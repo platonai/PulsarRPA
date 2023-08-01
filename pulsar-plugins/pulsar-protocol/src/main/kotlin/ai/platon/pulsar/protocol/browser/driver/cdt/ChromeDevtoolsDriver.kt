@@ -200,6 +200,8 @@ class ChromeDevtoolsDriver(
     override suspend fun stop() {
         navigateEntry.stopped = true
         try {
+            handleRedirect()
+
             if (browser.isGUI) {
                 // in gui mode, just stop the loading, so we can diagnose
                 pageAPI?.stopLoading()
@@ -207,8 +209,6 @@ class ChromeDevtoolsDriver(
                 // go to about:blank, so the browser stops the previous page and releases all resources
                 navigateTo(ChromeImpl.ABOUT_BLANK_PAGE)
             }
-
-            handleRedirect()
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "terminate")
         } catch (e: ChromeDriverException) {
