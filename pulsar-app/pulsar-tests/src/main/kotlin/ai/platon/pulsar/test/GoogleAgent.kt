@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import ai.platon.pulsar.common.proxy.ProxyType
 import ai.platon.pulsar.common.urls.DegenerateHyperlink
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -34,17 +35,22 @@ class GoogleAgent {
         // only works before 2023-08-25
         // # IP:PORT:USER:PASS
         val proxyString = """
-            146.247.127.238:12323:14a678fa9996c:505721cc2c
-            191.96.34.9:12323:14a678fa9996c:505721cc2c
-            185.158.105.182:12323:14a678fa9996c:505721cc2c
-            194.121.51.251:12323:14a678fa9996c:505721cc2c
-            152.89.0.179:12323:14a678fa9996c:505721cc2c
+//            146.247.127.238:12323:14a678fa9996c:505721cc2c
+//            191.96.34.9:12323:14a678fa9996c:505721cc2c
+//            185.158.105.182:12323:14a678fa9996c:505721cc2c
+//            194.121.51.251:12323:14a678fa9996c:505721cc2c
+//            152.89.0.179:12323:14a678fa9996c:505721cc2c
+127.0.0.1:10808:abc:abc
         """.trimIndent()
+
         val proxies = proxyString
-                .split("\n")
-                .map { it.trim().split(":") }
+                .split("\n").asSequence()
+                .map { it.trim() }
+                .filter { !it.startsWith("// ") }
+                .map { it.split(":") }
                 .filter { it.size == 4 }
-                .map { l -> ProxyEntry(l[0], l[1].toInt()).also { it.username = l[2]; it.password = l[3] } }
+                .map { l -> ProxyEntry(l[0].trim(), l[1].trim().toInt()).also { it.username = l[2].trim(); it.password = l[3].trim() } }
+                .onEach { it.proxyType = ProxyType.SOCKS5 }
                 .onEach { it.declaredTTL = Instant.now() + Duration.ofDays(30) }
         proxies.forEach {
             proxyPool.offer(it)

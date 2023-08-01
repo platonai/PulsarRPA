@@ -89,6 +89,8 @@ class ChromeDevtoolsDriver(
     private val rpc = RobustRPC(this)
     private var credentials: Credentials? = null
 
+    private val networkManager by lazy { NetworkManager(this, devTools) }
+
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val initScriptCache = mutableListOf<String>()
     private val closed = AtomicBoolean()
@@ -809,14 +811,8 @@ class ChromeDevtoolsDriver(
 
         val proxyUsername = browser.id.fingerprint.proxyUsername
         if (!proxyUsername.isNullOrBlank()) {
-            val cred = Credentials(proxyUsername, browser.id.fingerprint.proxyPassword)
-            this.credentials = cred
-
-logger.info("== registering onAuthRequired")
-
-            fetchAPI?.onAuthRequired { authRequired ->
-                onAuthRequired(authRequired)
-            }
+            credentials = Credentials(proxyUsername, browser.id.fingerprint.proxyPassword)
+            networkManager.authenticate(credentials)
         }
 
         navigateUrl = url
@@ -885,35 +881,6 @@ logger.info("== registering onAuthRequired")
             entry.mainResponseStatusText = response.response.statusText
             entry.mainResponseHeaders = response.response.headers
         }
-    }
-
-    private fun onRequestPaused(requestPaused: RequestPaused) {
-        val userRequestInterceptionEnabled = false
-        val protocolRequestInterceptionEnabled = true
-        if (!userRequestInterceptionEnabled && protocolRequestInterceptionEnabled) {
-            fetchAPI?.continueRequest(requestPaused.requestId)
-        }
-
-        val networkRequestId: String? = null
-        if (networkRequestId == null) {
-//            this.#onRequestWithoutNetworkInstrumentation(event);
-//            return;
-        }
-
-
-    }
-
-    private fun onAuthRequired(authRequired: AuthRequired) {
-        val cred = this.credentials ?: return
-
-        val authChallengeResponse = AuthChallengeResponse().also {
-            it.username = cred.username
-            it.password = cred.password
-        }
-
-        logger.info("== continueWithAuth")
-
-        fetchAPI?.continueWithAuth(authRequired.requestId, authChallengeResponse)
     }
 
     private suspend fun handleRedirect() {
