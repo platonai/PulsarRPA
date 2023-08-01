@@ -3,13 +3,20 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.ChromeTab
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
+import ai.platon.pulsar.common.alwaysFalse
 import com.github.kklisura.cdt.protocol.events.fetch.AuthRequired
 import com.github.kklisura.cdt.protocol.events.fetch.RequestPaused
 import com.github.kklisura.cdt.protocol.events.network.*
 import com.github.kklisura.cdt.protocol.types.fetch.RequestPattern
 import com.github.kklisura.cdt.protocol.types.network.Request
+import com.github.kklisura.cdt.protocol.types.network.Response
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+
+typealias NetworkRequestId = String
+
+typealias FetchRequestId = String
 
 class QueuedEventGroup(
         responseReceivedEvent: ResponseReceived,
@@ -55,9 +62,9 @@ class RedirectInfo(
  * (see crbug.com/1196004)
  */
 class NetworkEventManager {
-    val requestWillBeSentMap = ConcurrentHashMap<String, RequestWillBeSent>()
-    val requestPausedMap = ConcurrentHashMap<String, RequestPaused>()
-    val httpRequestsMap = ConcurrentHashMap<String, Request>()
+    val requestWillBeSentMap = ConcurrentHashMap<NetworkRequestId, RequestWillBeSent>()
+    val requestPausedMap = ConcurrentHashMap<NetworkRequestId, RequestPaused>()
+    val httpRequestsMap = ConcurrentHashMap<NetworkRequestId, Request>()
 
     /*
      * The below maps are used to reconcile Network.responseReceivedExtraInfo
@@ -68,9 +75,9 @@ class NetworkEventManager {
      * handle redirects, we have to make them Arrays to represent the chain of
      * events.
      */
-    val responseReceivedExtraInfoMap = ConcurrentHashMap<String, ArrayList<ResponseReceivedExtraInfo>>()
-    val queuedRedirectInfoMap = ConcurrentHashMap<String, ArrayList<RedirectInfo>>()
-    val queuedEventGroupMap = ConcurrentHashMap<String, ArrayList<QueuedEventGroup>>()
+    val responseReceivedExtraInfoMap = ConcurrentHashMap<NetworkRequestId, Queue<ResponseReceivedExtraInfo>>()
+    val queuedRedirectInfoMap = ConcurrentHashMap<FetchRequestId, Queue<RedirectInfo>>()
+    val queuedEventGroupMap = ConcurrentHashMap<NetworkRequestId, QueuedEventGroup>()
 
     fun forget(requestId: String) {
         requestWillBeSentMap.remove(requestId);
@@ -80,12 +87,85 @@ class NetworkEventManager {
         responseReceivedExtraInfoMap.remove(requestId);
     }
 
-    fun responseExtraInfo(requestId: String): ArrayList<ResponseReceivedExtraInfo> {
-        return responseReceivedExtraInfoMap.computeIfAbsent(requestId) { ArrayList() }
+    fun queueRedirectInfo(requestId: FetchRequestId, redirectInfo: RedirectInfo) {
+        computeQueuedRedirectInfo(requestId).add(redirectInfo)
     }
 
-    private fun queuedRedirectInfo(requestId: String) {
+    fun takeQueuedRedirectInfo(requestId: FetchRequestId): RedirectInfo? {
+        return computeQueuedRedirectInfo(requestId).remove()
+    }
 
+
+
+    fun storeRequestWillBeSent(networkRequestId: NetworkRequestId, event: RequestWillBeSent) {
+        requestWillBeSentMap[networkRequestId] = event
+    }
+
+    fun getRequestWillBeSent(networkRequestId: NetworkRequestId): RequestWillBeSent? {
+        return requestWillBeSentMap[networkRequestId]
+    }
+
+    fun forgetRequestWillBeSent(networkRequestId: NetworkRequestId) {
+        requestWillBeSentMap.remove(networkRequestId)
+    }
+
+    fun storeRequestPaused(networkRequestId: NetworkRequestId, event: RequestPaused) {
+        requestPausedMap[networkRequestId] = event
+    }
+
+    fun getRequestPaused(networkRequestId: NetworkRequestId) = requestPausedMap[networkRequestId]
+
+    fun forgetRequestPaused(networkRequestId: NetworkRequestId) {
+        requestPausedMap.remove(networkRequestId)
+    }
+
+
+
+
+
+    fun storeRequest(networkRequestId: NetworkRequestId, event: Request) {
+        httpRequestsMap[networkRequestId] = event
+    }
+
+    fun getRequest(networkRequestId: NetworkRequestId) = httpRequestsMap[networkRequestId]
+
+    fun forgetRequest(networkRequestId: NetworkRequestId) {
+        httpRequestsMap.remove(networkRequestId)
+    }
+
+
+
+
+    fun responseExtraInfo(requestId: String): Queue<ResponseReceivedExtraInfo> {
+        return responseReceivedExtraInfoMap.computeIfAbsent(requestId) { LinkedList() }
+    }
+
+    fun storeResponseExtraInfo(networkRequestId: NetworkRequestId, event: QueuedEventGroup) {
+        queuedEventGroupMap[networkRequestId] = event
+    }
+
+    fun getResponseExtraInfo(networkRequestId: NetworkRequestId) = queuedEventGroupMap[networkRequestId]
+
+    fun forgetResponseExtraInfo(networkRequestId: NetworkRequestId) {
+        responseExtraInfo(networkRequestId).remove()
+    }
+
+
+
+
+    fun storeQueuedEventGroup(networkRequestId: NetworkRequestId, event: QueuedEventGroup) {
+        queuedEventGroupMap[networkRequestId] = event
+    }
+
+    fun getQueuedEventGroup(networkRequestId: NetworkRequestId) = queuedEventGroupMap[networkRequestId]
+
+    fun forgetQueuedEventGroup(networkRequestId: NetworkRequestId) {
+        queuedEventGroupMap.remove(networkRequestId)
+    }
+
+
+    private fun computeQueuedRedirectInfo(requestId: FetchRequestId): Queue<RedirectInfo> {
+        return queuedRedirectInfoMap.computeIfAbsent(requestId) { LinkedList() }
     }
 }
 
@@ -102,6 +182,8 @@ class NetworkManager(
     private val networkAPI get() = devTools.network.takeIf { isActive }
     private val fetchAPI get() = devTools.fetch.takeIf { isActive }
     private val runtimeAPI get() = devTools.runtime.takeIf { isActive }
+
+    private val networkEventManager = NetworkEventManager()
 
     var ignoreHTTPSErrors = true
     val extraHTTPHeaders = mutableMapOf<String, String>()
@@ -162,17 +244,60 @@ class NetworkManager(
         val url = requestWillBeSent.request.url
         if (userRequestInterceptionEnabled && !url.startsWith("data:")) {
             val requestId = requestWillBeSent.requestId
+            networkEventManager.storeRequestWillBeSent(requestId, requestWillBeSent)
+
+            val requestPaused = networkEventManager.getRequestPaused(requestId)
+            if (requestPaused != null) {
+                patchRequestEventHeaders(requestWillBeSent, requestPaused)
+                onRequest(requestWillBeSent, requestId)
+                networkEventManager.forgetRequestPaused(requestId)
+            }
+        } else {
+            onRequest(requestWillBeSent, null)
+        }
+    }
+
+    private fun onRequest(event: RequestWillBeSent, fetchRequestId: String?) {
+        val requestId = event.requestId
+        val redirectChain = mutableListOf<Request>()
+        if (event.redirectResponse != null) {
+            var redirectResponseExtraInfo: ResponseReceivedExtraInfo? = null
+            val redirectHasExtraInfo = alwaysFalse()
+            if (redirectHasExtraInfo) {
+                // removes the first element
+                val extraInfo = networkEventManager.responseExtraInfo(requestId).remove()
+                redirectResponseExtraInfo = extraInfo
+                if (extraInfo != null) {
+                    networkEventManager.queueRedirectInfo(extraInfo.requestId, RedirectInfo(event, fetchRequestId))
+                    return
+                }
+            }
+
+            val request = networkEventManager.getRequest(event.requestId)
+            if (request != null) {
+                handleRequestRedirect(request, event.redirectResponse, redirectResponseExtraInfo)
+                // redirectChain = request._redirectChain
+            }
         }
 
-        onRequest(requestWillBeSent, null)
-    }
-    private fun onRequest(requestWillBeSent: RequestWillBeSent, fetchRequestId: String?) {
+        val request = Request()
+        networkEventManager.storeRequest(requestId, request)
+        // emit(NetworkManagerEmittedEvents.Request, request);
 
     }
+
+    private fun handleRequestRedirect(request: Request, redirectResponse: Response?, redirectResponseExtraInfo: ResponseReceivedExtraInfo?) {
+
+    }
+
     private fun onRequestServedFromCache(requestServedFromCache: RequestServedFromCache) {}
+
     private fun onResponseReceived(responseReceived: ResponseReceived) {}
+
     private fun onLoadingFinished(loadingFinished: LoadingFinished) {}
+
     private fun onLoadingFailed(loadingFailed: LoadingFailed) {}
+
     private fun onResponseReceivedExtraInfo(responseReceivedExtraInfo: ResponseReceivedExtraInfo) {}
 
     private fun enableAPIAgents() {
@@ -189,6 +314,11 @@ class NetworkManager(
             val patterns = listOf(RequestPattern())
             fetchAPI?.enable(patterns, true)
         }
+    }
+
+    private fun patchRequestEventHeaders(requestWillBeSent: RequestWillBeSent, requestPaused: RequestPaused) {
+        // includes extra headers, like: Accept, Origin
+        requestWillBeSent.request.headers.putAll(requestPaused.request.headers)
     }
 
     private fun updateProtocolRequestInterception() {
