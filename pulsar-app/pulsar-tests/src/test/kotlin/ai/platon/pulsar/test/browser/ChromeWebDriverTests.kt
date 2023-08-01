@@ -4,12 +4,17 @@ import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.test.TestBase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.kotlin.codegen.optimization.boxing.areSameTypedPrimitiveBoxedValues
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
@@ -245,6 +250,39 @@ class ChromeWebDriverTests: TestBase() {
             val result = driver.evaluate("__pulsar_utils__.doForAllFrames('HOLD', 'ME')")
             println(result)
         }
+    }
+
+    @Ignore("Valid proxies have to be provided")
+    @Test
+    fun testAuthorization() {
+        // only works before 2023-08-25
+        // # IP:PORT:USER:PASS
+        // 146.247.127.238:12323:14a678fa9996c:505721cc2c
+        // 191.96.34.9:12323:14a678fa9996c:505721cc2c
+        // 185.158.105.182:12323:14a678fa9996c:505721cc2c
+        // 194.121.51.251:12323:14a678fa9996c:505721cc2c
+        // 152.89.0.179:12323:14a678fa9996c:505721cc2c
+//        val proxy = "36.138.120.73:3128"
+        val proxy = "175.149.67.119:4231"
+//        val proxyEntry = ProxyEntry("146.247.127.238", 12323).also { it.username = "14a678fa9996c"; it.password = "505721cc2c" }
+        val proxyEntry = ProxyEntry.parse(proxy) ?: return
+        val browserId = BrowserId.DEFAULT
+        browserId.fingerprint.proxyServer = proxyEntry.hostPort
+        browserId.fingerprint.proxyUsername = proxyEntry.username
+        browserId.fingerprint.proxyPassword = proxyEntry.password
+
+        val browser = driverFactory.launchBrowser(browserId)
+        val driver = browser.newDriver()
+
+        runBlocking {
+            driver.navigateTo(url)
+            driver.waitForNavigation()
+            driver.waitForSelector("body")
+            val source = driver.pageSource()
+            assertTrue { source != null && source.length > 1000 }
+        }
+
+        readLine()
     }
 
     private fun runWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {

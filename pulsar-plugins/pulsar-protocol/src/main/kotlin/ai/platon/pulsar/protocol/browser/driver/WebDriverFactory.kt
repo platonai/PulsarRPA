@@ -39,21 +39,21 @@ open class WebDriverFactory(
      * Create a WebDriver
      */
     @Throws(BrowserLaunchException::class)
-    fun create(browserId: BrowserId, priority: Int, conf: VolatileConfig, start: Boolean = true) =
+    fun create(browserId: BrowserId, priority: Int = 0, conf: VolatileConfig = VolatileConfig.UNSAFE, start: Boolean = true) =
         launchBrowserAndDriver(browserId, priority, conf, start).second
 
     /**
      * Create a WebDriver
      */
     @Throws(BrowserLaunchException::class)
-    fun launchBrowser(browserId: BrowserId, conf: VolatileConfig): Browser {
+    fun launchBrowser(browserId: BrowserId, conf: VolatileConfig = VolatileConfig.UNSAFE): Browser {
         numDrivers.incrementAndGet()
 
         logger.debug("Creating browser #{} | {}", numDrivers, browserId)
 
         val browserType = browserId.browserType
         val capabilities = driverSettings.createGeneralOptions()
-        setProxy(capabilities, browserId.proxyServer)
+        setProxy(capabilities, browserId.fingerprint.proxyServer)
 
         try {
             val browser = when (browserType) {

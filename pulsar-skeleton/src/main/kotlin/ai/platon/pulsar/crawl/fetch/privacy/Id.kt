@@ -146,7 +146,6 @@ data class BrowserId constructor(
 
     val privacyAgent = PrivacyAgent(contextDir, fingerprint)
     val browserType: BrowserType get() = fingerprint.browserType
-    val proxyServer: String? get() = fingerprint.proxyServer
 
     val userDataDir: Path get() = when {
         privacyAgent.isUserDefault -> PrivacyContext.USER_DEFAULT_DATA_DIR_PLACEHOLDER

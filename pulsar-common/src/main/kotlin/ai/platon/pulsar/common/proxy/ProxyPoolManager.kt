@@ -38,6 +38,7 @@ open class ProxyPoolManager(
 
     val activeProxyEntries = ConcurrentSkipListMap<Path, ProxyEntry>()
     val workingProxyEntries = ConcurrentSkipListSet<ProxyEntry>()
+
     val isEnabled get() = isProxyEnabled(conf)
     val isDisabled get() = !isEnabled
 
@@ -106,11 +107,10 @@ open class ProxyPoolManager(
          *
          * 1. PROXY_USE_PROXY is set to "yes" or "true"
          * 2. PROXY_USE_PROXY is not set
-         *    1. PROXY_ENABLE_DEFAULT_PROVIDERS is set to "true"
+         *    1. PROXY_ENABLE_DEFAULT_PROVIDERS is "true"
          *    2. and there are proxy providers in AVAILABLE_PROVIDER_DIR
          * */
         fun isProxyEnabled(conf: ImmutableConfig): Boolean {
-            // explicit set system environment property
             val useProxy = conf[CapabilityTypes.PROXY_USE_PROXY]
             when (useProxy) {
                 "yes", "true" -> return true

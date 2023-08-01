@@ -14,12 +14,17 @@ import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.kklisura.cdt.protocol.events.fetch.AuthRequired
+import com.github.kklisura.cdt.protocol.events.fetch.RequestPaused
+import com.github.kklisura.cdt.protocol.events.network.RequestWillBeSent
+import com.github.kklisura.cdt.protocol.events.network.ResponseReceived
+import com.github.kklisura.cdt.protocol.types.fetch.AuthChallengeResponse
+import com.github.kklisura.cdt.protocol.types.fetch.RequestPattern
 import com.github.kklisura.cdt.protocol.types.network.Cookie
 import com.github.kklisura.cdt.protocol.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import com.github.kklisura.cdt.protocol.types.runtime.Evaluate
 import kotlinx.coroutines.delay
-import org.apache.commons.math3.util.MathUtils
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.time.Duration
@@ -65,9 +70,9 @@ class ChromeDevtoolsDriver(
     private var lastSessionId: String? = null
     private var navigateUrl = chromeTab.url ?: ""
 
-    private val browserAPI get() = devTools.browser
+    private val browserAPI get() = devTools.browser.takeIf { isActive }
     private val pageAPI get() = devTools.page.takeIf { isActive }
-    private val targetAPI get() = devTools.target
+    private val targetAPI get() = devTools.target.takeIf { isActive }
     private val domAPI get() = devTools.dom.takeIf { isActive }
     private val cssAPI get() = devTools.css.takeIf { isActive }
     private val inputAPI get() = devTools.input.takeIf { isActive }
@@ -82,6 +87,7 @@ class ChromeDevtoolsDriver(
 
     private var numResponseReceived = AtomicInteger()
     private val rpc = RobustRPC(this)
+    private var credentials: Credentials? = null
 
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val initScriptCache = mutableListOf<String>()
@@ -764,6 +770,13 @@ class ChromeDevtoolsDriver(
         if (resourceBlockProbability > 1e-6) {
             fetchAPI?.enable()
         }
+
+        val proxyUsername = browser.id.fingerprint.proxyUsername
+        if (!proxyUsername.isNullOrBlank()) {
+            // allow all url patterns
+            val patterns = listOf(RequestPattern())
+            fetchAPI?.enable(patterns, true)
+        }
     }
 
     override fun toString() = "Driver#$id"
@@ -783,55 +796,27 @@ class ChromeDevtoolsDriver(
         }
 
         networkAPI?.onRequestWillBeSent { requestWillBeSent ->
-            if (entry.mainRequestId.isBlank()) {
-                // The first request, fetch the main HTML
-
-                // amazon.com uses "referer" instead of "referrer" in the request header,
-                // not clear if other sites uses the other one
-                val headers: MutableMap<String, Any> = requestWillBeSent.request.headers
-                entry.pageReferrer?.let {
-                    headers["referer"] = it
-                    headers["referrer"] = it
-                }
-
-                entry.mainRequestId = requestWillBeSent.requestId
-                entry.mainRequestHeaders = requestWillBeSent.request.headers
-            }
-
-            if (resourceBlockProbability > 1e-6) {
-                val requestUrl = requestWillBeSent.request.url
-                if (probabilityBlockedURLs.any { requestUrl.matches(it.toRegex()) }) {
-                    // random drop requests
-                    val hit = Random.nextInt(100) / 100.0f < resourceBlockProbability
-                    if (hit) {
-                        // ErrorReason.CONNECTION_FAILED
-                        fetchAPI?.failRequest(requestWillBeSent.requestId, ErrorReason.ABORTED)
-                    }
-                }
-            }
+            onRequestWillBeSent(entry, requestWillBeSent)
         }
 
         networkAPI?.onResponseReceived { response ->
-            val maxResponses = numResponseReceivedToDisableNetwork
-            if (maxResponses > 0 && entry.mainRequestId.isNotBlank()) {
-                // split the `if` to make it clearer
-                if (numResponseReceived.incrementAndGet() == maxResponses) {
-                    // Disables network tracking, prevents network events from being sent to the client.
-                    // TODO: does the resource blocking logic work if we disable the network API?
-                    // networkAPI?.disable()
-                    // logger.info("Network API for driver #{} is disabled", id)
-                }
-            }
-
-            if (entry.mainResponseStatus < 0) {
-                entry.mainResponseStatus = response.response.status
-                entry.mainResponseStatusText = response.response.statusText
-                entry.mainResponseHeaders = response.response.headers
-            }
+            onResponseReceived(entry, response)
         }
 
         pageAPI?.onDocumentOpened {
             entry.mainRequestCookies = getCookies0()
+        }
+
+        val proxyUsername = browser.id.fingerprint.proxyUsername
+        if (!proxyUsername.isNullOrBlank()) {
+            val cred = Credentials(proxyUsername, browser.id.fingerprint.proxyPassword)
+            this.credentials = cred
+
+logger.info("== registering onAuthRequired")
+
+            fetchAPI?.onAuthRequired { authRequired ->
+                onAuthRequired(authRequired)
+            }
         }
 
         navigateUrl = url
@@ -852,6 +837,83 @@ class ChromeDevtoolsDriver(
 
         navigateUrl = url
         pageAPI?.navigate(url)
+    }
+
+    private fun onRequestWillBeSent(entry: NavigateEntry, requestWillBeSent: RequestWillBeSent) {
+        if (entry.mainRequestId.isBlank()) {
+            // The first request, fetch the main HTML
+
+            // amazon.com uses "referer" instead of "referrer" in the request header,
+            // not clear if other sites uses the other one
+            val headers: MutableMap<String, Any> = requestWillBeSent.request.headers
+            entry.pageReferrer?.let {
+                headers["referer"] = it
+                headers["referrer"] = it
+            }
+
+            entry.mainRequestId = requestWillBeSent.requestId
+            entry.mainRequestHeaders = requestWillBeSent.request.headers
+        }
+
+        if (resourceBlockProbability > 1e-6) {
+            val requestUrl = requestWillBeSent.request.url
+            if (probabilityBlockedURLs.any { requestUrl.matches(it.toRegex()) }) {
+                // random drop requests
+                val hit = Random.nextInt(100) / 100.0f < resourceBlockProbability
+                if (hit) {
+                    // ErrorReason.CONNECTION_FAILED
+                    fetchAPI?.failRequest(requestWillBeSent.requestId, ErrorReason.ABORTED)
+                }
+            }
+        }
+    }
+
+    private fun onResponseReceived(entry: NavigateEntry, response: ResponseReceived) {
+        val maxResponses = numResponseReceivedToDisableNetwork
+        if (maxResponses > 0 && entry.mainRequestId.isNotBlank()) {
+            // split the `if` to make it clearer
+            if (numResponseReceived.incrementAndGet() == maxResponses) {
+                // Disables network tracking, prevents network events from being sent to the client.
+                // TODO: does the resource blocking logic work if we disable the network API?
+                // networkAPI?.disable()
+                // logger.info("Network API for driver #{} is disabled", id)
+            }
+        }
+
+        if (entry.mainResponseStatus < 0) {
+            entry.mainResponseStatus = response.response.status
+            entry.mainResponseStatusText = response.response.statusText
+            entry.mainResponseHeaders = response.response.headers
+        }
+    }
+
+    private fun onRequestPaused(requestPaused: RequestPaused) {
+        val userRequestInterceptionEnabled = false
+        val protocolRequestInterceptionEnabled = true
+        if (!userRequestInterceptionEnabled && protocolRequestInterceptionEnabled) {
+            fetchAPI?.continueRequest(requestPaused.requestId)
+        }
+
+        val networkRequestId: String? = null
+        if (networkRequestId == null) {
+//            this.#onRequestWithoutNetworkInstrumentation(event);
+//            return;
+        }
+
+
+    }
+
+    private fun onAuthRequired(authRequired: AuthRequired) {
+        val cred = this.credentials ?: return
+
+        val authChallengeResponse = AuthChallengeResponse().also {
+            it.username = cred.username
+            it.password = cred.password
+        }
+
+        logger.info("== continueWithAuth")
+
+        fetchAPI?.continueWithAuth(authRequired.requestId, authChallengeResponse)
     }
 
     private suspend fun handleRedirect() {
