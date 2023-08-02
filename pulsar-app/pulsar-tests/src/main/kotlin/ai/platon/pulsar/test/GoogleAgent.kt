@@ -13,7 +13,7 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.context.MultiPrivacyContextManager
 import ai.platon.pulsar.ql.context.SQLContexts
-import com.github.kklisura.cdt.protocol.commands.Browser
+import com.github.kklisura.cdt.protocol.v2023.commands.Browser
 import org.apache.http.client.utils.URIBuilder
 import java.time.Duration
 import java.time.Instant

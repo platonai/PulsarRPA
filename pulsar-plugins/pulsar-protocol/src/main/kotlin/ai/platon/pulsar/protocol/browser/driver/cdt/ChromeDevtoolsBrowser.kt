@@ -12,7 +12,7 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
-import com.github.kklisura.cdt.protocol.ChromeDevTools
+import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.time.Duration

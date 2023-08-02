@@ -4,9 +4,8 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
-import com.github.kklisura.cdt.protocol.types.dom.Rect
-import com.github.kklisura.cdt.protocol.types.runtime.Evaluate
-import com.google.gson.Gson
+import com.github.kklisura.cdt.protocol.v2023.types.dom.Rect
+import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 
 class PageHandler(
     private val devTools: RemoteDevTools,

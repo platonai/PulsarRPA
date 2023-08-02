@@ -12,18 +12,17 @@ import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.*
+import ai.platon.pulsar.protocol.browser.driver.cdt.detail.NetworkManager
+import ai.platon.pulsar.protocol.browser.driver.cdt.detail.RobustRPC
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.kklisura.cdt.protocol.events.fetch.AuthRequired
-import com.github.kklisura.cdt.protocol.events.fetch.RequestPaused
-import com.github.kklisura.cdt.protocol.events.network.RequestWillBeSent
-import com.github.kklisura.cdt.protocol.events.network.ResponseReceived
-import com.github.kklisura.cdt.protocol.types.fetch.AuthChallengeResponse
-import com.github.kklisura.cdt.protocol.types.fetch.RequestPattern
-import com.github.kklisura.cdt.protocol.types.network.Cookie
-import com.github.kklisura.cdt.protocol.types.network.ErrorReason
-import com.github.kklisura.cdt.protocol.types.page.Viewport
-import com.github.kklisura.cdt.protocol.types.runtime.Evaluate
+import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
+import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceived
+import com.github.kklisura.cdt.protocol.v2023.types.fetch.RequestPattern
+import com.github.kklisura.cdt.protocol.v2023.types.network.Cookie
+import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
+import com.github.kklisura.cdt.protocol.v2023.types.page.Viewport
+import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -89,7 +88,7 @@ class ChromeDevtoolsDriver(
     private val rpc = RobustRPC(this)
     private var credentials: Credentials? = null
 
-    private val networkManager by lazy { NetworkManager(this, devTools) }
+    private val networkManager by lazy { NetworkManager(this, rpc) }
 
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val initScriptCache = mutableListOf<String>()
@@ -812,7 +811,7 @@ class ChromeDevtoolsDriver(
         val proxyUsername = browser.id.fingerprint.proxyUsername
         if (!proxyUsername.isNullOrBlank()) {
             credentials = Credentials(proxyUsername, browser.id.fingerprint.proxyPassword)
-            networkManager.authenticate(credentials)
+            credentials?.let { networkManager.authenticate(it) }
         }
 
         navigateUrl = url

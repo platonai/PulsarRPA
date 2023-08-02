@@ -17,8 +17,8 @@ import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.type.TypeFactory
-import com.github.kklisura.cdt.protocol.support.types.EventHandler
-import com.github.kklisura.cdt.protocol.support.types.EventListener
+import com.github.kklisura.cdt.protocol.v2023.support.types.EventHandler
+import com.github.kklisura.cdt.protocol.v2023.support.types.EventListener
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
