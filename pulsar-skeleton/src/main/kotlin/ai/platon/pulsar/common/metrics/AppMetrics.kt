@@ -79,11 +79,15 @@ class AppMetrics(
         val defaultMetricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
         val reg = defaultMetricRegistry
 
+        private fun formatAvailableMemoryGauge(): String {
+            return AppSystemInfo.availableMemory?.let { Strings.compactFormat(it) } ?: "Not available"
+        }
+        
         init {
             mapOf(
                 "startTime" to Gauge { AppSystemInfo.startTime },
                 "elapsedTime" to Gauge { AppSystemInfo.elapsedTime },
-                "availableMemory" to Gauge { Strings.compactFormat(AppSystemInfo.availableMemory) },
+                "availableMemory" to Gauge { formatAvailableMemoryGauge() },
                 "freeSpace" to Gauge { AppSystemInfo.freeDiskSpaces.map { Strings.compactFormat(it) } }
             ).let { reg.registerAll(this, it) }
         }

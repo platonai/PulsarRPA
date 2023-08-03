@@ -788,7 +788,6 @@ class ChromeDevtoolsDriver(
     private fun navigateInvaded(entry: NavigateEntry) {
         val url = entry.url
 
-//        pageAPI?.addScriptToEvaluateOnNewDocument(buildInitScripts())
         addScriptToEvaluateOnNewDocument()
 
         if (blockedURLs.isNotEmpty()) {
@@ -796,17 +795,11 @@ class ChromeDevtoolsDriver(
             networkAPI?.setBlockedURLs(blockedURLs)
         }
 
-        networkAPI?.onRequestWillBeSent { requestWillBeSent ->
-            onRequestWillBeSent(entry, requestWillBeSent)
-        }
+        networkAPI?.onRequestWillBeSent { requestWillBeSent -> onRequestWillBeSent(entry, requestWillBeSent) }
 
-        networkAPI?.onResponseReceived { response ->
-            onResponseReceived(entry, response)
-        }
+        networkAPI?.onResponseReceived { response -> onResponseReceived(entry, response) }
 
-        pageAPI?.onDocumentOpened {
-            entry.mainRequestCookies = getCookies0()
-        }
+        pageAPI?.onDocumentOpened { entry.mainRequestCookies = getCookies0() }
 
         val proxyUsername = browser.id.fingerprint.proxyUsername
         if (!proxyUsername.isNullOrBlank()) {

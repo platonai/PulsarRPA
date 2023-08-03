@@ -773,18 +773,17 @@ open class StreamingCrawler(
     private fun handleMemoryShortage(j: Int) {
         logger.info(
             "$j.\tnumRunning: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
-            globalRunningTasks,
-            Strings.compactFormat(AppSystemInfo.availableMemory),
+            globalRunningTasks, AppSystemInfo.formatAvailableMemory(),
             Strings.compactFormat(AppSystemInfo.actualCriticalMemory.toLong()),
-            Strings.compactFormat(AppSystemInfo.availableMemory - AppSystemInfo.actualCriticalMemory.toLong())
+            AppSystemInfo.formatMemoryShortage()
         )
         session.globalCache.clearPDCaches()
 
         // When control returns from the method call, the Java Virtual Machine
-        // has made a best effort to reclaim space from all unused objects.
+        // has made the best effort to reclaim space from all unused objects.
         System.gc()
     }
-
+    
     /**
      * Proxies should live for more than 5 minutes. If proxy is not enabled, the rate is always 0.
      *
@@ -797,7 +796,7 @@ open class StreamingCrawler(
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
             logger.takeIf { k % 60 == 0 }?.warn(
                     "Context leaks too fast: {} leaks/seconds, available memory: {}",
-                    contextLeaksRate, Strings.compactFormat(AppSystemInfo.availableMemory))
+                    contextLeaksRate, AppSystemInfo.formatAvailableMemory())
             delay(1000)
 
             // trigger the meter updating

@@ -6,6 +6,10 @@ import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
 import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceived
 import com.github.kklisura.cdt.protocol.v2023.types.fetch.HeaderEntry
 
+enum class NetworkManagerEvents {
+    Request, RequestServedFromCache, Response, RequestFailed, RequestFinished
+}
+
 enum class InterceptResolutionAction(val action: String) {
     Abort("abort"),
     Respond("respond"),
@@ -14,6 +18,16 @@ enum class InterceptResolutionAction(val action: String) {
     None("none"),
     Handled("handled"),
 }
+
+/**
+ * The request id for network API.
+ * */
+typealias NetworkRequestId = String
+
+/**
+ * The request id for fetch API.
+ * */
+typealias FetchRequestId = String
 
 /**
  *
@@ -52,11 +66,6 @@ class ResponseForRequest {
     val body: Any? = null
 }
 
-
-typealias NetworkRequestId = String
-
-typealias FetchRequestId = String
-
 class QueuedEventGroup(
         var responseReceivedEvent: ResponseReceived,
         var loadingFinishedEvent: LoadingFinished? = null,
@@ -65,9 +74,5 @@ class QueuedEventGroup(
 
 class RedirectInfo(
         val event: RequestWillBeSent,
-        val fetchRequestId: String? = null
+        val fetchRequestId: FetchRequestId? = null
 )
-
-enum class NetworkManagerEvents {
-    Request, RequestServedFromCache, Response, RequestFailed, RequestFinished
-}

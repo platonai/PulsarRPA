@@ -88,9 +88,15 @@
         </dependency>
 
         <!-- System metrics -->
+<!--        <dependency>-->
+<!--            <groupId>com.github.oshi</groupId>-->
+<!--            <artifactId>oshi-core</artifactId>-->
+<!--            <version>${oshi.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.github.oshi</groupId>
-            <artifactId>oshi-core</artifactId>
+            <artifactId>oshi-core-java11</artifactId>
+            <version>${oshi.version}</version>
         </dependency>
         <!-- Metrics system -->
         <dependency>

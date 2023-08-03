@@ -374,7 +374,7 @@ class LoadingWebDriverPool constructor(
                 numDriverSlots, activeDriversInPool, activeDriversInBrowser)
         } else if (AppSystemInfo.isCriticalMemory) {
             logger.info("Critical memory: {}, {}/{}/{} (slots/activeP/activeB), will not create new driver",
-                Strings.compactFormat(AppSystemInfo.availableMemory),
+                AppSystemInfo.formatAvailableMemory(),
                 numDriverSlots, activeDriversInPool, activeDriversInBrowser
             )
         }

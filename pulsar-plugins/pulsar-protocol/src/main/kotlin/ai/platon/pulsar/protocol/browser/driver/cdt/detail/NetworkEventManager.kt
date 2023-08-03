@@ -9,41 +9,41 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * There are four possible orders of events:
- * A. `_onRequestWillBeSent`
- * B. `_onRequestWillBeSent`, `_onRequestPaused`
- * C. `_onRequestPaused`, `_onRequestWillBeSent`
- * D. `_onRequestPaused`, `_onRequestWillBeSent`, `_onRequestPaused`,
- * `_onRequestWillBeSent`, `_onRequestPaused`, `_onRequestPaused`
+ * A. `onRequestWillBeSent`
+ * B. `onRequestWillBeSent`, `onRequestPaused`
+ * C. `onRequestPaused`, `onRequestWillBeSent`
+ * D. `onRequestPaused`, `onRequestWillBeSent`, `onRequestPaused`,
+ * `onRequestWillBeSent`, `onRequestPaused`, `onRequestPaused`
  * (see crbug.com/1196004)
  *
- * For `_onRequest` we need the event from `_onRequestWillBeSent` and
- * optionally the `interceptionId` from `_onRequestPaused`.
+ * For `onRequest` we need the event from `onRequestWillBeSent` and
+ * optionally the `interceptionId` from `onRequestPaused`.
  *
- * If request interception is disabled, call `_onRequest` once per call to
- * `_onRequestWillBeSent`.
- * If request interception is enabled, call `_onRequest` once per call to
- * `_onRequestPaused` (once per `interceptionId`).
+ * If request interception is disabled, call `onRequest` once per call to
+ * `onRequestWillBeSent`.
+ * If request interception is enabled, call `onRequest` once per call to
+ * `onRequestPaused` (once per `interceptionId`).
  *
- * Events are stored to allow for subsequent events to call `_onRequest`.
+ * Events are stored to allow for subsequent events to call `onRequest`.
  *
  * Note that (chains of) redirect requests have the same `requestId` (!) as
  * the original request. We have to anticipate series of events like these:
- * A. `_onRequestWillBeSent`,
- * `_onRequestWillBeSent`, ...
- * B. `_onRequestWillBeSent`, `_onRequestPaused`,
- * `_onRequestWillBeSent`, `_onRequestPaused`, ...
- * C. `_onRequestWillBeSent`, `_onRequestPaused`,
- * `_onRequestPaused`, `_onRequestWillBeSent`, ...
- * D. `_onRequestPaused`, `_onRequestWillBeSent`,
- * `_onRequestPaused`, `_onRequestWillBeSent`, `_onRequestPaused`,
- * `_onRequestWillBeSent`, `_onRequestPaused`, `_onRequestPaused`, ...
+ * A. `onRequestWillBeSent`,
+ * `onRequestWillBeSent`, ...
+ * B. `onRequestWillBeSent`, `onRequestPaused`,
+ * `onRequestWillBeSent`, `onRequestPaused`, ...
+ * C. `onRequestWillBeSent`, `onRequestPaused`,
+ * `onRequestPaused`, `onRequestWillBeSent`, ...
+ * D. `onRequestPaused`, `onRequestWillBeSent`,
+ * `onRequestPaused`, `onRequestWillBeSent`, `onRequestPaused`,
+ * `onRequestWillBeSent`, `onRequestPaused`, `onRequestPaused`, ...
  * (see crbug.com/1196004)
  */
 class NetworkEventManager {
-    private val requestWillBeSentMap = ConcurrentHashMap<String, RequestWillBeSent>()
-    private val requestWillBeSentExtraInfoMap = ConcurrentHashMap<String, Queue<RequestWillBeSentExtraInfo>>()
-    private val requestPausedMap = ConcurrentHashMap<String, RequestPaused>()
-    private val CDPRequestsMap = ConcurrentHashMap<String, CDPRequest>()
+    private val requestWillBeSentEvents = ConcurrentHashMap<NetworkRequestId, RequestWillBeSent>()
+    private val requestWillBeSentExtraInfoEvents = ConcurrentHashMap<String, Queue<RequestWillBeSentExtraInfo>>()
+    private val requestPausedEvents = ConcurrentHashMap<NetworkRequestId, RequestPaused>()
+    private val requests = ConcurrentHashMap<NetworkRequestId, CDPRequest>()
 
     /*
      * The below maps are used to reconcile Network.responseReceivedExtraInfo
@@ -54,97 +54,97 @@ class NetworkEventManager {
      * handle redirects, we have to make them Arrays to represent the chain of
      * events.
      */
-    private val responseReceivedExtraInfoMap = ConcurrentHashMap<String, Queue<ResponseReceivedExtraInfo>>()
-    private val queuedRedirectInfoMap = ConcurrentHashMap<FetchRequestId, Queue<RedirectInfo>>()
-    private val queuedEventGroupMap = ConcurrentHashMap<String, QueuedEventGroup>()
+    private val responseReceivedExtraInfoEvents = ConcurrentHashMap<NetworkRequestId, MutableList<ResponseReceivedExtraInfo>>()
+    private val queuedRedirectInfoEvents = ConcurrentHashMap<FetchRequestId, MutableList<RedirectInfo>>()
+    private val queuedEventGroups = ConcurrentHashMap<NetworkRequestId, QueuedEventGroup>()
 
     /**
-     * Forget all
+     * Forget all events
      * */
-    fun forget(requestId: String) {
-        requestWillBeSentMap.remove(requestId);
-        requestPausedMap.remove(requestId);
-        queuedEventGroupMap.remove(requestId);
-        queuedRedirectInfoMap.remove(requestId);
-        responseReceivedExtraInfoMap.remove(requestId);
+    fun removeAll(requestId: NetworkRequestId) {
+        requestWillBeSentEvents.remove(requestId)
+        requestPausedEvents.remove(requestId)
+        queuedEventGroups.remove(requestId)
+        queuedRedirectInfoEvents.remove(requestId)
+        responseReceivedExtraInfoEvents.remove(requestId)
     }
 
-    fun queueRedirectInfo(requestId: FetchRequestId, redirectInfo: RedirectInfo) {
-        computeQueuedRedirectInfo(requestId).add(redirectInfo)
+    fun queueRedirectInfoEvent(requestId: FetchRequestId, redirectInfo: RedirectInfo) {
+        computeRedirectInfoQueue(requestId).add(redirectInfo)
     }
 
-    fun takeFirstQueuedRedirectInfo(requestId: FetchRequestId): RedirectInfo? {
-        return computeQueuedRedirectInfo(requestId).remove()
+    fun takeFirstRedirectInfoEvent(requestId: FetchRequestId): RedirectInfo? {
+        return computeRedirectInfoQueue(requestId).removeFirstOrNull()
     }
-
-
-    fun addRequestWillBeSentExtraInfo(event: RequestWillBeSentExtraInfo) {
-
-    }
-
-
-    fun addRequestWillBeSentEvent(networkRequestId: String, event: RequestWillBeSent) {
-        requestWillBeSentMap[networkRequestId] = event
-    }
-
-    fun getRequestWillBeSentEvent(networkRequestId: String): RequestWillBeSent? {
-        return requestWillBeSentMap[networkRequestId]
-    }
-
-    fun removeRequestWillBeSentEvent(networkRequestId: String): RequestWillBeSent? {
-        return requestWillBeSentMap.remove(networkRequestId)
-    }
-
-    fun addRequestPausedEvent(requestId: String, event: RequestPaused) {
-        requestPausedMap[requestId] = event
-    }
-
-    fun getRequestPausedEvent(requestId: String) = requestPausedMap[requestId]
-
-    fun removeRequestPausedEvent(requestId: String) {
-        requestPausedMap.remove(requestId)
+    
+    private fun computeRedirectInfoQueue(requestId: FetchRequestId): MutableList<RedirectInfo> {
+        return queuedRedirectInfoEvents.computeIfAbsent(requestId) { LinkedList() }
     }
 
 
-    fun addRequest(requestId: String, request: CDPRequest) {
-        CDPRequestsMap[requestId] = request
+    fun addRequestWillBeSentExtraInfoEvent(event: RequestWillBeSentExtraInfo) {
+
     }
 
-    fun getRequest(requestId: String) = CDPRequestsMap[requestId]
+
+    fun addRequestWillBeSentEvent(networkRequestId: NetworkRequestId, event: RequestWillBeSent) {
+        requestWillBeSentEvents[networkRequestId] = event
+    }
+
+    fun getRequestWillBeSentEvent(networkRequestId: NetworkRequestId): RequestWillBeSent? {
+        return requestWillBeSentEvents[networkRequestId]
+    }
+
+    fun removeRequestWillBeSentEvent(networkRequestId: NetworkRequestId): RequestWillBeSent? {
+        return requestWillBeSentEvents.remove(networkRequestId)
+    }
+
+    fun addRequestPausedEvent(requestId: NetworkRequestId, event: RequestPaused) {
+        requestPausedEvents[requestId] = event
+    }
+
+    fun getRequestPausedEvent(requestId: NetworkRequestId) = requestPausedEvents[requestId]
+
+    fun removeRequestPausedEvent(requestId: NetworkRequestId) {
+        requestPausedEvents.remove(requestId)
+    }
+
+
+    fun addRequest(requestId: NetworkRequestId, request: CDPRequest) {
+        requests[requestId] = request
+    }
+
+    fun getCDPRequest(requestId: NetworkRequestId) = requests[requestId]
 
     fun removeRequest(requestId: String) {
-        CDPRequestsMap.remove(requestId)
+        requests.remove(requestId)
     }
 
 
-    fun addResponseExtraInfo(requestId: String, event: ResponseReceivedExtraInfo) {
-        getResponseExtraInfo(requestId).add(event)
+    fun addResponseExtraInfoEvent(requestId: NetworkRequestId, event: ResponseReceivedExtraInfo) {
+        computeResponseExtraInfoList(requestId).add(event)
     }
 
-    fun getResponseExtraInfo(requestId: String): Queue<ResponseReceivedExtraInfo> {
-        return responseReceivedExtraInfoMap.computeIfAbsent(requestId) { LinkedList() }
+    fun computeResponseExtraInfoList(requestId: NetworkRequestId): MutableList<ResponseReceivedExtraInfo> {
+        return responseReceivedExtraInfoEvents.computeIfAbsent(requestId) { LinkedList() }
     }
 
-    fun deleteResponseExtraInfo(requestId: String) {
-        getResponseExtraInfo(requestId).remove()
+    fun deleteResponseExtraInfo(requestId: NetworkRequestId) {
+        computeResponseExtraInfoList(requestId).removeFirstOrNull()
     }
 
-    fun takeFirstResponseExtraInfo(requestId: String): ResponseReceivedExtraInfo? {
-        return getResponseExtraInfo(requestId).remove()
+    fun takeFirstResponseExtraInfo(requestId: NetworkRequestId): ResponseReceivedExtraInfo? {
+        return computeResponseExtraInfoList(requestId).removeFirstOrNull()
     }
 
 
-    fun addQueuedEventGroup(requestId: String, event: QueuedEventGroup) {
-        queuedEventGroupMap[requestId] = event
+    fun addQueuedEventGroup(requestId: NetworkRequestId, event: QueuedEventGroup) {
+        queuedEventGroups[requestId] = event
     }
 
-    fun getQueuedEventGroup(requestId: String) = queuedEventGroupMap[requestId]
+    fun getQueuedEventGroup(requestId: NetworkRequestId) = queuedEventGroups[requestId]
 
-    fun deleteQueuedEventGroup(requestId: String) {
-        queuedEventGroupMap.remove(requestId)
-    }
-
-    private fun computeQueuedRedirectInfo(requestId: FetchRequestId): Queue<RedirectInfo> {
-        return queuedRedirectInfoMap.computeIfAbsent(requestId) { LinkedList() }
+    fun deleteQueuedEventGroup(requestId: NetworkRequestId) {
+        queuedEventGroups.remove(requestId)
     }
 }

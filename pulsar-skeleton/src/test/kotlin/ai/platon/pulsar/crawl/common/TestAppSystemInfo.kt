@@ -10,24 +10,39 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
-
 class TestAppSystemInfo {
     var sum = 0.0
     var prevTicks = LongArray(TickType.values().size)
+    
+    @Test
+    fun testOSVersionInfo() {
+        val systemInfo = AppSystemInfo.systemInfo ?: return
 
+        val versionInfo = systemInfo.operatingSystem.versionInfo
+        println(versionInfo)
+    }
+    
+    @Test
+    fun testSystemCpuLoad() {
+        val systemCpuLoad = AppSystemInfo.systemCpuLoad
+        assert(systemCpuLoad > 0)
+    }
+    
     @Test
     fun testCPULoad() {
+        val systemInfo = AppSystemInfo.systemInfo ?: return
+        
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate({
             println()
             measureCPU()
         }, 2, 2, TimeUnit.SECONDS)
 
-        val nThreads = AppSystemInfo.systemInfo.hardware.processor.logicalProcessorCount - 2
+        val nThreads = systemInfo.hardware.processor.logicalProcessorCount - 2
         val executor = Executors.newFixedThreadPool(nThreads)
         repeat(nThreads) {
             executor.submit { compute() }
         }
-        executor.awaitTermination(30, TimeUnit.SECONDS)
+        executor.awaitTermination(10, TimeUnit.SECONDS)
         println(sum)
     }
 
@@ -42,7 +57,9 @@ class TestAppSystemInfo {
     }
 
     fun measureCPU() {
-        val processor = AppSystemInfo.systemInfo.hardware.processor
+        val systemInfo = AppSystemInfo.systemInfo ?: return
+        
+        val processor = systemInfo.hardware.processor
 
         val cpuLoad = processor.getSystemCpuLoadBetweenTicks(prevTicks) * 100
         prevTicks = processor.systemCpuLoadTicks

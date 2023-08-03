@@ -710,8 +710,10 @@
         <autolink.version>0.10.0</autolink.version>
         <playwright.version>1.19.0</playwright.version>
 
+        <!-- Required by oshi -->
+        <jna.version>5.13.0</jna.version>
         <!-- oshi bug: https://github.com/oshi/oshi/issues/1289 -->
-        <oshi.version>5.6.1</oshi.version>
+        <oshi.version>6.4.4</oshi.version>
     </properties>
 
 </project>

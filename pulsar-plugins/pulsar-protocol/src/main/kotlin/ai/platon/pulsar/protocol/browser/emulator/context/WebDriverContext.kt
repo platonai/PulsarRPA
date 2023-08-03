@@ -199,8 +199,8 @@ open class WebDriverContext(
         val display = browserId.display
         val message = when {
             AppSystemInfo.isCriticalMemory ->
-                String.format("Low memory (%.2fGiB), close %d retired browsers immediately$isShutdown | $display",
-                    ByteUnit.BYTE.toGiB(AppSystemInfo.availableMemory.toDouble()), runningTasks.size)
+                String.format("Low memory (%s), close %d retired browsers immediately$isShutdown | $display",
+                    AppSystemInfo.formatAvailableMemory(), runningTasks.size)
             n <= 0L -> String.format("Timeout (still %d running tasks)$isShutdown | $display", runningTasks.size)
             n > 0 -> String.format("All tasks return in %d seconds$isShutdown | $display", timeout.seconds - n)
             else -> ""

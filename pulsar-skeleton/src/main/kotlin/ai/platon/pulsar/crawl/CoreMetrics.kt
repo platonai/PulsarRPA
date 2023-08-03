@@ -418,7 +418,7 @@ class CoreMetrics(
         meterTotalNetworkIFsRecvMBytes.mark(totalNetworkIFsRecvBytes / 1024 / 1024)
 
         runningChromeProcesses = Runtimes.countSystemProcess("chrome")
-        usedMemory = AppSystemInfo.usedMemory
+        usedMemory = AppSystemInfo.usedMemory ?: 0
         cpuLoad = AppSystemInfo.systemCpuLoad
     }
 

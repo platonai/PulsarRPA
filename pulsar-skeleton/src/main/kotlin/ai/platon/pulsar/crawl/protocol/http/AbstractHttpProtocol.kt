@@ -124,7 +124,7 @@ abstract class AbstractHttpProtocol: Protocol {
             } catch (e: Exception) {
                 response = null
                 lastThrowable = e
-                log.warn(e.brief("[Unexpected]"))
+                log.warn(e.stringify("[Unexpected]"))
             } catch (t: Throwable) {
                 response = null
                 lastThrowable = t

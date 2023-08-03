@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 
-import ai.platon.pulsar.common.alwaysFalse
 import ai.platon.pulsar.common.event.AbstractEventEmitter
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import ai.platon.pulsar.protocol.browser.driver.cdt.Credentials
 import com.github.kklisura.cdt.protocol.v2023.events.fetch.AuthRequired
@@ -12,13 +12,15 @@ import com.github.kklisura.cdt.protocol.v2023.types.fetch.AuthChallengeResponseR
 import com.github.kklisura.cdt.protocol.v2023.types.fetch.RequestPattern
 import com.github.kklisura.cdt.protocol.v2023.types.network.Response
 import org.slf4j.LoggerFactory
+import java.lang.ref.WeakReference
 import java.util.*
 
 internal class NetworkManager(
         private val driver: ChromeDevtoolsDriver,
         private val rpc: RobustRPC,
 ) : AbstractEventEmitter<NetworkManagerEvents>() {
-    private val logger = LoggerFactory.getLogger(NetworkManager::class.java)!!
+    private val logger = getLogger(this)
+    private val tracer get() = logger.takeIf { it.isTraceEnabled }
     
     val isActive get() = driver.isActive
     
@@ -85,7 +87,7 @@ internal class NetworkManager(
     }
     
     private fun onAuthRequired(event: AuthRequired) {
-        logger.info("onAuthRequired | {}", event.requestId)
+        tracer?.trace("onAuthRequired | {}", event.requestId)
         
         val response = when {
             attemptedAuthentications.contains(event.requestId) -> AuthChallengeResponseResponse.CANCEL_AUTH
@@ -104,7 +106,7 @@ internal class NetworkManager(
     }
     
     private fun onRequestPaused(event: RequestPaused) {
-        logger.info("onRequestPaused | {}", event.requestId)
+        tracer?.trace("onRequestPaused | {}", event.requestId)
         
         if (!userRequestInterceptionEnabled && protocolRequestInterceptionEnabled) {
             rpc.invoke("continueRequest") {
@@ -143,7 +145,7 @@ internal class NetworkManager(
     }
     
     private fun onRequestWillBeSent(event: RequestWillBeSent) {
-        logger.info("onRequestWillBeSent | {}", event.requestId)
+        tracer?.trace("onRequestWillBeSent | {}", event.requestId)
         // Request interception doesn't happen for data URLs with Network Service.
         
         val url = event.request.url
@@ -169,15 +171,15 @@ internal class NetworkManager(
     }
     
     private fun onRequestWillBeSentExtraInfo(event: RequestWillBeSentExtraInfo) {
-        networkEventManager.addRequestWillBeSentExtraInfo(event)
+        networkEventManager.addRequestWillBeSentExtraInfoEvent(event)
     }
     
     private fun onRequest(event: RequestWillBeSent, fetchRequestId: String?) {
         val requestId = event.requestId
         
-        logger.info("onRequest | {}", requestId)
+        tracer?.trace("onRequest | {}", requestId)
         
-        var redirectChain: Queue<CDPRequest> = LinkedList()
+        var redirectChain: Queue<WeakReference<CDPRequest>> = LinkedList()
         if (event.redirectResponse != null) {
             // We want to emit a response and RequestFinished for the
             // redirectResponse, but we can't do so unless we have a
@@ -187,19 +189,17 @@ internal class NetworkManager(
             // also wait to emit this Request too because it should come after the
             // response/RequestFinished.
             var redirectResponseExtraInfo: ResponseReceivedExtraInfo? = null
-            // TODO: event.redirectHasExtraInfo should exist, we might need upgrade the version of CDP
-            // val redirectHasExtraInfo = event.redirectHasExtraInfo
-            val redirectHasExtraInfo2 = alwaysFalse()
-            if (redirectHasExtraInfo2) {
+            if (event.redirectHasExtraInfo) {
                 // take the first element from the queue and remove it.
                 redirectResponseExtraInfo = networkEventManager.takeFirstResponseExtraInfo(requestId)
                 if (redirectResponseExtraInfo == null) {
-                    networkEventManager.queueRedirectInfo(requestId, RedirectInfo(event, fetchRequestId))
+                    networkEventManager.queueRedirectInfoEvent(requestId, RedirectInfo(event, fetchRequestId))
                     return
                 }
             }
             
-            val request = networkEventManager.getRequest(requestId)
+            val request = networkEventManager.getCDPRequest(requestId)
+            // If we connect late to the target, we could have missed the requestWillBeSent event.
             if (request != null) {
                 handleRequestRedirect(request, event.redirectResponse, redirectResponseExtraInfo)
                 redirectChain = request.redirectChain
@@ -210,7 +210,8 @@ internal class NetworkManager(
         val frame = event.frameId
         
         require(requestId == event.requestId) { "Inconsistent request id: <${event.requestId}> <- <$requestId>" }
-        val request = CDPRequest(driver, requestId, event.request, fetchRequestId, userRequestInterceptionEnabled, redirectChain)
+        val allowInterception = userRequestInterceptionEnabled
+        val request = CDPRequest(driver, requestId, event.request, fetchRequestId, allowInterception, redirectChain)
         request.also {
             it.loaderId = event.loaderId
             it.documentURL = event.documentURL
@@ -225,72 +226,46 @@ internal class NetworkManager(
     }
     
     private fun onRequestServedFromCache(event: RequestServedFromCache) {
-        logger.info("onRequestServedFromCache | {}", event.requestId)
-        val request = networkEventManager.getRequest(event.requestId)
-        if (request != null) {
-            request.fromMemoryCache = true
-        }
+        tracer?.trace("onRequestServedFromCache | {}", event.requestId)
+        val request = networkEventManager.getCDPRequest(event.requestId)
+        request?.fromMemoryCache = true
         
         emit(NetworkManagerEvents.RequestServedFromCache, request)
     }
-    
+
     private fun onResponseReceived(event: ResponseReceived) {
         val requestId = event.requestId
-        
-        logger.info("onResponseReceived | {}", requestId)
+
+        tracer?.trace("onResponseReceived | {}", requestId)
         var extraInfo: ResponseReceivedExtraInfo? = null
-        val request = networkEventManager.getRequest(requestId)
-        // TODO: upgrade our CDP
-//        val hasExtraInfo = event.hasExtraInfo
-        val hasExtraInfo = alwaysFalse()
-        if (request != null && !request.fromMemoryCache && hasExtraInfo) {
+        val request = networkEventManager.getCDPRequest(requestId)
+        if (request != null && !request.fromMemoryCache && event.hasExtraInfo) {
             extraInfo = networkEventManager.takeFirstResponseExtraInfo(requestId)
             if (extraInfo == null) {
                 networkEventManager.addQueuedEventGroup(requestId, QueuedEventGroup(event))
                 return
             }
         }
-        
+
         emitResponseEvent(event, extraInfo)
     }
-    
-    private fun onLoadingFinished(event: LoadingFinished) {
-        val requestId = event.requestId
-        logger.info("onLoadingFinished | {}", event.requestId)
-        
-        val queuedEventGroup =networkEventManager.getQueuedEventGroup(requestId)
-        if (queuedEventGroup != null) {
-            queuedEventGroup.loadingFinishedEvent = event
-        } else {
-            emitLoadingFinished(event)
-        }
-    }
-    
-    private fun onLoadingFailed(event: LoadingFailed) {
-        val requestId = event.requestId
-        logger.info("onLoadingFailed | {}", event.requestId)
-        
-        // If the response event for this request is still waiting on a
-        // corresponding ExtraInfo event, then wait to emit this event too.
-        val queuedEventGroup = networkEventManager.getQueuedEventGroup(requestId)
-        if (queuedEventGroup != null) {
-            queuedEventGroup.loadingFailedEvent = event
-        } else {
-            emitLoadingFailed(event)
-        }
-    }
-    
+
     private fun onResponseReceivedExtraInfo(event: ResponseReceivedExtraInfo) {
         val requestId = event.requestId
-        logger.info("onResponseReceivedExtraInfo | {}", event.requestId)
-        
-        val info: RedirectInfo? = networkEventManager.takeFirstQueuedRedirectInfo(requestId)
-        if (info != null) {
-            networkEventManager.addResponseExtraInfo(requestId, event)
-            onRequest(info.event, info.fetchRequestId)
+        tracer?.trace("onResponseReceivedExtraInfo | {}", event.requestId)
+
+        // We may have skipped a redirect response/request pair due to waiting for
+        // this ExtraInfo event. If so, continue that work now that we have the
+        // request.
+        val redirectInfo: RedirectInfo? = networkEventManager.takeFirstRedirectInfoEvent(requestId)
+        if (redirectInfo != null) {
+            networkEventManager.addResponseExtraInfoEvent(requestId, event)
+            onRequest(redirectInfo.event, redirectInfo.fetchRequestId)
             return
         }
-        
+
+        // We may have skipped response and loading events because we didn't have
+        // this ExtraInfo event yet. If so, emit those events now.
         val queuedEvents = networkEventManager.getQueuedEventGroup(requestId)
         if (queuedEvents != null) {
             networkEventManager.deleteQueuedEventGroup(requestId)
@@ -300,7 +275,7 @@ internal class NetworkManager(
             return
         }
         
-        networkEventManager.addResponseExtraInfo(requestId, event)
+        networkEventManager.addResponseExtraInfoEvent(requestId, event)
     }
     
     private fun patchRequestEventHeaders(requestWillBeSent: RequestWillBeSent, requestPaused: RequestPaused) {
@@ -326,8 +301,8 @@ internal class NetworkManager(
     
     private fun emitResponseEvent(event: ResponseReceived, extraInfo: ResponseReceivedExtraInfo?) {
         val requestId = event.requestId
-        val request = networkEventManager.getRequest(requestId) ?: return
-        val extraInfos = networkEventManager.getResponseExtraInfo(requestId)
+        val request = networkEventManager.getCDPRequest(requestId) ?: return
+        val extraInfos = networkEventManager.computeResponseExtraInfoList(requestId)
         if (extraInfos.isNotEmpty()) {
             logger.warn("Unexpected extraInfo events for request | {}", requestId)
         }
@@ -347,11 +322,11 @@ internal class NetworkManager(
     }
     
     private fun handleRequestRedirect(
-            request: CDPRequest, responsePayload: Response, extraInfo: ResponseReceivedExtraInfo?
+            request: CDPRequest, underlyingResponse: Response, extraInfo: ResponseReceivedExtraInfo?
     ) {
-        val response = CDPResponse(driver, request, responsePayload, extraInfo)
+        val response = CDPResponse(driver, request, underlyingResponse, extraInfo)
         request.response = response
-        request.redirectChain.add(request)
+        request.redirectChain.add(WeakReference(request))
 //        response._resolveBody(
 //                new Error('Response body is unavailable for redirect responses')
 //        );
@@ -359,20 +334,6 @@ internal class NetworkManager(
         
         emit(NetworkManagerEvents.Response, response)
         emit(NetworkManagerEvents.RequestFinished, request)
-    }
-    
-    private fun forgetRequest(request: CDPRequest, events: Boolean) {
-        val requestId = request.requestId
-        val interceptionId = request.interceptionId
-        
-        networkEventManager.removeRequest(requestId)
-        if (interceptionId != null) {
-            attemptedAuthentications.remove(interceptionId)
-        }
-        
-        if (events) {
-            networkEventManager.forget(requestId)
-        }
     }
     
     private fun updateProtocolRequestInterception() {
@@ -393,16 +354,42 @@ internal class NetworkManager(
         }
     }
     
+    private fun forgetRequest(request: CDPRequest, removeEvents: Boolean) {
+        val requestId = request.requestId
+        val interceptionId = request.interceptionId
+        
+        networkEventManager.removeRequest(requestId)
+        if (interceptionId != null) {
+            attemptedAuthentications.remove(interceptionId)
+        }
+        
+        if (removeEvents) {
+            networkEventManager.removeAll(requestId)
+        }
+    }
+    
     private fun updateProtocolCacheDisabled() {
         rpc.invoke("setCacheDisabled") {
             networkAPI?.setCacheDisabled(this.userCacheDisabled)
         }
     }
     
+    private fun onLoadingFinished(event: LoadingFinished) {
+        val requestId = event.requestId
+        tracer?.trace("onLoadingFinished | {}", event.requestId)
+        
+        val queuedEventGroup =networkEventManager.getQueuedEventGroup(requestId)
+        if (queuedEventGroup != null) {
+            queuedEventGroup.loadingFinishedEvent = event
+        } else {
+            emitLoadingFinished(event)
+        }
+    }
+    
     private fun emitLoadingFinished(event: LoadingFinished) {
         // For certain requestIds we never receive requestWillBeSent event.
         // @see https://crbug.com/750469
-        val request = networkEventManager.getRequest(event.requestId) ?: return
+        val request = networkEventManager.getCDPRequest(event.requestId) ?: return
 
         // Under certain conditions we never get the Network.responseReceived
         // event from protocol. @see https://crbug.com/883475
@@ -411,10 +398,24 @@ internal class NetworkManager(
         forgetRequest(request, true);
         emit(NetworkManagerEvents.RequestFinished, request);
     }
-
+    
+    private fun onLoadingFailed(event: LoadingFailed) {
+        val requestId = event.requestId
+        tracer?.trace("onLoadingFailed | {}", event.requestId)
+        
+        // If the response event for this request is still waiting on a
+        // corresponding ExtraInfo event, then wait to emit this event too.
+        val queuedEventGroup = networkEventManager.getQueuedEventGroup(requestId)
+        if (queuedEventGroup != null) {
+            queuedEventGroup.loadingFailedEvent = event
+        } else {
+            emitLoadingFailed(event)
+        }
+    }
+    
     private fun emitLoadingFailed(event: LoadingFailed) {
         val requestId = event.requestId
-        val request = networkEventManager.getRequest(requestId) ?: return
+        val request = networkEventManager.getCDPRequest(requestId) ?: return
         // For certain requestIds we never receive requestWillBeSent event.
         // @see https://crbug.com/750469
         request.failureText = event.errorText

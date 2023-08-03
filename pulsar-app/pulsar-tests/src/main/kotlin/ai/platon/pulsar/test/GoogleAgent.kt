@@ -13,7 +13,6 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.context.MultiPrivacyContextManager
 import ai.platon.pulsar.ql.context.SQLContexts
-import com.github.kklisura.cdt.protocol.v2023.commands.Browser
 import org.apache.http.client.utils.URIBuilder
 import java.time.Duration
 import java.time.Instant
@@ -21,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class GoogleAgent {
     private val logger = getLogger(this)
-    private val args = "-i 7s -parse"
+    private val args = "-i 7s -parse -refresh"
     private val googleBaseUrl = "https://www.google.com"
     private val submittedDegeneratedLinks = AtomicInteger()
     private val submittedSearchTasks = AtomicInteger()

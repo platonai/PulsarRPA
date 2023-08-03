@@ -8,6 +8,7 @@ import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.v2023.types.network.Initiator
 import com.github.kklisura.cdt.protocol.v2023.types.network.Request
 import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
+import java.lang.ref.WeakReference
 import java.util.*
 
 class CDPRequest(
@@ -27,7 +28,7 @@ class CDPRequest(
 
         val allowInterception: Boolean = false,
 
-        val redirectChain: Queue<CDPRequest> = LinkedList()
+        val redirectChain: Queue<WeakReference<CDPRequest>> = LinkedList()
 ) {
     /**
      * Loader identifier. Empty string if the request is fetched from worker.
