@@ -143,7 +143,12 @@ class AppSystemInfo {
             
             return isOSHIAvailable
         }
-        
+
+        fun networkIFsReceivedBytes(): Long {
+            val si = systemInfo ?: return -1
+            return si.hardware.networkIFs.sumOf { it.bytesRecv.toInt() }.toLong().coerceAtLeast(0)
+        }
+
         private fun handleOSHINotAvailable() {
             val path = Files.createTempFile("system.properties", ".txt")
             try {

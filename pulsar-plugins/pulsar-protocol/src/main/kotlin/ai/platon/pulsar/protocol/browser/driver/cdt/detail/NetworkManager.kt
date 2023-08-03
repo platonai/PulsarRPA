@@ -148,6 +148,8 @@ internal class NetworkManager(
         tracer?.trace("onRequestWillBeSent | {}", event.requestId)
         // Request interception doesn't happen for data URLs with Network Service.
         
+        emit(NetworkManagerEvents.RequestWillBeSent, event)
+        
         val url = event.request.url
         val intercept = userRequestInterceptionEnabled && !url.startsWith("data:")
         if (!intercept) {
@@ -246,6 +248,8 @@ internal class NetworkManager(
                 return
             }
         }
+        
+        emit(NetworkManagerEvents.ResponseReceived, event)
 
         emitResponseEvent(event, extraInfo)
     }
@@ -304,7 +308,7 @@ internal class NetworkManager(
         val request = networkEventManager.getCDPRequest(requestId) ?: return
         val extraInfos = networkEventManager.computeResponseExtraInfoList(requestId)
         if (extraInfos.isNotEmpty()) {
-            logger.warn("Unexpected extraInfo events for request | {}", requestId)
+            logger.debug("Unexpected extraInfo events for request | {} events | {}", extraInfos.size, requestId)
         }
         
         var extraInfo0 = extraInfo
@@ -395,8 +399,8 @@ internal class NetworkManager(
         // event from protocol. @see https://crbug.com/883475
         request.response?.resolveBody(null)
         
-        forgetRequest(request, true);
-        emit(NetworkManagerEvents.RequestFinished, request);
+        forgetRequest(request, true)
+        emit(NetworkManagerEvents.RequestFinished, request)
     }
     
     private fun onLoadingFailed(event: LoadingFailed) {

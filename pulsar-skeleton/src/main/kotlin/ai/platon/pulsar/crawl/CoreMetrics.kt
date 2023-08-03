@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.session.AbstractPulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
 import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
@@ -19,10 +18,10 @@ import ai.platon.pulsar.crawl.fetch.UrlStat
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.session.AbstractPulsarSession
 import com.codahale.metrics.Gauge
 import com.google.common.collect.ConcurrentHashMultiset
 import org.slf4j.LoggerFactory
-import oshi.SystemInfo
 import java.net.MalformedURLException
 import java.nio.file.Files
 import java.time.Duration
@@ -78,12 +77,6 @@ class CoreMetrics(
     private val logger = LoggerFactory.getLogger(CoreMetrics::class.java)!!
     val groupMode = conf.getEnum(PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     val maxHostFailureEvents = conf.getInt(FETCH_MAX_HOST_FAILURES, 20)
-    private val systemInfo = SystemInfo()
-
-    // Exception on Windows 11:
-    // Caused by: java.lang.IllegalStateException: Unmapped relationship: 7
-    //	at com.sun.jna.platform.win32.WinNT$SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX.fromPointer(WinNT.java:3033)
-//    private val processor = systemInfo.hardware.processor
 
     /**
      * The limitation of url length
@@ -151,9 +144,7 @@ class CoreMetrics(
     val pageSmallTexts = registry.histogram(this, "pageSmallTexts")
     val pageHeights = registry.histogram(this, "pageHeights")
 
-    val realTimeNetworkIFsRecvBytes
-        get() = systemInfo.hardware.networkIFs.sumOf { it.bytesRecv.toInt() }
-            .toLong().coerceAtLeast(0)
+    val realTimeNetworkIFsRecvBytes get() = AppSystemInfo.networkIFsReceivedBytes()
 
     /**
      * The total all bytes received by the hardware at the application startup
@@ -163,7 +154,6 @@ class CoreMetrics(
     /**
      * The total all bytes received by the hardware last read from system
      * */
-    @Volatile
     var totalNetworkIFsRecvBytes = 0L
 
     /**
@@ -413,8 +403,7 @@ class CoreMetrics(
         }
         lastSystemInfoRefreshTime = currentTimeMillis
 
-        totalNetworkIFsRecvBytes = systemInfo.hardware.networkIFs.sumOf { it.bytesRecv.toInt() }.toLong()
-            .coerceAtLeast(totalNetworkIFsRecvBytes)
+        totalNetworkIFsRecvBytes = AppSystemInfo.networkIFsReceivedBytes().coerceAtLeast(totalNetworkIFsRecvBytes)
         meterTotalNetworkIFsRecvMBytes.mark(totalNetworkIFsRecvBytes / 1024 / 1024)
 
         runningChromeProcesses = Runtimes.countSystemProcess("chrome")

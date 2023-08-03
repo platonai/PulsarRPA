@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.protocol.browser.driver.SessionLostException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
@@ -14,7 +15,7 @@ import kotlin.jvm.Throws
 internal class RobustRPC(
     private val driver: ChromeDevtoolsDriver
 ) {
-    private val logger = LoggerFactory.getLogger(RobustRPC::class.java)!!
+    private val logger = getLogger(this)
 
     val isActive get() = driver.isActive
 

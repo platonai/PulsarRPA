@@ -129,10 +129,6 @@ class NetworkEventManager {
         return responseReceivedExtraInfoEvents.computeIfAbsent(requestId) { LinkedList() }
     }
 
-    fun deleteResponseExtraInfo(requestId: NetworkRequestId) {
-        computeResponseExtraInfoList(requestId).removeFirstOrNull()
-    }
-
     fun takeFirstResponseExtraInfo(requestId: NetworkRequestId): ResponseReceivedExtraInfo? {
         return computeResponseExtraInfoList(requestId).removeFirstOrNull()
     }

@@ -92,9 +92,10 @@ class EventDispatcher : Consumer<String> {
     }
 
     private val logger = LoggerFactory.getLogger(EventDispatcher::class.java)
+    
+    private val tracer get() = logger.takeIf { it.isTraceEnabled }
 
     private val invocationFutures: MutableMap<Long, InvocationFuture> = ConcurrentHashMap()
-//    private val eventListeners: MutableMap<String, MutableSet<DevToolsEventListener>> = mutableMapOf()
     private val eventListeners: ConcurrentHashMap<String, ConcurrentSkipListSet<DevToolsEventListener>> = ConcurrentHashMap()
 
     private val eventDispatcherScope = CoroutineScope(Dispatchers.Default) + CoroutineName("EventDispatcher")
@@ -156,7 +157,7 @@ class EventDispatcher : Consumer<String> {
     }
 
     override fun accept(message: String) {
-        logger.takeIf { it.isTraceEnabled }?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
+        tracer?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
 
         DevToolsImpl.numAccepts.inc()
         try {

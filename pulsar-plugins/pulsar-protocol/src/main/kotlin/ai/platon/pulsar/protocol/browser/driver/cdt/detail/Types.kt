@@ -7,7 +7,7 @@ import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceived
 import com.github.kklisura.cdt.protocol.v2023.types.fetch.HeaderEntry
 
 enum class NetworkManagerEvents {
-    Request, RequestServedFromCache, Response, RequestFailed, RequestFinished
+    Request, RequestWillBeSent, RequestServedFromCache, Response, ResponseReceived, RequestFailed, RequestFinished
 }
 
 enum class InterceptResolutionAction(val action: String) {

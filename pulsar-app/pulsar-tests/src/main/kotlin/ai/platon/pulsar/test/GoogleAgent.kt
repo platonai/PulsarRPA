@@ -70,13 +70,9 @@ class GoogleAgent {
             initProxies()
         }
 
-        println("================")
-        println(privacyContextManager::class)
-        println(privacyContextManager.proxyPoolManager?.javaClass)
-
         val async = false
-        val businessNames = ResourceLoader.readAllLines("entity/business.names.com.txt")
-                .take(5)
+        val limit = 20
+        val businessNames = ResourceLoader.readAllLines("entity/business.names.com.txt").take(limit)
         val contactNames = listOf("Email", "Phone", "Facebook")
         businessNames.forEach { businessName ->
             contactNames.forEach { contactName ->
@@ -103,6 +99,9 @@ class GoogleAgent {
         val le = options.event.loadEvent
 
         be.onDocumentActuallyReady.addLast { page, driver ->
+            val texts = driver.allTexts("h3")
+            println(page.url)
+            println(texts)
         }
 
         le.onHTMLDocumentParsed.addLast { page, document ->

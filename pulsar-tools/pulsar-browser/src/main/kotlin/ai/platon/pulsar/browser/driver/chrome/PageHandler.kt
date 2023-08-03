@@ -115,8 +115,6 @@ class PageHandler(
 
         val exception = evaluate?.exceptionDetails?.exception
         if (exception != null) {
-//            logger.warn(exception.value?.toString())
-//            logger.warn(exception.unserializableValue)
             logger.info(exception.description + "\n>>>$expression<<<")
         }
 
