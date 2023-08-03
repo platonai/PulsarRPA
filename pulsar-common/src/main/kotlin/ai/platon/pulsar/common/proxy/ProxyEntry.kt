@@ -11,6 +11,7 @@ import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Proxy
+import java.net.URI
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
@@ -22,7 +23,7 @@ import java.util.concurrent.atomic.AtomicReference
 enum class ProxyType {
     HTTP, SOCKS4, SOCKS5;
 
-    val schema get() = this.toString().lowercase()
+    val protocol get() = this.toString().lowercase()
 }
 
 class ProxyEntry(
@@ -35,49 +36,53 @@ class ProxyEntry(
          * */
         var port: Int = 0,
         /**
-         * The out ip which will be seen by the target site
-         * */
-        var outIp: String = "",
-        /**
-         * The proxy entry id, it's unique in the process scope
-         * */
-        var id: Int = instanceSequence.incrementAndGet(),
-        /**
-         * The time to live of the proxy entry declared by the proxy vendor
-         * */
-        var declaredTTL: Instant? = null,
-        /**
-         * The last target url
-         * */
-        var lastTarget: String? = null,
-        /**
-         * The test urls
-         * */
-        var testUrls: List<URL> = TEST_URLS.toList(),
-        /**
-         * The default test url
-         * */
-        var defaultTestUrl: URL = DEFAULT_TEST_URL,
-        /**
-         * Check if the proxy is used for test
-         * */
-        var isTestIp: Boolean = false,
-        /**
-         * The proxy type
-         * */
-        var proxyType: ProxyType = ProxyType.HTTP,
-        /**
          * The username
          * */
         var username: String? = null,
         /**
          * The password
          * */
-        var password: String? = null
+        var password: String? = null,
+        /**
+         * The proxy type
+         * */
+        var proxyType: ProxyType = ProxyType.HTTP,
+        /**
+         * The time to live of the proxy entry declared by the proxy vendor
+         * */
+        var declaredTTL: Instant? = null
 ): Comparable<ProxyEntry> {
     enum class Status { FREE, WORKING, RETIRED, EXPIRED, GONE }
-
+    
+    /**
+     * The proxy entry id, it's unique in the process scope
+     * */
+    var id: Int = instanceSequence.incrementAndGet()
+    
+    /**
+     * The out ip which will be seen by the target site
+     * */
+    var outIp: String = ""
+    /**
+     * The last target url
+     * */
+    var lastTarget: String? = null
+    /**
+     * The test urls
+     * */
+    var testUrls: List<URL> = TEST_URLS.toList()
+    /**
+     * The default test url
+     * */
+    var defaultTestUrl: URL = DEFAULT_TEST_URL
+    /**
+     * Check if the proxy is used for test
+     * */
+    var isTestIp: Boolean = false
+    
+    val protocol get() = proxyType.protocol
     val hostPort get() = "$host:$port"
+
     val segment get() = host.substringBeforeLast(".")
     val outSegment get() = outIp.substringBeforeLast(".")
     val startTime = Instant.now()
@@ -136,6 +141,8 @@ class ProxyEntry(
         val isOK get() = this == OK
         val isBanned get() = !isOK
     }
+    
+    fun toURI() = URI(protocol, "$username:$password", host, port, null, null, null)
 
     fun willExpireAt(instant: Instant): Boolean = ttl < instant
 
@@ -174,7 +181,7 @@ class ProxyEntry(
         // first, check TCP network is reachable, this is fast
         var available = NetUtil.testTcpNetwork(host, port, timeout)
         if (available) {
-            // second, the destination web site is reachable through this proxy
+            // second, the destination website is reachable through this proxy
             val addr = InetSocketAddress(host, port)
             val proxy = Proxy(Proxy.Type.HTTP, addr)
 
@@ -275,9 +282,9 @@ class ProxyEntry(
 
         private val instanceSequence = AtomicInteger()
         private const val META_DELIMITER = StringUtils.SPACE
-        // Check if the proxy server is still available if it's not used for 60 seconds
-        private val PROXY_EXPIRED = Duration.ofSeconds(60)
-        // if a proxy server can not be connected in a hour, we announce it's dead and remove it from the file
+        // Check if the proxy server is still available if it's not used for 120 seconds
+        private val PROXY_EXPIRED = Duration.ofSeconds(120)
+        // if a proxy server can not be connected in an hour, we announce it's dead and remove it from the file
         private val MISSING_PROXY_DEAD_TIME = Duration.ofHours(1)
         private const val DEFAULT_PROXY_SERVER_PORT = 80
         const val PROXY_TEST_WEB_SITES_FILE = "proxy.test.web.sites.txt"
@@ -329,7 +336,7 @@ class ProxyEntry(
                     }
                 }
 
-                val proxyEntry = ProxyEntry(host, port, declaredTTL = ttl, username = username, password = password)
+                val proxyEntry = ProxyEntry(host, port, username, password, declaredTTL = ttl)
                 availableTime?.let { proxyEntry.availableTime = it }
                 return proxyEntry
             }

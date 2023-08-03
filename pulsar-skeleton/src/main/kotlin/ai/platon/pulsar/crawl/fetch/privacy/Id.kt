@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.readableClassName
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
@@ -139,7 +140,7 @@ typealias PrivacyContextId = PrivacyAgent
  *
  * Every browser instance have a unique fingerprint and a context directory.
  * */
-data class BrowserId constructor(
+data class BrowserId(
     val contextDir: Path,
     val fingerprint: Fingerprint,
 ): Comparable<BrowserId> {
@@ -164,7 +165,13 @@ data class BrowserId constructor(
     constructor(privacyAgent: PrivacyAgent): this(privacyAgent.contextDir, privacyAgent.fingerprint)
 
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
-
+    
+    fun setProxy(schema: String, hostPort: String, username: String?, password: String?) {
+        fingerprint.setProxy(schema, hostPort, username, password)
+    }
+    
+    fun setProxy(proxy: ProxyEntry) = fingerprint.setProxy(proxy)
+    
     override fun equals(other: Any?): Boolean {
         return other is BrowserId && other.privacyAgent == privacyAgent
     }

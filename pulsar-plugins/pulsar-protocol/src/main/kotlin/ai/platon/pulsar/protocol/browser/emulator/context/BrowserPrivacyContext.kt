@@ -151,18 +151,8 @@ open class BrowserPrivacyContext constructor(
         }
 
         try {
-            val pc = ProxyContext.create(privacyAgent, driverContext, proxyPoolManager, conf)
-            val pe = pc.proxyEntry
-            if (pe != null) {
-                val proxyServer = if (pe.proxyType == ProxyType.HTTP) pe.hostPort else pe.proxyType.schema + "://" + pe.hostPort
-                browserId.fingerprint.proxyServer = proxyServer
-                if (!pe.username.isNullOrBlank()) {
-                    browserId.fingerprint.proxyUsername = pe.username
-                    browserId.fingerprint.proxyPassword = pe.password
-                }
-            }
-            proxyEntry = pe
-            proxyContext = pc
+            proxyContext = ProxyContext.create(privacyAgent, driverContext, proxyPoolManager, conf)
+            proxyEntry = proxyContext?.proxyEntry?.also { browserId.setProxy(it) }
             coreMetrics?.proxies?.mark()
         } catch (e: ProxyException) {
             logger.warn(e.brief("Failed to create proxy context - "))

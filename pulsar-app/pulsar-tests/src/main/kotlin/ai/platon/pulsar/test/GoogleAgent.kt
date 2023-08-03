@@ -48,7 +48,7 @@ class GoogleAgent {
                 .filter { !it.startsWith("// ") }
                 .map { it.split(":") }
                 .filter { it.size == 4 }
-                .map { l -> ProxyEntry(l[0].trim(), l[1].trim().toInt()).also { it.username = l[2].trim(); it.password = l[3].trim() } }
+                .map { ProxyEntry(it[0].trim(), it[1].trim().toInt(), it[2], it[3]) }
                 .onEach { it.proxyType = ProxyType.SOCKS5 }
                 .onEach { it.declaredTTL = Instant.now() + Duration.ofDays(30) }
         proxies.forEach {

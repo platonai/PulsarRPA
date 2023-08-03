@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyType
 import ai.platon.pulsar.common.urls.UrlUtils
 import org.junit.Test
 import java.net.URL
@@ -11,21 +12,23 @@ import kotlin.test.assertTrue
 /**
  * Created by vincent on 17-1-14.
  */
-class TestProxy {
-
+class TestProxyEntry {
+    
     @Test
-    fun testProxyEntry() {
+    fun testProxySchema() {
+        val proxy = ProxyEntry("127.0.0.1", 10808, "abc", "abc", ProxyType.SOCKS5)
+        // println(proxy.toURI())
+        assertEquals("socks5", proxy.protocol)
+        assertEquals("socks5://abc:abc@127.0.0.1:10808", proxy.toURI().toString())
+    }
+    
+    @Test
+    fun testTestUrls() {
         ResourceLoader
                 .readAllLines(ProxyEntry.PROXY_TEST_WEB_SITES_FILE)
                 .mapNotNullTo(ProxyEntry.TEST_URLS) { UrlUtils.getURLOrNull(it) }
         assertTrue(ProxyEntry.TEST_URLS.isNotEmpty())
         assertTrue(URL("http://www.dongqiudi.com") in ProxyEntry.TEST_URLS)
-//        ResourceLoader.readAllLines(ProxyEntry.PROXY_TEST_WEB_SITES_FILE).mapNotNullTo(ProxyEntry.TEST_URLS) { Urls.getURLOrNull(it) }
-//        ProxyEntry.TEST_URLS.forEach { println(it) }
-
-//        println("hello")
-//        val testProxy = ProxyEntry("117.90.220.193", 4216)
-//        println(testProxy)
     }
 
     @Test
@@ -45,7 +48,7 @@ class TestProxy {
     fun testParsingProxyEntryWithAuth() {
         val proxies = mapOf(
                 "58.218.200.226:6008 at:2019-08-24T15:34:28.255Z, ttl:2019-08-24T16:31:24.215Z, usr:abc, pwd:123" to
-                        createProxyEntry("58.218.200.226", 6008, "abc", "123"),
+                        ProxyEntry("58.218.200.226", 6008, "abc", "123"),
         )
 
         proxies.forEach { (proxyString, expected) ->
@@ -57,9 +60,5 @@ class TestProxy {
             assertEquals(expected.password, actual.password)
             assertEquals(expected, actual)
         }
-    }
-
-    private fun createProxyEntry(host: String, port: Int, username: String, password: String): ProxyEntry {
-        return ProxyEntry(host, port).also { it.username = username; it.password = password }
     }
 }

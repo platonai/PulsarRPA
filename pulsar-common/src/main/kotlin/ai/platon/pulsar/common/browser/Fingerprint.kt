@@ -1,5 +1,7 @@
 package ai.platon.pulsar.common.browser
 
+import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyType
 import org.apache.commons.collections4.ComparatorUtils
 
 /**
@@ -17,7 +19,17 @@ data class Fingerprint(
     private val comp = ComparatorUtils.nullLowComparator {
             o1: String, o2: String -> o1.compareTo(o2)
     }
-
+    
+    fun setProxy(protocol: String, hostPort: String, username: String?, password: String?) {
+        proxyServer = if (protocol == "http") hostPort else "$protocol://$hostPort"
+        if (!username.isNullOrBlank()) {
+            proxyUsername = username
+            proxyPassword = password
+        }
+    }
+    
+    fun setProxy(proxy: ProxyEntry) = setProxy(proxy.protocol, proxy.hostPort, proxy.username, proxy.password)
+    
     override fun compareTo(other: Fingerprint): Int {
         var r = browserType.compareTo(other.browserType)
         if (r != 0) {
