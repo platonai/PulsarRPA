@@ -129,6 +129,10 @@ data class PrivacyAgent(
          * after the browser closes.
          * */
         val DEFAULT = PrivacyAgent(PrivacyContext.DEFAULT_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
+        /**
+         * The random privacy agent opens browser with a random data dir.
+         * */
+        val RANDOM get() = PrivacyAgent(PrivacyContext.RANDOM_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
     }
 }
 
@@ -197,6 +201,10 @@ data class BrowserId(
          * Represent the prototype browser.
          * */
         val PROTOTYPE = BrowserId(PrivacyAgent.PROTOTYPE)
+        /**
+         * Represent a browser with random context dir.
+         * */
+        val RANDOM get() = BrowserId(PrivacyAgent.RANDOM)
     }
 }
 
@@ -237,7 +245,6 @@ class PrototypePrivacyContextIdGenerator: PrivacyContextIdGenerator {
 
 class SequentialPrivacyContextIdGenerator: PrivacyContextIdGenerator {
     companion object {
-        /** The root directory of privacy contexts, every context have its own directory in this fold */
         private val sequencer = AtomicInteger()
     }
 

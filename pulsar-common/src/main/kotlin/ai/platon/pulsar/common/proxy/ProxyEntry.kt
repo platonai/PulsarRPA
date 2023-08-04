@@ -20,12 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
-enum class ProxyType {
-    HTTP, SOCKS4, SOCKS5;
-
-    val protocol get() = this.toString().lowercase()
-}
-
 class ProxyEntry(
         /**
          * The host of the proxy server
@@ -46,7 +40,7 @@ class ProxyEntry(
         /**
          * The proxy type
          * */
-        var proxyType: ProxyType = ProxyType.HTTP,
+        var proxyType: Proxy.Type = Proxy.Type.HTTP,
         /**
          * The time to live of the proxy entry declared by the proxy vendor
          * */
@@ -80,7 +74,11 @@ class ProxyEntry(
      * */
     var isTestIp: Boolean = false
     
-    val protocol get() = proxyType.protocol
+    val protocol get() = when (proxyType) {
+        Proxy.Type.HTTP -> "http"
+        Proxy.Type.SOCKS -> "socks"
+        else -> ""
+    }
     val hostPort get() = "$host:$port"
 
     val segment get() = host.substringBeforeLast(".")
@@ -159,6 +157,10 @@ class ProxyEntry(
         lastActiveTime = availableTime
     }
 
+    fun canConnect(): Boolean {
+        return NetUtil.testTcpNetwork(host, port)
+    }
+    
     fun test(): Boolean {
         val target = if (lastTarget != null) {
             URL(lastTarget)

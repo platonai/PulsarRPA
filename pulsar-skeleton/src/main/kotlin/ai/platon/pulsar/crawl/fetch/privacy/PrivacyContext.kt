@@ -15,6 +15,7 @@ import ai.platon.pulsar.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.RetryScope
 import com.google.common.annotations.Beta
+import org.apache.commons.lang.RandomStringUtils
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -51,6 +52,8 @@ abstract class PrivacyContext(
         val USER_DEFAULT_DATA_DIR_PLACEHOLDER = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
         // The default context directory, if you need a semi-permanent context, use this one
         val DEFAULT_CONTEXT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
+        // A random context directory, if you need a random temporary context, use this one
+        val RANDOM_CONTEXT_DIR get() = AppPaths.CONTEXT_TMP_DIR.resolve(RandomStringUtils.randomAlphabetic(6))
         // The prototype context directory, all privacy contexts copies browser data from the prototype.
         // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
         val PROTOTYPE_DATA_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE

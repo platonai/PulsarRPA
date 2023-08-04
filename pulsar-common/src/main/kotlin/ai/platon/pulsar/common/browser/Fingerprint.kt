@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common.browser
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyType
 import org.apache.commons.collections4.ComparatorUtils
 
 /**

@@ -1,9 +1,9 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyType
 import ai.platon.pulsar.common.urls.UrlUtils
 import org.junit.Test
+import java.net.Proxy
 import java.net.URL
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -16,7 +16,7 @@ class TestProxyEntry {
     
     @Test
     fun testProxySchema() {
-        val proxy = ProxyEntry("127.0.0.1", 10808, "abc", "abc", ProxyType.SOCKS5)
+        val proxy = ProxyEntry("127.0.0.1", 10808, "abc", "abc", Proxy.Type.SOCKS)
         // println(proxy.toURI())
         assertEquals("socks5", proxy.protocol)
         assertEquals("socks5://abc:abc@127.0.0.1:10808", proxy.toURI().toString())

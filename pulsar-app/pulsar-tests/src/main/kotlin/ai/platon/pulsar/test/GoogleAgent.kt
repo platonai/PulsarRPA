@@ -1,12 +1,12 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
-import ai.platon.pulsar.common.proxy.ProxyType
 import ai.platon.pulsar.common.urls.DegenerateHyperlink
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -14,6 +14,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.context.MultiPrivacyContextManager
 import ai.platon.pulsar.ql.context.SQLContexts
 import org.apache.http.client.utils.URIBuilder
+import java.net.Proxy
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -24,52 +25,61 @@ class GoogleAgent {
     private val googleBaseUrl = "https://www.google.com"
     private val submittedDegeneratedLinks = AtomicInteger()
     private val submittedSearchTasks = AtomicInteger()
-
+    
     private val context = SQLContexts.create()
     private val session = context.createSession()
     private val proxyPool get() = context.getBean(ProxyPool::class)
     private val privacyContextManager get() = context.getBean(MultiPrivacyContextManager::class)
-
+    
     fun initProxies() {
         // only works before 2023-08-25
         // # IP:PORT:USER:PASS
         val proxyString = """
-//            146.247.127.238:12323:14a678fa9996c:505721cc2c
-//            191.96.34.9:12323:14a678fa9996c:505721cc2c
-//            185.158.105.182:12323:14a678fa9996c:505721cc2c
-//            194.121.51.251:12323:14a678fa9996c:505721cc2c
-//            152.89.0.179:12323:14a678fa9996c:505721cc2c
 127.0.0.1:10808:abc:abc
         """.trimIndent()
-
+        
         val proxies = proxyString
-                .split("\n").asSequence()
-                .map { it.trim() }
-                .filter { !it.startsWith("// ") }
-                .map { it.split(":") }
-                .filter { it.size == 4 }
-                .map { ProxyEntry(it[0].trim(), it[1].trim().toInt(), it[2], it[3]) }
-                .onEach { it.proxyType = ProxyType.SOCKS5 }
-                .onEach { it.declaredTTL = Instant.now() + Duration.ofDays(30) }
+            .split("\n").asSequence()
+            .map { it.trim() }
+            .filter { !it.startsWith("// ") }
+            .map { it.split(":") }
+            .filter { it.size == 4 }
+            .map { ProxyEntry(it[0].trim(), it[1].trim().toInt(), it[2], it[3]) }
+            .onEach { it.proxyType = Proxy.Type.SOCKS }
+            .onEach { it.declaredTTL = Instant.now() + Duration.ofDays(30) }
+            .toMutableList()
+
+        if (proxies.isEmpty()) {
+            logger.info("No proxy available")
+            return
+        }
+        
+        proxies.forEach { proxy ->
+            if (!NetUtil.testTcpNetwork(proxy.host, proxy.port)) {
+                logger.info("Proxy not available: {}", proxy.toURI())
+                return
+            }
+        }
+
         proxies.forEach {
             proxyPool.offer(it)
             // ensure enough proxies
             proxyPool.offer(it)
         }
-
+        
         logger.info("There are {} proxies in pool", proxyPool.size)
     }
-
+    
     fun google() {
         if (!ProxyPoolManager.isProxyEnabled(session.unmodifiedConfig)) {
             logger.warn("Proxy is disabled")
             return
         }
-
+        
         if (proxyPool.isEmpty()) {
             initProxies()
         }
-
+        
         val async = false
         val limit = 20
         val businessNames = ResourceLoader.readAllLines("entity/business.names.com.txt").shuffled().take(limit)
@@ -86,10 +96,10 @@ class GoogleAgent {
                 }
             }
         }
-
+        
         PulsarContexts.await()
     }
-
+    
     fun google(keyword: String, async: Boolean = true) {
         val builder = URIBuilder("$googleBaseUrl/search")
         builder.addParameter("q", keyword)
@@ -97,13 +107,13 @@ class GoogleAgent {
         val options = session.options(args)
         val be = options.event.browseEvent
         val le = options.event.loadEvent
-
+        
         be.onDocumentActuallyReady.addLast { page, driver ->
             val texts = driver.allTexts("h3")
             println(page.url)
             println(texts)
         }
-
+        
         le.onHTMLDocumentParsed.addLast { page, document ->
             extract(page, document)
         }
@@ -116,17 +126,24 @@ class GoogleAgent {
         }
         submittedSearchTasks.incrementAndGet()
     }
-
+    
     private fun extract(page: WebPage, document: FeaturedDocument) {
         logger.info("Extract | {} | {}", page.protocolStatus, page.url)
+    }
+    
+    private fun test(proxy: ProxyEntry): Boolean {
+        return if (!NetUtil.testTcpNetwork(proxy.host, proxy.port)) {
+            logger.info("Proxy not available: {}", proxy.toURI())
+            false
+        } else true
     }
 }
 
 fun main() {
     BrowserSettings.enableProxy()
-
+    
     val agent = GoogleAgent()
     agent.google()
-
+    
     readLine()
 }

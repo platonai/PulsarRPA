@@ -4,7 +4,6 @@ import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyType
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -14,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.IOException
+import java.net.Proxy
 import java.util.*
 import kotlin.test.*
 
@@ -239,13 +239,13 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
 
     @Test
     fun testProxyAuthorization() {
-        val proxyEntry = ProxyEntry("127.0.0.1", 10808, "abc", "abc", ProxyType.SOCKS5)
+        val proxyEntry = ProxyEntry("127.0.0.1", 10808, "abc", "abc", Proxy.Type.SOCKS)
         if (!NetUtil.testTcpNetwork(proxyEntry.host, proxyEntry.port)) {
             logger.info("To run this test case, you should rise a local proxy server with proxy: {}", proxyEntry.toURI())
             return
         }
 
-        val browserId = BrowserId.DEFAULT
+        val browserId = BrowserId.RANDOM
         browserId.setProxy(proxyEntry)
 
         val browser = driverFactory.launchBrowser(browserId)
@@ -255,7 +255,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
             driver.navigateTo("https://www.baidu.com/")
             driver.waitForNavigation()
             driver.waitForSelector("body")
-            delay(3000)
+            delay(1000)
             val source = driver.pageSource()
             assertTrue { source != null && source.length > 1000 }
         }
