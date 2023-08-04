@@ -39,7 +39,7 @@ data class Fingerprint(
             userAgent to other.userAgent,
         ).forEach {
             r = comp.compare(it.first, it.second)
-println(it.first + " " + it.second + " " + r)
+
             if (r != 0) {
                 return r
             }
