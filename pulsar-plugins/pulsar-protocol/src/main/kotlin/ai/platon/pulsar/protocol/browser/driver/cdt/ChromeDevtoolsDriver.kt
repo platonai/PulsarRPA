@@ -13,9 +13,7 @@ import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.crawl.fetch.driver.*
-import ai.platon.pulsar.protocol.browser.driver.cdt.detail.NetworkManager
-import ai.platon.pulsar.protocol.browser.driver.cdt.detail.NetworkManagerEvents
-import ai.platon.pulsar.protocol.browser.driver.cdt.detail.RobustRPC
+import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
@@ -799,11 +797,11 @@ class ChromeDevtoolsDriver(
             networkAPI?.setBlockedURLs(blockedURLs)
         }
 
-        networkManager.on(NetworkManagerEvents.RequestWillBeSent) { event: RequestWillBeSent -> onRequestWillBeSent(entry, event) }
-        networkManager.on(NetworkManagerEvents.ResponseReceived) { event: ResponseReceived -> onResponseReceived(entry, event) }
-
-//        networkAPI?.onRequestWillBeSent { requestWillBeSent -> onRequestWillBeSent(entry, requestWillBeSent) }
-//        networkAPI?.onResponseReceived { response -> onResponseReceived(entry, response) }
+        // TODO: use Request, Response events instead of RequestWillBeSent, ResponseReceived
+//        networkManager.on(NetworkManagerEvents.Request) { request: CDPRequest ->  }
+//        networkManager.on(NetworkManagerEvents.Response) { response: CDPResponse ->  }
+        networkManager.on(NetworkEvents.RequestWillBeSent) { event: RequestWillBeSent -> onRequestWillBeSent(entry, event) }
+        networkManager.on(NetworkEvents.ResponseReceived) { event: ResponseReceived -> onResponseReceived(entry, event) }
 
         pageAPI?.onDocumentOpened { entry.mainRequestCookies = getCookies0() }
 

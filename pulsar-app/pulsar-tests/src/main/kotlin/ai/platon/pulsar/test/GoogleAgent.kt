@@ -72,7 +72,7 @@ class GoogleAgent {
 
         val async = false
         val limit = 20
-        val businessNames = ResourceLoader.readAllLines("entity/business.names.com.txt").take(limit)
+        val businessNames = ResourceLoader.readAllLines("entity/business.names.com.txt").shuffled().take(limit)
         val contactNames = listOf("Email", "Phone", "Facebook")
         businessNames.forEach { businessName ->
             contactNames.forEach { contactName ->

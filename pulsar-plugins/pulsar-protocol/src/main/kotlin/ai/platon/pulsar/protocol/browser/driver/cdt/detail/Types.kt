@@ -6,8 +6,19 @@ import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
 import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceived
 import com.github.kklisura.cdt.protocol.v2023.types.fetch.HeaderEntry
 
-enum class NetworkManagerEvents {
-    Request, RequestWillBeSent, RequestServedFromCache, Response, ResponseReceived, RequestFailed, RequestFinished
+/**
+ * The network events, used to intercept requests.
+ * */
+enum class NetworkEvents {
+    Request,
+    // may be removed, use Request instead
+    RequestWillBeSent,
+    RequestServedFromCache,
+    Response,
+    // may be removed, use Response instead
+    ResponseReceived,
+    RequestFailed,
+    RequestFinished
 }
 
 enum class InterceptResolutionAction(val action: String) {

@@ -195,10 +195,6 @@ __pulsar_utils__.updateStat = function(init = false) {
 
     if (!this.isBrowserError()) {
         document.body.__pulsar_forEach((node) => {
-            if (node.__pulsar_isIFrame === undefined) {
-                return
-            }
-
             if (node.__pulsar_isIFrame()) {
                 return
             }

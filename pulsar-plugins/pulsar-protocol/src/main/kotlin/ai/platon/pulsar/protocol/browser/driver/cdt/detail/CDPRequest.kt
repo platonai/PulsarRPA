@@ -48,67 +48,29 @@ class CDPRequest(
     var type: ResourceType? = null
     
     var response: CDPResponse? = null
+
     var fromMemoryCache: Boolean = false
 
-    internal var continueRequestOverrides: ContinueRequestOverrides? = null
-
-    internal var responseForRequest: ResponseForRequest? = null
-    
     internal var failureText: String? = null
-
-    var abortErrorReason: ErrorReason? = null
-
-    internal var interceptResolutionState: InterceptResolutionState? = null
 
     var interceptionHandled = false
 
-    var interceptHandlers = mutableListOf<Any>()
-
-    private var _interceptionId: String? = null
-
-
-
     val isActive get() = driver.isActive
-
-    private val fetchAPI get() = driver.devTools.fetch.takeIf { isActive }
 
     val url get() = request.url
 
-    fun abortErrorReason(): ErrorReason? {
-        require(allowInterception) { "Request Interception is not enabled!" }
-        return abortErrorReason
-    }
+    private val fetchAPI get() = driver.devTools.fetch.takeIf { isActive }
 
     fun finalizeInterceptions() {
-        interceptHandlers.map { }
-
-        val action = interceptResolutionState?.action
-        when (action) {
-            InterceptResolutionAction.Abort -> abort(abortErrorReason)
-            InterceptResolutionAction.Respond -> {
-                responseForRequest?.let { respond(it) }
-                        ?: throw ChromeRPCException("Response is missing for the interception")
-            }
-
-            InterceptResolutionAction.Continue -> {
-                continueRequestOverrides?.let { continueRequest(it) }
-            }
-
-            else -> {
-
-            }
-        }
     }
 
-    private fun continueRequest(overrides: ContinueRequestOverrides) {
+    fun continueRequest(overrides: ContinueRequestOverrides) {
         interceptionHandled = true
 
         val postDataBinaryBase64 = overrides.postData?.let { Base64.getEncoder().encodeToString(it.toByteArray()) }
-        val requestId = _interceptionId
-                ?: throw ChromeRPCException("HTTPRequest is missing _interceptionId needed for Fetch.continueRequest")
+        val requestId = interceptionId ?: throw ChromeRPCException("InterceptionId is required by Fetch.continueRequest")
 
         try {
-            // TODO: check interceptResponse
             val interceptResponse = false
             fetchAPI?.continueRequest(requestId,
                     overrides.url, overrides.method, postDataBinaryBase64, overrides.headers, interceptResponse)
@@ -117,67 +79,45 @@ class CDPRequest(
         }
     }
 
-    private fun respond(response: ResponseForRequest) {
+    fun respond(response: ResponseForRequest) {
         interceptionHandled = true
 
-        val body = responseForRequest?.body
-        val responseBody = when {
-            body is String -> body
-            body is ByteArray -> Base64.getEncoder().encodeToString(body)
-            else -> body.toString()
+        val responseBody = when (val body = response.body) {
+            is ByteArray -> body
+            is String -> body.toByteArray()
+            else -> body.toString().toByteArray()
         }
 
         val responseHeaders = response.headers.entries.mapTo(mutableListOf()) { (name, value) -> headerEntry(name, value) }
         response.contentType?.let { responseHeaders.add(headerEntry("content-type", it)) }
         if (!response.headers.containsKey("content-length")) {
-            // TODO: Buffer.byteLength(responseBody)
-            responseBody?.let { responseHeaders.add(headerEntry("content-length", it.length.toString())) }
+            responseHeaders.add(headerEntry("content-length", responseBody.size.toString()))
         }
         val binaryResponseHeaders = responseHeaders.joinToString()
 
-        val requestId = _interceptionId
-                ?: throw ChromeRPCException("HTTPRequest is missing _interceptionId needed for Fetch.fulfillRequest")
+        val requestId = interceptionId ?: throw ChromeRPCException("InterceptionId is required by Fetch.fulfillRequest")
 
         val responseCode = response.status ?: 200
         val httpStatus = HttpStatus.valueOf(responseCode)
 
         try {
-            fetchAPI?.fulfillRequest(requestId, responseCode, responseHeaders, binaryResponseHeaders, responseBody, httpStatus.reasonPhrase)
+            val responseBodyBase64 = Base64.getEncoder().encodeToString(responseBody)
+            // Provides response to the request.
+            fetchAPI?.fulfillRequest(requestId,
+                responseCode, responseHeaders, binaryResponseHeaders, responseBodyBase64, httpStatus.reasonPhrase)
         } catch (e: Exception) {
             interceptionHandled = false
         }
     }
+    
+    fun abort(abortErrorReason: ErrorReason?) {
+        interceptionHandled = true
+        
+        interceptionId?.let { fetchAPI?.failRequest(it, abortErrorReason) }
+            ?: throw ChromeRPCException("HTTPRequest is missing _interceptionId needed for Fetch.failRequest")
+    }
 
     private fun headerEntry(name: String, value: String): HeaderEntry {
         return HeaderEntry().also { it.name = name; it.value = value }
-    }
-
-    /**
-     * Provides response to the request.
-     *
-     * @param requestId An id the client received in requestPaused event.
-     * @param responseCode An HTTP response code.
-     * @param responseHeaders Response headers.
-     * @param binaryResponseHeaders Alternative way of specifying response headers as a \0-separated
-     * series of name: value pairs. Prefer the above method unless you need to represent some
-     * non-UTF8 values that can't be transmitted over the protocol as text. (Encoded as a base64
-     * string when passed over JSON)
-     * @param body A response body. (Encoded as a base64 string when passed over JSON)
-     * @param responsePhrase A textual representation of responseCode. If absent, a standard phrase
-     * matching responseCode is used.
-     */
-//    fun fulfillRequest(
-//            @ParamName("requestId") requestId: String?,
-//            @ParamName("responseCode") responseCode: Int?,
-//            @Optional @ParamName("responseHeaders") responseHeaders: List<HeaderEntry?>?,
-//            @Optional @ParamName("binaryResponseHeaders") binaryResponseHeaders: String?,
-//            @Optional @ParamName("body") body: String?,
-//            @Optional @ParamName("responsePhrase") responsePhrase: String?)
-
-    private fun abort(abortErrorReason: ErrorReason?) {
-        interceptionHandled = true
-
-        _interceptionId?.let { fetchAPI?.failRequest(it, abortErrorReason) }
-                ?: throw ChromeRPCException("HTTPRequest is missing _interceptionId needed for Fetch.failRequest")
     }
 }

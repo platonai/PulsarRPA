@@ -11,14 +11,13 @@ import com.github.kklisura.cdt.protocol.v2023.types.fetch.AuthChallengeResponse
 import com.github.kklisura.cdt.protocol.v2023.types.fetch.AuthChallengeResponseResponse
 import com.github.kklisura.cdt.protocol.v2023.types.fetch.RequestPattern
 import com.github.kklisura.cdt.protocol.v2023.types.network.Response
-import org.slf4j.LoggerFactory
 import java.lang.ref.WeakReference
 import java.util.*
 
 internal class NetworkManager(
         private val driver: ChromeDevtoolsDriver,
         private val rpc: RobustRPC,
-) : AbstractEventEmitter<NetworkManagerEvents>() {
+) : AbstractEventEmitter<NetworkEvents>() {
     private val logger = getLogger(this)
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     
@@ -148,7 +147,8 @@ internal class NetworkManager(
         tracer?.trace("onRequestWillBeSent | {}", event.requestId)
         // Request interception doesn't happen for data URLs with Network Service.
         
-        emit(NetworkManagerEvents.RequestWillBeSent, event)
+        // TODO: remove RequestWillBeSent, use emit(NetworkManagerEvents.Request, request)
+        emit(NetworkEvents.RequestWillBeSent, event)
         
         val url = event.request.url
         val intercept = userRequestInterceptionEnabled && !url.startsWith("data:")
@@ -222,7 +222,7 @@ internal class NetworkManager(
         }
         networkEventManager.addRequest(requestId, request)
         
-        emit(NetworkManagerEvents.Request, request)
+        emit(NetworkEvents.Request, request)
         
         request.finalizeInterceptions()
     }
@@ -232,7 +232,7 @@ internal class NetworkManager(
         val request = networkEventManager.getCDPRequest(event.requestId)
         request?.fromMemoryCache = true
         
-        emit(NetworkManagerEvents.RequestServedFromCache, request)
+        emit(NetworkEvents.RequestServedFromCache, request)
     }
 
     private fun onResponseReceived(event: ResponseReceived) {
@@ -249,7 +249,8 @@ internal class NetworkManager(
             }
         }
         
-        emit(NetworkManagerEvents.ResponseReceived, event)
+        // TODO: remove ResponseReceived, use emit(NetworkManagerEvents.Response, response)
+        emit(NetworkEvents.ResponseReceived, event)
 
         emitResponseEvent(event, extraInfo)
     }
@@ -299,7 +300,7 @@ internal class NetworkManager(
 //            it.initiator = event.initiator
 //            it.type = event.type
         }
-        emit(NetworkManagerEvents.Request, request)
+        emit(NetworkEvents.Request, request)
         request.finalizeInterceptions()
     }
     
@@ -322,7 +323,7 @@ internal class NetworkManager(
         val response = CDPResponse(driver, request, event.response, extraInfo0)
         request.response = response
         
-        emit(NetworkManagerEvents.Response, response)
+        emit(NetworkEvents.Response, response)
     }
     
     private fun handleRequestRedirect(
@@ -336,8 +337,8 @@ internal class NetworkManager(
 //        );
         forgetRequest(request, false)
         
-        emit(NetworkManagerEvents.Response, response)
-        emit(NetworkManagerEvents.RequestFinished, request)
+        emit(NetworkEvents.Response, response)
+        emit(NetworkEvents.RequestFinished, request)
     }
     
     private fun updateProtocolRequestInterception() {
@@ -400,7 +401,7 @@ internal class NetworkManager(
         request.response?.resolveBody(null)
         
         forgetRequest(request, true)
-        emit(NetworkManagerEvents.RequestFinished, request)
+        emit(NetworkEvents.RequestFinished, request)
     }
     
     private fun onLoadingFailed(event: LoadingFailed) {
@@ -426,6 +427,6 @@ internal class NetworkManager(
 
         request.response?.resolveBody(null)
         forgetRequest(request, true)
-        emit(NetworkManagerEvents.RequestFailed, request)
+        emit(NetworkEvents.RequestFailed, request)
     }
 }
