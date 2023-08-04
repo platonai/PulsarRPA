@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.MiscMessageWriter
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.crawl.component.ParseComponent
@@ -70,7 +70,7 @@ class CoreMetrics(
                 "dbPuts" to Gauge { WebDb.dbPutCount },
                 "dbPuts/s" to Gauge { 1.0 * WebDb.dbPutCount.get() / DateTimes.elapsedSeconds() },
                 "dbPutAveMillis" to Gauge { WebDb.dbPutAveMillis },
-            ).forEach { AppMetrics.reg.register(this, it.key, it.value) }
+            ).forEach { MetricsSystem.reg.register(this, it.key, it.value) }
         }
     }
 
@@ -115,7 +115,7 @@ class CoreMetrics(
     val deadUrls = ConcurrentSkipListSet<String>()
     val failedHosts = ConcurrentHashMultiset.create<String>()
 
-    private val registry = AppMetrics.reg
+    private val registry = MetricsSystem.reg
 
     val meterTotalNetworkIFsRecvMBytes = registry.meter(this, "totalNetworkIFsRecvMBytes")
 

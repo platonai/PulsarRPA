@@ -23,7 +23,7 @@ import ai.platon.pulsar.common.AppPaths.PATH_BANNED_URLS
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.metrics.EnumCounterRegistry
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
@@ -64,12 +64,12 @@ class GenerateComponent(
             mLater, mLater0, mLater1, mLater2, mLater3, mLater4, mLater5, mLater6, mLater7, mLaterN,
             mAhead, mSeedAhead, mSeedLater, mInactive
         }
-        init { AppMetrics.reg.register(Counter::class.java) }
+        init { MetricsSystem.reg.register(Counter::class.java) }
     }
 
     val LOG = LoggerFactory.getLogger(GenerateComponent::class.java)
 
-    private val enumCounters = AppMetrics.reg.enumCounterRegistry
+    private val enumCounters = MetricsSystem.reg.enumCounterRegistry
     private val startTime = Instant.now()
 
     private val unreachableHosts: MutableSet<String> = HashSet()

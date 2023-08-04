@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CL
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.PopularEmoji
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.readable
@@ -38,7 +38,7 @@ class MultiPrivacyContextManager(
     immutableConfig: ImmutableConfig
 ) : PrivacyManager(immutableConfig) {
     class Metrics {
-        private val registry = AppMetrics.reg
+        private val registry = MetricsSystem.reg
 
         val tasks = registry.multiMetric(this, "tasks")
         val successes = registry.multiMetric(this, "successes")

@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.common.readable
@@ -107,8 +107,8 @@ abstract class PrivacyContext(
     val privacyLeakWarnings = AtomicInteger()
     val privacyLeakMinorWarnings = AtomicInteger()
 
-    private val registry = AppMetrics.defaultMetricRegistry
-    private val sms = AppMetrics.SHADOW_METRIC_SYMBOL
+    private val registry = MetricsSystem.defaultMetricRegistry
+    private val sms = MetricsSystem.SHADOW_METRIC_SYMBOL
     val meterTasks = registry.meter(this, "$sequence$sms", "tasks")
     val meterSuccesses = registry.meter(this, "$sequence$sms", "successes")
     val meterFinishes = registry.meter(this, "$sequence$sms", "finishes")

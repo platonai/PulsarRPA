@@ -59,7 +59,7 @@
         <appender-ref ref="Console"/>
     </root>
 
-    <logger name="ai.platon.pulsar.common.metrics.AppMetrics" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.common.metrics.MetricsSystem" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
     </logger>
 

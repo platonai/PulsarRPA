@@ -61,8 +61,8 @@ class MultiMetric(
     }
 }
 
-class AppMetrics(
-        conf: ImmutableConfig
+class MetricsSystem(
+    conf: ImmutableConfig
 ): AutoCloseable {
     companion object {
         init {
@@ -93,7 +93,7 @@ class AppMetrics(
         }
     }
 
-    private val logger = LoggerFactory.getLogger(AppMetrics::class.java)
+    private val logger = LoggerFactory.getLogger(MetricsSystem::class.java)
     private val timeIdent = DateTimes.formatNow("MMdd")
     private val isEnabled = conf.getBoolean(CapabilityTypes.METRICS_ENABLED, false)
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
@@ -122,7 +122,7 @@ class AppMetrics(
 //        .build(reportDir.toFile())
     private val slf4jReporter = CodahaleSlf4jReporter.forRegistry(metricRegistry)
         .scheduleOn(executor).shutdownExecutorOnStop(true)
-        .outputTo(LoggerFactory.getLogger(AppMetrics::class.java))
+        .outputTo(LoggerFactory.getLogger(MetricsSystem::class.java))
         .convertRatesTo(TimeUnit.SECONDS)
         .convertDurationsTo(TimeUnit.MILLISECONDS)
         .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
@@ -181,18 +181,31 @@ class AppMetrics(
         }
     }
 
+    /**
+     * Close the metrics system.
+     *
+     * Note: this object is closed by spring framework, but some reporter will report for the last time before close,
+     * and the last report may throw exceptions if some metrics depends on the creation of spring beans.
+     * */
     override fun close() {
         if (isEnabled && closed.compareAndSet(false, true)) {
-            hourlyTimer.cancel()
-            dailyTimer.cancel()
-
-//            csvReporter.close()
-            slf4jReporter.close()
-//            jmxReporter.close()
-            graphiteReporter?.close()
-            graphiteReporter = null
-
-            counterReporter.close()
+            runCatching { doClose() }.onFailure { logger.warn(it.brief("[Unexpected] - ")) }
         }
     }
+    
+    private fun doClose() {
+        hourlyTimer.cancel()
+        dailyTimer.cancel()
+
+//            csvReporter.close()
+        slf4jReporter.close()
+//            jmxReporter.close()
+        graphiteReporter?.close()
+        graphiteReporter = null
+        
+        counterReporter.close()
+    }
 }
+
+@Deprecated("Inappropriate name", ReplaceWith("MetricSystem"))
+typealias AppMetrics = MetricsSystem

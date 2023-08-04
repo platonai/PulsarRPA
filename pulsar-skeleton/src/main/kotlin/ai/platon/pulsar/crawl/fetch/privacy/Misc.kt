@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 
 enum class CloseStrategy {
     ASAP,
@@ -11,7 +11,7 @@ enum class CloseStrategy {
 open class PrivacyContextException(message: String) : Exception(message)
 
 class PrivacyContextMetrics {
-    private val registry get() = AppMetrics.defaultMetricRegistry
+    private val registry get() = MetricsSystem.defaultMetricRegistry
     val tasks = registry.multiMetric(this, "tasks")
     val successes = registry.multiMetric(this, "successes")
     val finishes = registry.multiMetric(this, "finishes")

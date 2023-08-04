@@ -1,14 +1,13 @@
 package ai.platon.pulsar.protocol.browser.emulator.impl
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.files.ext.export
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -27,7 +26,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 
 abstract class BrowserEmulatorImplBase(
     val driverSettings: WebDriverSettings,
@@ -45,7 +43,7 @@ abstract class BrowserEmulatorImplBase(
     val isActive get() = !closed.get() && AppContext.isActive
 
     protected val pageSourceByteHistogram by lazy { registry.histogram(this, "hPageSourceBytes") }
-    private val registry = AppMetrics.reg
+    private val registry = MetricsSystem.reg
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
 
     val meterNavigates by lazy { registry.meter(this, "navigates") }

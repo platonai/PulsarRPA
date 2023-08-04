@@ -11,7 +11,6 @@ import ai.platon.pulsar.common.urls.DegenerateHyperlink
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.protocol.browser.emulator.context.MultiPrivacyContextManager
 import ai.platon.pulsar.ql.context.SQLContexts
 import org.apache.http.client.utils.URIBuilder
 import java.net.Proxy
@@ -29,7 +28,6 @@ class GoogleAgent {
     private val context = SQLContexts.create()
     private val session = context.createSession()
     private val proxyPool get() = context.getBean(ProxyPool::class)
-    private val privacyContextManager get() = context.getBean(MultiPrivacyContextManager::class)
     
     fun initProxies() {
         // only works before 2023-08-25
@@ -48,7 +46,7 @@ class GoogleAgent {
             .onEach { it.proxyType = Proxy.Type.SOCKS }
             .onEach { it.declaredTTL = Instant.now() + Duration.ofDays(30) }
             .toMutableList()
-
+        
         if (proxies.isEmpty()) {
             logger.info("No proxy available")
             return
@@ -60,7 +58,7 @@ class GoogleAgent {
                 return
             }
         }
-
+        
         proxies.forEach {
             proxyPool.offer(it)
             // ensure enough proxies

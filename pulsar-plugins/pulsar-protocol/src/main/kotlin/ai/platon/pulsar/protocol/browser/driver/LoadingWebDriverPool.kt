@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_T
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.crawl.BrowseEvent
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -43,7 +43,7 @@ class LoadingWebDriverPool constructor(
 
     val id = instanceSequencer.incrementAndGet()
 
-    private val registry = AppMetrics.defaultMetricRegistry
+    private val registry = MetricsSystem.defaultMetricRegistry
 
     /**
      * The max number of drivers the pool can hold

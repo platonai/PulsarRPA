@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.metrics.CommonCounter
 import ai.platon.pulsar.common.metrics.EnumCounterUtils
 import ai.platon.pulsar.common.measure.ByteUnitConverter
@@ -44,7 +44,7 @@ class TaskScheduler(
 
     private val log = LoggerFactory.getLogger(TaskScheduler::class.java)
     val id: Int = instanceSequence.incrementAndGet()
-    private val enumCounters = AppMetrics.reg.enumCounterRegistry
+    private val enumCounters = MetricsSystem.reg.enumCounterRegistry
 
     /**
      * Our own Hardware bandwidth in mbytes, if exceed the limit, slows down the task scheduling.
@@ -343,7 +343,7 @@ class TaskScheduler(
             rIndexed, rNotIndexed
         }
 
-        init { AppMetrics.reg.register(Counter::class.java) }
+        init { MetricsSystem.reg.register(Counter::class.java) }
 
         private val instanceSequence = AtomicInteger(0)
     }

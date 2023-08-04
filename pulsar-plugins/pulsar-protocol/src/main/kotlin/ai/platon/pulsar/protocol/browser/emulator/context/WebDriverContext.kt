@@ -3,8 +3,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppSystemInfo
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.measure.ByteUnit
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -37,11 +36,11 @@ open class WebDriverContext(
 ): AutoCloseable {
     companion object {
         private val numGlobalRunningTasks = AtomicInteger()
-        private val globalTasks = AppMetrics.reg.meter(this, "globalTasks")
-        private val globalFinishedTasks = AppMetrics.reg.meter(this, "globalFinishedTasks")
+        private val globalTasks = MetricsSystem.reg.meter(this, "globalTasks")
+        private val globalFinishedTasks = MetricsSystem.reg.meter(this, "globalFinishedTasks")
 
         init {
-            AppMetrics.reg.register(this,"globalRunningTasks", Gauge { numGlobalRunningTasks.get() })
+            MetricsSystem.reg.register(this,"globalRunningTasks", Gauge { numGlobalRunningTasks.get() })
         }
     }
 
