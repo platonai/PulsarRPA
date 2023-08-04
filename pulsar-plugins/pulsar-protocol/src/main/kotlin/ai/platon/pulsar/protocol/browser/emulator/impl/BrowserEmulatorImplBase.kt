@@ -256,7 +256,7 @@ abstract class BrowserEmulatorImplBase(
         val link = AppPaths.uniqueSymbolicLinkForUri(page.url)
         try {
             Files.deleteIfExists(link)
-            Files.createSymbolicLink(link, path)
+            AppFiles.createSymbolicLink(link, path)
         } catch (e: IOException) {
             logger.warn(e.toString())
         }

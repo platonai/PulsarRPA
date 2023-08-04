@@ -33,7 +33,7 @@ class WebDriverTestBase: TestBase() {
             }
         }
     }
-    
+
     protected suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) {
         driver.navigateTo(warnUpUrl)
         driver.navigateTo(url)

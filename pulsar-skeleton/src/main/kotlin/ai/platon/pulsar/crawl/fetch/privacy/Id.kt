@@ -7,11 +7,8 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.readableClassName
-import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
 import java.nio.file.Path
-import java.time.MonthDay
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -244,27 +241,8 @@ class PrototypePrivacyContextIdGenerator: PrivacyContextIdGenerator {
 }
 
 class SequentialPrivacyContextIdGenerator: PrivacyContextIdGenerator {
-    companion object {
-        private val sequencer = AtomicInteger()
-    }
-
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
-        PrivacyAgent(generateUserDataContextDir(), fingerprint)
-
-    @Synchronized
-    fun generateUserDataContextDir(): Path {
-        sequencer.incrementAndGet()
-        val prefix = PrivacyContext.CONTEXT_DIR_PREFIX
-        val contextCount = 1 + Files.list(AppPaths.CONTEXT_TMP_DIR)
-            .filter { Files.isDirectory(it) }
-            .filter { it.toString().contains(prefix) }
-            .count()
-        val rand = RandomStringUtils.randomAlphanumeric(5)
-        val monthDay = MonthDay.now()
-        val fileName = String.format("%s%02d%02d%s%s%s",
-            prefix, monthDay.monthValue, monthDay.dayOfMonth, sequencer, rand, contextCount)
-        return AppPaths.CONTEXT_TMP_DIR.resolve(fileName)
-    }
+        PrivacyAgent(PrivacyContext.computeNextSequentialContextDir(), fingerprint)
 }
 
 class PrivacyContextIdGeneratorFactory(val conf: ImmutableConfig) {

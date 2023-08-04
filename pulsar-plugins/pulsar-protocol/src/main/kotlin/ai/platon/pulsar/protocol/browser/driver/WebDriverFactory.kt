@@ -33,7 +33,7 @@ open class WebDriverFactory(
      * Create a WebDriver
      */
     @Throws(BrowserLaunchException::class)
-    fun create(conf: VolatileConfig, start: Boolean = true) = create(BrowserId.DEFAULT, 0, conf, start)
+    fun create(conf: VolatileConfig, start: Boolean = true) = create(BrowserId.RANDOM, 0, conf, start)
 
     /**
      * Create a WebDriver

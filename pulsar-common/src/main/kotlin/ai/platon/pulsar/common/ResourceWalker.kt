@@ -58,12 +58,13 @@ class ResourceWalker(
      * */
     fun walk(start: String, maxDepth: Int, visitor: (Path) -> Unit) {
         val path = getPath(start)
-
+        
         val walk = Files.walk(path, maxDepth)
         val it = walk.iterator()
         while (it.hasNext()) {
             try {
-                visitor(it.next())
+                val p = it.next()
+                visitor(p)
             } catch (e: Exception) {
                 logger.warn("Failed to visit path | $path", e)
             }

@@ -150,23 +150,23 @@ class AppSystemInfo {
         }
 
         private fun handleOSHINotAvailable() {
-            val path = Files.createTempFile("system.properties", ".txt")
+            val path = AppPaths.TMP_DIR.resolve("system.properties")
             try {
-                val text = System.getProperties().entries.joinToString("\n") { "" + it.key + ": " + it.value}
+                val text = System.getProperties().entries.joinToString("\n") { "" + it.key + "=" + it.value}
                 Files.writeString(path, text)
             } catch (t: Throwable) {
-                logger.warn(t.stringify())
                 System.err.println(t.stringify())
+                logger.warn(t.stringify())
             }
 
             val message = "OSHI (https://github.com/oshi/oshi) doesn't work on your system, you can ignore the message, " +
                 "\nbut we suggest you to create a issue to https://github.com/platonai/pulsarRPA " +
                 "\nwith the system information in file $path"
 
-            logger.warn(message)
             System.err.println(message)
+            logger.warn(message)
         }
-        
+
         fun formatAvailableMemory(): String {
             return availableMemory?.let { Strings.compactFormat(it) } ?: "N/A"
         }

@@ -15,10 +15,13 @@ import ai.platon.pulsar.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.RetryScope
 import com.google.common.annotations.Beta
-import org.apache.commons.lang.RandomStringUtils
+import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
+import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
+import java.time.MonthDay
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -40,6 +43,8 @@ abstract class PrivacyContext(
 ) : Comparable<PrivacyContext>, AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()
+        private val contextDirSequencer = AtomicInteger()
+        
         // The prefix for all temporary privacy contexts, system context, prototype context and default context are not included.
         val CONTEXT_DIR_PREFIX = "cx."
         @Deprecated("Inappropriate name", ReplaceWith("USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER"))
@@ -53,7 +58,7 @@ abstract class PrivacyContext(
         // The default context directory, if you need a semi-permanent context, use this one
         val DEFAULT_CONTEXT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         // A random context directory, if you need a random temporary context, use this one
-        val RANDOM_CONTEXT_DIR get() = AppPaths.CONTEXT_TMP_DIR.resolve(RandomStringUtils.randomAlphabetic(6))
+        val RANDOM_CONTEXT_DIR get() = computeNextSequentialContextDir()
         // The prototype context directory, all privacy contexts copies browser data from the prototype.
         // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
         val PROTOTYPE_DATA_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
@@ -64,6 +69,24 @@ abstract class PrivacyContext(
         val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT = Duration.ofMinutes(30)
 
         val globalMetrics by lazy { PrivacyContextMetrics() }
+
+        /**
+         * TODO: use a file lock
+         * */
+        @Synchronized
+        fun computeNextSequentialContextDir(): Path {
+            contextDirSequencer.incrementAndGet()
+            val prefix = CONTEXT_DIR_PREFIX
+            val contextCount = 1 + Files.list(AppPaths.CONTEXT_TMP_DIR)
+                .filter { Files.isDirectory(it) }
+                .filter { it.toString().contains(prefix) }
+                .count()
+            val rand = RandomStringUtils.randomAlphanumeric(5)
+            val monthDay = MonthDay.now()
+            val fileName = String.format("%s%02d%02d%s%s%s",
+                prefix, monthDay.monthValue, monthDay.dayOfMonth, contextDirSequencer, rand, contextCount)
+            return AppPaths.CONTEXT_TMP_DIR.resolve(monthDay.dayOfMonth.toString()).resolve(fileName)
+        }
     }
 
     private val logger = LoggerFactory.getLogger(PrivacyContext::class.java)

@@ -18,8 +18,8 @@ class TestProxyEntry {
     fun testProxySchema() {
         val proxy = ProxyEntry("127.0.0.1", 10808, "abc", "abc", Proxy.Type.SOCKS)
         // println(proxy.toURI())
-        assertEquals("socks5", proxy.protocol)
-        assertEquals("socks5://abc:abc@127.0.0.1:10808", proxy.toURI().toString())
+        assertEquals("socks", proxy.protocol)
+        assertEquals("socks://abc:abc@127.0.0.1:10808", proxy.toURI().toString())
     }
     
     @Test

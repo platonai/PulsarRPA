@@ -30,27 +30,29 @@ data class Fingerprint(
     fun setProxy(proxy: ProxyEntry) = setProxy(proxy.protocol, proxy.hostPort, proxy.username, proxy.password)
     
     override fun compareTo(other: Fingerprint): Int {
-        var r = browserType.compareTo(other.browserType)
-        if (r != 0) {
-            return r
-        }
-
+        var r = 0
         listOf(
+            browserType.name to other.browserType.name,
             proxyServer to other.proxyServer,
+            proxyUsername  to other.proxyUsername,
             username to other.username,
             userAgent to other.userAgent,
         ).forEach {
             r = comp.compare(it.first, it.second)
+println(it.first + " " + it.second + " " + r)
             if (r != 0) {
                 return r
             }
         }
 
-        return 0
+        return r
     }
 
     override fun hashCode() = toString().hashCode()
 
+    /**
+     * TODO: review the equality logic
+     * */
     override fun equals(other: Any?): Boolean {
         return other is Fingerprint && listOf(
             browserType to other.browserType,

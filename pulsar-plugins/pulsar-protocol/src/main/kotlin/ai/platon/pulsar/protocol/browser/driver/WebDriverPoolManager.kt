@@ -122,7 +122,7 @@ open class WebDriverPoolManager(
     }
 
     /**
-     * Run the task.
+     * Run the task using the default browser.
      * */
     @Throws(WebDriverException::class, WebDriverPoolException::class)
     suspend fun run(task: FetchTask, browseFun: suspend (driver: WebDriver) -> FetchResult?) =
