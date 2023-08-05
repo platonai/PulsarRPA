@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
@@ -49,14 +50,15 @@ internal class NetworkManager(
         networkAPI?.onLoadingFinished(::onLoadingFinished)
         networkAPI?.onLoadingFailed(::onLoadingFailed)
         networkAPI?.onResponseReceivedExtraInfo(::onResponseReceivedExtraInfo)
-        
-        rpc.invoke("security") {
-            if (ignoreHTTPSErrors) {
+
+        if (ignoreHTTPSErrors) {
+            rpc.invokeSilently("setIgnoreCertificateErrors") {
                 securityAPI?.enable()
                 securityAPI?.setIgnoreCertificateErrors(ignoreHTTPSErrors)
             }
         }
-        rpc.invoke("enable") {
+        
+        rpc.invokeSilently("enable") {
             networkAPI?.enable()
         }
     }
@@ -99,7 +101,7 @@ internal class NetworkManager(
             it.password = credentials?.password
         }
         
-        rpc.invoke("continueWithAuth") {
+        rpc.invokeSilently("continueWithAuth", event.requestId) {
             fetchAPI?.continueWithAuth(event.requestId, authChallengeResponse)
         }
     }
@@ -107,12 +109,22 @@ internal class NetworkManager(
     private fun onRequestPaused(event: RequestPaused) {
         tracer?.trace("onRequestPaused | {}", event.requestId)
         
+        if (credentials != null) {
+            if (!protocolRequestInterceptionEnabled) {
+                logger.warn("protocolRequestInterceptionEnabled should be true since credentials is set")
+            }
+        }
+
         if (!userRequestInterceptionEnabled && protocolRequestInterceptionEnabled) {
-            rpc.invoke("continueRequest") {
+            rpc.invokeSilently("continueRequest", event.requestId) {
                 fetchAPI?.continueRequest(event.requestId)
             }
         }
         
+        /**
+         * If the intercepted request had a corresponding Network.requestWillBeSent event fired for it,
+         * then this networkId will be the same as the requestId present in the requestWillBeSent event.
+         */
         val networkRequestId = event.networkId
         val fetchRequestId = event.requestId
         
@@ -229,6 +241,7 @@ internal class NetworkManager(
     
     private fun onRequestServedFromCache(event: RequestServedFromCache) {
         tracer?.trace("onRequestServedFromCache | {}", event.requestId)
+        
         val request = networkEventManager.getCDPRequest(event.requestId)
         request?.fromMemoryCache = true
         
@@ -239,6 +252,7 @@ internal class NetworkManager(
         val requestId = event.requestId
 
         tracer?.trace("onResponseReceived | {}", requestId)
+        
         var extraInfo: ResponseReceivedExtraInfo? = null
         val request = networkEventManager.getCDPRequest(requestId)
         if (request != null && !request.fromMemoryCache && event.hasExtraInfo) {
@@ -352,7 +366,9 @@ internal class NetworkManager(
         
         if (enabled) {
             val pattern = RequestPattern().also { it.urlPattern = "*" }
-            fetchAPI?.enable(listOf(pattern), true)
+            rpc.invokeSilently("enable") {
+                fetchAPI?.enable(listOf(pattern), true)
+            }
         } else {
             // TODO: there are other scenarios to enable FetchAPI
             // fetchAPI?.disable()
@@ -374,8 +390,12 @@ internal class NetworkManager(
     }
     
     private fun updateProtocolCacheDisabled() {
-        rpc.invoke("setCacheDisabled") {
-            networkAPI?.setCacheDisabled(this.userCacheDisabled)
+        try {
+            rpc.invoke("setCacheDisabled") {
+                networkAPI?.setCacheDisabled(this.userCacheDisabled)
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "setCacheDisabled")
         }
     }
     

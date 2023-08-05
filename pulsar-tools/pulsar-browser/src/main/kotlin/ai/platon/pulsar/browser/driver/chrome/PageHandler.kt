@@ -86,7 +86,8 @@ class PageHandler(
 
             dom?.scrollIntoViewIfNeeded(nodeId, node.backendNodeId, null, rect)
         } catch (e: ChromeRPCException) {
-            // logger.warn("Can to scroll into {} | {} | {}", nodeId, e.message, selector)
+            logger.debug("DOM.scrollIntoViewIfNeeded is not supported, fallback to Element.scrollIntoView | {} | {} | {}",
+                nodeId, e.message, selector)
             // Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
             evaluate("__pulsar_utils__.scrollIntoView('$selector')")
         }

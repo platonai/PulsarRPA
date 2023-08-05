@@ -788,7 +788,7 @@ open class StreamingCrawler(
     /**
      * Proxies should live for more than 5 minutes. If proxy is not enabled, the rate is always 0.
      *
-     * 5 / 60f = 0.083
+     * 5 / 60f ~= 0.083
      * */
     private suspend fun handleContextLeaks() {
         val contextLeaks = PrivacyContext.globalMetrics.contextLeaks

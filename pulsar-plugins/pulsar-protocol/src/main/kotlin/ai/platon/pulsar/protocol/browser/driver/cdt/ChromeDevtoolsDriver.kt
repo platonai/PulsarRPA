@@ -539,11 +539,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun scrollTo(selector: String) {
-        try {
-            rpc.invokeDeferred("scrollTo") { page.scrollIntoViewIfNeeded(selector) }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "scrollTo")
-        }
+        rpc.invokeDeferredSilently("scrollTo") { page.scrollIntoViewIfNeeded(selector) }
     }
 
     @Throws(WebDriverException::class)
@@ -729,13 +725,8 @@ class ChromeDevtoolsDriver(
 
     override suspend fun bringToFront() {
         if (!checkState()) return
-
-        try {
-            rpc.invokeDeferred("bringToFront") {
-                pageAPI?.bringToFront()
-            }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e)
+        rpc.invokeDeferredSilently("bringToFront") {
+            pageAPI?.bringToFront()
         }
     }
 
@@ -787,7 +778,7 @@ class ChromeDevtoolsDriver(
     /**
      * Navigate to the page and inject scripts.
      * */
-    private fun navigateInvaded(entry: NavigateEntry) {
+    private suspend fun navigateInvaded(entry: NavigateEntry) {
         val url = entry.url
 
         addScriptToEvaluateOnNewDocument()

@@ -4,7 +4,7 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyEntry2
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.urls.DegenerateHyperlink
@@ -30,7 +30,6 @@ class GoogleAgent {
     private val proxyPool get() = context.getBean(ProxyPool::class)
     
     fun initProxies() {
-        // only works before 2023-08-25
         // # IP:PORT:USER:PASS
         val proxyString = """
 127.0.0.1:10808:abc:abc
@@ -42,7 +41,7 @@ class GoogleAgent {
             .filter { !it.startsWith("// ") }
             .map { it.split(":") }
             .filter { it.size == 4 }
-            .map { ProxyEntry(it[0].trim(), it[1].trim().toInt(), it[2], it[3]) }
+            .map { ProxyEntry2(it[0].trim(), it[1].trim().toInt(), it[2], it[3]) }
             .onEach { it.proxyType = Proxy.Type.SOCKS }
             .onEach { it.declaredTTL = Instant.now() + Duration.ofDays(30) }
             .toMutableList()
@@ -60,9 +59,9 @@ class GoogleAgent {
         }
         
         proxies.forEach {
-            proxyPool.offer(it)
+            proxyPool.offer(it.toProxyEntry())
             // ensure enough proxies
-            proxyPool.offer(it)
+            proxyPool.offer(it.toProxyEntry())
         }
         
         logger.info("There are {} proxies in pool", proxyPool.size)
@@ -107,8 +106,17 @@ class GoogleAgent {
         val le = options.event.loadEvent
         
         be.onDocumentActuallyReady.addLast { page, driver ->
+            driver.scrollTo("h3:nth-child(3)")
+            driver.scrollTo("h3:nth-child(5)")
+            driver.scrollTo("h3:nth-child(8)")
+            
+            driver.click("textarea[name=q]")
+            driver.scrollToTop()
+            
+            println(String.format("%d.\t%s", page.id, page.url))
+            val resultStats = driver.firstText("#result-stats")
+            println(resultStats)
             val texts = driver.allTexts("h3")
-            println(page.url)
             println(texts)
         }
         
@@ -129,7 +137,7 @@ class GoogleAgent {
         logger.info("Extract | {} | {}", page.protocolStatus, page.url)
     }
     
-    private fun test(proxy: ProxyEntry): Boolean {
+    private fun test(proxy: ProxyEntry2): Boolean {
         return if (!NetUtil.testTcpNetwork(proxy.host, proxy.port)) {
             logger.info("Proxy not available: {}", proxy.toURI())
             false

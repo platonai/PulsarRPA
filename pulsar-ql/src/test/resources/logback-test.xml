@@ -62,6 +62,9 @@
     <logger name="ai.platon.pulsar.common.metrics.MetricsSystem" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
     </logger>
+    <logger name="ai.platon.pulsar.common.metrics.AppMetrics" level="INFO" additivity="false">
+        <appender-ref ref="METRICS"/>
+    </logger>
 
     <logger name="ai.platon.pulsar.common.CounterReporter" level="INFO" additivity="false">
         <appender-ref ref="COUNTERS"/>

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyEntry2
 import ai.platon.pulsar.common.urls.UrlUtils
 import org.junit.Test
 import java.net.Proxy
@@ -16,7 +17,7 @@ class TestProxyEntry {
     
     @Test
     fun testProxySchema() {
-        val proxy = ProxyEntry("127.0.0.1", 10808, "abc", "abc", Proxy.Type.SOCKS)
+        val proxy = ProxyEntry2("127.0.0.1", 10808, "abc", "abc", Proxy.Type.SOCKS)
         // println(proxy.toURI())
         assertEquals("socks", proxy.protocol)
         assertEquals("socks://abc:abc@127.0.0.1:10808", proxy.toURI().toString())
@@ -48,11 +49,11 @@ class TestProxyEntry {
     fun testParsingProxyEntryWithAuth() {
         val proxies = mapOf(
                 "58.218.200.226:6008 at:2019-08-24T15:34:28.255Z, ttl:2019-08-24T16:31:24.215Z, usr:abc, pwd:123" to
-                        ProxyEntry("58.218.200.226", 6008, "abc", "123"),
+                        ProxyEntry2("58.218.200.226", 6008, "abc", "123"),
         )
 
         proxies.forEach { (proxyString, expected) ->
-            val actual = ProxyEntry.parse(proxyString)
+            val actual = ProxyEntry2.parse(proxyString)
             assertNotNull(actual)
             assertEquals(expected.host, actual.host)
             assertEquals(expected.port, actual.port)

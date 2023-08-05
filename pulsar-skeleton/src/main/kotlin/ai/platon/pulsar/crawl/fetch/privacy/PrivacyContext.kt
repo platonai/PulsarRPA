@@ -85,7 +85,7 @@ abstract class PrivacyContext(
             val monthDay = MonthDay.now()
             val fileName = String.format("%s%02d%02d%s%s%s",
                 prefix, monthDay.monthValue, monthDay.dayOfMonth, contextDirSequencer, rand, contextCount)
-            return AppPaths.CONTEXT_TMP_DIR.resolve(monthDay.dayOfMonth.toString()).resolve(fileName)
+            return AppPaths.CONTEXT_TMP_DIR.resolve(monthDay.monthValue.toString()).resolve(fileName)
         }
     }
 
