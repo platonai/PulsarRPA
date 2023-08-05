@@ -2,7 +2,7 @@ package ai.platon.pulsar.browser.driver.examples
 
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
-import com.github.kklisura.cdt.protocol.events.page.*
+import com.github.kklisura.cdt.protocol.v2023.events.page.*
 import com.google.gson.Gson
 import java.util.concurrent.TimeUnit
 
@@ -11,7 +11,6 @@ class BlockUrlsExample: BrowserExampleBase() {
     override val testUrl = "https://www.stbchina.cn/"
 
     override fun run() {
-
         page.enable()
         network.enable()
         runtime.enable()

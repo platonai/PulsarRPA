@@ -4,8 +4,8 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.getLogger
-import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
-import com.github.kklisura.cdt.protocol.types.page.Viewport
+import com.github.kklisura.cdt.protocol.v2023.types.page.CaptureScreenshotFormat
+import com.github.kklisura.cdt.protocol.v2023.types.page.Viewport
 import com.google.gson.Gson
 import kotlin.math.roundToInt
 
@@ -101,7 +101,7 @@ class Screenshot(
             return null
         }
 
-        return page?.captureScreenshot(format, quality, viewport, true, false)
+        return page?.captureScreenshot(format, quality, viewport, true, false, false)
     }
 
     private fun calculateNodeClip(nodeId: Int, selector: String): NodeClip? {

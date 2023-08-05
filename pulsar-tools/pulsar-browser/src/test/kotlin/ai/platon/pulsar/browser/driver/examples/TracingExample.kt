@@ -1,7 +1,7 @@
 package ai.platon.pulsar.browser.driver.examples
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.kklisura.cdt.protocol.events.tracing.DataCollected
+import com.github.kklisura.cdt.protocol.v2023.events.tracing.DataCollected
 import java.io.File
 import java.io.IOException
 import java.nio.file.Path

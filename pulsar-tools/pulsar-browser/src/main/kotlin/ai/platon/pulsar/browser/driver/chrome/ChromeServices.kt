@@ -1,9 +1,9 @@
 package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
-import com.github.kklisura.cdt.protocol.ChromeDevTools
-import com.github.kklisura.cdt.protocol.support.types.EventHandler
-import com.github.kklisura.cdt.protocol.support.types.EventListener
+import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
+import com.github.kklisura.cdt.protocol.v2023.support.types.EventHandler
+import com.github.kklisura.cdt.protocol.v2023.support.types.EventListener
 import java.net.URI
 import java.util.concurrent.Future
 import java.util.function.Consumer

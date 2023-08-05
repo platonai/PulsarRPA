@@ -173,8 +173,7 @@ class ChromeImpl(
              * @see [#87](https://github.com/kklisura/chrome-devtools-java-client/issues/87)
              * */
             connection.requestMethod = method.toString()
-
-
+            
             val responseCode = connection.responseCode
             if (HttpURLConnection.HTTP_OK == responseCode) {
                 if (Void::class.java == responseType) {

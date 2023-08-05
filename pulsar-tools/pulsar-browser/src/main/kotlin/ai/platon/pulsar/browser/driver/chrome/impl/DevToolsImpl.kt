@@ -7,6 +7,7 @@ import ai.platon.pulsar.browser.driver.chrome.Transport
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCTimeoutException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.readable
 import com.codahale.metrics.Gauge
@@ -17,8 +18,8 @@ import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.type.TypeFactory
-import com.github.kklisura.cdt.protocol.support.types.EventHandler
-import com.github.kklisura.cdt.protocol.support.types.EventListener
+import com.github.kklisura.cdt.protocol.v2023.support.types.EventHandler
+import com.github.kklisura.cdt.protocol.v2023.support.types.EventListener
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
@@ -92,9 +93,10 @@ class EventDispatcher : Consumer<String> {
     }
 
     private val logger = LoggerFactory.getLogger(EventDispatcher::class.java)
+    
+    private val tracer get() = logger.takeIf { it.isTraceEnabled }
 
     private val invocationFutures: MutableMap<Long, InvocationFuture> = ConcurrentHashMap()
-//    private val eventListeners: MutableMap<String, MutableSet<DevToolsEventListener>> = mutableMapOf()
     private val eventListeners: ConcurrentHashMap<String, ConcurrentSkipListSet<DevToolsEventListener>> = ConcurrentHashMap()
 
     private val eventDispatcherScope = CoroutineScope(Dispatchers.Default) + CoroutineName("EventDispatcher")
@@ -156,7 +158,7 @@ class EventDispatcher : Consumer<String> {
     }
 
     override fun accept(message: String) {
-        logger.takeIf { it.isTraceEnabled }?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
+        tracer?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
 
         DevToolsImpl.numAccepts.inc()
         try {
@@ -199,7 +201,7 @@ class EventDispatcher : Consumer<String> {
             logger.error("Failed receiving web socket message", ex)
         }
     }
-
+    
     private fun handleEvent(name: String, params: JsonNode) {
         val listeners = eventListeners[name] ?: return
 
@@ -212,7 +214,8 @@ class EventDispatcher : Consumer<String> {
             handleEvent0(params, unmodifiedListeners)
         }
     }
-
+    
+    @Throws(Exception::class)
     private fun handleEvent0(params: JsonNode, unmodifiedListeners: Iterable<DevToolsEventListener>) {
         var event: Any? = null
         for (listener in unmodifiedListeners) {
@@ -223,8 +226,10 @@ class EventDispatcher : Consumer<String> {
             if (event != null) {
                 try {
                     listener.handler.onEvent(event)
-                } catch (t: Throwable) {
-                    logger.warn("Unexpected exception", t)
+                } catch (e: Exception) {
+                    logger.warn("Failed to handle event | {}, {} | {}", listener.key, listener.paramType, e.brief())
+                    // Let the exception throw again, they might be caught by RobustRPC, or somewhere else
+                    throw e
                 }
             }
         }
@@ -389,7 +394,7 @@ abstract class DevToolsImpl(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             // discard all furthers in dispatcher?
-            kotlin.runCatching { doClose() }.onFailure { logger.warn("[Unexpected][Ignored]", it.message) }
+            kotlin.runCatching { doClose() }.onFailure { logger.warn("[Unexpected][Ignored] | {}", it.message) }
             closeLatch.countDown()
         }
     }
