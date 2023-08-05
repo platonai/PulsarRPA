@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import org.jetbrains.kotlin.konan.file.File
 import org.junit.Test
 import kotlin.test.assertTrue
 
@@ -15,14 +16,15 @@ class ResourceWalkerTests {
 
     @Test
     fun testWalk() {
-        val targetResource = "data/html-charsets.txt"
+        val resource = "data/html-charsets.txt".replace("/", File.separator)
         var exists = false
         val resourceWalker = ResourceWalker()
         resourceWalker.walk("data", 2) { path ->
-            if (path.toString().contains(targetResource)) {
+            if (path.toString().contains(resource)) {
                 exists = true
             }
         }
-        assertTrue(exists)
+        
+        assertTrue(exists, "Resource should be found | $resource")
     }
 }

@@ -97,3 +97,7 @@ derby.log
 *.trace.db
 /.idea/httpRequests/
 .flattened-pom.xml
+
+# a source directory is "target"
+!*/**/src/main/java/com/github/kklisura/cdt/protocol/v2023/types/target
+!*/**/src/**/target

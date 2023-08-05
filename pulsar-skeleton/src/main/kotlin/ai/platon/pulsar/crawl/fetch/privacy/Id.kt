@@ -5,12 +5,10 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.readableClassName
-import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
 import java.nio.file.Path
-import java.time.MonthDay
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -128,6 +126,10 @@ data class PrivacyAgent(
          * after the browser closes.
          * */
         val DEFAULT = PrivacyAgent(PrivacyContext.DEFAULT_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
+        /**
+         * The random privacy agent opens browser with a random data dir.
+         * */
+        val RANDOM get() = PrivacyAgent(PrivacyContext.RANDOM_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
     }
 }
 
@@ -139,14 +141,13 @@ typealias PrivacyContextId = PrivacyAgent
  *
  * Every browser instance have a unique fingerprint and a context directory.
  * */
-data class BrowserId constructor(
+data class BrowserId(
     val contextDir: Path,
     val fingerprint: Fingerprint,
 ): Comparable<BrowserId> {
 
     val privacyAgent = PrivacyAgent(contextDir, fingerprint)
     val browserType: BrowserType get() = fingerprint.browserType
-    val proxyServer: String? get() = fingerprint.proxyServer
 
     val userDataDir: Path get() = when {
         privacyAgent.isUserDefault -> PrivacyContext.USER_DEFAULT_DATA_DIR_PLACEHOLDER
@@ -165,7 +166,13 @@ data class BrowserId constructor(
     constructor(privacyAgent: PrivacyAgent): this(privacyAgent.contextDir, privacyAgent.fingerprint)
 
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
-
+    
+    fun setProxy(schema: String, hostPort: String, username: String?, password: String?) {
+        fingerprint.setProxy(schema, hostPort, username, password)
+    }
+    
+    fun setProxy(proxy: ProxyEntry) = fingerprint.setProxy(proxy)
+    
     override fun equals(other: Any?): Boolean {
         return other is BrowserId && other.privacyAgent == privacyAgent
     }
@@ -191,6 +198,10 @@ data class BrowserId constructor(
          * Represent the prototype browser.
          * */
         val PROTOTYPE = BrowserId(PrivacyAgent.PROTOTYPE)
+        /**
+         * Represent a browser with random context dir.
+         * */
+        val RANDOM get() = BrowserId(PrivacyAgent.RANDOM)
     }
 }
 
@@ -230,28 +241,8 @@ class PrototypePrivacyContextIdGenerator: PrivacyContextIdGenerator {
 }
 
 class SequentialPrivacyContextIdGenerator: PrivacyContextIdGenerator {
-    companion object {
-        /** The root directory of privacy contexts, every context have its own directory in this fold */
-        private val sequencer = AtomicInteger()
-    }
-
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
-        PrivacyAgent(generateUserDataContextDir(), fingerprint)
-
-    @Synchronized
-    fun generateUserDataContextDir(): Path {
-        sequencer.incrementAndGet()
-        val prefix = PrivacyContext.CONTEXT_DIR_PREFIX
-        val contextCount = 1 + Files.list(AppPaths.CONTEXT_TMP_DIR)
-            .filter { Files.isDirectory(it) }
-            .filter { it.toString().contains(prefix) }
-            .count()
-        val rand = RandomStringUtils.randomAlphanumeric(5)
-        val monthDay = MonthDay.now()
-        val fileName = String.format("%s%02d%02d%s%s%s",
-            prefix, monthDay.monthValue, monthDay.dayOfMonth, sequencer, rand, contextCount)
-        return AppPaths.CONTEXT_TMP_DIR.resolve(fileName)
-    }
+        PrivacyAgent(PrivacyContext.computeNextSequentialContextDir(), fingerprint)
 }
 
 class PrivacyContextIdGeneratorFactory(val conf: ImmutableConfig) {

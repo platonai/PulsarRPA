@@ -18,17 +18,14 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
-import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
 import org.junit.Test
-import java.io.IOException
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.nio.file.attribute.FileAttribute
 import kotlin.random.Random
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TestAppPaths {
     private val tmpDirStr get() = AppPaths.TMP_DIR.toString()
@@ -38,6 +35,7 @@ class TestAppPaths {
     val tmp = SystemUtils.JAVA_IO_TMPDIR
     val appName = AppContext.APP_NAME
     val ident = AppContext.APP_IDENT
+    val sep = File.separatorChar
 
     @BeforeTest
     fun setup() {
@@ -52,36 +50,40 @@ class TestAppPaths {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testAppContextDirs() {
         assertEquals("pulsar", appName)
-        assertEquals(AppContext.APP_TMP_DIR.toString(), "$tmp/$appName")
-        assertEquals(AppContext.APP_PROC_TMP_DIR.toString(), "$tmp/$appName-$ident")
 
-        System.setProperty(CapabilityTypes.APP_TMP_DIR_KEY, "$home/prometheus")
-        assertEquals("$home/prometheus/$appName", AppContext.APP_TMP_DIR_RT.toString())
-        assertEquals("$home/prometheus/$appName-$ident", AppContext.APP_PROC_TMP_DIR_RT.toString())
+        if (SystemUtils.IS_OS_WINDOWS) {
+            assertEquals(AppContext.APP_TMP_DIR.toString(), "$tmp$appName")
+            assertEquals(AppContext.APP_PROC_TMP_DIR.toString(), "$tmp$appName-$ident")
+        }
+        
+        if (SystemUtils.IS_OS_LINUX) {
+            assertEquals(AppContext.APP_TMP_DIR.toString(), "$tmp$sep$appName")
+            assertEquals(AppContext.APP_PROC_TMP_DIR.toString(), "$tmp$sep$appName-$ident")
+        }
+        
+        System.setProperty(CapabilityTypes.APP_TMP_DIR_KEY, "$home${sep}prometheus")
+        assertEquals("$home${sep}prometheus$sep$appName", AppContext.APP_TMP_DIR_RT.toString())
+        assertEquals("$home${sep}prometheus$sep$appName-$ident", AppContext.APP_PROC_TMP_DIR_RT.toString())
     }
 
     @Test
-    @Throws(Exception::class)
     fun testCustomAppContextDirs() {
-        System.setProperty(CapabilityTypes.APP_TMP_DIR_KEY, "$home/prometheus")
+        System.setProperty(CapabilityTypes.APP_TMP_DIR_KEY, "$home${sep}prometheus")
         System.setProperty(CapabilityTypes.APP_NAME_KEY, "amazon")
         System.setProperty(CapabilityTypes.APP_ID_KEY, "bs")
 
-        assertEquals("$home/prometheus/amazon", AppContext.APP_TMP_DIR_RT.toString())
-        assertEquals("$home/prometheus/amazon-bs", AppContext.APP_PROC_TMP_DIR_RT.toString())
+        assertEquals("$home${sep}prometheus${sep}amazon", AppContext.APP_TMP_DIR_RT.toString())
+        assertEquals("$home${sep}prometheus${sep}amazon-bs", AppContext.APP_PROC_TMP_DIR_RT.toString())
     }
 
     @Test
-    @Throws(Exception::class)
     fun testPathStartWith() {
         assertTrue { AppPaths.CHROME_DATA_DIR_PROTOTYPE.startsWith(AppPaths.BROWSER_DATA_DIR) }
     }
 
     @Test
-    @Throws(Exception::class)
     fun testGet() {
         val filename = "finish_job-1217.20347.sh"
 
@@ -109,7 +111,6 @@ class TestAppPaths {
      *     #20 Failed to create symbolic link when export webpage on Windows 11</a>
      * */
     @Test
-    @Throws(Exception::class)
     fun testCreateSymbolicLink() {
         var i = 0
         val n = 50
@@ -121,9 +122,13 @@ class TestAppPaths {
             Files.writeString(path, "test")
 
             val link = AppPaths.uniqueSymbolicLinkForUri(url)
+
             try {
                 Files.deleteIfExists(link)
-                Files.createSymbolicLink(link, path)
+                assertTrue { Files.exists(path) }
+                assertFalse { Files.exists(link) }
+                AppFiles.createSymbolicLink(link, path)
+                
                 assertTrue { Files.exists(link) }
             } finally {
                 if (i % 2 == 0) {
@@ -135,7 +140,6 @@ class TestAppPaths {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testFromDomain() {
         assertTrue { Strings.isIpLike("8.8.8.8") }
         assertTrue { Strings.isIpLike("127.0.0.1") }

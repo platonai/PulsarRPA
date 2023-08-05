@@ -20,7 +20,6 @@ package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.OpenPageCategory

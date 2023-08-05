@@ -48,6 +48,11 @@ class TestRuntimes {
 
     @Test
     fun testDeleteBrokenSymbolicLinksUsingBash() {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            System.err.println("Files.createSymbolicLink failed on Windows")
+            return
+        }
+        
         val tmp = AppPaths.getTmp("test")
         val file = tmp.resolve(RandomStringUtils.randomAlphabetic(5))
         Files.createDirectories(file.parent)
@@ -78,15 +83,17 @@ class TestRuntimes {
         Files.createDirectories(file.parent)
         Files.writeString(file, "to be deleted")
         val symbolicPath = tmpDir.resolve(RandomStringUtils.randomAlphabetic(5))
-        Files.createSymbolicLink(symbolicPath, file)
+        AppFiles.createSymbolicLink(symbolicPath, file)
 
         assertTrue { Files.exists(file) }
         assertTrue { Files.exists(symbolicPath) }
 
         Files.delete(file)
         assertFalse { Files.exists(file) }
-        assertFalse { Files.exists(symbolicPath) }
-        assertTrue { Files.isSymbolicLink(symbolicPath) }
+        if (AppFiles.supportSymbolicLink(symbolicPath)) {
+            assertFalse { Files.exists(symbolicPath) }
+            assertTrue { Files.isSymbolicLink(symbolicPath) }
+        }
 
         Files.list(tmpDir).filter { Files.isSymbolicLink(it) && !Files.exists(it) }.forEach { Files.delete(it) }
 

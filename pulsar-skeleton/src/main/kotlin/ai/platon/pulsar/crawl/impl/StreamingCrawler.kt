@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.PageLoadStatusFormatter
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyInsufficientBalanceException
@@ -43,7 +43,7 @@ import kotlin.concurrent.withLock
 import kotlin.random.Random
 
 private class StreamingCrawlerMetrics {
-    private val registry = AppMetrics.defaultMetricRegistry
+    private val registry = MetricsSystem.defaultMetricRegistry
 
     val retries = registry.multiMetric(this, "retries")
     val cancels = registry.multiMetric(this, "cancels")
@@ -111,8 +111,8 @@ open class StreamingCrawler(
         /**
          * TODO: change to wrong profile
          * */
-        private var wrongDistrict = AppMetrics.reg.multiMetric(this, "WRONG_DISTRICT_COUNT")
-        private var wrongProfile = AppMetrics.reg.multiMetric(this, "WRONG_PROFILE_COUNT")
+        private var wrongDistrict = MetricsSystem.reg.multiMetric(this, "WRONG_DISTRICT_COUNT")
+        private var wrongProfile = MetricsSystem.reg.multiMetric(this, "WRONG_PROFILE_COUNT")
 
         private val readableCriticalWarning: String
             get() = criticalWarning?.message?.let { "!!! WARNING !!! $it !!! ${Instant.now()}" } ?: ""
@@ -132,7 +132,7 @@ open class StreamingCrawler(
                 "lastUrl" to Gauge { lastUrl },
                 "lastHtmlIntegrity" to Gauge { lastHtmlIntegrity },
                 "lastFetchError" to Gauge { lastFetchError },
-            ).let { AppMetrics.reg.registerAll(this, it) }
+            ).let { MetricsSystem.reg.registerAll(this, it) }
         }
     }
 
@@ -142,6 +142,7 @@ open class StreamingCrawler(
     private val conf = session.sessionConfig
     private val context = session.context as AbstractPulsarContext
     private val globalCache get() = session.globalCache
+    private val globalCacheOrNull get() = if (isActive) session.globalCache else null
     private val proxyPool: ProxyPool? = if (noProxy) null else context.getBeanOrNull(ProxyPool::class)
     private var proxyOutOfService = 0
 
@@ -228,13 +229,13 @@ open class StreamingCrawler(
     var jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5)
 
     init {
-        AppMetrics.reg.registerAll(this, "$id.g", gauges)
+        MetricsSystem.reg.registerAll(this, "$id.g", gauges)
 
         val cacheGauges = mapOf(
-            "pageCacheSize" to Gauge { globalCache.pageCache.size },
-            "documentCacheSize" to Gauge { globalCache.documentCache.size }
+            "pageCacheSize" to Gauge { globalCacheOrNull?.pageCache?.size?: 0 },
+            "documentCacheSize" to Gauge { globalCacheOrNull?.documentCache?.size?: 0 }
         )
-        AppMetrics.reg.registerAll(this, "$id.g", cacheGauges)
+        MetricsSystem.reg.registerAll(this, "$id.g", cacheGauges)
 
         generateFinishCommand()
     }
@@ -773,22 +774,21 @@ open class StreamingCrawler(
     private fun handleMemoryShortage(j: Int) {
         logger.info(
             "$j.\tnumRunning: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
-            globalRunningTasks,
-            Strings.compactFormat(AppSystemInfo.availableMemory),
+            globalRunningTasks, AppSystemInfo.formatAvailableMemory(),
             Strings.compactFormat(AppSystemInfo.actualCriticalMemory.toLong()),
-            Strings.compactFormat(AppSystemInfo.availableMemory - AppSystemInfo.actualCriticalMemory.toLong())
+            AppSystemInfo.formatMemoryShortage()
         )
         session.globalCache.clearPDCaches()
 
         // When control returns from the method call, the Java Virtual Machine
-        // has made a best effort to reclaim space from all unused objects.
+        // has made the best effort to reclaim space from all unused objects.
         System.gc()
     }
-
+    
     /**
      * Proxies should live for more than 5 minutes. If proxy is not enabled, the rate is always 0.
      *
-     * 5 / 60f = 0.083
+     * 5 / 60f ~= 0.083
      * */
     private suspend fun handleContextLeaks() {
         val contextLeaks = PrivacyContext.globalMetrics.contextLeaks
@@ -797,7 +797,7 @@ open class StreamingCrawler(
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
             logger.takeIf { k % 60 == 0 }?.warn(
                     "Context leaks too fast: {} leaks/seconds, available memory: {}",
-                    contextLeaksRate, Strings.compactFormat(AppSystemInfo.availableMemory))
+                    contextLeaksRate, AppSystemInfo.formatAvailableMemory())
             delay(1000)
 
             // trigger the meter updating

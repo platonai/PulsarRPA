@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.annotation.H2Context
@@ -52,7 +52,7 @@ object CommonFunctionTables {
     fun gauges(@H2Context conn: Connection): ResultSet {
         val rs = ResultSets.newSimpleResultSet("NAME", "VALUE")
 
-        AppMetrics.defaultMetricRegistry.gauges.forEach { (name, gauge) ->
+        MetricsSystem.defaultMetricRegistry.gauges.forEach { (name, gauge) ->
             rs.addRow(name, gauge.value)
         }
 
@@ -65,7 +65,7 @@ object CommonFunctionTables {
         val rs = ResultSets.newSimpleResultSet(
                 "NAME", "COUNT", "M1_RATE", "M5_RATE", "M15_RATE", "MEAN_RATE", "RATE_UNIT")
 
-        AppMetrics.defaultMetricRegistry.meters.forEach { (name, meter) ->
+        MetricsSystem.defaultMetricRegistry.meters.forEach { (name, meter) ->
             rs.addRow(name, meter.count, meter.oneMinuteRate, meter.fiveMinuteRate, meter.fifteenMinuteRate,
                     "events/second")
         }

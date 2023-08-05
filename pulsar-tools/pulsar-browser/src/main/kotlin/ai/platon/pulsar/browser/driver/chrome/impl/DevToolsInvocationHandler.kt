@@ -2,12 +2,12 @@ package ai.platon.pulsar.browser.driver.chrome.impl
 
 import ai.platon.pulsar.browser.driver.chrome.MethodInvocation
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
-import com.github.kklisura.cdt.protocol.support.annotations.EventName
-import com.github.kklisura.cdt.protocol.support.annotations.ParamName
-import com.github.kklisura.cdt.protocol.support.annotations.ReturnTypeParameter
-import com.github.kklisura.cdt.protocol.support.annotations.Returns
-import com.github.kklisura.cdt.protocol.support.types.EventHandler
-import com.github.kklisura.cdt.protocol.support.types.EventListener
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.EventName
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.ReturnTypeParameter
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.Returns
+import com.github.kklisura.cdt.protocol.v2023.support.types.EventHandler
+import com.github.kklisura.cdt.protocol.v2023.support.types.EventListener
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType

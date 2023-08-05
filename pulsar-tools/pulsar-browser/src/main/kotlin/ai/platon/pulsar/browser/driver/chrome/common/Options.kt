@@ -31,7 +31,8 @@ class LauncherOptions(
 annotation class ChromeParameter(val value: String)
 
 /**
- * The options to open chrome devtools
+ * The options to open chrome devtools, list of chrome command-line switches can be found in the below link:
+ * http://peter.sh/experiments/chromium-command-line-switches/
  * */
 class ChromeOptions(
     // user data dir is set as a constructor parameter of ChromeLauncher
@@ -77,6 +78,8 @@ class ChromeOptions(
     var disableSync: Boolean = true,
     @ChromeParameter("disable-translate")
     var disableTranslate: Boolean = true,
+    @ChromeParameter("disable-geolocation")
+    var disableGeolocation: Boolean = true,
     @ChromeParameter("disable-blink-features")
     var disableBlinkFeatures: String = "AutomationControlled",
     @ChromeParameter("metrics-recording-only")

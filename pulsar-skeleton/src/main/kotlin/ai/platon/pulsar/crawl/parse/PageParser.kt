@@ -23,7 +23,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.message.MiscMessageWriter
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
@@ -59,7 +59,7 @@ class PageParser(
 ) : Parameterized, JobInitialized, AutoCloseable {
 
     enum class Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
-    init { AppMetrics.reg.register(Counter::class.java) }
+    init { MetricsSystem.reg.register(Counter::class.java) }
 
     private val logger = LoggerFactory.getLogger(PageParser::class.java)
     private val parseCount = AtomicInteger()
@@ -272,7 +272,7 @@ class PageParser(
         }
 
         if (counter != null) {
-            AppMetrics.reg.enumCounterRegistry.inc(counter)
+            MetricsSystem.reg.enumCounterRegistry.inc(counter)
         }
     }
 

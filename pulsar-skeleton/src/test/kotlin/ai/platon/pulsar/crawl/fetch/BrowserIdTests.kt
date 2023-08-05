@@ -22,12 +22,12 @@ class BrowserIdTests {
         val id2 = BrowserId(contextPath, BrowserType.PLAYWRIGHT_CHROME)
         assertNotEquals(id, id2)
         assertNotEquals(id.hashCode(), id2.hashCode())
-        assertTrue { id.browserType.toString() > id2.browserType.toString() }
-        assertTrue { id.browserType < id2.browserType }
-        assertTrue { id.fingerprint < id2.fingerprint }
-        assertTrue { id > id2 }
-        assertTrue { id.toString().contains(contextPath.toString()) }
-        assertTrue { id.userDataDir.startsWith(contextPath) }
+        assertTrue("id.browserType.toString() > id2.browserType.toString()") { id.browserType.toString() > id2.browserType.toString() }
+        assertTrue("id.browserType < id2.browserType") { id.browserType < id2.browserType }
+        assertTrue("id.fingerprint < id2.fingerprint") { id.fingerprint > id2.fingerprint }
+        assertTrue("id > id2") { id > id2 }
+        assertTrue("contains") { id.toString().contains(contextPath.toString()) }
+        assertTrue("startsWith") { id.userDataDir.startsWith(contextPath) }
     }
 
     @Test

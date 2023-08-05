@@ -3,7 +3,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -34,7 +34,7 @@ open class ProxyContext(
             mapOf(
                 "proxyAbsences" to Gauge { numProxyAbsence.get() },
                 "runningTasks" to Gauge { numRunningTasks.get() }
-            ).forEach { AppMetrics.reg.register(this, it.key, it.value) }
+            ).forEach { MetricsSystem.reg.register(this, it.key, it.value) }
         }
 
         @Throws(ProxyException::class)

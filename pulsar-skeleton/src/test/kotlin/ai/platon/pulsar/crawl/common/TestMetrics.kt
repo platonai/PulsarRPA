@@ -3,7 +3,7 @@ package ai.platon.pulsar.crawl.common
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.sleepSeconds
 import org.junit.After
 import org.junit.Before
@@ -25,7 +25,7 @@ class TestMetrics {
 
     private val logger = LoggerFactory.getLogger(TestMetrics::class.java)
     private val conf = MutableConfig()
-    private val metrics = AppMetrics(conf)
+    private val metrics = MetricsSystem(conf)
 
     @Before
     fun setup() {
@@ -58,7 +58,7 @@ class TestMetrics {
             return
         }
 
-        val counters = IntRange(1, 10).map { AppMetrics.reg.counter("test.c$it") }
+        val counters = IntRange(1, 10).map { MetricsSystem.reg.counter("test.c$it") }
         var i = 0
         while (i++ < 60) {
             counters.forEachIndexed { j, c -> c.inc(j.toLong()) }

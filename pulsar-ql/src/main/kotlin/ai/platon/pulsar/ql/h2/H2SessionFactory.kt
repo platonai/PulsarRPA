@@ -48,7 +48,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     @Synchronized
     override fun createSession(ci: ConnectionInfo): Session {
         if (!sqlContext.isActive) {
-            throw DbException.get(ErrorCode.DATABASE_IS_CLOSED, "SQL context is closed")
+            throw IllegalStateException("[H2SessionFactory] SQL context is closed, will not create SQL session")
         }
 
         log.debug("Creating SQL session for h2 connection | {}", ci.url)

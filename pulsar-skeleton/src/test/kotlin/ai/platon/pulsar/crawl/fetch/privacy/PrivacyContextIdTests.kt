@@ -53,11 +53,4 @@ class PrivacyContextIdTests {
         activeContexts.computeIfAbsent(id) { 0 }
         assertTrue { activeContexts.containsKey(id) }
     }
-
-    @Test
-    fun testSequentialPrivacyContextIdGenerator() {
-        val generator = SequentialPrivacyContextIdGenerator()
-        val dir = generator.generateUserDataContextDir()
-        println(dir)
-    }
 }

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.browser.common
 
 import ai.platon.pulsar.common.Wildchar
-import com.github.kklisura.cdt.protocol.types.network.ResourceType
+import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 
 /**
  * The block rules of urls and resources

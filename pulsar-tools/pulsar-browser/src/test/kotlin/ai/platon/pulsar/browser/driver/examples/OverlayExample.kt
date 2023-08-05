@@ -1,7 +1,7 @@
 package ai.platon.pulsar.browser.driver.examples
 
-import com.github.kklisura.cdt.protocol.types.dom.RGBA
-import com.github.kklisura.cdt.protocol.types.overlay.HighlightConfig
+import com.github.kklisura.cdt.protocol.v2023.types.dom.RGBA
+import com.github.kklisura.cdt.protocol.v2023.types.overlay.HighlightConfig
 import com.google.gson.GsonBuilder
 
 class OverlayExample: BrowserExampleBase() {

@@ -5,10 +5,10 @@ import ai.platon.pulsar.common.geometric.DimD
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
-import com.github.kklisura.cdt.protocol.ChromeDevTools
-import com.github.kklisura.cdt.protocol.commands.DOM
-import com.github.kklisura.cdt.protocol.commands.Page
-import com.github.kklisura.cdt.protocol.types.input.*
+import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
+import com.github.kklisura.cdt.protocol.v2023.commands.DOM
+import com.github.kklisura.cdt.protocol.v2023.commands.Page
+import com.github.kklisura.cdt.protocol.v2023.types.input.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext

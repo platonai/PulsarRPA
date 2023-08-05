@@ -4,9 +4,8 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
-import com.github.kklisura.cdt.protocol.types.dom.Rect
-import com.github.kklisura.cdt.protocol.types.runtime.Evaluate
-import com.google.gson.Gson
+import com.github.kklisura.cdt.protocol.v2023.types.dom.Rect
+import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 
 class PageHandler(
     private val devTools: RemoteDevTools,
@@ -87,7 +86,8 @@ class PageHandler(
 
             dom?.scrollIntoViewIfNeeded(nodeId, node.backendNodeId, null, rect)
         } catch (e: ChromeRPCException) {
-            // logger.warn("Can to scroll into {} | {} | {}", nodeId, e.message, selector)
+            logger.debug("DOM.scrollIntoViewIfNeeded is not supported, fallback to Element.scrollIntoView | {} | {} | {}",
+                nodeId, e.message, selector)
             // Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
             evaluate("__pulsar_utils__.scrollIntoView('$selector')")
         }
@@ -116,8 +116,6 @@ class PageHandler(
 
         val exception = evaluate?.exceptionDetails?.exception
         if (exception != null) {
-//            logger.warn(exception.value?.toString())
-//            logger.warn(exception.unserializableValue)
             logger.info(exception.description + "\n>>>$expression<<<")
         }
 
