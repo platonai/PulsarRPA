@@ -17,7 +17,8 @@
 8. selenium support, and multiple browsers support
 9. support web driver's opener
    1. for chrome devtools, the opener can be found via ChromeTab.parentId
-11. more tests
+10. more tests
+11. upgrade to platon-3.7.x.pom
 
 
 ## 1.10.x

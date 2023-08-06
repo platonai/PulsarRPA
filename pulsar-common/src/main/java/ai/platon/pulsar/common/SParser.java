@@ -19,9 +19,8 @@ package ai.platon.pulsar.common;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.io.*;
 import java.lang.ref.WeakReference;
@@ -29,12 +28,15 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.*;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import static ai.platon.pulsar.common.LogsKt.getLogger;
 
 /**
  * A common string parser
@@ -43,14 +45,8 @@ import java.util.regex.PatternSyntaxException;
  * @version $Id: $Id
  */
 public class SParser {
-    /**
-     * Constant <code>LOG</code>
-     */
-    public static final Log LOG = LogFactory.getLog(SParser.class);
+    public static final Logger LOG = getLogger(SParser.class);
 
-    /**
-     * Constant <code>INVALID_DURATION</code>
-     */
     public static final Duration INVALID_DURATION = Duration.ofSeconds(Integer.MIN_VALUE);
 
     private static final Map<ClassLoader, Map<String, WeakReference<Class<?>>>> CACHE_CLASSES = new WeakHashMap<>();
