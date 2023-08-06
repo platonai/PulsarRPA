@@ -270,13 +270,13 @@ abstract class AbstractPulsarSession(
 
     override fun loadOutPages(portalUrl: UrlAware, options: LoadOptions) = loadOutPages0(portalUrl, options)
 
-    override fun submitOutPages(portalUrl: String, args: String) = submitOutPages(portalUrl, options(args))
+    override fun submitForOutPages(portalUrl: String, args: String) = submitForOutPages(portalUrl, options(args))
 
-    override fun submitOutPages(portalUrl: String, options: LoadOptions) = submitOutPages(PlainUrl(portalUrl), options)
+    override fun submitForOutPages(portalUrl: String, options: LoadOptions) = submitForOutPages(PlainUrl(portalUrl), options)
 
-    override fun submitOutPages(portalUrl: UrlAware, args: String) = submitOutPages(portalUrl, options(args))
+    override fun submitForOutPages(portalUrl: UrlAware, args: String) = submitForOutPages(portalUrl, options(args))
 
-    override fun submitOutPages(portalUrl: UrlAware, options: LoadOptions) = submitOutPages0(portalUrl, options)
+    override fun submitForOutPages(portalUrl: UrlAware, options: LoadOptions) = submitOutPages0(portalUrl, options)
 
     override fun loadOutPagesAsync(portalUrl: String, args: String) = loadOutPagesAsync(portalUrl, options(args))
 

@@ -1,6 +1,5 @@
 package ai.platon.pulsar.session
 
-import ai.platon.pulsar.common.BeanFactory
 import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -12,7 +11,6 @@ import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.DocumentCatch
 import ai.platon.pulsar.crawl.common.GlobalCache
-import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.PageCatch
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -864,7 +862,7 @@ interface PulsarSession : AutoCloseable {
      * @param args      The load arguments
      * @return The [PulsarSession] itself to enable chained operation
      */
-    fun submitOutPages(portalUrl: String, args: String): PulsarSession
+    fun submitForOutPages(portalUrl: String, args: String): PulsarSession
 
     /**
      * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
@@ -877,7 +875,7 @@ interface PulsarSession : AutoCloseable {
      * @param options   The load options
      * @return The [PulsarSession] itself to enable chained operation
      */
-    fun submitOutPages(portalUrl: String, options: LoadOptions): PulsarSession
+    fun submitForOutPages(portalUrl: String, options: LoadOptions): PulsarSession
 
     /**
      * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
@@ -890,7 +888,7 @@ interface PulsarSession : AutoCloseable {
      * @param args      The load arguments
      * @return The [PulsarSession] itself to enable chained operation
      */
-    fun submitOutPages(portalUrl: UrlAware, args: String): PulsarSession
+    fun submitForOutPages(portalUrl: UrlAware, args: String): PulsarSession
 
     /**
      * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
@@ -903,7 +901,7 @@ interface PulsarSession : AutoCloseable {
      * @param options   The load options
      * @return The [PulsarSession] itself to enable chained operation
      */
-    fun submitOutPages(portalUrl: UrlAware, options: LoadOptions): PulsarSession
+    fun submitForOutPages(portalUrl: UrlAware, options: LoadOptions): PulsarSession
 
     /**
      * Load a url as a resource without browser rendering.
