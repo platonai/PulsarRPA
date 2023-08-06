@@ -676,9 +676,27 @@
 
     <properties>
 
-        <pulsar.skip.assembly>true</pulsar.skip.assembly>
+        <!--  Gora Serialization  -->
+        <!--  When we upgrade gora, we have to consider the compatibility  -->
+        <!--
+            Gora 0.8 supports:
+            Apache Avro 1.8.1
+            Apache Hadoop 2.5.2
+            Apache HBase 1.2.3
+            Apache Spark 1.4.1
 
-        <!-- Required by gora, Configuration -->
+            Gora 0.9 supports:
+            Apache Avro 1.8.2
+            Apache Hadoop 2.5.2
+            Apache HBase 2.1.1
+            Apache Spark 2.2.1
+
+            See more at: http://gora.apache.org/
+          -->
+        <gora.version>0.8</gora.version>
+        <!-- Required by gora-0.8 -->
+        <avro.version>1.8.1</avro.version>
+        <!-- 2.5.2 is official, but 2.7.2 is a correct version, we will consider using a shaded gora -->
         <hadoop.version>2.7.2</hadoop.version>
 
         <dokka.version>1.8.10</dokka.version>

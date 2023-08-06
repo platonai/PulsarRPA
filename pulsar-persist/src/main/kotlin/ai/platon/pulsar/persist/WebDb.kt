@@ -200,7 +200,7 @@ class WebDb(
     @JvmOverloads
     @Throws(WebDBException::class)
     fun delete(originalUrl: String, norm: Boolean = false): Boolean {
-        val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
+        val (_, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
         if (key.isBlank()) {
             return false
         }
@@ -367,7 +367,7 @@ class WebDb(
      */
     @Throws(WebDBException::class)
     private fun getOrNull0(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): GWebPage? {
-        val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
+        val (_, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
 
         tracer?.trace("Getting $key")
 
