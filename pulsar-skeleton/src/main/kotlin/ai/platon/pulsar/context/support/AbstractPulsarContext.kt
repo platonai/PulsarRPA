@@ -128,8 +128,13 @@ abstract class AbstractPulsarContext(
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
      * */
-    @Throws(BeansException::class)
-    override fun <T : Any> getBean(requiredType: KClass<T>): T = applicationContext.getBean(requiredType.java)
+    @Throws(BeansException::class, IllegalStateException::class)
+    override fun <T : Any> getBean(requiredType: KClass<T>): T {
+        if (!isActive) {
+            throw IllegalStateException("System is down")
+        }
+        return applicationContext.getBean(requiredType.java)
+    }
 
     /**
      * Get a bean with the specified class, returns null if the bean doesn't exist

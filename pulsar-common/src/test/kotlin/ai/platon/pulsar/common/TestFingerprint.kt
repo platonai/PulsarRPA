@@ -44,14 +44,18 @@ class TestFingerprint {
     fun testComparison() {
         var f1 = Fingerprint(BrowserType.PULSAR_CHROME)
         var f2 = Fingerprint(BrowserType.PLAYWRIGHT_CHROME)
-        assertTrue { BrowserType.PULSAR_CHROME < BrowserType.PLAYWRIGHT_CHROME }
-        assertTrue { f1.compareTo(f2) < 0 }
-        assertTrue { f1 < f2 }
+        
+        assertTrue("L should be less then U in alphabetical order") { "L" < "U" }
+        assertTrue("PLAYWRIGHT_CHROME should < PULSAR_CHROME") {
+            BrowserType.PLAYWRIGHT_CHROME.name < BrowserType.PULSAR_CHROME.name }
+        assertTrue { f1.compareTo(f2) > 0 }
+        assertTrue { f1 > f2 }
 
         f1 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1")
         f2 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.2")
         assertTrue { f1 < f2 }
 
+        println("Compare with username ...")
         f1 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1", "sa")
         f2 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1", "sb")
         assertTrue { f1 < f2 }

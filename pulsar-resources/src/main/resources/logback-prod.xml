@@ -213,9 +213,14 @@
     <logger name="ai.platon.pulsar.browser" level="WARN" additivity="false">
         <appender-ref ref="BROWSER"/>
     </logger>
-    <logger name="ai.platon.pulsar.common.metrics.AppMetrics" level="WARN" additivity="false">
+
+    <logger name="ai.platon.pulsar.common.metrics.MetricsSystem" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
     </logger>
+    <logger name="ai.platon.pulsar.common.metrics.AppMetrics" level="INFO" additivity="false">
+        <appender-ref ref="METRICS"/>
+    </logger>
+
     <logger name="ai.platon.pulsar.common.CounterReporter" level="WARN" additivity="false">
         <appender-ref ref="COUNTERS"/>
     </logger>

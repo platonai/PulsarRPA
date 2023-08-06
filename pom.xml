@@ -46,7 +46,7 @@
         <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
         <url>https://github.com/platonai/pulsar</url>
-        <tag>v1.10.12</tag>
+        <tag>v1.12.0</tag>
     </scm>
 
     <repositories>
@@ -115,6 +115,13 @@
         </profile>
 
         <profile>
+            <id>dev-app</id>
+            <modules>
+                <module>pulsar-app</module>
+            </modules>
+        </profile>
+
+        <profile>
             <id>platon-release</id>
             <properties>
                 <platon-release-active>true</platon-release-active>
@@ -161,6 +168,26 @@
             <properties>
                 <platon-deploy-active>true</platon-deploy-active>
             </properties>
+            <modules>
+                <module>pulsar-common</module>
+                <module>pulsar-persist</module>
+                <module>pulsar-third</module>
+                <module>pulsar-skeleton</module>
+                <module>pulsar-resources</module>
+                <module>pulsar-dom</module>
+                <module>pulsar-plugins</module>
+
+                <module>pulsar-tools</module>
+                <module>pulsar-ql-common</module>
+                <module>pulsar-ql</module>
+
+                <module>pulsar-all</module>
+
+                <module>pulsar-spring-support</module>
+                <module>pulsar-rest</module>
+
+                <module>pulsar-client</module>
+            </modules>
 
             <build>
                 <plugins>

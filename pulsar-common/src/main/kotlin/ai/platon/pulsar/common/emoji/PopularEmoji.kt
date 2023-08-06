@@ -31,6 +31,6 @@ enum class PopularEmoji(val value: String, val alt: String) {
     override fun toString() = if (emojiVersion() <= 1.1) alt else value
 
     private fun emojiVersion(): Double {
-        return System.getProperty("emoji.version").toDoubleOrNull() ?: 6.0
+        return System.getProperty("emoji.version")?.toDoubleOrNull() ?: 6.0
     }
 }

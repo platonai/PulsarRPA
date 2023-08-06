@@ -5,9 +5,9 @@ import ai.platon.pulsar.dom.features.FeatureRegistry
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.SIB
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
-import ai.platon.pulsar.dom.select.getAnchors
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.select2
+import ai.platon.pulsar.dom.select.selectAnchors
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
@@ -121,7 +121,7 @@ object DomFunctionTables {
         }
 
         val doc = session.loadDocument(portalUrl)
-        val anchors = doc.document.getAnchors(restrictCss, offset, limit)
+        val anchors = doc.document.selectAnchors(restrictCss, offset, limit)
 
         return toResultSet(anchors)
     }
@@ -246,7 +246,7 @@ object DomFunctionTables {
         val elements = if (targetCss == ":root") {
             docs.map { it.document }
         } else {
-            docs.map { it.first(targetCss) }
+            docs.map { it.selectFirst(targetCss) }
         }
 
         return toResultSet("DOM", elements.asIterable().filterNotNull().map { domValue(it) })

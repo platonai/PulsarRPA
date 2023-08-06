@@ -2,12 +2,10 @@ package ai.platon.pulsar.test.browser
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.AppFiles
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
-import ai.platon.pulsar.test.TestBase
+import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyEntry2
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -15,23 +13,16 @@ import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
-import java.awt.Robot
 import java.io.IOException
+import java.net.Proxy
 import java.util.*
 import kotlin.test.*
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
-class ChromeWebDriverTests: TestBase() {
+class ChromeDevtoolsDriverTests: WebDriverTestBase() {
 
-    private val logger = getLogger(this)
-    private val warnUpUrl = "https://www.amazon.com/"
-    private val url = "https://www.amazon.com/dp/B09V3KXJPB"
-    private val asin = url.substringAfterLast("/dp/")
-    private val driverFactory get() = session.context.getBean(WebDriverFactory::class)
-    private val settings get() = driverFactory.driverSettings
-    private val confuser get() = settings.confuser
     private val fieldSelectors = mapOf(
         "01productTitle" to "#productTitle",
         "02acrPopover" to "#acrPopover",
@@ -247,34 +238,28 @@ class ChromeWebDriverTests: TestBase() {
         }
     }
 
-    private fun runWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
-        runBlocking {
-            driverFactory.create().use { driver ->
-                open(url, driver)
-                block(driver)
-            }
+    @Test
+    fun testProxyAuthorization() {
+        val proxyEntry = ProxyEntry2("127.0.0.1", 10808, "abc", "abc", Proxy.Type.SOCKS)
+        if (!NetUtil.testTcpNetwork(proxyEntry.host, proxyEntry.port)) {
+            logger.info("To run this test case, you should rise a local proxy server with proxy: {}", proxyEntry.toURI())
+            return
         }
-    }
 
-    private fun runWebDriverTest(block: suspend (driver: WebDriver) -> Unit) {
+        val browserId = BrowserId.RANDOM
+        browserId.setProxy(proxyEntry.toProxyEntry())
+
+        val browser = driverFactory.launchBrowser(browserId)
+        val driver = browser.newDriver()
+
         runBlocking {
-            driverFactory.create().use { driver ->
-                block(driver)
-            }
-        }
-    }
-
-    private suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) {
-        driver.navigateTo(warnUpUrl)
-        driver.navigateTo(url)
-        driver.waitForSelector("body")
-//        driver.bringToFront()
-        var n = scrollCount
-        while (n-- > 0) {
-            driver.scrollDown(1)
+            driver.navigateTo("https://www.baidu.com/")
+            driver.waitForNavigation()
+            driver.waitForSelector("body")
             delay(1000)
+            val source = driver.pageSource()
+            assertTrue { source != null && source.length > 1000 }
         }
-        driver.scrollToTop()
     }
 
     @Throws(IOException::class)

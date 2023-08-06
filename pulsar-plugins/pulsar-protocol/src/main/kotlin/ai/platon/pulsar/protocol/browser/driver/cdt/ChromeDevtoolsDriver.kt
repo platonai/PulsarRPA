@@ -8,19 +8,23 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.*
+import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.kklisura.cdt.protocol.types.network.Cookie
-import com.github.kklisura.cdt.protocol.types.network.ErrorReason
-import com.github.kklisura.cdt.protocol.types.page.Viewport
-import com.github.kklisura.cdt.protocol.types.runtime.Evaluate
+import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
+import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceived
+import com.github.kklisura.cdt.protocol.v2023.types.fetch.RequestPattern
+import com.github.kklisura.cdt.protocol.v2023.types.network.Cookie
+import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
+import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
+import com.github.kklisura.cdt.protocol.v2023.types.page.Viewport
+import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import kotlinx.coroutines.delay
-import org.apache.commons.math3.util.MathUtils
-import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
@@ -39,7 +43,9 @@ class ChromeDevtoolsDriver(
         val LOCALHOST_PREFIX = "http://localfile.org"
     }
 
-    private val logger = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
+    private val logger = getLogger(this)
+    
+    private val tracer get() = logger.takeIf { it.isTraceEnabled }
 
     override val browserType: BrowserType = BrowserType.PULSAR_CHROME
 
@@ -65,9 +71,9 @@ class ChromeDevtoolsDriver(
     private var lastSessionId: String? = null
     private var navigateUrl = chromeTab.url ?: ""
 
-    private val browserAPI get() = devTools.browser
+    private val browserAPI get() = devTools.browser.takeIf { isActive }
     private val pageAPI get() = devTools.page.takeIf { isActive }
-    private val targetAPI get() = devTools.target
+    private val targetAPI get() = devTools.target.takeIf { isActive }
     private val domAPI get() = devTools.dom.takeIf { isActive }
     private val cssAPI get() = devTools.css.takeIf { isActive }
     private val inputAPI get() = devTools.input.takeIf { isActive }
@@ -82,6 +88,9 @@ class ChromeDevtoolsDriver(
 
     private var numResponseReceived = AtomicInteger()
     private val rpc = RobustRPC(this)
+    private var credentials: Credentials? = null
+
+    private val networkManager by lazy { NetworkManager(this, rpc) }
 
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val initScriptCache = mutableListOf<String>()
@@ -143,6 +152,16 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "navigateTo", entry.url)
         }
     }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun getCookies(): List<Map<String, String>> {
+        return try {
+            rpc.invokeDeferred("getCookies") { getCookies0() } ?: listOf()
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "getCookies")
+            listOf()
+        }
+    }
 
     @Throws(WebDriverException::class)
     private fun getCookies0(): List<Map<String, String>> {
@@ -172,6 +191,8 @@ class ChromeDevtoolsDriver(
     override suspend fun stop() {
         navigateEntry.stopped = true
         try {
+            handleRedirect()
+
             if (browser.isGUI) {
                 // in gui mode, just stop the loading, so we can diagnose
                 pageAPI?.stopLoading()
@@ -179,8 +200,6 @@ class ChromeDevtoolsDriver(
                 // go to about:blank, so the browser stops the previous page and releases all resources
                 navigateTo(ChromeImpl.ABOUT_BLANK_PAGE)
             }
-
-            handleRedirect()
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "terminate")
         } catch (e: ChromeDriverException) {
@@ -495,11 +514,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun scrollTo(selector: String) {
-        try {
-            rpc.invokeDeferred("scrollTo") { page.scrollIntoViewIfNeeded(selector) }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "scrollTo")
-        }
+        rpc.invokeDeferredSilently("scrollTo") { page.scrollIntoViewIfNeeded(selector) }
     }
 
     @Throws(WebDriverException::class)
@@ -683,25 +698,10 @@ class ChromeDevtoolsDriver(
         return null
     }
 
-    @Throws(WebDriverException::class)
-    override suspend fun getCookies(): List<Map<String, String>> {
-        return try {
-            rpc.invokeDeferred("getCookies") { getCookies0() } ?: listOf()
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "getCookies")
-            listOf()
-        }
-    }
-
     override suspend fun bringToFront() {
         if (!checkState()) return
-
-        try {
-            rpc.invokeDeferred("bringToFront") {
-                pageAPI?.bringToFront()
-            }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e)
+        rpc.invokeDeferredSilently("bringToFront") {
+            pageAPI?.bringToFront()
         }
     }
 
@@ -739,6 +739,13 @@ class ChromeDevtoolsDriver(
         if (resourceBlockProbability > 1e-6) {
             fetchAPI?.enable()
         }
+
+        val proxyUsername = browser.id.fingerprint.proxyUsername
+        if (!proxyUsername.isNullOrBlank()) {
+            // allow all url patterns
+            val patterns = listOf(RequestPattern())
+            fetchAPI?.enable(patterns, true)
+        }
     }
 
     override fun toString() = "Driver#$id"
@@ -746,10 +753,9 @@ class ChromeDevtoolsDriver(
     /**
      * Navigate to the page and inject scripts.
      * */
-    private fun navigateInvaded(entry: NavigateEntry) {
+    private suspend fun navigateInvaded(entry: NavigateEntry) {
         val url = entry.url
 
-//        pageAPI?.addScriptToEvaluateOnNewDocument(buildInitScripts())
         addScriptToEvaluateOnNewDocument()
 
         if (blockedURLs.isNotEmpty()) {
@@ -757,56 +763,18 @@ class ChromeDevtoolsDriver(
             networkAPI?.setBlockedURLs(blockedURLs)
         }
 
-        networkAPI?.onRequestWillBeSent { requestWillBeSent ->
-            if (entry.mainRequestId.isBlank()) {
-                // The first request, fetch the main HTML
+        // TODO: use Request, Response events instead of RequestWillBeSent, ResponseReceived
+//        networkManager.on(NetworkManagerEvents.Request) { request: CDPRequest ->  }
+//        networkManager.on(NetworkManagerEvents.Response) { response: CDPResponse ->  }
+        networkManager.on(NetworkEvents.RequestWillBeSent) { event: RequestWillBeSent -> onRequestWillBeSent(entry, event) }
+        networkManager.on(NetworkEvents.ResponseReceived) { event: ResponseReceived -> onResponseReceived(entry, event) }
 
-                // amazon.com uses "referer" instead of "referrer" in the request header,
-                // not clear if other sites uses the other one
-                val headers: MutableMap<String, Any> = requestWillBeSent.request.headers
-                entry.pageReferrer?.let {
-                    headers["referer"] = it
-                    headers["referrer"] = it
-                }
+        pageAPI?.onDocumentOpened { entry.mainRequestCookies = getCookies0() }
 
-                entry.mainRequestId = requestWillBeSent.requestId
-                entry.mainRequestHeaders = requestWillBeSent.request.headers
-            }
-
-            if (resourceBlockProbability > 1e-6) {
-                val requestUrl = requestWillBeSent.request.url
-                if (probabilityBlockedURLs.any { requestUrl.matches(it.toRegex()) }) {
-                    // random drop requests
-                    val hit = Random.nextInt(100) / 100.0f < resourceBlockProbability
-                    if (hit) {
-                        // ErrorReason.CONNECTION_FAILED
-                        fetchAPI?.failRequest(requestWillBeSent.requestId, ErrorReason.ABORTED)
-                    }
-                }
-            }
-        }
-
-        networkAPI?.onResponseReceived { response ->
-            val maxResponses = numResponseReceivedToDisableNetwork
-            if (maxResponses > 0 && entry.mainRequestId.isNotBlank()) {
-                // split the `if` to make it clearer
-                if (numResponseReceived.incrementAndGet() == maxResponses) {
-                    // Disables network tracking, prevents network events from being sent to the client.
-                    // TODO: does the resource blocking logic work if we disable the network API?
-                    // networkAPI?.disable()
-                    // logger.info("Network API for driver #{} is disabled", id)
-                }
-            }
-
-            if (entry.mainResponseStatus < 0) {
-                entry.mainResponseStatus = response.response.status
-                entry.mainResponseStatusText = response.response.statusText
-                entry.mainResponseHeaders = response.response.headers
-            }
-        }
-
-        pageAPI?.onDocumentOpened {
-            entry.mainRequestCookies = getCookies0()
+        val proxyUsername = browser.id.fingerprint.proxyUsername
+        if (!proxyUsername.isNullOrBlank()) {
+            credentials = Credentials(proxyUsername, browser.id.fingerprint.proxyPassword)
+            credentials?.let { networkManager.authenticate(it) }
         }
 
         navigateUrl = url
@@ -827,6 +795,58 @@ class ChromeDevtoolsDriver(
 
         navigateUrl = url
         pageAPI?.navigate(url)
+    }
+
+    private fun onRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent) {
+        tracer?.trace("onRequestWillBeSent | driver | {}", event.requestId)
+
+        if (event.type == ResourceType.DOCUMENT) {
+            // amazon.com uses "referer" instead of "referrer" in the request header,
+            // not clear if other sites uses the other one
+            val headers: MutableMap<String, Any> = event.request.headers
+            entry.pageReferrer?.let {
+                headers["referer"] = it
+                headers["referrer"] = it
+            }
+
+            entry.mainRequestId = event.requestId
+            entry.mainRequestHeaders = event.request.headers
+        }
+        
+        if (resourceBlockProbability > 1e-6) {
+            val requestUrl = event.request.url
+            if (probabilityBlockedURLs.any { requestUrl.matches(it.toRegex()) }) {
+                // random drop requests
+                val hit = Random.nextInt(100) / 100.0f < resourceBlockProbability
+                if (hit) {
+                    // ErrorReason.CONNECTION_FAILED
+                    fetchAPI?.failRequest(event.requestId, ErrorReason.ABORTED)
+                }
+            }
+        }
+    }
+
+    private fun onResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
+        tracer?.trace("onResponseReceived | driver | {}", event.requestId)
+
+        val maxResponses = numResponseReceivedToDisableNetwork
+        if (maxResponses > 0 && entry.mainRequestId.isNotBlank()) {
+            // split the `if` to make it clearer
+            if (numResponseReceived.incrementAndGet() == maxResponses) {
+                // Disables network tracking, prevents network events from being sent to the client.
+                // TODO: does the resource blocking logic work if we disable the network API?
+                // networkAPI?.disable()
+                // logger.info("Network API for driver #{} is disabled", id)
+            }
+        }
+        
+        if (event.type == ResourceType.DOCUMENT) {
+            tracer?.trace("onResponseReceived | driver, document | {}", event.requestId)
+
+            entry.mainResponseStatus = event.response.status
+            entry.mainResponseStatusText = event.response.statusText
+            entry.mainResponseHeaders = event.response.headers
+        }
     }
 
     private suspend fun handleRedirect() {
@@ -864,7 +884,7 @@ class ChromeDevtoolsDriver(
         val dir = AppPaths.REPORT_DIR.resolve("browser/js")
         Files.createDirectories(dir)
         val report = Files.writeString(dir.resolve("preload.all.js"), script)
-        logger.trace("All injected js: file://$report")
+        tracer?.trace("All injected js: file://$report")
     }
 
     private suspend fun isMainFrame(frameId: String): Boolean {

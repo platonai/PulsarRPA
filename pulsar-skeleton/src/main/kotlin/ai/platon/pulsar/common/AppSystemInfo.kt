@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import oshi.SystemInfo
 import oshi.hardware.CentralProcessor
+import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 
@@ -13,17 +14,22 @@ import java.time.Instant
  * */
 class AppSystemInfo {
     companion object {
+        private val logger = getLogger(this)
+        
         private var prevCPUTicks = LongArray(CentralProcessor.TickType.values().size)
+        
+        private var isOSHIChecked = false
+        private var isOSHIAvailable = false
 
         var CRITICAL_CPU_THRESHOLD = System.getProperty("critical.cpu.threshold") ?.toDoubleOrNull() ?: 0.85
 
         val startTime = Instant.now()
         val elapsedTime get() = Duration.between(startTime, Instant.now())
 
-        val systemInfo = SystemInfo()
+        val systemInfo = if (isOSHIAvailable()) SystemInfo() else null
 
         // OSHI cached the value, so it's fast and safe to be called frequently
-        val memoryInfo get() = systemInfo.hardware.memory
+        val memoryInfo get() = systemInfo?.hardware?.memory
 
         /**
          * System cpu load in [0, 1]
@@ -55,7 +61,10 @@ class AppSystemInfo {
          *
          * @see [Load average: What is it, and what's the best load average for your Linux servers?](https://www.site24x7.com/blog/load-average-what-is-it-and-whats-the-best-load-average-for-your-linux-servers)
          * */
-        val systemLoadAverage get() = systemInfo.hardware.processor.getSystemLoadAverage(3)
+        val systemLoadAverage: DoubleArray? get() {
+            val si = systemInfo ?: return null
+            return si.hardware.processor.getSystemLoadAverage(3)
+        }
 
         /**
          * Free memory in bytes.
@@ -70,13 +79,19 @@ class AppSystemInfo {
          * Available memory is the amount of memory which is available for allocation to a new process or to existing
          * processes.
          * */
-        val availableMemory get() = memoryInfo.available
+        val availableMemory: Long? get() = memoryInfo?.available
 
-        val usedMemory get() = memoryInfo.total - memoryInfo.available
+        val usedMemory: Long? get() {
+            val mi = memoryInfo ?: return null
+            return mi.total - mi.available
+        }
 
         val totalMemory get() = Runtime.getRuntime().totalMemory()
         val totalMemoryGiB get() = ByteUnit.BYTE.toGiB(totalMemory.toDouble())
-        val availableMemoryGiB get() = ByteUnit.BYTE.toGiB(availableMemory.toDouble())
+        val availableMemoryGiB: Double? get() {
+            val m = availableMemory ?: return null
+            return ByteUnit.BYTE.toGiB(m.toDouble())
+        }
 
         //        private val memoryToReserveLarge get() = conf.getDouble(
 //            CapabilityTypes.BROWSER_MEMORY_TO_RESERVE_KEY,
@@ -90,7 +105,10 @@ class AppSystemInfo {
             else -> AppConstants.BROWSER_TAB_REQUIRED_MEMORY
         }
 
-        val isCriticalMemory get() = availableMemory < actualCriticalMemory
+        val isCriticalMemory: Boolean get() {
+            val am = availableMemory ?: return false
+            return am < actualCriticalMemory
+        }
 
         val freeDiskSpaces get() = Runtimes.unallocatedDiskSpaces()
 
@@ -98,13 +116,72 @@ class AppSystemInfo {
 
         val isCriticalResources get() = isCriticalMemory || isCriticalCPULoad || isCriticalDiskSpace
 
+        /**
+         *
+         * */
+        fun isOSHIAvailable(): Boolean {
+            if (isOSHIChecked) {
+                return isOSHIAvailable
+            }
+
+            val si = SystemInfo()
+            try {
+                val versionInfo = si.operatingSystem.versionInfo
+                val processor = si.hardware.processor
+                val memory = si.hardware.memory
+                
+                logger.info("Operation system: {}", versionInfo)
+                logger.info("Processor: {}", processor)
+                logger.info("Memory: {}", memory)
+                
+                isOSHIAvailable = true
+            } catch (e: Throwable) {
+                handleOSHINotAvailable()
+                isOSHIAvailable = false
+            }
+            
+            return isOSHIAvailable
+        }
+
+        fun networkIFsReceivedBytes(): Long {
+            val si = systemInfo ?: return -1
+            return si.hardware.networkIFs.sumOf { it.bytesRecv.toInt() }.toLong().coerceAtLeast(0)
+        }
+
+        private fun handleOSHINotAvailable() {
+            val path = AppPaths.TMP_DIR.resolve("system.properties")
+            try {
+                val text = System.getProperties().entries.joinToString("\n") { "" + it.key + "=" + it.value}
+                Files.writeString(path, text)
+            } catch (t: Throwable) {
+                System.err.println(t.stringify())
+                logger.warn(t.stringify())
+            }
+
+            val message = "OSHI (https://github.com/oshi/oshi) doesn't work on your system, you can ignore the message, " +
+                "\nbut we suggest you to create a issue to https://github.com/platonai/pulsarRPA " +
+                "\nwith the system information in file $path"
+
+            System.err.println(message)
+            logger.warn(message)
+        }
+
+        fun formatAvailableMemory(): String {
+            return availableMemory?.let { Strings.compactFormat(it) } ?: "N/A"
+        }
+        
+        fun formatMemoryShortage(): String {
+            val availableMemory = AppSystemInfo.availableMemory ?: return "N/A"
+            return Strings.compactFormat(availableMemory - actualCriticalMemory.toLong())
+        }
+        
         private fun checkIsOutOfDisk(): Boolean {
             val freeSpace = freeDiskSpaces.maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
             return freeSpace < 10.0
         }
 
         private fun computeSystemCpuLoad(): Double {
-            val processor = systemInfo.hardware.processor
+            val processor = systemInfo?.hardware?.processor ?: return 0.0
 
             synchronized(prevCPUTicks) {
                 // Returns the "recent cpu usage" for the whole system by counting ticks

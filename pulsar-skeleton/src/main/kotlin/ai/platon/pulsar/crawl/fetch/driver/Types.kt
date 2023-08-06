@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
-import java.util.*
+import java.util.Queue
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class JsException(
     val text: String? = null,
@@ -24,8 +25,11 @@ class NavigateHistory {
     /**
      * Navigate history is small, so search is very fast in a list.
      * */
-    val history: MutableList<NavigateEntry> = Collections.synchronizedList(mutableListOf())
+    val history: Queue<NavigateEntry> = ConcurrentLinkedQueue()
 
+    /**
+     *
+     * */
     fun isEmpty() = history.isEmpty()
 
     fun isNotEmpty() = history.isNotEmpty()
@@ -44,7 +48,7 @@ class NavigateHistory {
 
     fun lastOrNull(urlRegex: Regex) = history.lastOrNull { it.url.matches(urlRegex) }
 
-    fun findAll(urlRegex: Regex) = history.map { it.url.matches(urlRegex) }
+    fun findAll(urlRegex: Regex) = history.filter { it.url.matches(urlRegex) }
 
     fun add(entry: NavigateEntry) {
         history.add(entry)

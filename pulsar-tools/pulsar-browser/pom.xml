@@ -30,16 +30,17 @@
             <artifactId>tyrus-container-grizzly-client</artifactId>
             <version>${tyrus.version}</version>
         </dependency>
-
+        <!-- https://mvnrepository.com/artifact/javassist/javassist -->
         <dependency>
-            <groupId>com.github.kklisura.cdt</groupId>
-            <artifactId>cdt-java-client</artifactId>
-            <version>4.0.0</version>
+            <groupId>javassist</groupId>
+            <artifactId>javassist</artifactId>
+            <version>${javassist.version}</version>
         </dependency>
     </dependencies>
 
     <properties>
         <websocket.api.version>1.1</websocket.api.version>
         <tyrus.version>1.13.1</tyrus.version>
+        <javassist.version>3.12.1.GA</javassist.version>
     </properties>
 </project>

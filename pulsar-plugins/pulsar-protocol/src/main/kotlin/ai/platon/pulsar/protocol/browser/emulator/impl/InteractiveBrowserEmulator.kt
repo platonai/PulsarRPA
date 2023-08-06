@@ -4,7 +4,7 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.persist.ext.browseEvent
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchResult
@@ -43,7 +43,7 @@ open class InteractiveBrowserEmulator(
     private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
-    val numDeferredNavigates by lazy { AppMetrics.reg.meter(this, "deferredNavigates") }
+    val numDeferredNavigates by lazy { MetricsSystem.reg.meter(this, "deferredNavigates") }
 
     init {
         attach()

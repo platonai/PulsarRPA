@@ -18,10 +18,6 @@ class PrintFlowEvent: DefaultPageEvent() {
 
     init {
         loadEvent.apply {
-            onFilter.addLast { url ->
-                println("$seq. load - onFilter")
-                url
-            }
             onNormalize.addLast { url ->
                 println("$seq. load - onNormalize")
                 url
@@ -96,14 +92,6 @@ class PrintFlowEvent: DefaultPageEvent() {
         }
 
         crawlEvent.apply {
-            onFilter.addLast { url: UrlAware ->
-                println("$seq. crawl - onFilter")
-                url
-            }
-            onNormalize.addLast { url: UrlAware ->
-                println("$seq. crawl - onNormalize")
-                url
-            }
             onWillLoad.addLast { url: UrlAware ->
                 println("$seq. crawl - onWillLoad")
                 url

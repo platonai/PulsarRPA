@@ -61,8 +61,8 @@ class MultiMetric(
     }
 }
 
-class AppMetrics(
-        conf: ImmutableConfig
+open class MetricsSystem(
+    conf: ImmutableConfig
 ): AutoCloseable {
     companion object {
         init {
@@ -79,17 +79,21 @@ class AppMetrics(
         val defaultMetricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
         val reg = defaultMetricRegistry
 
+        private fun formatAvailableMemoryGauge(): String {
+            return AppSystemInfo.availableMemory?.let { Strings.compactFormat(it) } ?: "Not available"
+        }
+        
         init {
             mapOf(
                 "startTime" to Gauge { AppSystemInfo.startTime },
                 "elapsedTime" to Gauge { AppSystemInfo.elapsedTime },
-                "availableMemory" to Gauge { Strings.compactFormat(AppSystemInfo.availableMemory) },
+                "availableMemory" to Gauge { formatAvailableMemoryGauge() },
                 "freeSpace" to Gauge { AppSystemInfo.freeDiskSpaces.map { Strings.compactFormat(it) } }
             ).let { reg.registerAll(this, it) }
         }
     }
 
-    private val logger = LoggerFactory.getLogger(AppMetrics::class.java)
+    private val logger = LoggerFactory.getLogger(MetricsSystem::class.java)
     private val timeIdent = DateTimes.formatNow("MMdd")
     private val isEnabled = conf.getBoolean(CapabilityTypes.METRICS_ENABLED, false)
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
@@ -118,7 +122,7 @@ class AppMetrics(
 //        .build(reportDir.toFile())
     private val slf4jReporter = CodahaleSlf4jReporter.forRegistry(metricRegistry)
         .scheduleOn(executor).shutdownExecutorOnStop(true)
-        .outputTo(LoggerFactory.getLogger(AppMetrics::class.java))
+        .outputTo(LoggerFactory.getLogger(MetricsSystem::class.java))
         .convertRatesTo(TimeUnit.SECONDS)
         .convertDurationsTo(TimeUnit.MILLISECONDS)
         .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
@@ -177,18 +181,38 @@ class AppMetrics(
         }
     }
 
+    /**
+     * Close the metrics system.
+     *
+     * Note: this object is closed by spring framework, but some reporter will report for the last time before close,
+     * and the last report may throw exceptions if some metrics depends on the creation of spring beans.
+     * */
     override fun close() {
         if (isEnabled && closed.compareAndSet(false, true)) {
-            hourlyTimer.cancel()
-            dailyTimer.cancel()
+            runCatching { doClose() }.onFailure { logger.warn(it.brief("[Unexpected] - ")) }
+        }
+    }
+    
+    private fun doClose() {
+        hourlyTimer.cancel()
+        dailyTimer.cancel()
 
 //            csvReporter.close()
-            slf4jReporter.close()
+        slf4jReporter.close()
 //            jmxReporter.close()
-            graphiteReporter?.close()
-            graphiteReporter = null
+        graphiteReporter?.close()
+        graphiteReporter = null
+        
+        counterReporter.close()
+    }
+}
 
-            counterReporter.close()
-        }
+@Deprecated("Inappropriate name", ReplaceWith("MetricsSystem"))
+class AppMetrics(conf: ImmutableConfig): MetricsSystem(conf) {
+    companion object {
+        const val SHADOW_METRIC_SYMBOL = MetricsSystem.SHADOW_METRIC_SYMBOL
+        
+        val defaultMetricRegistry = MetricsSystem.defaultMetricRegistry
+        val reg = MetricsSystem.reg
     }
 }

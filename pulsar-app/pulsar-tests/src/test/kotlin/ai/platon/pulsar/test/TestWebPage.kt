@@ -84,7 +84,7 @@ class TestWebPage: TestBase() {
         pageModel.emplace(groupId, "", mapOf("a1" to "1", "b2" to "2", "b22" to "22"))
         assertEquals("Utf8", pageModel.unbox().fieldGroups.first().fields.keys.first().javaClass.simpleName)
         assertEquals("String", pageModel.unbox().fieldGroups.first().fields.values.first().javaClass.simpleName)
-        assertEquals("1", pageModel.findById(groupId)?.get("a1"))
+        assertEquals("1", pageModel.findGroup(groupId)?.get("a1"))
         session.persist(page)
 
         val page2 = webDB.get(url)
@@ -92,7 +92,7 @@ class TestWebPage: TestBase() {
         val pageModel2 = page2.pageModel
         assertNotNull(pageModel2)
         val fieldGroups2 = page2.unbox().pageModel.fieldGroups
-        val fieldGroup2 = pageModel2.findById(groupId)
+        val fieldGroup2 = pageModel2.findGroup(groupId)
         val fieldGroup21 = fieldGroups2.firstOrNull { it.id == groupId.toLong() }
         assertNotNull(fieldGroup21)
         pageModel2.emplace(groupId, "", mapOf("c3" to "3", "d4" to "4"))
@@ -112,7 +112,7 @@ class TestWebPage: TestBase() {
         val page3 = webDB.get(url)
         assertNotEquals(page.id, page3.id)
         val pageModel3 = page3.pageModel
-        val fieldGroup3 = pageModel2.findById(groupId)
+        val fieldGroup3 = pageModel2.findGroup(groupId)
         assertNotNull(pageModel3)
         println("fieldGroup3.fieldsCopy: " + fieldGroup3?.fieldsCopy)
         assertEquals("4", fieldGroup3?.get("d4"))

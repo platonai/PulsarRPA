@@ -187,11 +187,14 @@
     <logger name="ai.platon.pulsar.crawl.component" level="INFO">
         <appender-ref ref="SERVER"/>
     </logger>
-    <logger name="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulateEventHandler" level="INFO">
+
+    <logger name="ai.platon.pulsar.browser" level="INFO" additivity="false">
+        <appender-ref ref="BROWSER"/>
+    </logger>
+    <logger name="ai.platon.pulsar.protocol.browser.emulator.context" level="INFO">
         <appender-ref ref="SERVER"/>
     </logger>
-
-    <logger name="ai.platon.pulsar.protocol.browser.emulator.context" level="INFO">
+    <logger name="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulateEventHandler" level="INFO">
         <appender-ref ref="SERVER"/>
     </logger>
 
@@ -211,12 +214,14 @@
     <logger name="ai.platon.pulsar.common.collect.FatLinkExtractor" level="INFO" additivity="false">
         <appender-ref ref="PAGES"/>
     </logger>
-    <logger name="ai.platon.pulsar.browser" level="INFO" additivity="false">
-        <appender-ref ref="BROWSER"/>
+
+    <logger name="ai.platon.pulsar.common.metrics.MetricsSystem" level="INFO" additivity="false">
+        <appender-ref ref="METRICS"/>
     </logger>
     <logger name="ai.platon.pulsar.common.metrics.AppMetrics" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
     </logger>
+
     <logger name="ai.platon.pulsar.common.CounterReporter" level="INFO" additivity="false">
         <appender-ref ref="COUNTERS"/>
     </logger>

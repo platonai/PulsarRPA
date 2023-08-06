@@ -5,7 +5,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 
 /**
- * Demonstrates the very basic usage of Pulsar.
+ * Demonstrates the very basic usage of PulsarRPA.
  * */
 fun main() {
     // Create a pulsar session

@@ -292,10 +292,11 @@ abstract class AbstractWebDriver(
 
         // Since the browser uses the system proxy (by default),
         // so the http connection should also use the system proxy
-        val proxy = browser.id.proxyServer ?: System.getenv("http_proxy")
+        val proxy = browser.id.fingerprint.proxyServer ?: System.getenv("http_proxy")
         if (proxy != null && UrlUtils.isStandard(proxy)) {
             val u = UrlUtils.getURLOrNull(proxy)
             if (u != null) {
+                // TODO: sock proxy support
                 session.proxy(u.host, u.port)
             }
         }

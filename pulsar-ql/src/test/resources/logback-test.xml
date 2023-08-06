@@ -59,6 +59,9 @@
         <appender-ref ref="Console"/>
     </root>
 
+    <logger name="ai.platon.pulsar.common.metrics.MetricsSystem" level="INFO" additivity="false">
+        <appender-ref ref="METRICS"/>
+    </logger>
     <logger name="ai.platon.pulsar.common.metrics.AppMetrics" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
     </logger>
@@ -79,9 +82,6 @@
     <logger name="org.springframework.context" level="INFO"/>
     <logger name="org.springframework.core" level="INFO"/>
     <logger name="org.springframework.core.env" level="INFO"/>
-
-    <!-- Debug chrome. Be sure to remove or turn the logger off, when done. -->
-    <logger name="com.github.kklisura.cdt.launch.chrome.output" level="DEBUG"/>
 
     <logger name="ai.platon.pulsar" level="INFO"/>
     <logger name="ai.platon.pulsar.common" level="WARN"/>

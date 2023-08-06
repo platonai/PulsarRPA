@@ -4,14 +4,13 @@ import ai.platon.pulsar.common.measure.ByteUnitConverter
 import kotlinx.coroutines.delay
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
+import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
-import java.nio.file.FileStore
-import java.nio.file.FileSystems
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.io.InputStreamReader
+import java.nio.file.*
 import java.time.Duration
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
@@ -107,7 +106,7 @@ object Runtimes {
 
         return String.format("%-8s %-6d %-6s %-25s %-10s %s", user, pid, ppid, startTime?:"", cpuDuration?:"", cmdLine)
     }
-
+    
     fun deleteBrokenSymbolicLinks(symbolicLink: Path) {
         if (SystemUtils.IS_OS_WINDOWS) {
             // TODO: use command line
@@ -170,5 +169,31 @@ object ProcessLauncher {
         })
 
         return processBuilder.start()
+    }
+
+    /**
+     * Waits for DevTools server is up on chrome process.
+     *
+     * @param process Chrome process.
+     */
+    fun waitFor(process: Process): String {
+        val processOutput = StringBuilder()
+        val readLineThread = Thread {
+            BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
+                var line: String
+                while (reader.readLine().also { line = it } != null) {
+                    processOutput.appendLine(line)
+                }
+            }
+        }
+        readLineThread.start()
+
+        try {
+            readLineThread.join(Duration.ofMinutes(1).toMillis())
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
+
+        return processOutput.toString()
     }
 }

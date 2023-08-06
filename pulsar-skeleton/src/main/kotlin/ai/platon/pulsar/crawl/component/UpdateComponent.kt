@@ -23,7 +23,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.schedule.DefaultFetchSchedule
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
@@ -34,7 +34,6 @@ import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.Instant
 
@@ -54,11 +53,11 @@ class UpdateComponent(
         enum class Counter { rCreated, rNewDetail, rPassed, rLoaded, rNotExist, rDepthUp, rUpdated, rTotalUpdates, rBadModTime }
 
         init {
-            AppMetrics.reg.register(Counter::class.java)
+            MetricsSystem.reg.register(Counter::class.java)
         }
     }
 
-    private val enumCounters = AppMetrics.reg.enumCounterRegistry
+    private val enumCounters = MetricsSystem.reg.enumCounterRegistry
 
     constructor(webDb: WebDb, conf: ImmutableConfig) : this(webDb, DefaultFetchSchedule(conf), null, null, conf)
 

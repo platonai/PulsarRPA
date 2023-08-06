@@ -224,7 +224,7 @@ object Queries {
     fun getLinksIgnoreQuery(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
         val cssQuery = appendSelectorIfMissing(restrictCss, "a")
         return ele.select(cssQuery, offset, limit) {
-            it.absUrl("href").takeIf { UrlUtils.isValidUrl(it) }?.substringBefore("?")
+            it.absUrl("href").takeIf { UrlUtils.isStandard(it) }?.substringBefore("?")
         }.filterNotNull()
     }
 

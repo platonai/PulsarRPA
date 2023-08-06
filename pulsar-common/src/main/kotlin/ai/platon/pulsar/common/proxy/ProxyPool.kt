@@ -43,6 +43,8 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
 
     val size get() = freeProxies.size
 
+    fun isEmpty() = freeProxies.isEmpty()
+
     fun clear() = freeProxies.clear()
 
     open fun offer(proxyEntry: ProxyEntry): Boolean {

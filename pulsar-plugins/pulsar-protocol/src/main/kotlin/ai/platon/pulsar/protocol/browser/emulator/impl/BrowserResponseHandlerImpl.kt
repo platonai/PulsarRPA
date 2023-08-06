@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.browser.BrowserErrorCode
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.event.AbstractEventEmitter
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -30,7 +30,7 @@ open class BrowserResponseHandlerImpl(
     protected val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     protected val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
-    private val registry = AppMetrics.defaultMetricRegistry
+    private val registry = MetricsSystem.defaultMetricRegistry
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
     protected val wrongProfile by lazy { registry.meter(this, "wrongProfile") }
     protected val bannedPages by lazy { registry.meter(this, "bannedPages") }

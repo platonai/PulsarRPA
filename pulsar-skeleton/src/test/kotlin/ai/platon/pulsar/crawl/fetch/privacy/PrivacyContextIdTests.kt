@@ -53,11 +53,4 @@ class PrivacyAgentTests {
         activeContexts.computeIfAbsent(id) { 0 }
         assertTrue { activeContexts.containsKey(id) }
     }
-
-    @Test
-    fun testSequentialPrivacyAgentGenerator() {
-        val generator = SequentialPrivacyAgentGenerator()
-        val dir = generator.generateUserDataContextDir()
-        println(dir)
-    }
 }

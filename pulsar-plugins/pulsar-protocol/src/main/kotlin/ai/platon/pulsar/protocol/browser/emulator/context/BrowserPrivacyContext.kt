@@ -145,16 +145,13 @@ open class BrowserPrivacyContext constructor(
 
     private fun createProxyContext(proxyPoolManager: ProxyPoolManager) {
         if (!isActive) {
-            logger.info("Do not create proxy context, system is inactive")
+            logger.info("Do not create proxy context, system is down")
             return
         }
 
         try {
-            val pc = ProxyContext.create(privacyAgent, driverContext, proxyPoolManager, conf)
-            proxyEntry = pc.proxyEntry
-            // TODO: better initialize fingerprint.proxyServer
-            browserId.fingerprint.proxyServer = proxyEntry?.hostPort
-            proxyContext = pc
+            proxyContext = ProxyContext.create(privacyAgent, driverContext, proxyPoolManager, conf)
+            proxyEntry = proxyContext?.proxyEntry?.also { browserId.setProxy(it) }
             coreMetrics?.proxies?.mark()
         } catch (e: ProxyException) {
             logger.warn(e.brief("Failed to create proxy context - "))

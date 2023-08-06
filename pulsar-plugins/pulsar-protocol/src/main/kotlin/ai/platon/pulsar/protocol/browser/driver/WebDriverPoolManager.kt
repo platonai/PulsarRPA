@@ -4,21 +4,16 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.persist.ext.browseEvent
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.persist.ext.event
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
-import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import com.codahale.metrics.Gauge
 import com.google.common.annotations.Beta
 import kotlinx.coroutines.*
@@ -26,7 +21,6 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListMap
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -85,8 +79,8 @@ open class WebDriverPoolManager(
     // Maximum allowed number of retired drives, if it's exceeded, the oldest driver pool should be closed.
     val maxAllowedDyingDrivers = 10
 
-    val numReset by lazy { AppMetrics.reg.meter(this, "numReset") }
-    val numTimeout by lazy { AppMetrics.reg.meter(this, "numTimeout") }
+    val numReset by lazy { MetricsSystem.reg.meter(this, "numReset") }
+    val numTimeout by lazy { MetricsSystem.reg.meter(this, "numTimeout") }
     val gauges = mapOf(
         "waitingTasks" to Gauge { numWaitingTasks },
         "standbyDrivers" to Gauge { numStandbyDrivers },
@@ -118,11 +112,11 @@ open class WebDriverPoolManager(
     private val _deferredTasks = ConcurrentSkipListMap<Int, Deferred<FetchResult?>>()
 
     init {
-        gauges?.let { AppMetrics.reg.registerAll(this, it) }
+        gauges?.let { MetricsSystem.reg.registerAll(this, it) }
     }
 
     /**
-     * Run the task.
+     * Run the task using the default browser.
      * */
     @Throws(WebDriverException::class, WebDriverPoolException::class)
     suspend fun run(task: FetchTask, browseFun: suspend (driver: WebDriver) -> FetchResult?) =

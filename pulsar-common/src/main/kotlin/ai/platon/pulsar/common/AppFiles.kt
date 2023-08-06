@@ -2,8 +2,8 @@ package ai.platon.pulsar.common
 
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils.SPACE
+import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.lang3.math.NumberUtils
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -15,7 +15,26 @@ import java.util.zip.ZipInputStream
 object AppFiles {
 
     private val logger = getLogger(AppFiles::class.java)
-
+    
+    fun supportSymbolicLink(path: Path): Boolean {
+        return !SystemUtils.IS_OS_WINDOWS && path.fileSystem.supportedFileAttributeViews().contains("posix")
+    }
+    
+    /*
+     * Create a symbolic link to the given target if the target platform
+     * supports symbolic link; otherwise, it will create a tiny file
+     * to contain the path to the target.
+     */
+    @Throws(IOException::class)
+    fun createSymbolicLink(dstFile: Path, target: Path) {
+        Files.createDirectories(dstFile.parent)
+        if (supportSymbolicLink(dstFile)) {
+            Files.createSymbolicLink(dstFile, target)
+        } else {
+            Files.newBufferedWriter(dstFile).use { writer -> writer.write(String.format("Please see %s%n", target.toString())) }
+        }
+    }
+    
     fun saveTo(any: Any, path: Path, deleteIfExists: Boolean = false): Path {
         return saveTo(any.toString().toByteArray(), path, deleteIfExists)
     }

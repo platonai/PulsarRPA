@@ -4,7 +4,7 @@ import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.ObjectConverter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.message.PageLoadStatusFormatter
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.urls.*
@@ -56,7 +56,7 @@ class FatLinkExtractor(
         )
 
         init {
-            AppMetrics.reg.registerAll(this, gauges)
+            MetricsSystem.reg.registerAll(this, gauges)
         }
     }
 

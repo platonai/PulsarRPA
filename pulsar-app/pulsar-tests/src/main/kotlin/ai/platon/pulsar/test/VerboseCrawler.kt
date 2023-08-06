@@ -43,7 +43,7 @@ open class VerboseCrawler(
         }
 
         doc.select(options.outLinkSelector) { it.attr("abs:href") }.asSequence()
-            .filter { UrlUtils.isValidUrl(it) }
+            .filter { UrlUtils.isStandard(it) }
             .mapTo(HashSet()) { it.substringBefore(".com") }
             .asSequence()
             .filter { it.isNotBlank() }
