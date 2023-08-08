@@ -47,6 +47,7 @@ open class H2SQLContext(
 
     /**
      * Create a pulsar session, note that the session is not a SQLSession.
+     * TODO: return a better PulsarSession
      * */
     override fun createSession(): BasicPulsarSession {
         val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())
@@ -129,6 +130,9 @@ open class ClassPathXmlSQLContext(configLocation: String) :
         return session as H2SQLSession
     }
 
+    /**
+     * TODO: return a better PulsarSession
+     * */
     override fun createSession(): BasicPulsarSession {
         val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())
         return session.also { sessions[it.id] = it }

@@ -635,7 +635,7 @@ interface PulsarSession : AutoCloseable {
     fun loadAllAsync(urls: Iterable<String>): List<CompletableFuture<WebPage>>
 
     /**
-     * Load all normal urls in java async style
+     * Load all normal urls in java async style.
      *
      * This method first checks each url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.
@@ -646,7 +646,7 @@ interface PulsarSession : AutoCloseable {
     fun loadAllAsync(urls: Iterable<String>, args: String): List<CompletableFuture<WebPage>>
 
     /**
-     * Load all normal urls in java async style
+     * Load all normal urls in java async style.
      *
      * This method first checks each url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.
@@ -657,7 +657,7 @@ interface PulsarSession : AutoCloseable {
     fun loadAllAsync(urls: Iterable<String>, options: LoadOptions): List<CompletableFuture<WebPage>>
 
     /**
-     * Load all normal urls in java async style
+     * Load all normal urls in java async style.
      *
      * This method first checks each url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.
@@ -668,7 +668,7 @@ interface PulsarSession : AutoCloseable {
     fun loadAllAsync(urls: Collection<UrlAware>): List<CompletableFuture<WebPage>>
 
     /**
-     * Load all normal urls in java async style
+     * Load all normal urls in java async style.
      *
      * This method first checks each url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.
@@ -679,7 +679,7 @@ interface PulsarSession : AutoCloseable {
     fun loadAllAsync(urls: Collection<UrlAware>, args: String): List<CompletableFuture<WebPage>>
 
     /**
-     * Load all normal urls in java async style
+     * Load all normal urls in java async style.
      *
      * This method first checks each url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.

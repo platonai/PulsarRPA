@@ -19,6 +19,7 @@
 package ai.platon.pulsar.protocol.browser
 
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher
@@ -33,26 +34,32 @@ class BrowserEmulatorProtocol : ForwardingProtocol() {
         context.getBeanOrNull(BrowserEmulatedFetcher::class)
             ?: Defaults(conf).browserEmulatedFetcher.also { context.registerClosable(it) }
     }
+    
+    private val browserEmulatorOrNull get() = if (context.isActive) browserEmulator else null
 
     override fun getResponse(page: WebPage, followRedirects: Boolean): Response? {
         require(page.isNotInternal) { "Unexpected internal page ${page.url}" }
-        return super.getResponse(page, followRedirects) ?: browserEmulator.fetchContent(page)
+        return super.getResponse(page, followRedirects)
+            ?: browserEmulatorOrNull?.fetchContent(page)
+            ?: ForwardingResponse.canceled(page)
     }
 
     override suspend fun getResponseDeferred(page: WebPage, followRedirects: Boolean): Response? {
         require(page.isNotInternal) { "Unexpected internal page ${page.url}" }
-        return super.getResponse(page, followRedirects) ?: browserEmulator.fetchContentDeferred(page)
+        return super.getResponse(page, followRedirects)
+            ?: browserEmulatorOrNull?.fetchContentDeferred(page)
+            ?: ForwardingResponse.canceled(page)
     }
 
     override fun reset() {
-        browserEmulator.reset()
+        browserEmulatorOrNull?.reset()
     }
 
     override fun cancel(page: WebPage) {
-        browserEmulator.cancel(page)
+        browserEmulatorOrNull?.cancel(page)
     }
 
     override fun cancelAll() {
-        browserEmulator.cancelAll()
+        browserEmulatorOrNull?.cancelAll()
     }
 }

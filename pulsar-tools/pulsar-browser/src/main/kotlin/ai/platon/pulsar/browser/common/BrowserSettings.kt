@@ -31,14 +31,14 @@ open class BrowserSettings(
 
         /**
          * Check if the current environment supports only headless mode.
-         * TODO: this doesn't work sometimes
+         * TODO: this doesn't work on some platform
          * */
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
         /**
          * Specify the browser type to fetch webpages.
          * */
-        @Deprecated("Inappropriate name", ReplaceWith("withBrowser(browserType: BrowserType)"))
+        @Deprecated("Inappropriate name", ReplaceWith("withBrowser(browserType)"))
         @JvmStatic
         fun withBrowser(browserType: String): Companion {
             System.setProperty(BROWSER_TYPE, browserType)
@@ -416,9 +416,9 @@ open class BrowserSettings(
 enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
 
 /**
- * The interaction settings
+ * The interaction settings.
  * */
-data class InteractSettings constructor(
+data class InteractSettings(
     /**
      * The number of scroll downs on the page.
      * */

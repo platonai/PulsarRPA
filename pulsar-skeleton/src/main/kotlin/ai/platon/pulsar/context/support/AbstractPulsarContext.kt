@@ -518,6 +518,9 @@ abstract class AbstractPulsarContext(
         AppContext.endTermination()
     }
 
+    /**
+     * TODO: do not call getBean in close() function, it's better to close pulsar context before application context.
+     * */
     protected open fun doClose0() {
         logger.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
 
