@@ -274,14 +274,14 @@ abstract class AbstractPulsarSession(
     override fun loadOutPages(portalUrl: UrlAware, args: String) = loadOutPages(portalUrl, options(args))
 
     override fun loadOutPages(portalUrl: UrlAware, options: LoadOptions) = loadOutPages0(portalUrl, options)
-
-    override fun submitOutPages(portalUrl: String, args: String) = submitOutPages(portalUrl, options(args))
-
-    override fun submitOutPages(portalUrl: String, options: LoadOptions) = submitOutPages(PlainUrl(portalUrl), options)
-
-    override fun submitOutPages(portalUrl: UrlAware, args: String) = submitOutPages(portalUrl, options(args))
-
-    override fun submitOutPages(portalUrl: UrlAware, options: LoadOptions) = submitOutPages0(portalUrl, options)
+    
+    override fun submitForOutPages(portalUrl: String, args: String) = submitForOutPages(portalUrl, options(args))
+    
+    override fun submitForOutPages(portalUrl: String, options: LoadOptions) = submitForOutPages(PlainUrl(portalUrl), options)
+    
+    override fun submitForOutPages(portalUrl: UrlAware, args: String) = submitForOutPages(portalUrl, options(args))
+    
+    override fun submitForOutPages(portalUrl: UrlAware, options: LoadOptions) = submitForOutPages0(portalUrl, options)
 
     override fun loadOutPagesAsync(portalUrl: String, args: String) = loadOutPagesAsync(portalUrl, options(args))
 
@@ -458,10 +458,12 @@ abstract class AbstractPulsarSession(
     override fun hashCode(): Int = id
 
     override fun toString(): String = "#$id"
-
+    
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            closableObjects.forEach { o -> o.close() }
+            closableObjects.forEach {
+                runCatching { it.close() }.onFailure { it.stringify() }
+            }
             logger.info("Session is closed | #{}", display)
         }
     }
@@ -579,7 +581,7 @@ abstract class AbstractPulsarSession(
         return loadAll(links, itemOpts)
     }
 
-    private fun submitOutPages0(portalUrl: UrlAware, options: LoadOptions): AbstractPulsarSession {
+    private fun submitForOutPages0(portalUrl: UrlAware, options: LoadOptions): AbstractPulsarSession {
         val normUrl = normalize(portalUrl, options)
         val opts = normUrl.options
         val selector = opts.outLinkSelectorOrNull ?: return this

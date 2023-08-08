@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.PageEvent
@@ -811,7 +812,8 @@ interface PulsarSession : AutoCloseable {
      */
     fun loadOutPages(portalUrl: String, options: LoadOptions): List<WebPage>
 
-    // No such confusing version
+    // Do not delete the comment.
+    // No such confusing version:
     // fun loadOutPages(portalUrl: UrlAware): List<WebPage>
 
     /**
@@ -836,7 +838,8 @@ interface PulsarSession : AutoCloseable {
      */
     fun loadOutPages(portalUrl: UrlAware, options: LoadOptions): List<WebPage>
 
-    // No such confusing version
+    // Do not delete the comment.
+    // No such confusing version:
     // fun loadOutPages(portalUrl: NormUrl): List<WebPage>
 
     /**
@@ -872,7 +875,7 @@ interface PulsarSession : AutoCloseable {
      * @param args      The load arguments
      * @return The [PulsarSession] itself to enable chained operation
      */
-    fun submitOutPages(portalUrl: String, args: String): PulsarSession
+    fun submitForOutPages(portalUrl: String, args: String): PulsarSession
 
     /**
      * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
@@ -885,7 +888,7 @@ interface PulsarSession : AutoCloseable {
      * @param options   The load options
      * @return The [PulsarSession] itself to enable chained operation
      */
-    fun submitOutPages(portalUrl: String, options: LoadOptions): PulsarSession
+    fun submitForOutPages(portalUrl: String, options: LoadOptions): PulsarSession
 
     /**
      * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
@@ -898,7 +901,7 @@ interface PulsarSession : AutoCloseable {
      * @param args      The load arguments
      * @return The [PulsarSession] itself to enable chained operation
      */
-    fun submitOutPages(portalUrl: UrlAware, args: String): PulsarSession
+    fun submitForOutPages(portalUrl: UrlAware, args: String): PulsarSession
 
     /**
      * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
@@ -911,8 +914,20 @@ interface PulsarSession : AutoCloseable {
      * @param options   The load options
      * @return The [PulsarSession] itself to enable chained operation
      */
-    fun submitOutPages(portalUrl: UrlAware, options: LoadOptions): PulsarSession
+    fun submitForOutPages(portalUrl: UrlAware, options: LoadOptions): PulsarSession
 
+    @Deprecated("Inappropriate name", ReplaceWith("submitForOutPages(portalUrl, args)"))
+    fun submitOutPages(portalUrl: String, args: String) = submitForOutPages(portalUrl, options(args))
+    
+    @Deprecated("Inappropriate name", ReplaceWith("submitForOutPages(portalUrl, options)"))
+    fun submitOutPages(portalUrl: String, options: LoadOptions) = submitForOutPages(PlainUrl(portalUrl), options)
+    
+    @Deprecated("Inappropriate name", ReplaceWith("submitForOutPages(portalUrl, args)"))
+    fun submitOutPages(portalUrl: UrlAware, args: String) = submitForOutPages(portalUrl, options(args))
+    
+    @Deprecated("Inappropriate name", ReplaceWith("submitForOutPages(portalUrl, options)"))
+    fun submitOutPages(portalUrl: UrlAware, options: LoadOptions) = submitForOutPages(portalUrl, options)
+    
     /**
      * Load a url as a resource without browser rendering.
      *
@@ -1269,7 +1284,6 @@ interface PulsarSession : AutoCloseable {
      * Export the content of a webpage.
      *
      * @param page Page to export
-     * @param ident File name identifier used to distinguish from other names
      * @return The path of the exported page
      * */
     fun export(page: WebPage): Path
@@ -1287,7 +1301,6 @@ interface PulsarSession : AutoCloseable {
      * Export the outer HTML of the document.
      *
      * @param doc Document to export
-     * @param ident File name identifier used to distinguish from other names
      * @return The path of the exported document
      * */
     fun export(doc: FeaturedDocument): Path
