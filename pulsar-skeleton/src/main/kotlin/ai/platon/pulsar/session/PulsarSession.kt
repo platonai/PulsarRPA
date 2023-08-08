@@ -92,15 +92,18 @@ interface PulsarSession : AutoCloseable {
      * The pulsar context
      * */
     val context: PulsarContext
+    
+    /**
+     * An immutable config which is loaded from the config file at process startup, and never changes
+     * */
+    val unmodifiedConfig: ImmutableConfig
 
     /**
      * The session scope volatile config, every setting is supposed to be changed at any time
      * and any place
      * */
     val sessionConfig: VolatileConfig
-
-    val unmodifiedConfig: ImmutableConfig
-
+    
     /**
      * The scoped bean factory: for each volatileConfig object, there is a bean factory
      * */
@@ -135,7 +138,7 @@ interface PulsarSession : AutoCloseable {
     fun disablePDCache()
 
     /**
-     * Create a new [LoadOptions] object with arguments [args] and [event].
+     * Create a new [LoadOptions] object with [args], [event], and [sessionConfig].
      * */
     fun options(args: String = "", event: PageEvent? = null): LoadOptions
 

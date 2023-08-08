@@ -84,7 +84,7 @@ abstract class AbstractPulsarContext(
     override val id = instanceSequencer.incrementAndGet()
 
     /**
-     * An immutable config is loaded from the config file at process startup, and never changes
+     * An immutable config is which loaded from the config file at process startup, and never changes
      * */
     override val unmodifiedConfig: ImmutableConfig get() = getBean()
 

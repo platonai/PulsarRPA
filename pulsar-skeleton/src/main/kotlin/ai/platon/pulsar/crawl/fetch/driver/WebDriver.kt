@@ -33,6 +33,7 @@ import kotlin.random.Random
 interface WebDriver: Closeable {
     /**
      * Lifetime status
+     * TODO: move lifetime status to AbstractWebDriver
      * */
     enum class State {
         INIT,
@@ -154,7 +155,7 @@ interface WebDriver: Closeable {
 
     /**
      * Returns a JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on,
-     * which had difficulty handling kotlin suspend methods.
+     * the other JVM languages might have difficulty to handle kotlin suspend methods.
      * */
     fun jvm(): JvmWebDriver
 
@@ -252,6 +253,7 @@ interface WebDriver: Closeable {
     @Deprecated("Getter is available", ReplaceWith("mainRequestCookies"))
     @Throws(WebDriverException::class)
     suspend fun mainRequestCookies(): List<Map<String, String>>
+    
     @Throws(WebDriverException::class)
     suspend fun getCookies(): List<Map<String, String>>
     /**

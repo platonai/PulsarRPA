@@ -315,6 +315,7 @@ open class BrowserSettings(
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
     /**
      * Chrome has to run without sandbox in a virtual machine
+     * TODO: this flag might be upgraded by WSL
      * */
     val forceNoSandbox get() = AppContext.OS_IS_WSL
 
@@ -352,7 +353,7 @@ open class BrowserSettings(
     /**
      * Check if it's SPA mode, SPA stands for single page application.
      *
-     * If pulsar works in SPA mode:
+     * If PulsarPRA works in SPA mode:
      * 1. execution of fetches has no timeout limit
      * */
     val isSPA get() = conf.getBoolean(BROWSER_SPA_MODE, false)
@@ -381,7 +382,7 @@ open class BrowserSettings(
     /**
      * Page load strategy.
      *
-     * Pulsar checks document ready using javascript so just set the strategy to be none.
+     * PulsarRPA checks document ready using javascript so just set the strategy to be none.
      *
      * @see <a href='https://blog.knoldus.com/page-loading-strategy-in-the-selenium-webdriver/'>
      *     Page Loading Strategy</a>
