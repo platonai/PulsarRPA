@@ -20,7 +20,7 @@ class IllegalBusinessPreconditionException: IllegalStateException {
     constructor(cause: Throwable) : super(cause)
 }
 
-class IllegalApplicationContextStateException: IllegalStateException {
+class IllegalApplicationStateException: IllegalStateException {
     constructor() : super() {}
 
     constructor(message: String) : super(message) {

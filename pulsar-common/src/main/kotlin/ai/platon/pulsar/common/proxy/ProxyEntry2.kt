@@ -225,9 +225,11 @@ open class ProxyEntry2(
      * The string representation, can be parsed using [parse] or [deserialize]
      * */
     fun format() = serialize()
-    
+
     fun toProxyEntry(): ProxyEntry {
-        return ProxyEntry(host, port, outIp, id, declaredTTL, lastTarget, testUrls, defaultTestUrl, isTestIp)
+        return ProxyEntry(host, port, outIp, id, declaredTTL, lastTarget, testUrls, defaultTestUrl, isTestIp,
+                user = username, pwd = password
+        )
     }
 
     override fun hashCode(): Int = 31 * proxyType.hashCode() + hostPort.hashCode()

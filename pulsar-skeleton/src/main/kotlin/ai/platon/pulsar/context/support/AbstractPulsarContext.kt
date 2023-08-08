@@ -2,6 +2,7 @@ package ai.platon.pulsar.context.support
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.CheckState
+import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -90,7 +91,18 @@ abstract class AbstractPulsarContext(
     /**
      * Url normalizers
      * */
+    @Deprecated("Inappropriate name", ReplaceWith("urlNormalizer"))
     open val urlNormalizers: ChainedUrlNormalizer get() = getBean()
+
+    /**
+     * Url normalizer
+     * */
+    open val urlNormalizer: ChainedUrlNormalizer get() = getBean()
+
+    /**
+     * Url normalizer
+     * */
+    open val urlNormalizerOrNull: ChainedUrlNormalizer? get() = getBeanOrNull<ChainedUrlNormalizer>()
 
     /**
      * The web db
@@ -131,7 +143,7 @@ abstract class AbstractPulsarContext(
     @Throws(BeansException::class, IllegalStateException::class)
     override fun <T : Any> getBean(requiredType: KClass<T>): T {
         if (!isActive) {
-            throw IllegalStateException("System is down")
+            throw IllegalApplicationStateException("This application is being shut down.")
         }
         return applicationContext.getBean(requiredType.java)
     }
@@ -139,8 +151,12 @@ abstract class AbstractPulsarContext(
     /**
      * Get a bean with the specified class, returns null if the bean doesn't exist
      * */
-    override fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T? =
-        kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
+    override fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T? {
+        if (!isActive) {
+            return null
+        }
+        return kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
+    }
 
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
@@ -171,6 +187,9 @@ abstract class AbstractPulsarContext(
      * Register close objects, the objects will be closed when the context closes
      * */
     override fun registerClosable(closable: AutoCloseable) {
+        if (!isActive) {
+            return
+        }
         closableObjects.add(closable)
     }
 
@@ -212,7 +231,8 @@ abstract class AbstractPulsarContext(
      * If both tailing arguments and load options are present, the tailing arguments override the load options.
      * */
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        return CombinedUrlNormalizer(urlNormalizers).normalize(url, options, toItemOption)
+        val normalizer = urlNormalizerOrNull ?: return NormUrl.NIL
+        return CombinedUrlNormalizer(normalizer).normalize(url, options, toItemOption)
     }
 
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl? {

@@ -613,7 +613,7 @@ abstract class AbstractPulsarSession(
     }
 
     private fun <T> ensureActive(action: () -> T): T =
-        if (isActive) action() else throw IllegalApplicationContextStateException("Pulsar session is not alive")
+        if (isActive) action() else throw IllegalApplicationStateException("Pulsar session is not alive")
 
     private fun <T> ensureActive(defaultValue: T, action: () -> T): T = defaultValue.takeIf { !isActive } ?: action()
 }

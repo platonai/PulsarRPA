@@ -651,7 +651,7 @@ open class StreamingCrawler(
         }
 
         when (e) {
-            is IllegalApplicationContextStateException -> {
+            is IllegalApplicationStateException -> {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     logger.warn("\n!!!Illegal application context, quit ... | {}", e.message)
                 }
