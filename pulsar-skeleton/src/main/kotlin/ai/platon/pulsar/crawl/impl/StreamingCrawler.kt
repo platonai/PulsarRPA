@@ -10,10 +10,7 @@ import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.proxy.ProxyException
-import ai.platon.pulsar.common.proxy.ProxyInsufficientBalanceException
-import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
+import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.urls.CallableDegenerateUrl
 import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
@@ -82,7 +79,8 @@ open class StreamingCrawler(
     /**
      * Do not use proxy
      * */
-    val noProxy: Boolean = true,
+    @Deprecated("use ProxyPoolManager.isProxyEnabled instead")
+    val noProxy: Boolean = false,
     /**
      * Auto close or not
      * */
@@ -139,11 +137,12 @@ open class StreamingCrawler(
     private val logger = getLogger(StreamingCrawler::class)
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = getLogger(StreamingCrawler::class, ".Task")
-    private val conf = session.sessionConfig
+    private val sessionConfig = session.sessionConfig
     private val context = session.context as AbstractPulsarContext
     private val globalCache get() = session.globalCache
     private val globalCacheOrNull get() = if (isActive) session.globalCache else null
-    private val proxyPool: ProxyPool? = if (noProxy) null else context.getBeanOrNull(ProxyPool::class)
+    private val isProxyEnabled get() = ProxyPoolManager.isProxyEnabled(sessionConfig)
+    private val proxyPool: ProxyPool? = if (isProxyEnabled) context.getBeanOrNull(ProxyPool::class) else null
     private var proxyOutOfService = 0
 
     @Volatile
@@ -166,12 +165,12 @@ open class StreamingCrawler(
     /**
      * The maximum number of privacy contexts allowed.
      * */
-    val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+    val numPrivacyContexts get() = sessionConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)
 
     /**
      * The maximum number of open tabs allowed in each open browser.
      * */
-    val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    val numMaxActiveTabs get() = sessionConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
 
     /**
      * The fetch concurrency equals to the number of all allowed open tabs.
@@ -186,7 +185,7 @@ open class StreamingCrawler(
     /**
      * The timeout for each fetch task.
      * */
-    val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
+    val fetchTaskTimeout get() = sessionConfig.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
 
     /**
      * The idle time during which there is no fetch tasks.
@@ -204,7 +203,7 @@ open class StreamingCrawler(
      * If smart retry is enabled, tasks will be retried if it's canceled or marked as retry.
      * A continuous crawl system should enable smart retry, while a simple demo can disable it.
      * */
-    val isSmartRetryEnabled get() = conf.getBoolean(CRAWL_SMART_RETRY, true)
+    val isSmartRetryEnabled get() = sessionConfig.getBoolean(CRAWL_SMART_RETRY, true)
 
     /**
      * Check if the crawler is idle.
