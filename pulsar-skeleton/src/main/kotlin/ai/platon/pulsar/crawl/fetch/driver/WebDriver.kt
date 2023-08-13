@@ -255,6 +255,27 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun getCookies(): List<Map<String, String>>
     /**
+     * Deletes browser cookies with matching name.
+     *
+     * @param name Name of the cookies to remove.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun deleteCookies(name: String)
+    /**
+     * Deletes browser cookies with matching name and url or domain/path pair.
+     *
+     * @param name Name of the cookies to remove.
+     * @param url If specified, deletes all the cookies with the given name where domain and path
+     * match provided URL.
+     * @param domain If specified, deletes only cookies with the exact domain.
+     * @param path If specified, deletes only cookies with the exact path.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun deleteCookies(name: String, url: String? = null, domain: String? = null, path: String? = null)
+    /** Clears browser cookies. */
+    @Throws(WebDriverException::class)
+    suspend fun clearBrowserCookies()
+    /**
      * Brings page to front (activates tab).
      */
     @Throws(WebDriverException::class)

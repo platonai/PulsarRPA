@@ -167,19 +167,30 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
-        return try {
-            rpc.invokeDeferred("getCookies") { getCookies0() } ?: listOf()
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "getCookies")
-            listOf()
+        return rpc.invokeDeferredSilently("getCookies") { getCookies0() } ?: listOf()
+    }
+
+    override suspend fun deleteCookies(name: String) {
+        rpc.invokeDeferredSilently("deleteCookies") {
+            networkAPI?.deleteCookies(name)
+        }
+    }
+
+    override suspend fun deleteCookies(name: String, url: String?, domain: String?, path: String?) {
+        rpc.invokeDeferredSilently("deleteCookies") {
+            networkAPI?.deleteCookies(name, url, domain, path)
+        }
+    }
+
+    override suspend fun clearBrowserCookies() {
+        rpc.invokeDeferredSilently("clearBrowserCookies") {
+            networkAPI?.clearBrowserCookies()
         }
     }
 
     @Throws(WebDriverException::class)
     private fun getCookies0(): List<Map<String, String>> {
-        enableAPIAgents()
         val cookies = networkAPI?.cookies?.map { serialize(it) }
-        networkAPI?.disable()
         return cookies ?: listOf()
     }
 
