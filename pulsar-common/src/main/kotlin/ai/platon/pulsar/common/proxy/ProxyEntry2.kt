@@ -47,16 +47,22 @@ open class ProxyEntry2(
         var declaredTTL: Instant? = null
 ): Comparable<ProxyEntry2> {
     enum class Status { FREE, WORKING, RETIRED, EXPIRED, GONE }
-    
     /**
      * The proxy entry id, it's unique in the process scope
      * */
     var id: Int = instanceSequence.incrementAndGet()
-    
     /**
      * The out ip which will be seen by the target site
      * */
     var outIp: String = ""
+    /**
+     * Specify whether we can rotate the out ip via a link.
+     * */
+    var rotatable: Boolean = false
+    /**
+     * The link to tell the proxy vendor to rotate the out ip.
+     * */
+    var rotateURL: String? = null
     /**
      * The last target url
      * */

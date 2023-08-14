@@ -87,7 +87,16 @@ class ProxyEntry constructor(
     
     val username get() = user
     val password get() = pwd
-    
+
+    /**
+     * Specify whether we can rotate the out ip via a link.
+     * */
+    var rotatable: Boolean = false
+    /**
+     * The link to tell the proxy vendor to rotate the out ip.
+     * */
+    var rotateURL: String? = null
+
     val segment get() = host.substringBeforeLast(".")
     val outSegment get() = outIp.substringBeforeLast(".")
     val startTime = Instant.now()
