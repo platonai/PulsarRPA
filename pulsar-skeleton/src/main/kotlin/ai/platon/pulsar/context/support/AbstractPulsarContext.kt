@@ -84,7 +84,7 @@ abstract class AbstractPulsarContext(
     override val id = instanceSequencer.incrementAndGet()
 
     /**
-     * An immutable config is loaded from the config file at process startup, and never changes
+     * An immutable config is which loaded from the config file at process startup, and never changes
      * */
     override val unmodifiedConfig: ImmutableConfig get() = getBean()
 
@@ -518,6 +518,9 @@ abstract class AbstractPulsarContext(
         AppContext.endTermination()
     }
 
+    /**
+     * TODO: do not call getBean in close() function, it's better to close pulsar context before application context.
+     * */
     protected open fun doClose0() {
         logger.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
 

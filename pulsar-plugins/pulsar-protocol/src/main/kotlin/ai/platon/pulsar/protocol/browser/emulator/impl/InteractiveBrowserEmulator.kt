@@ -350,10 +350,6 @@ open class InteractiveBrowserEmulator(
 
         checkState(fetchTask, driver)
 
-//        listeners.notify(EventType.willNavigate, page, driver)
-//        val event = page.browseEvent
-//        notify("onWillNavigate") { event?.onWillNavigate?.invoke(page, driver) }
-
         // href has the higher priority to locate a resource
         require(task.url == page.url)
         val finalUrl = fetchTask.href ?: fetchTask.url
@@ -366,7 +362,6 @@ open class InteractiveBrowserEmulator(
             driver.navigateTo(navigateEntry)
         } finally {
             emit1(EmulateEvents.navigated, page, driver)
-//            notify("onNavigated") { event?.onNavigated?.invoke(page, driver) }
         }
 
         if (!driver.supportJavascript) {
@@ -466,7 +461,7 @@ open class InteractiveBrowserEmulator(
         var message: Any? = null
         try {
             var msg: Any? = null
-            // TODO: driver.isWorking
+            // TODO: while driver.isWorking
             while ((msg == null || msg == false) && i++ < maxRound && isActive && !fetchTask.isCanceled) {
                 msg = evaluate(interactTask, expression)
 
