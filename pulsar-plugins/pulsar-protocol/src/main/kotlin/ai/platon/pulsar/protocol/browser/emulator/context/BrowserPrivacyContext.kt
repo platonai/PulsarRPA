@@ -35,8 +35,7 @@ open class BrowserPrivacyContext constructor(
      * The privacy context is retired but not closed yet.
      * */
     override val isRetired: Boolean get() {
-        // driverContext.isActive
-        return proxyContext?.isRetired == true || driverContext.isRetired
+        return retired || proxyContext?.isRetired == true || driverContext.isRetired
     }
     /**
      * A ready privacy context has to meet the following requirements:

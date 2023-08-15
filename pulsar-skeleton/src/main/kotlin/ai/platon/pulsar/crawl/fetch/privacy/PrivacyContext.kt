@@ -135,6 +135,8 @@ abstract class PrivacyContext(
         get() = conf.getDuration(PRIVACY_CONTEXT_IDLE_TIMEOUT, PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT)
     private val idleTimeout: Duration get() = privacyContextIdleTimeout.coerceAtLeast(fetchTaskTimeout)
 
+    protected var retired = false
+
     val idelTime get() = Duration.between(lastActiveTime, Instant.now())
     open val isIdle get() = idelTime > idleTimeout
 
@@ -152,7 +154,7 @@ abstract class PrivacyContext(
     /**
      * The privacy context works fine and the fetch speed is qualified.
      * */
-    open val isRetired get() = false
+    open val isRetired get() = retired
     /**
      * Check if the privacy context is active.
      * An active privacy context can be used to serve tasks, and an inactive one should be closed.
@@ -300,7 +302,12 @@ abstract class PrivacyContext(
     fun takeSnapshot(): String {
         return "$readableState driver: ${promisedWebDriverCount()}"
     }
-
+    /**
+     * Dismiss the privacy context and mark it as be retired, so it should be closed later.
+     * */
+    fun dismiss() {
+        retired = true
+    }
     /**
      * Do the maintaining jobs.
      * */
