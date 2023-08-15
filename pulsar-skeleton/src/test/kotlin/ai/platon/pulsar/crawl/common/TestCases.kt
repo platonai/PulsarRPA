@@ -20,6 +20,7 @@ import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
+import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -83,6 +84,14 @@ class TestCases {
         val s = ""
         val u = Utf8(s)
         Assert.assertEquals(0, u.length.toLong())
+    }
+
+    @Test
+    fun testRandom() {
+        repeat(10) {
+            val a = Random.nextInt(0)
+            assertEquals(0, a)
+        }
     }
 
     @Test

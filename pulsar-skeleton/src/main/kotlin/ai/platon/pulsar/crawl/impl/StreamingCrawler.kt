@@ -142,7 +142,7 @@ open class StreamingCrawler(
     private val globalCache get() = session.globalCache
     private val globalCacheOrNull get() = if (isActive) session.globalCache else null
     private val isProxyEnabled get() = ProxyPoolManager.isProxyEnabled(sessionConfig)
-    private val proxyPool: ProxyPool? = if (isProxyEnabled) context.getBeanOrNull(ProxyPool::class) else null
+    private val proxyPool: ProxyPool? get() = if (isProxyEnabled) context.getBeanOrNull(ProxyPool::class) else null
     private var proxyOutOfService = 0
 
     @Volatile
@@ -231,6 +231,7 @@ open class StreamingCrawler(
         MetricsSystem.reg.registerAll(this, "$id.g", gauges)
 
         val cacheGauges = mapOf(
+            "paused" to Gauge { isPaused },
             "pageCacheSize" to Gauge { globalCacheOrNull?.pageCache?.size?: 0 },
             "documentCacheSize" to Gauge { globalCacheOrNull?.documentCache?.size?: 0 }
         )
@@ -370,6 +371,15 @@ open class StreamingCrawler(
 
     private suspend fun runWithStatusCheck(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
+        var k = 0
+
+        while (isActive && isPaused) {
+            if (k++ % 20 == 0) {
+                logger.info("The crawl loop is paused, use resume() to resume the crawl loop")
+            }
+            delay(1000)
+        }
+        k = 0 // reset k explicitly
 
         delayIfEstimatedNoLoadResource(j)
 
@@ -383,7 +393,7 @@ open class StreamingCrawler(
         /**
          * If all memory is used up, we can do nothing but wait.
          * */
-        var k = 0
+        k = 0
         while (isActive && AppSystemInfo.isCriticalMemory) {
             if (k++ % 20 == 0) {
                 handleMemoryShortage(k)
@@ -391,6 +401,7 @@ open class StreamingCrawler(
             criticalWarning = CriticalWarning.OUT_OF_MEMORY
             randomDelay(500, 500)
         }
+        k = 0 // reset k explicitly
 
         /**
          * If the privacy context leaks too quickly, there is a good chance that there is a bug.

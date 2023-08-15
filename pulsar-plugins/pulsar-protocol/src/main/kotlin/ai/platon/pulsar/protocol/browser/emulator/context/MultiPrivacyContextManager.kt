@@ -200,7 +200,7 @@ class MultiPrivacyContextManager(
      * */
     override fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
-            // TODO: out of memory problem
+            // TODO: too many running chrome process and out of memory problem
             val privacyAgent = createPrivacyAgent(page, fingerprint)
             if (privacyAgent.isPermanent) {
                 return computeIfAbsent(privacyAgent)

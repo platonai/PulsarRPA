@@ -18,6 +18,11 @@ interface Crawler: AutoCloseable {
      * Delay policy for retry tasks
      * */
     var retryDelayPolicy: (Int, UrlAware?) -> Duration
+
+    fun pause()
+
+    fun resume()
+
     /**
      * Wait until all tasks are done.
      * */
