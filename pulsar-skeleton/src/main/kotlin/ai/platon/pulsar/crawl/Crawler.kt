@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.persist.WebPage
 import java.time.Duration

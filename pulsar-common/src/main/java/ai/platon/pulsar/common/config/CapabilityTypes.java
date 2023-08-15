@@ -204,7 +204,6 @@ public interface CapabilityTypes {
 
     String FETCH_PENDING_TIMEOUT = "fetch.pending.timeout";
 
-
     String FETCH_MAX_HOST_FAILURES = "fetch.max.host.failures";
 
     String FETCH_QUEUE_MODE = "fetch.queue.mode";
