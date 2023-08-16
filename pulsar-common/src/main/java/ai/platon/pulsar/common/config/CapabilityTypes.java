@@ -251,6 +251,8 @@ public interface CapabilityTypes {
 
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
     String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
+
+    String FETCH_MAX_CONTENT_LENGTH = "fetch.max.content.length";
     /**
      * Privacy context
      */

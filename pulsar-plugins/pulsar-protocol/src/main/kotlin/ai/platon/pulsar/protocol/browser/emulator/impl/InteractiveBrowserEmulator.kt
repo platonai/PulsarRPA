@@ -43,6 +43,7 @@ open class InteractiveBrowserEmulator(
     private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
+
     val numDeferredNavigates by lazy { MetricsSystem.reg.meter(this, "deferredNavigates") }
 
     init {
@@ -243,15 +244,19 @@ open class InteractiveBrowserEmulator(
         val response = driver.loadResource(navigateTask.url)
             ?: return ForwardingResponse.failed(navigateTask.page, SessionLostException("null response"))
 
-        // TODO: transform in AbstractHttpProtocol
+        // TODO: transform protocol status in AbstractHttpProtocol
         val protocolStatus = ProtocolStatusTranslator.translateHttpCode(response.statusCode())
-        navigateTask.pageSource = response.body()
+        val content = response.body()
+        // Note: originalContentLength is already set before willComputeFeature event, (if not removed by someone)
+        navigateTask.originalContentLength = content.length
+        navigateTask.pageSource = preprocessPageContent(content)
+
         navigateTask.pageDatum.also {
             it.protocolStatus = protocolStatus
             it.headers.putAll(response.headers())
             it.contentType = response.contentType()
             it.content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
-            it.originalContentLength = it.content?.size ?: 0
+            it.originalContentLength = navigateTask.originalContentLength
         }
 
         responseHandler.emit(BrowserResponseEvents.willCreateResponse)
@@ -319,7 +324,10 @@ open class InteractiveBrowserEmulator(
             activeDOMStatTrace = interactResult.activeDOMMessage?.trace
             activeDOMUrls = interactResult.activeDOMMessage?.urls
         }
-        navigateTask.pageSource = driver.pageSource() ?: ""
+        val content = driver.pageSource()
+        // Note: originalContentLength is already set before willComputeFeature event, (if not removed by someone)
+        navigateTask.originalContentLength = content?.length ?: 0
+        navigateTask.pageSource = preprocessPageContent(content)
 
         responseHandler.onWillCreateResponse(fetchTask, driver)
         return createResponse(navigateTask).also {
@@ -426,15 +434,14 @@ open class InteractiveBrowserEmulator(
             emit1(EmulateEvents.didScroll, page, driver)
         }
 
+        // TODO: which place is the better to set originalContentLength? 1. here 2. in createResponse()
+        task.navigateTask.originalContentLength = driver.pageSource()?.length ?: 0
         if (result.state.isContinue) {
             emit1(EmulateEvents.willComputeFeature, page, driver)
 
-            task.navigateTask.originalContentLength = driver.pageSource()?.length ?: 0
             computeDocumentFeatures(task, result)
 
             emit1(EmulateEvents.featureComputed, page, driver)
-        } else {
-            task.navigateTask.originalContentLength = driver.pageSource()?.length ?: 0
         }
 
         return result
