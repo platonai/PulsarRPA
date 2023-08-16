@@ -242,6 +242,8 @@ interface WebDriver: Closeable {
      * example, by Javascript) there is no guarantee that the returned text is that of the modified
      * page.
      *
+     * TODO: distinguish pageSource and outerHTML
+     *
      * @return The source of the current page
      */
     @Throws(WebDriverException::class)
@@ -362,15 +364,22 @@ interface WebDriver: Closeable {
     suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int = 0)
     @Throws(WebDriverException::class)
     suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int = 0)
-
+    /** Returns the document's HTML markup. */
+    @Throws(WebDriverException::class)
+    suspend fun outerHTML(): String?
+    /** Returns the node's HTML markup. */
     @Throws(WebDriverException::class)
     suspend fun outerHTML(selector: String): String?
+    /** Returns the node's text content. */
     @Throws(WebDriverException::class)
     suspend fun firstText(selector: String): String?
+    /** Returns the nodes' text contents. */
     @Throws(WebDriverException::class)
     suspend fun allTexts(selector: String): List<String>
+    /** Returns the node's attribute name. */
     @Throws(WebDriverException::class)
     suspend fun firstAttr(selector: String, attrName: String): String?
+    /** Returns the nodes' attribute names. */
     @Throws(WebDriverException::class)
     suspend fun allAttrs(selector: String, attrName: String): List<String>
     /**
@@ -432,6 +441,7 @@ interface WebDriver: Closeable {
     /**
      * Load url as a resource without browser rendering, with the last page's context,
      * which means, the same headers and cookies.
+     * TODO: no Jsoup dependency, do not return a Connection.Response
      * */
     @Throws(WebDriverException::class)
     suspend fun loadResource(url: String): Connection.Response?

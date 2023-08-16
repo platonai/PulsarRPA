@@ -6,7 +6,6 @@ import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.common.geometric.PointD
@@ -22,7 +21,6 @@ import com.github.kklisura.cdt.protocol.v2023.types.fetch.RequestPattern
 import com.github.kklisura.cdt.protocol.v2023.types.network.Cookie
 import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
-import com.github.kklisura.cdt.protocol.v2023.types.page.Viewport
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import kotlinx.coroutines.delay
 import java.nio.file.Files
@@ -565,7 +563,11 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "dragAndDrop")
         }
     }
-
+    
+    override suspend fun outerHTML(): String? {
+        return rpc.invokeDeferredSilently("outerHTML") { domAPI?.outerHTML }
+    }
+    
     @Throws(WebDriverException::class)
     override suspend fun clickablePoint(selector: String): PointD? {
         try {
@@ -734,7 +736,7 @@ class ChromeDevtoolsDriver(
     }
 
     /**
-     * Close the tab hold by this driver
+     * Close the tab hold by this driver.
      * */
     override fun close() {
         browser.destroyDriver(this)

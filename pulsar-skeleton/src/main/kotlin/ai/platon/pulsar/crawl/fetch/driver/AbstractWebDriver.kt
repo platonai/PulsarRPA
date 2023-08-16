@@ -182,6 +182,9 @@ abstract class AbstractWebDriver(
         val result = evaluate("__pulsar_utils__.clickNthAnchor($n, '$rootSelector')")
         return result?.toString()
     }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun outerHTML() = outerHTML(":root")
 
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(selector: String): String? {
