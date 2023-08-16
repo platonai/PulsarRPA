@@ -49,8 +49,6 @@ class ChromeDevtoolsDriver(
 
     override val browserType: BrowserType = BrowserType.PULSAR_CHROME
 
-    val openSequence = 1 + browser.drivers.size
-
     val resourceBlockProbability get() = browserSettings.resourceBlockProbability
     /**
      * Disable network after n response received
@@ -67,7 +65,6 @@ class ChromeDevtoolsDriver(
     private val page = PageHandler(devTools, browserSettings)
     private val screenshot = Screenshot(page, devTools)
 
-    private var isFirstLaunch = openSequence == 1
     private var lastSessionId: String? = null
     private var navigateUrl = chromeTab.url ?: ""
 
@@ -113,15 +110,6 @@ class ChromeDevtoolsDriver(
 
     override suspend fun addInitScript(script: String) {
         initScriptCache.add(script)
-//        try {
-//            rpc.invokeDeferred("addInitScript") {
-//                pageAPI?.enable()
-//                val script0 = browserSettings.confuser.confuse(script)
-//                pageAPI?.addScriptToEvaluateOnNewDocument(script0)
-//            }
-//        } catch (e: ChromeRPCException) {
-//            rpc.handleRPCException(e, "addInitScript")
-//        }
     }
 
     override suspend fun addBlockedURLs(urls: List<String>) {
@@ -529,7 +517,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun focus(selector: String) {
-        focusOnSelector(selector)
+        rpc.invokeDeferredSilently("focus") { focusOnSelector(selector) }
     }
 
     @Throws(WebDriverException::class)
@@ -835,7 +823,8 @@ class ChromeDevtoolsDriver(
 
     private fun onRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent) {
         tracer?.trace("onRequestWillBeSent | driver | {}", event.requestId)
-
+        
+        // TODO: make sure it's the document we want
         if (event.type == ResourceType.DOCUMENT) {
             // amazon.com uses "referer" instead of "referrer" in the request header,
             // not clear if other sites uses the other one
@@ -864,18 +853,8 @@ class ChromeDevtoolsDriver(
 
     private fun onResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
         tracer?.trace("onResponseReceived | driver | {}", event.requestId)
-
-        val maxResponses = numResponseReceivedToDisableNetwork
-        if (maxResponses > 0 && entry.mainRequestId.isNotBlank()) {
-            // split the `if` to make it clearer
-            if (numResponseReceived.incrementAndGet() == maxResponses) {
-                // Disables network tracking, prevents network events from being sent to the client.
-                // TODO: does the resource blocking logic work if we disable the network API?
-                // networkAPI?.disable()
-                // logger.info("Network API for driver #{} is disabled", id)
-            }
-        }
         
+        // TODO: make sure it's the document we want
         if (event.type == ResourceType.DOCUMENT) {
             tracer?.trace("onResponseReceived | driver, document | {}", event.requestId)
 
@@ -909,27 +888,16 @@ class ChromeDevtoolsDriver(
             reportInjectedJs()
         }
 
-        // the cache is used for a single navigation, so we have to clear it
+        // the cache is used for a single document, so we have to clear it
         initScriptCache.clear()
     }
 
     private fun reportInjectedJs() {
         val script = browserSettings.confuser.confuse(initScriptCache.joinToString("\n;\n\n\n;\n"))
 
-        // TODO: write to driver specific directory
-        val dir = AppPaths.REPORT_DIR.resolve("browser/js")
+        val dir = browser.id.contextDir.resolve("driver.$id/js")
         Files.createDirectories(dir)
         val report = Files.writeString(dir.resolve("preload.all.js"), script)
-        tracer?.trace("All injected js: file://$report")
-    }
-
-    private suspend fun isMainFrame(frameId: String): Boolean {
-        return rpc.invokeDeferred("isMainFrame") {
-            mainFrameAPI?.id == frameId
-        } ?: false
-    }
-
-    private fun viewportToRectD(viewport: Viewport): RectD {
-        return RectD(viewport.x, viewport.y, viewport.width, viewport.height)
+        tracer?.trace("All injected js: file://{}", report)
     }
 }

@@ -20,6 +20,7 @@ class StaticPulsarContext(
      * Url normalizer
      * */
     override val urlNormalizer get() = getBeanOrNull() ?: defaults.urlNormalizer
+    
     /**
      * The web db
      * */

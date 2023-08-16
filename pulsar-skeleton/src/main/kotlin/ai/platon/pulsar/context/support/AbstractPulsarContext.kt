@@ -102,7 +102,7 @@ abstract class AbstractPulsarContext(
     /**
      * Url normalizer
      * */
-    open val urlNormalizerOrNull: ChainedUrlNormalizer? get() = getBeanOrNull<ChainedUrlNormalizer>()
+    open val urlNormalizerOrNull: ChainedUrlNormalizer? get() = runCatching { urlNormalizer }.getOrNull()
 
     /**
      * The web db
@@ -231,8 +231,7 @@ abstract class AbstractPulsarContext(
      * If both tailing arguments and load options are present, the tailing arguments override the load options.
      * */
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        val normalizer = urlNormalizerOrNull ?: return NormUrl.NIL
-        return CombinedUrlNormalizer(normalizer).normalize(url, options, toItemOption)
+        return CombinedUrlNormalizer(urlNormalizerOrNull).normalize(url, options, toItemOption)
     }
 
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl? {

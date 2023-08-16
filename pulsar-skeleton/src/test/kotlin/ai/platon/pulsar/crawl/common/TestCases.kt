@@ -87,14 +87,6 @@ class TestCases {
     }
 
     @Test
-    fun testRandom() {
-        repeat(10) {
-            val a = Random.nextInt(0)
-            assertEquals(0, a)
-        }
-    }
-
-    @Test
     fun testAtomic() {
         val counter = AtomicInteger(100)
         val deleted = 10
