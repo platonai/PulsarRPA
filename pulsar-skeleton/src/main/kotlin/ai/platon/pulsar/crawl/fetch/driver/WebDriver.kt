@@ -436,15 +436,27 @@ interface WebDriver: Closeable {
      * Create a new Jsoup session with the last page's context, which means, the same
      * headers and cookies.
      * */
+    @Deprecated("Inappropriate name", ReplaceWith("newJsoupSession()"))
     @Throws(WebDriverException::class)
     suspend fun newSession(): Connection
     /**
-     * Load url as a resource without browser rendering, with the last page's context,
-     * which means, the same headers and cookies.
-     * TODO: no Jsoup dependency, do not return a Connection.Response
+     * Create a new Jsoup session with the last page's context, which means, the same
+     * headers and cookies.
      * */
     @Throws(WebDriverException::class)
-    suspend fun loadResource(url: String): Connection.Response?
+    suspend fun newJsoupSession(): Connection
+    /**
+     * Load the url as a resource with Jsoup rather than browser rendering, with the last page's context,
+     * which means, the same headers and cookies.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun loadJsoupResource(url: String): Connection.Response
+    /**
+     * Load url as a resource without browser rendering, with the last page's context,
+     * which means, the same headers and cookies.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun loadResource(url: String): NetworkResourceResponse
     /**
      * Force the page pauses all navigations and PENDING resource fetches.
      * If the page loading stops, the user can still interact with the page,

@@ -1,6 +1,5 @@
 package ai.platon.pulsar.dom
 
-import org.jsoup.Connection
 import org.jsoup.HttpStatusException
 import org.jsoup.UnsupportedMimeTypeException
 import org.jsoup.helper.DataUtil
@@ -54,22 +53,6 @@ object Documents {
     }
 
     /**
-     * Creates a new [Connection] to a URL. Use to fetch and parse a HTML page.
-     *
-     *
-     * Use examples:
-     *
-     *  * `Document doc = Jsoup.connect("http://example.com").userAgent("Mozilla").data("name", "dom").get();`
-     *  * `Document doc = Jsoup.connect("http://example.com").cookie("auth", "token").post();`
-     *
-     * @param url URL to connect to. The protocol must be `http` or `https`.
-     * @return the connection. You can add data, cookies, and headers; set the user-agent, referrer, method; and then execute.
-     */
-    fun connect(url: String): Connection {
-        return HttpConnection.connect(url)
-    }
-
-    /**
      * Parse the contents of a file as HTML.
      *
      * @param file          file to load HTML from
@@ -105,7 +88,7 @@ object Documents {
         return parse(path.toFile(), charsetName)
     }
 
-    // TODO: check the logic whether to support ignoring script
+    // TODO: check the logic whether to support the no script version
 //    fun parse(file: File, charsetName: String, ignoreScript: Boolean): FeaturedDocument {
 //        return FeaturedDocument(DataUtil.load(file, charsetName, file.absolutePath, ignoreScript))
 //    }
@@ -124,7 +107,7 @@ object Documents {
         return FeaturedDocument(DataUtil.load(istream, charsetName, baseURI))
     }
 
-    // TODO: check the logic whether to support ignoring script
+    // TODO: check the logic whether to support the no script version
 //    fun parse(istream: InputStream, charsetName: String, baseURI: String, ignoreScript: Boolean): FeaturedDocument {
 //        return FeaturedDocument(DataUtil.load(istream, charsetName, baseURI, ignoreScript))
 //    }
@@ -171,7 +154,6 @@ object Documents {
     /**
      * Fetch a URL, and parse it as HTML. Provided for compatibility; in most cases use [.connect] instead.
      *
-     *
      * The encoding character set is determined by the content-type header or http-equiv meta tag, or falls back to `UTF-8`.
      *
      * @param url           URL to fetch (with a GET). The protocol must be `http` or `https`.
@@ -182,7 +164,6 @@ object Documents {
      * @throws UnsupportedMimeTypeException if the response mime type is not supported and those errors are not ignored
      * @throws java.net.SocketTimeoutException if the connection times out
      * @throws IOException if a connection or read error occurs
-     * @see .connect
      */
     fun parse(url: URL, timeoutMillis: Long): FeaturedDocument {
         val con = HttpConnection.connect(url)

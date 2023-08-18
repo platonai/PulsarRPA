@@ -582,6 +582,7 @@ val Node.canonicalName: String
                 val postfix = if (siblingNodes().size > 1) {
                     "~" + siblingIndex()
                 } else ""
+                // Recursive call
                 return bestElement.canonicalName + postfix
             }
 

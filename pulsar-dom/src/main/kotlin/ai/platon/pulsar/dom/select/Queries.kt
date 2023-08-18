@@ -179,8 +179,7 @@ fun Node.select(query: String, offset: Int, limit: Int = Int.MAX_VALUE): Element
     return PowerSelector.select(query, this, offset, limit)
 }
 
-fun <O> Node.select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
-                    transformer: (Element) -> O): List<O> {
+fun <O> Node.select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE, transformer: (Element) -> O): List<O> {
     return if (this is Element) {
         PowerSelector.select(query, this, offset, limit, transformer)
     } else listOf()
@@ -190,23 +189,23 @@ fun <O> Node.select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
  * TODO: Jsoup native supported selectTo
  * */
 inline fun <R : Any, C : MutableCollection<in R>> Node.selectTo(destination: C,
-        query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
-        transformer: (Element) -> R) {
+        query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE, transformer: (Element) -> R) {
     if (this is Element) {
         select(query, offset, limit).mapTo(destination) { transformer(it) }
     }
 }
 
-inline fun <R : Any> Node.selectNotNull(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
-                                  transformer: (Element) -> R?): List<R> {
+inline fun <R : Any> Node.selectNotNull(
+    query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE, transformer: (Element) -> R?
+): List<R> {
     return if (this is Element) {
         select(query, offset, limit).mapNotNull { transformer(it) }
     } else listOf()
 }
 
-inline fun <R : Any, C : MutableCollection<in R>> Node.selectNotNullTo(destination: C,
-        query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
-        transformer: (Element) -> R?) {
+inline fun <R : Any, C : MutableCollection<in R>> Node.selectNotNullTo(
+    destination: C, query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE, transformer: (Element) -> R?
+) {
     if (this is Element) {
         select(query, offset, limit).mapNotNullTo(destination) { transformer(it) }
     }
