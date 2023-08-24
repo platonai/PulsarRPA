@@ -79,7 +79,8 @@ abstract class AbstractPulsarSession(
     override val pageCache get() = context.globalCacheFactory.globalCache.pageCache
     override val documentCache get() = context.globalCacheFactory.globalCache.documentCache
 
-    private val globalCacheFactoryOrNull get() = context.takeIf { isActive }?.globalCacheFactory
+    private val contextOrNull get() = if (isActive) context else null
+    private val globalCacheFactoryOrNull get() = contextOrNull?.globalCacheFactory
     private val pageCacheOrNull get() = globalCacheFactoryOrNull?.globalCache?.pageCache
     private val documentCacheOrNull get() = globalCacheFactoryOrNull?.globalCache?.documentCache
 
@@ -149,13 +150,13 @@ abstract class AbstractPulsarSession(
 
     override fun get(url: String, vararg fields: String): WebPage = ensureActive { context.get(url, *fields) }
 
-    override fun getOrNull(url: String): WebPage? = ensureActive { context.getOrNull(url) }
+    override fun getOrNull(url: String): WebPage? = contextOrNull?.getOrNull(url)
 
-    override fun getOrNull(url: String, vararg fields: String): WebPage? = ensureActive { context.getOrNull(url, *fields) }
+    override fun getOrNull(url: String, vararg fields: String): WebPage? = contextOrNull?.getOrNull(url, *fields)
 
-    override fun getContent(url: String): ByteBuffer? = ensureActive { context.getContent(url) }
+    override fun getContent(url: String): ByteBuffer? = contextOrNull?.getContent(url)
 
-    override fun getContentAsString(url: String): String? = ensureActive { context.getContentAsString(url) }
+    override fun getContentAsString(url: String): String? = contextOrNull?.getContentAsString(url)
 
     override fun exists(url: String): Boolean = ensureActive { context.exists(url) }
 

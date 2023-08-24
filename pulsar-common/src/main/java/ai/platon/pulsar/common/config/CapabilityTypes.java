@@ -345,7 +345,12 @@ public interface CapabilityTypes {
      * Proxy
      */
     String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
+    /**
+     * @deprecated Use PROXY_POOL_MANAGER_CLASS instead
+     * */
+    @Deprecated
     String PROXY_POOL_MONITOR_CLASS = "proxy.pool.monitor.class";
+    String PROXY_POOL_MANAGER_CLASS = "proxy.pool.manager.class";
     String PROXY_LOADER_CLASS = "proxy.loader.class";
     String PROXY_MAX_FETCH_SUCCESS = "proxy.max.fetch.success";
     String PROXY_MAX_ALLOWED_PROXY_ABSENCE = "proxy.max.allowed.proxy.absence";

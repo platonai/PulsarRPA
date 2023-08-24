@@ -69,7 +69,7 @@ open class BrowserSettings(
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SystemDefaultPrivacyContextIdGenerator"
-            System.setProperty(PRIVACY_CONTEXT_ID_GENERATOR_CLASS, clazz)
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
         }
@@ -88,7 +88,7 @@ open class BrowserSettings(
         @JvmStatic
         fun withPrototypeBrowser(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyContextIdGenerator"
-            System.setProperty(PRIVACY_CONTEXT_ID_GENERATOR_CLASS, clazz)
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
         }
