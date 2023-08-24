@@ -105,12 +105,46 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
         return snapshot
     }
 
+    open fun maintain() {
+        // do nothing by default
+    }
+
     /**
      * Close a given privacy context, remove it from the active list and add it to the zombie list.
      * No exception.
      * */
     open fun close(privacyContext: PrivacyContext) {
         kotlin.runCatching { doClose(privacyContext) }.onFailure { logger.warn(it.stringify()) }
+    }
+
+    open fun reset() {
+        logger.info("Reset all privacy contexts, closing all ...")
+
+        activeContexts.values.toCollection(zombieContexts)
+        permanentContexts.clear()
+        temporaryContexts.clear()
+        closeZombieContexts()
+    }
+
+    /**
+     * Closing call stack:
+     *
+     * PrivacyManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
+     * -> BrowserManager.close -> Browser.close -> WebDriver.close
+     * |-> LoadingWebDriverPool.close
+     *
+     * */
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            logger.info("Closing privacy contexts ...")
+
+            activeContexts.values.toCollection(zombieContexts)
+            permanentContexts.clear()
+            temporaryContexts.clear()
+
+            cleaningService.runCatching { shutdown() }.onFailure { logger.warn(it.stringify()) }
+            closeZombieContexts()
+        }
     }
 
     /**
@@ -147,31 +181,6 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
                 lazyClose -> closeZombieContextsLazily()
                 else -> closeZombieContexts()
             }
-        }
-    }
-
-    open fun maintain() {
-        // do nothing by default
-    }
-
-    /**
-     * Closing call stack:
-     *
-     * PrivacyManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
-     * -> BrowserManager.close -> Browser.close -> WebDriver.close
-     * |-> LoadingWebDriverPool.close
-     *
-     * */
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
-            logger.info("Closing privacy contexts ...")
-
-            activeContexts.values.toCollection(zombieContexts)
-            permanentContexts.clear()
-            temporaryContexts.clear()
-
-            cleaningService.runCatching { shutdown() }.onFailure { logger.warn(it.stringify()) }
-            closeZombieContexts()
         }
     }
 

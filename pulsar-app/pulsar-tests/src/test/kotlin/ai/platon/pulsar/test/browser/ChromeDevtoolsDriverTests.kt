@@ -119,6 +119,18 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     }
 
     @Test
+    fun testLoadResource() = runWebDriverTest { driver ->
+        val resourceUrl = "https://www.amazon.com/robots.txt"
+        val response = driver.loadResource(resourceUrl)
+        val body = response.stream
+        assertNotNull(body)
+
+//        println(body)
+        assertContains(body, "Disallow")
+        // check cookies and headers
+    }
+
+    @Test
     fun testOpenNewTab() {
         val driver = driverFactory.create()
 
@@ -158,7 +170,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         open(url, driver)
 
         val href = driver.clickNthAnchor(100, "body")
-        println(href)
+//        println(href)
 
         driver.waitForNavigation()
         driver.waitForSelector("body")

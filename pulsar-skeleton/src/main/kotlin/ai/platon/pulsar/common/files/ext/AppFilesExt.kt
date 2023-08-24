@@ -38,11 +38,11 @@ fun AppFiles.export(
     } else {
         sb.append("/b").append(length / 20000 * 20000)
     }
+    sb.append("-")
 
     val fileNameIdent = sb.toString()
     val path = export(page, prettyHtml.toByteArray(), prefix = fileNameIdent, suffix = suffix, group = "default")
 
-    // TODO: path is a temporary field, should not be persisted to page.metadata
     page.metadata.set(Name.ORIGINAL_EXPORT_PATH, path.toString())
 
     page.setVar(Name.ORIGINAL_EXPORT_PATH.name, path)
