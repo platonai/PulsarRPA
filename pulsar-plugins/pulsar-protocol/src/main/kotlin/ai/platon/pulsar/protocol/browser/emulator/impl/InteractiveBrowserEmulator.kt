@@ -245,16 +245,17 @@ open class InteractiveBrowserEmulator(
             ?: return ForwardingResponse.failed(navigateTask.page, SessionLostException("null response"))
 
         // TODO: transform protocol status in AbstractHttpProtocol
-        val protocolStatus = ProtocolStatusTranslator.translateHttpCode(response.statusCode())
-        val content = response.body()
+        val protocolStatus = ProtocolStatusTranslator.translateHttpCode(response.httpStatusCode.toInt())
+        val headers = response.headers ?: mapOf()
+        val content = response.stream ?: ""
         // Note: originalContentLength is already set before willComputeFeature event, (if not removed by someone)
         navigateTask.originalContentLength = content.length
         navigateTask.pageSource = preprocessPageContent(content)
 
         navigateTask.pageDatum.also {
             it.protocolStatus = protocolStatus
-            it.headers.putAll(response.headers())
-            it.contentType = response.contentType()
+            headers.forEach { (t, u) -> it.headers[t] = u.toString() }
+//            it.contentType = response.contentType()
             it.content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
             it.originalContentLength = navigateTask.originalContentLength
         }
