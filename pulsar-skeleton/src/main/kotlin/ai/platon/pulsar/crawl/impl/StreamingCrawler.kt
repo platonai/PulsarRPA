@@ -214,7 +214,7 @@ open class StreamingCrawler(
     val isIdle: Boolean
         get() {
             return !urls.iterator().hasNext() && globalLoadingUrls.isEmpty()
-                    && idleTime > Duration.ofSeconds(5)
+                    && idleTime > Duration.ofSeconds(10)
         }
 
     /**

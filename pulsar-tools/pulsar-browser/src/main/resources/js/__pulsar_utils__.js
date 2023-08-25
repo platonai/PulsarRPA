@@ -195,6 +195,11 @@ __pulsar_utils__.updateStat = function(init = false) {
 
     if (!this.isBrowserError()) {
         document.body.__pulsar_forEach((node) => {
+            // 2023.08: google sites complains that node.__pulsar_isIFrame is not defined sometimes
+            if (!node.__pulsar_isIFrame) {
+                return;
+            }
+
             if (node.__pulsar_isIFrame()) {
                 return
             }
