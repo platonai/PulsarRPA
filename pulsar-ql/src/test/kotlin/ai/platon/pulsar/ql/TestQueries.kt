@@ -2,8 +2,8 @@ package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.h2.Queries
-import org.junit.Test
 import java.util.concurrent.Executors
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 

@@ -91,11 +91,8 @@ class ChromeLauncher(
 //                    .onFailure { logger.warn("Unexpected exception", it) }
         }
 
-        // if the data dir is the default dir, we might have problem to clean up
-        if (!userDataDir.toString().contains("context\\default", true)) {
-            kotlin.runCatching { cleanUp() }.onFailure {
-                logger.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
-            }
+        kotlin.runCatching { cleanUp() }.onFailure {
+            logger.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
         }
     }
 
@@ -278,9 +275,19 @@ class ChromeLauncher(
 
     @Throws(IOException::class)
     private fun cleanUp() {
+        // No, we do not delete any directory from the program, it is dangerous.
+        // It's better to use a script to delete temporary context directories older than a specified time,
+        // 3 days, for example.
+        val cleanUpUserDataDir = alwaysFalse()
+        if (cleanUpUserDataDir) {
+            deleteTemporaryUserDataDir()
+        }
+    }
+
+    private fun deleteTemporaryUserDataDir() {
         val target = userDataDir
 
-        // seems safe enough to delete directory matching special pattern
+        // It's in the context tmp dir, delete the user data dir safely
         val isTemporary = target.startsWith(AppPaths.CONTEXT_TMP_DIR)
         // be careful, do not delete files by mistake, so delete files only inside AppPaths.CONTEXT_TMP_DIR
         if (isTemporary) {

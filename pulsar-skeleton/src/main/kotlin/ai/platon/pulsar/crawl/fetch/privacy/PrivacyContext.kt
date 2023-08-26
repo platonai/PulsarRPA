@@ -46,27 +46,27 @@ abstract class PrivacyContext(
         private val contextDirSequencer = AtomicInteger()
         
         // The prefix for all temporary privacy contexts, system context, prototype context and default context are not included.
-        val CONTEXT_DIR_PREFIX = "cx."
+        const val CONTEXT_DIR_PREFIX = "cx."
         @Deprecated("Inappropriate name", ReplaceWith("USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER"))
-        val SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER = AppPaths.SYS_BROWSER_DATA_DIR_PLACEHOLDER
-        val USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
+        val SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER: Path = AppPaths.SYS_BROWSER_DATA_DIR_PLACEHOLDER
+        val USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER: Path = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
         // The placeholder directory for the user's default browser. This is a placeholder, actually no data dir
         // should be specified, so the browser driver opens a browser just like a normal user opens it.
         // The actual data dir of user's browser are different on different operating systems, for example,
         // on linux, chrome's data dir is: ~/.config/google-chrome/
-        val USER_DEFAULT_DATA_DIR_PLACEHOLDER = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
+        val USER_DEFAULT_DATA_DIR_PLACEHOLDER: Path = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
         // The default context directory, if you need a semi-permanent context, use this one
-        val DEFAULT_CONTEXT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
+        val DEFAULT_CONTEXT_DIR: Path = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         // A random context directory, if you need a random temporary context, use this one
         val RANDOM_CONTEXT_DIR get() = computeNextSequentialContextDir()
         // The prototype context directory, all privacy contexts copies browser data from the prototype.
         // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
-        val PROTOTYPE_DATA_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
+        val PROTOTYPE_DATA_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE
         // A context dir is the dir which contains the browser data dir, and supports different browsers.
         // For example: ~/.pulsar/browser/chrome/prototype/
-        val PROTOTYPE_CONTEXT_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE.parent
+        val PROTOTYPE_CONTEXT_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE.parent
 
-        val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT = Duration.ofMinutes(30)
+        val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT: Duration = Duration.ofMinutes(30)
 
         val globalMetrics by lazy { PrivacyContextMetrics() }
 

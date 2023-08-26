@@ -1,6 +1,5 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.dom.nodes.node.ext.uniqueName
@@ -8,19 +7,17 @@ import ai.platon.pulsar.ql.h2.H2Db
 import ai.platon.pulsar.ql.h2.H2DbConfig
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.engine.SysProperties
-import org.h2.store.fs.FileUtils
 import org.h2.tools.Server
 import org.h2.util.JdbcUtils
 import org.jsoup.Jsoup
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import org.junit.Ignore
-import org.junit.Test
-import org.junit.jupiter.api.Tag
 import java.nio.file.Files
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Types
+import kotlin.test.Ignore
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -166,7 +163,7 @@ class TestJavaObjectSerializer: TestBase() {
         println(dom.element.uniqueName)
     }
 
-    @Tag("SlowTest")
+    @Ignore("SlowTest")
     @Test
     fun testNetworkSerialization3() {
         val conn = remoteDB.getConnection("testNetworkSerialization3")

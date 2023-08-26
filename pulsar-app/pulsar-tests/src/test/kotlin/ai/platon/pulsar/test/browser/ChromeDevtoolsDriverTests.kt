@@ -122,12 +122,34 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     fun testLoadResource() = runWebDriverTest { driver ->
         val resourceUrl = "https://www.amazon.com/robots.txt"
         val response = driver.loadResource(resourceUrl)
+        val headers = response.headers
         val body = response.stream
+        assertNotNull(headers)
+        assertNotNull(body)
+
+//        println(body)
+        assertContains(body, "Disallow")
+
+//        val cookies = response.entries.joinToString("; ") { it.key + "=" + it.value }
+//        println(cookies)
+        headers.forEach { (name, value) -> println("$name: $value") }
+        assertContains(headers, "Content-Type", "Content-Type should be in headers")
+    }
+
+    @Test
+    fun testJsoupLoadResource() = runWebDriverTest { driver ->
+        val resourceUrl = "https://www.amazon.com/robots.txt"
+        val response = driver.loadJsoupResource(resourceUrl)
+        val body = response.body()
         assertNotNull(body)
 
 //        println(body)
         assertContains(body, "Disallow")
         // check cookies and headers
+        val cookies = response.cookies().entries.joinToString("; ") { it.key + "=" + it.value }
+        println(cookies)
+        response.headers().forEach { (name, value) -> println("$name: $value") }
+        assertContains(response.headers(), "Content-Type", "Content-Type should be in headers")
     }
 
     @Test

@@ -195,7 +195,7 @@
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.7</version>
+                        <version>1.6.13</version>
                         <configuration>
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
@@ -218,7 +218,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.0.1</version>
+                        <version>3.1.0</version>
                         <configuration>
                             <skip>true</skip>
                         </configuration>
@@ -695,7 +695,7 @@
         <pulsar-jsoup.version>1.14.3</pulsar-jsoup.version>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
-        <dokka.version>1.4.32</dokka.version>
+        <dokka.version>1.8.20</dokka.version>
         <maven-exec-plugin.version>3.0.0</maven-exec-plugin.version>
 
         <commons-io.version>2.11.0</commons-io.version>

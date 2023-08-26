@@ -18,7 +18,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.annotations.Beta
 import org.slf4j.LoggerFactory
 
-open class BrowserPrivacyContext constructor(
+open class BrowserPrivacyContext(
     val proxyPoolManager: ProxyPoolManager? = null,
     val driverPoolManager: WebDriverPoolManager,
     val coreMetrics: CoreMetrics? = null,
