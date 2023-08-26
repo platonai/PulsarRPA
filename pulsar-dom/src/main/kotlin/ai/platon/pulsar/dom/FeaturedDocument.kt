@@ -193,8 +193,6 @@ open class FeaturedDocument(val document: Document) {
      * to {@link OutputSettings#charset()}.
      *
      * @return Current Charset
-     *
-     * @see OutputSettings#charset()
      */
     val charset get() = document.charset()
 

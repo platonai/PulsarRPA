@@ -66,3 +66,13 @@ class NavigateHistory {
         history.clear()
     }
 }
+
+class NetworkResourceResponse(
+    val success: Boolean = false,
+    val netError: Double = 0.0,
+    val netErrorName: String = "",
+    /** Request not made */
+    val httpStatusCode: Double = 400.0,
+    val stream: String? = null,
+    val headers: Map<String, Any>? = null,
+)

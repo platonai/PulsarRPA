@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql
 
-import org.junit.Ignore
-import org.junit.Test
+import kotlin.test.Ignore
+import kotlin.test.Test
 
 /**
  * Created by vincent on 17-7-29.

@@ -11,19 +11,35 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * Manage the privacy contexts.
+ * */
 abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     private val logger = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
 
+    /**
+     * life cycle of the permanent context is relatively long. The system will never delete the permanent contexts.
+     *
+     * The predefined privacy agents for permanent contexts are:
+     *
+     * 1. PrivacyAgent.USER_DEFAULT
+     * 2. PrivacyAgent.PROTOTYPE
+     * 2. PrivacyAgent.DEFAULT
+     * */
     val permanentContexts = ConcurrentHashMap<PrivacyAgent, PrivacyContext>()
 
     /**
+     * The life cycle of the temporary context is very short. Whenever the system detects that the
+     * privacy context is leaked, the system discards the leaked context and creates a new one.
+     *
      * NOTE: we can use a priority queue and every time we need a context, take the top one
      * */
     val temporaryContexts = ConcurrentHashMap<PrivacyAgent, PrivacyContext>()
@@ -105,12 +121,51 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
         return snapshot
     }
 
+    open fun maintain() {
+        // do nothing by default
+    }
+
     /**
      * Close a given privacy context, remove it from the active list and add it to the zombie list.
      * No exception.
      * */
     open fun close(privacyContext: PrivacyContext) {
         kotlin.runCatching { doClose(privacyContext) }.onFailure { logger.warn(it.stringify()) }
+    }
+
+    /**
+     * Reset the privacy environment, close all privacy contexts, so all fetch tasks are handled by new browser contexts.
+     * */
+    open fun reset() {
+        logger.info("Reset all privacy contexts, closing all ...")
+
+        activeContexts.values.toCollection(zombieContexts)
+        permanentContexts.clear()
+        temporaryContexts.clear()
+        closeZombieContexts()
+    }
+
+    /**
+     * Close the privacy manager. All active contexts are also be closed.
+     *
+     * Closing call stack:
+     *
+     * PrivacyManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
+     * -> BrowserManager.close -> Browser.close -> WebDriver.close
+     * |-> LoadingWebDriverPool.close
+     *
+     * */
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            logger.info("Closing privacy contexts ...")
+
+            activeContexts.values.toCollection(zombieContexts)
+            permanentContexts.clear()
+            temporaryContexts.clear()
+
+            cleaningService.runCatching { shutdown() }.onFailure { logger.warn(it.stringify()) }
+            closeZombieContexts()
+        }
     }
 
     /**
@@ -150,31 +205,6 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
         }
     }
 
-    open fun maintain() {
-        // do nothing by default
-    }
-
-    /**
-     * Closing call stack:
-     *
-     * PrivacyManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
-     * -> BrowserManager.close -> Browser.close -> WebDriver.close
-     * |-> LoadingWebDriverPool.close
-     *
-     * */
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
-            logger.info("Closing privacy contexts ...")
-
-            activeContexts.values.toCollection(zombieContexts)
-            permanentContexts.clear()
-            temporaryContexts.clear()
-
-            cleaningService.runCatching { shutdown() }.onFailure { logger.warn(it.stringify()) }
-            closeZombieContexts()
-        }
-    }
-
     /**
      * Close zombie contexts lazily, hope the tasks returns better.
      *
@@ -201,7 +231,9 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             logger.debug("Closing {} pending zombie contexts ...", pendingContexts.size)
 
             pendingContexts.forEach { privacyContext ->
-                kotlin.runCatching { privacyContext.close() }.onFailure { logger.warn(it.stringify()) }
+                kotlin.runCatching {
+                    privacyContext.close()
+                }.onFailure { logger.warn(it.stringify()) }
             }
 
             reportZombieContexts()

@@ -42,6 +42,12 @@ open class WebDriverFactory(
     fun create(browserId: BrowserId, priority: Int = 0, conf: VolatileConfig = VolatileConfig.UNSAFE, start: Boolean = true) =
         launchBrowserAndDriver(browserId, priority, conf, start).second
 
+    @Throws(BrowserLaunchException::class)
+    fun launchBrowser() = launchBrowser(BrowserId.DEFAULT)
+
+    @Throws(BrowserLaunchException::class)
+    fun launchTempBrowser() = launchBrowser(BrowserId.RANDOM)
+
     /**
      * Create a WebDriver
      */

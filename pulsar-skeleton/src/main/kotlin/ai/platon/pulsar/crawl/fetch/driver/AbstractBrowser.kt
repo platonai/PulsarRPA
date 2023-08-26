@@ -5,9 +5,9 @@ import ai.platon.pulsar.browser.common.ScriptConfuser
 import ai.platon.pulsar.browser.common.ScriptLoader
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import kotlinx.coroutines.runBlocking
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -51,6 +51,13 @@ abstract class AbstractBrowser(
 
     override fun destroyForcibly() {
 
+    }
+
+    override fun clearCookies() {
+        runBlocking {
+            val driver = drivers.values.firstOrNull() ?: newDriver()
+            driver.clearBrowserCookies()
+        }
     }
 
     override fun maintain() {

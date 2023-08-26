@@ -1,9 +1,15 @@
 package ai.platon.pulsar.examples.sites.tools
 
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
+import ai.platon.pulsar.ql.context.SQLContexts
+import kotlinx.coroutines.runBlocking
 
 fun main() {
-    val session = PulsarContexts.createSession()
-    session.load("https://www.tmall.com/", "-refresh")
+    val driver = SQLContexts.create().getBean(WebDriverFactory::class).launchBrowser().newDriver()
+
+    runBlocking {
+        driver.navigateTo("about:blank")
+    }
+
     readLine()
 }

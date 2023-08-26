@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.context.support.ContextDefaults
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
@@ -46,6 +47,7 @@ open class H2SQLContext(
 
     /**
      * Create a pulsar session, note that the session is not a SQLSession.
+     * TODO: return a better PulsarSession
      * */
     override fun createSession(): BasicPulsarSession {
         val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())
@@ -56,48 +58,53 @@ open class H2SQLContext(
 class StaticH2SQLContext(
     applicationContext: StaticApplicationContext = StaticApplicationContext()
 ) : H2SQLContext(applicationContext) {
+    private val defaults = ContextDefaults()
 
     /**
      * The unmodified config
      * */
-    override val unmodifiedConfig = getBeanOrNull() ?: ImmutableConfig()
+    override val unmodifiedConfig get() = getBeanOrNull() ?: defaults.unmodifiedConfig
     /**
      * Url normalizers
      * */
-    override val urlNormalizers = getBeanOrNull() ?: ChainedUrlNormalizer(unmodifiedConfig)
+    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("urlNormalizer"))
+    override val urlNormalizers get() = getBeanOrNull() ?: defaults.urlNormalizers
+    /**
+     * Url normalizer
+     * */
+    override val urlNormalizer get() = getBeanOrNull() ?: defaults.urlNormalizer
     /**
      * The web db
      * */
-    override val webDb = getBeanOrNull() ?: WebDb(unmodifiedConfig)
+    override val webDb get() = getBeanOrNull() ?: defaults.webDb
     /**
      * The global cache
      * */
-    override val globalCacheFactory = getBeanOrNull() ?: GlobalCacheFactory(unmodifiedConfig)
-    /**
-     * The main loop
-     * */
-    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(StreamingCrawlLoop(unmodifiedConfig))
+    override val globalCacheFactory get() = getBeanOrNull() ?: defaults.globalCacheFactory
     /**
      * The injection component
      * */
-    override val injectComponent = getBeanOrNull() ?: InjectComponent(webDb, unmodifiedConfig)
+    override val injectComponent get() = getBeanOrNull() ?: defaults.injectComponent
     /**
      * The fetch component
      * */
-    override val fetchComponent = getBeanOrNull() ?: BatchFetchComponent(webDb, unmodifiedConfig)
+    override val fetchComponent get() = getBeanOrNull() ?: defaults.fetchComponent
     /**
      * The parse component
      * */
-    override val parseComponent: ParseComponent = getBeanOrNull() ?: ParseComponent(globalCacheFactory, unmodifiedConfig)
+    override val parseComponent get() = getBeanOrNull() ?: defaults.parseComponent
     /**
      * The update component
      * */
-    override val updateComponent = getBeanOrNull() ?: UpdateComponent(webDb, unmodifiedConfig)
+    override val updateComponent get() = getBeanOrNull() ?: defaults.updateComponent
     /**
      * The load component
      * */
-    override val loadComponent = getBeanOrNull() ?: LoadComponent(
-        webDb, globalCacheFactory, fetchComponent, parseComponent, updateComponent, unmodifiedConfig)
+    override val loadComponent get() = getBeanOrNull() ?: defaults.loadComponent
+    /**
+     * The main loop
+     * */
+    override val crawlLoops get() = getBeanOrNull() ?: defaults.crawlLoops
 
     init {
         applicationContext.refresh()
@@ -123,6 +130,9 @@ open class ClassPathXmlSQLContext(configLocation: String) :
         return session as H2SQLSession
     }
 
+    /**
+     * TODO: return a better PulsarSession
+     * */
     override fun createSession(): BasicPulsarSession {
         val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())
         return session.also { sessions[it.id] = it }
@@ -157,7 +167,7 @@ object SQLContexts {
     fun create(contextLocation: String): SQLContext = create(ClassPathXmlSQLContext(contextLocation))
 
     @Synchronized
-    fun createSession() = create().createSession() as SQLSession
+    fun createSession() = create().createSession()
 
     fun await() {
         PulsarContexts.await()

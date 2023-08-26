@@ -39,6 +39,13 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
     fun newDriver(): WebDriver
 
     /**
+     * Clear all cookies.
+     * Notice: even if we clear all cookies, the website still has some technology to track a session.
+     * */
+    @Throws(WebDriverException::class)
+    fun clearCookies()
+
+    /**
      * Destroy the web driver, close the associated browser tabs.
      * */
     fun destroyDriver(driver: WebDriver)

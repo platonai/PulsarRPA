@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.10.17-SNAPSHOT</version>
+        <version>1.10.18-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-skeleton</artifactId>
@@ -87,12 +87,12 @@
             <artifactId>jcommander</artifactId>
         </dependency>
 
-        <!-- System metrics -->
 <!--        <dependency>-->
 <!--            <groupId>com.github.oshi</groupId>-->
 <!--            <artifactId>oshi-core</artifactId>-->
 <!--            <version>${oshi.version}</version>-->
 <!--        </dependency>-->
+        <!-- Required by core metrics -->
         <dependency>
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core-java11</artifactId>

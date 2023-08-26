@@ -3,10 +3,9 @@ package ai.platon.pulsar.ql
 import ai.platon.pulsar.common.config.AppConstants.URL_TRACKER_HOME_URL
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.model.WebPageFormatter
-import org.junit.Ignore
-import org.junit.Test
-import org.junit.jupiter.api.Tag
 import java.util.concurrent.TimeUnit
+import kotlin.test.Ignore
+import kotlin.test.Test
 
 class TestExtractCases : TestBase() {
     private val productIndexUrl = TestResource.productIndexUrl
@@ -56,9 +55,9 @@ class TestExtractCases : TestBase() {
 
         val page = session.get(productIndexUrl)
         page.vividLinks.keys.map { it.toString() }
-                .map { session.load(it) }
-                .filter { !it.protocolStatus.isSuccess }
-                .map { session.delete(it.url) }
+            .map { session.load(it) }
+            .filter { !it.protocolStatus.isSuccess }
+            .map { session.delete(it.url) }
         session.flush()
 
         println("Loading " + page.vividLinks.size + " out links")
@@ -92,7 +91,7 @@ from
         execute(sql)
     }
 
-    @Tag("SlowTest")
+    @Ignore("SlowTest")
     @Test
     fun testLoadOutPagesForMogujie() {
         val url = urlGroups["mogujie"]!![0]
@@ -135,7 +134,7 @@ FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 5)
         execute(sql)
     }
 
-    @Tag("SlowTest")
+    @Ignore("SlowTest")
     @Test
     fun testLoadOutPagesForJd() {
         val url = urlGroups["jd"]!![0]

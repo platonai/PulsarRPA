@@ -1,41 +1,55 @@
 package ai.platon.pulsar.common.proxy
 
+import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_MANAGER_CLASS
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_MONITOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.stringify
 import org.slf4j.LoggerFactory
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.ConcurrentHashMap
 
 class ProxyPoolManagerFactory(
         val proxyPool: ProxyPool,
         val conf: ImmutableConfig
 ): AutoCloseable {
-    private val log = LoggerFactory.getLogger(ProxyPoolManagerFactory::class.java)
+    private val logger = LoggerFactory.getLogger(ProxyPoolManagerFactory::class.java)
 
-    private val proxyPoolMonitorRef = AtomicReference<ProxyPoolManager>()
-    fun get(): ProxyPoolManager = createIfAbsent(conf)
-
+    private val proxyPoolManagers = ConcurrentHashMap<String, ProxyPoolManager>()
+    
+    var specifiedProxyManager: ProxyPoolManager? = null
+    
+    fun get(): ProxyPoolManager = specifiedProxyManager ?: computeIfAbsent(conf)
+    
     override fun close() {
-        proxyPoolMonitorRef.getAndSet(null)?.close()
+        specifiedProxyManager?.runCatching { close() }?.onFailure { logger.warn(it.stringify()) }
+        proxyPoolManagers.values.forEach { runCatching { it.close() }.onFailure { logger.warn(it.stringify()) } }
     }
 
-    private fun createIfAbsent(conf: ImmutableConfig): ProxyPoolManager {
-        if (proxyPoolMonitorRef.get() == null) {
-            synchronized(ProxyPoolManagerFactory::class) {
-                if (proxyPoolMonitorRef.get() == null) {
-                    val defaultClazz = ProxyPoolManager::class.java
-                    val clazz = try {
-                        conf.getClass(PROXY_POOL_MONITOR_CLASS, defaultClazz)
-                    } catch (e: Exception) {
-                        log.warn("Configured proxy pool monitor {}({}) is not found, use default ({})",
-                                PROXY_POOL_MONITOR_CLASS, conf.get(PROXY_POOL_MONITOR_CLASS), defaultClazz.name)
-                        defaultClazz
-                    }
-                    val ref = clazz.constructors.first { it.parameters.size == 2 }.newInstance(proxyPool, conf)
-                    proxyPoolMonitorRef.set(ref as? ProxyPoolManager)
-                }
+    private fun computeIfAbsent(conf: ImmutableConfig): ProxyPoolManager {
+        synchronized(ProxyPoolManagerFactory::class) {
+            val clazz = getClass(conf)
+            return proxyPoolManagers.computeIfAbsent(clazz.name) {
+                clazz.constructors.first { it.parameters.size == 2 }.newInstance(proxyPool, conf) as ProxyPoolManager
             }
         }
+    }
 
-        return proxyPoolMonitorRef.get()
+    private fun getClass(conf: ImmutableConfig): Class<*> {
+        val defaultClazz = FileProxyLoader::class.java
+        var clazz = getClass(conf, PROXY_POOL_MANAGER_CLASS)
+        if (clazz == defaultClazz) {
+            clazz = getClass(conf, PROXY_POOL_MONITOR_CLASS)
+        }
+        return clazz
+    }
+    
+    private fun getClass(conf: ImmutableConfig, clazzName: String): Class<*> {
+        val defaultClazz = FileProxyLoader::class.java
+        return try {
+            conf.getClass(clazzName, defaultClazz)
+        } catch (e: Exception) {
+            logger.warn("Configured proxy loader {}({}) is not found, use default ({})",
+                clazzName, conf.get(clazzName), defaultClazz.simpleName)
+            defaultClazz
+        }
     }
 }

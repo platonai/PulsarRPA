@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.persist.WebPage
 import java.time.Duration
@@ -18,6 +17,11 @@ interface Crawler: AutoCloseable {
      * Delay policy for retry tasks
      * */
     var retryDelayPolicy: (Int, UrlAware?) -> Duration
+
+    fun pause()
+
+    fun resume()
+
     /**
      * Wait until all tasks are done.
      * */

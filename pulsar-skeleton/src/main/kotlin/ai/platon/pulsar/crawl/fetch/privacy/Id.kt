@@ -4,6 +4,8 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
+import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.readableClassName
@@ -247,38 +249,45 @@ class SequentialPrivacyContextIdGenerator: PrivacyContextIdGenerator {
 
 class PrivacyContextIdGeneratorFactory(val conf: ImmutableConfig) {
     private val logger = LoggerFactory.getLogger(PrivacyContextIdGeneratorFactory::class.java)
-
+    
     val generators = ConcurrentHashMap<String, PrivacyContextIdGenerator>()
-
+    
     val generator: PrivacyContextIdGenerator get() = create("")
-
+    
     @Synchronized
     fun create(className: String): PrivacyContextIdGenerator {
         var gen = generators[className]
         if (gen != null) {
             return gen
         }
-
-        gen = when(className) {
+        
+        gen = when (className) {
             PrototypePrivacyContextIdGenerator::class.java.name -> PrototypePrivacyContextIdGenerator()
             UserDefaultPrivacyContextIdGenerator::class.java.name -> UserDefaultPrivacyContextIdGenerator()
             else -> createUsingGlobalConfig(conf)
         }
-
+        
         generators[gen::class.java.name] = gen
-
+        
         return gen
     }
-
+    
     private fun createUsingGlobalConfig(conf: ImmutableConfig): PrivacyContextIdGenerator {
         val defaultClazz = DefaultPrivacyContextIdGenerator::class.java
+        var clazz = createUsingGlobalConfig(conf, PRIVACY_AGENT_GENERATOR_CLASS)
+        if (clazz == defaultClazz) {
+            clazz = createUsingGlobalConfig(conf, PRIVACY_CONTEXT_ID_GENERATOR_CLASS)
+        }
+        return clazz
+    }
+    
+    private fun createUsingGlobalConfig(conf: ImmutableConfig, className: String): PrivacyContextIdGenerator {
+        val defaultClazz = DefaultPrivacyContextIdGenerator::class.java
         val clazz = try {
-            conf.getClass(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS, defaultClazz)
+            conf.getClass(className, defaultClazz)
         } catch (e: Exception) {
             logger.warn("Configured privacy context id generator {}({}) is not found, use default ({})",
-                CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS,
-                conf.get(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS),
-                defaultClazz.simpleName)
+                className, conf.get(className), defaultClazz.simpleName)
             defaultClazz
         }
 

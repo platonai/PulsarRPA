@@ -117,7 +117,7 @@ abstract class AbstractHttpProtocol: Protocol {
                 // TODO: FETCH_PROTOCOL does not work if the response is a ForwardingResponse
                 response = getResponse(page, false)
                 retry = response == null || shouldRetry(response)
-            } catch (e: IllegalApplicationContextStateException) {
+            } catch (e: IllegalApplicationStateException) {
                 log.warn(e.message)
                 response = null
                 lastThrowable = e

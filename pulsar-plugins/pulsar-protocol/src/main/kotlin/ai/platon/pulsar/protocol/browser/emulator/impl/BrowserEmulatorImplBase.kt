@@ -20,6 +20,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.*
 import kotlinx.coroutines.delay
+import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import java.io.IOException
 import java.nio.charset.StandardCharsets
@@ -39,6 +40,9 @@ abstract class BrowserEmulatorImplBase(
     private val tracer = logger.takeIf { it.isTraceEnabled }
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
+
+    protected val maxPageSourceLength = immutableConfig.getInt(CapabilityTypes.FETCH_MAX_CONTENT_LENGTH, 8 * FileUtils.ONE_MB.toInt())
+
     val closed = AtomicBoolean(false)
     val isActive get() = !closed.get() && AppContext.isActive
 
@@ -60,15 +64,14 @@ abstract class BrowserEmulatorImplBase(
 
         val pageDatum = task.pageDatum
         val length = task.pageSource.length
-        pageSourceByteHistogram.update(length)
-        pageSourceBytes.mark(length.toLong())
 
         pageDatum.pageCategory = responseHandler.pageCategorySniffer(pageDatum)
         pageDatum.protocolStatus = responseHandler.checkErrorPage(task.page, pageDatum.protocolStatus)
+        pageDatum.lastBrowser = task.driver.browserType
         if (!pageDatum.protocolStatus.isSuccess) {
+            // TODO: check the logic, protocolStatus might be set to failure not because of the browser's error page
             // The browser shows internal error page, which is no value to store
             task.pageSource = ""
-            pageDatum.lastBrowser = task.driver.browserType
             return createResponseWithDatum(task, pageDatum)
         }
 
@@ -83,10 +86,13 @@ abstract class BrowserEmulatorImplBase(
             responseHandler.emit(BrowserResponseEvents.browseTimeout)
         }
 
-        pageDatum.headers.put(HttpHeaders.CONTENT_LENGTH, task.pageSource.length.toString())
+        pageDatum.headers.put(HttpHeaders.CONTENT_LENGTH, length.toString())
         if (integrity.isOK) {
             // Update page source, modify charset directive, do the caching stuff
             task.pageSource = responseHandler.normalizePageSource(task.url, task.pageSource).toString()
+
+            pageSourceByteHistogram.update(length)
+            pageSourceBytes.mark(length.toLong())
         } else {
             // The page seems to be broken, retry it
             pageDatum.protocolStatus = responseHandler.createProtocolStatusForBrokenContent(task.fetchTask, integrity)
@@ -190,6 +196,27 @@ abstract class BrowserEmulatorImplBase(
                 settings.pageLoadTimeout, settings.scriptTimeout, settings.scrollInterval
             )
         }
+    }
+
+    /**
+     * Preprocess page content.
+     * */
+    protected fun preprocessPageContent(content: String?): String {
+        if (content == null) {
+            return ""
+        }
+
+        val length = content.length
+        if (length > maxPageSourceLength) {
+            /**
+             * Issue #43: OutOfMemoryError: Java heap space from BrowserEmulatorImplBase.createResponse,
+             * caused by normalizePageSource().toString()
+             * **/
+            logger.warn("Too long page source: {}, truncate it to empty", length)
+            return ""
+        }
+
+        return content
     }
 
     /**

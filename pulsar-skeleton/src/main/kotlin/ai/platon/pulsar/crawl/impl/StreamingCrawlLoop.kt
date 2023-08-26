@@ -66,6 +66,9 @@ open class StreamingCrawlLoop(
         }
     }
 
+    /**
+     * Wait until the loop is started and all tasks are done.
+     * */
     override fun await() {
         started.await()
         crawler.await()
@@ -75,7 +78,7 @@ open class StreamingCrawlLoop(
         logger.info("Registered {} link collectors | loop#{} @{}", urlFeeder.collectors.size, id, hashCode())
 
         val urls = urlFeeder.asSequence()
-        _crawler = StreamingCrawler(urls, context.createSession(), noProxy = false)
+        _crawler = StreamingCrawler(urls, context.createSession())
 
         crawlJob = scope.launch {
             supervisorScope {

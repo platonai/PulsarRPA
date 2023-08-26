@@ -33,6 +33,7 @@ import kotlin.random.Random
 interface WebDriver: Closeable {
     /**
      * Lifetime status
+     * TODO: move lifetime status to AbstractWebDriver
      * */
     enum class State {
         INIT,
@@ -154,7 +155,7 @@ interface WebDriver: Closeable {
 
     /**
      * Returns a JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on,
-     * which had difficulty handling kotlin suspend methods.
+     * the other JVM languages might have difficulty to handle kotlin suspend methods.
      * */
     fun jvm(): JvmWebDriver
 
@@ -241,6 +242,8 @@ interface WebDriver: Closeable {
      * example, by Javascript) there is no guarantee that the returned text is that of the modified
      * page.
      *
+     * TODO: distinguish pageSource and outerHTML
+     *
      * @return The source of the current page
      */
     @Throws(WebDriverException::class)
@@ -252,8 +255,30 @@ interface WebDriver: Closeable {
     @Deprecated("Getter is available", ReplaceWith("mainRequestCookies"))
     @Throws(WebDriverException::class)
     suspend fun mainRequestCookies(): List<Map<String, String>>
+    
     @Throws(WebDriverException::class)
     suspend fun getCookies(): List<Map<String, String>>
+    /**
+     * Deletes browser cookies with matching name.
+     *
+     * @param name Name of the cookies to remove.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun deleteCookies(name: String)
+    /**
+     * Deletes browser cookies with matching name and url or domain/path pair.
+     *
+     * @param name Name of the cookies to remove.
+     * @param url If specified, deletes all the cookies with the given name where domain and path
+     * match provided URL.
+     * @param domain If specified, deletes only cookies with the exact domain.
+     * @param path If specified, deletes only cookies with the exact path.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun deleteCookies(name: String, url: String? = null, domain: String? = null, path: String? = null)
+    /** Clears browser cookies. */
+    @Throws(WebDriverException::class)
+    suspend fun clearBrowserCookies()
     /**
      * Brings page to front (activates tab).
      */
@@ -339,15 +364,22 @@ interface WebDriver: Closeable {
     suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int = 0)
     @Throws(WebDriverException::class)
     suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int = 0)
-
+    /** Returns the document's HTML markup. */
+    @Throws(WebDriverException::class)
+    suspend fun outerHTML(): String?
+    /** Returns the node's HTML markup. */
     @Throws(WebDriverException::class)
     suspend fun outerHTML(selector: String): String?
+    /** Returns the node's text content. */
     @Throws(WebDriverException::class)
     suspend fun firstText(selector: String): String?
+    /** Returns the nodes' text contents. */
     @Throws(WebDriverException::class)
     suspend fun allTexts(selector: String): List<String>
+    /** Returns the node's attribute name. */
     @Throws(WebDriverException::class)
     suspend fun firstAttr(selector: String, attrName: String): String?
+    /** Returns the nodes' attribute names. */
     @Throws(WebDriverException::class)
     suspend fun allAttrs(selector: String, attrName: String): List<String>
     /**
@@ -404,14 +436,27 @@ interface WebDriver: Closeable {
      * Create a new Jsoup session with the last page's context, which means, the same
      * headers and cookies.
      * */
+    @Deprecated("Inappropriate name", ReplaceWith("newJsoupSession()"))
     @Throws(WebDriverException::class)
     suspend fun newSession(): Connection
+    /**
+     * Create a new Jsoup session with the last page's context, which means, the same
+     * headers and cookies.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun newJsoupSession(): Connection
+    /**
+     * Load the url as a resource with Jsoup rather than browser rendering, with the last page's context,
+     * which means, the same headers and cookies.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun loadJsoupResource(url: String): Connection.Response
     /**
      * Load url as a resource without browser rendering, with the last page's context,
      * which means, the same headers and cookies.
      * */
     @Throws(WebDriverException::class)
-    suspend fun loadResource(url: String): Connection.Response?
+    suspend fun loadResource(url: String): NetworkResourceResponse
     /**
      * Force the page pauses all navigations and PENDING resource fetches.
      * If the page loading stops, the user can still interact with the page,

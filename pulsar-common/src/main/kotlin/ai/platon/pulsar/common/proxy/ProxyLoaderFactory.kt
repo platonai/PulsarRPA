@@ -2,33 +2,41 @@ package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_LOADER_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.stringify
 import org.slf4j.LoggerFactory
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.ConcurrentHashMap
 
 class ProxyLoaderFactory(val conf: ImmutableConfig): AutoCloseable {
-    private val log = LoggerFactory.getLogger(ProxyLoaderFactory::class.java)
+    private val logger = LoggerFactory.getLogger(ProxyLoaderFactory::class.java)
 
-    private val proxyLoaderRef = AtomicReference<ProxyLoader>()
-    fun get(): ProxyLoader = createIfAbsent(conf)
+    private val proxyLoaders = ConcurrentHashMap<String, ProxyLoader>()
+    
+    var specifiedProxyLoader: ProxyLoader? = null
+    
+    fun get(): ProxyLoader = specifiedProxyLoader ?: computeIfAbsent(conf)
 
     override fun close() {
-        proxyLoaderRef.getAndSet(null)?.close()
+        specifiedProxyLoader?.runCatching { close() }?.onFailure { logger.warn(it.stringify()) }
+        proxyLoaders.values.forEach { runCatching { it.close() }.onFailure { logger.warn(it.stringify()) } }
     }
 
-    private fun createIfAbsent(conf: ImmutableConfig): ProxyLoader {
+    private fun computeIfAbsent(conf: ImmutableConfig): ProxyLoader {
         synchronized(ProxyLoaderFactory::class) {
-            if (proxyLoaderRef.get() == null) {
-                val defaultClazz = FileProxyLoader::class.java
-                val clazz = try {
-                    conf.getClass(PROXY_LOADER_CLASS, defaultClazz)
-                } catch (e: Exception) {
-                    log.warn("Configured proxy loader {}({}) is not found, use default ({})",
-                        PROXY_LOADER_CLASS, conf.get(PROXY_LOADER_CLASS), defaultClazz.simpleName)
-                    defaultClazz
-                }
-                proxyLoaderRef.set(clazz.constructors.first { it.parameters.size == 1 }.newInstance(conf) as ProxyLoader)
+            val clazz = getClass(conf)
+            return proxyLoaders.computeIfAbsent(clazz.name) {
+                clazz.constructors.first { it.parameters.size == 1 }.newInstance(conf) as ProxyLoader
             }
         }
-        return proxyLoaderRef.get()
+    }
+    
+    private fun getClass(conf: ImmutableConfig): Class<*> {
+        val defaultClazz = FileProxyLoader::class.java
+        return try {
+            conf.getClass(PROXY_LOADER_CLASS, defaultClazz)
+        } catch (e: Exception) {
+            logger.warn("Configured proxy loader {}({}) is not found, use default ({})",
+                PROXY_LOADER_CLASS, conf.get(PROXY_LOADER_CLASS), defaultClazz.simpleName)
+            defaultClazz
+        }
     }
 }

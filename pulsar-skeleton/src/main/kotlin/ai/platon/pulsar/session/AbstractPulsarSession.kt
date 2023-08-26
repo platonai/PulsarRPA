@@ -79,7 +79,8 @@ abstract class AbstractPulsarSession(
     override val pageCache get() = context.globalCacheFactory.globalCache.pageCache
     override val documentCache get() = context.globalCacheFactory.globalCache.documentCache
 
-    private val globalCacheFactoryOrNull get() = context.takeIf { isActive }?.globalCacheFactory
+    private val contextOrNull get() = if (isActive) context else null
+    private val globalCacheFactoryOrNull get() = contextOrNull?.globalCacheFactory
     private val pageCacheOrNull get() = globalCacheFactoryOrNull?.globalCache?.pageCache
     private val documentCacheOrNull get() = globalCacheFactoryOrNull?.globalCache?.documentCache
 
@@ -149,13 +150,13 @@ abstract class AbstractPulsarSession(
 
     override fun get(url: String, vararg fields: String): WebPage = ensureActive { context.get(url, *fields) }
 
-    override fun getOrNull(url: String): WebPage? = ensureActive { context.getOrNull(url) }
+    override fun getOrNull(url: String): WebPage? = contextOrNull?.getOrNull(url)
 
-    override fun getOrNull(url: String, vararg fields: String): WebPage? = ensureActive { context.getOrNull(url, *fields) }
+    override fun getOrNull(url: String, vararg fields: String): WebPage? = contextOrNull?.getOrNull(url, *fields)
 
-    override fun getContent(url: String): ByteBuffer? = ensureActive { context.getContent(url) }
+    override fun getContent(url: String): ByteBuffer? = contextOrNull?.getContent(url)
 
-    override fun getContentAsString(url: String): String? = ensureActive { context.getContentAsString(url) }
+    override fun getContentAsString(url: String): String? = contextOrNull?.getContentAsString(url)
 
     override fun exists(url: String): Boolean = ensureActive { context.exists(url) }
 
@@ -274,14 +275,14 @@ abstract class AbstractPulsarSession(
     override fun loadOutPages(portalUrl: UrlAware, args: String) = loadOutPages(portalUrl, options(args))
 
     override fun loadOutPages(portalUrl: UrlAware, options: LoadOptions) = loadOutPages0(portalUrl, options)
-
-    override fun submitOutPages(portalUrl: String, args: String) = submitOutPages(portalUrl, options(args))
-
-    override fun submitOutPages(portalUrl: String, options: LoadOptions) = submitOutPages(PlainUrl(portalUrl), options)
-
-    override fun submitOutPages(portalUrl: UrlAware, args: String) = submitOutPages(portalUrl, options(args))
-
-    override fun submitOutPages(portalUrl: UrlAware, options: LoadOptions) = submitOutPages0(portalUrl, options)
+    
+    override fun submitForOutPages(portalUrl: String, args: String) = submitForOutPages(portalUrl, options(args))
+    
+    override fun submitForOutPages(portalUrl: String, options: LoadOptions) = submitForOutPages(PlainUrl(portalUrl), options)
+    
+    override fun submitForOutPages(portalUrl: UrlAware, args: String) = submitForOutPages(portalUrl, options(args))
+    
+    override fun submitForOutPages(portalUrl: UrlAware, options: LoadOptions) = submitForOutPages0(portalUrl, options)
 
     override fun loadOutPagesAsync(portalUrl: String, args: String) = loadOutPagesAsync(portalUrl, options(args))
 
@@ -458,10 +459,12 @@ abstract class AbstractPulsarSession(
     override fun hashCode(): Int = id
 
     override fun toString(): String = "#$id"
-
+    
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            closableObjects.forEach { o -> o.close() }
+            closableObjects.forEach {
+                runCatching { it.close() }.onFailure { it.stringify() }
+            }
             logger.info("Session is closed | #{}", display)
         }
     }
@@ -579,7 +582,7 @@ abstract class AbstractPulsarSession(
         return loadAll(links, itemOpts)
     }
 
-    private fun submitOutPages0(portalUrl: UrlAware, options: LoadOptions): AbstractPulsarSession {
+    private fun submitForOutPages0(portalUrl: UrlAware, options: LoadOptions): AbstractPulsarSession {
         val normUrl = normalize(portalUrl, options)
         val opts = normUrl.options
         val selector = opts.outLinkSelectorOrNull ?: return this
@@ -613,7 +616,7 @@ abstract class AbstractPulsarSession(
     }
 
     private fun <T> ensureActive(action: () -> T): T =
-        if (isActive) action() else throw IllegalApplicationContextStateException("Pulsar session is not alive")
+        if (isActive) action() else throw IllegalApplicationStateException("Pulsar session is not alive")
 
     private fun <T> ensureActive(defaultValue: T, action: () -> T): T = defaultValue.takeIf { !isActive } ?: action()
 }

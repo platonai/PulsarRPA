@@ -36,12 +36,22 @@ abstract class AbstractCrawler(
         Duration.ofMinutes(1L + 2 * nextRetryNumber)
     }
 
-    val closed = AtomicBoolean()
+    protected var isPaused = false
+
+    protected val closed = AtomicBoolean()
 
     open val isActive get() = !closed.get() && AppContext.isActive
 
     init {
         attach()
+    }
+
+    override fun pause() {
+        isPaused = true
+    }
+
+    override fun resume() {
+        isPaused = false
     }
 
     override fun onWillLoad(url: UrlAware) {

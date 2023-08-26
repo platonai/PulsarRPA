@@ -30,6 +30,11 @@ __pulsar_NodeFeatureCalculator.prototype.isStopped = function() {
  * @param  depth {Number} the depth in the DOM
  */
 __pulsar_NodeFeatureCalculator.prototype.head = function(node, depth) {
+    // 2023.08: google sites complains that node.__pulsar_isIFrame is not defined sometimes
+    if (!node.__pulsar_isIFrame) {
+        return;
+    }
+
     if (node.__pulsar_isIFrame()) {
         return
     }
@@ -100,6 +105,11 @@ __pulsar_NodeFeatureCalculator.prototype.calcSelfIndicator = function(node, dept
  * @param  depth {Number} the depth in the DOM
  */
 __pulsar_NodeFeatureCalculator.prototype.tail = function(node, depth) {
+    // 2023.08: google sites complains that node.__pulsar_isIFrame is not defined sometimes
+    if (!node.__pulsar_isIFrame) {
+        return;
+    }
+
     if (node.__pulsar_isIFrame()) {
         return
     }

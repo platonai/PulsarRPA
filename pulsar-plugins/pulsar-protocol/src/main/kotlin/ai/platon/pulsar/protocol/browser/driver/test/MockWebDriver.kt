@@ -104,11 +104,13 @@ class MockWebDriver(
         backupDriverOrNull?.navigateTo(url)
     }
 
+    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestHeaders"))
     @Throws(WebDriverException::class)
     override suspend fun mainRequestHeaders(): Map<String, Any> {
         return backupDriverOrNull?.mainRequestHeaders() ?: mapOf()
     }
 
+    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestCookies"))
     @Throws(WebDriverException::class)
     override suspend fun mainRequestCookies(): List<Map<String, String>> {
         return backupDriverOrNull?.mainRequestCookies() ?: listOf()
@@ -117,6 +119,21 @@ class MockWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
         return backupDriverOrNull?.getCookies() ?: listOf()
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun clearBrowserCookies() {
+        backupDriverOrNull?.clearBrowserCookies()
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun deleteCookies(name: String) {
+        backupDriverOrNull?.deleteCookies(name)
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun deleteCookies(name: String, url: String?, domain: String?, path: String?) {
+        backupDriverOrNull?.deleteCookies(name, url, domain, path)
     }
 
     @Throws(WebDriverException::class)

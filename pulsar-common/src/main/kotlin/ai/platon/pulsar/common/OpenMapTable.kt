@@ -9,20 +9,37 @@ class OpenMapTable(
         val numColumns: Int,
         val ident: Int = -1
 ) {
+    /**
+     * The metadata for columns.
+     * */
     val metadata = Metadata(numColumns, ident)
+    /**
+     * The underlying rows, each row is associated with a key.
+     * */
     val map = mutableMapOf<String, Row>()
-
+    
+    /**
+     * The attributes.
+     * */
     val attributes = mutableMapOf<String, Any>()
-    val columns get() = metadata.columns
+    /**
+     * The row collection.
+     * */
     val rows get() = map.values
 
-    val keys get() = map.keys
+    val keys: Set<String> get() = map.keys
     val numRows: Int get() = map.size
     val isEmpty: Boolean get() = numRows == 0
     val isNotEmpty: Boolean get() = !isEmpty
 
+    /**
+     * Get the row associated with [key].
+     * */
     operator fun get(key: String) = map[key]
-
+    
+    /**
+     * Associated a [row] with [key].
+     * */
     operator fun set(key: String, row: Row) {
         map[key] = row
     }
