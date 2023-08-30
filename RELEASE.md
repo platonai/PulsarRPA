@@ -4,7 +4,7 @@ Release Notes
 1.10.19
 ==
 
-1. Bug fix
+
 
 1.10.18
 ==
