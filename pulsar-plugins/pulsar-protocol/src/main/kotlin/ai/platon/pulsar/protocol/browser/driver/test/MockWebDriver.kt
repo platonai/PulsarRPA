@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 //import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import org.slf4j.LoggerFactory
@@ -18,10 +19,13 @@ import java.util.*
 
 class MockBrowser(
     id: BrowserId,
-    launcherOptions: LauncherOptions
+    launcherOptions: LauncherOptions,
+    backupBrowserCreator: () -> Browser,
 ): AbstractBrowser(id, launcherOptions.browserSettings) {
+    private val backupBrowser = backupBrowserCreator()
+    
     override fun newDriver(): WebDriver {
-        TODO("not implemented")
+        return MockWebDriver(this) { backupBrowser.newDriver() }
     }
 }
 

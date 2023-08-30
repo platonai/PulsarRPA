@@ -30,3 +30,6 @@ class IllegalApplicationStateException: IllegalStateException {
 
     constructor(cause: Throwable) : super(cause) {}
 }
+
+@Deprecated("Inappropriate name", ReplaceWith("IllegalApplicationStateException"))
+typealias IllegalApplicationContextStateException = IllegalApplicationStateException

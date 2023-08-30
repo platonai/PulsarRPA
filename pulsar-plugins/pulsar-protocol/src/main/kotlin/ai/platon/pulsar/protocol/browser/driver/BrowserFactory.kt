@@ -17,7 +17,9 @@ class BrowserFactory {
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): Browser {
         val browser = when(browserId.browserType) {
-            BrowserType.MOCK_CHROME -> MockBrowser(browserId, launcherOptions)
+            BrowserType.MOCK_CHROME -> MockBrowser(browserId, launcherOptions) {
+                launchChromeDevtoolsBrowser(browserId, launcherOptions, launchOptions)
+            }
 //            BrowserType.PLAYWRIGHT_CHROME -> PlaywrightBrowserInstance(instanceId, launcherOptions, launchOptions)
             else -> launchChromeDevtoolsBrowser(browserId, launcherOptions, launchOptions)
         }

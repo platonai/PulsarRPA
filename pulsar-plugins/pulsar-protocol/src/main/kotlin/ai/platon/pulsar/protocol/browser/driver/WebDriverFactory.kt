@@ -99,7 +99,7 @@ open class WebDriverFactory(
     }
 
     @Throws(BrowserLaunchException::class)
-    private fun launchChrome(
+    fun launchChrome(
         browserId: BrowserId, capabilities: Map<String, Any>,
     ): ChromeDevtoolsBrowser {
         require(browserId.browserType == BrowserType.PULSAR_CHROME)
