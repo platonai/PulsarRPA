@@ -17,15 +17,13 @@
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import ai.platon.pulsar.common.domain.DomainSuffixes
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import org.slf4j.LoggerFactory
-import java.util.*
 
 /**
  * Filters URLs based on a file containing domain suffixes, domain names, and

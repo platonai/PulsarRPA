@@ -16,13 +16,19 @@ class BrowserFactory {
     fun launch(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): Browser {
+//        val backupBrowserId = browserId.copy()
+//        backupBrowserId.fingerprint.browserType = BrowserType.PULSAR_CHROME
+
+        val browserSettings = launcherOptions.browserSettings
         val browser = when(browserId.browserType) {
-            BrowserType.MOCK_CHROME -> MockBrowser(browserId, launcherOptions)
+            BrowserType.MOCK_CHROME -> MockBrowser(browserId,
+                browserSettings,
+                launchChromeDevtoolsBrowser(browserId, launcherOptions, launchOptions))
 //            BrowserType.PLAYWRIGHT_CHROME -> PlaywrightBrowserInstance(instanceId, launcherOptions, launchOptions)
             else -> launchChromeDevtoolsBrowser(browserId, launcherOptions, launchOptions)
         }
 
-        if (!launcherOptions.browserSettings.isGUI) {
+        if (!browserSettings.isGUI) {
             // Web drivers are in GUI mode, please close it manually
             // browser.registerShutdownHook()
         }
