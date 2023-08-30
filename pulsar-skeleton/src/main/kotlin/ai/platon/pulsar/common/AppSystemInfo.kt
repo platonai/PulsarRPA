@@ -120,6 +120,7 @@ class AppSystemInfo {
         /**
          *
          * */
+        @Synchronized
         fun isOSHIAvailable(): Boolean {
             if (isOSHIChecked) {
                 return isOSHIAvailable
@@ -140,6 +141,8 @@ class AppSystemInfo {
                 handleOSHINotAvailable()
                 isOSHIAvailable = false
             }
+            
+            isOSHIChecked = true
             
             return isOSHIAvailable
         }
