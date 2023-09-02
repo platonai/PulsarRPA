@@ -6,7 +6,7 @@ import java.util.*
 /**
  * A very simple yet fast LRU cache with TTL support
  */
-class ConcurrentLRUCache<K, V> {
+class ConcurrentLRUCache<K, V : Any> {
     /**
      * A fast yet short life least recently used cache
      */
@@ -60,7 +60,14 @@ class ConcurrentLRUCache<K, V> {
         val ttlKey = getTTLKey(key)
         return synchronized(cache) { cache.put(ttlKey, value) }
     }
-
+    
+    fun remove(): V? {
+        synchronized(cache) {
+            val ttlKey = cache.keys.firstOrNull() ?: return null
+            return cache.remove(ttlKey)
+        }
+    }
+    
     fun remove(key: K): V? {
         val ttlKey = getTTLKey(key)
         synchronized(cache) { return cache.remove(ttlKey) }

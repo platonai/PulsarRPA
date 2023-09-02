@@ -166,25 +166,23 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         }
     }
 
-    @Ignore("Ignored temporary, test failed")
     @Test
     fun testClickTextMatches() = runWebDriverTest { driver ->
         open(url, driver, 1)
+        delay(1000)
 
-        driver.clickTextMatches("a[href~=stores]", "Store")
+        // should match the anchor text "Visit the Apple Store"
+        driver.clickTextMatches("a[href*=stores]", "Store")
         driver.waitForNavigation()
         driver.waitForSelector("body")
-        assertNotEquals(url, driver.currentUrl())
-    }
-
-    @Test
-    fun testClickMatches2() = runWebDriverTest { driver ->
-        open(url, driver)
-
-        driver.clickTextMatches("a[data-hook]", "See all reviews")
-        driver.waitForNavigation()
-        driver.waitForSelector("body")
-        // assertNotEquals(url, driver.currentUrl())
+        delay(1000)
+        
+        // expected url like: https://www.amazon.com/stores/Apple/page/77D9E1F7-0337-4282-9DB6-B6B8FB2DC98D?ref_=ast_bln
+        val currentUrl = driver.currentUrl()
+        println(currentUrl)
+        
+        assertNotEquals(url, currentUrl)
+        assertContains(currentUrl, "stores")
     }
 
     @Test

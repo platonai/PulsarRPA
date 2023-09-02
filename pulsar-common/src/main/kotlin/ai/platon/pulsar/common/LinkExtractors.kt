@@ -4,8 +4,15 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Pattern
 
+/**
+ * TODO: org.nibor.autolink.LinkExtractor might be faster
+ * */
 open class UrlExtractor {
     companion object {
+        
+        /**
+         * TODO: see https://github.com/aosp-mirror/platform_frameworks_base/blob/master/core/java/android/util/Patterns.java
+         * */
         val URL_PATTERN: Pattern = Pattern.compile(
             "(?:^|[\\W])((ht|f)tp(s?):\\/\\/|www\\.)"
                     + "(([\\w\\-]+\\.){1,}?([\\w\\-.~]+\\/?)*"
