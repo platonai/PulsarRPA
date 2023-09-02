@@ -21,7 +21,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.10.18-SNAPSHOT</version>
+    <version>1.10.19-SNAPSHOT</version>
 
     <name>Pulsar</name>
     <description>Scrape Web data at scale completely and accurately with high performance, distributed RPA.</description>
@@ -46,7 +46,7 @@
         <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
         <url>https://github.com/platonai/pulsar</url>
-        <tag>v1.10.18</tag>
+        <tag>v1.10.19</tag>
     </scm>
 
     <repositories>
@@ -710,9 +710,9 @@
         <playwright.version>1.19.0</playwright.version>
 
         <!-- Required by oshi -->
-        <jna.version>5.13.0</jna.version>
+<!--        <jna.version>5.13.0</jna.version>-->
         <!-- oshi bug: https://github.com/oshi/oshi/issues/1289 -->
-        <oshi.version>6.4.4</oshi.version>
+        <oshi.version>6.4.5</oshi.version>
     </properties>
 
 </project>

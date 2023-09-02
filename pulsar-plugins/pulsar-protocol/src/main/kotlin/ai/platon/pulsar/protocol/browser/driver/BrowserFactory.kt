@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
@@ -16,18 +17,30 @@ class BrowserFactory {
     fun launch(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): Browser {
+        val browserSettings = launcherOptions.browserSettings
         val browser = when(browserId.browserType) {
-            BrowserType.MOCK_CHROME -> MockBrowser(browserId, launcherOptions)
+            BrowserType.MOCK_CHROME -> createMockBrowser(browserId, launcherOptions, launchOptions)
 //            BrowserType.PLAYWRIGHT_CHROME -> PlaywrightBrowserInstance(instanceId, launcherOptions, launchOptions)
             else -> launchChromeDevtoolsBrowser(browserId, launcherOptions, launchOptions)
         }
 
-        if (!launcherOptions.browserSettings.isGUI) {
+        if (!browserSettings.isGUI) {
             // Web drivers are in GUI mode, please close it manually
             // browser.registerShutdownHook()
         }
 
         return browser
+    }
+    
+    private fun createMockBrowser(
+        browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
+    ): MockBrowser {
+        val backupFingerprint = Fingerprint(BrowserType.PULSAR_CHROME)
+        val backupBrowserId = BrowserId(browserId.contextDir, backupFingerprint)
+        val browserSettings = launcherOptions.browserSettings
+        return MockBrowser(browserId,
+            browserSettings,
+            launchChromeDevtoolsBrowser(backupBrowserId, launcherOptions, launchOptions))
     }
 
     @Synchronized

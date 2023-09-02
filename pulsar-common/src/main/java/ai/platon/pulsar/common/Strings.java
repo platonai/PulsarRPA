@@ -496,6 +496,9 @@ public final class Strings {
     return getLongestPart(text, Pattern.compile(regex));
   }
 
+  /**
+   * TODO: Use CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
+   * */
   public static String csslize(String text) {
     text = StringUtils.uncapitalize(text).trim();
     text = StringUtils.join(text.split("(?=\\p{Upper})"), "-").toLowerCase();
@@ -507,6 +510,9 @@ public final class Strings {
 
   // nav_top -> nav top, mainMenu -> main menu, image-detail -> image detail
 
+  /**
+   * TODO: Use CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
+   * */
   public static String humanize(String text) {
     text = StringUtils.join(text.split("(?=\\p{Upper})"), " ");
     text = text.replaceAll("[-_]", " ").toLowerCase().trim();
