@@ -25,6 +25,11 @@ public interface CapabilityTypes {
     String DRY_RUN = "pulsar.dry.run";
 
     /**
+     * Main loop
+     * */
+    String MAIN_LOOP_CONCURRENCY_OVERRIDE = "main.loop.concurrency.override";
+
+    /**
      * Args
      */
     String TENANT_ID = "tenantId";
