@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.collect.DelayUrl
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
+import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.common.metrics.MetricsSystem
@@ -323,7 +324,8 @@ open class StreamingCrawler(
                 val freeSpace =
                     Runtimes.unallocatedDiskSpaces().maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
                 if (freeSpace < 10.0) {
-                    logger.error("Disk space is full!")
+                    val diskSpaces = Runtimes.unallocatedDiskSpaces().joinToString { ByteUnit.BYTE.toGB(it).toString() }
+                    logger.error("Disk space is full! | {}", diskSpaces)
                     criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
                     return@startCrawlLoop
                 }

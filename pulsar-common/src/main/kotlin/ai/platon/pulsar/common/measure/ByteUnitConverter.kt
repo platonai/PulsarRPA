@@ -1,17 +1,14 @@
 package ai.platon.pulsar.common.measure
 
 /**
- *
  * **See Also**
  *
  * [jscience](http://jscience.org/)
- *
  * [github unitsofmeasurement](https://github.com/unitsofmeasurement)
- *
  * [baeldung](https://www.baeldung.com/javax-measure)
- *
- * TODO: use ByteUnit instead
+ * [org.apache.commons.io.FileUtils](https://commons.apache.org/proper/commons-io/apidocs/org/apache/commons/io/FileUtils.html#byteCountToDisplaySize-java.math.BigInteger-)
  * */
+@Deprecated("use ByteUnit instead", ReplaceWith("ByteUnit"))
 object ByteUnitConverter {
 
     fun convert(bytes: Int, unit: String) = convert(bytes.toLong(), unit)
