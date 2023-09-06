@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common
 
-class ServiceUnavailableException: RuntimeException {
+open class ServiceUnavailableException: RuntimeException {
     constructor() : super()
 
     constructor(message: String) : super(message)
@@ -10,7 +10,7 @@ class ServiceUnavailableException: RuntimeException {
     constructor(cause: Throwable) : super(cause)
 }
 
-class IllegalBusinessPreconditionException: IllegalStateException {
+open class IllegalBusinessPreconditionException: IllegalStateException {
     constructor() : super()
 
     constructor(message: String) : super(message)
@@ -20,7 +20,7 @@ class IllegalBusinessPreconditionException: IllegalStateException {
     constructor(cause: Throwable) : super(cause)
 }
 
-class IllegalApplicationStateException: IllegalStateException {
+open class IllegalApplicationStateException: IllegalStateException {
     constructor() : super() {}
 
     constructor(message: String) : super(message) {
@@ -30,3 +30,6 @@ class IllegalApplicationStateException: IllegalStateException {
 
     constructor(cause: Throwable) : super(cause) {}
 }
+
+@Deprecated("Inappropriate name", ReplaceWith("IllegalApplicationStateException"))
+class IllegalApplicationContextStateException: IllegalApplicationStateException()
