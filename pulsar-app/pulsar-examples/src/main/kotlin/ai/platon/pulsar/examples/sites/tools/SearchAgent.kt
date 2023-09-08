@@ -1,4 +1,4 @@
-package ai.platon.pulsar.test
+package ai.platon.pulsar.examples.sites.tools
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.NetUtil
@@ -6,97 +6,87 @@ import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.proxy.ProxyEntry2
 import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.urls.DegenerateHyperlink
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
 import org.apache.http.client.utils.URIBuilder
-import java.net.Proxy
-import java.time.Duration
-import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
-class GoogleAgent {
+class SearchAgent {
     private val logger = getLogger(this)
     private val args = "-i 7s -parse -refresh"
     private val googleBaseUrl = "https://www.google.com"
+    private val bingBaseUrl = "https://www.bing.com"
+    private val baiduBaseUrl = "https://www.bing.com"
+    private val baseUrl get() = bingBaseUrl
     private val submittedDegeneratedLinks = AtomicInteger()
     private val submittedSearchTasks = AtomicInteger()
     
     private val context = SQLContexts.create()
     private val session = context.createSession()
     private val proxyPool get() = context.getBean(ProxyPool::class)
-    
-    fun initProxies() {
-        // # IP:PORT:USER:PASS
-        val proxyString = """
-127.0.0.1:10808:abc:abc
-        """.trimIndent()
-        
-        val proxies = proxyString
-            .split("\n").asSequence()
-            .map { it.trim() }
-            .filter { !it.startsWith("// ") }
-            .map { it.split(":") }
-            .filter { it.size == 4 }
-            .map { ProxyEntry2(it[0].trim(), it[1].trim().toInt(), it[2], it[3]) }
-            .onEach { it.proxyType = Proxy.Type.SOCKS }
-            .onEach { it.declaredTTL = Instant.now() + Duration.ofDays(30) }
-            .toMutableList()
-        
-        if (proxies.isEmpty()) {
-            logger.info("No proxy available")
-            return
-        }
-        
-        proxies.forEach { proxy ->
-            if (!NetUtil.testTcpNetwork(proxy.host, proxy.port)) {
-                logger.info("Proxy not available: {}", proxy.toURI())
-                return
-            }
-        }
-        
-        proxies.forEach {
-            proxyPool.offer(it.toProxyEntry())
-            // ensure enough proxies
-            proxyPool.offer(it.toProxyEntry())
-        }
-        
-        logger.info("There are {} proxies in pool", proxyPool.size)
-    }
-    
-    fun google() {
-        if (!ProxyPoolManager.isProxyEnabled(session.unmodifiedConfig)) {
-            logger.warn("Proxy is disabled")
-            return
-        }
-        
-        if (proxyPool.isEmpty()) {
-            initProxies()
-        }
-        
+
+    fun search() {
+//        val proxyLoader = TemporaryProxyLoader(proxyPool)
+//        proxyLoader.loadProxies()
+
         val async = false
-        val limit = 20
+        val limit = 4
         val businessNames = ResourceLoader.readAllLines("entity/business.names.com.txt").shuffled().take(limit)
         val contactNames = listOf("Email", "Phone", "Facebook")
         businessNames.forEach { businessName ->
             contactNames.forEach { contactName ->
                 val keyword = "$businessName $contactName"
                 if (async) {
-                    val degeneratedHyperlink = DegenerateHyperlink(googleBaseUrl, "google") { google(keyword) }
+                    val degeneratedHyperlink = DegenerateHyperlink(bingBaseUrl, "bing.com") { bing(keyword) }
                     session.submit(degeneratedHyperlink)
                     submittedDegeneratedLinks.incrementAndGet()
                 } else {
-                    google(keyword, async = async)
+                    bing(keyword, async = async)
                 }
             }
         }
         
         PulsarContexts.await()
     }
-    
+
+    fun bing(keyword: String, async: Boolean = true) {
+        val url = URIBuilder("$bingBaseUrl/search").addParameter("q", keyword).build().toURL()
+
+        val options = session.options(args)
+        val be = options.event.browseEvent
+        val le = options.event.loadEvent
+
+        be.onDocumentActuallyReady.addLast { page, driver ->
+            driver.scrollTo("ol#b_results li:nth-child(3) h2")
+            driver.scrollTo("ol#b_results li:nth-child(5) h2")
+            driver.scrollTo("ol#b_results li:nth-child(8) h2")
+
+            driver.click("input#sb_form_q")
+            driver.scrollToTop()
+
+            println(String.format("%d.\t%s", page.id, page.url))
+            val resultStats = driver.firstText("#b_tween")
+            println(resultStats)
+
+            val texts = driver.allTexts("ol#b_results li h2")
+            println(texts)
+        }
+
+        le.onHTMLDocumentParsed.addLast { page, document ->
+            extract(page, document)
+        }
+
+        if (async) {
+            session.submit(url.toString(), options)
+        } else {
+            session.load(url.toString(), options)
+        }
+        submittedSearchTasks.incrementAndGet()
+    }
+
     fun google(keyword: String, async: Boolean = true) {
         val builder = URIBuilder("$googleBaseUrl/search")
         builder.addParameter("q", keyword)
@@ -136,7 +126,7 @@ class GoogleAgent {
     private fun extract(page: WebPage, document: FeaturedDocument) {
         logger.info("Extract | {} | {}", page.protocolStatus, page.url)
     }
-    
+
     private fun test(proxy: ProxyEntry2): Boolean {
         return if (!NetUtil.testTcpNetwork(proxy.host, proxy.port)) {
             logger.info("Proxy not available: {}", proxy.toURI())
@@ -147,9 +137,9 @@ class GoogleAgent {
 
 fun main() {
     BrowserSettings.enableProxy()
-    
-    val agent = GoogleAgent()
-    agent.google()
+
+    val agent = SearchAgent()
+    agent.search()
     
     readLine()
 }

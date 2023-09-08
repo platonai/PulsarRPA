@@ -17,6 +17,8 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.protocol.browser.emulator.*
 import ai.platon.pulsar.protocol.browser.emulator.util.*
+import org.apache.commons.io.FileUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -82,7 +84,8 @@ open class BrowserResponseHandlerImpl(
      * TODO: or we insert a new metadata to indicate the charset
      */
     override fun normalizePageSource(url: String, pageSource: String): StringBuilder {
-        return HtmlUtils.replaceHTMLCharset(pageSource, charsetPattern, "UTF-8")
+        val sb = HtmlUtils.replaceHTMLCharset(pageSource, charsetPattern, "UTF-8")
+        return sb
     }
 
     override fun onBrowseTimeout(task: NavigateTask) {

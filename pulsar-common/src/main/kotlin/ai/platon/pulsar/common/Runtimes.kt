@@ -122,6 +122,9 @@ object Runtimes {
         delay(timeMillis + Random.nextInt(delta))
     }
 
+    /**
+     * Return the number of unallocated bytes of each file stores
+     * */
     fun unallocatedDiskSpaces(): List<Long> {
         return try {
             FileSystems.getDefault().fileStores

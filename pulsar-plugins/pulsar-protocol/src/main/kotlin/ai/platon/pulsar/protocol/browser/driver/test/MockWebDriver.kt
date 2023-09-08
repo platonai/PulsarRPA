@@ -4,9 +4,10 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.math.geometric.RectD
+import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 //import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import org.slf4j.LoggerFactory
@@ -18,10 +19,12 @@ import java.util.*
 
 class MockBrowser(
     id: BrowserId,
-    launcherOptions: LauncherOptions
-): AbstractBrowser(id, launcherOptions.browserSettings) {
+    browserSettings: BrowserSettings,
+    private val backupBrowser: Browser,
+): AbstractBrowser(id, browserSettings) {
+    
     override fun newDriver(): WebDriver {
-        TODO("not implemented")
+        return MockWebDriver(this) { backupBrowser.newDriver() }
     }
 }
 
@@ -55,12 +58,6 @@ class MockWebDriver(
         }
 
     override val isMockedPageSource: Boolean get() = mockPageSource != null
-
-    override val mainRequestHeaders get() = backupDriverOrNull?.mainRequestHeaders ?: mapOf()
-    override val mainRequestCookies get() = backupDriverOrNull?.mainRequestCookies ?: listOf()
-    override val mainResponseStatus get() = backupDriverOrNull?.mainResponseStatus ?: 0
-    override val mainResponseStatusText get() = backupDriverOrNull?.mainResponseStatusText ?: ""
-    override val mainResponseHeaders get() = backupDriverOrNull?.mainResponseHeaders ?: mapOf()
 
     @Throws(WebDriverException::class)
     override suspend fun addInitScript(script: String) {
@@ -110,9 +107,36 @@ class MockWebDriver(
         backupDriverOrNull?.navigateTo(url)
     }
 
+    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestHeaders"))
+    @Throws(WebDriverException::class)
+    override suspend fun mainRequestHeaders(): Map<String, Any> {
+        return backupDriverOrNull?.mainRequestHeaders() ?: mapOf()
+    }
+
+    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestCookies"))
+    @Throws(WebDriverException::class)
+    override suspend fun mainRequestCookies(): List<Map<String, String>> {
+        return backupDriverOrNull?.mainRequestCookies() ?: listOf()
+    }
+
     @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
         return backupDriverOrNull?.getCookies() ?: listOf()
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun clearBrowserCookies() {
+        backupDriverOrNull?.clearBrowserCookies()
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun deleteCookies(name: String) {
+        backupDriverOrNull?.deleteCookies(name)
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun deleteCookies(name: String, url: String?, domain: String?, path: String?) {
+        backupDriverOrNull?.deleteCookies(name, url, domain, path)
     }
 
     @Throws(WebDriverException::class)
@@ -139,6 +163,11 @@ class MockWebDriver(
     override suspend fun scrollTo(selector: String) {
         backupDriverOrNull?.scrollTo(selector)
     }
+
+    @Deprecated("Not used any more")
+    override val sessionId: String?
+        @Throws(WebDriverException::class)
+        get() = backupDriverOrNull?.sessionId
 
     @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String = backupDriverOrNull?.currentUrl() ?: navigateUrl
@@ -177,6 +206,12 @@ class MockWebDriver(
 
     override suspend fun clickTextMatches(selector: String, pattern: String, count: Int) {
         backupDriverOrNull?.clickTextMatches(selector, pattern, count)
+    }
+
+    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("clickTextMatches(selector, pattern, count"))
+    @Throws(WebDriverException::class)
+    override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
+        backupDriverOrNull?.clickMatches(selector, pattern, count)
     }
 
     @Throws(WebDriverException::class)
@@ -235,6 +270,14 @@ class MockWebDriver(
     @Throws(WebDriverException::class)
     override fun awaitTermination() {
         backupDriverOrNull?.awaitTermination()
+    }
+
+    /**
+     * Quit the browser instance
+     * */
+    @Throws(WebDriverException::class)
+    override fun quit() {
+        close()
     }
 
     /**

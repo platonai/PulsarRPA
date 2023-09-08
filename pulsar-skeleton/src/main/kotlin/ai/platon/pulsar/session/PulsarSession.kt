@@ -1,16 +1,19 @@
 package ai.platon.pulsar.session
 
+import ai.platon.pulsar.common.BeanFactory
 import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.DocumentCatch
 import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.PageCatch
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -79,24 +82,33 @@ import java.util.concurrent.CompletableFuture
  * and puppeteer does, all actions and behaviors are optimized to mimic real people as closely as possible.
  * */
 interface PulsarSession : AutoCloseable {
-
+    
     /**
      * The session id
      * */
     val id: Int
-
+    
     /**
      * The pulsar context
      * */
     val context: PulsarContext
-
+    
+    /**
+     * An immutable config which is loaded from the config file at process startup, and never changes
+     * */
+    val unmodifiedConfig: ImmutableConfig
+    
     /**
      * The session scope volatile config, every setting is supposed to be changed at any time
      * and any place
      * */
     val sessionConfig: VolatileConfig
-
-    val unmodifiedConfig: ImmutableConfig
+    
+    /**
+     * The scoped bean factory: for each volatileConfig object, there is a bean factory
+     * */
+    @Deprecated("Not used any more")
+    val sessionBeanFactory: BeanFactory
     /**
      * A short descriptive display text.
      * */
@@ -113,7 +125,9 @@ interface PulsarSession : AutoCloseable {
      * The global cache
      * */
     val globalCache: GlobalCache
-
+    
+    @Deprecated("Factory should not be a interface property, globalCache is OK")
+    val globalCacheFactory: GlobalCacheFactory
     /**
      * Close objects when the session closes
      * */
@@ -122,17 +136,17 @@ interface PulsarSession : AutoCloseable {
      * Disable page cache and document cache
      * */
     fun disablePDCache()
-
+    
     /**
-     * Create a new [LoadOptions] object with arguments [args] and [event].
+     * Create a new [LoadOptions] object with [args], [event], and [sessionConfig].
      * */
     fun options(args: String = "", event: PageEvent? = null): LoadOptions
-
+    
     /**
      * Get a property.
      * */
     fun property(name: String): String?
-
+    
     /**
      * Set a session scope property.
      * */
@@ -194,7 +208,7 @@ interface PulsarSession : AutoCloseable {
      * @return All normalized urls, all invalid input urls are removed
      * */
     fun normalize(urls: Collection<UrlAware>, args: String, toItemOption: Boolean = false): List<NormUrl>
-
+    
     /**
      * Normalize urls, remove invalid ones
      *
@@ -204,7 +218,7 @@ interface PulsarSession : AutoCloseable {
      * @return All normalized urls, all invalid input urls are removed
      * */
     fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
-
+    
     /**
      * Inject a url as a seed to fetch. Injection is usually used in Nutch style crawls
      * where the execution flow likes the following:
@@ -217,7 +231,7 @@ interface PulsarSession : AutoCloseable {
      * @return A newly created webpage record which is ready to be generated
      */
     fun inject(url: String): WebPage
-
+    
     /**
      * Get a page from storage.
      *
@@ -225,7 +239,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage in storage if exists, otherwise returns a NIL page
      */
     fun get(url: String): WebPage
-
+    
     /**
      * Get a page from storage.
      *
@@ -234,7 +248,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage in storage if exists, otherwise returns a NIL page
      */
     fun get(url: String, vararg fields: String): WebPage
-
+    
     /**
      * Get a page from storage.
      *
@@ -242,7 +256,7 @@ interface PulsarSession : AutoCloseable {
      * @return The page in storage if exists, otherwise returns null
      */
     fun getOrNull(url: String): WebPage?
-
+    
     /**
      * Get a page from storage.
      *
@@ -251,7 +265,7 @@ interface PulsarSession : AutoCloseable {
      * @return The page in storage if exists, otherwise returns null
      */
     fun getOrNull(url: String, vararg fields: String): WebPage?
-
+    
     /**
      * Get the content of the page from the storage
      *
@@ -259,7 +273,7 @@ interface PulsarSession : AutoCloseable {
      * @return The page content or null
      */
     fun getContent(url: String): ByteBuffer?
-
+    
     /**
      * Get the content of the page from the storage
      *
@@ -268,7 +282,7 @@ interface PulsarSession : AutoCloseable {
      */
     @Beta
     fun getContentAsString(url: String): String?
-
+    
     /**
      * Check if the page exists in the storage.
      *
@@ -276,7 +290,7 @@ interface PulsarSession : AutoCloseable {
      * @return true if the page exists, false otherwise
      */
     fun exists(url: String): Boolean
-
+    
     /**
      * Return the fetch state of the page.
      *
@@ -285,7 +299,7 @@ interface PulsarSession : AutoCloseable {
      * @return The fetch state of the page
      */
     fun fetchState(page: WebPage, options: LoadOptions): CheckState
-
+    
     /**
      * Open a url.
      *
@@ -295,7 +309,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun open(url: String): WebPage
-
+    
     /**
      * Load a url with specified arguments.
      *
@@ -313,7 +327,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun load(url: String): WebPage
-
+    
     /**
      * Load a url with specified arguments.
      *
@@ -332,7 +346,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun load(url: String, args: String): WebPage
-
+    
     /**
      * Load a url with specified options.
      *
@@ -351,7 +365,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun load(url: String, options: LoadOptions): WebPage
-
+    
     /**
      * Load a url with the specified arguments.
      *
@@ -362,7 +376,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun load(url: UrlAware): WebPage
-
+    
     /**
      * Load a url with the specified arguments.
      *
@@ -374,7 +388,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun load(url: UrlAware, args: String): WebPage
-
+    
     /**
      * Load a url with options.
      *
@@ -386,7 +400,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun load(url: UrlAware, options: LoadOptions): WebPage
-
+    
     /**
      * Load a normal url.
      *
@@ -397,7 +411,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun load(url: NormUrl): WebPage
-
+    
     /**
      * Load a url with specified options.
      *
@@ -412,7 +426,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     suspend fun loadDeferred(url: String, args: String): WebPage
-
+    
     /**
      * Load a url with specified options.
      *
@@ -427,7 +441,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     suspend fun loadDeferred(url: String, options: LoadOptions = options()): WebPage
-
+    
     /**
      * Load a url with specified arguments.
      *
@@ -442,7 +456,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     suspend fun loadDeferred(url: UrlAware, args: String): WebPage
-
+    
     /**
      * Load a url with specified options.
      *
@@ -457,7 +471,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     suspend fun loadDeferred(url: UrlAware, options: LoadOptions = options()): WebPage
-
+    
     /**
      * Load a url with specified options
      *
@@ -471,7 +485,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     suspend fun loadDeferred(url: NormUrl): WebPage
-
+    
     /**
      * Load all urls with specified options
      *
@@ -482,7 +496,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun loadAll(urls: Iterable<String>): List<WebPage>
-
+    
     /**
      * Load all urls with specified options
      *
@@ -494,7 +508,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun loadAll(urls: Iterable<String>, args: String): List<WebPage>
-
+    
     /**
      * Load all urls with specified options
      *
@@ -506,7 +520,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun loadAll(urls: Iterable<String>, options: LoadOptions): List<WebPage>
-
+    
     /**
      * Load all urls with specified options
      *
@@ -517,7 +531,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun loadAll(urls: Collection<UrlAware>): List<WebPage>
-
+    
     /**
      * Load all urls with specified options
      *
@@ -529,7 +543,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun loadAll(urls: Collection<UrlAware>, args: String): List<WebPage>
-
+    
     /**
      * Load all urls with specified options
      *
@@ -541,7 +555,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun loadAll(urls: Collection<UrlAware>, options: LoadOptions): List<WebPage>
-
+    
     /**
      * Load all normal urls with specified options
      *
@@ -552,7 +566,7 @@ interface PulsarSession : AutoCloseable {
      * @return The loaded webpages
      */
     fun loadAll(normUrls: List<NormUrl>): List<WebPage>
-
+    
     /**
      * Load a normal url in java async style
      *
@@ -560,7 +574,7 @@ interface PulsarSession : AutoCloseable {
      * @return A completable future of webpage
      */
     fun loadAsync(url: String): CompletableFuture<WebPage>
-
+    
     /**
      * Load a normal url in java async style
      *
@@ -568,7 +582,7 @@ interface PulsarSession : AutoCloseable {
      * @return A completable future of webpage
      */
     fun loadAsync(url: String, args: String): CompletableFuture<WebPage>
-
+    
     /**
      * Load a normal url in java async style
      *
@@ -576,7 +590,7 @@ interface PulsarSession : AutoCloseable {
      * @return A completable future of webpage
      */
     fun loadAsync(url: String, options: LoadOptions): CompletableFuture<WebPage>
-
+    
     /**
      * Load a normal url in java async style
      *
@@ -584,7 +598,7 @@ interface PulsarSession : AutoCloseable {
      * @return A completable future of webpage
      */
     fun loadAsync(url: UrlAware): CompletableFuture<WebPage>
-
+    
     /**
      * Load a normal url in java async style
      *
@@ -592,7 +606,7 @@ interface PulsarSession : AutoCloseable {
      * @return A completable future of webpage
      */
     fun loadAsync(url: UrlAware, args: String): CompletableFuture<WebPage>
-
+    
     /**
      * Load a normal url in java async style
      *
@@ -600,7 +614,7 @@ interface PulsarSession : AutoCloseable {
      * @return A completable future of webpage
      */
     fun loadAsync(url: UrlAware, options: LoadOptions): CompletableFuture<WebPage>
-
+    
     /**
      * Load a normal url in java async style
      *
@@ -608,7 +622,7 @@ interface PulsarSession : AutoCloseable {
      * @return A completable future of webpage
      */
     fun loadAsync(url: NormUrl): CompletableFuture<WebPage>
-
+    
     /**
      * Load all normal urls in java async style
      *
@@ -619,9 +633,9 @@ interface PulsarSession : AutoCloseable {
      * @return The completable futures of webpages
      */
     fun loadAllAsync(urls: Iterable<String>): List<CompletableFuture<WebPage>>
-
+    
     /**
-     * Load all normal urls in java async style
+     * Load all normal urls in java async style.
      *
      * This method first checks each url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.
@@ -630,9 +644,9 @@ interface PulsarSession : AutoCloseable {
      * @return The completable futures of webpages
      */
     fun loadAllAsync(urls: Iterable<String>, args: String): List<CompletableFuture<WebPage>>
-
+    
     /**
-     * Load all normal urls in java async style
+     * Load all normal urls in java async style.
      *
      * This method first checks each url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.
@@ -641,9 +655,9 @@ interface PulsarSession : AutoCloseable {
      * @return The completable futures of webpages
      */
     fun loadAllAsync(urls: Iterable<String>, options: LoadOptions): List<CompletableFuture<WebPage>>
-
+    
     /**
-     * Load all normal urls in java async style
+     * Load all normal urls in java async style.
      *
      * This method first checks each url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.
@@ -652,9 +666,9 @@ interface PulsarSession : AutoCloseable {
      * @return The completable futures of webpages
      */
     fun loadAllAsync(urls: Collection<UrlAware>): List<CompletableFuture<WebPage>>
-
+    
     /**
-     * Load all normal urls in java async style
+     * Load all normal urls in java async style.
      *
      * This method first checks each url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.
@@ -663,9 +677,9 @@ interface PulsarSession : AutoCloseable {
      * @return The completable futures of webpages
      */
     fun loadAllAsync(urls: Collection<UrlAware>, args: String): List<CompletableFuture<WebPage>>
-
+    
     /**
-     * Load all normal urls in java async style
+     * Load all normal urls in java async style.
      *
      * This method first checks each url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.
@@ -674,7 +688,7 @@ interface PulsarSession : AutoCloseable {
      * @return The completable futures of webpages
      */
     fun loadAllAsync(urls: Collection<UrlAware>, options: LoadOptions): List<CompletableFuture<WebPage>>
-
+    
     /**
      * Load all normal urls in java async style
      *
@@ -685,7 +699,7 @@ interface PulsarSession : AutoCloseable {
      * @return The completable futures of webpages
      */
     fun loadAllAsync(urls: List<NormUrl>): List<CompletableFuture<WebPage>>
-
+    
     /**
      * Submit a url to the URL pool, the url will be processed in the crawl loop later
      *
@@ -693,7 +707,7 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submit(url: String): PulsarSession
-
+    
     /**
      * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
@@ -702,7 +716,7 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submit(url: String, args: String): PulsarSession
-
+    
     /**
      * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
@@ -711,7 +725,7 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submit(url: String, options: LoadOptions): PulsarSession
-
+    
     /**
      * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
@@ -719,7 +733,7 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submit(url: UrlAware): PulsarSession
-
+    
     /**
      * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
@@ -727,10 +741,10 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submit(url: UrlAware, args: String): PulsarSession
-
+    
     // No such version, it's too complicated to handle events
     // fun submit(url: UrlAware, options: LoadOptions): PulsarSession
-
+    
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
@@ -738,7 +752,7 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submitAll(urls: Iterable<String>): PulsarSession
-
+    
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
@@ -747,7 +761,7 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submitAll(urls: Iterable<String>, args: String): PulsarSession
-
+    
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
@@ -756,7 +770,7 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submitAll(urls: Iterable<String>, options: LoadOptions): PulsarSession
-
+    
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
@@ -764,7 +778,7 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submitAll(urls: Collection<UrlAware>): PulsarSession
-
+    
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
@@ -772,13 +786,13 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submitAll(urls: Collection<UrlAware>, args: String): PulsarSession
-
+    
     // No such version, it's too complicated to handle events
     // fun submitAll(urls: Collection<UrlAware>, options: LoadOptions): PulsarSession
-
+    
     // No such confusing version
     // fun loadOutPages(portalUrl: String): List<WebPage>
-
+    
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
      *
@@ -789,7 +803,7 @@ interface PulsarSession : AutoCloseable {
      * @return The loaded out pages
      */
     fun loadOutPages(portalUrl: String, args: String): List<WebPage>
-
+    
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
      *
@@ -800,10 +814,11 @@ interface PulsarSession : AutoCloseable {
      * @return The loaded out pages
      */
     fun loadOutPages(portalUrl: String, options: LoadOptions): List<WebPage>
-
-    // No such confusing version
+    
+    // Do not delete the comment.
+    // No such confusing version:
     // fun loadOutPages(portalUrl: UrlAware): List<WebPage>
-
+    
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
      *
@@ -814,7 +829,7 @@ interface PulsarSession : AutoCloseable {
      * @return The loaded out pages
      */
     fun loadOutPages(portalUrl: UrlAware, args: String): List<WebPage>
-
+    
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
      *
@@ -825,10 +840,11 @@ interface PulsarSession : AutoCloseable {
      * @return The loaded out pages
      */
     fun loadOutPages(portalUrl: UrlAware, options: LoadOptions): List<WebPage>
-
-    // No such confusing version
+    
+    // Do not delete the comment.
+    // No such confusing version:
     // fun loadOutPages(portalUrl: NormUrl): List<WebPage>
-
+    
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option asynchronously.
      *
@@ -839,7 +855,7 @@ interface PulsarSession : AutoCloseable {
      * @return The loaded out pages
      */
     fun loadOutPagesAsync(portalUrl: String, args: String): List<CompletableFuture<WebPage>>
-
+    
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option asynchronously.
      *
@@ -850,7 +866,7 @@ interface PulsarSession : AutoCloseable {
      * @return The loaded out pages
      */
     fun loadOutPagesAsync(portalUrl: String, options: LoadOptions): List<CompletableFuture<WebPage>>
-
+    
     /**
      * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
      *
@@ -863,7 +879,7 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enable chained operation
      */
     fun submitForOutPages(portalUrl: String, args: String): PulsarSession
-
+    
     /**
      * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
      *
@@ -876,7 +892,7 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enable chained operation
      */
     fun submitForOutPages(portalUrl: String, options: LoadOptions): PulsarSession
-
+    
     /**
      * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
      *
@@ -889,7 +905,7 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enable chained operation
      */
     fun submitForOutPages(portalUrl: UrlAware, args: String): PulsarSession
-
+    
     /**
      * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
      *
@@ -902,7 +918,19 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enable chained operation
      */
     fun submitForOutPages(portalUrl: UrlAware, options: LoadOptions): PulsarSession
-
+    
+    @Deprecated("Inappropriate name", ReplaceWith("submitForOutPages(portalUrl, args)"))
+    fun submitOutPages(portalUrl: String, args: String) = submitForOutPages(portalUrl, options(args))
+    
+    @Deprecated("Inappropriate name", ReplaceWith("submitForOutPages(portalUrl, options)"))
+    fun submitOutPages(portalUrl: String, options: LoadOptions) = submitForOutPages(PlainUrl(portalUrl), options)
+    
+    @Deprecated("Inappropriate name", ReplaceWith("submitForOutPages(portalUrl, args)"))
+    fun submitOutPages(portalUrl: UrlAware, args: String) = submitForOutPages(portalUrl, options(args))
+    
+    @Deprecated("Inappropriate name", ReplaceWith("submitForOutPages(portalUrl, options)"))
+    fun submitOutPages(portalUrl: UrlAware, options: LoadOptions) = submitForOutPages(portalUrl, options)
+    
     /**
      * Load a url as a resource without browser rendering.
      *
@@ -938,7 +966,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage containing the resource
      */
     fun loadResource(url: String, referrer: String, options: LoadOptions): WebPage
-
+    
     /**
      * Load a url as a resource without browser rendering.
      *
@@ -1072,7 +1100,7 @@ interface PulsarSession : AutoCloseable {
     fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
-
+    
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -1086,7 +1114,7 @@ interface PulsarSession : AutoCloseable {
     fun scrape(
         url: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
-
+    
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -1100,7 +1128,7 @@ interface PulsarSession : AutoCloseable {
     fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
-
+    
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -1114,7 +1142,7 @@ interface PulsarSession : AutoCloseable {
     fun scrape(
         url: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
-
+    
     /**
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
@@ -1127,7 +1155,7 @@ interface PulsarSession : AutoCloseable {
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Iterable<String>): List<Map<String, String?>>
-
+    
     /**
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
@@ -1139,7 +1167,7 @@ interface PulsarSession : AutoCloseable {
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Iterable<String>): List<Map<String, String?>>
-
+    
     /**
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
@@ -1154,7 +1182,7 @@ interface PulsarSession : AutoCloseable {
     fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
-
+    
     /**
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
@@ -1169,7 +1197,7 @@ interface PulsarSession : AutoCloseable {
     fun scrapeOutPages(
         portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
-
+    
     /**
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
@@ -1181,7 +1209,7 @@ interface PulsarSession : AutoCloseable {
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>): List<Map<String, String?>>
-
+    
     /**
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
@@ -1193,7 +1221,7 @@ interface PulsarSession : AutoCloseable {
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Map<String, String>): List<Map<String, String?>>
-
+    
     /**
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
@@ -1208,7 +1236,7 @@ interface PulsarSession : AutoCloseable {
     fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
-
+    
     /**
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
@@ -1223,41 +1251,46 @@ interface PulsarSession : AutoCloseable {
     fun scrapeOutPages(
         portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
-
+    
     /**
      * Get a variable from this session
      * */
     fun getVariable(name: String): Any?
-
+    
     /**
      * Set a variable into this session
      * */
     fun setVariable(name: String, value: Any)
-
+    
+    /**
+     * Put session scope bean
+     * */
+    @Deprecated("Not used any more")
+    fun putSessionBean(obj: Any)
+    
     /**
      * Delete a webpage from the storage
      * */
     fun delete(url: String)
-
+    
     /**
      * Flush to the storage
      * */
     fun flush()
-
+    
     /**
      * Persist to the storage
      * */
     fun persist(page: WebPage): Boolean
-
+    
     /**
      * Export the content of a webpage.
      *
      * @param page Page to export
-     * @param ident File name identifier used to distinguish from other names
      * @return The path of the exported page
      * */
     fun export(page: WebPage): Path
-
+    
     /**
      * Export the content of a webpage.
      *
@@ -1266,16 +1299,15 @@ interface PulsarSession : AutoCloseable {
      * @return The path of the exported page
      * */
     fun export(page: WebPage, ident: String = ""): Path
-
+    
     /**
      * Export the outer HTML of the document.
      *
      * @param doc Document to export
-     * @param ident File name identifier used to distinguish from other names
      * @return The path of the exported document
      * */
     fun export(doc: FeaturedDocument): Path
-
+    
     /**
      * Export the outer HTML of the document.
      *
@@ -1284,7 +1316,7 @@ interface PulsarSession : AutoCloseable {
      * @return The path of the exported document
      * */
     fun export(doc: FeaturedDocument, ident: String = ""): Path
-
+    
     /**
      * Export the whole HTML of the document to the given path.
      *

@@ -2,6 +2,7 @@ package ai.platon.pulsar.context.support
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.CheckState
+import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -83,14 +84,25 @@ abstract class AbstractPulsarContext(
     override val id = instanceSequencer.incrementAndGet()
 
     /**
-     * An immutable config is loaded from the config file at process startup, and never changes
+     * An immutable config is which loaded from the config file at process startup, and never changes
      * */
     override val unmodifiedConfig: ImmutableConfig get() = getBean()
 
     /**
      * Url normalizers
      * */
+    @Deprecated("Inappropriate name", ReplaceWith("urlNormalizer"))
     open val urlNormalizers: ChainedUrlNormalizer get() = getBean()
+
+    /**
+     * Url normalizer
+     * */
+    open val urlNormalizer: ChainedUrlNormalizer get() = getBean()
+
+    /**
+     * Url normalizer
+     * */
+    open val urlNormalizerOrNull: ChainedUrlNormalizer? get() = runCatching { urlNormalizer }.getOrNull()
 
     /**
      * The web db
@@ -114,7 +126,7 @@ abstract class AbstractPulsarContext(
     override val crawlPool: UrlPool get() = globalCache.urlPool
 
     override val crawlLoops: CrawlLoops get() = getBean()
-
+    
     /**
      * The start time
      * */
@@ -125,13 +137,15 @@ abstract class AbstractPulsarContext(
      * */
     val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
 
+    private val crawlPoolOrNull: UrlPool? get() = runCatching { crawlPool }.getOrNull()
+    
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
      * */
     @Throws(BeansException::class, IllegalStateException::class)
     override fun <T : Any> getBean(requiredType: KClass<T>): T {
         if (!isActive) {
-            throw IllegalStateException("System is down")
+            throw IllegalApplicationStateException("This program is being shut down.")
         }
         return applicationContext.getBean(requiredType.java)
     }
@@ -139,8 +153,12 @@ abstract class AbstractPulsarContext(
     /**
      * Get a bean with the specified class, returns null if the bean doesn't exist
      * */
-    override fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T? =
-        kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
+    override fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T? {
+        if (!isActive) {
+            return null
+        }
+        return kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
+    }
 
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
@@ -171,6 +189,9 @@ abstract class AbstractPulsarContext(
      * Register close objects, the objects will be closed when the context closes
      * */
     override fun registerClosable(closable: AutoCloseable) {
+        if (!isActive) {
+            return
+        }
         closableObjects.add(closable)
     }
 
@@ -212,7 +233,7 @@ abstract class AbstractPulsarContext(
      * If both tailing arguments and load options are present, the tailing arguments override the load options.
      * */
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        return CombinedUrlNormalizer(urlNormalizers).normalize(url, options, toItemOption)
+        return CombinedUrlNormalizer(urlNormalizerOrNull).normalize(url, options, toItemOption)
     }
 
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl? {
@@ -386,14 +407,14 @@ abstract class AbstractPulsarContext(
     override fun submit(url: UrlAware): AbstractPulsarContext {
         startLoopIfNecessary()
         if (url.isStandard || url is DegenerateUrl) {
-            crawlPool.add(url)
+            crawlPoolOrNull?.add(url)
         }
         return this
     }
 
     override fun submitAll(urls: Iterable<UrlAware>): AbstractPulsarContext {
         startLoopIfNecessary()
-        crawlPool.addAll(urls.filter { it.isStandard || it is DegenerateUrl })
+        crawlPoolOrNull?.addAll(urls.filter { it.isStandard || it is DegenerateUrl })
         return this
     }
 
@@ -498,6 +519,9 @@ abstract class AbstractPulsarContext(
         AppContext.endTermination()
     }
 
+    /**
+     * TODO: do not call getBean in close() function, it's better to close pulsar context before application context.
+     * */
     protected open fun doClose0() {
         logger.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
 

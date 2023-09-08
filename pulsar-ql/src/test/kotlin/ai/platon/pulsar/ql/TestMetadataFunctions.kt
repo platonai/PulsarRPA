@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql
 
-import org.junit.Test
+import kotlin.test.Ignore
+import kotlin.test.Test
 
 class TestMetadataFunctions : TestBase() {
     private val urlGroups = TestResource.urlGroups

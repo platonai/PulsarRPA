@@ -22,9 +22,17 @@ class NavigateTask constructor(
 
     val url get() = fetchTask.url
     val page get() = fetchTask.page
+    /**
+     * The page datum.
+     * */
     val pageDatum = PageDatum(page)
-
+    /**
+     * The original content length, -1 means not specified, or we don't know.
+     * */
     var originalContentLength = -1
+    /**
+     * The page source.
+     * */
     var pageSource = ""
 
     init {

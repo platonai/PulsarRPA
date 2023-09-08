@@ -233,7 +233,7 @@ interface JvmWebDriver {
      * which means, the same headers and cookies.
      * */
     @Throws(WebDriverException::class)
-    fun loadResourceAsync(url: String): CompletableFuture<Connection.Response?>
+    fun loadResourceAsync(url: String): CompletableFuture<NetworkResourceResponse>
     /**
      * Force the page pauses all navigations and PENDING resource fetches.
      * If the page loading stops, the user can still interact with the page,

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.ql.context.AbstractSQLContext
-import org.junit.Test
+import kotlin.test.Test
 
 /**
  * Index tests.

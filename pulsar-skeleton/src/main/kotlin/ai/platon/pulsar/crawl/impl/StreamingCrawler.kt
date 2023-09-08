@@ -6,14 +6,12 @@ import ai.platon.pulsar.common.collect.DelayUrl
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
+import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.proxy.ProxyException
-import ai.platon.pulsar.common.proxy.ProxyInsufficientBalanceException
-import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
+import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.urls.CallableDegenerateUrl
 import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
@@ -82,7 +80,8 @@ open class StreamingCrawler(
     /**
      * Do not use proxy
      * */
-    val noProxy: Boolean = true,
+    @Deprecated("use ProxyPoolManager.isProxyEnabled instead")
+    val noProxy: Boolean = false,
     /**
      * Auto close or not
      * */
@@ -108,9 +107,7 @@ open class StreamingCrawler(
         private val lastCancelReason = Frequency<String>()
         private val isIllegalApplicationState = AtomicBoolean()
 
-        /**
-         * TODO: change to wrong profile
-         * */
+        @Deprecated("Use wrong profile instead", ReplaceWith("wrongProfile"))
         private var wrongDistrict = MetricsSystem.reg.multiMetric(this, "WRONG_DISTRICT_COUNT")
         private var wrongProfile = MetricsSystem.reg.multiMetric(this, "WRONG_PROFILE_COUNT")
 
@@ -139,13 +136,24 @@ open class StreamingCrawler(
     private val logger = getLogger(StreamingCrawler::class)
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = getLogger(StreamingCrawler::class, ".Task")
-    private val conf = session.sessionConfig
+    private val sessionConfig = session.sessionConfig
     private val context = session.context as AbstractPulsarContext
     private val globalCache get() = session.globalCache
     private val globalCacheOrNull get() = if (isActive) session.globalCache else null
-    private val proxyPool: ProxyPool? = if (noProxy) null else context.getBeanOrNull(ProxyPool::class)
+    private val isProxyEnabled get() = ProxyPoolManager.isProxyEnabled(sessionConfig)
+    private val proxyPool: ProxyPool? get() = if (isProxyEnabled) context.getBeanOrNull(ProxyPool::class) else null
     private var proxyOutOfService = 0
-
+    
+    /**
+     * Override the main loop concurrency.
+     *
+     * When we execute non-browser tasks in the main loop, we might need higher
+     * concurrency level than fetch concurrency.
+     *
+     * 0 means follow the fetch concurrency.
+     * */
+    private val concurrencyOverride get() = sessionConfig.getInt(MAIN_LOOP_CONCURRENCY_OVERRIDE, 0)
+    
     @Volatile
     private var flowState = FlowState.CONTINUE
 
@@ -159,25 +167,31 @@ open class StreamingCrawler(
         "numPrivacyContexts" to Gauge { numPrivacyContexts },
         "numMaxActiveTabs" to Gauge { numMaxActiveTabs },
         "fetchConcurrency" to Gauge { fetchConcurrency },
+        "concurrency" to Gauge { concurrency },
     )
 
     private var forceQuit = false
-
+    
     /**
      * The maximum number of privacy contexts allowed.
      * */
-    val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+    val numPrivacyContexts get() = sessionConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)
 
     /**
      * The maximum number of open tabs allowed in each open browser.
      * */
-    val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    val numMaxActiveTabs get() = sessionConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
 
     /**
      * The fetch concurrency equals to the number of all allowed open tabs.
      * */
     val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
 
+    /**
+     * The main loop concurrency.
+     * */
+    val concurrency get() = if (concurrencyOverride > 0) concurrencyOverride else fetchConcurrency
+    
     /**
      * The out of work timeout.
      * */
@@ -186,7 +200,7 @@ open class StreamingCrawler(
     /**
      * The timeout for each fetch task.
      * */
-    val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
+    val fetchTaskTimeout get() = sessionConfig.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
 
     /**
      * The idle time during which there is no fetch tasks.
@@ -204,7 +218,7 @@ open class StreamingCrawler(
      * If smart retry is enabled, tasks will be retried if it's canceled or marked as retry.
      * A continuous crawl system should enable smart retry, while a simple demo can disable it.
      * */
-    val isSmartRetryEnabled get() = conf.getBoolean(CRAWL_SMART_RETRY, true)
+    val isSmartRetryEnabled get() = sessionConfig.getBoolean(CRAWL_SMART_RETRY, true)
 
     /**
      * Check if the crawler is idle.
@@ -215,7 +229,7 @@ open class StreamingCrawler(
     val isIdle: Boolean
         get() {
             return !urls.iterator().hasNext() && globalLoadingUrls.isEmpty()
-                    && idleTime > Duration.ofSeconds(5)
+                    && idleTime > Duration.ofSeconds(10)
         }
 
     /**
@@ -232,6 +246,7 @@ open class StreamingCrawler(
         MetricsSystem.reg.registerAll(this, "$id.g", gauges)
 
         val cacheGauges = mapOf(
+            "paused" to Gauge { isPaused },
             "pageCacheSize" to Gauge { globalCacheOrNull?.pageCache?.size?: 0 },
             "documentCacheSize" to Gauge { globalCacheOrNull?.documentCache?.size?: 0 }
         )
@@ -309,7 +324,8 @@ open class StreamingCrawler(
                 val freeSpace =
                     Runtimes.unallocatedDiskSpaces().maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
                 if (freeSpace < 10.0) {
-                    logger.error("Disk space is full!")
+                    val diskSpaces = Runtimes.unallocatedDiskSpaces().joinToString { ByteUnit.BYTE.toGB(it).toString() }
+                    logger.error("Disk space is full! | {}", diskSpaces)
                     criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
                     return@startCrawlLoop
                 }
@@ -371,6 +387,15 @@ open class StreamingCrawler(
 
     private suspend fun runWithStatusCheck(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
+        var k = 0
+
+        while (isActive && isPaused) {
+            if (k++ % 20 == 0) {
+                logger.info("The crawl loop is paused, use resume() to resume the crawl loop")
+            }
+            delay(1000)
+        }
+        k = 0 // reset k explicitly
 
         delayIfEstimatedNoLoadResource(j)
 
@@ -384,7 +409,7 @@ open class StreamingCrawler(
         /**
          * If all memory is used up, we can do nothing but wait.
          * */
-        var k = 0
+        k = 0
         while (isActive && AppSystemInfo.isCriticalMemory) {
             if (k++ % 20 == 0) {
                 handleMemoryShortage(k)
@@ -392,9 +417,11 @@ open class StreamingCrawler(
             criticalWarning = CriticalWarning.OUT_OF_MEMORY
             randomDelay(500, 500)
         }
+        k = 0 // reset k explicitly
 
         /**
-         * If the privacy context leaks too quickly, there is a good chance that there is a bug.
+         * If the privacy context leaks too fast, there is a good chance that there is a bug,
+         * or the quality of this batch of proxy IPs is poor.
          * */
         val contextLeaksRate = PrivacyContext.globalMetrics.contextLeaks.meter.fifteenMinuteRate
         if (isActive && contextLeaksRate >= 5 / 60f) {
@@ -462,7 +489,7 @@ open class StreamingCrawler(
      * */
     private suspend fun delayIfEstimatedNoLoadResource(j: Int, maxTry: Int = 1000) {
         var k = 0
-        while (isActive && ++k < maxTry && globalRunningTasks.get() >= fetchConcurrency) {
+        while (isActive && ++k < maxTry && globalRunningTasks.get() >= concurrency) {
             if (j % 120 == 0) {
                 logger.info(
                     "$j. Long time to run $globalRunningTasks tasks | $lastActiveTime -> {}",
@@ -651,7 +678,7 @@ open class StreamingCrawler(
         }
 
         when (e) {
-            is IllegalApplicationContextStateException -> {
+            is IllegalApplicationStateException -> {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     logger.warn("\n!!!Illegal application context, quit ... | {}", e.message)
                 }
@@ -869,6 +896,9 @@ open class StreamingCrawler(
         }
     }
 
+    /**
+     * TODO: since profile contains district setting, this will be removed later
+     * */
     private suspend fun handleWrongDistrict() {
         var k = 0
         while (wrongDistrict.hourlyCounter.count > 60) {

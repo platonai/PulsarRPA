@@ -25,6 +25,11 @@ public interface CapabilityTypes {
     String DRY_RUN = "pulsar.dry.run";
 
     /**
+     * Main loop
+     * */
+    String MAIN_LOOP_CONCURRENCY_OVERRIDE = "main.loop.concurrency.override";
+
+    /**
      * Args
      */
     String TENANT_ID = "tenantId";
@@ -186,7 +191,6 @@ public interface CapabilityTypes {
 
     String FETCH_PENDING_TIMEOUT = "fetch.pending.timeout";
 
-
     String FETCH_MAX_HOST_FAILURES = "fetch.max.host.failures";
 
     String FETCH_QUEUE_MODE = "fetch.queue.mode";
@@ -234,6 +238,8 @@ public interface CapabilityTypes {
 
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
     String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
+
+    String FETCH_MAX_CONTENT_LENGTH = "fetch.max.content.length";
     /**
      * Privacy context
      */
@@ -295,7 +301,12 @@ public interface CapabilityTypes {
      * Proxy
      */
     String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
+    /**
+     * @deprecated Use PROXY_POOL_MANAGER_CLASS instead
+     * */
+    @Deprecated
     String PROXY_POOL_MONITOR_CLASS = "proxy.pool.monitor.class";
+    String PROXY_POOL_MANAGER_CLASS = "proxy.pool.manager.class";
     String PROXY_LOADER_CLASS = "proxy.loader.class";
     String PROXY_MAX_FETCH_SUCCESS = "proxy.max.fetch.success";
     String PROXY_MAX_ALLOWED_PROXY_ABSENCE = "proxy.max.allowed.proxy.absence";

@@ -7,13 +7,11 @@ import ai.platon.pulsar.common.options.LoadOptionDefaults
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import org.junit.Test
 import java.time.Duration
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TestLoadOptions {
 
@@ -40,6 +38,18 @@ class TestLoadOptions {
         val options2 = LoadOptions.parse(args, conf)
         val options3 = LoadOptions.merge(options, options2)
         assertOptions(options3)
+    }
+    
+    @Test
+    fun testNormalization() {
+        assertTrue { i.context.isActive }
+        
+        val context = i.context as AbstractPulsarContext
+        val normalizer = context.urlNormalizer
+        val normalizerOrNull = context.urlNormalizerOrNull
+        
+        assertTrue { normalizer.urlNormalizers.isEmpty() }
+        assertNotNull(normalizerOrNull)
     }
 
     @Test
@@ -276,7 +286,7 @@ class TestLoadOptions {
     fun testNormalizeHyperlinkOptions() {
         val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
         val hyperlink = StatefulListenableHyperlink(url, args = "-i 0s")
-
+        
         val normUrl = i.normalize(hyperlink)
         assertEquals(0, normUrl.options.expires.seconds)
     }

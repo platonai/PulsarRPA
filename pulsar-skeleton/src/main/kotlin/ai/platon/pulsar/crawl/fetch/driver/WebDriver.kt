@@ -2,8 +2,8 @@ package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.math.geometric.PointD
-import ai.platon.pulsar.common.math.geometric.RectD
+import ai.platon.pulsar.common.geometric.PointD
+import ai.platon.pulsar.common.geometric.RectD
 import com.google.common.annotations.Beta
 import org.jsoup.Connection
 import java.io.Closeable
@@ -33,19 +33,32 @@ import kotlin.random.Random
 interface WebDriver: Closeable {
     /**
      * Lifetime status
+     * TODO: move lifetime status to AbstractWebDriver
      * */
     enum class State {
         INIT,
         READY,
+        @Deprecated("Inappropriate name", ReplaceWith("READY"))
+        FREE,
         WORKING,
+        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.canceled"))
+        CANCELED,
         RETIRED,
+        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.crashed"))
+        CRASHED,
         QUIT;
 
         val isInit get() = this == INIT
-        val isReady get() = this == READY
+        @Deprecated("Inappropriate name", ReplaceWith("isReady"))
+        val isFree get() = this == FREE
+        val isReady get() = this == READY || isFree
         val isWorking get() = this == WORKING
         val isQuit get() = this == QUIT
         val isRetired get() = this == RETIRED
+        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.isCanceled"))
+        val isCanceled get() = this == CANCELED
+        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.isCrashed"))
+        val isCrashed get() = this == CRASHED
     }
 
     /**
@@ -117,6 +130,8 @@ interface WebDriver: Closeable {
 
     val isInit: Boolean
     val isReady: Boolean
+    @Deprecated("Inappropriate name", ReplaceWith("isReady()"))
+    val isFree: Boolean
     val isWorking: Boolean
     val isRetired: Boolean
     val isQuit: Boolean
@@ -124,6 +139,8 @@ interface WebDriver: Closeable {
     val isCanceled: Boolean
     val isCrashed: Boolean
 
+    @Deprecated("Not used any more")
+    val sessionId: String?
     /**
      * Delay policy defines the delay time between actions, it is used to mimic real people
      * to interact with webpages.
@@ -138,7 +155,7 @@ interface WebDriver: Closeable {
 
     /**
      * Returns a JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on,
-     * which had difficulty handling kotlin suspend methods.
+     * the other JVM languages might have difficulty to handle kotlin suspend methods.
      * */
     fun jvm(): JvmWebDriver
 
@@ -225,12 +242,43 @@ interface WebDriver: Closeable {
      * example, by Javascript) there is no guarantee that the returned text is that of the modified
      * page.
      *
+     * TODO: distinguish pageSource and outerHTML
+     *
      * @return The source of the current page
      */
     @Throws(WebDriverException::class)
     suspend fun pageSource(): String?
+
+    @Deprecated("Getter is available", ReplaceWith("mainRequestHeaders"))
+    @Throws(WebDriverException::class)
+    suspend fun mainRequestHeaders(): Map<String, Any>
+    @Deprecated("Getter is available", ReplaceWith("mainRequestCookies"))
+    @Throws(WebDriverException::class)
+    suspend fun mainRequestCookies(): List<Map<String, String>>
+    
     @Throws(WebDriverException::class)
     suspend fun getCookies(): List<Map<String, String>>
+    /**
+     * Deletes browser cookies with matching name.
+     *
+     * @param name Name of the cookies to remove.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun deleteCookies(name: String)
+    /**
+     * Deletes browser cookies with matching name and url or domain/path pair.
+     *
+     * @param name Name of the cookies to remove.
+     * @param url If specified, deletes all the cookies with the given name where domain and path
+     * match provided URL.
+     * @param domain If specified, deletes only cookies with the exact domain.
+     * @param path If specified, deletes only cookies with the exact path.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun deleteCookies(name: String, url: String? = null, domain: String? = null, path: String? = null)
+    /** Clears browser cookies. */
+    @Throws(WebDriverException::class)
+    suspend fun clearBrowserCookies()
     /**
      * Brings page to front (activates tab).
      */
@@ -279,6 +327,12 @@ interface WebDriver: Closeable {
 
     @Throws(WebDriverException::class)
     suspend fun clickTextMatches(selector: String, pattern: String, count: Int = 1)
+    /**
+     * Use clickTextMatches instead
+     * */
+    @Deprecated("Inappropriate name", ReplaceWith("clickTextMatches(selector, pattern, count"))
+    @Throws(WebDriverException::class)
+    suspend fun clickMatches(selector: String, pattern: String, count: Int = 1) = clickTextMatches(selector, pattern, count)
     @Throws(WebDriverException::class)
     suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
     @Throws(WebDriverException::class)
@@ -310,15 +364,22 @@ interface WebDriver: Closeable {
     suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int = 0)
     @Throws(WebDriverException::class)
     suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int = 0)
-
+    /** Returns the document's HTML markup. */
+    @Throws(WebDriverException::class)
+    suspend fun outerHTML(): String?
+    /** Returns the node's HTML markup. */
     @Throws(WebDriverException::class)
     suspend fun outerHTML(selector: String): String?
+    /** Returns the node's text content. */
     @Throws(WebDriverException::class)
     suspend fun firstText(selector: String): String?
+    /** Returns the nodes' text contents. */
     @Throws(WebDriverException::class)
     suspend fun allTexts(selector: String): List<String>
+    /** Returns the node's attribute name. */
     @Throws(WebDriverException::class)
     suspend fun firstAttr(selector: String, attrName: String): String?
+    /** Returns the nodes' attribute names. */
     @Throws(WebDriverException::class)
     suspend fun allAttrs(selector: String, attrName: String): List<String>
     /**
@@ -375,14 +436,27 @@ interface WebDriver: Closeable {
      * Create a new Jsoup session with the last page's context, which means, the same
      * headers and cookies.
      * */
+    @Deprecated("Inappropriate name", ReplaceWith("newJsoupSession()"))
     @Throws(WebDriverException::class)
     suspend fun newSession(): Connection
+    /**
+     * Create a new Jsoup session with the last page's context, which means, the same
+     * headers and cookies.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun newJsoupSession(): Connection
+    /**
+     * Load the url as a resource with Jsoup rather than browser rendering, with the last page's context,
+     * which means, the same headers and cookies.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun loadJsoupResource(url: String): Connection.Response
     /**
      * Load url as a resource without browser rendering, with the last page's context,
      * which means, the same headers and cookies.
      * */
     @Throws(WebDriverException::class)
-    suspend fun loadResource(url: String): Connection.Response?
+    suspend fun loadResource(url: String): NetworkResourceResponse
     /**
      * Force the page pauses all navigations and PENDING resource fetches.
      * If the page loading stops, the user can still interact with the page,
@@ -390,6 +464,9 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun pause()
+    @Deprecated("Inappropriate name", ReplaceWith("pause"))
+    @Throws(WebDriverException::class)
+    suspend fun stopLoading() = pause()
     /**
      * Force the page stop all navigations and RELEASES all resources. Interaction with the
      * stop page results in undefined behavior and the results should not be trusted.
@@ -405,6 +482,12 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun terminate()
+    /**
+     * Quits this driver, closing every associated window.
+     * */
+    @Deprecated("Inappropriate name", ReplaceWith("close()"))
+    @Throws(Exception::class)
+    fun quit()
     /** Wait until the tab is terminated and closed. */
     @Throws(Exception::class)
     fun awaitTermination()

@@ -119,6 +119,40 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     }
 
     @Test
+    fun testLoadResource() = runWebDriverTest { driver ->
+        val resourceUrl = "https://www.amazon.com/robots.txt"
+        val response = driver.loadResource(resourceUrl)
+        val headers = response.headers
+        val body = response.stream
+        assertNotNull(headers)
+        assertNotNull(body)
+
+//        println(body)
+        assertContains(body, "Disallow")
+
+//        val cookies = response.entries.joinToString("; ") { it.key + "=" + it.value }
+//        println(cookies)
+        headers.forEach { (name, value) -> println("$name: $value") }
+        assertContains(headers, "Content-Type", "Content-Type should be in headers")
+    }
+
+    @Test
+    fun testJsoupLoadResource() = runWebDriverTest { driver ->
+        val resourceUrl = "https://www.amazon.com/robots.txt"
+        val response = driver.loadJsoupResource(resourceUrl)
+        val body = response.body()
+        assertNotNull(body)
+
+//        println(body)
+        assertContains(body, "Disallow")
+        // check cookies and headers
+        val cookies = response.cookies().entries.joinToString("; ") { it.key + "=" + it.value }
+        println(cookies)
+        response.headers().forEach { (name, value) -> println("$name: $value") }
+        assertContains(response.headers(), "Content-Type", "Content-Type should be in headers")
+    }
+
+    @Test
     fun testOpenNewTab() {
         val driver = driverFactory.create()
 
@@ -132,25 +166,23 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         }
     }
 
-    @Ignore("Ignored temporary, test failed")
     @Test
     fun testClickTextMatches() = runWebDriverTest { driver ->
         open(url, driver, 1)
+        delay(1000)
 
-        driver.clickTextMatches("a[href~=stores]", "Store")
+        // should match the anchor text "Visit the Apple Store"
+        driver.clickTextMatches("a[href*=stores]", "Store")
         driver.waitForNavigation()
         driver.waitForSelector("body")
-        assertNotEquals(url, driver.currentUrl())
-    }
-
-    @Test
-    fun testClickMatches2() = runWebDriverTest { driver ->
-        open(url, driver)
-
-        driver.clickTextMatches("a[data-hook]", "See all reviews")
-        driver.waitForNavigation()
-        driver.waitForSelector("body")
-        // assertNotEquals(url, driver.currentUrl())
+        delay(1000)
+        
+        // expected url like: https://www.amazon.com/stores/Apple/page/77D9E1F7-0337-4282-9DB6-B6B8FB2DC98D?ref_=ast_bln
+        val currentUrl = driver.currentUrl()
+        println(currentUrl)
+        
+        assertNotEquals(url, currentUrl)
+        assertContains(currentUrl, "stores")
     }
 
     @Test
@@ -158,7 +190,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         open(url, driver)
 
         val href = driver.clickNthAnchor(100, "body")
-        println(href)
+//        println(href)
 
         driver.waitForNavigation()
         driver.waitForSelector("body")

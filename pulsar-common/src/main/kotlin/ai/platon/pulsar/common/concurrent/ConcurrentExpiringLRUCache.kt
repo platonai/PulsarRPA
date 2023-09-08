@@ -27,7 +27,7 @@ class ConcurrentExpiringLRUCache<K, T>(
         const val CACHE_CAPACITY = 200
     }
 
-    val cache = ConcurrentLRUCache<K, ExpiringItem<T>>(ttl.seconds, capacity)
+    private val cache = ConcurrentLRUCache<K, ExpiringItem<T>>(ttl.seconds, capacity)
 
     val size get() = cache.size
 
@@ -58,7 +58,9 @@ class ConcurrentExpiringLRUCache<K, T>(
     fun computeIfAbsent(key: K, mappingFunction: (K) -> T): T {
         return cache.computeIfAbsent(key) { ExpiringItem(mappingFunction(key)) }.datum
     }
-
+    
+    fun remove() = cache.remove()
+    
     fun remove(key: K) = cache.remove(key)
 
     fun removeAll(keys: Iterable<K>) = keys.forEach { cache.remove(it) }

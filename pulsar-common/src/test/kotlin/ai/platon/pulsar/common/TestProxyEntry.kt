@@ -26,14 +26,20 @@ class TestProxyEntry {
     @Test
     fun testTestUrls() {
         ResourceLoader
-                .readAllLines(ProxyEntry.PROXY_TEST_WEB_SITES_FILE)
-                .mapNotNullTo(ProxyEntry.TEST_URLS) { UrlUtils.getURLOrNull(it) }
+            .readAllLines(ProxyEntry.PROXY_TEST_WEB_SITES_FILE)
+            .mapNotNullTo(ProxyEntry.TEST_URLS) { UrlUtils.getURLOrNull(it) }
         assertTrue(ProxyEntry.TEST_URLS.isNotEmpty())
         assertTrue(URL("http://www.dongqiudi.com") in ProxyEntry.TEST_URLS)
     }
-
+    
     @Test
-    fun testParseProxyEntry() {
+    fun testParseProxyEntry1() {
+        val proxy = ProxyEntry.parse("43.157.119.224:21697")
+        println(proxy)
+    }
+    
+    @Test
+    fun testParseProxyEntry2() {
         val proxies = arrayOf(
                 "58.218.200.226:6925 at:2019-08-24T15:34:28.255Z, spd:0.0",
                 "58.218.200.228:4169 at:2019-08-24T15:34:28.255Z, spd:0.0",
@@ -46,9 +52,9 @@ class TestProxyEntry {
     }
 
     @Test
-    fun testParsingProxyEntryWithAuth() {
+    fun testParsingProxyEntry2WithAuth() {
         val proxies = mapOf(
-                "58.218.200.226:6008 at:2019-08-24T15:34:28.255Z, ttl:2019-08-24T16:31:24.215Z, usr:abc, pwd:123" to
+                "http://abc:123@58.218.200.226:6008?at=2019-08-24T15:34:28.255Z&ttl=2019-08-24T16:31:24.215Z" to
                         ProxyEntry2("58.218.200.226", 6008, "abc", "123"),
         )
 

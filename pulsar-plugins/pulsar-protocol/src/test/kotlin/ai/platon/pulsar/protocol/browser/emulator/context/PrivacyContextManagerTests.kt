@@ -10,8 +10,8 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
-import ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyAgentGenerator
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
+import ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyContextIdGenerator
 import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
 import kotlinx.coroutines.delay
@@ -36,7 +36,7 @@ class PrivacyContextManagerTests {
     fun setup() {
         System.setProperty(
             CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS,
-            SequentialPrivacyAgentGenerator::class.java.name
+            SequentialPrivacyContextIdGenerator::class.java.name
         )
         BrowserSettings.privacy(6).maxTabs(10)
     }
@@ -50,14 +50,14 @@ class PrivacyContextManagerTests {
         assertTrue { pc.isActive }
         privacyManager.close(pc)
         assertTrue { !pc.isActive }
-        assertFalse { privacyManager.temporaryContexts.containsKey(pc.privacyAgent) }
+        assertFalse { privacyManager.temporaryContexts.containsKey(pc.id) }
         assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
 
         val pc2 = privacyManager.computeNextContext(fingerprint)
         assertTrue { pc2.isActive }
-        assertNotEquals(pc.privacyAgent, pc2.privacyAgent)
+        assertNotEquals(pc.id, pc2.id)
         assertNotEquals(pc, pc2)
-        assertTrue { privacyManager.temporaryContexts.containsKey(pc2.privacyAgent) }
+        assertTrue { privacyManager.temporaryContexts.containsKey(pc2.id) }
         assertTrue { privacyManager.temporaryContexts.containsValue(pc2) }
     }
 
@@ -74,7 +74,7 @@ class PrivacyContextManagerTests {
             assertTrue { pc.isActive }
             privacyManager.close(pc)
             assertTrue { !pc.isActive }
-            assertFalse { privacyManager.temporaryContexts.containsKey(pc.privacyAgent) }
+            assertFalse { privacyManager.temporaryContexts.containsKey(pc.id) }
             assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
         }
     }
@@ -101,11 +101,11 @@ class PrivacyContextManagerTests {
         closer.scheduleWithFixedDelay({
             volatileContexts.forEach { pc ->
                 // proxy server can be changed, which will be improved in the further
-                pc.privacyAgent.fingerprint.proxyServer = "127.0.0." + Random.nextInt(200)
+                pc.id.fingerprint.proxyServer = "127.0.0." + Random.nextInt(200)
 
                 privacyManager.close(pc)
                 assertTrue { !pc.isActive }
-                assertFalse { privacyManager.temporaryContexts.containsKey(pc.privacyAgent) }
+                assertFalse { privacyManager.temporaryContexts.containsKey(pc.id) }
                 assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
             }
         }, 2, 1, TimeUnit.SECONDS)
@@ -120,7 +120,7 @@ class PrivacyContextManagerTests {
     fun `When a privacy context closed then it's removed from the active queue`() {
         val manager = MultiPrivacyContextManager(driverPoolManager, conf)
 
-        val id = PrivacyAgent(contextPath, BrowserType.MOCK_CHROME)
+        val id = PrivacyContextId(contextPath, BrowserType.MOCK_CHROME)
         val privacyContext = manager.computeIfAbsent(id)
 
         assertTrue { manager.temporaryContexts.containsKey(id) }

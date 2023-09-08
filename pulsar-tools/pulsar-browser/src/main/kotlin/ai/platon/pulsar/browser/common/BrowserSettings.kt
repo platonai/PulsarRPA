@@ -31,9 +31,19 @@ open class BrowserSettings(
 
         /**
          * Check if the current environment supports only headless mode.
-         * TODO: this doesn't work sometimes
+         * TODO: this doesn't work on some platform
          * */
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
+
+        /**
+         * Specify the browser type to fetch webpages.
+         * */
+        @Deprecated("Inappropriate name", ReplaceWith("withBrowser(browserType)"))
+        @JvmStatic
+        fun withBrowser(browserType: String): Companion {
+            System.setProperty(BROWSER_TYPE, browserType)
+            return BrowserSettings
+        }
 
         /**
          * Specify the browser type to fetch webpages.
@@ -58,7 +68,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SystemDefaultPrivacyContextIdGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
@@ -77,7 +87,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withPrototypeBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyContextIdGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
@@ -167,6 +177,13 @@ open class BrowserSettings(
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
             return BrowserSettings
         }
+
+        /**
+         * Set the number of privacy contexts
+         * */
+        @Deprecated("Verbose name", ReplaceWith("privacy(n)"))
+        @JvmStatic
+        fun privacyContext(n: Int): Companion = privacy(n)
 
         /**
          * Set the number of privacy contexts
@@ -298,6 +315,7 @@ open class BrowserSettings(
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
     /**
      * Chrome has to run without sandbox in a virtual machine
+     * TODO: this flag might be upgraded by WSL
      * */
     val forceNoSandbox get() = AppContext.OS_IS_WSL
 
@@ -335,7 +353,7 @@ open class BrowserSettings(
     /**
      * Check if it's SPA mode, SPA stands for single page application.
      *
-     * If pulsar works in SPA mode:
+     * If PulsarPRA works in SPA mode:
      * 1. execution of fetches has no timeout limit
      * */
     val isSPA get() = conf.getBoolean(BROWSER_SPA_MODE, false)
@@ -352,6 +370,7 @@ open class BrowserSettings(
      * Check if url blocking is enabled.
      * If true and blocking rules are set, resources matching the rules will be blocked by the browser.
      * */
+    @Deprecated("Use resourceBlockProbability instead", ReplaceWith("resourceBlockProbability > 1e-6"))
     val isUrlBlockingEnabled get() = resourceBlockProbability > 1e-6
     /**
      * Check if user agent overriding is enabled. User agent overriding is disabled by default,
@@ -363,7 +382,7 @@ open class BrowserSettings(
     /**
      * Page load strategy.
      *
-     * Pulsar checks document ready using javascript so just set the strategy to be none.
+     * PulsarRPA checks document ready using javascript so just set the strategy to be none.
      *
      * @see <a href='https://blog.knoldus.com/page-loading-strategy-in-the-selenium-webdriver/'>
      *     Page Loading Strategy</a>
@@ -397,9 +416,9 @@ open class BrowserSettings(
 enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
 
 /**
- * The interaction settings
+ * The interaction settings.
  * */
-data class InteractSettings constructor(
+data class InteractSettings(
     /**
      * The number of scroll downs on the page.
      * */
