@@ -32,4 +32,13 @@ open class IllegalApplicationStateException: IllegalStateException {
 }
 
 @Deprecated("Inappropriate name", ReplaceWith("IllegalApplicationStateException"))
-class IllegalApplicationContextStateException: IllegalApplicationStateException()
+class IllegalApplicationContextStateException: IllegalApplicationStateException {
+    constructor() : super() {}
+    
+    constructor(message: String) : super(message) {
+    }
+    
+    constructor(message: String, cause: Throwable) : super(message, cause) {}
+    
+    constructor(cause: Throwable) : super(cause) {}
+}
