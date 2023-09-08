@@ -23,6 +23,10 @@ class OpenMapTable(
      * */
     val attributes = mutableMapOf<String, Any>()
     /**
+     * The column collection.
+     * */
+    val columns get() = metadata.columns
+    /**
      * The row collection.
      * */
     val rows get() = map.values
