@@ -63,6 +63,9 @@ abstract class AbstractPulsarSession(
 
     override val unmodifiedConfig get() = context.unmodifiedConfig
 
+    @Deprecated("Not used any more")
+    override val sessionBeanFactory = BeanFactory(sessionConfig)
+
     override val display get() = "$id"
 
     private val closed = AtomicBoolean()
@@ -70,9 +73,11 @@ abstract class AbstractPulsarSession(
 
     private val variables = ConcurrentHashMap<String, Any>()
     private var enablePDCache = true
-    override val globalCache get() = context.globalCacheFactory.globalCache
-    override val pageCache get() = context.globalCacheFactory.globalCache.pageCache
-    override val documentCache get() = context.globalCacheFactory.globalCache.documentCache
+    @Deprecated("Factory should not be a interface property, globalCache is OK")
+    override val globalCacheFactory get() = context.globalCacheFactory
+    override val globalCache get() = context.globalCache
+    override val pageCache get() = globalCache.pageCache
+    override val documentCache get() = globalCache.documentCache
 
     private val contextOrNull get() = if (isActive) context else null
     private val globalCacheFactoryOrNull get() = contextOrNull?.globalCacheFactory
@@ -270,14 +275,14 @@ abstract class AbstractPulsarSession(
     override fun loadOutPages(portalUrl: UrlAware, args: String) = loadOutPages(portalUrl, options(args))
 
     override fun loadOutPages(portalUrl: UrlAware, options: LoadOptions) = loadOutPages0(portalUrl, options)
-
+    
     override fun submitForOutPages(portalUrl: String, args: String) = submitForOutPages(portalUrl, options(args))
-
+    
     override fun submitForOutPages(portalUrl: String, options: LoadOptions) = submitForOutPages(PlainUrl(portalUrl), options)
-
+    
     override fun submitForOutPages(portalUrl: UrlAware, args: String) = submitForOutPages(portalUrl, options(args))
-
-    override fun submitForOutPages(portalUrl: UrlAware, options: LoadOptions) = submitOutPages0(portalUrl, options)
+    
+    override fun submitForOutPages(portalUrl: UrlAware, options: LoadOptions) = submitForOutPages0(portalUrl, options)
 
     override fun loadOutPagesAsync(portalUrl: String, args: String) = loadOutPagesAsync(portalUrl, options(args))
 
@@ -417,6 +422,11 @@ abstract class AbstractPulsarSession(
     override fun getVariable(name: String): Any? = let { variables[name] }
 
     override fun setVariable(name: String, value: Any) = run { variables[name] = value }
+
+    @Deprecated("Not used any more")
+    override fun putSessionBean(obj: Any) = ensureActive { sessionBeanFactory.putBean(obj) }
+
+    inline fun <reified T> getSessionBean(): T? = sessionBeanFactory.getBean()
 
     override fun delete(url: String) = ensureActive { context.delete(url) }
 

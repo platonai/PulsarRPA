@@ -3,7 +3,6 @@ package ai.platon.pulsar.crawl.fetch.privacy
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -22,8 +21,6 @@ data class PrivacyAgentId(
     val ident = contextDir.last().toString()
 
     val display = ident.substringAfter(PrivacyContext.CONTEXT_DIR_PREFIX)
-    @Deprecated("Inappropriate name", ReplaceWith("isUserDefault"))
-    val isSystemDefault get() = this.contextDir == PrivacyContext.SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER
     /**
      * If true, the privacy agent opens browser just like a real user does every day.
      * */
@@ -111,8 +108,6 @@ data class PrivacyAgent(
 //    override fun toString() = /** AUTO GENERATED **/
 
     companion object {
-        @Deprecated("Inappropriate name", ReplaceWith("USER_DEFAULT"))
-        val SYSTEM_DEFAULT = PrivacyAgent(PrivacyContext.SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
         /**
          * The user default privacy agent opens browser just like real users do every day.
          * */
@@ -231,7 +226,7 @@ class DefaultPrivacyContextIdGenerator: PrivacyContextIdGenerator {
 
 @Deprecated("Inappropriate name", ReplaceWith("UserDefaultPrivacyContextIdGenerator"))
 class SystemDefaultPrivacyContextIdGenerator: PrivacyContextIdGenerator {
-    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.SYSTEM_DEFAULT
+    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.USER_DEFAULT
 }
 
 class UserDefaultPrivacyContextIdGenerator: PrivacyContextIdGenerator {

@@ -47,8 +47,6 @@ abstract class PrivacyContext(
         
         // The prefix for all temporary privacy contexts, system context, prototype context and default context are not included.
         const val CONTEXT_DIR_PREFIX = "cx."
-        @Deprecated("Inappropriate name", ReplaceWith("USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER"))
-        val SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER: Path = AppPaths.SYS_BROWSER_DATA_DIR_PLACEHOLDER
         val USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER: Path = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
         // The placeholder directory for the user's default browser. This is a placeholder, actually no data dir
         // should be specified, so the browser driver opens a browser just like a normal user opens it.

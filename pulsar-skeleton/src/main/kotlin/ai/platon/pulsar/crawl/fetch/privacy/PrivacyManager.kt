@@ -54,7 +54,10 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     private val cleaningService = Executors.newSingleThreadScheduledExecutor()
 
-    protected val privacyAgentGeneratorFactory = PrivacyAgentGeneratorFactory(conf)
+    protected val privacyAgentGeneratorFactory = PrivacyContextIdGeneratorFactory(conf)
+
+    @Deprecated("Use local generator")
+    open val privacyContextIdGenerator get() = privacyAgentGeneratorFactory.generator
 
     val isClosed get() = closed.get()
 

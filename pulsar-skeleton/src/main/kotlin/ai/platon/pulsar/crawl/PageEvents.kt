@@ -6,6 +6,11 @@ import ai.platon.pulsar.crawl.event.*
  * Manage all events in crawl phase of the webpage lifecycle.
  * */
 interface CrawlEvent {
+    @Deprecated("Url filtering should not be in PageEvent")
+    val onFilter: UrlAwareEventFilter
+
+    @Deprecated("No need to normalize in a crawler")
+    val onNormalize: UrlAwareEventFilter
 
     val onWillLoad: UrlAwareEventHandler
 
@@ -20,6 +25,8 @@ interface CrawlEvent {
  * Manage all events in the load phase of the webpage lifecycle.
  * */
 interface LoadEvent {
+    @Deprecated("Url filtering should not be in load phase, crawl phase is better")
+    val onFilter: UrlFilterEventHandler
 
     val onNormalize: UrlFilterEventHandler
 
@@ -62,7 +69,12 @@ interface BrowseEvent {
     val onWillInteract: WebPageWebDriverEventHandler
     val onDidInteract: WebPageWebDriverEventHandler
 
+    @Deprecated("Inappropriate name", ReplaceWith("onWillCheckDocumentState"))
+    val onWillCheckDOMState: WebPageWebDriverEventHandler get() = onWillCheckDocumentState
     val onWillCheckDocumentState: WebPageWebDriverEventHandler
+    @Deprecated("Inappropriate name", ReplaceWith("onDocumentActuallyReady"))
+    val onDOMStateChecked: WebPageWebDriverEventHandler get() = onDocumentActuallyReady
+
     /**
      * Fire when the document is actually ready. The document state is checked(computed)
      * using an algorithm in javascript.

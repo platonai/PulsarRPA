@@ -61,6 +61,8 @@ class JsoupParser(
 
         val options = page.options
 
+        // normUrl is deprecated, use normalizedUrl instead
+        metadata.attr("normUrl", page.url)
         metadata.attr("normalizedUrl", page.url)
         metadata.attr("label", options.label)
         metadata.attr("taskId", options.taskId)
