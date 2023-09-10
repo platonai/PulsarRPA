@@ -1,24 +1,30 @@
 Release Notes
 =
 
-Versioning Policy
+Versioning Policy Since 1.12
 ==
 
-The convention for version numbers is major.minor.build.
+Since 1.12, we ship different types of releases:
 
-* major is incremented when the public interface changes incompatibly. For example, a method is removed, or its signature changes. Clients using your library need to take care when using a library with a different major version, because things may break.
-* minor is incremented when the public interface changes in a compatible way. For example, a method is added. Clients do not need to worry about about using the new version, as all the functions they are used to seeing will still be there and act the same.
-* build is incremented when the implementation of a function changes, but no signatures are added or removed. For example, you found a bug and fixed it. Clients should probably update to the new version, but if it doesn't work because they depended on the broken behavior, they can easily downgrade.
+* Feature releases (1.x) that bring major changes in PulsarRPA.
 
-1.12.x
+* Incremental releases (1.x.y) that are shipped between feature releases and include updates in the tooling, performance improvements, and bug fixes.
+
+* Bug fix releases (1.x.yz) that include bug fixes for incremental releases.
+
+For example, for the feature release 1.12 we had several incremental releases including 1.12.10, 1.12.20, and 1.12.70. For 1.12.70, we had 2 bug fix releases – 1.12.71 and 1.12.72.
+
+For each incremental and feature release, we also ship several preview (EAP) versions for you to try new features before they are released. See Early Access Preview for details.
+
+1.10.19
 ==
-
-
 
 1.10.18
 ==
 
-1. upgrade dependencies
+1. External IP rotation
+2. Closing all privacy contexts explicitly
+3. Bug fix
 
 1.10.17
 ==
