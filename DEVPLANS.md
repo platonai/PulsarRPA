@@ -18,7 +18,11 @@
 9. support web driver's opener
    1. for chrome devtools, the opener can be found via ChromeTab.parentId
 10. more tests
-11. upgrade to platon-3.7.x.pom
+11. less pressure to the main thread
+12. proactive webdriver tasks?
+13. remove all deprecated code
+14. effective page model 
+15. upgrade to platon-3.7.x.pom
 
 
 ## 1.10.x
@@ -36,8 +40,8 @@
     6. onInitRetryDelayPolicy
 6. RPA supports
     1. frames
-    2. [Fixed] create webdriver for existing tab
-7. [Won't Fix] try to reduce communication between pulsar and the browser, a possible way is to disable the network api
+    2. **[finished]** create webdriver for existing tab
+7. try to reduce communication between pulsar and the browser, a possible way is to disable the network api
 8. selenium support, and multiple browsers support
 9. support web driver's opener
    1. for chrome devtools, the opener can be found via ChromeTab.parentId
