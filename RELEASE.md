@@ -3,7 +3,6 @@ Release Notes
 
 Versioning Policy
 ==
-15
 
 The convention for version numbers is major.minor.build.
 

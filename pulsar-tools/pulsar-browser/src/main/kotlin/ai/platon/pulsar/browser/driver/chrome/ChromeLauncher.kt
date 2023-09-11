@@ -19,6 +19,7 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.channels.FileChannel
 import java.nio.file.*
+import java.time.Duration
 import java.util.regex.Pattern
 
 /**
@@ -32,10 +33,11 @@ class ChromeLauncher(
 
     companion object {
         val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
+        val PID_FILE_NAME = "chrome.launcher.pid"
     }
 
     private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
-    val pidPath = userDataDir.resolveSibling("chrome.launcher.pid")
+    val pidPath = userDataDir.resolveSibling(PID_FILE_NAME)
     private var process: Process? = null
     private val shutdownHookThread = Thread { this.close() }
 
@@ -163,7 +165,7 @@ class ChromeLauncher(
 
             process?.also {
                 Files.createDirectories(userDataDir)
-                val pidPath = userDataDir.resolveSibling("chrome.launcher.pid")
+                val pidPath = userDataDir.resolveSibling(PID_FILE_NAME)
                 Files.writeString(pidPath, it.pid().toString(), StandardOpenOption.CREATE)
             }
             waitForDevToolsServer(process!!)
@@ -275,13 +277,7 @@ class ChromeLauncher(
 
     @Throws(IOException::class)
     private fun cleanUp() {
-        // No, we do not delete any directory from the program, it is dangerous.
-        // It's better to use a script to delete temporary context directories older than a specified time,
-        // 3 days, for example.
-        val cleanUpUserDataDir = alwaysFalse()
-        if (cleanUpUserDataDir) {
-            deleteTemporaryUserDataDir()
-        }
+        deleteTemporaryUserDataDir()
     }
 
     private fun deleteTemporaryUserDataDir() {
@@ -289,8 +285,12 @@ class ChromeLauncher(
 
         // It's in the context tmp dir, delete the user data dir safely
         val isTemporary = target.startsWith(AppPaths.CONTEXT_TMP_DIR)
+        val lastModifiedTime = Files.getLastModifiedTime(target).toInstant()
+        val isExpired = DateTimes.elapsedTime(lastModifiedTime).toDays() > 3
+        // Double check to ensure it's safe to delete the directory
+        val hasPidFile = Files.exists(target.resolve(PID_FILE_NAME))
         // be careful, do not delete files by mistake, so delete files only inside AppPaths.CONTEXT_TMP_DIR
-        if (isTemporary) {
+        if (isTemporary && isExpired && hasPidFile) {
             FileUtils.deleteQuietly(target.toFile())
             if (!SystemUtils.IS_OS_WINDOWS && Files.exists(target)) {
                 logger.warn("Failed to delete browser cache, try again | {}", target)
