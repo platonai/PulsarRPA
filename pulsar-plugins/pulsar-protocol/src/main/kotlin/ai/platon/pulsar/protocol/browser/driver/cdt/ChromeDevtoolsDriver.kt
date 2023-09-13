@@ -742,11 +742,21 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun loadResource(url: String): NetworkResourceResponse {
-        val options = LoadNetworkResourceOptions()
-
+        val options = LoadNetworkResourceOptions().apply {
+            disableCache = false
+            includeCredentials = false
+        }
+        
+        val frameId = pageAPI?.frameTree?.frame?.id
         val response = rpc.invokeDeferredSilently("loadNetworkResource") {
-            networkAPI?.loadNetworkResource(url, options)?.let {
-                NetworkResourceResponse(it.success, it.netError, it.netErrorName, it.httpStatusCode, it.stream, it.headers)
+            networkAPI?.loadNetworkResource(frameId, url, options)?.let {
+                NetworkResourceResponse(
+                    it.success ?: false,
+                    it.netError ?: 0.0,
+                    it.netErrorName ?: "",
+                    it.httpStatusCode ?: 400.0,
+                    it.stream,
+                    it.headers)
             }
         }
 
