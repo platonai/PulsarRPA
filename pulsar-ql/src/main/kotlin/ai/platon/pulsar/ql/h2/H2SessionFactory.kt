@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.*
@@ -20,6 +21,8 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     private val log = LoggerFactory.getLogger(H2SessionFactory::class.java)!!
 
     private val sqlContext get() = SQLContexts.create()
+
+    private val sqlContextOrNull get() = if (AppContext.isActive) SQLContexts.create() else null
 
     init {
         H2Config.config()
@@ -46,9 +49,10 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
      * @return The h2 session
      */
     @Synchronized
-    override fun createSession(ci: ConnectionInfo): Session {
-        if (!sqlContext.isActive) {
-            throw IllegalStateException("[H2SessionFactory] SQL context is closed, will not create SQL session")
+    override fun createSession(ci: ConnectionInfo): Session? {
+        if (!AppContext.isActive) {
+            // throw IllegalStateException("[H2SessionFactory] SQL context is closed, will not create SQL session")
+            return null
         }
 
         log.debug("Creating SQL session for h2 connection | {}", ci.url)
@@ -61,7 +65,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
             h2session.trace.setLevel(TraceSystem.ADAPTER)
         }
 
-        val sqlSession = sqlContext.createSession(H2SessionDelegate(h2session.serialId, h2session))
+        val sqlSession = sqlContextOrNull?.createSession(H2SessionDelegate(h2session.serialId, h2session)) ?: return null
         sqlSession.sessionConfig.set(CapabilityTypes.SCENT_EXTRACT_TABULATE_CELL_TYPE, "DATABASE")
         require(sqlSession.id == h2session.serialId)
 
@@ -98,7 +102,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
     @Synchronized
     override fun closeSession(serialId: Int) {
-        sqlContext.closeSession(serialId)
+        sqlContextOrNull?.closeSession(serialId)
     }
 
     @Synchronized
@@ -107,7 +111,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     }
 
     /**
-     * @see org.h2.engine.SessionRemote.shutdownSessionFactory
+     * @see org.h2.engine.SessionRemote.shutdownSessionFactory()
      * */
     @Synchronized
     fun shutdownNow() {

@@ -120,12 +120,14 @@ abstract class AbstractSQLContext constructor(
         ensureRunning()
         return sqlSessions.size
     }
-
+    
+    @Throws(DbException::class)
     override fun getSession(sessionInterface: SessionInterface): AbstractSQLSession {
         val h2session = sessionInterface as Session
         return getSession(h2session.serialId)
     }
 
+    @Throws(DbException::class)
     override fun getSession(sessionId: Int): AbstractSQLSession {
         ensureRunning()
         val session = sqlSessions[sessionId]

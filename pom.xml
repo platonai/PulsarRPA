@@ -646,6 +646,27 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>org.slf4j</groupId>-->
+<!--                <artifactId>slf4j-log4j12</artifactId>-->
+<!--                <version>1.7.36</version>-->
+<!--            </dependency>-->
         </dependencies>
     </dependencyManagement>
 
@@ -702,6 +723,8 @@
         <dokka.version>1.8.10</dokka.version>
 
         <autolink.version>0.10.0</autolink.version>
+
+        <slf4j.version>1.7.36</slf4j.version>
     </properties>
 
 </project>

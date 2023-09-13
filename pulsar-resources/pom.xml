@@ -10,6 +10,14 @@
     <name>Pulsar Resources</name>
     <description>Pulsar Resources</description>
 
+    <!-- slf4j-log4j12 requires logback.xml, which is provided by pulsar-resources -->
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>

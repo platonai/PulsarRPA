@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.common.DateTimes
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Created by vincent on 18-1-1.
@@ -63,6 +64,9 @@ data class NavigateEntry(
      * Track the time of page actions.
      */
     val actionTimes = mutableMapOf<String, Instant>()
+    
+    val networkResponseCount = AtomicInteger()
+    
     /**
      * Refresh the entry with the given action.
      * */

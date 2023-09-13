@@ -12,6 +12,7 @@ fun main() {
     val session = PulsarContexts.createSession()
     // The main url we are playing with
     val url = "https://www.amazon.com/dp/B09V3KXJPB"
+    val resourceUrl = "https://www.amazon.com/robots.txt"
 
     // Load a page from local storage, or fetch it from the Internet if it does not exist or has expired
     val page = session.load(url, "-expires 10s")
@@ -27,6 +28,11 @@ fun main() {
     // Load and parse
     val document2 = session.loadDocument(url, "-expires 10s")
     // do something with the document
+    // ...
+    
+    // Load resource
+    val resource = session.loadResource(resourceUrl, url)
+    // do something with the resource
     // ...
 
     // Load the portal page and then load all links specified by `-outLink`.
@@ -60,25 +66,29 @@ fun main() {
     // Java-style async calls
     session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(session::export)
 
-    println("== document")
+    println("\n== document")
     println(document.title)
     println(document.selectFirstOrNull("title")?.text())
 
-    println("== document2")
+    println("\n== document2")
     println(document2.title)
     println(document2.selectFirstOrNull("title")?.text())
-
-    println("== pages")
+    
+    println("\n== resource")
+    println("Length: " + resource.contentLength)
+    println("Content: " + resource.contentAsString.split("\n").take(5).joinToString("\t"))
+    
+    println("\n== pages")
     println(pages.map { it.url })
 
     val gson = Gson()
-    println("== fields")
+    println("\n== fields")
     println(gson.toJson(fields))
 
-    println("== fields2")
+    println("\n== fields2")
     println(gson.toJson(fields2))
 
-    println("== fields3")
+    println("\n== fields3")
     println(gson.toJson(fields3))
 
     // Wait until all tasks are done.

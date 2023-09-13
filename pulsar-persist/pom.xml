@@ -158,6 +158,11 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- slf4j-simple is used when there is no logback.xml available -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

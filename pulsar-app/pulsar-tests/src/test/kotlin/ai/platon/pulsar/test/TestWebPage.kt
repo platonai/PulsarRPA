@@ -8,6 +8,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import com.google.gson.GsonBuilder
 import org.junit.Test
+import org.springframework.boot.test.context.SpringBootTest
 import java.time.Instant
 import kotlin.test.*
 

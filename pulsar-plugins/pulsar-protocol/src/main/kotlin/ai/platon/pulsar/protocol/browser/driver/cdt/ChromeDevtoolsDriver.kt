@@ -11,13 +11,13 @@ import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
 import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceived
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
 import com.github.kklisura.cdt.protocol.v2023.types.fetch.RequestPattern
 import com.github.kklisura.cdt.protocol.v2023.types.network.Cookie
 import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
@@ -25,7 +25,6 @@ import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourceO
 import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import kotlinx.coroutines.delay
-import org.jsoup.Connection
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
@@ -745,9 +744,11 @@ class ChromeDevtoolsDriver(
         val options = LoadNetworkResourceOptions()
         
         val response = rpc.invokeDeferredSilently("loadNetworkResource") {
-            networkAPI?.loadNetworkResource(url, options)?.let {
-                NetworkResourceResponse(it.success, it.netError, it.netErrorName, it.httpStatusCode, it.stream, it.headers)
-            }
+            // There is an exception, seems caused by protocol version mismatch:
+            // ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException:
+            // Invalid parameters: Failed to deserialize params.options.disableCache -
+            // BINDINGS: mandatory field missing at position 24
+            networkAPI?.loadNetworkResource(url, options)?.let { NetworkResourceResponse.from(it) }
         }
         
         return response ?: NetworkResourceResponse()
@@ -872,12 +873,22 @@ class ChromeDevtoolsDriver(
     }
     
     private fun onResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
-        tracer?.trace("onResponseReceived | driver | {}", event.requestId)
+        if (!UrlUtils.isStandard(entry.url)) {
+            logger.warn("Not a valid url | {}", entry.url)
+            return
+        }
         
-        // TODO: make sure it's the document we want
-        if (event.type == ResourceType.DOCUMENT) {
+        tracer?.trace("onResponseReceived | driver | {}", event.requestId)
+        val count = entry.networkResponseCount.incrementAndGet()
+        if (count == 1) {
+            // The first response, the main HTML document
+            if (event.type != ResourceType.DOCUMENT) {
+                logger.warn("The main response is not a DOCUMENT, this might be a bug")
+            }
+            
             tracer?.trace("onResponseReceived | driver, document | {}", event.requestId)
             
+            // TODO: make sure it's the document we want
             entry.mainResponseStatus = event.response.status
             entry.mainResponseStatusText = event.response.statusText
             entry.mainResponseHeaders = event.response.headers

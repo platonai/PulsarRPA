@@ -12,7 +12,7 @@ import kotlin.random.Random
 
 class TestAppSystemInfo {
     var sum = 0.0
-    var prevTicks = LongArray(TickType.values().size)
+    var prevTicks = LongArray(TickType.entries.size)
     
     @Test
     fun testOSVersionInfo() {

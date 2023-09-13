@@ -21,9 +21,11 @@
 11. less pressure to the main thread
 12. proactive webdriver tasks?
 13. remove all deprecated code
-14. effective page model 
-15. upgrade to platon-3.7.x.pom
-
+14. effective page model
+15. upgrade platon.pom
+16. upgrade kotlin
+17. upgrade spring
+18. Fix OSHI issues
 
 ## 1.10.x
 

@@ -45,6 +45,7 @@ open class LoadOptions(
     val conf: VolatileConfig,
     var rawEvent: PageEvent? = null,
     var rawItemEvent: PageEvent? = null,
+    var referrer: String? = null,
 ) : CommonOptions(argv) {
 
     /**
@@ -660,11 +661,6 @@ open class LoadOptions(
     val outLinkSelectorOrNull
         get() = outLinkSelector.takeIf { it.isNotBlank() }
 
-    /**
-     * The page referrer.
-     * */
-    var referrer: String? = null
-
     val event: PageEvent get() = enableEvent()
 
     val itemEvent: PageEvent get() = enableItemEvent()
@@ -704,7 +700,7 @@ open class LoadOptions(
      * The constructor.
      * */
     protected constructor(args: String, other: LoadOptions) :
-            this(split(args), other.conf, other.rawEvent, other.rawItemEvent)
+            this(split(args), other.conf, other.rawEvent, other.rawItemEvent, other.referrer)
 
     /**
      * Parse the arguments into [LoadOptions] with JCommander and with bug fixes.
