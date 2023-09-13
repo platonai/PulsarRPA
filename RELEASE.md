@@ -17,6 +17,8 @@ For 1.10.70, we had 2 bug fix releases – 1.10.71 and 1.10.72.
 
 For each incremental and feature release, we also ship several preview (EAP) versions for you to try new features before they are released. See Early Access Preview for details.
 
+Format for feature branches: ft/username/feature-name
+
 1.10.19
 ==
 
