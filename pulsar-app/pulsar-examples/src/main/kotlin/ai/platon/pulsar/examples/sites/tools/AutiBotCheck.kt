@@ -4,6 +4,15 @@ import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.examples.sites.tools.proxy.TemporaryProxyLoader
 import ai.platon.pulsar.ql.context.SQLContexts
 
+/**
+ * Bot check blogs and tools:
+ *
+ * https://amiunique.org/
+ * https://gologin.com/check-browser
+ * https://browserleaks.com/canvas
+ * https://browserleaks.com/
+ * https://privacybee.com/blog/browser-fingerprinting/
+ * */
 fun main() {
     val urls = """
 http://www.baidu.com
