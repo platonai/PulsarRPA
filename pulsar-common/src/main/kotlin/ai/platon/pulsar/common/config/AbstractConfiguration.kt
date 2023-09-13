@@ -164,7 +164,9 @@ abstract class AbstractConfiguration {
     }
 
     /**
-     * Get the value of the `name`.
+     * Get the value of the `name`. If the key is deprecated,
+     * it returns the value of the first key which replaces the deprecated key
+     * and is not null.
      * If no such property exists,
      * then `defaultValue` is returned.
      *

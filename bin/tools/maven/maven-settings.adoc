@@ -19,3 +19,11 @@ On Linux:
 On Windows:
 
     copy ".\bin\tools\maven\cn\settings.xml" "%UserProfile%\.m2"
+
+If the file exists, add the following code to the file:
+
+    <mirror>
+        <id>huaweicloud</id>
+        <url>https://repo.huaweicloud.com/repository/maven/</url>
+        <mirrorOf>central</mirrorOf>
+    </mirror>

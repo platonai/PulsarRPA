@@ -91,12 +91,14 @@ class NetworkResourceResponse(
         }
         
         fun from(res: LoadNetworkResourcePageResult): NetworkResourceResponse {
-            val netError = res.netError.toInt()
-            val httpStatusCode = res.httpStatusCode.toInt()
+            val success = res.success ?: false
+            val netError = res.netError?.toInt() ?: 0
+            val netErrorName = res.netErrorName ?: ""
+            val httpStatusCode = res.httpStatusCode?.toInt() ?: 400
             // All pulsar added headers have a prefix Q-
             val headers = res.headers.toMutableMap()
             headers["Q-client"] = "Chrome"
-            return NetworkResourceResponse(res.success, netError, res.netErrorName, httpStatusCode, res.stream, headers)
+            return NetworkResourceResponse(success, netError, netErrorName, httpStatusCode, res.stream, headers)
         }
     }
 }

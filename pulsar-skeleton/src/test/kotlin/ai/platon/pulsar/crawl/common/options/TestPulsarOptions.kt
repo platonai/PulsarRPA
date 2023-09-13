@@ -1,12 +1,13 @@
 package ai.platon.pulsar.crawl.common.options
 
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.options.*
+import ai.platon.pulsar.common.options.LinkOptions
+import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.options.OptionUtils
+import ai.platon.pulsar.common.options.PulsarOptions
 import com.google.common.collect.Lists
-import org.apache.commons.collections4.CollectionUtils
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.util.*
 import kotlin.test.assertTrue
 
 /**

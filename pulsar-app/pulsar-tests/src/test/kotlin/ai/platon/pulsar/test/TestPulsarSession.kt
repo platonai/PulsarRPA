@@ -17,7 +17,7 @@ class TestPulsarSession: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers/zgbs/"
     private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     
-    val resourceUrl = "https://www.amazon.com/robots.txt"
+    private val resourceUrl = "https://www.amazon.com/robots.txt"
 
     @Before
     fun setup() {

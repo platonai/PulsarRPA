@@ -741,14 +741,14 @@ class ChromeDevtoolsDriver(
     }
     
     override suspend fun loadResource(url: String): NetworkResourceResponse {
-        val options = LoadNetworkResourceOptions()
+        val options = LoadNetworkResourceOptions().apply {
+            disableCache = false
+            includeCredentials = false
+        }
         
+        val frameId = pageAPI?.frameTree?.frame?.id
         val response = rpc.invokeDeferredSilently("loadNetworkResource") {
-            // There is an exception, seems caused by protocol version mismatch:
-            // ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException:
-            // Invalid parameters: Failed to deserialize params.options.disableCache -
-            // BINDINGS: mandatory field missing at position 24
-            networkAPI?.loadNetworkResource(url, options)?.let { NetworkResourceResponse.from(it) }
+            networkAPI?.loadNetworkResource(frameId, url, options)?.let { NetworkResourceResponse.from(it) }
         }
         
         return response ?: NetworkResourceResponse()
