@@ -1,26 +1,17 @@
 package ai.platon.pulsar.test.browser
 
-import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyEntry2
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringRunner
 import java.io.IOException
 import java.net.Proxy
 import java.util.*
 import kotlin.test.*
 
-@RunWith(SpringRunner::class)
-@SpringBootTest
-@ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class ChromeDevtoolsDriverTests: WebDriverTestBase() {
 
     private val fieldSelectors = mapOf(

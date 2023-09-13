@@ -27,6 +27,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
+import java.time.Duration
 import java.time.Instant
 import kotlin.random.Random
 
@@ -240,6 +241,12 @@ open class InteractiveBrowserEmulator(
     @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
     private suspend fun loadResourceWithoutRendering(navigateTask: NavigateTask, driver: WebDriver): Response {
         checkState(navigateTask.fetchTask, driver)
+
+        val referrer = navigateTask.page.referrer
+        if (referrer != null && !driver.browser.navigateHistory.contains(referrer)) {
+            driver.navigateTo(referrer)
+            driver.waitForNavigation(Duration.ofSeconds(10))
+        }
 
         val response = driver.loadResource(navigateTask.url)
             ?: return ForwardingResponse.failed(navigateTask.page, SessionLostException("null response"))

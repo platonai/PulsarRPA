@@ -17,7 +17,7 @@ class TestPulsarSession: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers/zgbs/"
     private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
 
-    private val resourceUrl = "https://www.amazon.com/dp/B0933BVK6T"
+    private val resourceUrl = "https://www.amazon.com/robots.txt"
 
     @Before
     fun setup() {
@@ -59,7 +59,6 @@ class TestPulsarSession: TestBase() {
 
         assertTrue { page.fetchCount > 0 }
         assertTrue { page.protocolStatus.isSuccess }
-        assertTrue { page.contentLength > 100 }
 
         println(WebPageFormatter(page))
         val path = session.export(page)

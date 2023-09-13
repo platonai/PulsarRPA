@@ -161,12 +161,8 @@ class AppSystemInfo {
                 System.err.println(t.stringify())
                 logger.warn(t.stringify())
             }
-
-            val message = "OSHI (https://github.com/oshi/oshi) doesn't work on your system, you can ignore the message, " +
-                "\nbut we suggest you to create a issue to https://github.com/platonai/pulsarRPA " +
-                "\nwith the system information in file $path"
-
-            System.err.println(message)
+            
+            val message = "OSHI is disabled"
             logger.warn(message)
         }
 

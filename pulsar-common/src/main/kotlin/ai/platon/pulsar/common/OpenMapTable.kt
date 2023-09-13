@@ -31,6 +31,7 @@ class OpenMapTable(
      * */
     val rows get() = map.values
 
+    
     val keys: Set<String> get() = map.keys
     val numRows: Int get() = map.size
     val isEmpty: Boolean get() = numRows == 0
@@ -40,7 +41,7 @@ class OpenMapTable(
      * Get the row associated with [key].
      * */
     operator fun get(key: String) = map[key]
-    
+
     /**
      * Associated a [row] with [key].
      * */
