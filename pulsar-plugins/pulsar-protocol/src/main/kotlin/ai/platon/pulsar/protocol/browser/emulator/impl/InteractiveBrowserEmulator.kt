@@ -9,10 +9,7 @@ import ai.platon.pulsar.common.persist.ext.browseEvent
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.crawl.protocol.http.ProtocolStatusTranslator
@@ -239,13 +236,18 @@ open class InteractiveBrowserEmulator(
     private suspend fun loadResourceWithoutRendering(navigateTask: NavigateTask, driver: WebDriver): Response {
         checkState(navigateTask.fetchTask, driver)
 
-        val referrer = navigateTask.page.referrer
+        val page = navigateTask.page
+        val referrer = page.referrer
         if (referrer != null && !driver.browser.navigateHistory.contains(referrer)) {
             driver.navigateTo(referrer)
-            driver.waitForNavigation(Duration.ofSeconds(10))
+            driver.waitForSelector("body", Duration.ofSeconds(10))
         }
-
-        val response = driver.loadResource(navigateTask.url)
+        
+        val resourceLoader = page.conf["resource.loader", "jsoup"]
+        val response = when (resourceLoader) {
+            "web.driver" -> driver.loadResource(navigateTask.url)
+            else -> NetworkResourceResponse.from(driver.loadJsoupResource(navigateTask.url))
+        }
 
         // TODO: transform protocol status in AbstractHttpProtocol
         val protocolStatus = ProtocolStatusTranslator.translateHttpCode(response.httpStatusCode.toInt())
