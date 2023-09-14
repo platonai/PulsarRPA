@@ -752,10 +752,6 @@ class ChromeDevtoolsDriver(
             networkAPI?.loadNetworkResource(frameId, url, options)?.let { NetworkResourceResponse.from(it) }
         }
         
-println("=== $url")
-println("" + response?.httpStatusCode + "\t" + response?.netErrorName)
-println(response?.stream?: "no content")
-        
         return response ?: NetworkResourceResponse()
     }
 
