@@ -246,7 +246,7 @@ open class InteractiveBrowserEmulator(
             driver.waitForSelector("body", Duration.ofSeconds(10))
         }
 
-        val resourceLoader = page.conf["resource.loader", "json"]
+        val resourceLoader = page.conf["resource.loader", "jsoup"]
         val response = when (resourceLoader) {
             "web.driver" -> driver.loadResource(navigateTask.url)
             else -> NetworkResourceResponse.from(driver.loadJsoupResource(navigateTask.url))
