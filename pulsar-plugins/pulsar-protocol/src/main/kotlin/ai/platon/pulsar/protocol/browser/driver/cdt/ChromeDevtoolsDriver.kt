@@ -749,17 +749,13 @@ class ChromeDevtoolsDriver(
         
         val frameId = pageAPI?.frameTree?.frame?.id
         val response = rpc.invokeDeferredSilently("loadNetworkResource") {
-            networkAPI?.loadNetworkResource(frameId, url, options)?.let {
-                NetworkResourceResponse(
-                    it.success ?: false,
-                    it.netError ?: 0.0,
-                    it.netErrorName ?: "",
-                    it.httpStatusCode ?: 400.0,
-                    it.stream,
-                    it.headers)
-            }
+            networkAPI?.loadNetworkResource(frameId, url, options)?.let { NetworkResourceResponse.from(it) }
         }
-
+        
+println("=== $url")
+println("" + response?.httpStatusCode + "\t" + response?.netErrorName)
+println(response?.stream?: "no content")
+        
         return response ?: NetworkResourceResponse()
     }
 

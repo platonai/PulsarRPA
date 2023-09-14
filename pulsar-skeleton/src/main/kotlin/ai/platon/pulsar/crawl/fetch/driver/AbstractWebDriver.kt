@@ -272,10 +272,7 @@ abstract class AbstractWebDriver(
     
     @Throws(IOException::class)
     override suspend fun loadResource(url: String): NetworkResourceResponse {
-        return loadJsoupResource(url).let {
-            NetworkResourceResponse(it.statusCode() == 200, 0.0, "",
-                httpStatusCode = it.statusCode().toDouble(), stream = it.body(), headers = it.headers())
-        }
+        return NetworkResourceResponse.from(loadJsoupResource(url))
     }
     
     /**
