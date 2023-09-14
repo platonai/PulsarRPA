@@ -9,12 +9,19 @@ import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.jvm.Throws
 
 internal class RobustRPC(
     private val driver: ChromeDevtoolsDriver
 ) {
+    companion object {
+        // handle to many exceptions
+        private val exceptionCounts = ConcurrentHashMap<Long, AtomicInteger>()
+        private val exceptionMessages = ConcurrentHashMap<Long, String>()
+    }
+    
     private val logger = getLogger(this)
     
     val isActive get() = driver.isActive
@@ -28,17 +35,19 @@ internal class RobustRPC(
             logger.warn("Too many RPC failures: {} ({}/{}) | {}", action, rpcFailures, maxRPCFailures, e.message)
             throw SessionLostException("Too many RPC failures", driver)
         }
-        
-        if (message == null) {
-            logger.info("[{}] ({}/{}) | {}, {}", action, rpcFailures, maxRPCFailures, e.code, e.message)
-        } else {
-            logger.info("[{}] ({}/{}) | {} | {}, {}", action, rpcFailures, maxRPCFailures, message, e.code, e.message)
-        }
-        if (e.cause != null) {
-            logger.warn(e.cause?.brief("Caused by: "))
+
+        val count = exceptionCounts.computeIfAbsent(e.code) { AtomicInteger() }.get()
+        traceException(e)
+
+        if (count < 10L) {
+            logException(count, e, action, message)
+        } else if (count < 100L && count % 10 == 0) {
+            logException(count, e, action, message)
+        } else if (count < 1000L && count % 50 == 0) {
+            logException(count, e, action, message)
         }
     }
-    
+
     fun <T> invokeSilently(action: String, message: String? = null, block: () -> T): T? {
         return try {
             invoke(action, block)
@@ -125,5 +134,33 @@ internal class RobustRPC(
 
     private fun increaseRPCFailures() {
         rpcFailures.incrementAndGet()
+    }
+    
+    /**
+     * Normalize message, remove all digits
+     * */
+    private fun normalizeMessage(message: String?): String {
+        if (message == null) {
+            return ""
+        }
+        
+        return message.filterNot { it.isDigit() }
+    }
+    
+    private fun traceException(e: ChromeRPCException) {
+        val code = e.code
+        exceptionCounts.computeIfAbsent(code) { AtomicInteger() }.incrementAndGet()
+        exceptionMessages[code] = normalizeMessage(e.message)
+    }
+    
+    private fun logException(count: Int, e: ChromeRPCException, action: String? = null, message: String? = null) {
+        if (message == null) {
+            logger.info("{}.\t[{}] ({}/{}) | code: {}, {}", count, action, rpcFailures, maxRPCFailures, e.code, e.message)
+        } else {
+            logger.info("{}.\t[{}] ({}/{}) | {} | code: {}, {}", count, action, rpcFailures, maxRPCFailures, message, e.code, e.message)
+        }
+        if (e.cause != null) {
+            logger.warn(e.cause?.brief("Caused by: "))
+        }
     }
 }
