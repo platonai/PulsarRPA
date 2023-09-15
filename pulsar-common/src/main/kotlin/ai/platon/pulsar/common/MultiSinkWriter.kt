@@ -1,7 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.ImmutableConfig
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
@@ -13,10 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * Multiple sink message writer. Messages from different source are write to different files or database.
  */
-abstract class MultiSinkWriter(
-    @Deprecated("Useless config")
-    val conf: ImmutableConfig
-) : AutoCloseable {
+open class MultiSinkWriter : AutoCloseable {
     private val timeIdent get() = DateTimes.formatNow("MMdd")
     private val reportDir0 get() = AppPaths.REPORT_DIR.resolve(timeIdent)
     private val _writers = ConcurrentHashMap<Path, MessageWriter>()

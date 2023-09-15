@@ -10,8 +10,6 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.driver.*
@@ -82,7 +80,7 @@ class ChromeDevtoolsDriver(
     private var credentials: Credentials? = null
     
     private val networkManager by lazy { NetworkManager(this, rpc) }
-    private val messageWriter = MiscMessageWriter(ImmutableConfig())
+    private val messageWriter = MultiSinkWriter()
     
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val initScriptCache = mutableListOf<String>()

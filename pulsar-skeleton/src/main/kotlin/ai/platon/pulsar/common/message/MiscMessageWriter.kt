@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class MiscMessageWriter(
     conf: ImmutableConfig
-) : MultiSinkWriter(conf) {
+) : MultiSinkWriter() {
     private val closed = AtomicBoolean()
 
     private fun reportFetchTimeHistory(fetchTimeHistory: String) {
