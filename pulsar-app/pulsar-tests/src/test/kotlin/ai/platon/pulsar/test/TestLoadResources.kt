@@ -35,7 +35,9 @@ class TestLoadResources: TestBase() {
             val referrer = URLUtil.getOrigin(resourceUrl)
             val page = session.loadResource(resourceUrl, referrer, "-refresh")
 
-            val content = page.contentAsString.asSequence().filter { Strings.isCJK(it) }.take(100)
+            val content = page.contentAsString.asSequence()
+                .filter { Strings.isCJK(it) }.take(100)
+                .joinToString("")
             println("$i.\t" + page.contentLength + "\t" + content)
 
             assertTrue(resourceUrl) { page.fetchCount > 0 }

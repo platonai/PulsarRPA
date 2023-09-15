@@ -5,20 +5,21 @@ import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
-import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
-import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
 import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceived
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
 import com.github.kklisura.cdt.protocol.v2023.types.fetch.RequestPattern
 import com.github.kklisura.cdt.protocol.v2023.types.network.Cookie
 import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
@@ -26,12 +27,10 @@ import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourceO
 import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import kotlinx.coroutines.delay
-import org.jsoup.Connection
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
 class ChromeDevtoolsDriver(
@@ -83,6 +82,7 @@ class ChromeDevtoolsDriver(
     private var credentials: Credentials? = null
     
     private val networkManager by lazy { NetworkManager(this, rpc) }
+    private val messageWriter = MiscMessageWriter(ImmutableConfig())
     
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val initScriptCache = mutableListOf<String>()
@@ -841,12 +841,15 @@ class ChromeDevtoolsDriver(
         tracer?.trace("onRequestWillBeSent | driver | {}", event.requestId)
         
         val count = entry.networkRequestCount.incrementAndGet()
-        // TODO: make sure it's the document we want
-        if (count == 1) {
-            if (event.type != ResourceType.DOCUMENT) {
-                logger.warn("The main request is not for a DOCUMENT, this might be a bug")
-            }
-            
+        
+        // The first request, it should be the main HTML document
+        if (count == 1 && event.type != ResourceType.DOCUMENT) {
+            // It might be a redirection, prefetch, or just an image
+            logger.info("The resource type of the first request is {}, expected DOCUMENT | {}",
+                event.type, event.request.url)
+        }
+
+        if (majorRequestWillBeSent(entry, event)) {
             // amazon.com uses "referer" instead of "referrer" in the request header,
             // not clear if other sites uses the other one
             val headers: MutableMap<String, Any> = event.request.headers
@@ -854,12 +857,12 @@ class ChromeDevtoolsDriver(
                 headers["referer"] = it
                 headers["referrer"] = it
             }
-
+            
             entry.mainRequestId = event.requestId
             entry.mainRequestHeaders = event.request.headers
         }
-        
-        if (resourceBlockProbability > 1e-6) {
+
+        if (isMinorResource(entry, event) && resourceBlockProbability > 1e-6) {
             val requestUrl = event.request.url
             if (probabilityBlockedURLs.any { requestUrl.matches(it.toRegex()) }) {
                 // random drop requests
@@ -870,32 +873,113 @@ class ChromeDevtoolsDriver(
                 }
             }
         }
+        
+        // TODO: handle customer onRequestWillBeSent events
     }
     
     private fun onResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
-        if (!UrlUtils.isStandard(entry.url)) {
-            logger.warn("Not a valid url | {}", entry.url)
-            return
-        }
-        
         tracer?.trace("onResponseReceived | driver | {}", event.requestId)
         val count = entry.networkResponseCount.incrementAndGet()
-        if (count == 1) {
-            // TODO: handle resource loading
-            // The first response, the main HTML document
-            if (event.type != ResourceType.DOCUMENT) {
-                logger.warn("The main response is not a DOCUMENT, this might be a bug")
-            }
-            
+
+        // The first response, it should be the main HTML document
+        if (count == 1 && event.type != ResourceType.DOCUMENT) {
+            // It might be a redirection, prefetch, or just an image
+            logger.info("The resource type of the first response is {}, expected DOCUMENT | {}",
+                event.type, event.response.url)
+        }
+
+        if (majorResponseReceived(entry, event)) {
             tracer?.trace("onResponseReceived | driver, document | {}", event.requestId)
-            
-            // TODO: make sure it's the document we want
+
             entry.mainResponseStatus = event.response.status
             entry.mainResponseStatusText = event.response.statusText
             entry.mainResponseHeaders = event.response.headers
         }
         
-        // TODO: the customer should handle RequestWillBeSent & ResponseReceived events
+        traceInterestingResources(entry, event)
+        
+        // TODO: handle customer ResponseReceived events
+    }
+    
+    private fun majorRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent): Boolean {
+        return !entry.documentTransferred && event.type == ResourceType.DOCUMENT
+    }
+    
+    private fun majorResponseReceived(entry: NavigateEntry, event: ResponseReceived): Boolean {
+        return !entry.documentTransferred && event.type == ResourceType.DOCUMENT
+    }
+    
+    private fun isMinorResource(entry: NavigateEntry, event: RequestWillBeSent): Boolean {
+        return entry.documentTransferred && isMinorResource(event)
+    }
+    
+    private fun isMinorResource(event: RequestWillBeSent): Boolean {
+        return event.type in listOf(
+            ResourceType.FONT,
+            ResourceType.MEDIA,
+            ResourceType.IMAGE,
+        )
+    }
+    
+    private fun traceInterestingResources(entry: NavigateEntry, event: ResponseReceived) {
+        runCatching { traceInterestingResources0(entry, event) }.onFailure { logger.warn(it.stringify()) }
+    }
+    
+    private fun traceInterestingResources0(entry: NavigateEntry, event: ResponseReceived) {
+        val mimeType = event.response.mimeType
+        val mimeTypes = listOf("application/json")
+        if (mimeType !in mimeTypes) {
+            return
+        }
+        
+        val resourceTypes = listOf(
+            ResourceType.FETCH,
+            ResourceType.XHR,
+            ResourceType.SCRIPT,
+        )
+        if (event.type !in resourceTypes) {
+            // return
+        }
+        
+        // page url is normalized
+        val pageUrl = entry.pageUrl
+        val resourceUrl = event.response.url
+        val host = URLUtil.getHost(pageUrl) ?: "unknown"
+        val reportDir = messageWriter.reportDir.resolve("trace").resolve(host)
+        
+        if (!Files.exists(reportDir)) {
+            Files.createDirectories(reportDir)
+        }
+        
+        val count = Files.list(reportDir).count()
+        if (count > 2_000) {
+            // TOO MANY tracing
+            return
+        }
+        
+        var suffix = "-" + event.type.name.lowercase() + "-urls.txt"
+        var filename = AppPaths.fileId(pageUrl) + suffix
+        var path = reportDir.resolve(filename)
+        
+        val message = String.format("%s\t%s", mimeType, event.response.url)
+        messageWriter.write(message, path)
+        
+        // configurable
+        val saveResourceBody = mimeType == "application/json"
+            && alwaysFalse()
+            && event.response.encodedDataLength < 1_000_000
+        if (saveResourceBody) {
+            val body = rpc.invokeSilently("getResponseBody") {
+                fetchAPI?.enable()
+                fetchAPI?.getResponseBody(event.requestId)?.body
+            }
+            if (!body.isNullOrBlank()) {
+                suffix = "-" + event.type.name.lowercase() + "-body.txt"
+                filename = AppPaths.fromUri(resourceUrl, suffix = suffix)
+                path = reportDir.resolve(filename)
+                messageWriter.write(body, path)
+            }
+        }
     }
     
     private suspend fun handleRedirect() {
