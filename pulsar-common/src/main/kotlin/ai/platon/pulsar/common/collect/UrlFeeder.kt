@@ -67,7 +67,7 @@ class UrlFeeder(
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 
     /**
-     * Estimate the order to fetch for the next task to add with priority [priority]
+     * Estimate the order to fetch for the next task to add with priority [priority].
      * */
     fun estimatedOrder(priority: Int): Int {
         return kotlin.runCatching { doEstimatedOrder(priority) }

@@ -32,11 +32,10 @@ class TestLoadResources: TestBase() {
     @Test
     fun testLoadResource() {
         resourceUrls.forEachIndexed { i, resourceUrl ->
-            val host = URLUtil.getHostName(resourceUrl) ?: "181hua.com/"
-            val referrer = "http://$host"
+            val referrer = URLUtil.getOrigin(resourceUrl)
             val page = session.loadResource(resourceUrl, referrer, "-refresh")
 
-            val content = page.contentAsString.filter { Strings.isCJK(it) }.take(100)
+            val content = page.contentAsString.asSequence().filter { Strings.isCJK(it) }.take(100)
             println("$i.\t" + page.contentLength + "\t" + content)
 
             assertTrue(resourceUrl) { page.fetchCount > 0 }

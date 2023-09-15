@@ -20,11 +20,12 @@ abstract class AbstractWebDriver(
     override val id: Int = instanceSequencer.incrementAndGet()
 ): Comparable<AbstractWebDriver>, AbstractJvmWebDriver(), WebDriver, JvmWebDriver {
     companion object {
-        val instanceSequencer = AtomicInteger()
+        private val instanceSequencer = AtomicInteger()
     }
     
     private val jsoupCreateDestroyMonitor = Any()
     private var jsoupSession: Connection? = null
+    
     private val canceled = AtomicBoolean()
     private val crashed = AtomicBoolean()
     

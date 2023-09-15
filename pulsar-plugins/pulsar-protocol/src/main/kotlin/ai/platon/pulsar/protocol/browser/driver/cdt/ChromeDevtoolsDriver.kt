@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -52,14 +53,6 @@ class ChromeDevtoolsDriver(
     
     val resourceBlockProbability get() = browserSettings.resourceBlockProbability
     
-    /**
-     * Disable network after n response received
-     * TODO: check if this is necessary
-     * */
-    private val numResponseReceivedToDisableNetwork: Int
-        get() {
-            return System.getProperty("WebDriver.numResponseReceivedToDisableNetwork")?.toIntOrNull() ?: -1
-        }
     private val _blockedURLs = mutableListOf<String>()
     private val _probabilityBlockedURLs = mutableListOf<String>()
     val blockedURLs: List<String> get() = _blockedURLs
@@ -86,7 +79,6 @@ class ChromeDevtoolsDriver(
     private val mouse get() = page.mouse.takeIf { isActive }
     private val keyboard get() = page.keyboard.takeIf { isActive }
     
-    private var numResponseReceived = AtomicInteger()
     private val rpc = RobustRPC(this)
     private var credentials: Credentials? = null
     
@@ -809,9 +801,6 @@ class ChromeDevtoolsDriver(
             networkAPI?.setBlockedURLs(blockedURLs)
         }
 
-        // TODO: use Request, Response events instead of RequestWillBeSent, ResponseReceived
-//        networkManager.on(NetworkManagerEvents.Request) { request: CDPRequest ->  }
-//        networkManager.on(NetworkManagerEvents.Response) { response: CDPResponse ->  }
         networkManager.on(NetworkEvents.RequestWillBeSent) { event: RequestWillBeSent -> onRequestWillBeSent(entry, event) }
         networkManager.on(NetworkEvents.ResponseReceived) { event: ResponseReceived -> onResponseReceived(entry, event) }
 
@@ -844,10 +833,20 @@ class ChromeDevtoolsDriver(
     }
 
     private fun onRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent) {
+        if (!UrlUtils.isStandard(entry.url)) {
+            logger.warn("Not a valid url | {}", entry.url)
+            return
+        }
+        
         tracer?.trace("onRequestWillBeSent | driver | {}", event.requestId)
         
+        val count = entry.networkRequestCount.incrementAndGet()
         // TODO: make sure it's the document we want
-        if (event.type == ResourceType.DOCUMENT) {
+        if (count == 1) {
+            if (event.type != ResourceType.DOCUMENT) {
+                logger.warn("The main request is not for a DOCUMENT, this might be a bug")
+            }
+            
             // amazon.com uses "referer" instead of "referrer" in the request header,
             // not clear if other sites uses the other one
             val headers: MutableMap<String, Any> = event.request.headers
@@ -872,20 +871,33 @@ class ChromeDevtoolsDriver(
             }
         }
     }
-
+    
     private fun onResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
-        tracer?.trace("onResponseReceived | driver | {}", event.requestId)
+        if (!UrlUtils.isStandard(entry.url)) {
+            logger.warn("Not a valid url | {}", entry.url)
+            return
+        }
         
-        // TODO: make sure it's the document we want
-        if (event.type == ResourceType.DOCUMENT) {
+        tracer?.trace("onResponseReceived | driver | {}", event.requestId)
+        val count = entry.networkResponseCount.incrementAndGet()
+        if (count == 1) {
+            // TODO: handle resource loading
+            // The first response, the main HTML document
+            if (event.type != ResourceType.DOCUMENT) {
+                logger.warn("The main response is not a DOCUMENT, this might be a bug")
+            }
+            
             tracer?.trace("onResponseReceived | driver, document | {}", event.requestId)
-
+            
+            // TODO: make sure it's the document we want
             entry.mainResponseStatus = event.response.status
             entry.mainResponseStatusText = event.response.statusText
             entry.mainResponseHeaders = event.response.headers
         }
+        
+        // TODO: the customer should handle RequestWillBeSent & ResponseReceived events
     }
-
+    
     private suspend fun handleRedirect() {
         val finalUrl = currentUrl()
         // redirect

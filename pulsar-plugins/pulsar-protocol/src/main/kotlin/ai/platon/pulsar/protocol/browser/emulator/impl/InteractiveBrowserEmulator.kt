@@ -243,12 +243,13 @@ open class InteractiveBrowserEmulator(
         val referrer = page.referrer
         if (referrer != null && !driver.browser.navigateHistory.contains(referrer)) {
             driver.navigateTo(referrer)
-            driver.waitForSelector("body", Duration.ofSeconds(10))
+            driver.waitForSelector("body", Duration.ofSeconds(15))
         }
 
         val resourceLoader = page.conf["resource.loader", "jsoup"]
         val response = when (resourceLoader) {
             "web.driver" -> driver.loadResource(navigateTask.url)
+            "jsoup" -> NetworkResourceResponse.from(driver.loadJsoupResource(navigateTask.url))
             else -> NetworkResourceResponse.from(driver.loadJsoupResource(navigateTask.url))
         }
 
