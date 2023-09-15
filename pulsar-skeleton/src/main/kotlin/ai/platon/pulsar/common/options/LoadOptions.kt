@@ -1067,7 +1067,10 @@ open class LoadOptions(
         /**
          * Parse the [args] with other [options].
          * */
-        fun parse(args: String, options: LoadOptions) = LoadOptions(args.trim(), options).apply { parse() }
+        fun parse(args: String, options: LoadOptions) = LoadOptions(args.trim(), options).apply {
+            referrer = options.referrer
+            parse()
+        }
 
         /**
          * Create a new LoadOptions with [o1] and [o2]'s items, [o2] overrides [o1].

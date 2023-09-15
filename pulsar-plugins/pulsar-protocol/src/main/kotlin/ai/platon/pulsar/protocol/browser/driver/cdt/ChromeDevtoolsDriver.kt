@@ -5,13 +5,15 @@ import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
-import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -29,7 +31,6 @@ import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
 class ChromeDevtoolsDriver(
@@ -51,14 +52,6 @@ class ChromeDevtoolsDriver(
     
     val resourceBlockProbability get() = browserSettings.resourceBlockProbability
     
-    /**
-     * Disable network after n response received
-     * TODO: check if this is necessary
-     * */
-    private val numResponseReceivedToDisableNetwork: Int
-        get() {
-            return System.getProperty("WebDriver.numResponseReceivedToDisableNetwork")?.toIntOrNull() ?: -1
-        }
     private val _blockedURLs = mutableListOf<String>()
     private val _probabilityBlockedURLs = mutableListOf<String>()
     val blockedURLs: List<String> get() = _blockedURLs
@@ -85,11 +78,11 @@ class ChromeDevtoolsDriver(
     private val mouse get() = page.mouse.takeIf { isActive }
     private val keyboard get() = page.keyboard.takeIf { isActive }
     
-    private var numResponseReceived = AtomicInteger()
     private val rpc = RobustRPC(this)
     private var credentials: Credentials? = null
     
     private val networkManager by lazy { NetworkManager(this, rpc) }
+    private val messageWriter = MiscMessageWriter(ImmutableConfig())
     
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val initScriptCache = mutableListOf<String>()
@@ -739,7 +732,7 @@ class ChromeDevtoolsDriver(
     override fun awaitTermination() {
         devTools.awaitTermination()
     }
-    
+
     override suspend fun loadResource(url: String): NetworkResourceResponse {
         val options = LoadNetworkResourceOptions().apply {
             disableCache = false
@@ -753,7 +746,7 @@ class ChromeDevtoolsDriver(
         
         return response ?: NetworkResourceResponse()
     }
-    
+
     /**
      * Close the tab hold by this driver.
      * */
@@ -761,11 +754,11 @@ class ChromeDevtoolsDriver(
         browser.destroyDriver(this)
         doClose()
     }
-    
+
     fun doClose() {
         if (closed.compareAndSet(false, true)) {
             state.set(WebDriver.State.QUIT)
-            
+
             try {
                 devTools.close()
             } catch (e: WebDriverException) {
@@ -773,18 +766,18 @@ class ChromeDevtoolsDriver(
             }
         }
     }
-    
+
     fun enableAPIAgents() {
         pageAPI?.enable()
         domAPI?.enable()
         runtimeAPI?.enable()
         networkAPI?.enable()
         cssAPI?.enable()
-        
+
         if (resourceBlockProbability > 1e-6) {
             fetchAPI?.enable()
         }
-        
+
         val proxyUsername = browser.id.fingerprint.proxyUsername
         if (!proxyUsername.isNullOrBlank()) {
             // allow all url patterns
@@ -792,36 +785,33 @@ class ChromeDevtoolsDriver(
             fetchAPI?.enable(patterns, true)
         }
     }
-    
+
     override fun toString() = "Driver#$id"
-    
+
     /**
      * Navigate to the page and inject scripts.
      * */
     private suspend fun navigateInvaded(entry: NavigateEntry) {
         val url = entry.url
-        
+
         addScriptToEvaluateOnNewDocument()
-        
+
         if (blockedURLs.isNotEmpty()) {
             // Blocks URLs from loading.
             networkAPI?.setBlockedURLs(blockedURLs)
         }
-        
-        // TODO: use Request, Response events instead of RequestWillBeSent, ResponseReceived
-//        networkManager.on(NetworkManagerEvents.Request) { request: CDPRequest ->  }
-//        networkManager.on(NetworkManagerEvents.Response) { response: CDPResponse ->  }
+
         networkManager.on(NetworkEvents.RequestWillBeSent) { event: RequestWillBeSent -> onRequestWillBeSent(entry, event) }
         networkManager.on(NetworkEvents.ResponseReceived) { event: ResponseReceived -> onResponseReceived(entry, event) }
-        
+
         pageAPI?.onDocumentOpened { entry.mainRequestCookies = getCookies0() }
-        
+
         val proxyUsername = browser.id.fingerprint.proxyUsername
         if (!proxyUsername.isNullOrBlank()) {
             credentials = Credentials(proxyUsername, browser.id.fingerprint.proxyPassword)
             credentials?.let { networkManager.authenticate(it) }
         }
-        
+
         navigateUrl = url
         // TODO: This is a temporary solution to serve local file, for example, file:///tmp/example.html
         if (LOCALHOST_PREFIX in url) {
@@ -831,22 +821,35 @@ class ChromeDevtoolsDriver(
             pageAPI?.navigate(url)
         }
     }
-    
+
     /**
      * Navigate to a url without javascript injected, this is only for debugging
      * */
     private fun navigateNonInvaded(entry: NavigateEntry) {
         val url = entry.url
-        
+
         navigateUrl = url
         pageAPI?.navigate(url)
     }
-    
+
     private fun onRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent) {
+        if (!UrlUtils.isStandard(entry.url)) {
+            logger.warn("Not a valid url | {}", entry.url)
+            return
+        }
+        
         tracer?.trace("onRequestWillBeSent | driver | {}", event.requestId)
         
-        // TODO: make sure it's the document we want
-        if (event.type == ResourceType.DOCUMENT) {
+        val count = entry.networkRequestCount.incrementAndGet()
+        
+        // The first request, it should be the main HTML document
+        if (count == 1 && event.type != ResourceType.DOCUMENT) {
+            // It might be a redirection, prefetch, or just an image
+            logger.info("The resource type of the first request is {}, expected DOCUMENT | {}",
+                event.type, event.request.url)
+        }
+
+        if (majorRequestWillBeSent(entry, event)) {
             // amazon.com uses "referer" instead of "referrer" in the request header,
             // not clear if other sites uses the other one
             val headers: MutableMap<String, Any> = event.request.headers
@@ -858,8 +861,8 @@ class ChromeDevtoolsDriver(
             entry.mainRequestId = event.requestId
             entry.mainRequestHeaders = event.request.headers
         }
-        
-        if (resourceBlockProbability > 1e-6) {
+
+        if (isMinorResource(entry, event) && resourceBlockProbability > 1e-6) {
             val requestUrl = event.request.url
             if (probabilityBlockedURLs.any { requestUrl.matches(it.toRegex()) }) {
                 // random drop requests
@@ -870,28 +873,112 @@ class ChromeDevtoolsDriver(
                 }
             }
         }
+        
+        // TODO: handle customer onRequestWillBeSent events
     }
     
     private fun onResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
-        if (!UrlUtils.isStandard(entry.url)) {
-            logger.warn("Not a valid url | {}", entry.url)
-            return
-        }
-        
         tracer?.trace("onResponseReceived | driver | {}", event.requestId)
         val count = entry.networkResponseCount.incrementAndGet()
-        if (count == 1) {
-            // The first response, the main HTML document
-            if (event.type != ResourceType.DOCUMENT) {
-                logger.warn("The main response is not a DOCUMENT, this might be a bug")
-            }
-            
+
+        // The first response, it should be the main HTML document
+        if (count == 1 && event.type != ResourceType.DOCUMENT) {
+            // It might be a redirection, prefetch, or just an image
+            logger.info("The resource type of the first response is {}, expected DOCUMENT | {}",
+                event.type, event.response.url)
+        }
+
+        if (majorResponseReceived(entry, event)) {
             tracer?.trace("onResponseReceived | driver, document | {}", event.requestId)
-            
-            // TODO: make sure it's the document we want
+
             entry.mainResponseStatus = event.response.status
             entry.mainResponseStatusText = event.response.statusText
             entry.mainResponseHeaders = event.response.headers
+        }
+        
+        traceInterestingResources(entry, event)
+        
+        // TODO: handle customer ResponseReceived events
+    }
+    
+    private fun majorRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent): Boolean {
+        return !entry.documentTransferred && event.type == ResourceType.DOCUMENT
+    }
+    
+    private fun majorResponseReceived(entry: NavigateEntry, event: ResponseReceived): Boolean {
+        return !entry.documentTransferred && event.type == ResourceType.DOCUMENT
+    }
+    
+    private fun isMinorResource(entry: NavigateEntry, event: RequestWillBeSent): Boolean {
+        return entry.documentTransferred && isMinorResource(event)
+    }
+    
+    private fun isMinorResource(event: RequestWillBeSent): Boolean {
+        return event.type in listOf(
+            ResourceType.FONT,
+            ResourceType.MEDIA,
+            ResourceType.IMAGE,
+        )
+    }
+    
+    private fun traceInterestingResources(entry: NavigateEntry, event: ResponseReceived) {
+        runCatching { traceInterestingResources0(entry, event) }.onFailure { logger.warn(it.stringify()) }
+    }
+    
+    private fun traceInterestingResources0(entry: NavigateEntry, event: ResponseReceived) {
+        val mimeType = event.response.mimeType
+        val mimeTypes = listOf("application/json")
+        if (mimeType !in mimeTypes) {
+            return
+        }
+        
+        val resourceTypes = listOf(
+            ResourceType.FETCH,
+            ResourceType.XHR,
+            ResourceType.SCRIPT,
+        )
+        if (event.type !in resourceTypes) {
+            // return
+        }
+        
+        // page url is normalized
+        val pageUrl = entry.pageUrl
+        val resourceUrl = event.response.url
+        val host = URLUtil.getHost(pageUrl) ?: "unknown"
+        val reportDir = messageWriter.reportDir.resolve("trace").resolve(host)
+        
+        if (!Files.exists(reportDir)) {
+            Files.createDirectories(reportDir)
+        }
+        
+        val count = Files.list(reportDir).count()
+        if (count > 2_000) {
+            // TOO MANY tracing
+            return
+        }
+        
+        var suffix = "-" + event.type.name.lowercase() + "-urls.txt"
+        var filename = AppPaths.fileId(pageUrl) + suffix
+        var path = reportDir.resolve(filename)
+        
+        val message = String.format("%s\t%s", mimeType, event.response.url)
+        messageWriter.write(message, path)
+        
+        // configurable
+        val saveResourceBody = mimeType == "application/json"
+            && alwaysFalse()
+            && event.response.encodedDataLength < 1_000_000
+        if (saveResourceBody) {
+            val body = rpc.invokeSilently("getResponseBody") {
+                fetchAPI?.enable()
+                fetchAPI?.getResponseBody(event.requestId)?.body
+            }
+            if (!body.isNullOrBlank()) {
+                suffix = "-" + event.type.name.lowercase() + "-body.txt"
+                filename = AppPaths.fromUri(resourceUrl, suffix = suffix)
+                path = reportDir.resolve(filename)
+                messageWriter.write(body, path)
+            }
         }
     }
     
@@ -902,30 +989,30 @@ class ChromeDevtoolsDriver(
             // browser.addHistory(NavigateEntry(finalUrl))
         }
     }
-    
+
     private fun addScriptToEvaluateOnNewDocument() {
         val js = browserSettings.scriptLoader.getPreloadJs(false)
         if (js !in initScriptCache) {
             // utils comes first
             initScriptCache.add(0, js)
         }
-        
+
         val confuser = browserSettings.confuser
         initScriptCache.forEach {
             pageAPI?.addScriptToEvaluateOnNewDocument(confuser.confuse(it))
         }
-        
+
         if (logger.isTraceEnabled) {
             reportInjectedJs()
         }
-        
+
         // the cache is used for a single document, so we have to clear it
         initScriptCache.clear()
     }
-    
+
     private fun reportInjectedJs() {
         val script = browserSettings.confuser.confuse(initScriptCache.joinToString("\n;\n\n\n;\n"))
-        
+
         val dir = browser.id.contextDir.resolve("driver.$id/js")
         Files.createDirectories(dir)
         val report = Files.writeString(dir.resolve("preload.all.js"), script)

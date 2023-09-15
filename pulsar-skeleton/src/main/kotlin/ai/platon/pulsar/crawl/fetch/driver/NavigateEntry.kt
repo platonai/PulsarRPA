@@ -56,6 +56,8 @@ data class NavigateEntry(
     var mainResponseStatusText: String = ""
     var mainResponseHeaders: Map<String, Any> = mapOf()
 
+    val documentTransferred get() = mainResponseStatus > 0
+
     /**
      * The time when the document is ready.
      */
@@ -64,6 +66,8 @@ data class NavigateEntry(
      * Track the time of page actions.
      */
     val actionTimes = mutableMapOf<String, Instant>()
+    
+    val networkRequestCount = AtomicInteger()
     
     val networkResponseCount = AtomicInteger()
     

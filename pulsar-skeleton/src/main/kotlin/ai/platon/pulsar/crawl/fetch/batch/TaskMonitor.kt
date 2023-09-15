@@ -216,7 +216,7 @@ class TaskMonitor(
 
     private fun doProduce(task: JobFetchTask) {
         val url = task.urlString
-        val host = URLUtil.getHostName(url)?:return
+        val host = URLUtil.getHostNameOrNull(url)?:return
         if (coreMetrics.isUnreachable(host)) {
             log.warn("Ignore unreachable url | {}", url)
             return

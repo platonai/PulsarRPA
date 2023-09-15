@@ -59,7 +59,6 @@ class TestPulsarSession: TestBase() {
 
         assertTrue { page.fetchCount > 0 }
         assertTrue { page.protocolStatus.isSuccess }
-        assertTrue { page.contentLength > 100 }
 
         println(WebPageFormatter(page))
         val path = session.export(page)

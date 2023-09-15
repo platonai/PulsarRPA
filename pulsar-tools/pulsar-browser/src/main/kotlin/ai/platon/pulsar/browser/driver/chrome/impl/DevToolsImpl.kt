@@ -89,7 +89,6 @@ class EventDispatcher : Consumer<String> {
         private val OBJECT_MAPPER = ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-
     }
 
     private val logger = LoggerFactory.getLogger(EventDispatcher::class.java)
