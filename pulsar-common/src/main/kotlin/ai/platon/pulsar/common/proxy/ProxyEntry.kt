@@ -86,7 +86,12 @@ class ProxyEntry constructor(
     }
     
     val username get() = user
+    
     val password get() = pwd
+    /**
+     * The agent ip which will be seen by the target site.
+     * */
+    val agentIp: String get() = outIp.takeIf { Strings.isIpLike(it) } ?: host
 
     /**
      * Specify whether we can rotate the out ip via a link.

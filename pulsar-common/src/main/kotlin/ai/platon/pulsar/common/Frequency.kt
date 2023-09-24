@@ -187,6 +187,10 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
         return freq
     }
 
+    /**
+     * Remove elements that are more than n, where
+     * n = [freqThreshold] if [freqThreshold] > 1 or n = [freqThreshold] * [size] if [freqThreshold] < 1
+     * */
     fun trimEnd(freqThreshold: Double): Int {
         var a = freqThreshold
         if (a <= 0) return 0
@@ -206,6 +210,10 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
         return removal.size
     }
 
+    /**
+     * Remove elements that are more than n, where
+     * n = [freqThreshold] if [freqThreshold] > 1 or n = [freqThreshold] * [size] if [freqThreshold] < 1
+     * */
     fun trimStart(freqThreshold: Double): Int {
         var a = freqThreshold
         if (a <= 0) {
