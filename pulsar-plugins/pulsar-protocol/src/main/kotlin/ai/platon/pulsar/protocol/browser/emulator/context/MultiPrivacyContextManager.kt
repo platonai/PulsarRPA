@@ -1,7 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.FileCommand
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_AGENT
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -12,7 +11,6 @@ import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
-import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -51,7 +49,7 @@ class MultiPrivacyContextManager(
         val VAR_CONTEXT_INFO = "CONTEXT_INFO"
     }
 
-    private val logger = LoggerFactory.getLogger(MultiPrivacyContextManager::class.java)
+    private val logger = getLogger(MultiPrivacyContextManager::class)
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private var numTasksAtLastReportTime = 0L
     private val numPrivacyContexts: Int get() = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
@@ -180,7 +178,8 @@ class MultiPrivacyContextManager(
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             if (temporaryContexts.size < numPrivacyContexts) {
-                computeIfAbsent(privacyContextIdGenerator(fingerprint))
+                val generator = privacyAgentGeneratorFactory.generator
+                computeIfAbsent(generator(fingerprint))
             }
 
             return tryNextUnderLoadedPrivacyContext()
@@ -200,9 +199,10 @@ class MultiPrivacyContextManager(
      * */
     override fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
-            // TODO: too many running chrome process and out of memory problem
             val privacyAgent = createPrivacyAgent(page, fingerprint)
             if (privacyAgent.isPermanent) {
+                logger.info("Prepare for permanent privacy agent | {}", privacyAgent)
+                forceReserveResource()
                 return computeIfAbsent(privacyAgent)
             }
 
@@ -234,8 +234,8 @@ class MultiPrivacyContextManager(
      * If the tmp dir is the default one, run the following command to take snapshot once:
      * echo takePrivacyContextSnapshot >> /tmp/pulsar/pulsar-commands
      * */
-    override fun maintain() {
-        if (tooFrequentMaintenance) {
+    override fun maintain(force: Boolean) {
+        if (!force && tooFrequentMaintenance) {
             return
         }
         lastMaintainTime = Instant.now()
@@ -259,6 +259,7 @@ class MultiPrivacyContextManager(
         activeContexts.values.forEach { context ->
             context.maintain()
         }
+        driverPoolManager.maintain()
 
         // If "takePrivacyContextSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
         //
@@ -279,7 +280,7 @@ class MultiPrivacyContextManager(
 
     private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): PrivacyAgent {
         // Specify the privacy agent by the user code
-        // TODO: this is a temporary solution, try a better and consistent solution
+        // TODO: this is a temporary solution to use a specified privacy agent, try a better and consistent solution
         val specifiedPrivacyAgent = page.getVar(VAR_PRIVACY_AGENT)
         if (specifiedPrivacyAgent is PrivacyAgent) {
             return specifiedPrivacyAgent
@@ -313,6 +314,15 @@ class MultiPrivacyContextManager(
         }
 
         return pc
+    }
+
+    private fun forceReserveResource() {
+        doMaintain()
+
+        if (activeContexts.size >= numPrivacyContexts || AppSystemInfo.isCriticalResources) {
+            logger.info("Close a temporary context to reserve resource")
+            temporaryContexts.entries.firstOrNull()?.let { close(it.value) }
+        }
     }
 
     private fun closeDyingContexts() {

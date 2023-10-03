@@ -37,7 +37,7 @@ class ChromeLauncher(
     }
 
     private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
-    val pidPath = userDataDir.resolveSibling(PID_FILE_NAME)
+    val pidPath get() = userDataDir.resolveSibling(PID_FILE_NAME)
     private var process: Process? = null
     private val shutdownHookThread = Thread { this.close() }
 
@@ -165,7 +165,6 @@ class ChromeLauncher(
 
             process?.also {
                 Files.createDirectories(userDataDir)
-                val pidPath = userDataDir.resolveSibling(PID_FILE_NAME)
                 Files.writeString(pidPath, it.pid().toString(), StandardOpenOption.CREATE)
             }
             waitForDevToolsServer(process!!)
@@ -288,7 +287,7 @@ class ChromeLauncher(
         val lastModifiedTime = Files.getLastModifiedTime(target).toInstant()
         val isExpired = DateTimes.elapsedTime(lastModifiedTime).toDays() > 3
         // Double check to ensure it's safe to delete the directory
-        val hasPidFile = Files.exists(target.resolve(PID_FILE_NAME))
+        val hasPidFile = Files.exists(target.resolveSibling(PID_FILE_NAME))
         // be careful, do not delete files by mistake, so delete files only inside AppPaths.CONTEXT_TMP_DIR
         if (isTemporary && isExpired && hasPidFile) {
             FileUtils.deleteQuietly(target.toFile())

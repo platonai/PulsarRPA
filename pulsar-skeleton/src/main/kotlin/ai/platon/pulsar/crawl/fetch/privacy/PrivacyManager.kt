@@ -121,7 +121,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
         return snapshot
     }
 
-    open fun maintain() {
+    open fun maintain(force: Boolean = false) {
         // do nothing by default
     }
 

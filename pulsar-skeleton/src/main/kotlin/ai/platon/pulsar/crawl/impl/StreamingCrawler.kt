@@ -322,7 +322,7 @@ open class StreamingCrawler(
 
                 // The largest disk must have at least 10 GiB remaining space
                 val freeSpace =
-                    Runtimes.unallocatedDiskSpaces().maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
+                    Runtimes.unallocatedDiskSpaces().maxOfOrNull { ByteUnit.BYTE.toGB(it) } ?: 0.0
                 if (freeSpace < 10.0) {
                     val diskSpaces = Runtimes.unallocatedDiskSpaces().joinToString { ByteUnit.BYTE.toGB(it).toString() }
                     logger.error("Disk space is full! | {}", diskSpaces)

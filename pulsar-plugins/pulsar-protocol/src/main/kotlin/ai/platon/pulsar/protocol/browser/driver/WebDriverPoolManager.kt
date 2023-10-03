@@ -288,8 +288,8 @@ open class WebDriverPoolManager(
      * echo takeDriverPoolSnapshot >> /tmp/pulsar/pulsar-commands
      * */
     @Throws(Exception::class)
-    fun maintain() {
-        if (tooFrequentMaintenance) {
+    fun maintain(force: Boolean = false) {
+        if (!force && tooFrequentMaintenance) {
             return
         }
         lastMaintainTime = Instant.now()
