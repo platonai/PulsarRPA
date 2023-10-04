@@ -411,6 +411,7 @@ open class StreamingCrawler(
         k = 0
         while (isActive && AppSystemInfo.isCriticalMemory) {
             if (k++ % 20 == 0) {
+                // k is the number of consecutive warnings, the sequence of k is: 1, 21, 41, 61, ...
                 handleMemoryShortage(k)
             }
             criticalWarning = CriticalWarning.OUT_OF_MEMORY
@@ -797,12 +798,12 @@ open class StreamingCrawler(
         delayCache.add(DelayUrl(url, delay))
     }
 
-    private fun handleMemoryShortage(j: Int) {
+    private fun handleMemoryShortage(consecutiveWarningCount: Int) {
         logger.info(
-            "$j.\tnumRunning: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
+            "{}. runningTasks: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
+            consecutiveWarningCount,
             globalRunningTasks, AppSystemInfo.formatAvailableMemory(),
-            Strings.compactFormat(AppSystemInfo.memoryToReserve.toLong()),
-            AppSystemInfo.formatMemoryShortage()
+            AppSystemInfo.formatMemoryToReserve(), AppSystemInfo.formatMemoryShortage()
         )
         session.globalCache.clearPDCaches()
 

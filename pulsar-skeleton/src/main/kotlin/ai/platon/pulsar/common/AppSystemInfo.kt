@@ -183,7 +183,11 @@ class AppSystemInfo {
         fun formatAvailableMemory(): String {
             return availableMemory?.let { Strings.compactFormat(it) } ?: "N/A"
         }
-        
+
+        fun formatMemoryToReserve(): String {
+            return Strings.compactFormat(memoryToReserve.toLong())
+        }
+
         fun formatMemoryShortage(): String {
             val availableMemory = AppSystemInfo.availableMemory ?: return "N/A"
             return Strings.compactFormat(availableMemory - memoryToReserve.toLong())
