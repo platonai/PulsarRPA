@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnit
-import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.options.LoadOptions
@@ -802,7 +801,7 @@ open class StreamingCrawler(
         logger.info(
             "$j.\tnumRunning: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
             globalRunningTasks, AppSystemInfo.formatAvailableMemory(),
-            Strings.compactFormat(AppSystemInfo.actualCriticalMemory.toLong()),
+            Strings.compactFormat(AppSystemInfo.memoryToReserve.toLong()),
             AppSystemInfo.formatMemoryShortage()
         )
         session.globalCache.clearPDCaches()

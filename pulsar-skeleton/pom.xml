@@ -87,11 +87,6 @@
             <artifactId>jcommander</artifactId>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.github.oshi</groupId>-->
-<!--            <artifactId>oshi-core</artifactId>-->
-<!--            <version>${oshi.version}</version>-->
-<!--        </dependency>-->
         <!-- Required by core metrics -->
         <dependency>
             <groupId>com.github.oshi</groupId>

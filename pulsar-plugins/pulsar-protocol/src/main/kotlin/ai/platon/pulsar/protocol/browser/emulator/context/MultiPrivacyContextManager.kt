@@ -24,7 +24,6 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
 import kotlinx.coroutines.delay
-import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -60,7 +59,7 @@ class MultiPrivacyContextManager(
     internal val maintainCount = AtomicInteger()
     private var lastMaintainTime = Instant.now()
     private val minMaintainInterval = Duration.ofSeconds(10)
-    private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
+    private val tooFrequentMaintenance get() = DateTimes.isNotExpired(lastMaintainTime, minMaintainInterval)
 
     private var driverAbsenceReportTime = Instant.EPOCH
 

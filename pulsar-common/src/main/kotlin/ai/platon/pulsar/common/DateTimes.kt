@@ -234,9 +234,11 @@ object DateTimes {
      * Calculate the elapsed time between two times specified in milliseconds.
      */
     @JvmOverloads
-    fun elapsedTime(start: Instant, end: Instant = Instant.now()): Duration {
-        return Duration.between(start, end)
-    }
+    fun elapsedTime(start: Instant, end: Instant = Instant.now()) = Duration.between(start, end)
+
+    fun isExpired(start: Instant, expiry: Duration) = start + expiry > Instant.now()
+
+    fun isNotExpired(start: Instant, expiry: Duration) = !isExpired(start, expiry)
 
     /**
      * RFC 2616 defines three different date formats that a conforming client must understand.

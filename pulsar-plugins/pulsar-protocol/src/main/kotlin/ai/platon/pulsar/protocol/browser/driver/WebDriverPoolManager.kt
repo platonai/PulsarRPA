@@ -99,7 +99,7 @@ open class WebDriverPoolManager(
     private var lastMaintainTime = Instant.now()
     private val maintainCount = AtomicInteger()
     private val minMaintainInterval = Duration.ofSeconds(10)
-    private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
+    private val tooFrequentMaintenance get() = DateTimes.isNotExpired(lastMaintainTime, minMaintainInterval)
 
     /**
      * The web driver pool closer

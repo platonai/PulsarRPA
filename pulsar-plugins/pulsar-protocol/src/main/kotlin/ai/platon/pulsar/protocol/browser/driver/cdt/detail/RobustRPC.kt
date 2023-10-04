@@ -20,6 +20,7 @@ internal class RobustRPC(
         // handle to many exceptions
         private val exceptionCounts = ConcurrentHashMap<Long, AtomicInteger>()
         private val exceptionMessages = ConcurrentHashMap<Long, String>()
+        var MAX_RPC_FAILURES = 5
     }
     
     private val logger = getLogger(this)
@@ -27,7 +28,7 @@ internal class RobustRPC(
     val isActive get() = driver.isActive
     
     val rpcFailures = AtomicInteger()
-    var maxRPCFailures = 5
+    var maxRPCFailures = MAX_RPC_FAILURES
     
     @Throws(SessionLostException::class)
     fun handleRPCException(e: ChromeRPCException, action: String? = null, message: String? = null) {
