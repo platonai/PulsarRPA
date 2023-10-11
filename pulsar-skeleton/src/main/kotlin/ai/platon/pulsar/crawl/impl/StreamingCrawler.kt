@@ -648,8 +648,8 @@ open class StreamingCrawler(
         }
 
         // TODO: use the code below, to avoid option creation, which leads to too complex option merging
-//        if (url.deadline > Instant.now()) {
-//            session.loadDeferred(url)
+//        if (url.deadline <= Instant.now()) {
+//            return null
 //        }
 
         return kotlin.runCatching { session.loadDeferred(url, options) }

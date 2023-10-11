@@ -236,7 +236,7 @@ object DateTimes {
     @JvmOverloads
     fun elapsedTime(start: Instant, end: Instant = Instant.now()) = Duration.between(start, end)
 
-    fun isExpired(start: Instant, expiry: Duration) = start + expiry > Instant.now()
+    fun isExpired(start: Instant, expiry: Duration) = start + expiry < Instant.now()
 
     fun isNotExpired(start: Instant, expiry: Duration) = !isExpired(start, expiry)
 

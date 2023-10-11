@@ -833,6 +833,12 @@ class ChromeDevtoolsDriver(
     }
 
     private fun onRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent) {
+        if (!entry.url.startsWith("http")) {
+            // chrome's internal page, or other non-http resource
+            // examples for chrome's internal pages: about:blank, chrome://settings/, chrome://settings/system, etc
+            return
+        }
+
         if (!UrlUtils.isStandard(entry.url)) {
             logger.warn("Not a valid url | {}", entry.url)
             return

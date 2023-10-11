@@ -24,8 +24,12 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
 import kotlinx.coroutines.delay
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
 
 class MultiPrivacyContextManager(
@@ -46,6 +50,8 @@ class MultiPrivacyContextManager(
 
     companion object {
         val VAR_CONTEXT_INFO = "CONTEXT_INFO"
+        val SNAPSHOT_PATH = AppPaths.TMP_DIR.resolve("privacy.context.snapshot.txt")
+        var SNAPSHOT_DUMP_INTERVAL = Duration.ofMinutes(1)
     }
 
     private val logger = getLogger(MultiPrivacyContextManager::class)
@@ -60,6 +66,9 @@ class MultiPrivacyContextManager(
     private var lastMaintainTime = Instant.now()
     private val minMaintainInterval = Duration.ofSeconds(10)
     private val tooFrequentMaintenance get() = DateTimes.isNotExpired(lastMaintainTime, minMaintainInterval)
+    private var lastDumpTime = Instant.now()
+    private val snapshotDumpCount = AtomicInteger()
+    var snapshotDumpInterval = SNAPSHOT_DUMP_INTERVAL
 
     private var driverAbsenceReportTime = Instant.EPOCH
 
@@ -241,8 +250,6 @@ class MultiPrivacyContextManager(
 
         if (maintainCount.getAndIncrement() == 0) {
             logger.info("Maintaining service is started, minimal maintain interval: {}", minMaintainInterval)
-            val command = "echo takePrivacyContextSnapshot >> ${FileCommand.COMMAND_FILE}"
-            logger.info("Run the following command to take snapshot once: \n{}", command)
         }
 
         doMaintain()
@@ -258,19 +265,9 @@ class MultiPrivacyContextManager(
         activeContexts.values.forEach { context ->
             context.maintain()
         }
-        driverPoolManager.maintain()
+//        driverPoolManager.maintain()
 
-        // If "takePrivacyContextSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
-        //
-        // If the tmp dir is the default one, run the following command to take snapshot once:
-        // echo takePrivacyContextSnapshot >> /tmp/pulsar/pulsar-commands
-        if (FileCommand.check("takePrivacyContextSnapshot")) {
-            logger.info("\nPrivacy context snapshot: \n")
-            logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            logger.info("\n{}", takeSnapshot())
-            activeContexts.values.forEach { it.report() }
-            logger.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-        }
+        dumpIfNecessary()
     }
 
     override fun close() {
@@ -318,8 +315,12 @@ class MultiPrivacyContextManager(
     private fun forceReserveResource() {
         doMaintain()
 
-        if (activeContexts.size >= numPrivacyContexts || AppSystemInfo.isCriticalResources) {
-            logger.info("Close a temporary context to reserve resource")
+        if (AppSystemInfo.isCriticalResources) {
+            logger.info("Critical resource, closing a temporary context | availableMem: {}, memToReserve: {}, shortage: {}",
+                AppSystemInfo.formatAvailableMemory(), AppSystemInfo.formatMemoryToReserve(),
+                AppSystemInfo.formatMemoryShortage()
+            )
+
             temporaryContexts.entries.firstOrNull()?.let { close(it.value) }
         }
     }
@@ -500,5 +501,33 @@ class MultiPrivacyContextManager(
             result.task.id, privacyContext.sequence, privacyContext.privacyLeakWarnings,
             result.status, result.task.url
         )
+    }
+
+    private fun dumpIfNecessary() {
+        if (DateTimes.isExpired(lastDumpTime, snapshotDumpInterval)) {
+            lastDumpTime = Instant.now()
+            dump()
+        }
+    }
+
+    private fun dump() {
+        try {
+            if (!Files.exists(SNAPSHOT_PATH)) {
+                Files.createDirectories(SNAPSHOT_PATH.parent)
+            }
+
+            val count = snapshotDumpCount.incrementAndGet()
+            val sb = StringBuilder()
+            sb.append("\n$count. Privacy context snapshot: \n")
+            sb.appendLine(LocalDateTime.now())
+            sb.append(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            sb.append("\n{}", takeSnapshot())
+            activeContexts.values.forEach { sb.appendLine(it.getReport()) }
+            sb.append("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+
+            Files.writeString(SNAPSHOT_PATH, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+        } catch (e: IOException) {
+            logger.warn(e.stringify())
+        }
     }
 }
