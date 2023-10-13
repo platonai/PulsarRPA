@@ -78,23 +78,13 @@ class ChromeLauncher(
         @Throws(IOException::class)
         private fun forceDeleteDirectory(dirToDelete: Path) {
             synchronized(ChromeLauncher::class.java) {
-                val lock = AppPaths.BROWSER_TMP_DIR_LOCK
-
                 val maxTry = 10
                 var i = 0
                 while (i++ < maxTry && Files.exists(dirToDelete) && !Files.isSymbolicLink(dirToDelete)) {
-                    FileChannel.open(lock, StandardOpenOption.APPEND).use {
-                        it.lock()
-                        kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
-                            .onFailure { logger.warn("Failed to delete directory | {} | {}",
-                                dirToDelete, it.message)
-                            }
-                    }
-
+                    kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
+                        .onFailure { logger.warn("Failed to delete directory | {} | {}", dirToDelete, it.message) }
                     Thread.sleep(500)
                 }
-
-                require(Files.exists(lock))
             }
         }
     }
