@@ -100,7 +100,7 @@ class TestWebDriverPool {
                 }
 
                 if (workingDrivers.size < 20) {
-                    driverPool.poll()?.let { workingDrivers.add(it) }
+                    driverPool.poll().let { workingDrivers.add(it) }
                 }
             }
         }

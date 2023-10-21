@@ -21,7 +21,7 @@ class WalmartRPA(
         val options = session.options(args)
 
         val le = options.event.loadEvent
-        le.onHTMLDocumentParsed.addLast { _, document: FeaturedDocument ->
+        le.onHTMLDocumentParsed.addLast { _, _ ->
             // use the document
         }
 
@@ -33,7 +33,7 @@ class WalmartRPA(
             waitForReferrer(page, driver)
             waitForPreviousPage(page, driver)
         }
-        be.onWillCheckDocumentState.addLast { page, driver ->
+        be.onWillCheckDocumentState.addLast { _, _ ->
             // driver.waitForSelector("body h1[itemprop=name]")
         }
 
@@ -52,7 +52,7 @@ class WalmartCrawler(private val session: PulsarSession = PulsarContexts.createS
 
     private val rpa = WalmartRPA(session)
 
-    private val parseHandler = { _: WebPage, document: FeaturedDocument -> }
+    private val parseHandler = { _: WebPage, _: FeaturedDocument -> }
 
     fun scrapeOutPages(portalUrl: String, args: String) {
         val options = rpa.options(args)

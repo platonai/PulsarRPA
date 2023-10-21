@@ -179,7 +179,7 @@ class AsinSellerScraper {
                     href = link.href
                 }
                 .apply {
-                    event.browseEvent.onWillNavigate.addLast { page, driver ->
+                    event.browseEvent.onWillNavigate.addLast { page, _ ->
                         page.referrer = null
                         null
                     }
@@ -214,7 +214,7 @@ class AsinSellerScraper {
             val sellerName = rs.getString("seller_name")
             logger.info("$sellerID $sellerName | $url0")
 
-            val formatter = ResultSetFormatter(rs, asList = true, withHeader = true)
+            // val formatter = ResultSetFormatter(rs, asList = true, withHeader = true)
             // logger.info("\n" + formatter.toString())
         }
 

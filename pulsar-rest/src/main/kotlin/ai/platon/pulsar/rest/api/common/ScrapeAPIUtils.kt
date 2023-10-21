@@ -35,7 +35,7 @@ object ScrapeAPIUtils {
     }
 
     fun isScrapeUDF(sql: String): Boolean {
-        val s = sql.replace("_", "").toLowerCase()
+        val s = sql.replace("_", "").lowercase(Locale.getDefault())
         return allowedScrapeUDFs.any { it in s }
     }
 
