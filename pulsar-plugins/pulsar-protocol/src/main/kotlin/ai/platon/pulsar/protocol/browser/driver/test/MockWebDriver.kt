@@ -1,15 +1,13 @@
 package ai.platon.pulsar.protocol.browser.driver.test
 
+//import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
-//import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
@@ -275,6 +273,7 @@ class MockWebDriver(
     /**
      * Quit the browser instance
      * */
+    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("close()"))
     @Throws(WebDriverException::class)
     override fun quit() {
         close()

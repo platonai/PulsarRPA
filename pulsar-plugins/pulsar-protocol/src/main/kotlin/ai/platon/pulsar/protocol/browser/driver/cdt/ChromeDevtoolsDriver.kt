@@ -890,10 +890,10 @@ class ChromeDevtoolsDriver(
         // The first response, it should be the main HTML document
         if (count == 1 && event.type != ResourceType.DOCUMENT) {
             // It might be a redirection, prefetch, or just an image
-            logger.info("The resource type of the first response is {}, expected DOCUMENT | {}",
-                event.type, event.response.url)
+            logger.info("The resource type of the first response is {} | {}", event.type, event.response.url)
         }
 
+        // TODO: synchronization on entry.mainResponseStatus
         if (majorResponseReceived(entry, event)) {
             tracer?.trace("onResponseReceived | driver, document | {}", event.requestId)
 

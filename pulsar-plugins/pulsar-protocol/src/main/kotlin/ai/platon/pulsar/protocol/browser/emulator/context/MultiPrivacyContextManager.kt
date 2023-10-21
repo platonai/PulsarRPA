@@ -163,7 +163,7 @@ class MultiPrivacyContextManager(
         assert(!context.isActive)
         close(context)
 
-        return computeIfAbsent(privacyContextIdGenerator(fingerprint))
+        return computeIfAbsent(privacyAgentGenerator(fingerprint))
     }
     @Throws(ProxyException::class)
     override fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {

@@ -51,7 +51,8 @@ class BasicPrivacyContextManager(
     }
 
     override fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
-        return computeNextContext(page, fingerprint, task)
+        val context = computeIfNecessary(page, fingerprint, task)
+        return context.takeIf { it.isActive } ?: run { close(context); computeIfAbsent(privacyAgentGenerator(fingerprint)) }
     }
 
     @Deprecated(

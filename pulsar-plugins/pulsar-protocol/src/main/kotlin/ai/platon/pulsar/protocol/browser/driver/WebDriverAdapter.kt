@@ -227,6 +227,7 @@ class WebDriverAdapter(
     /**
      * Quits this driver, close every associated window
      * */
+    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("close()"))
     @Throws(Exception::class)
     override fun quit() = driverOrNull?.quit() ?: Unit
 

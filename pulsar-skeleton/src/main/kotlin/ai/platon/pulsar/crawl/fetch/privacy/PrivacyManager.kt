@@ -11,7 +11,6 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.Executors
@@ -56,8 +55,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     protected val privacyAgentGeneratorFactory = PrivacyContextIdGeneratorFactory(conf)
 
-    @Deprecated("Use local generator")
-    open val privacyContextIdGenerator get() = privacyAgentGeneratorFactory.generator
+    open val privacyAgentGenerator get() = privacyAgentGeneratorFactory.generator
 
     val isClosed get() = closed.get()
 
