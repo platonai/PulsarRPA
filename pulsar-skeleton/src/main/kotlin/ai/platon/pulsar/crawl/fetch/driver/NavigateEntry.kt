@@ -3,6 +3,8 @@ package ai.platon.pulsar.crawl.fetch.driver
 import ai.platon.pulsar.common.DateTimes
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Created by vincent on 18-1-1.
@@ -49,6 +51,8 @@ data class NavigateEntry(
      */
     val createTime: Instant = Instant.now(),
 ): Comparable<NavigateEntry> {
+    private val lock = ReentrantLock()
+
     var mainRequestId = ""
     var mainRequestHeaders: Map<String, Any> = mapOf()
     var mainRequestCookies: List<Map<String, String>> = listOf()
@@ -70,7 +74,7 @@ data class NavigateEntry(
     val networkRequestCount = AtomicInteger()
     
     val networkResponseCount = AtomicInteger()
-    
+
     /**
      * Refresh the entry with the given action.
      * */
@@ -80,6 +84,10 @@ data class NavigateEntry(
         if (action.isNotBlank()) {
             actionTimes[action] = now
         }
+    }
+
+    fun synchronized(action: () -> Unit) {
+        lock.withLock(action)
     }
 
     override fun equals(other: Any?): Boolean {

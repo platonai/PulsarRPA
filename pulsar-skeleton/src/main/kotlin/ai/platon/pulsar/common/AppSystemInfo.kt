@@ -29,7 +29,13 @@ class AppSystemInfo {
 
         val systemInfo = if (isOSHIAvailable()) SystemInfo() else null
 
-        // OSHI cached the value, so it's fast and safe to be called frequently
+        /**
+         * OSHI cached the value, so it's fast and safe to be called frequently.
+         *
+         * for example, on Windows,
+         * WindowsGlobalMemory.availTotalSize is defined as:
+         * memoize(WindowsGlobalMemory::readPerfInfo, defaultExpiration());
+         * */
         val memoryInfo get() = systemInfo?.hardware?.memory
 
         /**
@@ -157,6 +163,9 @@ class AppSystemInfo {
             val processor = si.hardware.processor
             logger.info("Processor: {}", processor)
 
+            // Failed on Windows:
+            // si.hardware.memory throws exception since jna used by kotlin is too old,
+            // but we can not specify the version
             val memory = si.hardware.memory
             logger.info("Memory: {}", memory)
         }
@@ -214,5 +223,5 @@ class AppSystemInfo {
     }
 }
 
-@Deprecated("Inappropriate name", ReplaceWith("HardwareResource"))
+@Deprecated("Inappropriate name", ReplaceWith("AppSystemInfo"))
 typealias AppRuntime = AppSystemInfo
