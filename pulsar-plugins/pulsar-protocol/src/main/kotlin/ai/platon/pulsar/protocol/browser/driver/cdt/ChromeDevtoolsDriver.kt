@@ -5,19 +5,21 @@ import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
-import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
-import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
 import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceived
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
 import com.github.kklisura.cdt.protocol.v2023.types.fetch.RequestPattern
 import com.github.kklisura.cdt.protocol.v2023.types.network.Cookie
 import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
@@ -25,12 +27,10 @@ import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourceO
 import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import kotlinx.coroutines.delay
-import org.jsoup.Connection
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
 class ChromeDevtoolsDriver(
@@ -39,38 +39,30 @@ class ChromeDevtoolsDriver(
     val browserSettings: BrowserSettings,
     override val browser: ChromeDevtoolsBrowser,
 ) : AbstractWebDriver(browser) {
-    
+
     companion object {
         val LOCALHOST_PREFIX = "http://localfile.org"
     }
-    
+
     private val logger = getLogger(this)
-    
+
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
-    
+
     override val browserType: BrowserType = BrowserType.PULSAR_CHROME
-    
+
     val resourceBlockProbability get() = browserSettings.resourceBlockProbability
-    
-    /**
-     * Disable network after n response received
-     * TODO: check if this is necessary
-     * */
-    private val numResponseReceivedToDisableNetwork: Int
-        get() {
-            return System.getProperty("WebDriver.numResponseReceivedToDisableNetwork")?.toIntOrNull() ?: -1
-        }
+
     private val _blockedURLs = mutableListOf<String>()
     private val _probabilityBlockedURLs = mutableListOf<String>()
     val blockedURLs: List<String> get() = _blockedURLs
     val probabilityBlockedURLs: List<String> get() = _probabilityBlockedURLs
-    
+
     private val page = PageHandler(devTools, browserSettings)
     private val screenshot = Screenshot(page, devTools)
-    
+
     private var lastSessionId: String? = null
     private var navigateUrl = chromeTab.url ?: ""
-    
+
     private val browserAPI get() = devTools.browser.takeIf { isActive }
     private val pageAPI get() = devTools.page.takeIf { isActive }
     private val targetAPI get() = devTools.target.takeIf { isActive }
@@ -82,61 +74,61 @@ class ChromeDevtoolsDriver(
     private val fetchAPI get() = devTools.fetch.takeIf { isActive }
     private val runtimeAPI get() = devTools.runtime.takeIf { isActive }
     private val emulationAPI get() = devTools.emulation.takeIf { isActive }
-    
+
     private val mouse get() = page.mouse.takeIf { isActive }
     private val keyboard get() = page.keyboard.takeIf { isActive }
-    
-    private var numResponseReceived = AtomicInteger()
+
     private val rpc = RobustRPC(this)
     private var credentials: Credentials? = null
-    
+
     private val networkManager by lazy { NetworkManager(this, rpc) }
-    
+    private val messageWriter = MiscMessageWriter(ImmutableConfig())
+
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val initScriptCache = mutableListOf<String>()
     private val closed = AtomicBoolean()
-    
+
     override var lastActiveTime = Instant.now()
     val isGone get() = closed.get() || isQuit || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone
-    
+
     /**
      * Expose the underlying implementation, used for development purpose
      * */
     val implementation get() = devTools
-    
+
     init {
         val userAgent = browser.userAgent
         if (!userAgent.isNullOrEmpty()) {
             emulationAPI?.setUserAgentOverride(userAgent)
         }
     }
-    
+
     override suspend fun addInitScript(script: String) {
         initScriptCache.add(script)
     }
-    
+
     override suspend fun addBlockedURLs(urls: List<String>) {
         _blockedURLs.addAll(urls)
     }
-    
-    override suspend fun addProbabilityBlockedURLs(urls: List<String>) {
-        _probabilityBlockedURLs.addAll(urls)
+
+    override suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>) {
+        _probabilityBlockedURLs.addAll(urlPatterns)
     }
-    
+
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) {
         navigateHistory.add(entry)
         this.navigateEntry = entry
-        
+
         browser.emit(BrowserEvents.willNavigate, entry)
-        
+
         try {
             enableAPIAgents()
-            
+
             rpc.invokeDeferred("navigateTo") {
                 if (enableStartupScript) navigateInvaded(entry) else navigateNonInvaded(entry)
             }
@@ -144,55 +136,55 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "navigateTo", entry.url)
         }
     }
-    
+
     @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestHeaders"))
     @Throws(WebDriverException::class)
     override suspend fun mainRequestHeaders(): Map<String, Any> {
         return mainRequestHeaders
     }
-    
+
     @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestCookies"))
     @Throws(WebDriverException::class)
     override suspend fun mainRequestCookies(): List<Map<String, String>> {
         return mainRequestCookies
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
         return rpc.invokeDeferredSilently("getCookies") { getCookies0() } ?: listOf()
     }
-    
+
     override suspend fun deleteCookies(name: String) {
         rpc.invokeDeferredSilently("deleteCookies") {
             networkAPI?.deleteCookies(name)
         }
     }
-    
+
     override suspend fun deleteCookies(name: String, url: String?, domain: String?, path: String?) {
         rpc.invokeDeferredSilently("deleteCookies") {
             networkAPI?.deleteCookies(name, url, domain, path)
         }
     }
-    
+
     override suspend fun clearBrowserCookies() {
         rpc.invokeDeferredSilently("clearBrowserCookies") {
             networkAPI?.clearBrowserCookies()
         }
     }
-    
+
     @Throws(WebDriverException::class)
     private fun getCookies0(): List<Map<String, String>> {
         val cookies = networkAPI?.cookies?.map { serialize(it) }
         return cookies ?: listOf()
     }
-    
+
     private fun serialize(cookie: Cookie): Map<String, String> {
         val mapper = jacksonObjectMapper()
         val json = mapper.writeValueAsString(cookie)
         val map: Map<String, String?> = mapper.readValue(json)
         return map.filterValues { it != null }.mapValues { it.toString() }
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun pause() {
         try {
@@ -201,13 +193,13 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "pause")
         }
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun stop() {
         navigateEntry.stopped = true
         try {
             handleRedirect()
-            
+
             if (browser.isGUI) {
                 // in gui mode, just stop the loading, so we can diagnose
                 pageAPI?.stopLoading()
@@ -221,12 +213,12 @@ class ChromeDevtoolsDriver(
             logger.info("Terminate exception: {}", e.message)
         }
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun terminate() {
         stop()
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun evaluate(expression: String): Any? {
         try {
@@ -234,10 +226,10 @@ class ChromeDevtoolsDriver(
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "evaluate")
         }
-        
+
         return null
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun evaluateDetail(expression: String): JsEvaluation? {
         try {
@@ -247,13 +239,13 @@ class ChromeDevtoolsDriver(
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "evaluateDetail")
         }
-        
+
         return null
     }
-    
+
     private fun createJsEvaluate(evaluate: Evaluate?): JsEvaluation? {
         evaluate ?: return null
-        
+
         val result = evaluate.result
         val exception = evaluate.exceptionDetails
         return if (exception != null) {
@@ -273,7 +265,7 @@ class ChromeDevtoolsDriver(
             )
         }
     }
-    
+
     @Deprecated("Not used any more")
     override val sessionId: String?
         @Throws(WebDriverException::class)
@@ -286,7 +278,7 @@ class ChromeDevtoolsDriver(
             }
             return lastSessionId
         }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String {
         navigateUrl = try {
@@ -295,10 +287,10 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "currentUrl")
             ""
         }
-        
+
         return navigateUrl
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun exists(selector: String): Boolean {
         try {
@@ -307,10 +299,10 @@ class ChromeDevtoolsDriver(
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "exists $selector")
         }
-        
+
         return false
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun isVisible(selector: String): Boolean {
         try {
@@ -318,10 +310,10 @@ class ChromeDevtoolsDriver(
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "visible >$selector<")
         }
-        
+
         return false
     }
-    
+
     /**
      * Wait until [selector] for [timeout] at most
      * */
@@ -330,7 +322,7 @@ class ChromeDevtoolsDriver(
         val timeoutMillis = timeout.toMillis()
         val startTime = System.currentTimeMillis()
         var elapsedTime = 0L
-        
+
         try {
             var nodeId = querySelector(selector)
             while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0) && isActive) {
@@ -338,15 +330,15 @@ class ChromeDevtoolsDriver(
                 elapsedTime = System.currentTimeMillis() - startTime
                 nodeId = querySelector(selector)
             }
-            
+
             return timeoutMillis - elapsedTime
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "waitForSelector $selector")
         }
-        
+
         return -1L
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun waitForNavigation(timeout: Duration): Long {
         try {
@@ -354,23 +346,23 @@ class ChromeDevtoolsDriver(
             var navigated = isNavigated(oldUrl)
             val startTime = System.currentTimeMillis()
             var elapsedTime = 0L
-            
+
             val timeoutMillis = timeout.toMillis()
-            
+
             while (elapsedTime < timeoutMillis && !navigated && isActive) {
                 gap("waitForNavigation")
                 elapsedTime = System.currentTimeMillis() - startTime
                 navigated = isNavigated(oldUrl)
             }
-            
+
             return timeoutMillis - elapsedTime
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "waitForNavigation $timeout")
         }
-        
+
         return -1
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun waitForPage(url: String, timeout: Duration): WebDriver? {
         var now = Instant.now()
@@ -383,18 +375,18 @@ class ChromeDevtoolsDriver(
         }
         return driver
     }
-    
+
     @Throws(WebDriverException::class)
     private suspend fun isNavigated(oldUrl: String): Boolean {
         if (oldUrl != currentUrl()) {
             return true
         }
-        
+
         // TODO: other signals
-        
+
         return false
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
         try {
@@ -403,7 +395,7 @@ class ChromeDevtoolsDriver(
                     if (i > 0) {
                         if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
                     }
-                    
+
                     mouse?.wheel(deltaX, deltaY)
                 }
             }
@@ -411,7 +403,7 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "mouseWheelDown")
         }
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun mouseWheelUp(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
         try {
@@ -420,7 +412,7 @@ class ChromeDevtoolsDriver(
                     if (i > 0) {
                         if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
                     }
-                    
+
                     mouse?.wheel(deltaX, deltaY)
                 }
             }
@@ -428,7 +420,7 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "mouseWheelUp")
         }
     }
-    
+
     /**
      * TODO: test is required
      * */
@@ -440,14 +432,14 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "moveMouseTo")
         }
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int) {
         try {
             val nodeId = rpc.invokeDeferred("scrollIntoViewIfNeeded") {
                 page.scrollIntoViewIfNeeded(selector)
             } ?: return
-            
+
             val offset = OffsetD(4.0, 4.0)
             val p = pageAPI
             val d = domAPI
@@ -465,7 +457,7 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "moveMouseTo")
         }
     }
-    
+
     /**
      * This method fetches an element with `selector`, scrolls it into view if
      * needed, and then uses {@link Mouse} to click in the center of the
@@ -488,29 +480,29 @@ class ChromeDevtoolsDriver(
             val nodeId = rpc.invokeDeferred("click") {
                 page.scrollIntoViewIfNeeded(selector)
             } ?: return
-            
+
             val offset = OffsetD(4.0, 4.0)
-            
+
             val p = pageAPI
             val d = domAPI
             if (p != null && d != null) {
                 val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value ?: return
-                
+
                 rpc.invokeDeferred("click") {
                     mouse?.click(point.x, point.y, count, delayPolicy("click"))
                 }
-                
+
                 gap("click")
             }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "click")
         }
     }
-    
+
     @Throws(WebDriverException::class)
     private suspend fun click(nodeId: Int, count: Int) {
         val offset = OffsetD(4.0, 4.0)
-        
+
         val p = pageAPI
         val d = domAPI
         if (p != null && d != null) {
@@ -518,12 +510,12 @@ class ChromeDevtoolsDriver(
             mouse?.click(point.x, point.y, count, delayPolicy("click"))
         }
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun focus(selector: String) {
         rpc.invokeDeferredSilently("focus") { focusOnSelector(selector) }
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) {
         try {
@@ -533,25 +525,25 @@ class ChromeDevtoolsDriver(
                     keyboard?.type(nodeId, text, delayPolicy("type"))
                 }
             }
-            
+
             gap("type")
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "type")
         }
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun scrollTo(selector: String) {
         rpc.invokeDeferredSilently("scrollTo") { page.scrollIntoViewIfNeeded(selector) }
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {
         try {
             val nodeId = rpc.invokeDeferred("scrollIntoViewIfNeeded") {
                 page.scrollIntoViewIfNeeded(selector)
             } ?: return
-            
+
             val offset = OffsetD(4.0, 4.0)
             val p = pageAPI
             val d = domAPI
@@ -569,11 +561,11 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "dragAndDrop")
         }
     }
-    
+
     override suspend fun outerHTML(): String? {
         return rpc.invokeDeferredSilently("outerHTML") { domAPI?.outerHTML }
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun clickablePoint(selector: String): PointD? {
         try {
@@ -584,10 +576,10 @@ class ChromeDevtoolsDriver(
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "clickablePoint")
         }
-        
+
         return null
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun boundingBox(selector: String): RectD? {
         try {
@@ -598,10 +590,10 @@ class ChromeDevtoolsDriver(
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "boundingBox")
         }
-        
+
         return null
     }
-    
+
     /**
      * This method scrolls element into view if needed, and then uses
      * {@link page.captureScreenshot} to take a screenshot of the element.
@@ -620,7 +612,7 @@ class ChromeDevtoolsDriver(
             null
         }
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun captureScreenshot(clip: RectD): String? {
         return try {
@@ -634,44 +626,44 @@ class ChromeDevtoolsDriver(
             null
         }
     }
-    
+
     @Throws(WebDriverCancellationException::class)
     internal fun checkState(action: String = ""): Boolean {
         if (!isActive) {
             return false
         }
-        
+
         if (isCanceled) {
             // is it good to throw here?
             throw WebDriverCancellationException("WebDriver is canceled #$id | $navigateUrl", this)
         }
-        
+
         if (action.isNotBlank()) {
             lastActiveTime = Instant.now()
             navigateEntry.refresh(action)
         }
-        
+
         return isActive
     }
-    
+
     private suspend fun gap() {
         if (isActive) {
             delay(delayPolicy("gap"))
         }
     }
-    
+
     private suspend fun gap(type: String) {
         if (isActive) {
             delay(delayPolicy(type))
         }
     }
-    
+
     private suspend fun gap(millis: Long) {
         if (isActive) {
             delay(millis)
         }
     }
-    
+
     /**
      * This method fetches an element with `selector` and focuses it. If there's no
      * element matching `selector`, the method throws an error.
@@ -685,40 +677,40 @@ class ChromeDevtoolsDriver(
      */
     private fun focusOnSelector(selector: String): Int {
         if (!checkState()) return 0
-        
+
         val rootId = domAPI?.document?.nodeId ?: return 0
         val nodeId = domAPI?.querySelector(rootId, selector)
         if (nodeId == 0) {
             logger.warn("No node found for selector: $selector")
             return 0
         }
-        
+
         try {
             domAPI?.focus(nodeId, rootId, null)
         } catch (e: Exception) {
             logger.warn("Failed to focus #$nodeId | {}", e.message)
         }
-        
+
         return nodeId ?: 0
     }
-    
+
     @Throws(WebDriverException::class)
     private suspend fun querySelector(selector: String): Int? {
         if (!checkState()) return null
-        
+
         try {
             return rpc.invokeDeferred("querySelector") { page.querySelector(selector) }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "querySelector")
         }
-        
+
         return null
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun pageSource(): String? {
         if (!checkState()) return null
-        
+
         try {
             return rpc.invokeDeferred("pageSource") {
                 domAPI?.getOuterHTML(domAPI?.document?.nodeId, null, null)
@@ -726,17 +718,17 @@ class ChromeDevtoolsDriver(
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "pageSource")
         }
-        
+
         return null
     }
-    
+
     override suspend fun bringToFront() {
         if (!checkState()) return
         rpc.invokeDeferredSilently("bringToFront") {
             pageAPI?.bringToFront()
         }
     }
-    
+
     override fun awaitTermination() {
         devTools.awaitTermination()
     }
@@ -746,18 +738,10 @@ class ChromeDevtoolsDriver(
             disableCache = false
             includeCredentials = false
         }
-        
+
         val frameId = pageAPI?.frameTree?.frame?.id
         val response = rpc.invokeDeferredSilently("loadNetworkResource") {
-            networkAPI?.loadNetworkResource(frameId, url, options)?.let {
-                NetworkResourceResponse(
-                    it.success ?: false,
-                    it.netError ?: 0.0,
-                    it.netErrorName ?: "",
-                    it.httpStatusCode ?: 400.0,
-                    it.stream,
-                    it.headers)
-            }
+            networkAPI?.loadNetworkResource(frameId, url, options)?.let { NetworkResourceResponse.from(it) }
         }
 
         return response ?: NetworkResourceResponse()
@@ -817,11 +801,8 @@ class ChromeDevtoolsDriver(
             networkAPI?.setBlockedURLs(blockedURLs)
         }
 
-        // TODO: use Request, Response events instead of RequestWillBeSent, ResponseReceived
-//        networkManager.on(NetworkManagerEvents.Request) { request: CDPRequest ->  }
-//        networkManager.on(NetworkManagerEvents.Response) { response: CDPResponse ->  }
-        networkManager.on(NetworkEvents.RequestWillBeSent) { event: RequestWillBeSent -> onRequestWillBeSent(entry, event) }
-        networkManager.on(NetworkEvents.ResponseReceived) { event: ResponseReceived -> onResponseReceived(entry, event) }
+        networkManager.on(NetworkEvents.RequestWillBeSent, this::handleRequestWillBeSent)
+        networkManager.on(NetworkEvents.ResponseReceived, this::handleResponseReceived)
 
         pageAPI?.onDocumentOpened { entry.mainRequestCookies = getCookies0() }
 
@@ -851,11 +832,52 @@ class ChromeDevtoolsDriver(
         pageAPI?.navigate(url)
     }
 
-    private fun onRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent) {
+    private fun handleRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent) {
+        if (!entry.url.startsWith("http")) {
+            // chrome's internal page, or other non-http resource
+            // examples for chrome's internal pages: about:blank, chrome://settings/, chrome://settings/system, etc
+            return
+        }
+
+        if (!UrlUtils.isStandard(entry.url)) {
+            logger.warn("Not a valid url | {}", entry.url)
+            return
+        }
+
         tracer?.trace("onRequestWillBeSent | driver | {}", event.requestId)
-        
-        // TODO: make sure it's the document we want
-        if (event.type == ResourceType.DOCUMENT) {
+
+        entry.synchronized {
+            updateEntryStateBeforeRequestSent(entry, event)
+        }
+
+        // perform blocking logic
+        if (isMinorResource(entry, event) && resourceBlockProbability > 1e-6) {
+            val requestUrl = event.request.url
+            if (probabilityBlockedURLs.any { requestUrl.matches(it.toRegex()) }) {
+                // random drop requests
+                val hit = Random.nextInt(100) / 100.0f < resourceBlockProbability
+                if (hit) {
+                    // ErrorReason.CONNECTION_FAILED
+                    fetchAPI?.failRequest(event.requestId, ErrorReason.ABORTED)
+                }
+            }
+        }
+        // handle user-defined events
+    }
+
+    private fun updateEntryStateBeforeRequestSent(entry: NavigateEntry, event: RequestWillBeSent) {
+        val count = entry.networkRequestCount.incrementAndGet()
+
+        // The first request, it should be the main HTML document
+        if (count == 1 && event.type != ResourceType.DOCUMENT) {
+            // It might be a redirection, prefetch, or just an image
+            logger.info(
+                "The resource type of the first request is {}, requests: {} | {}",
+                event.type, entry.networkRequestCount, event.request.url
+            )
+        }
+
+        if (isMajorRequestWillBeSent(entry, event)) {
             // amazon.com uses "referer" instead of "referrer" in the request header,
             // not clear if other sites uses the other one
             val headers: MutableMap<String, Any> = event.request.headers
@@ -867,25 +889,29 @@ class ChromeDevtoolsDriver(
             entry.mainRequestId = event.requestId
             entry.mainRequestHeaders = event.request.headers
         }
-        
-        if (resourceBlockProbability > 1e-6) {
-            val requestUrl = event.request.url
-            if (probabilityBlockedURLs.any { requestUrl.matches(it.toRegex()) }) {
-                // random drop requests
-                val hit = Random.nextInt(100) / 100.0f < resourceBlockProbability
-                if (hit) {
-                    // ErrorReason.CONNECTION_FAILED
-                    fetchAPI?.failRequest(event.requestId, ErrorReason.ABORTED)
-                }
-            }
-        }
     }
 
-    private fun onResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
+    private fun handleResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
         tracer?.trace("onResponseReceived | driver | {}", event.requestId)
-        
-        // TODO: make sure it's the document we want
-        if (event.type == ResourceType.DOCUMENT) {
+
+        entry.synchronized { updateEntryStateAfterResponseReceived(entry, event) }
+
+        traceInterestingResources(entry, event)
+
+        // handle user-defined events
+    }
+
+    private fun updateEntryStateAfterResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
+        val count = entry.networkResponseCount.incrementAndGet()
+
+        // The first response, it should be the main HTML document
+        if (count == 1 && event.type != ResourceType.DOCUMENT) {
+            // It might be a redirection, prefetch, or just an image
+            logger.info("The resource type of the first response is {}, responses: {} | {}",
+                event.type, entry.networkResponseCount, event.response.url)
+        }
+
+        if (isMajorResponseReceived(entry, event)) {
             tracer?.trace("onResponseReceived | driver, document | {}", event.requestId)
 
             entry.mainResponseStatus = event.response.status
@@ -893,7 +919,88 @@ class ChromeDevtoolsDriver(
             entry.mainResponseHeaders = event.response.headers
         }
     }
-
+    
+    private fun isMajorRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent): Boolean {
+        return !entry.documentTransferred && event.type == ResourceType.DOCUMENT
+    }
+    
+    private fun isMajorResponseReceived(entry: NavigateEntry, event: ResponseReceived): Boolean {
+        return !entry.documentTransferred && event.type == ResourceType.DOCUMENT
+    }
+    
+    private fun isMinorResource(entry: NavigateEntry, event: RequestWillBeSent): Boolean {
+        return entry.documentTransferred && isMinorResource(event)
+    }
+    
+    private fun isMinorResource(event: RequestWillBeSent): Boolean {
+        return event.type in listOf(
+            ResourceType.FONT,
+            ResourceType.MEDIA,
+            ResourceType.IMAGE,
+        )
+    }
+    
+    private fun traceInterestingResources(entry: NavigateEntry, event: ResponseReceived) {
+        runCatching { traceInterestingResources0(entry, event) }.onFailure { logger.warn(it.stringify()) }
+    }
+    
+    private fun traceInterestingResources0(entry: NavigateEntry, event: ResponseReceived) {
+        val mimeType = event.response.mimeType
+        val mimeTypes = listOf("application/json")
+        if (mimeType !in mimeTypes) {
+            return
+        }
+        
+        val resourceTypes = listOf(
+            ResourceType.FETCH,
+            ResourceType.XHR,
+            ResourceType.SCRIPT,
+        )
+        if (event.type !in resourceTypes) {
+            // return
+        }
+        
+        // page url is normalized
+        val pageUrl = entry.pageUrl
+        val resourceUrl = event.response.url
+        val host = URLUtil.getHost(pageUrl) ?: "unknown"
+        val reportDir = messageWriter.reportDir.resolve("trace").resolve(host)
+        
+        if (!Files.exists(reportDir)) {
+            Files.createDirectories(reportDir)
+        }
+        
+        val count = Files.list(reportDir).count()
+        if (count > 2_000) {
+            // TOO MANY tracing
+            return
+        }
+        
+        var suffix = "-" + event.type.name.lowercase() + "-urls.txt"
+        var filename = AppPaths.fileId(pageUrl) + suffix
+        var path = reportDir.resolve(filename)
+        
+        val message = String.format("%s\t%s", mimeType, event.response.url)
+        messageWriter.write(message, path)
+        
+        // configurable
+        val saveResourceBody = mimeType == "application/json"
+            && alwaysFalse()
+            && event.response.encodedDataLength < 1_000_000
+        if (saveResourceBody) {
+            val body = rpc.invokeSilently("getResponseBody") {
+                fetchAPI?.enable()
+                fetchAPI?.getResponseBody(event.requestId)?.body
+            }
+            if (!body.isNullOrBlank()) {
+                suffix = "-" + event.type.name.lowercase() + "-body.txt"
+                filename = AppPaths.fromUri(resourceUrl, suffix = suffix)
+                path = reportDir.resolve(filename)
+                messageWriter.write(body, path)
+            }
+        }
+    }
+    
     private suspend fun handleRedirect() {
         val finalUrl = currentUrl()
         // redirect

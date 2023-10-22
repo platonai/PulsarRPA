@@ -3,7 +3,6 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.measure.ByteUnitConverter
-import org.jetbrains.kotlin.konan.properties.saveToFile
 import oshi.SystemInfo
 import oshi.hardware.CentralProcessor
 import java.nio.file.Files
@@ -23,13 +22,20 @@ class AppSystemInfo {
         private var isOSHIAvailable = false
 
         var CRITICAL_CPU_THRESHOLD = System.getProperty("critical.cpu.threshold") ?.toDoubleOrNull() ?: 0.85
+        var CRITICAL_MEMORY_THRESHOLD_MIB = System.getProperty("critical.memory.threshold.MiB")?.toDouble() ?: 0.0
 
         val startTime = Instant.now()
         val elapsedTime get() = Duration.between(startTime, Instant.now())
 
         val systemInfo = if (isOSHIAvailable()) SystemInfo() else null
 
-        // OSHI cached the value, so it's fast and safe to be called frequently
+        /**
+         * OSHI cached the value, so it's fast and safe to be called frequently.
+         *
+         * for example, on Windows,
+         * WindowsGlobalMemory.availTotalSize is defined as:
+         * memoize(WindowsGlobalMemory::readPerfInfo, defaultExpiration());
+         * */
         val memoryInfo get() = systemInfo?.hardware?.memory
 
         /**
@@ -37,6 +43,9 @@ class AppSystemInfo {
          * */
         val systemCpuLoad get() = computeSystemCpuLoad()
 
+        /**
+         * Check whether CPU usage reaches critical status.
+         * */
         val isCriticalCPULoad get() = systemCpuLoad > CRITICAL_CPU_THRESHOLD
 
         /**
@@ -94,27 +103,33 @@ class AppSystemInfo {
             return ByteUnit.BYTE.toGiB(m.toDouble())
         }
 
-        //        private val memoryToReserveLarge get() = conf.getDouble(
-//            CapabilityTypes.BROWSER_MEMORY_TO_RESERVE_KEY,
-//            AppConstants.DEFAULT_BROWSER_RESERVED_MEMORY
-//        )
-        val criticalMemoryMiB get() = System.getProperty("critical.memory.MiB")?.toDouble() ?: 0.0
-        val actualCriticalMemory = when {
-            criticalMemoryMiB > 0 -> ByteUnit.MIB.toBytes(criticalMemoryMiB)
+        val memoryToReserve = when {
+            // user specified
+            CRITICAL_MEMORY_THRESHOLD_MIB >= 1 -> ByteUnit.MIB.toBytes(CRITICAL_MEMORY_THRESHOLD_MIB)
+            // autodetected
             totalMemoryGiB >= 14 -> ByteUnit.GIB.toBytes(3.0) // 3 GiB
             totalMemoryGiB >= 30 -> AppConstants.DEFAULT_BROWSER_RESERVED_MEMORY
             else -> AppConstants.BROWSER_TAB_REQUIRED_MEMORY
         }
 
+        /**
+         * Check whether memory usage reaches critical status.
+         * */
         val isCriticalMemory: Boolean get() {
             val am = availableMemory ?: return false
-            return am < actualCriticalMemory
+            return am < memoryToReserve
         }
 
         val freeDiskSpaces get() = Runtimes.unallocatedDiskSpaces()
 
+        /**
+         * Check whether disk usage reaches critical status.
+         * */
         val isCriticalDiskSpace get() = checkIsOutOfDisk()
 
+        /**
+         * Check whether hardware resource usage reaches critical status.
+         * */
         val isCriticalResources get() = isCriticalMemory || isCriticalCPULoad || isCriticalDiskSpace
 
         /**
@@ -126,25 +141,33 @@ class AppSystemInfo {
                 return isOSHIAvailable
             }
 
-            val si = SystemInfo()
-            try {
-                val versionInfo = si.operatingSystem.versionInfo
-                val processor = si.hardware.processor
-                val memory = si.hardware.memory
-                
-                logger.info("Operation system: {}", versionInfo)
-                logger.info("Processor: {}", processor)
-                logger.info("Memory: {}", memory)
-                
-                isOSHIAvailable = true
+            isOSHIAvailable = try {
+                report()
+                true
             } catch (e: Throwable) {
                 handleOSHINotAvailable()
-                isOSHIAvailable = false
+                false
             }
             
             isOSHIChecked = true
             
             return isOSHIAvailable
+        }
+
+        fun report() {
+            val si = SystemInfo()
+
+            val versionInfo = si.operatingSystem.versionInfo
+            logger.info("Operation system: {}", versionInfo)
+
+            val processor = si.hardware.processor
+            logger.info("Processor: {}", processor)
+
+            // Failed on Windows:
+            // si.hardware.memory throws exception since jna used by kotlin is too old,
+            // but we can not specify the version
+            val memory = si.hardware.memory
+            logger.info("Memory: {}", memory)
         }
 
         fun networkIFsReceivedBytes(): Long {
@@ -169,10 +192,14 @@ class AppSystemInfo {
         fun formatAvailableMemory(): String {
             return availableMemory?.let { Strings.compactFormat(it) } ?: "N/A"
         }
-        
+
+        fun formatMemoryToReserve(): String {
+            return Strings.compactFormat(memoryToReserve.toLong())
+        }
+
         fun formatMemoryShortage(): String {
             val availableMemory = AppSystemInfo.availableMemory ?: return "N/A"
-            return Strings.compactFormat(availableMemory - actualCriticalMemory.toLong())
+            return Strings.compactFormat(availableMemory - memoryToReserve.toLong())
         }
         
         private fun checkIsOutOfDisk(): Boolean {
@@ -196,5 +223,5 @@ class AppSystemInfo {
     }
 }
 
-@Deprecated("Inappropriate name", ReplaceWith("HardwareResource"))
+@Deprecated("Inappropriate name", ReplaceWith("AppSystemInfo"))
 typealias AppRuntime = AppSystemInfo

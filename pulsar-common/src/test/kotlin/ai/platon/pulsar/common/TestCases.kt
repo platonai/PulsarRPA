@@ -74,6 +74,27 @@ class TestCases {
     }
 
     @Test
+    fun testPostIncrementOperatorAndRemainder() {
+        assertEquals(0, 0 % 20)
+        assertEquals(0, 20 % 20)
+        assertEquals(0, 40 % 20)
+
+        val numbers = mutableListOf<Int>()
+        var k = 0
+        while (k < 1000) {
+            if (k++ % 20 == 0) {
+                // k is the number of consecutive warnings, the sequence of k is: 1, 21, 41, 61, 81, 101, ...
+                numbers.add(k)
+            }
+        }
+        println(numbers)
+        assertTrue { 21 in numbers }
+        assertTrue { 61 in numbers }
+        assertTrue { 201 in numbers }
+        assertTrue { 561 in numbers }
+    }
+
+    @Test
     fun testOptional() {
         val s1 = Optional.ofNullable("hello")
         val s2 = Optional.ofNullable<String>(null)

@@ -99,7 +99,7 @@ open class WebDriverPoolManager(
     private var lastMaintainTime = Instant.now()
     private val maintainCount = AtomicInteger()
     private val minMaintainInterval = Duration.ofSeconds(10)
-    private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
+    private val tooFrequentMaintenance get() = DateTimes.isNotExpired(lastMaintainTime, minMaintainInterval)
 
     /**
      * The web driver pool closer
@@ -288,8 +288,8 @@ open class WebDriverPoolManager(
      * echo takeDriverPoolSnapshot >> /tmp/pulsar/pulsar-commands
      * */
     @Throws(Exception::class)
-    fun maintain() {
-        if (tooFrequentMaintenance) {
+    fun maintain(force: Boolean = false) {
+        if (!force && tooFrequentMaintenance) {
             return
         }
         lastMaintainTime = Instant.now()
@@ -519,41 +519,6 @@ open class WebDriverPoolManager(
             _deferredTasks.remove(task.id)
         }
     }
-
-//    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
-//    private suspend fun poll(driverPool: LoadingWebDriverPool, task: WebDriverTask): WebDriver {
-//        // TODO: should not set driverPool.launched here
-//        // NOTE: concurrency note - if multiple threads come to the code snippet,
-//        // only one goes to launchAndPoll, others wait in pollWebDriver
-//        val notLaunched = driverPool.launched.compareAndSet(false, true)
-//        return if (notLaunched) {
-//            launchAndPoll(driverPool, task.page, task.priority)
-//        } else {
-//            pollWebDriver(driverPool, task.priority, task.page.conf)
-//        }
-//    }
-//
-//    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
-//    private suspend fun launchAndPoll(
-//        driverPool: LoadingWebDriverPool, page: WebPage, priority: Int,
-//    ): WebDriver {
-//        val event = page.browseEvent
-//
-//        // TODO: should handle launch events in browser
-//        dispatchEvent("onWillLaunchBrowser") { event?.onWillLaunchBrowser?.invoke(page) }
-//
-//        return pollWebDriver(driverPool, priority, page.conf).also { driver ->
-//            dispatchEvent("onBrowserLaunched") { event?.onBrowserLaunched?.invoke(page, driver) }
-//        }
-//    }
-//
-//    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
-//    private fun pollWebDriver(driverPool: LoadingWebDriverPool, priority: Int, conf: VolatileConfig): WebDriver {
-//        val timeout = driverSettings.pollingDriverTimeout
-//        val driver = driverPool.poll(priority, conf, timeout)
-//        require(driver.isWorking)
-//        return driver
-//    }
 
     private fun createDriverPoolIfAbsent0(browserId: BrowserId, priority: Int): LoadingWebDriverPool {
         return driverPoolPool.computeIfAbsent(browserId) { createUnmanagedDriverPool(browserId, priority) }

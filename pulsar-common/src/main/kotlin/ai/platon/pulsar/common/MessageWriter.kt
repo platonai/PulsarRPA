@@ -53,13 +53,27 @@ class MessageWriter(
     }
 
     fun write(level: Int, clazz: KClass<*>, s: String, t: Throwable? = null) {
-        if (level > this.levelFile) return
+        if (level > this.levelFile) {
+            return
+        }
         write(level, clazz.simpleName?:"", s, t)
     }
 
     fun write(level: Int, module: String, s: String, t: Throwable? = null) {
-        if (level > this.levelFile) return
+        if (level > this.levelFile) {
+            return
+        }
         writeFile(format(module, s), t)
+    }
+    
+    fun flush() {
+        printWriter?.flush()
+    }
+    
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            closeWriter()
+        }
     }
 
     @Synchronized
@@ -126,11 +140,5 @@ class MessageWriter(
 
         printWriter = null
         fileWriter = null
-    }
-
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
-            closeWriter()
-        }
     }
 }

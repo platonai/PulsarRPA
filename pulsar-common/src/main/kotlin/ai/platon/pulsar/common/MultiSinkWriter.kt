@@ -14,17 +14,16 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Multiple sink message writer. Messages from different source are write to different files or database.
  */
 abstract class MultiSinkWriter(
+    @Deprecated("Useless config")
     val conf: ImmutableConfig
 ) : AutoCloseable {
     private val timeIdent get() = DateTimes.formatNow("MMdd")
-    private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME]
     private val reportDir0 get() = AppPaths.REPORT_DIR.resolve(timeIdent)
     private val _writers = ConcurrentHashMap<Path, MessageWriter>()
     private val closed = AtomicBoolean()
-
+    
+    val reportDir = reportDir0
     val writers: Map<Path, MessageWriter> get() = _writers
-
-    val reportDir = if (jobIdent == null) reportDir0 else reportDir0.resolve(jobIdent)
 
     init {
         Files.createDirectories(reportDir)
@@ -64,6 +63,10 @@ abstract class MultiSinkWriter(
         _writers[getPath(filename)]?.close()
     }
 
+    fun flush() {
+        _writers.values.forEach { it.flush() }
+    }
+    
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             _writers.values.forEach { it.close() }

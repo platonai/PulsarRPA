@@ -137,6 +137,12 @@ class FetchTask constructor(
             val fingerprint = Fingerprint(browserType)
             return FetchTask(0, priority, page, fingerprint = fingerprint)
         }
+
+        fun create(page: WebPage, fingerprint: Fingerprint): FetchTask {
+            val conf = page.conf
+            val priority = conf.getUint(CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY, 0)
+            return FetchTask(0, priority, page, fingerprint = fingerprint)
+        }
     }
 }
 

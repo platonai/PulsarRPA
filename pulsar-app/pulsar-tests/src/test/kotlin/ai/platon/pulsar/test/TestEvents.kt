@@ -37,7 +37,7 @@ class TestEvents : TestBase() {
         val firedEvents = mutableListOf<String>()
         val eventHandler = hyperlink.event.loadEvent
         eventHandler.apply {
-            onWillLoad.addLast { url ->
+            onWillLoad.addLast { _ ->
                 firedEvents.add("onBeforeLoad")
                 assertEquals(0, metrics.fetchTasks.count)
                 null

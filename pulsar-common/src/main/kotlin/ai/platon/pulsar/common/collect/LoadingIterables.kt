@@ -76,7 +76,7 @@ open class ConcurrentLoadingIterable<E>(
 
                 return cache.isNotEmpty()
             } catch (e: Throwable) {
-                getLogger(this).warn("Unexpected exception", e)
+                getLogger(this).warn("[Unexpected]", e)
             }
 
             return false

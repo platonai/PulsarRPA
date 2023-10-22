@@ -19,7 +19,12 @@
         <constructor-arg ref="conf" />
     </bean>
 
+    <!-- AppMetrics has been deprecated, will remove the bean in the feature -->
     <bean id="appMetrics" class="ai.platon.pulsar.common.metrics.AppMetrics" init-method="start" destroy-method="close">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="metricsSystem" class="ai.platon.pulsar.common.metrics.MetricsSystem" init-method="start" destroy-method="close">
         <constructor-arg ref="conf"/>
     </bean>
 

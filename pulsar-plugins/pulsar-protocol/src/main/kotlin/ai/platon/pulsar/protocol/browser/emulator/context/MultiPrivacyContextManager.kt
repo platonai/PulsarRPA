@@ -1,7 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.FileCommand
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_AGENT
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -12,7 +11,6 @@ import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
-import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -26,9 +24,12 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
 import kotlinx.coroutines.delay
-import org.slf4j.LoggerFactory
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
 
 class MultiPrivacyContextManager(
@@ -49,9 +50,11 @@ class MultiPrivacyContextManager(
 
     companion object {
         val VAR_CONTEXT_INFO = "CONTEXT_INFO"
+        val SNAPSHOT_PATH = AppPaths.TMP_DIR.resolve("privacy.context.snapshot.txt")
+        var SNAPSHOT_DUMP_INTERVAL = Duration.ofMinutes(1)
     }
 
-    private val logger = LoggerFactory.getLogger(MultiPrivacyContextManager::class.java)
+    private val logger = getLogger(MultiPrivacyContextManager::class)
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private var numTasksAtLastReportTime = 0L
     private val numPrivacyContexts: Int get() = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
@@ -62,7 +65,10 @@ class MultiPrivacyContextManager(
     internal val maintainCount = AtomicInteger()
     private var lastMaintainTime = Instant.now()
     private val minMaintainInterval = Duration.ofSeconds(10)
-    private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
+    private val tooFrequentMaintenance get() = DateTimes.isNotExpired(lastMaintainTime, minMaintainInterval)
+    private var lastDumpTime = Instant.now()
+    private val snapshotDumpCount = AtomicInteger()
+    var snapshotDumpInterval = SNAPSHOT_DUMP_INTERVAL
 
     private var driverAbsenceReportTime = Instant.EPOCH
 
@@ -157,7 +163,7 @@ class MultiPrivacyContextManager(
         assert(!context.isActive)
         close(context)
 
-        return computeIfAbsent(privacyContextIdGenerator(fingerprint))
+        return computeIfAbsent(privacyAgentGenerator(fingerprint))
     }
     @Throws(ProxyException::class)
     override fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
@@ -180,7 +186,8 @@ class MultiPrivacyContextManager(
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             if (temporaryContexts.size < numPrivacyContexts) {
-                computeIfAbsent(privacyContextIdGenerator(fingerprint))
+                val generator = privacyAgentGeneratorFactory.generator
+                computeIfAbsent(generator(fingerprint))
             }
 
             return tryNextUnderLoadedPrivacyContext()
@@ -200,9 +207,10 @@ class MultiPrivacyContextManager(
      * */
     override fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
-            // TODO: too many running chrome process and out of memory problem
             val privacyAgent = createPrivacyAgent(page, fingerprint)
             if (privacyAgent.isPermanent) {
+                logger.info("Prepare for permanent privacy agent | {}", privacyAgent)
+                forceReserveResource()
                 return computeIfAbsent(privacyAgent)
             }
 
@@ -234,16 +242,14 @@ class MultiPrivacyContextManager(
      * If the tmp dir is the default one, run the following command to take snapshot once:
      * echo takePrivacyContextSnapshot >> /tmp/pulsar/pulsar-commands
      * */
-    override fun maintain() {
-        if (tooFrequentMaintenance) {
+    override fun maintain(force: Boolean) {
+        if (!force && tooFrequentMaintenance) {
             return
         }
         lastMaintainTime = Instant.now()
 
         if (maintainCount.getAndIncrement() == 0) {
             logger.info("Maintaining service is started, minimal maintain interval: {}", minMaintainInterval)
-            val command = "echo takePrivacyContextSnapshot >> ${FileCommand.COMMAND_FILE}"
-            logger.info("Run the following command to take snapshot once: \n{}", command)
         }
 
         doMaintain()
@@ -259,18 +265,9 @@ class MultiPrivacyContextManager(
         activeContexts.values.forEach { context ->
             context.maintain()
         }
+//        driverPoolManager.maintain()
 
-        // If "takePrivacyContextSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
-        //
-        // If the tmp dir is the default one, run the following command to take snapshot once:
-        // echo takePrivacyContextSnapshot >> /tmp/pulsar/pulsar-commands
-        if (FileCommand.check("takePrivacyContextSnapshot")) {
-            logger.info("\nPrivacy context snapshot: \n")
-            logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            logger.info("\n{}", takeSnapshot())
-            activeContexts.values.forEach { it.report() }
-            logger.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-        }
+        dumpIfNecessary()
     }
 
     override fun close() {
@@ -279,7 +276,7 @@ class MultiPrivacyContextManager(
 
     private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): PrivacyAgent {
         // Specify the privacy agent by the user code
-        // TODO: this is a temporary solution, try a better and consistent solution
+        // TODO: this is a temporary solution to use a specified privacy agent, try a better and consistent solution
         val specifiedPrivacyAgent = page.getVar(VAR_PRIVACY_AGENT)
         if (specifiedPrivacyAgent is PrivacyAgent) {
             return specifiedPrivacyAgent
@@ -313,6 +310,19 @@ class MultiPrivacyContextManager(
         }
 
         return pc
+    }
+
+    private fun forceReserveResource() {
+        doMaintain()
+
+        if (AppSystemInfo.isCriticalResources) {
+            logger.info("Critical resource, closing a temporary context | availableMem: {}, memToReserve: {}, shortage: {}",
+                AppSystemInfo.formatAvailableMemory(), AppSystemInfo.formatMemoryToReserve(),
+                AppSystemInfo.formatMemoryShortage()
+            )
+
+            temporaryContexts.entries.firstOrNull()?.let { close(it.value) }
+        }
     }
 
     private fun closeDyingContexts() {
@@ -491,5 +501,33 @@ class MultiPrivacyContextManager(
             result.task.id, privacyContext.sequence, privacyContext.privacyLeakWarnings,
             result.status, result.task.url
         )
+    }
+
+    private fun dumpIfNecessary() {
+        if (DateTimes.isExpired(lastDumpTime, snapshotDumpInterval)) {
+            lastDumpTime = Instant.now()
+            dump()
+        }
+    }
+
+    private fun dump() {
+        try {
+            if (!Files.exists(SNAPSHOT_PATH)) {
+                Files.createDirectories(SNAPSHOT_PATH.parent)
+            }
+
+            val count = snapshotDumpCount.incrementAndGet()
+            val sb = StringBuilder()
+            sb.append("\n$count. Privacy context snapshot: \n")
+            sb.appendLine(LocalDateTime.now())
+            sb.append(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            sb.append("\n{}", takeSnapshot())
+            activeContexts.values.forEach { sb.appendLine(it.getReport()) }
+            sb.append("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+
+            Files.writeString(SNAPSHOT_PATH, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+        } catch (e: IOException) {
+            logger.warn(e.stringify())
+        }
     }
 }

@@ -172,6 +172,22 @@ class TestFrequency {
 //        println(freq.leastEntry.count)
         assertTrue(freq.leastEntry.count > freqThreshold - 0.1, "Count of least entry: " + freq.leastEntry.count)
     }
+    
+    @Test
+    fun testFrequencyTrimStartPercentage() {
+        val freq = Frequency<Int>()
+        IntRange(1, 10).forEach { i ->
+            repeat(i) {
+                freq.add(i)
+            }
+        }
+
+        assertEquals(10, freq.size)
+        assertEquals(55, freq.totalFrequency)
+        val freqThreshold = 0.5 * freq.size
+        freq.trimStart(freqThreshold)
+        assertTrue(freq.leastEntry.count > freqThreshold - 0.1, "Count of least entry: " + freq.leastEntry.count)
+    }
 
     @Test
     fun testFrequencyTrimEnd() {
@@ -184,8 +200,6 @@ class TestFrequency {
 
         val freqThreshold = 5.0
         freq.trimEnd(freqThreshold)
-//        println(freq.toString())
-//        println(freq.mostEntry.count)
         assertTrue(freq.mostEntry.count < freqThreshold + 0.1, "Count of most entry: " + freq.mostEntry.count)
     }
 }

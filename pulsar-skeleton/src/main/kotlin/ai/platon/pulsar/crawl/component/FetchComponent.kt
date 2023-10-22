@@ -195,7 +195,7 @@ open class FetchComponent(
 
         pageDatum?.also {
             page.location = it.location
-            page.proxy = it.proxyEntry?.outIp
+            page.proxy = it.proxyEntry?.agentIp
             val trace = it.activeDOMStatTrace
             if (trace != null) {
                 page.activeDOMStatus = trace.status

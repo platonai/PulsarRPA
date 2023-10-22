@@ -180,7 +180,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     fun testClickNthAnchor() = runWebDriverTest { driver ->
         open(url, driver)
 
-        val href = driver.clickNthAnchor(100, "body")
+        driver.clickNthAnchor(100, "body")
 //        println(href)
 
         driver.waitForNavigation()
