@@ -50,12 +50,16 @@ class ChromeDevtoolsDriver(
 
     override val browserType: BrowserType = BrowserType.PULSAR_CHROME
 
+    /**
+     * The probability to block a resource request if the request url is in probabilisticBlockedURLs.
+     * The probability must be in [0, 1].
+     * */
     val resourceBlockProbability get() = browserSettings.resourceBlockProbability
 
     private val _blockedURLs = mutableListOf<String>()
     private val _probabilityBlockedURLs = mutableListOf<String>()
     val blockedURLs: List<String> get() = _blockedURLs
-    val probabilityBlockedURLs: List<String> get() = _probabilityBlockedURLs
+    val probabilisticBlockedURLs: List<String> get() = _probabilityBlockedURLs
 
     private val page = PageHandler(devTools, browserSettings)
     private val screenshot = Screenshot(page, devTools)
@@ -107,11 +111,21 @@ class ChromeDevtoolsDriver(
     override suspend fun addInitScript(script: String) {
         initScriptCache.add(script)
     }
-
+    
+    /**
+     * Blocks URLs from loading.
+     *
+     * @param urls URL patterns to block. Wildcards ('*') are allowed.
+     */
     override suspend fun addBlockedURLs(urls: List<String>) {
         _blockedURLs.addAll(urls)
     }
-
+    
+    /**
+     * Blocks URLs from loading with a probability.
+     *
+     * @param urlPatterns URL patterns in regular expression to block.
+     */
     override suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>) {
         _probabilityBlockedURLs.addAll(urlPatterns)
     }
@@ -834,8 +848,9 @@ class ChromeDevtoolsDriver(
 
     private fun handleRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent) {
         if (!entry.url.startsWith("http")) {
-            // chrome's internal page, or other non-http resource
-            // examples for chrome's internal pages: about:blank, chrome://settings/, chrome://settings/system, etc
+            // This can happen for the following cases:
+            // 1. non-http resources, for example, ftp, ws, etc.
+            // 2. chrome's internal page, for example, about:blank, chrome://settings/, chrome://settings/system, etc.
             return
         }
 
@@ -846,100 +861,44 @@ class ChromeDevtoolsDriver(
 
         tracer?.trace("onRequestWillBeSent | driver | {}", event.requestId)
 
-        entry.synchronized {
-            updateEntryStateBeforeRequestSent(entry, event)
-        }
+        val chromeNavigateEntry = ChromeNavigateEntry(navigateEntry)
+        chromeNavigateEntry.updateStateBeforeRequestSent(event)
 
         // perform blocking logic
-        if (isMinorResource(entry, event) && resourceBlockProbability > 1e-6) {
-            val requestUrl = event.request.url
-            if (probabilityBlockedURLs.any { requestUrl.matches(it.toRegex()) }) {
-                // random drop requests
-                val hit = Random.nextInt(100) / 100.0f < resourceBlockProbability
-                if (hit) {
-                    // ErrorReason.CONNECTION_FAILED
-                    fetchAPI?.failRequest(event.requestId, ErrorReason.ABORTED)
-                }
-            }
+        val isMinor = chromeNavigateEntry.isMinorResource(event)
+        if (isMinor && isBlocked(event.request.url)) {
+            fetchAPI?.failRequest(event.requestId, ErrorReason.ABORTED)
         }
+
         // handle user-defined events
     }
-
-    private fun updateEntryStateBeforeRequestSent(entry: NavigateEntry, event: RequestWillBeSent) {
-        val count = entry.networkRequestCount.incrementAndGet()
-
-        // The first request, it should be the main HTML document
-        if (count == 1 && event.type != ResourceType.DOCUMENT) {
-            // It might be a redirection, prefetch, or just an image
-            logger.info(
-                "The resource type of the first request is {}, requests: {} | {}",
-                event.type, entry.networkRequestCount, event.request.url
-            )
+    
+    private fun isBlocked(url: String): Boolean {
+        if (url in blockedURLs) {
+            return true
         }
-
-        if (isMajorRequestWillBeSent(entry, event)) {
-            // amazon.com uses "referer" instead of "referrer" in the request header,
-            // not clear if other sites uses the other one
-            val headers: MutableMap<String, Any> = event.request.headers
-            entry.pageReferrer?.let {
-                headers["referer"] = it
-                headers["referrer"] = it
+        
+        if (resourceBlockProbability > 1e-6) {
+            if (probabilisticBlockedURLs.any { url.matches(it.toRegex()) }) {
+                return Random.nextInt(100) / 100.0f < resourceBlockProbability
             }
-
-            entry.mainRequestId = event.requestId
-            entry.mainRequestHeaders = event.request.headers
         }
+
+        return false
     }
 
     private fun handleResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
+        val chromeNavigateEntry = ChromeNavigateEntry(entry)
+        
         tracer?.trace("onResponseReceived | driver | {}", event.requestId)
-
-        entry.synchronized { updateEntryStateAfterResponseReceived(entry, event) }
+        
+        chromeNavigateEntry.updateStateAfterResponseReceived(event)
 
         traceInterestingResources(entry, event)
 
         // handle user-defined events
     }
 
-    private fun updateEntryStateAfterResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
-        val count = entry.networkResponseCount.incrementAndGet()
-
-        // The first response, it should be the main HTML document
-        if (count == 1 && event.type != ResourceType.DOCUMENT) {
-            // It might be a redirection, prefetch, or just an image
-            logger.info("The resource type of the first response is {}, responses: {} | {}",
-                event.type, entry.networkResponseCount, event.response.url)
-        }
-
-        if (isMajorResponseReceived(entry, event)) {
-            tracer?.trace("onResponseReceived | driver, document | {}", event.requestId)
-
-            entry.mainResponseStatus = event.response.status
-            entry.mainResponseStatusText = event.response.statusText
-            entry.mainResponseHeaders = event.response.headers
-        }
-    }
-    
-    private fun isMajorRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent): Boolean {
-        return !entry.documentTransferred && event.type == ResourceType.DOCUMENT
-    }
-    
-    private fun isMajorResponseReceived(entry: NavigateEntry, event: ResponseReceived): Boolean {
-        return !entry.documentTransferred && event.type == ResourceType.DOCUMENT
-    }
-    
-    private fun isMinorResource(entry: NavigateEntry, event: RequestWillBeSent): Boolean {
-        return entry.documentTransferred && isMinorResource(event)
-    }
-    
-    private fun isMinorResource(event: RequestWillBeSent): Boolean {
-        return event.type in listOf(
-            ResourceType.FONT,
-            ResourceType.MEDIA,
-            ResourceType.IMAGE,
-        )
-    }
-    
     private fun traceInterestingResources(entry: NavigateEntry, event: ResponseReceived) {
         runCatching { traceInterestingResources0(entry, event) }.onFailure { logger.warn(it.stringify()) }
     }
@@ -985,8 +944,8 @@ class ChromeDevtoolsDriver(
         
         // configurable
         val saveResourceBody = mimeType == "application/json"
-            && alwaysFalse()
             && event.response.encodedDataLength < 1_000_000
+            && alwaysFalse()
         if (saveResourceBody) {
             val body = rpc.invokeSilently("getResponseBody") {
                 fetchAPI?.enable()
