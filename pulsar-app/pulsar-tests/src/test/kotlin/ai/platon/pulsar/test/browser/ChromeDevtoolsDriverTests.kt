@@ -38,6 +38,23 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         // identity name mangler
         confuser.nameMangler = { script -> script }
     }
+    
+    @Test
+    fun `When navigate to a HTML page then the navigate state are correct`() = runWebDriverTest { driver ->
+        open(url, driver, 1)
+        
+        val navigateEntry = driver.navigateEntry
+        assertTrue { navigateEntry.documentTransferred }
+        assertTrue { navigateEntry.networkRequestCount.get() > 0 }
+        assertTrue { navigateEntry.networkResponseCount.get() > 0 }
+        
+        assertEquals(200, driver.mainResponseStatus)
+        assertTrue { driver.mainResponseStatus == 200 }
+        assertTrue { driver.mainResponseHeaders.isNotEmpty() }
+        assertEquals(200, navigateEntry.mainResponseStatus)
+        assertTrue { navigateEntry.mainResponseStatus == 200 }
+        assertTrue { navigateEntry.mainResponseHeaders.isNotEmpty() }
+    }
 
     @Test
     fun `Ensure js injected`() = runWebDriverTest { driver ->

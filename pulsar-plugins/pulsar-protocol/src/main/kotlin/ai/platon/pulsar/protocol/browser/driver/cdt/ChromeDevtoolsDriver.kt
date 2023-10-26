@@ -815,8 +815,8 @@ class ChromeDevtoolsDriver(
             networkAPI?.setBlockedURLs(blockedURLs)
         }
 
-        networkManager.on(NetworkEvents.RequestWillBeSent, this::handleRequestWillBeSent)
-        networkManager.on(NetworkEvents.ResponseReceived, this::handleResponseReceived)
+        networkManager.on(NetworkEvents.RequestWillBeSent) { event: RequestWillBeSent -> handleRequestWillBeSent(entry, event) }
+        networkManager.on(NetworkEvents.ResponseReceived) { event: ResponseReceived -> handleResponseReceived(entry, event) }
 
         pageAPI?.onDocumentOpened { entry.mainRequestCookies = getCookies0() }
 
