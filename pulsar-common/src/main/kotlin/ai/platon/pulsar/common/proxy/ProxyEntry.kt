@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
 enum class ProxyType {
-    HTTP, SOCKS4, SOCKS5
+    HTTP, SOCKS4, SOCKS5, DIRECT
 }
 
 @Deprecated("Use ProxyEntry2 instead", ReplaceWith("ProxyEntry2"))
@@ -168,7 +168,37 @@ class ProxyEntry constructor(
         val isOK get() = this == OK
         val isBanned get() = !isOK
     }
-    
+
+    constructor(
+        /**
+         * The host of the proxy server
+         * */
+        host: String,
+        /**
+         * The port of the proxy server
+         * */
+        port: Int = 0,
+        /**
+         * The username
+         * */
+        username: String? = null,
+        /**
+         * The password
+         * */
+        password: String? = null,
+        /**
+         * The proxy type
+         * */
+        type: Proxy.Type = Proxy.Type.HTTP
+    ): this(host, port, user = username, pwd = password) {
+        proxyType = when (type) {
+            Proxy.Type.HTTP -> ProxyType.HTTP
+            Proxy.Type.SOCKS -> ProxyType.SOCKS5
+            Proxy.Type.DIRECT -> ProxyType.DIRECT
+            else -> ProxyType.DIRECT
+        }
+    }
+
     fun willExpireAt(instant: Instant): Boolean = ttl < instant
     
     fun willExpireAfter(duration: Duration): Boolean = ttl < Instant.now() + duration
