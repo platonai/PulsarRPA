@@ -1,7 +1,7 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.brief
-import org.junit.Test
+import kotlin.test.*
 import oshi.SystemInfo
 
 /**

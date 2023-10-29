@@ -6,9 +6,8 @@ import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import com.google.gson.Gson
-import org.junit.Test
 import java.time.LocalDateTime
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TestChromeImplLauncher {
     private val USER_DATA_DIR_REGEX = ".+pulsar-.+/context/cx.+".toRegex()

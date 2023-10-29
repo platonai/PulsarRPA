@@ -1,12 +1,8 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.lang3.RandomStringUtils
-import org.apache.commons.lang3.SystemUtils
-import org.junit.Test
 import java.nio.file.Files
-import java.nio.file.Path
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TestMessageWriter {
 

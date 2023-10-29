@@ -19,8 +19,7 @@
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader.readAllLines
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.*
 import org.junit.runner.RunWith
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.IOException
@@ -35,7 +34,7 @@ import kotlin.test.assertEquals
 class TestSuffixUrlFilter : UrlFilterTestBase() {
     private lateinit var filter: SuffixUrlFilter
     
-    @Before
+    @BeforeTest
     @Throws(IOException::class)
     fun setUp() {
         filter = SuffixUrlFilter(readAllLines(suffixes, "not-exist"), conf)

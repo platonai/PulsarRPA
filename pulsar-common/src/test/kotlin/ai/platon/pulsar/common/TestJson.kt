@@ -3,9 +3,7 @@ package ai.platon.pulsar.common
 import com.google.common.collect.Sets
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Created by vincent on 17-1-14.

@@ -1,8 +1,8 @@
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
-import org.junit.Test
 import java.io.Reader
+import kotlin.test.Test
 
 /**
  * Created by vincent on 17-2-23.

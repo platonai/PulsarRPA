@@ -1,10 +1,9 @@
 package ai.platon.pulsar.common.urls
 
-import org.junit.Test
 import org.nibor.autolink.LinkExtractor
 import org.nibor.autolink.LinkType
 import java.util.*
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 class TestUrlExtractors {
 

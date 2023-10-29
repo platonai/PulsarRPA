@@ -19,11 +19,9 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import org.apache.commons.lang3.SystemUtils
-import org.junit.Test
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.nio.file.attribute.FileAttribute
 import kotlin.random.Random
 import kotlin.test.*
 

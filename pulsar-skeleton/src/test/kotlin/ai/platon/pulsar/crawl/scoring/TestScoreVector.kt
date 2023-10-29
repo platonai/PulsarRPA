@@ -3,7 +3,7 @@ package ai.platon.pulsar.crawl.scoring
 import ai.platon.pulsar.common.ScoreVector
 import com.google.common.math.IntMath
 import org.apache.commons.math3.analysis.function.Sigmoid
-import org.junit.Test
+import kotlin.test.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 

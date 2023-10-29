@@ -1,7 +1,7 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import org.junit.Test
+import kotlin.test.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 

@@ -11,7 +11,7 @@ import org.apache.avro.util.Utf8
 import org.apache.commons.lang3.StringUtils
 import org.junit.Assert
 import org.junit.Ignore
-import org.junit.Test
+import kotlin.test.*
 import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL

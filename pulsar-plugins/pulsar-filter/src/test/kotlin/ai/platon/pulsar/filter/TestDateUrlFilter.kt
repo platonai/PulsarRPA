@@ -19,16 +19,13 @@
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader.readAllLines
-import org.junit.Before
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.IOException
 import java.time.ZoneId
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.*
 
 /**
  * JUnit based test of class `RegexURLFilter`.
@@ -41,7 +38,7 @@ class TestDateUrlFilter : UrlFilterTestBase("datedata") {
     @Autowired
     lateinit var dateUrlFilter: DateUrlFilter
 
-    @Before
+    @BeforeTest
     @Throws(IOException::class)
     fun setUp() {
         dateUrlFilter = DateUrlFilter(ZoneId.systemDefault(), conf)

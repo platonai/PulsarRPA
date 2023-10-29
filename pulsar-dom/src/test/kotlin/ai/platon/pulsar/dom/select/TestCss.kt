@@ -4,8 +4,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.parser.Tag
 import org.jsoup.select.Elements
-import org.junit.Assert.*
-import org.junit.Test
+import kotlin.test.*
 
 class TestCss {
 
@@ -159,7 +158,7 @@ class TestCss {
     }
 
     protected fun check(result: Elements, vararg expectedContent: String) {
-        assertEquals("Number of elements", expectedContent.size.toLong(), result.size.toLong())
+        assertEquals(expectedContent.size.toLong(), result.size.toLong(), "Number of elements")
         for (i in expectedContent.indices) {
             assertNotNull(result[i])
             assertEquals("Expected element", expectedContent[i], result[i].ownText())

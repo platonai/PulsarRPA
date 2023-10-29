@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import org.apache.http.HttpStatus
-import org.junit.Test
+import kotlin.test.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue

@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.proxy.ProxyEntry2
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.Test
 import java.io.IOException
 import java.net.Proxy
 import java.util.*

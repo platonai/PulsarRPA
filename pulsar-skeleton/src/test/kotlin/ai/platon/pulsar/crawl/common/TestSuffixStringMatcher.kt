@@ -20,7 +20,7 @@ package ai.platon.pulsar.crawl.common
 
 import ai.platon.pulsar.common.SuffixStringMatcher
 import org.junit.Assert
-import org.junit.Test
+import kotlin.test.*
 
 /**
  * Unit tests for SuffixStringMatcher.

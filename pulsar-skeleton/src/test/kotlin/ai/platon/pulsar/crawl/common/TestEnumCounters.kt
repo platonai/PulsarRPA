@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.common
 
 import ai.platon.pulsar.common.metrics.EnumCounterRegistry
-import org.junit.Test
+import kotlin.test.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals

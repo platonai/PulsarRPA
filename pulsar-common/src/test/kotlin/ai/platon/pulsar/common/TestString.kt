@@ -19,11 +19,8 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.options.OptionUtils
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
-import org.junit.Assert.assertArrayEquals
-import org.junit.Test
 import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -34,16 +31,14 @@ import java.util.regex.Pattern
 import java.util.stream.Collectors
 import java.util.stream.IntStream
 import java.util.stream.Stream
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Unit tests for StringUtil methods.
  */
 class TestString {
     var conf = ImmutableConfig()
+
     @Test
     fun testValueOf() {
         val i = 18760506
@@ -71,10 +66,10 @@ class TestString {
     @Test
     fun testPadding() {
         val strings = arrayOf(
-                "1.\thttp://v.ifeng.com/\t凤凰视频首页-最具媒体价值的视频门户-凤凰网",
-                "2.\thttp://fo.ifeng.com/\t佛教首页_佛教频道__凤凰网",
-                "3.\thttp://www.ifeng.com/\t凤凰网",
-                "24.\thttp://fashion.ifeng.com/health/\t凤凰健康_关注全球华人健康"
+            "1.\thttp://v.ifeng.com/\t凤凰视频首页-最具媒体价值的视频门户-凤凰网",
+            "2.\thttp://fo.ifeng.com/\t佛教首页_佛教频道__凤凰网",
+            "3.\thttp://www.ifeng.com/\t凤凰网",
+            "24.\thttp://fashion.ifeng.com/health/\t凤凰健康_关注全球华人健康"
         )
         IntStream.range(0, strings.size).forEach { i: Int -> strings[i] = StringUtils.rightPad(strings[i], 60) }
         Stream.of(*strings).forEach { x: String? -> println(x) }
@@ -149,16 +144,16 @@ class TestString {
     @Test
     fun testAvailableCharsets() {
         var charsets = Charset.availableCharsets().values.stream()
-                .map { obj: Charset -> obj.name() }
-                .collect(Collectors.joining("|"))
+            .map { obj: Charset -> obj.name() }
+            .collect(Collectors.joining("|"))
         var charsetPattern = Pattern.compile(charsets, Pattern.CASE_INSENSITIVE)
         assertEquals(Charset.availableCharsets().size.toLong(), StringUtils.countMatches(charsets, "|") + 1.toLong())
         assertTrue(charsetPattern.matcher("gb2312").matches())
         assertTrue(charsetPattern.matcher("UTF-8").matches())
         assertTrue(charsetPattern.matcher("windows-1257").matches())
         charsets = ("UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1"
-                + "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257"
-                + "|UTF-8")
+            + "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257"
+            + "|UTF-8")
         charsets = charsets.replace("UTF-8\\|?".toRegex(), "")
         charsetPattern = Pattern.compile(charsets, Pattern.CASE_INSENSITIVE)
         assertTrue(charsetPattern.matcher("gb2312").matches())
@@ -208,8 +203,8 @@ class TestString {
     @Test
     fun testStripNonChar() {
         val texts = arrayOf(
-                "天王表 正品热卖  个性表盘  ",
-                "天王表 正品热卖 \uE004主要职责：  OK"
+            "天王表 正品热卖  个性表盘  ",
+            "天王表 正品热卖 \uE004主要职责：  OK"
         )
         for (text in texts) {
             println(Strings.stripNonCJKChar(text, Strings.DEFAULT_KEEP_CHARS))
@@ -219,30 +214,32 @@ class TestString {
     @Test
     fun testIsChinese() {
         val texts = arrayOf(
-                "关注全球华人健康"
+            "关注全球华人健康"
         )
         for (text in texts) {
             assertTrue(Strings.isChinese(text))
         }
         val noChineseTexts = arrayOf(
-                "1234534",
-                "alphabetical",
-                "1b关注全球华人健康",
-                "a关注全球华人健康"
+            "1234534",
+            "alphabetical",
+            "1b关注全球华人健康",
+            "a关注全球华人健康"
         )
         for (text in noChineseTexts) { // TODO: noChineseTexts assertion failed
 // assertFalse(text, StringUtil.isChinese(text));
         }
         val mainlyChineseTexts = arrayOf(
-                "1234关注全球华人健康关注全球华人健康",
-                "alpha关注全球华人健康关注全球华人健康",
-                "1b关注全球华人健康",
-                "a关注全球华人健康"
+            "1234关注全球华人健康关注全球华人健康",
+            "alpha关注全球华人健康关注全球华人健康",
+            "1b关注全球华人健康",
+            "a关注全球华人健康"
         )
 
         for (text in mainlyChineseTexts) {
-            println(Strings.countChinese(text).toString() + "/" + text.length
-                    + "=" + Strings.countChinese(text) * 1.0 / text.length + "\t" + text)
+            println(
+                Strings.countChinese(text).toString() + "/" + text.length
+                    + "=" + Strings.countChinese(text) * 1.0 / text.length + "\t" + text
+            )
             assertTrue(Strings.isMainlyChinese(text, 0.6), text)
         }
     }
@@ -260,7 +257,8 @@ class TestString {
     fun testSplitStringByRegex() {
         var s = "TestStringUtil"
         val r = s.split("(?=\\p{Upper})".toRegex()).filterNot { it.isEmpty() }.toTypedArray()
-        assertArrayEquals(arrayOf("Test", "String", "Util"), r)
+        // assertArrayEquals(arrayOf("Test", "String", "Util"), r)
+        assertContentEquals(arrayOf("Test", "String", "Util"), r)
         assertEquals("Test.String.Util", StringUtils.join(r, "."))
         var url = "http://t.tt/\t-i 1m"
         var parts = StringUtils.split(url, "\t")
@@ -317,10 +315,11 @@ class TestString {
         println(SParser.wrap("a=1 b=2 c=3 c=4,d= e f").getKvs("="))
         println(SParser.wrap("").kvs)
         val kvs2 = arrayOf(
-                "a=1 b=2 c=3,c=4 d e f",
-                "a=1 b=2 c=3 c=4 d= e f",
-                "a=1,b=2,c=3,c=4,d= e f.3     ",
-                "   a=1     b=2\tc=3 c=4 d= e =3     ")
+            "a=1 b=2 c=3,c=4 d e f",
+            "a=1 b=2 c=3 c=4 d= e f",
+            "a=1,b=2,c=3,c=4,d= e f.3     ",
+            "   a=1     b=2\tc=3 c=4 d= e =3     "
+        )
         for (i in kvs2.indices) {
             val kv = SParser.wrap(kvs2[i]).getKvs("=")
             assertEquals("{a=1, b=2, c=4}", kv.toString(), i.toString() + "th [" + kvs2[i] + "]")
@@ -330,19 +329,19 @@ class TestString {
     @Test
     fun testGetUnslashedLines() {
         var s = "http://www.sxrb.com/sxxww/\t--fetch-interval=1s --fetch-priority=1010 \\\n" +
-                "    --follow-dom=:root --follow-url=.+ --follow-anchor=8,40 \\\n" +
-                "    --entity=#content --entity-fields=title:#title,content:#content,publish_time:#publish_time \\\n" +
-                "    --collection=#comments --collection-item=.comment --collection-item-fields=publish_time:.comment_publish_time,author:.author,content:.content\n" +
-                "http://news.qq.com/\t--fetch-interval=1h --entity=#content\n" +
-                "http://news.youth.cn/\t--fetch-interval=1h --entity=#content\\\n" +
-                "    --collection=#comments\n" +
-                "http://news.163.com/\t--fetch-interval=1h --entity=#content" +
-                "\n"
+            "    --follow-dom=:root --follow-url=.+ --follow-anchor=8,40 \\\n" +
+            "    --entity=#content --entity-fields=title:#title,content:#content,publish_time:#publish_time \\\n" +
+            "    --collection=#comments --collection-item=.comment --collection-item-fields=publish_time:.comment_publish_time,author:.author,content:.content\n" +
+            "http://news.qq.com/\t--fetch-interval=1h --entity=#content\n" +
+            "http://news.youth.cn/\t--fetch-interval=1h --entity=#content\\\n" +
+            "    --collection=#comments\n" +
+            "http://news.163.com/\t--fetch-interval=1h --entity=#content" +
+            "\n"
         var lines = Strings.getUnslashedLines(s)
         assertEquals(4, lines.size.toLong())
         s = "http://sz.sxrb.com/sxxww/dspd/szpd/bwch/\n" +
-                "http://sz.sxrb.com/sxxww/dspd/szpd/fcjjjc/\n" +
-                "http://sz.sxrb.com/sxxww/dspd/szpd/hydt/"
+            "http://sz.sxrb.com/sxxww/dspd/szpd/fcjjjc/\n" +
+            "http://sz.sxrb.com/sxxww/dspd/szpd/hydt/"
         lines = Strings.getUnslashedLines(s)
         assertEquals(3, lines.size.toLong())
     }
@@ -364,9 +363,9 @@ class TestString {
     @Test
     fun testGetFirstInteger() {
         val texts = arrayOf(
-                "-hello world 999 i love you 520 forever",
-                "i have received $1964,234 last day",
-                "this is a java number: 1_435_324"
+            "-hello world 999 i love you 520 forever",
+            "i have received $1964,234 last day",
+            "this is a java number: 1_435_324"
         )
         val expects = arrayOf(999, 1964_234, 1_435_324)
 
@@ -381,9 +380,9 @@ class TestString {
     @Test
     fun testGetLastInteger() {
         val texts = arrayOf(
-                "-hello world 999 i love you 520 forever",
-                "i have received $1964,234 yesterday, and $2046,123 the day before yesterday",
-                "this is a java number: 1_435_324, and this is another: 2_457_325"
+            "-hello world 999 i love you 520 forever",
+            "i have received $1964,234 yesterday, and $2046,123 the day before yesterday",
+            "this is a java number: 1_435_324, and this is another: 2_457_325"
         )
         val expects = arrayOf(520, 2046_123, 2_457_325)
 
@@ -397,9 +396,9 @@ class TestString {
     @Test
     fun testGetFirstFloatNumber() {
         val texts = arrayOf(
-                "-hello world 999.234 i love you 520.02 forever",
-                "i have received $1964,234.1 last day",
-                "this is a java number: 1_435_324.92"
+            "-hello world 999.234 i love you 520.02 forever",
+            "i have received $1964,234.1 last day",
+            "this is a java number: 1_435_324.92"
         )
         val expects = arrayOf(999.234f, 1964_234.1f, 1_435_324.92f)
 

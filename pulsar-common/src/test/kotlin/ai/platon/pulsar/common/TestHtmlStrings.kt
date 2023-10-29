@@ -1,10 +1,7 @@
 package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.RandomStringUtils
-import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TestHtmlStrings {
     @Test

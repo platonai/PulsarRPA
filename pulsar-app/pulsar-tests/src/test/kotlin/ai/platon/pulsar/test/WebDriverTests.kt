@@ -3,7 +3,7 @@ package ai.platon.pulsar.test
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.delay
-import org.junit.Test
+import kotlin.test.*
 
 /**
  * Created by vincent on 16-7-20.

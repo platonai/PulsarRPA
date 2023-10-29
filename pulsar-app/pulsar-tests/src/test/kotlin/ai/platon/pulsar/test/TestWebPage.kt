@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import com.google.gson.GsonBuilder
-import org.junit.Test
+import kotlin.test.*
 import java.time.Instant
 import kotlin.test.*
 

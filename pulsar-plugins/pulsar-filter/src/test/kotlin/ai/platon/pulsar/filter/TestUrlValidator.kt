@@ -16,9 +16,7 @@
  */
 package ai.platon.pulsar.filter
 
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.*
 import org.junit.runner.RunWith
 import org.springframework.test.context.junit4.SpringRunner
 
@@ -27,7 +25,8 @@ class TestUrlValidator : UrlFilterTestBase() {
     private var validUrl: String? = null
     private var invalidUrl: String? = null
     private val preUrl = "http://example."
-    @Before
+
+    @BeforeTest
     @Throws(Exception::class)
     fun setUp() {
         tldLength = conf.getInt("urlfilter.tld.length", 8)
@@ -38,40 +37,40 @@ class TestUrlValidator : UrlFilterTestBase() {
         val urlValidator = UrlValidator(conf)
         validUrl = generateValidTld(tldLength)
         invalidUrl = generateInvalidTld(tldLength)
-        Assert.assertNotNull(urlValidator)
+        assertNotNull(urlValidator)
         // invalid urls
-//        Assert.assertNull("Filtering on a null object should return null",
+//        assertNull("Filtering on a null object should return null",
 //                urlValidator.filter(null))
-        Assert.assertNull("Invalid url: example.com/file[/].html",
+        assertNull("Invalid url: example.com/file[/].html",
                 urlValidator.filter("example.com/file[/].html"))
-        Assert.assertNull("Invalid url: http://www.example.com/space here.html",
+        assertNull("Invalid url: http://www.example.com/space here.html",
                 urlValidator.filter("http://www.example.com/space here.html"))
-        Assert.assertNull("Invalid url: /main.html", urlValidator.filter("/main.html"))
-        Assert.assertNull("Invalid url: www.example.com/main.html",
+        assertNull("Invalid url: /main.html", urlValidator.filter("/main.html"))
+        assertNull("Invalid url: www.example.com/main.html",
                 urlValidator.filter("www.example.com/main.html"))
-        Assert.assertNull("Invalid url: ftp:www.example.com/main.html",
+        assertNull("Invalid url: ftp:www.example.com/main.html",
                 urlValidator.filter("ftp:www.example.com/main.html"))
-        Assert.assertNull("Inalid url: http://999.000.456.32/pulsar/trunk/README.txt",
+        assertNull("Inalid url: http://999.000.456.32/pulsar/trunk/README.txt",
                 urlValidator.filter("http://999.000.456.32/pulsar/trunk/README.txt"))
-        Assert.assertNull("Invalid url: http://www.example.com/ma|in\\toc.html",
+        assertNull("Invalid url: http://www.example.com/ma|in\\toc.html",
                 urlValidator.filter(" http://www.example.com/ma|in\\toc.html"))
         // test tld limit
-        Assert.assertNull("InValid url: $invalidUrl", urlValidator.filter(invalidUrl!!))
+        assertNull("InValid url: $invalidUrl", urlValidator.filter(invalidUrl!!))
         // valid urls
-        Assert.assertNotNull("Valid url: https://issues.apache.org/jira/PULSAR-1127",
+        assertNotNull("Valid url: https://issues.apache.org/jira/PULSAR-1127",
                 urlValidator.filter("https://issues.apache.org/jira/PULSAR-1127"))
-        Assert.assertNotNull(
+        assertNotNull(
                 "Valid url: http://domain.tld/function.cgi?url=http://fonzi.com/&amp;name=Fonzi&amp;mood=happy&amp;coat=leather",
                 urlValidator
                         .filter("http://domain.tld/function.cgi?url=http://fonzi.com/&amp;name=Fonzi&amp;mood=happy&amp;coat=leather"))
-        Assert.assertNotNull(
+        assertNotNull(
                 "Valid url: http://validator.w3.org/feed/check.cgi?url=http%3A%2F%2Ffeeds.feedburner.com%2Fperishablepress",
                 urlValidator
                         .filter("http://validator.w3.org/feed/check.cgi?url=http%3A%2F%2Ffeeds.feedburner.com%2Fperishablepress"))
-        Assert.assertNotNull("Valid url: ftp://alfa.bravo.pi/foo/bar/plan.pdf",
+        assertNotNull("Valid url: ftp://alfa.bravo.pi/foo/bar/plan.pdf",
                 urlValidator.filter("ftp://alfa.bravo.pi/mike/check/plan.pdf"))
         // test tld limit
-        Assert.assertNotNull("Valid url: $validUrl", urlValidator.filter(validUrl!!))
+        assertNotNull("Valid url: $validUrl", urlValidator.filter(validUrl!!))
     }
 
     /**

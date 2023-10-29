@@ -5,16 +5,11 @@ import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.Ignore
-import org.junit.Test
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * TODO: move to pulsar-skeleton module
@@ -32,15 +27,6 @@ class TestWebDriverPool {
         val driverControl = WebDriverSettings(conf)
         val driverPoolManager = DefaultWebDriverPoolManager(conf)
         var quitMultiThreadTesting = false
-
-        @BeforeClass
-        fun setup() {
-
-        }
-
-        @AfterClass
-        fun teardown() {
-        }
     }
 
 //    @Test

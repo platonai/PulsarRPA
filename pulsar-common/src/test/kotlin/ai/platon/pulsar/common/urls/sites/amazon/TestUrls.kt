@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common.urls.sites.amazon
 
-import org.junit.Test
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 class TestAmazonUrlUtils {
     val asin = "B01LSUQSB0"

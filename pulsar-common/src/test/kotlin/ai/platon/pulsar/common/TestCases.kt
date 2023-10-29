@@ -10,17 +10,13 @@ import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.apache.commons.math3.util.Precision
-import org.junit.Ignore
-import org.junit.Test
 import java.awt.Color
 import java.math.BigInteger
 import java.time.Duration
 import java.time.Instant
 import java.util.*
 import kotlin.random.Random
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TestClass(
     val file: String = "",

@@ -19,7 +19,6 @@
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import org.junit.Assert

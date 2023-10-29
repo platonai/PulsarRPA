@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.collect.HyperlinkExtractor
 import ai.platon.pulsar.common.urls.sites.amazon.AmazonUrls
 import ai.platon.pulsar.common.urls.sites.amazon.AsinUrlNormalizer
 import ai.platon.pulsar.test.TestBase
-import org.junit.Test
+import kotlin.test.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
