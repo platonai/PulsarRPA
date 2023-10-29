@@ -238,12 +238,6 @@ open class ProxyEntry2(
      * */
     fun format() = serialize()
 
-    fun toProxyEntry(): ProxyEntry {
-        return ProxyEntry(host, port, outIp, id, declaredTTL, lastTarget, testUrls, defaultTestUrl, isTestIp,
-                user = username, pwd = password
-        )
-    }
-
     override fun hashCode(): Int = 31 * type.hashCode() + hostPort.hashCode()
 
     override fun equals(other: Any?): Boolean {
