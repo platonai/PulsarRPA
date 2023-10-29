@@ -161,7 +161,7 @@ class TestCss {
         assertEquals(expectedContent.size.toLong(), result.size.toLong(), "Number of elements")
         for (i in expectedContent.indices) {
             assertNotNull(result[i])
-            assertEquals("Expected element", expectedContent[i], result[i].ownText())
+            assertEquals(expectedContent[i], result[i].ownText(), "Expected element")
         }
     }
 

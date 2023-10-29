@@ -41,36 +41,33 @@ class TestUrlValidator : UrlFilterTestBase() {
         // invalid urls
 //        assertNull("Filtering on a null object should return null",
 //                urlValidator.filter(null))
-        assertNull("Invalid url: example.com/file[/].html",
-                urlValidator.filter("example.com/file[/].html"))
-        assertNull("Invalid url: http://www.example.com/space here.html",
-                urlValidator.filter("http://www.example.com/space here.html"))
-        assertNull("Invalid url: /main.html", urlValidator.filter("/main.html"))
-        assertNull("Invalid url: www.example.com/main.html",
-                urlValidator.filter("www.example.com/main.html"))
-        assertNull("Invalid url: ftp:www.example.com/main.html",
-                urlValidator.filter("ftp:www.example.com/main.html"))
-        assertNull("Inalid url: http://999.000.456.32/pulsar/trunk/README.txt",
-                urlValidator.filter("http://999.000.456.32/pulsar/trunk/README.txt"))
-        assertNull("Invalid url: http://www.example.com/ma|in\\toc.html",
-                urlValidator.filter(" http://www.example.com/ma|in\\toc.html"))
+        assertNull(urlValidator.filter("example.com/file[/].html"),
+            "Invalid url: example.com/file[/].html")
+        assertNull(urlValidator.filter("http://www.example.com/space here.html"),
+            "Invalid url: http://www.example.com/space here.html")
+        assertNull(urlValidator.filter("/main.html"), "Invalid url: /main.html")
+        assertNull(urlValidator.filter("www.example.com/main.html"),
+            "Invalid url: www.example.com/main.html")
+        assertNull(urlValidator.filter("ftp:www.example.com/main.html"), "Invalid url: ftp:www.example.com/main.html")
+        assertNull(urlValidator.filter("http://999.000.456.32/pulsar/trunk/README.txt"),
+            "Invalid url: http://999.000.456.32/pulsar/trunk/README.txt")
+        assertNull(urlValidator.filter(" http://www.example.com/ma|in\\toc.html"),
+            "Invalid url: http://www.example.com/ma|in\\toc.html")
         // test tld limit
-        assertNull("InValid url: $invalidUrl", urlValidator.filter(invalidUrl!!))
+        assertNull(urlValidator.filter(invalidUrl!!), "InValid url: $invalidUrl")
         // valid urls
-        assertNotNull("Valid url: https://issues.apache.org/jira/PULSAR-1127",
-                urlValidator.filter("https://issues.apache.org/jira/PULSAR-1127"))
+        assertNotNull(urlValidator.filter("https://issues.apache.org/jira/PULSAR-1127"),
+            "Valid url: https://issues.apache.org/jira/PULSAR-1127")
+        assertNotNull(urlValidator.filter("http://domain.tld/function.cgi?url=http://fonzi.com/&amp;name=Fonzi&amp;mood=happy&amp;coat=leather"),
+                "Valid url: http://domain.tld/function.cgi?url=http://fonzi.com/&amp;name=Fonzi&amp;mood=happy&amp;coat=leather")
         assertNotNull(
-                "Valid url: http://domain.tld/function.cgi?url=http://fonzi.com/&amp;name=Fonzi&amp;mood=happy&amp;coat=leather",
-                urlValidator
-                        .filter("http://domain.tld/function.cgi?url=http://fonzi.com/&amp;name=Fonzi&amp;mood=happy&amp;coat=leather"))
+            urlValidator
+                .filter("http://validator.w3.org/feed/check.cgi?url=http%3A%2F%2Ffeeds.feedburner.com%2Fperishablepress"),
+                "Valid url: http://validator.w3.org/feed/check.cgi?url=http%3A%2F%2Ffeeds.feedburner.com%2Fperishablepress")
         assertNotNull(
-                "Valid url: http://validator.w3.org/feed/check.cgi?url=http%3A%2F%2Ffeeds.feedburner.com%2Fperishablepress",
-                urlValidator
-                        .filter("http://validator.w3.org/feed/check.cgi?url=http%3A%2F%2Ffeeds.feedburner.com%2Fperishablepress"))
-        assertNotNull("Valid url: ftp://alfa.bravo.pi/foo/bar/plan.pdf",
-                urlValidator.filter("ftp://alfa.bravo.pi/mike/check/plan.pdf"))
+            urlValidator.filter("ftp://alfa.bravo.pi/mike/check/plan.pdf"), "Valid url: ftp://alfa.bravo.pi/foo/bar/plan.pdf")
         // test tld limit
-        assertNotNull("Valid url: $validUrl", urlValidator.filter(validUrl!!))
+        assertNotNull(urlValidator.filter(validUrl!!), "Valid url: $validUrl")
     }
 
     /**
@@ -79,7 +76,7 @@ class TestUrlValidator : UrlFilterTestBase() {
     fun generateValidTld(length: Int): String {
         val buffer = StringBuilder()
         for (i in 1..length) {
-            val c = ('a'.toDouble() + Math.random() * 26).toChar()
+            val c = ('a'.code.toDouble() + Math.random() * 26).toInt().toChar()
             buffer.append(c)
         }
         return preUrl + buffer.toString()
@@ -91,7 +88,7 @@ class TestUrlValidator : UrlFilterTestBase() {
     fun generateInvalidTld(length: Int): String {
         val buffer = StringBuilder()
         for (i in 1..length + 1) {
-            val c = ('a'.toDouble() + Math.random() * 26).toChar()
+            val c = ('a'.code.toDouble() + Math.random() * 26).toInt().toChar()
             buffer.append(c)
         }
         return preUrl + buffer.toString()
