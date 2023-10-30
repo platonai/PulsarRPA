@@ -294,21 +294,23 @@ class ProxyEntry constructor(
 
         if (other is ProxyEntry2) {
             return other.type == type
-                && other.host == host && other.port == port
-                && other.outIp == outIp
+                && other.host == host
+                && other.port == port
+                && other.username == username
         }
 
         return other is ProxyEntry
-            && other.proxyType == proxyType
-            && other.host == host && other.port == port
-            && other.outIp == outIp
+            && other.type == type
+            && other.host == host
+            && other.port == port
+            && other.username == username
     }
-    
+
     /**
      * The string representation, can be parsed using [parse]
      * */
     override fun toString(): String = "$display $metadata".trim()
-    
+
     override fun compareTo(other: ProxyEntry): Int {
         var c = outIp.compareTo(other.outIp)
         if (c == 0) {
@@ -316,7 +318,7 @@ class ProxyEntry constructor(
         }
         return c
     }
-    
+
     private fun formatDisplay(): String {
         val ban = if (isBanned) "[banned] " else ""
         val ttlStr = ttlDuration?.truncatedTo(ChronoUnit.SECONDS)?.readable() ?:"0s"

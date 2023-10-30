@@ -2,6 +2,7 @@ package ai.platon.pulsar.test.browser
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyEntry2
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
@@ -324,7 +325,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         }
 
         val browserId = BrowserId.RANDOM
-        browserId.setProxy(proxyEntry.toProxyEntry())
+        browserId.setProxy(ProxyEntry.create(proxyEntry))
 
         val browser = driverFactory.launchBrowser(browserId)
         val driver = browser.newDriver()

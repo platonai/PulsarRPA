@@ -246,11 +246,14 @@ open class ProxyEntry2(
         }
 
         return other is ProxyEntry2
-                && other.type == type
-                && other.host == host && other.port == port
-                && other.outIp == outIp
+            && other.type == type
+            && other.host == host
+            && other.port == port
+            && other.username == username
+            && other.password == password
+            && other.outIp == outIp
     }
-    
+
     /**
      * The string representation, can be parsed using [parse]
      * */
