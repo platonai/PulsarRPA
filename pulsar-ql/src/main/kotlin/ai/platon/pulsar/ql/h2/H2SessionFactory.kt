@@ -50,9 +50,10 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
         val h2session = org.h2.engine.Engine.getInstance().createSession(ci)
 
         if (!sqlContext.isActive) {
-            log.info("Context is closed, can not create a Scent SQL session, fallback to H2database to handle this")
-            return h2session
-//            throw IllegalStateException("[H2SessionFactory] SQL context is closed, will not create SQL session")
+            // Note: it's proven that we can not just return a h2session, never do this !!!
+            // log.info("Context is closed, can not create a Scent SQL session, fallback to H2database to handle this")
+            // return h2session
+            throw IllegalStateException("[H2SessionFactory] SQL context is closed, will not create SQL session")
         }
 
         log.debug("Creating SQL session for h2 connection | {}", ci.url)
