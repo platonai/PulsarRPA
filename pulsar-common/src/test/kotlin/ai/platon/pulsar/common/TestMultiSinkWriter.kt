@@ -7,7 +7,7 @@ import kotlin.test.*
 
 class TestMultiSinkWriter {
 
-    private val writer = MultiSinkWriter(ImmutableConfig())
+    private val writer = MultiSinkWriter()
 
     @Test
     fun `When writer is idle then close it automatically`() {

@@ -15,9 +15,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 open class MultiSinkWriter(
     @Deprecated("Useless config")
-    val conf: ImmutableConfig
+    val conf: ImmutableConfig = ImmutableConfig.UNSAFE
 ) : AutoCloseable {
-    private val logger = getLogger(this)
+    private val logger = getLogger(MultiSinkWriter::class)
     private val _writers = ConcurrentHashMap<Path, MessageWriter>()
     private val closed = AtomicBoolean()
 
@@ -47,7 +47,6 @@ open class MultiSinkWriter(
 
     fun write(message: String, file: Path) {
         _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)
-
         closeIdleWriters()
     }
 
@@ -63,8 +62,10 @@ open class MultiSinkWriter(
         closeIdleWriters()
     }
 
-    fun closeWriter(filename: String) {
-        _writers[getPath(filename)]?.close()
+    fun close(filename: String) {
+        val path = getPath(filename)
+        val writer = _writers.remove(path)
+        writer?.close()
     }
 
     fun flush() {
@@ -73,7 +74,9 @@ open class MultiSinkWriter(
     
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            _writers.values.forEach { it.close() }
+            _writers.forEach {
+                runCatching { it.value.close() }.onFailure { logger.warn(it.stringify()) }
+            }
         }
     }
 
