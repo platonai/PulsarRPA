@@ -17,6 +17,7 @@ abstract class MultiSinkWriter(
     @Deprecated("Useless config")
     val conf: ImmutableConfig
 ) : AutoCloseable {
+    private val logger = getLogger(this)
     private val timeIdent get() = DateTimes.formatNow("MMdd")
     private val reportDir0 get() = AppPaths.REPORT_DIR.resolve(timeIdent)
     private val _writers = ConcurrentHashMap<Path, MessageWriter>()
@@ -47,6 +48,8 @@ abstract class MultiSinkWriter(
 
     fun write(message: String, file: Path) {
         _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)
+
+        closeIdleWriters()
     }
 
     fun writeLine(message: String, filename: String) {
@@ -57,6 +60,8 @@ abstract class MultiSinkWriter(
         val writer = _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }
         writer.write(message)
         writer.write("\n")
+
+        closeIdleWriters()
     }
 
     fun closeWriter(filename: String) {
@@ -70,6 +75,18 @@ abstract class MultiSinkWriter(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             _writers.values.forEach { it.close() }
+        }
+    }
+
+    private fun closeIdleWriters() {
+        try {
+            val idleWriters = _writers.filter { it.value.isIdle }
+            idleWriters.forEach { _writers.remove(it.key) }
+            idleWriters.forEach {
+                runCatching { it.value.close() }.onFailure { logger.warn(it.stringify()) }
+            }
+        } catch (e: Exception) {
+            logger.warn(e.stringify())
         }
     }
 }
