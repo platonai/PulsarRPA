@@ -2,6 +2,7 @@ package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.RandomStringUtils
 import java.nio.file.Files
+import java.time.Duration
 import kotlin.test.*
 
 class TestMessageWriter {
@@ -29,5 +30,17 @@ class TestMessageWriter {
             .filter { Files.isRegularFile(it) }
             .filter { it.toString().contains("TestMessageWriter") }
             .forEach { Files.deleteIfExists(it) }
+    }
+
+    @Test
+    fun testExpiry() {
+        val path = Files.createTempFile("test", ".log")
+        val writer = MessageWriter(path)
+        writer.idleTimeout = Duration.ofSeconds(3)
+        writer.write("hello")
+        val length = Files.readString(path).length
+        assertEquals(6, length)
+        sleepSeconds(3)
+        assertTrue { writer.isIdle }
     }
 }

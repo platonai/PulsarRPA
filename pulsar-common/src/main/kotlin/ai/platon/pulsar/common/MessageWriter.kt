@@ -36,6 +36,8 @@ class MessageWriter(
         var DEFAULT_MAX_FILE_SIZE = 512 * 1024 * 1024
 
         var CHECK_SIZE_EACH_WRITES = 4096
+
+        var IDLE_TIMEOUT = Duration.ofMinutes(5)
     }
 
     private val logger = LoggerFactory.getLogger(MessageWriter::class.java)
@@ -46,8 +48,8 @@ class MessageWriter(
 
     var lastActiveTime = Instant.now()
         private set
-    var idleTimeout = Duration.ofMinutes(10)
-    val isIdle = DateTimes.isExpired(lastActiveTime, idleTimeout)
+    var idleTimeout = IDLE_TIMEOUT
+    val isIdle get() = DateTimes.isExpired(lastActiveTime, idleTimeout)
     var maxFileSize = DEFAULT_MAX_FILE_SIZE
 
     var dateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
