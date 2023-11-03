@@ -1,13 +1,13 @@
 package ai.platon.pulsar.crawl.common.options
 
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.options.LinkOptions
-import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.options.OptionUtils
-import ai.platon.pulsar.common.options.PulsarOptions
+import ai.platon.pulsar.common.options.*
+import ai.platon.pulsar.common.options.deprecated.CrawlOptions
 import com.google.common.collect.Lists
+import org.apache.commons.collections4.CollectionUtils
 import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.*
+import java.util.*
 import kotlin.test.assertTrue
 
 /**
@@ -38,6 +38,14 @@ class TestPulsarOptions {
 
     @Test
     fun testRebuildOptions() {
+        val options = CrawlOptions.parse(args2, conf)
+        val options2 = CrawlOptions.parse(options.toString(), conf)
+        CollectionUtils.containsAll(options.params.asStringMap().values, options2.params.asStringMap().values)
+
+        println(args2)
+        println(options.params.asStringMap())
+        println(options2.params.asStringMap())
+
         val args = "-ps -rpl -nlf -notSupport"
         val loadOptions = LoadOptions.parse(args, conf)
         val finalArgs = loadOptions.toString()
@@ -67,8 +75,10 @@ class TestPulsarOptions {
 
     @Test
     fun testEmptyOptions() {
-        assertEquals(LoadOptions.DEFAULT, LoadOptions.parse(""))
-        assertEquals(LoadOptions.DEFAULT, LoadOptions.createUnsafe())
+        assertEquals(CrawlOptions.DEFAULT, CrawlOptions(""))
+        assertEquals(CrawlOptions.DEFAULT, CrawlOptions())
+        assertEquals(CrawlOptions.DEFAULT, CrawlOptions(arrayOf()))
+        assertEquals(CrawlOptions.DEFAULT, CrawlOptions(arrayOf("")))
 
         assertEquals(LinkOptions.DEFAULT, LinkOptions(""))
         assertEquals(LinkOptions.DEFAULT, LinkOptions())
@@ -76,7 +86,7 @@ class TestPulsarOptions {
         assertEquals(LinkOptions.DEFAULT, LinkOptions(arrayOf("")))
         assertEquals(LinkOptions.DEFAULT, LinkOptions(HashMap()))
 
-        println(LoadOptions.DEFAULT)
+        println(CrawlOptions.DEFAULT)
         println(LinkOptions.DEFAULT)
     }
 

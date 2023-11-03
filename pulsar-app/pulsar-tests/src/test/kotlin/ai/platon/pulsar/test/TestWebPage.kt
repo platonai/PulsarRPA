@@ -7,8 +7,7 @@ import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import com.google.gson.GsonBuilder
-import org.junit.Test
-import org.springframework.boot.test.context.SpringBootTest
+import kotlin.test.*
 import java.time.Instant
 import kotlin.test.*
 
@@ -51,7 +50,7 @@ class TestWebPage: TestBase() {
         assertTrue { page.isContentUpdated }
         assertEquals(options2, page.options)
         val prevFetchTime2 = page.prevFetchTime
-        val fetchTime2 = page.fetchTime
+//        val fetchTime2 = page.fetchTime
 
         println(PageLoadStatusFormatter(page, "", true, true, true, true))
         println("Fetch time history: " + page.getFetchTimeHistory(""))

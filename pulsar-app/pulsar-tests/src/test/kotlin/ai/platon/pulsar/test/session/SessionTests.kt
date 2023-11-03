@@ -2,6 +2,7 @@ package ai.platon.pulsar.test.session
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.persist.ext.loadEvent
+import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.session.BasicPulsarSession
@@ -82,5 +83,24 @@ class SessionTests {
         pages2.forEach { assertTrue { it.isCached } }
         pages2.forEach { assertTrue { it.loadEvent != null } }
         assertEquals(pages.size, pages2.size)
+    }
+
+    @Test
+    fun `When loaded a HTML page then the navigate state are correct`() {
+        val options = session.options("-refresh")
+        options.event.browseEvent.onDidScroll.addLast { page, driver ->
+            val navigateEntry = driver.navigateEntry
+            assertTrue { navigateEntry.documentTransferred }
+            assertTrue { navigateEntry.networkRequestCount.get() > 0 }
+            assertTrue { navigateEntry.networkResponseCount.get() > 0 }
+            
+            assertEquals(200, driver.mainResponseStatus)
+            assertTrue { driver.mainResponseStatus == 200 }
+            assertTrue { driver.mainResponseHeaders.isNotEmpty() }
+            assertEquals(200, navigateEntry.mainResponseStatus)
+            assertTrue { navigateEntry.mainResponseStatus == 200 }
+            assertTrue { navigateEntry.mainResponseHeaders.isNotEmpty() }
+        }
+        session.load(url, options)
     }
 }

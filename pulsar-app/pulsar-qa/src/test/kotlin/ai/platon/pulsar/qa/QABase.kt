@@ -1,7 +1,6 @@
 package ai.platon.pulsar.qa
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
-import org.junit.Before
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration

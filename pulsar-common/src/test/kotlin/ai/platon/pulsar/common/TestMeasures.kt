@@ -1,8 +1,8 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.measure.ByteUnit
-import org.junit.Test
-import kotlin.test.assertEquals
+
+import kotlin.test.*
 
 class TestMeasures {
 

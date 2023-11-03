@@ -1,9 +1,8 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.Params
-import org.junit.Test
 import java.time.Duration
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TestParams {
 

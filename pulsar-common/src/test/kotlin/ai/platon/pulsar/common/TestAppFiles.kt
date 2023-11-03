@@ -2,14 +2,12 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.AppPaths.get
 import org.apache.commons.lang3.SystemUtils
-import org.junit.Assert
-import org.junit.Test
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.PosixFilePermissions
 import java.text.SimpleDateFormat
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Created by vincent on 16-7-20.

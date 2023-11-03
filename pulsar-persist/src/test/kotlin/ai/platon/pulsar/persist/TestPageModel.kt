@@ -3,7 +3,7 @@ package ai.platon.pulsar.persist
 import ai.platon.pulsar.common.config.VolatileConfig
 import org.apache.gora.mongodb.store.MongoStore
 import org.apache.gora.persistency.impl.DirtyListWrapper
-import org.junit.Test
+import kotlin.test.*
 import kotlin.test.*
 
 class TestPageModel {

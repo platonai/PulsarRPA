@@ -9,7 +9,7 @@ import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
 import ai.platon.pulsar.rest.api.service.ScrapeService
 import org.apache.commons.lang3.RandomStringUtils
 import org.junit.Ignore
-import org.junit.Test
+import kotlin.test.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest

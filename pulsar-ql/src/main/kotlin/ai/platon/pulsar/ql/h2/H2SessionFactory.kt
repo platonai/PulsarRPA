@@ -1,6 +1,5 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.*
@@ -21,8 +20,6 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     private val log = LoggerFactory.getLogger(H2SessionFactory::class.java)!!
 
     private val sqlContext get() = SQLContexts.create()
-
-    private val sqlContextOrNull get() = if (AppContext.isActive) SQLContexts.create() else null
 
     init {
         H2Config.config()
@@ -49,15 +46,18 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
      * @return The h2 session
      */
     @Synchronized
-    override fun createSession(ci: ConnectionInfo): Session? {
-        if (!AppContext.isActive) {
-            // throw IllegalStateException("[H2SessionFactory] SQL context is closed, will not create SQL session")
-            return null
+    override fun createSession(ci: ConnectionInfo): Session {
+        val h2session = org.h2.engine.Engine.getInstance().createSession(ci)
+
+        if (!sqlContext.isActive) {
+            // Note: it's proven that we can not just return a h2session, never do this !!!
+            // log.info("Context is closed, can not create a Scent SQL session, fallback to H2database to handle this")
+            // return h2session
+            throw IllegalStateException("[H2SessionFactory] SQL context is closed, will not create SQL session")
         }
 
         log.debug("Creating SQL session for h2 connection | {}", ci.url)
 
-        val h2session = org.h2.engine.Engine.getInstance().createSession(ci)
         SysProperties.serializeJavaObject = ci.isPersistent
 
         val h2Log = LoggerFactory.getLogger("org.h2")
@@ -65,7 +65,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
             h2session.trace.setLevel(TraceSystem.ADAPTER)
         }
 
-        val sqlSession = sqlContextOrNull?.createSession(H2SessionDelegate(h2session.serialId, h2session)) ?: return null
+        val sqlSession = sqlContext.createSession(H2SessionDelegate(h2session.serialId, h2session))
         sqlSession.sessionConfig.set(CapabilityTypes.SCENT_EXTRACT_TABULATE_CELL_TYPE, "DATABASE")
         require(sqlSession.id == h2session.serialId)
 
@@ -102,7 +102,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
     @Synchronized
     override fun closeSession(serialId: Int) {
-        sqlContextOrNull?.closeSession(serialId)
+        sqlContext.closeSession(serialId)
     }
 
     @Synchronized
@@ -111,7 +111,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     }
 
     /**
-     * @see org.h2.engine.SessionRemote.shutdownSessionFactory()
+     * @see org.h2.engine.SessionRemote.shutdownSessionFactory
      * */
     @Synchronized
     fun shutdownNow() {

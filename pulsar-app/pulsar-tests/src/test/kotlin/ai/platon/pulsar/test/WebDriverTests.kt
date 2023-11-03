@@ -3,7 +3,7 @@ package ai.platon.pulsar.test
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.delay
-import org.junit.Test
+import kotlin.test.*
 
 /**
  * Created by vincent on 16-7-20.
@@ -17,7 +17,7 @@ class WebDriverTests: TestBase() {
     @Test
     fun testScrollDown() {
         val options = session.options("-refresh")
-        options.event.browseEvent.onWillFetch.addLast { page, driver ->
+        options.event.browseEvent.onWillFetch.addLast { _, driver ->
             visit(url2, driver)
         }
         session.load(url, options)

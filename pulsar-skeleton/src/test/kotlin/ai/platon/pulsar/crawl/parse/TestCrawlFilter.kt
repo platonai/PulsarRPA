@@ -4,9 +4,7 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrl
 import ai.platon.pulsar.crawl.filter.CrawlFilters
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
+import kotlin.test.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
@@ -31,7 +29,7 @@ class TestCrawlFilter {
     @Autowired
     lateinit var crawlFilters: CrawlFilters
 
-    @Before
+    @BeforeTest
     @Throws(IOException::class)
     fun setUp() {
         val crawlFilterRules = "{}"

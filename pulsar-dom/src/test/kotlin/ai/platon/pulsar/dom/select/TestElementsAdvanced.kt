@@ -1,8 +1,7 @@
 package ai.platon.pulsar.dom.select
 
 import org.jsoup.Jsoup
-import org.junit.Assert.*
-import org.junit.Test
+import kotlin.test.*
 
 /**
  * Tests for ElementList.

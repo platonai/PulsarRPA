@@ -205,7 +205,7 @@ data class BrowserId(
 @Deprecated("Inappropriate name", ReplaceWith("BrowserId"))
 typealias BrowserInstanceId = BrowserId
 
-@Deprecated("rename to PrivacyAgentGenerator")
+@Deprecated("rename to PrivacyAgentGenerator", ReplaceWith("PrivacyAgentGenerator"))
 interface PrivacyContextIdGenerator {
     operator fun invoke(fingerprint: Fingerprint): PrivacyAgent
 }

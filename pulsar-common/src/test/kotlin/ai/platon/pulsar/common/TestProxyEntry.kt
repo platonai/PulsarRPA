@@ -3,12 +3,9 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyEntry2
 import ai.platon.pulsar.common.urls.UrlUtils
-import org.junit.Test
 import java.net.Proxy
 import java.net.URL
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Created by vincent on 17-1-14.

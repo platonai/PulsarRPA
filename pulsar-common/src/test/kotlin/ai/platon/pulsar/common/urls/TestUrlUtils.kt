@@ -18,10 +18,7 @@ package ai.platon.pulsar.common.urls
 
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrl
 import ai.platon.pulsar.common.urls.UrlUtils.unreverseUrl
-import org.junit.Assert
-import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 typealias uc = UrlCommon
 
@@ -86,12 +83,12 @@ class TestUrlUtils {
         @Throws(Exception::class)
         private fun assertReverse(url: String, expectedReversedUrl: String) {
             val reversed = reverseUrl(url)
-            Assert.assertEquals(expectedReversedUrl, reversed)
+            assertEquals(expectedReversedUrl, reversed)
         }
 
         private fun assertUnreverse(reversedUrl: String, expectedUrl: String) {
             val unreversed = unreverseUrl(reversedUrl)
-            Assert.assertEquals(expectedUrl, unreversed)
+            assertEquals(expectedUrl, unreversed)
         }
     }
 }

@@ -20,9 +20,7 @@ package ai.platon.pulsar.normalizer
 
 import ai.platon.pulsar.common.ResourceLoader.getResource
 import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.*
 import org.junit.runner.RunWith
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,7 +41,7 @@ class TestRegexUrlNormalizer {
     @Autowired
     private val normalizer: RegexUrlNormalizer? = null
     private val testData = HashMap<String, List<NormalizedURL>>()
-    @Before
+    @BeforeTest
     @Throws(IOException::class, URISyntaxException::class)
     fun setUp() {
         val SAMPLE_DIR = Paths.get(getResource("normregex/sample")!!.toURI())
@@ -83,7 +81,7 @@ class TestRegexUrlNormalizer {
             val normalized = normalizer!!.normalize(url1.url, scope)
             val expected = url1.expectedURL
             LOG.info("scope: $scope url: $url | normalized: $normalized | expected: $expected")
-            Assert.assertEquals(url1.expectedURL, normalized)
+            assertEquals(url1.expectedURL, normalized)
         }
     }
 

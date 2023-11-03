@@ -799,7 +799,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      * WebPage.url is the permanent internal address, it might not still available to access the target.
      * And WebPage.location or WebPage.baseUrl is the last working address, it might redirect to url,
      * or it might have additional random parameters.
-     * WebPage.location may be different from url, it's generally normalized.
+     * WebPage.location may be different from url which is generally normalized.
      * <p>
      * TODO: location is usually not the same as baseUrl, set it properly
      */

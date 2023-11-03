@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql.udfs
 
 import ai.platon.pulsar.ql.TestBase
-import org.junit.Test
+import kotlin.test.*
 import kotlin.test.assertTrue
 
 class SelectFunctionTests: TestBase() {

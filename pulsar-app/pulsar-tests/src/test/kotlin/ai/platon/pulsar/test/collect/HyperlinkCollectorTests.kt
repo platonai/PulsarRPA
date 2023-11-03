@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.sleep
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
-import org.junit.Test
+import kotlin.test.*
 import java.lang.IllegalArgumentException
 import java.nio.file.Paths
 import java.time.Duration

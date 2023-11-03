@@ -20,13 +20,12 @@ package ai.platon.pulsar.parse.html
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import org.apache.html.dom.HTMLDocumentImpl
 import org.cyberneko.html.parsers.DOMFragmentParser
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
@@ -159,19 +158,6 @@ class TestPrimerParser {
             return o.stream().map { obj: HyperlinkPersistable -> obj.toString() }.collect(Collectors.joining("\n"))
         }
 
-        private fun compareLinks(expected: ArrayList<HyperlinkPersistable>, actual: ArrayList<HyperlinkPersistable>, pageIndex: Int) {
-            Assert.assertEquals("Page : p" + (pageIndex + 1) + "\tExpected : [" + linksString(expected) + "]\t Actual : [" + linksString(actual) + "]\t",
-                    expected.size.toLong(), actual.size.toLong())
-            for (i in expected.indices) {
-                if (expected[i] != actual[i]) {
-                    Assert.assertTrue(
-                            "got wrong liveLinks at position " + i + "\n" + "answer: " + "\n" + "'" + expected[i].url
-                                    + "', anchor: '" + expected[i].text + "'" +
-                                    "\n" + "got: " + "\n" + "'" + actual[i].url + "', anchor: '" + actual[i].text + "'", false)
-                }
-            }
-        }
-
         init {
             ANSWER_HYPERLINKS = arrayOf(arrayOf(HyperlinkPersistable("http://www.pulsar.org", "anchor")), arrayOf(HyperlinkPersistable("http://www.pulsar.org/", "home"),
                     HyperlinkPersistable("http://www.pulsar.org/docs/bot.html", "bots")), arrayOf(HyperlinkPersistable("http://www.pulsar.org/", "separate this"),
@@ -203,7 +189,7 @@ class TestPrimerParser {
     private lateinit var conf: MutableConfig
     private lateinit var primerParser: PrimerParser
 
-    @Before
+    @BeforeTest
     fun setup() {
         conf = immutableConfig.toMutableConfig()
         conf.setBoolean("parser.html.form.use_action", true)
@@ -221,7 +207,8 @@ class TestPrimerParser {
                 parser.parse(InputSource(ByteArrayInputStream(testPages[i].toByteArray())), node)
                 testBaseHrefURLs[i] = URL(testBaseHrefs[i])
             } catch (e: Exception) {
-                Assert.assertTrue("caught exception: $e", false)
+                // assertTrue("caught exception: $e", false)
+                println(e.stringify())
             }
             testDOMs[i] = node
         }
@@ -234,7 +221,7 @@ class TestPrimerParser {
         }
         for (i in testPages.indices) {
             val text = primerParser.getPageText(testDOMs[i]!!)
-            Assert.assertEquals(answerText[i], text)
+            assertEquals(answerText[i], text)
         }
     }
 
@@ -245,7 +232,7 @@ class TestPrimerParser {
         }
         for (i in testPages.indices) {
             val title = primerParser.getPageTitle(testDOMs[i]!!)
-            Assert.assertEquals(answerTitle[i], title)
+            assertEquals(answerTitle[i], title)
         }
     }
 

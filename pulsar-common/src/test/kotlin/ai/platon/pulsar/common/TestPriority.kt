@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common
 
-import org.junit.Test
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 /**
  * Created by vincent on 17-1-14.

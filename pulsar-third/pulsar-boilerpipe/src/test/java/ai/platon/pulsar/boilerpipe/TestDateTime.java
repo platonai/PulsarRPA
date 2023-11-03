@@ -7,7 +7,7 @@ import ai.platon.pulsar.boilerpipe.utils.ScentUtils;
 import ai.platon.pulsar.common.DateTimeDetector;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
+import org.junit.Test;;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;

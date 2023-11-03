@@ -1,12 +1,8 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.persist.model.WebPageFormatter
-import org.junit.Before
-import org.junit.Test
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Created by vincent on 16-7-20.
@@ -24,7 +20,7 @@ class TestLoadResources: TestBase() {
         https://www.shidaihuayuan.com/a/1597.html
     """.trimIndent().split("\n")
 
-    @Before
+    @BeforeTest
     fun setup() {
         resourceUrls.forEach { webDB.delete(it) }
     }

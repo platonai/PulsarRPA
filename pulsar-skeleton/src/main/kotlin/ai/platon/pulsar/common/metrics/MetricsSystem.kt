@@ -160,7 +160,7 @@ open class MetricsSystem(
         inc(count = 1, counters = counters)
     }
 
-    fun start() {
+    open fun start() {
         if (isEnabled) {
             // jmxReporter.start()
             // csvReporter.start(initialDelay.seconds, csvReportInterval.seconds, TimeUnit.SECONDS)

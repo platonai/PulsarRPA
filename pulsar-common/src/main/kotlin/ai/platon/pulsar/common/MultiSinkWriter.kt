@@ -1,5 +1,7 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
@@ -11,13 +13,16 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * Multiple sink message writer. Messages from different source are write to different files or database.
  */
-open class MultiSinkWriter : AutoCloseable {
-    private val timeIdent get() = DateTimes.formatNow("MMdd")
-    private val reportDir0 get() = AppPaths.REPORT_DIR.resolve(timeIdent)
+open class MultiSinkWriter(
+    @Deprecated("Useless config")
+    val conf: ImmutableConfig = ImmutableConfig.UNSAFE
+) : AutoCloseable {
+    private val logger = getLogger(MultiSinkWriter::class)
     private val _writers = ConcurrentHashMap<Path, MessageWriter>()
     private val closed = AtomicBoolean()
-    
-    val reportDir = reportDir0
+
+    private val timeIdent get() = DateTimes.formatNow("MMdd")
+    val reportDir = AppPaths.REPORT_DIR.resolve(timeIdent)
     val writers: Map<Path, MessageWriter> get() = _writers
 
     init {
@@ -42,6 +47,7 @@ open class MultiSinkWriter : AutoCloseable {
 
     fun write(message: String, file: Path) {
         _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)
+        closeIdleWriters()
     }
 
     fun writeLine(message: String, filename: String) {
@@ -52,10 +58,14 @@ open class MultiSinkWriter : AutoCloseable {
         val writer = _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }
         writer.write(message)
         writer.write("\n")
+
+        closeIdleWriters()
     }
 
-    fun closeWriter(filename: String) {
-        _writers[getPath(filename)]?.close()
+    fun close(filename: String) {
+        val path = getPath(filename)
+        val writer = _writers.remove(path)
+        writer?.close()
     }
 
     fun flush() {
@@ -64,7 +74,21 @@ open class MultiSinkWriter : AutoCloseable {
     
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            _writers.values.forEach { it.close() }
+            _writers.forEach {
+                runCatching { it.value.close() }.onFailure { logger.warn(it.stringify()) }
+            }
+        }
+    }
+
+    private fun closeIdleWriters() {
+        try {
+            val idleWriters = _writers.filter { it.value.isIdle }
+            idleWriters.forEach { _writers.remove(it.key) }
+            idleWriters.forEach {
+                runCatching { it.value.close() }.onFailure { logger.warn(it.stringify()) }
+            }
+        } catch (e: Exception) {
+            logger.warn(e.stringify())
         }
     }
 }

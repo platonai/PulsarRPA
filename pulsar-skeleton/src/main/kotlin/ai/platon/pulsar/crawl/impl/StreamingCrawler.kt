@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnit
-import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.options.LoadOptions
@@ -322,7 +321,7 @@ open class StreamingCrawler(
 
                 // The largest disk must have at least 10 GiB remaining space
                 val freeSpace =
-                    Runtimes.unallocatedDiskSpaces().maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
+                    Runtimes.unallocatedDiskSpaces().maxOfOrNull { ByteUnit.BYTE.toGB(it) } ?: 0.0
                 if (freeSpace < 10.0) {
                     val diskSpaces = Runtimes.unallocatedDiskSpaces().joinToString { ByteUnit.BYTE.toGB(it).toString() }
                     logger.error("Disk space is full! | {}", diskSpaces)
@@ -412,6 +411,7 @@ open class StreamingCrawler(
         k = 0
         while (isActive && AppSystemInfo.isCriticalMemory) {
             if (k++ % 20 == 0) {
+                // k is the number of consecutive warnings, the sequence of k is: 1, 21, 41, 61, ...
                 handleMemoryShortage(k)
             }
             criticalWarning = CriticalWarning.OUT_OF_MEMORY
@@ -648,8 +648,8 @@ open class StreamingCrawler(
         }
 
         // TODO: use the code below, to avoid option creation, which leads to too complex option merging
-//        if (url.deadline > Instant.now()) {
-//            session.loadDeferred(url)
+//        if (url.deadline <= Instant.now()) {
+//            return null
 //        }
 
         return kotlin.runCatching { session.loadDeferred(url, options) }
@@ -798,12 +798,12 @@ open class StreamingCrawler(
         delayCache.add(DelayUrl(url, delay))
     }
 
-    private fun handleMemoryShortage(j: Int) {
+    private fun handleMemoryShortage(consecutiveWarningCount: Int) {
         logger.info(
-            "$j.\tnumRunning: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
+            "{}. runningTasks: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
+            consecutiveWarningCount,
             globalRunningTasks, AppSystemInfo.formatAvailableMemory(),
-            Strings.compactFormat(AppSystemInfo.actualCriticalMemory.toLong()),
-            AppSystemInfo.formatMemoryShortage()
+            AppSystemInfo.formatMemoryToReserve(), AppSystemInfo.formatMemoryShortage()
         )
         session.globalCache.clearPDCaches()
 

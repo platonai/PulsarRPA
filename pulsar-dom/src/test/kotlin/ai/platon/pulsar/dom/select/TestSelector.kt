@@ -1,8 +1,10 @@
 package ai.platon.pulsar.dom.select
 
 import org.jsoup.Jsoup
-import org.junit.Assert.*
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Tests that the selector selects correctly.
@@ -62,7 +64,8 @@ class TestSelector {
 
     @Test
     fun testByAttribute() {
-        val h = "<div Title=Foo /><div Title=Bar /><div Style=Qux /><div title=Balim /><div title=SLIM />" + "<div data-name='with spaces'/>"
+        val h =
+            "<div Title=Foo /><div Title=Bar /><div Style=Qux /><div title=Balim /><div title=SLIM />" + "<div data-name='with spaces'/>"
         val doc = Jsoup.parse(h)
 
         val withTitle = doc.select("[title]")
@@ -162,7 +165,8 @@ class TestSelector {
 
     @Test
     fun testByAttributeRegex() {
-        val doc = Jsoup.parse("<p><img src=foo.png id=1><img src=bar.jpg id=2><img src=qux.JPEG id=3><img src=old.gif><img></p>")
+        val doc =
+            Jsoup.parse("<p><img src=foo.png id=1><img src=bar.jpg id=2><img src=qux.JPEG id=3><img src=old.gif><img></p>")
         val imgs = doc.select("img[src~=(?i)\\.(png|jpe?g)]")
         assertEquals(3, imgs.size.toLong())
         assertEquals("1", imgs[0].id())
@@ -172,7 +176,8 @@ class TestSelector {
 
     @Test
     fun testByAttributeRegexCharacterClass() {
-        val doc = Jsoup.parse("<p><img src=foo.png id=1><img src=bar.jpg id=2><img src=qux.JPEG id=3><img src=old.gif id=4></p>")
+        val doc =
+            Jsoup.parse("<p><img src=foo.png id=1><img src=bar.jpg id=2><img src=qux.JPEG id=3><img src=old.gif id=4></p>")
         val imgs = doc.select("img[src~=[o]]")
         assertEquals(2, imgs.size.toLong())
         assertEquals("1", imgs[0].id())
@@ -290,7 +295,8 @@ class TestSelector {
 
     @Test
     fun deeperDescendant() {
-        val h = "<div class=head><p><span class=first>Hello</div><div class=head><p class=first><span>Another</span><p>Again</div>"
+        val h =
+            "<div class=head><p><span class=first>Hello</div><div class=head><p class=first><span>Another</span><p>Again</div>"
         val doc = Jsoup.parse(h)
         val root = doc.getElementsByClass("head").first()!!
 
@@ -512,7 +518,8 @@ class TestSelector {
 
     @Test
     fun testPseudoHas() {
-        val doc = Jsoup.parse("<div id=0><p><span>Hello</span></p></div> <div id=1><span class=foo>There</span></div> <div id=2><p>Not</p></div>")
+        val doc =
+            Jsoup.parse("<div id=0><p><span>Hello</span></p></div> <div id=1><span class=foo>There</span></div> <div id=2><p>Not</p></div>")
 
         val divs1 = doc.select("div:has(span)")
         assertEquals(2, divs1.size.toLong())
@@ -612,7 +619,8 @@ class TestSelector {
 
     @Test
     fun testMatches() {
-        val doc = Jsoup.parse("<p id=1>The <i>Rain</i></p> <p id=2>There are 99 bottles.</p> <p id=3>Harder (this)</p> <p id=4>Rain</p>")
+        val doc =
+            Jsoup.parse("<p id=1>The <i>Rain</i></p> <p id=2>There are 99 bottles.</p> <p id=3>Harder (this)</p> <p id=4>Rain</p>")
 
         val p1 = doc.select("p:matches(The rain)") // no match, case sensitive
         assertEquals(0, p1.size.toLong())

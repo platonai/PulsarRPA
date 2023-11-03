@@ -4,8 +4,7 @@ import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import com.google.gson.Gson
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.*
 import java.time.Instant
 import kotlin.test.*
 
@@ -19,7 +18,7 @@ class TestPulsarSession: TestBase() {
     
     private val resourceUrl = "https://www.amazon.com/robots.txt"
 
-    @Before
+    @BeforeTest
     fun setup() {
 //        webDB.delete(url)
 //        webDB.delete(url2)

@@ -364,6 +364,7 @@ open class BrowserSettings(
     val isStartupScriptEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
     /**
      * The probability to block resource requests.
+     * The probability must be in [0, 1].
      * */
     val resourceBlockProbability get() = conf.getFloat(BROWSER_RESOURCE_BLOCK_PROBABILITY, 0.0f)
     /**

@@ -51,7 +51,8 @@ class WebDriverAdapter(
 
     override suspend fun addBlockedURLs(urls: List<String>) = driverOrNull?.addBlockedURLs(urls) ?: Unit
 
-    override suspend fun addProbabilityBlockedURLs(urls: List<String>) = driverOrNull?.addProbabilityBlockedURLs(urls) ?: Unit
+    override suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>) =
+        driverOrNull?.addProbabilityBlockedURLs(urlPatterns) ?: Unit
 
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) = driverOrNull?.navigateTo(entry) ?: Unit
@@ -227,7 +228,7 @@ class WebDriverAdapter(
     /**
      * Quits this driver, close every associated window
      * */
-    @Deprecated("Inappropriate name", ReplaceWith("close()"))
+    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("close()"))
     @Throws(Exception::class)
     override fun quit() = driverOrNull?.quit() ?: Unit
 

@@ -2,8 +2,7 @@ package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.gora.FileBackendPageStore
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.*
 import java.nio.file.Files
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -14,7 +13,7 @@ class TestFileBackendStore {
     private val store = FileBackendPageStore(persistDirectory)
     private lateinit var page: WebPage
 
-    @Before
+    @BeforeTest
     fun setup() {
         page = WebPageExt.newTestWebPage(url)
     }

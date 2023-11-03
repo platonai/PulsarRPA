@@ -997,6 +997,22 @@ __pulsar_utils__.getClientRect = function(node) {
 /**
  * The computed style.
  *
+ * @param selector {string} The selector to get the element from.
+ * @param propertyNames {Array}
+ * @return {DOMRect|String|Boolean}
+ * * */
+__pulsar_utils__.queryComputedStyle = function(selector, propertyNames) {
+    let ele = document.querySelector(selector);
+    if (!ele) {
+        return null;
+    }
+
+    return this.getComputedStyle(ele, propertyNames)
+};
+
+/**
+ * The computed style.
+ *
  * @param node {Node|Element|Text}
  * @param propertyNames {Array}
  * @return {Object|Boolean|null}
@@ -1258,7 +1274,7 @@ __pulsar_utils__.add = function(a, b) {
 };
 
 /**
- * Return type infomation.
+ * Return type information.
  *
  * @return {Object}
  * */

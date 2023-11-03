@@ -22,7 +22,7 @@ import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import org.apache.tika.mime.MimeTypes
-import org.junit.Test
+import kotlin.test.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 

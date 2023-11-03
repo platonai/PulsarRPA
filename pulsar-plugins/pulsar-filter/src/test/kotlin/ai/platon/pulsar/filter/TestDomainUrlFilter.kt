@@ -2,10 +2,9 @@ package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.MutableConfig
-import org.junit.Before
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.test.context.junit4.SpringRunner
+import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue

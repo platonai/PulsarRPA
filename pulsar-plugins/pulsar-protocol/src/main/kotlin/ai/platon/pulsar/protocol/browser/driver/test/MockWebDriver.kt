@@ -4,7 +4,7 @@ package ai.platon.pulsar.protocol.browser.driver.test
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.math.geometric.RectD
+import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
@@ -64,7 +64,8 @@ class MockWebDriver(
 
     override suspend fun addBlockedURLs(urls: List<String>) = backupDriverOrNull?.addBlockedURLs(urls) ?: Unit
 
-    override suspend fun addProbabilityBlockedURLs(urls: List<String>) = backupDriverOrNull?.addProbabilityBlockedURLs(urls) ?: Unit
+    override suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>) =
+        backupDriverOrNull?.addProbabilityBlockedURLs(urlPatterns) ?: Unit
 
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) {
@@ -273,7 +274,7 @@ class MockWebDriver(
     /**
      * Quit the browser instance
      * */
-    @Deprecated("Inappropriate name", ReplaceWith("close()"))
+    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("close()"))
     @Throws(WebDriverException::class)
     override fun quit() {
         close()

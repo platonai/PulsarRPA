@@ -22,7 +22,7 @@ import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.html.PrimerHtmlParser
 import ai.platon.pulsar.crawl.parse.ParseException
 import ai.platon.pulsar.persist.metadata.Name
-import org.junit.Test
+import kotlin.test.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.junit4.SpringRunner

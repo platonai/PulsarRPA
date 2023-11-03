@@ -20,11 +20,9 @@ package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
-import org.junit.Test
 import java.nio.file.FileSystems
 import java.nio.file.Files
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TestRuntimes {
     @Test

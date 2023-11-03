@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common;
 
-import org.junit.Test;
+import org.junit.Test;;
 
 import java.util.Random;
 
