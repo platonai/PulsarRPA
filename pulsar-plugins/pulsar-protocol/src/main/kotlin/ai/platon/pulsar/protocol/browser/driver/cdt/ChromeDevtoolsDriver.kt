@@ -8,9 +8,9 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.geometric.OffsetD
-import ai.platon.pulsar.common.geometric.PointD
-import ai.platon.pulsar.common.geometric.RectD
+import ai.platon.pulsar.common.math.geometric.OffsetD
+import ai.platon.pulsar.common.math.geometric.PointD
+import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.URLUtil
