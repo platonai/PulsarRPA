@@ -26,7 +26,7 @@ select
   dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
   dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
   str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1d -njr 3', 'body');
+from load_and_select('https://www.amazon.com/dp/B0C1H26C46 -i 1d -njr 3', 'body');
 ----
 
 Pulsar 主要通过注册 UDF 来扩展 H2 数据库，但也做了其他扩展。
@@ -73,7 +73,7 @@ X-SQL 函数不区分大小写，所有下划线(`_`)都会被忽略。
 select
     dom_base_uri(dom)
 from
-    load_and_select('https://www.amazon.com/dp/B09V3KXJPB', 'body', 1, 10)
+    load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body', 1, 10)
 ----
 
 ## DOM 函数
@@ -94,7 +94,7 @@ DOM 函数定义在下面文件中：link:../pulsar-ql/src/main/kotlin/ai/platon
 
 [source,sql]
 ----
-select dom_base_uri(dom) from load_and_select('https://www.amazon.com/dp/B09V3KXJPB', 'body')
+select dom_base_uri(dom) from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body')
 ----
 
 ## DOM 选择函数
@@ -168,5 +168,5 @@ from
 select
     str_substring_after(dom_first_text(dom, '#price'), '$') as Price
 from
-    load_and_select('https://www.amazon.com/dp/B09V3KXJPB', 'body');
+    load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
 ----

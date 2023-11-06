@@ -8,7 +8,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class TestFileBackendStore {
-    private val url = "https://www.amazon.com/dp/B082P8J28M"
+    private val url = "https://www.amazon.com/dp/B0C1H26C46"
     private val persistDirectory = Files.createTempDirectory("pulsar-test")
     private val store = FileBackendPageStore(persistDirectory)
     private lateinit var page: WebPage
