@@ -62,6 +62,11 @@ class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
         fieldGroup.setDirty()
     }
 
+    fun clear() {
+        fieldGroup.fields.clear()
+        fieldGroup.setDirty()
+    }
+    
     override fun toString(): String {
         return FieldGroupFormatter(this).format()
     }
