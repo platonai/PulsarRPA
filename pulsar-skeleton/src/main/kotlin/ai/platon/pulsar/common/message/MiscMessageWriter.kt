@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 class MiscMessageWriter(
     conf: ImmutableConfig
 ) : MultiSinkWriter(conf) {
-    private val closed = AtomicBoolean()
 
     private fun reportFetchTimeHistory(fetchTimeHistory: String) {
         write(fetchTimeHistory, "fetch-time-history.txt")
@@ -187,10 +186,5 @@ class MiscMessageWriter(
 
     fun reportBadModifiedTime(report: String) {
         write(report, "bad-modified-urls.txt")
-    }
-
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
-        }
     }
 }

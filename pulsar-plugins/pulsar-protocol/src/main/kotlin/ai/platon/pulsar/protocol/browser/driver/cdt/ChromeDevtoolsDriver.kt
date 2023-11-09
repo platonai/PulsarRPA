@@ -894,12 +894,14 @@ class ChromeDevtoolsDriver(
         
         chromeNavigateEntry.updateStateAfterResponseReceived(event)
 
-        traceInterestingResources(entry, event)
+        if (logger.isDebugEnabled) {
+            reportInterestingResources(entry, event)
+        }
 
         // handle user-defined events
     }
 
-    private fun traceInterestingResources(entry: NavigateEntry, event: ResponseReceived) {
+    private fun reportInterestingResources(entry: NavigateEntry, event: ResponseReceived) {
         runCatching { traceInterestingResources0(entry, event) }.onFailure { logger.warn(it.stringify()) }
     }
     
@@ -938,10 +940,10 @@ class ChromeDevtoolsDriver(
         var suffix = "-" + event.type.name.lowercase() + "-urls.txt"
         var filename = AppPaths.fileId(pageUrl) + suffix
         var path = reportDir.resolve(filename)
-        
+
         val message = String.format("%s\t%s", mimeType, event.response.url)
         messageWriter.write(message, path)
-        
+
         // configurable
         val saveResourceBody = mimeType == "application/json"
             && event.response.encodedDataLength < 1_000_000

@@ -5,6 +5,8 @@ import java.io.PrintWriter
 import java.io.Writer
 import java.nio.file.*
 import java.text.SimpleDateFormat
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.isRegularFile
 import kotlin.reflect.KClass
@@ -34,16 +36,23 @@ class MessageWriter(
         var DEFAULT_MAX_FILE_SIZE = 512 * 1024 * 1024
 
         var CHECK_SIZE_EACH_WRITES = 4096
+
+        var IDLE_TIMEOUT = Duration.ofMinutes(5)
     }
 
-    private val log = LoggerFactory.getLogger(MessageWriter::class.java)
+    private val logger = LoggerFactory.getLogger(MessageWriter::class.java)
 
     private var fileWriter: Writer? = null
     private var printWriter: PrintWriter? = null
     private val closed = AtomicBoolean()
 
+    var lastActiveTime = Instant.now()
+        private set
+    var idleTimeout = IDLE_TIMEOUT
+    val isIdle get() = DateTimes.isExpired(lastActiveTime, idleTimeout)
     var maxFileSize = DEFAULT_MAX_FILE_SIZE
-    var dateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss ")
+
+    var dateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
     var checkSize: Int = 0
     var writingError: Boolean = false
@@ -78,7 +87,7 @@ class MessageWriter(
 
     @Synchronized
     private fun format(module: String, s: String): String {
-        return dateFormat.format(System.currentTimeMillis()) + module + ": " + s
+        return dateFormat.format(System.currentTimeMillis()) + " " + module + ": " + s
     }
 
     @Synchronized
@@ -133,7 +142,7 @@ class MessageWriter(
 
     @Synchronized
     private fun closeWriter() {
-        log.info("Closing writer | $filePath")
+        logger.info("Closing writer | $filePath")
         printWriter?.flush()
         printWriter?.close()
         fileWriter?.close()
