@@ -19,6 +19,7 @@
 package ai.platon.pulsar.normalizer
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.crawl.filter.AbstractScopedUrlNormalizer
 import ai.platon.pulsar.crawl.filter.UrlNormalizer
 
 /**
@@ -28,13 +29,13 @@ import ai.platon.pulsar.crawl.filter.UrlNormalizer
  *
  * @author Andrzej Bialecki
  */
-class PassUrlNormalizer(conf: ImmutableConfig?) : UrlNormalizer {
-
-    override fun normalize(url: String, scope: String): String? {
+class PassUrlNormalizer(conf: ImmutableConfig?) : AbstractScopedUrlNormalizer() {
+    
+    override fun normalize(url: String, scope: String): String {
         return url
     }
 
     override fun valid(urlString: String, scope: String): Boolean {
-        return normalize(urlString, scope) != null
+        return true
     }
 }

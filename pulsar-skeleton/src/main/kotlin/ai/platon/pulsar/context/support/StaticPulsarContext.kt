@@ -15,7 +15,7 @@ class StaticPulsarContext(
      * Url normalizers
      * */
     @Deprecated("Inappropriate name", replaceWith = ReplaceWith("urlNormalizer"))
-    override val urlNormalizers get() = getBeanOrNull() ?: defaults.urlNormalizers
+    override val urlNormalizers get() = getBeanOrNull() ?: defaults.urlNormalizer
     /**
      * Url normalizer
      * */

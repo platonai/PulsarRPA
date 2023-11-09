@@ -21,6 +21,7 @@ package ai.platon.pulsar.normalizer
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.KConfigurable
 import ai.platon.pulsar.common.urls.UrlUtils.getURLOrNull
+import ai.platon.pulsar.crawl.filter.AbstractScopedUrlNormalizer
 import ai.platon.pulsar.crawl.filter.UrlNormalizer
 import org.apache.oro.text.regex.*
 import org.slf4j.LoggerFactory
@@ -34,7 +35,7 @@ import java.net.URL
  *  * remove default ports, e.g. 80 for protocol `http://`
  *
  */
-class BasicUrlNormalizer(override var conf: ImmutableConfig) : KConfigurable, UrlNormalizer {
+class BasicUrlNormalizer(override var conf: ImmutableConfig) : KConfigurable, AbstractScopedUrlNormalizer() {
     val LOG = LoggerFactory.getLogger(BasicUrlNormalizer::class.java)
 
     private val relativePathRule: Rule = Rule()
@@ -73,7 +74,7 @@ class BasicUrlNormalizer(override var conf: ImmutableConfig) : KConfigurable, Ur
             throw RuntimeException(e)
         }
     }
-
+    
     override fun normalize(url: String, scope: String): String? {
         var urlString: String = url
 
@@ -83,7 +84,7 @@ class BasicUrlNormalizer(override var conf: ImmutableConfig) : KConfigurable, Ur
         var port = u.port
         var file = u.file
         var changed = false
-        if (!urlString.startsWith(protocol)) // protocol was lowercased
+        if (!urlString.startsWith(protocol)) // protocol was lowercase
             changed = true
         if ("http" == protocol || "https" == protocol || "ftp" == protocol) {
             if (host != null) {

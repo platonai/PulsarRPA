@@ -24,6 +24,7 @@ import kotlin.test.*
 import org.junit.runner.RunWith
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import ai.platon.pulsar.crawl.filter.SCOPE_DEFAULT
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
@@ -64,7 +65,7 @@ class TestRegexUrlNormalizer {
     @Test
     @Throws(Exception::class)
     fun testNormalizerDefault() {
-        normalizeTest(testData[ChainedUrlNormalizer.SCOPE_DEFAULT]!!, ChainedUrlNormalizer.SCOPE_DEFAULT)
+        normalizeTest(testData[SCOPE_DEFAULT]!!, SCOPE_DEFAULT)
     }
 
     @Test
