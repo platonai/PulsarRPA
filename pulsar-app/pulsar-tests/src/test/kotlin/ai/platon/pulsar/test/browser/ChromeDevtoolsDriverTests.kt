@@ -2,11 +2,11 @@ package ai.platon.pulsar.test.browser
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyEntry2
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.Test
 import java.io.IOException
 import java.net.Proxy
 import java.util.*
@@ -37,6 +37,23 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     fun setup() {
         // identity name mangler
         confuser.nameMangler = { script -> script }
+    }
+    
+    @Test
+    fun `When navigate to a HTML page then the navigate state are correct`() = runWebDriverTest { driver ->
+        open(url, driver, 1)
+        
+        val navigateEntry = driver.navigateEntry
+        assertTrue { navigateEntry.documentTransferred }
+        assertTrue { navigateEntry.networkRequestCount.get() > 0 }
+        assertTrue { navigateEntry.networkResponseCount.get() > 0 }
+        
+        assertEquals(200, driver.mainResponseStatus)
+        assertTrue { driver.mainResponseStatus == 200 }
+        assertTrue { driver.mainResponseHeaders.isNotEmpty() }
+        assertEquals(200, navigateEntry.mainResponseStatus)
+        assertTrue { navigateEntry.mainResponseStatus == 200 }
+        assertTrue { navigateEntry.mainResponseHeaders.isNotEmpty() }
     }
 
     @Test
@@ -262,6 +279,44 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     }
 
     @Test
+    fun `When call queryClientRects then return client rects`() = runWebDriverTest(url) { driver ->
+        driver.mouseWheelDown(5)
+        val box = driver.boundingBox("body")
+        // RectD(x=0.0, y=-600.0, width=1912.0, height=10538.828125)
+        println(box)
+        assertNotNull(box)
+
+        delay(3000)
+
+        driver.mouseWheelUp(5)
+
+        val box2 = driver.boundingBox("body")
+        // RectD(x=0.0, y=-150.0, width=1912.0, height=10538.828125)
+        println(box2)
+        assertNotNull(box2)
+
+        var jsFun = "__pulsar_utils__.queryClientRects"
+        var bodyInfo = driver.evaluate("$jsFun('body')")?.toString() ?: "unexpected"
+        // [{0 0 1912 10538.8}, ]
+        println("queryClientRects: $bodyInfo")
+
+        jsFun = "__pulsar_utils__.queryClientRect"
+        bodyInfo = driver.evaluate("$jsFun('body')")?.toString() ?: "unexpected"
+        // [{0 0 1912 10538.8}, ]
+        println("queryClientRect: $bodyInfo")
+
+        jsFun = "document.body.scrollWidth"
+        bodyInfo = driver.evaluate("$jsFun('body')")?.toString() ?: "unexpected"
+        // [{0 0 1912 10538.8}, ]
+        println("body.scrollWidth: $bodyInfo")
+
+        jsFun = "document.body.clientWidth"
+        bodyInfo = driver.evaluate("$jsFun('body')")?.toString() ?: "unexpected"
+        // [{0 0 1912 10538.8}, ]
+        println("body.clientWidth: $bodyInfo")
+    }
+
+    @Test
     fun testProxyAuthorization() {
         val proxyEntry = ProxyEntry2("127.0.0.1", 10808, "abc", "abc", Proxy.Type.SOCKS)
         if (!NetUtil.testTcpNetwork(proxyEntry.host, proxyEntry.port)) {
@@ -270,7 +325,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         }
 
         val browserId = BrowserId.RANDOM
-        browserId.setProxy(proxyEntry.toProxyEntry())
+        browserId.setProxy(ProxyEntry.create(proxyEntry))
 
         val browser = driverFactory.launchBrowser(browserId)
         val driver = browser.newDriver()

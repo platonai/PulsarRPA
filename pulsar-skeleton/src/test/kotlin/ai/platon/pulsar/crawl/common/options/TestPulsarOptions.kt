@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.options.deprecated.CrawlOptions
 import com.google.common.collect.Lists
 import org.apache.commons.collections4.CollectionUtils
 import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.*
 import java.util.*
 import kotlin.test.assertTrue
 

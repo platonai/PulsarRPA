@@ -1,8 +1,7 @@
 package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.dom.Documents
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.*
 
 /**
  * Tests that the selector selects correctly.

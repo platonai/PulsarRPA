@@ -1,6 +1,6 @@
 package ai.platon.pulsar.persist
 
-import org.junit.Test
+import kotlin.test.*
 import kotlin.test.assertTrue
 
 class TestProtocolStatus {

@@ -20,9 +20,10 @@ package ai.platon.pulsar.normalizer
 
 import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import org.junit.Assert
-import org.junit.Test
+import kotlin.test.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
+import ai.platon.pulsar.crawl.filter.SCOPE_DEFAULT
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 
@@ -93,6 +94,6 @@ class TestBasicUrlNormalizer {
 
     @Throws(Exception::class)
     private fun normalizeTest(weird: String, normal: String) {
-        Assert.assertEquals(normal, normalizer!!.normalize(weird, ChainedUrlNormalizer.SCOPE_DEFAULT))
+        Assert.assertEquals(normal, normalizer!!.normalize(weird, SCOPE_DEFAULT))
     }
 }

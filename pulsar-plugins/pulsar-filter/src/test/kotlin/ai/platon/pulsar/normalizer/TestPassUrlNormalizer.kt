@@ -16,13 +16,13 @@
  */
 package ai.platon.pulsar.normalizer
 
-import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import org.junit.Assert
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
+import ai.platon.pulsar.crawl.filter.SCOPE_DEFAULT
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
+import kotlin.test.*
 
 @RunWith(SpringRunner::class)
 @ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
@@ -32,7 +32,7 @@ class TestPassUrlNormalizer {
     @Test
     fun testPassURLNormalizer() {
         val url = "http://www.example.com/test/..//"
-        val result = normalizer!!.normalize(url, ChainedUrlNormalizer.SCOPE_DEFAULT)
+        val result = normalizer!!.normalize(url, SCOPE_DEFAULT)
         Assert.assertEquals(url, result)
     }
 }

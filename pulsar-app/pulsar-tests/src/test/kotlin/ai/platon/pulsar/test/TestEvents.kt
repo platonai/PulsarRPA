@@ -3,8 +3,7 @@ package ai.platon.pulsar.test
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.crawl.component.FetchComponent
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import kotlin.test.assertEquals
@@ -17,7 +16,7 @@ class TestEvents : TestBase() {
     @Autowired
     lateinit var fetchComponent: FetchComponent
 
-    @Before
+    @BeforeTest
     fun setup() {
         val metrics = fetchComponent.coreMetrics
         assertNotNull(metrics)

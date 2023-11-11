@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.common
 
 import ai.platon.pulsar.common.AppSystemInfo
-import org.junit.Test
+import kotlin.test.*
 import oshi.SystemInfo
 import oshi.hardware.CentralProcessor.TickType
 import java.time.Instant

@@ -3,9 +3,7 @@ package ai.platon.pulsar.dom.select
 import ai.platon.pulsar.dom.nodes.node.ext.minimalCopy
 import ai.platon.pulsar.dom.nodes.node.ext.slimCopy
 import org.jsoup.Jsoup
-import org.junit.Test
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Tests for ElementList.

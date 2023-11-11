@@ -199,7 +199,11 @@ class AppSystemInfo {
 
         fun formatMemoryShortage(): String {
             val availableMemory = AppSystemInfo.availableMemory ?: return "N/A"
-            return Strings.compactFormat(availableMemory - memoryToReserve.toLong())
+            val shortage = availableMemory - memoryToReserve.toLong()
+            if (shortage > 0) {
+                return "N/A"
+            }
+            return Strings.compactFormat(shortage)
         }
         
         private fun checkIsOutOfDisk(): Boolean {

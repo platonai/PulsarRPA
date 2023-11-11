@@ -56,7 +56,17 @@ class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
         fieldGroup.fields[u8(key)] = value
         fieldGroup.setDirty()
     }
+    
+    fun remove(key: String) {
+        fieldGroup.fields.remove(u8(key))
+        fieldGroup.setDirty()
+    }
 
+    fun clear() {
+        fieldGroup.fields.clear()
+        fieldGroup.setDirty()
+    }
+    
     override fun toString(): String {
         return FieldGroupFormatter(this).format()
     }

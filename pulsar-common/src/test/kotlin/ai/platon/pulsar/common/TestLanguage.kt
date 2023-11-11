@@ -1,8 +1,6 @@
 package ai.platon.pulsar.common
 
-import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
+import kotlin.test.*
 
 data class DataClass11(val s: String)
 data class DataClass12(val s: String)

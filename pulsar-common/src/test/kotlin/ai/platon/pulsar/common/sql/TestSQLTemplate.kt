@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.sql
 
-import org.junit.Test
+import kotlin.test.*
 import kotlin.test.assertEquals
 
 class TestSQLTemplate {

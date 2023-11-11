@@ -2,9 +2,7 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
-import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TestFingerprint {
     val fingerprints = listOf(

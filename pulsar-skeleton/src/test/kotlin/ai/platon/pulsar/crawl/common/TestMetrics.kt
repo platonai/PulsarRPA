@@ -5,9 +5,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.sleepSeconds
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.*
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.test.assertEquals
@@ -27,12 +25,12 @@ class TestMetrics {
     private val conf = MutableConfig()
     private val metrics = MetricsSystem(conf)
 
-    @Before
+    @BeforeTest
     fun setup() {
         metrics.start()
     }
 
-    @After
+    @AfterTest
     fun tearDown() {
         metrics.close()
     }

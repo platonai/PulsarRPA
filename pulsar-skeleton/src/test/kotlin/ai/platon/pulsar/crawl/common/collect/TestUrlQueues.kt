@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.collect.queue.ConcurrentNEntrantQueue
 import ai.platon.pulsar.common.collect.queue.ConcurrentNonReentrantQueue
 import ai.platon.pulsar.common.urls.ComparableUrlAware
 import ai.platon.pulsar.common.urls.Hyperlink
-import org.junit.Test
+import kotlin.test.*
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 

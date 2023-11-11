@@ -2,7 +2,7 @@ package ai.platon.pulsar.common;
 
 import com.google.common.collect.Lists;
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.Test;;
 
 import javax.annotation.Nonnull;
 import java.lang.annotation.Annotation;

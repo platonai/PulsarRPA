@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import com.google.gson.GsonBuilder
-import org.junit.Test
+import kotlin.test.*
 import java.time.Instant
 import kotlin.test.*
 
@@ -16,7 +16,7 @@ import kotlin.test.*
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class TestWebPage: TestBase() {
-    private val url = "https://www.amazon.com/dp/B082P8J28M"
+    private val url = "https://www.amazon.com/dp/B0C1H26C46"
     private val groupId = 43853791
     private val gson = GsonBuilder().setPrettyPrinting().create()
 

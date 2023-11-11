@@ -3,19 +3,12 @@ package ai.platon.pulsar.boilerpipe;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
 import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
-import ai.platon.pulsar.boilerpipe.sax.HTMLParser;
 import ai.platon.pulsar.boilerpipe.sax.SAXInput;
 import ai.platon.pulsar.common.ResourceLoader;
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
+import org.junit.Test;;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 /**

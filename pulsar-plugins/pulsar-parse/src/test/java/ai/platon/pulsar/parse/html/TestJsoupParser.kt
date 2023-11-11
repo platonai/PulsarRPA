@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.parse.html
 
-import org.junit.Test
+import kotlin.test.*
 import java.io.IOException
 import java.nio.file.Paths
 

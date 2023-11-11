@@ -3,7 +3,7 @@ package ai.platon.pulsar.qa.db
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.ql.context.AbstractSQLContext
 import ai.platon.pulsar.ql.context.SQLContexts
-import org.junit.Test
+import kotlin.test.*
 
 /**
  * Created by vincent on 16-7-20.

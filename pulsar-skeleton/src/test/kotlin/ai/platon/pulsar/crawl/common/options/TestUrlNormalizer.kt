@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.config.AppConstants.EXAMPLE_URL
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Hyperlink
-import org.junit.Test
+import kotlin.test.*
 import java.time.Duration
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

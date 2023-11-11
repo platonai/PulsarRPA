@@ -12,7 +12,7 @@ import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import org.apache.commons.collections4.map.MultiValueMap
-import org.junit.Test
+import kotlin.test.*
 import java.nio.file.Paths
 import java.util.*
 import kotlin.test.assertEquals

@@ -2,11 +2,9 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.geometric.str2
 import ai.platon.pulsar.common.geometric.testAlignment
-import org.junit.Ignore
-import org.junit.Test
 import java.awt.Rectangle
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+
+import kotlin.test.*
 
 class TestGeometrics {
     @Test

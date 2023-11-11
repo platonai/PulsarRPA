@@ -18,7 +18,7 @@ import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.RandomStringUtils
-import org.junit.Test
+import kotlin.test.*
 import java.nio.file.Files
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.Executors

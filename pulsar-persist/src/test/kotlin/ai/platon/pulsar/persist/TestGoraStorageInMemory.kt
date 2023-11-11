@@ -29,9 +29,7 @@ import org.apache.avro.util.Utf8
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.gora.memory.store.MemStore
 import org.apache.gora.store.DataStore
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.*
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.Callable
@@ -57,7 +55,7 @@ class TestGoraStorageInMemory {
     private val store: DataStore<String, GWebPage> get() = webDb.dataStore
     private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
 
-    @Before
+    @BeforeTest
     fun setup() {
         assertEquals(MEM_STORE_CLASS, conf.get(CapabilityTypes.STORAGE_DATA_STORE_CLASS))
         assertEquals(MEM_STORE_CLASS, AutoDetectStorageProvider.detectDataStoreClassName(conf))
@@ -72,7 +70,7 @@ class TestGoraStorageInMemory {
         webDb.truncate(force = true)
     }
 
-    @After
+    @AfterTest
     fun teardown() {
         webDb.delete(exampleUrl)
         webDb.flush()

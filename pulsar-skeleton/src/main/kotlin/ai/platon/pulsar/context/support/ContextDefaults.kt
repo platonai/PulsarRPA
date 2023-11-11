@@ -15,13 +15,9 @@ class ContextDefaults {
      * */
     val unmodifiedConfig = ImmutableConfig()
     /**
-     * Url default normalizers
-     * */
-    val urlNormalizers = ChainedUrlNormalizer(unmodifiedConfig)
-    /**
      * Url default normalizer
      * */
-    val urlNormalizer = ChainedUrlNormalizer(unmodifiedConfig)
+    val urlNormalizer = ChainedUrlNormalizer()
     /**
      * The default web db
      * */

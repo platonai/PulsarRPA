@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
-import org.junit.Test
+import kotlin.test.*
 import java.time.Duration
 import kotlin.test.*
 

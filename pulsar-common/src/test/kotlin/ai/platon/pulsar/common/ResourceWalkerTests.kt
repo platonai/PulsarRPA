@@ -1,8 +1,7 @@
 package ai.platon.pulsar.common
 
-import org.junit.Test
 import java.io.File
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class ResourceWalkerTests {
 

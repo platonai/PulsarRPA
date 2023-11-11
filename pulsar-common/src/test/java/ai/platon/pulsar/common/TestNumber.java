@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common;
 
 import org.apache.commons.lang3.math.NumberUtils;
-import org.junit.Test;
+import org.junit.Test;;
 
 import java.text.DecimalFormat;
 

@@ -11,7 +11,7 @@ fun main() {
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with
-    val url = "https://www.amazon.com/dp/B09V3KXJPB"
+    val url = "https://www.amazon.com/dp/B0C1H26C46"
 
     // Load a page from local storage, or fetch it from the Internet if it does not exist or has expired
     val page = session.load(url, "-expires 10s")
