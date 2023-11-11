@@ -53,15 +53,6 @@
     </bean>
 
     <bean id="urlNormalizers" class="ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer">
-        <constructor-arg ref="conf"/>
-        <constructor-arg value="default"/>
-        <constructor-arg>
-            <list>
-                <ref bean="basicUrlNormalizer" />
-                <ref bean="regexUrlNormalizer" />
-                <ref bean="passUrlNormalizer" />
-            </list>
-        </constructor-arg>
     </bean>
 
     <bean id="crawlFilter" class="ai.platon.pulsar.crawl.filter.CrawlFilter">

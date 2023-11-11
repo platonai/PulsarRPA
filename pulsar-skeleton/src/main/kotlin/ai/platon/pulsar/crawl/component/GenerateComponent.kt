@@ -18,17 +18,21 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_BANNED_URLS
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
+import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.FSUtils
+import ai.platon.pulsar.common.LocalFSUtils
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
-import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.metrics.EnumCounterRegistry
+import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
-import ai.platon.pulsar.crawl.filter.*
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
+import ai.platon.pulsar.crawl.filter.CrawlFilters
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilters
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -36,10 +40,8 @@ import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
-import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import java.util.*
 
 /**
  * The generate component.
@@ -140,113 +142,6 @@ class GenerateComponent(
                         "unreachableHostsPath", PATH_UNREACHABLE_HOSTS,
                         "unreachableHosts", unreachableHosts.size
                 ))
-    }
-
-    /**
-     * TODO : We may move some filters to hbase query filters directly
-     * TODO : Move to CrawlFilter
-     */
-    fun shouldFetch(url: String, reversedUrl: String, page: WebPage): Pair<Boolean, String> {
-        val u: String = url
-
-        if (reGenerateSeeds && page.isSeed) {
-            return true to "+reGenerateSeeds"
-        }
-
-        if (!checkFetchSchedule(page)) {
-            return false to "-FetchSchedule"
-        }
-
-        if (!checkHost(u)) {
-            return false to "-Host"
-        }
-
-        if (bannedUrls.contains(u)) {
-            enumCounters.inc(Counter.mBanned)
-            return false to "-Banned"
-        }
-
-        if (unreachableHosts.contains(URLUtil.getHost(page.url, groupMode))) {
-            enumCounters.inc(Counter.mHostGone)
-            return false to "-unreachableHost"
-        }
-
-        if (page.hasMark(Mark.GENERATE)) {
-            enumCounters.inc(Counter.mGenerated)
-            /*
-             * Fetch entries are generated, empty webpage entries are created in the database(HBase)
-             * case 1. another fetcher job is fetching the generated batch. In this case, we should not generate it.
-             * case 2. another fetcher job handled the generated batch, but failed, which means the pages are not fetched.
-             *
-             * There are three ways to fetch pages that are generated but not fetched nor fetching.
-             * 1. Restart a text with ignoreGenerated set to be false
-             * 2. Resume a FetchJob with resume set to be true
-             * */
-            if (!reGenerate) {
-                val days = Duration.between(page.generateTime, startTime).toDays()
-                when {
-                    days == 1L -> {
-                        // may be used by other jobs, or not fetched correctly
-                        return false to "-1days"
-                    }
-                    days <= 3 -> {
-                        // force re-generate
-                    }
-                    else -> {
-                        // ignore pages too old
-                        return false to "-TooOld"
-                    }
-                }
-            } else {
-                // re-generate
-            }
-        } // if
-
-        val distanceBias = 0
-        // Filter on distance
-        if (page.distance > maxDistance + distanceBias) {
-            enumCounters.inc(Counter.mTooDeep)
-            return false to "-Distance"
-        }
-
-        // TODO : Url range filtering should be applied to (HBase) native query filter
-        // key before start key
-        if (!CrawlFilter.keyGreaterEqual(reversedUrl, keyRange[0])) {
-            enumCounters.inc(Counter.mBeforeStart)
-            return false to "-BeforeStart"
-        }
-
-        // key after end key, finish the mapper
-        if (!CrawlFilter.keyLessEqual(reversedUrl, keyRange[1])) {
-            //      stop("Complete mapper, reason : hit end key " + reversedUrl
-//          + ", upper bound : " + keyRange[1]
-//          + ", diff : " + reversedUrl.compareTo(keyRange[1]));
-            return false to "-AfterEnd"
-        }
-
-        // key not fall in key ranges
-        if (!crawlFilters.testKeyRangeSatisfied(reversedUrl)) {
-            enumCounters.inc(Counter.mNotInRange)
-            return false to "-KeyOutOfRange"
-        }
-
-        var u2: String? = u
-        // If filtering is on don't generate URLs that don't pass UrlFilters
-        if (normalise) {
-            u2 = urlNormalizers.normalize(u, SCOPE_GENERATE_HOST_COUNT)
-        }
-
-        if (u2 == null) {
-            enumCounters.inc(Counter.mNotNormal)
-            return false to "-notNormal"
-        }
-
-        if (filter && urlFilters.filter(u2) == null) {
-            enumCounters.inc(Counter.mUrlFiltered)
-            return false to "-UrlFiltered"
-        }
-
-        return true to "+Pass"
     }
 
     /**

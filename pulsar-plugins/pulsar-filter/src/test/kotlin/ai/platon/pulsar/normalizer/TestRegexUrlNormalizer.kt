@@ -46,8 +46,7 @@ class TestRegexUrlNormalizer {
     @Throws(IOException::class, URISyntaxException::class)
     fun setUp() {
         val SAMPLE_DIR = Paths.get(getResource("normregex/sample")!!.toURI())
-        val configs = SAMPLE_DIR.toFile()
-                .listFiles { f: File -> f.name.endsWith(".xml") && f.name.startsWith("regex-normalize-") }!!
+        val configs = SAMPLE_DIR.toFile().listFiles { f: File -> f.name.endsWith(".xml") && f.name.startsWith("regex-normalize-") }!!
         for (config in configs) {
             try {
                 val reader = FileReader(config)
@@ -92,7 +91,7 @@ class TestRegexUrlNormalizer {
         val testFile = Paths.get(SAMPLE_DIR.toString(), "regex-normalize-$scope.test")
         return Files.readAllLines(testFile).stream()
                 .map { obj: String -> obj.trim { it <= ' ' } }
-                .filter { l: String -> !l.isEmpty() }
+                .filter { l: String -> l.isNotEmpty() }
                 .filter { l: String -> !l.startsWith("#") }.map { line: String -> NormalizedURL(line) }
                 .collect(Collectors.toList())
     }
