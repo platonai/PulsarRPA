@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.10.23-SNAPSHOT</version>
+        <version>1.10.24-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-spring-support</artifactId>
