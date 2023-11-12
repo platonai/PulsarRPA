@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -39,6 +40,11 @@ interface PulsarContext: AutoCloseable {
      * An immutable config loaded from the config file at startup, and never changes
      * */
     val unmodifiedConfig: ImmutableConfig
+    
+    /**
+     * The url normalizer
+     * */
+    val urlNormalizer: ChainedUrlNormalizer
 
     /**
      * The global cache

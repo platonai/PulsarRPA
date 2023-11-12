@@ -97,7 +97,7 @@ abstract class AbstractPulsarContext(
     /**
      * Url normalizer
      * */
-    open val urlNormalizer: ChainedUrlNormalizer get() = getBean()
+    override val urlNormalizer: ChainedUrlNormalizer get() = getBean()
 
     /**
      * Url normalizer

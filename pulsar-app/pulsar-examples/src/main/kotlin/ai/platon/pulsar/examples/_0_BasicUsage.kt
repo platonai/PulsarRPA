@@ -5,14 +5,13 @@ import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 
 /**
- * Demonstrates the very basic usage of PulsarRPA.
+ * Demonstrates the very basic usage of Pulsar.
  * */
 fun main() {
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with
-    val url = "https://www.amazon.com/dp/B09V3KXJPB"
-    val resourceUrl = "https://www.amazon.com/robots.txt"
+    val url = "https://www.amazon.com/dp/B0C1H26C46"
 
     // Load a page from local storage, or fetch it from the Internet if it does not exist or has expired
     val page = session.load(url, "-expires 10s")
@@ -29,11 +28,6 @@ fun main() {
     val document2 = session.loadDocument(url, "-expires 10s")
     // do something with the document
     // ...
-    
-    // Load resource
-    val resource = session.loadResource(resourceUrl, url)
-    // do something with the resource
-    // ...
 
     // Load the portal page and then load all links specified by `-outLink`.
     // Option `-outLink` specifies the cssSelector to select links in the portal page to load.
@@ -43,7 +37,7 @@ fun main() {
     // Load the portal page and submit the out links specified by `-outLink` to the URL pool.
     // Option `-outLink` specifies the cssSelector to select links in the portal page to submit.
     // Option `-topLinks` specifies the maximal number of links selected by `-outLink`.
-    session.submitForOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/] -topLinks 10")
+    session.submitOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/] -topLinks 10")
 
     // Load, parse and scrape fields
     val fields = session.scrape(url, "-expires 10s", "#centerCol",
@@ -66,29 +60,25 @@ fun main() {
     // Java-style async calls
     session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(session::export)
 
-    println("\n== document")
+    println("== document")
     println(document.title)
     println(document.selectFirstOrNull("title")?.text())
 
-    println("\n== document2")
+    println("== document2")
     println(document2.title)
     println(document2.selectFirstOrNull("title")?.text())
-    
-    println("\n== resource")
-    println("Length: " + resource.contentLength)
-    println("Content: " + resource.contentAsString.split("\n").take(5).joinToString("\t"))
-    
-    println("\n== pages")
+
+    println("== pages")
     println(pages.map { it.url })
 
     val gson = Gson()
-    println("\n== fields")
+    println("== fields")
     println(gson.toJson(fields))
 
-    println("\n== fields2")
+    println("== fields2")
     println(gson.toJson(fields2))
 
-    println("\n== fields3")
+    println("== fields3")
     println(gson.toJson(fields3))
 
     // Wait until all tasks are done.

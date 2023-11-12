@@ -26,7 +26,7 @@ select
   dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
   dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
   str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1d -njr 3', 'body');
+from load_and_select('https://www.amazon.com/dp/B0C1H26C46 -i 1d -njr 3', 'body');
 ----
 
 Pulsar extends H2 database mainly by registering UDFs, but it also makes other extensions.
@@ -73,7 +73,7 @@ Example:
 select
     dom_base_uri(dom)
 from
-    load_and_select('https://www.amazon.com/dp/B09V3KXJPB', 'body', 1, 10)
+    load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body', 1, 10)
 ----
 
 ## DOM Functions
@@ -94,7 +94,7 @@ Example:
 
 [source,sql]
 ----
-select dom_base_uri(dom) from load_and_select('https://www.amazon.com/dp/B09V3KXJPB', 'body')
+select dom_base_uri(dom) from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body')
 ----
 
 ## DOM Selection Functions
@@ -168,5 +168,5 @@ Example:
 select
     str_substring_after(dom_first_text(dom, '#price'), '$') as Price
 from
-    load_and_select('https://www.amazon.com/dp/B09V3KXJPB', 'body');
+    load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
 ----

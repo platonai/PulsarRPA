@@ -15,7 +15,7 @@ fun main() {
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with
-    val url = "https://www.amazon.com/dp/B09V3KXJPB"
+    val url = "https://www.amazon.com/dp/B0C1H26C46"
 
     //
     // 1. PlainUrl

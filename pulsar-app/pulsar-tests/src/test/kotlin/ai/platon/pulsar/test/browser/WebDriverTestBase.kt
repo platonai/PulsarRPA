@@ -11,7 +11,7 @@ class WebDriverTestBase: TestBase() {
 
     protected val logger = getLogger(this)
     protected val warnUpUrl = "https://www.amazon.com/"
-    protected val url = "https://www.amazon.com/dp/B09V3KXJPB"
+    protected val url = "https://www.amazon.com/dp/B0C1H26C46"
     protected val asin get() = url.substringAfterLast("/dp/")
     protected val driverFactory get() = session.context.getBean(WebDriverFactory::class)
     protected val settings get() = driverFactory.driverSettings

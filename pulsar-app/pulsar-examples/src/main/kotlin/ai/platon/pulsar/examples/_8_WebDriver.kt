@@ -107,7 +107,7 @@ fun main() {
     // Set the system to work with single page applications (SPA)
     BrowserSettings.withSPA()
 
-    val url = "https://www.amazon.com/dp/B09V3KXJPB"
+    val url = "https://www.amazon.com/dp/B0C1H26C46"
     val args = "-refresh -parse"
     val session = createSession()
     val crawler = WebDriverDemo(session)

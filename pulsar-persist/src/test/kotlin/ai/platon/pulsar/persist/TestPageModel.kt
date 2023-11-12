@@ -8,7 +8,7 @@ import kotlin.test.*
 
 class TestPageModel {
 
-    private val baseUrl = "https://www.amazon.com/dp/B082P8J28M"
+    private val baseUrl = "https://www.amazon.com/dp/B0C1H26C46"
     private val conf = VolatileConfig()
     private val webDb = WebDb(conf)
     private val groupId = 43853791

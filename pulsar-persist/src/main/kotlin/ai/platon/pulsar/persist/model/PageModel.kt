@@ -10,7 +10,7 @@ import ai.platon.pulsar.persist.gora.generated.GPageModel
  * The core concept of Page Model
  */
 class PageModel(
-        val pageModel: GPageModel
+    val pageModel: GPageModel
 ) {
     companion object {
         const val DEFAULT_GROUP_ID = 1
