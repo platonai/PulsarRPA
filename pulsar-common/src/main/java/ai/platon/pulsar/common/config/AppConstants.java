@@ -47,12 +47,12 @@ public interface AppConstants {
 
     /**
      * The first unicode character
-     * @link {https://en.wikipedia.org/wiki/UTF-8}
+     * @link <a href="https://en.wikipedia.org/wiki/UTF-8">...</a>
      * */
     Character UNICODE_FIRST_CODE_POINT = '\u0001';
     /**
      * The last unicode character
-     * @link {https://en.wikipedia.org/wiki/UTF-8}
+     * @link <a href="https://en.wikipedia.org/wiki/UTF-8">...</a>
      * */
     Character UNICODE_LAST_CODE_POINT = '\uFFFF';
 

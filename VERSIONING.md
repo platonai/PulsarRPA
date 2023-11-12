@@ -1,7 +1,7 @@
 VERSIONING POLICY
 =
 
-Since 1.10.20, we ship different types of releases:
+Since 1.12, we ship different types of releases:
 
 * Feature releases (1.x) that bring major changes in PulsarRPA.
 
