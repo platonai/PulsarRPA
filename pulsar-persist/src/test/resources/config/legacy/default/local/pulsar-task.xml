@@ -13,7 +13,7 @@
     <!-- persist -->
     <property>
         <name>storage.crawl.id</name>
-        <value>amazon_tmp</value>
+        <value>pulsar_tmp</value>
         <description>Crawl amazon web pages</description>
     </property>
 

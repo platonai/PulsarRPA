@@ -722,9 +722,10 @@
 
             See more at: http://gora.apache.org/
           -->
-        <gora.version>0.8</gora.version>
+        <gora.version>0.9</gora.version>
+        <gora-shaded-mongo.version>0.9-SNAPSHOT</gora-shaded-mongo.version>
         <!-- Required by gora-0.8 -->
-        <avro.version>1.8.1</avro.version>
+        <avro.version>1.8.2</avro.version>
         <!-- 2.5.2 is official, but 2.7.2 is a correct version, we will consider using a shaded gora -->
         <hadoop.version>2.7.2</hadoop.version>
 

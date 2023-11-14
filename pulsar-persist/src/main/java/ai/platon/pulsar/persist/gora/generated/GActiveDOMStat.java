@@ -3,7 +3,9 @@
  *
  * DO NOT EDIT DIRECTLY
  */
-package ai.platon.pulsar.persist.gora.generated;  
+package ai.platon.pulsar.persist.gora.generated;
+
+import org.apache.gora.persistency.Persistent;
 
 public class GActiveDOMStat extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GActiveDOMStat\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"ni\",\"type\":\"int\",\"default\":0},{\"name\":\"na\",\"type\":\"int\",\"default\":0},{\"name\":\"nnm\",\"type\":\"int\",\"default\":0},{\"name\":\"nst\",\"type\":\"int\",\"default\":0},{\"name\":\"w\",\"type\":\"int\",\"default\":0},{\"name\":\"h\",\"type\":\"int\",\"default\":0}]}");
@@ -68,6 +70,11 @@ public class GActiveDOMStat extends org.apache.gora.persistency.impl.PersistentB
    */
   public int getFieldsCount() {
     return GActiveDOMStat._ALL_FIELDS.length;
+  }
+
+  @Override
+  public Persistent clone() {
+    return null;
   }
 
   private int ni;

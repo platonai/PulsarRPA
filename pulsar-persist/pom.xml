@@ -28,13 +28,16 @@
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>gora-shaded-mongodb</artifactId>
-            <version>0.8</version>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
+
+        <!-- Not working? -->
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>gora-shaded-mongodb</artifactId>
+            <version>${gora-shaded-mongo.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.apache.avro</groupId>
@@ -49,6 +52,7 @@
             </exclusions>
         </dependency>
         <!-- Required by gora -->
+        <!-- TODO: shade hadoop inside gora-shaded-mongo -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
@@ -79,6 +83,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-compiler</artifactId>

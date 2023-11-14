@@ -3,7 +3,9 @@
  *
  * DO NOT EDIT DIRECTLY
  */
-package ai.platon.pulsar.persist.gora.generated;  
+package ai.platon.pulsar.persist.gora.generated;
+
+import org.apache.gora.persistency.Persistent;
 
 public class GPageModel extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GPageModel\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"fieldGroups\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"GFieldGroup\",\"fields\":[{\"name\":\"id\",\"type\":\"long\",\"default\":0},{\"name\":\"parentId\",\"type\":\"long\",\"default\":0},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"fields\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}},\"default\":[]}]}");
@@ -58,6 +60,11 @@ public class GPageModel extends org.apache.gora.persistency.impl.PersistentBase 
    */
   public int getFieldsCount() {
     return GPageModel._ALL_FIELDS.length;
+  }
+
+  @Override
+  public Persistent clone() {
+    return null;
   }
 
   private java.util.List<ai.platon.pulsar.persist.gora.generated.GFieldGroup> fieldGroups;

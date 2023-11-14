@@ -13,8 +13,8 @@
     <!-- persist -->
     <property>
         <name>storage.crawl.id</name>
-        <value>amazon_tmp</value>
-        <description>Crawl amazon web pages</description>
+        <value>pulsar_tmp</value>
+        <description>The PulsarRPA storage</description>
     </property>
 
 </configuration>
