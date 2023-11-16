@@ -86,7 +86,7 @@ class ChromeDevtoolsDriver(
     private var credentials: Credentials? = null
 
     private val networkManager by lazy { NetworkManager(this, rpc) }
-    private val messageWriter = MiscMessageWriter(ImmutableConfig())
+    private val messageWriter = MiscMessageWriter()
 
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val initScriptCache = mutableListOf<String>()

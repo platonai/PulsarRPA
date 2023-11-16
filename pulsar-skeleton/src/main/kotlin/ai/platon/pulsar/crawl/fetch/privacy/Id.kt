@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
-import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.readableClassName
@@ -268,12 +267,7 @@ class PrivacyContextIdGeneratorFactory(val conf: ImmutableConfig) {
     }
     
     private fun createUsingGlobalConfig(conf: ImmutableConfig): PrivacyContextIdGenerator {
-        val defaultClazz = DefaultPrivacyContextIdGenerator::class.java
-        var clazz = createUsingGlobalConfig(conf, PRIVACY_AGENT_GENERATOR_CLASS)
-        if (clazz == defaultClazz) {
-            clazz = createUsingGlobalConfig(conf, PRIVACY_CONTEXT_ID_GENERATOR_CLASS)
-        }
-        return clazz
+        return createUsingGlobalConfig(conf, PRIVACY_AGENT_GENERATOR_CLASS)
     }
     
     private fun createUsingGlobalConfig(conf: ImmutableConfig, className: String): PrivacyContextIdGenerator {
