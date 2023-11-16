@@ -682,7 +682,6 @@
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core</artifactId>
         </dependency>
-
     </dependencies>
 
     <properties>
@@ -723,7 +722,7 @@
 
         <autolink.version>0.10.0</autolink.version>
 
-        <slf4j.version>1.7.36</slf4j.version>
+        <slf4j.version>2.0.9</slf4j.version>
     </properties>
 
 </project>

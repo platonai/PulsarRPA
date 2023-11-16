@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common
 
-import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -67,7 +66,7 @@ class FrequencyManager<T : Comparable<T>> : MutableMap<String, Frequency<T>> {
     }
 
     /**
-     * Remove items appears more then {@param threshold} times
+     * Remove items appears more than {@param threshold} times
      *
      * @param appearance The appearance
      */
@@ -76,10 +75,6 @@ class FrequencyManager<T : Comparable<T>> : MutableMap<String, Frequency<T>> {
 
         for (counter in counters.values) {
             removed += counter.trimEnd(appearance)
-        }
-
-        if (removed > 0) {
-            LOG.debug("Removed $removed items more then $appearance appearance")
         }
 
         return removed
@@ -95,10 +90,6 @@ class FrequencyManager<T : Comparable<T>> : MutableMap<String, Frequency<T>> {
 
         for (counter in counters.values) {
             removed += counter.trimStart(appearance)
-        }
-
-        if (removed > 0) {
-            LOG.debug("Removed $removed items more then $appearance appearance")
         }
 
         return removed
@@ -128,9 +119,5 @@ class FrequencyManager<T : Comparable<T>> : MutableMap<String, Frequency<T>> {
             sb.append(counter.name).append('\n').append(counter.toString()).append('\n')
         }
         return sb.toString()
-    }
-
-    companion object {
-        val LOG = LoggerFactory.getLogger(FrequencyManager::class.java)!!
     }
 }

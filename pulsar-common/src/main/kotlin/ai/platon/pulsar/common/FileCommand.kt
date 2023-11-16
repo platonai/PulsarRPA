@@ -1,13 +1,12 @@
 package ai.platon.pulsar.common
 
-import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 
 object FileCommand {
-    private val log = LoggerFactory.getLogger(FileCommand::class.java)
+    private val log = getLogger(FileCommand::class.java)
 
     val COMMAND_FILE: Path = AppPaths.PATH_LOCAL_COMMAND
     val CHECK_INTERVAL: Duration = Duration.ofSeconds(15)
