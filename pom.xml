@@ -712,7 +712,6 @@
             See more at: http://gora.apache.org/
           -->
         <gora.version>0.9</gora.version>
-        <gora-shaded-mongo.version>0.9-SNAPSHOT</gora-shaded-mongo.version>
         <!-- Required by gora-0.8 -->
         <avro.version>1.8.2</avro.version>
         <!-- 2.5.2 is official, but 2.7.2 is a correct version, we will consider using a shaded gora -->
@@ -721,6 +720,7 @@
         <dokka.version>1.8.10</dokka.version>
 
         <autolink.version>0.10.0</autolink.version>
+<!--        <tika.version>2.4.1</tika.version>-->
 
         <slf4j.version>2.0.9</slf4j.version>
     </properties>
