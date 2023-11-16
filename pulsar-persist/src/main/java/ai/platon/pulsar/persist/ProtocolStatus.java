@@ -125,14 +125,6 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         return minorCodes.getOrDefault(code, "unknown");
     }
 
-    /**
-     * @deprecated Retry should have a reason. Use retry(scope, reason) instead
-     * */
-    @Nonnull
-    public static ProtocolStatus retry(RetryScope scope) {
-        return failed(ProtocolStatusCodes.RETRY, ARG_RETRY_SCOPE, scope);
-    }
-
     @Nonnull
     public static ProtocolStatus retry(RetryScope scope, Object reason) {
         String reasonString;

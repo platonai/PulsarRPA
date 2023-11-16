@@ -560,17 +560,4 @@ object UrlUtils {
     fun unreverseHost(reversedHostName: String): String {
         return reverseHost(reversedHostName) // Reversible
     }
-
-    /**
-     * Convert given Utf8 instance to String and cleans out any offending "�"
-     * from the String.
-     *
-     * @param utf8 Utf8 object
-     * @return stringify Utf8 object or null if Utf8 instance is null
-     * @deprecated purpose not clear
-     */
-    @JvmStatic
-    fun toString(utf8: CharSequence?): String? {
-        return if (utf8 == null) null else Strings.cleanField(utf8.toString())
-    }
 }
