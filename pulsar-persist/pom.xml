@@ -36,15 +36,39 @@
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <artifactSet>
                                 <excludes>
-                                    <exclude>junit:junit</exclude>
+                                    <exclude>junit:*</exclude>
                                     <exclude>jmock:*</exclude>
                                     <exclude>*:xml-apis</exclude>
                                     <exclude>org.apache.maven:lib:tests</exclude>
+                                    <exclude>org.slf4j:*</exclude>
                                     <exclude>log4j:log4j:jar:</exclude>
                                     <exclude>org.jetbrains:*</exclude>
                                     <exclude>org.springframework:*</exclude>
                                 </excludes>
+                                <includes>
+                                    <include>com.mongodb:*</include>
+                                    <include>org.mongodb:*</include>
+                                    <include>org.bson:*</include>
+                                    <include>org.jdom:*</include>
+                                    <include>org.apache.avro:*</include>
+                                    <include>org.apache.gora:*</include>
+                                    <include>org.apache.hadoop:*</include>
+                                </includes>
                             </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/license/**</exclude>
+                                        <exclude>META-INF/*</exclude>
+                                        <exclude>META-INF/maven/**</exclude>
+                                        <exclude>LICENSE</exclude>
+                                        <exclude>NOTICE</exclude>
+                                        <exclude>/*.txt</exclude>
+                                        <exclude>build.properties</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -52,14 +76,30 @@
                                 </transformer>
                             </transformers>
                             <relocations>
-                                <!--                                <relocation>-->
-                                <!--                                    <pattern>org.codehaus.plexus.util</pattern>-->
-                                <!--                                    <shadedPattern>org.shaded.plexus.util</shadedPattern>-->
-                                <!--                                    <excludes>-->
-                                <!--                                        <exclude>org.codehaus.plexus.util.xml.Xpp3Dom</exclude>-->
-                                <!--                                        <exclude>org.codehaus.plexus.util.xml.pull.*</exclude>-->
-                                <!--                                    </excludes>-->
-                                <!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.codehaus.plexus.util</pattern>-->
+<!--                                    <shadedPattern>org.shaded.plexus.util</shadedPattern>-->
+<!--                                    <excludes>-->
+<!--                                        <exclude>org.codehaus.plexus.util.xml.Xpp3Dom</exclude>-->
+<!--                                        <exclude>org.codehaus.plexus.util.xml.pull.*</exclude>-->
+<!--                                    </excludes>-->
+<!--                                </relocation>-->
+                                <relocation>
+                                    <pattern>org.mongodb</pattern>
+                                    <shadedPattern>org.shaded.mongodb</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.mongodb</pattern>
+                                    <shadedPattern>com.shaded.mongodb</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.bson</pattern>
+                                    <shadedPattern>org.shaded.bson</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.jdom</pattern>
+                                    <shadedPattern>org.shaded.jdom</shadedPattern>
+                                </relocation>
                                 <relocation>
                                     <pattern>org.apache.hadoop</pattern>
                                     <shadedPattern>org.shaded.apache.hadoop</shadedPattern>
@@ -83,11 +123,35 @@
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
 
-        <!-- TODO: shade mongodb relevant packages just in this file -->
+
         <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>gora-shaded-mongodb</artifactId>
-            <version>${gora-shaded-mongo.version}</version>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>${mongo.driver.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gora</groupId>
+            <artifactId>gora-mongodb</artifactId>
+            <version>${gora.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gora</groupId>
+            <artifactId>gora-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <!-- Conflict with tomcat: use javax.servlet:javax.servlet-api:3.1.0 instead -->
+                <exclusion>
+                    <groupId>org.mortbay.jetty</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -111,25 +175,6 @@
                 <exclusion>
                     <groupId>*</groupId>
                     <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.gora</groupId>
-            <artifactId>gora-core</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <!-- Conflict with tomcat: use javax.servlet:javax.servlet-api:3.1.0 instead -->
-                <exclusion>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>servlet-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -208,12 +253,34 @@
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!-- slf4j-simple is used when there is no logback.xml available -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-        </dependency>
     </dependencies>
+
+    <properties>
+        <!--  Gora Serialization  -->
+        <!--
+            Gora 0.8 supports:
+            Apache Avro 1.8.1
+            Apache Hadoop 2.5.2
+            Apache HBase 1.2.3
+            Apache Spark 1.4.1
+
+            Gora 0.9 supports:
+            Apache Avro 1.8.2
+            Apache Hadoop 2.5.2
+            Apache HBase 2.1.1
+            Apache Spark 2.2.1
+
+            See more at: http://gora.apache.org/
+          -->
+        <gora.version>0.9</gora.version>
+        <!-- Required by gora-0.8 -->
+        <avro.version>1.8.2</avro.version>
+        <!-- gora-0.9 use 2.5.2 by default, but 2.7.2 is a correct version -->
+        <hadoop.version>2.7.2</hadoop.version>
+
+        <!-- gora-0.9 use mongo-java-driver:3.5.0 by default -->
+        <!--  <mongo.driver.version>3.5.0</mongo.driver.version>-->
+        <mongo.driver.version>3.12.8</mongo.driver.version>
+    </properties>
 
 </project>
