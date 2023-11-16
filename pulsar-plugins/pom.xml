@@ -51,6 +51,7 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-persist</artifactId>
+                <classifier>shaded</classifier>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

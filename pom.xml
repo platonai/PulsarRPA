@@ -24,7 +24,7 @@
     <version>1.12.0-SNAPSHOT</version>
 
     <name>Pulsar</name>
-    <description>Scrape Web data at scale completely and accurately with high performance, distributed RPA.</description>
+    <description>Scrape Web data at scale completely and accurately with high performance, distributed AI-RPA.</description>
 
     <licenses>
         <license>
@@ -451,13 +451,8 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-persist</artifactId>
+                <classifier>shaded</classifier>
                 <version>${project.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.mongodb</groupId>
-                        <artifactId>mongo-java-driver</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
@@ -662,11 +657,6 @@
                 <artifactId>slf4j-log4j12</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>org.slf4j</groupId>-->
-<!--                <artifactId>slf4j-log4j12</artifactId>-->
-<!--                <version>1.7.36</version>-->
-<!--            </dependency>-->
         </dependencies>
     </dependencyManagement>
 

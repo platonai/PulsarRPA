@@ -9,7 +9,8 @@
 	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
 	OF ANY KIND, either express or implied. See the License for the specific
 	language governing permissions and limitations under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>ai.platon.pulsar</groupId>
@@ -19,6 +20,57 @@
 
     <artifactId>pulsar-persist</artifactId>
     <name>Pulsar Persist</name>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>junit:junit</exclude>
+                                    <exclude>jmock:*</exclude>
+                                    <exclude>*:xml-apis</exclude>
+                                    <exclude>org.apache.maven:lib:tests</exclude>
+                                    <exclude>log4j:log4j:jar:</exclude>
+                                    <exclude>org.jetbrains:*</exclude>
+                                    <exclude>org.springframework:*</exclude>
+                                </excludes>
+                            </artifactSet>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>ai/platon/pulsar/persist/gora/CompileAvroKt</mainClass>
+                                </transformer>
+                            </transformers>
+                            <relocations>
+                                <!--                                <relocation>-->
+                                <!--                                    <pattern>org.codehaus.plexus.util</pattern>-->
+                                <!--                                    <shadedPattern>org.shaded.plexus.util</shadedPattern>-->
+                                <!--                                    <excludes>-->
+                                <!--                                        <exclude>org.codehaus.plexus.util.xml.Xpp3Dom</exclude>-->
+                                <!--                                        <exclude>org.codehaus.plexus.util.xml.pull.*</exclude>-->
+                                <!--                                    </excludes>-->
+                                <!--                                </relocation>-->
+                                <relocation>
+                                    <pattern>org.apache.hadoop</pattern>
+                                    <shadedPattern>org.shaded.apache.hadoop</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
         <!-- Internal Dependencies -->
@@ -31,13 +83,12 @@
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
 
-        <!-- Not working? -->
+        <!-- TODO: shade mongodb relevant packages just in this file -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>gora-shaded-mongodb</artifactId>
             <version>${gora-shaded-mongo.version}</version>
         </dependency>
-
 
         <dependency>
             <groupId>org.apache.avro</groupId>
@@ -52,7 +103,6 @@
             </exclusions>
         </dependency>
         <!-- Required by gora -->
-        <!-- TODO: shade hadoop inside gora-shaded-mongo -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
