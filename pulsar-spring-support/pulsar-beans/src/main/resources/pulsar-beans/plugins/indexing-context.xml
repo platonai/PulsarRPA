@@ -28,15 +28,9 @@
         <constructor-arg value="indexer-mapping.xml"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="solrIndexWriter" class="ai.platon.pulsar.solr.SolrIndexWriter" destroy-method="close">
-        <constructor-arg ref="indexerMapping"/>
-        <constructor-arg ref="conf"/>
-        <property name="webDb" ref="webDb"/>
-    </bean>
     <bean id="indexWriters" class="ai.platon.pulsar.crawl.index.IndexWriters">
         <constructor-arg>
             <list>
-                <ref bean="solrIndexWriter" />
             </list>
         </constructor-arg>
         <constructor-arg ref="conf"/>

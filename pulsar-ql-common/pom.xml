@@ -67,6 +67,7 @@
             <artifactId>pulsar-dom</artifactId>
         </dependency>
 
+        <!-- ValueDomWritable requires hadoop's Writable, DataOutput, DataInput -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
