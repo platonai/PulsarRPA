@@ -53,6 +53,7 @@
                                     <include>org.apache.avro:*</include>
                                     <include>org.apache.gora:*</include>
                                     <include>org.apache.hadoop:*</include>
+                                    <include>org.codehaus.jackson:*</include>
                                 </includes>
                             </artifactSet>
                             <filters>
@@ -117,10 +118,23 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+        <!-- TODO: try to remove this dependency -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
 
@@ -133,6 +147,12 @@
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-mongodb</artifactId>
             <version>${gora.version}</version>
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>log4j</groupId>-->
+<!--                    <artifactId>*</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
         </dependency>
         <dependency>
             <groupId>org.apache.gora</groupId>
@@ -195,10 +215,7 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-        </dependency>
+        <!-- Web graph computing -->
         <dependency>
             <groupId>org.jgrapht</groupId>
             <artifactId>jgrapht-core</artifactId>
@@ -208,29 +225,9 @@
             <artifactId>jgrapht-ext</artifactId>
         </dependency>
 
-        <!-- Perl5Pattern, text process -->
-        <dependency>
-            <groupId>oro</groupId>
-            <artifactId>oro</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-        </dependency>
-
-        <!-- Persistent -->
-        <!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
-        <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>2.3.1</version>
-        </dependency>
-
-        <!-- Configuration is required by gora, and commons-collections is required -->
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
         </dependency>
 
         <dependency>
@@ -246,6 +243,27 @@
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
         </dependency>
+
+
+        <!-- TODO: check if we can remove this dependency, and choose a best version -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+
+        <!-- Perl5Pattern, text process, required by ProtocolHeaders, TODO: try to remove this dependency -->
+        <dependency>
+            <groupId>oro</groupId>
+            <artifactId>oro</artifactId>
+        </dependency>
+
+        <!-- Persistent, TODO: check if we can remove this dependency -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>${jaxb-api.version}</version>
+        </dependency>
+
 
         <!-- Test -->
         <dependency>
@@ -281,6 +299,8 @@
         <!-- gora-0.9 use mongo-java-driver:3.5.0 by default -->
         <!--  <mongo.driver.version>3.5.0</mongo.driver.version>-->
         <mongo.driver.version>3.12.8</mongo.driver.version>
+
+        <jaxb-api.version>2.3.1</jaxb-api.version>
     </properties>
 
 </project>

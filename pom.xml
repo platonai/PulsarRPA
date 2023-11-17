@@ -583,12 +583,19 @@
                 <artifactId>javax.servlet-api</artifactId>
                 <version>3.1.0</version>
             </dependency>
-            <!-- For parsers -->
+            <!-- For parsers.
+              The core library, tika-core, contains the key interfaces and classes of Tika and can be used by itself
+              if you don't need the full set of parsers from the tika-parsers component.
+             -->
             <dependency>
                 <groupId>org.apache.tika</groupId>
                 <artifactId>tika-core</artifactId>
                 <version>${tika.version}</version>
             </dependency>
+            <!-- The tika parsers are provided, so parsing by tika is disabled by default.
+                If you want to use Tika to parse documents (instead of simply detecting document types, etc.),
+                you'll want to add a dependency on at least tika-parsers-standard-package
+            -->
             <dependency>
                 <groupId>org.apache.tika</groupId>
                 <artifactId>tika-parsers-standard-package</artifactId>
@@ -637,17 +644,10 @@
                 <version>${jackson.version}</version>
             </dependency>
 
-            <!-- TODO: check if we need this, default version might be OK? -->
-            <dependency>
-                <groupId>org.mongodb</groupId>
-                <artifactId>bson</artifactId>
-                <version>4.1.1</version>
-            </dependency>
-
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>5.8.2</version>
+                <version>${junit-version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -704,34 +704,14 @@
         <kotlin.coroutine.version>1.7.3</kotlin.coroutine.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
-        <!--  Gora Serialization  -->
-        <!--  When we upgrade gora, we have to consider the compatibility  -->
-        <!--
-            Gora 0.8 supports:
-            Apache Avro 1.8.1
-            Apache Hadoop 2.5.2
-            Apache HBase 1.2.3
-            Apache Spark 1.4.1
-
-            Gora 0.9 supports:
-            Apache Avro 1.8.2
-            Apache Hadoop 2.5.2
-            Apache HBase 2.1.1
-            Apache Spark 2.2.1
-
-            See more at: http://gora.apache.org/
-          -->
-        <gora.version>0.9</gora.version>
-        <!-- Required by gora-0.8 -->
-        <avro.version>1.8.2</avro.version>
-        <!-- 2.5.2 is official, but 2.7.2 is a correct version, we will consider using a shaded gora -->
-        <hadoop.version>2.7.2</hadoop.version>
-
         <dokka.version>1.8.10</dokka.version>
 
         <autolink.version>0.10.0</autolink.version>
-<!--        <tika.version>2.9.0</tika.version>-->
 
+        <!-- tika upgrades -->
+        <!-- <tika.version>2.9.0</tika.version>-->
+
+        <junit-version>5.8.2</junit-version>
         <slf4j.version>2.0.9</slf4j.version>
     </properties>
 
