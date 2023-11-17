@@ -586,12 +586,22 @@
             <!-- For parsers -->
             <dependency>
                 <groupId>org.apache.tika</groupId>
+                <artifactId>tika-core</artifactId>
+                <version>${tika.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tika</groupId>
                 <artifactId>tika-parsers-standard-package</artifactId>
                 <version>${tika.version}</version>
+                <scope>provided</scope>
                 <type>pom</type>
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
@@ -720,7 +730,7 @@
         <dokka.version>1.8.10</dokka.version>
 
         <autolink.version>0.10.0</autolink.version>
-<!--        <tika.version>2.4.1</tika.version>-->
+<!--        <tika.version>2.9.0</tika.version>-->
 
         <slf4j.version>2.0.9</slf4j.version>
     </properties>
