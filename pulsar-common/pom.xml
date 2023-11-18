@@ -117,9 +117,22 @@
         </dependency>
 
         <!-- Logging and diagnose -->
+        <!--
+        The SLF4J serves as a simple facade or abstraction for various logging frameworks,
+        such as java.util.logging, log4j 1.x, reload4j and logback.
+        -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <!--
+        Fix the following error:
+        ERROR StatusLogger Log4j2 could not find a logging implementation.
+        Please add log4j-core to the classpath. Using SimpleLogger to log to the console...
+        -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

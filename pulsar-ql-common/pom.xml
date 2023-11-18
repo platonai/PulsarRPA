@@ -41,12 +41,18 @@
                                     <exclude>*:xml-apis</exclude>
                                     <exclude>org.apache.maven:lib:tests</exclude>
                                     <exclude>log4j:log4j:jar:</exclude>
+                                    <exclude>org.jetbrains:*</exclude>
+                                    <exclude>org.perf4j:*</exclude>
                                 </excludes>
                             </artifactSet>
                             <relocations>
                                 <relocation>
                                     <pattern>org.apache.hadoop</pattern>
                                     <shadedPattern>org.shaded.apache.hadoop</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.google</pattern>
+                                    <shadedPattern>com.shaded.google</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
@@ -64,9 +70,26 @@
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-dom</artifactId>
+            <artifactId>pulsar-common</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-dom</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>ai.platon.pulsar</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.perf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-jsoup</artifactId>
+        </dependency>
         <!-- ValueDomWritable requires hadoop's Writable, DataOutput, DataInput -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
