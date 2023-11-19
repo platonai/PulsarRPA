@@ -93,6 +93,7 @@
                                     <pattern>com.mongodb</pattern>
                                     <shadedPattern>com.shaded.mongodb</shadedPattern>
                                 </relocation>
+                                <!-- TODO: check if bson should be always be compatible with avro -->
                                 <relocation>
                                     <pattern>org.bson</pattern>
                                     <shadedPattern>org.shaded.bson</shadedPattern>
