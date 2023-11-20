@@ -133,7 +133,7 @@ object DomFunctions {
     fun elementSiblingIndex(dom: ValueDom) = dom.element.elementSiblingIndex()
 
     /**
-     * The normalized uri
+     * The normalized uri, should be the same as WebPage.url, which is also the key in the database
      * */
     @UDFunction
     @JvmStatic

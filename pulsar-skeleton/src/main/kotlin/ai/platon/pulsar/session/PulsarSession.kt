@@ -919,18 +919,6 @@ interface PulsarSession : AutoCloseable {
      */
     fun submitForOutPages(portalUrl: UrlAware, options: LoadOptions): PulsarSession
     
-    @Deprecated("Inappropriate name", ReplaceWith("submitForOutPages(portalUrl, args)"))
-    fun submitOutPages(portalUrl: String, args: String) = submitForOutPages(portalUrl, options(args))
-    
-    @Deprecated("Inappropriate name", ReplaceWith("submitForOutPages(portalUrl, options)"))
-    fun submitOutPages(portalUrl: String, options: LoadOptions) = submitForOutPages(PlainUrl(portalUrl), options)
-    
-    @Deprecated("Inappropriate name", ReplaceWith("submitForOutPages(portalUrl, args)"))
-    fun submitOutPages(portalUrl: UrlAware, args: String) = submitForOutPages(portalUrl, options(args))
-    
-    @Deprecated("Inappropriate name", ReplaceWith("submitForOutPages(portalUrl, options)"))
-    fun submitOutPages(portalUrl: UrlAware, options: LoadOptions) = submitForOutPages(portalUrl, options)
-    
     /**
      * Load a url as a resource without browser rendering.
      *

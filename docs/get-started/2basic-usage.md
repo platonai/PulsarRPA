@@ -47,7 +47,7 @@ PulsarRPA 实现**网络即数据库**范式，像对待内部数据库一样对
 5. loadAll()
 6. submitAll()  
 7. loadOutPages() 
-8. submitOutPages()
+8. submitForOutPages()
 9. loadResource()
 10. loadResourceDeferred()
 11. loadDocument()
@@ -116,7 +116,7 @@ val pages = session.loadOutPages(url, "-expires 10s -itemExpires 10s -outLink a[
 // 加载门户页面并将`-outLink '指定的外部链接提交到URL池。
 // 选项“-outLink”指定cssSelector来选择入口页面中要提交的链接。
 // 选项“-topLinks”指定“-outLink”选择的链接的最大数量。
-session.submitOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/] -topLinks 10")
+session.submitForOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/] -topLinks 10")
 ```
 
 网页采集最终是要从网页中提取字段，PulsarSession 也提供了丰富的方法来简化“**采集-解析-提取**”复合任务，有单网页版本的，也有批处理版本的：
@@ -153,21 +153,21 @@ session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(sess
 
 最后小结一下，我们提供了一系列方法家族来**加载**页面：
 
-| 函数名                  | 描述                                                   |
-|:-----------------------|:------------------------------------------------------|
-| load()                 | **加载**一个页面                                        |
-| loadDeferred()         | 异步**加载**一个页面，它可以在 Kotlin 协程中执行            |
-| loadAsync()            | 异步**加载**一个页面，它以 Java 异步编程风格执行            |
-| submit()               | 提交一个链接，它会在采集循环中被**加载**                    |
-| loadAll()              | **加载**批量页面                                        |
-| submitAll()            | 提交批量页面，它们会在采集循环中被**加载**                   |
-| loadOutPages()         | **加载**一批链出页面                                     |
-| submitOutPages()       | 提交一批链出链接，它们会在采集循环中被**加载**               |
-| loadResource()         | **加载**一个资源，使用简单的 HTTP 协议，而不是通过浏览器渲染  |
-| loadResourceDeferred() | **加载**一个资源，它可以在 Kotlin 协程中执行               |
-| loadDocument()         | **加载**一个页面，并且解析成 DOM 文档                      |
-| scrape()               | **加载**一个页面，解析成 DOM 文档，并且从中提取数据          |
-| scrapeOutPages()       | **加载**一批链出页面，解析成 DOM 文档，并且从中提取数据       |
+| 函数名                      | 描述                                                   |
+|:-------------------------|:------------------------------------------------------|
+| load()                   | **加载**一个页面                                        |
+| loadDeferred()           | 异步**加载**一个页面，它可以在 Kotlin 协程中执行            |
+| loadAsync()              | 异步**加载**一个页面，它以 Java 异步编程风格执行            |
+| submit()                 | 提交一个链接，它会在采集循环中被**加载**                    |
+| loadAll()                | **加载**批量页面                                        |
+| submitAll()              | 提交批量页面，它们会在采集循环中被**加载**                   |
+| loadOutPages()           | **加载**一批链出页面                                     |
+| submitForOutPages()      | 提交一批链出链接，它们会在采集循环中被**加载**               |
+| loadResource()           | **加载**一个资源，使用简单的 HTTP 协议，而不是通过浏览器渲染  |
+| loadResourceDeferred()   | **加载**一个资源，它可以在 Kotlin 协程中执行               |
+| loadDocument()           | **加载**一个页面，并且解析成 DOM 文档                      |
+| scrape()                 | **加载**一个页面，解析成 DOM 文档，并且从中提取数据          |
+| scrapeOutPages()         | **加载**一批链出页面，解析成 DOM 文档，并且从中提取数据       |
 
 这些函数提供了丰富的重载函数，以满足绝大多数复杂编程要求。譬如，当我们准备启动一个新的采集项目时，我们第一步要做的是评估采集难度，这可以用一行代码来启动：
 
