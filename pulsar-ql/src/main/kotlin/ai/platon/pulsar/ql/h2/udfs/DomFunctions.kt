@@ -138,10 +138,7 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun uri(dom: ValueDom): String {
-        return dom.element.ownerDocument()!!.selectFirstOrNull("#PulsarMetaInformation")
-            ?.attr("normalizedUrl")
-            ?.takeIf { UrlUtils.isStandard(it) }
-            ?: baseUri(dom)
+        return dom.element.ownerDocument.normalizedURI ?: ""
     }
 
     /**

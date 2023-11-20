@@ -15,6 +15,7 @@ import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.model.createLink
 import ai.platon.pulsar.dom.nodes.*
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.jsoup.nodes.*
@@ -116,6 +117,10 @@ val Document.pulsarMetaElement get() = getElementById(PULSAR_META_INFORMATION_ID
 val Document.pulsarScriptElement get() = getElementById(PULSAR_SCRIPT_SECTION_ID)
 
 val Document.pulsarScript get() = ownerDocument.pulsarScriptElement?.text()
+
+val Document.normalizedURI: String? get() = head().selectFirstOrNull("link[rel=$PULSAR_DOCUMENT_NORMALIZED_URI]")
+    ?.attr("href")
+    ?: pulsarMetaElement?.attr(PULSAR_DOCUMENT_NORMALIZED_URI)
 
 var Document.isInitialized by field { AtomicBoolean() }
 

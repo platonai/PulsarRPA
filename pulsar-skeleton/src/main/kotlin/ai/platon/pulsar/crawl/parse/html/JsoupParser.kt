@@ -1,6 +1,8 @@
 package ai.platon.pulsar.crawl.parse.html
 
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.PULSAR_DOCUMENT_NORMALIZED_URI
+import ai.platon.pulsar.common.config.AppConstants.PULSAR_META_INFORMATION_SELECTOR
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.urls.UrlUtils
@@ -52,18 +54,30 @@ class JsoupParser(
     }
 
     private fun updateMetaInfos(page: WebPage, document: FeaturedDocument) {
-        // TODO: a json variable might be better
-        val selector = "#${AppConstants.PULSAR_META_INFORMATION_ID}"
+        val selector = PULSAR_META_INFORMATION_SELECTOR
         val metadata = document.document.selectFirstOrNull(selector) ?: return
 
-        page.href?.takeIf { UrlUtils.isStandard(it) }?.let { metadata.attr("href", it) }
-        page.referrer.takeIf { UrlUtils.isStandard(it) }?.let { metadata.attr("referrer", it) }
+        val hrefs = mutableMapOf(PULSAR_DOCUMENT_NORMALIZED_URI to page.url)
+        
+        page.href?.takeIf { UrlUtils.isStandard(it) }?.let {
+            hrefs.put("href", it)
+        }
+        page.referrer.takeIf { UrlUtils.isStandard(it) }?.let {
+            hrefs.put("referrer", it)
+        }
+
+        val head = document.head
+        hrefs.forEach { (rel, href) ->
+            head.appendElement("<link rel='$rel' href='$href' />")
+            metadata.attr(rel, href)
+        }
+
+        // normUrl is deprecated, use normalizedURL instead
+        metadata.attr("normUrl", page.url)
+        // deprecated, use body head link[rel=normalizedURI] instead
+        metadata.attr("normalizedUrl", page.url)
 
         val options = page.options
-
-        // normUrl is deprecated, use normalizedUrl instead
-        metadata.attr("normUrl", page.url)
-        metadata.attr("normalizedUrl", page.url)
         metadata.attr("label", options.label)
         metadata.attr("taskId", options.taskId)
         metadata.attr("taskTime", options.taskTime.toString())

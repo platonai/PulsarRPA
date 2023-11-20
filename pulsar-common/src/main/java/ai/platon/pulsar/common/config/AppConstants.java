@@ -208,6 +208,7 @@ public interface AppConstants {
     String PULSAR_META_INFORMATION_SELECTOR = "#" + PULSAR_META_INFORMATION_ID;
     String PULSAR_SCRIPT_SECTION_ID = "PulsarScriptSection";
     String PULSAR_SCRIPT_SECTION_SELECTOR = "#" + PULSAR_SCRIPT_SECTION_ID;
+    String PULSAR_DOCUMENT_NORMALIZED_URI = "normalizedURI";
     String PULSAR_ATTR_HIDDEN = "_h";
     String PULSAR_ATTR_OVERFLOW_HIDDEN = "_oh";
     String PULSAR_ATTR_OVERFLOW_VISIBLE = "_visible";

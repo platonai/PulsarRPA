@@ -85,10 +85,7 @@ open class FeaturedDocument(val document: Document) {
      * */
     val sequence = instanceSequencer.incrementAndGet()
 
-    /**
-     * Get document title.
-     * */
-    val title get() = document.title()
+    val normalizedURI get() = document.normalizedURI
 
     /**
      * Get the URL this Document was parsed from. If the starting URL is a redirect,
@@ -104,6 +101,11 @@ open class FeaturedDocument(val document: Document) {
      * @see #absUrl
      */
     val baseURI get() = document.baseUri()
+    
+    /**
+     * Get document title.
+     * */
+    val title get() = document.title()
 
     /**
      * Get this document's head element.
