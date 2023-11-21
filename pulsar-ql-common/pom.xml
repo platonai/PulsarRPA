@@ -91,6 +91,7 @@
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
         <!-- ValueDomWritable requires hadoop's Writable, DataOutput, DataInput -->
+        <!-- Will remove hadoop dependency in the future -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>

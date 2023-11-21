@@ -22,6 +22,7 @@
 
     <dependencies>
         <!-- Spring core is the first class dependency now -->
+        <!-- Requires Environment -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>

@@ -91,7 +91,7 @@ class ExportPaths(val uri: String) {
     }
 }
 
-const val NILLocation: String = AppConstants.NIL_PAGE_URL
+const val NILLocation: String = NIL_PAGE_URL
 
 const val NILBaseUri: String = NILLocation
 
@@ -116,11 +116,17 @@ val Document.pulsarMetaElement get() = getElementById(PULSAR_META_INFORMATION_ID
 
 val Document.pulsarScriptElement get() = getElementById(PULSAR_SCRIPT_SECTION_ID)
 
-val Document.pulsarScript get() = ownerDocument.pulsarScriptElement?.text()
+val Document.pulsarScript get() = pulsarScriptElement?.text()
 
-val Document.normalizedURI: String? get() = head().selectFirstOrNull("link[rel=$PULSAR_DOCUMENT_NORMALIZED_URI]")
-    ?.attr("href")
-    ?: pulsarMetaElement?.attr(PULSAR_DOCUMENT_NORMALIZED_URI)
+val Document.normalizedURI: String? get() {
+    if (isNil) {
+        return NILBaseUri
+    }
+
+    return head().selectFirstOrNull("link[rel=$PULSAR_DOCUMENT_NORMALIZED_URI]")
+        ?.attr("href")
+        ?: pulsarMetaElement?.attr(PULSAR_DOCUMENT_NORMALIZED_URI)
+}
 
 var Document.isInitialized by field { AtomicBoolean() }
 
@@ -235,6 +241,9 @@ fun Element.getStyle(styleKey: String): String {
 
 val Node.isNil get() = this === NILNode
 
+/**
+ * TODO: should not call ownerDocument.extension, which is a recursive call
+ * */
 val Node.ownerDocument get() = Objects.requireNonNull(extension.ownerDocumentNode) as Document
 
 /**

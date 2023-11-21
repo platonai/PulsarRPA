@@ -42,6 +42,26 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-ql-common</artifactId>
+            <classifier>shaded</classifier>
+        </dependency>
+
+        <!-- Requires org.springframework.context.support.AbstractApplicationContext -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+
+        <!-- Requires org.apache.hadoop.io.Text, etc -->
+        <!-- Will remove hadoop dependency in the future -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- apache common -->
@@ -50,7 +70,6 @@
             <artifactId>commons-collections4</artifactId>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/com.google.code.crawler-commons/crawler-commons -->
         <dependency>
             <groupId>com.google.code.crawler-commons</groupId>
             <artifactId>crawler-commons</artifactId>

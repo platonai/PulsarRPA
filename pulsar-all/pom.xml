@@ -84,6 +84,18 @@
     <dependencies>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-persist</artifactId>
+            <classifier>shaded</classifier>
+        </dependency>
+        <!-- Required by hadoop -->
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-protocol</artifactId>
         </dependency>
         <dependency>

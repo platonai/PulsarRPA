@@ -24,6 +24,7 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-ql-common</artifactId>
+            <classifier>shaded</classifier>
         </dependency>
 
         <!-- Pulsar dependencies -->
@@ -93,19 +94,24 @@
             <type>pom</type>
         </dependency>
 
-        <!-- Spring support -->
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-h2</artifactId>
         </dependency>
+
+        <!-- Spring support -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
         </dependency>
+
+        <!-- TODO: try to remove spring-boot dependency -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot</artifactId>
         </dependency>
+
+        <!-- TODO: try to remove spring-boot-starter dependency -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
