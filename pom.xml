@@ -788,6 +788,7 @@
         <autolink.version>0.10.0</autolink.version>
         <jackson.version>2.15.3</jackson.version>
         <commons-text.version>1.11.0</commons-text.version>
+        <oshi.version>6.4.7</oshi.version>
 
 
         <junit-version>5.8.2</junit-version>

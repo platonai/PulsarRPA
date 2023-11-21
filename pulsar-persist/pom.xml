@@ -102,10 +102,6 @@
                                     <pattern>org.jdom</pattern>
                                     <shadedPattern>org.shaded.jdom</shadedPattern>
                                 </relocation>
-                                <relocation>
-                                    <pattern>org.apache.hadoop</pattern>
-                                    <shadedPattern>org.shaded.apache.hadoop</shadedPattern>
-                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>

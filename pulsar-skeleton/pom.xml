@@ -95,15 +95,10 @@
             <artifactId>jcommander</artifactId>
         </dependency>
 
-        <!-- System metrics -->
-<!--        <dependency>-->
-<!--            <groupId>com.github.oshi</groupId>-->
-<!--            <artifactId>oshi-core</artifactId>-->
-<!--            <version>${oshi.version}</version>-->
-<!--        </dependency>-->
+        <!-- Required by system metrics -->
         <dependency>
             <groupId>com.github.oshi</groupId>
-            <artifactId>oshi-core-java11</artifactId>
+            <artifactId>oshi-core</artifactId>
             <version>${oshi.version}</version>
         </dependency>
         <!-- Metrics system -->
