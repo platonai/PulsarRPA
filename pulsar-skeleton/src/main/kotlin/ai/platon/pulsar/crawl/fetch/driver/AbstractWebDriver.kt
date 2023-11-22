@@ -20,11 +20,12 @@ abstract class AbstractWebDriver(
     override val id: Int = instanceSequencer.incrementAndGet()
 ): Comparable<AbstractWebDriver>, AbstractJvmWebDriver(), WebDriver, JvmWebDriver {
     companion object {
-        val instanceSequencer = AtomicInteger()
+        private val instanceSequencer = AtomicInteger()
     }
     
     private val jsoupCreateDestroyMonitor = Any()
     private var jsoupSession: Connection? = null
+    
     private val canceled = AtomicBoolean()
     private val crashed = AtomicBoolean()
     
@@ -272,10 +273,7 @@ abstract class AbstractWebDriver(
     
     @Throws(IOException::class)
     override suspend fun loadResource(url: String): NetworkResourceResponse {
-        return loadJsoupResource(url).let {
-            NetworkResourceResponse(it.statusCode() == 200, 0.0, "",
-                httpStatusCode = it.statusCode().toDouble(), stream = it.body(), headers = it.headers())
-        }
+        return NetworkResourceResponse.from(loadJsoupResource(url))
     }
     
     /**

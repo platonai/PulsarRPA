@@ -80,9 +80,8 @@ open class BrowserManager(
 
     @Synchronized
     fun findLeastValuableDriver(): WebDriver? {
-        return browsers.values
-            .mapNotNull { findLeastValuableDriver(it.drivers.values) }
-            .minByOrNull { it.lastActiveTime }
+        val drivers = browsers.values.flatMap { it.drivers.values }
+        return findLeastValuableDriver(drivers)
     }
 
     @Synchronized

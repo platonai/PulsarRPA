@@ -2,6 +2,9 @@ package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.common.DateTimes
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Created by vincent on 18-1-1.
@@ -48,12 +51,25 @@ data class NavigateEntry(
      */
     val createTime: Instant = Instant.now(),
 ): Comparable<NavigateEntry> {
+    private val lock = ReentrantLock()
+
+    /**
+     * Main request is only used for HTML documents for now.
+     *
+     * For HTML webpages, the main request is the request for the first HTML document.
+     * TODO: redirection requests are not main requests.
+     * */
     var mainRequestId = ""
     var mainRequestHeaders: Map<String, Any> = mapOf()
     var mainRequestCookies: List<Map<String, String>> = listOf()
+    /**
+     * The response status of the main request
+     * */
     var mainResponseStatus: Int = -1
     var mainResponseStatusText: String = ""
     var mainResponseHeaders: Map<String, Any> = mapOf()
+
+    val documentTransferred get() = mainResponseStatus > 0
 
     /**
      * The time when the document is ready.
@@ -63,6 +79,11 @@ data class NavigateEntry(
      * Track the time of page actions.
      */
     val actionTimes = mutableMapOf<String, Instant>()
+    
+    val networkRequestCount = AtomicInteger()
+    
+    val networkResponseCount = AtomicInteger()
+
     /**
      * Refresh the entry with the given action.
      * */
@@ -74,6 +95,31 @@ data class NavigateEntry(
         }
     }
 
+    fun synchronized(action: () -> Unit) {
+        lock.withLock(action)
+    }
+
+    fun updateMainRequest(requestId: String, headers: Map<String, Any>) {
+        mainRequestId = requestId
+        mainRequestHeaders = headers
+
+        // amazon.com uses "referer" instead of "referrer" in the request header,
+        // not clear if other sites uses the other one
+        val referrer = pageReferrer
+        if (referrer != null) {
+            val mutableHeaders = headers.toMutableMap()
+            mutableHeaders["referer"] = referrer
+            mutableHeaders["referrer"] = referrer
+            mainRequestHeaders = mutableHeaders
+        }
+    }
+    
+    fun updateMainResponse(status: Int, statusText: String, headers: Map<String, Any>) {
+        mainResponseStatus = status
+        mainResponseStatusText = statusText
+        mainResponseHeaders = headers
+    }
+    
     override fun equals(other: Any?): Boolean {
         if (this === other) {
             return true

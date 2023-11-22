@@ -91,7 +91,7 @@ select
       dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
       dom_first_text(dom, '#acrCustomerReviewText') as ratings,
       str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1s -njr 3', 'body');
+  from load_and_select('https://www.amazon.com/dp/B0C1H26C46 -i 1s -njr 3', 'body');
 ----
 
 示例代码:
@@ -181,14 +181,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.10.20</version>
+  <version>1.10.24</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.10.20")
+implementation("ai.platon.pulsar:pulsar-all:1.10.24")
 ----
 
 也可以从 github.com 克隆模板项目: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17]。
@@ -204,7 +204,7 @@ implementation("ai.platon.pulsar:pulsar-all:1.10.20")
 // Create a pulsar session
 val session = PulsarContexts.createSession()
 // The main url we are playing with
-val url = "https://www.amazon.com/dp/B09V3KXJPB"
+val url = "https://www.amazon.com/dp/B0C1H26C46"
 
 // Load a page from local storage, or fetch it from the Internet if it does not exist or has expired
 val page = session.load(url, "-expires 10s")
@@ -381,7 +381,7 @@ select
       dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
       dom_first_text(dom, '#acrCustomerReviewText') as ratings,
       str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1s -njr 3', 'body');
+  from load_and_select('https://www.amazon.com/dp/B0C1H26C46 -i 1s -njr 3', 'body');
 ----
 
 执行 X-SQL：
@@ -445,7 +445,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
       dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
       dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
       str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1d -njr 3', 'body');"
+  from load_and_select('https://www.amazon.com/dp/B0C1H26C46 -i 1d -njr 3', 'body');"
 ----
 
 示例代码: link:bin/scrape.sh[bash], link:bin/scrape.bat[batch], link:pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java[java], link:pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt[kotlin], link:pulsar-client/src/main/php/Scraper.php[php].
@@ -465,7 +465,7 @@ Json 格式的响应如下：
             "listprice": "$19.99",
             "price": "$12.99",
             "categories": "Toys & Games|Arts & Crafts|Craft Kits|Jewelry",
-            "baseuri": "https://www.amazon.com/dp/B09V3KXJPB"
+            "baseuri": "https://www.amazon.com/dp/B0C1H26C46"
         }
     ],
     "pageStatus": "OK",

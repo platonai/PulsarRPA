@@ -22,7 +22,6 @@ import ai.platon.pulsar.persist.metadata.PageCategory
 import com.google.gson.GsonBuilder
 import org.slf4j.LoggerFactory
 import org.w3c.dom.Node
-import java.util.*
 
 /**
  * TODO : need full unit test
@@ -36,40 +35,40 @@ class CrawlFilters(
     val conf: ImmutableConfig
 ) {
     constructor(conf: ImmutableConfig) : this(
-            listOf(),
-            ChainedUrlNormalizer(conf),
-            CrawlUrlFilters(conf),
-            ChainedUrlNormalizer.SCOPE_DEFAULT,
-            conf
+        listOf(),
+        ChainedUrlNormalizer(),
+        CrawlUrlFilters(conf),
+        SCOPE_DEFAULT,
+        conf
     )
-
+    
     fun isNormalizedValid(hyperlink: HyperlinkPersistable): Boolean {
         return isNormalizedValid(hyperlink.url)
     }
-
+    
     fun isNormalizedValid(url: String): Boolean {
         return normalizeToEmpty(url).isNotEmpty()
     }
-
-    fun normalizeToEmpty(url: String, scope: String = ChainedUrlNormalizer.SCOPE_DEFAULT): String {
+    
+    fun normalizeToEmpty(url: String, scope: String = SCOPE_DEFAULT): String {
         return normalizeToEmpty(url)
     }
-
+    
     fun normalizeToEmpty(url: String): String {
         val normUrl = normalizeToNull(url)
         return normUrl ?: ""
     }
-
-    fun normalizeToNull(url: String, scope: String = ChainedUrlNormalizer.SCOPE_DEFAULT): String? {
+    
+    fun normalizeToNull(url: String, scope: String = SCOPE_DEFAULT): String? {
         if (url.isEmpty()) {
             return null
         }
-
+        
         var filteredUrl: String? = temporaryUrlFilter(url)
-        if (filteredUrl == null || filteredUrl.isEmpty()) {
+        if (filteredUrl.isNullOrEmpty()) {
             return null
         }
-
+        
         // apply noNorm and noFilter
         filteredUrl = urlNormalizers.normalize(filteredUrl, scope)
         if (filteredUrl != null) {
@@ -77,7 +76,7 @@ class CrawlFilters(
         }
         return filteredUrl
     }
-
+    
     // TODO : use suffix-urlfilter instead, this is a quick dirty fix
     private fun temporaryUrlFilter(url_: String): String {
         var url = url_
@@ -89,7 +88,7 @@ class CrawlFilters(
         }
         return url
     }
-
+    
     fun testUrlSatisfied(url: String?): Boolean {
         if (url == null) return false
         for (filter in crawlFilters) {
@@ -99,7 +98,7 @@ class CrawlFilters(
         }
         return true
     }
-
+    
     fun testTextSatisfied(text: String?): Boolean {
         if (text == null) return false
         for (filter in crawlFilters) {
@@ -109,7 +108,7 @@ class CrawlFilters(
         }
         return true
     }
-
+    
     fun testKeyRangeSatisfied(reversedUrl: String?): Boolean {
         if (reversedUrl == null) return false
         for (filter in crawlFilters) {
@@ -119,7 +118,7 @@ class CrawlFilters(
         }
         return true
     }
-
+    
     val reversedKeyRanges: Map<String, String?>
         get() {
             val keyRanges: MutableMap<String, String?> = HashMap()
@@ -132,7 +131,7 @@ class CrawlFilters(
             }
             return keyRanges
         }
-
+    
     /**
      * TODO: use pair
      */
@@ -159,7 +158,7 @@ class CrawlFilters(
             }
             return keyRange
         }
-
+    
     /**
      * TODO : Tricky logic
      */
@@ -177,7 +176,7 @@ class CrawlFilters(
         }
         return false
     }
-
+    
     /**
      * TODO : Tricky logic
      */
@@ -195,7 +194,7 @@ class CrawlFilters(
         }
         return false
     }
-
+    
     fun veryLikelyBeDetailUrl(url: String?): Boolean {
         if (url == null) {
             return false
@@ -211,7 +210,7 @@ class CrawlFilters(
         }
         return false
     }
-
+    
     fun veryLikelyBeIndexUrl(url: String?): Boolean {
         if (url == null) return false
         val pageType = CrawlFilter.guessPageCategory(url)
@@ -225,7 +224,7 @@ class CrawlFilters(
         }
         return false
     }
-
+    
     fun veryLikelyBeMediaUrl(url: String?): Boolean {
         if (url == null) return false
         val pageType = CrawlFilter.guessPageCategory(url)
@@ -239,7 +238,7 @@ class CrawlFilters(
         }
         return false
     }
-
+    
     /**
      * Notice : index url is not a search url even if it contains "search"
      */
@@ -258,16 +257,16 @@ class CrawlFilters(
         }
         return false
     }
-
+    
     fun toJson(): String {
         val gson = GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
         return gson.toJson(this)
     }
-
+    
     override fun toString(): String {
         return toJson()
     }
-
+    
     companion object {
         val LOG = LoggerFactory.getLogger(CrawlFilters::class.java)
         const val CRAWL_FILTER_RULES = "crawl.filter.rules"

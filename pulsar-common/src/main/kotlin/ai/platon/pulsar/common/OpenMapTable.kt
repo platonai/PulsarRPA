@@ -23,10 +23,14 @@ class OpenMapTable(
      * */
     val attributes = mutableMapOf<String, Any>()
     /**
+     * The column collection.
+     * */
+    val columns get() = metadata.columns
+    /**
      * The row collection.
      * */
     val rows get() = map.values
-
+    
     val keys: Set<String> get() = map.keys
     val numRows: Int get() = map.size
     val isEmpty: Boolean get() = numRows == 0
@@ -36,7 +40,7 @@ class OpenMapTable(
      * Get the row associated with [key].
      * */
     operator fun get(key: String) = map[key]
-    
+
     /**
      * Associated a [row] with [key].
      * */
@@ -98,8 +102,8 @@ class OpenMapTable(
          * Set the cell of the j-th column, 0 based
          * */
         operator fun set(j: Int, cell: Cell) {
-            require(j < cells.size)
-            require(j == cell.j)
+            require(j < cells.size) { "Cell index out of boundary, total size ${cells.size}, index $j" }
+            require(j == cell.j) { "Cell index not match, required $j actual ${cell.j}" }
             cells[j] = cell
         }
 
@@ -118,7 +122,9 @@ class OpenMapTable(
     }
 
     companion object {
+        @Deprecated("Use EMPTY instead", ReplaceWith("EMPTY"))
         val empty = OpenMapTable(0)
+        val EMPTY = OpenMapTable(0)
     }
 }
 

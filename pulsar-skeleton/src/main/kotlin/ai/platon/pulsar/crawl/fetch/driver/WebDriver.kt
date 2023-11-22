@@ -185,9 +185,9 @@ interface WebDriver: Closeable {
     /**
      * Block resource URL loading with a certain probability.
      *
-     * @param urls URL patterns to block.
+     * @param urlPatterns Regular expressions of URLs to block.
      */
-    suspend fun addProbabilityBlockedURLs(urls: List<String>)
+    suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>)
     /**
      * Returns the main resource response. In case of multiple redirects, the navigation
      * will resolve with the first non-redirect response.

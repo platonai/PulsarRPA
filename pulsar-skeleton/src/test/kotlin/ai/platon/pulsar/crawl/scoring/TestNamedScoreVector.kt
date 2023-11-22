@@ -1,17 +1,13 @@
 package ai.platon.pulsar.crawl.scoring
 
 import ai.platon.pulsar.common.ScoreVector
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 class TestNamedScoreVector {
 
     private val score = NamedScoreVector()
 
-    @Before
+    @BeforeTest
     fun setup() {
         score.setValue(Name.refIndexErrDensity, 10)
         score.setValue(Name.refParseErrDensity, 8)

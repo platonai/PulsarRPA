@@ -16,7 +16,18 @@ import ai.platon.pulsar.common.measure.BitUnit
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-*/ /**
+*/
+
+/**
+ * **See Also**
+ *
+ * [jscience](http://jscience.org/)
+ * [github unitsofmeasurement](https://github.com/unitsofmeasurement)
+ * [baeldung](https://www.baeldung.com/javax-measure)
+ * [org.apache.commons.io.FileUtils](https://commons.apache.org/proper/commons-io/apidocs/org/apache/commons/io/FileUtils.html#byteCountToDisplaySize-java.math.BigInteger-)
+ * */
+
+/**
  *
  * @author Fabian Barney
  */

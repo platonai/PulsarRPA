@@ -24,7 +24,7 @@ open class HyperlinkCollector(
      * */
     val session: PulsarSession,
     /**
-     * The urls of portal pages from where hyper links are extracted from
+     * The urls of portal pages from where hyperlinks are extracted from
      * */
     val seeds: Queue<NormUrl>,
     /**

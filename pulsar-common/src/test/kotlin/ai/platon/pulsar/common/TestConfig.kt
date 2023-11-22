@@ -4,11 +4,8 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import org.apache.commons.lang3.StringUtils
-import org.junit.Test
 import java.time.Duration
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Created by vincent on 17-1-14.

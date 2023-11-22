@@ -1,9 +1,7 @@
 package ai.platon.pulsar.common
 
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import org.slf4j.LoggerFactory
-import kotlin.test.assertNotNull
+import kotlin.test.*
 
 class TestFiledLines {
     val log = LoggerFactory.getLogger(Test::class.java)

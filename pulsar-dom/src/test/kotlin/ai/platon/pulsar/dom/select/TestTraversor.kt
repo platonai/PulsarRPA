@@ -4,8 +4,8 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Node
 import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class TestTraversor {
 

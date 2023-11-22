@@ -5,23 +5,21 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.persist.gora.GoraStorage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.apache.gora.store.DataStore
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.*
 
 class TestScoreVectorWritable {
     private var conf = MutableConfig()
     private lateinit var datastore: DataStore<String, GWebPage>
     private var persistentDataStore = false
 
-    @Before
+    @BeforeTest
     @Throws(Exception::class)
     fun setUp() {
         conf["storage.data.store.class"] = "org.apache.gora.memory.store.MemStore"
         datastore = GoraStorage.createDataStore(conf, String::class.java, GWebPage::class.java)
     }
 
-    @After
+    @AfterTest
     @Throws(Exception::class)
     fun tearDown() {
         // empty the database after test

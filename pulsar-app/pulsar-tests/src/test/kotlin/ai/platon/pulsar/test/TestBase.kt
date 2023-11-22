@@ -6,12 +6,15 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.session.PulsarSession
-import org.junit.Test
+import kotlin.test.*
+import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit4.SpringRunner
 import kotlin.test.assertTrue
 
+@RunWith(SpringRunner::class)
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class TestBase {

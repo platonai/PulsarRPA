@@ -1,9 +1,7 @@
 package ai.platon.pulsar.common
 
-import org.junit.Test
 import java.time.Duration
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Created by vincent on 17-1-14.

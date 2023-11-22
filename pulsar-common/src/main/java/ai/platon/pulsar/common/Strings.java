@@ -497,7 +497,7 @@ public final class Strings {
   }
 
   /**
-   * TODO: Use CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
+   * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
    * */
   public static String csslize(String text) {
     text = StringUtils.uncapitalize(text).trim();
@@ -508,10 +508,8 @@ public final class Strings {
     return text;
   }
 
-  // nav_top -> nav top, mainMenu -> main menu, image-detail -> image detail
-
   /**
-   * TODO: Use CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
+   * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
    * */
   public static String humanize(String text) {
     text = StringUtils.join(text.split("(?=\\p{Upper})"), " ");
@@ -520,6 +518,9 @@ public final class Strings {
     return text;
   }
 
+  /**
+   * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
+   * */
   public static String humanize(String text, String seperator) {
     text = StringUtils.join(text.split("(?=\\p{Upper})"), seperator);
     text = text.replaceAll("[-_]", seperator).toLowerCase().trim();
@@ -527,6 +528,9 @@ public final class Strings {
     return text;
   }
 
+  /**
+   * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
+   * */
   public static String humanize(String text, String suffix, String seperator) {
     text = StringUtils.join(text.split("(?=\\p{Upper})"), seperator);
     text = text.replaceAll("[-_]", seperator).toLowerCase().trim();
@@ -534,6 +538,9 @@ public final class Strings {
     return text + seperator + suffix;
   }
 
+  /**
+   * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
+   * */
   public static String humanize(Class clazz, String suffix, String seperator) {
     String text = StringUtils.join(clazz.getSimpleName().split("(?=\\p{Upper})"), seperator);
     text = text.replaceAll("[-_]", seperator).toLowerCase().trim();
@@ -1023,6 +1030,10 @@ public final class Strings {
    * @return a boolean.
    */
   public static boolean isIpLike(String text) {
+    return isIpV4Like(text);
+  }
+
+  public static boolean isIpV4Like(String text) {
     return text.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
   }
 }

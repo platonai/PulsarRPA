@@ -10,17 +10,13 @@ import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.apache.commons.math3.util.Precision
-import org.junit.Ignore
-import org.junit.Test
 import java.awt.Color
 import java.math.BigInteger
 import java.time.Duration
 import java.time.Instant
 import java.util.*
 import kotlin.random.Random
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TestClass(
     val file: String = "",
@@ -71,6 +67,27 @@ class TestCases {
     fun testPostIncrementOperator() {
         var i = 0
         assertTrue { i++ == 0 }
+    }
+
+    @Test
+    fun testPostIncrementOperatorAndRemainder() {
+        assertEquals(0, 0 % 20)
+        assertEquals(0, 20 % 20)
+        assertEquals(0, 40 % 20)
+
+        val numbers = mutableListOf<Int>()
+        var k = 0
+        while (k < 1000) {
+            if (k++ % 20 == 0) {
+                // k is the number of consecutive warnings, the sequence of k is: 1, 21, 41, 61, 81, 101, ...
+                numbers.add(k)
+            }
+        }
+        println(numbers)
+        assertTrue { 21 in numbers }
+        assertTrue { 61 in numbers }
+        assertTrue { 201 in numbers }
+        assertTrue { 561 in numbers }
     }
 
     @Test

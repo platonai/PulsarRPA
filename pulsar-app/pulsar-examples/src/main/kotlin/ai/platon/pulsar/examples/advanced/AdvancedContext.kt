@@ -10,7 +10,7 @@ fun main() {
     val session = context.createSession()
 
     val portalUrl = "https://list.jd.com/list.html?cat=652,12345,12349"
-    val pages = session.submitOutPages(portalUrl, "-expires 1s -itemExpires 7d -outLink a[href~=item]")
+    val pages = session.submitForOutPages(portalUrl, "-expires 1s -itemExpires 7d -outLink a[href~=item]")
 
     PulsarContexts.await()
 }

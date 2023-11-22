@@ -9,10 +9,7 @@ import ai.platon.pulsar.common.persist.ext.browseEvent
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.crawl.protocol.http.ProtocolStatusTranslator
@@ -27,6 +24,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
+import java.time.Duration
 import java.time.Instant
 import kotlin.random.Random
 
@@ -241,11 +239,22 @@ open class InteractiveBrowserEmulator(
     private suspend fun loadResourceWithoutRendering(navigateTask: NavigateTask, driver: WebDriver): Response {
         checkState(navigateTask.fetchTask, driver)
 
-        val response = driver.loadResource(navigateTask.url)
-            ?: return ForwardingResponse.failed(navigateTask.page, SessionLostException("null response"))
+        val page = navigateTask.page
+        val referrer = page.referrer
+        if (referrer != null && !driver.browser.navigateHistory.contains(referrer)) {
+            driver.navigateTo(referrer)
+            driver.waitForSelector("body", Duration.ofSeconds(15))
+        }
+
+        val resourceLoader = page.conf["resource.loader", "jsoup"]
+        val response = when (resourceLoader) {
+            "web.driver" -> driver.loadResource(navigateTask.url)
+            "jsoup" -> NetworkResourceResponse.from(driver.loadJsoupResource(navigateTask.url))
+            else -> NetworkResourceResponse.from(driver.loadJsoupResource(navigateTask.url))
+        }
 
         // TODO: transform protocol status in AbstractHttpProtocol
-        val protocolStatus = ProtocolStatusTranslator.translateHttpCode(response.httpStatusCode.toInt())
+        val protocolStatus = ProtocolStatusTranslator.translateHttpCode(response.httpStatusCode)
         val headers = response.headers ?: mapOf()
         val content = response.stream ?: ""
         // Note: originalContentLength is already set before willComputeFeature event, (if not removed by someone)

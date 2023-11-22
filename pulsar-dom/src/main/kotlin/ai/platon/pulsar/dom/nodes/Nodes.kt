@@ -12,6 +12,7 @@ import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
 import java.awt.Rectangle
 import java.util.regex.Pattern
+import kotlin.math.abs
 
 /**
  * General labels for a node
@@ -123,8 +124,16 @@ data class GeoAnchor(
 }
 
 data class DOMRect(var left: Double = 0.0, var top: Double = 0.0, var width: Double = 0.0, var height: Double = 0.0) {
+    
+    constructor(left0: Int, top0: Int, width0: Int, height0: Int):
+        this(left0.toDouble(), top0.toDouble(), width0.toDouble(), height0.toDouble())
+    
     val isEmpty get() = left == 0.0 && top == 0.0 && width == 0.0 && height == 0.0
-
+    
+    override fun equals(other: Any?): Boolean {
+        return other is DOMRect && equals(this, other)
+    }
+    
     companion object {
         fun parseDOMRect(rect: String): DOMRect {
             if (rect.isBlank()) {
@@ -142,6 +151,13 @@ data class DOMRect(var left: Double = 0.0, var top: Double = 0.0, var width: Dou
             val height = NumberUtils.toDouble(a[3])
 
             return DOMRect(left, top, width, height)
+        }
+        
+        fun equals(rect: DOMRect, rect2: DOMRect, e: Double = 0.99): Boolean {
+            val r = rect
+            val r2 = rect2
+            return abs(r.left - r2.left) < e && abs(r.top - r2.top) < e
+                && abs(r.width - r2.width) < e && abs(r.height - r2.height) < e
         }
     }
 }

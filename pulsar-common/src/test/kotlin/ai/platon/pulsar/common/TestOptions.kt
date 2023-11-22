@@ -2,9 +2,7 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.options.OptionUtils
 import ai.platon.pulsar.common.options.OptionUtils.OPTION_REGEX
-import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import kotlin.test.*
 
 class TestOptions {
 

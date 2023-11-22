@@ -21,9 +21,7 @@ package ai.platon.pulsar.protocol.browser
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
-import org.junit.Before
-import org.junit.Test
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 /**
  * Unit test for new protocol plugin.
@@ -34,7 +32,7 @@ class TestProtocolFactory {
     /**
      * Inits the Test Case with the test parse-plugin file
      */
-    @Before
+    @BeforeTest
     @Throws(Exception::class)
     fun setUp() {
     }

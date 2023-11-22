@@ -27,7 +27,25 @@ import java.net.*
 import java.util.*
 
 /**
- * Utility class for URL analysis
+ * Utility class for URL analysis.
+ *
+ * protocol://username:password@hostname:port/pathname?search#hash
+ * -----------------------------href------------------------------
+ *                              -----host----
+ * -----------      origin      -------------
+ *
+ * protocol - protocol scheme of the URL, including the final ':'
+ * hostname - domain name
+ * port - port number
+ * pathname - /pathname
+ * search - ?parameters
+ * hash - #fragment_identifier
+ * username - username specified before the domain name
+ * password - password specified before the domain name
+ * href - the entire URL
+ * origin - protocol://hostname:port
+ * host - hostname:port
+ *
  * TODO: merge with ai.platon.pulsar.common.url.Urls
  */
 object URLUtil {
@@ -377,16 +395,58 @@ object URLUtil {
             }
         }
     }
-
+    
     /**
-     * Returns the lowercased hostname for the url or null if the url is not well
-     * formed.
+     * Returns the lowercase origin for the url.
      *
-     * @param url
-     * The url to check.
+     * @param url The url to check.
      * @return String The hostname for the url.
      */
-    fun getHostName(url: String?): String? {
+    @Throws(MalformedURLException::class)
+    fun getOrigin(url: String): String {
+        val u = URL(url)
+        return u.protocol + "://" + u.host
+    }
+    
+    /**
+     * Returns the lowercase origin for the url or null if the url is not well-formed.
+     *
+     * @param url The url to check.
+     * @return String The hostname for the url.
+     */
+    fun getOriginOrNull(url: String?): String? {
+        if (url == null) {
+            return null
+        }
+        
+        return try {
+            val u = URL(url)
+            u.protocol + "://" + u.host
+        } catch (t: Throwable) {
+            null
+        }
+    }
+
+    /**
+     * Returns the lowercase hostname for the url.
+     *
+     * @param url The url to check.
+     * @return String The hostname for the url.
+     */
+    @Throws(MalformedURLException::class)
+    fun getHostName(url: String) = URL(url).host.lowercase(Locale.getDefault())
+
+    /**
+     * Returns the lowercase hostname for the url or null if the url is not well-formed.
+     *
+     * @param url The url to check.
+     * @return String The hostname for the url.
+     */
+    fun getHostNameOrNull(url: String?): String? {
+        if (url == null) {
+            return null
+        }
+        
         return try {
             URL(url).host.lowercase(Locale.getDefault())
         } catch (e: MalformedURLException) {

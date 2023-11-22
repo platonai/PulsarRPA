@@ -24,6 +24,8 @@ import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import org.slf4j.LoggerFactory
+import java.util.*
+import kotlin.collections.LinkedHashSet
 
 /**
  * Filters URLs based on a file containing domain suffixes, domain names, and
@@ -67,7 +69,7 @@ class DomainUrlFilter(conf: ImmutableConfig) : CrawlUrlFilter {
             // match for suffix, domain, and host in that order. more general will
             // override more specific
             var domain = URLUtil.getDomainName(url) ?: return null
-            domain = domain.toLowerCase().trim { it <= ' ' }
+            domain = domain.lowercase(Locale.getDefault()).trim { it <= ' ' }
             val host = URLUtil.getHostName(url)
             var suffix: String? = null
             val domainSuffix = URLUtil.getDomainSuffix(tlds, url)

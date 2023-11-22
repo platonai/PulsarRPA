@@ -28,9 +28,7 @@ import ai.platon.pulsar.crawl.common.URLUtil.getDomainSuffix
 import ai.platon.pulsar.crawl.common.URLUtil.getHostBatches
 import ai.platon.pulsar.crawl.common.URLUtil.toASCII
 import ai.platon.pulsar.crawl.common.URLUtil.toUNICODE
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.*
 import java.net.URL
 import kotlin.test.assertEquals
 
@@ -41,7 +39,7 @@ class TestURLUtil {
     private var conf: ImmutableConfig? = null
     private val tlds: DomainSuffixes? = null
 
-    @Before
+    @BeforeTest
     fun setup() {
         conf = ImmutableConfig()
         val resourcePrefix = conf!![CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
@@ -89,7 +87,7 @@ class TestURLUtil {
         var url = URL("http://lucene.apache.org/pulsar")
         assertEquals("org", getDomainSuffix(url)!!.domain)
         url = URL("http://140.211.11.130/foundation/contributing.html")
-        Assert.assertNull(getDomainSuffix(url))
+        assertNull(getDomainSuffix(url))
         url = URL("http://www.example.co.uk:8080/index.html")
         assertEquals("co.uk", getDomainSuffix(url)!!.domain)
         url = URL("http://com")
@@ -98,11 +96,11 @@ class TestURLUtil {
         assertEquals("com", getDomainSuffix(url)!!.domain)
         // "nn" is not a tld
         url = URL("http://example.com.nn")
-        Assert.assertNull(getDomainSuffix(url))
+        assertNull(getDomainSuffix(url))
         url = URL("http://")
-        Assert.assertNull(getDomainSuffix(url))
+        assertNull(getDomainSuffix(url))
         url = URL("http://www.edu.tr.xyz")
-        Assert.assertNull(getDomainSuffix(url))
+        assertNull(getDomainSuffix(url))
         url = URL("http://subdomain.example.edu.tr")
         assertEquals("edu.tr", getDomainSuffix(url)!!.domain)
         url = URL("http://subdomain.example.presse.fr")

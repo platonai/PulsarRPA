@@ -31,7 +31,7 @@ fun main() {
     event.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
         println(document.title + " | " + document.baseURI)
     }
-    urls.forEach { session.submitOutPages(it, options) }
+    urls.forEach { session.submitForOutPages(it, options) }
 
     PulsarContexts.await()
 }

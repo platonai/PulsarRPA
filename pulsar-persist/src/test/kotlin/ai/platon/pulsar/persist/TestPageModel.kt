@@ -3,12 +3,12 @@ package ai.platon.pulsar.persist
 import ai.platon.pulsar.common.config.VolatileConfig
 import org.apache.gora.mongodb.store.MongoStore
 import org.apache.gora.persistency.impl.DirtyListWrapper
-import org.junit.Test
+import kotlin.test.*
 import kotlin.test.*
 
 class TestPageModel {
 
-    private val baseUrl = "https://www.amazon.com/dp/B082P8J28M"
+    private val baseUrl = "https://www.amazon.com/dp/B0C1H26C46"
     private val conf = VolatileConfig()
     private val webDb = WebDb(conf)
     private val groupId = 43853791

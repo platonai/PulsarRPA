@@ -21,7 +21,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.10.20-SNAPSHOT</version>
+    <version>1.10.24-SNAPSHOT</version>
 
     <name>Pulsar</name>
     <description>Scrape Web data at scale completely and accurately with high performance, distributed RPA.</description>
@@ -46,7 +46,7 @@
         <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
         <url>https://github.com/platonai/pulsar</url>
-        <tag>v1.10.20</tag>
+        <tag>v1.10.24</tag>
     </scm>
 
     <repositories>
@@ -650,14 +650,6 @@
                 <artifactId>bson</artifactId>
                 <version>4.1.1</version>
             </dependency>
-
-            <dependency>
-                <groupId>org.junit</groupId>
-                <artifactId>junit-bom</artifactId>
-                <version>5.8.2</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -687,7 +679,7 @@
     </dependencies>
 
     <properties>
-        <kotlin.version>1.5.32</kotlin.version>
+        <kotlin.version>1.8.22</kotlin.version>
         <kotlin.coroutine.version>1.6.4</kotlin.coroutine.version>
 <!--        <kotlin.version>1.6.20</kotlin.version>-->
         <pulsar-h2.version>1.4.196</pulsar-h2.version>
@@ -709,10 +701,15 @@
         <autolink.version>0.10.0</autolink.version>
         <playwright.version>1.19.0</playwright.version>
 
-        <!-- Required by oshi -->
-<!--        <jna.version>5.13.0</jna.version>-->
+        <!-- Required by oshi
+         ISSUE: OSHI failed on Windows in module pulsar-tests and productions,
+         VERSION: pulsar-1.10.12
+         CAUSE: jna relevant packages are overridden by kotlin-compiler-${version}.jar:com.sun.jna.Memory,
+         which has no close() method.
+         -->
+        <jna.version>5.13.0</jna.version>
         <!-- oshi bug: https://github.com/oshi/oshi/issues/1289 -->
-        <oshi.version>6.4.5</oshi.version>
+        <oshi.version>6.4.6</oshi.version>
     </properties>
 
 </project>

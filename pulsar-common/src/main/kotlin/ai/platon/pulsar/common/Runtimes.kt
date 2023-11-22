@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import kotlinx.coroutines.delay
 import org.apache.commons.lang3.SystemUtils
@@ -122,10 +123,13 @@ object Runtimes {
         delay(timeMillis + Random.nextInt(delta))
     }
 
+    /**
+     * Return the number of unallocated bytes of each file stores
+     * */
     fun unallocatedDiskSpaces(): List<Long> {
         return try {
             FileSystems.getDefault().fileStores
-                .filter { ByteUnitConverter.convert(totalSpaceOr0(it), "G") > 20 }
+                .filter { ByteUnit.BYTE.toGB(totalSpaceOr0(it)) > 20 }
                 .map { unallocatedSpaceOr0(it) }
                 .filter { it > 0 }
         } catch (e: Throwable) {

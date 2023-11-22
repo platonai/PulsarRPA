@@ -8,8 +8,8 @@ import ai.platon.pulsar.dom.features.defined.HEIGHT
 import ai.platon.pulsar.dom.features.defined.WIDTH
 import ai.platon.pulsar.dom.nodes.node.ext.canonicalName
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -28,7 +28,7 @@ class TestExtendedCss {
     private val box = Box(447, 447)
     private val box2 = Box(463, 439)
 
-    @Before
+    @BeforeTest
     fun teardown() {
         stream.close()
     }

@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.crawl.common.GlobalCache
-import org.junit.Before
+import kotlin.test.BeforeTest
 
 open class TestBase {
     protected val conf = ImmutableConfig()
@@ -17,7 +17,7 @@ open class TestBase {
     protected val globalCache = GlobalCache(conf)
     protected val urlPool get() = globalCache.urlPool
 
-    @Before
+    @BeforeTest
     fun setUp() {
         urlLoader = TemporaryLocalFileUrlLoader()
         val hyperlinks = IntRange(1, queueSize).map { AppConstants.EXAMPLE_URL + "/$it" }

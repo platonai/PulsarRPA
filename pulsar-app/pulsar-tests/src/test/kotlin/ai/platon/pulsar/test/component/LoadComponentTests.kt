@@ -8,13 +8,9 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
-import org.junit.Before
-import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.CompletableFuture
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class LoadComponentTests: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
@@ -24,7 +20,7 @@ class LoadComponentTests: TestBase() {
     @Autowired
     lateinit var loadComponent: LoadComponent
 
-    @Before
+    @BeforeTest
     fun setup() {
         crawlLoops.start()
     }

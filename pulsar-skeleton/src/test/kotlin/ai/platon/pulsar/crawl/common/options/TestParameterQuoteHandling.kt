@@ -3,7 +3,7 @@ package ai.platon.pulsar.crawl.common.options
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
-import org.junit.Test
+import kotlin.test.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 

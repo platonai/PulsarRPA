@@ -11,7 +11,7 @@ import org.apache.avro.util.Utf8
 import org.apache.commons.lang3.StringUtils
 import org.junit.Assert
 import org.junit.Ignore
-import org.junit.Test
+import kotlin.test.*
 import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL
@@ -124,7 +124,7 @@ class TestCases {
         )
         // longer url comes first
         urls.sortedByDescending { it.length }.forEach { println(it) }
-        urls.mapNotNull { URLUtil.getHostName(it) }.forEach { println(it) }
+        urls.map { URLUtil.getHostName(it) }.forEach { println(it) }
         for (url in urls) {
             val u = URL(url)
             println(u.hashCode().toString() + ", " + url.hashCode())

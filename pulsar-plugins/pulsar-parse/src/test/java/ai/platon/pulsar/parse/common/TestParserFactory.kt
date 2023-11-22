@@ -21,10 +21,7 @@ package ai.platon.pulsar.parse.common
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.ParserConfigReader
 import ai.platon.pulsar.crawl.parse.ParserFactory
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
+import kotlin.test.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
@@ -43,7 +40,7 @@ class TestParserFactory {
     @Autowired
     private lateinit var parserFactory: ParserFactory
 
-    @Before
+    @BeforeTest
     @Throws(Exception::class)
     fun setUp() {
         conf.unbox()[ParserConfigReader.PARSE_PLUGINS_FILE] = "parse-plugins.xml"

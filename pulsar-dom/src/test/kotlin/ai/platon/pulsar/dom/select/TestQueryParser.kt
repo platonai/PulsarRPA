@@ -1,9 +1,9 @@
 package ai.platon.pulsar.dom.select
 
 import org.jsoup.select.Evaluator
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Tests for the Selector Query Parser.

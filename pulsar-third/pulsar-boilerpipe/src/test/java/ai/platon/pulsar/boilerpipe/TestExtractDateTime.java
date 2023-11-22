@@ -7,12 +7,9 @@ import ai.platon.pulsar.boilerpipe.sax.HTMLParser;
 import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.ResourceLoader;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
+import org.junit.Test;;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.List;
 

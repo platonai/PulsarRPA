@@ -18,21 +18,18 @@ package ai.platon.pulsar.crawl.common
 
 import ai.platon.pulsar.common.EncodingDetector
 import ai.platon.pulsar.common.HttpHeaders
-import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.WebPage
 import org.apache.avro.util.Utf8
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
 import java.nio.ByteBuffer
+import kotlin.test.*
 
 class TestEncodingDetector {
     private val contentInOctets = "çñôöøДЛжҶ".toByteArray(charset("utf-8"))
 
     private var conf = VolatileConfig()
 
-    @Before
+    @BeforeTest
     fun setup() {
     }
 
@@ -52,7 +49,7 @@ class TestEncodingDetector {
         detector.autoDetectClues(page, true)
         encoding = detector.guessEncoding(page, "utf-8")
         // no information is available, so it should return default encoding
-        Assert.assertEquals("utf-8", encoding.toLowerCase())
+        assertEquals("utf-8", encoding.toLowerCase())
         page = WebPage.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
@@ -61,7 +58,7 @@ class TestEncodingDetector {
         detector = EncodingDetector(conf)
         detector.autoDetectClues(page, true)
         encoding = detector.guessEncoding(page, "utf-8")
-        Assert.assertEquals("utf-16", encoding.toLowerCase())
+        assertEquals("utf-16", encoding.toLowerCase())
         page = WebPage.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
@@ -70,7 +67,7 @@ class TestEncodingDetector {
         detector.autoDetectClues(page, true)
         detector.addClue("windows-1254", "sniffed")
         encoding = detector.guessEncoding(page, "utf-8")
-        Assert.assertEquals("windows-1254", encoding.toLowerCase())
+        assertEquals("windows-1254", encoding.toLowerCase())
         // enable autodetection
         conf.setInt(EncodingDetector.MIN_CONFIDENCE_KEY, 50)
         page = WebPage.newWebPage(url, conf)
@@ -82,6 +79,6 @@ class TestEncodingDetector {
         detector.autoDetectClues(page, true)
         detector.addClue("utf-32", "sniffed")
         encoding = detector.guessEncoding(page, "utf-8")
-        Assert.assertEquals("utf-8", encoding.toLowerCase())
+        assertEquals("utf-8", encoding.toLowerCase())
     }
 }

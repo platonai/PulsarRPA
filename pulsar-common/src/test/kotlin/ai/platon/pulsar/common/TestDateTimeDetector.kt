@@ -3,7 +3,6 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.DateTimes.parseInstant
 import com.google.common.collect.Lists
 import org.apache.commons.lang3.time.DateUtils
-import org.junit.Test
 import java.text.ParseException
 import java.time.*
 import java.time.format.DateTimeFormatter

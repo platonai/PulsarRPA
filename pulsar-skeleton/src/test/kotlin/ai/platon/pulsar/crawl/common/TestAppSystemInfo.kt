@@ -1,7 +1,8 @@
 package ai.platon.pulsar.crawl.common
 
 import ai.platon.pulsar.common.AppSystemInfo
-import org.junit.Test
+import kotlin.test.*
+import oshi.SystemInfo
 import oshi.hardware.CentralProcessor.TickType
 import java.time.Instant
 import java.util.concurrent.Executors
@@ -13,6 +14,26 @@ import kotlin.random.Random
 class TestAppSystemInfo {
     var sum = 0.0
     var prevTicks = LongArray(TickType.values().size)
+
+    @Test
+    fun testOSHIAvailable() {
+        val si = SystemInfo()
+
+        runCatching {
+            val versionInfo = si.operatingSystem.versionInfo
+            println("Operation system: $versionInfo")
+        }.onFailure { println(it.message) }
+
+        runCatching {
+            val processor = si.hardware.processor
+            println("Processor: $processor")
+        }.onFailure { println(it.message) }
+        
+        runCatching {
+            val memory = si.hardware.memory
+            println("Memory: $memory")
+        }.onFailure { println(it.message) }
+    }
     
     @Test
     fun testOSVersionInfo() {

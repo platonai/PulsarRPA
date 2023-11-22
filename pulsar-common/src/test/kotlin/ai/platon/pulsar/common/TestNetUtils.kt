@@ -18,8 +18,8 @@
  */
 package ai.platon.pulsar.common
 
-import org.junit.Test
 import java.net.InetAddress
+import kotlin.test.*
 
 /** Unit tests for StringUtil methods.  */
 class TestNetUtils {

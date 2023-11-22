@@ -24,7 +24,7 @@ import ai.platon.pulsar.crawl.index.IndexingFilters;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.WebPageExt;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.Test;;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;

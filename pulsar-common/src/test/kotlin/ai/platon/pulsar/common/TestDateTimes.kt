@@ -307,4 +307,11 @@ class TestDateTimes {
         assertTrue(cost2 < cost3, "System.currentTimeMillis() should be faster then Instant.now()")
         println("$cost, $cost2, $cost3")
     }
+
+    @Test
+    fun testExpiry() {
+        val startTime = Instant.now().minusSeconds(120)
+        val expiry = Duration.ofSeconds(60)
+        assertTrue { DateTimes.isExpired(startTime, expiry) }
+    }
 }

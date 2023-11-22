@@ -11,7 +11,6 @@ import ai.platon.pulsar.common.browser.Browsers
 import ai.platon.pulsar.common.concurrent.RuntimeShutdownHookRegistry
 import ai.platon.pulsar.common.concurrent.ShutdownHookRegistry
 import org.apache.commons.io.FileUtils
-import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.FileFilter
@@ -19,6 +18,7 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.channels.FileChannel
 import java.nio.file.*
+import java.time.Duration
 import java.util.regex.Pattern
 
 /**
@@ -31,11 +31,66 @@ class ChromeLauncher(
 ) : AutoCloseable {
 
     companion object {
-        val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
+        private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
+
+        var DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
+        var PID_FILE_NAME = "chrome.launcher.pid"
+        var TEMPORARY_UDD_EXPIRY = Duration.ofHours(24)
+
+        fun deleteTemporaryUserDataDirWithLock(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
+            val lock = AppPaths.BROWSER_TMP_DIR_LOCK
+            if (Files.exists(userDataDir)) {
+                FileChannel.open(lock, StandardOpenOption.APPEND).use {
+                    it.lock()
+                    deleteTemporaryUserDataDir(userDataDir, expiry)
+                }
+            }
+        }
+
+        fun deleteTemporaryUserDataDir(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
+            val target = userDataDir
+
+            // It's in the context tmp dir, delete the user data dir safely
+            val isTemporary = target.startsWith(AppPaths.CONTEXT_TMP_DIR)
+            val lastModifiedTime = Files.getLastModifiedTime(target).toInstant()
+            val isExpired = DateTimes.isExpired(lastModifiedTime, expiry)
+            // Double check to ensure it's safe to delete the directory
+            val hasPidFile = Files.exists(target.resolveSibling(PID_FILE_NAME))
+            // be careful, do not delete files by mistake, so delete files only inside AppPaths.CONTEXT_TMP_DIR
+            if (isTemporary && isExpired && hasPidFile) {
+                FileUtils.deleteQuietly(target.toFile())
+                // Make sure the last operation is finished
+                sleepSeconds(1)
+                if (Files.exists(target)) {
+                    logger.warn("Failed to delete browser cache, try again | {}", target)
+                    forceDeleteDirectory(target)
+
+                    if (Files.exists(target)) {
+                        logger.error("Could not delete browser cache | {}", target)
+                    }
+                }
+            }
+        }
+
+        /**
+         * Force delete all browser data
+         * */
+        @Throws(IOException::class)
+        private fun forceDeleteDirectory(dirToDelete: Path) {
+            synchronized(ChromeLauncher::class.java) {
+                val maxTry = 10
+                var i = 0
+                while (i++ < maxTry && Files.exists(dirToDelete) && !Files.isSymbolicLink(dirToDelete)) {
+                    kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
+                        .onFailure { logger.warn("Failed to delete directory | {} | {}", dirToDelete, it.message) }
+                    Thread.sleep(500)
+                }
+            }
+        }
     }
 
-    private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
-    val pidPath = userDataDir.resolveSibling("chrome.launcher.pid")
+    val pidPath get() = userDataDir.resolveSibling(PID_FILE_NAME)
+    val temporaryUddExpiry = TEMPORARY_UDD_EXPIRY
     private var process: Process? = null
     private val shutdownHookThread = Thread { this.close() }
 
@@ -163,7 +218,6 @@ class ChromeLauncher(
 
             process?.also {
                 Files.createDirectories(userDataDir)
-                val pidPath = userDataDir.resolveSibling("chrome.launcher.pid")
                 Files.writeString(pidPath, it.pid().toString(), StandardOpenOption.CREATE)
             }
             waitForDevToolsServer(process!!)
@@ -275,57 +329,6 @@ class ChromeLauncher(
 
     @Throws(IOException::class)
     private fun cleanUp() {
-        // No, we do not delete any directory from the program, it is dangerous.
-        // It's better to use a script to delete temporary context directories older than a specified time,
-        // 3 days, for example.
-        val cleanUpUserDataDir = alwaysFalse()
-        if (cleanUpUserDataDir) {
-            deleteTemporaryUserDataDir()
-        }
-    }
-
-    private fun deleteTemporaryUserDataDir() {
-        val target = userDataDir
-
-        // It's in the context tmp dir, delete the user data dir safely
-        val isTemporary = target.startsWith(AppPaths.CONTEXT_TMP_DIR)
-        // be careful, do not delete files by mistake, so delete files only inside AppPaths.CONTEXT_TMP_DIR
-        if (isTemporary) {
-            FileUtils.deleteQuietly(target.toFile())
-            if (!SystemUtils.IS_OS_WINDOWS && Files.exists(target)) {
-                logger.warn("Failed to delete browser cache, try again | {}", target)
-                forceDeleteDirectory(target)
-
-                if (Files.exists(target)) {
-                    logger.error("Could not delete browser cache | {}", target)
-                }
-            }
-        }
-    }
-
-    /**
-     * Force delete all browser data
-     * */
-    @Throws(IOException::class)
-    private fun forceDeleteDirectory(dirToDelete: Path) {
-        synchronized(ChromeLauncher::class.java) {
-            val lock = AppPaths.BROWSER_TMP_DIR_LOCK
-
-            val maxTry = 10
-            var i = 0
-            while (i++ < maxTry && Files.exists(dirToDelete) && !Files.isSymbolicLink(dirToDelete)) {
-                FileChannel.open(lock, StandardOpenOption.APPEND).use {
-                    it.lock()
-                    kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
-                        .onFailure { logger.warn("Failed to delete directory | {} | {}",
-                            dirToDelete, it.message)
-                        }
-                }
-
-                Thread.sleep(500)
-            }
-
-            require(Files.exists(lock))
-        }
+        deleteTemporaryUserDataDirWithLock(userDataDir, temporaryUddExpiry)
     }
 }
