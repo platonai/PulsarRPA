@@ -34,7 +34,7 @@ class ProxyPoolManagerFactory(
     }
 
     private fun getClass(conf: ImmutableConfig): Class<*> {
-        val defaultClazz = FileProxyLoader::class.java
+        val defaultClazz = ProxyPoolManager::class.java
         var clazz = getClass(conf, PROXY_POOL_MANAGER_CLASS)
         if (clazz == defaultClazz) {
             clazz = getClass(conf, PROXY_POOL_MONITOR_CLASS)
@@ -43,7 +43,7 @@ class ProxyPoolManagerFactory(
     }
     
     private fun getClass(conf: ImmutableConfig, clazzName: String): Class<*> {
-        val defaultClazz = FileProxyLoader::class.java
+        val defaultClazz = ProxyPoolManager::class.java
         return try {
             conf.getClass(clazzName, defaultClazz)
         } catch (e: Exception) {
