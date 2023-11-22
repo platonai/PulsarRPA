@@ -27,6 +27,7 @@ class ProxyPoolManagerFactory(
         synchronized(ProxyPoolManagerFactory::class) {
             val clazz = getClass(conf)
             return proxyPoolManagers.computeIfAbsent(clazz.name) {
+                // TODO: bad manner to construct the object
                 clazz.constructors.first { it.parameters.size == 2 }.newInstance(proxyPool, conf) as ProxyPoolManager
             }
         }
@@ -35,7 +36,7 @@ class ProxyPoolManagerFactory(
     private fun getClass(conf: ImmutableConfig): Class<*> = getClass(conf, PROXY_POOL_MANAGER_CLASS)
     
     private fun getClass(conf: ImmutableConfig, clazzName: String): Class<*> {
-        val defaultClazz = FileProxyLoader::class.java
+        val defaultClazz = ProxyPoolManager::class.java
         return try {
             conf.getClass(clazzName, defaultClazz)
         } catch (e: Exception) {
