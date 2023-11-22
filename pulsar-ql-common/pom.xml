@@ -36,31 +36,22 @@
                             <shadedArtifactAttached>false</shadedArtifactAttached>
                             <minimizeJar>true</minimizeJar>
                             <artifactSet>
-                                <excludes>
-                                    <exclude>*:*</exclude>
-                                </excludes>
                                 <includes>
                                     <include>ai.platon.pulsar:*</include>
+                                    <include>org.apache.hadoop:*</include>
+                                    <include>org.jetbrains.kotlin:*</include>
+                                    <include>org.jetbrains:*</include>
+                                    <include>com.google:*</include>
                                 </includes>
                             </artifactSet>
                             <filters>
-                                <filter>
-                                    <artifact>junit:junit</artifact>
-                                    <includes>
-                                        <include>junit/framework/**</include>
-                                        <include>org/junit/**</include>
-                                    </includes>
-                                    <excludes>
-                                        <exclude>org/junit/experimental/**</exclude>
-                                        <exclude>org/junit/runners/**</exclude>
-                                    </excludes>
-                                </filter>
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>proxy.test.web.sites.txt</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
@@ -76,21 +67,29 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-h2</artifactId>
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>*</groupId>-->
+<!--                    <artifactId>*</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-dom</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>ai.platon.pulsar</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.perf4j</groupId>
+                    <groupId>*</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
@@ -98,6 +97,12 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- ValueDomWritable requires hadoop's Writable, DataOutput, DataInput -->
         <!-- Will remove hadoop dependency in the future -->
@@ -110,6 +115,10 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
         </dependency>
     </dependencies>
 </project>

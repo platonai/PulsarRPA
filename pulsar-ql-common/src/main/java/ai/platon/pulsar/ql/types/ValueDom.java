@@ -12,17 +12,11 @@ import org.h2.api.ErrorCode;
 import org.h2.message.DbException;
 import org.h2.util.JdbcUtils;
 import org.h2.util.StringUtils;
-import org.h2.value.CompareMode;
-import org.h2.value.Value;
-import org.h2.value.ValueBytes;
-import org.h2.value.ValueJavaObject;
-import org.h2.value.ValueString;
-import org.jetbrains.annotations.NotNull;
+import org.h2.value.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import javax.annotation.Nonnull;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -89,7 +83,6 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
      * @param element the Element
      * @return the value
      */
-    @Nonnull
     public static ValueDom get(Element element) {
         Objects.requireNonNull(element);
 
@@ -108,17 +101,14 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
         return new ValueDom(element);
     }
 
-    @Nonnull
     public static ValueDom get(FeaturedDocument doc) {
         return get(doc.unbox());
     }
 
-    @Nonnull
     public static ValueDom getOrNil(Element element) {
         return element == null ? NIL : get(element);
     }
 
-    @Nonnull
     public static ValueDom get(String html) {
         Objects.requireNonNull(html);
         return get(Jsoup.parse(html));
@@ -240,7 +230,7 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
     }
 
     @Override
-    public int compareTo(@NotNull ValueDom o) {
+    public int compareTo(ValueDom o) {
         return globalId().compareTo(o.globalId());
     }
 }
