@@ -1,6 +1,7 @@
 package ai.platon.pulsar.rest
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.crawl.CrawlLoop
@@ -40,7 +41,7 @@ class ScrapeServiceTests {
         )
         println(PRESENT)
         
-        // getLogger(this).info("Logging system works correctly")
+        getLogger(this).info("Logging system works correctly")
     }
     
     /**
