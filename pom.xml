@@ -459,7 +459,11 @@
                 <version>${project.version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>*</groupId>
+                        <groupId>com.mongodb</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.mongodb</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
@@ -529,12 +533,6 @@
                 <artifactId>pulsar-ql-common</artifactId>
                 <version>${project.version}</version>
                 <classifier>shaded</classifier>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
@@ -792,8 +790,10 @@
 
 
         <junit-version>5.8.2</junit-version>
-        <slf4j.version>2.0.9</slf4j.version>
+<!--        <slf4j.version>2.0.9</slf4j.version>-->
+        <slf4j.version>1.7.36</slf4j.version>
         <log4j.version>2.20.0</log4j.version>
+        <logback.version>1.2.12</logback.version>
     </properties>
 
 </project>

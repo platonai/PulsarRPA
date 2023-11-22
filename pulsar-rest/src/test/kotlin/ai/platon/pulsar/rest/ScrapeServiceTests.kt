@@ -12,13 +12,13 @@ import org.junit.Ignore
 import kotlin.test.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.logging.logback.LogbackLoggingSystem
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.ImportResource
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import org.springframework.util.ClassUtils
+import kotlin.test.*
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -32,6 +32,17 @@ class ScrapeServiceTests {
     @Autowired
     private lateinit var crawlLoop: CrawlLoop
 
+    @Test
+    fun testLogging() {
+        val PRESENT = ClassUtils.isPresent(
+            "ch.qos.logback.classic.LoggerContext",
+            LogbackLoggingSystem.Factory::class.java.classLoader
+        )
+        println(PRESENT)
+        
+        // getLogger(this).info("Logging system works correctly")
+    }
+    
     /**
      * Execute a normal sql
      * */
