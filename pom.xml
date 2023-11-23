@@ -626,6 +626,13 @@
                 <artifactId>tika-core</artifactId>
                 <version>${tika.version}</version>
             </dependency>
+            <!-- Provide only the html parser -->
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-parser-html-module</artifactId>
+                <version>${tika.version}</version>
+                <scope>runtime</scope>
+            </dependency>
             <!-- The tika parsers are provided, so parsing by tika is disabled by default.
                 If you want to use Tika to parse documents (instead of simply detecting document types, etc.),
                 you'll want to add a dependency on at least tika-parsers-standard-package

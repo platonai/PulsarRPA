@@ -44,10 +44,20 @@
             <artifactId>nekohtml</artifactId>
         </dependency>
 
+        <!-- For parsers.
+          The core library, tika-core, contains the key interfaces and classes of Tika and can be used by itself
+          if you don't need the full set of parsers from the tika-parsers component.
+         -->
         <dependency>
             <groupId>org.apache.tika</groupId>
-            <artifactId>tika-parsers-standard-package</artifactId>
-            <type>pom</type>
+            <artifactId>tika-core</artifactId>
+            <version>${tika.version}</version>
+        </dependency>
+        <!-- Provide only the html parser -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parser-html-module</artifactId>
+            <version>${tika.version}</version>
         </dependency>
 
         <dependency>
