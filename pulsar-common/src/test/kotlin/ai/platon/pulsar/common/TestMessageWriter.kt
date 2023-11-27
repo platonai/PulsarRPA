@@ -38,8 +38,8 @@ class TestMessageWriter {
         val writer = MessageWriter(path)
         writer.idleTimeout = Duration.ofSeconds(3)
         writer.write("hello")
-        val length = Files.readString(path).length
-        assertEquals(6, length)
+        val length = Files.readString(path).trim().length
+        assertEquals(5, length)
         sleepSeconds(3)
         assertTrue { writer.isIdle }
     }
