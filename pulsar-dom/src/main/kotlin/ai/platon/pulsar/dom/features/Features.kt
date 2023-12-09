@@ -38,6 +38,7 @@ object FeatureRegistry {
 
     var primaryFeatures: List<NodeFeature> = listOf()
         private set
+    
     var floatFeatures: List<NodeFeature> = listOf()
         private set
 
@@ -64,9 +65,10 @@ object FeatureRegistry {
         private set
     var primaryFeatureKeysToNames : Map<Int, String> = mapOf()
         private set
-
+    
     var floatFeatureNamesToKeys: Map<String, Int> = mapOf()
         private set
+    
     var floatFeatureKeysToNames: Map<Int, String> = mapOf()
         private set
 
@@ -99,12 +101,24 @@ object FeatureRegistry {
     }
 }
 
-data class NodeFeature(val key: Int, val name: String, val isPrimary: Boolean = true, val isFloat: Boolean = false) {
+data class NodeFeature(
+    val key: Int,
+    val name: String,
+    val isPrimary: Boolean = true,
+    /**
+     * Precision is the number of digits in a number.
+     * Scale is the number of digits to the right of the decimal point in a number.
+     * For example, the number 123.45 has a precision of 5 and a scale of 2.
+     * */
+    val scale: Int = 0
+) {
 
     var value: Double = 0.0
 
     val toEntry = FeatureEntry(key, value)
 
+    val isFloat: Boolean get() = scale > 0
+    
     /**
      * TODO: avoid object
      * */

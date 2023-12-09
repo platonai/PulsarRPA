@@ -131,7 +131,7 @@ private class Level1NodeFeatureCalculatorVisitor: NodeVisitor {
         }
     }
 
-    // hit when all of the node's children (if any) have been visited
+    // hit when all the node's children (if any) have been visited
     override fun tail(node: Node, depth: Int) {
         if (node !is Element && node !is TextNode) {
             return
