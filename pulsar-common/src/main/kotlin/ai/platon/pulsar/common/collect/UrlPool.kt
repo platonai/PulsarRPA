@@ -251,7 +251,7 @@ open class ConcurrentUrlPool(conf: ImmutableConfig) : AbstractUrlPool(conf) {
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
-            Priority13.values().forEach { orderedCaches[it.value] = ConcurrentUrlCache(it.name, it.value) }
+            Priority13.entries.forEach { orderedCaches[it.value] = ConcurrentUrlCache(it.name, it.value) }
         }
     }
 }
@@ -269,7 +269,7 @@ class LoadingUrlPool(
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
-            Priority13.values().forEach {
+            Priority13.entries.forEach {
                 orderedCaches[it.value] = LoadingUrlCache(it.name, it.value, loader, capacity)
             }
         }

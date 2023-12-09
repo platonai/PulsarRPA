@@ -168,6 +168,6 @@ open class BrowserResponseHandlerImpl(
     }
 
     private fun detach() {
-        BrowserResponseEvents.values().forEach { off(it) }
+        BrowserResponseEvents.entries.forEach { off(it) }
     }
 }

@@ -24,7 +24,7 @@ class Level1FeatureCalculator: AbstractFeatureCalculator() {
         init {
             ResourceLoader.addClassFactory(ClassFactory())
             if (FeatureRegistry.registeredFeatures.isEmpty()) {
-                FeatureRegistry.register(F.values().map { it.toFeature() })
+                FeatureRegistry.register(F.entries.map { it.toFeature() })
                 require(FeatureRegistry.registeredFeatures.size == N)
             }
         }

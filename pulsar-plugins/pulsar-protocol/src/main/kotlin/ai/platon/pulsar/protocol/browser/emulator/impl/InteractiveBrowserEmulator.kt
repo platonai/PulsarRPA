@@ -114,7 +114,7 @@ open class InteractiveBrowserEmulator(
     }
 
     private fun detach() {
-        EmulateEvents.values().forEach { off(it) }
+        EmulateEvents.entries.forEach { off(it) }
     }
 
     override suspend fun onWillNavigate(page: WebPage, driver: WebDriver) {

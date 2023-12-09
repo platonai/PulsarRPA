@@ -82,10 +82,10 @@ class IndexDocument(
         if (field == null) {
             return null
         }
-        if (field.getValues().size == 0) {
+        if (field.getValues().isEmpty()) {
             return null
         }
-        return field.getValues().get(0)
+        return field.getValues()[0]
     }
 
     fun getField(name: CharSequence): IndexField? {

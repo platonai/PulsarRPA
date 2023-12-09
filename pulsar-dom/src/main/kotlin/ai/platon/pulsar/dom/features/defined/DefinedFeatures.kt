@@ -6,7 +6,8 @@ import ai.platon.pulsar.dom.features.NodeFeature.Companion.incKey
 const val FEATURE_VERSION: Int = 10001
 
 /**
- * The level 1 features definition
+ * The level 1 features definition.
+ * All features are integer by default.
  * */
 enum class F(val key: Int, val alias: String = "", val isPrimary: Boolean = true, val isFloat: Boolean = false) {
     TOP(incKey, "top"),
@@ -49,4 +50,4 @@ enum class F(val key: Int, val alias: String = "", val isPrimary: Boolean = true
 @JvmField val DNS = F.DNS.key       //
 
 // the number of features
-@JvmField val N = F.values().size
+@JvmField val N = F.entries.size
