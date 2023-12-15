@@ -460,10 +460,10 @@ val Node?.cleanText: String
  * TextNodes' texts are calculated and stored while Elements' clean texts are calculated on the fly.
  * This is a balance of space and time.
  * */
-fun Node.joinToString(sparator: String = " ", prefix: String = "", suffix: String = ""): String {
+fun Node.joinToString(separator: String = " ", prefix: String = "", suffix: String = ""): String {
     val text = when (this) {
         is TextNode -> extension.immutableText.trim()
-        is Element -> accumulateText(this, sparator).trim()
+        is Element -> accumulateText(this, separator).trim()
         else -> ""
     }.trim()
 

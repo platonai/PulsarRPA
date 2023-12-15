@@ -199,25 +199,25 @@ abstract class AbstractWebDriver(
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun firstText(selector: String): String? {
+    override suspend fun selectFirstTextOrNull(selector: String): String? {
         val result = evaluate("__pulsar_utils__.firstText('$selector')")
         return result?.toString()
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun allTexts(selector: String): List<String> {
+    override suspend fun selectTexts(selector: String): List<String> {
         val result = evaluate("__pulsar_utils__.allTexts('$selector')")
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun firstAttr(selector: String, attrName: String): String? {
+    override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
         val result = evaluate("__pulsar_utils__.firstAttr('$selector', '$attrName')")
         return result?.toString()
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun allAttrs(selector: String, attrName: String): List<String> {
+    override suspend fun selectAttributes(selector: String, attrName: String): List<String> {
         val result = evaluate("__pulsar_utils__.allAttrs('$selector', '$attrName')")
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }

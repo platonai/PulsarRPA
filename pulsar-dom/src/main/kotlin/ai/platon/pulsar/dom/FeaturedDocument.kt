@@ -442,6 +442,14 @@ open class FeaturedDocument(val document: Document) {
      * */
     fun <T> selectFirstOptional(query: String, transformer: (Element) -> T) =
         Optional.ofNullable(document.selectFirstOrNull(query)?.let { transformer(it) })
+    
+    /**
+     * Find text of elements that match the CSS query. Matched elements
+     * may include the document, or any of its children.
+     * */
+    @JvmOverloads
+    fun selectTexts(query: String, attrName: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
+        document.selectAttributes(query, attrName, offset, limit)
 
     /**
      * Find the text content of the first element that match the CSS query.
@@ -479,6 +487,14 @@ open class FeaturedDocument(val document: Document) {
      * Matched element may be the document, or any of its children.
      * */
     fun firstTextOptional(query: String) = selectFirstTextOptional(query)
+    
+    /**
+     * Find the attribute value of the first element that match the CSS query.
+     * Matched element may be the document, or any of its children.
+     * */
+    @JvmOverloads
+    fun selectAttributes(query: String, attrName: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
+        document.selectAttributes(query, attrName, offset, limit)
 
     /**
      * Find the attribute value of the first element that match the CSS query.
@@ -527,7 +543,7 @@ open class FeaturedDocument(val document: Document) {
     @JvmOverloads
     fun selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
         document.selectHyperlinks(query, offset, limit)
-
+    
     /**
      * Find anchor elements matching the CSS query.
      * */

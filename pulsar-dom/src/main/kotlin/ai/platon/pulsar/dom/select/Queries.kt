@@ -229,6 +229,11 @@ fun Node.selectFirstOptional(query: String): Optional<Element> {
 }
 
 @JvmOverloads
+fun Node.selectTexts(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> {
+    return select(query, offset, limit) { it.text() }
+}
+
+@JvmOverloads
 fun Node.selectFirstText(query: String, defaultValue: String = "") = firstTextOrNull(query) ?: defaultValue
 
 fun Node.selectFirstTextOrNull(query: String) = selectFirstOrNull(query)?.text()
@@ -241,6 +246,11 @@ fun Node.firstText(query: String, defaultValue: String = "") = selectFirstText(q
 fun Node.firstTextOrNull(query: String) = selectFirstTextOrNull(query)
 
 fun Node.firstTextOptional(query: String) = selectFirstTextOptional(query)
+
+@JvmOverloads
+fun Node.selectAttributes(query: String, attrName: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> {
+    return select(query, offset, limit) { it.attr(attrName) }
+}
 
 @JvmOverloads
 fun Node.selectFirstAttribute(query: String, attrName: String, defaultValue: String = "") =

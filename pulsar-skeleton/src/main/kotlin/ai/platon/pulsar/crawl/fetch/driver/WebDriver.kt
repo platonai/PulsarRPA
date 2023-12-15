@@ -364,6 +364,7 @@ interface WebDriver: Closeable {
     suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int = 0)
     @Throws(WebDriverException::class)
     suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int = 0)
+    
     /** Returns the document's HTML markup. */
     @Throws(WebDriverException::class)
     suspend fun outerHTML(): String?
@@ -372,16 +373,24 @@ interface WebDriver: Closeable {
     suspend fun outerHTML(selector: String): String?
     /** Returns the node's text content. */
     @Throws(WebDriverException::class)
-    suspend fun firstText(selector: String): String?
+    suspend fun firstText(selector: String): String? = selectFirstTextOrNull(selector)
     /** Returns the nodes' text contents. */
     @Throws(WebDriverException::class)
-    suspend fun allTexts(selector: String): List<String>
-    /** Returns the node's attribute name. */
+    suspend fun allTexts(selector: String): List<String> = selectTexts(selector)
     @Throws(WebDriverException::class)
-    suspend fun firstAttr(selector: String, attrName: String): String?
-    /** Returns the nodes' attribute names. */
+    suspend fun selectFirstTextOrNull(selector: String): String?
     @Throws(WebDriverException::class)
-    suspend fun allAttrs(selector: String, attrName: String): List<String>
+    suspend fun selectTexts(selector: String): List<String>
+    /** Returns the node's attribute. */
+    @Throws(WebDriverException::class)
+    suspend fun firstAttr(selector: String, attrName: String): String? = selectFirstAttributeOrNull(selector, attrName)
+    /** Returns the nodes' attribute values. */
+    @Throws(WebDriverException::class)
+    suspend fun allAttrs(selector: String, attrName: String): List<String> = selectAttributes(selector, attrName)
+    @Throws(WebDriverException::class)
+    suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String?
+    @Throws(WebDriverException::class)
+    suspend fun selectAttributes(selector: String, attrName: String): List<String>
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
