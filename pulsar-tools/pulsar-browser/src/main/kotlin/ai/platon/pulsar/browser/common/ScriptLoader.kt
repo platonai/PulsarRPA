@@ -2,6 +2,7 @@ package ai.platon.pulsar.browser.common
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.alwaysFalse
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.CLIENT_JS_PROPERTY_NAMES
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_COMPUTED_STYLES
@@ -133,5 +134,10 @@ class ScriptLoader(
             "ATTR_ELEMENT_NODE_VI" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_VI,
             "ATTR_TEXT_NODE_VI" to AppConstants.PULSAR_ATTR_TEXT_NODE_VI,
         ).also { jsInitParameters.putAll(it) }
+        
+        if (alwaysFalse()) {
+            // might cause huge html size
+            jsInitParameters["ATTR_COMPUTED_STYLE"] = AppConstants.PULSAR_ATTR_COMPUTED_STYLE
+        }
     }
 }

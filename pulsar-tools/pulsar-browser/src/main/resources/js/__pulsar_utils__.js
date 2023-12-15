@@ -100,7 +100,9 @@ __pulsar_utils__.writeData = function() {
 
     script = document.createElement('script');
     script.id = __pulsar_CONFIGS.SCRIPT_SECTION_ID;
-    script.type = 'text/javascript';
+    // javascript only
+    // script.type = 'text/javascript';
+    script.type = 'javascript';
 
     let pulsarData = JSON.stringify(document.__pulsar__Data, null, 3);
     script.textContent = "\n" + `;let __pulsar__Data = ${pulsarData};\n`;

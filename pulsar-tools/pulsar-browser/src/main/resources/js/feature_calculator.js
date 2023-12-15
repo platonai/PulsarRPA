@@ -121,7 +121,9 @@ __pulsar_NodeFeatureCalculator.prototype.tail = function(node, depth) {
     }
 
     if (node.__pulsar_isElement()) {
-        node.__pulsar_setAttributeIfNotBlank(config.ATTR_COMPUTED_STYLE, nodeExt.formatStyles());
+        if (config.ATTR_COMPUTED_STYLE) {
+            node.__pulsar_setAttributeIfNotBlank(config.ATTR_COMPUTED_STYLE, nodeExt.formatStyles());
+        }
         node.__pulsar_setAttributeIfNotBlank(config.ATTR_ELEMENT_NODE_VI, nodeExt.formatDOMRect());
 
         // calculate the rectangle of each child text node

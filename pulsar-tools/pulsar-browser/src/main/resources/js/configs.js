@@ -7,6 +7,7 @@ const __pulsar_DEFAULT_CONFIGS = {
     "ATTR_HIDDEN": "_h",
     "ATTR_OVERFLOW_HIDDEN": "_oh",
     "ATTR_OVERFLOW_VISIBLE": "_visible",
+    // "ATTR_COMPUTED_STYLE": "cs",
     "ATTR_ELEMENT_NODE_VI": "vi",
     "ATTR_TEXT_NODE_VI": "tv"
 };
