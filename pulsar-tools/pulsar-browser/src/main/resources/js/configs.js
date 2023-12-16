@@ -4,7 +4,7 @@ const __pulsar_DEFAULT_CONFIGS = {
     "viewPortHeight": 1080,
     "META_INFORMATION_ID": "PulsarMetaInformation",
     "SCRIPT_SECTION_ID": "PulsarScriptSection",
-    "ATTR_HIDDEN": "_h",
+    "ATTR_HIDDEN": "h",
     "ATTR_OVERFLOW_HIDDEN": "_oh",
     "ATTR_OVERFLOW_VISIBLE": "_visible",
     // "ATTR_COMPUTED_STYLE": "cs",

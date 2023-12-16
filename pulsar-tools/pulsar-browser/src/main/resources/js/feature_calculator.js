@@ -74,16 +74,20 @@ __pulsar_NodeFeatureCalculator.prototype.calcSelfIndicator = function(node, dept
     // TODO: since there are too many _hidden nodes, we should simplified it to save space
     if (node.__pulsar_isElement()) {
         // "hidden" seems not defined properly,
-        // some parent element is "hidden" and some of there children are not expected to be hidden
-        // for example, ul tag often have a zero dimension
+        // In some cases, the parent element is "hidden", but the children are not expected to be hidden.
+        // for example, ul tag often have a zero dimension.
         if (nodeExt.isHidden()) {
-            // node.toggleAttribute(ATTR_HIDDEN, true);
-            node.setAttribute(this.config.ATTR_HIDDEN, '');
+            // TODO: if there is already a `h` attribute, use a longer one
+            let attrName = this.config.ATTR_HIDDEN
+            if (node.hasAttribute(attrName)) {
+                attrName = "_ps_" + this.config.ATTR_HIDDEN
+            }
+            node.setAttribute(attrName, '1');
         }
 
         if (nodeExt.isOverflowHidden() || (nodeExt.hasParent() && nodeExt.parent().node.hasAttribute(this.config.ATTR_OVERFLOW_HIDDEN))) {
             // node.toggleAttribute(ATTR_OVERFLOW_HIDDEN, true);
-            node.setAttribute(this.config.ATTR_OVERFLOW_HIDDEN, '');
+            node.setAttribute(this.config.ATTR_OVERFLOW_HIDDEN, '1');
         }
     }
 
@@ -99,7 +103,7 @@ __pulsar_NodeFeatureCalculator.prototype.calcSelfIndicator = function(node, dept
 };
 
 /**
- * Leaving the the element
+ * Leaving the element
  *
  * @param node {Node|Element} the node visited
  * @param  depth {Number} the depth in the DOM
