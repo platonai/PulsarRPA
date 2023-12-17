@@ -40,32 +40,43 @@ object FileCommand {
      */
     @JvmOverloads
     fun check(command: String, checkInterval: Duration = CHECK_INTERVAL, action: () -> Unit = {}): Boolean {
-        if (!Files.exists(COMMAND_FILE)) {
-            return false
-        }
-
-        var exist = false
-        try {
-            synchronized(FileCommand::class.java) {
-                val modifiedTime = COMMAND_FILE.toFile().lastModified()
-                val lastCheckTime = LAST_CHECK_TIME.getOrDefault(command, 0L)
-                val now = System.currentTimeMillis()
-                if (lastCheckTime <= modifiedTime && now - lastCheckTime >= checkInterval.toMillis()) {
-                    LAST_CHECK_TIME[command] = now
-                    val lines = Files.readAllLines(COMMAND_FILE)
-                    exist = lines.any { it.contains(command) }
-                    if (exist) {
-                        if (!command.contains( "-perm", ignoreCase = true)) {
-                            lines.remove(command)
-                            Files.write(COMMAND_FILE, lines)
-                        }
-                        action()
-                    }
-                }
-            }
+        return try {
+            doCheckFile(command, checkInterval, action)
         } catch (e: IOException) {
             log.error(e.toString())
+            false
         }
+    }
+    
+    @Synchronized
+    private fun doCheckFile(command: String, checkInterval: Duration = CHECK_INTERVAL, action: () -> Unit = {}): Boolean {
+        val lastCheckTime = LAST_CHECK_TIME.getOrDefault(command, 0L)
+        if (DateTimes.elapsedTime(lastCheckTime) < checkInterval) {
+            // do not check
+            return false
+        }
+        
+        if (!Files.exists(COMMAND_FILE)) {
+            // do not check
+            return false
+        }
+        
+        val now = System.currentTimeMillis()
+        val modifiedTime = COMMAND_FILE.toFile().lastModified()
+        var exist = false
+        if (lastCheckTime <= modifiedTime) {
+            LAST_CHECK_TIME[command] = now
+            val lines = Files.readAllLines(COMMAND_FILE)
+            exist = lines.any { it.contains(command) }
+            if (exist) {
+                if (!command.contains( "-perm", ignoreCase = true)) {
+                    lines.remove(command)
+                    Files.write(COMMAND_FILE, lines)
+                }
+                action()
+            }
+        }
+        
         return exist
     }
 }
