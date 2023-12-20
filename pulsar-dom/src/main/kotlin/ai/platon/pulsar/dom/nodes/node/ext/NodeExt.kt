@@ -123,8 +123,8 @@ val Document.normalizedURI: String? get() {
         return NILBaseUri
     }
 
-    return head().selectFirstOrNull("link[rel=$PULSAR_DOCUMENT_NORMALIZED_URI]")
-        ?.attr("href")
+    // <link rel='normalizedURI' href='...' /> is added by JsoupParser
+    return head().selectFirstOrNull("link[rel=$PULSAR_DOCUMENT_NORMALIZED_URI]")?.attr("href")
         ?: pulsarMetaElement?.attr(PULSAR_DOCUMENT_NORMALIZED_URI)
 }
 

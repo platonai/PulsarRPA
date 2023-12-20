@@ -45,20 +45,22 @@ class TestChromeImplLauncher {
             .resolve(LocalDateTime.now().second.toString())
 
         val launcher = ChromeLauncher(userDataDir, options = LauncherOptions())
-        val chrome = launcher.launch(launchOptions)
-
-        val version = chrome.version
-        val tab = chrome.createTab("https://www.baidu.com")
-        val versionString = Gson().toJson(chrome.version)
-        assertTrue(!chrome.version.browser.isNullOrBlank())
-        assertTrue(versionString.contains("Mozilla"))
-
-        println("Tab id: " + tab.id)
-        println("Protocol version: " + version.protocolVersion)
-        println("Browser version" + version.browser)
-
-        println(prettyPulsarObjectMapper().writeValueAsString(tab))
-        println(prettyPulsarObjectMapper().writeValueAsString(chrome.version))
-        println(versionString)
+        launcher.use {
+            val chrome = launcher.launch(launchOptions)
+            
+            val version = chrome.version
+            val tab = chrome.createTab("https://www.baidu.com")
+            val versionString = Gson().toJson(chrome.version)
+            assertTrue(!chrome.version.browser.isNullOrBlank())
+            assertTrue(versionString.contains("Mozilla"))
+            
+            println("Tab id: " + tab.id)
+            println("Protocol version: " + version.protocolVersion)
+            println("Browser version" + version.browser)
+            
+            println(prettyPulsarObjectMapper().writeValueAsString(tab))
+            println(prettyPulsarObjectMapper().writeValueAsString(chrome.version))
+            println(versionString)
+        }
     }
 }

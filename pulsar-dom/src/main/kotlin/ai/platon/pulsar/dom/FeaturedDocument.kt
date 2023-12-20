@@ -653,7 +653,7 @@ open class FeaturedDocument(val document: Document) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) {
-            return true;
+            return true
         }
 
         return other is FeaturedDocument && location == other.location
@@ -662,28 +662,36 @@ open class FeaturedDocument(val document: Document) {
     override fun hashCode() = location.hashCode()
 
     override fun toString() = document.uniqueName
-
+    
     private fun initialize() {
         // Only one thread is allow to access the document
-        document.threadIds.add(Thread.currentThread().id)
+        // NIL document might be accessed by multiple threads
+        val threadId = Thread.currentThread().id
+        document.threadIds.add(threadId)
         if(document.threadIds.size != 1) {
             val threads = document.threadIds.joinToString()
             System.err.println("Warning: multiple threads ($threads) are process document | $location")
         }
 
         if (document.isInitialized.compareAndSet(false, true)) {
-            FeatureCalculatorFactory.calculator.calculate(document)
-            require(features.isNotEmpty)
-
-            document.unitArea = densityUnitArea
-            document.primaryGrid = primaryGridDimension
-            document.secondaryGrid = secondaryGridDimension
-            document.grid = document.primaryGrid
-
-            calculateInducedFeatures()
+            calculateFeatures()
         }
+
+        document.threadIds.remove(threadId)
     }
 
+    private fun calculateFeatures() {
+        FeatureCalculatorFactory.calculator.calculate(document)
+        require(features.isNotEmpty)
+        
+        document.unitArea = densityUnitArea
+        document.primaryGrid = primaryGridDimension
+        document.secondaryGrid = secondaryGridDimension
+        document.grid = document.primaryGrid
+        
+        calculateInducedFeatures()
+    }
+    
     /**
      * Calculate features depend on other features
      * */

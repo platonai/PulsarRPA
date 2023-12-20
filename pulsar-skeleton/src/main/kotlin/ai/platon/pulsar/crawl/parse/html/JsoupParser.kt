@@ -56,6 +56,7 @@ class JsoupParser(
     }
 
     private fun updateMetaInfos(page: WebPage, document: org.jsoup.nodes.Document) {
+        // the node is created by injected javascript
         val selector = PULSAR_META_INFORMATION_SELECTOR
         val metadata = document.selectFirstOrNull(selector) ?: return
 
@@ -73,8 +74,8 @@ class JsoupParser(
             head.appendElement("<link rel='$rel' href='$href' />")
             metadata.attr(rel, href)
         }
-
-        // normUrl is deprecated, use normalizedURL instead
+        
+        // deprecated, use body head link[rel=normalizedURI] instead
         metadata.attr("normUrl", page.url)
         // deprecated, use body head link[rel=normalizedURI] instead
         metadata.attr("normalizedUrl", page.url)
