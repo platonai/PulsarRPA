@@ -154,8 +154,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <properties>
-        <byte-buddy.version>1.12.9</byte-buddy.version>
-    </properties>
 </project>
