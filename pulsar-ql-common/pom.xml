@@ -33,7 +33,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <shadedArtifactAttached>false</shadedArtifactAttached>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
                             <minimizeJar>true</minimizeJar>
                             <artifactSet>
                                 <includes>
