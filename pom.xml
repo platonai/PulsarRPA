@@ -796,6 +796,8 @@
 
 
         <junit-version>5.8.2</junit-version>
+        <!-- Required by spring-boot-starter-test, correct the version -->
+        <byte-buddy.version>1.12.9</byte-buddy.version>
 <!--        <slf4j.version>2.0.9</slf4j.version>-->
         <slf4j.version>1.7.36</slf4j.version>
         <log4j.version>2.20.0</log4j.version>

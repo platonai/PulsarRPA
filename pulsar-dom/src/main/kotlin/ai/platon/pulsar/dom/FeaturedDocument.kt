@@ -280,11 +280,8 @@ open class FeaturedDocument(val document: Document) {
      *
      * @return a real-valued vector with basic algebraic operations.
      */
-    var features: RealVector
+    val features: RealVector
         get() = document.extension.features
-        set(value) {
-            document.extension.features = value
-        }
 
     /**
      * The constructor
@@ -324,14 +321,6 @@ open class FeaturedDocument(val document: Document) {
      * Check if this document is internal.
      */
     fun isNotInternal() = !isInternal()
-
-    /**
-     * Create a new Element, with this document's base uri. Does not make the new element a child of this document.
-     * @param tagName element tag name (e.g. {@code a})
-     *
-     * @return new element
-     */
-    fun createElement(tagName: String) = document.createElement(tagName)
 
     /**
      * Guess the document's title.
