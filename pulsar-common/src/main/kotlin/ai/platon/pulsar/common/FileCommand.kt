@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 import java.time.Duration
 
 object FileCommand {
@@ -12,6 +13,14 @@ object FileCommand {
     val CHECK_INTERVAL: Duration = Duration.ofSeconds(15)
     val LAST_CHECK_TIME: MutableMap<String, Long> = HashMap()
 
+    @Synchronized
+    fun submit(command: String): Path? {
+        return runCatching {
+            // add StandardOpenOption.CREATE to create a new file if it does not exist.
+            Files.writeString(COMMAND_FILE, command, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+        }.getOrNull()
+    }
+    
     /**
      * Check local command file to see if there are pending commands.
      * Supported local file commands can be found in AppConstants CMD_*
@@ -23,6 +32,7 @@ object FileCommand {
      * @param checkInterval The check interval in seconds
      * @return true if the command is exists during this check period
      */
+    @Synchronized
     fun check(command: String, checkInterval: Long): Boolean {
         return check(command, Duration.ofSeconds(checkInterval))
     }
@@ -39,6 +49,7 @@ object FileCommand {
      * @return true if the command is exists during this check period
      */
     @JvmOverloads
+    @Synchronized
     fun check(command: String, checkInterval: Duration = CHECK_INTERVAL, action: () -> Unit = {}): Boolean {
         return try {
             doCheckFile(command, checkInterval, action)
@@ -48,7 +59,6 @@ object FileCommand {
         }
     }
     
-    @Synchronized
     private fun doCheckFile(command: String, checkInterval: Duration = CHECK_INTERVAL, action: () -> Unit = {}): Boolean {
         val lastCheckTime = LAST_CHECK_TIME.getOrDefault(command, 0L)
         if (DateTimes.elapsedTime(lastCheckTime) < checkInterval) {
