@@ -8,6 +8,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.plus
 import java.time.Duration
+import java.util.*
+import java.util.concurrent.CompletableFuture
 
 abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     private val interopScope = CoroutineScope(Dispatchers.Default) + CoroutineName("interop")
@@ -55,18 +57,33 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     override fun moveMouseToAsync(x: Double, y: Double) = interopScope.future { moveMouseTo(x, y) }
     override fun dragAndDropAsync(selector: String, deltaX: Int, deltaY: Int) =
         interopScope.future { dragAndDrop(selector, deltaX, deltaY) }
+    
     override fun outerHTMLAsync(selector: String) = interopScope.future { outerHTML(selector) }
-    override fun firstTextAsync(selector: String) = interopScope.future { firstText(selector) }
-    override fun allTextsAsync(selector: String) = interopScope.future { allTexts(selector) }
+    override fun firstTextAsync(selector: String) = interopScope.future { selectFirstTextOrNull(selector) }
+    override fun allTextsAsync(selector: String) = interopScope.future { selectTexts(selector) }
+    override fun selectFirstTextOrNullAsync(selector: String): CompletableFuture<String?> =
+        interopScope.future { selectFirstTextOrNull(selector) }
+    override fun selectFirstTextOptionalAsync(selector: String): CompletableFuture<Optional<String>> =
+        interopScope.future { Optional.ofNullable(selectFirstTextOrNull(selector)) }
+    override fun selectTextsAsync(selector: String): CompletableFuture<List<String>> =
+        interopScope.future { allTexts(selector) }
+    
     override fun firstAttrAsync(selector: String, attrName: String) = interopScope.future { firstAttr(selector, attrName) }
     override fun allAttrsAsync(selector: String, attrName: String) = interopScope.future { allAttrs(selector, attrName) }
+    override fun selectFirstAttributeOrNullAsync(selector: String, attrName: String): CompletableFuture<String?> =
+        interopScope.future { selectFirstAttributeOrNull(selector, attrName) }
+    override fun selectFirstAttributeOptionalAsync(selector: String, attrName: String): CompletableFuture<Optional<String>> =
+        interopScope.future { Optional.ofNullable(selectFirstAttributeOrNull(selector, attrName)) }
+    override fun selectAttributesAsync(selector: String, attrName: String): CompletableFuture<List<String>> =
+        interopScope.future { selectAttributes(selector, attrName) }
+    
     override fun evaluateAsync(expression: String) = interopScope.future { evaluate(expression) }
     override fun evaluateSilentlyAsync(expression: String) = interopScope.future { evaluateSilently(expression) }
     override fun captureScreenshotAsync(selector: String) = interopScope.future { captureScreenshot(selector) }
     override fun captureScreenshotAsync(rect: RectD) = interopScope.future { captureScreenshot(rect) }
     override fun clickablePointAsync(selector: String) = interopScope.future { clickablePoint(selector) }
     override fun boundingBoxAsync(selector: String) = interopScope.future { boundingBox(selector) }
-    override fun newSessionAsync() = interopScope.future { newSession() }
+    override fun newJsoupSessionAsync() = interopScope.future { newJsoupSession() }
     override fun loadResourceAsync(url: String) = interopScope.future { loadResource(url) }
     override fun pauseAsync() = interopScope.future { pause() }
     override fun stopAsync() = interopScope.future { stop() }

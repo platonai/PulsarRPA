@@ -445,13 +445,6 @@ interface WebDriver: Closeable {
      * Create a new Jsoup session with the last page's context, which means, the same
      * headers and cookies.
      * */
-    @Deprecated("Inappropriate name", ReplaceWith("newJsoupSession()"))
-    @Throws(WebDriverException::class)
-    suspend fun newSession(): Connection
-    /**
-     * Create a new Jsoup session with the last page's context, which means, the same
-     * headers and cookies.
-     * */
     @Throws(WebDriverException::class)
     suspend fun newJsoupSession(): Connection
     /**
@@ -473,9 +466,6 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun pause()
-    @Deprecated("Inappropriate name", ReplaceWith("pause"))
-    @Throws(WebDriverException::class)
-    suspend fun stopLoading() = pause()
     /**
      * Force the page stop all navigations and RELEASES all resources. Interaction with the
      * stop page results in undefined behavior and the results should not be trusted.
@@ -491,12 +481,7 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun terminate()
-    /**
-     * Quits this driver, closing every associated window.
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("close()"))
-    @Throws(Exception::class)
-    fun quit()
+
     /** Wait until the tab is terminated and closed. */
     @Throws(Exception::class)
     fun awaitTermination()

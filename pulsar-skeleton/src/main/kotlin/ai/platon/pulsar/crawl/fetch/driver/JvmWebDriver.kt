@@ -8,6 +8,7 @@ import org.jsoup.Connection
 import java.io.Closeable
 import java.time.Duration
 import java.time.Instant
+import java.util.Optional
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
@@ -177,11 +178,24 @@ interface JvmWebDriver {
     @Throws(WebDriverException::class)
     fun firstTextAsync(selector: String): CompletableFuture<String?>
     @Throws(WebDriverException::class)
+    fun selectFirstTextOrNullAsync(selector: String): CompletableFuture<String?>
+    @Throws(WebDriverException::class)
+    fun selectFirstTextOptionalAsync(selector: String): CompletableFuture<Optional<String>>
+    @Throws(WebDriverException::class)
     fun allTextsAsync(selector: String): CompletableFuture<List<String>>
+    @Throws(WebDriverException::class)
+    fun selectTextsAsync(selector: String): CompletableFuture<List<String>>
+    
     @Throws(WebDriverException::class)
     fun firstAttrAsync(selector: String, attrName: String): CompletableFuture<String?>
     @Throws(WebDriverException::class)
+    fun selectFirstAttributeOrNullAsync(selector: String, attrName: String): CompletableFuture<String?>
+    @Throws(WebDriverException::class)
+    fun selectFirstAttributeOptionalAsync(selector: String, attrName: String): CompletableFuture<Optional<String>>
+    @Throws(WebDriverException::class)
     fun allAttrsAsync(selector: String, attrName: String): CompletableFuture<List<String>>
+    @Throws(WebDriverException::class)
+    fun selectAttributesAsync(selector: String, attrName: String): CompletableFuture<List<String>>
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
@@ -227,7 +241,7 @@ interface JvmWebDriver {
      * headers and cookies.
      * */
     @Throws(WebDriverException::class)
-    fun newSessionAsync(): CompletableFuture<Connection>
+    fun newJsoupSessionAsync(): CompletableFuture<Connection>
     /**
      * Load url as a resource without browser rendering, with the last page's context,
      * which means, the same headers and cookies.

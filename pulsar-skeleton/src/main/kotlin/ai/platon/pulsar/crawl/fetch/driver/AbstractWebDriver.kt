@@ -242,10 +242,6 @@ abstract class AbstractWebDriver(
         evaluate("__pulsar_utils__.uncheck('$selector')")
     }
     
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("newJsoupSession()"))
-    @Throws(WebDriverException::class)
-    override suspend fun newSession(): Connection = newJsoupSession()
-    
     @Throws(WebDriverException::class)
     override suspend fun newJsoupSession(): Connection {
         val headers = mainRequestHeaders.entries.associate { it.key to it.value.toString() }
@@ -274,14 +270,6 @@ abstract class AbstractWebDriver(
     @Throws(IOException::class)
     override suspend fun loadResource(url: String): NetworkResourceResponse {
         return NetworkResourceResponse.from(loadJsoupResource(url))
-    }
-    
-    /**
-     * Quit the browser instance
-     * */
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("close()"))
-    override fun quit() {
-        close()
     }
     
     override fun equals(other: Any?): Boolean = this === other || (other is AbstractWebDriver && other.id == this.id)

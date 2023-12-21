@@ -272,15 +272,6 @@ class MockWebDriver(
     }
 
     /**
-     * Quit the browser instance
-     * */
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("close()"))
-    @Throws(WebDriverException::class)
-    override fun quit() {
-        close()
-    }
-
-    /**
      * Close the tab hold by this driver
      * */
     @Throws(Exception::class)
