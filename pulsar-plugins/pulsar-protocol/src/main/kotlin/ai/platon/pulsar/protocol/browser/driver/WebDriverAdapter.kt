@@ -40,12 +40,6 @@ class WebDriverAdapter(
 
     override val isMockedPageSource get() = driver.isMockedPageSource
 
-    /**
-     * The id of the session to the browser
-     * */
-    @Deprecated("Not used any more")
-    override val sessionId get() = driverOrNull?.sessionId
-
     @Throws(WebDriverException::class)
     override suspend fun addInitScript(script: String) = driverOrNull?.addInitScript(script) ?: Unit
 

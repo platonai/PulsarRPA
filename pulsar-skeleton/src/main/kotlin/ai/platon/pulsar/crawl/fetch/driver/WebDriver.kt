@@ -33,32 +33,19 @@ import kotlin.random.Random
 interface WebDriver: Closeable {
     /**
      * Lifetime status
-     * TODO: move lifetime status to AbstractWebDriver
      * */
     enum class State {
         INIT,
         READY,
-        @Deprecated("Inappropriate name", ReplaceWith("READY"))
-        FREE,
         WORKING,
-        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.canceled"))
-        CANCELED,
         RETIRED,
-        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.crashed"))
-        CRASHED,
         QUIT;
 
         val isInit get() = this == INIT
-        @Deprecated("Inappropriate name", ReplaceWith("isReady"))
-        val isFree get() = this == FREE
-        val isReady get() = this == READY || isFree
+        val isReady get() = this == READY
         val isWorking get() = this == WORKING
         val isQuit get() = this == QUIT
         val isRetired get() = this == RETIRED
-        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.isCanceled"))
-        val isCanceled get() = this == CANCELED
-        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.isCrashed"))
-        val isCrashed get() = this == CRASHED
     }
 
     /**
@@ -130,8 +117,6 @@ interface WebDriver: Closeable {
 
     val isInit: Boolean
     val isReady: Boolean
-    @Deprecated("Inappropriate name", ReplaceWith("isReady()"))
-    val isFree: Boolean
     val isWorking: Boolean
     val isRetired: Boolean
     val isQuit: Boolean
@@ -139,8 +124,6 @@ interface WebDriver: Closeable {
     val isCanceled: Boolean
     val isCrashed: Boolean
 
-    @Deprecated("Not used any more")
-    val sessionId: String?
     /**
      * Delay policy defines the delay time between actions, it is used to mimic real people
      * to interact with webpages.
@@ -279,11 +262,7 @@ interface WebDriver: Closeable {
     /** Clears browser cookies. */
     @Throws(WebDriverException::class)
     suspend fun clearBrowserCookies()
-    /**
-     * Brings page to front (activates tab).
-     */
-    @Throws(WebDriverException::class)
-    suspend fun bringToFront()
+
     /**
      * Returns when element specified by selector satisfies {@code state} option.
      * */
@@ -306,6 +285,10 @@ interface WebDriver: Closeable {
 
     @Throws(WebDriverException::class)
     suspend fun waitForPage(url: String, timeout: Duration): WebDriver?
+    
+    /*
+     * Status checking
+     **/
 
     @Throws(WebDriverException::class)
     suspend fun exists(selector: String): Boolean
@@ -317,11 +300,46 @@ interface WebDriver: Closeable {
     suspend fun visible(selector: String): Boolean = isVisible(selector)
     @Throws(WebDriverException::class)
     suspend fun isChecked(selector: String): Boolean
-
+    
+    /*
+     * Interacts with the Webpage
+     **/
+    /**
+     * Brings page to front (activates tab).
+     */
+    @Throws(WebDriverException::class)
+    suspend fun bringToFront()
+    
+    /**
+     * This method fetches an element with `selector` and focuses it. If there's no
+     * element matching `selector`, nothing to do.
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to focus. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     */
     @Throws(WebDriverException::class)
     suspend fun focus(selector: String)
+    /**
+     * This method emulates inserting text that doesn't come from a key press.
+     *
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to focus. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * @param text The text to insert.
+     */
     @Throws(WebDriverException::class)
     suspend fun type(selector: String, text: String)
+    /**
+     * This method clicks an element with `selector` and focuses it. If there's no
+     * element matching `selector`, nothing to do.
+     *
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to focus. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * */
     @Throws(WebDriverException::class)
     suspend fun click(selector: String, count: Int = 1)
 
@@ -341,7 +359,7 @@ interface WebDriver: Closeable {
     suspend fun check(selector: String)
     @Throws(WebDriverException::class)
     suspend fun uncheck(selector: String)
-
+    
     @Throws(WebDriverException::class)
     suspend fun scrollTo(selector: String)
     @Throws(WebDriverException::class)
@@ -365,16 +383,23 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int = 0)
     
+    /*
+     * Retrival for html strings, texts and attributes of DOMs
+     **/
+    
     /** Returns the document's HTML markup. */
     @Throws(WebDriverException::class)
     suspend fun outerHTML(): String?
     /** Returns the node's HTML markup. */
     @Throws(WebDriverException::class)
     suspend fun outerHTML(selector: String): String?
+    
     /** Returns the node's text content. */
+    @Deprecated("Inappropriate name", ReplaceWith("selectFirstTextOrNull"))
     @Throws(WebDriverException::class)
     suspend fun firstText(selector: String): String? = selectFirstTextOrNull(selector)
     /** Returns the nodes' text contents. */
+    @Deprecated("Inappropriate name", ReplaceWith("selectTexts"))
     @Throws(WebDriverException::class)
     suspend fun allTexts(selector: String): List<String> = selectTexts(selector)
     @Throws(WebDriverException::class)
@@ -391,6 +416,11 @@ interface WebDriver: Closeable {
     suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String?
     @Throws(WebDriverException::class)
     suspend fun selectAttributes(selector: String, attrName: String): List<String>
+    
+    /*
+     * Evaluating Javascript expression
+     **/
+    
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.

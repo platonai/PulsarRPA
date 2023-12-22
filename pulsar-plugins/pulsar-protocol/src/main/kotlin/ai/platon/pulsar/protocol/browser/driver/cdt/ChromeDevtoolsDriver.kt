@@ -280,19 +280,6 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    @Deprecated("Not used any more")
-    override val sessionId: String?
-        @Throws(WebDriverException::class)
-        get() {
-            lastSessionId = try {
-                if (!isActive) null else mainFrameAPI?.id
-            } catch (e: ChromeRPCException) {
-                rpc.handleRPCException(e, "sessionId")
-                null
-            }
-            return lastSessionId
-        }
-
     @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String {
         navigateUrl = try {
