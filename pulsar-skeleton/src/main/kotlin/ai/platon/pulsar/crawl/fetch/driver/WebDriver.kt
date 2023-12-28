@@ -194,13 +194,15 @@ interface WebDriver: Closeable {
     /**
      * Returns a string representing the current URL that the browser is looking at.
      *
-     * If the browser failed to return a proper url, return the url to navigate.
+     * If the browser failed to return a proper url, return the passed in url to navigate.
      *
-     * @return The frame document's URL without fragment.
+     * @return The frame document's URL without fragment, or the passed in url to navigate.
      */
     @Throws(WebDriverException::class)
     suspend fun currentUrl(): String
     /**
+     * Returns the document's location evaluated by javascript.
+     *
      * In javascript, the `window.location`, or `document.location`, is a read-only property
      * returns a Location object, which contains information about the URL of the
      * document and provides methods for changing that URL and loading another URL.
@@ -210,6 +212,8 @@ interface WebDriver: Closeable {
      * */
     suspend fun location(): String
     /**
+     * Returns the document's baseURI evaluated by javascript.
+     *
      * In javascript, the baseURI is a property of Node, it's the absolute base URL of the
      * document containing the node. A baseURI is used to resolve relative URLs.
      *
