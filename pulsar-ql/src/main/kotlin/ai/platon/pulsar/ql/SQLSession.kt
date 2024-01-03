@@ -10,20 +10,41 @@ import java.sql.Connection
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 
+/**
+ * A SQL session enables the X-SQL execution.
+ * */
 interface SQLSession : PulsarSession {
+    /**
+     * The SQL context
+     * */
     val sqlContext get() = context as SQLContext
 
+    /**
+     * The session delegate which provides implementation.
+     * */
     val sessionDelegate: SessionDelegate
 
+    /**
+     * UDF class samples used to detect all other UDF classes.
+     * */
     val udfClassSamples: Set<KClass<out Any>>
 
+    /**
+     * All registered UDF classes.
+     * */
     val registeredAllUdfClasses: Set<Class<out Any>>
 
+    /**
+     * All registered admin UDF classes.
+     * */
     val registeredAdminUdfClasses
         get() = registeredAllUdfClasses
             .filter { it.annotations.any { it is UDFGroup && it.namespace == "ADMIN" } }
             .toSet()
 
+    /**
+     * All registered non-admin UDF classes.
+     * */
     val registeredUdfClasses
         get() = registeredAllUdfClasses
             .filterNot { it in registeredAdminUdfClasses }

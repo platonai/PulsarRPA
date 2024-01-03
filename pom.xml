@@ -162,59 +162,54 @@
                                 </goals>
                             </execution>
                         </executions>
-<!--                        <configuration>-->
+                        <configuration>
 
-<!--                            &lt;!&ndash; Set to true to skip dokka task, default: false &ndash;&gt;-->
-<!--                            <skip>false</skip>-->
+                            <!-- Set to true to skip dokka task, default: false -->
+                            <skip>false</skip>
 
-<!--                            &lt;!&ndash; Default: ${project.artifactId} &ndash;&gt;-->
-<!--&lt;!&ndash;                            <moduleName>data</moduleName>&ndash;&gt;-->
+                            <!-- Default: ${project.artifactId} -->
+<!--                            <moduleName>data</moduleName>-->
 
-<!--                            &lt;!&ndash; Default: ${project.basedir}/target/dokka &ndash;&gt;-->
-<!--&lt;!&ndash;                            <outputDir>${project.basedir}/target/dokka</outputDir>&ndash;&gt;-->
+                            <!-- Default: ${project.basedir}/target/dokka -->
+<!--                            <outputDir>${project.basedir}/target/dokka</outputDir>-->
 
-<!--                            &lt;!&ndash; Use default or set to custom path to cache directory to enable package-list caching. &ndash;&gt;-->
-<!--                            &lt;!&ndash; When set to default, caches stored in $USER_HOME/.cache/dokka &ndash;&gt;-->
-<!--                            <cacheRoot>default</cacheRoot>-->
 
-<!--                            &lt;!&ndash; List of '.md' files with package and module docs &ndash;&gt;-->
-<!--                            &lt;!&ndash; https://kotlinlang.org/docs/reference/kotlin-doc.html#module-and-package-documentation &ndash;&gt;-->
+
+                            <!-- Use default or set to custom path to cache directory to enable package-list caching. -->
+                            <!-- When set to default, caches stored in $USER_HOME/.cache/dokka -->
+                            <cacheRoot>default</cacheRoot>
+
+                            <!-- List of '.md' files with package and module docs -->
+                            <!-- https://kotlinlang.org/docs/reference/kotlin-doc.html#module-and-package-documentation -->
 <!--                            <includes>-->
 <!--                                <include>README.adoc</include>-->
 <!--                                <include>README-CN.adoc</include>-->
 <!--                            </includes>-->
 
-<!--                            &lt;!&ndash; List of sample roots &ndash;&gt;-->
+                            <!-- List of sample roots -->
 <!--                            <samples>-->
-<!--&lt;!&ndash;                                <dir>src/test/samples</dir>&ndash;&gt;-->
+<!--                                <dir>src/test/samples</dir>-->
 <!--                            </samples>-->
 
-<!--                            &lt;!&ndash; Used for linking to JDK, default: 11 &ndash;&gt;-->
-<!--                            <jdkVersion>11</jdkVersion>-->
+                            <!-- Used for linking to JDK, default: 11 -->
+                            <jdkVersion>11</jdkVersion>
 
-<!--                            &lt;!&ndash; Do not output deprecated members, applies globally, can be overridden by packageOptions &ndash;&gt;-->
-<!--                            <skipDeprecated>true</skipDeprecated>-->
-<!--                            &lt;!&ndash; Emit warnings about not documented members, applies globally, also can be overridden by packageOptions &ndash;&gt;-->
-<!--                            <reportUndocumented>true</reportUndocumented>-->
-<!--                            &lt;!&ndash; Do not create index pages for empty packages &ndash;&gt;-->
-<!--                            <skipEmptyPackages>true</skipEmptyPackages>-->
+                            <!-- Do not output deprecated members, applies globally, can be overridden by packageOptions -->
+                            <skipDeprecated>true</skipDeprecated>
+                            <!-- Emit warnings about not documented members, applies globally, also can be overridden by packageOptions -->
+                            <reportUndocumented>true</reportUndocumented>
+                            <!-- Do not create index pages for empty packages -->
+                            <skipEmptyPackages>false</skipEmptyPackages>
+                            <includeNonPublic>false</includeNonPublic>
 
-<!--                            &lt;!&ndash; Short form list of sourceRoots, by default, set to ${project.compileSourceRoots} &ndash;&gt;-->
-<!--                            <sourceDirectories>-->
-<!--                                <dir>src/main/kotlin</dir>-->
-<!--                            </sourceDirectories>-->
+                            <!-- Short form list of sourceRoots, by default, set to ${project.compileSourceRoots} -->
+                            <sourceDirectories>
+                                <dir>src/main/java</dir>
+                                <dir>src/main/kotlin</dir>
+                            </sourceDirectories>
 
-<!--                            &lt;!&ndash; Full form list of sourceRoots &ndash;&gt;-->
-<!--                            <sourceRoots>-->
-<!--                                <root>-->
-<!--                                    <path>src/main/kotlin</path>-->
-<!--                                    &lt;!&ndash; See platforms section of documentation &ndash;&gt;-->
-<!--                                    <platforms>JVM</platforms>-->
-<!--                                </root>-->
-<!--                            </sourceRoots>-->
-
-<!--                            &lt;!&ndash; Specifies the location of the project source code on the Web. If provided, Dokka generates "source" links-->
-<!--                                 for each declaration. &ndash;&gt;-->
+                            <!-- Specifies the location of the project source code on the Web. If provided, Dokka generates "source" links
+                                 for each declaration. -->
 <!--                            <sourceLinks>-->
 <!--                                <link>-->
 <!--                                    &lt;!&ndash; Source directory &ndash;&gt;-->
@@ -226,13 +221,13 @@
 <!--                                </link>-->
 <!--                            </sourceLinks>-->
 
-<!--                            &lt;!&ndash; Disable linking to online kotlin-stdlib documentation  &ndash;&gt;-->
-<!--                            <noStdlibLink>false</noStdlibLink>-->
+                            <!-- Disable linking to online kotlin-stdlib documentation  -->
+                            <noStdlibLink>false</noStdlibLink>
 
-<!--                            &lt;!&ndash; Disable linking to online JDK documentation &ndash;&gt;-->
-<!--                            <noJdkLink>false</noJdkLink>-->
+                            <!-- Disable linking to online JDK documentation -->
+                            <noJdkLink>false</noJdkLink>
 
-<!--                            &lt;!&ndash; Allows linking to documentation of the project's dependencies (generated with Javadoc or Dokka) &ndash;&gt;-->
+                            <!-- Allows linking to documentation of the project's dependencies (generated with Javadoc or Dokka) -->
 <!--                            <externalDocumentationLinks>-->
 <!--                                <link>-->
 <!--                                    &lt;!&ndash; Root URL of the generated documentation to link with. The trailing slash is required! &ndash;&gt;-->
@@ -242,21 +237,21 @@
 <!--                                </link>-->
 <!--                            </externalDocumentationLinks>-->
 
-<!--                            &lt;!&ndash; Allows to customize documentation generation options on a per-package basis &ndash;&gt;-->
-<!--                            <perPackageOptions>-->
-<!--                                <packageOptions>-->
-<!--                                    &lt;!&ndash; Will match kotlin and all sub-packages of it &ndash;&gt;-->
+                            <!-- Allows to customize documentation generation options on a per-package basis -->
+                            <perPackageOptions>
+                                <packageOptions>
+                                    <!-- Will match kotlin and all sub-packages of it -->
 <!--                                    <prefix>kotlin</prefix>-->
 
-<!--                                    &lt;!&ndash; All options are optional, default values are below: &ndash;&gt;-->
-<!--                                    <skipDeprecated>false</skipDeprecated>-->
-<!--                                    &lt;!&ndash; Emit warnings about not documented members  &ndash;&gt;-->
-<!--                                    <reportUndocumented>true</reportUndocumented>-->
-<!--                                    <includeNonPublic>false</includeNonPublic>-->
-<!--                                </packageOptions>-->
-<!--                            </perPackageOptions>-->
+                                    <!-- All options are optional, default values are below: -->
+                                    <skipDeprecated>false</skipDeprecated>
+                                    <!-- Emit warnings about not documented members  -->
+                                    <reportUndocumented>true</reportUndocumented>
+                                    <includeNonPublic>false</includeNonPublic>
+                                </packageOptions>
+                            </perPackageOptions>
 
-<!--                            &lt;!&ndash; Allows to use any dokka plugin, eg. GFM format   &ndash;&gt;-->
+                            <!-- Allows to use any dokka plugin, eg. GFM format   -->
 <!--                            <dokkaPlugins>-->
 <!--                                <plugin>-->
 <!--                                    <groupId>org.jetbrains.dokka</groupId>-->
@@ -264,7 +259,7 @@
 <!--                                    <version>${dokka.version}</version>-->
 <!--                                </plugin>-->
 <!--                            </dokkaPlugins>-->
-<!--                        </configuration>-->
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
