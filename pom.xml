@@ -204,8 +204,8 @@
 
                             <!-- Short form list of sourceRoots, by default, set to ${project.compileSourceRoots} -->
                             <sourceDirectories>
-                                <dir>src/main/java</dir>
-                                <dir>src/main/kotlin</dir>
+                                <dir>${project.basedir}/src/main/java</dir>
+                                <dir>${project.basedir}/src/main/kotlin</dir>
                             </sourceDirectories>
 
                             <!-- Specifies the location of the project source code on the Web. If provided, Dokka generates "source" links
