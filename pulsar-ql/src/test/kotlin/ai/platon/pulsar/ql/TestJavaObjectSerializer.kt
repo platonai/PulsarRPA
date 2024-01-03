@@ -108,7 +108,7 @@ class TestJavaObjectSerializer: TestBase() {
 
         assertTrue { obj !== deserializeObject }
         assertTrue { dom.element.baseUri() == dom2.element.baseUri() }
-        // assertTrue { dom.element.ownerDocument() != dom2.element.ownerDocument() }
+        // assertTrue { dom.element.ownerDocument.extension() != dom2.element.ownerDocument() }
     }
 
     @Test

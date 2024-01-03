@@ -8,9 +8,9 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.geometric.OffsetD
-import ai.platon.pulsar.common.geometric.PointD
-import ai.platon.pulsar.common.geometric.RectD
+import ai.platon.pulsar.common.math.geometric.OffsetD
+import ai.platon.pulsar.common.math.geometric.PointD
+import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.URLUtil
@@ -86,7 +86,7 @@ class ChromeDevtoolsDriver(
     private var credentials: Credentials? = null
 
     private val networkManager by lazy { NetworkManager(this, rpc) }
-    private val messageWriter = MiscMessageWriter(ImmutableConfig())
+    private val messageWriter = MiscMessageWriter()
 
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val initScriptCache = mutableListOf<String>()
@@ -279,19 +279,6 @@ class ChromeDevtoolsDriver(
             )
         }
     }
-
-    @Deprecated("Not used any more")
-    override val sessionId: String?
-        @Throws(WebDriverException::class)
-        get() {
-            lastSessionId = try {
-                if (!isActive) null else mainFrameAPI?.id
-            } catch (e: ChromeRPCException) {
-                rpc.handleRPCException(e, "sessionId")
-                null
-            }
-            return lastSessionId
-        }
 
     @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String {

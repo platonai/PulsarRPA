@@ -19,9 +19,10 @@ package ai.platon.pulsar.crawl.signature;
 
 import ai.platon.pulsar.persist.WebPage;
 import org.apache.avro.util.Utf8;
-import org.apache.hadoop.io.MD5Hash;
 
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * Default implementation of a page signature. It calculates an MD5 hash of the
@@ -31,6 +32,29 @@ import java.nio.ByteBuffer;
  * @author Andrzej Bialecki &lt;ab@getopt.org&gt;
  */
 public class MD5Signature extends Signature {
+    private static final ThreadLocal<MessageDigest> DIGESTER_FACTORY = ThreadLocal.withInitial(() -> {
+        try {
+            return MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    });
+
+    public static MessageDigest getDigester() {
+        MessageDigest digester = (MessageDigest)DIGESTER_FACTORY.get();
+        digester.reset();
+        return digester;
+    }
+
+    public static byte[] digest(byte[] data, int start, int len) {
+        MessageDigest digester = getDigester();
+        digester.update(data, start, len);
+        byte[] digest = digester.digest();
+        if (digest.length != 16) {
+            throw new IllegalArgumentException("Wrong length: " + digest.length);
+        }
+        return digest;
+    }
 
     @Override
     public byte[] calculate(WebPage page) {
@@ -49,6 +73,7 @@ public class MD5Signature extends Signature {
             cb = buf.remaining();
         }
 
-        return MD5Hash.digest(data, of, cb).getDigest();
+        // org.apache.hadoop.io.MD5Hash.MD5Hash.digest(data, of, cb).getDigest();
+        return digest(data, of, cb);
     }
 }

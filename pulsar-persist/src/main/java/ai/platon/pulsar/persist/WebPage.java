@@ -41,9 +41,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -170,15 +168,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     @NotNull
     public static WebPage newWebPage(@NotNull String url, @NotNull VolatileConfig conf) {
         return newWebPage(url, conf, null);
-    }
-
-    /**
-     * @deprecated Use WebPageEx.newTestWebPage instead
-     * */
-    @Deprecated
-    @NotNull
-    public static WebPage newTestWebPage(@NotNull String url) {
-        return newWebPage(url, new VolatileConfig(), null);
     }
 
     @NotNull
@@ -1051,25 +1040,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      */
     public void setEncoding(@Nullable String encoding) {
         page.setEncoding(encoding);
-    }
-
-    /**
-     * The clues are used to determine the encoding of the page content.
-     * <p>
-     * Not used if fetch mode is browser since the page content retrieved from a browser will always be UTF-8.
-     * */
-    @NotNull
-    public String getEncodingClues() {
-        return getMetadata().getOrDefault(Name.ENCODING_CLUES, "");
-    }
-
-    /**
-     * The clues are used to determine the encoding of the page content
-     * <p>
-     * Not used if fetch mode is browser since the page content retrieved from a browser will always be UTF-8.
-     * */
-    public void setEncodingClues(@NotNull String clues) {
-        getMetadata().set(Name.ENCODING_CLUES, clues);
     }
 
     /**

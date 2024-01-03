@@ -7,10 +7,10 @@ import kotlinx.coroutines.runBlocking
 
 fun main() {
     val driver = SQLContexts.create().getBean(WebDriverFactory::class).launchBrowser(BrowserId.PROTOTYPE).newDriver()
-
+    
     runBlocking {
         driver.navigateTo("about:blank")
     }
-
+    
     readLine()
 }

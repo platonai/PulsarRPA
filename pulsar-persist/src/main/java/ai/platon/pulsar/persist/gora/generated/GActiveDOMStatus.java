@@ -3,7 +3,9 @@
  *
  * DO NOT EDIT DIRECTLY
  */
-package ai.platon.pulsar.persist.gora.generated;  
+package ai.platon.pulsar.persist.gora.generated;
+
+import org.apache.gora.persistency.Persistent;
 
 public class GActiveDOMStatus extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GActiveDOMStatus\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"n\",\"type\":\"int\",\"default\":0},{\"name\":\"scroll\",\"type\":\"int\",\"default\":0},{\"name\":\"st\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"r\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"idl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"ec\",\"type\":[\"null\",\"string\"],\"default\":null}]}");
@@ -68,6 +70,11 @@ public class GActiveDOMStatus extends org.apache.gora.persistency.impl.Persisten
    */
   public int getFieldsCount() {
     return GActiveDOMStatus._ALL_FIELDS.length;
+  }
+
+  @Override
+  public Persistent clone() {
+    return null;
   }
 
   private int n;

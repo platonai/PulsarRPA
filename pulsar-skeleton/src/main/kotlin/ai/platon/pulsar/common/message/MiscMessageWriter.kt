@@ -19,9 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * Write misc messages into misc sinks
  */
-class MiscMessageWriter(
-    conf: ImmutableConfig
-) : MultiSinkWriter(conf) {
+class MiscMessageWriter: MultiSinkWriter() {
 
     private fun reportFetchTimeHistory(fetchTimeHistory: String) {
         write(fetchTimeHistory, "fetch-time-history.txt")

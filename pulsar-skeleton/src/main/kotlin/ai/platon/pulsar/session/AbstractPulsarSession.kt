@@ -73,11 +73,9 @@ abstract class AbstractPulsarSession(
 
     private val variables = ConcurrentHashMap<String, Any>()
     private var enablePDCache = true
-    @Deprecated("Factory should not be a interface property, globalCache is OK",
-        ReplaceWith("context.globalCacheFactory")
-    )
+    @Deprecated("Factory should not be a interface property, globalCache is OK")
     override val globalCacheFactory get() = context.globalCacheFactory
-    override val globalCache get() = context.globalCacheFactory.globalCache
+    override val globalCache get() = context.globalCache
     override val pageCache get() = globalCache.pageCache
     override val documentCache get() = globalCache.documentCache
 
@@ -461,7 +459,7 @@ abstract class AbstractPulsarSession(
     override fun hashCode(): Int = id
 
     override fun toString(): String = "#$id"
-    
+
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             closableObjects.forEach {

@@ -100,7 +100,9 @@ __pulsar_utils__.writeData = function() {
 
     script = document.createElement('script');
     script.id = __pulsar_CONFIGS.SCRIPT_SECTION_ID;
-    script.type = 'text/javascript';
+    // javascript only
+    // script.type = 'text/javascript';
+    script.type = 'javascript';
 
     let pulsarData = JSON.stringify(document.__pulsar__Data, null, 3);
     script.textContent = "\n" + `;let __pulsar__Data = ${pulsarData};\n`;
@@ -217,14 +219,17 @@ __pulsar_utils__.updateStat = function(init = false) {
                     }
 
                     let ele = node.__pulsar_bestElement();
-                    if (ele != null && !init && !ele.hasAttribute("_ps_tp")) {
-                        // not set at initialization, it's lazy loaded
-                        ele.setAttribute("_ps_lazy", "1")
+                    if (ele != null && !init && !ele.hasAttribute("tp")) {
+                        // not set at initialization, it's lazy loaded.
+                        // "lz" is short for lazy.
+                        // TODO: embed all pulsar generated data into a single attribute to reduce the page size
+                        ele.setAttribute("lz", "1")
                     }
 
                     if (ele != null) {
                         let type = isNumberLike ? "nm" : "st";
-                        ele.setAttribute("_ps_tp", type);
+                        // "tp" is short for type.
+                        ele.setAttribute("tp", type);
                     }
                 }
             }
@@ -234,7 +239,7 @@ __pulsar_utils__.updateStat = function(init = false) {
         });
     }
 
-    // unexpected but occurs when do performance test to parallel harvest Web sites
+    // unexpected but occurs when do performance test to parallel harvest Websites
     if (!document.__pulsar__Data) {
         return
     }
@@ -1227,7 +1232,7 @@ __pulsar_utils__.compute = function() {
 
     // remove temporary flags
     document.body.__pulsar_forEachElement(ele => {
-        ele.removeAttribute("_ps_tp")
+        ele.removeAttribute("tp")
     });
 
     // traverse the DOM and compute necessary data, we must compute data before we perform humanization

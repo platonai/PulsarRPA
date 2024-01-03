@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_AGENT
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
-import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.metrics.MetricsSystem
@@ -283,8 +282,7 @@ class MultiPrivacyContextManager(
         }
 
         val conf = page.conf
-        val privacyAgentClassName = conf[PRIVACY_AGENT_GENERATOR_CLASS]
-            ?: conf[PRIVACY_CONTEXT_ID_GENERATOR_CLASS] ?: ""
+        val privacyAgentClassName = conf[PRIVACY_AGENT_GENERATOR_CLASS] ?: ""
 
         val privacyAgentGenerator = privacyAgentGeneratorFactory.create(privacyAgentClassName)
         return privacyAgentGenerator.invoke(fingerprint)

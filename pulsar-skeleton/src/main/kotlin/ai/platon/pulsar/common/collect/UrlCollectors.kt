@@ -237,7 +237,7 @@ open class PeriodicalHyperlinkCollector(
                 .filterNot { it.startsWith("#") }
                 .filterNot { it.isBlank() }
                 .map { NormUrl.parse(it, session.sessionConfig.toVolatileConfig()) }
-                .filter { UrlUtils.isValidUrl(it.spec) }
+                .filter { UrlUtils.isStandard(it.spec) }
                 .map { PeriodicalHyperlinkCollector(session, it, priority) }
         }
     }

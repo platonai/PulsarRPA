@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.10.23-SNAPSHOT</version>
+        <version>1.12.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-ql</artifactId>
@@ -24,6 +24,7 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-ql-common</artifactId>
+            <classifier>shaded</classifier>
         </dependency>
 
         <!-- Pulsar dependencies -->
@@ -43,6 +44,7 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-persist</artifactId>
+            <classifier>shaded</classifier>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
@@ -85,26 +87,24 @@
             <artifactId>pulsar-beans</artifactId>
         </dependency>
 
-        <!-- for excel support -->
         <dependency>
-            <groupId>org.apache.tika</groupId>
-            <artifactId>tika-parsers-standard-package</artifactId>
-            <type>pom</type>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-h2</artifactId>
         </dependency>
 
         <!-- Spring support -->
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
         </dependency>
+
+        <!-- TODO: try to remove spring-boot dependency -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot</artifactId>
         </dependency>
+
+        <!-- TODO: try to remove spring-boot-starter dependency -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
@@ -128,5 +128,15 @@
             <artifactId>lucene-analyzers-smartcn</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

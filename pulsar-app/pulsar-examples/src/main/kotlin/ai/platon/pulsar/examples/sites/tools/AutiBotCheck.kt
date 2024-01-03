@@ -23,14 +23,14 @@ https://arh.antoinevastel.com/bots/areyouheadless
         .map { it.trim() }
         .filter { it.startsWith("http") }
         .take(1)
-
+    
     val session = SQLContexts.createSession()
-
+    
     val proxyPool = session.context.getBean(ProxyPool::class)
     val proxyLoader = TemporaryProxyLoader(proxyPool)
     proxyLoader.loadProxies()
-
+    
     urls.forEach { session.open(it) }
-
+    
     readLine()
 }

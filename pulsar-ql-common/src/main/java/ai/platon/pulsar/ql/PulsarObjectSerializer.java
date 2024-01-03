@@ -1,6 +1,5 @@
 package ai.platon.pulsar.ql;
 
-import ai.platon.pulsar.dom.nodes.node.ext.NodeExtKt;
 import ai.platon.pulsar.ql.io.ValueDomWritable;
 import ai.platon.pulsar.ql.types.ValueDom;
 import org.apache.hadoop.io.DataInputBuffer;
@@ -8,22 +7,14 @@ import org.apache.hadoop.io.DataOutputBuffer;
 import org.h2.api.ErrorCode;
 import org.h2.api.JavaObjectSerializer;
 import org.h2.message.DbException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class PulsarObjectSerializer implements JavaObjectSerializer {
-
-    public static final Logger LOG = LoggerFactory.getLogger(PulsarObjectSerializer.class);
 
     @Override
     public byte[] serialize(Object obj) throws Exception {
         if (obj instanceof org.jsoup.nodes.Element) {
-            org.jsoup.nodes.Element ele = (org.jsoup.nodes.Element)obj;
+            org.jsoup.nodes.Element ele = (org.jsoup.nodes.Element) obj;
             obj = ValueDom.get(ele);
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Element {} converted to ValueDom", NodeExtKt.getUniqueName(ele));
-            }
         }
 
         if (obj instanceof ValueDom) {

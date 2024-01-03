@@ -72,7 +72,7 @@ class PageParser(
         conf,
         CrawlFilters(conf),
         TextMD5Signature(),
-        MiscMessageWriter(conf)
+        MiscMessageWriter()
     )
 
     /**

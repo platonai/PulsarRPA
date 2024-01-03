@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-app</artifactId>
-        <version>1.10.23-SNAPSHOT</version>
+        <version>1.12.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-tests</artifactId>
@@ -25,6 +25,7 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-persist</artifactId>
+            <classifier>shaded</classifier>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>

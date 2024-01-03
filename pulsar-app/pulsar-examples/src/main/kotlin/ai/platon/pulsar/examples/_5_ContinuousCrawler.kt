@@ -20,6 +20,7 @@ fun main() {
         context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
     }
 
+    // change to seeds100.txt to crawl more
     val urls = LinkExtractors.fromResource("seeds10.txt")
         .map { ParsableHyperlink("$it -refresh", parseHandler) }
     context.submitAll(urls).await()

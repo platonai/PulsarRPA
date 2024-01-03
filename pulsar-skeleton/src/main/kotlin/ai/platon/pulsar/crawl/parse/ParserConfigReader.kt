@@ -27,15 +27,11 @@ import org.w3c.dom.Element
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
 import java.io.IOException
-import java.util.*
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.parsers.ParserConfigurationException
 
 /**
- * A reader to load the information stored in the `$APP_HOME/config/parse-plugins.xml` file.
- *
- * @author mattmann
- * @version 1.0
+ * A reader to load the information stored in the `parse-plugins.xml` file.
  */
 class ParserConfigReader {
     /**
@@ -52,8 +48,8 @@ class ParserConfigReader {
      */
     fun parse(conf: ImmutableConfig): ParserConfig {
         val parserConfig = ParserConfig()
-        val resourcePrefix = conf.get(CapabilityTypes.LEGACY_CONFIG_PROFILE, "")
-        val fileResource = conf.get(PARSE_PLUGINS_FILE, "parse-plugins.xml")
+        val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
+        val fileResource = conf[PARSE_PLUGINS_FILE, "parse-plugins.xml"]
         var document: Document? = null
         try {
             ResourceLoader.getResourceAsReader(fileResource, resourcePrefix).use { reader ->
@@ -92,7 +88,7 @@ class ParserConfigReader {
             // OR if they have a special order="" attribute, then hold those in
             // a separate list, and then insert them into the final list at the
             // order specified
-            if (parserNodes != null && parserNodes.length > 0) {
+            if (parserNodes.length > 0) {
                 val parserClasses = mutableListOf<String>()
                 for (j in 0 until parserNodes.length) {
                     val parserNode = parserNodes.item(j) as Element
@@ -118,7 +114,7 @@ class ParserConfigReader {
     private fun getAliases(parsePluginsRoot: Element): Map<String, String> {
         val aliases: MutableMap<String, String> = HashMap()
         val aliasRoot = parsePluginsRoot.getElementsByTagName("aliases")
-        if (aliasRoot == null || aliasRoot.length == 0) {
+        if (aliasRoot.length == 0) {
             if (LOG.isWarnEnabled) {
                 LOG.warn("No aliases defined in parse-plugins.xml!")
             }
@@ -131,14 +127,12 @@ class ParserConfigReader {
         }
         val aliasRootElem = aliasRoot.item(0) as Element
         val aliasElements = aliasRootElem.getElementsByTagName("alias")
-        if (aliasElements != null && aliasElements.length > 0) {
+        if (aliasElements.length > 0) {
             for (i in 0 until aliasElements.length) {
                 val aliasElem = aliasElements.item(i) as Element
                 val name = aliasElem.getAttribute("name")
                 val clazz = aliasElem.getAttribute("class")
-                if (name != null && clazz != null) {
-                    aliases[name] = clazz
-                }
+                aliases[name] = clazz
             }
         }
 

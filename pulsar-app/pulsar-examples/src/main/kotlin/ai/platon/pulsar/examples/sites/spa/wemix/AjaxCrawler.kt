@@ -19,7 +19,7 @@ private class AjaxFetchHandler(
     private val logger = getLogger(this)
 
     override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
-        val session = driver.newSession()
+        val session = driver.newJsoupSession()
 
         val u = "https://scopi.wemixnetwork.com/api/v1/chain/1003/account/0xcb7615cb4322cddc518f670b4da042dbefc69500/tx"
         IntRange(1, 100).forEach { i ->

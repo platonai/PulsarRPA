@@ -16,7 +16,7 @@ class AppSystemInfo {
     companion object {
         private val logger = getLogger(this)
         
-        private var prevCPUTicks = LongArray(CentralProcessor.TickType.values().size)
+        private var prevCPUTicks = LongArray(CentralProcessor.TickType.entries.size)
         
         private var isOSHIChecked = false
         private var isOSHIAvailable = false

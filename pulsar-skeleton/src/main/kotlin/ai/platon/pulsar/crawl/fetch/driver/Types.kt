@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourcePageResult
 import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue

@@ -63,7 +63,7 @@ class LoadComponent(
             GWebPage.Field.CONTENT
         )
 
-        var PAGE_FIELDS = GWebPage.Field.values().toSet() - LAZY_PAGE_FIELDS
+        var PAGE_FIELDS = GWebPage.Field.entries.toSet() - LAZY_PAGE_FIELDS
 
         // Specify page fields to accelerate page loading
 //        val PAGE_FIELDS = mutableListOf<GWebPage.Field>()

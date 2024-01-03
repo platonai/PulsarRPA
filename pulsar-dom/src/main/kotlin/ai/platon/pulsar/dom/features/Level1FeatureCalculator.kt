@@ -24,7 +24,7 @@ class Level1FeatureCalculator: AbstractFeatureCalculator() {
         init {
             ResourceLoader.addClassFactory(ClassFactory())
             if (FeatureRegistry.registeredFeatures.isEmpty()) {
-                FeatureRegistry.register(F.values().map { it.toFeature() })
+                FeatureRegistry.register(F.entries.map { it.toFeature() })
                 require(FeatureRegistry.registeredFeatures.size == N)
             }
         }
@@ -131,7 +131,7 @@ private class Level1NodeFeatureCalculatorVisitor: NodeVisitor {
         }
     }
 
-    // hit when all of the node's children (if any) have been visited
+    // hit when all the node's children (if any) have been visited
     override fun tail(node: Node, depth: Int) {
         if (node !is Element && node !is TextNode) {
             return

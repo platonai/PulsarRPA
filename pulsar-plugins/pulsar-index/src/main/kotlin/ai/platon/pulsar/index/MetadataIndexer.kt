@@ -18,21 +18,12 @@
  */
 package ai.platon.pulsar.index
 
-import ai.platon.pulsar.crawl.common.URLUtil.getDomainName
-import ai.platon.pulsar.crawl.index.IndexingFilter
 import ai.platon.pulsar.common.config.ImmutableConfig
-import kotlin.Throws
-import ai.platon.pulsar.crawl.index.IndexingException
 import ai.platon.pulsar.crawl.index.IndexDocument
+import ai.platon.pulsar.crawl.index.IndexingException
+import ai.platon.pulsar.crawl.index.IndexingFilter
 import ai.platon.pulsar.persist.WebPage
-import java.net.MalformedURLException
-import ai.platon.pulsar.common.DateTimes.isoInstantFormat
-import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.persist.WebPageExt
-import java.net.URL
-import java.time.Instant
 import java.util.*
-import java.util.function.Consumer
 
 /**
  * Indexer which can be configured to extract metadata from the crawldb, parse
@@ -43,104 +34,12 @@ import java.util.function.Consumer
 class MetadataIndexer(
     override var conf: ImmutableConfig
 ) : IndexingFilter {
-
+    
     override fun setup(conf: ImmutableConfig) {
-        this.conf = conf
-        conf.getStringCollection(PARSE_CONF_PROPERTY).forEach(Consumer { metatag: String ->
-            val key = PARSE_META_PREFIX + metatag.toLowerCase(Locale.ROOT)
-            val value = INDEX_PREFIX + metatag
-            parseFieldnames[key] = value
-        })
     }
-
-    override fun getParams(): Params {
-        return Params()
-    }
-
+    
     @Throws(IndexingException::class)
     override fun filter(doc: IndexDocument, url: String, page: WebPage): IndexDocument? {
-        try {
-            addTime(doc, url, page)
-            addHost(doc, url, page)
-
-            // MultiMetadata-index does not meet all our requirement
-            addGeneralMetadata(doc, url, page)
-            addPageMetadata(doc, url, page)
-        } catch (e: IndexingException) {
-            IndexingFilter.LOG.error(e.toString())
-        }
         return doc
-    }
-
-    @Throws(IndexingException::class)
-    private fun addHost(doc: IndexDocument, url0: String, page: WebPage) {
-        val url: String = url0
-        if (url.isEmpty()) {
-            return
-        }
-
-        try {
-            val u = URL(url)
-            val domain = getDomainName(u)
-            doc.add("url", url)
-            doc.add("domain", domain)
-            doc.addIfNotNull("host", u.host)
-        } catch (e: MalformedURLException) {
-            throw IndexingException(e)
-        }
-    }
-
-    private fun addTime(doc: IndexDocument, url: String, page: WebPage) {
-        val pageExt = WebPageExt(page)
-        val now = Instant.now()
-        val crawlTimeStr = isoInstantFormat(now)
-        val firstFetchTime = pageExt.firstFetchTime ?: now
-        val fetchTimeHistory = page.getFetchTimeHistory(crawlTimeStr)
-        doc.add("first_crawl_time", isoInstantFormat(firstFetchTime))
-        doc.add("last_crawl_time", crawlTimeStr)
-        doc.add("fetch_time_history", fetchTimeHistory)
-        val indexTimeStr = isoInstantFormat(now)
-        val firstIndexTime = pageExt.getFirstIndexTime(now)
-        val indexTimeHistory = pageExt.getIndexTimeHistory(indexTimeStr)
-        doc.add("first_index_time", isoInstantFormat(firstIndexTime))
-        doc.add("last_index_time", indexTimeStr)
-        doc.add("index_time_history", indexTimeHistory)
-    }
-
-    @Throws(IndexingException::class)
-    private fun addGeneralMetadata(doc: IndexDocument, url: String, page: WebPage) {
-        val contentType = page.contentType
-        if (!contentType.contains("html")) {
-            IndexingFilter.LOG.warn("Content type $contentType is not fully supported")
-        }
-
-        doc.add("content_type", contentType)
-    }
-
-    private fun addPageMetadata(doc: IndexDocument?, url: String, page: WebPage): IndexDocument? {
-        if (doc == null || parseFieldnames.isEmpty()) {
-            return doc
-        }
-
-        for (metatag in parseFieldnames.entries) {
-            var k = metatag.value
-            var metadata = page.metadata[metatag.key]
-            if (metadata != null) {
-                k = k.trim { it <= ' ' }
-                metadata = metadata.trim { it <= ' ' }
-                if (k.isNotEmpty() && metadata.isNotEmpty()) {
-                    metadata.split("\t".toRegex()).forEach { doc.addIfAbsent(k, it) }
-                }
-            }
-        }
-
-        return doc
-    }
-
-    companion object {
-        private const val PARSE_CONF_PROPERTY = "index.metadata"
-        private const val INDEX_PREFIX = "meta_"
-        private const val PARSE_META_PREFIX = "meta_"
-        private val parseFieldnames: MutableMap<String, String> = TreeMap()
     }
 }

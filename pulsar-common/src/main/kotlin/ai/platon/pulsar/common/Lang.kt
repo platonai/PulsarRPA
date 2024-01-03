@@ -75,26 +75,26 @@ enum class Priority13(val value: Int) {
 
     companion object {
         fun valueOfOrNull(name: String): Priority13? {
-            return values().firstOrNull { it.name == name }
+            return entries.firstOrNull { it.name == name }
         }
 
         @Throws(IllegalArgumentException::class)
         fun valueOf(value: Int): Priority13 {
-            return values().firstOrNull { it.value == value }
+            return entries.firstOrNull { it.value == value }
                 ?: throw IllegalArgumentException("Illegal priority value $value, " +
-                        "must be one of ${values().map { it.value }}")
+                        "must be one of ${entries.map { it.value }}")
         }
 
         fun valueOfOrNull(value: Int): Priority13? {
-            return values().firstOrNull { it.value == value }
+            return entries.firstOrNull { it.value == value }
         }
 
         fun lowerPriority(value: Int): Priority13 {
-            return values().sortedBy { it.value }.firstOrNull { it.value >= value } ?: LOWEST
+            return entries.sortedBy { it.value }.firstOrNull { it.value >= value } ?: LOWEST
         }
 
         fun upperPriority(value: Int): Priority13 {
-            return values().sortedBy { it.value }.lastOrNull { it.value <= value } ?: HIGHEST
+            return entries.sortedBy { it.value }.lastOrNull { it.value <= value } ?: HIGHEST
         }
     }
 }

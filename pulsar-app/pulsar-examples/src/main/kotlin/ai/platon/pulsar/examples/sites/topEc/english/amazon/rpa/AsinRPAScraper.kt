@@ -21,13 +21,7 @@ class AsinRPAScraper {
 
     private val asinSQLTemplate = SQLTemplate.load("amazon/x-asin.sql")
 
-    private val districtZipCodes = mapOf(
-        "amazon.co.uk" to "S99 3AD"
-    )
-    private val districtTexts = mapOf(
-        "amazon.co.uk" to "Sheffield S99 3"
-    )
-    private val asinLoadArgs = "-i 5s -parse -requireSize 800000"
+    private val asinLoadArgs = "-parse -requireSize 800000 -refresh"
     private val districtSelector = "#glow-ingress-block, .nav-global-location-slot"
     private val sellerListCandidateSelectors = listOf(
         "#olpLinkWidget_feature_div a",
@@ -42,8 +36,8 @@ class AsinRPAScraper {
      * After clicking `New seller` button, the seller url will be displayed.
      * */
     fun crawl() {
-        val url = "https://www.amazon.co.uk/dp/B012D87WZ2"
-        val domain = "amazon.co.uk"
+        val url = "https://www.amazon.com/dp/B09V3KXJPB"
+        val domain = "amazon.com"
         val link = createASINHyperlink(domain, url)
         session.load(link)
     }
@@ -53,13 +47,9 @@ class AsinRPAScraper {
         val be = hyperlink.event.browseEvent
 
         be.onWillComputeFeature.addLast { page, driver ->
-            val district = driver.firstText(districtSelector) ?: ""
-            val expectedDistrict = districtTexts[domain] ?: "not-a-district"
-            if (district.contains(expectedDistrict)) {
-                clickAndCollectSellerLinks(page, driver)
-            } else {
-                logger.warn("District is not expected {} but actually {}", expectedDistrict, district)
-            }
+            val district = driver.firstText(districtSelector)
+            logger.info("District: {}", district)
+            null
         }
 
         val le = hyperlink.event.loadEvent
@@ -120,7 +110,7 @@ class AsinRPAScraper {
         val sql = asinSQLTemplate.createSQL(asinUrl)
         val rs = context.executeQuery(sql)
 
-        val formatter = ResultSetFormatter(rs, asList = true, textOnly = true, maxColumnLength = 120)
+        val formatter = ResultSetFormatter(rs, asList = true, maxColumnLength = 120)
         println(formatter.toString())
 
         val sellerUrls = document.selectHyperlinks(sellerOptionSelector).distinct()
@@ -134,5 +124,5 @@ fun main() {
     val crawler = AsinRPAScraper()
     crawler.crawl()
 
-    readLine()
+    readlnOrNull()
 }

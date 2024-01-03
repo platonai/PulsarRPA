@@ -3,7 +3,9 @@
  *
  * DO NOT EDIT DIRECTLY
  */
-package ai.platon.pulsar.persist.gora.generated;  
+package ai.platon.pulsar.persist.gora.generated;
+
+import org.apache.gora.persistency.Persistent;
 
 public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GHypeLink\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"url\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"order\",\"type\":\"int\",\"default\":0}]}");
@@ -62,6 +64,11 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
    */
   public int getFieldsCount() {
     return GHypeLink._ALL_FIELDS.length;
+  }
+
+  @Override
+  public Persistent clone() {
+    return null;
   }
 
   private java.lang.CharSequence url;

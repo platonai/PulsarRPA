@@ -1117,14 +1117,6 @@ class MutableWebPage: ImmutableWebPage() {
         private val SEQUENCER = AtomicInteger()
         val NIL = newInternalPage(AppConstants.NIL_PAGE_URL, 0, "nil", "nil")
 
-        @Deprecated(
-            """Use WebPageEx.newTestWebPage instead
-      """
-        )
-        fun newTestWebPage(url: String): MutableWebPage {
-            return newWebPage(url, VolatileConfig(), null)
-        }
-
         @JvmOverloads
         fun newWebPage(url: String, conf: VolatileConfig, href: String? = null): MutableWebPage {
             return newWebPageInternal(url, conf, href)

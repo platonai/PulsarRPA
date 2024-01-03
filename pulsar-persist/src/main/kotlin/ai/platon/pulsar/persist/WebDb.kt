@@ -1,10 +1,8 @@
 package ai.platon.pulsar.persist
 
-import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrNull
@@ -20,7 +18,6 @@ import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.jvm.Throws
 
 class WebDb(
     val conf: ImmutableConfig,
@@ -203,7 +200,7 @@ class WebDb(
     @JvmOverloads
     @Throws(WebDBException::class)
     fun delete(originalUrl: String, norm: Boolean = false): Boolean {
-        val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
+        val (_, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
         if (key.isBlank()) {
             return false
         }
@@ -241,6 +238,7 @@ class WebDb(
     @Throws(WebDBException::class)
     fun scan(urlBase: String): Iterator<WebPage> {
         val query = dataStore.newQuery()
+        // TODO: key range does not working in MongoStore
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
 
         val result = dataStore.execute(query)
@@ -267,7 +265,7 @@ class WebDb(
     @Throws(WebDBException::class)
     fun scan(urlBase: String, fields: Array<String>): Iterator<WebPage> {
         val query = dataStore.newQuery()
-        // TODO: key range not working for MongoDB
+        // TODO: key range does not working in MongoStore
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
@@ -286,7 +284,7 @@ class WebDb(
         val query = dataStore.newQuery()
 
         query.filter = filter
-        // TODO: key range is not working for MongoDB
+        // TODO: key range does not working in MongoStore
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
@@ -313,7 +311,7 @@ class WebDb(
             endKey = endKey.replace("\\\\uFFFF".toRegex(), UNICODE_LAST_CODE_POINT.toString())
         }
 
-        // TODO: key range is not working for MongoDB
+        // TODO: key range does not working in MongoStore
         goraQuery.startKey = startKey
         goraQuery.endKey = endKey
         val batchId = query.batchId
@@ -369,7 +367,7 @@ class WebDb(
      */
     @Throws(WebDBException::class)
     private fun getOrNull0(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): GWebPage? {
-        val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
+        val (_, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
 
         tracer?.trace("Getting $key")
 

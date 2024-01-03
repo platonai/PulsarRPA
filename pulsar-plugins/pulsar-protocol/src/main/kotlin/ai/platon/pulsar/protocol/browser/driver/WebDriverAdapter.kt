@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.geometric.RectD
+import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -39,12 +39,6 @@ class WebDriverAdapter(
     override val supportJavascript get() = driver.supportJavascript
 
     override val isMockedPageSource get() = driver.isMockedPageSource
-
-    /**
-     * The id of the session to the browser
-     * */
-    @Deprecated("Not used any more")
-    override val sessionId get() = driverOrNull?.sessionId
 
     @Throws(WebDriverException::class)
     override suspend fun addInitScript(script: String) = driverOrNull?.addInitScript(script) ?: Unit
@@ -224,13 +218,6 @@ class WebDriverAdapter(
 
     @Throws(WebDriverException::class)
     override fun awaitTermination() = driverOrNull?.awaitTermination() ?: Unit
-
-    /**
-     * Quits this driver, close every associated window
-     * */
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("close()"))
-    @Throws(Exception::class)
-    override fun quit() = driverOrNull?.quit() ?: Unit
 
     @Throws(Exception::class)
     override fun close() = driverOrNull?.close() ?: Unit

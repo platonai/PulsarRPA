@@ -23,22 +23,20 @@ import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor
 import ai.platon.pulsar.boilerpipe.sax.SAXInput
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.crawl.parse.AbstractParseFilter
 import ai.platon.pulsar.crawl.parse.FilterResult
-import ai.platon.pulsar.crawl.parse.ParseFilter
-import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.metadata.PageCategory
-import org.apache.commons.logging.LogFactory
 
 /**
  * Parse html document into fields
  */
 class BoilerpipeExtractor(val conf: ImmutableConfig) : AbstractParseFilter() {
-    private val log = LogFactory.getLog(BoilerpipeExtractor::class.java.name)
+    private val log = getLogger(BoilerpipeExtractor::class)
 
     private val primerParser = PrimerParser(conf)
 

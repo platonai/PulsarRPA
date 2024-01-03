@@ -6,9 +6,19 @@ import ai.platon.pulsar.dom.features.NodeFeature.Companion.incKey
 const val FEATURE_VERSION: Int = 10001
 
 /**
- * The level 1 features definition
+ * The level 1 features definition.
  * */
-enum class F(val key: Int, val alias: String = "", val isPrimary: Boolean = true, val isFloat: Boolean = false) {
+enum class F(
+    val key: Int,
+    val alias: String = "",
+    val isPrimary: Boolean = true,
+    /**
+     * Precision is the number of digits in a number.
+     * Scale is the number of digits to the right of the decimal point in a number.
+     * For example, the number 123.45 has a precision of 5 and a scale of 2.
+     * */
+    val scale: Int = 0,
+) {
     TOP(incKey, "top"),
     LEFT(incKey, "left"),
     WIDTH(incKey, "width"),
@@ -21,10 +31,12 @@ enum class F(val key: Int, val alias: String = "", val isPrimary: Boolean = true
     C(incKey, "child"),
     DEP(incKey, "dep"),
     SEQ(incKey, "seq"),
-    DNS(incKey, "txt_dns", isFloat = true);
-
+    DNS(incKey, "txt_dns", scale = 4);
+    
+    val isFloat: Boolean get() = scale > 0
+    
     fun toFeature(): NodeFeature {
-        return NodeFeature(key, alias, isPrimary, isFloat)
+        return NodeFeature(key, alias, isPrimary, scale)
     }
 }
 
@@ -49,4 +61,4 @@ enum class F(val key: Int, val alias: String = "", val isPrimary: Boolean = true
 @JvmField val DNS = F.DNS.key       //
 
 // the number of features
-@JvmField val N = F.values().size
+@JvmField val N = F.entries.size

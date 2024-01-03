@@ -9,12 +9,13 @@
 	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
 	OF ANY KIND, either express or implied. See the License for the specific
 	language governing permissions and limitations under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.10.23-SNAPSHOT</version>
+        <version>1.12.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-persist</artifactId>
@@ -23,11 +24,88 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>junit:*</exclude>
+                                    <exclude>jmock:*</exclude>
+                                    <exclude>*:xml-apis</exclude>
+                                    <exclude>org.apache.maven:lib:tests</exclude>
+                                    <exclude>org.slf4j:*</exclude>
+                                    <exclude>log4j:log4j:jar:</exclude>
+                                    <exclude>org.jetbrains:*</exclude>
+                                    <exclude>org.springframework:*</exclude>
+                                </excludes>
+                                <includes>
+                                    <include>com.mongodb:*</include>
+                                    <include>org.mongodb:*</include>
+                                    <include>org.bson:*</include>
+                                    <include>org.jdom:*</include>
+                                    <include>org.apache.avro:*</include>
+                                    <include>org.apache.gora:*</include>
+                                    <include>org.apache.hadoop:*</include>
+                                    <include>org.codehaus.jackson:*</include>
+                                </includes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/license/**</exclude>
+                                        <exclude>META-INF/*</exclude>
+                                        <exclude>META-INF/maven/**</exclude>
+                                        <exclude>LICENSE</exclude>
+                                        <exclude>NOTICE</exclude>
+                                        <exclude>/*.txt</exclude>
+                                        <exclude>build.properties</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>ai/platon/pulsar/persist/gora/CompileAvroKt</mainClass>
+                                </transformer>
+                            </transformers>
+                            <relocations>
+<!--                                <relocation>-->
+<!--                                    <pattern>org.codehaus.plexus.util</pattern>-->
+<!--                                    <shadedPattern>org.shaded.plexus.util</shadedPattern>-->
+<!--                                    <excludes>-->
+<!--                                        <exclude>org.codehaus.plexus.util.xml.Xpp3Dom</exclude>-->
+<!--                                        <exclude>org.codehaus.plexus.util.xml.pull.*</exclude>-->
+<!--                                    </excludes>-->
+<!--                                </relocation>-->
+                                <relocation>
+                                    <pattern>org.mongodb</pattern>
+                                    <shadedPattern>org.shaded.mongodb</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.mongodb</pattern>
+                                    <shadedPattern>com.shaded.mongodb</shadedPattern>
+                                </relocation>
+                                <!-- TODO: check if bson should be always be compatible with avro -->
+                                <relocation>
+                                    <pattern>org.bson</pattern>
+                                    <shadedPattern>org.shaded.bson</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.jdom</pattern>
+                                    <shadedPattern>org.shaded.jdom</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -38,25 +116,46 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>gora-shaded-mongodb</artifactId>
-            <version>0.8</version>
-        </dependency>
+        <!-- TODO: try to remove this dependency -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
+        <!-- shaded -->
         <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-            <version>1.8.1</version>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>${mongo.driver.version}</version>
             <exclusions>
-                <!-- tika-parsers-1.25 requires commons-compress-1.20 -->
                 <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-compress</artifactId>
+                    <groupId>log4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gora</groupId>
+            <artifactId>gora-mongodb</artifactId>
+            <version>${gora.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -79,6 +178,38 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro.version}</version>
+            <exclusions>
+                <!-- tika-parsers-1.25 requires commons-compress-1.20 -->
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Required by gora -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hadoop.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Required by hadoop -->
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-compiler</artifactId>
@@ -95,10 +226,7 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-        </dependency>
+        <!-- Web graph computing -->
         <dependency>
             <groupId>org.jgrapht</groupId>
             <artifactId>jgrapht-core</artifactId>
@@ -108,33 +236,9 @@
             <artifactId>jgrapht-ext</artifactId>
         </dependency>
 
-        <!-- Perl5Pattern, text process -->
-        <dependency>
-            <groupId>oro</groupId>
-            <artifactId>oro</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-        </dependency>
-
-        <!-- Persistent -->
-        <!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
-        <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>2.3.1</version>
-        </dependency>
-
-        <!-- Configuration is required by gora, and commons-collections is required -->
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
         </dependency>
 
         <dependency>
@@ -151,13 +255,63 @@
             <artifactId>jackson-module-kotlin</artifactId>
         </dependency>
 
+
+        <!-- TODO: check if we can remove this dependency, and choose a best version -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+
+        <!-- Perl5Pattern, text process, required by ProtocolHeaders, TODO: try to remove this dependency -->
+        <dependency>
+            <groupId>oro</groupId>
+            <artifactId>oro</artifactId>
+        </dependency>
+
+        <!-- Persistent, TODO: check if we can remove this dependency -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>${jaxb-api.version}</version>
+        </dependency>
+
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
+
+    <properties>
+        <!--  Gora Serialization  -->
+        <!--
+            Gora 0.8 supports:
+            Apache Avro 1.8.1
+            Apache Hadoop 2.5.2
+            Apache HBase 1.2.3
+            Apache Spark 1.4.1
+
+            Gora 0.9 supports:
+            Apache Avro 1.8.2
+            Apache Hadoop 2.5.2
+            Apache HBase 2.1.1
+            Apache Spark 2.2.1
+
+            See more at: http://gora.apache.org/
+          -->
+        <gora.version>0.9</gora.version>
+        <!-- Required by gora-0.8 -->
+        <avro.version>1.8.2</avro.version>
+        <!-- gora-0.9 use 2.5.2 by default, but 2.7.2 is a correct version -->
+        <hadoop.version>2.7.2</hadoop.version>
+
+        <!-- gora-0.9 use mongo-java-driver:3.5.0 by default -->
+        <!--  <mongo.driver.version>3.5.0</mongo.driver.version>-->
+        <mongo.driver.version>3.12.8</mongo.driver.version>
+
+        <jaxb-api.version>2.3.1</jaxb-api.version>
+    </properties>
 
 </project>

@@ -12,8 +12,8 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.annotations.Beta
 import org.slf4j.LoggerFactory
@@ -23,12 +23,11 @@ open class BrowserPrivacyContext(
     val driverPoolManager: WebDriverPoolManager,
     val coreMetrics: CoreMetrics? = null,
     conf: ImmutableConfig,
-    // @Deprecated("Inappropriate name", ReplaceWith("privacyAgent"))
-    id: PrivacyContextId
-): PrivacyContext(id, conf) {
+    privacyAgent: PrivacyAgent
+): PrivacyContext(privacyAgent, conf) {
     private val logger = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
     private var proxyEntry: ProxyEntry? = null
-    private val browserId = BrowserId(id.contextDir, id.fingerprint)
+    private val browserId = BrowserId(privacyAgent.contextDir, privacyAgent.fingerprint)
     private val driverContext = WebDriverContext(browserId, driverPoolManager, conf)
     private var proxyContext: ProxyContext? = null
     /**

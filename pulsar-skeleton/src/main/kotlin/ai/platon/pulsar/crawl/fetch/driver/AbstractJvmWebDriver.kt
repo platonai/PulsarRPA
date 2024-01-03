@@ -1,13 +1,15 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.geometric.RectD
+import ai.platon.pulsar.common.math.geometric.RectD
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.plus
 import java.time.Duration
+import java.util.*
+import java.util.concurrent.CompletableFuture
 
 abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     private val interopScope = CoroutineScope(Dispatchers.Default) + CoroutineName("interop")
@@ -19,8 +21,8 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     override fun setTimeoutsAsync(browserSettings: BrowserSettings) = interopScope.future { setTimeouts(browserSettings) }
     override fun currentUrlAsync() = interopScope.future { currentUrl() }
     override fun pageSourceAsync() = interopScope.future { pageSource() }
-    override fun mainRequestHeadersAsync() = interopScope.future { mainRequestHeaders() }
-    override fun mainRequestCookiesAsync() = interopScope.future { mainRequestCookies() }
+    override fun mainRequestHeadersAsync() = interopScope.future { mainRequestHeaders }
+    override fun mainRequestCookiesAsync() = interopScope.future { mainRequestCookies }
     override fun getCookiesAsync() = interopScope.future { getCookies() }
     override fun bringToFrontAsync() = interopScope.future { bringToFront() }
     override fun waitForSelectorAsync(selector: String) = interopScope.future { waitForSelector(selector) }
@@ -36,7 +38,7 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     override fun isCheckedAsync(selector: String) = interopScope.future { isChecked(selector) }
     override fun typeAsync(selector: String, text: String) = interopScope.future { type(selector, text) }
     override fun clickAsync(selector: String, count: Int) = interopScope.future { click(selector, count) }
-    override fun clickMatchesAsync(selector: String, pattern: String, count: Int) = interopScope.future { clickMatches(selector, pattern, count) }
+    override fun clickMatchesAsync(selector: String, pattern: String, count: Int) = interopScope.future { clickTextMatches(selector, pattern, count) }
     override fun clickMatchesAsync(selector: String, attrName: String, pattern: String, count: Int) =
         interopScope.future { clickMatches(selector, attrName, pattern, count) }
     override fun clickNthAnchorAsync(n: Int, rootSelector: String) = interopScope.future { clickNthAnchor(n, rootSelector) }
@@ -55,18 +57,33 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     override fun moveMouseToAsync(x: Double, y: Double) = interopScope.future { moveMouseTo(x, y) }
     override fun dragAndDropAsync(selector: String, deltaX: Int, deltaY: Int) =
         interopScope.future { dragAndDrop(selector, deltaX, deltaY) }
+    
     override fun outerHTMLAsync(selector: String) = interopScope.future { outerHTML(selector) }
-    override fun firstTextAsync(selector: String) = interopScope.future { firstText(selector) }
-    override fun allTextsAsync(selector: String) = interopScope.future { allTexts(selector) }
+    override fun firstTextAsync(selector: String) = interopScope.future { selectFirstTextOrNull(selector) }
+    override fun allTextsAsync(selector: String) = interopScope.future { selectTexts(selector) }
+    override fun selectFirstTextOrNullAsync(selector: String): CompletableFuture<String?> =
+        interopScope.future { selectFirstTextOrNull(selector) }
+    override fun selectFirstTextOptionalAsync(selector: String): CompletableFuture<Optional<String>> =
+        interopScope.future { Optional.ofNullable(selectFirstTextOrNull(selector)) }
+    override fun selectTextsAsync(selector: String): CompletableFuture<List<String>> =
+        interopScope.future { allTexts(selector) }
+    
     override fun firstAttrAsync(selector: String, attrName: String) = interopScope.future { firstAttr(selector, attrName) }
     override fun allAttrsAsync(selector: String, attrName: String) = interopScope.future { allAttrs(selector, attrName) }
+    override fun selectFirstAttributeOrNullAsync(selector: String, attrName: String): CompletableFuture<String?> =
+        interopScope.future { selectFirstAttributeOrNull(selector, attrName) }
+    override fun selectFirstAttributeOptionalAsync(selector: String, attrName: String): CompletableFuture<Optional<String>> =
+        interopScope.future { Optional.ofNullable(selectFirstAttributeOrNull(selector, attrName)) }
+    override fun selectAttributesAsync(selector: String, attrName: String): CompletableFuture<List<String>> =
+        interopScope.future { selectAttributes(selector, attrName) }
+    
     override fun evaluateAsync(expression: String) = interopScope.future { evaluate(expression) }
     override fun evaluateSilentlyAsync(expression: String) = interopScope.future { evaluateSilently(expression) }
     override fun captureScreenshotAsync(selector: String) = interopScope.future { captureScreenshot(selector) }
     override fun captureScreenshotAsync(rect: RectD) = interopScope.future { captureScreenshot(rect) }
     override fun clickablePointAsync(selector: String) = interopScope.future { clickablePoint(selector) }
     override fun boundingBoxAsync(selector: String) = interopScope.future { boundingBox(selector) }
-    override fun newSessionAsync() = interopScope.future { newSession() }
+    override fun newJsoupSessionAsync() = interopScope.future { newJsoupSession() }
     override fun loadResourceAsync(url: String) = interopScope.future { loadResource(url) }
     override fun pauseAsync() = interopScope.future { pause() }
     override fun stopAsync() = interopScope.future { stop() }

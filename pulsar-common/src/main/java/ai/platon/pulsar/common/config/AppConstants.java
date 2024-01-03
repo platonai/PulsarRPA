@@ -47,12 +47,12 @@ public interface AppConstants {
 
     /**
      * The first unicode character
-     * @link {https://en.wikipedia.org/wiki/UTF-8}
+     * @link <a href="https://en.wikipedia.org/wiki/UTF-8">...</a>
      * */
     Character UNICODE_FIRST_CODE_POINT = '\u0001';
     /**
      * The last unicode character
-     * @link {https://en.wikipedia.org/wiki/UTF-8}
+     * @link <a href="https://en.wikipedia.org/wiki/UTF-8">...</a>
      * */
     Character UNICODE_LAST_CODE_POINT = '\uFFFF';
 
@@ -123,7 +123,11 @@ public interface AppConstants {
     String MONGO_STORE_CLASS = "org.apache.gora.mongodb.store.MongoStore";
     String HBASE_STORE_CLASS = "org.apache.gora.hbase.store.HBaseStore";
     // schema version 1.10.x
-    String WEBPAGE_SCHEMA = "webpage110";
+//    String WEBPAGE_SCHEMA = "webpage110";
+    /**
+     * Schema version 1.12.x, has to be compatible with webpage110
+     * */
+    String WEBPAGE_SCHEMA = "webpage120";
 
     /**
      * Fetch
@@ -204,12 +208,18 @@ public interface AppConstants {
     String PULSAR_META_INFORMATION_SELECTOR = "#" + PULSAR_META_INFORMATION_ID;
     String PULSAR_SCRIPT_SECTION_ID = "PulsarScriptSection";
     String PULSAR_SCRIPT_SECTION_SELECTOR = "#" + PULSAR_SCRIPT_SECTION_ID;
+    String PULSAR_DOCUMENT_NORMALIZED_URI = "normalizedURI";
     String PULSAR_ATTR_HIDDEN = "_h";
     String PULSAR_ATTR_OVERFLOW_HIDDEN = "_oh";
     String PULSAR_ATTR_OVERFLOW_VISIBLE = "_visible";
     String PULSAR_ATTR_ELEMENT_NODE_VI = "vi";
     String PULSAR_ATTR_TEXT_NODE_VI = "tv";
+    /**
+     * @deprecated Use PULSAR_ATTR_COMPUTED_STYLE instead
+     * */
+    @Deprecated
     String PULSAR_ATTR_ELEMENT_NODE_STYLE = "st";
+    String PULSAR_ATTR_COMPUTED_STYLE = "cs";
 
     /**
      * Other notable properties:

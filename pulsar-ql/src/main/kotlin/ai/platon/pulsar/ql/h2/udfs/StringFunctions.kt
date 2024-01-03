@@ -195,13 +195,6 @@ object StringFunctions {
     @JvmStatic
     fun firstFloat(str: String?, defaultValue: Float): Float = Strings.getFirstFloatNumber(str, defaultValue)
 
-    @UDFunction(description = "Get the first integer in the given string")
-    @JvmStatic
-    @Deprecated("Use firstInteger instead", replaceWith = ReplaceWith("firstInteger"))
-    fun getFirstInteger(str: String?, defaultValue: Int): Int {
-        return Strings.getFirstInteger(str, defaultValue)
-    }
-
     @UDFunction(description = "Get the first float number in the given string")
     @JvmStatic
     fun getFirstFloatNumber(str: String?, defaultValue: Float): Float {

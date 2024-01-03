@@ -20,6 +20,7 @@ import java.nio.channels.FileChannel
 import java.nio.file.*
 import java.time.Duration
 import java.util.regex.Pattern
+import kotlin.io.path.isDirectory
 
 /**
  * The chrome launcher
@@ -32,41 +33,49 @@ class ChromeLauncher(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
-
+        
         var DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
         var PID_FILE_NAME = "chrome.launcher.pid"
         var TEMPORARY_UDD_EXPIRY = Duration.ofHours(24)
 
         fun deleteTemporaryUserDataDirWithLock(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
-            val lock = AppPaths.BROWSER_TMP_DIR_LOCK
-            if (Files.exists(userDataDir)) {
-                FileChannel.open(lock, StandardOpenOption.APPEND).use {
-                    it.lock()
-                    deleteTemporaryUserDataDir(userDataDir, expiry)
+            synchronized(AppPaths.BROWSER_TMP_DIR_LOCK) {
+                val lock = AppPaths.BROWSER_TMP_DIR_LOCK
+                if (Files.exists(userDataDir)) {
+                    FileChannel.open(lock, StandardOpenOption.APPEND).use {
+                        it.lock()
+                        deleteTemporaryUserDataDir(userDataDir, expiry)
+                    }
                 }
             }
         }
 
         fun deleteTemporaryUserDataDir(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
-            val target = userDataDir
+            synchronized(AppPaths.BROWSER_TMP_DIR_LOCK) {
+                deleteTemporaryUserDataDir0(userDataDir, expiry)
+            }
+        }
+
+        private fun deleteTemporaryUserDataDir0(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
+            val dirToDelete = userDataDir
 
             // It's in the context tmp dir, delete the user data dir safely
-            val isTemporary = target.startsWith(AppPaths.CONTEXT_TMP_DIR)
-            val lastModifiedTime = Files.getLastModifiedTime(target).toInstant()
+            val isTemporary = dirToDelete.startsWith(AppPaths.CONTEXT_TMP_DIR)
+            val lastModifiedTime = Files.getLastModifiedTime(dirToDelete).toInstant()
             val isExpired = DateTimes.isExpired(lastModifiedTime, expiry)
             // Double check to ensure it's safe to delete the directory
-            val hasPidFile = Files.exists(target.resolveSibling(PID_FILE_NAME))
+            val hasPidSiblingFile = Files.exists(dirToDelete.resolveSibling(PID_FILE_NAME))
             // be careful, do not delete files by mistake, so delete files only inside AppPaths.CONTEXT_TMP_DIR
-            if (isTemporary && isExpired && hasPidFile) {
-                FileUtils.deleteQuietly(target.toFile())
+            if (isTemporary && isExpired && hasPidSiblingFile) {
+                FileUtils.deleteQuietly(dirToDelete.toFile())
                 // Make sure the last operation is finished
                 sleepSeconds(1)
-                if (Files.exists(target)) {
-                    logger.warn("Failed to delete browser cache, try again | {}", target)
-                    forceDeleteDirectory(target)
+                if (Files.exists(dirToDelete)) {
+                    logger.warn("Failed to delete browser cache, try again | {}", dirToDelete)
+                    forceDeleteDirectory(dirToDelete)
 
-                    if (Files.exists(target)) {
-                        logger.error("Could not delete browser cache | {}", target)
+                    if (Files.exists(dirToDelete)) {
+                        logger.error("Could not delete browser cache | {}", dirToDelete)
                     }
                 }
             }
@@ -148,6 +157,9 @@ class ChromeLauncher(
 
         kotlin.runCatching { cleanUp() }.onFailure {
             logger.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
+            if (it.message == null) {
+                logger.warn(it.stringify())
+            }
         }
     }
 
@@ -329,6 +341,9 @@ class ChromeLauncher(
 
     @Throws(IOException::class)
     private fun cleanUp() {
-        deleteTemporaryUserDataDirWithLock(userDataDir, temporaryUddExpiry)
+        val hasPidSiblingFile: (Path) -> Boolean = { path -> Files.exists(path.resolveSibling(PID_FILE_NAME)) }
+        Files.walk(AppPaths.CONTEXT_TMP_DIR).filter { it.isDirectory() && hasPidSiblingFile(it) }.forEach { path ->
+            deleteTemporaryUserDataDirWithLock(path, temporaryUddExpiry)
+        }
     }
 }

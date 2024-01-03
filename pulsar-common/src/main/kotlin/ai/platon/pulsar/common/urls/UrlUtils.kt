@@ -45,18 +45,6 @@ object UrlUtils {
      * @param  str   The string to test
      * @return true if the given str is a a standard URL, false otherwise
      * */
-    @Deprecated("Inappropriate name", ReplaceWith("UrlUtils.isStandard(str)"))
-    @JvmStatic
-    fun isValidUrl(str: String?): Boolean {
-        return getURLOrNull(str) != null
-    }
-
-    /**
-     * Test if the str is a standard URL.
-     *
-     * @param  str   The string to test
-     * @return true if the given str is a a standard URL, false otherwise
-     * */
     @JvmStatic
     fun isStandard(str: String?): Boolean {
         return getURLOrNull(str) != null
@@ -571,18 +559,5 @@ object UrlUtils {
     @JvmStatic
     fun unreverseHost(reversedHostName: String): String {
         return reverseHost(reversedHostName) // Reversible
-    }
-
-    /**
-     * Convert given Utf8 instance to String and cleans out any offending "�"
-     * from the String.
-     *
-     * @param utf8 Utf8 object
-     * @return string-ifed Utf8 object or null if Utf8 instance is null
-     * @deprecated purpose not clear
-     */
-    @JvmStatic
-    fun toString(utf8: CharSequence?): String? {
-        return if (utf8 == null) null else Strings.cleanField(utf8.toString())
     }
 }

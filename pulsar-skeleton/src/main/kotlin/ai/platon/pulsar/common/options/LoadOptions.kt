@@ -45,6 +45,7 @@ open class LoadOptions(
     val conf: VolatileConfig,
     var rawEvent: PageEvent? = null,
     var rawItemEvent: PageEvent? = null,
+    var referrer: String? = null,
 ) : CommonOptions(argv) {
 
     /**
@@ -91,24 +92,14 @@ open class LoadOptions(
      * The deadline to finish the task, if the deadline is exceeded, the task should be discarded
      * as soon as possible.
      *
-     * :::
-     *
-     * NOTICE:
-     * The arguments "-deadTime", "--dead-time" are deprecated, will be removed in the further.
-     *
-     * :::
-     *
      * */
     @ApiPublic
     @Parameter(
-        names = ["-deadline", "-deadTime", "--dead-time"], converter = InstantConverter::class,
+        names = ["-deadline", "--deadline"], converter = InstantConverter::class,
         description = "The deadline to finish the task, if the deadline is exceeded, " +
                 " the task should be discarded as soon as possible."
     )
     var deadline = DateTimes.doomsday
-
-    @Deprecated("Inappropriate name", ReplaceWith("deadline"))
-    val deadTime get() = deadline
 
     /**
      * The auth token, used for authorization purpose.
@@ -670,11 +661,6 @@ open class LoadOptions(
     val outLinkSelectorOrNull
         get() = outLinkSelector.takeIf { it.isNotBlank() }
 
-    /**
-     * The page referrer.
-     * */
-    var referrer: String? = null
-
     val event: PageEvent get() = enableEvent()
 
     val itemEvent: PageEvent get() = enableItemEvent()
@@ -714,7 +700,7 @@ open class LoadOptions(
      * The constructor.
      * */
     protected constructor(args: String, other: LoadOptions) :
-            this(split(args), other.conf, other.rawEvent, other.rawItemEvent)
+            this(split(args), other.conf, other.rawEvent, other.rawItemEvent, other.referrer)
 
     /**
      * Parse the arguments into [LoadOptions] with JCommander and with bug fixes.

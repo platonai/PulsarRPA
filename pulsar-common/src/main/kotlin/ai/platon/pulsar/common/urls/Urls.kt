@@ -101,12 +101,6 @@ interface UrlAware {
     val deadline: Instant
 
     /**
-     * The deadline, it should be a shortcut for `-deadline` option in load options
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("deadline"))
-    val deadTime: Instant get() = deadline
-
-    /**
      * Required website language
      * */
     val lang: String

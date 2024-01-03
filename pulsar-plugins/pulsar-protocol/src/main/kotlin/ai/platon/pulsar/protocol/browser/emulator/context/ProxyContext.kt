@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -39,7 +39,7 @@ open class ProxyContext(
 
         @Throws(ProxyException::class)
         fun create(
-            id: PrivacyContextId,
+            id: PrivacyAgent,
             driverContext: WebDriverContext,
             proxyPoolManager: ProxyPoolManager,
             conf: ImmutableConfig

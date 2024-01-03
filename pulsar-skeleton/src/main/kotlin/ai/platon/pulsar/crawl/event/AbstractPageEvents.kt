@@ -18,6 +18,7 @@ abstract class AbstractLoadEvent(
     override val onLoaded: WebPageEventHandler = WebPageEventHandler()
 ): LoadEvent {
 
+    
     override fun chain(other: LoadEvent): AbstractLoadEvent {
         onFilter.addLast(other.onFilter)
         onNormalize.addLast(other.onNormalize)

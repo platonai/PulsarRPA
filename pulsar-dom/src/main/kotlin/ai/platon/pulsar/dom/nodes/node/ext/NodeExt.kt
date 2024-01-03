@@ -5,8 +5,8 @@ import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.*
-import ai.platon.pulsar.common.geometric.str
-import ai.platon.pulsar.common.geometric.str2
+import ai.platon.pulsar.common.math.geometric.str
+import ai.platon.pulsar.common.math.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.set
 import ai.platon.pulsar.dom.features.FeatureEntry
@@ -15,6 +15,7 @@ import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.model.createLink
 import ai.platon.pulsar.dom.nodes.*
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.jsoup.nodes.*
@@ -90,7 +91,7 @@ class ExportPaths(val uri: String) {
     }
 }
 
-const val NILLocation: String = AppConstants.NIL_PAGE_URL
+const val NILLocation: String = NIL_PAGE_URL
 
 const val NILBaseUri: String = NILLocation
 
@@ -115,7 +116,17 @@ val Document.pulsarMetaElement get() = getElementById(PULSAR_META_INFORMATION_ID
 
 val Document.pulsarScriptElement get() = getElementById(PULSAR_SCRIPT_SECTION_ID)
 
-val Document.pulsarScript get() = ownerDocument.pulsarScriptElement?.text()
+val Document.pulsarScript get() = pulsarScriptElement?.text()
+
+val Document.normalizedURI: String? get() {
+    if (isNil) {
+        return NILBaseUri
+    }
+
+    // <link rel='normalizedURI' href='...' /> is added by JsoupParser
+    return head().selectFirstOrNull("link[rel=$PULSAR_DOCUMENT_NORMALIZED_URI]")?.attr("href")
+        ?: pulsarMetaElement?.attr(PULSAR_DOCUMENT_NORMALIZED_URI)
+}
 
 var Document.isInitialized by field { AtomicBoolean() }
 
@@ -230,6 +241,9 @@ fun Element.getStyle(styleKey: String): String {
 
 val Node.isNil get() = this === NILNode
 
+/**
+ * TODO: should not call ownerDocument.extension, which is a recursive call
+ * */
 val Node.ownerDocument get() = Objects.requireNonNull(extension.ownerDocumentNode) as Document
 
 /**
@@ -446,10 +460,10 @@ val Node?.cleanText: String
  * TextNodes' texts are calculated and stored while Elements' clean texts are calculated on the fly.
  * This is a balance of space and time.
  * */
-fun Node.joinToString(sparator: String = " ", prefix: String = "", suffix: String = ""): String {
+fun Node.joinToString(separator: String = " ", prefix: String = "", suffix: String = ""): String {
     val text = when (this) {
         is TextNode -> extension.immutableText.trim()
-        is Element -> accumulateText(this, sparator).trim()
+        is Element -> accumulateText(this, separator).trim()
         else -> ""
     }.trim()
 

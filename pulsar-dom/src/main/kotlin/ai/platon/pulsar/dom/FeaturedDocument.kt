@@ -85,10 +85,7 @@ open class FeaturedDocument(val document: Document) {
      * */
     val sequence = instanceSequencer.incrementAndGet()
 
-    /**
-     * Get document title.
-     * */
-    val title get() = document.title()
+    val normalizedURI get() = document.normalizedURI
 
     /**
      * Get the URL this Document was parsed from. If the starting URL is a redirect,
@@ -104,9 +101,11 @@ open class FeaturedDocument(val document: Document) {
      * @see #absUrl
      */
     val baseURI get() = document.baseUri()
-
-    @Deprecated("Inappropriate name", ReplaceWith("baseURI"))
-    val baseUri get() = document.baseUri()
+    
+    /**
+     * Get document title.
+     * */
+    val title get() = document.title()
 
     /**
      * Get this document's head element.
@@ -281,14 +280,8 @@ open class FeaturedDocument(val document: Document) {
      *
      * @return a real-valued vector with basic algebraic operations.
      */
-    var features: RealVector
+    val features: RealVector
         get() = document.extension.features
-        set(value) {
-            document.extension.features = value
-        }
-
-    @Deprecated("Fragment is no longer used")
-    val fragments by lazy { DocumentFragments(this) }
 
     /**
      * The constructor
@@ -328,14 +321,6 @@ open class FeaturedDocument(val document: Document) {
      * Check if this document is internal.
      */
     fun isNotInternal() = !isInternal()
-
-    /**
-     * Create a new Element, with this document's base uri. Does not make the new element a child of this document.
-     * @param tagName element tag name (e.g. {@code a})
-     *
-     * @return new element
-     */
-    fun createElement(tagName: String) = document.createElement(tagName)
 
     /**
      * Guess the document's title.
@@ -446,13 +431,14 @@ open class FeaturedDocument(val document: Document) {
      * */
     fun <T> selectFirstOptional(query: String, transformer: (Element) -> T) =
         Optional.ofNullable(document.selectFirstOrNull(query)?.let { transformer(it) })
-
-    @Deprecated("Inappropriate name", ReplaceWith("selectFirst(query)"))
-    fun first(query: String) = document.selectFirstOrNull(query)
-
-    @Deprecated("Inappropriate name", ReplaceWith("selectFirst(query, transformer)"))
-    fun <T> first(query: String, transformer: (Element) -> T) =
-        document.selectFirstOrNull(query)?.let { transformer(it) }
+    
+    /**
+     * Find text of elements that match the CSS query. Matched elements
+     * may include the document, or any of its children.
+     * */
+    @JvmOverloads
+    fun selectTexts(query: String, attrName: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
+        document.selectAttributes(query, attrName, offset, limit)
 
     /**
      * Find the text content of the first element that match the CSS query.
@@ -490,6 +476,14 @@ open class FeaturedDocument(val document: Document) {
      * Matched element may be the document, or any of its children.
      * */
     fun firstTextOptional(query: String) = selectFirstTextOptional(query)
+    
+    /**
+     * Find the attribute value of the first element that match the CSS query.
+     * Matched element may be the document, or any of its children.
+     * */
+    @JvmOverloads
+    fun selectAttributes(query: String, attrName: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
+        document.selectAttributes(query, attrName, offset, limit)
 
     /**
      * Find the attribute value of the first element that match the CSS query.
@@ -538,7 +532,7 @@ open class FeaturedDocument(val document: Document) {
     @JvmOverloads
     fun selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
         document.selectHyperlinks(query, offset, limit)
-
+    
     /**
      * Find anchor elements matching the CSS query.
      * */
@@ -659,7 +653,7 @@ open class FeaturedDocument(val document: Document) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) {
-            return true;
+            return true
         }
 
         return other is FeaturedDocument && location == other.location
@@ -668,28 +662,36 @@ open class FeaturedDocument(val document: Document) {
     override fun hashCode() = location.hashCode()
 
     override fun toString() = document.uniqueName
-
+    
     private fun initialize() {
         // Only one thread is allow to access the document
-        document.threadIds.add(Thread.currentThread().id)
+        // NIL document might be accessed by multiple threads
+        val threadId = Thread.currentThread().id
+        document.threadIds.add(threadId)
         if(document.threadIds.size != 1) {
             val threads = document.threadIds.joinToString()
             System.err.println("Warning: multiple threads ($threads) are process document | $location")
         }
 
         if (document.isInitialized.compareAndSet(false, true)) {
-            FeatureCalculatorFactory.calculator.calculate(document)
-            require(features.isNotEmpty)
-
-            document.unitArea = densityUnitArea
-            document.primaryGrid = primaryGridDimension
-            document.secondaryGrid = secondaryGridDimension
-            document.grid = document.primaryGrid
-
-            calculateInducedFeatures()
+            calculateFeatures()
         }
+
+        document.threadIds.remove(threadId)
     }
 
+    private fun calculateFeatures() {
+        FeatureCalculatorFactory.calculator.calculate(document)
+        require(features.isNotEmpty)
+        
+        document.unitArea = densityUnitArea
+        document.primaryGrid = primaryGridDimension
+        document.secondaryGrid = secondaryGridDimension
+        document.grid = document.primaryGrid
+        
+        calculateInducedFeatures()
+    }
+    
     /**
      * Calculate features depend on other features
      * */

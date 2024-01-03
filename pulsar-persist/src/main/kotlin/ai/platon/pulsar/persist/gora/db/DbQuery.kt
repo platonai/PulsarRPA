@@ -27,10 +27,7 @@ class DbQuery(
     var limit: Long = 100L,
     var fields: HashSet<String> = HashSet(),
     var filterIfMissing: Boolean = false,
-    var filterNullBatchId: Boolean = false,
-
-    @Deprecated("Not used any more")
-    var crawlId: String? = null,
+    var filterNullBatchId: Boolean = false
 ) {
     // private var batchId = Utf8(AppConstants.ALL_BATCHES)
 //    var urlFilter = "+."

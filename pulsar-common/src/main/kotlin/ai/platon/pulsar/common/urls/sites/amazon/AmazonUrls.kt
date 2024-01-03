@@ -49,42 +49,6 @@ object AmazonUrls {
 
         return null
     }
-
-    fun findAsinDeprecated(url: String, open: String = "/dp/", close: String = "/ref="): String? {
-        var open0 = open
-        var close0 = close
-
-        var asin: String? = url.substringAfterLast(open0, "")
-        if (asin != null && asin.isNotBlank() && asin.indexOf('/') == -1) {
-            return asin
-        }
-
-        asin = StringUtils.substringBetween(url, open0, close0)
-        if (asin != null) {
-            return asin
-        }
-
-        close0 = "?ref="
-        asin = StringUtils.substringBetween(url, open0, close0)
-        if (asin != null) {
-            return asin
-        }
-
-        open0 = URLEncoder.encode(open0, charset)
-        close0 = URLEncoder.encode("/ref=", charset)
-        asin = StringUtils.substringBetween(url, open0, close0)
-        if (asin != null) {
-            return asin
-        }
-
-        close0 = URLEncoder.encode("?ref=", charset)
-        asin = StringUtils.substringBetween(url, open0, close0)
-        if (asin != null) {
-            return asin
-        }
-
-        return asin
-    }
 }
 
 class AsinUrlNormalizer: AbstractUrlNormalizer() {

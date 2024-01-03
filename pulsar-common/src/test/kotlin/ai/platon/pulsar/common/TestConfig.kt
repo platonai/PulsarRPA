@@ -20,7 +20,7 @@ class TestConfig {
         conf = ImmutableConfig(profile = "default", loadDefaults = true)
         assertTrue("pulsar-task.xml" in conf.toString())
         assertEquals("test", conf["pulsar.config.id"])
-        assertEquals("amazon_tmp", conf["storage.crawl.id"])
+        assertEquals("pulsar_test_crawl_id", conf["storage.crawl.id"])
     }
 
     @Test

@@ -2,8 +2,8 @@ package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.geometric.PointD
-import ai.platon.pulsar.common.geometric.RectD
+import ai.platon.pulsar.common.math.geometric.PointD
+import ai.platon.pulsar.common.math.geometric.RectD
 import com.google.common.annotations.Beta
 import org.jsoup.Connection
 import java.io.Closeable
@@ -33,32 +33,19 @@ import kotlin.random.Random
 interface WebDriver: Closeable {
     /**
      * Lifetime status
-     * TODO: move lifetime status to AbstractWebDriver
      * */
     enum class State {
         INIT,
         READY,
-        @Deprecated("Inappropriate name", ReplaceWith("READY"))
-        FREE,
         WORKING,
-        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.canceled"))
-        CANCELED,
         RETIRED,
-        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.crashed"))
-        CRASHED,
         QUIT;
 
         val isInit get() = this == INIT
-        @Deprecated("Inappropriate name", ReplaceWith("isReady"))
-        val isFree get() = this == FREE
-        val isReady get() = this == READY || isFree
+        val isReady get() = this == READY
         val isWorking get() = this == WORKING
         val isQuit get() = this == QUIT
         val isRetired get() = this == RETIRED
-        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.isCanceled"))
-        val isCanceled get() = this == CANCELED
-        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.isCrashed"))
-        val isCrashed get() = this == CRASHED
     }
 
     /**
@@ -130,8 +117,6 @@ interface WebDriver: Closeable {
 
     val isInit: Boolean
     val isReady: Boolean
-    @Deprecated("Inappropriate name", ReplaceWith("isReady()"))
-    val isFree: Boolean
     val isWorking: Boolean
     val isRetired: Boolean
     val isQuit: Boolean
@@ -139,8 +124,6 @@ interface WebDriver: Closeable {
     val isCanceled: Boolean
     val isCrashed: Boolean
 
-    @Deprecated("Not used any more")
-    val sessionId: String?
     /**
      * Delay policy defines the delay time between actions, it is used to mimic real people
      * to interact with webpages.
@@ -211,13 +194,15 @@ interface WebDriver: Closeable {
     /**
      * Returns a string representing the current URL that the browser is looking at.
      *
-     * If the browser failed to return a proper url, return the url to navigate.
+     * If the browser failed to return a proper url, return the passed in url to navigate.
      *
-     * @return The frame document's URL without fragment.
+     * @return The frame document's URL without fragment, or the passed in url to navigate.
      */
     @Throws(WebDriverException::class)
     suspend fun currentUrl(): String
     /**
+     * Returns the document's location evaluated by javascript.
+     *
      * In javascript, the `window.location`, or `document.location`, is a read-only property
      * returns a Location object, which contains information about the URL of the
      * document and provides methods for changing that URL and loading another URL.
@@ -227,6 +212,8 @@ interface WebDriver: Closeable {
      * */
     suspend fun location(): String
     /**
+     * Returns the document's baseURI evaluated by javascript.
+     *
      * In javascript, the baseURI is a property of Node, it's the absolute base URL of the
      * document containing the node. A baseURI is used to resolve relative URLs.
      *
@@ -279,11 +266,7 @@ interface WebDriver: Closeable {
     /** Clears browser cookies. */
     @Throws(WebDriverException::class)
     suspend fun clearBrowserCookies()
-    /**
-     * Brings page to front (activates tab).
-     */
-    @Throws(WebDriverException::class)
-    suspend fun bringToFront()
+
     /**
      * Returns when element specified by selector satisfies {@code state} option.
      * */
@@ -306,6 +289,10 @@ interface WebDriver: Closeable {
 
     @Throws(WebDriverException::class)
     suspend fun waitForPage(url: String, timeout: Duration): WebDriver?
+    
+    /*
+     * Status checking
+     **/
 
     @Throws(WebDriverException::class)
     suspend fun exists(selector: String): Boolean
@@ -317,11 +304,46 @@ interface WebDriver: Closeable {
     suspend fun visible(selector: String): Boolean = isVisible(selector)
     @Throws(WebDriverException::class)
     suspend fun isChecked(selector: String): Boolean
-
+    
+    /*
+     * Interacts with the Webpage
+     **/
+    /**
+     * Brings page to front (activates tab).
+     */
+    @Throws(WebDriverException::class)
+    suspend fun bringToFront()
+    
+    /**
+     * This method fetches an element with `selector` and focuses it. If there's no
+     * element matching `selector`, nothing to do.
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to focus. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     */
     @Throws(WebDriverException::class)
     suspend fun focus(selector: String)
+    /**
+     * This method emulates inserting text that doesn't come from a key press.
+     *
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to focus. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * @param text The text to insert.
+     */
     @Throws(WebDriverException::class)
     suspend fun type(selector: String, text: String)
+    /**
+     * This method clicks an element with `selector` and focuses it. If there's no
+     * element matching `selector`, nothing to do.
+     *
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to focus. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * */
     @Throws(WebDriverException::class)
     suspend fun click(selector: String, count: Int = 1)
 
@@ -341,7 +363,7 @@ interface WebDriver: Closeable {
     suspend fun check(selector: String)
     @Throws(WebDriverException::class)
     suspend fun uncheck(selector: String)
-
+    
     @Throws(WebDriverException::class)
     suspend fun scrollTo(selector: String)
     @Throws(WebDriverException::class)
@@ -364,24 +386,45 @@ interface WebDriver: Closeable {
     suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int = 0)
     @Throws(WebDriverException::class)
     suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int = 0)
+    
+    /*
+     * Retrival for html strings, texts and attributes of DOMs
+     **/
+    
     /** Returns the document's HTML markup. */
     @Throws(WebDriverException::class)
     suspend fun outerHTML(): String?
     /** Returns the node's HTML markup. */
     @Throws(WebDriverException::class)
     suspend fun outerHTML(selector: String): String?
+    
     /** Returns the node's text content. */
+    @Deprecated("Inappropriate name", ReplaceWith("selectFirstTextOrNull"))
     @Throws(WebDriverException::class)
-    suspend fun firstText(selector: String): String?
+    suspend fun firstText(selector: String): String? = selectFirstTextOrNull(selector)
     /** Returns the nodes' text contents. */
+    @Deprecated("Inappropriate name", ReplaceWith("selectTexts"))
     @Throws(WebDriverException::class)
-    suspend fun allTexts(selector: String): List<String>
-    /** Returns the node's attribute name. */
+    suspend fun allTexts(selector: String): List<String> = selectTexts(selector)
     @Throws(WebDriverException::class)
-    suspend fun firstAttr(selector: String, attrName: String): String?
-    /** Returns the nodes' attribute names. */
+    suspend fun selectFirstTextOrNull(selector: String): String?
     @Throws(WebDriverException::class)
-    suspend fun allAttrs(selector: String, attrName: String): List<String>
+    suspend fun selectTexts(selector: String): List<String>
+    /** Returns the node's attribute. */
+    @Throws(WebDriverException::class)
+    suspend fun firstAttr(selector: String, attrName: String): String? = selectFirstAttributeOrNull(selector, attrName)
+    /** Returns the nodes' attribute values. */
+    @Throws(WebDriverException::class)
+    suspend fun allAttrs(selector: String, attrName: String): List<String> = selectAttributes(selector, attrName)
+    @Throws(WebDriverException::class)
+    suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String?
+    @Throws(WebDriverException::class)
+    suspend fun selectAttributes(selector: String, attrName: String): List<String>
+    
+    /*
+     * Evaluating Javascript expression
+     **/
+    
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
@@ -436,13 +479,6 @@ interface WebDriver: Closeable {
      * Create a new Jsoup session with the last page's context, which means, the same
      * headers and cookies.
      * */
-    @Deprecated("Inappropriate name", ReplaceWith("newJsoupSession()"))
-    @Throws(WebDriverException::class)
-    suspend fun newSession(): Connection
-    /**
-     * Create a new Jsoup session with the last page's context, which means, the same
-     * headers and cookies.
-     * */
     @Throws(WebDriverException::class)
     suspend fun newJsoupSession(): Connection
     /**
@@ -464,9 +500,6 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun pause()
-    @Deprecated("Inappropriate name", ReplaceWith("pause"))
-    @Throws(WebDriverException::class)
-    suspend fun stopLoading() = pause()
     /**
      * Force the page stop all navigations and RELEASES all resources. Interaction with the
      * stop page results in undefined behavior and the results should not be trusted.
@@ -482,12 +515,7 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun terminate()
-    /**
-     * Quits this driver, closing every associated window.
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("close()"))
-    @Throws(Exception::class)
-    fun quit()
+
     /** Wait until the tab is terminated and closed. */
     @Throws(Exception::class)
     fun awaitTermination()

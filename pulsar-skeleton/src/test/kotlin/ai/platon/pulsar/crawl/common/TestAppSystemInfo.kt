@@ -13,7 +13,7 @@ import kotlin.random.Random
 
 class TestAppSystemInfo {
     var sum = 0.0
-    var prevTicks = LongArray(TickType.values().size)
+    var prevTicks = LongArray(TickType.entries.size)
 
     @Test
     fun testOSHIAvailable() {
@@ -28,7 +28,7 @@ class TestAppSystemInfo {
             val processor = si.hardware.processor
             println("Processor: $processor")
         }.onFailure { println(it.message) }
-        
+
         runCatching {
             val memory = si.hardware.memory
             println("Memory: $memory")

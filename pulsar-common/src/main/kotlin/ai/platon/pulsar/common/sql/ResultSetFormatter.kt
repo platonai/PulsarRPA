@@ -11,8 +11,6 @@ class ResultSetFormatter(
     private val rs: ResultSet,
     private val asList: Boolean = false,
     private val withHeader: Boolean = false,
-    @Deprecated("Not used anymore")
-    private val textOnly: Boolean = false,
     private val maxColumnLength: Int = 120,
     val buffer: StringBuilder = StringBuilder()
 ) {

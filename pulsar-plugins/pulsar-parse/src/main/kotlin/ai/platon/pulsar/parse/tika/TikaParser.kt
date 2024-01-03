@@ -109,7 +109,7 @@ class TikaParser(
             pageTitle = primerParser.getPageTitle(root) // extract title
         }
 
-        if (!metaTags.noFollow) { // okay to follow links
+        if (!metaTags.noFollow) {// okay to follow links
             val baseTag = primerParser.getBaseURLFromTag(root)
             primerParser.collectLinks(baseTag ?: base, hypeLinks, root, null)
         }

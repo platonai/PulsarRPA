@@ -44,7 +44,7 @@ fun main() {
     // Option `-outLink` specifies the cssSelector to select links in the portal page to submit.
     // Option `-topLinks` specifies the maximal number of links selected by `-outLink`.
     val hyperlink2 = Hyperlink(url, args = "-expires 1d -itemExpires 7d")
-    session.submitOutPages(hyperlink2, "-outLink a[href~=/dp/] -topLinks 5")
+    session.submitForOutPages(hyperlink2, "-outLink a[href~=/dp/] -topLinks 5")
 
     //
     // 3. ParsableHyperlink

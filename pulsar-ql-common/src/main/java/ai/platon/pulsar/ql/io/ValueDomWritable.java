@@ -102,7 +102,7 @@ public class ValueDomWritable implements Writable {
         if (selector.equals("#root")) {
             ele = doc.unbox();
         } else {
-            ele = doc.first(selector);
+            ele = doc.selectFirst(selector);
         }
 
         if (ele == null) {

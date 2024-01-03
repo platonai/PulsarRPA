@@ -25,21 +25,19 @@ class FieldGroupFormatter {
     var sourceTitle: String? = null
     private var fieldGroup: GFieldGroup
     var id: Long = 0
-
+    
     constructor(fieldGroup: GFieldGroup) {
         this.fieldGroup = fieldGroup
     }
-
+    
     constructor(fieldGroup: FieldGroup) {
         this.fieldGroup = fieldGroup.unbox()
     }
-
+    
     fun parseFields() {
         val fields = fieldGroup.fields
-        var k: CharSequence = ""
-        var v: CharSequence? = ""
-        k = "id"
-        v = fields[k]
+        var k: CharSequence = "id"
+        var v: CharSequence? = fields[k]
         if (v != null) id = NumberUtils.toLong(v.toString(), 0)
         k = "name"
         v = fields[k]
@@ -52,10 +50,10 @@ class FieldGroupFormatter {
         if (v != null) author = v.toString()
         k = "authors"
         v = fields[k]
-        if (v != null) authors = Arrays.asList(*v.toString().split(",").toTypedArray())
+        if (v != null) authors = listOf(*v.toString().split(",").toTypedArray())
         k = "directors"
         v = fields[k]
-        if (v != null) directors = Arrays.asList(*v.toString().split(",").toTypedArray())
+        if (v != null) directors = listOf(*v.toString().split(",").toTypedArray())
         k = "created"
         v = fields[k]
         if (v != null) created = v.toString()
@@ -81,7 +79,7 @@ class FieldGroupFormatter {
         v = fields[k]
         if (v != null) sourceTitle = v.toString()
     }
-
+    
     fun format(): String {
         val sb = StringBuilder()
         sb.append("id:\t").append(fieldGroup.id)
@@ -91,7 +89,7 @@ class FieldGroupFormatter {
         sb.append("\tfields:\t").append(fields)
         return sb.toString()
     }
-
+    
     val fields: Map<String, Any>
         get() {
             val result: MutableMap<String, Any> = HashMap()
@@ -102,7 +100,7 @@ class FieldGroupFormatter {
             result["fields"] = fields
             return result
         }
-
+    
     override fun toString(): String {
         return format()
     }

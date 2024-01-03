@@ -1,10 +1,10 @@
 package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.common.DescriptiveResult
-import ai.platon.pulsar.common.geometric.DimD
-import ai.platon.pulsar.common.geometric.OffsetD
-import ai.platon.pulsar.common.geometric.PointD
-import ai.platon.pulsar.common.geometric.RectD
+import ai.platon.pulsar.common.math.geometric.DimD
+import ai.platon.pulsar.common.math.geometric.OffsetD
+import ai.platon.pulsar.common.math.geometric.PointD
+import ai.platon.pulsar.common.math.geometric.RectD
 import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
 import com.github.kklisura.cdt.protocol.v2023.commands.DOM
 import com.github.kklisura.cdt.protocol.v2023.commands.Page

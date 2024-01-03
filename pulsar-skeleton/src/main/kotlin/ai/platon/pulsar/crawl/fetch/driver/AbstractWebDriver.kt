@@ -73,8 +73,6 @@ abstract class AbstractWebDriver(
     override val isInit get() = state.get().isInit
     override val isReady get() = state.get().isReady
     
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("isReady()"))
-    override val isFree get() = isReady
     override val isWorking get() = state.get().isWorking
     override val isRetired get() = state.get().isRetired
     override val isQuit get() = state.get().isQuit
@@ -106,10 +104,6 @@ abstract class AbstractWebDriver(
     }
     
     override fun jvm(): JvmWebDriver = this
-    
-    @Deprecated("Not used any more", ReplaceWith("id.toString()"))
-    override val sessionId: String?
-        get() = id.toString()
     
     override val mainRequestHeaders: Map<String, Any> get() = navigateEntry.mainRequestHeaders
     override val mainRequestCookies: List<Map<String, String>> get() = navigateEntry.mainRequestCookies
@@ -199,25 +193,25 @@ abstract class AbstractWebDriver(
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun firstText(selector: String): String? {
+    override suspend fun selectFirstTextOrNull(selector: String): String? {
         val result = evaluate("__pulsar_utils__.firstText('$selector')")
         return result?.toString()
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun allTexts(selector: String): List<String> {
+    override suspend fun selectTexts(selector: String): List<String> {
         val result = evaluate("__pulsar_utils__.allTexts('$selector')")
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun firstAttr(selector: String, attrName: String): String? {
+    override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
         val result = evaluate("__pulsar_utils__.firstAttr('$selector', '$attrName')")
         return result?.toString()
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun allAttrs(selector: String, attrName: String): List<String> {
+    override suspend fun selectAttributes(selector: String, attrName: String): List<String> {
         val result = evaluate("__pulsar_utils__.allAttrs('$selector', '$attrName')")
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
@@ -242,10 +236,6 @@ abstract class AbstractWebDriver(
         evaluate("__pulsar_utils__.uncheck('$selector')")
     }
     
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("newJsoupSession()"))
-    @Throws(WebDriverException::class)
-    override suspend fun newSession(): Connection = newJsoupSession()
-    
     @Throws(WebDriverException::class)
     override suspend fun newJsoupSession(): Connection {
         val headers = mainRequestHeaders.entries.associate { it.key to it.value.toString() }
@@ -253,14 +243,14 @@ abstract class AbstractWebDriver(
         
         return newSession(headers, cookies)
     }
-
+    
     @Throws(IOException::class)
     override suspend fun loadJsoupResource(url: String): Connection.Response {
         val jsession: Connection = synchronized(jsoupCreateDestroyMonitor) {
             jsoupSession ?: createJsoupSession()
         }
         jsoupSession = jsession
-
+        
         return withContext(Dispatchers.IO) {
             jsession.newRequest().url(url).execute()
         }
@@ -276,31 +266,23 @@ abstract class AbstractWebDriver(
         return NetworkResourceResponse.from(loadJsoupResource(url))
     }
     
-    /**
-     * Quit the browser instance
-     * */
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("close()"))
-    override fun quit() {
-        close()
-    }
-
     override fun equals(other: Any?): Boolean = this === other || (other is AbstractWebDriver && other.id == this.id)
-
+    
     override fun hashCode(): Int = id
-
+    
     override fun compareTo(other: AbstractWebDriver): Int = id - other.id
-
+    
     override fun toString(): String = "#$id"
-
+    
     private fun getHeadersAndCookies(): Pair<Map<String, String>, List<Map<String, String>>> {
         return runBlocking {
             val headers = mainRequestHeaders.entries.associate { it.key to it.value.toString() }
             val cookies = getCookies()
-
+            
             headers to cookies
         }
     }
-
+    
     /**
      * Create a new session with the same context of the browser: headers, cookies, proxy, etc.
      * The browser should be initialized by opening a page before the session is created.
@@ -308,7 +290,7 @@ abstract class AbstractWebDriver(
     private fun newSession(headers: Map<String, String>, cookies: List<Map<String, String>>): Connection {
         // TODO: use the same user agent as this browser
         val userAgent = browser.userAgent ?: (browser as AbstractBrowser).browserSettings.userAgent.getRandomUserAgent()
-
+        
         val httpTimeout = Duration.ofSeconds(20)
         val session = Jsoup.newSession()
             .timeout(httpTimeout.toMillis().toInt())
@@ -316,11 +298,11 @@ abstract class AbstractWebDriver(
             .headers(headers)
             .ignoreContentType(true)
             .ignoreHttpErrors(true)
-
+        
         if (cookies.isNotEmpty()) {
             session.cookies(cookies.first())
         }
-
+        
         // Since the browser uses the system proxy (by default),
         // so the http connection should also use the system proxy
         val proxy = browser.id.fingerprint.proxyServer ?: System.getenv("http_proxy")
@@ -331,7 +313,7 @@ abstract class AbstractWebDriver(
                 session.proxy(u.host, u.port)
             }
         }
-
+        
         return session
     }
 }

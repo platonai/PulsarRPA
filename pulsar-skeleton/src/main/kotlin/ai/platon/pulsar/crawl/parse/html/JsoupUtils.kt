@@ -43,8 +43,7 @@ object JsoupUtils {
                 return@traverse
             }
             val selector = ele.cssSelector()
-            ele.attr("warpsselector", selector)
-            ele.addClass("warpsselector") // Deprecated
+            ele.attr("pulsar-selector", selector)
             ele.addClass("has-selector")
         }, doc)
         for (ele in doc.select("html,head,body")) { // ele.clearAttrs();

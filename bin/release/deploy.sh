@@ -1,5 +1,42 @@
 #bin
 
+printUsage() {
+  echo "Usage: deploy [-clean|-test]"
+}
+
+if [[ $# -gt 0 ]]; then
+  echo printUsage
+  exit 0
+fi
+
+TEST=false
+CLEAN=false
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -clean)
+      CLEAN=true
+      shift # past argument
+      ;;
+    -test)
+      TEST=false
+      shift # past argument
+      ;;
+    -h|-help|--help)
+      printUsage
+      exit 1
+      ;;
+    -*|--*)
+      printUsage
+      exit 1
+      ;;
+    *)
+      shift # past argument
+      ;;
+  esac
+done
+
+
 bin=$(dirname "$0")/..
 bin=$(cd "$bin">/dev/null || exit; pwd)
 APP_HOME=$(cd "$bin"/..>/dev/null || exit; pwd)
@@ -13,8 +50,15 @@ echo "$VERSION" > "$APP_HOME"/VERSION
 
 find "$APP_HOME" -name 'pom.xml' -exec sed -i "s/$SNAPSHOT_VERSION/$VERSION/" {} \;
 
-mvn clean
-mvn deploy -Pplaton-release -Pplaton-deploy
+if $CLEAN; then
+  mvn clean
+fi
+
+if $TEST; then
+  mvn deploy -Pplaton-release -Pplaton-deploy -DskipTests=true
+else
+  mvn deploy -Pplaton-release -Pplaton-deploy
+fi
 
 exitCode=$?
 [ $exitCode -eq 0 ] && echo "Build successfully" || exit 1

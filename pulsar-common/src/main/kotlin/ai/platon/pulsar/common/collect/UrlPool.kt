@@ -31,9 +31,6 @@ open class DelayUrl(
 
     constructor(url: String, delay: Duration): this(PlainUrl(url), delay)
 
-    @Deprecated("Inappropriate name", ReplaceWith("delayExpires"))
-    val startTime get() = delayExpireAt
-
     override fun compareTo(other: Delayed): Int {
         return Ints.saturatedCast(delayExpireAt - (other as DelayUrl).delayExpireAt)
     }
@@ -81,8 +78,6 @@ interface UrlPool {
      * Total number of items in all url caches.
      * */
     val totalCount: Int
-    @Deprecated("Confusing name", ReplaceWith("totalCount"))
-    val totalItems: Int get() = totalCount
     /**
      * A shortcut to the cache with the lowest priority in the ordered caches
      * */
@@ -256,7 +251,7 @@ open class ConcurrentUrlPool(conf: ImmutableConfig) : AbstractUrlPool(conf) {
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
-            Priority13.values().forEach { orderedCaches[it.value] = ConcurrentUrlCache(it.name, it.value) }
+            Priority13.entries.forEach { orderedCaches[it.value] = ConcurrentUrlCache(it.name, it.value) }
         }
     }
 }
@@ -274,7 +269,7 @@ class LoadingUrlPool(
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
-            Priority13.values().forEach {
+            Priority13.entries.forEach {
                 orderedCaches[it.value] = LoadingUrlCache(it.name, it.value, loader, capacity)
             }
         }

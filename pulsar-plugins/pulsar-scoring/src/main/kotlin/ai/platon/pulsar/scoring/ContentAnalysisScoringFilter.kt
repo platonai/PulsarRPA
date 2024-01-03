@@ -24,6 +24,9 @@ import ai.platon.pulsar.persist.WebPage
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
+/**
+ * The content analysis scoring filter.
+ * */
 open class ContentAnalysisScoringFilter(val conf: ImmutableConfig) : ScoringFilter {
 
     override fun getParams(): Params {

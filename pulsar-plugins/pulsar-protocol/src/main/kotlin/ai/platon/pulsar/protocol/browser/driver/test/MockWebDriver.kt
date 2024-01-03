@@ -4,7 +4,7 @@ package ai.platon.pulsar.protocol.browser.driver.test
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.geometric.RectD
+import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
@@ -163,11 +163,6 @@ class MockWebDriver(
         backupDriverOrNull?.scrollTo(selector)
     }
 
-    @Deprecated("Not used any more")
-    override val sessionId: String?
-        @Throws(WebDriverException::class)
-        get() = backupDriverOrNull?.sessionId
-
     @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String = backupDriverOrNull?.currentUrl() ?: navigateUrl
 
@@ -269,15 +264,6 @@ class MockWebDriver(
     @Throws(WebDriverException::class)
     override fun awaitTermination() {
         backupDriverOrNull?.awaitTermination()
-    }
-
-    /**
-     * Quit the browser instance
-     * */
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("close()"))
-    @Throws(WebDriverException::class)
-    override fun quit() {
-        close()
     }
 
     /**

@@ -35,7 +35,7 @@ public class BasicUsage {
         // load all pages with links specified by -outLink
         List<WebPage> pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]");
         // load the portal page and submit the out links specified by the `-outLink` option to the URL pool
-        session.submitOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]");
+        session.submitForOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]");
         // load, parse and scrape fields
         List<Map<String, String>> fields = session.scrape(url, "-expires 1d", "li[data-sku]",
                 Arrays.asList(".p-name em", ".p-price"));
