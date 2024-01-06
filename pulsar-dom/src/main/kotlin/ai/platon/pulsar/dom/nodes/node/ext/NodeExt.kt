@@ -800,6 +800,10 @@ fun Node.getMlLabels(): List<String> {
     return getTuple(A_ML_LABELS).map { it.toString() }
 }
 
+fun Node.getMlLabel(): String {
+    return getMlLabels().firstOrNull() ?: ""
+}
+
 fun Node.hasMlLabel(label: String): Boolean {
     return hasTupleItem(A_ML_LABELS, label)
 }
