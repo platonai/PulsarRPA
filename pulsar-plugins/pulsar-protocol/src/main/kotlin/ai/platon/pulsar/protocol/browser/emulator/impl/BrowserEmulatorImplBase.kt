@@ -55,6 +55,9 @@ abstract class BrowserEmulatorImplBase(
     val counterJsWaits by lazy { registry.counter(this, "jsWaits") }
     val counterCancels by lazy { registry.counter(this, "cancels") }
 
+    /**
+     * The imprecise number of pages exported.
+     * */
     private var exportCount = 0
 
     open fun createResponse(task: NavigateTask): Response {
@@ -249,7 +252,7 @@ abstract class BrowserEmulatorImplBase(
 
         val id = page.id
         val test = page.options.test
-        val shouldExport = exportCount < 1000
+        val shouldExport = ++exportCount < 1000
                 || (id % 100 == 0 && exportCount < 10000)
                 || test > 0
                 || logger.isDebugEnabled
@@ -265,7 +268,6 @@ abstract class BrowserEmulatorImplBase(
         }
 
         val path = AppFiles.export(status, pageSource, page)
-        ++exportCount
 
         if (SystemUtils.IS_OS_WINDOWS) {
             // TODO: Issue 16 - https://github.com/platonai/PulsarRPA/issues/16

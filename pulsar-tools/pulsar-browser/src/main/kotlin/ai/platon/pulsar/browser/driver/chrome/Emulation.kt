@@ -482,11 +482,8 @@ class Mouse(private val devTools: ChromeDevTools) {
 
     /**
      * Performs a drag, dragenter, dragover, and drop in sequence.
-     * @param target - point to drag from
+     * @param start - point to drag from
      * @param target - point to drop on
-     * @param options - An object of options. Accepts delay which,
-     * if specified, is the time to wait between `dragover` and `drop` in milliseconds.
-     * Defaults to 0.
      */
     suspend fun dragAndDrop(start: PointD, target: PointD, delayMillis: Long = 500) {
         val data = drag(start, target) ?: return

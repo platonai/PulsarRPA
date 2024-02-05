@@ -9,6 +9,7 @@ import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.crawl.event.impl.PageEventFactory
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.AbstractSQLContext
@@ -65,9 +66,7 @@ open class XSQLScrapeHyperlink(
     val response = ScrapeResponse()
 
     override var args: String? = "-parse ${sql.args}"
-    override var event: PageEvent = DefaultPageEvent(
-        loadEvent = ScrapeLoadEvent(this, response)
-    )
+    override var event: PageEvent = PageEventFactory().pageEvent.also { it.loadEvent = ScrapeLoadEvent(this, response) }
 
     open fun executeQuery(): ResultSet = executeQuery(request, response)
 

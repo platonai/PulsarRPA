@@ -32,24 +32,53 @@ import kotlin.random.Random
  */
 interface WebDriver: Closeable {
     /**
-     * Lifetime status
+     * The state of the driver.
      * */
     enum class State {
+        /**
+         * The driver is initialized.
+         * */
         INIT,
+        /**
+         * The driver is ready to work.
+         * */
         READY,
+        /**
+         * The driver is working.
+         * */
         WORKING,
+        /**
+         * The driver is retired and should be quit as soon as possible.
+         * */
         RETIRED,
+        /**
+         * The driver is quit.
+         * */
         QUIT;
-
+        /**
+         * Whether the driver is initialized.
+         * */
         val isInit get() = this == INIT
+        /**
+         * Whether the driver is ready to work.
+         * */
         val isReady get() = this == READY
+        /**
+         * Whether the driver is working.
+         * */
         val isWorking get() = this == WORKING
+        /**
+         * Whether the driver is quit.
+         * */
         val isQuit get() = this == QUIT
+        /**
+         * Whether the driver is retired and should be quit as soon as possible.
+         * */
         val isRetired get() = this == RETIRED
     }
-
+    
     /**
-     * The unique driver id.
+     * The driver id.
      * */
     val id: Int
     /**
@@ -74,12 +103,12 @@ interface WebDriver: Closeable {
      * */
     val browserType: BrowserType
     /**
-     * Indicates whether the driver supports javascript. Web drivers such as MockDriver do not
+     * Whether the driver supports javascript. Web drivers such as MockDriver do not
      * support javascript.
      * */
     val supportJavascript: Boolean
     /**
-     * Indicate whether the page source is mocked.
+     * Whether the page source is mocked.
      * */
     val isMockedPageSource: Boolean
     /**
@@ -91,15 +120,20 @@ interface WebDriver: Closeable {
      * */
     var isReused: Boolean
     /**
-     * The driver status.
+     * The state of the driver.
+     * * [INIT]: The driver is initialized.
+     * * [READY]: The driver is ready to work.
+     * * [WORKING]: The driver is working.
+     * * [RETIRED]: The driver is retired and should be quit as soon as possible.
+     * * [QUIT]: The driver is quit.
      * */
     val state: AtomicReference<State>
     /**
-     * The associated data.
+     * The associated data of the driver.
      * */
     val data: MutableMap<String, Any?>
     /**
-     * The time of the last action.
+     * The time of the last active action.
      * */
     val lastActiveTime: Instant
     /**
@@ -107,41 +141,72 @@ interface WebDriver: Closeable {
      * */
     var idleTimeout: Duration
     /**
-     * The driver is idle if no action in [idleTimeout].
+     * Whether the driver is idle. The driver is idle if it is not working for a period of time.
      * */
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
     /**
-     * The timeout to wait for some object.
+     * The timeout to wait for an element to appear.
      * */
     var waitForElementTimeout: Duration
-
-    val isInit: Boolean
-    val isReady: Boolean
-    val isWorking: Boolean
-    val isRetired: Boolean
-    val isQuit: Boolean
-
-    val isCanceled: Boolean
-    val isCrashed: Boolean
-
     /**
-     * Delay policy defines the delay time between actions, it is used to mimic real people
-     * to interact with webpages.
+     * Whether the driver is initialized.
+     * */
+    val isInit: Boolean
+    /**
+     * Whether the driver is ready to work.
+     * */
+    val isReady: Boolean
+    /**
+     * Whether the driver is working.
+     * */
+    val isWorking: Boolean
+    /**
+     * Whether the driver is retired and should be quit as soon as possible.
+     * */
+    val isRetired: Boolean
+    /**
+     * Whether the driver is quit.
+     * */
+    val isQuit: Boolean
+    /**
+     * Whether the current driver task is canceled and should return as soon as possible.
+     * */
+    val isCanceled: Boolean
+    /**
+     * Whether the driver is crashed.
+     * */
+    val isCrashed: Boolean
+    /**
+     * The delay policy to wait for the next action, such as click, type, etc.
+     * The delay policy is a function that returns a delay time in milliseconds.
+     * It is used to mimic real people to interact with webpages.
      * */
     val delayPolicy: (String) -> Long get() = { 300L + Random.nextInt(500) }
-
+    /**
+     * The main request's http headers.
+     * */
     val mainRequestHeaders: Map<String, Any>
+    /**
+     * The main request's http cookies.
+     * */
     val mainRequestCookies: List<Map<String, String>>
+    /**
+     * The main response's status.
+     * */
     val mainResponseStatus: Int
+    /**
+     * The main response's status text.
+     * */
     val mainResponseStatusText: String
+    /**
+     * The main response's http headers.
+     * */
     val mainResponseHeaders: Map<String, Any>
-
     /**
      * Returns a JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on,
      * the other JVM languages might have difficulty to handle kotlin suspend methods.
      * */
     fun jvm(): JvmWebDriver
-
     /**
      * Adds a script which would be evaluated in one of the following scenarios:
      *
@@ -187,10 +252,10 @@ interface WebDriver: Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun navigateTo(entry: NavigateEntry)
-
+    
     @Throws(WebDriverException::class)
     suspend fun setTimeouts(browserSettings: BrowserSettings)
-
+    
     /**
      * Returns a string representing the current URL that the browser is looking at.
      *
@@ -223,7 +288,7 @@ interface WebDriver: Closeable {
      * 2. If the document has an `<base>` element, its href attribute is used.
      * */
     suspend fun baseURI(): String
-
+    
     /**
      * Returns the source of the last loaded page. If the page has been modified after loading (for
      * example, by Javascript) there is no guarantee that the returned text is that of the modified
@@ -235,7 +300,7 @@ interface WebDriver: Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun pageSource(): String?
-
+    
     @Deprecated("Getter is available", ReplaceWith("mainRequestHeaders"))
     @Throws(WebDriverException::class)
     suspend fun mainRequestHeaders(): Map<String, Any>
@@ -266,7 +331,7 @@ interface WebDriver: Closeable {
     /** Clears browser cookies. */
     @Throws(WebDriverException::class)
     suspend fun clearBrowserCookies()
-
+    
     /**
      * Returns when element specified by selector satisfies {@code state} option.
      * */
@@ -286,22 +351,36 @@ interface WebDriver: Closeable {
     suspend fun waitForNavigation(timeoutMillis: Long): Long
     @Throws(WebDriverException::class)
     suspend fun waitForNavigation(timeout: Duration): Long
-
     @Throws(WebDriverException::class)
     suspend fun waitForPage(url: String, timeout: Duration): WebDriver?
-    
+
     /*
      * Status checking
      **/
 
+    /**
+     * Returns whether the element exists.
+     * */
     @Throws(WebDriverException::class)
     suspend fun exists(selector: String): Boolean
+    /**
+     * Returns whether the element is hidden.
+     * */
     @Throws(WebDriverException::class)
     suspend fun isHidden(selector: String): Boolean = !isVisible(selector)
+    /**
+     * Returns whether the element is visible.
+     * */
     @Throws(WebDriverException::class)
     suspend fun isVisible(selector: String): Boolean
+    /**
+     * Returns whether the element is visible.
+     * */
     @Throws(WebDriverException::class)
     suspend fun visible(selector: String): Boolean = isVisible(selector)
+    /**
+     * Returns whether the element is checked.
+     * */
     @Throws(WebDriverException::class)
     suspend fun isChecked(selector: String): Boolean
     
@@ -309,7 +388,7 @@ interface WebDriver: Closeable {
      * Interacts with the Webpage
      **/
     /**
-     * Brings page to front (activates tab).
+     * Brings the browser window to the front.
      */
     @Throws(WebDriverException::class)
     suspend fun bringToFront()
@@ -317,6 +396,7 @@ interface WebDriver: Closeable {
     /**
      * This method fetches an element with `selector` and focuses it. If there's no
      * element matching `selector`, nothing to do.
+     *
      * @param selector - A
      * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
      * of an element to focus. If there are multiple elements satisfying the
@@ -336,7 +416,7 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun type(selector: String, text: String)
     /**
-     * This method clicks an element with `selector` and focuses it. If there's no
+     * This method clicks an element with [selector] and focuses it. If there's no
      * element matching `selector`, nothing to do.
      *
      * @param selector - A
@@ -346,7 +426,16 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun click(selector: String, count: Int = 1)
-
+    
+    /**
+     * This method clicks an element with [selector] whose text content matches [pattern], and then focuses it.
+     * If there's no element matching [selector], or the element's text content doesn't match [pattern], nothing to do.
+     *
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to focus. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * */
     @Throws(WebDriverException::class)
     suspend fun clickTextMatches(selector: String, pattern: String, count: Int = 1)
     /**
@@ -359,31 +448,108 @@ interface WebDriver: Closeable {
     suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
     @Throws(WebDriverException::class)
     suspend fun clickNthAnchor(n: Int, rootSelector: String = "body"): String?
+    /**
+     * This method check an element with [selector]. If there's no element matching [selector], nothing to do.
+     *
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to check. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * */
     @Throws(WebDriverException::class)
     suspend fun check(selector: String)
+    /**
+     * This method uncheck an element with [selector]. If there's no element matching [selector], nothing to do.
+     *
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to uncheck. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * */
     @Throws(WebDriverException::class)
     suspend fun uncheck(selector: String)
-    
+    /**
+     * This method fetches an element with [selector], scrolls it into view if needed. If there's no element matching
+     * [selector], the method does nothing.
+     *
+     * @param selector - A selector to search for element to scroll to. If there are multiple elements satisfying
+     * the [selector], the first will be selected.
+     */
     @Throws(WebDriverException::class)
     suspend fun scrollTo(selector: String)
+    /**
+     * The current page frame scrolls down for [count] times.
+     *
+     * @param count The times to scroll down.
+     */
     @Throws(WebDriverException::class)
     suspend fun scrollDown(count: Int = 1)
+    /**
+     * The current page frame scrolls up for [count] times.
+     *
+     * @param count The times to scroll up.
+     */
     @Throws(WebDriverException::class)
     suspend fun scrollUp(count: Int = 1)
+    /**
+     * The current page frame scrolls to the top.
+     */
     @Throws(WebDriverException::class)
     suspend fun scrollToTop()
+    /**
+     * The current page frame scrolls to the bottom.
+     */
     @Throws(WebDriverException::class)
     suspend fun scrollToBottom()
+    /**
+     * The current page frame scrolls to the middle.
+     *
+     * @param ratio The ratio of the page to scroll to, 0.0 means the top, 1.0 means the bottom.
+     */
     @Throws(WebDriverException::class)
     suspend fun scrollToMiddle(ratio: Float)
+    /**
+     * The mouse wheels down for [count] times.
+     *
+     * @param count The times to wheel down.
+     * @param deltaX The distance to wheel horizontally.
+     * @param deltaY The distance to wheel vertically.
+     * @param delayMillis The delay time in milliseconds.
+     */
     @Throws(WebDriverException::class)
     suspend fun mouseWheelDown(count: Int = 1, deltaX: Double = 0.0, deltaY: Double = 150.0, delayMillis: Long = 0)
+    /**
+     * The mouse wheels up for [count] times.
+     *
+     * @param count The times to wheel up.
+     * @param deltaX The distance to wheel horizontally.
+     * @param deltaY The distance to wheel vertically.
+     * @param delayMillis The delay time in milliseconds.
+     */
     @Throws(WebDriverException::class)
     suspend fun mouseWheelUp(count: Int = 1, deltaX: Double = 0.0, deltaY: Double = -150.0, delayMillis: Long = 0)
+    /**
+     * The mouse moves to the position specified by [x] and [y].
+     *
+     * @param x The x coordinate to move to.
+     * @param y The y coordinate to move to.
+     */
     @Throws(WebDriverException::class)
     suspend fun moveMouseTo(x: Double, y: Double)
+    /**
+     * The mouse moves to the element with [selector].
+     *
+     * @param deltaX The distance to the left of the element.
+     * @param deltaY The distance to the top of the element.
+     */
     @Throws(WebDriverException::class)
     suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int = 0)
+    /**
+     * Performs a drag, dragenter, dragover, and drop in sequence.
+     * @param selector - selector of the element to drag from.
+     * @param deltaX The distance to drag horizontally.
+     * @param deltaY The distance to drag vertically.
+     */
     @Throws(WebDriverException::class)
     suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int = 0)
     
@@ -391,10 +557,23 @@ interface WebDriver: Closeable {
      * Retrival for html strings, texts and attributes of DOMs
      **/
     
-    /** Returns the document's HTML markup. */
+    /**
+     * Returns the document's HTML markup.
+     *
+     * If the document does not exist, returns null.
+     *
+     * @return The HTML markup of the document.
+     * */
     @Throws(WebDriverException::class)
     suspend fun outerHTML(): String?
-    /** Returns the node's HTML markup. */
+    /**
+     * Returns the node's HTML markup, the node is located by [selector].
+     *
+     * If the node does not exist, returns null.
+     *
+     * @param selector The selector to locate the node.
+     * @return The HTML markup of the node.
+     * */
     @Throws(WebDriverException::class)
     suspend fun outerHTML(selector: String): String?
     
@@ -406,25 +585,55 @@ interface WebDriver: Closeable {
     @Deprecated("Inappropriate name", ReplaceWith("selectTexts"))
     @Throws(WebDriverException::class)
     suspend fun allTexts(selector: String): List<String> = selectTexts(selector)
+    /**
+     * Returns the node's text content, the node is located by [selector].
+     *
+     * If the node does not exist, returns null.
+     *
+     * @param selector The selector to locate the node.
+     * @return The text content of the node.
+     * */
     @Throws(WebDriverException::class)
     suspend fun selectFirstTextOrNull(selector: String): String?
+    /**
+     * Returns the nodes' text contents.
+     *
+     * If the nodes do not exist, returns an empty list.
+     *
+     * @param selector The selector to locate the nodes.
+     * @return The text contents of the nodes.
+     * */
     @Throws(WebDriverException::class)
     suspend fun selectTexts(selector: String): List<String>
-    /** Returns the node's attribute. */
+    
+    @Deprecated("Inappropriate name", ReplaceWith("selectFirstAttributeOrNull"))
     @Throws(WebDriverException::class)
     suspend fun firstAttr(selector: String, attrName: String): String? = selectFirstAttributeOrNull(selector, attrName)
-    /** Returns the nodes' attribute values. */
+    @Deprecated("Inappropriate name", ReplaceWith("selectAttributes"))
     @Throws(WebDriverException::class)
     suspend fun allAttrs(selector: String, attrName: String): List<String> = selectAttributes(selector, attrName)
+    /**
+     * Returns the node's attribute value, the node is located by [selector], the attribute is [attrName].
+     *
+     * If the node does not exist, or the attribute does not exist, returns null.
+     *
+     * @param selector The selector to locate the node.
+     * @param attrName The attribute name to retrieve.
+     * @return The attribute value of the node.
+     * */
     @Throws(WebDriverException::class)
     suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String?
+    /**
+     * Returns the nodes' attribute values, the nodes are located by [selector], the attribute is [attrName].
+     *
+     * If the nodes do not exist, or the attribute does not exist, returns an empty list.
+     *
+     * @param selector The selector to locate the nodes.
+     * @param attrName The attribute name to retrieve.
+     * @return The attribute values of the nodes.
+     * */
     @Throws(WebDriverException::class)
     suspend fun selectAttributes(selector: String, attrName: String): List<String>
-    
-    /*
-     * Evaluating Javascript expression
-     **/
-    
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
@@ -454,15 +663,16 @@ interface WebDriver: Closeable {
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
     suspend fun evaluateSilently(expression: String): Any?
-
     /**
      * This method scrolls element into view if needed, and then ake a screenshot of the element.
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(selector: String): String?
+    /**
+     * This method scrolls element into view if needed, and then ake a screenshot of the element.
+     */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(rect: RectD): String?
-
     /**
      * Calculate the clickable point of an element located by [selector].
      * If the element does not exist, or is not clickable, returns null.
@@ -515,11 +725,10 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun terminate()
-
+    
     /** Wait until the tab is terminated and closed. */
     @Throws(Exception::class)
     fun awaitTermination()
-
     /**
      * Mark the driver as free, so it can be used to fetch a new page.
      * */

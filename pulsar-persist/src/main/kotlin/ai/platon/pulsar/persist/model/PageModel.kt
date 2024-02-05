@@ -111,11 +111,11 @@ class PageModel(
      * Set a field entry to field group whose id is [groupId].
      * */
     @Synchronized
-    fun put(groupId: Int, name: String, value: String) {
+    fun put(groupId: Int, name: String, value: String): Pair<FieldGroup, CharSequence?> {
         val group = findGroup(groupId)
         val parentId = group?.parentId?.toInt() ?: 0
         val groupName = group?.name ?: ""
-        put0(groupId, parentId, groupName, name, value)
+        return put0(groupId, parentId, groupName, name, value)
     }
 
     @Synchronized
@@ -139,6 +139,13 @@ class PageModel(
         pageModel.setDirty()
     }
 
+    /**
+     * Remove the entry associated with [key].
+     *
+     * @param groupId The group id.
+     * @param key The key.
+     * @return the old value.
+     * */
     @Synchronized
     fun remove(groupId: Int, key: String): String? {
         val gFieldGroup = findRawById(groupId) ?: return null
@@ -191,17 +198,18 @@ class PageModel(
     @Synchronized
     private fun put0(
         groupId: Int, parentId: Int, groupName: String, name: String, value: String
-    ): FieldGroup {
+    ): Pair<FieldGroup, CharSequence?> {
         var gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
         if (gFieldGroup == null) {
             gFieldGroup = FieldGroup.newGFieldGroup(groupId, groupName, parentId)
             fieldGroups.add(gFieldGroup)
         }
 
-        gFieldGroup.fields[u8(name)] = value
+        val u8key = u8(name)
+        val oldValue = gFieldGroup.fields.put(u8key, value)
         gFieldGroup.setDirty()
         pageModel.setDirty()
 
-        return FieldGroup.box(gFieldGroup)
+        return FieldGroup.box(gFieldGroup) to oldValue
     }
 }
