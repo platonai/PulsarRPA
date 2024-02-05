@@ -66,7 +66,7 @@ open class XSQLScrapeHyperlink(
     val response = ScrapeResponse()
 
     override var args: String? = "-parse ${sql.args}"
-    override var event: PageEvent = PageEventFactory().pageEvent.also { it.loadEvent = ScrapeLoadEvent(this, response) }
+    override var event: PageEvent = PageEventFactory().create(loadEvent = ScrapeLoadEvent(this, response))
 
     open fun executeQuery(): ResultSet = executeQuery(request, response)
 

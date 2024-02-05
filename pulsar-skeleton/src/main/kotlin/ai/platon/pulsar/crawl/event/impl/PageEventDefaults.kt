@@ -72,6 +72,13 @@ class PageEventFactory(val conf: ImmutableConfig = ImmutableConfig()) {
         return gen
     }
     
+    @Synchronized
+    fun create(
+        loadEvent: LoadEvent = DefaultLoadEvent(),
+        browseEvent: BrowseEvent = DefaultBrowseEvent(),
+        crawlEvent: CrawlEvent = DefaultCrawlEvent()
+    ): PageEvent = DefaultPageEvent(loadEvent, browseEvent, crawlEvent)
+    
     private fun createUsingGlobalConfig(conf: ImmutableConfig): DefaultPageEvent {
         return createUsingGlobalConfig(conf, DefaultPageEvent::class.java.name)
     }
