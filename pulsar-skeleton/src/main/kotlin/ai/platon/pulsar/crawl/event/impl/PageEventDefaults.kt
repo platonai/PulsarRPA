@@ -27,13 +27,21 @@ open class DefaultCrawlEvent : AbstractCrawlEvent()
  * The perfect trace browse event handler.
  */
 class PerfectTraceBrowseEvent(
+    /**
+     * The RPA to use.
+     * */
     val rpa: BrowseRPA = DefaultBrowseRPA()
 ) : AbstractBrowseEvent() {
-    
+    /**
+     * Fire when a browser is launched.
+     * */
     override val onBrowserLaunched = WebPageWebDriverEventHandler().also {
         it.addLast { page, driver -> rpa.warnUpBrowser(page, driver) }
     }
     
+    /**
+     * Fire when a page is about to fetch.
+     * */
     override val onWillFetch = WebPageWebDriverEventHandler().also {
         it.addLast { page, driver ->
             rpa.waitForReferrer(page, driver)
@@ -42,28 +50,49 @@ class PerfectTraceBrowseEvent(
     }
 }
 
+/**
+ * The empty browse event handler.
+ */
 class EmptyBrowseEvent(
+    /**
+     * The RPA to use.
+     * */
     val rpa: BrowseRPA = DefaultBrowseRPA()
 ) : AbstractBrowseEvent() {
 
 }
 
+/**
+ * The default browse event handler.
+ */
 typealias DefaultBrowseEvent = EmptyBrowseEvent
 
+/**
+ * The default page event handler.
+ */
 open class DefaultPageEvent(
     loadEvent: LoadEvent = DefaultLoadEvent(),
     browseEvent: BrowseEvent = DefaultBrowseEvent(),
     crawlEvent: CrawlEvent = DefaultCrawlEvent()
 ) : AbstractPageEvent(loadEvent, browseEvent, crawlEvent)
 
+/**
+ * The factory to create page event handler.
+ */
 class PageEventFactory(val conf: ImmutableConfig = ImmutableConfig()) {
     private val logger = LoggerFactory.getLogger(PageEventFactory::class.java)
 
+    /**
+     * Create a page event handler.
+     * */
     @Synchronized
-    fun create(): PageEvent = create("")
+    fun create(): PageEvent = createUsingGlobalConfig(conf)
     
+    /**
+     * Create a page event handler with [className].
+     * */
     @Synchronized
-    fun create(className: String): DefaultPageEvent {
+    fun create(className: String): PageEvent {
         val gen = when (className) {
             DefaultPageEvent::class.java.name -> DefaultPageEvent()
             else -> createUsingGlobalConfig(conf)
@@ -72,6 +101,9 @@ class PageEventFactory(val conf: ImmutableConfig = ImmutableConfig()) {
         return gen
     }
     
+    /**
+     * Create a page event handler with [loadEvent], [browseEvent] and [crawlEvent].
+     * */
     @Synchronized
     fun create(
         loadEvent: LoadEvent = DefaultLoadEvent(),
@@ -79,11 +111,11 @@ class PageEventFactory(val conf: ImmutableConfig = ImmutableConfig()) {
         crawlEvent: CrawlEvent = DefaultCrawlEvent()
     ): PageEvent = DefaultPageEvent(loadEvent, browseEvent, crawlEvent)
     
-    private fun createUsingGlobalConfig(conf: ImmutableConfig): DefaultPageEvent {
+    private fun createUsingGlobalConfig(conf: ImmutableConfig): PageEvent {
         return createUsingGlobalConfig(conf, DefaultPageEvent::class.java.name)
     }
     
-    private fun createUsingGlobalConfig(conf: ImmutableConfig, className: String): DefaultPageEvent {
+    private fun createUsingGlobalConfig(conf: ImmutableConfig, className: String): PageEvent {
         val defaultClazz = DefaultPageEvent::class.java
         val clazz = try {
             conf.getClass(className, defaultClazz)
@@ -95,6 +127,6 @@ class PageEventFactory(val conf: ImmutableConfig = ImmutableConfig()) {
             defaultClazz
         }
         
-        return clazz.constructors.first { it.parameters.isEmpty() }.newInstance() as DefaultPageEvent
+        return clazz.constructors.first { it.parameters.isEmpty() }.newInstance() as PageEvent
     }
 }

@@ -123,7 +123,6 @@ open class XSQLScrapeHyperlink(
     }
 
     private fun executeQuery(sql: String): ResultSet {
-//        return session.executeQuery(sql)
         val connection = connectionPool.poll() ?: randomConnection
         return executeQuery(sql, connection).also { connectionPool.offer(connection) }
     }

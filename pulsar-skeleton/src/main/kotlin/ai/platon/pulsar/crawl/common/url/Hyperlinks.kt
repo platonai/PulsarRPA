@@ -20,10 +20,16 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 
+/**
+ * A url that contains a [PageEvent] to handle page events.
+ * */
 interface ListenableUrl: UrlAware {
     val event: PageEvent
 }
 
+/**
+ * A hyperlink that contains a [PageEvent] to handle page events.
+ * */
 open class ListenableHyperlink(
     /**
      * The url of this hyperlink

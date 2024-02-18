@@ -1141,7 +1141,6 @@ interface PulsarSession : AutoCloseable {
      * @return All extracted fields. For each out page, fields extracted
      *          with their selectors are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Iterable<String>): List<Map<String, String?>>
     
     /**
@@ -1153,7 +1152,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their selectors are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Iterable<String>): List<Map<String, String?>>
     
     /**
@@ -1166,7 +1164,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their selectors are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
@@ -1181,7 +1178,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their selectors are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
@@ -1195,7 +1191,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>): List<Map<String, String?>>
     
     /**
@@ -1207,7 +1202,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Map<String, String>): List<Map<String, String?>>
     
     /**
@@ -1220,7 +1214,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
@@ -1235,7 +1228,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
@@ -1267,7 +1259,7 @@ interface PulsarSession : AutoCloseable {
     fun flush()
     
     /**
-     * Persist to the storage
+     * Persist the content of a webpage.
      * */
     fun persist(page: WebPage): Boolean
     
@@ -1283,7 +1275,7 @@ interface PulsarSession : AutoCloseable {
      * Export the content of a webpage.
      *
      * @param page Page to export
-     * @param ident File name identifier used to distinguish from other names
+     * @param ident File name identifier used to distinguish from other files
      * @return The path of the exported page
      * */
     fun export(page: WebPage, ident: String = ""): Path
@@ -1300,7 +1292,7 @@ interface PulsarSession : AutoCloseable {
      * Export the outer HTML of the document.
      *
      * @param doc Document to export
-     * @param ident File name identifier used to distinguish from other names
+     * @param ident File name identifier used to distinguish from other files
      * @return The path of the exported document
      * */
     fun export(doc: FeaturedDocument, ident: String = ""): Path
