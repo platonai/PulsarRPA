@@ -228,6 +228,11 @@ public interface CapabilityTypes {
     String FETCH_NET_BANDWIDTH_M = "fetcher.net.bandwidth.m";
 
     /**
+     * The maximum number of pages to export in fetch phrase.
+     * */
+    String FETCH_MAX_EXPORT_COUNT = "fetch.max.export.count";
+
+    /**
      * Browser
      * */
     String FETCH_INTERACT_SETTINGS = "interact.settings";

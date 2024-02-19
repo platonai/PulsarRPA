@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.emulator.impl
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_MAX_EXPORT_COUNT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.event.AbstractEventEmitter
@@ -250,13 +251,9 @@ abstract class BrowserEmulatorImplBase(
             return
         }
 
-        val id = page.id
-        val test = page.options.test
-        val shouldExport = ++exportCount < 1000
-                || (id % 100 == 0 && exportCount < 10000)
-                || test > 0
-                || logger.isDebugEnabled
-                || (logger.isInfoEnabled && !status.isSuccess)
+        val maxExportCount = immutableConfig.getInt(FETCH_MAX_EXPORT_COUNT, 0)
+        ++exportCount
+        val shouldExport = exportCount < maxExportCount || (logger.isInfoEnabled && !status.isSuccess)
         if (shouldExport) {
             export0(pageSource, status, page)
         }
