@@ -251,10 +251,13 @@ abstract class BrowserEmulatorImplBase(
             return
         }
 
+        if (logger.isInfoEnabled && !status.isSuccess) {
+            export0(pageSource, status, page)
+            return
+        }
+
         val maxExportCount = immutableConfig.getInt(FETCH_MAX_EXPORT_COUNT, 0)
-        ++exportCount
-        val shouldExport = exportCount < maxExportCount || (logger.isInfoEnabled && !status.isSuccess)
-        if (shouldExport) {
+        if (++exportCount < maxExportCount) {
             export0(pageSource, status, page)
         }
     }
