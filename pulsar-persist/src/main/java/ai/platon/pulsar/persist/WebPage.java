@@ -273,7 +273,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     /**
      * Return a Utf8 string.
-     *
+     * <p>
      * Unlike {@link String}, instances are mutable. This is more
      * efficient than {@link String} when reading or writing a sequence of values,
      * as a single instance may be reused.
@@ -285,7 +285,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     /**
      * Return a Utf8 string.
-     *
+     * <p>
      * Unlike {@link String}, instances are mutable. This is more
      * efficient than {@link String} when reading or writing a sequence of values,
      * as a single instance may be reused.
@@ -315,7 +315,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * A non-persistable page id, the id is process scope.
+     * A process scope page id.
      * */
     public int getId() {
         return id;
@@ -373,11 +373,10 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         unsafeSetGPage(GWebPage.newBuilder(page.unbox()).build());
     }
 
-    /**
-     * *****************************************************************************
-     * Common fields
-     * ******************************************************************************
-     */
+    //////////////////////////////////////////////////////////////////////////////////
+    //
+    // Common fields
+    //
 
     @NotNull
     public Variables getVariables() {

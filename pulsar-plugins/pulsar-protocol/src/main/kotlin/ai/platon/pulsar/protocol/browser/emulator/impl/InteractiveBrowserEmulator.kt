@@ -33,8 +33,17 @@ import kotlin.random.Random
  * Copyright @ 2013-2023 Platon AI. All rights reserved.
  */
 open class InteractiveBrowserEmulator(
+    /**
+     * The driver pool manager
+     * */
     val driverPoolManager: WebDriverPoolManager,
+    /**
+     * The response handler
+     * */
     responseHandler: BrowserResponseHandler,
+    /**
+     * The immutable config
+     * */
     immutableConfig: ImmutableConfig,
 ) : BrowserEmulator,
     BrowserEmulatorImplBase(driverPoolManager.driverSettings, responseHandler, immutableConfig) {
@@ -45,6 +54,7 @@ open class InteractiveBrowserEmulator(
     val numDeferredNavigates by lazy { MetricsSystem.reg.meter(this, "deferredNavigates") }
 
     init {
+        // Attach event handlers
         attach()
     }
 
@@ -52,6 +62,7 @@ open class InteractiveBrowserEmulator(
      * Fetch a page using a browser which can render the DOM and execute scripts.
      *
      * @param task The task to fetch
+     * @param driver The web driver
      * @return The result of this fetch
      * */
     override suspend fun visit(task: FetchTask, driver: WebDriver): FetchResult {
@@ -59,12 +70,22 @@ open class InteractiveBrowserEmulator(
         FetchResult.canceled(task, "Inactive interactive browser emulator")
     }
 
+    /**
+     * Cancel a task immediately
+     *
+     * @param task The task to cancel
+     * */
     override fun cancelNow(task: FetchTask) {
         counterCancels.inc()
         task.cancel()
         driverPoolManager.cancel(task.url)
     }
 
+    /**
+     * Cancel a task
+     *
+     * @param task The task to cancel
+     * */
     override suspend fun cancel(task: FetchTask) {
         counterCancels.inc()
         task.cancel()

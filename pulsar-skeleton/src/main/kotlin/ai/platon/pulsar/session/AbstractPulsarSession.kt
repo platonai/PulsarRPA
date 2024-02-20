@@ -441,6 +441,10 @@ abstract class AbstractPulsarSession(
         val path = WEB_CACHE_DIR.resolve("export").resolve(ident).resolve(filename)
         return AppFiles.saveTo(page.contentAsString, path, true)
     }
+    
+    override fun exportTo(page: WebPage, path: Path): Path {
+        return AppFiles.saveTo(page.contentAsString, path, true)
+    }
 
     override fun export(doc: FeaturedDocument) = export(doc, "")
 

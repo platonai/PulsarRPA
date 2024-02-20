@@ -58,12 +58,15 @@ class UrlFeeder(
         get() = PriorityDataCollectorsFormatter(collectors).toString()
 
     /**
-     * Add a hyperlink to the very beginning of the fetch queue, so it will be served immediately
+     * Add a hyperlink to the very beginning of the fetch queue, so it will be served first
      * */
     fun addFirst(url: UrlAware) = loadingIterable.addFirst(url)
 
+    /**
+     * Add a hyperlink to the end of the fetch queue, so it will be served last
+     * */
     fun addLast(url: UrlAware) = loadingIterable.addLast(url)
-
+    
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 
     /**

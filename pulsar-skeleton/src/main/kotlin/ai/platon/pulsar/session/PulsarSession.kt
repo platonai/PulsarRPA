@@ -1234,11 +1234,17 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Get a variable from this session
+     *
+     * @param name The name of the variable
+     * @return The value of the variable
      * */
     fun getVariable(name: String): Any?
     
     /**
      * Set a variable into this session
+     *
+     * @param name The name of the variable
+     * @param value The value of the variable
      * */
     fun setVariable(name: String, value: Any)
     
@@ -1250,6 +1256,8 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Delete a webpage from the storage
+     *
+     * @param url The url of the webpage
      * */
     fun delete(url: String)
     
@@ -1260,6 +1268,9 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Persist the content of a webpage.
+     *
+     * @param page Page to persist
+     * @return True if the page is persisted successfully
      * */
     fun persist(page: WebPage): Boolean
     
@@ -1279,6 +1290,15 @@ interface PulsarSession : AutoCloseable {
      * @return The path of the exported page
      * */
     fun export(page: WebPage, ident: String = ""): Path
+    
+    /**
+     * Export the whole HTML of the document to the given path.
+     *
+     * @param doc Document to export
+     * @param path Path to save the exported content
+     * @return The path of the exported document
+     * */
+    fun exportTo(page: WebPage, path: Path): Path
     
     /**
      * Export the outer HTML of the document.

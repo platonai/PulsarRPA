@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.emulator.impl
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_MAX_CONTENT_LENGTH
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_MAX_EXPORT_COUNT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -30,37 +31,54 @@ import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorImplBase(
+    /**
+     * The settings of the web driver
+     * */
     val driverSettings: WebDriverSettings,
     /**
      * Handle the response
      * */
     val responseHandler: BrowserResponseHandler,
+    /**
+     * The configuration of the emulator
+     * */
     val immutableConfig: ImmutableConfig
 ): AbstractEventEmitter<EmulateEvents>(), Parameterized, AutoCloseable {
     private val logger = getLogger(BrowserEmulatorImplBase::class)
     private val tracer = logger.takeIf { it.isTraceEnabled }
+
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
-    protected val maxPageSourceLength = immutableConfig.getInt(CapabilityTypes.FETCH_MAX_CONTENT_LENGTH, 8 * FileUtils.ONE_MB.toInt())
-
-    val closed = AtomicBoolean(false)
+    /**
+     * The maximum length of the page source, 8M by default.
+     * */
+    protected val maxPageSourceLength = immutableConfig.getInt(FETCH_MAX_CONTENT_LENGTH, 8 * FileUtils.ONE_MB.toInt())
+    
+    private val registry = MetricsSystem.reg
+    protected val pageSourceByteHistogram by lazy { registry.histogram(this, "hPageSourceBytes") }
+    protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
+    
+    protected val meterNavigates by lazy { registry.meter(this, "navigates") }
+    protected val counterJsEvaluates by lazy { registry.counter(this, "jsEvaluates") }
+    protected val counterJsWaits by lazy { registry.counter(this, "jsWaits") }
+    protected val counterCancels by lazy { registry.counter(this, "cancels") }
+    
+    protected val closed = AtomicBoolean(false)
+    
+    /**
+     * Whether the emulator is active.
+     * */
     val isActive get() = !closed.get() && AppContext.isActive
 
-    protected val pageSourceByteHistogram by lazy { registry.histogram(this, "hPageSourceBytes") }
-    private val registry = MetricsSystem.reg
-    protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
-
-    val meterNavigates by lazy { registry.meter(this, "navigates") }
-    val counterJsEvaluates by lazy { registry.counter(this, "jsEvaluates") }
-    val counterJsWaits by lazy { registry.counter(this, "jsWaits") }
-    val counterCancels by lazy { registry.counter(this, "cancels") }
-
     /**
-     * The imprecise number of pages exported.
+     * Approximate number of exported web pages.
      * */
     private var exportCount = 0
 
+    /**
+     * Create a response for the task.
+     * */
     open fun createResponse(task: NavigateTask): Response {
         if (!isActive) {
             return ForwardingResponse.canceled(task.page)
@@ -114,6 +132,9 @@ abstract class BrowserEmulatorImplBase(
         return createResponseWithDatum(task, pageDatum)
     }
 
+    /**
+     * Create a response with the page datum.
+     * */
     open fun createResponseWithDatum(task: NavigateTask, pageDatum: PageDatum): ForwardingResponse {
         val headers = pageDatum.headers
 
@@ -141,6 +162,9 @@ abstract class BrowserEmulatorImplBase(
         return ForwardingResponse(task.page, pageDatum)
     }
 
+    /**
+     * Close the emulator.
+     * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
 
