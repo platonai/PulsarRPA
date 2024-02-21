@@ -313,8 +313,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified arguments.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * Other fetch conditions can be specified by load arguments:
      *
@@ -331,8 +331,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified arguments.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * Other fetch conditions can be specified by load arguments:
      *
@@ -350,8 +350,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified options.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * Other fetch conditions can be specified by load arguments:
      *
@@ -369,8 +369,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with the specified arguments.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param url  The url to load
      * @return The webpage loaded or NIL
@@ -380,8 +380,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with the specified arguments.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param url  The url to load
      * @param args The load arguments
@@ -392,8 +392,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with options.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param url     The url to load
      * @param options The load options
@@ -404,8 +404,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a normal url.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param url The normal url
      * @return The webpage loaded or NIL
@@ -415,8 +415,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified options.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -430,8 +430,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified options.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -445,8 +445,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified arguments.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -460,8 +460,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified options.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -475,8 +475,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified options
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -489,8 +489,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls    The urls to load
      * @return The webpage loaded or NIL
@@ -500,8 +500,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls    The urls to load
      * @param args The load arguments
@@ -512,8 +512,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls    The urls to load
      * @param options The load options
@@ -524,8 +524,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls    The urls to load
      * @return The webpage loaded or NIL
@@ -535,8 +535,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls    The urls to load
      * @param args The load arguments
@@ -547,8 +547,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls    The urls to load
      * @param options The load options
@@ -559,8 +559,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param normUrls    The normal urls to load
      * @return The loaded webpages
@@ -626,8 +626,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -637,8 +637,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style.
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -648,8 +648,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style.
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -659,8 +659,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style.
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -670,8 +670,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style.
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -681,8 +681,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style.
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -692,8 +692,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
