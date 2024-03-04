@@ -19,6 +19,9 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
+/**
+ * A simple interface to query and store web pages.
+ * */
 class WebDb(
     val conf: ImmutableConfig,
 ): AutoCloseable {
@@ -98,13 +101,14 @@ class WebDb(
      */
     @Throws(WebDBException::class)
     fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage? {
+        // TODO: consider the design again whether we need normalize the url here
         val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
 
         val page = getOrNull0(originalUrl, norm, fields)
 
         if (page != null) {
             val p = WebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
-            tracer?.trace("Got ${p.fetchCount} ${p.prevFetchTime} ${p.fetchTime} $key")
+            tracer?.trace("Got {} {} {} {}", p.fetchCount, p.prevFetchTime, p.fetchTime, key)
             return p
         }
 
@@ -115,7 +119,7 @@ class WebDb(
      * Returns the WebPage corresponding to the given url.
      *
      * @param originalUrl the original address of the page
-     * @return the WebPage corresponding to the key or WebPage.NIL if it cannot be found
+     * @return the WebPage corresponding to the key or [WebPage.NIL] if it cannot be found
      */
     @Throws(WebDBException::class)
     fun get(originalUrl: String, field: GWebPage.Field) = getOrNull(originalUrl, field) ?: WebPage.NIL
@@ -183,8 +187,8 @@ class WebDb(
         if (replaceIfExists) {
             performDSAction("put") { dataStore.delete(key) }
         }
-
-        tracer?.trace("Putting ${page.fetchCount} ${page.prevFetchTime} ${page.fetchTime} $key")
+        
+        tracer?.trace("Putting {} {} {} {}", page.fetchCount, page.prevFetchTime, page.fetchTime, key)
 
         val startTime = System.nanoTime()
         performDSAction("put") { dataStore.put(key, page.unbox()) }
@@ -293,7 +297,7 @@ class WebDb(
     }
 
     /**
-     * Scan all pages matches the {@param query}
+     * Scan all pages matches the {@param query}.
      *
      * @param query The query
      * @return The iterator to retrieve pages

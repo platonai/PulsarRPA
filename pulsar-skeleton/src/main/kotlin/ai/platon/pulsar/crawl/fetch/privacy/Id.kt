@@ -270,6 +270,14 @@ class PrivacyContextIdGeneratorFactory(val conf: ImmutableConfig) {
         return createUsingGlobalConfig(conf, PRIVACY_AGENT_GENERATOR_CLASS)
     }
     
+    /**
+     * Get the value of the `name` property as a `Class`.
+     * If the property is not set, or the class is not found, use the default class.
+     * The default class is `DefaultPageEvent`.
+     *
+     * Set the class:
+     * `System.setProperty(CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS, "ai.platon.pulsar.crawl.fetch.privacy.DefaultPrivacyContextIdGenerator")`
+     * */
     private fun createUsingGlobalConfig(conf: ImmutableConfig, className: String): PrivacyContextIdGenerator {
         val defaultClazz = DefaultPrivacyContextIdGenerator::class.java
         val clazz = try {

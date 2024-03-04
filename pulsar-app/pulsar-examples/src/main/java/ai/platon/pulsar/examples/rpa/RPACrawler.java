@@ -2,7 +2,7 @@ package ai.platon.pulsar.examples.rpa;
 
 import ai.platon.pulsar.common.options.LoadOptions;
 import ai.platon.pulsar.context.PulsarContexts;
-import ai.platon.pulsar.crawl.event.WebPageJvmWebDriverEventHandler;
+import ai.platon.pulsar.crawl.event.JvmWebPageWebDriverEventHandler;
 import ai.platon.pulsar.crawl.fetch.driver.JvmWebDriver;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.session.PulsarSession;
@@ -41,7 +41,7 @@ public class RPACrawler {
         var options = session.options(args, null);
         var be = options.getEvent().getBrowseEvent();
 
-        be.getOnWillComputeFeature().addLast(new WebPageJvmWebDriverEventHandler() {
+        be.getOnWillComputeFeature().addLast(new JvmWebPageWebDriverEventHandler() {
             @Override
             public Object invoke(WebPage page, JvmWebDriver driver, Continuation<? super Object> continuation) {
                 fieldSelectors.values().forEach(selector -> interact(selector, driver));
@@ -49,7 +49,7 @@ public class RPACrawler {
             }
         });
 
-        be.getOnFeatureComputed().addLast(new WebPageJvmWebDriverEventHandler() {
+        be.getOnFeatureComputed().addLast(new JvmWebPageWebDriverEventHandler() {
             @Override
             public Object invoke(WebPage page, JvmWebDriver driver, Continuation<? super Object> $completion) {
                 logger.info("Feature computed");

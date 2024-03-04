@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.event.impl
 
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.BrowseEvent
 import ai.platon.pulsar.crawl.CrawlEvent
@@ -9,7 +10,6 @@ import ai.platon.pulsar.crawl.event.*
 import ai.platon.pulsar.crawl.fetch.driver.rpa.BrowseRPA
 import ai.platon.pulsar.crawl.fetch.driver.rpa.DefaultBrowseRPA
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The default load event handler.
@@ -87,7 +87,7 @@ class PageEventFactory(val conf: ImmutableConfig = ImmutableConfig()) {
      * */
     @Synchronized
     fun create(): PageEvent = createUsingGlobalConfig(conf)
-    
+
     /**
      * Create a page event handler with [className].
      * */
@@ -97,10 +97,10 @@ class PageEventFactory(val conf: ImmutableConfig = ImmutableConfig()) {
             DefaultPageEvent::class.java.name -> DefaultPageEvent()
             else -> createUsingGlobalConfig(conf)
         }
-        
+
         return gen
     }
-    
+
     /**
      * Create a page event handler with [loadEvent], [browseEvent] and [crawlEvent].
      * */
@@ -110,14 +110,24 @@ class PageEventFactory(val conf: ImmutableConfig = ImmutableConfig()) {
         browseEvent: BrowseEvent = DefaultBrowseEvent(),
         crawlEvent: CrawlEvent = DefaultCrawlEvent()
     ): PageEvent = DefaultPageEvent(loadEvent, browseEvent, crawlEvent)
-    
+
     private fun createUsingGlobalConfig(conf: ImmutableConfig): PageEvent {
-        return createUsingGlobalConfig(conf, DefaultPageEvent::class.java.name)
+        return createUsingGlobalConfig(conf, CapabilityTypes.PAGE_EVENT_CLASS)
     }
-    
+
+    /**
+     * Get the value of the `name` property as a `Class`.
+     * If the property is not set, or the class is not found, use the default class.
+     * The default class is `DefaultPageEvent`.
+     *
+     * Set the class:
+     * `System.setProperty(CapabilityTypes.PAGE_EVENT_CLASS, "ai.platon.pulsar.crawl.event.impl.DefaultPageEvent")`
+     * */
     private fun createUsingGlobalConfig(conf: ImmutableConfig, className: String): PageEvent {
         val defaultClazz = DefaultPageEvent::class.java
         val clazz = try {
+            // Get the value of the `name` property as a `Class`.
+            // If the property is not set, or the class is not found, use the default class.
             conf.getClass(className, defaultClazz)
         } catch (e: Exception) {
             logger.warn(

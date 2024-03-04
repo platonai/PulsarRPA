@@ -152,10 +152,19 @@ open class WebAssetWebDriverEventHandler: AbstractChainedPDFunction2<WebAsset, W
  * */
 open class WebPageWebDriverEventHandler: AbstractChainedPDFunction2<WebPage, WebDriver, Any?>()
 
+@Deprecated("Use JvmWebPageWebDriverEventHandler instead")
 abstract class WebPageJvmWebDriverEventHandler: WebPageWebDriverEventHandler() {
     override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         return invoke(page, driver.jvm())
     }
 
+    abstract suspend fun invoke(page: WebPage, driver: JvmWebDriver): Any?
+}
+
+abstract class JvmWebPageWebDriverEventHandler: WebPageWebDriverEventHandler() {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
+        return invoke(page, driver.jvm())
+    }
+    
     abstract suspend fun invoke(page: WebPage, driver: JvmWebDriver): Any?
 }

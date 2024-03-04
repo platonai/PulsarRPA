@@ -49,7 +49,7 @@ open class LoadOptions(
 ) : CommonOptions(argv) {
 
     /**
-     * The entity name of the page, for example, article, product, hotel, flower, etc, it's optional.
+     * The entity name of the page, for example, article, product, hotel, flower, etc., it's optional.
      * */
     @ApiPublic
     @Parameter(
@@ -59,7 +59,7 @@ open class LoadOptions(
     var entity = ""
 
     /**
-     * The task label, it's optional and can be used to group tasks.
+     * The task label is optional and may be utilized to categorize tasks into groups.
      * */
     @ApiPublic
     @Parameter(
@@ -69,35 +69,34 @@ open class LoadOptions(
     var label = ""
 
     /**
-     * The task id, it's optional and can be used to distinguish tasks.
+     * The taskId is optional and serves to differentiate tasks if needed.
      * */
     @ApiPublic
     @Parameter(
         names = ["-taskId", "--task-id"],
-        description = "The task id, it's optional and can be used to distinguish tasks"
+        description = "The taskId is optional and serves to differentiate tasks if needed."
     )
     var taskId = ""
 
     /**
-     * The task time, we usually use task time to indicate the name of a task batch.
+     * The taskTime is usually used to denote the name of a batch of tasks.
      * */
     @ApiPublic
     @Parameter(
         names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
-        description = "The task time, we usually use task time to indicate the name of a task batch"
+        description = "The taskTime is usually used to denote the name of a batch of tasks."
     )
-    var taskTime = LoadOptionDefaults.taskTime
+    var taskTime = Instant.now().truncatedTo(ChronoUnit.MINUTES)
 
     /**
-     * The deadline to finish the task, if the deadline is exceeded, the task should be discarded
-     * as soon as possible.
-     *
+     * The task's deadline indicates the time by which it should be completed. If this deadline is surpassed,
+     * the task must be promptly discarded.
      * */
     @ApiPublic
     @Parameter(
         names = ["-deadline", "--deadline"], converter = InstantConverter::class,
-        description = "The deadline to finish the task, if the deadline is exceeded, " +
-                " the task should be discarded as soon as possible."
+        description = "The task's deadline indicates the time by which it should be completed. If this deadline is surpassed, " +
+                " the task must be promptly discarded."
     )
     var deadline = DateTimes.doomsday
 
@@ -112,13 +111,14 @@ open class LoadOptions(
     var authToken = ""
 
     /**
-     * Specify if the load execution is read only or not.
-     * If a load execution is read only, the webpage loaded should not be changed by the execution.
+     * Specify whether the load execution is read-only or not. When a load execution is read-only, it ensures that the
+     * webpage loaded remains unchanged by the execution.
      * */
     @ApiPublic
     @Parameter(
         names = ["-readonly"],
-        description = "Whether the page should never be changed during load execution."
+        description = "Specify whether the load execution is read-only or not. " +
+                "When a load execution is read-only, it ensures that the webpage loaded remains unchanged by the execution."
     )
     var readonly = false
 
@@ -447,7 +447,7 @@ open class LoadOptions(
     var itemRequireSize = 0
 
     /**
-     * Re-fetch item pages who's images is less than requireImages.
+     * Re-fetch item pages whose images is less than requireImages.
      * */
     @ApiPublic
     @Parameter(
@@ -457,7 +457,7 @@ open class LoadOptions(
     var itemRequireImages = 0
 
     /**
-     * Re-fetch item pages whos anchors is less than requireAnchors.
+     * Re-fetch item pages with fewer anchors than the required number specified by requireAnchors.
      * */
     @ApiPublic
     @Parameter(
@@ -486,7 +486,7 @@ open class LoadOptions(
 
     /**
      * If the option is set, do not persist the page content which is usually very large.
-     * If the option is set, it overrides [storeContent].
+     * If the option is true, it overrides [storeContent].
      * */
     @Parameter(
         names = ["-dct", "-dropContent", "--drop-content"], arity = 1,
@@ -1108,11 +1108,6 @@ open class LoadOptions(
  * The default load options, be careful if you have to change the default behaviour.
  * */
 object LoadOptionDefaults {
-    /**
-     * The default task time.
-     * */
-    var taskTime = Instant.now().truncatedTo(ChronoUnit.MINUTES)
-
     /**
      * The default expiry time, some time we may need expire all pages by default, for example, in test mode
      * */
