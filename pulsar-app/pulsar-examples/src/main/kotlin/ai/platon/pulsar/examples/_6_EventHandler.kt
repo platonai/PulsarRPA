@@ -32,14 +32,11 @@ class PrintFlowEvent: DefaultPageEvent() {
             onFetched.addLast { page ->
                 println("$seq. load - onFetched")
             }
+            onWillParse.addLast { page ->
+                println("$seq. load - onWillParse")
+            }
             onWillParseHTMLDocument.addLast { page ->
                 println("$seq. load - onWillParseHTMLDocument")
-            }
-            onWillExtractData.addLast { page ->
-                println("$seq. load - onWillExtractData")
-            }
-            onDataExtracted.addLast { page: WebPage, document: FeaturedDocument ->
-                println("$seq. load - onDataExtracted")
             }
             onHTMLDocumentParsed.addLast { page: WebPage, document: FeaturedDocument ->
                 println("$seq. load - onHTMLDocumentParsed")

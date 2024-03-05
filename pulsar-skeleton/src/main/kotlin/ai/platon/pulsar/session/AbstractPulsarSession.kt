@@ -63,18 +63,13 @@ abstract class AbstractPulsarSession(
 
     override val unmodifiedConfig get() = context.unmodifiedConfig
 
-    @Deprecated("Not used any more")
-    override val sessionBeanFactory = BeanFactory(sessionConfig)
-
     override val display get() = "$id"
 
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get() && context.isActive
 
-    private val variables = ConcurrentHashMap<String, Any>()
+    private val dataCache = ConcurrentHashMap<String, Any>()
     private var enablePDCache = true
-    @Deprecated("Factory should not be a interface property, globalCache is OK")
-    override val globalCacheFactory get() = context.globalCacheFactory
     override val globalCache get() = context.globalCache
     override val pageCache get() = globalCache.pageCache
     override val documentCache get() = globalCache.documentCache
@@ -362,15 +357,12 @@ abstract class AbstractPulsarSession(
         }
     }
 
-    @ExperimentalApi
     override fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Iterable<String>) =
         scrapeOutPages(portalUrl, args, ":root", fieldSelectors)
 
-    @ExperimentalApi
     override fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Iterable<String>) =
         scrapeOutPages(portalUrl, options, ":root", fieldSelectors)
 
-    @ExperimentalApi
     override fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>> {
@@ -380,7 +372,6 @@ abstract class AbstractPulsarSession(
             .toList()
     }
 
-    @ExperimentalApi
     override fun scrapeOutPages(
         portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>> {
@@ -390,16 +381,13 @@ abstract class AbstractPulsarSession(
             .toList()
     }
 
-    @ExperimentalApi
     override fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>) =
         scrapeOutPages(portalUrl, args, ":root", fieldSelectors)
 
-    @ExperimentalApi
     override fun scrapeOutPages(
         portalUrl: String, options: LoadOptions, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>> = scrapeOutPages(portalUrl, options, ":root", fieldSelectors)
 
-    @ExperimentalApi
     override fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>> {
@@ -409,7 +397,6 @@ abstract class AbstractPulsarSession(
             .toList()
     }
 
-    @ExperimentalApi
     override fun scrapeOutPages(
         portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>> {
@@ -419,14 +406,9 @@ abstract class AbstractPulsarSession(
             .toList()
     }
 
-    override fun getVariable(name: String): Any? = let { variables[name] }
+    override fun data(name: String): Any? = let { dataCache[name] }
 
-    override fun setVariable(name: String, value: Any) = run { variables[name] = value }
-
-    @Deprecated("Not used any more")
-    override fun putSessionBean(obj: Any) = ensureActive { sessionBeanFactory.putBean(obj) }
-
-    inline fun <reified T> getSessionBean(): T? = sessionBeanFactory.getBean()
+    override fun data(name: String, value: Any) = run { dataCache[name] = value }
 
     override fun delete(url: String) = ensureActive { context.delete(url) }
 

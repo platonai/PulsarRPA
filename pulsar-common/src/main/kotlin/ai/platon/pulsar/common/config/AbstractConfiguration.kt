@@ -112,7 +112,7 @@ abstract class AbstractConfiguration {
             name
         ).map { it.replace("//", "/") }.distinct().sortedByDescending { it.length }
 
-        val resource = searchPaths.mapNotNull { getResource(it) }.firstOrNull()
+        val resource = searchPaths.firstNotNullOfOrNull { getResource(it) }
         if (resource != null) {
             logger.info("Find legacy resource: $resource")
         }
@@ -502,7 +502,8 @@ abstract class AbstractConfiguration {
     override fun toString() = "profile: <$profile> | $conf"
 
     companion object {
-        const val APPLICATION_SPECIFIED_RESOURCES = "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml"
+        // The resources that are loaded by default. The resources are hadoop compatible.
+        const val APPLICATION_SPECIFIED_RESOURCES = "pulsar-default.xml,pulsar-site.xml"
         val DEFAULT_RESOURCES = LinkedHashSet<String>()
     }
 }

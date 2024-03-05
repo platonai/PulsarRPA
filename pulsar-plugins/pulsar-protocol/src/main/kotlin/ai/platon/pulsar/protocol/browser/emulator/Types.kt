@@ -63,11 +63,6 @@ class InteractTask(
         ?: browserSettings.interactSettings
 }
 
-class BrowserStatus(
-        var status: ProtocolStatus,
-        var code: Int = 0
-)
-
 class BrowserErrorResponse(
         val status: ProtocolStatus,
         val activeDOMMessage: ActiveDOMMessage

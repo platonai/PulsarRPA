@@ -3,14 +3,9 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.crawl.event.*
 
 /**
- * Event handlers for the crawl phase of the webpage lifecycle.
+ * Event handlers during the crawl phase of the webpage lifecycle.
  * */
 interface CrawlEvent {
-    @Deprecated("Url filtering should not be in PageEvent")
-    val onFilter: UrlAwareEventFilter
-
-    @Deprecated("No need to normalize in a crawler")
-    val onNormalize: UrlAwareEventFilter
 
     /**
      * Fire when the url is about to be loaded.
@@ -19,6 +14,7 @@ interface CrawlEvent {
 
     /**
      * Fire to load the url.
+     * TODO: better name?
      * */
     val onLoad: UrlAwareEventHandler
 
@@ -34,11 +30,9 @@ interface CrawlEvent {
 }
 
 /**
- * Event handlers for the loading phase of the webpage lifecycle.
+ * Event handlers during the loading phase of the webpage lifecycle.
  * */
 interface LoadEvent {
-    @Deprecated("Url filtering should not be in load phase, crawl phase is better")
-    val onFilter: UrlFilterEventHandler
 
     /**
      * Fire when the url is about to be normalized.
@@ -70,17 +64,7 @@ interface LoadEvent {
      * Fire when the html document is about to be parsed.
      * */
     val onWillParseHTMLDocument: WebPageEventHandler
-
-    /**
-     * Fire when the data is about to be extracted.
-     * */
-    val onWillExtractData: WebPageEventHandler
-
-    /**
-     * Fire when the data is extracted.
-     * */
-    val onDataExtracted: HTMLDocumentEventHandler
-
+    
     /**
      * Fire when the html document is parsed.
      * */
@@ -103,7 +87,7 @@ interface LoadEvent {
 }
 
 /**
- * Event handlers for the browsing phase of the webpage lifecycle.
+ * Event handlers during the browsing phase of the webpage lifecycle.
  * */
 interface BrowseEvent {
     /**
@@ -129,24 +113,33 @@ interface BrowseEvent {
      * */
     val onWillNavigate: WebPageWebDriverEventHandler
     /**
-     * Fire when the url is navigated.
+     * Fire when the url is navigated, just like we clicked the `Go` button on the browser's navigation bar.
      * */
     val onNavigated: WebPageWebDriverEventHandler
 
     /**
-     * Fire when the url webpage about to interact.
+     * Fire when the interaction with the webpage is about to begin.
      * */
     val onWillInteract: WebPageWebDriverEventHandler
     /**
-     * Fire when the webpage is interacted.
+     * Fire when the interactions with the webpage have been completed.
+     * This event is fired after the interactions are completed, such as clicking a button, filling a form, and so on.
+     *
+     * This event is fired after the completion of the following actions:
+     *
+     * 1. Checking the document state
+     * 2. Completing webpage scrolling
+     * 3. Computing webpage features
+     *
+     * The event is fired before the following actions:
+     * 1. Stopping the browser tab
      * */
     val onDidInteract: WebPageWebDriverEventHandler
 
-    @Deprecated("Inappropriate name", ReplaceWith("onWillCheckDocumentState"))
-    val onWillCheckDOMState: WebPageWebDriverEventHandler get() = onWillCheckDocumentState
+    /**
+     * Fire when the document state is about to be checked.
+     * */
     val onWillCheckDocumentState: WebPageWebDriverEventHandler
-    @Deprecated("Inappropriate name", ReplaceWith("onDocumentActuallyReady"))
-    val onDOMStateChecked: WebPageWebDriverEventHandler get() = onDocumentActuallyReady
 
     /**
      * Fire when the document is actually ready. The document state is checked(computed)
@@ -155,29 +148,35 @@ interface BrowseEvent {
     val onDocumentActuallyReady: WebPageWebDriverEventHandler
 
     /**
-     * Fire when the url is about to be scrolled.
+     * Fire when we are about to perform scrolling on the page.
      * */
     val onWillScroll: WebPageWebDriverEventHandler
     /**
-     * Fire when the url is scrolled.
+     * Fire when we have performed scrolling on the page.
      * */
     val onDidScroll: WebPageWebDriverEventHandler
 
     /**
-     * Fire when the feature is about to be computed.
+     * Fire when the webpage features are about to be computed.
      * */
     val onWillComputeFeature: WebPageWebDriverEventHandler
     /**
-     * Fire when the feature is computed.
+     * Fire when the webpage features have been computed.
      * */
     val onFeatureComputed: WebPageWebDriverEventHandler
 
     /**
-     * Fire when the tab is about to be stopped.
+     * Fire when the browser tab is about to be stopped.
+     *
+     * This event is fired after the completion of the following actions:
+     * 1. Checking the document state
+     * 2. Completing webpage scrolling
+     * 3. Computing webpage features
+     * 4. Interacting with the webpage
      * */
     val onWillStopTab: WebPageWebDriverEventHandler
     /**
-     * Fire when the tab is stopped.
+     * Fire when the browser tab is stopped.
      * */
     val onTabStopped: WebPageWebDriverEventHandler
 

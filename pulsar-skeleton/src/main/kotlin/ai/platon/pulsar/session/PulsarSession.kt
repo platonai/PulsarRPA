@@ -105,11 +105,6 @@ interface PulsarSession : AutoCloseable {
     val sessionConfig: VolatileConfig
     
     /**
-     * The scoped bean factory: for each volatileConfig object, there is a bean factory
-     * */
-    @Deprecated("Not used any more")
-    val sessionBeanFactory: BeanFactory
-    /**
      * A short descriptive display text.
      * */
     val display: String
@@ -126,8 +121,6 @@ interface PulsarSession : AutoCloseable {
      * */
     val globalCache: GlobalCache
     
-    @Deprecated("Factory should not be a interface property, globalCache is OK")
-    val globalCacheFactory: GlobalCacheFactory
     /**
      * Close objects when the session closes
      * */
@@ -137,20 +130,38 @@ interface PulsarSession : AutoCloseable {
      * */
     fun disablePDCache()
     
-    /**
-     * Create a new [LoadOptions] object with [args], [event], and [sessionConfig].
-     * */
-    fun options(args: String = "", event: PageEvent? = null): LoadOptions
+    @Deprecated("Inappropriate name", ReplaceWith("data(name)"))
+    fun getVariable(name: String): Any? = data(name)
     
+    @Deprecated("Inappropriate name", ReplaceWith("data(name, value)"))
+    fun setVariable(name: String, value: Any) = data(name, value)
+    
+    /**
+     * Get a variable from this session
+     *
+     * @param name The name of the variable
+     * @return The value of the variable
+     * */
+    fun data(name: String): Any?
+    /**
+     * Set a variable into this session
+     *
+     * @param name The name of the variable
+     * @param value The value of the variable
+     * */
+    fun data(name: String, value: Any)
     /**
      * Get a property.
      * */
     fun property(name: String): String?
-    
     /**
      * Set a session scope property.
      * */
     fun property(name: String, value: String)
+    /**
+     * Create a new [LoadOptions] object with [args], [event], and [sessionConfig].
+     * */
+    fun options(args: String = "", event: PageEvent? = null): LoadOptions
     /**
      * Normalize a url.
      * */
@@ -221,7 +232,7 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Inject a url as a seed to fetch. Injection is usually used in Nutch style crawls
-     * where the execution flow likes the following:
+     * where the execution flow is the following:
      *
      * inject -> generate -> fetch -> parse [ -> index ] -> update
      *              ^                                          ^
@@ -814,10 +825,13 @@ interface PulsarSession : AutoCloseable {
      * @return The loaded out pages
      */
     fun loadOutPages(portalUrl: String, options: LoadOptions): List<WebPage>
-    
-    // Do not delete the comment.
-    // No such confusing version:
-    // fun loadOutPages(portalUrl: UrlAware): List<WebPage>
+
+    /**
+     * A confusing version, it's too complicated to handle events and should not be implemented.
+     */
+    fun loadOutPages(portalUrl: UrlAware): List<WebPage> =
+        throw NotImplementedError("The signature loadOutPages(UrlAware) is " +
+            "a confusing version, it's too complicated to handle events and should not be implemented.")
     
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
@@ -840,10 +854,13 @@ interface PulsarSession : AutoCloseable {
      * @return The loaded out pages
      */
     fun loadOutPages(portalUrl: UrlAware, options: LoadOptions): List<WebPage>
-    
-    // Do not delete the comment.
-    // No such confusing version:
-    // fun loadOutPages(portalUrl: NormUrl): List<WebPage>
+
+    /**
+     * A confusing version, it's too complicated to handle events and should not be implemented.
+     */
+    fun loadOutPages(portalUrl: NormUrl): List<WebPage> =
+        throw NotImplementedError("The signature loadOutPages(NormUrl) is " +
+            "a confusing version, it's too complicated to handle events and should not be implemented.")
     
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option asynchronously.
@@ -1231,28 +1248,6 @@ interface PulsarSession : AutoCloseable {
     fun scrapeOutPages(
         portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
-    
-    /**
-     * Get a variable from this session
-     *
-     * @param name The name of the variable
-     * @return The value of the variable
-     * */
-    fun getVariable(name: String): Any?
-    
-    /**
-     * Set a variable into this session
-     *
-     * @param name The name of the variable
-     * @param value The value of the variable
-     * */
-    fun setVariable(name: String, value: Any)
-    
-    /**
-     * Put session scope bean
-     * */
-    @Deprecated("Not used any more")
-    fun putSessionBean(obj: Any)
     
     /**
      * Delete a webpage from the storage

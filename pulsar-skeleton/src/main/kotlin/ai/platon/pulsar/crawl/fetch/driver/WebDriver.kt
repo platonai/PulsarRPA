@@ -121,11 +121,11 @@ interface WebDriver: Closeable {
     var isReused: Boolean
     /**
      * The state of the driver.
-     * * [INIT]: The driver is initialized.
-     * * [READY]: The driver is ready to work.
-     * * [WORKING]: The driver is working.
-     * * [RETIRED]: The driver is retired and should be quit as soon as possible.
-     * * [QUIT]: The driver is quit.
+     * * [State.INIT]: The driver is initialized.
+     * * [State.READY]: The driver is ready to work.
+     * * [State.WORKING]: The driver is working.
+     * * [State.RETIRED]: The driver is retired and should be quit as soon as possible.
+     * * [State.QUIT]: The driver is quit.
      * */
     val state: AtomicReference<State>
     /**

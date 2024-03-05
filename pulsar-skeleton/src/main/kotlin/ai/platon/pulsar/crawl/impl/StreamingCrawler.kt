@@ -431,9 +431,6 @@ open class StreamingCrawler(
 
         if (isActive && wrongProfile.hourlyCounter.count > 60) {
             handleWrongProfile()
-        } else if (isActive && wrongDistrict.hourlyCounter.count > 60) {
-            // since profile contains district setting, handleWrongDistrict will be removed
-            handleWrongDistrict()
         }
 
         if (isActive && proxyOutOfService > 0) {
@@ -518,12 +515,12 @@ open class StreamingCrawler(
     private fun runDegenerateUrlTask(url: DegenerateUrl) {
         when (url) {
             is CallableDegenerateUrl -> {
+                // The url is degenerated, which means it's not a resource on the Internet but a normal executable task.
                 url.invoke()
             }
 
             is ListenableUrl -> {
                 emit(CrawlEvents.willLoad, url)
-                // The url is degenerated, which means it's not a resource on the Internet but a normal executable task.
                 emit(CrawlEvents.load, url)
                 emit(CrawlEvents.loaded, url, null)
             }
@@ -602,15 +599,6 @@ open class StreamingCrawler(
             wrongProfile.mark()
         } else {
             wrongProfile.reset()
-        }
-
-        if (!page.htmlIntegrity.isWrongProfile) {
-            // TODO: since profile contains district setting, this will be removed later
-            if (page.htmlIntegrity == HtmlIntegrity.WRONG_DISTRICT) {
-                wrongDistrict.mark()
-            } else {
-                wrongDistrict.reset()
-            }
         }
 
         if (page.isFetched) {
@@ -821,15 +809,14 @@ open class StreamingCrawler(
         val contextLeaks = PrivacyContext.globalMetrics.contextLeaks
         val contextLeaksRate = contextLeaks.meter.fifteenMinuteRate
         var k = 0
-        while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
+        val threshold = 5 / 60f // 5 / 60f ~= 0.083
+        while (isActive && contextLeaksRate >= threshold && ++k < 600) {
             logger.takeIf { k % 60 == 0 }?.warn(
                     "Context leaks too fast: {} leaks/seconds, available memory: {}",
                     contextLeaksRate, AppSystemInfo.formatAvailableMemory())
             delay(1000)
-
-            // trigger the meter updating
-            contextLeaks.inc(-1)
-            contextLeaks.inc(1)
+            
+            contextLeaks.update()
 
             contextLeakWaitingTime += Duration.ofSeconds(1)
         }
@@ -893,18 +880,6 @@ open class StreamingCrawler(
 
         if (canConnect) {
             globalWebDBFailures.set(0)
-        }
-    }
-
-    /**
-     * TODO: since profile contains district setting, this will be removed later
-     * */
-    private suspend fun handleWrongDistrict() {
-        var k = 0
-        while (wrongDistrict.hourlyCounter.count > 60) {
-            criticalWarning = CriticalWarning.WRONG_DISTRICT
-            logger.takeIf { k++ % 20 == 0 }?.warn("{}", criticalWarning?.message ?: "")
-            delay(1000)
         }
     }
 

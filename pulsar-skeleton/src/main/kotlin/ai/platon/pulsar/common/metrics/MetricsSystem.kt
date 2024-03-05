@@ -40,12 +40,7 @@ class MultiMetric(
     val hourlyCounter: Counter,
     val meter: Meter
 ) {
-    fun mark() {
-        counter.inc()
-        dailyCounter.inc()
-        hourlyCounter.inc()
-        meter.mark()
-    }
+    fun mark() = inc(1)
 
     fun inc(n: Long) {
         counter.inc(n)
@@ -56,6 +51,17 @@ class MultiMetric(
 
     fun inc(n: Int) = inc(n.toLong())
 
+    /**
+     * trigger the meter updating
+     * */
+    fun update() {
+        inc(1)
+        inc(-1)
+    }
+    
+    /**
+     * Reset the counters
+     * */
     fun reset() {
         inc(-counter.count)
     }

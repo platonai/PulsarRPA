@@ -295,7 +295,7 @@ abstract class BrowserEmulatorImplBase(
 
         if (SystemUtils.IS_OS_WINDOWS) {
             // TODO: Issue 16 - https://github.com/platonai/PulsarRPA/issues/16
-            // Failed to create symbolic link on Windows
+            // Not a good idea to create symbolic link on Windows, it requires administrator privilege
         } else {
             createSymbolicLink(path, page)
         }
