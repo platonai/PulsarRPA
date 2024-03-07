@@ -13,6 +13,7 @@ interface CrawlLoop: StartStopRunnable {
     val urlFeeder: Iterable<UrlAware>
     val collectors: List<out DataCollector<UrlAware>>
     val crawler: Crawler
+    val display: String
     val abstract: String
     val report: String
 }
