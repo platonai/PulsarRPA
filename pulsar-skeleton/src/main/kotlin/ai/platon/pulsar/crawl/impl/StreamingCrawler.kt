@@ -295,7 +295,7 @@ open class StreamingCrawler(
     }
 
     protected suspend fun startCrawlLoop(scope: CoroutineScope) {
-        logger.info("Starting {} #{} ...", name, id)
+        logger.info("Starting crawler | {} | #{} | {} ...", name, id, session::class.java)
 
         globalRunningInstances.incrementAndGet()
 

@@ -160,7 +160,7 @@ abstract class AbstractConfiguration {
      * or null if no such property exists.
      */
     open operator fun get(name: String): String? {
-        return System.getProperty(name) ?: environment?.get(name) ?: conf[name]
+        return System.getenv(name) ?: System.getProperty(name) ?: environment?.get(name) ?: conf[name]
     }
 
     /**

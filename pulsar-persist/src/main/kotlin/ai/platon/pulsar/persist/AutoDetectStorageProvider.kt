@@ -23,7 +23,7 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
 
     fun createPageStore(): DataStore<String, GWebPage> {
         if (!AppContext.isActive) {
-            throw IllegalStateException("App context is inactive")
+            throw IllegalStateException("Inactive application context")
         }
 
         val pageStore = GoraStorage.createDataStore(conf, String::class.java, GWebPage::class.java, pageStoreClass)
@@ -42,7 +42,7 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
          */
         fun detectDataStoreClassName(conf: ImmutableConfig): String {
             if (!AppContext.isActive) {
-                throw IllegalStateException("App context is inactive")
+                throw IllegalStateException("Inactive application context")
             }
 
             val specified = conf.get(STORAGE_DATA_STORE_CLASS)
@@ -90,7 +90,6 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
         }
 
         private fun checkIfMongoClientAvailable(): Boolean {
-
             return ResourceLoader.exists("gora-mongodb-mapping.xml")
         }
     }

@@ -201,13 +201,13 @@ abstract class BrowserEmulatorImplBase(
 
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
-            // and all the running tasks should be redo
+            // and all the running tasks should run again.
             throw WebDriverCancellationException("Web driver is canceled #${driver.id}", driver)
         }
 
         if (task.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
-            // and all the running tasks should be redo
+            // and all the running tasks should run again.
             throw NavigateTaskCancellationException("Task #${task.batchTaskId}/${task.batchId} is canceled | ${task.url}")
         }
     }
@@ -240,19 +240,17 @@ abstract class BrowserEmulatorImplBase(
              * Issue #43: OutOfMemoryError: Java heap space from BrowserEmulatorImplBase.createResponse,
              * caused by normalizePageSource().toString()
              * **/
-            logger.warn("Too long page source: {}, truncate it to empty", length)
+            logger.warn("Too large page source: {}, truncate it to empty", Strings.compactFormat(length))
             return ""
         }
 
         return content
     }
-
+    
     /**
      * Export the page if one of the following condition matches:
-     * 1. the first 200 pages
-     * 2. LoadOptions.test > 0
-     * 3. logger level is debug or lower
-     * 4. logger level is info and protocol status is failed
+     * 1. The page is failed to fetch
+     * 2. FETCH_MAX_EXPORT_COUNT > 0 and the export count is less than FETCH_MAX_EXPORT_COUNT
      * */
     private fun exportIfNecessary(task: NavigateTask) {
         try {
@@ -264,11 +262,8 @@ abstract class BrowserEmulatorImplBase(
 
     /**
      * Export the page if one of the following condition matches:
-     * 1. the first 1000 pages
-     * 2. LoadOptions.test > 0
-     * 3. logger level is debug or lower
-     * 4. logger level is info and protocol status is failed
-     * 5. other cases
+     * 1. The page is failed to fetch
+     * 2. FETCH_MAX_EXPORT_COUNT > 0 and the export count is less than FETCH_MAX_EXPORT_COUNT
      * */
     private fun exportIfNecessary0(pageSource: String, status: ProtocolStatus, page: WebPage) {
         if (pageSource.isEmpty()) {
