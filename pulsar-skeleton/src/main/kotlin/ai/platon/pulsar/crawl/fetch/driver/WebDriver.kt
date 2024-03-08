@@ -253,6 +253,9 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun navigateTo(entry: NavigateEntry)
     
+    /**
+     * TODO: NOT IMPLEMENTED
+     * */
     @Throws(WebDriverException::class)
     suspend fun setTimeouts(browserSettings: BrowserSettings)
     

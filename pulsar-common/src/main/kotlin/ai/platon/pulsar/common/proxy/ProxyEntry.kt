@@ -8,9 +8,11 @@ import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.collect.ConcurrentHashMultiset
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
+import org.apache.http.client.utils.URIBuilder
 import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Proxy
+import java.net.URI
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
@@ -23,8 +25,7 @@ enum class ProxyType {
     HTTP, SOCKS4, SOCKS5, DIRECT
 }
 
-@Deprecated("Use ProxyEntry2 instead", ReplaceWith("ProxyEntry2"))
-class ProxyEntry constructor(
+open class ProxyEntry(
     /**
      * The host of the proxy server
      * */
@@ -34,73 +35,37 @@ class ProxyEntry constructor(
      * */
     var port: Int = 0,
     /**
-     * The out ip which will be seen by the target site
-     * */
-    var outIp: String = "",
-    /**
-     * The proxy entry id, it's unique in the process scope
-     * */
-    var id: Int = instanceSequence.incrementAndGet(),
-    /**
-     * The time to live of the proxy entry declared by the proxy vendor
-     * */
-    var declaredTTL: Instant? = null,
-    /**
-     * The last target url
-     * */
-    var lastTarget: String? = null,
-    /**
-     * The test urls
-     * */
-    var testUrls: List<URL> = TEST_URLS.toList(),
-    /**
-     * The default test url
-     * */
-    var defaultTestUrl: URL = DEFAULT_TEST_URL,
-    /**
-     * Check if the proxy is used for test
-     * */
-    var isTestIp: Boolean = false,
-    /**
-     * The proxy type
-     * */
-    var proxyType: ProxyType = ProxyType.HTTP, // reserved
-    /**
      * The username
      * */
-    var user: String? = null, // reserved
+    var username: String? = null,
     /**
      * The password
      * */
-    var pwd: String? = null // reserved
+    var password: String? = null,
+    /**
+     * The proxy type
+     * */
+    var type: Proxy.Type = Proxy.Type.HTTP
 ): Comparable<ProxyEntry> {
     enum class Status { FREE, WORKING, RETIRED, EXPIRED, GONE }
+    /**
+     * The proxy entry id, it's unique in the process scope
+     * */
+    var id: Int = instanceSequence.incrementAndGet()
+    /**
+     * The out ip which will be seen by the target site
+     * */
+    var outIp: String = ""
     
-    val hostPort get() = "$host:$port"
-    
-    val protocol get() = when (proxyType) {
-        ProxyType.HTTP -> "http"
-        ProxyType.SOCKS4 -> "socks"
-        ProxyType.SOCKS5 -> "socks"
-        else -> ""
-    }
-    
-    val username get() = user
-    
-    val password get() = pwd
-
-    val type get() = when(proxyType) {
-        ProxyType.HTTP -> Proxy.Type.HTTP
-        ProxyType.SOCKS4 -> Proxy.Type.SOCKS
-        ProxyType.SOCKS5 -> Proxy.Type.SOCKS
-        else -> Proxy.Type.DIRECT
-    }
-
     /**
      * The agent ip which will be seen by the target site.
      * */
     val agentIp: String get() = outIp.takeIf { Strings.isIpLike(it) } ?: host
-
+    
+    /**
+     * The time to live of the proxy entry declared by the proxy vendor
+     * */
+    var declaredTTL: Instant? = null
     /**
      * Specify whether we can rotate the out ip via a link.
      * */
@@ -109,7 +74,30 @@ class ProxyEntry constructor(
      * The link to tell the proxy vendor to rotate the out ip.
      * */
     var rotateURL: String? = null
-
+    /**
+     * The last target url
+     * */
+    var lastTarget: String? = null
+    /**
+     * The test urls
+     * */
+    var testUrls: List<URL> = TEST_URLS.toList()
+    /**
+     * The default test url
+     * */
+    var defaultTestUrl: URL = DEFAULT_TEST_URL
+    /**
+     * Check if the proxy is used for test
+     * */
+    var isTestIp: Boolean = false
+    
+    val protocol get() = when (type) {
+        Proxy.Type.HTTP -> "http"
+        Proxy.Type.SOCKS -> "socks"
+        else -> ""
+    }
+    val hostPort get() = "$host:$port"
+    
     val segment get() = host.substringBeforeLast(".")
     val outSegment get() = outIp.substringBeforeLast(".")
     val startTime = Instant.now()
@@ -162,43 +150,24 @@ class ProxyEntry constructor(
             .filter { it.second }.joinToString(" ") { it.first }
     }
     
+    val params get() =
+        listOf(
+            "ttl" to declaredTTL,
+            "at" to availableTime,
+            "st" to status,
+            "pg" to numSuccessPages,
+            "fpg" to numFailedPages
+        )
+    
     enum class BanState {
         OK, SEGMENT, HOST, OTHER;
         
         val isOK get() = this == OK
         val isBanned get() = !isOK
     }
-
-    constructor(
-        /**
-         * The host of the proxy server
-         * */
-        host: String,
-        /**
-         * The port of the proxy server
-         * */
-        port: Int = 0,
-        /**
-         * The username
-         * */
-        username: String? = null,
-        /**
-         * The password
-         * */
-        password: String? = null,
-        /**
-         * The proxy type
-         * */
-        type: Proxy.Type = Proxy.Type.HTTP
-    ): this(host, port, user = username, pwd = password) {
-        proxyType = when (type) {
-            Proxy.Type.HTTP -> ProxyType.HTTP
-            Proxy.Type.SOCKS -> ProxyType.SOCKS5
-            Proxy.Type.DIRECT -> ProxyType.DIRECT
-            else -> ProxyType.DIRECT
-        }
-    }
-
+    
+    fun toURI() = URI(protocol, "$username:$password", host, port, null, null, null)
+    
     fun willExpireAt(instant: Instant): Boolean = ttl < instant
     
     fun willExpireAfter(duration: Duration): Boolean = ttl < Instant.now() + duration
@@ -212,6 +181,10 @@ class ProxyEntry constructor(
     fun refresh() {
         availableTime = Instant.now()
         lastActiveTime = availableTime
+    }
+    
+    fun canConnect(): Boolean {
+        return NetUtil.testTcpNetwork(host, port)
     }
     
     fun test(): Boolean {
@@ -264,53 +237,40 @@ class ProxyEntry constructor(
     }
     
     /**
-     * The string representation, can be parsed using [parse]
+     * The string representation, can be parsed using [parse] or [deserialize]
      * */
     fun serialize(): String {
-        val ttlStr = if (declaredTTL != null) ", ttl:$declaredTTL" else ""
-        return "$host:$port${META_DELIMITER}at:$availableTime$ttlStr, $metadata"
+        val uriBuilder = URIBuilder(toURI())
+        params.forEach { uriBuilder.addParameter(it.first, it.second.toString()) }
+        return uriBuilder.toString()
     }
-
-    fun toProxyEntry2(): ProxyEntry2 {
-        val p2 = ProxyEntry2(host, port, username, password, type)
-
-        p2.outIp = outIp
-        p2.id = id
-        p2.declaredTTL = declaredTTL
-        p2.lastTarget = lastTarget
-        p2.testUrls
-        p2.defaultTestUrl
-        p2.isTestIp
-
-        return p2
-    }
-
-    override fun hashCode(): Int = 31 * proxyType.hashCode() + hostPort.hashCode()
+    
+    /**
+     * The string representation, can be parsed using [parse] or [deserialize]
+     * */
+    fun format() = serialize()
+    
+    override fun hashCode(): Int = 31 * type.hashCode() + hostPort.hashCode()
     
     override fun equals(other: Any?): Boolean {
         if (this === other) {
             return true
         }
-
-        if (other is ProxyEntry2) {
-            return other.type == type
-                && other.host == host
-                && other.port == port
-                && other.username == username
-        }
-
+        
         return other is ProxyEntry
             && other.type == type
             && other.host == host
             && other.port == port
             && other.username == username
+            && other.password == password
+            && other.outIp == outIp
     }
-
+    
     /**
      * The string representation, can be parsed using [parse]
      * */
-    override fun toString(): String = "$display $metadata".trim()
-
+    override fun toString(): String = "$display $metadata"
+    
     override fun compareTo(other: ProxyEntry): Int {
         var c = outIp.compareTo(other.outIp)
         if (c == 0) {
@@ -318,12 +278,11 @@ class ProxyEntry constructor(
         }
         return c
     }
-
+    
     private fun formatDisplay(): String {
         val ban = if (isBanned) "[banned] " else ""
         val ttlStr = ttlDuration?.truncatedTo(ChronoUnit.SECONDS)?.readable() ?:"0s"
-        val ipStr = if (outIp.isEmpty()) hostPort else "$hostPort => $outIp"
-        return "$ban[$ipStr]($numFailedPages/$numSuccessPages/$ttlStr)[$readableState]"
+        return "$ban[$hostPort => $outIp]($numFailedPages/$numSuccessPages/$ttlStr)[$readableState]"
     }
     
     /**
@@ -352,9 +311,9 @@ class ProxyEntry constructor(
         
         private val instanceSequence = AtomicInteger()
         private const val META_DELIMITER = StringUtils.SPACE
-        // Check if the proxy server is still available if it's not used for 60 seconds
+        // Check if the proxy server is still available if it's not used for 120 seconds
         private val PROXY_EXPIRED = Duration.ofSeconds(120)
-        // if a proxy server can not be connected in a hour, we announce it's dead and remove it from the file
+        // if a proxy server can not be connected in an hour, we announce it's dead and remove it from the file
         private val MISSING_PROXY_DEAD_TIME = Duration.ofHours(1)
         private const val DEFAULT_PROXY_SERVER_PORT = 80
         const val PROXY_TEST_WEB_SITES_FILE = "proxy.test.web.sites.txt"
@@ -368,50 +327,41 @@ class ProxyEntry constructor(
         init {
             ResourceLoader.readAllLines(PROXY_TEST_WEB_SITES_FILE).mapNotNullTo(TEST_URLS) { UrlUtils.getURLOrNull(it) }
         }
-
-        fun create(proxy: ProxyEntry2): ProxyEntry {
-            val p2 = proxy
-            return ProxyEntry(p2.host, p2.port, p2.outIp, p2.id, p2.declaredTTL, p2.lastTarget,
-                p2.testUrls, p2.defaultTestUrl, p2.isTestIp,
-                user = p2.username, pwd = p2.password
-            )
-        }
-
+        
         /**
-         * Parse a proxy from a string. A string generated by ProxyEntry.serialize can be parsed.
+         * Parse a proxy from a string. A string generated by [serialize] can be parsed.
          * */
-        fun parse(str: String): ProxyEntry? {
-            val ipPort = str.trim().substringBefore(META_DELIMITER)
-            if (!Strings.isIpPortLike(ipPort)) {
-                log.warn("Malformed ip port - >{}<", str)
-                return null
+        fun parse(str: String): ProxyEntry? = deserialize(str)
+        
+        /**
+         * Parse a proxy from a string. A string generated by [serialize] can be parsed.
+         * */
+        fun deserialize(str: String): ProxyEntry? {
+            val uri = runCatching { URI.create(str) }.getOrNull() ?: return null
+            
+            var username: String? = null
+            var password: String? = null
+            if (uri.userInfo != null) {
+                username = uri.userInfo.substringBefore(":")
+                password = uri.userInfo.substringAfter(":")
+            }
+            val type = when (uri.scheme) {
+                "http", "https" -> Proxy.Type.HTTP
+                "socks", "socks4", "socks5" -> Proxy.Type.SOCKS
+                else -> return null
             }
             
-            val pos = ipPort.lastIndexOf(':')
-            if (pos != -1) {
-                val host = ipPort.substring(0, pos)
-                val port = NumberUtils.toInt(ipPort.substring(pos + 1), DEFAULT_PROXY_SERVER_PORT)
-                
-                var availableTime: Instant? = null
-                var ttl: Instant? = null
-                val parts = str.substringAfter(META_DELIMITER).split(", ")
-                parts.forEach { item ->
-                    try {
-                        when {
-                            item.startsWith("at:") -> availableTime = Instant.parse(item.substring("at:".length).trimEnd())
-                            item.startsWith("ttl:") -> ttl = Instant.parse(item.substring("ttl:".length).trimEnd())
-                        }
-                    } catch (e: Throwable) {
-                        log.warn("Ignore malformed proxy metadata <{}>", item)
-                    }
-                }
-                
-                val proxyEntry = ProxyEntry(host, port, declaredTTL = ttl)
-                availableTime?.let { proxyEntry.availableTime = it }
-                return proxyEntry
-            }
+            val proxyEntry = ProxyEntry(uri.host, uri.port, username, password, type)
+            val params = uri.query.split("&").map { it.split("=") }
+                .filter { it.size == 2 }.associate { it[0] to it[1] }
             
-            return null
+            params["ttl"]?.let { proxyEntry.declaredTTL = Instant.parse(it) }
+            params["at"]?.let { proxyEntry.availableTime = Instant.parse(it) }
+            params["st"]?.let { proxyEntry.status.set(Status.valueOf(it)) }
+            params["pg"]?.let { proxyEntry.numSuccessPages.set(Integer.parseInt(it)) }
+            params["fpg"]?.let { proxyEntry.numFailedPages.set(Integer.parseInt(it)) }
+            
+            return proxyEntry
         }
     }
 }

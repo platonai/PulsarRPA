@@ -3,7 +3,6 @@ package ai.platon.pulsar.test.browser
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyEntry2
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -318,14 +317,14 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
 
     @Test
     fun testProxyAuthorization() {
-        val proxyEntry = ProxyEntry2("127.0.0.1", 10808, "abc", "abc", Proxy.Type.SOCKS)
+        val proxyEntry = ProxyEntry("127.0.0.1", 10808, "abc", "abc", Proxy.Type.SOCKS)
         if (!NetUtil.testTcpNetwork(proxyEntry.host, proxyEntry.port)) {
             logger.info("To run this test case, you should rise a local proxy server with proxy: {}", proxyEntry.toURI())
             return
         }
 
         val browserId = BrowserId.RANDOM
-        browserId.setProxy(ProxyEntry.create(proxyEntry))
+        browserId.setProxy(proxyEntry)
 
         val browser = driverFactory.launchBrowser(browserId)
         val driver = browser.newDriver()
