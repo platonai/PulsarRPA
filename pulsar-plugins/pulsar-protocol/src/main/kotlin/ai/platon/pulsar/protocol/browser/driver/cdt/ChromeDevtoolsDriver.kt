@@ -151,18 +151,6 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestHeaders"))
-    @Throws(WebDriverException::class)
-    override suspend fun mainRequestHeaders(): Map<String, Any> {
-        return mainRequestHeaders
-    }
-
-    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestCookies"))
-    @Throws(WebDriverException::class)
-    override suspend fun mainRequestCookies(): List<Map<String, String>> {
-        return mainRequestCookies
-    }
-
     @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
         return rpc.invokeDeferredSilently("getCookies") { getCookies0() } ?: listOf()

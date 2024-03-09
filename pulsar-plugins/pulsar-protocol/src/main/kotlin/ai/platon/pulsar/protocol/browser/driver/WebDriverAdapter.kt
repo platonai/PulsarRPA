@@ -165,14 +165,6 @@ class WebDriverAdapter(
     @Throws(WebDriverException::class)
     override suspend fun evaluateDetail(expression: String) = driverOrNull?.evaluateDetail(expression)
 
-    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestHeaders"))
-    @Throws(WebDriverException::class)
-    override suspend fun mainRequestHeaders() = driverOrNull?.mainRequestHeaders() ?: mapOf()
-
-    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestCookies"))
-    @Throws(WebDriverException::class)
-    override suspend fun mainRequestCookies() = driverOrNull?.mainRequestCookies() ?: listOf()
-
     @Throws(WebDriverException::class)
     override suspend fun getCookies() = driverOrNull?.getCookies() ?: listOf()
 

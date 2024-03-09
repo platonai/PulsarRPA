@@ -304,13 +304,6 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun pageSource(): String?
     
-    @Deprecated("Getter is available", ReplaceWith("mainRequestHeaders"))
-    @Throws(WebDriverException::class)
-    suspend fun mainRequestHeaders(): Map<String, Any>
-    @Deprecated("Getter is available", ReplaceWith("mainRequestCookies"))
-    @Throws(WebDriverException::class)
-    suspend fun mainRequestCookies(): List<Map<String, String>>
-    
     @Throws(WebDriverException::class)
     suspend fun getCookies(): List<Map<String, String>>
     /**
