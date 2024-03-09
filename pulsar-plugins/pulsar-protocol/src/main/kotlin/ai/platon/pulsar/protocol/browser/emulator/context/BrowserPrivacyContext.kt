@@ -77,10 +77,10 @@ open class BrowserPrivacyContext(
 
     @Beta
     override fun subscribeWebDriver() = driverPoolManager.subscribeDriver(browserId)
-
-    override fun report() {
-        logger.info("Privacy context has lived for {} | {} | {}" +
-                " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
+    
+    override fun getReport(): String {
+        var report = String.format("Privacy context has lived for %s | %s | %s" +
+            " | success: %s(%s pages/s) | small: %s(%s) | traffic: %s(%s/s) | tasks: %s total run: %s | %s",
             // Privacy context has lived for {} | {} | {}
             elapsedTime.readable(), display, readableState,
             // success: {}({} pages/s)
@@ -95,17 +95,26 @@ open class BrowserPrivacyContext(
             // proxy: {}
             proxyContext?.proxyEntry?.toString()
         )
-
+        report += "\n"
+        
         if (smallPageRate > 0.5) {
-            logger.warn("Privacy context #{} is disqualified, too many small pages: {}({})",
-                    sequence, meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate))
+            report += String.format("Privacy context #%s is disqualified, too many small pages: %s(%s)",
+                sequence, meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate))
+            report += "\n"
         }
-
+        
         // 0 to disable
         if (meterSuccesses.meanRate < 0) {
-            logger.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", sequence)
+            report += String.format("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", sequence)
             // check the zombie context list, if the context keeps go bad, the proxy provider is bad
+            report += "\n"
         }
+        
+        return report
+    }
+
+    override fun report() {
+        logger.info(getReport())
     }
     /**
      * Closing call stack:

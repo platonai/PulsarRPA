@@ -59,7 +59,6 @@ class MultiPrivacyContextManager(
     private val numPrivacyContexts: Int get() = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
 
     val maxAllowedBadContexts = 10
-    val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
 
     internal val maintainCount = AtomicInteger()
     private var lastMaintainTime = Instant.now()
@@ -328,6 +327,7 @@ class MultiPrivacyContextManager(
         activeContexts.filterValues { !it.isActive }.values.forEach {
             permanentContexts.remove(it.privacyAgent)
             temporaryContexts.remove(it.privacyAgent)
+            
             logger.info("Privacy context is inactive, closing it | {} | {} | {}",
                 it.elapsedTime.readable(), it.display, it.readableState)
             close(it)
@@ -516,13 +516,14 @@ class MultiPrivacyContextManager(
 
             val count = snapshotDumpCount.incrementAndGet()
             val sb = StringBuilder()
-            sb.append("\n$count. Privacy context snapshot: \n")
+            sb.append("\n\n\n$count. Privacy contexts snapshot \n")
             sb.appendLine(LocalDateTime.now())
             sb.append(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            sb.append("\n{}", takeSnapshot())
+            sb.append("\n", takeSnapshot())
+            sb.append("\n")
             activeContexts.values.forEach { sb.appendLine(it.getReport()) }
             sb.append("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-
+            
             Files.writeString(SNAPSHOT_PATH, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND)
         } catch (e: IOException) {
             logger.warn(e.stringify())

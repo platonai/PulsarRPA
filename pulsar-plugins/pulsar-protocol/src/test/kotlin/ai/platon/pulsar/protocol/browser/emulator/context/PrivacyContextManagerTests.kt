@@ -12,14 +12,13 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyContextIdGenerator
-import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.RandomStringUtils
-import kotlin.test.*
 import java.nio.file.Files
+import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -42,6 +41,34 @@ class PrivacyContextManagerTests {
         BrowserSettings.privacy(6).maxTabs(10)
     }
 
+    @Test
+    fun testPrivacyContextReport() {
+        var report = String.format("Privacy context has lived for %s | %s | %s" +
+            " | success: %s(%s pages/s) | small: %s(%s) | traffic: %s(%s/s) | tasks: %s total run: %s | proxy: %s",
+            // Privacy context has lived for {} | {} | {}
+            Duration.ofMinutes(1), "03092518dNOgA1", "active ready",
+            // success: {}({} pages/s)
+            1023, String.format("%.2f", 0.45),
+            // small: {}({})
+            101, String.format("%.1f%%", 100 * 0.01),
+            // traffic: {}({}/s)
+            "1G",
+            "1M",
+            // tasks: {} total run: {}
+            123, 234,
+            // proxy: {}
+            "8.8.8.8"
+        )
+        
+        // println(report)
+        
+        assertTrue { report.contains("Privacy context has lived for PT1M | 03092518dNOgA1 | active ready") }
+        assertTrue { report.contains("success: 1023(0.45 pages/s)") }
+        assertTrue { report.contains("small: 101(1.0%)") }
+        assertTrue { report.contains("traffic: 1G(1M/s)") }
+        assertTrue { report.contains("tasks: 123 total run: 234") }
+    }
+    
     @Test
     fun testPrivacyContextComparison() {
         val privacyManager = MultiPrivacyContextManager(driverPoolManager, conf)

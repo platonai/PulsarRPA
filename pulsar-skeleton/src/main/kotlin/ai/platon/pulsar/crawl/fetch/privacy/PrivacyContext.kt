@@ -298,7 +298,7 @@ abstract class PrivacyContext(
     abstract suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
     fun takeSnapshot(): String {
-        return "$readableState driver: ${promisedWebDriverCount()}"
+        return "$readableState | promised drivers: ${promisedWebDriverCount()}"
     }
     /**
      * Dismiss the privacy context and mark it as be retired, so it should be closed later.
