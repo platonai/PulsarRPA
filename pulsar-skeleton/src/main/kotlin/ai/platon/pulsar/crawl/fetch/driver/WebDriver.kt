@@ -380,9 +380,9 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun isChecked(selector: String): Boolean
     
-    /*
-     * Interacts with the Webpage
-     **/
+    /////////////////////////////////////////////////
+    // Interacts with the Webpage
+    
     /**
      * Brings the browser window to the front.
      */

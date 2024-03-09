@@ -79,15 +79,21 @@ open class BrowserPrivacyContext(
     override fun subscribeWebDriver() = driverPoolManager.subscribeDriver(browserId)
 
     override fun report() {
-        logger.info("Privacy context #{}{}{} has lived for {}" +
+        logger.info("Privacy context has lived for {} | {} | {}" +
                 " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
-                display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
-                meterSuccesses.count, String.format("%.2f", meterSuccesses.meanRate),
-                meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate),
-                Strings.compactFormat(coreMetrics?.totalNetworkIFsRecvBytes?:0),
-                Strings.compactFormat(coreMetrics?.networkIFsRecvBytesPerSecond?:0),
-                meterTasks.count, meterFinishes.count,
-                proxyContext?.proxyEntry?.toString()
+            // Privacy context has lived for {} | {} | {}
+            elapsedTime.readable(), display, readableState,
+            // success: {}({} pages/s)
+            meterSuccesses.count, String.format("%.2f", meterSuccesses.meanRate),
+            // small: {}({})
+            meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate),
+            // traffic: {}({}/s)
+            Strings.compactFormat(coreMetrics?.totalNetworkIFsRecvBytes?:0),
+            Strings.compactFormat(coreMetrics?.networkIFsRecvBytesPerSecond?:0),
+            // tasks: {} total run: {}
+            meterTasks.count, meterFinishes.count,
+            // proxy: {}
+            proxyContext?.proxyEntry?.toString()
         )
 
         if (smallPageRate > 0.5) {

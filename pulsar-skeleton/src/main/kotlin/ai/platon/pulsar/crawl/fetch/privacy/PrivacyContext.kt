@@ -202,8 +202,8 @@ abstract class PrivacyContext(
         return listOf(
             "closed" to isClosed, "leaked" to isLeaked, "active" to isActive,
             "highFailure" to isHighFailureRate, "idle" to isIdle, "good" to isGood,
-            "ready" to isReady
-        ).filter { it.second }.joinToString(" ") { it.first }
+            "ready" to isReady, "retired" to isRetired
+        ).filter { it.second }.joinToString(",") { it.first }
     }
 
     init {
