@@ -550,7 +550,8 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "dragAndDrop")
         }
     }
-
+    
+    @Throws(WebDriverException::class)
     override suspend fun outerHTML(): String? {
         return rpc.invokeDeferredSilently("outerHTML") { domAPI?.outerHTML }
     }

@@ -105,7 +105,7 @@ open class WebDriverContext(
 
     @Throws(Exception::class)
     open fun maintain() {
-        // close dead, valueless, idle driver pools, etc
+        // should close dead, valueless, idle driver pools, etc
     }
 
     /**
@@ -135,6 +135,7 @@ open class WebDriverContext(
         if (asap) {
             closeUnderlyingLayerGracefully()
         } else {
+            // TODO: always close the context as soon as possible, just retry the the unfinished tasks.
             waitUntilAllDoneNormally(Duration.ofMinutes(1))
             // close underlying IO based modules asynchronously
             closeUnderlyingLayerGracefully()
@@ -153,7 +154,7 @@ open class WebDriverContext(
     }
 
     private fun closeUnderlyingLayerGracefully() {
-        // Mark all working tasks are canceled, so they return as soon as possible
+        // Mark all working tasks to be canceled, so they return as soon as possible
         runningTasks.forEach { it.cancel() }
         // Cancel the browser, and all online drivers, and the worker coroutines with the drivers
         driverPoolManager.cancelAll(browserId)

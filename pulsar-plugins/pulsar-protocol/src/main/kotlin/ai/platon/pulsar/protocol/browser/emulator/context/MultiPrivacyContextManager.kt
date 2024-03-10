@@ -518,10 +518,11 @@ class MultiPrivacyContextManager(
             val sb = StringBuilder()
             sb.append("\n\n\n$count. Privacy contexts snapshot \n")
             sb.appendLine(LocalDateTime.now())
-            sb.append(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            sb.append("------------------------------")
             sb.append("\n", takeSnapshot())
             sb.append("\n")
-            activeContexts.values.forEach { sb.appendLine(it.getReport()) }
+            sb.append("\n")
+            activeContexts.values.forEach { sb.append(it.getReport()) }
             sb.append("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
             
             Files.writeString(SNAPSHOT_PATH, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND)
