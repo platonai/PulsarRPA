@@ -62,7 +62,7 @@ class MultiPrivacyContextManager(
 
     internal val maintainCount = AtomicInteger()
     private var lastMaintainTime = Instant.now()
-    private val minMaintainInterval = Duration.ofSeconds(10)
+    private val minMaintainInterval = Duration.ofSeconds(15)
     private val tooFrequentMaintenance get() = DateTimes.isNotExpired(lastMaintainTime, minMaintainInterval)
     private var lastDumpTime = Instant.now()
     private val snapshotDumpCount = AtomicInteger()

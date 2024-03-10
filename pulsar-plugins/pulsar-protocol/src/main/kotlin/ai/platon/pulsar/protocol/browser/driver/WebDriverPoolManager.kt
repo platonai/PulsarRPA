@@ -98,7 +98,7 @@ open class WebDriverPoolManager(
 
     private var lastMaintainTime = Instant.now()
     private val maintainCount = AtomicInteger()
-    private val minMaintainInterval = Duration.ofSeconds(10)
+    private val minMaintainInterval = Duration.ofSeconds(15)
     private val tooFrequentMaintenance get() = DateTimes.isNotExpired(lastMaintainTime, minMaintainInterval)
 
     /**
@@ -295,7 +295,7 @@ open class WebDriverPoolManager(
         lastMaintainTime = Instant.now()
 
         if (maintainCount.getAndIncrement() == 0) {
-            logger.info("Maintaining service is started")
+            logger.info("Maintaining service is started, minimal maintain interval: {}", minMaintainInterval)
         }
 
         doMaintain()
