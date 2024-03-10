@@ -89,7 +89,6 @@ class ParseComponent(
 
         traceInfo?.also {
             it.clear()
-            it["linkFilterReport"] = pageParser.linkFilter.filterReport.joinToString("\n") { it }
         }
 
         return traceInfo?: mapOf()
