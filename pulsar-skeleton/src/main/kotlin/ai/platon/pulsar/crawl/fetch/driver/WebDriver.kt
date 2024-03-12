@@ -548,11 +548,7 @@ interface WebDriver: Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int = 0)
-    
-    /*
-     * Retrival for html strings, texts and attributes of DOMs
-     **/
-    
+
     /**
      * Returns the document's HTML markup.
      *

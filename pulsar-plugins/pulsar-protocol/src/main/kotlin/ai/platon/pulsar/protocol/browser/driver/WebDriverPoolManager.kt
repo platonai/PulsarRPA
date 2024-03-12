@@ -298,7 +298,11 @@ open class WebDriverPoolManager(
             logger.info("Maintaining service is started, minimal maintain interval: {}", minMaintainInterval)
         }
 
-        doMaintain()
+        try {
+            doMaintain()
+        } catch (t: Throwable) {
+            logger.warn(t.stringify("Failed to maintain the driver pool"))
+        }
 
         // assign the last maintain time again
         lastMaintainTime = Instant.now()
@@ -322,6 +326,7 @@ open class WebDriverPoolManager(
         if (idleDriverPoolCount > 0) {
             logger.warn("There are {} idle driver pools, preempt and do the maintaining", idleDriverPoolCount)
             // Preempt the channel to ensure consistency
+            // TODO: check if it's necessary to preempt the channel
             preempt {
                 driverPoolCloser.closeIdleDriverPoolsSafely()
             }
@@ -375,7 +380,7 @@ open class WebDriverPoolManager(
         if (closed.compareAndSet(false, true)) {
             _deferredTasks.values.forEach {
                 // Cancels job, including all its children with a specified diagnostic error
-                it.cancel("Program is closed")
+                it.cancel("This process is closing")
             }
             _deferredTasks.clear()
 
