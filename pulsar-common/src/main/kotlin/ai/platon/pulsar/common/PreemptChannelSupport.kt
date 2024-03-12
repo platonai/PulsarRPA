@@ -4,6 +4,7 @@ import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.jvm.Throws
 
 /**
  * The preemptive channel concurrency pattern, there are two channels: preemptive channel and normal channel
@@ -49,11 +50,14 @@ abstract class PreemptChannelSupport(val name: String = "") {
     /**
      * If there is at least one preemptive task in the critical section, all normal tasks must wait.
      * */
+    @Throws(InterruptedException::class)
     fun <T> preempt(preemptiveTask: () -> T) = beforePreempt().runCatching { preemptiveTask() }
             .also { afterPreempt() }.getOrThrow()
-
+    
+    @Throws(InterruptedException::class)
     fun <T> whenNormal(task: () -> T) = beforeTask().runCatching { task() }.also { afterTask() }.getOrThrow()
-
+    
+    @Throws(InterruptedException::class)
     suspend fun <T> whenNormalDeferred(task: suspend () -> T) =
             beforeTask().runCatching { task() }.also { afterTask() }.getOrThrow()
 
@@ -73,14 +77,16 @@ abstract class PreemptChannelSupport(val name: String = "") {
                 " pNTasks: $numPendingNormalTasks," +
                 " rNTasks: $numRunningNormalTasks"
     }
-
+    
+    @Throws(InterruptedException::class)
     private fun beforePreempt() {
         // All workers must NOT pass now
         numPreemptiveTasks.incrementAndGet()
         // Wait until all the normal tasks are finished
         waitUntilNoRunningNormalTasks()
     }
-
+    
+    @Throws(InterruptedException::class)
     private fun afterPreempt() {
         numRunningPreemptiveTasks.decrementAndGet()
         lock.withLock {
@@ -90,13 +96,15 @@ abstract class PreemptChannelSupport(val name: String = "") {
             }
         }
     }
-
+    
+    @Throws(InterruptedException::class)
     private fun beforeTask() {
         numPendingNormalTasks.incrementAndGet()
         // wait all the preemptive tasks  are finished
         waitUntilNoPreemptiveTask()
     }
-
+    
+    @Throws(InterruptedException::class)
     private fun afterTask() {
         lock.withLock {
             if (numRunningNormalTasks.decrementAndGet() == 0) {
@@ -105,7 +113,8 @@ abstract class PreemptChannelSupport(val name: String = "") {
             }
         }
     }
-
+    
+    @Throws(InterruptedException::class)
     private fun waitUntilNoRunningNormalTasks() {
         lock.withLock {
             var nanos = pollingTimeout.toNanos()
@@ -118,6 +127,7 @@ abstract class PreemptChannelSupport(val name: String = "") {
         }
     }
 
+    @Throws(InterruptedException::class)
     private fun waitUntilNoPreemptiveTask() {
         lock.withLock {
             var nanos = pollingTimeout.toNanos()

@@ -116,16 +116,23 @@ class LoadingWebDriverPool constructor(
      * Number of available slots to allocate new drivers
      * */
     val numDriverSlots get() = capacity - numActive
-
+    /**
+     * The last active time of the pool.
+     * */
     var lastActiveTime: Instant = Instant.now()
         private set
+    /**
+     * The idle timeout of the pool.
+     * */
     val idleTimeout get() = immutableConfig.getDuration(BROWSER_DRIVER_POOL_IDLE_TIMEOUT, Duration.ofMinutes(20))
+    /**
+     * The idle time of the pool.
+     * */
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
 
     /**
-     * Check if the pool is idle.
-     *
-     * TODO: why numWorking == 0 is needed?
+     * Check if the pool is idle. If there is no working driver and the idle time is longer than the idle timeout,
+     * the pool is idle. If the pool is idle, it should be closed.
      * */
     val isIdle get() = (numWorking == 0 && idleTime > idleTimeout)
 

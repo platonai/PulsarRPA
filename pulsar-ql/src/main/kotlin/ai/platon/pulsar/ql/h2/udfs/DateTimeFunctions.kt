@@ -30,8 +30,8 @@ object DateTimeFunctions {
         try {
             val instant = DateTimes.parseBestInstant(text)
             return DateTimeFormatter.ofPattern(pattern).withZone(DateTimes.zoneId).format(instant)
-        } catch (t: Throwable) {
-            logger.warn("Failed handle date time: {}", text)
+        } catch (e: RuntimeException) {
+            logger.warn("Failed handle date time: {} | {}", text, e.message)
         }
 
         return formatDefaultDateTime(pattern)

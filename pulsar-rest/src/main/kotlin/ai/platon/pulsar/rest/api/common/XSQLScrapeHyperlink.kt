@@ -77,7 +77,9 @@ open class XSQLScrapeHyperlink(
 
             doExtract(page, document)
         } catch (t: Throwable) {
+            // Log the exception and throw it
             logger.warn("Unexpected exception", t)
+            throw t
         }
     }
 

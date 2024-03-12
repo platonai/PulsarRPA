@@ -38,6 +38,7 @@ open class DegenerateXSQLScrapeHyperlink(
             }
         } catch (t: Throwable) {
             logger.warn("Unexpected exception", t)
+            throw t
         } finally {
             response.isDone = true
         }
@@ -48,7 +49,9 @@ open class DegenerateXSQLScrapeHyperlink(
             try {
                 executeQuery()
             } catch (t: Throwable) {
+                // Log the exception and throw it
                 getLogger(this).warn("Unexpected exception", t)
+                throw t
             } finally {
                 complete(page ?: WebPage.NIL)
             }

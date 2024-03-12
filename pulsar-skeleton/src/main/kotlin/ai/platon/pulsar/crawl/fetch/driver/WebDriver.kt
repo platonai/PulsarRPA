@@ -264,7 +264,7 @@ interface WebDriver: Closeable {
      *
      * If the browser failed to return a proper url, return the passed in url to navigate.
      *
-     * @return The frame document's URL without fragment, or the passed in url to navigate.
+     * @return The document's URL without fragment, or the passed in url to navigate.
      */
     @Throws(WebDriverException::class)
     suspend fun currentUrl(): String
@@ -597,13 +597,6 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun selectTexts(selector: String): List<String>
-    
-    @Deprecated("Inappropriate name", ReplaceWith("selectFirstAttributeOrNull"))
-    @Throws(WebDriverException::class)
-    suspend fun firstAttr(selector: String, attrName: String): String? = selectFirstAttributeOrNull(selector, attrName)
-    @Deprecated("Inappropriate name", ReplaceWith("selectAttributes"))
-    @Throws(WebDriverException::class)
-    suspend fun allAttrs(selector: String, attrName: String): List<String> = selectAttributes(selector, attrName)
     /**
      * Returns the node's attribute value, the node is located by [selector], the attribute is [attrName].
      *

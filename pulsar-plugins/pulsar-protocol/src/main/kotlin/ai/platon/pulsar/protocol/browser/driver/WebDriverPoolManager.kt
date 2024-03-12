@@ -156,6 +156,10 @@ open class WebDriverPoolManager(
         lastActiveTime = Instant.now()
         try {
             return doRun(task)
+        } catch (e: InterruptedException) {
+            logger.warn("Interrupted | {}", e.message)
+            Thread.currentThread().interrupt()
+            return null
         } catch (e: WebDriverException) {
             logger.warn("Failed to run the task | {} | {}", task.page.url, e.message)
             return null
@@ -167,7 +171,7 @@ open class WebDriverPoolManager(
     /**
      * Run the task and save the execution state, so it can be canceled by [cancel] and [cancelAll].
      * */
-    suspend fun runCancelable(task: WebDriverTask, driver: WebDriver): FetchResult? {
+    private suspend fun runCancelable(task: WebDriverTask, driver: WebDriver): FetchResult? {
         val deferred = supervisorScope {
             // Creates a coroutine and returns its future result
             // The running coroutine is cancelled when the resulting deferred is cancelled
@@ -307,6 +311,9 @@ open class WebDriverPoolManager(
 
         try {
             doMaintain()
+        } catch (e: InterruptedException) {
+            logger.warn("Interrupted | {}", e.message)
+            Thread.currentThread().interrupt()
         } catch (t: Throwable) {
             logger.warn(t.stringify("Failed to maintain the driver pool"))
         }
@@ -315,7 +322,7 @@ open class WebDriverPoolManager(
         lastMaintainTime = Instant.now()
     }
 
-    @Throws(Exception::class)
+    @Throws(InterruptedException::class, Exception::class)
     private fun doMaintain() {
         // To close retired driver pools, there is no need to wait for normal tasks, so no preempting is required
         driverPoolCloser.closeOldestRetiredDriverPoolSafely()
@@ -405,7 +412,7 @@ open class WebDriverPoolManager(
      * */
     override fun toString(): String = takeSnapshot(false)
 
-    @Throws(WebDriverException::class, WebDriverPoolException::class)
+    @Throws(WebDriverException::class, WebDriverPoolException::class, InterruptedException::class)
     private suspend fun doRun(task: WebDriverTask): FetchResult? {
         maintain()
         
@@ -418,7 +425,7 @@ open class WebDriverPoolManager(
         return runCancelableWithTimeout(task, driver)
     }
 
-    @Throws(WebDriverException::class, WebDriverPoolException::class)
+    @Throws(WebDriverException::class, WebDriverPoolException::class, InterruptedException::class)
     private suspend fun runWithDriverPool(task: WebDriverTask): FetchResult? {
         val browserId = task.browserId
         var result: FetchResult? = null

@@ -116,11 +116,13 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
     
+    @Throws(WebDriverException::class)
     override suspend fun location(): String {
         val result = evaluate("window.location")
         return result?.toString() ?: ""
     }
     
+    @Throws(WebDriverException::class)
     override suspend fun baseURI(): String {
         val result = evaluate("document.baseURI")
         return result?.toString() ?: ""

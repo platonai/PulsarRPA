@@ -510,8 +510,14 @@ abstract class AbstractPulsarContext(
         if (closed.compareAndSet(false, true)) {
             try {
                 doClose0()
+            } catch (e: InterruptedException) {
+                System.err.println("Interrupted while closing context")
+                Thread.currentThread().interrupt()
+            } catch (e: Exception) {
+                System.err.println("Exception while closing context")
+                e.printStackTrace(System.err)
             } catch (t: Throwable) {
-                System.err.println("Unexpected exception:")
+                System.err.println("Unexpected while closing context")
                 t.printStackTrace(System.err)
             }
         }
@@ -524,8 +530,6 @@ abstract class AbstractPulsarContext(
      * */
     protected open fun doClose0() {
         logger.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
-
-        getBeanOrNull<GlobalCacheFactory>()?.globalCache?.clearCaches()
 
         val nonSyncSessions = sessions.values.toList().also { sessions.clear() }
         nonSyncSessions.parallelStream().forEach { session ->

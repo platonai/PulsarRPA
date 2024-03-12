@@ -97,8 +97,6 @@ abstract class AbstractSQLContext constructor(
         val conn = connectionPool.poll() ?: randomConnection
         try {
             block(conn)
-        } catch (t: Throwable) {
-            logger.warn(t.stringify())
         } finally {
             conn.takeUnless { it.isClosed }?.let { connectionPool.add(conn) }
         }

@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import oshi.SystemInfo
 import oshi.hardware.CentralProcessor
+import java.io.IOException
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
@@ -180,9 +181,9 @@ class AppSystemInfo {
             try {
                 val text = System.getProperties().entries.joinToString("\n") { "" + it.key + "=" + it.value}
                 Files.writeString(path, text)
-            } catch (t: Throwable) {
-                System.err.println(t.stringify())
-                logger.warn(t.stringify())
+            } catch (e: IOException) {
+                System.err.println(e.stringify())
+                logger.warn(e.stringify())
             }
             
             val message = "OSHI is disabled"
