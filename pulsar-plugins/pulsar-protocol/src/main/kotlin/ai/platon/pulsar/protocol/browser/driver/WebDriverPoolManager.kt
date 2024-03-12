@@ -154,7 +154,14 @@ open class WebDriverPoolManager(
     @Throws(WebDriverException::class, WebDriverPoolException::class)
     suspend fun run(task: WebDriverTask): FetchResult? {
         lastActiveTime = Instant.now()
-        return doRun(task).also { lastActiveTime = Instant.now() }
+        try {
+            return doRun(task)
+        } catch (e: WebDriverException) {
+            logger.warn("Failed to run the task | {} | {}", task.page.url, e.message)
+            return null
+        } finally {
+            lastActiveTime = Instant.now()
+        }
     }
 
     /**

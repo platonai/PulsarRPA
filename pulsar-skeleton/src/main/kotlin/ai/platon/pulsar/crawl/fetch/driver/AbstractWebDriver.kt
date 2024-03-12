@@ -84,7 +84,7 @@ abstract class AbstractWebDriver(
         canceled.set(false)
         crashed.set(false)
         if (!isInit && !isWorking) {
-            throw IllegalStateException("A driver has to be ready before work, actual $state")
+            throw IllegalWebDriverStateException("The driver is expected to be INIT or WORKING, actually $state")
         }
         state.set(WebDriver.State.READY)
     }
@@ -93,7 +93,7 @@ abstract class AbstractWebDriver(
         canceled.set(false)
         crashed.set(false)
         if (!isInit && !isReady) {
-            throw IllegalStateException("A driver has to be ready before work, actual $state")
+            throw IllegalWebDriverStateException("The driver is expected to be INIT or READY, actually $state")
         }
         state.set(WebDriver.State.WORKING)
     }
