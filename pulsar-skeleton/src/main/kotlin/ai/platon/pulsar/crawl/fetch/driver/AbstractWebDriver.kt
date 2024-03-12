@@ -84,7 +84,8 @@ abstract class AbstractWebDriver(
         canceled.set(false)
         crashed.set(false)
         if (!isInit && !isWorking) {
-            throw IllegalWebDriverStateException("The driver is expected to be INIT or WORKING, actually $state")
+            // It's a bad idea to throw an exception, which lead to inconsistency within the ConcurrentStatefulDriverPool.
+            // throw IllegalWebDriverStateException("The driver is expected to be INIT or WORKING to be ready, actually $state")
         }
         state.set(WebDriver.State.READY)
     }
@@ -93,7 +94,8 @@ abstract class AbstractWebDriver(
         canceled.set(false)
         crashed.set(false)
         if (!isInit && !isReady) {
-            throw IllegalWebDriverStateException("The driver is expected to be INIT or READY, actually $state")
+            // It's a bad idea to throw an exception, which lead to inconsistency within the ConcurrentStatefulDriverPool.
+            // throw IllegalWebDriverStateException("The driver is expected to be INIT or READY to work, actually $state")
         }
         state.set(WebDriver.State.WORKING)
     }

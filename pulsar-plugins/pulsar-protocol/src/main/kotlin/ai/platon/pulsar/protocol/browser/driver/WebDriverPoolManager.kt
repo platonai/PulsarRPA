@@ -324,16 +324,16 @@ open class WebDriverPoolManager(
 
         /**
          * Check if there is zombie browsers who are not in active browser list nor in closed browser list,
-         * if there are some of such browsers, write warnings and destroy them.
+         * if there are some of such browsers, issue warnings and destroy them.
          * */
         browserManager.destroyZombieBrowsersForcibly()
 
-        // We doubt the preemptive maintainer slows down the system if it runs too frequent
         val idleDriverPoolCount = workingDriverPools.values.count { it.isIdle }
         if (idleDriverPoolCount > 0) {
             logger.warn("There are {} idle driver pools, preempt and do the maintaining", idleDriverPoolCount)
             // Preempt the channel to ensure consistency
             // TODO: check if it's necessary to preempt the channel
+            // We doubt the preemptive maintainer slows down the system if it runs too frequent
             preempt {
                 driverPoolCloser.closeIdleDriverPoolsSafely()
             }
@@ -407,10 +407,9 @@ open class WebDriverPoolManager(
 
     @Throws(WebDriverException::class, WebDriverPoolException::class)
     private suspend fun doRun(task: WebDriverTask): FetchResult? {
-        val result = runWithDriverPool(task)
-
         maintain()
-
+        
+        val result = runWithDriverPool(task)
         return result
     }
 
@@ -420,43 +419,14 @@ open class WebDriverPoolManager(
     }
 
     @Throws(WebDriverException::class, WebDriverPoolException::class)
-    private suspend fun subscribeDriver(browserId: BrowserId, priority: Int): WebDriver? {
-        var driver: WebDriver? = null
-        /**
-         * There are two kind of tasks, normal tasks and monitor tasks,
-         * normal tasks are performed in parallel, but can not be performed with monitor tasks at the same time.
-         *
-         * [PreemptChannelSupport] is developed for such mechanism.
-         * */
-        whenNormalDeferred {
-            if (!isActive) {
-                logger.warn("Web driver pool manager is inactive")
-                return@whenNormalDeferred null
-            }
-
-            // The browser id is specified by the caller, a typical strategy is
-            // taking a browser id in a list in sequence, in which case, driver pools are return
-            // one by one in sequence.
-            //
-            val driverPool = createDriverPoolIfAbsent(browserId, priority)
-
-            driver = driverPool.poll()
-        }
-
-        return driver
-    }
-
-    @Throws(WebDriverException::class, WebDriverPoolException::class)
     private suspend fun runWithDriverPool(task: WebDriverTask): FetchResult? {
         val browserId = task.browserId
         var result: FetchResult? = null
         /**
-         * There are two kind of tasks, normal tasks and monitor tasks,
-         * normal tasks are performed in parallel, but can not be performed with monitor tasks at the same time.
+         * There are two kind of tasks, normal tasks and monitor tasks.
+         * Normal tasks are executed concurrently; however, they cannot be executed simultaneously with monitor tasks.
          *
          * [PreemptChannelSupport] is developed for such mechanism.
-         *
-         * TODO: seems not a normal task
          * */
         whenNormalDeferred {
             if (!isActive) {
@@ -468,7 +438,7 @@ open class WebDriverPoolManager(
             // taking a browser id in a list in sequence, in which case, driver pools are return
             // one by one in sequence.
             //
-            val driverPool = createDriverPoolIfAbsent(browserId, task.priority)
+            val driverPool = getOrCreateDriverPool(browserId, task.priority)
 
             result = runWithDriverPool(task, driverPool)
         }
@@ -477,7 +447,7 @@ open class WebDriverPoolManager(
     }
 
     @Throws(WebDriverPoolException::class)
-    private fun createDriverPoolIfAbsent(browserId: BrowserId, priority: Int): LoadingWebDriverPool {
+    private fun getOrCreateDriverPool(browserId: BrowserId, priority: Int): LoadingWebDriverPool {
         if (isRetiredPool(browserId)) {
             val message = "Web driver pool is retired | $browserId"
             logger.warn(message)
@@ -530,10 +500,6 @@ open class WebDriverPoolManager(
         } finally {
             _deferredTasks.remove(task.id)
         }
-    }
-
-    private fun createDriverPoolIfAbsent0(browserId: BrowserId, priority: Int): LoadingWebDriverPool {
-        return driverPoolPool.computeIfAbsent(browserId) { createUnmanagedDriverPool(browserId, priority) }
     }
 }
 

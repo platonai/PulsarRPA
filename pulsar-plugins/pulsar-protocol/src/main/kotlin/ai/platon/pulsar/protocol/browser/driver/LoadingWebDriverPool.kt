@@ -237,6 +237,7 @@ class LoadingWebDriverPool constructor(
             statefulDriverPool.offer(driver)
             meterOffer.mark()
         } else {
+            logger.info("The driver is not working, dismiss it")
             statefulDriverPool.close(driver)
             meterClosed.mark()
         }
