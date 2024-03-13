@@ -70,6 +70,7 @@ open class StreamingCrawlLoop(
     /**
      * Wait until the loop is started and all tasks are done.
      * */
+    @Throws(InterruptedException::class)
     override fun await() {
         started.await()
         crawler.await()

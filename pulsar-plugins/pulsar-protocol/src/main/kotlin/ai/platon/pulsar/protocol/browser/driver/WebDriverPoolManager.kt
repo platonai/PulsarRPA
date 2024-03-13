@@ -399,9 +399,9 @@ open class WebDriverPoolManager(
             _deferredTasks.clear()
 
             // Actually no exception to catch
-            kotlin.runCatching { driverPoolPool.close() }.onFailure { warnInterruptible(this, it) }
+            kotlin.runCatching { driverPoolPool.close() }.onFailure { warnForClose(this, it) }
             // Actually no exception to catch
-            kotlin.runCatching { browserManager.close() }.onFailure { warnInterruptible(this, it) }
+            kotlin.runCatching { browserManager.close() }.onFailure { warnForClose(this, it) }
 
             logger.info("Web driver pool manager is closed")
         }

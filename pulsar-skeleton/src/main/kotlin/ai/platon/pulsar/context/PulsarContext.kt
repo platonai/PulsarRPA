@@ -350,6 +350,7 @@ interface PulsarContext: AutoCloseable {
     /**
      * Wait until all tasks are done.
      * */
+    @Throws(InterruptedException::class)
     fun await()
 
     /**

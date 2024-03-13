@@ -37,7 +37,8 @@ class CrawlLoops(val loops: MutableList<CrawlLoop>) : StartStopRunnable {
                 .forEach { it.stop() }
         }
     }
-
+    
+    @Throws(InterruptedException::class)
     override fun await() {
         loops.forEach { it.await() }
     }

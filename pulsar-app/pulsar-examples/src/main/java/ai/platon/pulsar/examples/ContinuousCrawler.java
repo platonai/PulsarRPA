@@ -22,7 +22,7 @@ public class ContinuousCrawler {
         PulsarContexts.create().submitAll(urls);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         List<Hyperlink> urls = LinkExtractors.fromResource("seeds.txt")
                 .stream()
                 .map(seed -> new ParsableHyperlink(seed, ContinuousCrawler::onParse))

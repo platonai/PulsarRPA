@@ -449,7 +449,7 @@ abstract class AbstractPulsarSession(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             closableObjects.forEach {
-                runCatching { it.close() }.onFailure { warnInterruptible(this, it) }
+                runCatching { it.close() }.onFailure { warnForClose(this, it) }
             }
             closableObjects.clear()
             logger.info("Session is closed | #{}", display)

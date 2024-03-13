@@ -275,6 +275,7 @@ open class StreamingCrawler(
     /**
      * Wait until all tasks are done.
      * */
+    @Throws(InterruptedException::class)
     override fun await() {
         lock.withLock { notBusy.await() }
     }

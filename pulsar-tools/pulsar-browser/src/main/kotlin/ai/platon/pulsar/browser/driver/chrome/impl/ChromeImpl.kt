@@ -5,8 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.browser.driver.chrome.util.ProxyClasses
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.common.warnInterruptible
+import ai.platon.pulsar.common.warnForClose
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -108,7 +107,7 @@ class ChromeImpl(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            remoteDevTools.values.forEach { it.runCatching { close() }.onFailure { warnInterruptible(this, it) } }
+            remoteDevTools.values.forEach { it.runCatching { close() }.onFailure { warnForClose(this, it) } }
             remoteDevTools.clear()
         }
     }

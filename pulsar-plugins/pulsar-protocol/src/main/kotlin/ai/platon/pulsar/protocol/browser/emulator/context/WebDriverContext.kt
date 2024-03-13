@@ -1,11 +1,8 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppSystemInfo
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.MetricsSystem
-import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -120,9 +117,9 @@ open class WebDriverContext(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             if (!AppContext.isActive) {
-                kotlin.runCatching { shutdownUnderlyingLayerImmediately() }.onFailure { warnInterruptible(this, it) }
+                runCatching { shutdownUnderlyingLayerImmediately() }.onFailure { warnForClose(this, it) }
             } else {
-                kotlin.runCatching { closeContext() }.onFailure { warnInterruptible(this, it) }
+                runCatching { closeContext() }.onFailure { warnForClose(this, it) }
             }
         }
     }

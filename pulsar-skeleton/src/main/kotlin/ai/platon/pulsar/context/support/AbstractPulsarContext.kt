@@ -454,6 +454,7 @@ abstract class AbstractPulsarContext(
     /**
      * Wait until there is no tasks in the main loop
      * */
+    @Throws(InterruptedException::class)
     override fun await() {
         if (isActive) {
             crawlLoops.await()
@@ -531,11 +532,11 @@ abstract class AbstractPulsarContext(
         closableObjects.clear()
         
         sessions1.forEach { session ->
-            runCatching { session.close() }.onFailure { warnInterruptible(this, it) }
+            runCatching { session.close() }.onFailure { warnForClose(this, it) }
         }
         
         closableObjects1.forEach { closable ->
-            runCatching { closable.close() }.onFailure { warnInterruptible(this, it) }
+            runCatching { closable.close() }.onFailure { warnForClose(this, it) }
         }
     }
 

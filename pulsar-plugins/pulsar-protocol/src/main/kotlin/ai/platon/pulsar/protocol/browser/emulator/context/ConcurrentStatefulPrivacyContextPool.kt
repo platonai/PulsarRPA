@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
@@ -66,7 +67,7 @@ class ConcurrentStatefulPrivacyContextPool(
         logger.debug("Closing {} zombie contexts ...", dyingContexts.size)
         
         dyingContexts.forEach { privacyContext ->
-            privacyContext.runCatching { close() }.onFailure { warnInterruptible(this, it) }
+            privacyContext.runCatching { close() }.onFailure { warnForClose(this, it) }
             
             zombieContexts.remove(privacyContext)
             deadContexts.add(privacyContext)

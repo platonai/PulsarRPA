@@ -58,6 +58,7 @@ object PulsarContexts {
     fun createSession() = create().createSession()
 
     @JvmStatic
+    @Throws(InterruptedException::class)
     fun await() {
         activeContext?.await()
     }

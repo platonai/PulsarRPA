@@ -140,6 +140,8 @@ interface StartStopRunnable {
         stop()
         start()
     }
+    
+    @Throws(InterruptedException::class)
     fun await() {}
 }
 

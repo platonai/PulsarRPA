@@ -10,7 +10,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.common.warnInterruptible
+import ai.platon.pulsar.common.warnForClose
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -394,7 +394,7 @@ abstract class DevToolsImpl(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             // discard all furthers in dispatcher?
-            runCatching { doClose() }.onFailure { warnInterruptible(this, it) }
+            runCatching { doClose() }.onFailure { warnForClose(this, it) }
             closeLatch.countDown()
         }
     }

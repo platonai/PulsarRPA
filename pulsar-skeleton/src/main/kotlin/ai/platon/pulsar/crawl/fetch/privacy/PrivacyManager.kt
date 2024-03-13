@@ -1,12 +1,9 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppSystemInfo
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_CLOSE_LAZY
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -120,7 +117,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * No exception.
      * */
     open fun close(privacyContext: PrivacyContext) {
-        kotlin.runCatching { doClose(privacyContext) }.onFailure { warnInterruptible(this, it) }
+        kotlin.runCatching { doClose(privacyContext) }.onFailure { warnForClose(this, it) }
     }
 
     /**
@@ -153,7 +150,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             permanentContexts.clear()
             temporaryContexts.clear()
 
-            cleaningService.runCatching { shutdown() }.onFailure { warnInterruptible(this, it) }
+            cleaningService.runCatching { shutdown() }.onFailure { warnForClose(this, it) }
             closeHistoricalContexts()
         }
     }
@@ -222,7 +219,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             logger.debug("Closing {} zombie contexts ...", dyingContexts.size)
 
             dyingContexts.forEach { privacyContext ->
-                kotlin.runCatching { privacyContext.close() }.onFailure { warnInterruptible(this, it) }
+                privacyContext.runCatching { close() }.onFailure { warnForClose(this, it) }
                 zombieContexts.remove(privacyContext)
                 deadContexts.add(privacyContext)
             }
@@ -232,14 +229,14 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     }
 
     private fun reportHistoricalContexts() {
-        val maximumReports = 15
+        val maximumRecords = 15
         val historicalContexts = zombieContexts.filter { it.privacyAgent.isTemporary } +
             deadContexts.filter { it.privacyAgent.isTemporary }
         if (historicalContexts.isNotEmpty()) {
             val prefix = "The latest temporary context throughput: "
             val postfix = " (success/min)"
             // zombieContexts is a deque, so here we take the latest n contexts.
-            historicalContexts.take(maximumReports)
+            historicalContexts.take(maximumRecords)
                 .joinToString(", ", prefix, postfix) { String.format("%.2f", 60 * it.meterSuccesses.meanRate) }
                 .let { logger.info(it) }
         }

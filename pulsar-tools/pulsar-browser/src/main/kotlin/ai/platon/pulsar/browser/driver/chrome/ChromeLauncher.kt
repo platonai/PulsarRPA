@@ -161,9 +161,7 @@ class ChromeLauncher(
 
         kotlin.runCatching { cleanUp() }.onFailure {
             logger.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
-            if (it.message == null) {
-                warnInterruptible(this, it)
-            }
+            warnForClose(this, it)
         }
     }
 

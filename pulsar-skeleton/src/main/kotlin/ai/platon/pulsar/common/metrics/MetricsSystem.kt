@@ -195,7 +195,7 @@ open class MetricsSystem(
      * */
     override fun close() {
         if (isEnabled && closed.compareAndSet(false, true)) {
-            runCatching { doClose() }.onFailure { warnInterruptible(this, it) }
+            runCatching { doClose() }.onFailure { warnForClose(this, it) }
         }
     }
     
