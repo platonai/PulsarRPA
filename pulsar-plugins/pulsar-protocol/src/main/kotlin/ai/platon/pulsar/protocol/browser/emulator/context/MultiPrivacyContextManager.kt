@@ -177,6 +177,10 @@ class MultiPrivacyContextManager(
      * */
     override fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
+            if (!isActive) {
+                throw IllegalStateException("Inactive privacy context manager")
+            }
+            
             val privacyAgent = createPrivacyAgent(page, fingerprint)
             if (privacyAgent.isPermanent) {
                 logger.info("Prepare for permanent privacy agent | {}", privacyAgent)
@@ -195,6 +199,10 @@ class MultiPrivacyContextManager(
     @Throws(ProxyException::class)
     override fun computeIfAbsent(privacyAgent: PrivacyAgent): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
+            if (!isActive) {
+                throw IllegalStateException("Inactive privacy context manager")
+            }
+            
             return if (privacyAgent.isPermanent) {
                 permanentContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
             } else {
@@ -228,6 +236,10 @@ class MultiPrivacyContextManager(
     )
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
+            if (!isActive) {
+                throw IllegalStateException("Inactive privacy context manager")
+            }
+            
             if (temporaryContexts.size < allowedPrivacyContextCount) {
                 val generator = privacyAgentGeneratorFactory.generator
                 computeIfAbsent(generator(fingerprint))

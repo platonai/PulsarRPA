@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.WebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.warnForClose
 import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
@@ -148,11 +149,7 @@ class TransportImpl : Transport {
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            try {
-                session.close()
-            } catch (e: IOException) {
-                logger.error("Failed closing ws session", e)
-            }
+            session.runCatching { close() }.onFailure { warnForClose(this, it) }
         }
     }
 

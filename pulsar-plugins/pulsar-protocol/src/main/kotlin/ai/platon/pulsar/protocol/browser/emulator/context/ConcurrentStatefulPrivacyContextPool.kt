@@ -1,17 +1,27 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.common.warnForClose
-import ai.platon.pulsar.common.warnInterruptible
+import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.browser.Fingerprint
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.ProxyException
+import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import ai.platon.pulsar.crawl.CoreMetrics
+import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.privacy.CloseStrategy
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 
 class ConcurrentStatefulPrivacyContextPool(
-
+    val proxyPoolManager: ProxyPoolManager,
+    val driverPoolManager: WebDriverPoolManager,
+    val coreMetrics: CoreMetrics,
+    val conf: ImmutableConfig,
+    val allowedPrivacyContextCount: Int
 ) {
     private val logger = getLogger(this)
     
@@ -51,12 +61,38 @@ class ConcurrentStatefulPrivacyContextPool(
     
     @get:Synchronized
     val activeContextCount get() = permanentContexts.size + temporaryContexts.size
+
+    @Throws(ProxyException::class)
+    fun computeIfAbsent(privacyAgent: PrivacyAgent): PrivacyContext {
+        return if (privacyAgent.isPermanent) {
+            _permanentContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
+        } else {
+            _temporaryContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
+        }
+    }
+    
+    /**
+     * Create a privacy context who is not added to the context list yet.
+     * */
+    @Throws(ProxyException::class)
+    fun createUnmanagedContext(privacyAgent: PrivacyAgent): BrowserPrivacyContext {
+        val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, privacyAgent)
+        if (privacyAgent.isPermanent) {
+            logger.info("Permanent privacy context is created #{} | {}", context.display, context.baseDir)
+        } else {
+            logger.info(
+                "Temporary privacy context is created #{}, active: {}, allowed: {} | {}",
+                context.display, temporaryContexts.size, allowedPrivacyContextCount, context.baseDir
+            )
+        }
+        return context
+    }
     
     /**
      * Close the zombie contexts, and the resources release immediately.
      * */
     @Synchronized
-    fun closeHistoricalContexts() {
+    fun closeDyingContexts() {
         logger.debug("Closing zombie contexts ...")
         
         val dyingContexts = zombieContexts.filter { !it.isClosed }
@@ -75,10 +111,18 @@ class ConcurrentStatefulPrivacyContextPool(
     }
     
     @Synchronized
-    fun close() {
-        _permanentContexts.clear()
-        _temporaryContexts.clear()
-        _zombieContexts.clear()
-        _deadContexts.clear()
+    fun close(privacyContext: PrivacyContext) {
+        val privacyAgent = privacyContext.privacyAgent
+        
+        _permanentContexts.remove(privacyAgent)
+        _temporaryContexts.remove(privacyAgent)
+        
+        if (!_zombieContexts.contains(privacyContext)) {
+            // every time we add the item to the head,
+            // so when we report the deque, the latest contexts are reported.
+            _zombieContexts.addFirst(privacyContext)
+        }
+        
+        closeDyingContexts()
     }
 }

@@ -4,6 +4,8 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.getTracer
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.persist.ext.browseEvent
 import ai.platon.pulsar.common.persist.ext.options
@@ -47,9 +49,9 @@ open class InteractiveBrowserEmulator(
     immutableConfig: ImmutableConfig,
 ) : BrowserEmulator,
     BrowserEmulatorImplBase(driverPoolManager.driverSettings, responseHandler, immutableConfig) {
-    private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
-    private val tracer get() = logger.takeIf { it.isTraceEnabled }
-    private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
+    private val logger = getLogger(this)
+    private val tracer = getTracer(this)
+    private val taskLogger = getLogger(this, ".Task")
 
     val numDeferredNavigates by lazy { MetricsSystem.reg.meter(this, "deferredNavigates") }
 
@@ -239,7 +241,8 @@ open class InteractiveBrowserEmulator(
         } catch (e: Exception) {
             when {
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
-                    logger.warn("Coroutine was cancelled | {}", e.message)
+                    val message = e.message ?: "Coroutine was cancelled"
+                    logger.warn("{}. {} | {}", task.page.id, message, task.url)
                 }
 
                 else -> {
@@ -320,10 +323,12 @@ open class InteractiveBrowserEmulator(
             emit1(EmulateEvents.tabStopped, page, driver)
 //            notify("onTabStopped") { event?.onTabStopped?.invoke(page, driver) }
         } catch (e: NavigateTaskCancellationException) {
-            logger.info(
-                "{}. Try canceled task {}/{} again later (privacy scope suggested)",
-                page.id, navigateTask.fetchTask.id, navigateTask.fetchTask.batchId
-            )
+            if (isActive) {
+                logger.info(
+                    "{}. Task is canceled {}/{} again later (privacy scope suggested)",
+                    page.id, navigateTask.fetchTask.id, navigateTask.fetchTask.batchId
+                )
+            }
             response = ForwardingResponse.canceled(page)
         }
 

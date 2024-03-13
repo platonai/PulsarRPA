@@ -174,7 +174,7 @@ abstract class BrowserEmulatorImplBase(
     @Throws(NavigateTaskCancellationException::class)
     protected fun checkState() {
         if (!isActive) {
-            throw NavigateTaskCancellationException("Emulator is closed")
+            throw NavigateTaskCancellationException("Emulator was closed")
         }
     }
 

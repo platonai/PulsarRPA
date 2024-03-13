@@ -401,7 +401,10 @@ abstract class DevToolsImpl(
 
     @Throws(Exception::class)
     private fun doClose() {
-        waitUntilIdle(Duration.ofSeconds(5))
+        // NOTE:
+        // 1. It's a bad idea to throw an InterruptedException in close() method
+        // 2. No need to wait for the dispatcher to be idle
+        // waitUntilIdle(Duration.ofSeconds(5))
 
         logger.trace("Closing ws client ... | {}", browserClient)
         browserClient.close()

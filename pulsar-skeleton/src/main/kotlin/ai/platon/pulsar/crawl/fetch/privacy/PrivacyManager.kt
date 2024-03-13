@@ -129,7 +129,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
         activeContexts.values.toCollection(zombieContexts)
         permanentContexts.clear()
         temporaryContexts.clear()
-        closeHistoricalContexts()
+        closeDyingContexts()
     }
 
     /**
@@ -151,7 +151,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             temporaryContexts.clear()
 
             cleaningService.runCatching { shutdown() }.onFailure { warnForClose(this, it) }
-            closeHistoricalContexts()
+            closeDyingContexts()
         }
     }
 
@@ -186,9 +186,9 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             // 2. the zombie contexts should be closed before new contexts are created
             val lazyClose = closeStrategy == CloseStrategy.LAZY.name
             when {
-                AppSystemInfo.isCriticalResources -> closeHistoricalContexts()
+                AppSystemInfo.isCriticalResources -> closeDyingContexts()
                 lazyClose -> closeZombieContextsLazily()
-                else -> closeHistoricalContexts()
+                else -> closeDyingContexts()
             }
         }
     }
@@ -201,13 +201,13 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * 2. tasks canceling is good, no need to wait for the tasks
      * */
     private fun closeZombieContextsLazily() {
-        cleaningService.schedule({ closeHistoricalContexts() }, 5, TimeUnit.SECONDS)
+        cleaningService.schedule({ closeDyingContexts() }, 5, TimeUnit.SECONDS)
     }
 
     /**
      * Close the zombie contexts, and the resources release immediately.
      * */
-    private fun closeHistoricalContexts() {
+    private fun closeDyingContexts() {
         logger.debug("Closing zombie contexts ...")
 
         val dyingContexts = zombieContexts.filter { !it.isClosed }
