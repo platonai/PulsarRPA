@@ -183,7 +183,7 @@ class CoreMetrics(
             if (Files.exists(PATH_UNREACHABLE_HOSTS)) {
                 Files.readAllLines(PATH_UNREACHABLE_HOSTS).toCollection(unreachableHosts)
             }
-        }.onFailure { logger.warn("[Unexpected][Ignored]", it) }
+        }.onFailure { warnInterruptible(this, it) }
 
         params.withLogger(logger).info(true)
     }
@@ -392,7 +392,7 @@ class CoreMetrics(
     }
 
     fun updateSystemInfo() {
-        kotlin.runCatching { updateSystemInfo0() }.onFailure { logger.warn("[Unexpected]", it) }
+        kotlin.runCatching { updateSystemInfo0() }.onFailure { warnInterruptible(this, it) }
     }
 
     @Throws(Exception::class)

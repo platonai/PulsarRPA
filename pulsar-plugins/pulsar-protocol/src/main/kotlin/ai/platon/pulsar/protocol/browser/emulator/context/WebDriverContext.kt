@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.AppSystemInfo
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -119,9 +120,9 @@ open class WebDriverContext(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             if (!AppContext.isActive) {
-                kotlin.runCatching { shutdownUnderlyingLayerImmediately() }.onFailure { logger.warn(it.stringify()) }
+                kotlin.runCatching { shutdownUnderlyingLayerImmediately() }.onFailure { warnInterruptible(this, it) }
             } else {
-                kotlin.runCatching { closeContext() }.onFailure { logger.warn(it.stringify()) }
+                kotlin.runCatching { closeContext() }.onFailure { warnInterruptible(this, it) }
             }
         }
     }

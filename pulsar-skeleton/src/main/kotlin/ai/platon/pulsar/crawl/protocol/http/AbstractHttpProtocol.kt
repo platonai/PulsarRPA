@@ -79,7 +79,7 @@ abstract class AbstractHttpProtocol: Protocol {
     override fun getResponses(pages: Collection<WebPage>, volatileConfig: VolatileConfig): Collection<Response> {
         return pages.takeIf { isActive }
                 ?.mapNotNull { it.runCatching { getResponse(it, false) }
-                        .onFailure { log.warn(it.message) }.getOrNull() }
+                        .onFailure { warnInterruptible(this, it) }.getOrNull() }
                 ?: listOf()
     }
 

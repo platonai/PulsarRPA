@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.runBlocking
 import java.util.Queue
@@ -77,8 +78,7 @@ class ConcurrentStatefulDriverPool(
         _retiredDrivers.remove(driver)
         _closedDrivers.add(driver)
 
-        runCatching { browserManager.closeDriver(driver) }
-            .onFailure { logger.warn(it.brief("[Unexpected] Closing $driver")) }
+        runCatching { browserManager.closeDriver(driver) }.onFailure { warnInterruptible(this, it) }
         
         // require(driver.isQuit)
     }

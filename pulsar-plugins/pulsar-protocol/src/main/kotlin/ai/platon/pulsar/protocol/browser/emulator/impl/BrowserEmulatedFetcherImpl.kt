@@ -90,12 +90,12 @@ open class BrowserEmulatedFetcherImpl(
             return doFetch(task, driver).response
         }
 
-        return privacyManager.run(task) { _, driver -> doFetch(task, driver) }.response
+        return privacyManager.run(task) { _, driver2 -> doFetch(task, driver2) }.response
     }
 
     private suspend fun doFetch(task: FetchTask, driver: WebDriver): FetchResult {
         if (!isActive) {
-            return FetchResult.canceled(task, "Inactive browser emulated fetcher")
+            return FetchResult.canceled(task, "Browser fetcher is not active")
         }
 
         emit(EventType.willFetch, task.page, driver)

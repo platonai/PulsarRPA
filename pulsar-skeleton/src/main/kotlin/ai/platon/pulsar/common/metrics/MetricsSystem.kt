@@ -195,7 +195,7 @@ open class MetricsSystem(
      * */
     override fun close() {
         if (isEnabled && closed.compareAndSet(false, true)) {
-            runCatching { doClose() }.onFailure { logger.warn(it.brief("[Unexpected] - ")) }
+            runCatching { doClose() }.onFailure { warnInterruptible(this, it) }
         }
     }
     

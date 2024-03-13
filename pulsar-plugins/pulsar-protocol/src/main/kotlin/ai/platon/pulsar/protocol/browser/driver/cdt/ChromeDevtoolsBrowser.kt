@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_REUSE_RECOVERED_DRIVERS
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
@@ -89,8 +90,8 @@ class ChromeDevtoolsBrowser(
             mutableReusedDrivers.remove(chromTabId)
             mutableDrivers.remove(chromTabId)
             
-            kotlin.runCatching { closeTab(driver.chromeTab) }.onFailure { logger.warn(it.brief()) }
-            kotlin.runCatching { driver.doClose() }.onFailure { logger.warn(it.brief()) }
+            kotlin.runCatching { closeTab(driver.chromeTab) }.onFailure { warnInterruptible(this, it) }
+            kotlin.runCatching { driver.doClose() }.onFailure { warnInterruptible(this, it) }
         }
     }
     
@@ -101,7 +102,7 @@ class ChromeDevtoolsBrowser(
     
     override fun destroyForcibly() {
         close()
-        kotlin.runCatching { launcher.destroyForcibly() }.onFailure { logger.warn(it.stringify()) }
+        kotlin.runCatching { launcher.destroyForcibly() }.onFailure { warnInterruptible(this, it) }
     }
     
     /**
@@ -114,7 +115,7 @@ class ChromeDevtoolsBrowser(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            kotlin.runCatching { doClose() }.onFailure { logger.warn(it.brief("Failed to close browser\n")) }
+            kotlin.runCatching { doClose() }.onFailure { warnInterruptible(this, it) }
             super.close()
         }
     }
@@ -210,7 +211,7 @@ class ChromeDevtoolsBrowser(
         logger.info("Closing browser with {} drivers/devtools ... | #{}", drivers.size, id)
         
         nonSynchronized.parallelStream().forEach { (id, driver) ->
-            kotlin.runCatching { driver.close() }.onFailure { logger.warn(it.brief("Failed to close the devtool")) }
+            kotlin.runCatching { driver.close() }.onFailure { warnInterruptible(this, it) }
         }
     }
     

@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.proxy
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_MANAGER_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.common.warnInterruptible
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
@@ -19,8 +20,8 @@ class ProxyPoolManagerFactory(
     fun get(): ProxyPoolManager = specifiedProxyManager ?: computeIfAbsent(conf)
     
     override fun close() {
-        specifiedProxyManager?.runCatching { close() }?.onFailure { logger.warn(it.stringify()) }
-        proxyPoolManagers.values.forEach { runCatching { it.close() }.onFailure { logger.warn(it.stringify()) } }
+        specifiedProxyManager?.runCatching { close() }?.onFailure { warnInterruptible(this, it) }
+        proxyPoolManagers.values.forEach { it.runCatching { close() }.onFailure { warnInterruptible(this, it) } }
     }
 
     private fun computeIfAbsent(conf: ImmutableConfig): ProxyPoolManager {

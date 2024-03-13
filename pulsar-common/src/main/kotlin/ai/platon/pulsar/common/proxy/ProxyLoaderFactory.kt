@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.proxy
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_LOADER_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.common.warnInterruptible
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
@@ -16,8 +17,8 @@ class ProxyLoaderFactory(val conf: ImmutableConfig): AutoCloseable {
     fun get(): ProxyLoader = specifiedProxyLoader ?: computeIfAbsent(conf)
 
     override fun close() {
-        specifiedProxyLoader?.runCatching { close() }?.onFailure { logger.warn(it.stringify()) }
-        proxyLoaders.values.forEach { runCatching { it.close() }.onFailure { logger.warn(it.stringify()) } }
+        specifiedProxyLoader?.runCatching { close() }?.onFailure { warnInterruptible(this, it) }
+        proxyLoaders.values.forEach { it.runCatching { close() }.onFailure { warnInterruptible(this, it) } }
     }
 
     private fun computeIfAbsent(conf: ImmutableConfig): ProxyLoader {

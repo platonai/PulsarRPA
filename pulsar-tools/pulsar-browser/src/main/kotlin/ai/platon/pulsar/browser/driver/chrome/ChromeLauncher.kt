@@ -90,9 +90,13 @@ class ChromeLauncher(
                 val maxTry = 10
                 var i = 0
                 while (i++ < maxTry && Files.exists(dirToDelete) && !Files.isSymbolicLink(dirToDelete)) {
-                    kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
-                        .onFailure { logger.warn("Failed to delete directory | {} | {}", dirToDelete, it.message) }
-                    Thread.sleep(500)
+                    kotlin.runCatching {
+                        FileUtils.deleteDirectory(dirToDelete.toFile())
+                        Thread.sleep(500)
+                    }.onFailure { 
+                            warnInterruptible(this,
+                                it, "Failed to delete directory | {} | {}", dirToDelete, it.message)
+                        }
                 }
             }
         }
@@ -111,7 +115,7 @@ class ChromeLauncher(
         if ("context\\default--" !in userDataDir.toString()) {
         }
         kotlin.runCatching { prepareUserDataDir() }.onFailure {
-            logger.warn("Failed to prepare user data dir", it)
+            warnInterruptible(this, it, "Failed to prepare user data dir | {} | {}", userDataDir, it.message)
         }
 
         val port = launchChromeProcess(chromeBinaryPath, userDataDir, options)
@@ -158,7 +162,7 @@ class ChromeLauncher(
         kotlin.runCatching { cleanUp() }.onFailure {
             logger.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
             if (it.message == null) {
-                logger.warn(it.stringify())
+                warnInterruptible(this, it)
             }
         }
     }

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.SQLUtils
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SessionDelegate
@@ -41,7 +42,7 @@ abstract class AbstractSQLContext constructor(
     abstract val randomConnection: Connection
 
     val randomConnectionOrNull: Connection? get() = kotlin.runCatching { randomConnection }
-        .onFailure { logger.warn(it.stringify()) }
+        .onFailure { warnInterruptible(this, it) }
         .getOrNull()
 
     val connectionPool = ArrayBlockingQueue<Connection>(1000)

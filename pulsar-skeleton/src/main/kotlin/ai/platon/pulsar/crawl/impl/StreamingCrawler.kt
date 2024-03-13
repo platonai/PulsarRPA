@@ -666,6 +666,11 @@ open class StreamingCrawler(
         }
 
         when (e) {
+            is InterruptedException -> {
+                Thread.currentThread().interrupt()
+                logger.warn("Thread was interrupted, quit ...", e)
+                return FlowState.BREAK
+            }
             is IllegalApplicationStateException -> {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     logger.warn("\n!!!Illegal application context, quit ... | {}", e.message)
@@ -843,7 +848,7 @@ open class StreamingCrawler(
                     if (it !is ProxyInsufficientBalanceException) {
                         proxyOutOfService = 0
                     } else {
-                        logger.warn("Proxy account insufficient balance")
+                        warnInterruptible(this, it, "Proxy account insufficient balance")
                     }
                 }.onSuccess { proxyOutOfService = 0 }
             } else {

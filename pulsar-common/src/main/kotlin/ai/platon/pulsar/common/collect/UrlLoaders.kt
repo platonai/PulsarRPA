@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.UrlExtractor
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.HyperlinkDatum
 import ai.platon.pulsar.common.urls.UrlAware
+import ai.platon.pulsar.common.warnInterruptible
 import com.google.gson.GsonBuilder
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -30,7 +31,7 @@ open class LocalFileUrlLoader(val path: Path): OneLoadExternalUrlLoader() {
         val g = "${topic.group}"
         runCatching {
             Files.readAllLines(path).mapNotNullTo(sink) { parse(it, g) }
-        }.onFailure { log.warn("Failed to load urls from $path", it) }
+        }.onFailure { warnInterruptible(this, it, "Failed to load urls from $path") }
 
         return sink
     }
@@ -43,7 +44,7 @@ open class LocalFileUrlLoader(val path: Path): OneLoadExternalUrlLoader() {
         val g = "${topic.group}"
         runCatching {
             Files.readAllLines(path).mapNotNull { parse(it, g) }.mapTo(sink) { transformer(it) }
-        }.onFailure { log.warn("Failed to load urls from $path", it) }
+        }.onFailure { warnInterruptible(this, it, "Failed to load urls from $path") }
 
         return sink
     }

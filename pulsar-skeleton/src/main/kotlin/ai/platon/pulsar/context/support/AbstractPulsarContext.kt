@@ -1,9 +1,6 @@
 package ai.platon.pulsar.context.support
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.CheckState
-import ai.platon.pulsar.common.IllegalApplicationStateException
-import ai.platon.pulsar.common.brief
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -525,20 +522,20 @@ abstract class AbstractPulsarContext(
         AppContext.endTermination()
     }
 
-    /**
-     * TODO: do not call getBean in close() function, it's better to close pulsar context before application context.
-     * */
     protected open fun doClose0() {
         logger.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
-
-        val nonSyncSessions = sessions.values.toList().also { sessions.clear() }
-        nonSyncSessions.parallelStream().forEach { session ->
-            runCatching { session.close() }.onFailure { logger.warn(it.brief("[Unexpected]")) }
+        
+        val sessions1 = sessions.values.toList()
+        sessions.clear()
+        val closableObjects1 = closableObjects.toList()
+        closableObjects.clear()
+        
+        sessions1.forEach { session ->
+            runCatching { session.close() }.onFailure { warnInterruptible(this, it) }
         }
-
-        val nonSyncObjects = closableObjects.toList().also { closableObjects.clear() }
-        nonSyncObjects.parallelStream().forEach { closable ->
-            runCatching { closable.close() }.onFailure { logger.warn(it.brief("[Unexpected]")) }
+        
+        closableObjects1.forEach { closable ->
+            runCatching { closable.close() }.onFailure { warnInterruptible(this, it) }
         }
     }
 

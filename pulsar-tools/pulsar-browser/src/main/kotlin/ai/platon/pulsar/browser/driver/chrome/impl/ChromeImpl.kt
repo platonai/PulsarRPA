@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ProxyClasses
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.common.warnInterruptible
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -107,7 +108,7 @@ class ChromeImpl(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            remoteDevTools.values.forEach { kotlin.runCatching { it.close() }.onFailure { logger.warn(it.stringify()) } }
+            remoteDevTools.values.forEach { it.runCatching { close() }.onFailure { warnInterruptible(this, it) } }
             remoteDevTools.clear()
         }
     }

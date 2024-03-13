@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import com.google.common.annotations.Beta
@@ -129,7 +130,7 @@ class ConcurrentStatefulDriverPoolPool {
         _retiredDriverPools.remove(browserId)
         _closedDriverPools.add(browserId)
 
-        kotlin.runCatching { driverPool.close() }.onFailure { getLogger(this).warn(it.stringify()) }
+        kotlin.runCatching { driverPool.close() }.onFailure { warnInterruptible(this, it) }
     }
 
     @Synchronized

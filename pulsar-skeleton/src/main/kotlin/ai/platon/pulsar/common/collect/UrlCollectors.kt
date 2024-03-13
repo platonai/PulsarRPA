@@ -65,7 +65,7 @@ open class HyperlinkCollector(
         beforeCollect()
 
         val count = kotlin.runCatching { collectTo0(sink) }
-            .onFailure { log.warn("Collect failed", it) }
+            .onFailure { warnInterruptible(this, it) }
             .getOrDefault(0)
 
         return afterCollect(count)
@@ -159,7 +159,7 @@ open class CircularHyperlinkCollector(
         beforeCollect()
 
         val count = kotlin.runCatching { collectTo0(sink) }
-            .onFailure { log.warn("Collect failed - " + it.message) }
+            .onFailure { warnInterruptible(this, it) }
             .getOrDefault(0)
 
         return afterCollect(count)
@@ -205,7 +205,7 @@ open class PeriodicalHyperlinkCollector(
         beforeCollect()
 
         val count = kotlin.runCatching { collectTo0(sink) }
-            .onFailure { log.warn("Collect failed", it) }
+            .onFailure { warnInterruptible(this, it) }
             .getOrDefault(0)
 
         return afterCollect(count)

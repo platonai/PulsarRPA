@@ -882,7 +882,7 @@ class ChromeDevtoolsDriver(
     }
 
     private fun reportInterestingResources(entry: NavigateEntry, event: ResponseReceived) {
-        runCatching { traceInterestingResources0(entry, event) }.onFailure { logger.warn(it.stringify()) }
+        runCatching { traceInterestingResources0(entry, event) }.onFailure { warnInterruptible(this, it) }
     }
     
     private fun traceInterestingResources0(entry: NavigateEntry, event: ResponseReceived) {

@@ -180,7 +180,7 @@ class LoadingWebDriverPool constructor(
     fun allocate(conf: VolatileConfig) {
         repeat(capacity) {
             runCatching { put(poll(priority, conf, POLLING_TIMEOUT.seconds, TimeUnit.SECONDS)) }.onFailure {
-                logger.warn("Unexpected exception", it)
+                warnInterruptible(this, it)
             }
         }
     }

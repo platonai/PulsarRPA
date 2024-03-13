@@ -102,7 +102,7 @@ class AsinRPAScraper {
             return
         }
 
-        kotlin.runCatching { scrapeAsin0(page, document) }.onFailure { logger.warn(it.brief()) }
+        kotlin.runCatching { scrapeAsin0(page, document) }.onFailure { warnInterruptible(this, it) }
     }
 
     private fun scrapeAsin0(page: WebPage, document: FeaturedDocument) {

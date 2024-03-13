@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -53,7 +54,7 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
         parseFilters.forEach { filter ->
             if (filter.isRelevant(parseContext).isOK) {
                 val result = filter.runCatching { filter(parseContext) }
-                    .onFailure { logger.warn("[Unexpected]", it) }.getOrNull()
+                    .onFailure { warnInterruptible(this, it) }.getOrNull()
 
                 if (result != null && result.shouldBreak) {
                     return@filter
@@ -76,7 +77,7 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
         if (closed.compareAndSet(false, true)) {
             parseFilters.forEach { filter ->
                 runCatching { filter.close() }.onFailure { t ->
-                    logger.warn(t.brief("Failed to close ${filter.javaClass.simpleName}"))
+                    warnInterruptible(this, t, t.brief("Failed to close ${filter.javaClass.simpleName}"))
                 }
             }
         }

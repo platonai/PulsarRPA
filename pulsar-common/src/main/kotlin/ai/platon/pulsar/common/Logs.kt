@@ -25,3 +25,22 @@ fun getTracer(any: Any): Logger? = if (any is Logger) {
 }
 
 fun getRandomLogger(): Logger = LoggerFactory.getLogger(RandomStringUtils.randomAlphabetic(8))
+
+fun warn(any: Any, message: String, vararg args: Any?) {
+    getLogger(any).warn(message, *args)
+}
+
+fun warn(any: Any, t: Throwable, message: String, vararg args: Any?) {
+    getLogger(any).warn(message, t, *args)
+}
+
+fun warnInterruptible(any: Any, t: Throwable) = warnInterruptible(any, t, t.stringify())
+
+fun warnInterruptible(any: Any, t: Throwable, message: String, vararg args: Any?) {
+    getLogger(any).warn(message, *args)
+    
+    if (t is InterruptedException) {
+        // Preserve interrupt status
+        Thread.currentThread().interrupt()
+    }
+}

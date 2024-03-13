@@ -1,11 +1,8 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.collector.AbstractPriorityDataCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.sleep
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.CrawlableFatLink
 import ai.platon.pulsar.common.urls.FatLink
 import java.time.Duration
@@ -50,7 +47,7 @@ open class ChainedDataCollector<E>(
 
     override fun hasMore() = collectors.any {
         kotlin.runCatching { it.hasMore() }
-            .onFailure { logger.warn(it.stringify()) }
+            .onFailure { warnInterruptible(this, it) }
             .getOrDefault(false)
     }
 
@@ -64,7 +61,7 @@ open class ChainedDataCollector<E>(
     override fun collectTo(sink: MutableList<E>): Int {
         _round.incrementAndGet()
         return kotlin.runCatching { collectTo0(sink) }
-            .onFailure { logger.warn(it.stringify()) }
+            .onFailure { warnInterruptible(this, it) }
             .getOrDefault(0)
     }
 
