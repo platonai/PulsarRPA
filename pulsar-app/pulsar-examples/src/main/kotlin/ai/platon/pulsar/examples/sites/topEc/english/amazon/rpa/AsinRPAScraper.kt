@@ -47,7 +47,7 @@ class AsinRPAScraper {
         val be = hyperlink.event.browseEvent
 
         be.onWillComputeFeature.addLast { page, driver ->
-            val district = driver.firstText(districtSelector)
+            val district = driver.selectFirstTextOrNull(districtSelector)
             logger.info("District: {}", district)
             null
         }

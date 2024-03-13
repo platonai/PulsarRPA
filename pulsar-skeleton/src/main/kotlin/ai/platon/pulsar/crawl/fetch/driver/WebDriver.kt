@@ -570,11 +570,11 @@ interface WebDriver: Closeable {
     suspend fun outerHTML(selector: String): String?
     
     /** Returns the node's text content. */
-    @Deprecated("Inappropriate name", ReplaceWith("selectFirstTextOrNull"))
+    @Deprecated("Inappropriate name", ReplaceWith("selectFirstTextOrNull(selector)"))
     @Throws(WebDriverException::class)
     suspend fun firstText(selector: String): String? = selectFirstTextOrNull(selector)
     /** Returns the nodes' text contents. */
-    @Deprecated("Inappropriate name", ReplaceWith("selectTexts"))
+    @Deprecated("Inappropriate name", ReplaceWith("selectTexts(selector)"))
     @Throws(WebDriverException::class)
     suspend fun allTexts(selector: String): List<String> = selectTexts(selector)
     /**

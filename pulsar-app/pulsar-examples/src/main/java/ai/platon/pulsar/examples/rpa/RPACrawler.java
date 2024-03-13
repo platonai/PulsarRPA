@@ -67,8 +67,8 @@ public class RPACrawler {
         driver.existsAsync(selector).thenAccept(exists -> {
             if (exists) {
                 driver.clickAsync(selector)
-                        .thenCompose(ignored -> driver.firstTextAsync(selector))
-                        .thenAcceptAsync(text -> driver.typeAsync(searchBoxSelector, text.substring(1, 4)), delayedExecutor)
+                        .thenCompose(ignored -> driver.selectFirstTextOptionalAsync(selector))
+                        .thenAcceptAsync(text -> driver.typeAsync(searchBoxSelector, text.orElse("").substring(1, 4)), delayedExecutor)
                         .thenRun(() -> logger.info("{} clicked", selector))
                         .join();
             }

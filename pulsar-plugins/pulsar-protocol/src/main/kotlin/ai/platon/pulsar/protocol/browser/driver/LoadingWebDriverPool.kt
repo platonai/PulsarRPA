@@ -244,7 +244,7 @@ class LoadingWebDriverPool constructor(
             statefulDriverPool.offer(driver)
             meterOffer.mark()
         } else {
-            logger.info("The driver is not working, dismiss it")
+            logger.info("The driver is not working unexpectedly, mark it as retired and close it")
             statefulDriverPool.close(driver)
             meterClosed.mark()
         }
@@ -343,19 +343,24 @@ class LoadingWebDriverPool constructor(
                 return
             }
 
-            computeBrowserAndDriver(priority, conf)
+            val driver = computeBrowserAndDriver(priority, conf)
+            
+            // TODO: wait until the driver is ready
+            driver.state
         }
     }
 
     @Throws(BrowserLaunchException::class)
-    private fun computeBrowserAndDriver(priority: Int, conf: VolatileConfig) {
+    private fun computeBrowserAndDriver(priority: Int, conf: VolatileConfig): WebDriver {
         try {
-            computeBrowserAndDriver0(conf)
+            return computeBrowserAndDriver0(conf)
         } catch (e: BrowserLaunchException) {
             logger.debug("[Unexpected]", e)
 
             if (isActive) {
                 throw e
+            } else {
+                throw IllegalApplicationStateException("The process is shutting down, do not create new drivers", e)
             }
         }
     }
@@ -367,31 +372,32 @@ class LoadingWebDriverPool constructor(
         // Using the count of non-quit drivers can better match the memory consumption,
         // but it's easy to wrongly count the quit drivers, a tiny bug can lead to a big mistake.
         // We leave a debug log here for diagnosis purpose.
-        val activeDriversInBrowser = _browser?.drivers?.values?.count { !it.isQuit } ?: 0
+        val resourceConsumingDriversInBrowser = _browser?.drivers?.values?.count { !it.isQuit } ?: 0
         // Number of active drivers in this driver pool
-        val activeDriversInPool = statefulDriverPool.workingDrivers.size + statefulDriverPool.standbyDrivers.size
-        if (activeDriversInBrowser != activeDriversInPool) {
-            logger.warn("Inconsistent online driver status: {}/{}/{} (slots/activeP/activeB)",
-                numDriverSlots, activeDriversInPool, activeDriversInBrowser)
+        val resourceConsumingDriversInPool = statefulDriverPool.activeDriverCount
+        if (resourceConsumingDriversInBrowser != resourceConsumingDriversInPool) {
+            logger.warn("Inconsistent online driver status, resource consuming drivers: {}/{}/{} (slots/pool/browser)",
+                numDriverSlots, resourceConsumingDriversInPool, resourceConsumingDriversInBrowser)
         }
 
         val isCriticalResources = AppSystemInfo.isCriticalResources
-        if (activeDriversInPool >= capacity) {
+        if (resourceConsumingDriversInPool >= capacity) {
             // should also: numDriverSlots > 0
-            logger.debug("Enough online drivers: {}/{}/{} (slots/activeP/activeB), will not create new one",
-                numDriverSlots, activeDriversInPool, activeDriversInBrowser)
+            logger.debug("Enough online drivers, will not create new one." +
+                " Resource consuming drivers: {}/{}/{} (slots/pool/browser)",
+                numDriverSlots, resourceConsumingDriversInPool, resourceConsumingDriversInBrowser)
         } else if (AppSystemInfo.isCriticalMemory) {
-            logger.info("Critical memory: {}, {}/{}/{} (slots/activeP/activeB), will not create new driver",
+            logger.info("Critical memory: {}, resource consuming drivers: {}/{}/{} (slots/pool/browser), will not create new driver",
                 AppSystemInfo.formatAvailableMemory(),
-                numDriverSlots, activeDriversInPool, activeDriversInBrowser
+                numDriverSlots, resourceConsumingDriversInPool, resourceConsumingDriversInBrowser
             )
         }
 
-        return isActive && !isCriticalResources && activeDriversInPool < capacity
+        return isActive && !isCriticalResources && resourceConsumingDriversInPool < capacity
     }
 
     @Throws(BrowserLaunchException::class)
-    private fun computeBrowserAndDriver0(conf: VolatileConfig) {
+    private fun computeBrowserAndDriver0(conf: VolatileConfig): WebDriver {
         val browser = driverFactory.launchBrowser(browserId, conf)
         val driver = browser.newDriver()
 
@@ -402,6 +408,8 @@ class LoadingWebDriverPool constructor(
         if (logger.isDebugEnabled) {
             logDriverOnline(driver)
         }
+        
+        return driver
     }
 
     private suspend fun dispatchEvent(name: String, action: suspend () -> Unit) {

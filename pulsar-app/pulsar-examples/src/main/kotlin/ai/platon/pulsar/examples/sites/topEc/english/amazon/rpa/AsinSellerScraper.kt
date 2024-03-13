@@ -69,7 +69,7 @@ class AsinSellerScraper {
         val be = hyperlink.event.browseEvent
 
         be.onWillComputeFeature.addLast { page, driver ->
-            val district = driver.firstText("#glow-ingress-block, .nav-global-location-slot") ?: ""
+            val district = driver.selectFirstTextOrNull("#glow-ingress-block, .nav-global-location-slot") ?: ""
             val expectedDistrict = districtTexts[domain] ?: "not-a-district"
             if (district.contains(expectedDistrict)) {
                 clickAndCollectSellerLinks(page, driver)

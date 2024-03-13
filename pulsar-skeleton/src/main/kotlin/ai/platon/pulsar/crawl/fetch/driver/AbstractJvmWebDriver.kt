@@ -59,17 +59,14 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
         interopScope.future { dragAndDrop(selector, deltaX, deltaY) }
     
     override fun outerHTMLAsync(selector: String) = interopScope.future { outerHTML(selector) }
-    override fun firstTextAsync(selector: String) = interopScope.future { selectFirstTextOrNull(selector) }
-    override fun allTextsAsync(selector: String) = interopScope.future { selectTexts(selector) }
+    
     override fun selectFirstTextOrNullAsync(selector: String): CompletableFuture<String?> =
         interopScope.future { selectFirstTextOrNull(selector) }
     override fun selectFirstTextOptionalAsync(selector: String): CompletableFuture<Optional<String>> =
         interopScope.future { Optional.ofNullable(selectFirstTextOrNull(selector)) }
     override fun selectTextsAsync(selector: String): CompletableFuture<List<String>> =
-        interopScope.future { allTexts(selector) }
+        interopScope.future { selectTexts(selector) }
     
-    override fun firstAttrAsync(selector: String, attrName: String) = interopScope.future { firstAttr(selector, attrName) }
-    override fun allAttrsAsync(selector: String, attrName: String) = interopScope.future { allAttrs(selector, attrName) }
     override fun selectFirstAttributeOrNullAsync(selector: String, attrName: String): CompletableFuture<String?> =
         interopScope.future { selectFirstAttributeOrNull(selector, attrName) }
     override fun selectFirstAttributeOptionalAsync(selector: String, attrName: String): CompletableFuture<Optional<String>> =

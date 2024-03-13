@@ -20,7 +20,7 @@ private class RPAPaginateHandler(val initPageNumber: Int) : WebPageWebDriverEven
         IntRange(1, 100).forEach { i ->
             roundGap(i)
 
-            var text = driver.firstText(".table__list table.table__list-set tr:nth-child(25)") ?: ""
+            var text = driver.selectFirstTextOrNull(".table__list table.table__list-set tr:nth-child(25)") ?: ""
             println(text)
             if (text.length < 100) {
                 delay(3000)

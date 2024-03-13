@@ -49,6 +49,9 @@ class ConcurrentStatefulDriverPool(
      * */
     val closedDrivers: Queue<WebDriver> get() = _closedDrivers
 
+    @get:Synchronized
+    val activeDriverCount get() = workingDrivers.size + standbyDrivers.size
+    
     @Synchronized
     fun poll(timeout: Long, unit: TimeUnit): WebDriver? {
         val driver = _standbyDrivers.poll(timeout, unit)
@@ -61,12 +64,14 @@ class ConcurrentStatefulDriverPool(
 
     @Synchronized
     fun offer(driver: WebDriver) {
+        driver.free()
         _workingDrivers.remove(driver)
-        _standbyDrivers.offer(driver.apply { free() })
+        _standbyDrivers.offer(driver)
     }
 
     @Synchronized
     fun close(driver: WebDriver) {
+        driver.retire()
         _standbyDrivers.remove(driver)
         _workingDrivers.remove(driver)
         _retiredDrivers.remove(driver)
@@ -74,6 +79,8 @@ class ConcurrentStatefulDriverPool(
 
         runCatching { browserManager.closeDriver(driver) }
             .onFailure { logger.warn(it.brief("[Unexpected] Closing $driver")) }
+        
+        // require(driver.isQuit)
     }
 
     @Synchronized

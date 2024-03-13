@@ -741,16 +741,20 @@ class ChromeDevtoolsDriver(
      * Close the tab hold by this driver.
      * */
     override fun close() {
+        // state should not be ready, working
+//        if (state.get() == WebDriver.State.READY || state.get() == WebDriver.State.WORKING) {
+//            logger.warn("Illegal driver state before close | {}", state.get())
+//        }
+        
         browser.destroyDriver(this)
         doClose()
     }
 
     fun doClose() {
         if (closed.compareAndSet(false, true)) {
-            state.set(WebDriver.State.QUIT)
-
             try {
                 devTools.close()
+                state.set(WebDriver.State.QUIT)
             } catch (e: WebDriverException) {
                 // ignored
             }

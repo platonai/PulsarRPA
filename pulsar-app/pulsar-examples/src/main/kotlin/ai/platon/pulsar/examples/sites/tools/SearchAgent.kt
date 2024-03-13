@@ -104,7 +104,7 @@ class SearchAgent {
             driver.scrollToTop()
             
             println(String.format("%d.\t%s", page.id, page.url))
-            val resultStats = driver.firstText("#result-stats")
+            val resultStats = driver.selectFirstTextOrNull("#result-stats")
             println(resultStats)
             val texts = driver.allTexts("h3")
             println(texts)
