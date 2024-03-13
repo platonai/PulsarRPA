@@ -68,10 +68,10 @@ class SearchAgent {
             driver.scrollToTop()
 
             println(String.format("%d.\t%s", page.id, page.url))
-            val resultStats = driver.firstText("#b_tween")
+            val resultStats = driver.selectFirstTextOrNull("#b_tween")
             println(resultStats)
 
-            val texts = driver.allTexts("ol#b_results li h2")
+            val texts = driver.selectTexts("ol#b_results li h2")
             println(texts)
         }
 
@@ -106,7 +106,7 @@ class SearchAgent {
             println(String.format("%d.\t%s", page.id, page.url))
             val resultStats = driver.selectFirstTextOrNull("#result-stats")
             println(resultStats)
-            val texts = driver.allTexts("h3")
+            val texts = driver.selectTexts("h3")
             println(texts)
         }
         

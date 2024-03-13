@@ -55,7 +55,7 @@ class TestProxyEntry {
         )
 
         proxies.forEach { (proxyString, expected) ->
-            val actual = ProxyEntry.parse(proxyString)
+            val actual = ProxyEntry.parse2(proxyString)
             assertNotNull(actual)
             assertEquals(expected.host, actual.host)
             assertEquals(expected.port, actual.port)
