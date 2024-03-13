@@ -1061,7 +1061,7 @@ open class LoadOptions(
         /**
          * Parse the [args] with other [conf].
          * */
-        fun parse(args: String, conf: VolatileConfig = VolatileConfig.UNSAFE) =
+        fun parse(args: String, conf: VolatileConfig = VolatileConfig()) =
             LoadOptions(args.trim(), conf).apply { parse() }
 
         /**
@@ -1111,18 +1111,18 @@ object LoadOptionDefaults {
     /**
      * The default expiry time, some time we may need expire all pages by default, for example, in test mode
      * */
-    var expires = ChronoUnit.DECADES.duration
-
+    val EXPIRES = ChronoUnit.DECADES.duration
+    
     /**
      * The default time to expire
      * */
-    var expireAt = DateTimes.doomsday
-
+    val EXPIRE_AT = DateTimes.doomsday
+    
     /**
      * Lazy flush.
      * */
-    var lazyFlush = true
-
+    const val LAZY_FLUSH = true
+    
     /**
      * Trigger the parse phase or not.
      *
@@ -1131,15 +1131,15 @@ object LoadOptionDefaults {
      * 2. add a -parse option
      * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
      * */
-    var parse = false
-
+    const val PARSE = false
+    
     /**
      * Store webpage content or not.
      *
      * Store webpage content by default.
      * If we are running a public cloud, this option might be changed to false.
      * */
-    var storeContent = true
+    const val STORE_CONTENT = true
     /**
      * Load webpage content or not.
      *
@@ -1152,22 +1152,100 @@ object LoadOptionDefaults {
     /**
      * If true, still fetch the page even if it is gone.
      * */
-    var ignoreFailure = false
+    const val IGNORE_FAILURE = false
+    
+    /**
+     * There are several cases to enable jit retry.
+     * For example, in a test environment.
+     * */
+    const val N_JIT_RETRY = -1
+    
+    /**
+     * The default browser is chrome with pulsar implemented web driver.
+     * */
+    val BROWSER = BrowserType.PULSAR_CHROME
+    
+    /**
+     * Set to be > 0 if we are doing unit test or other test.
+     * We will talk more, log more and trace more in test mode.
+     * */
+    const val TEST = 0
+    
+    /**
+     * The default expiry time, some time we may need expire all pages by default, for example, in test mode
+     * */
+    var expires = EXPIRES
+
+    /**
+     * The default time to expire
+     * */
+    var expireAt = EXPIRE_AT
+
+    /**
+     * Lazy flush.
+     * */
+    var lazyFlush = LAZY_FLUSH
+
+    /**
+     * Trigger the parse phase or not.
+     *
+     * Do not parse by default, since there are may ways to trigger a webpage parsing:
+     * 1. use session.parse()
+     * 2. add a -parse option
+     * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
+     * */
+    var parse = PARSE
+
+    /**
+     * Store webpage content or not.
+     *
+     * Store webpage content by default.
+     * If we are running a public cloud, this option might be changed to false.
+     * */
+    var storeContent = STORE_CONTENT
+    /**
+     * Load webpage content or not.
+     *
+     * Load webpage content by default.
+     * If we are running a public cloud, this option might be changed to false.
+     *
+     * TODO: review the design
+     * */
+//    var loadContent = true
+    /**
+     * If true, still fetch the page even if it is gone.
+     * */
+    var ignoreFailure = IGNORE_FAILURE
 
     /**
      * There are several cases to enable jit retry.
      * For example, in a test environment.
      * */
-    var nJitRetry = -1
+    var nJitRetry = N_JIT_RETRY
 
     /**
      * The default browser is chrome with pulsar implemented web driver.
      * */
-    var browser = BrowserType.PULSAR_CHROME
+    var browser = BROWSER
 
     /**
      * Set to be > 0 if we are doing unit test or other test.
      * We will talk more, log more and trace more in test mode.
      * */
-    var test = 0
+    var test = TEST
+    
+    /**
+     * Reset all the options to default.
+     * */
+    fun reset() {
+        expires = EXPIRES
+        expireAt = EXPIRE_AT
+        lazyFlush = LAZY_FLUSH
+        parse = PARSE
+        storeContent = STORE_CONTENT
+        ignoreFailure = IGNORE_FAILURE
+        nJitRetry = N_JIT_RETRY
+        browser = BROWSER
+        test = TEST
+    }
 }
