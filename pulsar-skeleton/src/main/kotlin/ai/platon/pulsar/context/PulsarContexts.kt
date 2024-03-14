@@ -1,6 +1,7 @@
 package ai.platon.pulsar.context
 
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.context.support.ClassPathXmlPulsarContext
@@ -66,7 +67,7 @@ object PulsarContexts {
     @Synchronized
     @JvmStatic
     fun shutdown() {
-        contexts.forEach { it.close() }
+        contexts.forEach { cx -> cx.runCatching { close() }.onFailure { warnForClose(this, it) } }
         contexts.clear()
         activeContext = null
     }

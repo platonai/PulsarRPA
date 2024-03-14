@@ -9,36 +9,36 @@ fun <T : Any> getLogger(clazz: KClass<T>): Logger = getLogger(clazz, "")
 
 fun <T : Any> getLogger(clazz: KClass<T>, postfix: String): Logger = LoggerFactory.getLogger(clazz.java.name + postfix)
 
-fun getLogger(any: Any): Logger = getLogger(any, "")
+fun getLogger(target: Any): Logger = getLogger(target, "")
 
-fun getLogger(any: Any, postfix: String): Logger = when (any) {
-    is Logger -> any
-    is KClass<*> -> LoggerFactory.getLogger(any.java.name + postfix)
-    is Class<*> -> LoggerFactory.getLogger(any.name + postfix)
-    is String -> LoggerFactory.getLogger(any + postfix)
-    else -> LoggerFactory.getLogger(any::class.java.name + postfix)
+fun getLogger(target: Any, postfix: String): Logger = when (target) {
+    is Logger -> target
+    is KClass<*> -> LoggerFactory.getLogger(target.java.name + postfix)
+    is Class<*> -> LoggerFactory.getLogger(target.name + postfix)
+    is String -> LoggerFactory.getLogger(target + postfix)
+    else -> LoggerFactory.getLogger(target::class.java.name + postfix)
 }
 
-fun getTracer(any: Any): Logger? = if (any is Logger) {
-    any.takeIf { it.isTraceEnabled }
+fun getTracer(target: Any): Logger? = if (target is Logger) {
+    target.takeIf { it.isTraceEnabled }
 } else {
-    getLogger(any).takeIf { it.isTraceEnabled }
+    getLogger(target).takeIf { it.isTraceEnabled }
 }
 
 fun getRandomLogger(): Logger = LoggerFactory.getLogger(RandomStringUtils.randomAlphabetic(8))
 
-fun warn(any: Any, message: String, vararg args: Any?) {
-    getLogger(any).warn(message, *args)
+fun warn(target: Any, message: String, vararg args: Any?) {
+    getLogger(target).warn(message, *args)
 }
 
-fun warn(any: Any, t: Throwable, message: String, vararg args: Any?) {
-    getLogger(any).warn(message, t, *args)
+fun warn(target: Any, t: Throwable, message: String, vararg args: Any?) {
+    getLogger(target).warn(message, t, *args)
 }
 
-fun warnInterruptible(any: Any, t: Throwable) = warnInterruptible(any, t, t.stringify())
+fun warnInterruptible(target: Any, t: Throwable) = warnInterruptible(target, t, t.stringify())
 
-fun warnInterruptible(any: Any, t: Throwable, message: String, vararg args: Any?) {
-    getLogger(any).warn(message, *args)
+fun warnInterruptible(target: Any, t: Throwable, message: String, vararg args: Any?) {
+    getLogger(target).warn(message, *args)
     
     if (t is InterruptedException) {
         // Preserve interrupt status
@@ -46,10 +46,10 @@ fun warnInterruptible(any: Any, t: Throwable, message: String, vararg args: Any?
     }
 }
 
-fun warnForClose(any: Any, t: Throwable) = warnForClose(any, t, t.stringify())
+fun warnForClose(target: Any, t: Throwable) = warnForClose(target, t, t.stringify())
 
-fun warnForClose(any: Any, t: Throwable, message: String, vararg args: Any?) {
-    val logger = getLogger(any)
+fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) {
+    val logger = getLogger(target)
     logger.warn(message, *args)
 
     if (t is InterruptedException) {
@@ -57,7 +57,7 @@ fun warnForClose(any: Any, t: Throwable, message: String, vararg args: Any?) {
         Thread.currentThread().interrupt()
         
         val message = """
-                 * <p><em>Implementers of close interface are strongly advised
+                 * <p><em>Implementers of AutoClosable interface are strongly advised
                  * to not have the {@code close} method throw {@link
                  * InterruptedException}.</em>
                  *

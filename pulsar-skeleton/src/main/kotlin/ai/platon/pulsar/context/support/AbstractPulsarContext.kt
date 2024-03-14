@@ -510,16 +510,16 @@ abstract class AbstractPulsarContext(
                 doClose0()
             } catch (e: InterruptedException) {
                 Thread.currentThread().interrupt()
-                System.err.println("Interrupted while closing context")
+                System.err.println("Interrupted while closing context | $this")
                 warnForClose(this, e)
             } catch (e: Exception) {
-                System.err.println("Exception while closing context")
+                System.err.println("Exception while closing context | $this")
                 e.printStackTrace(System.err)
-                logger.warn("Exception while closing context", e)
+                logger.warn("Exception while closing context | $this", e)
             } catch (t: Throwable) {
-                System.err.println("[Unexpected] Failed to close context")
+                System.err.println("[Unexpected] Failed to close context | $this")
                 t.printStackTrace(System.err)
-                logger.error("[Unexpected] Failed to close context", t)
+                logger.error("[Unexpected] Failed to close context | $this", t)
             }
         }
 

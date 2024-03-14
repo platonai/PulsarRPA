@@ -123,8 +123,8 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     /**
      * Reset the privacy environment, close all privacy contexts, so all fetch tasks are handled by new browser contexts.
      * */
-    open fun reset() {
-        logger.info("Reset all privacy contexts, closing all ...")
+    open fun reset(reason: String = "") {
+        logger.info("Reset all privacy contexts, closing all ... | {}", reason.ifEmpty { "no reason" })
 
         activeContexts.values.toCollection(zombieContexts)
         permanentContexts.clear()

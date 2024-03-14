@@ -2,6 +2,7 @@ package ai.platon.pulsar.ql.context
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.context.support.ContextDefaults
 import ai.platon.pulsar.crawl.component.*
@@ -114,6 +115,7 @@ open class ClassPathXmlSQLContext(configLocation: String) :
     override val randomConnection: Connection
         get() = db.getRandomConnection()
 
+    @Throws(Exception::class)
     override fun createSession(sessionDelegate: SessionDelegate): AbstractSQLSession {
         require(sessionDelegate is H2SessionDelegate)
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
@@ -132,8 +134,12 @@ open class ClassPathXmlSQLContext(configLocation: String) :
     }
 
     override fun close() {
-        super.close()
-        db.close()
+        try {
+            super.close()
+            db.close()
+        } catch (t: Throwable) {
+            warnForClose(this, t)
+        }
     }
 }
 
