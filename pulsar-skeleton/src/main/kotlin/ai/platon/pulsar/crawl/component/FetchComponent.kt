@@ -80,7 +80,7 @@ open class FetchComponent(
     /**
      * Fetch a page
      *
-     * @param page The page to fetch
+     * @param fetchEntry The fetch entry
      * @return The fetch result
      */
     @Throws(Exception::class)
