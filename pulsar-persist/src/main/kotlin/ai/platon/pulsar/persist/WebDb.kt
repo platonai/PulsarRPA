@@ -410,7 +410,8 @@ class WebDb(
         fields.remove("url")
         return fields.toTypedArray()
     }
-
+    
+    @Throws(WebDBException::class)
     private fun <T : Any> performDSAction(name: String, url: String? = null, action: () -> T): T {
 //        if (!AppContext.isActive) {
 //            throw IllegalApplicationContextStateException("")

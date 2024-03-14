@@ -23,7 +23,7 @@ public class RPACrawler {
 
     public final Map<String, String> fieldSelectors;
 
-    public RPACrawler() {
+    public RPACrawler() throws Exception {
         this(PulsarContexts.createSession());
     }
 
@@ -75,7 +75,7 @@ public class RPACrawler {
         }).join();
     }
 
-    public static void main(String[] argv) {
+    public static void main(String[] argv) throws Exception {
         var url = "https://item.jd.com/10023632209832.html";
         var args = "-refresh -parse";
 

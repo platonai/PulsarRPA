@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.event
 
+import ai.platon.pulsar.common.warnInterruptible
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -8,7 +9,9 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
 
     val listeners: Map<EventType, List<Function<Any>>> get() = listenerMap
 
-    var eventExceptionHandler: (Throwable) -> Unit = { it.printStackTrace() }
+    var eventExceptionHandler: (Throwable) -> Unit = {
+        warnInterruptible(AbstractEventEmitter::class, it)
+    }
 
     override fun on(event: EventType, handler: () -> Any): AbstractEventEmitter<EventType> {
         listenerMap.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)

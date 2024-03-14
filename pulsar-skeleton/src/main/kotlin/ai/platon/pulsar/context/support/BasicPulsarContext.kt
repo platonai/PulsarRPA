@@ -11,7 +11,8 @@ import org.springframework.context.support.AbstractApplicationContext
 open class BasicPulsarContext(
     applicationContext: AbstractApplicationContext
 ) : AbstractPulsarContext(applicationContext) {
-
+    
+    @Throws(Exception::class)
     override fun createSession(): BasicPulsarSession {
         val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())
         return session.also { sessions[it.id] = it }

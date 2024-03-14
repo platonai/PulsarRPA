@@ -29,7 +29,8 @@ open class H2SQLContext(
     private val db = H2MemoryDb()
 
     override val randomConnection: Connection get() = db.getRandomConnection()
-
+    
+    @Throws(Exception::class)
     override fun createSession(sessionDelegate: SessionDelegate): H2SQLSession {
         require(sessionDelegate is H2SessionDelegate)
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
@@ -43,6 +44,7 @@ open class H2SQLContext(
      * Create a pulsar session, note that the session is not a SQLSession.
      * TODO: return a better PulsarSession
      * */
+    @Throws(Exception::class)
     override fun createSession(): BasicPulsarSession {
         val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())
         return session.also { sessions[it.id] = it }

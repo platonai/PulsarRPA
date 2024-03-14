@@ -38,7 +38,12 @@ fun warn(target: Any, t: Throwable, message: String, vararg args: Any?) {
 fun warnInterruptible(target: Any, t: Throwable) = warnInterruptible(target, t, t.stringify())
 
 fun warnInterruptible(target: Any, t: Throwable, message: String, vararg args: Any?) {
-    getLogger(target).warn(message, *args)
+    try {
+        getLogger(target).warn(message, *args)
+    } catch (t: Throwable) {
+        System.err.println("Failed to log warning message: $message")
+        t.printStackTrace()
+    }
     
     if (t is InterruptedException) {
         // Preserve interrupt status
@@ -49,14 +54,19 @@ fun warnInterruptible(target: Any, t: Throwable, message: String, vararg args: A
 fun warnForClose(target: Any, t: Throwable) = warnForClose(target, t, t.stringify())
 
 fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) {
-    val logger = getLogger(target)
-    logger.warn(message, *args)
+    val logger = try {
+        getLogger(target)
+    } catch (t: Throwable) {
+        System.err.println("Failed to log warning message: $message")
+        t.printStackTrace()
+        null
+    }
 
     if (t is InterruptedException) {
         // Preserve interrupt status
         Thread.currentThread().interrupt()
         
-        val message = """
+        val message2 = """
                  * <p><em>Implementers of AutoClosable interface are strongly advised
                  * to not have the {@code close} method throw {@link
                  * InterruptedException}.</em>
@@ -70,7 +80,8 @@ fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) 
                  * exception to be suppressed, the {@code AutoCloseable.close}
                  * method should not throw it.
         """
-        logger.warn(message)
-        logger.warn(t.stringify())
+        
+        logger?.warn(message2)
+        logger?.warn(t.stringify())
     }
 }

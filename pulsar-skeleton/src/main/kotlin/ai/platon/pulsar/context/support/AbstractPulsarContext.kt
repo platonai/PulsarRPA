@@ -13,6 +13,7 @@ import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -154,7 +155,7 @@ abstract class AbstractPulsarContext(
         if (!isActive) {
             return null
         }
-        return kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
+        return applicationContext.runCatching { getBean(requiredType.java) }.getOrNull()
     }
 
     /**
@@ -171,6 +172,7 @@ abstract class AbstractPulsarContext(
     /**
      * Create a session
      * */
+    @Throws(Exception::class)
     abstract override fun createSession(): AbstractPulsarSession
 
     /**
@@ -256,6 +258,7 @@ abstract class AbstractPulsarContext(
      * @param url The url which can be followed by arguments
      * @return The web page created
      */
+    @Throws(WebDBException::class)
     override fun inject(url: String): WebPage {
         return abnormalPage ?: injectComponent.inject(UrlUtils.splitUrlArgs(url))
     }
@@ -266,6 +269,7 @@ abstract class AbstractPulsarContext(
      * @param url The url which can be followed by arguments
      * @return The web page created
      */
+    @Throws(WebDBException::class)
     override fun inject(url: NormUrl): WebPage {
         return abnormalPage ?: injectComponent.inject(url.spec, url.args)
     }
@@ -273,10 +277,12 @@ abstract class AbstractPulsarContext(
     /**
      * Get a webpage from the storage
      * */
+    @Throws(WebDBException::class)
     override fun get(url: String): WebPage {
         return webDbOrNull?.get(url, false) ?: WebPage.NIL
     }
-
+    
+    @Throws(WebDBException::class)
     override fun get(url: String, vararg fields: String): WebPage {
         return webDbOrNull?.get(url, false, arrayOf(*fields)) ?: WebPage.NIL
     }
@@ -284,6 +290,7 @@ abstract class AbstractPulsarContext(
     /**
      * Get a webpage from the storage
      * */
+    @Throws(WebDBException::class)
     override fun getOrNull(url: String): WebPage? {
         return webDbOrNull?.getOrNull(url, false)
     }
@@ -291,17 +298,21 @@ abstract class AbstractPulsarContext(
     /**
      * Get a webpage from the storage
      * */
+    @Throws(WebDBException::class)
     override fun getOrNull(url: String, vararg fields: String): WebPage? {
         return webDbOrNull?.getOrNull(url, false, arrayOf(*fields))
     }
-
+    
+    @Throws(WebDBException::class)
     override fun getContent(url: String): ByteBuffer? = webDbOrNull?.getContent(url)
-
+    
+    @Throws(WebDBException::class)
     override fun getContentAsString(url: String): String? = webDbOrNull?.getContentAsString(url)
 
     /**
      * Check if a page exists in the storage
      * */
+    @Throws(WebDBException::class)
     override fun exists(url: String) = webDbOrNull?.exists(url) == true
 
     /**
@@ -313,6 +324,7 @@ abstract class AbstractPulsarContext(
     /**
      * Scan pages in the storage
      * */
+    @Throws(WebDBException::class)
     override fun scan(urlPrefix: String): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix) ?: listOf<WebPage>().iterator()
     }
@@ -320,6 +332,7 @@ abstract class AbstractPulsarContext(
     /**
      * Scan pages in the storage
      * */
+    @Throws(WebDBException::class)
     override fun scan(urlPrefix: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
@@ -327,6 +340,7 @@ abstract class AbstractPulsarContext(
     /**
      * Scan pages in the storage
      * */
+    @Throws(WebDBException::class)
     override fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
@@ -338,6 +352,7 @@ abstract class AbstractPulsarContext(
      * @param options The load options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
+    @Throws(WebDBException::class)
     override fun load(url: String, options: LoadOptions): WebPage {
         val normUrl = normalize(url, options)
         return abnormalPage ?: loadComponent.load(normUrl)
@@ -350,6 +365,7 @@ abstract class AbstractPulsarContext(
      * @param options The load options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
+    @Throws(WebDBException::class)
     override fun load(url: URL, options: LoadOptions): WebPage {
         return abnormalPage ?: loadComponent.load(url, options)
     }
@@ -360,10 +376,12 @@ abstract class AbstractPulsarContext(
      * @param url The url which can be followed by arguments
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
+    @Throws(WebDBException::class)
     override fun load(url: NormUrl): WebPage {
         return abnormalPage ?: loadComponent.load(url)
     }
-
+    
+    @Throws(WebDBException::class)
     override suspend fun loadDeferred(url: NormUrl): WebPage {
         return abnormalPage ?: loadComponent.loadDeferred(url)
     }
@@ -381,21 +399,25 @@ abstract class AbstractPulsarContext(
      * @param options The load options
      * @return Pages for all urls.
      */
+    @Throws(WebDBException::class)
     override fun loadAll(urls: Iterable<String>, options: LoadOptions): List<WebPage> {
         startLoopIfNecessary()
         return abnormalPages ?: loadComponent.loadAll(normalize(urls, options))
     }
-
+    
+    @Throws(WebDBException::class)
     override fun loadAll(urls: Iterable<NormUrl>): List<WebPage> {
         startLoopIfNecessary()
         return abnormalPages ?: loadComponent.loadAll(urls)
     }
-
+    
+    @Throws(WebDBException::class)
     override fun loadAsync(url: NormUrl): CompletableFuture<WebPage> {
         startLoopIfNecessary()
         return loadComponentOrNull?.loadAsync(url) ?: CompletableFuture.completedFuture(WebPage.NIL)
     }
-
+    
+    @Throws(WebDBException::class)
     override fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>> {
         startLoopIfNecessary()
         return loadComponentOrNull?.loadAllAsync(urls) ?: listOf()
@@ -426,6 +448,7 @@ abstract class AbstractPulsarContext(
     /**
      * Persist the page into the storage
      * */
+    @Throws(WebDBException::class)
     override fun persist(page: WebPage) {
         webDbOrNull?.put(page, false)
     }
@@ -433,6 +456,7 @@ abstract class AbstractPulsarContext(
     /**
      * Delete the page from the storage
      * */
+    @Throws(WebDBException::class)
     override fun delete(url: String) {
         webDbOrNull?.delete(url)
     }
@@ -440,6 +464,7 @@ abstract class AbstractPulsarContext(
     /**
      * Delete the page from the storage
      * */
+    @Throws(WebDBException::class)
     override fun delete(page: WebPage) {
         webDbOrNull?.delete(page.url)
     }
@@ -447,6 +472,7 @@ abstract class AbstractPulsarContext(
     /**
      * Flush the storage
      * */
+    @Throws(WebDBException::class)
     override fun flush() {
         webDbOrNull?.flush()
     }
