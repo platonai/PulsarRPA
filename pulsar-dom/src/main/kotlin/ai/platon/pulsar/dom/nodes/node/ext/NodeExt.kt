@@ -159,7 +159,7 @@ fun Element.addClasses(vararg classNames: String): Element {
 fun Element.slimCopy(): Element {
     val clone = this.clone()
     simplifyDOM(clone)
-
+    
     clone.clearAttributesCascaded()
 
     return clone

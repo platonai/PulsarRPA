@@ -452,7 +452,7 @@ abstract class AbstractPulsarSession(
                 runCatching { it.close() }.onFailure { warnForClose(this, it) }
             }
             closableObjects.clear()
-            logger.info("Session is closed | #{}", display)
+            logger.info("PulsarSession is closed | #{} | {}#{}", display, this.javaClass.name, hashCode())
         }
     }
 

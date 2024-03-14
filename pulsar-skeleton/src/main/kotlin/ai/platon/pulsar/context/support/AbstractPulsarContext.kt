@@ -49,6 +49,7 @@ abstract class AbstractPulsarContext(
      * */
     private val closableObjects = ConcurrentLinkedQueue<AutoCloseable>()
 
+    /** Flag that indicates whether this context has been closed already. */
     private val closed = AtomicBoolean()
 
     /** Synchronization monitor for the "refresh" and "destroy" */
@@ -72,7 +73,7 @@ abstract class AbstractPulsarContext(
     private val abnormalPages: List<WebPage>? get() = if (isActive) null else listOf()
 
     /**
-     * Check if the context is active
+     * Flag that indicates whether this context is currently active.
      * */
     override val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
 
@@ -529,7 +530,7 @@ abstract class AbstractPulsarContext(
     }
 
     protected open fun doClose() {
-        AppContext.beginTermination()
+        AppContext.terminate()
 
         if (closed.compareAndSet(false, true)) {
             try {

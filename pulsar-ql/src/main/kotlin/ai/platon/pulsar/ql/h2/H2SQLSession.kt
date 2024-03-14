@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2
 
+import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SessionConfig
@@ -82,8 +83,12 @@ class H2SQLSession(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            val h2session = sessionDelegate.implementation as org.h2.engine.Session
-            h2session.close()
+            try {
+                val h2session = sessionDelegate.implementation as org.h2.engine.Session
+                h2session.close()
+            } catch (t: Throwable) {
+                warnForClose(this, t)
+            }
         }
     }
 

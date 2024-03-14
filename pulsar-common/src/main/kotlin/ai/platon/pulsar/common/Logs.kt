@@ -27,6 +27,12 @@ fun getTracer(target: Any): Logger? = if (target is Logger) {
 
 fun getRandomLogger(): Logger = LoggerFactory.getLogger(RandomStringUtils.randomAlphabetic(8))
 
+fun catastrophicError(t: Throwable, message: String, vararg args: Any?) {
+    System.err.println("Logging system crashed.")
+    System.err.println("Failed to log warning message: $message")
+    t.printStackTrace()
+}
+
 fun warn(target: Any, message: String, vararg args: Any?) {
     getLogger(target).warn(message, *args)
 }
@@ -41,9 +47,26 @@ fun warnInterruptible(target: Any, t: Throwable, message: String, vararg args: A
     try {
         getLogger(target).warn(message, *args)
     } catch (t2: Throwable) {
-        System.err.println("Logging system crashed.")
-        System.err.println("Failed to log warning message: $message")
-        t2.printStackTrace()
+        catastrophicError(t2, message, *args)
+    }
+    
+    if (t is InterruptedException) {
+        // Preserve interrupt status
+        Thread.currentThread().interrupt()
+    }
+}
+
+fun warnUnexpected(target: Any, t: Throwable) = warnUnexpected(target, t, t.stringify())
+
+fun warnUnexpected(target: Any, t: Throwable, message: String, vararg args: Any?) {
+    try {
+        val logger = getLogger(target)
+        val message1 = """
+The exception is unexpected, it's best managed within custom code, such as event handlers.
+        """.trimIndent()
+        logger.warn("$message1\n$message", *args)
+    } catch (t2: Throwable) {
+        catastrophicError(t2, message, *args)
     }
     
     if (t is InterruptedException) {
@@ -81,9 +104,7 @@ fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) 
         logger = getLogger(target)
         logger.warn(message, *args)
     } catch (t2: Throwable) {
-        System.err.println("Logging system crashed.")
-        System.err.println("Failed to log warning message: $message")
-        t2.printStackTrace()
+        catastrophicError(t2, message, *args)
     }
 
     if (t is InterruptedException) {

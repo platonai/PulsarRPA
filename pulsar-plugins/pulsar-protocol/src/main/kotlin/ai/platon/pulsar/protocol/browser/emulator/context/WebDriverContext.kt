@@ -133,13 +133,14 @@ open class WebDriverContext(
         if (asap) {
             closeUnderlyingLayerGracefully()
         } else {
-            // TODO: always close the context as soon as possible, just retry the the unfinished tasks.
-            waitUntilAllDoneNormally(Duration.ofMinutes(1))
+            // always close the context as soon as possible, just retry the unfinished tasks.
+            // waitUntilAllDoneNormally(Duration.ofMinutes(1))
             // close underlying IO based modules asynchronously
             closeUnderlyingLayerGracefully()
         }
 
-        waitUntilNoRunningTasks(Duration.ofSeconds(10))
+        // No need to wait for the underlying layer to be closed, just close it
+        // waitUntilNoRunningTasks(Duration.ofSeconds(10))
 
         val isShutdown = if (AppContext.isActive) "" else " (shutdown)"
         val display = browserId.display

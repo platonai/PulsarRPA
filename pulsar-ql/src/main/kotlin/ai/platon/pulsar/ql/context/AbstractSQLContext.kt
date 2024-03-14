@@ -152,7 +152,7 @@ abstract class AbstractSQLContext constructor(
 
     override fun close() {
         logger.info("Closing SQLContext #{}, sql sessions: {}", id, sqlSessions.keys.joinToString { "$it" })
-        AppContext.beginTermination()
+        AppContext.terminate()
 
         if (closed.compareAndSet(false, true)) {
             runCatching { doClose1() }.onFailure { warnForClose(this, it) }
