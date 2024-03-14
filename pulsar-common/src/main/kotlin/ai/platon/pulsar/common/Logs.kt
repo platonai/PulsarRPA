@@ -40,9 +40,10 @@ fun warnInterruptible(target: Any, t: Throwable) = warnInterruptible(target, t, 
 fun warnInterruptible(target: Any, t: Throwable, message: String, vararg args: Any?) {
     try {
         getLogger(target).warn(message, *args)
-    } catch (t: Throwable) {
+    } catch (t2: Throwable) {
+        System.err.println("Logging system crashed.")
         System.err.println("Failed to log warning message: $message")
-        t.printStackTrace()
+        t2.printStackTrace()
     }
     
     if (t is InterruptedException) {
@@ -51,15 +52,38 @@ fun warnInterruptible(target: Any, t: Throwable, message: String, vararg args: A
     }
 }
 
+/**
+ * Log a warning message for a close method that throws an exception.
+ *
+ * It's very common for the close method to suppress exceptions and just log it, but some exceptions should be
+ * carefully handled, such as InterruptedException. It's strongly advised to not have the close method throw
+ * InterruptedException, but it's not guaranteed, so we suppress it and log a warning message if it happens.
+ *
+ * @param target the object that is being closed
+ * @param t the exception thrown by the close method
+ * */
 fun warnForClose(target: Any, t: Throwable) = warnForClose(target, t, t.stringify())
 
+/**
+ * Log a warning message for a close method that throws an exception.
+ *
+ * It's very common for the close method to suppress exceptions and just log it, but some exceptions should be
+ * carefully handled, such as InterruptedException. It's strongly advised to not have the close method throw
+ * InterruptedException, but it's not guaranteed, so we suppress it and log a warning message if it happens.
+ *
+ * @param target the object that is being closed
+ * @param t the exception thrown by the close method
+ * @param message the message to log
+ * */
 fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) {
-    val logger = try {
-        getLogger(target)
-    } catch (t: Throwable) {
+    var logger: Logger? = null
+    try {
+        logger = getLogger(target)
+        logger.warn(message, *args)
+    } catch (t2: Throwable) {
+        System.err.println("Logging system crashed.")
         System.err.println("Failed to log warning message: $message")
-        t.printStackTrace()
-        null
+        t2.printStackTrace()
     }
 
     if (t is InterruptedException) {

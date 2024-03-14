@@ -90,7 +90,7 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
             Document doc = (Document) element;
             String baseUri = doc.baseUri();
 
-            if (baseUri != null && !baseUri.isEmpty()) {
+            if (!baseUri.isEmpty()) {
                 doc.body().attr("baseUri", baseUri);
             } else {
                 baseUri = doc.body().attr("baseUri");
