@@ -170,7 +170,8 @@ fun Element.minimalCopy(): Element {
     val clone = this.clone()
     simplifyDOM(clone)
     
-    clone.removeUnnecessaryAttributesCascaded()
+    // TODO: might have a bug because of concurrent modification, it can be re-produced by calling dom_minimal_html()
+    // clone.removeUnnecessaryAttributesCascaded()
 
     return clone
 }
@@ -206,7 +207,7 @@ fun Element.removeNonStandardAttributes(): Element {
 }
 
 fun Element.removeUnnecessaryAttributes(): Element {
-    this.attributes().mapNotNull { it.key }.forEach {
+    this.attributes().mapNotNull { it.key }.filterNot { it in VALUABLE_ATTRIBUTES }.forEach {
         if (it !in VALUABLE_ATTRIBUTES) {
             this.removeAttr(it)
         }
@@ -220,7 +221,9 @@ fun Element.removeNonStandardAttributesCascaded(): Element {
 }
 
 fun Element.removeUnnecessaryAttributesCascaded(): Element {
-    this.forEachElement(includeRoot = true) { it.removeUnnecessaryAttributes() }
+    this.forEachElement(includeRoot = true) {
+        it.removeUnnecessaryAttributes()
+    }
     return this
 }
 

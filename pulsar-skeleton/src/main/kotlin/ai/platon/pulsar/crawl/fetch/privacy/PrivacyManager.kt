@@ -74,6 +74,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * @param fetchFun the fetch function
      * @return the fetch result
      * */
+    @Throws(Exception::class)
     abstract suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
     /**
      * Create a new context or return an existing one.

@@ -94,6 +94,7 @@ class MultiPrivacyContextManager(
      * @param fetchFun the fetch function
      * @return the fetch result
      * */
+    @Throws(Exception::class)
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         metrics.tasks.mark()
 
@@ -105,6 +106,7 @@ class MultiPrivacyContextManager(
         // not closed, not retired, [not idle]?, has promised driver.
         // If the privacy context is inactive, close it and cancel the task.
         val privacyContext = computeNextContext(task.page, task.fingerprint, task)
+        // @Throws(ProxyException::class, Exception::class)
         val result = runIfPrivacyContextActive(privacyContext, task, fetchFun).also { metrics.finishes.mark() }
 
         // maintain the privacy context system after run
@@ -379,6 +381,7 @@ class MultiPrivacyContextManager(
      * not closed, not retired, [not idle]?, has promised driver.
      * If the privacy context is inactive, close it and cancel the task.
      * */
+    @Throws(ProxyException::class, Exception::class)
     private suspend fun runIfPrivacyContextActive(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {
@@ -429,7 +432,8 @@ class MultiPrivacyContextManager(
 
         delay(2_000)
     }
-
+    
+    @Throws(ProxyException::class, Exception::class)
     private suspend fun runAndUpdate(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {
@@ -443,7 +447,8 @@ class MultiPrivacyContextManager(
 
         return result
     }
-
+    
+    @Throws(ProxyException::class, Exception::class)
     private suspend fun doRun(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {
@@ -453,6 +458,7 @@ class MultiPrivacyContextManager(
             require(task.proxyEntry == null)
 
             task.markReady()
+            // @Throws(ProxyException::class, Exception::class)
             privacyContext.run(task) { _, driver ->
                 task.startWork()
                 fetchFun(task, driver)

@@ -91,7 +91,8 @@ abstract class AbstractHttpProtocol: Protocol {
             ProtocolOutput(ProtocolStatus.failed(e))
         }
     }
-
+    
+    @Throws(Exception::class)
     override suspend fun getProtocolOutputDeferred(page: WebPage): ProtocolOutput {
         val startTime = Instant.now()
         val response = getResponseDeferred(page, false)

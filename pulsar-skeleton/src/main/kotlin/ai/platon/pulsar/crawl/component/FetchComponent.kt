@@ -55,6 +55,7 @@ open class FetchComponent(
      * @param url The url of web page to fetch
      * @return The fetch result
      */
+    @Throws(Exception::class)
     fun fetch(url: String) = abnormalPage ?: fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
     /**
@@ -64,6 +65,7 @@ open class FetchComponent(
      * @param options The options
      * @return The fetch result
      */
+    @Throws(Exception::class)
     fun fetch(url: String, options: LoadOptions) = abnormalPage ?: fetchContent0(FetchEntry(url, options))
 
     /**
@@ -72,6 +74,7 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
+    @Throws(Exception::class)
     fun fetchContent(page: WebPage) = abnormalPage ?: fetchContent0(FetchEntry(page, page.options))
 
     /**
@@ -80,6 +83,7 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
+    @Throws(Exception::class)
     fun fetchContent(fetchEntry: FetchEntry) = abnormalPage ?: fetchContent0(fetchEntry)
 
     /**
@@ -88,6 +92,7 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
+    @Throws(Exception::class)
     suspend fun fetchContentDeferred(page: WebPage) = abnormalPage ?: fetchContentDeferred0(page)
 
     /**
@@ -96,6 +101,7 @@ open class FetchComponent(
      * @param fetchEntry The fetch entry
      * @return The fetched webpage
      */
+    @Throws(Exception::class)
     protected fun fetchContent0(fetchEntry: FetchEntry): WebPage {
         val page = fetchEntry.page
         require(page.isNotInternal) { "Internal page ${page.url}" }
@@ -120,6 +126,7 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
+    @Throws(Exception::class)
     protected suspend fun fetchContentDeferred0(page: WebPage): WebPage {
         return try {
             onWillFetch(page)

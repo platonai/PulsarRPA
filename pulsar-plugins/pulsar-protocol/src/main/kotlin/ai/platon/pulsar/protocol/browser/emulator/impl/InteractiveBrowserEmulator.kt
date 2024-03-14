@@ -64,6 +64,7 @@ open class InteractiveBrowserEmulator(
      * @param driver The web driver
      * @return The result of this fetch
      * */
+    @Throws(Exception::class)
     override suspend fun visit(task: FetchTask, driver: WebDriver): FetchResult {
         return takeIf { isActive }?.browseWithDriver(task, driver) ?:
         FetchResult.canceled(task, "Inactive interactive browser emulator")
@@ -190,7 +191,8 @@ open class InteractiveBrowserEmulator(
             detach()
         }
     }
-
+    
+    @Throws(Exception::class)
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
         // page.lastBrowser is used by AppFiles.export, so it has to be set before export
         // TODO: page should not be modified in browser phase, it should only be updated using PageDatum
@@ -238,15 +240,24 @@ open class InteractiveBrowserEmulator(
         } catch (e: Exception) {
             when {
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
-                    val message = e.message ?: "Coroutine was cancelled"
-                    logger.warn("{}. {} | {}", task.page.id, message, task.url)
+                    if (isActive) {
+                        // The system is not closing.
+                        // The coroutine is canceled, it's not a normal case
+                        val message = e.message ?: "Coroutine was cancelled"
+                        logger.warn("{}. {} | {}", task.page.id, message, task.url)
+                    } else {
+                        // The system is closing.
+                        // Let the higher level to handle it, usually it's handled by the main loop
+                        throw e
+                    }
                 }
-
                 else -> {
                     logger.warn("[Unexpected]", e)
                 }
             }
-            response = ForwardingResponse.crawlRetry(task.page, e)
+            // TODO: return a retrying response or re-throw the exception?
+            // response = ForwardingResponse.crawlRetry(task.page, e)
+            throw e
         } finally {
         }
 

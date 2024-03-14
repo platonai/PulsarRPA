@@ -39,6 +39,7 @@ interface BrowserEmulator: EventEmitter<EmulateEvents>, AutoCloseable {
      * @param task The task to fetch
      * @return The result of this fetch
      * */
+    @Throws(Exception::class)
     suspend fun visit(task: FetchTask, driver: WebDriver): FetchResult
 
     fun cancelNow(task: FetchTask)

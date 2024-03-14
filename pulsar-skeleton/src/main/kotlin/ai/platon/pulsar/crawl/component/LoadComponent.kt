@@ -135,6 +135,7 @@ class LoadComponent(
      * @param options The load options
      * @return The page
      * */
+    @Throws(Exception::class)
     fun load(url: URL, options: LoadOptions): WebPage {
         return abnormalPage ?: loadWithRetry(NormUrl(url, options))
     }
@@ -155,6 +156,7 @@ class LoadComponent(
      * @param normUrl The normalized url of the page
      * @return The page
      * */
+    @Throws(Exception::class)
     fun load(normUrl: NormUrl): WebPage {
         return abnormalPage ?: loadWithRetry(normUrl)
     }
@@ -177,10 +179,12 @@ class LoadComponent(
      * @param normUrl The normalized url of the page
      * @return The page
      * */
+    @Throws(Exception::class)
     suspend fun loadDeferred(normUrl: NormUrl): WebPage {
         return abnormalPage ?: loadWithRetryDeferred(normUrl)
     }
-
+    
+    @Throws(Exception::class)
     fun loadWithRetry(normUrl: NormUrl): WebPage {
         if (normUrl.isNil) {
             return WebPage.NIL
@@ -193,7 +197,8 @@ class LoadComponent(
         }
         return page
     }
-
+    
+    @Throws(Exception::class)
     suspend fun loadWithRetryDeferred(normUrl: NormUrl): WebPage {
         if (normUrl.isNil) {
             return WebPage.NIL
@@ -277,6 +282,7 @@ class LoadComponent(
      * Load a webpage from local storage, or if it doesn't exist in local storage,
      * fetch it from the Internet, unless the fetch component is disabled.
      * */
+    @Throws(Exception::class)
     private fun load0(normUrl: NormUrl): WebPage {
         val page = createPageShell(normUrl)
 
@@ -286,7 +292,8 @@ class LoadComponent(
 
         return load1(normUrl, page)
     }
-
+    
+    @Throws(Exception::class)
     private fun load1(normUrl: NormUrl, page: WebPage): WebPage {
         onWillLoad(normUrl, page)
 
@@ -296,7 +303,8 @@ class LoadComponent(
 
         return page
     }
-
+    
+    @Throws(Exception::class)
     private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
         val page = createPageShell(normUrl)
 
@@ -306,7 +314,8 @@ class LoadComponent(
 
         return loadDeferred1(normUrl, page)
     }
-
+    
+    @Throws(Exception::class)
     private suspend fun loadDeferred1(normUrl: NormUrl, page: WebPage): WebPage {
         onWillLoad(normUrl, page)
 
@@ -316,7 +325,8 @@ class LoadComponent(
 
         return page
     }
-
+    
+    @Throws(Exception::class)
     private fun fetchContentIfNecessary(normUrl: NormUrl, page: WebPage) {
         if (page.isInternal) {
             return
@@ -326,7 +336,8 @@ class LoadComponent(
             fetchContent(page, normUrl)
         }
     }
-
+    
+    @Throws(Exception::class)
     private suspend fun fetchContentIfNecessaryDeferred(normUrl: NormUrl, page: WebPage) {
         if (page.removeVar(VAR_REFRESH) != null) {
             fetchContentDeferred(page, normUrl)
@@ -553,7 +564,8 @@ class LoadComponent(
         globalCache.fetchingCache.add(page.url)
         logger.takeIf { it.isDebugEnabled }?.debug("Loading url | {} {}", page.url, page.args)
     }
-
+    
+    @Throws(Exception::class)
     private fun fetchContent(page: WebPage, normUrl: NormUrl) {
         try {
             beforeFetch(page, normUrl.options)
@@ -567,7 +579,8 @@ class LoadComponent(
             afterFetch(page, normUrl.options)
         }
     }
-
+    
+    @Throws(Exception::class)
     private suspend fun fetchContentDeferred(page: WebPage, normUrl: NormUrl) {
         try {
             beforeFetch(page, normUrl.options)

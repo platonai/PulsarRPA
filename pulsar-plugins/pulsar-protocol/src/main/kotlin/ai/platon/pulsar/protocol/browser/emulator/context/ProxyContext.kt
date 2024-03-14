@@ -106,7 +106,8 @@ open class ProxyContext(
     init {
         maxAllowedProxyAbsence = conf.getInt(CapabilityTypes.PROXY_MAX_ALLOWED_PROXY_ABSENCE, 10)
     }
-
+    
+    @Throws(ProxyException::class, Exception::class)
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         return checkAbnormalResult(task) ?:run0(task, browseFun)
     }
@@ -119,7 +120,7 @@ open class ProxyContext(
         // nothing to do currently
     }
 
-    @Throws(ProxyException::class)
+    @Throws(ProxyException::class, Exception::class)
     private suspend fun run0(
         task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {

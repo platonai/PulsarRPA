@@ -55,8 +55,8 @@ open class BrowserPrivacyContext(
     }
 
     override val isFullCapacity: Boolean get() = driverPoolManager.isFullCapacity(browserId)
-
-    @Throws(ProxyException::class)
+    
+    @Throws(ProxyException::class, Exception::class)
     override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         initialize(task)
 

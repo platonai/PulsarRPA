@@ -279,7 +279,7 @@ abstract class PrivacyContext(
      * @param fetchFun the fetch function
      * @return the fetch result
      * */
-    @Throws(ProxyException::class)
+    @Throws(ProxyException::class, Exception::class)
     open suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         beforeRun(task)
         val result = doRun(task, fetchFun)

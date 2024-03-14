@@ -66,7 +66,8 @@ open class WebDriverContext(
             val isDriverPoolReady = driverPoolManager.isReady && driverPoolManager.hasDriverPromise(browserId)
             return isActive && isDriverPoolReady
         }
-
+    
+    @Throws(Exception::class)
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         globalTasks.mark()
         return checkAbnormalResult(task) ?: try {

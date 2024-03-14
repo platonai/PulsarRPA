@@ -21,6 +21,7 @@ import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.kotlin.ir.types.IdSignatureValues.result
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -45,27 +46,33 @@ open class BrowserEmulatedFetcherImpl(
         willFetch,
         fetched
     }
-
+    
+    @Throws(Exception::class)
     override fun fetch(url: String) = fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
-
+    
+    @Throws(Exception::class)
     override fun fetch(url: String, conf: VolatileConfig) = fetchContent(WebPage.newWebPage(url, conf))
 
     /**
      * Fetch page content
      * */
+    @Throws(Exception::class)
     override fun fetchContent(page: WebPage): Response = runBlocking {
         fetchContentDeferred(page)
     }
-
+    
+    @Throws(Exception::class)
     override suspend fun fetchDeferred(url: String) =
         fetchContentDeferred(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
-
+    
+    @Throws(Exception::class)
     override suspend fun fetchDeferred(url: String, volatileConfig: VolatileConfig) =
         fetchContentDeferred(WebPage.newWebPage(url, volatileConfig))
 
     /**
      * Fetch page content
      * */
+    @Throws(Exception::class)
     override suspend fun fetchContentDeferred(page: WebPage): Response {
         if (!isActive) {
             return ForwardingResponse.canceled(page)
@@ -83,6 +90,7 @@ open class BrowserEmulatedFetcherImpl(
     /**
      * Fetch page content
      * */
+    @Throws(Exception::class)
     private suspend fun fetchTaskDeferred(task: FetchTask): Response {
         // TODO: it's a temporary solution to specify the web driver to fetch the page
         val driver = task.page.getVar("WEB_DRIVER") as? WebDriver
@@ -90,9 +98,11 @@ open class BrowserEmulatedFetcherImpl(
             return doFetch(task, driver).response
         }
 
+        // @Throws(ProxyException::class, Exception::class)
         return privacyManager.run(task) { _, driver2 -> doFetch(task, driver2) }.response
     }
 
+    @Throws(Exception::class)
     private suspend fun doFetch(task: FetchTask, driver: WebDriver): FetchResult {
         if (!isActive) {
             return FetchResult.canceled(task, "Browser fetcher is not active")
@@ -100,12 +110,13 @@ open class BrowserEmulatedFetcherImpl(
 
         emit(EventType.willFetch, task.page, driver)
 
-        val result = try {
-            browserEmulator.visit(task, driver)
-        } catch (e: Throwable) {
-            logger.warn(e.stringify("[Unexpected] Failed to visit page | ${task.url}\n"))
-            FetchResult.failed(task, e)
-        }
+//        val result = try {
+//            browserEmulator.visit(task, driver)
+//        } catch (e: Throwable) {
+//            logger.warn(e.stringify("[Unexpected] Failed to visit page | ${task.url}\n"))
+//            FetchResult.failed(task, e)
+//        }
+        val result = browserEmulator.visit(task, driver)
 
         emit(EventType.fetched, task.page, driver)
 
