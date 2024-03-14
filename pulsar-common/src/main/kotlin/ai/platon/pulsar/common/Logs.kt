@@ -27,6 +27,13 @@ fun getTracer(target: Any): Logger? = if (target is Logger) {
 
 fun getRandomLogger(): Logger = LoggerFactory.getLogger(RandomStringUtils.randomAlphabetic(8))
 
+/**
+ * Log messages using [System.err] and [Throwable.printStackTrace] in the case when the logging system was crashed.
+ *
+ * @param t the exception thrown by the close method
+ * @param t the exception thrown by the close method
+ * @param message the message to log
+ * */
 fun catastrophicError(t: Throwable, message: String, vararg args: Any?) {
     System.err.println("Logging system crashed.")
     System.err.println("Failed to log warning message: $message")
@@ -41,8 +48,25 @@ fun warn(target: Any, t: Throwable, message: String, vararg args: Any?) {
     getLogger(target).warn(message, t, *args)
 }
 
+/**
+ * Log a warning message for an interruptible exception.
+ *
+ * This method logs the exception and manages [InterruptedException].
+ *
+ * @param target the object that is being closed
+ * @param t the exception thrown by the close method
+ * */
 fun warnInterruptible(target: Any, t: Throwable) = warnInterruptible(target, t, t.stringify())
 
+/**
+ * Log a warning message for an interruptible exception.
+ *
+ * This method logs the exception and manages [InterruptedException].
+ *
+ * @param target the object that is being closed
+ * @param t the exception thrown by the close method
+ * @param message the message to log
+ * */
 fun warnInterruptible(target: Any, t: Throwable, message: String, vararg args: Any?) {
     try {
         getLogger(target).warn(message, *args)
@@ -56,8 +80,29 @@ fun warnInterruptible(target: Any, t: Throwable, message: String, vararg args: A
     }
 }
 
+/**
+ * Log a warning message for an unexpected exception.
+ *
+ * The exception is unexpected, it's best managed within custom code, such as event handlers.
+ * This method logs the exception, manages [InterruptedException], and logs a message to emphasize that the exception is
+ * unexpected.
+ *
+ * @param target the object that is being closed
+ * @param t the exception thrown by the close method
+ * */
 fun warnUnexpected(target: Any, t: Throwable) = warnUnexpected(target, t, t.stringify())
 
+/**
+ * Log a warning message for an unexpected exception.
+ *
+ * The exception is unexpected, it's best managed within custom code, such as event handlers.
+ * This method logs the exception, manages [InterruptedException], and logs a message to emphasize that the exception is
+ * unexpected.
+ *
+ * @param target the object that is being closed
+ * @param t the exception thrown by the close method
+ * @param message the message to log
+ * */
 fun warnUnexpected(target: Any, t: Throwable, message: String, vararg args: Any?) {
     try {
         val logger = getLogger(target)

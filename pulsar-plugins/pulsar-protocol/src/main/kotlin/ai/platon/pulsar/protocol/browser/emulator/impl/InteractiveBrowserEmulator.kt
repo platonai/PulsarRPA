@@ -1,11 +1,8 @@
 package ai.platon.pulsar.protocol.browser.emulator.impl
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.brief
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.getTracer
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.persist.ext.browseEvent
 import ai.platon.pulsar.common.persist.ext.options
@@ -236,7 +233,7 @@ open class InteractiveBrowserEmulator(
             exception = e
             response = ForwardingResponse.crawlRetry(task.page, e)
         } catch (e: TimeoutCancellationException) {
-            logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout] | {}", e.brief())
+            logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout] | {}", e.stringify())
             response = ForwardingResponse.crawlRetry(task.page, e)
         } catch (e: Exception) {
             when {

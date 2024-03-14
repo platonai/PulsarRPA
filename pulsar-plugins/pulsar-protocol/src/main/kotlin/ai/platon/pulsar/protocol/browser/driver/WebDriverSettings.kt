@@ -17,7 +17,6 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_TASK_TIMEOUT
 import ai.platon.pulsar.common.config.ImmutableConfig
