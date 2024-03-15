@@ -1,19 +1,19 @@
-= PulsarRPA 简介
+= PulsarRPA 简�?
 Vincent Zhang <ivincent.zhang@gmail.com>
 3.0, July 29, 2022: PulsarRPA README
 :toc:
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
-link:README.adoc[English] | 简体中文 | https://gitee.com/platonai_galaxyeye/PulsarRPA[中国镜像]
+link:README.adoc[English] | 简体中�?| https://gitee.com/platonai_galaxyeye/PulsarRPA[中国镜像]
 
-== 🚄 开始
+== 🚄 开�?
 
 💖 PulsarRPA 是你唯一的需要！💖
 
-PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎所有规模和性质的网络数据采集需要。
+PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎所有规模和性质的网络数据采集需要�?
 
-大规模提取 Web 数据非常困难。#网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，PulsarRPA 开发了一系列尖端技术来解决这些问题。
+大规模提�?Web 数据非常困难�?网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完�?，PulsarRPA 开发了一系列尖端技术来解决这些问题�?
 
 *大多数抓取尝试可以从几乎一行代码开始：*
 
@@ -24,9 +24,9 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
   "https://www.amazon.com/", "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ----
 
-上面的代码从一组产品页面中抓取由 css 选择器 #title 和 #acrCustomerReviewText 指定的字段。 示例代码：link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/sites/amazon/AmazonCrawler.java[java].
+上面的代码从一组产品页面中抓取�?css 选择�?#title �?#acrCustomerReviewText 指定的字段�?示例代码：link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/sites/amazon/AmazonCrawler.java[java].
 
-*大多数 #生产环境# 数据采集项目可以从以下代码片段开始：*
+*大多�?#生产环境# 数据采集项目可以从以下代码片段开始：*
 
 *Kotlin:*
 [source,kotlin]
@@ -46,10 +46,10 @@ fun main() {
 }
 ----
 
-示例代码：
+示例代码�?
 link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
-*#最复杂# 的数据采集项目需要使用 RPA：*
+*#最复杂# 的数据采集项目需要使�?RPA�?
 
 *Kotlin:*
 ```kotlin
@@ -78,10 +78,10 @@ session.load(url, options)
 
 示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt[kotlin].
 
-*#最复杂# 的 Web 数据抽取难题需要用 X-SQL 来解决:*
+*#最复杂# �?Web 数据抽取难题需要用 X-SQL 来解�?*
 
 1. 您的 Web 数据提取规则非常复杂，例如，每个单独的页面有 100 多个规则
-2. 需要维护的数据提取规则很多，比如全球 20 多个亚马逊网站，每个网站 20 多个数据类型
+2. 需要维护的数据提取规则很多，比如全�?20 多个亚马逊网站，每个网站 20 多个数据类型
 
 [source,sql,dialect=H2]
 ----
@@ -99,81 +99,81 @@ select
 * link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[X-SQL to scrape 100+ fields from an Amazon's product page]
 * link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[X-SQLs to scrape all types of Amazon webpages]
 
-== 🥁 简介
+== 🥁 简�?
 
-PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎所有规模和性质的网络数据采集需要。
+PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎所有规模和性质的网络数据采集需要�?
 
-大规模提取 Web 数据非常困难。#网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，PulsarRPA 开发了一系列尖端技术来解决这些问题。
+大规模提�?Web 数据非常困难�?网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完�?，PulsarRPA 开发了一系列尖端技术来解决这些问题�?
 
-我们发布了一些最大型电商网站的全站数据采集的完整解决方案，*这些解决方案满足最高标准的性能、质量和成本要求*，他们将永久免费并开放源代码，譬如：
+我们发布了一些最大型电商网站的全站数据采集的完整解决方案�?这些解决方案满足最高标准的性能、质量和成本要求*，他们将永久免费并开放源代码，譬如：
 
 * https://github.com/platonai/exotic-amazon[Exotic Amazon]
 * https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart[Exotic Walmart]
 * https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/food/dianping[Exotic Dianping]
 
-🕷 **PulsarRPA 支持高质量的大规模数据采集和处理。**PulsarRPA 开发了一系列基础设施和前沿技术，来保证即使是大规模数据采集场景，也能达到最高标准的性能、质量和总体拥有成本。
+🕷 **PulsarRPA 支持高质量的大规模数据采集和处理�?*PulsarRPA 开发了一系列基础设施和前沿技术，来保证即使是大规模数据采集场景，也能达到最高标准的性能、质量和总体拥有成本�?
 
-🏪 **PulsarRPA 支持网络即数据库范式。**PulsarRPA 像对待内部数据库一样对待外部网络，如果需要的数据不在本地存储中，或者现存版本不满足分析需要，则系统会从互联网上采集该数据的最新版本。我们还开发了 X-SQL 来直接查询互联网，并将网页转换成表格和图表。
+🏪 **PulsarRPA 支持网络即数据库范式�?*PulsarRPA 像对待内部数据库一样对待外部网络，如果需要的数据不在本地存储中，或者现存版本不满足分析需要，则系统会从互联网上采集该数据的最新版本。我们还开发了 X-SQL 来直接查询互联网，并将网页转换成表格和图表�?
 
-🌈 **PulsarRPA 支持浏览器渲染并将其作为数据采集的首要方法。**将浏览器渲染作为数据采集的首要方法，我们在数据点规模、数据质量、人力成本和硬件成本之间实现了最佳平衡，并实现了最低的总体拥有成本。通过优化，如屏蔽不必要的资源文件，浏览器渲染的性能甚至可以与传统的单一资源采集方法相媲美。
+🌈 **PulsarRPA 支持浏览器渲染并将其作为数据采集的首要方法�?*将浏览器渲染作为数据采集的首要方法，我们在数据点规模、数据质量、人力成本和硬件成本之间实现了最佳平衡，并实现了最低的总体拥有成本。通过优化，如屏蔽不必要的资源文件，浏览器渲染的性能甚至可以与传统的单一资源采集方法相媲美�?
 
-💫 **PulsarRPA 支持 RPA 采集。**PulsarRPA 包含一个 RPA 子系统，来实现网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。该子系统和大家所熟知的 selenium, playwright, puppeteer 是类似的，但对所有行为进行了优化，譬如更真实的模拟操作，更好的执行性能，更好的并行性，更好的容错处理，等等。
+💫 **PulsarRPA 支持 RPA 采集�?*PulsarRPA 包含一�?RPA 子系统，来实现网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。该子系统和大家所熟知�?selenium, playwright, puppeteer 是类似的，但对所有行为进行了优化，譬如更真实的模拟操作，更好的执行性能，更好的并行性，更好的容错处理，等等�?
 
-🔪 **PulsarRPA 支持退化的单一资源采集。**PulsarRPA 的默认采集方式是通过浏览器渲染来采集 `完整的` 网页数据，但如果您需要的数据可以通过单一接口获取，譬如可以通过某个 ajax 接口返回，也可以调用 PulsarRPA 的资源采集方法进行超高速采集。
+🔪 **PulsarRPA 支持退化的单一资源采集�?*PulsarRPA 的默认采集方式是通过浏览器渲染来采集 `完整的` 网页数据，但如果您需要的数据可以通过单一接口获取，譬如可以通过某个 ajax 接口返回，也可以调用 PulsarRPA 的资源采集方法进行超高速采集�?
 
-💯 **PulsarRPA 计划支持最前沿的信息提取技术。**我们计划发布一个先进的人工智能，以显著的精度自动提取所有网页（譬如商品详情页）中的每一个字段，目前我们提供了一个 https://github.com/platonai/exotic#run-auto-extract[预览版本]。
+💯 **PulsarRPA 计划支持最前沿的信息提取技术�?*我们计划发布一个先进的人工智能，以显著的精度自动提取所有网页（譬如商品详情页）中的每一个字段，目前我们提供了一�?https://github.com/platonai/exotic#run-auto-extract[预览版本]�?
 
-== 🚀 主要特性
+== 🚀 主要特�?
 
 * 网络爬虫：各种数据采集模式，包括浏览器渲染、ajax数据采集、普通协议采集等
 * RPA：机器人流程自动化、模仿人类行为、采集单网页应用程序或执行其他有价值的任务
-* 简洁的 API：一行代码抓取，或者一条 SQL 将整个网站栏目变成表格
-* X-SQL：扩展 SQL 来管理 Web 数据：网络爬取、数据采集、Web 内容挖掘、Web BI
+* 简洁的 API：一行代码抓取，或者一�?SQL 将整个网站栏目变成表�?
+* X-SQL：扩�?SQL 来管�?Web 数据：网络爬取、数据采集、Web 内容挖掘、Web BI
 * 爬虫隐身：浏览器驱动隐身，IP 轮换，隐私上下文轮换，永远不会被屏蔽
-* 高性能：高度优化，单机并行渲染数百页而不被屏蔽
-* 低成本：每天抓取 100,000 个浏览器渲染的电子商务网页，或 n * 10,000,000 个数据点，仅需要 8 核 CPU/32G 内存
+* 高性能：高度优化，单机并行渲染数百页而不被屏�?
+* 低成本：每天抓取 100,000 个浏览器渲染的电子商务网页，�?n * 10,000,000 个数据点，仅需�?8 �?CPU/32G 内存
 * 数据质量保证：智能重试、精准调度、Web 数据生命周期管理
-* 大规模采集：完全分布式，专为大规模数据采集而设计
-* 大数据支持：支持各种后端存储：本地文件/MongoDB/HBase/Gora
-* 日志和指标：密切监控并记录每个事件
-* [预览] 信息提取：自动学习网页数据模式，以显著的精度自动提取网页中的每一个字段
+* 大规模采集：完全分布式，专为大规模数据采集而设�?
+* 大数据支持：支持各种后端存储：本地文�?MongoDB/HBase/Gora
+* 日志和指标：密切监控并记录每个事�?
+* [预览] 信息提取：自动学习网页数据模式，以显著的精度自动提取网页中的每一个字�?
 
-== ♾ 核心概念
+== �?核心概念
 
-PulsarRPA 的核心概念包括以下内容，了解了这些核心概念，您可以使用 PulsarRPA 解决最高要求的数据采集任务：
+PulsarRPA 的核心概念包括以下内容，了解了这些核心概念，您可以使�?PulsarRPA 解决最高要求的数据采集任务�?
 
-* 网络数据采集（Web Scraping）: 使用机器人从网站中提取内容和数据的过程
-* 自动提取（Auto Extract）: 自动学习数据模式并从网页中提取每个字段，由尖端的人工智能解决算法驱动
+* 网络数据采集（Web Scraping�? 使用机器人从网站中提取内容和数据的过�?
+* 自动提取（Auto Extract�? 自动学习数据模式并从网页中提取每个字段，由尖端的人工智能解决算法驱动
 * RPA: 机器人流程自动化，这是抓取现代网页的唯一方法
-* 网络即数据库（Network As A Database）: 像访问本地数据库一样访问 Web
+* 网络即数据库（Network As A Database�? 像访问本地数据库一样访�?Web
 * X-SQL: 直接使用 SQL 查询 Web
-* Pulsar Session: 提供了一组简单、强大和灵活的 API 来执行 Web 抓取任务
+* Pulsar Session: 提供了一组简单、强大和灵活�?API 来执�?Web 抓取任务
 * Web Driver: Web 驱动定义了一个简洁的界面来访问网页并与之交互，所有行为都经过优化以尽可能接近真实的人
 * URL: PulsarRPA 中的 URL 是一个普通的 URL，但是带有描述任务的额外信息。PulsarRPA 中的每个任务都被定义为某种形式的 URL
-* Hyperlink: PulsarRPA 中的超链接是一个普通的超链接，但是带有描述任务的额外信息
-* Load Options: 加载选项或加载参数影响 PulsarRPA 如何加载、获取和抓取网页
+* Hyperlink: PulsarRPA 中的超链接是一个普通的超链接，但是带有描述任务的额外信�?
+* Load Options: 加载选项或加载参数影�?PulsarRPA 如何加载、获取和抓取网页
 * Event Handlers: 在网页的整个生命周期中捕获和处理事件
 
-点击 link:docs/concepts-CN.adoc#_the_core_concepts_of_pulsar[PulsarRPA concepts] 查看详情。
+点击 link:docs/concepts-CN.adoc#_the_core_concepts_of_pulsar[PulsarRPA concepts] 查看详情�?
 
-== 🧮 通过可执行 jar 使用 PulsarRPA
+== 🧮 通过可执�?jar 使用 PulsarRPA
 
-我们发布了一个基于 PulsarRPA 的独立可执行 jar，它包含：
+我们发布了一个基�?PulsarRPA 的独立可执行 jar，它包含�?
 
 * 一组顶尖站点的数据采集示例
-* 基于 `自监督机器学习` 自动进行信息提取的小程序，AI 算法识别详情页的所有字段，95% 以上字段精确度 99% 以上
-* 基于 `自监督机器学习` 自动学习并输出所有采集规则的小程序
+* 基于 `自监督机器学习` 自动进行信息提取的小程序，AI 算法识别详情页的所有字段，95% 以上字段精确�?99% 以上
+* 基于 `自监督机器学习` 自动学习并输出所有采集规则的小程�?
 * 从命令行直接执行网页数据采集任务，不需要写代码
-* PulsarRPA 服务器，我们可以向服务器发送 SQL 来采集 Web 数据
-* 一个 Web UI，从中我们可以编写 SQL 并将它们发送到服务器
+* PulsarRPA 服务器，我们可以向服务器发�?SQL 来采�?Web 数据
+* 一�?Web UI，从中我们可以编�?SQL 并将它们发送到服务�?
 
 下载 link:https://github.com/platonai/exotic#download[Exotic] 并使用单个命令行探索其能力：
 
     java -jar exotic-standalone.jar
 
-== 🎁 将 PulsarRPA 用作软件库
+== 🎁 �?PulsarRPA 用作软件�?
 
-利用 PulsarRPA 强大功能的最简单方法是将其作为库添加到您的项目中。
+利用 PulsarRPA 强大功能的最简单方法是将其作为库添加到您的项目中�?
 
 Maven:
 [source,xml]
@@ -181,19 +181,19 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.12.2</version>
+  <version>1.12.3</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.12.2")
+implementation("ai.platon.pulsar:pulsar-all:1.12.3")
 ----
 
-也可以从 github.com 克隆模板项目: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17]。
+也可以从 github.com 克隆模板项目: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17]�?
 
-对于国内开发者，我们强烈建议您按照 link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建。
+对于国内开发者，我们强烈建议您按�?link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建�?
 
 === 基本用法
 
@@ -259,7 +259,7 @@ session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(sess
 
 *Load options*
 
-请注意，我们的大多数抓取方法都接受一个称为加载参数或加载选项的参数，以控制如何加载/获取网页。
+请注意，我们的大多数抓取方法都接受一个称为加载参数或加载选项的参数，以控制如何加�?获取网页�?
 
     -expires     // The expiry time of a page
     -itemExpires // The expiry time of item pages in batch scraping methods
@@ -268,11 +268,11 @@ session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(sess
     -parse       // Activate parse subsystem
     -resource    // Fetch the url as a resource without browser rendering
 
-点击 link:docs/concepts-CN.adoc#_load_options[Load Options] 查看详情。
+点击 link:docs/concepts-CN.adoc#_load_options[Load Options] 查看详情�?
 
 === 提取网页数据
 
-PulsarRPA 使用 https://jsoup.org/[jsoup] 从 HTML 文档中提取数据。 Jsoup 将 HTML 解析为与现代浏览器相同的 DOM。 查看  https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] 以获取所有受支持的 CSS 选择器。
+PulsarRPA 使用 https://jsoup.org/[jsoup] �?HTML 文档中提取数据�?Jsoup �?HTML 解析为与现代浏览器相同的 DOM�?查看  https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] 以获取所有受支持�?CSS 选择器�?
 
 *Kotlin:*
 
@@ -284,7 +284,7 @@ val price = document.selectFirst('.price').text()
 
 === 连续采集
 
-在 PulsarRPA 中抓取大量 url 集合或运行连续采集非常简单。
+�?PulsarRPA 中抓取大�?url 集合或运行连续采集非常简单�?
 
 *Kotlin:*
 
@@ -336,11 +336,11 @@ public class ContinuousCrawler {
 
 示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
-=== 👽 RPA (机器人流程自动化）
+=== 👽 RPA (机器人流程自动化�?
 
-随着网站变得越来越复杂，RPA 已成为从某些网站收集数据的唯一途径，例如某些使用自定义字体技术的网站。
+随着网站变得越来越复杂，RPA 已成为从某些网站收集数据的唯一途径，例如某些使用自定义字体技术的网站�?
 
-PulsarRPA 包含一个 RPA 子系统，提供了一种在网页生命周期中模仿真人的便捷方式，使用 Web 驱动程序与网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。这和大家所熟知的 selenium，playwright，puppeteer 类似，不同的是，PulsarRPA 的所有行为都针对大规模数据采集进行优化。
+PulsarRPA 包含一�?RPA 子系统，提供了一种在网页生命周期中模仿真人的便捷方式，使�?Web 驱动程序与网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。这和大家所熟知�?selenium，playwright，puppeteer 类似，不同的是，PulsarRPA 的所有行为都针对大规模数据采集进行优化�?
 
 以下是一个典型的 RPA 代码片段，它是从顶级电子商务网站收集数据所必需的：
 
@@ -348,7 +348,7 @@ PulsarRPA 包含一个 RPA 子系统，提供了一种在网页生命周期中�
 val options = session.options(args)
 val event = options.event.browseEvent
 event.onBrowserLaunched.addLast { page, driver ->
-    // 预热浏览器，以避免被网站阻止，或选择全局设置，例如您的位置
+    // 预热浏览器，以避免被网站阻止，或选择全局设置，例如您的位�?
     warnUpBrowser(page, driver)
 }
 event.onWillFetch.addLast { page, driver ->
@@ -363,15 +363,15 @@ event.onWillCheckDocumentState.addLast { page, driver ->
     // 关闭遮罩层，它可能是促销、广告或其他东西
     driver.click(".mask-layer-close-button")
 }
-// 访问 URL 并触发事件
+// 访问 URL 并触发事�?
 session.load(url, options)
 ```
 
-The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt[kotlin]。
+The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt[kotlin]�?
 
 === 使用 X-SQL 查询 Web
 
-提取单个页面：
+提取单个页面�?
 
 [source,sql]
 ----
@@ -384,7 +384,7 @@ select
   from load_and_select('https://www.amazon.com/dp/B0C1H26C46 -i 1s -njr 3', 'body');
 ----
 
-执行 X-SQL：
+执行 X-SQL�?
 
 [source,kotlin]
 ----
@@ -402,11 +402,11 @@ HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store
 
 示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt[kotlin].
 
-点击 link:docs/x-sql-CN.adoc[X-SQL] 查看关于 X-SQL 的详细介绍和函数说明。
+点击 link:docs/x-sql-CN.adoc[X-SQL] 查看关于 X-SQL 的详细介绍和函数说明�?
 
-== 🌐 将 PulsarRPA 作为 REST 服务运行
+== 🌐 �?PulsarRPA 作为 REST 服务运行
 
-当 PulsarRPA 作为 REST 服务运行时，X-SQL 可用于随时随地抓取网页或直接查询 Web 数据，无需打开 IDE。
+�?PulsarRPA 作为 REST 服务运行时，X-SQL 可用于随时随地抓取网页或直接查询 Web 数据，无需打开 IDE�?
 
 === 从源代码构建
 ----
@@ -414,24 +414,24 @@ git clone https://github.com/platonai/pulsar.git
 cd pulsar && bin/build-run.sh
 ----
 
-对于国内开发者，我们强烈建议您按照 link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建。
+对于国内开发者，我们强烈建议您按�?link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建�?
 
 === 使用 X-SQL 查询 Web
 
-如果未启动，则启动 pulsar 服务器：
+如果未启动，则启�?pulsar 服务器：
 
 [source,shell]
 ----
 bin/pulsar
 ----
 
-在另一个终端窗口中抓取网页：
+在另一个终端窗口中抓取网页�?
 
 [source,shell]
 ----
 bin/scrape.sh
 ----
-该 bash 脚本非常简单，只需使用 curl 发送 X-SQL：
+�?bash 脚本非常简单，只需使用 curl 发�?X-SQL�?
 [source,sql]
 ----
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
@@ -473,9 +473,9 @@ Json 格式的响应如下：
 }
 ----
 
-点击 link:docs/x-sql-CN.adoc[X-SQL] 查看关于 X-SQL 的详细介绍和函数说明。
+点击 link:docs/x-sql-CN.adoc[X-SQL] 查看关于 X-SQL 的详细介绍和函数说明�?
 
-== 📖 循序渐进的课程
+== 📖 循序渐进的课�?
 
 我们有一个循序渐进的示例课程:
 
@@ -492,22 +492,22 @@ Json 格式的响应如下：
 . link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt[X-SQL]
 . link:https://github.com/platonai/exotic-amazon[Practice: Crawl the Top 1 E-comm Site at Scale]
 
-== 📊 日志和指标
+== 📊 日志和指�?
 
-PulsarRPA 精心设计了日志和指标子系统，以记录系统中发生的每一个事件。
+PulsarRPA 精心设计了日志和指标子系统，以记录系统中发生的每一个事件�?
 
-PulsarRPA 在日志中报告每个页面加载任务执行的状态，因此很容易知道系统中发生了什么，判断系统运行是否健康、回答成功获取多少页面、重试多少页面、使用了多少代理 IP。
+PulsarRPA 在日志中报告每个页面加载任务执行的状态，因此很容易知道系统中发生了什么，判断系统运行是否健康、回答成功获取多少页面、重试多少页面、使用了多少代理 IP�?
 
-只需注意几个符号，您就可以深入了解整个系统的状态：💯 💔 🗙 ⚡ 💿 🔃 🤺。
+只需注意几个符号，您就可以深入了解整个系统的状态：💯 💔 🗙 �?💿 🔃 🤺�?
 
-下面是一组典型的页面加载日志，查看 link:docs/log-format.adoc[日志格式] 了解如何阅读日志，从而一目了然地了解整个系统的状态。
+下面是一组典型的页面加载日志，查�?link:docs/log-format.adoc[日志格式] 了解如何阅读日志，从而一目了然地了解整个系统的状态�?
 
 [source,composer log,options="nowrap"]
 ----
-2022-09-24 11:46:26.045  INFO [-worker-14] a.p.p.c.c.L.Task - 3313. 💯 ⚡ U for N got 200 580.92 KiB in 1m14.277s, fc:1 | 75/284/96/277/6554 | 106.32.12.75 | 3xBpaR2 | https://www.walmart.com/ip/Restored-iPhone-7-32GB-Black-T-Mobile-Refurbished/329207863 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
+2022-09-24 11:46:26.045  INFO [-worker-14] a.p.p.c.c.L.Task - 3313. 💯 �?U for N got 200 580.92 KiB in 1m14.277s, fc:1 | 75/284/96/277/6554 | 106.32.12.75 | 3xBpaR2 | https://www.walmart.com/ip/Restored-iPhone-7-32GB-Black-T-Mobile-Refurbished/329207863 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 2022-09-24 11:46:09.190  INFO [-worker-32] a.p.p.c.c.L.Task - 3738. 💯 💿 U  got 200 452.91 KiB in 55.286s, last fetched 9h32m50s ago, fc:1 | 49/171/82/238/6172 | 121.205.220.179 | https://www.walmart.com/ip/Boost-Mobile-Apple-iPhone-SE-2-Cell-Phone-Black-64GB-Prepaid-Smartphone/490934488 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 2022-09-24 11:46:28.567  INFO [-worker-17] a.p.p.c.c.L.Task - 2269. 💯 🔃 U for SC got 200 565.07 KiB <- 543.41 KiB in 1m22.767s, last fetched 16m58s ago, fc:6 | 58/230/98/295/6272 | 27.158.125.76 | 9uwu602 | https://www.walmart.com/ip/Straight-Talk-Apple-iPhone-11-64GB-Purple-Prepaid-Smartphone/356345388?variantFieldId=actual_color -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
-2022-09-24 11:47:18.390  INFO [r-worker-8] a.p.p.c.c.L.Task - 3732. 💔 ⚡ U for N got 1601 0 <- 0 in 32.201s, fc:1/1 Retry(1601) rsp: CRAWL, rrs: EMPTY_0B | 2zYxg52 | https://www.walmart.com/ip/Apple-iPhone-7-256GB-Jet-Black-AT-T-Locked-Smartphone-Grade-B-Used/182353175?variantFieldId=actual_color -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
+2022-09-24 11:47:18.390  INFO [r-worker-8] a.p.p.c.c.L.Task - 3732. 💔 �?U for N got 1601 0 <- 0 in 32.201s, fc:1/1 Retry(1601) rsp: CRAWL, rrs: EMPTY_0B | 2zYxg52 | https://www.walmart.com/ip/Apple-iPhone-7-256GB-Jet-Black-AT-T-Locked-Smartphone-Grade-B-Used/182353175?variantFieldId=actual_color -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 2022-09-24 11:47:13.860  INFO [-worker-60] a.p.p.c.c.L.Task - 2828. 🗙 🗙 U for SC got 200 0 <- 348.31 KiB <- 684.75 KiB in 0s, last fetched 18m55s ago, fc:2 | 34/130/52/181/5747 | 60.184.124.232 | 11zTa0r2 | https://www.walmart.com/ip/Walmart-Family-Mobile-Apple-iPhone-11-64GB-Black-Prepaid-Smartphone/209201965?athbdg=L1200 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 ----
 
@@ -515,11 +515,11 @@ PulsarRPA 在日志中报告每个页面加载任务执行的状态，因此很�
 
 * Memory 4G+
 * Maven 3.2+
-* Java 11 JDK 最新版本
+* Java 11 JDK 最新版�?
 * java and jar on the PATH
 * Google Chrome 90+
 
-PulsarRPA 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进行了测试，任何其他满足要求的操作系统也应该可以正常工作。
+PulsarRPA �?Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进行了测试，任何其他满足要求的操作系统也应该可以正常工作�?
 
 == 🛸 高级主题
 
@@ -527,28 +527,28 @@ PulsarRPA 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进�
 
 * 大规模网络爬虫有什么困难？
 * 如何每天从电子商务网站上抓取一百万个产品页面？
-* 如何在登录后抓取页面？
-* 如何在浏览器上下文中直接下载资源？
+* 如何在登录后抓取页面�?
+* 如何在浏览器上下文中直接下载资源�?
 * 如何抓取单页应用程序（SPA）？
 ** 资源模式
 ** RPA 模式
 * 如何确保正确提取所有字段？
-* 如何抓取分页链接？
-* 如何抓取新发现的链接？
-* 如何爬取整个网站？
-* 如何模拟人类行为？
-* 如何安排优先任务？
+* 如何抓取分页链接�?
+* 如何抓取新发现的链接�?
+* 如何爬取整个网站�?
+* 如何模拟人类行为�?
+* 如何安排优先任务�?
 * 如何在固定时间点开始任务？
-* 如何删除计划任务？
+* 如何删除计划任务�?
 * 如何知道任务的状态？
 * 如何知道系统中发生了什么？
-* 如何为要抓取的字段自动生成 css 选择器？
+* 如何为要抓取的字段自动生�?css 选择器？
 * 如何使用机器学习自动从网站中提取内容并具有商业准确性？
 * 如何抓取 amazon.com 以满足行业需求？
 
 == 🆚 同其他方案的对比
 
-一般来说，”主要特性“部分中提到的特性都得到了 PulsarRPA 的良好支持，但其他解决方案不支持或者支持不好。
+一般来说，”主要特性“部分中提到的特性都得到�?PulsarRPA 的良好支持，但其他解决方案不支持或者支持不好�?
 
 点击链接 link:docs/faq/solution-comparison.adoc[solution comparison] 查看以下问题的答案：
 
@@ -556,12 +556,12 @@ PulsarRPA 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进�
 * PulsarRPA vs nutch
 * PulsarRPA vs scrapy+splash
 
-== 🤓 技术细节
+== 🤓 技术细�?
 点击链接 link:docs/faq/technical-details.adoc[technical details] 查看以下问题的答案：
 
-* 如何轮换我的 IP 地址？
-* 如何隐藏我的机器人不被检测到？
-* 如何以及为什么要模拟人类行为？
+* 如何轮换我的 IP 地址�?
+* 如何隐藏我的机器人不被检测到�?
+* 如何以及为什么要模拟人类行为�?
 * 如何在一台机器上渲染尽可能多的页面而不被屏蔽？
 
 == 🐦 联系方式
