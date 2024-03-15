@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.Transport
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCTimeoutException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants
@@ -147,12 +148,12 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
     }
 
     fun unsubscribe(id: Long) {
-        invocationFutures.remove(id)?.signal(false, null)
+        invocationFutures.remove(id)
     }
     
     fun unsubscribeAll() {
         invocationFutures.keys.forEach {
-            unsubscribe(it)
+            invocationFutures.remove(it)?.signal(false, null)
         }
     }
 
@@ -170,8 +171,8 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
     
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            removeAllListeners()
             unsubscribeAll()
+            removeAllListeners()
         }
     }
     
@@ -295,24 +296,71 @@ abstract class DevToolsImpl(
         browserClient.addMessageHandler(dispatcher)
         pageClient.addMessageHandler(dispatcher)
     }
-
+    
+    /**
+     * Invokes a remote method and returns the result.
+     * The method is blocking and will wait for the response.
+     *
+     * TODO: use non-blocking version
+     *
+     * @param returnProperty The property to return from the response.
+     * @param clazz The class of the return type.
+     * @param <T> The return type.
+     * @return The result of the invocation.
+     * */
+    @Throws(InterruptedException::class)
     open operator fun <T> invoke(
         returnProperty: String,
         clazz: Class<T>,
         methodInvocation: MethodInvocation
     ): T? {
-        return invoke0(returnProperty, clazz, null, methodInvocation)
+        try {
+            return invoke0(returnProperty, clazz, null, methodInvocation)
+        }  catch (e: WebSocketServiceException) {
+            throw ChromeRPCException("Web socket connection lost", e)
+        } catch (e: InterruptedException) {
+            logger.warn("Interrupted while invoke ${clazz::javaClass.name}.${methodInvocation.method}")
+            Thread.currentThread().interrupt()
+            return null
+        } catch (e: IOException) {
+            throw ChromeRPCException("Failed reading response message", e)
+        }
     }
-
+    
+    /**
+     * Invokes a remote method and returns the result.
+     * The method is blocking and will wait for the response.
+     *
+     * TODO: use non-blocking version
+     *
+     * @param returnProperty The property to return from the response.
+     * @param clazz The class of the return type.
+     * @param returnTypeClasses The classes of the return type.
+     * @param method The method to invoke.
+     * @param <T> The return type.
+     * @return The result of the invocation.
+     * */
+    @Throws(InterruptedException::class)
     override operator fun <T> invoke(
         returnProperty: String?,
         clazz: Class<T>,
         returnTypeClasses: Array<Class<out Any>>?,
         method: MethodInvocation
     ): T? {
-        return invoke0(returnProperty, clazz, returnTypeClasses, method)
+        try {
+            return invoke0(returnProperty, clazz, returnTypeClasses, method)
+        }  catch (e: WebSocketServiceException) {
+            throw ChromeRPCException("Web socket connection lost", e)
+        } catch (e: InterruptedException) {
+            logger.warn("Interrupted while invoke ${method.method}")
+            Thread.currentThread().interrupt()
+            return null
+        } catch (e: IOException) {
+            throw ChromeRPCException("Failed reading response message", e)
+        }
     }
-
+    
+    @Throws(InterruptedException::class, ChromeServiceException::class)
     private fun <T> invoke0(
         returnProperty: String?,
         clazz: Class<T>,
@@ -322,63 +370,64 @@ abstract class DevToolsImpl(
         if (!isOpen || !dispatcher.isActive) {
             return null
         }
-
+        
         numInvokes.inc()
         lastActiveTime = Instant.now()
-
+        
         val future = dispatcher.subscribe(method.id, returnProperty)
         val message = dispatcher.serialize(method)
-
-        try {
-            // See https://github.com/hardkoded/puppeteer-sharp/issues/796
-            if (method.method.startsWith("Target.")) {
-                browserClient.send(message)
-            } else {
-                pageClient.send(message)
-            }
-
-            val readTimeout = config.readTimeout
-            // await() blocking the current thread
-            // TODO: find a way to avoid blocking the current thread
-            val responded = future.await(readTimeout)
-            dispatcher.unsubscribe(method.id)
-            lastActiveTime = Instant.now()
-
-            if (!isOpen) {
-                return null
-            }
-
-            if (!responded) {
-                val methodName = method.method
-                throw ChromeRPCTimeoutException("Response timeout $methodName | #${numInvokes.count}, ($readTimeout)")
-            }
-
-            if (future.isSuccess) {
-                return when {
-                    Void.TYPE == clazz -> null
-                    returnTypeClasses != null -> dispatcher.deserialize(returnTypeClasses, clazz, future.result)
-                    else -> dispatcher.deserialize(clazz, future.result)
-                }
-            }
-
-            // Received an error
-            val error = dispatcher.deserialize(ErrorObject::class.java, future.result)
-            val sb = StringBuilder(error.message)
-            if (error.data != null) {
-                sb.append(": ")
-                sb.append(error.data)
-            }
-
-            throw ChromeRPCException(error.code, sb.toString())
-        } catch (e: WebSocketServiceException) {
-            throw ChromeRPCException("Web socket connection lost", e)
-        } catch (e: InterruptedException) {
-            logger.warn("Interrupted while invoke ${method.method}")
-            Thread.currentThread().interrupt()
-            return null
-        } catch (e: IOException) {
-            throw ChromeRPCException("Failed reading response message", e)
+        
+        // See https://github.com/hardkoded/puppeteer-sharp/issues/796 to understand why we need handle Target methods
+        // differently.
+        if (method.method.startsWith("Target.")) {
+            browserClient.sendAsync(message)
+        } else {
+            pageClient.sendAsync(message)
         }
+        
+        val readTimeout = config.readTimeout
+        // await() blocking the current thread
+        // TODO: find a way to avoid blocking the current thread, ktor might be a good choice
+        // see: https://ktor.io/docs/websocket-client.html
+        val responded = future.await(readTimeout)
+        dispatcher.unsubscribe(method.id)
+        lastActiveTime = Instant.now()
+        
+        if (!isOpen) {
+            return null
+        }
+        
+        if (!responded) {
+            val methodName = method.method
+            throw ChromeRPCTimeoutException("Response timeout $methodName | #${numInvokes.count}, ($readTimeout)")
+        }
+        
+        if (future.isSuccess) {
+            return when {
+                Void.TYPE == clazz -> null
+                returnTypeClasses != null -> dispatcher.deserialize(returnTypeClasses, clazz, future.result)
+                else -> dispatcher.deserialize(clazz, future.result)
+            }
+        }
+        
+        // Received an error
+        handleErrorReceived(future)
+        
+        // dead code block, handleErrorReceived throws a ChromeRPCException
+        return null
+    }
+    
+    @Throws(ChromeRPCException::class)
+    private fun handleErrorReceived(future: InvocationFuture) {
+        // Received an error
+        val error = dispatcher.deserialize(ErrorObject::class.java, future.result)
+        val sb = StringBuilder(error.message)
+        if (error.data != null) {
+            sb.append(": ")
+            sb.append(error.data)
+        }
+        
+        throw ChromeRPCException(error.code, sb.toString())
     }
 
     override fun addEventListener(

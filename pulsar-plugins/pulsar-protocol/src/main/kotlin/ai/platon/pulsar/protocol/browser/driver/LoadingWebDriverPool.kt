@@ -32,7 +32,7 @@ class LoadingWebDriverPool constructor(
     val driverPoolManager: WebDriverPoolManager,
     val driverFactory: WebDriverFactory,
     val immutableConfig: ImmutableConfig
-) {
+): AutoCloseable {
     companion object {
         var CLOSE_ALL_TIMEOUT = Duration.ofSeconds(60)
         var POLLING_TIMEOUT = Duration.ofSeconds(60)
@@ -72,7 +72,9 @@ class LoadingWebDriverPool constructor(
      * Retired but not closed yet.
      * */
     private var isRetired = false
-    val isActive get() = !isRetired && AppContext.isActive
+    private val closed = AtomicBoolean()
+    val isClosed get() = closed.get()
+    val isActive get() = !isClosed && !isRetired && AppContext.isActive
     private val launchEventsEmitted = AtomicBoolean()
     private val _numCreatedDrivers = AtomicInteger()
     private val _numWaitingTasks = AtomicInteger()
@@ -177,6 +179,7 @@ class LoadingWebDriverPool constructor(
     /**
      * Allocate [capacity] drivers
      * */
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun allocate(conf: VolatileConfig) {
         repeat(capacity) {
             runCatching { put(poll(priority, conf, POLLING_TIMEOUT.seconds, TimeUnit.SECONDS)) }.onFailure {
@@ -191,20 +194,21 @@ class LoadingWebDriverPool constructor(
      *
      * @return the head of the free driver queue, or {@code null} if this queue is empty
      */
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun poll(): WebDriver = poll(VolatileConfig.UNSAFE)
 
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun poll(conf: VolatileConfig): WebDriver = poll(0, conf, POLLING_TIMEOUT.seconds, TimeUnit.SECONDS)
 
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun poll(conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver = poll(0, conf, timeout, unit)
 
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun poll(priority: Int, conf: VolatileConfig, timeout: Duration): WebDriver {
         return poll(priority, conf, timeout.seconds, TimeUnit.SECONDS)
     }
 
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun poll(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver {
         val driver = pollWebDriver(priority, conf, timeout, unit)
         if (driver == null) {
@@ -258,8 +262,8 @@ class LoadingWebDriverPool constructor(
         isRetired = true
         statefulDriverPool.retire()
     }
-
-    fun close() {
+    
+    override fun close() {
         statefulDriverPool.close()
     }
 
@@ -314,16 +318,13 @@ class LoadingWebDriverPool constructor(
         }
     }
 
-    @Throws(BrowserLaunchException::class)
+    @Throws(BrowserLaunchException::class, InterruptedException::class)
     private fun pollWebDriver(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver? {
         _numWaitingTasks.incrementAndGet()
 
         val driver = try {
             resourceSafeCreateDriverIfNecessary(priority, conf)
             statefulDriverPool.poll(timeout, unit)
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            null
         } finally {
             _numWaitingTasks.decrementAndGet()
             lastActiveTime = Instant.now()
@@ -339,6 +340,10 @@ class LoadingWebDriverPool constructor(
     @Throws(BrowserLaunchException::class)
     private fun resourceSafeCreateDriverIfNecessary(priority: Int, conf: VolatileConfig) {
         synchronized(driverFactory) {
+            if (!isActive) {
+                return
+            }
+            
             if (!shouldCreateWebDriver()) {
                 return
             }

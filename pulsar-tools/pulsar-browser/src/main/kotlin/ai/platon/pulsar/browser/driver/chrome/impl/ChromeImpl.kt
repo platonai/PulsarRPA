@@ -102,13 +102,14 @@ class ChromeImpl(
     }
 
     private fun clearDevTools(tab: ChromeTab) {
-        remoteDevTools.remove(tab.id)?.close()
+        remoteDevTools.remove(tab.id)?.runCatching { close() }?.onFailure { warnForClose(this, it) }
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            remoteDevTools.values.forEach { it.runCatching { close() }.onFailure { warnForClose(this, it) } }
+            val devTools = remoteDevTools.values
             remoteDevTools.clear()
+            devTools.forEach { it.runCatching { close() }.onFailure { warnForClose(this, it) } }
         }
     }
 
@@ -161,8 +162,7 @@ class ChromeImpl(
         try {
             val uri = URL(String.format(path, *params))
             connection = uri.openConnection() as HttpURLConnection
-
-
+            
             /**
              * Chrome 111 no longer accepts HTTP GET to create tabs, PUT is the correct verb.
              *

@@ -13,7 +13,9 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
+import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import com.codahale.metrics.Gauge
 import com.google.common.annotations.Beta
 import kotlinx.coroutines.*
@@ -157,8 +159,7 @@ open class WebDriverPoolManager(
         try {
             return doRun(task)
         } catch (e: InterruptedException) {
-            logger.warn("Interrupted | {}", e.message)
-            Thread.currentThread().interrupt()
+            warnInterruptible(this, e)
             return null
         } catch (e: WebDriverException) {
             logger.warn("Failed to run the task | {} | {}", task.page.url, e.message)
@@ -475,7 +476,8 @@ open class WebDriverPoolManager(
 
         return driverPool
     }
-
+    
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     private suspend fun runWithDriverPool(task: WebDriverTask, driverPool: LoadingWebDriverPool): FetchResult? {
         var driver: WebDriver? = null
         try {

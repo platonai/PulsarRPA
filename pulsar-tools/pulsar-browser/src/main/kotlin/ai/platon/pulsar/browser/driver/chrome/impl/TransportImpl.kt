@@ -8,6 +8,10 @@ import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.warnForClose
 import com.codahale.metrics.SharedMetricRegistries
+import io.ktor.client.*
+import io.ktor.client.plugins.websocket.*
+import io.ktor.http.*
+import io.ktor.websocket.*
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -17,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
 import javax.websocket.*
+import javax.websocket.CloseReason
 
 class TransportImpl : Transport {
     private val logger = LoggerFactory.getLogger(TransportImpl::class.java)
@@ -28,7 +33,7 @@ class TransportImpl : Transport {
     private val metricsPrefix = "c.i.WebSocketClient"
     private val metrics = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
     private val meterRequests = metrics.meter("$metricsPrefix.requests")
-
+    
     class DevToolsMessageHandler(val consumer: Consumer<String>) : MessageHandler.Whole<String> {
         override fun onMessage(message: String) {
             consumer.accept(message)
@@ -77,7 +82,7 @@ class TransportImpl : Transport {
             logger.warn("Failed to connect to ws server | $uri", e)
             throw WebSocketServiceException("Failed connecting to ws server | $uri", e)
         } catch (e: IOException) {
-            logger.warn("Failed to connect to ws server | $uri", uri, e)
+            logger.warn("Failed to connect to ws server | $uri", e)
             throw WebSocketServiceException("Failed connecting to ws server | $uri", e)
         }
     }
@@ -91,6 +96,8 @@ class TransportImpl : Transport {
             session.basicRemote.sendText(message)
         } catch (e: IOException) {
             throw WebSocketServiceException("The connection is closed", e)
+        } catch (e: IllegalArgumentException) {
+            throw WebSocketServiceException("The connection is closed", e)
         } catch (e: java.lang.IllegalStateException) {
             throw WebSocketServiceException("The connection is closed", e)
         } catch (e: Exception) {
@@ -99,12 +106,14 @@ class TransportImpl : Transport {
     }
 
     @Throws(WebSocketServiceException::class)
-    override fun asyncSend(message: String): Future<Void> {
+    override fun sendAsync(message: String): Future<Void> {
         meterRequests.mark()
 
         return try {
             session.asyncRemote.sendText(message)
         } catch (e: IOException) {
+            throw WebSocketServiceException("The connection is closed", e)
+        } catch (e: IllegalArgumentException) {
             throw WebSocketServiceException("The connection is closed", e)
         } catch (e: java.lang.IllegalStateException) {
             throw WebSocketServiceException("The connection is closed", e)

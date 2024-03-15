@@ -87,8 +87,8 @@ class ChromeDevtoolsBrowser(
             mutableReusedDrivers.remove(chromeTabId)
             mutableDrivers.remove(chromeTabId)
             
-            runCatching { closeTab(driver.chromeTab) }.onFailure { warnForClose(this, it) }
             runCatching { driver.doClose() }.onFailure { warnForClose(this, it) }
+            runCatching { closeTab(driver.chromeTab) }.onFailure { warnForClose(this, it) }
         }
     }
     

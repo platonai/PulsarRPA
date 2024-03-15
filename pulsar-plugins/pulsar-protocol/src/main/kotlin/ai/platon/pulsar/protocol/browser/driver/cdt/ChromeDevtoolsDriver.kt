@@ -7,7 +7,6 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
@@ -752,12 +751,8 @@ class ChromeDevtoolsDriver(
 
     fun doClose() {
         if (closed.compareAndSet(false, true)) {
-            try {
-                devTools.close()
-                state.set(WebDriver.State.QUIT)
-            } catch (e: WebDriverException) {
-                // ignored
-            }
+            state.set(WebDriver.State.QUIT)
+            devTools.runCatching { close() }.onFailure { warnForClose(this, it) }
         }
     }
 

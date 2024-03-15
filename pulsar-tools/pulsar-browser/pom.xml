@@ -30,6 +30,20 @@
             <artifactId>tyrus-container-grizzly-client</artifactId>
             <version>${tyrus.version}</version>
         </dependency>
+
+        <!-- Experimental, for non-blocking WS communication to Chrome DevTools -->
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-websockets-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <!-- Experimental, for non-blocking WS communication to Chrome DevTools -->
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-serialization-jackson-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/javassist/javassist -->
         <dependency>
             <groupId>javassist</groupId>
@@ -37,4 +51,8 @@
             <version>${javassist.version}</version>
         </dependency>
     </dependencies>
+
+    <properties>
+        <ktor.version>2.3.9</ktor.version>
+    </properties>
 </project>

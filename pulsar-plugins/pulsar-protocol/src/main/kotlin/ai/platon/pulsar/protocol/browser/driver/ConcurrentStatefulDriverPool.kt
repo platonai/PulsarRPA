@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 class ConcurrentStatefulDriverPool(
     private val browserManager: BrowserManager,
     private val capacity: Int
-) {
+): AutoCloseable {
     private val logger = getLogger(this)
 
     /**
@@ -53,6 +53,7 @@ class ConcurrentStatefulDriverPool(
     @get:Synchronized
     val activeDriverCount get() = workingDrivers.size + standbyDrivers.size
     
+    @Throws(InterruptedException::class)
     @Synchronized
     fun poll(timeout: Long, unit: TimeUnit): WebDriver? {
         val driver = _standbyDrivers.poll(timeout, unit)
@@ -105,8 +106,7 @@ class ConcurrentStatefulDriverPool(
         _workingDrivers.forEach { it.cancel() }
     }
 
-    @Synchronized
-    fun close() {
+    override fun close() {
         // do not clear, keep the state
 //        standbyDrivers.clear()
 //        workingDrivers.clear()
