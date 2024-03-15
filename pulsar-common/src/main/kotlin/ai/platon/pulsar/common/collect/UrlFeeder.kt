@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.collect.collector.UrlCacheCollector
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlAware
+import ai.platon.pulsar.common.warnInterruptible
 
 /**
  * The url feeder collects urls from the url pool and feed them to the crawlers.
@@ -58,12 +59,15 @@ class UrlFeeder(
         get() = PriorityDataCollectorsFormatter(collectors).toString()
 
     /**
-     * Add a hyperlink to the very beginning of the fetch queue, so it will be served immediately
+     * Add a hyperlink to the very beginning of the fetch queue, so it will be served first
      * */
     fun addFirst(url: UrlAware) = loadingIterable.addFirst(url)
 
+    /**
+     * Add a hyperlink to the end of the fetch queue, so it will be served last
+     * */
     fun addLast(url: UrlAware) = loadingIterable.addLast(url)
-
+    
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 
     /**
@@ -71,7 +75,7 @@ class UrlFeeder(
      * */
     fun estimatedOrder(priority: Int): Int {
         return kotlin.runCatching { doEstimatedOrder(priority) }
-            .onFailure { logger.warn(it.stringify()) }
+            .onFailure { warnInterruptible(this, it) }
             .getOrDefault(-2)
     }
 

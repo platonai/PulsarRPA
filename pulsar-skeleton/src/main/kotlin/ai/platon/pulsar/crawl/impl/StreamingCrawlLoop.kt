@@ -35,17 +35,18 @@ open class StreamingCrawlLoop(
     private lateinit var _crawler: StreamingCrawler
     override val crawler: Crawler get() = _crawler
 
+    // TODO: better initialization, may use spring bean
     private val context get() = PulsarContexts.create()
 
     init {
-        logger.info("Crawl loop is created | @{}", hashCode())
+        logger.info("Crawl loop is created | {} | @{}", display, hashCode())
     }
 
     @Synchronized
     override fun start() {
         if (isRunning) {
             // issue a warning for debug
-            logger.warn("Crawl loop #{} is already running", id)
+            logger.warn("Crawl loop {} is already running", display)
         }
 
         if (running.compareAndSet(false, true)) {
@@ -61,7 +62,7 @@ open class StreamingCrawlLoop(
                 crawlJob?.cancelAndJoin()
                 crawlJob = null
 
-                logger.info("Crawl loop #{} is stopped", id)
+                logger.info("Crawl loop {} is stopped", display)
             }
         }
     }
@@ -69,13 +70,14 @@ open class StreamingCrawlLoop(
     /**
      * Wait until the loop is started and all tasks are done.
      * */
+    @Throws(InterruptedException::class)
     override fun await() {
         started.await()
         crawler.await()
     }
 
     private fun start0() {
-        logger.info("Registered {} link collectors | loop#{} @{}", urlFeeder.collectors.size, id, hashCode())
+        logger.info("Registered {} link collectors | {} | @{}", urlFeeder.collectors.size, display, hashCode())
 
         val urls = urlFeeder.asSequence()
         _crawler = StreamingCrawler(urls, context.createSession())

@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.PageEvent
-import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
+import ai.platon.pulsar.crawl.event.impl.PageEventFactory
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
@@ -49,7 +49,7 @@ open class LoadOptions(
 ) : CommonOptions(argv) {
 
     /**
-     * The entity name of the page, for example, article, product, hotel, flower, etc, it's optional.
+     * The entity name of the page, for example, article, product, hotel, flower, etc., it's optional.
      * */
     @ApiPublic
     @Parameter(
@@ -59,7 +59,7 @@ open class LoadOptions(
     var entity = ""
 
     /**
-     * The task label, it's optional and can be used to group tasks.
+     * The task label is optional and may be utilized to categorize tasks into groups.
      * */
     @ApiPublic
     @Parameter(
@@ -69,35 +69,34 @@ open class LoadOptions(
     var label = ""
 
     /**
-     * The task id, it's optional and can be used to distinguish tasks.
+     * The taskId is optional and serves to differentiate tasks if needed.
      * */
     @ApiPublic
     @Parameter(
         names = ["-taskId", "--task-id"],
-        description = "The task id, it's optional and can be used to distinguish tasks"
+        description = "The taskId is optional and serves to differentiate tasks if needed."
     )
     var taskId = ""
 
     /**
-     * The task time, we usually use task time to indicate the name of a task batch.
+     * The taskTime is usually used to denote the name of a batch of tasks.
      * */
     @ApiPublic
     @Parameter(
         names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
-        description = "The task time, we usually use task time to indicate the name of a task batch"
+        description = "The taskTime is usually used to denote the name of a batch of tasks."
     )
-    var taskTime = LoadOptionDefaults.taskTime
+    var taskTime = Instant.now().truncatedTo(ChronoUnit.MINUTES)
 
     /**
-     * The deadline to finish the task, if the deadline is exceeded, the task should be discarded
-     * as soon as possible.
-     *
+     * The task's deadline indicates the time by which it should be completed. If this deadline is surpassed,
+     * the task must be promptly discarded.
      * */
     @ApiPublic
     @Parameter(
         names = ["-deadline", "--deadline"], converter = InstantConverter::class,
-        description = "The deadline to finish the task, if the deadline is exceeded, " +
-                " the task should be discarded as soon as possible."
+        description = "The task's deadline indicates the time by which it should be completed. If this deadline is surpassed, " +
+                " the task must be promptly discarded."
     )
     var deadline = DateTimes.doomsday
 
@@ -112,13 +111,14 @@ open class LoadOptions(
     var authToken = ""
 
     /**
-     * Specify if the load execution is read only or not.
-     * If a load execution is read only, the webpage loaded should not be changed by the execution.
+     * Specify whether the load execution is read-only or not. When a load execution is read-only, it ensures that the
+     * webpage loaded remains unchanged by the execution.
      * */
     @ApiPublic
     @Parameter(
         names = ["-readonly"],
-        description = "Whether the page should never be changed during load execution."
+        description = "Specify whether the load execution is read-only or not. " +
+                "When a load execution is read-only, it ensures that the webpage loaded remains unchanged by the execution."
     )
     var readonly = false
 
@@ -447,7 +447,7 @@ open class LoadOptions(
     var itemRequireSize = 0
 
     /**
-     * Re-fetch item pages who's images is less than requireImages.
+     * Re-fetch item pages whose images is less than requireImages.
      * */
     @ApiPublic
     @Parameter(
@@ -457,7 +457,7 @@ open class LoadOptions(
     var itemRequireImages = 0
 
     /**
-     * Re-fetch item pages whos anchors is less than requireAnchors.
+     * Re-fetch item pages with fewer anchors than the required number specified by requireAnchors.
      * */
     @ApiPublic
     @Parameter(
@@ -486,7 +486,7 @@ open class LoadOptions(
 
     /**
      * If the option is set, do not persist the page content which is usually very large.
-     * If the option is set, it overrides [storeContent].
+     * If the option is true, it overrides [storeContent].
      * */
     @Parameter(
         names = ["-dct", "-dropContent", "--drop-content"], arity = 1,
@@ -902,7 +902,7 @@ open class LoadOptions(
      * Ensure [event] is created.
      * */
     private fun enableEvent(): PageEvent {
-        val eh = rawEvent ?: DefaultPageEvent()
+        val eh = rawEvent ?: PageEventFactory(conf).create()
         rawEvent = eh
         return eh
     }
@@ -911,7 +911,7 @@ open class LoadOptions(
      * Ensure [rawItemEvent] is created.
      * */
     private fun enableItemEvent(): PageEvent {
-        val eh = rawEvent ?: DefaultPageEvent()
+        val eh = rawEvent ?: PageEventFactory(conf).create()
         rawItemEvent = eh
         return eh
     }
@@ -1061,7 +1061,7 @@ open class LoadOptions(
         /**
          * Parse the [args] with other [conf].
          * */
-        fun parse(args: String, conf: VolatileConfig = VolatileConfig.UNSAFE) =
+        fun parse(args: String, conf: VolatileConfig = VolatileConfig()) =
             LoadOptions(args.trim(), conf).apply { parse() }
 
         /**
@@ -1105,30 +1105,24 @@ open class LoadOptions(
 }
 
 /**
- * The default load options, be careful to change the default behaviour.
- *
+ * The default load options, be careful if you have to change the default behaviour.
  * */
 object LoadOptionDefaults {
     /**
-     * The default task time.
-     * */
-    var taskTime = Instant.now().truncatedTo(ChronoUnit.MINUTES)
-
-    /**
      * The default expiry time, some time we may need expire all pages by default, for example, in test mode
      * */
-    var expires = ChronoUnit.DECADES.duration
-
+    val EXPIRES = ChronoUnit.DECADES.duration
+    
     /**
      * The default time to expire
      * */
-    var expireAt = DateTimes.doomsday
-
+    val EXPIRE_AT = DateTimes.doomsday
+    
     /**
      * Lazy flush.
      * */
-    var lazyFlush = true
-
+    const val LAZY_FLUSH = true
+    
     /**
      * Trigger the parse phase or not.
      *
@@ -1137,15 +1131,15 @@ object LoadOptionDefaults {
      * 2. add a -parse option
      * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
      * */
-    var parse = false
-
+    const val PARSE = false
+    
     /**
      * Store webpage content or not.
      *
      * Store webpage content by default.
      * If we are running a public cloud, this option might be changed to false.
      * */
-    var storeContent = true
+    const val STORE_CONTENT = true
     /**
      * Load webpage content or not.
      *
@@ -1158,22 +1152,100 @@ object LoadOptionDefaults {
     /**
      * If true, still fetch the page even if it is gone.
      * */
-    var ignoreFailure = false
+    const val IGNORE_FAILURE = false
+    
+    /**
+     * There are several cases to enable jit retry.
+     * For example, in a test environment.
+     * */
+    const val N_JIT_RETRY = -1
+    
+    /**
+     * The default browser is chrome with pulsar implemented web driver.
+     * */
+    val BROWSER = BrowserType.PULSAR_CHROME
+    
+    /**
+     * Set to be > 0 if we are doing unit test or other test.
+     * We will talk more, log more and trace more in test mode.
+     * */
+    const val TEST = 0
+    
+    /**
+     * The default expiry time, some time we may need expire all pages by default, for example, in test mode
+     * */
+    var expires = EXPIRES
+
+    /**
+     * The default time to expire
+     * */
+    var expireAt = EXPIRE_AT
+
+    /**
+     * Lazy flush.
+     * */
+    var lazyFlush = LAZY_FLUSH
+
+    /**
+     * Trigger the parse phase or not.
+     *
+     * Do not parse by default, since there are may ways to trigger a webpage parsing:
+     * 1. use session.parse()
+     * 2. add a -parse option
+     * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
+     * */
+    var parse = PARSE
+
+    /**
+     * Store webpage content or not.
+     *
+     * Store webpage content by default.
+     * If we are running a public cloud, this option might be changed to false.
+     * */
+    var storeContent = STORE_CONTENT
+    /**
+     * Load webpage content or not.
+     *
+     * Load webpage content by default.
+     * If we are running a public cloud, this option might be changed to false.
+     *
+     * TODO: review the design
+     * */
+//    var loadContent = true
+    /**
+     * If true, still fetch the page even if it is gone.
+     * */
+    var ignoreFailure = IGNORE_FAILURE
 
     /**
      * There are several cases to enable jit retry.
      * For example, in a test environment.
      * */
-    var nJitRetry = -1
+    var nJitRetry = N_JIT_RETRY
 
     /**
      * The default browser is chrome with pulsar implemented web driver.
      * */
-    var browser = BrowserType.PULSAR_CHROME
+    var browser = BROWSER
 
     /**
      * Set to be > 0 if we are doing unit test or other test.
      * We will talk more, log more and trace more in test mode.
      * */
-    var test = 0
+    var test = TEST
+    
+    /**
+     * Reset all the options to default.
+     * */
+    fun reset() {
+        expires = EXPIRES
+        expireAt = EXPIRE_AT
+        lazyFlush = LAZY_FLUSH
+        parse = PARSE
+        storeContent = STORE_CONTENT
+        ignoreFailure = IGNORE_FAILURE
+        nJitRetry = N_JIT_RETRY
+        browser = BROWSER
+        test = TEST
+    }
 }

@@ -3,10 +3,8 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
-import ai.platon.pulsar.common.AppSystemInfo
-import ai.platon.pulsar.common.brief
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_REUSE_RECOVERED_DRIVERS
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -82,15 +80,15 @@ class ChromeDevtoolsBrowser(
     
     override fun destroyDriver(driver: WebDriver) {
         if (driver is ChromeDevtoolsDriver) {
-            val chromTab = driver.chromeTab
-            val chromTabId = chromTab.id
+            val chromeTab = driver.chromeTab
+            val chromeTabId = chromeTab.id
             
-            mutableRecoveredDrivers.remove(chromTabId)
-            mutableReusedDrivers.remove(chromTabId)
-            mutableDrivers.remove(chromTabId)
+            mutableRecoveredDrivers.remove(chromeTabId)
+            mutableReusedDrivers.remove(chromeTabId)
+            mutableDrivers.remove(chromeTabId)
             
-            kotlin.runCatching { closeTab(driver.chromeTab) }.onFailure { logger.warn(it.brief()) }
-            kotlin.runCatching { driver.doClose() }.onFailure { logger.warn(it.brief()) }
+            runCatching { closeTab(driver.chromeTab) }.onFailure { warnForClose(this, it) }
+            runCatching { driver.doClose() }.onFailure { warnForClose(this, it) }
         }
     }
     
@@ -100,8 +98,10 @@ class ChromeDevtoolsBrowser(
     }
     
     override fun destroyForcibly() {
-        close()
-        kotlin.runCatching { launcher.destroyForcibly() }.onFailure { logger.warn(it.stringify()) }
+        runCatching {
+            close()
+            launcher.destroyForcibly()
+        }.onFailure { warnForClose(this, it) }
     }
     
     /**
@@ -114,7 +114,7 @@ class ChromeDevtoolsBrowser(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            kotlin.runCatching { doClose() }.onFailure { logger.warn(it.brief("Failed to close browser\n")) }
+            kotlin.runCatching { doClose() }.onFailure { warnForClose(this, it) }
             super.close()
         }
     }
@@ -209,8 +209,8 @@ class ChromeDevtoolsBrowser(
         
         logger.info("Closing browser with {} drivers/devtools ... | #{}", drivers.size, id)
         
-        nonSynchronized.parallelStream().forEach { (id, driver) ->
-            kotlin.runCatching { driver.close() }.onFailure { logger.warn(it.brief("Failed to close the devtool")) }
+        nonSynchronized.forEach { (id, driver) ->
+            kotlin.runCatching { driver.close() }.onFailure { warnForClose(this, it) }
         }
     }
     

@@ -61,11 +61,9 @@ class PageParser(
     enum class Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
     init { MetricsSystem.reg.register(Counter::class.java) }
 
-    private val logger = LoggerFactory.getLogger(PageParser::class.java)
     private val parseCount = AtomicInteger()
 
     val unparsableTypes = ConcurrentSkipListSet<CharSequence>()
-    val linkFilter = LinkFilter(crawlFilters, conf)
 
     constructor(parserFactory: ParserFactory, conf: ImmutableConfig) : this(
         parserFactory,
@@ -81,7 +79,7 @@ class PageParser(
     constructor(conf: ImmutableConfig) : this(ParserFactory(conf), conf)
 
     init {
-        params.merge(linkFilter.params).withLogger(LOG).info(true)
+        params.withLogger(logger).info(true)
     }
 
     override fun setup(jobConf: ImmutableConfig) {
@@ -117,7 +115,7 @@ class PageParser(
 
             return parseResult
         } catch (e: Throwable) {
-            LOG.error(e.stringify())
+            logger.error(e.stringify())
         }
 
         return ParseResult()
@@ -138,10 +136,10 @@ class PageParser(
             applyParsers(page)
         } catch (e: ParserNotFound) {
             unparsableTypes.add(page.contentType)
-            LOG.warn("No parser found for <" + page.contentType + ">\n" + e.message)
+            logger.warn("No parser found for <" + page.contentType + ">\n" + e.message)
             return ParseResult.failed(ParseStatus.FAILED_NO_PARSER, page.contentType)
         } catch (e: Throwable) {
-            LOG.warn("Failed to parse | ${page.configuredUrl}", e)
+            logger.warn("Failed to parse | ${page.configuredUrl}", e)
             return ParseResult.failed(e)
         } finally {
             onParsed(page)
@@ -152,7 +150,7 @@ class PageParser(
         try {
             page.loadEvent?.onWillParse?.invoke(page)
         } catch (e: Throwable) {
-            LOG.warn("[onWillParse]", e)
+            logger.warn("[onWillParse]", e)
         }
     }
 
@@ -160,7 +158,7 @@ class PageParser(
         try {
             page.loadEvent?.onParsed?.invoke(page)
         } catch (e: Throwable) {
-            LOG.warn("[onParsed]", e)
+            logger.warn("[onParsed]", e)
         }
     }
 
@@ -280,7 +278,7 @@ class PageParser(
     }
 
     companion object {
-        val LOG = LoggerFactory.getLogger(PageParser::class.java)
+        val logger = LoggerFactory.getLogger(PageParser::class.java)
 
         /**
          * Checks if the page's content is truncated.
@@ -306,13 +304,13 @@ class PageParser(
             val url = page.url
             val inHeaderSize = page.headers.contentLength
             if (inHeaderSize < 0) {
-                LOG.trace("HttpHeaders.CONTENT_LENGTH is not available | $url")
+                logger.trace("HttpHeaders.CONTENT_LENGTH is not available | $url")
                 return false
             }
 
             val content = page.content
             if (content == null) {
-                LOG.debug("Page content is null, url: $url")
+                logger.debug("Page content is null, url: $url")
                 return false
             }
 

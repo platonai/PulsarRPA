@@ -9,47 +9,51 @@ import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import ai.platon.pulsar.protocol.browser.UnsupportedWebDriverException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowser
-import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import ai.platon.pulsar.protocol.browser.driver.test.MockBrowser
-import ai.platon.pulsar.protocol.browser.driver.test.MockWebDriver
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * A factory to create WebDriver.
+ */
 open class WebDriverFactory(
     val driverSettings: WebDriverSettings,
     val browserManager: BrowserManager,
     val immutableConfig: ImmutableConfig,
 ) {
     private val logger = LoggerFactory.getLogger(WebDriverFactory::class.java)
-    private val numDrivers = AtomicInteger()
-
     /**
-     * Create a WebDriver
+     * The number of drivers created.
+     */
+    private val numDrivers = AtomicInteger()
+    /**
+     * Create a WebDriver.
      */
     @Throws(BrowserLaunchException::class)
     fun create(start: Boolean = true) = create(immutableConfig.toVolatileConfig(), start)
-
     /**
-     * Create a WebDriver
+     * Create a WebDriver.
      */
     @Throws(BrowserLaunchException::class)
     fun create(conf: VolatileConfig, start: Boolean = true) = create(BrowserId.RANDOM, 0, conf, start)
-
     /**
-     * Create a WebDriver
+     * Create a WebDriver.
      */
     @Throws(BrowserLaunchException::class)
     fun create(browserId: BrowserId, priority: Int = 0, conf: VolatileConfig = VolatileConfig.UNSAFE, start: Boolean = true) =
         launchBrowserAndDriver(browserId, priority, conf, start).second
-
+    /**
+     * Launch a browser with the default fingerprint.
+     */
     @Throws(BrowserLaunchException::class)
     fun launchBrowser() = launchBrowser(BrowserId.DEFAULT)
-
+    /**
+     * Launch a browser with a random fingerprint.
+     */
     @Throws(BrowserLaunchException::class)
     fun launchTempBrowser() = launchBrowser(BrowserId.RANDOM)
-
     /**
-     * Create a WebDriver
+     * Launch a browser.
      */
     @Throws(BrowserLaunchException::class)
     fun launchBrowser(browserId: BrowserId, conf: VolatileConfig = VolatileConfig.UNSAFE): Browser {
@@ -75,9 +79,8 @@ open class WebDriverFactory(
             throw e
         }
     }
-
     /**
-     * Create a WebDriver
+     * Launch a browser and a WebDriver.
      */
     @Throws(BrowserLaunchException::class)
     private fun launchBrowserAndDriver(
@@ -97,7 +100,9 @@ open class WebDriverFactory(
             throw e
         }
     }
-
+    /**
+     * Launch a Chrome browser.
+     */
     @Throws(BrowserLaunchException::class)
     fun launchChrome(
         browserId: BrowserId, capabilities: Map<String, Any>,
@@ -113,7 +118,9 @@ open class WebDriverFactory(
 //        val browser = createBrowserInstance(instanceId, capabilities)
 //        return PlaywrightDriver(driverSettings, browser as PlaywrightBrowserInstance)
 //    }
-
+    /**
+     * Launch a mock Chrome browser.
+     */
     @Throws(BrowserLaunchException::class)
     private fun launchMockChrome(browserId: BrowserId, capabilities: Map<String, Any>): MockBrowser {
         require(browserId.browserType == BrowserType.MOCK_CHROME)

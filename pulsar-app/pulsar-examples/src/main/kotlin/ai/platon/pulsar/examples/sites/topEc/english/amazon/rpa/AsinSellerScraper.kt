@@ -69,7 +69,7 @@ class AsinSellerScraper {
         val be = hyperlink.event.browseEvent
 
         be.onWillComputeFeature.addLast { page, driver ->
-            val district = driver.firstText("#glow-ingress-block, .nav-global-location-slot") ?: ""
+            val district = driver.selectFirstTextOrNull("#glow-ingress-block, .nav-global-location-slot") ?: ""
             val expectedDistrict = districtTexts[domain] ?: "not-a-district"
             if (district.contains(expectedDistrict)) {
                 clickAndCollectSellerLinks(page, driver)
@@ -130,7 +130,7 @@ class AsinSellerScraper {
             return
         }
 
-        kotlin.runCatching { scrapeAsin0(page, document) }.onFailure { logger.warn(it.brief()) }
+        kotlin.runCatching { scrapeAsin0(page, document) }.onFailure { warnInterruptible(this, it) }
     }
 
     private fun scrapeAsin0(page: WebPage, document: FeaturedDocument) {
@@ -198,7 +198,7 @@ class AsinSellerScraper {
             return
         }
 
-        kotlin.runCatching { scrapeSeller0(sellerPage) }.onFailure { logger.warn(it.brief()) }
+        kotlin.runCatching { scrapeSeller0(sellerPage) }.onFailure { warnInterruptible(this, it) }
     }
 
     private fun scrapeSeller0(sellerPage: WebPage) {

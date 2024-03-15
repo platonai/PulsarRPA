@@ -2,17 +2,11 @@ package ai.platon.pulsar.ql.context
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.context.support.ContextDefaults
-import ai.platon.pulsar.crawl.CrawlLoops
-import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
-import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
-import ai.platon.pulsar.crawl.impl.StreamingCrawlLoop
-import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.ql.AbstractSQLSession
-import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.SessionConfig
 import ai.platon.pulsar.ql.SessionDelegate
 import ai.platon.pulsar.ql.h2.H2MemoryDb
@@ -35,7 +29,8 @@ open class H2SQLContext(
     private val db = H2MemoryDb()
 
     override val randomConnection: Connection get() = db.getRandomConnection()
-
+    
+    @Throws(Exception::class)
     override fun createSession(sessionDelegate: SessionDelegate): H2SQLSession {
         require(sessionDelegate is H2SessionDelegate)
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
@@ -49,6 +44,7 @@ open class H2SQLContext(
      * Create a pulsar session, note that the session is not a SQLSession.
      * TODO: return a better PulsarSession
      * */
+    @Throws(Exception::class)
     override fun createSession(): BasicPulsarSession {
         val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())
         return session.also { sessions[it.id] = it }
@@ -121,6 +117,7 @@ open class ClassPathXmlSQLContext(configLocation: String) :
     override val randomConnection: Connection
         get() = db.getRandomConnection()
 
+    @Throws(Exception::class)
     override fun createSession(sessionDelegate: SessionDelegate): AbstractSQLSession {
         require(sessionDelegate is H2SessionDelegate)
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
@@ -139,8 +136,12 @@ open class ClassPathXmlSQLContext(configLocation: String) :
     }
 
     override fun close() {
-        super.close()
-        db.close()
+        try {
+            super.close()
+            db.close()
+        } catch (t: Throwable) {
+            warnForClose(this, t)
+        }
     }
 }
 
@@ -169,6 +170,7 @@ object SQLContexts {
     @Synchronized
     fun createSession() = create().createSession()
 
+    @Throws(InterruptedException::class)
     fun await() {
         PulsarContexts.await()
     }

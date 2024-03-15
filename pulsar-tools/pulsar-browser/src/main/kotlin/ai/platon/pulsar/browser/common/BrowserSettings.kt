@@ -28,7 +28,13 @@ open class BrowserSettings(
 
         // Compression quality from range [0..100] (jpeg only) to capture screenshots
         var screenshotQuality = 50
-
+        
+        /**
+         * The interaction settings. Interaction settings define how the system
+         * interacts with webpages to mimic the behavior of real people.
+         * */
+        var interactSettings = InteractSettings.DEFAULT
+        
         /**
          * Check if the current environment supports only headless mode.
          * TODO: this doesn't work on some platform
@@ -326,10 +332,10 @@ open class BrowserSettings(
     val noSandbox get() = forceNoSandbox || conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
 
     /**
-     * The browser's display mode, can be one of:
-     * headless,
-     * GUI,
-     * supervised
+     * The browser's display mode, can be one of the following values:
+     * * headless
+     * * GUI
+     * * supervised
      * */
     val displayMode
         get() = when {
@@ -368,17 +374,17 @@ open class BrowserSettings(
      * */
     val resourceBlockProbability get() = conf.getFloat(BROWSER_RESOURCE_BLOCK_PROBABILITY, 0.0f)
     /**
-     * Check if url blocking is enabled.
-     * If true and blocking rules are set, resources matching the rules will be blocked by the browser.
-     * */
-    @Deprecated("Use resourceBlockProbability instead", ReplaceWith("resourceBlockProbability > 1e-6"))
-    val isUrlBlockingEnabled get() = resourceBlockProbability > 1e-6
-    /**
      * Check if user agent overriding is enabled. User agent overriding is disabled by default,
      * because inappropriate user agent overriding can be detected by the website,
      * furthermore, there is no obvious benefits to rotate the user agent.
      * */
     val isUserAgentOverridingEnabled get() = conf.getBoolean(BROWSER_ENABLE_UA_OVERRIDING, false)
+    
+    /**
+     * The interaction settings. Interaction settings define how the system
+     * interacts with webpages to mimic the behavior of real people.
+     * */
+    val interactSettings get() = Companion.interactSettings
 
     /**
      * Page load strategy.
@@ -389,17 +395,6 @@ open class BrowserSettings(
      *     Page Loading Strategy</a>
      * */
     var pageLoadStrategy = "none"
-
-    /**
-     * The javascript code to inject into the browser.
-     * */
-    var preloadJs = ""
-
-    /**
-     * The interaction settings. Interaction settings define how the system
-     * interacts with webpages to mimic the behavior of real people.
-     * */
-    var interactSettings = InteractSettings.DEFAULT
 
     val userAgent = UserAgent()
     val confuser = ScriptConfuser()

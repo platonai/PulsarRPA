@@ -5,7 +5,7 @@ import ai.platon.pulsar.session.PulsarSession;
 
 class JdCrawler {
 
-    public static void main(String[] argv) {
+    public static void main(String[] argv) throws Exception {
         String portalUrl = "https://list.jd.com/list.html?cat=652,12345,12349";
         String args = "-i 1s -ii 5s -ol a[href~=item] -ignoreFailure";
         PulsarSession session = PulsarContexts.createSession();

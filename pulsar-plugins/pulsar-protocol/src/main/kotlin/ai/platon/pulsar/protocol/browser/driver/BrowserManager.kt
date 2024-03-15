@@ -2,10 +2,8 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
-import ai.platon.pulsar.common.brief
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.BrowserEvents
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -55,7 +53,7 @@ open class BrowserManager(
     fun closeBrowser(browserId: BrowserId) {
         val browser = _browsers.remove(browserId)
         if (browser != null) {
-            kotlin.runCatching { browser.close() }.onFailure { logger.warn(it.brief("Failed to close browser\n")) }
+            kotlin.runCatching { browser.close() }.onFailure { warnForClose(this, it) }
             closedBrowsers.add(browser)
         }
     }
@@ -63,7 +61,7 @@ open class BrowserManager(
     @Synchronized
     fun destroyBrowserForcibly(browserId: BrowserId) {
         historicalBrowsers.filter { browserId == it.id }.forEach { browser ->
-            kotlin.runCatching { browser.destroyForcibly() }.onFailure { logger.warn(it.stringify("Failed to close browser\n")) }
+            kotlin.runCatching { browser.destroyForcibly() }.onFailure { warnInterruptible(this, it) }
             closedBrowsers.add(browser)
         }
     }
@@ -75,7 +73,7 @@ open class BrowserManager(
 
     @Synchronized
     fun closeDriver(driver: WebDriver) {
-        kotlin.runCatching { driver.close() }.onFailure { logger.warn(it.brief("Failed to close driver\n")) }
+        kotlin.runCatching { driver.close() }.onFailure { warnForClose(this, it) }
     }
 
     @Synchronized
@@ -103,7 +101,7 @@ open class BrowserManager(
             logger.warn("There are {} zombie browsers, cleaning them ...", zombieBrowsers.size)
             zombieBrowsers.forEach { browser ->
                 logger.info("Closing zombie browser | {}", browser.id)
-                kotlin.runCatching { browser.destroyForcibly() }.onFailure { logger.warn(it.stringify()) }
+                kotlin.runCatching { browser.destroyForcibly() }.onFailure { warnInterruptible(this, it) }
             }
         }
     }
@@ -124,7 +122,7 @@ open class BrowserManager(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             _browsers.values.forEach { browser ->
-                kotlin.runCatching { browser.close() }.onFailure { logger.warn(it.stringify()) }
+                kotlin.runCatching { browser.close() }.onFailure { warnForClose(this, it) }
             }
             _browsers.clear()
         }

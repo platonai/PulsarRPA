@@ -1,9 +1,6 @@
 package ai.platon.pulsar.context.support
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.CheckState
-import ai.platon.pulsar.common.IllegalApplicationStateException
-import ai.platon.pulsar.common.brief
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -16,6 +13,7 @@ import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -51,6 +49,7 @@ abstract class AbstractPulsarContext(
      * */
     private val closableObjects = ConcurrentLinkedQueue<AutoCloseable>()
 
+    /** Flag that indicates whether this context has been closed already. */
     private val closed = AtomicBoolean()
 
     /** Synchronization monitor for the "refresh" and "destroy" */
@@ -74,7 +73,7 @@ abstract class AbstractPulsarContext(
     private val abnormalPages: List<WebPage>? get() = if (isActive) null else listOf()
 
     /**
-     * Check if the context is active
+     * Flag that indicates whether this context is currently active.
      * */
     override val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
 
@@ -157,7 +156,7 @@ abstract class AbstractPulsarContext(
         if (!isActive) {
             return null
         }
-        return kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
+        return applicationContext.runCatching { getBean(requiredType.java) }.getOrNull()
     }
 
     /**
@@ -174,6 +173,7 @@ abstract class AbstractPulsarContext(
     /**
      * Create a session
      * */
+    @Throws(Exception::class)
     abstract override fun createSession(): AbstractPulsarSession
 
     /**
@@ -259,6 +259,7 @@ abstract class AbstractPulsarContext(
      * @param url The url which can be followed by arguments
      * @return The web page created
      */
+    @Throws(WebDBException::class)
     override fun inject(url: String): WebPage {
         return abnormalPage ?: injectComponent.inject(UrlUtils.splitUrlArgs(url))
     }
@@ -269,6 +270,7 @@ abstract class AbstractPulsarContext(
      * @param url The url which can be followed by arguments
      * @return The web page created
      */
+    @Throws(WebDBException::class)
     override fun inject(url: NormUrl): WebPage {
         return abnormalPage ?: injectComponent.inject(url.spec, url.args)
     }
@@ -276,10 +278,12 @@ abstract class AbstractPulsarContext(
     /**
      * Get a webpage from the storage
      * */
+    @Throws(WebDBException::class)
     override fun get(url: String): WebPage {
         return webDbOrNull?.get(url, false) ?: WebPage.NIL
     }
-
+    
+    @Throws(WebDBException::class)
     override fun get(url: String, vararg fields: String): WebPage {
         return webDbOrNull?.get(url, false, arrayOf(*fields)) ?: WebPage.NIL
     }
@@ -287,6 +291,7 @@ abstract class AbstractPulsarContext(
     /**
      * Get a webpage from the storage
      * */
+    @Throws(WebDBException::class)
     override fun getOrNull(url: String): WebPage? {
         return webDbOrNull?.getOrNull(url, false)
     }
@@ -294,17 +299,21 @@ abstract class AbstractPulsarContext(
     /**
      * Get a webpage from the storage
      * */
+    @Throws(WebDBException::class)
     override fun getOrNull(url: String, vararg fields: String): WebPage? {
         return webDbOrNull?.getOrNull(url, false, arrayOf(*fields))
     }
-
+    
+    @Throws(WebDBException::class)
     override fun getContent(url: String): ByteBuffer? = webDbOrNull?.getContent(url)
-
+    
+    @Throws(WebDBException::class)
     override fun getContentAsString(url: String): String? = webDbOrNull?.getContentAsString(url)
 
     /**
      * Check if a page exists in the storage
      * */
+    @Throws(WebDBException::class)
     override fun exists(url: String) = webDbOrNull?.exists(url) == true
 
     /**
@@ -316,6 +325,7 @@ abstract class AbstractPulsarContext(
     /**
      * Scan pages in the storage
      * */
+    @Throws(WebDBException::class)
     override fun scan(urlPrefix: String): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix) ?: listOf<WebPage>().iterator()
     }
@@ -323,6 +333,7 @@ abstract class AbstractPulsarContext(
     /**
      * Scan pages in the storage
      * */
+    @Throws(WebDBException::class)
     override fun scan(urlPrefix: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
@@ -330,6 +341,7 @@ abstract class AbstractPulsarContext(
     /**
      * Scan pages in the storage
      * */
+    @Throws(WebDBException::class)
     override fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
@@ -341,6 +353,7 @@ abstract class AbstractPulsarContext(
      * @param options The load options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
+    @Throws(WebDBException::class)
     override fun load(url: String, options: LoadOptions): WebPage {
         val normUrl = normalize(url, options)
         return abnormalPage ?: loadComponent.load(normUrl)
@@ -353,6 +366,7 @@ abstract class AbstractPulsarContext(
      * @param options The load options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
+    @Throws(WebDBException::class)
     override fun load(url: URL, options: LoadOptions): WebPage {
         return abnormalPage ?: loadComponent.load(url, options)
     }
@@ -363,10 +377,12 @@ abstract class AbstractPulsarContext(
      * @param url The url which can be followed by arguments
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
+    @Throws(WebDBException::class)
     override fun load(url: NormUrl): WebPage {
         return abnormalPage ?: loadComponent.load(url)
     }
-
+    
+    @Throws(WebDBException::class)
     override suspend fun loadDeferred(url: NormUrl): WebPage {
         return abnormalPage ?: loadComponent.loadDeferred(url)
     }
@@ -384,21 +400,25 @@ abstract class AbstractPulsarContext(
      * @param options The load options
      * @return Pages for all urls.
      */
+    @Throws(WebDBException::class)
     override fun loadAll(urls: Iterable<String>, options: LoadOptions): List<WebPage> {
         startLoopIfNecessary()
         return abnormalPages ?: loadComponent.loadAll(normalize(urls, options))
     }
-
+    
+    @Throws(WebDBException::class)
     override fun loadAll(urls: Iterable<NormUrl>): List<WebPage> {
         startLoopIfNecessary()
         return abnormalPages ?: loadComponent.loadAll(urls)
     }
-
+    
+    @Throws(WebDBException::class)
     override fun loadAsync(url: NormUrl): CompletableFuture<WebPage> {
         startLoopIfNecessary()
         return loadComponentOrNull?.loadAsync(url) ?: CompletableFuture.completedFuture(WebPage.NIL)
     }
-
+    
+    @Throws(WebDBException::class)
     override fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>> {
         startLoopIfNecessary()
         return loadComponentOrNull?.loadAllAsync(urls) ?: listOf()
@@ -429,6 +449,7 @@ abstract class AbstractPulsarContext(
     /**
      * Persist the page into the storage
      * */
+    @Throws(WebDBException::class)
     override fun persist(page: WebPage) {
         webDbOrNull?.put(page, false)
     }
@@ -436,6 +457,7 @@ abstract class AbstractPulsarContext(
     /**
      * Delete the page from the storage
      * */
+    @Throws(WebDBException::class)
     override fun delete(url: String) {
         webDbOrNull?.delete(url)
     }
@@ -443,6 +465,7 @@ abstract class AbstractPulsarContext(
     /**
      * Delete the page from the storage
      * */
+    @Throws(WebDBException::class)
     override fun delete(page: WebPage) {
         webDbOrNull?.delete(page.url)
     }
@@ -450,6 +473,7 @@ abstract class AbstractPulsarContext(
     /**
      * Flush the storage
      * */
+    @Throws(WebDBException::class)
     override fun flush() {
         webDbOrNull?.flush()
     }
@@ -457,6 +481,7 @@ abstract class AbstractPulsarContext(
     /**
      * Wait until there is no tasks in the main loop
      * */
+    @Throws(InterruptedException::class)
     override fun await() {
         if (isActive) {
             crawlLoops.await()
@@ -505,36 +530,43 @@ abstract class AbstractPulsarContext(
     }
 
     protected open fun doClose() {
-        AppContext.beginTermination()
+        AppContext.terminate()
 
         if (closed.compareAndSet(false, true)) {
             try {
                 doClose0()
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                System.err.println("Interrupted while closing context | $this")
+                warnForClose(this, e)
+            } catch (e: Exception) {
+                System.err.println("Exception while closing context | $this")
+                e.printStackTrace(System.err)
+                logger.warn("Exception while closing context | $this", e)
             } catch (t: Throwable) {
-                System.err.println("Unexpected exception:")
+                System.err.println("[Unexpected] Failed to close context | $this")
                 t.printStackTrace(System.err)
+                logger.error("[Unexpected] Failed to close context | $this", t)
             }
         }
 
         AppContext.endTermination()
     }
 
-    /**
-     * TODO: do not call getBean in close() function, it's better to close pulsar context before application context.
-     * */
     protected open fun doClose0() {
         logger.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
-
-        getBeanOrNull<GlobalCacheFactory>()?.globalCache?.clearCaches()
-
-        val nonSyncSessions = sessions.values.toList().also { sessions.clear() }
-        nonSyncSessions.parallelStream().forEach { session ->
-            runCatching { session.close() }.onFailure { logger.warn(it.brief("[Unexpected]")) }
+        
+        val sessions1 = sessions.values.toList()
+        sessions.clear()
+        val closableObjects1 = closableObjects.toList()
+        closableObjects.clear()
+        
+        sessions1.forEach { session ->
+            runCatching { session.close() }.onFailure { warnForClose(this, it) }
         }
-
-        val nonSyncObjects = closableObjects.toList().also { closableObjects.clear() }
-        nonSyncObjects.parallelStream().forEach { closable ->
-            runCatching { closable.close() }.onFailure { logger.warn(it.brief("[Unexpected]")) }
+        
+        closableObjects1.forEach { closable ->
+            runCatching { closable.close() }.onFailure { warnForClose(this, it) }
         }
     }
 

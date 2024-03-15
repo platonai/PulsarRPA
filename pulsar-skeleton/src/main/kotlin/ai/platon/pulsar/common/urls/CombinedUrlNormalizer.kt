@@ -37,8 +37,8 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
 
         // already done
 //        finalOptions.overrideConfiguration()
-
-        val href = url.href?.takeIf { UrlUtils.isStandard(it) }
+        
+        val href = url.href?.let { UrlUtils.splitUrlArgs(it).first }?.takeIf { UrlUtils.isStandard(it) }
         return NormUrl(normUrl, finalOptions, href, url)
     }
 

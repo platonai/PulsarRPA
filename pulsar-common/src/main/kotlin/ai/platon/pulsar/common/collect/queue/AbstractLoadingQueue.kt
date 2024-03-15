@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.collect.UrlTopic
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlAware
+import ai.platon.pulsar.common.warnInterruptible
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.function.Predicate
@@ -45,7 +46,7 @@ abstract class AbstractLoadingQueue(
     override val externalSize: Int
         get() {
             return loader.runCatching { countRemaining(topic) }
-                .onFailure { logger.warn(it.stringify("externalSize - ")) }
+                .onFailure { warnInterruptible(this, it) }
                 .getOrNull() ?: 0
         }
 
@@ -53,7 +54,7 @@ abstract class AbstractLoadingQueue(
     override val estimatedExternalSize: Int
         get() {
             return loader.runCatching { estimateRemaining(topic) }
-                .onFailure { logger.warn(it.stringify("estimatedExternalSize - ")) }
+                .onFailure { warnInterruptible(this, it) }
                 .getOrNull() ?: 0
         }
 

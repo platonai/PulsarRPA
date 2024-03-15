@@ -35,7 +35,7 @@ class DateUrlFilter(val conf: ImmutableConfig) : CrawlUrlFilter {
     private val configFile: String? = null
     private val rules: Set<String> = LinkedHashSet()
     private val detector = DateTimeDetector()
-    var oldDays = conf.getInt(CapabilityTypes.RECENT_DAYS_WINDOWN, 7)
+    var oldDays = conf.getInt(CapabilityTypes.RECENT_DAYS_WINDOW, 7)
 
     constructor(zoneId: ZoneId, conf: ImmutableConfig): this(conf) {
         detector.zoneId = zoneId

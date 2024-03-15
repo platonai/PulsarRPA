@@ -74,7 +74,11 @@ enum class Priority13(val value: Int) {
     LOWEST(Int.MAX_VALUE / 10);
 
     companion object {
-        fun valueOfOrNull(name: String): Priority13? {
+        fun valueOfOrNull(name: String?): Priority13? {
+            if (name == null) {
+                return null
+            }
+            
             return entries.firstOrNull { it.name == name }
         }
 
@@ -136,6 +140,8 @@ interface StartStopRunnable {
         stop()
         start()
     }
+    
+    @Throws(InterruptedException::class)
     fun await() {}
 }
 

@@ -57,11 +57,13 @@ interface Protocol : Configurable, AutoCloseable {
     /**
      * Returns the [ProtocolOutput] for a fetch list entry.
      */
+    @Throws(Exception::class)
     fun getProtocolOutput(page: WebPage): ProtocolOutput
 
     /**
      * Returns the [ProtocolOutput] for a fetch list entry.
      */
+    @Throws(Exception::class)
     suspend fun getProtocolOutputDeferred(page: WebPage): ProtocolOutput
 
     /**

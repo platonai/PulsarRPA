@@ -6,8 +6,7 @@ import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes.LOAD_DISABLE_FETCH
-import ai.platon.pulsar.common.config.CapabilityTypes.LOAD_STRATEGY
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.PageLoadStatusFormatter
@@ -38,7 +37,8 @@ import java.util.concurrent.atomic.AtomicLong
  * Created by vincent on 17-7-15.
  * Copyright @ 2013-2023 Platon AI. All rights reserved
  *
- * Load pages from storage or fetch from the Internet if it's not fetched or expired
+ * The load component is the core component of the Pulsar framework, it is responsible for loading pages from the
+ * local storage or fetching them from the Internet.
  */
 class LoadComponent(
     val webDb: WebDb,
@@ -64,9 +64,6 @@ class LoadComponent(
         )
 
         var PAGE_FIELDS = GWebPage.Field.entries.toSet() - LAZY_PAGE_FIELDS
-
-        // Specify page fields to accelerate page loading
-//        val PAGE_FIELDS = mutableListOf<GWebPage.Field>()
     }
 
     private val logger = LoggerFactory.getLogger(LoadComponent::class.java)
@@ -74,12 +71,17 @@ class LoadComponent(
     private val tracer = logger.takeIf { it.isTraceEnabled }
 
     private val loadStrategy = immutableConfig.get(LOAD_STRATEGY, "SIMPLE")
+    
+    private val deactivateFetchComponent1 = immutableConfig.getBoolean(LOAD_DEACTIVATE_FETCH_COMPONENT, false)
+    @Deprecated("Use LOAD_DEACTIVATE_FETCH_COMPONENT instead")
+    private val deactivateFetchComponent2 = immutableConfig.getBoolean(LOAD_DISABLE_FETCH, false)
     /**
-     * Disable the fetch component, so all the pages will be loaded from the storage,
-     * and will never be fetched from the Internet.
-     * If the page does not exist in the local storage, return WebPage.NIL.
+     * Deactivate the fetch component, ensuring that all pages are loaded exclusively from storage
+     * and never fetched from the Internet.
+     *
+     * If a page is not found in the local storage, return WebPage.NIL.
      * */
-    private val disableFetch = immutableConfig.getBoolean(LOAD_DISABLE_FETCH, false)
+    private val deactivateFetchComponent = deactivateFetchComponent1 || deactivateFetchComponent2
 
     val globalCache get() = globalCacheFactory.globalCache
     val pageCache get() = globalCache.pageCache
@@ -96,6 +98,13 @@ class LoadComponent(
 
     private var reportCount = 0
 
+    /**
+     * Retrieve the fetch state of a page, which determines whether the page should be fetched from the Internet.
+     *
+     * @param page The page to be fetched
+     * @param options The load options
+     * @return The fetch state
+     * */
     fun fetchState(page: WebPage, options: LoadOptions): CheckState {
         val protocolStatus = page.protocolStatus
 
@@ -109,18 +118,73 @@ class LoadComponent(
         }
     }
 
+    /**
+     * Load a page specified by [url] with the given arguments.
+     *
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
+     *
+     * Other fetch conditions can be specified by load arguments:
+     *
+     * 1. expiration
+     * 2. page size requirement
+     * 3. fields requirement
+     * 4. other
+     *
+     * @param url The url of the page
+     * @param options The load options
+     * @return The page
+     * */
+    @Throws(Exception::class)
     fun load(url: URL, options: LoadOptions): WebPage {
         return abnormalPage ?: loadWithRetry(NormUrl(url, options))
     }
-
+    
+    /**
+     * Load a page specified by [normUrl].
+     *
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
+     *
+     * Other fetch conditions can be specified by load arguments:
+     *
+     * 1. expiration
+     * 2. page size requirement
+     * 3. fields requirement
+     * 4. other
+     *
+     * @param normUrl The normalized url of the page
+     * @return The page
+     * */
+    @Throws(Exception::class)
     fun load(normUrl: NormUrl): WebPage {
         return abnormalPage ?: loadWithRetry(normUrl)
     }
-
+    
+    /**
+     * Load a page specified by [normUrl].
+     *
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
+     *
+     * This method is a coroutine version of [load].
+     *
+     * Other fetch conditions can be specified by load arguments:
+     *
+     * 1. expiration
+     * 2. page size requirement
+     * 3. fields requirement
+     * 4. other
+     *
+     * @param normUrl The normalized url of the page
+     * @return The page
+     * */
+    @Throws(Exception::class)
     suspend fun loadDeferred(normUrl: NormUrl): WebPage {
         return abnormalPage ?: loadWithRetryDeferred(normUrl)
     }
-
+    
+    @Throws(Exception::class)
     fun loadWithRetry(normUrl: NormUrl): WebPage {
         if (normUrl.isNil) {
             return WebPage.NIL
@@ -133,7 +197,8 @@ class LoadComponent(
         }
         return page
     }
-
+    
+    @Throws(Exception::class)
     suspend fun loadWithRetryDeferred(normUrl: NormUrl): WebPage {
         if (normUrl.isNil) {
             return WebPage.NIL
@@ -217,16 +282,18 @@ class LoadComponent(
      * Load a webpage from local storage, or if it doesn't exist in local storage,
      * fetch it from the Internet, unless the fetch component is disabled.
      * */
+    @Throws(Exception::class)
     private fun load0(normUrl: NormUrl): WebPage {
         val page = createPageShell(normUrl)
 
-        if (disableFetch && shouldFetch(page)) {
+        if (deactivateFetchComponent && shouldFetch(page)) {
             return WebPage.NIL
         }
 
         return load1(normUrl, page)
     }
-
+    
+    @Throws(Exception::class)
     private fun load1(normUrl: NormUrl, page: WebPage): WebPage {
         onWillLoad(normUrl, page)
 
@@ -236,17 +303,19 @@ class LoadComponent(
 
         return page
     }
-
+    
+    @Throws(Exception::class)
     private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
         val page = createPageShell(normUrl)
 
-        if (disableFetch && shouldFetch(page)) {
+        if (deactivateFetchComponent && shouldFetch(page)) {
             return WebPage.NIL
         }
 
         return loadDeferred1(normUrl, page)
     }
-
+    
+    @Throws(Exception::class)
     private suspend fun loadDeferred1(normUrl: NormUrl, page: WebPage): WebPage {
         onWillLoad(normUrl, page)
 
@@ -256,7 +325,8 @@ class LoadComponent(
 
         return page
     }
-
+    
+    @Throws(Exception::class)
     private fun fetchContentIfNecessary(normUrl: NormUrl, page: WebPage) {
         if (page.isInternal) {
             return
@@ -266,7 +336,8 @@ class LoadComponent(
             fetchContent(page, normUrl)
         }
     }
-
+    
+    @Throws(Exception::class)
     private suspend fun fetchContentIfNecessaryDeferred(normUrl: NormUrl, page: WebPage) {
         if (page.removeVar(VAR_REFRESH) != null) {
             fetchContentDeferred(page, normUrl)
@@ -493,7 +564,8 @@ class LoadComponent(
         globalCache.fetchingCache.add(page.url)
         logger.takeIf { it.isDebugEnabled }?.debug("Loading url | {} {}", page.url, page.args)
     }
-
+    
+    @Throws(Exception::class)
     private fun fetchContent(page: WebPage, normUrl: NormUrl) {
         try {
             beforeFetch(page, normUrl.options)
@@ -507,7 +579,8 @@ class LoadComponent(
             afterFetch(page, normUrl.options)
         }
     }
-
+    
+    @Throws(Exception::class)
     private suspend fun fetchContentDeferred(page: WebPage, normUrl: NormUrl) {
         try {
             beforeFetch(page, normUrl.options)

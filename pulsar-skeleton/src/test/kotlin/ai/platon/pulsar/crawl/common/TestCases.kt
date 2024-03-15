@@ -139,7 +139,7 @@ class TestCases {
         val (url, args) = splitUrlArgs(configuredUrl)
         assertEquals(configuredUrl, url)
         assertEquals("", args)
-        val options = LoadOptions.parse(args, volatileConfig)
+        val options = LoadOptions.parse(args, VolatileConfig())
         assertEquals("", options.toString())
     }
 }

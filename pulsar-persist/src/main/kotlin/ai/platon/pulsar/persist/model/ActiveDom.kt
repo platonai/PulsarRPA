@@ -34,11 +34,15 @@ data class ActiveDOMStat(
 data class ActiveDOMUrls(
     /**
      * The entire URL of the document, including the protocol (like http://)
+     *
+     * This property is retrieved from javascript `document.URL`.
      */
     var URL: String = "",
     /**
      * In javascript, the baseURI is a property of Node, it's the absolute base URL of the
      * document containing the node. A baseURI is used to resolve relative URLs.
+     *
+     * This property is retrieved from javascript `document.baseURI`.
      *
      * The base URL is determined as follows:
      * 1. By default, the base URL is the location of the document
@@ -51,12 +55,16 @@ data class ActiveDOMUrls(
      * returns a Location object, which contains information about the URL of the
      * document and provides methods for changing that URL and loading another URL.
      *
+     * This property is retrieved from javascript `document.location`.
+     *
      * To retrieve just the URL as a string, the read-only `document.URL` property can
      * also be used.
      * */
     var location: String = "",
     /**
      * Returns the document location as a string.
+     *
+     * This property is retrieved from javascript `document.documentURI`.
      *
      * The documentURI property can be used on any document types. The document.URL
      * property can only be used on HTML documents.

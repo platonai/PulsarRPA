@@ -9,10 +9,7 @@ import java.time.Instant
  * A degenerate url can be submitted to the url pool normally, the main loop will take it from the url pool,
  * and execute it as a task, but it will never be loaded as a webpage.
  * */
-interface DegenerateUrl {
-    // TODO: Every DegenerateUrl is callable?
-    // operator fun invoke()
-}
+interface DegenerateUrl
 
 interface CallableDegenerateUrl: DegenerateUrl {
     operator fun invoke()
@@ -29,33 +26,29 @@ interface CallableDegenerateUrl: DegenerateUrl {
  * */
 interface UrlAware {
     /**
-     * The url specification, it is usually normalized, and can contain load arguments.
+     * The url specification, can be followed by load arguments.
      * */
     var url: String
 
     /**
-     * The url args
+     * The explicitly specified load arguments
      * */
     var args: String?
 
     /**
-     * The hypertext reference, It defines the address of the document, which this time is linked from
+     * The hypertext reference, it defines the address of the document, which this time is linked from.
+     * The href is usually extracted from the webpage and serves as the browser's primary choice for navigation.
      * */
     var href: String?
 
     /**
-     * The referrer
+     * The referrer url, it is the url of the webpage that contains the hyperlink.
      * */
     var referrer: String?
 
     /**
-     * The referer(or referrer)
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("referrer"))
-    val referer: String? get() = referrer
-
-    /**
-     * The priority
+     * The priority of the url, the higher the priority, the earlier the url will be loaded.
+     * Priority is a numerical value, where smaller numbers indicate higher priority.
      * */
     var priority: Int
 
@@ -101,17 +94,17 @@ interface UrlAware {
     val deadline: Instant
 
     /**
-     * Required website language
+     * Required website language, reserved for future use
      * */
     val lang: String
 
     /**
-     * Required website country
+     * Required website country, reserved for future use
      * */
     val country: String
 
     /**
-     * Required website district
+     * Required website district, reserved for future use
      * */
     val district: String
 

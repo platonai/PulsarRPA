@@ -1,12 +1,9 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_NAME
-import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
-import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -58,8 +55,8 @@ open class BrowserPrivacyContext(
     }
 
     override val isFullCapacity: Boolean get() = driverPoolManager.isFullCapacity(browserId)
-
-    @Throws(ProxyException::class)
+    
+    @Throws(ProxyException::class, Exception::class)
     override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         initialize(task)
 
@@ -77,29 +74,44 @@ open class BrowserPrivacyContext(
 
     @Beta
     override fun subscribeWebDriver() = driverPoolManager.subscribeDriver(browserId)
-
-    override fun report() {
-        logger.info("Privacy context #{}{}{} has lived for {}" +
-                " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
-                display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
-                meterSuccesses.count, String.format("%.2f", meterSuccesses.meanRate),
-                meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate),
-                Strings.compactFormat(coreMetrics?.totalNetworkIFsRecvBytes?:0),
-                Strings.compactFormat(coreMetrics?.networkIFsRecvBytesPerSecond?:0),
-                meterTasks.count, meterFinishes.count,
-                proxyContext?.proxyEntry?.toString()
+    
+    override fun getReport(): String {
+        var report = String.format("Privacy context has lived for %s | %s | %s" +
+            " | success: %s(%s pages/s) | small: %s(%s) | traffic: %s(%s/s) | tasks: %s total run: %s | %s",
+            // Privacy context has lived for {} | {} | {}
+            elapsedTime.readable(), display, readableState,
+            // success: {}({} pages/s)
+            meterSuccesses.count, String.format("%.2f", meterSuccesses.meanRate),
+            // small: {}({})
+            meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate),
+            // traffic: {}({}/s)
+            Strings.compactFormat(coreMetrics?.totalNetworkIFsRecvBytes?:0),
+            Strings.compactFormat(coreMetrics?.networkIFsRecvBytesPerSecond?:0),
+            // tasks: {} total run: {}
+            meterTasks.count, meterFinishes.count,
+            // proxy: {}
+            proxyContext?.proxyEntry?.toString()
         )
-
+        report += "\n"
+        
         if (smallPageRate > 0.5) {
-            logger.warn("Privacy context #{} is disqualified, too many small pages: {}({})",
-                    sequence, meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate))
+            report += String.format("Privacy context #%s is disqualified, too many small pages: %s(%s)",
+                sequence, meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate))
+            report += "\n"
         }
-
+        
         // 0 to disable
         if (meterSuccesses.meanRate < 0) {
-            logger.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", sequence)
+            report += String.format("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", sequence)
             // check the zombie context list, if the context keeps go bad, the proxy provider is bad
+            report += "\n"
         }
+        
+        return report
+    }
+
+    override fun report() {
+        logger.info(getReport())
     }
     /**
      * Closing call stack:
@@ -116,8 +128,8 @@ open class BrowserPrivacyContext(
                 report()
                 driverContext.close()
                 proxyContext?.close()
-            } catch (e: Exception) {
-                logger.warn(e.stringify())
+            } catch (t: Throwable) {
+                warnForClose(this, t)
             }
         }
     }

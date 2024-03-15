@@ -1,11 +1,9 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppSystemInfo
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_CLOSE_LAZY
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -46,6 +44,8 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     val activeContexts get() = permanentContexts + temporaryContexts
 
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
+    
+    val deadContexts = ConcurrentLinkedDeque<PrivacyContext>()
 
     val contextLifeCycleMonitor = Any()
 
@@ -74,6 +74,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * @param fetchFun the fetch function
      * @return the fetch result
      * */
+    @Throws(Exception::class)
     abstract suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
     /**
      * Create a new context or return an existing one.
@@ -117,19 +118,19 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * No exception.
      * */
     open fun close(privacyContext: PrivacyContext) {
-        kotlin.runCatching { doClose(privacyContext) }.onFailure { logger.warn(it.stringify()) }
+        kotlin.runCatching { doClose(privacyContext) }.onFailure { warnForClose(this, it) }
     }
 
     /**
      * Reset the privacy environment, close all privacy contexts, so all fetch tasks are handled by new browser contexts.
      * */
-    open fun reset() {
-        logger.info("Reset all privacy contexts, closing all ...")
+    open fun reset(reason: String = "") {
+        logger.info("Reset all privacy contexts, closing all ... | {}", reason.ifEmpty { "no reason" })
 
         activeContexts.values.toCollection(zombieContexts)
         permanentContexts.clear()
         temporaryContexts.clear()
-        closeZombieContexts()
+        closeDyingContexts()
     }
 
     /**
@@ -150,8 +151,8 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             permanentContexts.clear()
             temporaryContexts.clear()
 
-            cleaningService.runCatching { shutdown() }.onFailure { logger.warn(it.stringify()) }
-            closeZombieContexts()
+            cleaningService.runCatching { shutdown() }.onFailure { warnForClose(this, it) }
+            closeDyingContexts()
         }
     }
 
@@ -168,8 +169,8 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
         val privacyAgent = privacyContext.privacyAgent
 
         /**
-         * Volatile contexts is synchronized, so no new contexts should be allocated
-         * before the dead context releases its resource
+         * Operations on contexts are synchronized, so it's guaranteed that new contexts are allocated
+         * after dead contexts release their resources.
          * */
         synchronized(contextLifeCycleMonitor) {
             permanentContexts.remove(privacyAgent)
@@ -181,13 +182,14 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
                 zombieContexts.addFirst(privacyContext)
             }
 
-            // it might be a bad idea to close lazily:
+            // it is a bad idea to close lazily:
             // 1. hard to control the hardware resources, especially the memory
+            // 2. the zombie contexts should be closed before new contexts are created
             val lazyClose = closeStrategy == CloseStrategy.LAZY.name
             when {
-                AppSystemInfo.isCriticalResources -> closeZombieContexts()
+                AppSystemInfo.isCriticalResources -> closeDyingContexts()
                 lazyClose -> closeZombieContextsLazily()
-                else -> closeZombieContexts()
+                else -> closeDyingContexts()
             }
         }
     }
@@ -200,39 +202,42 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * 2. tasks canceling is good, no need to wait for the tasks
      * */
     private fun closeZombieContextsLazily() {
-        cleaningService.schedule({ closeZombieContexts() }, 5, TimeUnit.SECONDS)
+        cleaningService.schedule({ closeDyingContexts() }, 5, TimeUnit.SECONDS)
     }
 
     /**
      * Close the zombie contexts, and the resources release immediately.
      * */
-    private fun closeZombieContexts() {
+    private fun closeDyingContexts() {
         logger.debug("Closing zombie contexts ...")
 
-        val pendingContexts = zombieContexts.filter { !it.isClosed }
+        val dyingContexts = zombieContexts.filter { !it.isClosed }
         if (isClosed) {
             zombieContexts.clear()
         }
 
-        if (pendingContexts.isNotEmpty()) {
-            logger.debug("Closing {} pending zombie contexts ...", pendingContexts.size)
+        if (dyingContexts.isNotEmpty()) {
+            logger.debug("Closing {} zombie contexts ...", dyingContexts.size)
 
-            pendingContexts.forEach { privacyContext ->
-                kotlin.runCatching {
-                    privacyContext.close()
-                }.onFailure { logger.warn(it.stringify()) }
+            dyingContexts.forEach { privacyContext ->
+                privacyContext.runCatching { close() }.onFailure { warnForClose(this, it) }
+                zombieContexts.remove(privacyContext)
+                deadContexts.add(privacyContext)
             }
-
-            reportZombieContexts()
+            
+            reportHistoricalContexts()
         }
     }
 
-    private fun reportZombieContexts() {
-        if (zombieContexts.isNotEmpty()) {
+    private fun reportHistoricalContexts() {
+        val maximumRecords = 15
+        val historicalContexts = zombieContexts.filter { it.privacyAgent.isTemporary } +
+            deadContexts.filter { it.privacyAgent.isTemporary }
+        if (historicalContexts.isNotEmpty()) {
             val prefix = "The latest temporary context throughput: "
             val postfix = " (success/min)"
             // zombieContexts is a deque, so here we take the latest n contexts.
-            zombieContexts.filter { it.privacyAgent.isTemporary }.take(15)
+            historicalContexts.take(maximumRecords)
                 .joinToString(", ", prefix, postfix) { String.format("%.2f", 60 * it.meterSuccesses.meanRate) }
                 .let { logger.info(it) }
         }

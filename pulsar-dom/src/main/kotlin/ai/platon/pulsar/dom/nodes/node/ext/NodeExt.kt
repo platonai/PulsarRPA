@@ -158,8 +158,9 @@ fun Element.addClasses(vararg classNames: String): Element {
 
 fun Element.slimCopy(): Element {
     val clone = this.clone()
+    clone.forEach { it.extension.features = ArrayRealVector() }
     simplifyDOM(clone)
-
+    
     clone.clearAttributesCascaded()
 
     return clone
@@ -168,8 +169,9 @@ fun Element.slimCopy(): Element {
 fun Element.minimalCopy(): Element {
     val clone = this.clone()
     simplifyDOM(clone)
-
-    clone.removeUnnecessaryAttributesCascaded()
+    
+    // TODO: might have a bug because of concurrent modification, it can be re-produced by calling dom_minimal_html()
+    // clone.removeUnnecessaryAttributesCascaded()
 
     return clone
 }
@@ -189,14 +191,14 @@ fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
 }
 
 fun Element.removeTemporaryAttributesCascaded(): Element {
-    this.attributes().map { it.key }.filter { it in TEMPORARY_ATTRIBUTES || it.startsWith("tv") }.forEach {
+    this.attributes().mapNotNull { it.key }.filter { it in TEMPORARY_ATTRIBUTES || it.startsWith("tv") }.forEach {
         this.removeAttr(it)
     }
     return this
 }
 
 fun Element.removeNonStandardAttributes(): Element {
-    this.attributes().map { it.key }.forEach {
+    this.attributes().mapNotNull { it.key }.forEach {
         if (it !in STANDARD_ATTRIBUTES) {
             this.removeAttr(it)
         }
@@ -205,7 +207,7 @@ fun Element.removeNonStandardAttributes(): Element {
 }
 
 fun Element.removeUnnecessaryAttributes(): Element {
-    this.attributes().map { it.key }.forEach {
+    this.attributes().mapNotNull { it.key }.filterNot { it in VALUABLE_ATTRIBUTES }.forEach {
         if (it !in VALUABLE_ATTRIBUTES) {
             this.removeAttr(it)
         }
@@ -219,7 +221,9 @@ fun Element.removeNonStandardAttributesCascaded(): Element {
 }
 
 fun Element.removeUnnecessaryAttributesCascaded(): Element {
-    this.forEachElement(includeRoot = true) { it.removeUnnecessaryAttributes() }
+    this.forEachElement(includeRoot = true) {
+        it.removeUnnecessaryAttributes()
+    }
     return this
 }
 
@@ -798,6 +802,10 @@ fun Node.removeMlLabel(label: String): Boolean {
 
 fun Node.getMlLabels(): List<String> {
     return getTuple(A_ML_LABELS).map { it.toString() }
+}
+
+fun Node.getMlLabel(): String {
+    return getMlLabels().firstOrNull() ?: ""
 }
 
 fun Node.hasMlLabel(label: String): Boolean {

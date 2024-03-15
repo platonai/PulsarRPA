@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.event.WebPageHandler
 import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
+import ai.platon.pulsar.crawl.event.impl.PageEventFactory
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.net.MalformedURLException
@@ -19,10 +20,16 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 
+/**
+ * A url that contains a [PageEvent] to handle page events.
+ * */
 interface ListenableUrl: UrlAware {
     val event: PageEvent
 }
 
+/**
+ * A hyperlink that contains a [PageEvent] to handle page events.
+ * */
 open class ListenableHyperlink(
     /**
      * The url of this hyperlink
@@ -52,7 +59,7 @@ open class ListenableHyperlink(
     /**
      * The event handler
      * */
-    override var event: PageEvent = DefaultPageEvent(),
+    override var event: PageEvent = PageEventFactory().create(),
 ): Hyperlink(url, text, order, referrer, args, href), ListenableUrl {
     /**
      * A listenable url is not a persistence object because the event handler is not persistent
@@ -89,7 +96,7 @@ open class StatefulListenableHyperlink(
         /**
          * The event handler
          * */
-        override var event: PageEvent = DefaultPageEvent()
+        override var event: PageEvent = PageEventFactory().create()
 ): StatefulHyperlink(url, text, order, referrer, args, href), ListenableUrl {
 
     override val isPersistable: Boolean = false
@@ -252,7 +259,7 @@ open class CompletableListenableHyperlink<T>(
     /**
      * The event handler
      * */
-    override var event: PageEvent = DefaultPageEvent()
+    override var event: PageEvent = PageEventFactory().create(),
 ): UrlAware, Comparable<UrlAware>, ListenableUrl,
     CompletableHyperlink<T>(url, text, order, referrer, args, href)
 

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.lang
 
+import ai.platon.pulsar.common.warnUnexpected
 import java.util.concurrent.CopyOnWriteArrayList
 
 interface PFunction {
@@ -164,7 +165,9 @@ abstract class AbstractChainedFunction0<R>: AbstractPFunction0<R>(), ChainedHand
 
     override operator fun invoke(): R? {
         var r: R? = null
-        registeredHandlers.asSequence().filter { it.isRelevant }.forEach { r = it() }
+        registeredHandlers.asSequence().filter { it.isRelevant }.forEach { handler ->
+            runCatching { r = handler() }.onFailure { warnUnexpected(handler, it) }
+        }
         return r
     }
 }
@@ -199,7 +202,9 @@ abstract class AbstractChainedFunction1<T, R>: AbstractPFunction1<T, R>(), Chain
 
     override operator fun invoke(param: T): R? {
         var r: R? = null
-        registeredHandlers.asSequence().filter { it.isRelevant }.forEach { r = it(param) }
+        registeredHandlers.asSequence().filter { it.isRelevant }.forEach { handler ->
+            runCatching { r = handler(param) }.onFailure { warnUnexpected(handler, it) }
+        }
         return r
     }
 }
@@ -234,7 +239,9 @@ abstract class AbstractChainedFunction2<T, T2, R>: AbstractPFunction2<T, T2, R>(
 
     override operator fun invoke(param: T, param2: T2): R? {
         var r: R? = null
-        registeredHandlers.asSequence().filter { it.isRelevant }.forEach { r = it(param, param2) }
+        registeredHandlers.asSequence().filter { it.isRelevant }.forEach { handler ->
+            runCatching { r = handler(param, param2) }.onFailure { warnUnexpected(handler, it) }
+        }
         return r
     }
 }
@@ -269,7 +276,9 @@ abstract class AbstractChainedPDFunction0<R>: AbstractPDFunction0<R>(), ChainedH
 
     override suspend operator fun invoke(): R? {
         var r: R? = null
-        registeredHandlers.asSequence().filter { it.isRelevant }.forEach { r = it() }
+        registeredHandlers.asSequence().filter { it.isRelevant }.forEach { handler ->
+            runCatching { r = handler() }.onFailure { warnUnexpected(handler, it) }
+        }
         return r
     }
 }
@@ -304,7 +313,9 @@ abstract class AbstractChainedPDFunction1<T, R>: AbstractPDFunction1<T, R>(), Ch
 
     override suspend operator fun invoke(param: T): R? {
         var r: R? = null
-        registeredHandlers.asSequence().filter { it.isRelevant }.forEach { r = it(param) }
+        registeredHandlers.asSequence().filter { it.isRelevant }.forEach { handler ->
+            runCatching { r = handler(param) }.onFailure { warnUnexpected(handler, it) }
+        }
         return r
     }
 }
@@ -339,7 +350,9 @@ abstract class AbstractChainedPDFunction2<T, T2, R>: AbstractPDFunction2<T, T2, 
 
     override suspend operator fun invoke(param: T, param2: T2): R? {
         var r: R? = null
-        registeredHandlers.asSequence().filter { it.isRelevant }.forEach { r = it(param, param2) }
+        registeredHandlers.asSequence().filter { it.isRelevant }.forEach { handler ->
+            runCatching { r = handler(param, param2) }.onFailure { warnUnexpected(handler, it) }
+        }
         return r
     }
 }

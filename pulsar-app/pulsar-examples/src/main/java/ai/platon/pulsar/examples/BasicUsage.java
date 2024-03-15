@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class BasicUsage {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // create a pulsar session
         PulsarSession session = PulsarContexts.createSession();
         // the main url we are playing with

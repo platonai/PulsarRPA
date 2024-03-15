@@ -32,7 +32,7 @@ interface PulsarContext: AutoCloseable {
     val id: Int
 
     /**
-     * The context id
+     * Flag that indicates whether this context is currently active.
      * */
     val isActive: Boolean
 
@@ -350,6 +350,7 @@ interface PulsarContext: AutoCloseable {
     /**
      * Wait until all tasks are done.
      * */
+    @Throws(InterruptedException::class)
     fun await()
 
     /**

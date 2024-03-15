@@ -6,7 +6,7 @@ import java.util.Map;
 
 class AmazonCrawler {
 
-    public static void main(String[] argv) {
+    public static void main(String[] argv) throws Exception {
         PulsarContexts.createSession().scrapeOutPages(
                 "https://www.amazon.com/Best-Sellers/zgbs",
                 "-outLink a[href~=/dp/]",

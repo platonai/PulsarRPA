@@ -175,25 +175,18 @@ interface JvmWebDriver {
 
     @Throws(WebDriverException::class)
     fun outerHTMLAsync(selector: String): CompletableFuture<String?>
-    @Throws(WebDriverException::class)
-    fun firstTextAsync(selector: String): CompletableFuture<String?>
+    
     @Throws(WebDriverException::class)
     fun selectFirstTextOrNullAsync(selector: String): CompletableFuture<String?>
     @Throws(WebDriverException::class)
     fun selectFirstTextOptionalAsync(selector: String): CompletableFuture<Optional<String>>
     @Throws(WebDriverException::class)
-    fun allTextsAsync(selector: String): CompletableFuture<List<String>>
-    @Throws(WebDriverException::class)
     fun selectTextsAsync(selector: String): CompletableFuture<List<String>>
     
-    @Throws(WebDriverException::class)
-    fun firstAttrAsync(selector: String, attrName: String): CompletableFuture<String?>
     @Throws(WebDriverException::class)
     fun selectFirstAttributeOrNullAsync(selector: String, attrName: String): CompletableFuture<String?>
     @Throws(WebDriverException::class)
     fun selectFirstAttributeOptionalAsync(selector: String, attrName: String): CompletableFuture<Optional<String>>
-    @Throws(WebDriverException::class)
-    fun allAttrsAsync(selector: String, attrName: String): CompletableFuture<List<String>>
     @Throws(WebDriverException::class)
     fun selectAttributesAsync(selector: String, attrName: String): CompletableFuture<List<String>>
     /**

@@ -25,6 +25,9 @@ abstract class AbstractBrowser(
     protected val closed = AtomicBoolean()
     protected var lastActiveTime = Instant.now()
     
+    /**
+     * TODO: use the real user agent
+     * */
     override val userAgent = getRandomUserAgentOrNull()
     
     override val navigateHistory = NavigateHistory()

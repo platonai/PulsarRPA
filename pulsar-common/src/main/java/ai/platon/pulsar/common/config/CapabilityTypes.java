@@ -42,27 +42,6 @@ public interface CapabilityTypes {
 
     String LIMIT = "limit";
 
-    String REGEX = "regex";
-
-    String FIELDS = "fields";
-
-    String ATTRIBUTE = "attribute";
-
-    String ENTITY_DOMAIN = "domain";
-
-    String EXTRACTOR = "extractor";
-
-    String BUILDER = "builder";
-
-    String FORMAT = "format";
-
-    String TASK_NAME = "taskName";
-
-    String OUTPUT_DIR = "outputDir";
-
-
-    String CRAWL_ROUND = "crawl.round";
-
     String CRAWL_MAX_DISTANCE = "crawl.max.distance";
 
     String BATCH_ID = "pulsar.batch.name";
@@ -71,66 +50,14 @@ public interface CapabilityTypes {
 
     String MAPREDUCE_JOB_REDUCES = "mapreduce.job.reduces";
 
-    String MAPPER_LIMIT = "pulsar.mapper.limit";
-
-    String REDUCER_LIMIT = "pulsar.reducer.limit";
-
-    String REINDEX = "reindex";
-
     String FORCE = "force";
 
-    String RESUME = "pulsar.job.resume";
-
-    String RECENT_DAYS_WINDOWN = "recent.days.window";
-
-    String REPORTER_REPORT_INTERVAL = "reporter.report.interval";
-
-    String METATAG_NAMES = "metatags.names";
-
-    /**
-     * Status / result message.
-     * */
-    String STAT_PULSAR_STATUS = "Pulsar Status";
-
-    String STAT_INFECTED_ROWS = "injectedRows";
-
-    // short constants for status / results fields
-    /**
-     * Status / result message.
-     */
-    String STAT_MESSAGE = "msg";
-    /**
-     * Phase of processing.
-     */
-    String STAT_PHASE = "phase";
-    /**
-     * Progress (float).
-     */
-    String STAT_PROGRESS = "progress";
-    /**
-     * Jobs.
-     */
-    String STAT_JOBS = "jobs";
-    /**
-     * Counters.
-     */
-    String STAT_COUNTERS = "counters";
-
-    String COUNTER_GROUP_STATUS = "Runtime Status";
+    String RECENT_DAYS_WINDOW = "recent.days.window";
 
     /**
      * Application metrics
      * */
     String METRICS_ENABLED = "metrics.enabled";
-
-    /**
-     * Generate
-     * */
-    String GENERATE_COUNT_VALUE_DOMAIN = "domain";
-
-    String GENERATE_COUNT_VALUE_HOST = "host";
-
-    String GENERATE_COUNT_VALUE_IP = "ip";
 
     /**
      * Distribution
@@ -139,9 +66,19 @@ public interface CapabilityTypes {
 
     String PULSAR_MASTER_PORT = "pulsar.master.port";
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Crawl section
+
     /**
-     * Storage
-     */
+     * The class name of the page event handler.
+     * <p>
+     * <code>System.setProperty(CapabilityTypes.PAGE_EVENT_CLASS, "ai.platon.pulsar.crawl.event.impl.DefaultPageEvent")</code>
+     * */
+    String PAGE_EVENT_CLASS = "page.event.class";
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Storage
+
     String STORAGE_CRAWL_ID = "storage.crawl.id";
 
     String STORAGE_SCHEMA_WEBPAGE = "storage.schema.webpage";
@@ -152,31 +89,44 @@ public interface CapabilityTypes {
 
     String STORAGE_DATUM_EXPIRES = "storage.datum.expires";
 
-    String STORAGE_EMBED_MONGO = "storage.embed.mongo";
+    ///////////////////////////////////////////////////////////////////////////
+    // Spring
 
-    /**
-     * Spring
-     */
     String APPLICATION_CONTEXT_CONFIG_LOCATION = "application.context.config.location";
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Inject phrase
 
     /**
      * Inject parameters
      */
-
     String INJECT_SCORE = "inject.score";
 
     String GLOBAL_CACHE_CLASS = "global.cache.class";
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Load phrase
 
     /**
      * Load parameters
      */
     String LOAD_STRATEGY = "load.strategy";
     /**
-     * Disable the fetch component, so the page only be loaded from the storage,
-     * and will never be fetched from the internet.
-     * If the page does not exist in the local storage, return WebPage.NIL.
+     * Deactivate the fetch component, ensuring that all pages are loaded exclusively from storage
+     * and never fetched from the Internet.
+     * <p>
+     * If a page is not found in the local storage, return WebPage.NIL.
      * */
+    String LOAD_DEACTIVATE_FETCH_COMPONENT = "load.deactivate.fetch.component";
+    /**
+     * @deprecated use {@link #LOAD_DEACTIVATE_FETCH_COMPONENT} instead
+     * */
+    @Deprecated
     String LOAD_DISABLE_FETCH = "load.disable.fetch";
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Fetch phrase
 
     /**
      * Fetch parameters
@@ -228,6 +178,11 @@ public interface CapabilityTypes {
     String FETCH_NET_BANDWIDTH_M = "fetcher.net.bandwidth.m";
 
     /**
+     * The maximum number of pages to export in fetch phrase.
+     * */
+    String FETCH_MAX_EXPORT_COUNT = "fetch.max.export.count";
+
+    /**
      * Browser
      * */
     String FETCH_INTERACT_SETTINGS = "interact.settings";
@@ -240,6 +195,10 @@ public interface CapabilityTypes {
     String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
 
     String FETCH_MAX_CONTENT_LENGTH = "fetch.max.content.length";
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Privacy context
+
     /**
      * Privacy context
      */
@@ -260,6 +219,11 @@ public interface CapabilityTypes {
      * The strategy to close privacy context: asap, lazy
      * */
     String PRIVACY_CONTEXT_CLOSE_LAZY = "privacy.close.strategy";
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Browser
+
     /**
      * The max value of tabs a browser can open
      */
@@ -297,6 +261,10 @@ public interface CapabilityTypes {
     String BROWSER_LAUNCH_NO_SANDBOX = "browser.launch.no.sandbox";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS = "browser.launch.supervisor.process";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS = "browser.launch.supervisor.process.args";
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Proxy
+
     /**
      * Proxy
      */
@@ -309,15 +277,16 @@ public interface CapabilityTypes {
     String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
     String PROXY_IDLE_TIMEOUT = "proxy.idle.timeout";
     String PROXY_ENABLE_DEFAULT_PROVIDERS = "proxy.enable.default.providers";
-    String PROXY_ENABLE_LOCAL_FORWARD_SERVER = "proxy.enable.local.forward.server";
-    String PROXY_SERVER_BOSS_THREADS = "proxy.forward.server.boss.threads";
-    String PROXY_SERVER_WORKER_THREADS = "proxy.forward.server.worker.threads";
 
-    /**
-     * Network
-     */
+    ///////////////////////////////////////////////////////////////////////////
+    // Network
+
     String HTTP_TIMEOUT = "http.timeout";
     String HTTP_FETCH_MAX_RETRY = "http.fetch.max.retry";
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Generate phrase
 
     /**
      * Generator parameters
@@ -340,6 +309,11 @@ public interface CapabilityTypes {
     String GENERATE_DETAIL_PAGE_RATE = "generate.detail.page.rate";
     String GENERATE_DELAY = "crawl.gen.delay";
     String GENERATE_RANDOM_SEED = "generate.partition.seed";
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Parse phrase
+
     /**
      * Parser parameters
      */
@@ -363,11 +337,17 @@ public interface CapabilityTypes {
 
     String PARSE_RETRIEVE_FADED_LINKS = "parse.retrieve.faded.links";
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Update phrase
+
     /**
      * DbUpdater parameters
      */
     String UPDATE_MAX_INLINKS = "update.max.inlinks";
     String UPDATE_IGNORE_IN2OUT_GRAPH = "update.ignore.in.graph";
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Scheduling
 
     String SCHEDULE_INC_RATE = "db.fetch.schedule.adaptive.inc_rate";
     String SCHEDULE_DEC_RATE = "db.fetch.schedule.adaptive.dec_rate";
@@ -377,6 +357,9 @@ public interface CapabilityTypes {
     String SCHEDULE_SYNC_DELTA = "db.fetch.schedule.adaptive.sync_delta";
     String SCHEDULE_SYNC_DELTA_RATE = "db.fetch.schedule.adaptive.sync_delta_rate";
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Scoring
+
     /**
      * Scoring
      */
@@ -384,16 +367,21 @@ public interface CapabilityTypes {
     String SCORE_SORT_ERROR_COUNTER_DIVISOR = "score.sort.error.counter.divisor";
     String SCORE_SORT_WEB_GRAPH_SCORE_DIVISOR = "score.sort.web.graph.score.divisor";
     String SCORE_SORT_CONTENT_SCORE_DIVISOR = "score.sort.content.score.divisor";
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Indexing
+
     /**
      * Indexing parameters
      */
     String INDEXER_JIT = "indexer.just.in.time";
     String INDEXER_HOSTNAME = "index.server.hostname";
     String INDEXER_PORT = "index.server.port";
-    String INDEXER_URL = "indexer.url";
-    String INDEXER_ZK = "indexer.zookeeper.hosts";
-    String INDEXER_COLLECTION = "indexer.collection";
-    String INDEXER_WRITE_COMMIT_SIZE = "indexer.write.commit.size";
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Other
 
     /**
      * Create default data collectors or not

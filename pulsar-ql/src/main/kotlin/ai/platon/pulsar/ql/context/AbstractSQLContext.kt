@@ -1,16 +1,17 @@
 package ai.platon.pulsar.ql.context
 
-import ai.platon.pulsar.session.PulsarEnvironment
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.SQLUtils
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.warnForClose
+import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SessionDelegate
-import ai.platon.pulsar.ql.h2.H2SessionFactory
+import ai.platon.pulsar.session.PulsarEnvironment
 import org.h2.api.ErrorCode
 import org.h2.engine.Session
 import org.h2.engine.SessionInterface
@@ -41,7 +42,7 @@ abstract class AbstractSQLContext constructor(
     abstract val randomConnection: Connection
 
     val randomConnectionOrNull: Connection? get() = kotlin.runCatching { randomConnection }
-        .onFailure { logger.warn(it.stringify()) }
+        .onFailure { warnInterruptible(this, it) }
         .getOrNull()
 
     val connectionPool = ArrayBlockingQueue<Connection>(1000)
@@ -69,7 +70,8 @@ abstract class AbstractSQLContext constructor(
         val normUrl = super.normalize(url, options, toItemOption)
         return NormUrl(SQLUtils.unsanitizeUrl(normUrl.spec), normUrl.options, hrefSpec = normUrl.hrefSpec)
     }
-
+    
+    @Throws(Exception::class)
     override fun execute(sql: String) {
         val conn = connectionPool.poll() ?: randomConnection
         try {
@@ -92,13 +94,12 @@ abstract class AbstractSQLContext constructor(
             conn.takeUnless { it.isClosed }?.let { connectionPool.add(conn) }
         }
     }
-
+    
+    @Throws(Exception::class)
     override fun run(block: (Connection) -> Unit) {
         val conn = connectionPool.poll() ?: randomConnection
         try {
             block(conn)
-        } catch (t: Throwable) {
-            logger.warn(t.stringify())
         } finally {
             conn.takeUnless { it.isClosed }?.let { connectionPool.add(conn) }
         }
@@ -113,7 +114,8 @@ abstract class AbstractSQLContext constructor(
             conn.takeUnless { it.isClosed }?.let { connectionPool.add(conn) }
         }
     }
-
+    
+    @Throws(Exception::class)
     abstract override fun createSession(sessionDelegate: SessionDelegate): AbstractSQLSession
 
     override fun sessionCount(): Int {
@@ -121,13 +123,13 @@ abstract class AbstractSQLContext constructor(
         return sqlSessions.size
     }
     
-    @Throws(DbException::class)
+    @Throws(Exception::class)
     override fun getSession(sessionInterface: SessionInterface): AbstractSQLSession {
         val h2session = sessionInterface as Session
         return getSession(h2session.serialId)
     }
 
-    @Throws(DbException::class)
+    @Throws(Exception::class)
     override fun getSession(sessionId: Int): AbstractSQLSession {
         ensureRunning()
         val session = sqlSessions[sessionId]
@@ -150,24 +152,33 @@ abstract class AbstractSQLContext constructor(
 
     override fun close() {
         logger.info("Closing SQLContext #{}, sql sessions: {}", id, sqlSessions.keys.joinToString { "$it" })
+        AppContext.terminate()
 
         if (closed.compareAndSet(false, true)) {
-            status = Status.CLOSING
+            runCatching { doClose1() }.onFailure { warnForClose(this, it) }
+        }
 
+        super.close()
+        
+        AppContext.endTermination()
+    }
+    
+    private fun doClose1() {
+        if (closed.compareAndSet(false, true)) {
+            status = Status.CLOSING
+            
             // database engine will close the sessions
             sqlSessions.values.forEach { it.close() }
             sqlSessions.clear()
             connectionPool.forEach { it.close() }
             connectionPool.clear()
-
+            
             status = Status.CLOSED
-
+            
             // H2SessionFactory.shutdown()
         }
-
-        super.close()
     }
-
+    
     private fun ensureRunning() {
         if (!isActive) {
             throw IllegalStateException("SQLContext is closed | #$id")

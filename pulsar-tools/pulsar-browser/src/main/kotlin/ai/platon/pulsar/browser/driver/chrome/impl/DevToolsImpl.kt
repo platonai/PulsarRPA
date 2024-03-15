@@ -10,6 +10,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.warnForClose
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -393,14 +394,17 @@ abstract class DevToolsImpl(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             // discard all furthers in dispatcher?
-            kotlin.runCatching { doClose() }.onFailure { logger.warn("[Unexpected][Ignored] | {}", it.message) }
+            runCatching { doClose() }.onFailure { warnForClose(this, it) }
             closeLatch.countDown()
         }
     }
 
     @Throws(Exception::class)
     private fun doClose() {
-        waitUntilIdle(Duration.ofSeconds(5))
+        // NOTE:
+        // 1. It's a bad idea to throw an InterruptedException in close() method
+        // 2. No need to wait for the dispatcher to be idle
+        // waitUntilIdle(Duration.ofSeconds(5))
 
         logger.trace("Closing ws client ... | {}", browserClient)
         browserClient.close()

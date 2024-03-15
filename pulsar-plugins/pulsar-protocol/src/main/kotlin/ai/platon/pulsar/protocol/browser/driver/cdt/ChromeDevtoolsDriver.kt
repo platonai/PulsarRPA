@@ -151,18 +151,6 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestHeaders"))
-    @Throws(WebDriverException::class)
-    override suspend fun mainRequestHeaders(): Map<String, Any> {
-        return mainRequestHeaders
-    }
-
-    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestCookies"))
-    @Throws(WebDriverException::class)
-    override suspend fun mainRequestCookies(): List<Map<String, String>> {
-        return mainRequestCookies
-    }
-
     @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
         return rpc.invokeDeferredSilently("getCookies") { getCookies0() } ?: listOf()
@@ -562,7 +550,8 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "dragAndDrop")
         }
     }
-
+    
+    @Throws(WebDriverException::class)
     override suspend fun outerHTML(): String? {
         return rpc.invokeDeferredSilently("outerHTML") { domAPI?.outerHTML }
     }
@@ -752,16 +741,20 @@ class ChromeDevtoolsDriver(
      * Close the tab hold by this driver.
      * */
     override fun close() {
+        // state should not be ready, working
+//        if (state.get() == WebDriver.State.READY || state.get() == WebDriver.State.WORKING) {
+//            logger.warn("Illegal driver state before close | {}", state.get())
+//        }
+        
         browser.destroyDriver(this)
         doClose()
     }
 
     fun doClose() {
         if (closed.compareAndSet(false, true)) {
-            state.set(WebDriver.State.QUIT)
-
             try {
                 devTools.close()
+                state.set(WebDriver.State.QUIT)
             } catch (e: WebDriverException) {
                 // ignored
             }
@@ -889,7 +882,7 @@ class ChromeDevtoolsDriver(
     }
 
     private fun reportInterestingResources(entry: NavigateEntry, event: ResponseReceived) {
-        runCatching { traceInterestingResources0(entry, event) }.onFailure { logger.warn(it.stringify()) }
+        runCatching { traceInterestingResources0(entry, event) }.onFailure { warnInterruptible(this, it) }
     }
     
     private fun traceInterestingResources0(entry: NavigateEntry, event: ResponseReceived) {

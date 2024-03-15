@@ -33,6 +33,7 @@ class ChromeLauncher(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
+        private val isActive get() = AppContext.isActive && !Thread.currentThread().isInterrupted
         
         var DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
         var PID_FILE_NAME = "chrome.launcher.pid"
@@ -41,10 +42,12 @@ class ChromeLauncher(
         fun deleteTemporaryUserDataDirWithLock(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
             synchronized(AppPaths.BROWSER_TMP_DIR_LOCK) {
                 val lock = AppPaths.BROWSER_TMP_DIR_LOCK
-                if (Files.exists(userDataDir)) {
+                if (isActive && Files.exists(userDataDir)) {
                     FileChannel.open(lock, StandardOpenOption.APPEND).use {
                         it.lock()
-                        deleteTemporaryUserDataDir(userDataDir, expiry)
+                        if (isActive) {
+                            deleteTemporaryUserDataDir(userDataDir, expiry)
+                        }
                     }
                 }
             }
@@ -52,7 +55,9 @@ class ChromeLauncher(
 
         fun deleteTemporaryUserDataDir(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
             synchronized(AppPaths.BROWSER_TMP_DIR_LOCK) {
-                deleteTemporaryUserDataDir0(userDataDir, expiry)
+                if (isActive) {
+                    deleteTemporaryUserDataDir0(userDataDir, expiry)
+                }
             }
         }
 
@@ -66,11 +71,11 @@ class ChromeLauncher(
             // Double check to ensure it's safe to delete the directory
             val hasPidSiblingFile = Files.exists(dirToDelete.resolveSibling(PID_FILE_NAME))
             // be careful, do not delete files by mistake, so delete files only inside AppPaths.CONTEXT_TMP_DIR
-            if (isTemporary && isExpired && hasPidSiblingFile) {
+            if (isActive && isTemporary && isExpired && hasPidSiblingFile) {
                 FileUtils.deleteQuietly(dirToDelete.toFile())
                 // Make sure the last operation is finished
                 sleepSeconds(1)
-                if (Files.exists(dirToDelete)) {
+                if (isActive && Files.exists(dirToDelete)) {
                     logger.warn("Failed to delete browser cache, try again | {}", dirToDelete)
                     forceDeleteDirectory(dirToDelete)
 
@@ -89,10 +94,14 @@ class ChromeLauncher(
             synchronized(ChromeLauncher::class.java) {
                 val maxTry = 10
                 var i = 0
-                while (i++ < maxTry && Files.exists(dirToDelete) && !Files.isSymbolicLink(dirToDelete)) {
-                    kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
-                        .onFailure { logger.warn("Failed to delete directory | {} | {}", dirToDelete, it.message) }
-                    Thread.sleep(500)
+                while (isActive && i++ < maxTry && Files.exists(dirToDelete) && !Files.isSymbolicLink(dirToDelete)) {
+                    kotlin.runCatching {
+                        FileUtils.deleteDirectory(dirToDelete.toFile())
+                        Thread.sleep(500)
+                    }.onFailure { 
+                            warnInterruptible(this,
+                                it, "Failed to delete directory | {} | {}", dirToDelete, it.message)
+                        }
                 }
             }
         }
@@ -111,7 +120,7 @@ class ChromeLauncher(
         if ("context\\default--" !in userDataDir.toString()) {
         }
         kotlin.runCatching { prepareUserDataDir() }.onFailure {
-            logger.warn("Failed to prepare user data dir", it)
+            warnInterruptible(this, it, "Failed to prepare user data dir | {} | {}", userDataDir, it.message)
         }
 
         val port = launchChromeProcess(chromeBinaryPath, userDataDir, options)
@@ -157,9 +166,7 @@ class ChromeLauncher(
 
         kotlin.runCatching { cleanUp() }.onFailure {
             logger.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
-            if (it.message == null) {
-                logger.warn(it.stringify())
-            }
+            warnForClose(this, it)
         }
     }
 
@@ -198,9 +205,10 @@ class ChromeLauncher(
     @Throws(ChromeProcessException::class, IllegalStateException::class, ChromeProcessTimeoutException::class)
     @Synchronized
     private fun launchChromeProcess(chromeBinary: Path, userDataDir: Path, chromeOptions: ChromeOptions): Int {
-        if (!AppContext.isActive) {
+        if (!isActive) {
             return 0
         }
+
         check(process == null) { "Chrome process has already been started" }
         check(!isAlive) { "Chrome process has already been started" }
 
@@ -308,9 +316,13 @@ class ChromeLauncher(
         }
 
         val lock = AppPaths.BROWSER_TMP_DIR_LOCK
-        if (Files.exists(prototypeUserDataDir.resolve("Default"))) {
+        if (isActive && Files.exists(prototypeUserDataDir.resolve("Default"))) {
             FileChannel.open(lock, StandardOpenOption.APPEND).use {
                 it.lock()
+
+                if (!isActive) {
+                    return
+                }
 
                 if (!Files.exists(userDataDir.resolve("Default"))) {
                     logger.info("User data dir does not exist, copy from prototype | {} <- {}", userDataDir, prototypeUserDataDir)
@@ -342,7 +354,7 @@ class ChromeLauncher(
     @Throws(IOException::class)
     private fun cleanUp() {
         val hasPidSiblingFile: (Path) -> Boolean = { path -> Files.exists(path.resolveSibling(PID_FILE_NAME)) }
-        Files.walk(AppPaths.CONTEXT_TMP_DIR).filter { it.isDirectory() && hasPidSiblingFile(it) }.forEach { path ->
+        Files.walk(AppPaths.CONTEXT_TMP_DIR).filter { isActive && it.isDirectory() && hasPidSiblingFile(it) }.forEach { path ->
             deleteTemporaryUserDataDirWithLock(path, temporaryUddExpiry)
         }
     }

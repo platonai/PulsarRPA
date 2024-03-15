@@ -3,6 +3,8 @@ package ai.platon.pulsar.protocol.browser.emulator.impl
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_MAX_CONTENT_LENGTH
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_MAX_EXPORT_COUNT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.event.AbstractEventEmitter
@@ -29,34 +31,54 @@ import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorImplBase(
+    /**
+     * The settings of the web driver
+     * */
     val driverSettings: WebDriverSettings,
     /**
      * Handle the response
      * */
     val responseHandler: BrowserResponseHandler,
+    /**
+     * The configuration of the emulator
+     * */
     val immutableConfig: ImmutableConfig
 ): AbstractEventEmitter<EmulateEvents>(), Parameterized, AutoCloseable {
     private val logger = getLogger(BrowserEmulatorImplBase::class)
     private val tracer = logger.takeIf { it.isTraceEnabled }
+
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
-    protected val maxPageSourceLength = immutableConfig.getInt(CapabilityTypes.FETCH_MAX_CONTENT_LENGTH, 8 * FileUtils.ONE_MB.toInt())
-
-    val closed = AtomicBoolean(false)
+    /**
+     * The maximum length of the page source, 8M by default.
+     * */
+    protected val maxPageSourceLength = immutableConfig.getInt(FETCH_MAX_CONTENT_LENGTH, 8 * FileUtils.ONE_MB.toInt())
+    
+    private val registry = MetricsSystem.reg
+    protected val pageSourceByteHistogram by lazy { registry.histogram(this, "hPageSourceBytes") }
+    protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
+    
+    protected val meterNavigates by lazy { registry.meter(this, "navigates") }
+    protected val counterJsEvaluates by lazy { registry.counter(this, "jsEvaluates") }
+    protected val counterJsWaits by lazy { registry.counter(this, "jsWaits") }
+    protected val counterCancels by lazy { registry.counter(this, "cancels") }
+    
+    protected val closed = AtomicBoolean(false)
+    
+    /**
+     * Whether the emulator is active.
+     * */
     val isActive get() = !closed.get() && AppContext.isActive
 
-    protected val pageSourceByteHistogram by lazy { registry.histogram(this, "hPageSourceBytes") }
-    private val registry = MetricsSystem.reg
-    protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
-
-    val meterNavigates by lazy { registry.meter(this, "navigates") }
-    val counterJsEvaluates by lazy { registry.counter(this, "jsEvaluates") }
-    val counterJsWaits by lazy { registry.counter(this, "jsWaits") }
-    val counterCancels by lazy { registry.counter(this, "cancels") }
-
+    /**
+     * Approximate number of exported web pages.
+     * */
     private var exportCount = 0
 
+    /**
+     * Create a response for the task.
+     * */
     open fun createResponse(task: NavigateTask): Response {
         if (!isActive) {
             return ForwardingResponse.canceled(task.page)
@@ -110,6 +132,9 @@ abstract class BrowserEmulatorImplBase(
         return createResponseWithDatum(task, pageDatum)
     }
 
+    /**
+     * Create a response with the page datum.
+     * */
     open fun createResponseWithDatum(task: NavigateTask, pageDatum: PageDatum): ForwardingResponse {
         val headers = pageDatum.headers
 
@@ -137,6 +162,9 @@ abstract class BrowserEmulatorImplBase(
         return ForwardingResponse(task.page, pageDatum)
     }
 
+    /**
+     * Close the emulator.
+     * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
 
@@ -146,7 +174,7 @@ abstract class BrowserEmulatorImplBase(
     @Throws(NavigateTaskCancellationException::class)
     protected fun checkState() {
         if (!isActive) {
-            throw NavigateTaskCancellationException("Emulator is closed")
+            throw NavigateTaskCancellationException("Emulator was closed")
         }
     }
 
@@ -173,13 +201,13 @@ abstract class BrowserEmulatorImplBase(
 
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
-            // and all the running tasks should be redo
+            // and all the running tasks should run again.
             throw WebDriverCancellationException("Web driver is canceled #${driver.id}", driver)
         }
 
         if (task.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
-            // and all the running tasks should be redo
+            // and all the running tasks should run again.
             throw NavigateTaskCancellationException("Task #${task.batchTaskId}/${task.batchId} is canceled | ${task.url}")
         }
     }
@@ -212,19 +240,17 @@ abstract class BrowserEmulatorImplBase(
              * Issue #43: OutOfMemoryError: Java heap space from BrowserEmulatorImplBase.createResponse,
              * caused by normalizePageSource().toString()
              * **/
-            logger.warn("Too long page source: {}, truncate it to empty", length)
+            logger.warn("Too large page source: {}, truncate it to empty", Strings.compactFormat(length))
             return ""
         }
 
         return content
     }
-
+    
     /**
      * Export the page if one of the following condition matches:
-     * 1. the first 200 pages
-     * 2. LoadOptions.test > 0
-     * 3. logger level is debug or lower
-     * 4. logger level is info and protocol status is failed
+     * 1. The page is failed to fetch
+     * 2. FETCH_MAX_EXPORT_COUNT > 0 and the export count is less than FETCH_MAX_EXPORT_COUNT
      * */
     private fun exportIfNecessary(task: NavigateTask) {
         try {
@@ -236,25 +262,21 @@ abstract class BrowserEmulatorImplBase(
 
     /**
      * Export the page if one of the following condition matches:
-     * 1. the first 1000 pages
-     * 2. LoadOptions.test > 0
-     * 3. logger level is debug or lower
-     * 4. logger level is info and protocol status is failed
-     * 5. other cases
+     * 1. The page is failed to fetch
+     * 2. FETCH_MAX_EXPORT_COUNT > 0 and the export count is less than FETCH_MAX_EXPORT_COUNT
      * */
     private fun exportIfNecessary0(pageSource: String, status: ProtocolStatus, page: WebPage) {
         if (pageSource.isEmpty()) {
             return
         }
 
-        val id = page.id
-        val test = page.options.test
-        val shouldExport = exportCount < 1000
-                || (id % 100 == 0 && exportCount < 10000)
-                || test > 0
-                || logger.isDebugEnabled
-                || (logger.isInfoEnabled && !status.isSuccess)
-        if (shouldExport) {
+        if (logger.isInfoEnabled && !status.isSuccess) {
+            export0(pageSource, status, page)
+            return
+        }
+
+        val maxExportCount = immutableConfig.getInt(FETCH_MAX_EXPORT_COUNT, 0)
+        if (++exportCount < maxExportCount) {
             export0(pageSource, status, page)
         }
     }
@@ -265,11 +287,10 @@ abstract class BrowserEmulatorImplBase(
         }
 
         val path = AppFiles.export(status, pageSource, page)
-        ++exportCount
 
         if (SystemUtils.IS_OS_WINDOWS) {
             // TODO: Issue 16 - https://github.com/platonai/PulsarRPA/issues/16
-            // Failed to create symbolic link on Windows
+            // Not a good idea to create symbolic link on Windows, it requires administrator privilege
         } else {
             createSymbolicLink(path, page)
         }

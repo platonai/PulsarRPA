@@ -3,32 +3,24 @@ package ai.platon.pulsar.crawl.event
 import ai.platon.pulsar.crawl.*
 
 abstract class AbstractLoadEvent(
-    @Deprecated("Url filtering should not be in load phase, crawl phase is better")
-    override val onFilter: UrlFilterEventHandler = UrlFilterEventHandler(),
     override val onNormalize: UrlFilterEventHandler = UrlFilterEventHandler(),
     override val onWillLoad: UrlEventHandler = UrlEventHandler(),
     override val onWillFetch: WebPageEventHandler = WebPageEventHandler(),
     override val onFetched: WebPageEventHandler = WebPageEventHandler(),
     override val onWillParse: WebPageEventHandler = WebPageEventHandler(),
     override val onWillParseHTMLDocument: WebPageEventHandler = WebPageEventHandler(),
-    override val onWillExtractData: WebPageEventHandler = WebPageEventHandler(),
-    override val onDataExtracted: HTMLDocumentEventHandler = HTMLDocumentEventHandler(),
     override val onHTMLDocumentParsed: HTMLDocumentEventHandler = HTMLDocumentEventHandler(),
     override val onParsed: WebPageEventHandler = WebPageEventHandler(),
     override val onLoaded: WebPageEventHandler = WebPageEventHandler()
 ): LoadEvent {
-
     
     override fun chain(other: LoadEvent): AbstractLoadEvent {
-        onFilter.addLast(other.onFilter)
         onNormalize.addLast(other.onNormalize)
         onWillLoad.addLast(other.onWillLoad)
         onWillFetch.addLast(other.onWillFetch)
         onFetched.addLast(other.onFetched)
         onWillParse.addLast(other.onWillParse)
         onWillParseHTMLDocument.addLast(other.onWillParseHTMLDocument)
-        onWillExtractData.addLast(other.onWillExtractData)
-        onDataExtracted.addLast(other.onDataExtracted)
         onHTMLDocumentParsed.addLast(other.onHTMLDocumentParsed)
         onParsed.addLast(other.onParsed)
         onLoaded.addLast(other.onLoaded)
@@ -38,17 +30,11 @@ abstract class AbstractLoadEvent(
 }
 
 abstract class AbstractCrawlEvent(
-    @Deprecated("Url filtering should not be in PageEvent")
-    override val onFilter: UrlAwareEventFilter = UrlAwareEventFilter(),
-    @Deprecated("No need to normalize in a crawler")
-    override val onNormalize: UrlAwareEventFilter = UrlAwareEventFilter(),
     override val onWillLoad: UrlAwareEventHandler = UrlAwareEventHandler(),
     override val onLoad: UrlAwareEventHandler = UrlAwareEventHandler(),
     override val onLoaded: UrlAwareWebPageEventHandler = UrlAwareWebPageEventHandler()
 ): CrawlEvent {
     override fun chain(other: CrawlEvent): CrawlEvent {
-        onFilter.addLast(other.onFilter)
-        onNormalize.addLast(other.onNormalize)
         onWillLoad.addLast(other.onWillLoad)
         onLoad.addLast(other.onLoad)
         onLoaded.addLast(other.onLoaded)

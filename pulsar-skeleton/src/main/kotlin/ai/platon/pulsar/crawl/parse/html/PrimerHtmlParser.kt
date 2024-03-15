@@ -53,7 +53,7 @@ class PrimerHtmlParser(
         return Params.of(
             "className", this.javaClass.simpleName,
             "defaultCharEncoding", defaultCharEncoding,
-            "parseFilters", parseFilters
+            "parseFilters", parseFilters?.javaClass?.simpleName ?: "null",
         )
     }
 

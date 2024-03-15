@@ -6,8 +6,10 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.crawl.inject.SeedBuilder
+import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
@@ -31,15 +33,18 @@ class InjectComponent(
     override fun getParams(): Params {
         return seedBuilder.params
     }
-
+    
+    @Throws(WebDBException::class)
     fun inject(urlArgs: Pair<String, String>): WebPage {
         return inject(urlArgs.first, urlArgs.second)
     }
-
+    
+    @Throws(WebDBException::class)
     fun inject(normUrl: NormUrl): WebPage {
         return inject(normUrl.spec, normUrl.args)
     }
-
+    
+    @Throws(WebDBException::class)
     fun inject(url: String, args: String): WebPage {
         var page = webDb.get(url, false)
 
@@ -56,7 +61,8 @@ class InjectComponent(
         page.args = args
         return if (inject(page)) page else WebPage.NIL
     }
-
+    
+    @Throws(WebDBException::class)
     fun inject(page: WebPage): Boolean {
         val success = seedBuilder.makeSeed(page)
         if (success) {
@@ -67,18 +73,21 @@ class InjectComponent(
 
         return false
     }
-
+    
+    @Throws(WebDBException::class)
     fun injectAll(vararg configuredUrls: String): List<WebPage> {
         return configuredUrls.map { inject(UrlUtils.splitUrlArgs(it)) }
     }
-
+    
+    @Throws(WebDBException::class)
     fun injectAll(pages: Collection<WebPage>): List<WebPage> {
         val injectedPages = pages.onEach { inject(it) }.filter { it.isSeed }
         seedIndexer.indexAll(injectedPages.map { it.url })
         LOG.info("Injected " + injectedPages.size + " seeds out of " + pages.size + " pages")
         return injectedPages
     }
-
+    
+    @Throws(WebDBException::class)
     fun unInject(url: String): WebPage {
         val page = webDb.get(url)
         if (page.isSeed) {
@@ -86,7 +95,8 @@ class InjectComponent(
         }
         return page
     }
-
+    
+    @Throws(WebDBException::class)
     fun unInject(page: WebPage): WebPage {
         if (!page.isSeed) {
             return page
@@ -97,14 +107,16 @@ class InjectComponent(
         webDb.put(page)
         return page
     }
-
+    
+    @Throws(WebDBException::class)
     fun unInjectAll(vararg urls: String): List<WebPage> {
         val pages = urls.mapNotNull { webDb.getOrNull(it) }.filter { it.isSeed }.onEach { unInject(it) }
         LOG.debug("UnInjected " + pages.size + " urls")
         seedIndexer.removeAll(pages.map { it.url })
         return pages
     }
-
+    
+    @Throws(WebDBException::class)
     fun unInjectAll(pages: Collection<WebPage>): Collection<WebPage> {
         pages.forEach { this.unInject(it) }
         return pages
@@ -118,17 +130,17 @@ class InjectComponent(
         }
         return "No home page"
     }
-
+    
+    @Throws(WebDBException::class)
     fun commit() {
         webDb.flush()
         seedIndexer.commit()
     }
 
     override fun close() {
-        if (closed.getAndSet(true)) {
-            return
+        if (closed.compareAndSet(false, true)) {
+            runCatching { commit() }.onFailure { warnForClose(this, it) }
         }
-        commit()
     }
 
     companion object {

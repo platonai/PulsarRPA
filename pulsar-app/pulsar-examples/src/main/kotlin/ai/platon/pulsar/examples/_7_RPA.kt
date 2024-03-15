@@ -39,7 +39,7 @@ internal class RPACrawler(private val session: PulsarSession = createSession()) 
 
         if (driver.exists(selector)) {
             driver.click(selector)
-            val text = driver.firstText(selector) ?: "no-text"
+            val text = driver.selectFirstTextOrNull(selector) ?: "no-text"
             driver.type(searchBoxSelector, text.substring(1, 4))
             logger.info("{} clicked", selector)
         }

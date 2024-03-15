@@ -2,7 +2,7 @@ package ai.platon.pulsar.examples.rpa;
 
 import ai.platon.pulsar.common.options.LoadOptions;
 import ai.platon.pulsar.context.PulsarContexts;
-import ai.platon.pulsar.crawl.event.WebPageJvmWebDriverEventHandler;
+import ai.platon.pulsar.crawl.event.JvmWebPageWebDriverEventHandler;
 import ai.platon.pulsar.crawl.fetch.driver.JvmWebDriver;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.session.PulsarSession;
@@ -23,7 +23,7 @@ public class RPACrawler {
 
     public final Map<String, String> fieldSelectors;
 
-    public RPACrawler() {
+    public RPACrawler() throws Exception {
         this(PulsarContexts.createSession());
     }
 
@@ -41,7 +41,7 @@ public class RPACrawler {
         var options = session.options(args, null);
         var be = options.getEvent().getBrowseEvent();
 
-        be.getOnWillComputeFeature().addLast(new WebPageJvmWebDriverEventHandler() {
+        be.getOnWillComputeFeature().addLast(new JvmWebPageWebDriverEventHandler() {
             @Override
             public Object invoke(WebPage page, JvmWebDriver driver, Continuation<? super Object> continuation) {
                 fieldSelectors.values().forEach(selector -> interact(selector, driver));
@@ -49,7 +49,7 @@ public class RPACrawler {
             }
         });
 
-        be.getOnFeatureComputed().addLast(new WebPageJvmWebDriverEventHandler() {
+        be.getOnFeatureComputed().addLast(new JvmWebPageWebDriverEventHandler() {
             @Override
             public Object invoke(WebPage page, JvmWebDriver driver, Continuation<? super Object> $completion) {
                 logger.info("Feature computed");
@@ -67,15 +67,15 @@ public class RPACrawler {
         driver.existsAsync(selector).thenAccept(exists -> {
             if (exists) {
                 driver.clickAsync(selector)
-                        .thenCompose(ignored -> driver.firstTextAsync(selector))
-                        .thenAcceptAsync(text -> driver.typeAsync(searchBoxSelector, text.substring(1, 4)), delayedExecutor)
+                        .thenCompose(ignored -> driver.selectFirstTextOptionalAsync(selector))
+                        .thenAcceptAsync(text -> driver.typeAsync(searchBoxSelector, text.orElse("").substring(1, 4)), delayedExecutor)
                         .thenRun(() -> logger.info("{} clicked", selector))
                         .join();
             }
         }).join();
     }
 
-    public static void main(String[] argv) {
+    public static void main(String[] argv) throws Exception {
         var url = "https://item.jd.com/10023632209832.html";
         var args = "-refresh -parse";
 

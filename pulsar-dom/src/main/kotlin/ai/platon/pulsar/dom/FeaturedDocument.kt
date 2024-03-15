@@ -118,15 +118,14 @@ open class FeaturedDocument(val document: Document) {
     val head: Element get() = document.head()
 
     /**
-     * Get this document's {@code <body>} or {@code <frameset>} element.
+     * Get this document's [body] element.
      *
-     * As a <b>side-effect</b>, if this Document does not already have a HTML structure, 
-     * it will be created with a {@code <body>} element. If you do not want that, 
+     * As a <b>side effect</b>, if this Document does not already have an HTML structure,
+     * it will be created with a [body] element. If you do not want that,
      * use {@code #selectFirst("body")} instead.
      *
-     * @return {@code body} element for documents with a {@code <body>}, a new {@code <body>} 
-     * element if the document had no contents, or the outermost {@code <frameset> element} 
-     * for frameset documents.
+     * @return [body] element for documents with a [body], a new [body]
+     * element if the document had no contents for frameset documents.
      */
     val body: Element get() = document.body()
 

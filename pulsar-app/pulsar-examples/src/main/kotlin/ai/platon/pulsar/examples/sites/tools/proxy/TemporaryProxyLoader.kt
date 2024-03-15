@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyType
+import java.net.Proxy
 
 class TemporaryProxyLoader(
     private val proxyPool: ProxyPool,
@@ -38,8 +39,8 @@ class TemporaryProxyLoader(
             .filter { it.trim().matches("^\\d+.+".toRegex()) }
             .map { it.split(":").map { it.trim() } }
             .filter { it.size == 4 }
-            .map { ProxyEntry(it[0], it[1].toInt(), user = it[2], pwd = it[3]) }
-            .onEach { it.proxyType = ProxyType.SOCKS5 }
+            .map { ProxyEntry(it[0], it[1].toInt(), username = it[2], password = it[3]) }
+            .onEach { it.type = Proxy.Type.SOCKS }
             .onEach { it.declaredTTL = DateTimes.doomsday }
             .toMutableList()
 

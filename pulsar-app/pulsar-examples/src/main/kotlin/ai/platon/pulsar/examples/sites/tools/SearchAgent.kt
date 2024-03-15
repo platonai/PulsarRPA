@@ -4,7 +4,7 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.proxy.ProxyEntry2
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.urls.DegenerateHyperlink
 import ai.platon.pulsar.context.PulsarContexts
@@ -68,10 +68,10 @@ class SearchAgent {
             driver.scrollToTop()
 
             println(String.format("%d.\t%s", page.id, page.url))
-            val resultStats = driver.firstText("#b_tween")
+            val resultStats = driver.selectFirstTextOrNull("#b_tween")
             println(resultStats)
 
-            val texts = driver.allTexts("ol#b_results li h2")
+            val texts = driver.selectTexts("ol#b_results li h2")
             println(texts)
         }
 
@@ -104,9 +104,9 @@ class SearchAgent {
             driver.scrollToTop()
             
             println(String.format("%d.\t%s", page.id, page.url))
-            val resultStats = driver.firstText("#result-stats")
+            val resultStats = driver.selectFirstTextOrNull("#result-stats")
             println(resultStats)
-            val texts = driver.allTexts("h3")
+            val texts = driver.selectTexts("h3")
             println(texts)
         }
         
@@ -127,7 +127,7 @@ class SearchAgent {
         logger.info("Extract | {} | {}", page.protocolStatus, page.url)
     }
 
-    private fun test(proxy: ProxyEntry2): Boolean {
+    private fun test(proxy: ProxyEntry): Boolean {
         return if (!NetUtil.testTcpNetwork(proxy.host, proxy.port)) {
             logger.info("Proxy not available: {}", proxy.toURI())
             false

@@ -1,10 +1,8 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppSystemInfo
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.MetricsSystem
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -68,7 +66,8 @@ open class WebDriverContext(
             val isDriverPoolReady = driverPoolManager.isReady && driverPoolManager.hasDriverPromise(browserId)
             return isActive && isDriverPoolReady
         }
-
+    
+    @Throws(Exception::class)
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         globalTasks.mark()
         return checkAbnormalResult(task) ?: try {
@@ -105,7 +104,7 @@ open class WebDriverContext(
 
     @Throws(Exception::class)
     open fun maintain() {
-        // close dead, valueless, idle driver pools, etc
+        // should close dead, valueless, idle driver pools, etc
     }
 
     /**
@@ -119,9 +118,9 @@ open class WebDriverContext(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             if (!AppContext.isActive) {
-                kotlin.runCatching { shutdownUnderlyingLayerImmediately() }.onFailure { logger.warn(it.stringify()) }
+                runCatching { shutdownUnderlyingLayerImmediately() }.onFailure { warnForClose(this, it) }
             } else {
-                kotlin.runCatching { closeContext() }.onFailure { logger.warn(it.stringify()) }
+                runCatching { closeContext() }.onFailure { warnForClose(this, it) }
             }
         }
     }
@@ -135,12 +134,14 @@ open class WebDriverContext(
         if (asap) {
             closeUnderlyingLayerGracefully()
         } else {
-            waitUntilAllDoneNormally(Duration.ofMinutes(1))
+            // always close the context as soon as possible, just retry the unfinished tasks.
+            // waitUntilAllDoneNormally(Duration.ofMinutes(1))
             // close underlying IO based modules asynchronously
             closeUnderlyingLayerGracefully()
         }
 
-        waitUntilNoRunningTasks(Duration.ofSeconds(10))
+        // No need to wait for the underlying layer to be closed, just close it
+        // waitUntilNoRunningTasks(Duration.ofSeconds(10))
 
         val isShutdown = if (AppContext.isActive) "" else " (shutdown)"
         val display = browserId.display
@@ -153,7 +154,7 @@ open class WebDriverContext(
     }
 
     private fun closeUnderlyingLayerGracefully() {
-        // Mark all working tasks are canceled, so they return as soon as possible
+        // Mark all working tasks to be canceled, so they return as soon as possible
         runningTasks.forEach { it.cancel() }
         // Cancel the browser, and all online drivers, and the worker coroutines with the drivers
         driverPoolManager.cancelAll(browserId)

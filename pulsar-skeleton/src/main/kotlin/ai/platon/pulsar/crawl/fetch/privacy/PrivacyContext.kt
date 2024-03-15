@@ -202,8 +202,8 @@ abstract class PrivacyContext(
         return listOf(
             "closed" to isClosed, "leaked" to isLeaked, "active" to isActive,
             "highFailure" to isHighFailureRate, "idle" to isIdle, "good" to isGood,
-            "ready" to isReady
-        ).filter { it.second }.joinToString(" ") { it.first }
+            "ready" to isReady, "retired" to isRetired
+        ).filter { it.second }.joinToString(",") { it.first }
     }
 
     init {
@@ -279,7 +279,7 @@ abstract class PrivacyContext(
      * @param fetchFun the fetch function
      * @return the fetch result
      * */
-    @Throws(ProxyException::class)
+    @Throws(ProxyException::class, Exception::class)
     open suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         beforeRun(task)
         val result = doRun(task, fetchFun)
@@ -298,7 +298,7 @@ abstract class PrivacyContext(
     abstract suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
     fun takeSnapshot(): String {
-        return "$readableState driver: ${promisedWebDriverCount()}"
+        return "$readableState | promised drivers: ${promisedWebDriverCount()}"
     }
     /**
      * Dismiss the privacy context and mark it as be retired, so it should be closed later.

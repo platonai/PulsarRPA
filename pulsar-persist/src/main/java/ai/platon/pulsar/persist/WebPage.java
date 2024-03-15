@@ -52,29 +52,36 @@ import static ai.platon.pulsar.common.config.AppConstants.*;
  * The core web page structure
  */
 final public class WebPage implements Comparable<WebPage>, WebAsset {
-
+    /**
+     * The WebPage object sequence number generator.
+     * */
     private static final AtomicInteger SEQUENCER = new AtomicInteger();
-
+    /**
+     * The nil page.
+     * */
     public static final WebPage NIL = newInternalPage(NIL_PAGE_URL, 0, "nil", "nil");
-
+    /**
+     * The page id which is unique in process scope.
+     * */
     private Integer id = SEQUENCER.incrementAndGet();
     /**
-     * The url is the permanent internal address, and the location is the last working address
+     * The url is the permanent internal address, while the location is the last working address.
      */
     @NotNull
     private String url = "";
     /**
-     * The reversed url of the web page, it's also the key of the underlying storage of this object
+     * The reversed url of the web page, it's also the key of the underlying storage of this webpage.
+     * It's faster to retrieve the page by the reversed url.
      */
     @NotNull
     private String reversedUrl = "";
     /**
-     * Underlying persistent object
+     * The underlying persistent object.
      */
     @NotNull
     private GWebPage page;
     /**
-     * Web page scope configuration
+     * A webpage scope configuration, any modifications made to it will exclusively impact this particular webpage.
      */
     @NotNull
     private VolatileConfig conf;
@@ -88,7 +95,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     private final Variables data = new Variables();
     /**
      * The page datum for update.
-     * Page datum is collected by the fetcher and is used to update the page in the update phase.
+     * Page datum is collected during the fetch phrase and is used to update the page in the update phase.
      * */
     private PageDatum pageDatum = null;
     /**
@@ -117,7 +124,8 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     private volatile boolean isContentUpdated = false;
 
     /**
-     * The cached content
+     * The cached content.
+     * TODO: use a loading cache for all cached page contents.
      */
     private volatile ByteBuffer tmpContent = null;
 
@@ -145,7 +153,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         this.conf = conf;
         this.page = page;
 
-        // the url of a page might be normalized, but the baseUrl always keeps be the original
         if (page.getBaseUrl() == null) {
             setLocation(this.url);
         }
@@ -159,7 +166,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         this.conf = conf;
         this.page = page;
 
-        // BaseUrl is the last working address, it might redirect to url, or it might have random parameters
         if (page.getBaseUrl() == null) {
             setLocation(this.url);
         }
@@ -273,7 +279,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     /**
      * Return a Utf8 string.
-     *
+     * <p>
      * Unlike {@link String}, instances are mutable. This is more
      * efficient than {@link String} when reading or writing a sequence of values,
      * as a single instance may be reused.
@@ -285,7 +291,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     /**
      * Return a Utf8 string.
-     *
+     * <p>
      * Unlike {@link String}, instances are mutable. This is more
      * efficient than {@link String} when reading or writing a sequence of values,
      * as a single instance may be reused.
@@ -315,7 +321,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * A non-persistable page id, the id is process scope.
+     * A process scope page id.
      * */
     public int getId() {
         return id;
@@ -373,11 +379,10 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         unsafeSetGPage(GWebPage.newBuilder(page.unbox()).build());
     }
 
-    /**
-     * *****************************************************************************
-     * Common fields
-     * ******************************************************************************
-     */
+    //////////////////////////////////////////////////////////////////////////////////
+    //
+    // Common fields
+    //
 
     @NotNull
     public Variables getVariables() {

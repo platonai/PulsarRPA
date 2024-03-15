@@ -105,11 +105,6 @@ interface PulsarSession : AutoCloseable {
     val sessionConfig: VolatileConfig
     
     /**
-     * The scoped bean factory: for each volatileConfig object, there is a bean factory
-     * */
-    @Deprecated("Not used any more")
-    val sessionBeanFactory: BeanFactory
-    /**
      * A short descriptive display text.
      * */
     val display: String
@@ -126,8 +121,6 @@ interface PulsarSession : AutoCloseable {
      * */
     val globalCache: GlobalCache
     
-    @Deprecated("Factory should not be a interface property, globalCache is OK")
-    val globalCacheFactory: GlobalCacheFactory
     /**
      * Close objects when the session closes
      * */
@@ -137,20 +130,38 @@ interface PulsarSession : AutoCloseable {
      * */
     fun disablePDCache()
     
-    /**
-     * Create a new [LoadOptions] object with [args], [event], and [sessionConfig].
-     * */
-    fun options(args: String = "", event: PageEvent? = null): LoadOptions
+    @Deprecated("Inappropriate name", ReplaceWith("data(name)"))
+    fun getVariable(name: String): Any? = data(name)
     
+    @Deprecated("Inappropriate name", ReplaceWith("data(name, value)"))
+    fun setVariable(name: String, value: Any) = data(name, value)
+    
+    /**
+     * Get a variable from this session
+     *
+     * @param name The name of the variable
+     * @return The value of the variable
+     * */
+    fun data(name: String): Any?
+    /**
+     * Set a variable into this session
+     *
+     * @param name The name of the variable
+     * @param value The value of the variable
+     * */
+    fun data(name: String, value: Any)
     /**
      * Get a property.
      * */
     fun property(name: String): String?
-    
     /**
      * Set a session scope property.
      * */
     fun property(name: String, value: String)
+    /**
+     * Create a new [LoadOptions] object with [args], [event], and [sessionConfig].
+     * */
+    fun options(args: String = "", event: PageEvent? = null): LoadOptions
     /**
      * Normalize a url.
      * */
@@ -221,7 +232,7 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Inject a url as a seed to fetch. Injection is usually used in Nutch style crawls
-     * where the execution flow likes the following:
+     * where the execution flow is the following:
      *
      * inject -> generate -> fetch -> parse [ -> index ] -> update
      *              ^                                          ^
@@ -313,8 +324,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified arguments.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * Other fetch conditions can be specified by load arguments:
      *
@@ -331,8 +342,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified arguments.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * Other fetch conditions can be specified by load arguments:
      *
@@ -350,8 +361,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified options.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * Other fetch conditions can be specified by load arguments:
      *
@@ -369,8 +380,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with the specified arguments.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param url  The url to load
      * @return The webpage loaded or NIL
@@ -380,8 +391,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with the specified arguments.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param url  The url to load
      * @param args The load arguments
@@ -392,8 +403,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with options.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param url     The url to load
      * @param options The load options
@@ -404,8 +415,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a normal url.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param url The normal url
      * @return The webpage loaded or NIL
@@ -415,8 +426,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified options.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -430,8 +441,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified options.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -445,8 +456,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified arguments.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -460,8 +471,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified options.
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -475,8 +486,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url with specified options
      *
-     * This method first checks the url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -489,8 +500,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls    The urls to load
      * @return The webpage loaded or NIL
@@ -500,8 +511,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls    The urls to load
      * @param args The load arguments
@@ -512,8 +523,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls    The urls to load
      * @param options The load options
@@ -524,8 +535,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls    The urls to load
      * @return The webpage loaded or NIL
@@ -535,8 +546,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls    The urls to load
      * @param args The load arguments
@@ -547,8 +558,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls    The urls to load
      * @param options The load options
@@ -559,8 +570,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls with specified options
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param normUrls    The normal urls to load
      * @return The loaded webpages
@@ -626,8 +637,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -637,8 +648,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style.
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -648,8 +659,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style.
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -659,8 +670,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style.
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -670,8 +681,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style.
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -681,8 +692,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style.
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -692,8 +703,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load all normal urls in java async style
      *
-     * This method first checks each url in the local store and return the local version if the page
-     * exists and matches the requirements, otherwise fetch it from the Internet.
+     * This method initially verifies the presence of the page in the local store. If the page exists and meets the
+     * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -814,10 +825,13 @@ interface PulsarSession : AutoCloseable {
      * @return The loaded out pages
      */
     fun loadOutPages(portalUrl: String, options: LoadOptions): List<WebPage>
-    
-    // Do not delete the comment.
-    // No such confusing version:
-    // fun loadOutPages(portalUrl: UrlAware): List<WebPage>
+
+    /**
+     * A confusing version, it's too complicated to handle events and should not be implemented.
+     */
+    fun loadOutPages(portalUrl: UrlAware): List<WebPage> =
+        throw NotImplementedError("The signature loadOutPages(UrlAware) is " +
+            "a confusing version, it's too complicated to handle events and should not be implemented.")
     
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
@@ -840,10 +854,13 @@ interface PulsarSession : AutoCloseable {
      * @return The loaded out pages
      */
     fun loadOutPages(portalUrl: UrlAware, options: LoadOptions): List<WebPage>
-    
-    // Do not delete the comment.
-    // No such confusing version:
-    // fun loadOutPages(portalUrl: NormUrl): List<WebPage>
+
+    /**
+     * A confusing version, it's too complicated to handle events and should not be implemented.
+     */
+    fun loadOutPages(portalUrl: NormUrl): List<WebPage> =
+        throw NotImplementedError("The signature loadOutPages(NormUrl) is " +
+            "a confusing version, it's too complicated to handle events and should not be implemented.")
     
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option asynchronously.
@@ -1141,7 +1158,6 @@ interface PulsarSession : AutoCloseable {
      * @return All extracted fields. For each out page, fields extracted
      *          with their selectors are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Iterable<String>): List<Map<String, String?>>
     
     /**
@@ -1153,7 +1169,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their selectors are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Iterable<String>): List<Map<String, String?>>
     
     /**
@@ -1166,7 +1181,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their selectors are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
@@ -1181,7 +1195,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their selectors are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
@@ -1195,7 +1208,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>): List<Map<String, String?>>
     
     /**
@@ -1207,7 +1219,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Map<String, String>): List<Map<String, String?>>
     
     /**
@@ -1220,7 +1231,6 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
@@ -1235,29 +1245,14 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
-    @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
     
     /**
-     * Get a variable from this session
-     * */
-    fun getVariable(name: String): Any?
-    
-    /**
-     * Set a variable into this session
-     * */
-    fun setVariable(name: String, value: Any)
-    
-    /**
-     * Put session scope bean
-     * */
-    @Deprecated("Not used any more")
-    fun putSessionBean(obj: Any)
-    
-    /**
      * Delete a webpage from the storage
+     *
+     * @param url The url of the webpage
      * */
     fun delete(url: String)
     
@@ -1267,7 +1262,10 @@ interface PulsarSession : AutoCloseable {
     fun flush()
     
     /**
-     * Persist to the storage
+     * Persist the content of a webpage.
+     *
+     * @param page Page to persist
+     * @return True if the page is persisted successfully
      * */
     fun persist(page: WebPage): Boolean
     
@@ -1283,10 +1281,19 @@ interface PulsarSession : AutoCloseable {
      * Export the content of a webpage.
      *
      * @param page Page to export
-     * @param ident File name identifier used to distinguish from other names
+     * @param ident File name identifier used to distinguish from other files
      * @return The path of the exported page
      * */
     fun export(page: WebPage, ident: String = ""): Path
+    
+    /**
+     * Export the whole HTML of the document to the given path.
+     *
+     * @param doc Document to export
+     * @param path Path to save the exported content
+     * @return The path of the exported document
+     * */
+    fun exportTo(page: WebPage, path: Path): Path
     
     /**
      * Export the outer HTML of the document.
@@ -1300,7 +1307,7 @@ interface PulsarSession : AutoCloseable {
      * Export the outer HTML of the document.
      *
      * @param doc Document to export
-     * @param ident File name identifier used to distinguish from other names
+     * @param ident File name identifier used to distinguish from other files
      * @return The path of the exported document
      * */
     fun export(doc: FeaturedDocument, ident: String = ""): Path

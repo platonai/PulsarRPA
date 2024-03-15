@@ -9,6 +9,7 @@ import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.crawl.event.impl.PageEventFactory
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.AbstractSQLContext
@@ -65,9 +66,7 @@ open class XSQLScrapeHyperlink(
     val response = ScrapeResponse()
 
     override var args: String? = "-parse ${sql.args}"
-    override var event: PageEvent = DefaultPageEvent(
-        loadEvent = ScrapeLoadEvent(this, response)
-    )
+    override var event: PageEvent = PageEventFactory().create(loadEvent = ScrapeLoadEvent(this, response))
 
     open fun executeQuery(): ResultSet = executeQuery(request, response)
 
@@ -78,7 +77,9 @@ open class XSQLScrapeHyperlink(
 
             doExtract(page, document)
         } catch (t: Throwable) {
+            // Log the exception and throw it
             logger.warn("Unexpected exception", t)
+            throw t
         }
     }
 
@@ -124,7 +125,6 @@ open class XSQLScrapeHyperlink(
     }
 
     private fun executeQuery(sql: String): ResultSet {
-//        return session.executeQuery(sql)
         val connection = connectionPool.poll() ?: randomConnection
         return executeQuery(sql, connection).also { connectionPool.offer(connection) }
     }

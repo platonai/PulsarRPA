@@ -1,7 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.ImmutableConfig
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
@@ -72,7 +70,7 @@ open class MultiSinkWriter : AutoCloseable {
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             _writers.forEach {
-                runCatching { it.value.close() }.onFailure { logger.warn(it.stringify()) }
+                runCatching { it.value.close() }.onFailure { warnForClose(this, it) }
             }
         }
     }
@@ -82,7 +80,7 @@ open class MultiSinkWriter : AutoCloseable {
             val idleWriters = _writers.filter { it.value.isIdle }
             idleWriters.forEach { _writers.remove(it.key) }
             idleWriters.forEach {
-                runCatching { it.value.close() }.onFailure { logger.warn(it.stringify()) }
+                runCatching { it.value.close() }.onFailure { warnForClose(this, it) }
             }
         } catch (e: Exception) {
             logger.warn(e.stringify())

@@ -84,7 +84,8 @@ abstract class AbstractWebDriver(
         canceled.set(false)
         crashed.set(false)
         if (!isInit && !isWorking) {
-            throw IllegalStateException("A driver has to be ready before work, actual $state")
+            // It's a bad idea to throw an exception, which lead to inconsistency within the ConcurrentStatefulDriverPool.
+            // throw IllegalWebDriverStateException("The driver is expected to be INIT or WORKING to be ready, actually $state")
         }
         state.set(WebDriver.State.READY)
     }
@@ -93,7 +94,8 @@ abstract class AbstractWebDriver(
         canceled.set(false)
         crashed.set(false)
         if (!isInit && !isReady) {
-            throw IllegalStateException("A driver has to be ready before work, actual $state")
+            // It's a bad idea to throw an exception, which lead to inconsistency within the ConcurrentStatefulDriverPool.
+            // throw IllegalWebDriverStateException("The driver is expected to be INIT or READY to work, actually $state")
         }
         state.set(WebDriver.State.WORKING)
     }
@@ -114,11 +116,13 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
     
+    @Throws(WebDriverException::class)
     override suspend fun location(): String {
         val result = evaluate("window.location")
         return result?.toString() ?: ""
     }
     
+    @Throws(WebDriverException::class)
     override suspend fun baseURI(): String {
         val result = evaluate("document.baseURI")
         return result?.toString() ?: ""

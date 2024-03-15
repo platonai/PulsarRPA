@@ -1,10 +1,12 @@
 package ai.platon.pulsar.context
 
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.context.support.ClassPathXmlPulsarContext
 import ai.platon.pulsar.context.support.StaticPulsarContext
+import ai.platon.pulsar.persist.WebDBException
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
 
@@ -55,9 +57,11 @@ object PulsarContexts {
 
     @Synchronized
     @JvmStatic
+    @Throws(Exception::class)
     fun createSession() = create().createSession()
 
     @JvmStatic
+    @Throws(InterruptedException::class)
     fun await() {
         activeContext?.await()
     }
@@ -65,7 +69,7 @@ object PulsarContexts {
     @Synchronized
     @JvmStatic
     fun shutdown() {
-        contexts.forEach { it.close() }
+        contexts.forEach { cx -> cx.runCatching { close() }.onFailure { warnForClose(this, it) } }
         contexts.clear()
         activeContext = null
     }

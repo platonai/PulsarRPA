@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 class CrawlAsync {
 
-    public static void loadAll() {
+    public static void loadAll() throws Exception {
         PulsarSession session = PulsarContexts.createSession();
         LinkExtractors.fromResource("seeds10.txt").stream()
                 .map(session::open).map(session::parse)
@@ -18,7 +18,7 @@ class CrawlAsync {
                 .forEach(System.out::println);
     }
 
-    public static void loadAllAsync2() {
+    public static void loadAllAsync2() throws Exception {
         PulsarSession session = PulsarContexts.createSession();
 
         CompletableFuture<?>[] futures = LinkExtractors.fromResource("seeds10.txt").stream()
@@ -32,7 +32,7 @@ class CrawlAsync {
         CompletableFuture.allOf(futures).join();
     }
 
-    public static void loadAllAsync3() {
+    public static void loadAllAsync3() throws Exception {
         PulsarSession session = PulsarContexts.createSession();
 
         CompletableFuture<?>[] futures = session.loadAllAsync(LinkExtractors.fromResource("seeds10.txt")).stream()
@@ -44,7 +44,7 @@ class CrawlAsync {
         CompletableFuture.allOf(futures).join();
     }
 
-    public static void loadAllAsync4() {
+    public static void loadAllAsync4() throws Exception {
         PulsarSession session = PulsarContexts.createSession();
 
         CompletableFuture<?>[] futures = session.loadAllAsync(LinkExtractors.fromResource("seeds10.txt")).stream()
@@ -57,7 +57,7 @@ class CrawlAsync {
         CompletableFuture.allOf(futures).join();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         loadAll();
         loadAllAsync2();
         loadAllAsync3();

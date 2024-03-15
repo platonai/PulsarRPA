@@ -17,7 +17,7 @@ abstract class AbstractCrawlLoop(
     }
 
     override val id: Int = sequencer.incrementAndGet()
-
+    
     /**
      * The fetch iterable from which all fetch tasks are taken
      * */
@@ -29,7 +29,9 @@ abstract class AbstractCrawlLoop(
         get() = urlFeeder.collectors
 
     abstract override val crawler: Crawler
-
+    
+    override val display: String get() = "CrawlLoop#$id:$name"
+    
     override val abstract: String get() = urlFeeder.abstract
 
     override val report: String get() = urlFeeder.report
