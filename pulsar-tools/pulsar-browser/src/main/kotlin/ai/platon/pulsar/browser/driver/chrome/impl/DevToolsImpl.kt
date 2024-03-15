@@ -169,6 +169,11 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         eventListeners.clear()
     }
     
+    /**
+     * Closes the dispatcher. All event listeners will be removed and all waiting futures are signaled with failed.
+     *
+     * This method is thread-safe.
+     * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             unsubscribeAll()
@@ -479,10 +484,9 @@ abstract class DevToolsImpl(
         
         dispatcher.close()
 
-        logger.trace("Closing ws client ... | {}", browserClient)
-        browserClient.close()
+        logger.info("Closing devtools client ...")
 
-        logger.trace("Closing ws client ... | {}", pageClient)
+        browserClient.close()
         pageClient.close()
     }
 }
