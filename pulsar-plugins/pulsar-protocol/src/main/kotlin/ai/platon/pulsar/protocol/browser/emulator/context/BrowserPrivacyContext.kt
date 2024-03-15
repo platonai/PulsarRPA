@@ -107,7 +107,7 @@ open class BrowserPrivacyContext(
             report += "\n"
         }
         
-        return report
+        return report.trimEnd()
     }
 
     override fun report() {

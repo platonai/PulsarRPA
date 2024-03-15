@@ -186,11 +186,14 @@ class TestString {
 
     @Test
     fun testTrim() {
-        var text = " 个性表盘  "
+        var text = "       使用条件修剪  "
         assertTrue { ' '.isWhitespace() }
         // String.trim() == CharSequence.trim(Char::isWhitespace)
-        assertEquals("个性表盘", text.trim())
-        assertEquals("个性表盘  ", text.trim { it <= ' ' })
+        assertEquals("使用条件修剪", text.trim())
+        assertEquals("使用条件修剪  ", text.trim { it <= ' ' })
+        
+        assertEquals("line-break-is-trimmed", "line-break-is-trimmed\n".trimEnd())
+        assertEquals("line-break-is-trimmed", "line-break-is-trimmed\r\n".trimEnd())
     }
 
     @Test

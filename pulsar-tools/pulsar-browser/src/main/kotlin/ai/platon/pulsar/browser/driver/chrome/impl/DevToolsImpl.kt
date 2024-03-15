@@ -14,6 +14,7 @@ import ai.platon.pulsar.common.warnForClose
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
@@ -79,7 +80,7 @@ internal class ErrorObject {
     var data: String? = null
 }
 
-class EventDispatcher : Consumer<String> {
+class EventDispatcher : Consumer<String>, AutoCloseable {
     companion object {
         private const val ID_PROPERTY = "id"
         private const val ERROR_PROPERTY = "error"
@@ -96,11 +97,15 @@ class EventDispatcher : Consumer<String> {
     
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
 
+    private val closed = AtomicBoolean()
     private val invocationFutures: MutableMap<Long, InvocationFuture> = ConcurrentHashMap()
     private val eventListeners: ConcurrentHashMap<String, ConcurrentSkipListSet<DevToolsEventListener>> = ConcurrentHashMap()
 
     private val eventDispatcherScope = CoroutineScope(Dispatchers.Default) + CoroutineName("EventDispatcher")
-
+    
+    val isActive get() = !closed.get()
+    
+    @Throws(JsonProcessingException::class)
     fun serialize(message: Any): String = OBJECT_MAPPER.writeValueAsString(message)
 
     @Throws(IOException::class)
@@ -142,7 +147,13 @@ class EventDispatcher : Consumer<String> {
     }
 
     fun unsubscribe(id: Long) {
-        invocationFutures.remove(id)
+        invocationFutures.remove(id)?.signal(false, null)
+    }
+    
+    fun unsubscribeAll() {
+        invocationFutures.keys.forEach {
+            unsubscribe(it)
+        }
     }
 
     fun registerListener(key: String, listener: DevToolsEventListener) {
@@ -156,7 +167,14 @@ class EventDispatcher : Consumer<String> {
     fun removeAllListeners() {
         eventListeners.clear()
     }
-
+    
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            removeAllListeners()
+            unsubscribeAll()
+        }
+    }
+    
     override fun accept(message: String) {
         tracer?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
 
@@ -197,7 +215,7 @@ class EventDispatcher : Consumer<String> {
             }
         } catch (ex: IOException) {
             logger.error("Failed reading web socket message", ex)
-        } catch (ex: java.lang.Exception) {
+        } catch (ex: Exception) {
             logger.error("Failed receiving web socket message", ex)
         }
     }
@@ -208,13 +226,15 @@ class EventDispatcher : Consumer<String> {
         // make a copy
         val unmodifiedListeners = mutableSetOf<DevToolsEventListener>()
         synchronized(listeners) { listeners.toCollection(unmodifiedListeners) }
-        if (unmodifiedListeners.isEmpty()) return
+        if (unmodifiedListeners.isEmpty()) {
+            return
+        }
 
         eventDispatcherScope.launch {
             handleEvent0(params, unmodifiedListeners)
         }
     }
-    
+
     @Throws(Exception::class)
     private fun handleEvent0(params: JsonNode, unmodifiedListeners: Iterable<DevToolsEventListener>) {
         var event: Any? = null
@@ -265,8 +285,6 @@ abstract class DevToolsImpl(
     private val logger = LoggerFactory.getLogger(DevToolsImpl::class.java)
     private val id = instanceSequencer.incrementAndGet()
 
-    private val lock = ReentrantLock() // lock for containers
-    private val notBusy = lock.newCondition()
     private val closeLatch = CountDownLatch(1)
     private val closed = AtomicBoolean()
     override val isOpen get() = !closed.get() && !pageClient.isClosed()
@@ -301,7 +319,7 @@ abstract class DevToolsImpl(
         returnTypeClasses: Array<Class<out Any>>?,
         method: MethodInvocation
     ): T? {
-        if (!isOpen) {
+        if (!isOpen || !dispatcher.isActive) {
             return null
         }
 
@@ -320,16 +338,11 @@ abstract class DevToolsImpl(
             }
 
             val readTimeout = config.readTimeout
-            // blocking the current thread
+            // await() blocking the current thread
+            // TODO: find a way to avoid blocking the current thread
             val responded = future.await(readTimeout)
             dispatcher.unsubscribe(method.id)
             lastActiveTime = Instant.now()
-
-            lock.withLock {
-                if (!dispatcher.hasFutures()) {
-                    notBusy.signalAll()
-                }
-            }
 
             if (!isOpen) {
                 return null
@@ -383,8 +396,12 @@ abstract class DevToolsImpl(
         dispatcher.unregisterListener(listener.key, listener)
     }
 
+    /**
+     * Waits for the DevTool to terminate.
+     * */
     override fun awaitTermination() {
         try {
+            // block the calling thread
             closeLatch.await()
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
@@ -395,6 +412,11 @@ abstract class DevToolsImpl(
         if (closed.compareAndSet(false, true)) {
             // discard all furthers in dispatcher?
             runCatching { doClose() }.onFailure { warnForClose(this, it) }
+
+            // Decrements the count of the latch, releasing all waiting threads if the count reaches zero.
+            // If the current count is greater than zero then it is decremented. If the new count is zero then all
+            // waiting threads are re-enabled for thread scheduling purposes.
+            // If the current count equals zero then nothing happens.
             closeLatch.countDown()
         }
     }
@@ -405,29 +427,13 @@ abstract class DevToolsImpl(
         // 1. It's a bad idea to throw an InterruptedException in close() method
         // 2. No need to wait for the dispatcher to be idle
         // waitUntilIdle(Duration.ofSeconds(5))
+        
+        dispatcher.close()
 
         logger.trace("Closing ws client ... | {}", browserClient)
         browserClient.close()
 
         logger.trace("Closing ws client ... | {}", pageClient)
         pageClient.close()
-    }
-
-    /**
-     * Wait until idle.
-     * @see [ArrayBlockingQueue#take]
-     * @throws InterruptedException if the current thread is interrupted
-     * */
-    @Throws(InterruptedException::class)
-    private fun waitUntilIdle(timeout: Duration) {
-        var n = timeout.seconds
-        lock.lockInterruptibly()
-        try {
-            while (n-- > 0 && dispatcher.hasFutures()) {
-                notBusy.await(1, TimeUnit.SECONDS)
-            }
-        } finally {
-            lock.unlock()
-        }
     }
 }
