@@ -31,47 +31,6 @@
             <version>${tyrus.version}</version>
         </dependency>
 
-        <!-- Ktor is experimental, for non-blocking WS communication to Chrome DevTools -->
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-server-websockets-jvm</artifactId>
-            <version>${ktor.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-server-netty-jvm</artifactId>
-            <version>${ktor.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-client-core</artifactId>
-            <version>${ktor.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-client-cio</artifactId>
-            <version>${ktor.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-client-websockets-jvm</artifactId>
-            <version>${ktor.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-client-java-jvm</artifactId>
-            <version>${ktor.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-serialization-jackson-jvm</artifactId>
-            <version>${ktor.version}</version>
-        </dependency>
-
         <!-- https://mvnrepository.com/artifact/javassist/javassist -->
         <dependency>
             <groupId>javassist</groupId>
