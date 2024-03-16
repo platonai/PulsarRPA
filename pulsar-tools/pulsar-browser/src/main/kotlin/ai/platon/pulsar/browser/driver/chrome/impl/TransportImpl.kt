@@ -27,21 +27,19 @@ class TransportImpl : Transport {
     private val logger = LoggerFactory.getLogger(TransportImpl::class.java)
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
-
-    val id = instanceSequencer.incrementAndGet()
+    
     private lateinit var session: Session
     private val metricsPrefix = "c.i.WebSocketClient"
     private val metrics = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
     private val meterRequests = metrics.meter("$metricsPrefix.requests")
     
+    val id = instanceSequencer.incrementAndGet()
+    override val isClosed: Boolean get() = !session.isOpen || closed.get()
+    
     class DevToolsMessageHandler(val consumer: Consumer<String>) : MessageHandler.Whole<String> {
         override fun onMessage(message: String) {
             consumer.accept(message)
         }
-    }
-
-    override fun isClosed(): Boolean {
-        return !session.isOpen || closed.get()
     }
 
     /**

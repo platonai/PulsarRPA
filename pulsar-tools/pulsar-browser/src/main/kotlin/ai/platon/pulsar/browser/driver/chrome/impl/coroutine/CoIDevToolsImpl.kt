@@ -1,14 +1,12 @@
 package ai.platon.pulsar.browser.driver.chrome.impl.coroutine
 
-import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
-import ai.platon.pulsar.browser.driver.chrome.MethodInvocation
-import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
-import ai.platon.pulsar.browser.driver.chrome.Transport
+import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.EventDispatcher
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCTimeoutException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
@@ -26,9 +24,19 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-abstract class DevToolsCoImpl(
-    private val browserClient: Transport,
-    private val pageClient: Transport,
+/**
+ * An attempt to implement a coroutine version of DevTools.
+ *
+ * 1. the thread for [DevToolsImpl.invoke] is managed by Kotlin since this method is running within withContext(Dispatchers.IO)
+ * 2. there are still better solutions to avoid blocking the current thread
+ * 3. it is unclear whether there is a significant performance improvement by using non-blocking solution
+ * 4. unfortunately, there is no easy way to combine the coroutine with the [ProxyClasses.createProxyFromAbstract]
+ * 5. a possible solutions is to send CDP messages directly instead of using the proxy classes
+ * */
+@ExperimentalApi
+abstract class CoDevToolsImpl(
+    private val browserClient: CoTransport,
+    private val pageClient: CoTransport,
     private val config: DevToolsConfig
 ) : RemoteDevTools, AutoCloseable {
     
@@ -52,20 +60,18 @@ abstract class DevToolsCoImpl(
         }
     }
     
-    private val logger = LoggerFactory.getLogger(DevToolsCoImpl::class.java)
+    private val logger = LoggerFactory.getLogger(CoDevToolsImpl::class.java)
     private val id = instanceSequencer.incrementAndGet()
     
     private val closeLatch = CountDownLatch(1)
     private val closed = AtomicBoolean()
-    override val isOpen get() = !closed.get() && !pageClient.isClosed()
+    override val isOpen get() = !closed.get() && !pageClient.isClosed
     
     private val serializer = EventDispatcher()
     
     /**
      * Invokes a remote method and returns the result.
      * The method is blocking and will wait for the response.
-     *
-     * TODO: use non-blocking version
      *
      * @param returnProperty The property to return from the response.
      * @param clazz The class of the return type.
@@ -153,19 +159,16 @@ abstract class DevToolsCoImpl(
         returnProperty: String?,
         method: MethodInvocation
     ): Pair<JsonNode, Boolean> {
-        val ktorBrowserClient = browserClient as TransportKtorImpl
-        val ktorPageClient = pageClient as TransportKtorImpl
-        
         val message = serializer.serialize(method)
         
         // See https://github.com/hardkoded/puppeteer-sharp/issues/796 to understand why we need handle Target methods
         // differently.
         val messageReceived = if (method.method.startsWith("Target.")) {
-            ktorBrowserClient.sendDeferred(message)
+            browserClient.send(message)
         } else {
-            ktorPageClient.sendDeferred(message)
+            pageClient.send(message)
         }
-
+        
         var responded = true
         val response = if (messageReceived != null) {
             // serializer.accept(messageReceived)

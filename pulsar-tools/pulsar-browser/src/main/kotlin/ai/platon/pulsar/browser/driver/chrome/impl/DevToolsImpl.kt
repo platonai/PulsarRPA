@@ -37,227 +37,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
 
-class InvocationFuture(val returnProperty: String? = null) {
-    var result: JsonNode? = null
-    var isSuccess = false
-    private val countDownLatch = CountDownLatch(1)
-
-    fun signal(isSuccess: Boolean, result: JsonNode?) {
-        this.isSuccess = isSuccess
-        this.result = result
-        countDownLatch.countDown()
-    }
-
-    /**
-     * Causes the current thread to wait until the latch has counted down to
-     * zero, unless the thread is interrupted, or the specified waiting time elapses.
-     *
-     * TODO: this method blocks the current thread, so it should not used in a coroutine
-     * */
-    @Throws(InterruptedException::class)
-    fun await(timeout: Duration) = await(timeout.toMillis(), TimeUnit.MILLISECONDS)
-
-    /**
-     * Causes the current thread to wait until the latch has counted down to
-     * zero, unless the thread is interrupted, or the specified waiting time elapses.
-     *
-     * TODO: this method blocks the current thread, so it should not used in a coroutine
-     * */
-    @Throws(InterruptedException::class)
-    fun await(timeout: Long, timeUnit: TimeUnit): Boolean {
-        return if (timeout == 0L) {
-            countDownLatch.await()
-            true
-        } else countDownLatch.await(timeout, timeUnit)
-    }
-}
-
-/** Error object returned from dev tools. */
-internal class ErrorObject {
-    var code: Long = 0
-    var message: String = ""
-    var data: String? = null
-}
-
-class EventDispatcher : Consumer<String>, AutoCloseable {
-    companion object {
-        private const val ID_PROPERTY = "id"
-        private const val ERROR_PROPERTY = "error"
-        private const val RESULT_PROPERTY = "result"
-        private const val METHOD_PROPERTY = "method"
-        private const val PARAMS_PROPERTY = "params"
-
-        private val OBJECT_MAPPER = ObjectMapper()
-            .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    }
-
-    private val logger = LoggerFactory.getLogger(EventDispatcher::class.java)
-    
-    private val tracer get() = logger.takeIf { it.isTraceEnabled }
-
-    private val closed = AtomicBoolean()
-    private val invocationFutures: MutableMap<Long, InvocationFuture> = ConcurrentHashMap()
-    private val eventListeners: ConcurrentHashMap<String, ConcurrentSkipListSet<DevToolsEventListener>> = ConcurrentHashMap()
-
-    private val eventDispatcherScope = CoroutineScope(Dispatchers.Default) + CoroutineName("EventDispatcher")
-    
-    val isActive get() = !closed.get()
-    
-    @Throws(JsonProcessingException::class)
-    fun serialize(message: Any): String = OBJECT_MAPPER.writeValueAsString(message)
-
-    @Throws(IOException::class)
-    fun <T> deserialize(classParameters: Array<Class<*>>, parameterizedClazz: Class<T>, jsonNode: JsonNode?): T {
-        if (jsonNode == null) {
-            throw ChromeRPCException("Failed converting null response to clazz $parameterizedClazz")
-        }
-
-        val typeFactory: TypeFactory = OBJECT_MAPPER.typeFactory
-        var javaType: JavaType? = null
-        if (classParameters.size > 1) {
-            for (i in classParameters.size - 2 downTo 0) {
-                javaType = if (javaType == null) {
-                    typeFactory.constructParametricType(classParameters[i], classParameters[i + 1])
-                } else {
-                    typeFactory.constructParametricType(classParameters[i], javaType)
-                }
-            }
-            javaType = typeFactory.constructParametricType(parameterizedClazz, javaType)
-        } else {
-            javaType = typeFactory.constructParametricType(parameterizedClazz, classParameters[0])
-        }
-
-        return OBJECT_MAPPER.readerFor(javaType).readValue(jsonNode)
-    }
-
-    @Throws(IOException::class)
-    fun <T> deserialize(clazz: Class<T>, jsonNode: JsonNode?): T {
-        if (jsonNode == null) {
-            throw ChromeRPCException("Failed converting null response to clazz " + clazz.name)
-        }
-        return OBJECT_MAPPER.readerFor(clazz).readValue(jsonNode)
-    }
-
-    fun hasFutures() = invocationFutures.isNotEmpty()
-
-    fun subscribe(id: Long, returnProperty: String?): InvocationFuture {
-        return invocationFutures.computeIfAbsent(id) { InvocationFuture(returnProperty) }
-    }
-
-    fun unsubscribe(id: Long) {
-        invocationFutures.remove(id)
-    }
-    
-    fun unsubscribeAll() {
-        invocationFutures.keys.forEach {
-            invocationFutures.remove(it)?.signal(false, null)
-        }
-    }
-
-    fun registerListener(key: String, listener: DevToolsEventListener) {
-        eventListeners.computeIfAbsent(key) { ConcurrentSkipListSet<DevToolsEventListener>() }.add(listener)
-    }
-
-    fun unregisterListener(key: String, listener: DevToolsEventListener) {
-        eventListeners[key]?.removeIf { listener.handler == it.handler }
-    }
-
-    fun removeAllListeners() {
-        eventListeners.clear()
-    }
-    
-    /**
-     * Closes the dispatcher. All event listeners will be removed and all waiting futures are signaled with failed.
-     *
-     * This method is thread-safe.
-     * */
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
-            unsubscribeAll()
-            removeAllListeners()
-        }
-    }
-    
-    override fun accept(message: String) {
-        tracer?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
-
-        DevToolsImpl.numAccepts.inc()
-        try {
-            val jsonNode = OBJECT_MAPPER.readTree(message)
-            val idNode = jsonNode.get(ID_PROPERTY)
-            if (idNode != null) {
-                val id = idNode.asLong()
-                val future = invocationFutures[id]
-                if (future != null) {
-                    var resultNode = jsonNode.get(RESULT_PROPERTY)
-                    val errorNode = jsonNode.get(ERROR_PROPERTY)
-                    if (errorNode != null) {
-                        future.signal(false, errorNode)
-                    } else {
-                        if (future.returnProperty != null) {
-                            if (resultNode != null) {
-                                resultNode = resultNode.get(future.returnProperty)
-                            }
-                        }
-
-                        if (resultNode != null) {
-                            future.signal(true, resultNode)
-                        } else {
-                            future.signal(true, null)
-                        }
-                    }
-                } else {
-                    logger.warn("Received response with unknown invocation #{} - {}", id, jsonNode.asText())
-                }
-            } else {
-                val methodNode = jsonNode.get(METHOD_PROPERTY)
-                val paramsNode = jsonNode.get(PARAMS_PROPERTY)
-                if (methodNode != null) {
-                    handleEvent(methodNode.asText(), paramsNode)
-                }
-            }
-        } catch (e: IOException) {
-            logger.error("Failed reading web socket message", e)
-        }
-    }
-    
-    private fun handleEvent(name: String, params: JsonNode) {
-        val listeners = eventListeners[name] ?: return
-
-        // make a copy
-        val unmodifiedListeners = mutableSetOf<DevToolsEventListener>()
-        synchronized(listeners) { listeners.toCollection(unmodifiedListeners) }
-        if (unmodifiedListeners.isEmpty()) {
-            return
-        }
-
-        eventDispatcherScope.launch {
-            handleEvent0(params, unmodifiedListeners)
-        }
-    }
-
-    @Throws(Exception::class)
-    private fun handleEvent0(params: JsonNode, unmodifiedListeners: Iterable<DevToolsEventListener>) {
-        var event: Any? = null
-        for (listener in unmodifiedListeners) {
-            if (event == null) {
-                event = deserialize(listener.paramType, params)
-            }
-
-            if (event != null) {
-                try {
-                    listener.handler.onEvent(event)
-                } catch (e: Exception) {
-                    logger.warn("Failed to handle event | {}, {} | {}", listener.key, listener.paramType, e.brief())
-                    // Let the exception throw again, they might be caught by RobustRPC, or somewhere else
-                    throw e
-                }
-            }
-        }
-    }
-}
-
 abstract class DevToolsImpl(
     private val browserClient: Transport,
     private val pageClient: Transport,
@@ -289,7 +68,7 @@ abstract class DevToolsImpl(
 
     private val closeLatch = CountDownLatch(1)
     private val closed = AtomicBoolean()
-    override val isOpen get() = !closed.get() && !pageClient.isClosed()
+    override val isOpen get() = !closed.get() && !pageClient.isClosed
 
     private val dispatcher = EventDispatcher()
 
@@ -398,7 +177,7 @@ abstract class DevToolsImpl(
     ): Pair<InvocationFuture, Boolean> {
         val future = dispatcher.subscribe(method.id, returnProperty)
         val message = dispatcher.serialize(method)
-        
+
         // See https://github.com/hardkoded/puppeteer-sharp/issues/796 to understand why we need handle Target methods
         // differently.
         if (method.method.startsWith("Target.")) {
@@ -406,9 +185,14 @@ abstract class DevToolsImpl(
         } else {
             pageClient.sendAsync(message)
         }
-        
+
         // await() blocking the current thread
-        // TODO: find a way to avoid blocking the current thread, ktor might be a good choice
+        // 1. the current thread is managed by Kotlin since this method is running within withContext(Dispatchers.IO)
+        // 2. there are still better solutions to avoid blocking the current thread
+        // 3. it is unclear whether there is a significant performance improvement by using non-blocking solution
+        // 4. unfortunately, there is no easy way to combine the coroutine with the [ProxyClasses.createProxyFromAbstract]
+        // 5. a possible solutions is to send CDP messages directly instead of using the proxy classes
+
         // see: https://ktor.io/docs/websocket-client.html
         val responded = future.await(config.readTimeout)
         dispatcher.unsubscribe(method.id)
