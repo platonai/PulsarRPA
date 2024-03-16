@@ -1,4 +1,4 @@
-package ai.platon.pulsar.browser.driver.ws
+package ai.platon.pulsar.browser.driver.ws.client
 
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*

@@ -29,22 +29,20 @@ object ProxyClasses {
      * @param <T> Class type
      * @return Proxy instance <T>
      */
+    @Throws(Exception::class)
     fun <T> createProxyFromAbstract(
-            clazz: Class<T>,
-            paramTypes: Array<Class<*>>,
-            args: Array<Any>? = null,
-            invocationHandler: InvocationHandler
+            clazz: Class<T>, paramTypes: Array<Class<*>>, args: Array<Any>? = null, invocationHandler: InvocationHandler
     ): T {
-        return try {
-            with(ProxyFactory()) {
-                superclass = clazz
-                setFilter { Modifier.isAbstract(it.modifiers) }
-                create(paramTypes, args) { o, method, _, objects ->
-                    invocationHandler.invoke(o, method, objects)
-                } as T
-            }
+        try {
+            val factory = ProxyFactory()
+            factory.superclass = clazz
+            factory.setFilter { Modifier.isAbstract(it.modifiers) }
+            
+            return factory.create(paramTypes, args) { o, method, _, objects ->
+                invocationHandler.invoke(o, method, objects)
+            } as T
         } catch (e: Exception) {
-            throw RuntimeException("Failed creating proxy from abstract class", e)
+            throw RuntimeException("Failed creating proxy from abstract class | ${clazz.name}", e)
         }
     }
 }

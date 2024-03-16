@@ -35,9 +35,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
-import kotlin.concurrent.withLock
 
 class InvocationFuture(val returnProperty: String? = null) {
     var result: JsonNode? = null
@@ -219,10 +217,8 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
                     handleEvent(methodNode.asText(), paramsNode)
                 }
             }
-        } catch (ex: IOException) {
-            logger.error("Failed reading web socket message", ex)
-        } catch (ex: Exception) {
-            logger.error("Failed receiving web socket message", ex)
+        } catch (e: IOException) {
+            logger.error("Failed reading web socket message", e)
         }
     }
     
@@ -378,7 +374,28 @@ abstract class DevToolsImpl(
         
         numInvokes.inc()
         lastActiveTime = Instant.now()
+
+        val (future, responded) = invoke1(returnProperty, method)
         
+        if (!responded) {
+            val methodName = method.method
+            val readTimeout = config.readTimeout
+            throw ChromeRPCTimeoutException("Response timeout $methodName | #${numInvokes.count}, ($readTimeout)")
+        }
+        
+        return when {
+            !future.isSuccess -> handleFailedFurther(future).let { throw ChromeRPCException(it.first.code, it.second) }
+            Void.TYPE == clazz -> null
+            returnTypeClasses != null -> dispatcher.deserialize(returnTypeClasses, clazz, future.result)
+            else -> dispatcher.deserialize(clazz, future.result)
+        }
+    }
+    
+    @Throws(InterruptedException::class, ChromeServiceException::class)
+    private fun invoke1(
+        returnProperty: String?,
+        method: MethodInvocation
+    ): Pair<InvocationFuture, Boolean> {
         val future = dispatcher.subscribe(method.id, returnProperty)
         val message = dispatcher.serialize(method)
         
@@ -390,40 +407,17 @@ abstract class DevToolsImpl(
             pageClient.sendAsync(message)
         }
         
-        val readTimeout = config.readTimeout
         // await() blocking the current thread
         // TODO: find a way to avoid blocking the current thread, ktor might be a good choice
         // see: https://ktor.io/docs/websocket-client.html
-        val responded = future.await(readTimeout)
+        val responded = future.await(config.readTimeout)
         dispatcher.unsubscribe(method.id)
-        lastActiveTime = Instant.now()
         
-        if (!isOpen) {
-            return null
-        }
-        
-        if (!responded) {
-            val methodName = method.method
-            throw ChromeRPCTimeoutException("Response timeout $methodName | #${numInvokes.count}, ($readTimeout)")
-        }
-        
-        if (future.isSuccess) {
-            return when {
-                Void.TYPE == clazz -> null
-                returnTypeClasses != null -> dispatcher.deserialize(returnTypeClasses, clazz, future.result)
-                else -> dispatcher.deserialize(clazz, future.result)
-            }
-        }
-        
-        // Received an error
-        handleErrorReceived(future)
-        
-        // dead code block, handleErrorReceived throws a ChromeRPCException
-        return null
+        return future to responded
     }
-    
+
     @Throws(ChromeRPCException::class)
-    private fun handleErrorReceived(future: InvocationFuture) {
+    private fun handleFailedFurther(future: InvocationFuture): Pair<ErrorObject, String> {
         // Received an error
         val error = dispatcher.deserialize(ErrorObject::class.java, future.result)
         val sb = StringBuilder(error.message)
@@ -432,7 +426,7 @@ abstract class DevToolsImpl(
             sb.append(error.data)
         }
         
-        throw ChromeRPCException(error.code, sb.toString())
+        return error to sb.toString()
     }
 
     override fun addEventListener(

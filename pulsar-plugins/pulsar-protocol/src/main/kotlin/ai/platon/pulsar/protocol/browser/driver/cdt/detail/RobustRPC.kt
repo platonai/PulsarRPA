@@ -109,6 +109,10 @@ internal class RobustRPC(
             }
 
             try {
+                // It's bad if block() is blocking, it will block the whole thread and no other coroutine can run within this
+                // thread, so we should avoid blocking in the block(). Unfortunately, the block() is usually a rpc call,
+                // the rpc call blocks its calling thread and wait for the response.
+                // We should find a way to avoid the blocking in the block() and make it non-blocking.
                 block().also { decreaseRPCFailures() }
             } catch (e: ChromeRPCException) {
                 increaseRPCFailures()
