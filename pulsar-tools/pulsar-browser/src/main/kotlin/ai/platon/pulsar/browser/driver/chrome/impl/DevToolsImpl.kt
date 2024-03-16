@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.type.TypeFactory
+import com.github.kklisura.cdt.protocol.v2023.commands.IO
 import com.github.kklisura.cdt.protocol.v2023.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.v2023.support.types.EventListener
 import kotlinx.coroutines.*
@@ -140,7 +141,7 @@ abstract class DevToolsImpl(
         }
     }
     
-    @Throws(InterruptedException::class, ChromeServiceException::class)
+    @Throws(InterruptedException::class, ChromeServiceException::class, IOException::class)
     private fun <T> invoke0(
         returnProperty: String?,
         clazz: Class<T>,
@@ -186,7 +187,7 @@ abstract class DevToolsImpl(
             pageClient.sendAsync(message)
         }
 
-        // await() blocking the current thread
+        // await() blocks the current thread
         // 1. the current thread is managed by Kotlin since this method is running within withContext(Dispatchers.IO)
         // 2. there are still better solutions to avoid blocking the current thread
         // 3. it is unclear whether there is a significant performance improvement by using non-blocking solution
@@ -200,7 +201,7 @@ abstract class DevToolsImpl(
         return future to responded
     }
 
-    @Throws(ChromeRPCException::class)
+    @Throws(ChromeRPCException::class, IOException::class)
     private fun handleFailedFurther(future: InvocationFuture): Pair<ErrorObject, String> {
         // Received an error
         val error = dispatcher.deserialize(ErrorObject::class.java, future.result)

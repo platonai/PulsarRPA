@@ -1,7 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.impl
 
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
-import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.getTracerOrNull
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -116,7 +115,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         return OBJECT_MAPPER.readerFor(javaType).readValue(jsonNode)
     }
     
-    @Throws(IOException::class)
+    @Throws(IOException::class, ChromeRPCException::class)
     fun <T> deserialize(clazz: Class<T>, jsonNode: JsonNode?): T {
         if (jsonNode == null) {
             throw ChromeRPCException("Failed converting null response to clazz " + clazz.name)
@@ -152,18 +151,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         eventListeners.clear()
     }
     
-    /**
-     * Closes the dispatcher. All event listeners will be removed and all waiting futures are signaled with failed.
-     *
-     * This method is thread-safe.
-     * */
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
-            unsubscribeAll()
-            removeAllListeners()
-        }
-    }
-    
+    @Throws(ChromeRPCException::class, IOException::class)
     override fun accept(message: String) {
         tracer?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
         
@@ -207,6 +195,17 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         }
     }
     
+    /**
+     * Closes the dispatcher. All event listeners will be removed and all waiting futures are signaled with failed.
+     * */
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            unsubscribeAll()
+            removeAllListeners()
+        }
+    }
+    
+    @Throws(ChromeRPCException::class, IOException::class)
     private fun handleEvent(name: String, params: JsonNode) {
         val listeners = eventListeners[name] ?: return
         
@@ -222,7 +221,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         }
     }
     
-    @Throws(Exception::class)
+    @Throws(ChromeRPCException::class, IOException::class)
     private fun handleEvent0(params: JsonNode, unmodifiedListeners: Iterable<DevToolsEventListener>) {
         var event: Any? = null
         for (listener in unmodifiedListeners) {
@@ -234,9 +233,8 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
                 try {
                     listener.handler.onEvent(event)
                 } catch (e: Exception) {
-                    logger.warn("Failed to handle event | {}, {} | {}", listener.key, listener.paramType, e.brief())
                     // Let the exception throw again, they might be caught by RobustRPC, or somewhere else
-                    throw e
+                    throw ChromeRPCException("Failed to handle event | ${listener.key}, ${listener.paramType}", e)
                 }
             }
         }
