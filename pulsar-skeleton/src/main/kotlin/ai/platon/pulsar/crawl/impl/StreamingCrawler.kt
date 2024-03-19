@@ -311,7 +311,7 @@ open class StreamingCrawler(
         )
     }
     
-    protected suspend fun runCrawlLoopWhileActive(scope: CoroutineScope) {
+    private suspend fun runCrawlLoopWhileActive(scope: CoroutineScope) {
         var idleSeconds = 0
         while (isActive) {
             checkEmptyUrlSequence(++idleSeconds)

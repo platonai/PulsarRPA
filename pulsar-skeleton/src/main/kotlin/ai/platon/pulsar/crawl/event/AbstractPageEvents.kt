@@ -61,6 +61,8 @@ abstract class AbstractBrowseEvent(
     override val onWillCheckDocumentState: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
     override val onDocumentActuallyReady: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
 
+    override val onDocumentSteady: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
+    
     override val onWillComputeFeature: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
     override val onFeatureComputed: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
 
@@ -86,6 +88,8 @@ abstract class AbstractBrowseEvent(
 
         onWillScroll.addLast(other.onWillScroll)
         onDidScroll.addLast(other.onDidScroll)
+        
+        onDocumentSteady.addLast(other.onDocumentSteady)
 
         onWillComputeFeature.addLast(other.onWillComputeFeature)
         onFeatureComputed.addLast(other.onFeatureComputed)

@@ -223,7 +223,7 @@ class ChromeLauncher(
             options.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
         }.toMutableList()
 
-        if (userDataDir == AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER) {
+        if (userDataDir.contains(AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER)) {
             // Open the default browser just like a real user daily do,
             // open a blank page not to choose the profile
             val args = "--remote-debugging-port=0 --remote-allow-origins=* about:blank"

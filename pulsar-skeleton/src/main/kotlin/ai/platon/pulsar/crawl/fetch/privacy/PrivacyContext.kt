@@ -53,7 +53,8 @@ abstract class PrivacyContext(
         // The actual data dir of user's browser are different on different operating systems, for example,
         // on linux, chrome's data dir is: ~/.config/google-chrome/
         val USER_DEFAULT_DATA_DIR_PLACEHOLDER: Path = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
-        // The default context directory, if you need a semi-permanent context, use this one
+        // The default context directory, if you need a semi-permanent context, use this one.
+        // NOTICE: the user-default context dir is not a default context dir.
         val DEFAULT_CONTEXT_DIR: Path = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         // A random context directory, if you need a random temporary context, use this one
         val RANDOM_CONTEXT_DIR get() = computeNextSequentialContextDir()

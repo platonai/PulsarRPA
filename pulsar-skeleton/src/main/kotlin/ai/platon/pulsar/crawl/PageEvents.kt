@@ -155,9 +155,25 @@ interface BrowseEvent {
      * Fire when we have performed scrolling on the page.
      * */
     val onDidScroll: WebPageWebDriverEventHandler
+    
+    /**
+     * Fire when we have performed scrolling on the page, at which point the document is considered not to change
+     * unless other interactive actions occur. It is a good time to perform custom actions.
+     *
+     * Custom actions are defined by the user using code snippets that are written for a specific purpose, such as
+     * clicking a button, filling a form, and so on.
+     *
+     * The event is fired after the completion of the following actions:
+     * onDocumentActuallyReady, onWillScroll, onDidScroll
+     *
+     * The event is fired before the following actions:
+     * onWillComputeFeature, onFeatureComputed, onDidInteract, onWillStopTab, onTabStopped
+     * */
+    val onDocumentSteady: WebPageWebDriverEventHandler
 
     /**
      * Fire when the webpage features are about to be computed.
+     *
      * */
     val onWillComputeFeature: WebPageWebDriverEventHandler
     /**
