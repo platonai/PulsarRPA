@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 open class MultiSinkWriter : AutoCloseable {
     private val logger = getLogger(MultiSinkWriter::class)
+    // TODO: store writers in companion object?
     private val _writers = ConcurrentHashMap<Path, MessageWriter>()
     private val closed = AtomicBoolean()
 

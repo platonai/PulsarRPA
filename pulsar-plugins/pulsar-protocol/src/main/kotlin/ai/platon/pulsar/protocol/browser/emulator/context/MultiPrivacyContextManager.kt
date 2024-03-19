@@ -16,7 +16,6 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
@@ -24,8 +23,6 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
 import kotlinx.coroutines.delay
 import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -49,7 +46,8 @@ class MultiPrivacyContextManager(
 
     companion object {
         val VAR_CONTEXT_INFO = "CONTEXT_INFO"
-        val SNAPSHOT_PATH = AppPaths.TMP_DIR.resolve("privacy.context.snapshot.txt")
+        val SNAPSHOT_FILE_NAME = "privacy.context.snapshot.txt"
+        val SNAPSHOT_PATH = AppPaths.TMP_DIR.resolve(SNAPSHOT_FILE_NAME)
         var SNAPSHOT_DUMP_INTERVAL = Duration.ofMinutes(1)
     }
 
@@ -67,6 +65,7 @@ class MultiPrivacyContextManager(
     private var lastDumpTime = Instant.now()
     private val snapshotDumpCount = AtomicInteger()
     var snapshotDumpInterval = SNAPSHOT_DUMP_INTERVAL
+    private val messageWriter = MultiSinkWriter()
     
     private val activeContextCount get() = permanentContexts.size + temporaryContexts.size
     
@@ -160,6 +159,7 @@ class MultiPrivacyContextManager(
         }
 
         assert(!context.isActive)
+        // The context is inactive, close it and create a new one
         close(context)
 
         return computeIfAbsent(createPrivacyAgent(task.page, fingerprint))
@@ -213,11 +213,6 @@ class MultiPrivacyContextManager(
         }
     }
     
-    @Deprecated(
-        "Use computeNextContext(task, fingerprint)",
-        replaceWith = ReplaceWith("computeNextContext(task, fingerprint)")
-    )
-    @Throws(ProxyException::class)
     override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
         val context = computeIfNecessary(fingerprint)
         
@@ -232,10 +227,6 @@ class MultiPrivacyContextManager(
         return computeIfAbsent(privacyAgentGenerator(fingerprint))
     }
     
-    @Deprecated(
-        "Use computeIfNecessary(task, fingerprint)",
-        replaceWith = ReplaceWith("computeIfNecessary(FetchTask, Fingerprint)")
-    )
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             if (!isActive) {
@@ -294,7 +285,7 @@ class MultiPrivacyContextManager(
 
     private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): PrivacyAgent {
         // Specify the privacy agent by the user code
-        // TODO: this is a temporary solution to use a specified privacy agent, try a better and consistent solution
+        // TODO: this is a temporary solution to specify a privacy agent, try a better and consistent solution
         val specifiedPrivacyAgent = page.getVar(VAR_PRIVACY_AGENT)
         if (specifiedPrivacyAgent is PrivacyAgent) {
             return specifiedPrivacyAgent
@@ -310,8 +301,8 @@ class MultiPrivacyContextManager(
     /**
      * Get the next under loaded privacy context, which can be ether active or inactive.
      *
-     * If a privacy context is full capacity, it means the underlying layer is healthy and is running full load, and no
-     * resources to serve new tasks.
+     * If a privacy context is full capacity, it means the underlying layer is healthy and is running full load, and
+     * there is no resource to serve new tasks.
      *
      * If a privacy context is not full capacity, it means the underlying layer is inactive or has available resources
      * to serve new tasks.
@@ -472,7 +463,7 @@ class MultiPrivacyContextManager(
     }
 
     private fun formatPrivacyContext(privacyContext: PrivacyContext): String {
-        return String.format("%s(%.2f)", privacyContext.id.display, privacyContext.meterSuccesses.meanRate)
+        return String.format("%s(%.2f)", privacyContext.privacyAgent.display, privacyContext.meterSuccesses.meanRate)
     }
 
     /**
@@ -534,10 +525,10 @@ class MultiPrivacyContextManager(
 
     private fun dump() {
         try {
-            if (!Files.exists(SNAPSHOT_PATH)) {
-                Files.createDirectories(SNAPSHOT_PATH.parent)
-            }
-
+//            if (!Files.exists(SNAPSHOT_PATH)) {
+//                Files.createDirectories(SNAPSHOT_PATH.parent)
+//            }
+            
             val count = snapshotDumpCount.incrementAndGet()
             val sb = StringBuilder()
             sb.append("\n\n\n$count. Privacy contexts snapshot \n")
@@ -549,7 +540,9 @@ class MultiPrivacyContextManager(
             activeContexts.values.forEach { sb.append(it.getReport()) }
             sb.append("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
             
-            Files.writeString(SNAPSHOT_PATH, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+            // Files.writeString(SNAPSHOT_PATH, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+            // use message writer to write the snapshot, so if the file becomes too large, it will be rotated
+            messageWriter.write(sb.toString(), SNAPSHOT_PATH)
         } catch (e: IOException) {
             logger.warn(e.stringify())
         }

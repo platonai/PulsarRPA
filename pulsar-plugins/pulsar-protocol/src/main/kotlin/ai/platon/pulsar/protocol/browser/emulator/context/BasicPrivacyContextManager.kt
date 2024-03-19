@@ -10,7 +10,6 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
@@ -35,30 +34,19 @@ class BasicPrivacyContextManager(
         return run0(computeNextContext(task.page, task.fingerprint, task), task, fetchFun)
     }
 
-    override fun createUnmanagedContext(privacyAgent: PrivacyContextId): BrowserPrivacyContext {
+    override fun createUnmanagedContext(privacyAgent: PrivacyAgent): BrowserPrivacyContext {
         val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, privacyAgent)
         logger.info("Privacy context is created #{}", context.display)
         return context
     }
-
-    @Deprecated(
-        "Use computeNextContext(task, fingerprint)",
-        replaceWith = ReplaceWith("computeNextContext(FetchTask, Fingerprint)")
-    )
     override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
         val task = FetchTask.create(WebPage.NIL, fingerprint)
         return computeNextContext(task.page, fingerprint, task)
     }
-
     override fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
         val context = computeIfNecessary(page, fingerprint, task)
         return context.takeIf { it.isActive } ?: run { close(context); computeIfAbsent(privacyAgentGenerator(fingerprint)) }
     }
-
-    @Deprecated(
-        "Use computeIfNecessary(task, fingerprint)",
-        replaceWith = ReplaceWith("computeIfNecessary(FetchTask, Fingerprint)")
-    )
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
         val task = FetchTask.create(WebPage.NIL, fingerprint)
         return computeIfNecessary(task.page, fingerprint, task)
@@ -104,6 +92,6 @@ class BasicPrivacyContextManager(
     }
 
     private fun formatPrivacyContext(privacyContext: PrivacyContext): String {
-        return String.format("%s(%.2f)", privacyContext.id.display, privacyContext.meterSuccesses.fiveMinuteRate)
+        return String.format("%s(%.2f)", privacyContext.privacyAgent.display, privacyContext.meterSuccesses.fiveMinuteRate)
     }
 }

@@ -124,43 +124,62 @@ abstract class PrivacyContext(
      * High failure rate make sense only when there are many tasks.
      * */
     val isHighFailureRate get() = meterTasks.count > 100 && failureRate > failureRateThreshold
-
+    /**
+     * The start time of the privacy context.
+     * */
     val startTime = Instant.now()
+    /**
+     * The last active time of the privacy context.
+     * */
     var lastActiveTime = Instant.now()
+        private set
+    /**
+     * The elapsed time of the privacy context since it's started.
+     * */
     val elapsedTime get() = Duration.between(startTime, Instant.now())
+    
     private val fetchTaskTimeout
         get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
     private val privacyContextIdleTimeout
         get() = conf.getDuration(PRIVACY_CONTEXT_IDLE_TIMEOUT, PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT)
     private val idleTimeout: Duration get() = privacyContextIdleTimeout.coerceAtLeast(fetchTaskTimeout)
-
+    /**
+     * The privacy context is retired, and should be closed soon.
+     * */
     protected var retired = false
-
+    /**
+     * The idle time of the privacy context.
+     * */
     val idelTime get() = Duration.between(lastActiveTime, Instant.now())
+    /**
+     * Whether the privacy context is idle.
+     * */
     open val isIdle get() = idelTime > idleTimeout
 
 //    val historyUrls = PassiveExpiringMap<String, String>()
-
+    /**
+     * Whether the privacy context is closed.
+     * */
     protected val closed = AtomicBoolean()
     /**
-     * The privacy context works fine and the fetch speed is qualified.
+     * Whether the privacy context works fine and the fetch speed is qualified.
      * */
     open val isGood get() = meterSuccesses.meanRate >= minimumThroughput
     /**
-     * The privacy has been leaked since there are too many warnings about privacy leakage.
+     * Whether the privacy has been leaked since there are too many warnings about privacy leakage.
      * */
     open val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
     /**
-     * The privacy context works fine and the fetch speed is qualified.
+     * Whether the privacy context works fine and the fetch speed is qualified.
      * */
     open val isRetired get() = retired
     /**
-     * Check if the privacy context is active.
+     * Whether the privacy context is active.
      * An active privacy context can be used to serve tasks, and an inactive one should be closed.
      * */
     open val isActive get() = !isLeaked && !isRetired && !isClosed
     /**
-     * Check if the privacy context is closed
+     * Whether the privacy context is closed.
      * */
     open val isClosed get() = closed.get()
     /**
@@ -179,15 +198,15 @@ abstract class PrivacyContext(
      * */
     open val isReady get() = hasWebDriverPromise() && isActive
     /**
-     * Check if the privacy context is full capacity. If the privacy context is full capacity, it should
-     * not be used for new tasks, the underlying layer might refuse to serve.
+     * Check whether the privacy context is at full capacity. If the privacy context is indeed at full capacity, it
+     * should not be used for processing new tasks, and the underlying services may potentially refuse to provide service.
      *
-     * A privacy context is running at full load when the underlying webdriver pool is full capacity,
+     * A privacy context is running at full capacity when the underlying webdriver pool is full capacity,
      * so the webdriver pool can not provide a webdriver for new tasks.
      *
      * Note that if a driver pool is retired or closed, it's not full capacity.
      *
-     * @return True if the privacy context is running at full load, false otherwise.
+     * @return True if the privacy context is running at full capacity, false otherwise.
      * */
     open val isFullCapacity = false
 

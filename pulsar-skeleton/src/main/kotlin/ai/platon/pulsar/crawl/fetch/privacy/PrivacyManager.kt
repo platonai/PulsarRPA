@@ -53,7 +53,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     private val cleaningService = Executors.newSingleThreadScheduledExecutor()
 
-    protected val privacyAgentGeneratorFactory = PrivacyContextIdGeneratorFactory(conf)
+    protected val privacyAgentGeneratorFactory = PrivacyAgentGeneratorFactory(conf)
 
     open val privacyAgentGenerator get() = privacyAgentGeneratorFactory.generator
 
@@ -79,12 +79,11 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     /**
      * Create a new context or return an existing one.
      * */
-    abstract fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
+    abstract fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
     /**
      * Create a new context or return an existing one.
      * */
-    abstract fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
-
+    abstract fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
     /**
      * Create a new context or return an existing one
      * */
