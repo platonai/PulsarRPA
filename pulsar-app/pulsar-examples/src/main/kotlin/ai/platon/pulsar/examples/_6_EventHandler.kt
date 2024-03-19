@@ -71,6 +71,15 @@ class PrintFlowEvent: DefaultPageEvent() {
             onDocumentActuallyReady.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. browse - onDocumentActuallyReady")
             }
+            onWillScroll.addLast { page: WebPage, driver: WebDriver ->
+                println("$seq. browse - onWillScroll")
+            }
+            onDidScroll.addLast { page: WebPage, driver: WebDriver ->
+                println("$seq. browse - onDidScroll")
+            }
+            onDocumentSteady.addLast { page: WebPage, driver: WebDriver ->
+                println("$seq. browse - onDocumentSteady")
+            }
             onWillComputeFeature.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. browse - onWillComputeFeature")
             }
