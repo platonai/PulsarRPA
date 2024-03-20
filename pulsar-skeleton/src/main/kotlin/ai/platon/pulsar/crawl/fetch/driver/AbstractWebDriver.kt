@@ -1,6 +1,8 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
+import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.dom.nodes.GeoAnchor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -52,6 +54,8 @@ abstract class AbstractWebDriver(
     override var navigateEntry: NavigateEntry = NavigateEntry("")
     
     override val navigateHistory = NavigateHistory()
+    
+    override val userAgent: String? by lazy { runBlocking { evaluate("navigator.userAgent")?.toString() } }
     
     override val supportJavascript: Boolean = true
     
@@ -220,6 +224,37 @@ abstract class AbstractWebDriver(
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
     
+    
+    
+    /**
+     * Find hyperlinks in elements matching the CSS query.
+     * */
+    @Throws(WebDriverException::class)
+    override suspend fun selectHyperlinks(selector: String, offset: Int, limit: Int): List<Hyperlink> {
+        // val result = evaluate("__pulsar_utils__.allAttrs('$selector', 'abs:href')")
+        // TODO: add __pulsar_utils__.selectHyperlinks()
+        return selectAttributes(selector, "abs:href").drop(offset).take(limit).map { Hyperlink(it) }
+    }
+    
+    /**
+     * Find image elements matching the CSS query.
+     * */
+    @Throws(WebDriverException::class)
+    override suspend fun selectAnchors(selector: String, offset: Int, limit: Int): List<GeoAnchor> {
+        // TODO: add __pulsar_utils__.selectAnchors()
+        return selectAttributes(selector, "abs:href").drop(offset).take(limit).map { GeoAnchor(it, "") }
+    }
+    
+    /**
+     * Find image elements matching the CSS query.
+     * */
+    @Throws(WebDriverException::class)
+    override suspend fun selectImages(selector: String, offset: Int, limit: Int): List<String> {
+        return selectAttributes(selector, "abs:src").drop(offset).take(limit)
+    }
+    
+    
+    
     @Throws(WebDriverException::class)
     override suspend fun clickTextMatches(selector: String, pattern: String, count: Int) {
         evaluate("__pulsar_utils__.clickTextMatches('$selector', '$pattern')")
@@ -292,16 +327,14 @@ abstract class AbstractWebDriver(
      * The browser should be initialized by opening a page before the session is created.
      * */
     private fun newSession(headers: Map<String, String>, cookies: List<Map<String, String>>): Connection {
-        // TODO: use the same user agent as this browser
-        val userAgent = browser.userAgent ?: (browser as AbstractBrowser).browserSettings.userAgent.getRandomUserAgent()
-        
         val httpTimeout = Duration.ofSeconds(20)
         val session = Jsoup.newSession()
             .timeout(httpTimeout.toMillis().toInt())
-            .userAgent(userAgent)
             .headers(headers)
             .ignoreContentType(true)
             .ignoreHttpErrors(true)
+        
+        userAgent?.let { session.userAgent(it) }
         
         if (cookies.isNotEmpty()) {
             session.cookies(cookies.first())

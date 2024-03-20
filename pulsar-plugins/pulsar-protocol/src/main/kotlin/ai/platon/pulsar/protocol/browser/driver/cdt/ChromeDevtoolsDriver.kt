@@ -101,7 +101,7 @@ class ChromeDevtoolsDriver(
     val implementation get() = devTools
 
     init {
-        val userAgent = browser.userAgent
+        val userAgent = browser.userAgentOverride
         if (!userAgent.isNullOrEmpty()) {
             emulationAPI?.setUserAgentOverride(userAgent)
         }

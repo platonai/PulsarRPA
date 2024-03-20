@@ -15,7 +15,7 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
     /**
      * The user agent to override, do not override if it's null.
      * */
-    val userAgent: String?
+    var userAgentOverride: String?
     /**
      * The navigation history.
      * */

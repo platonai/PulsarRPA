@@ -4,6 +4,8 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
+import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.dom.nodes.GeoAnchor
 import com.google.common.annotations.Beta
 import org.jsoup.Connection
 import java.io.Closeable
@@ -91,6 +93,10 @@ interface WebDriver: Closeable {
      * */
     val browser: Browser
     /**
+     * The browser type.
+     * */
+    val browserType: BrowserType
+    /**
      * The current navigation entry.
      * */
     var navigateEntry: NavigateEntry
@@ -99,9 +105,9 @@ interface WebDriver: Closeable {
      * */
     val navigateHistory: NavigateHistory
     /**
-     * The browser type.
+     * The current navigation entry.
      * */
-    val browserType: BrowserType
+    val userAgent: String?
     /**
      * Whether the driver supports javascript. Web drivers such as MockDriver do not
      * support javascript.
@@ -619,6 +625,28 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun selectAttributes(selector: String, attrName: String): List<String>
+    
+    
+    
+    /**
+     * Find hyperlinks in elements matching the CSS query.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectHyperlinks(selector: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<Hyperlink>
+    
+    /**
+     * Find anchor elements matching the CSS query.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectAnchors(selector: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor>
+    
+    /**
+     * Find image elements matching the CSS query.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectImages(selector: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String>
+    
+    
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
