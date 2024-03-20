@@ -917,7 +917,7 @@ class ChromeDevtoolsDriver(
         var path = reportDir.resolve(filename)
 
         val message = String.format("%s\t%s", mimeType, event.response.url)
-        messageWriter.write(message, path)
+        messageWriter.writeTo(message, path)
 
         // configurable
         val saveResourceBody = mimeType == "application/json"
@@ -932,7 +932,7 @@ class ChromeDevtoolsDriver(
                 suffix = "-" + event.type.name.lowercase() + "-body.txt"
                 filename = AppPaths.fromUri(resourceUrl, suffix = suffix)
                 path = reportDir.resolve(filename)
-                messageWriter.write(body, path)
+                messageWriter.writeTo(body, path)
             }
         }
     }

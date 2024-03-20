@@ -542,7 +542,7 @@ class MultiPrivacyContextManager(
             
             // Files.writeString(SNAPSHOT_PATH, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND)
             // use message writer to write the snapshot, so if the file becomes too large, it will be rotated
-            messageWriter.write(sb.toString(), SNAPSHOT_PATH)
+            messageWriter.writeTo(sb.toString(), SNAPSHOT_PATH)
         } catch (e: IOException) {
             logger.warn(e.stringify())
         }

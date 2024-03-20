@@ -9,12 +9,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Created by vincent on 16-10-12.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  *
- * Multiple sink message writer. Messages from different source are write to different files or database.
+ * Multiple sink message writer. Messages from different source are write to different files.
  */
 open class MultiSinkWriter : AutoCloseable {
+    companion object {
+        private val _writers = ConcurrentHashMap<Path, MessageWriter>()
+    }
+    
     private val logger = getLogger(MultiSinkWriter::class)
-    // TODO: store writers in companion object?
-    private val _writers = ConcurrentHashMap<Path, MessageWriter>()
     private val closed = AtomicBoolean()
 
     private val timeIdent get() = DateTimes.formatNow("MMdd")
@@ -38,19 +40,18 @@ open class MultiSinkWriter : AutoCloseable {
     }
 
     fun write(message: String, filename: String) {
-        write(message, getPath(filename))
+        writeTo(message, getPath(filename))
     }
 
-    fun write(message: String, file: Path) {
+    @Deprecated("Use writeTo instead", ReplaceWith("writeTo(message, path)"))
+    fun write(message: String, file: Path) = writeTo(message, file)
+    
+    fun writeTo(message: String, file: Path) {
         _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)
         closeIdleWriters()
     }
 
-    fun writeLine(message: String, filename: String) {
-        writeLine(message, getPath(filename))
-    }
-
-    fun writeLine(message: String, file: Path) {
+    fun writeLineTo(message: String, file: Path) {
         val writer = _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }
         writer.write(message)
         writer.write("\n")
