@@ -14,10 +14,6 @@ class TestLoadResources: TestBase() {
         http://www.181hua.com/show/947.html
         http://www.181hua.com/show/974.html
         http://www.181hua.com/show/960.html
-        https://www.shidaihuayuan.com/a/1834.html
-        https://www.shidaihuayuan.com/a/1646.html
-        https://www.shidaihuayuan.com/a/1612.html
-        https://www.shidaihuayuan.com/a/1597.html
     """.trimIndent().split("\n")
 
     @BeforeTest
