@@ -212,13 +212,3 @@ open class MetricsSystem(
         counterReporter.close()
     }
 }
-
-@Deprecated("Inappropriate name", ReplaceWith("MetricsSystem"))
-class AppMetrics(conf: ImmutableConfig): MetricsSystem(conf) {
-    companion object {
-        const val SHADOW_METRIC_SYMBOL = MetricsSystem.SHADOW_METRIC_SYMBOL
-        
-        val defaultMetricRegistry = MetricsSystem.defaultMetricRegistry
-        val reg = MetricsSystem.reg
-    }
-}

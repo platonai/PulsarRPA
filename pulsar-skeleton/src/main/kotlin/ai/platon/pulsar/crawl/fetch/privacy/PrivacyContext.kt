@@ -162,24 +162,31 @@ abstract class PrivacyContext(
      * */
     protected val closed = AtomicBoolean()
     /**
-     * Whether the privacy context works fine and the fetch speed is qualified.
+     * Check whether the privacy context works fine and the fetch speed is qualified.
      * */
     open val isGood get() = meterSuccesses.meanRate >= minimumThroughput
     /**
-     * Whether the privacy has been leaked since there are too many warnings about privacy leakage.
+     * Check whether the privacy has been leaked since there are too many warnings about privacy leakage.
      * */
     open val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
     /**
-     * Whether the privacy context works fine and the fetch speed is qualified.
+     * Check whether the privacy context works fine and the fetch speed is qualified.
      * */
     open val isRetired get() = retired
     /**
-     * Whether the privacy context is active.
+     * Check whether the privacy context is active.
      * An active privacy context can be used to serve tasks, and an inactive one should be closed.
+     *
+     * An active privacy context has to meet the following requirements:
+     * 1. not closed
+     * 2. not leaked
+     * 3. not retired
+     *
+     * Note: this flag does not guarantee consistency, and can change immediately after it's read
      * */
     open val isActive get() = !isLeaked && !isRetired && !isClosed
     /**
-     * Whether the privacy context is closed.
+     * Check whether the privacy context is closed.
      * */
     open val isClosed get() = closed.get()
     /**
@@ -189,8 +196,9 @@ abstract class PrivacyContext(
      * 1. not closed
      * 2. not leaked
      * 3. [requirement removed] not idle
-     * 4. if there is a proxy, the proxy has to be ready
-     * 5. the associated driver pool promises to provide an available driver, ether one of the following:
+     * 4. not retired
+     * 5. if there is a proxy, the proxy has to be ready
+     * 6. the associated driver pool promises to provide an available driver, ether one of the following:
      *    1. it has slots to create new drivers
      *    2. it has standby drivers
      *
