@@ -106,8 +106,6 @@ open class StreamingCrawler(
         private val lastCancelReason = Frequency<String>()
         private val isIllegalApplicationState = AtomicBoolean()
 
-        @Deprecated("Use wrong profile instead", ReplaceWith("wrongProfile"))
-        private var wrongDistrict = MetricsSystem.reg.multiMetric(this, "WRONG_DISTRICT_COUNT")
         private var wrongProfile = MetricsSystem.reg.multiMetric(this, "WRONG_PROFILE_COUNT")
 
         private val readableCriticalWarning: String
