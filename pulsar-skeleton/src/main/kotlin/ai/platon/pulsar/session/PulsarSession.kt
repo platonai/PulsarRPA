@@ -56,8 +56,8 @@ import java.util.concurrent.CompletableFuture
  * 1. parse the page content into an HTML document
  * 2. extract fields from the HTML document
  * 3. write the extraction results to a destination, such as
- *    1. plain file, avro file, CSV, excel, mongodb, mysql, etc
- *    2. solr, elastic, etc
+ *    1. plain file, avro file, CSV, excel, mongodb, mysql, etc.
+ *    2. solr, elastic, etc.
  *
  * There are many ways to fetch the content of a page from the Internet:
  * 1. through HTTP protocol
@@ -799,10 +799,13 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Collection<UrlAware>, args: String): PulsarSession
     
     // No such version, it's too complicated to handle events
-    // fun submitAll(urls: Collection<UrlAware>, options: LoadOptions): PulsarSession
+    fun submitAll(urls: Collection<UrlAware>, options: LoadOptions): PulsarSession =
+        throw NotImplementedError("The signature submitAll(Collection<UrlAware>, LoadOptions) is " +
+            "a confusing version, it's too complicated to handle events and should not be implemented.")
     
     // No such confusing version
-    // fun loadOutPages(portalUrl: String): List<WebPage>
+    fun loadOutPages(portalUrl: String): List<WebPage> =
+        throw NotImplementedError("The signature loadOutPages(String) is a confusing version.")
     
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
@@ -1289,7 +1292,7 @@ interface PulsarSession : AutoCloseable {
     /**
      * Export the whole HTML of the document to the given path.
      *
-     * @param doc Document to export
+     * @param page Webpage to export
      * @param path Path to save the exported content
      * @return The path of the exported document
      * */

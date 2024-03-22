@@ -376,6 +376,7 @@ open class FeaturedDocument(val document: Document) {
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined.
      * */
+    @Throws(NoSuchElementException::class)
     fun selectFirst(query: String) =
         document.selectFirstOrNull(query) ?: throw NoSuchElementException("No element matching $query")
 
@@ -386,6 +387,7 @@ open class FeaturedDocument(val document: Document) {
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined.
      * */
+    @Throws(NoSuchElementException::class)
     fun <T> selectFirst(query: String, transformer: (Element) -> T) =
         document.selectFirstOrNull(query)?.let { transformer(it) }
             ?: throw NoSuchElementException("No element matching $query")

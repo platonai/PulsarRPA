@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static ai.platon.pulsar.common.LogsKt.warnForClose;
 import static ai.platon.pulsar.common.config.AppConstants.MONGO_STORE_CLASS;
 import static ai.platon.pulsar.common.config.AppConstants.WEBPAGE_SCHEMA;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
@@ -63,10 +64,9 @@ public class GoraStorage {
 
             dataStores.put(realSchema, dataStore);
 
-            Params.of(
-                    "Backend data store", dataStore.getClass().getSimpleName(),
-                    "realSchema", dataStore.getSchemaName()
-            ).withLogger(logger).info(true);
+            logger.info("Backend data store: {}, real schema: {}, storage id: <{}>, " +
+                            "set config `storage.crawl.id` to define the storage",
+                    dataStore.getClass().getSimpleName(), dataStore.getSchemaName(), schemaPrefix);
 
             return dataStore;
         }
@@ -78,7 +78,11 @@ public class GoraStorage {
         dataStores.forEach((schema, store) -> {
             if (store instanceof DataStore) {
                 logger.info("Closing data store <{}>", schema);
-                ((DataStore<?, ?>) store).close();
+                try {
+                    ((DataStore<?, ?>) store).close();
+                } catch (Exception e) {
+                    warnForClose(store, e);
+                }
             }
         });
         dataStores.clear();

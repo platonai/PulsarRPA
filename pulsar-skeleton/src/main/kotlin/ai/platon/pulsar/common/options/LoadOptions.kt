@@ -595,7 +595,7 @@ open class LoadOptions(
     var parse = LoadOptionDefaults.parse
 
     /**
-     * Re-parse links if the page has been parsed before.
+     * Reparse links if the page has been parsed before.
      * */
     @Parameter(
         names = ["-rpl", "-reparseLinks", "--reparse-links"],
@@ -957,7 +957,6 @@ open class LoadOptions(
          * A list of the options who's arity is 0.
          * */
         val arity0BooleanParams = optionFields
-            .asSequence()
             .onEach { it.isAccessible = true }
             .filter { it.get(DEFAULT) is Boolean }
             .flatMap { it.annotations.toList() }
@@ -970,7 +969,6 @@ open class LoadOptions(
          * A list of the options who's arity is 1.
          * */
         val arity1BooleanParams = optionFields
-            .asSequence()
             .onEach { it.isAccessible = true }
             .filter { it.get(DEFAULT) is Boolean }
             .flatMap { it.annotations.toList() }
@@ -983,7 +981,6 @@ open class LoadOptions(
          * A list of all the option names.
          * */
         val optionNames = optionFields
-            .asSequence()
             .flatMap { it.annotations.toList() }
             .filterIsInstance<Parameter>()
             .flatMap { it.names.toList() }
@@ -993,7 +990,6 @@ open class LoadOptions(
          * A list of all the names of options who are allowed with REST APIs.
          * */
         val apiPublicOptionNames = optionFields
-            .asSequence()
             .filter { it.kotlinProperty?.hasAnnotation<ApiPublic>() == true }
             .flatMap { it.annotations.toList() }
             .filterIsInstance<Parameter>()
@@ -1006,7 +1002,6 @@ open class LoadOptions(
         val helpList: List<List<String>>
             get() =
                 optionFields
-                    .asSequence()
                     .mapNotNull { (it.annotations.firstOrNull { it is Parameter } as? Parameter)?.to(it) }
                     .map {
                         listOf(
@@ -1035,7 +1030,6 @@ open class LoadOptions(
          * */
         fun getOptionNames(fieldName: String): List<String> {
             return optionFields
-                .asSequence()
                 .filter { it.name == fieldName }
                 .flatMap { it.annotations.toList() }
                 .filterIsInstance<Parameter>()

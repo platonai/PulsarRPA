@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * */
 abstract class PrivacyContext(
     @Deprecated("Inappropriate name", ReplaceWith("privacyAgent"))
-    val id: PrivacyAgent,
+    private val id: PrivacyAgent,
     val conf: ImmutableConfig
 ) : Comparable<PrivacyContext>, AutoCloseable {
     companion object {

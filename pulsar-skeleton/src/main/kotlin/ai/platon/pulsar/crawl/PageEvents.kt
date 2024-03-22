@@ -142,8 +142,13 @@ interface BrowseEvent {
     val onWillCheckDocumentState: WebPageWebDriverEventHandler
 
     /**
-     * Fire when the document is actually ready. The document state is checked(computed)
-     * using an algorithm in javascript.
+     * Fire when the document is actually ready. The actuallyReady state is determined using an algorithm that is executed
+     * within the browser.
+     *
+     * This actuallyReady state differs from the standard Document.readyState, which describes the loading state of the
+     * document. When Document.readyState changes, a readystatechange event fires on the document object.
+     *
+     * @see [https://developer.mozilla.org/en-US/docs/Web/API/Document/readyState]
      * */
     val onDocumentActuallyReady: WebPageWebDriverEventHandler
 

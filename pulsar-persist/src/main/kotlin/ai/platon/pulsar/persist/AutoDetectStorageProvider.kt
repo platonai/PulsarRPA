@@ -27,7 +27,7 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
         }
 
         val pageStore = GoraStorage.createDataStore(conf, String::class.java, GWebPage::class.java, pageStoreClass)
-        logger.info("Storage is created: {} realSchema: {}", pageStoreClass, pageStore.schemaName)
+        logger.info("Storage is created: {}, realSchema: {}", pageStoreClass, pageStore.schemaName)
         return pageStore
     }
 
