@@ -80,7 +80,7 @@ class Screenshot(
 
     private fun captureScreenshot0(nodeId: Int, viewport: Viewport): String? {
         val format = CaptureScreenshotFormat.JPEG
-        val quality = BrowserSettings.screenshotQuality
+        val quality = BrowserSettings.SCREENSHOT_QUALITY
 
         if (debugLevel > 50) {
             println("viewport: ")
