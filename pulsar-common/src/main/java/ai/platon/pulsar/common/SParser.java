@@ -830,11 +830,7 @@ public class SParser {
         Map<String, WeakReference<Class<?>>> map;
 
         synchronized (CACHE_CLASSES) {
-            map = CACHE_CLASSES.get(classLoader);
-            if (map == null) {
-                map = Collections.synchronizedMap(new WeakHashMap<>());
-                CACHE_CLASSES.put(classLoader, map);
-            }
+            map = CACHE_CLASSES.computeIfAbsent(classLoader, k -> Collections.synchronizedMap(new WeakHashMap<>()));
         }
 
         Class<?> clazz = null;
@@ -845,6 +841,7 @@ public class SParser {
 
         if (clazz == null) {
             try {
+                // clazz = ResourceLoader.INSTANCE.loadUserClass(name);
                 clazz = Class.forName(name, true, classLoader);
             } catch (ClassNotFoundException e) {
                 // Leave a marker that the class isn't found

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.event.impl
 
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.BrowseEvent
@@ -128,7 +129,8 @@ class PageEventFactory(val conf: ImmutableConfig = ImmutableConfig()) {
         val clazz = try {
             // Get the value of the `name` property as a `Class`.
             // If the property is not set, or the class is not found, use the default class.
-            conf.getClass(className, defaultClazz)
+            kotlin.runCatching { ResourceLoader.loadUserClass<PageEvent>(className) }.getOrNull() ?: defaultClazz
+//             conf.getClass(className, defaultClazz)
         } catch (e: Exception) {
             logger.warn(
                 "Configured PageEvent generator {}({}) is not found, use default ({})",

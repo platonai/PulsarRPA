@@ -178,7 +178,7 @@ class ChromeDevtoolsBrowser(
             logger.debug("Closing {} unmanaged drivers", unmanagedTimeoutDrivers.size)
             val hasHistory = unmanagedTimeoutDrivers.any { it.navigateHistory.isEmpty() }
             if (hasHistory) {
-                logger.warn("Unmanaged driver should has no history")
+                logger.warn("Unmanaged driver should has no history, this indicates a bug")
             }
 //            require(unmanagedTimeoutDrivers.all { it.navigateHistory.isEmpty() }) {
 //                "Unmanaged driver should have no history"

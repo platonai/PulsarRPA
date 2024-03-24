@@ -123,8 +123,8 @@ class ScriptLoader(
     private fun initDefaultJsParameters() {
         mapOf(
             "propertyNames" to propertyNames,
-            "viewPortWidth" to BrowserSettings.screenViewport.width,
-            "viewPortHeight" to BrowserSettings.screenViewport.height,
+            "viewPortWidth" to BrowserSettings.SCREEN_VIEWPORT.width,
+            "viewPortHeight" to BrowserSettings.SCREEN_VIEWPORT.height,
 
             "META_INFORMATION_ID" to AppConstants.PULSAR_META_INFORMATION_ID,
             "SCRIPT_SECTION_ID" to AppConstants.PULSAR_SCRIPT_SECTION_ID,

@@ -45,7 +45,8 @@ abstract class PrivacyContext(
         private val instanceSequencer = AtomicInteger()
         private val contextDirSequencer = AtomicInteger()
         
-        // The prefix for all temporary privacy contexts, system context, prototype context and default context are not included.
+        // The prefix for all temporary privacy contexts. System context, prototype context and default context are not
+        // required to start with the prefix.
         const val CONTEXT_DIR_PREFIX = "cx."
         val USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER: Path = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
         // The placeholder directory for the user's default browser. This is a placeholder, actually no data dir

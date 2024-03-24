@@ -105,7 +105,9 @@ class PageDatum(
      * The length of the final page content in bytes, the content might has inserted pulsar metadata.
      */
     val contentLength get() = (content?.size ?: 0).toLong()
-
+    /**
+     * The page object, it's a weak reference to avoid circular reference.
+     * */
     var page = WeakReference<WebPage>(null)
 
     constructor(page: WebPage): this(page.url) {

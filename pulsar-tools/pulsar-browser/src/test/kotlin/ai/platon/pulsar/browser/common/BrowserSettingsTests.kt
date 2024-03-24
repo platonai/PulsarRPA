@@ -15,7 +15,7 @@ class BrowserSettingsTests {
         val settings = InteractSettings()
         settings.overrideSystemProperties()
 
-        val json = System.getProperty(CapabilityTypes.FETCH_INTERACT_SETTINGS)
+        val json = System.getProperty(CapabilityTypes.BROWSER_INTERACT_SETTINGS)
         assertNotNull(json)
 
         val settings2: InteractSettings = pulsarObjectMapper().readValue(json)
@@ -29,7 +29,7 @@ class BrowserSettingsTests {
         val conf = MutableConfig()
         settings.overrideConfiguration(conf)
 
-        val json = conf.get(CapabilityTypes.FETCH_INTERACT_SETTINGS)
+        val json = conf.get(CapabilityTypes.BROWSER_INTERACT_SETTINGS)
         assertNotNull(json)
 
         val settings2: InteractSettings = pulsarObjectMapper().readValue(json)

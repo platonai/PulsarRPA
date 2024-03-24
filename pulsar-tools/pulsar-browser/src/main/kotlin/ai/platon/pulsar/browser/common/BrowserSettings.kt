@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.core.JacksonException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -24,16 +25,16 @@ open class BrowserSettings(
 ) {
     companion object {
         // The viewport size for browser to rendering all webpages
-        var screenViewport = AppConstants.DEFAULT_VIEW_PORT
+        var SCREEN_VIEWPORT = AppConstants.DEFAULT_VIEW_PORT
 
         // Compression quality from range [0..100] (jpeg only) to capture screenshots
-        var screenshotQuality = 50
-        
+        var SCREENSHOT_QUALITY = 50
+
         /**
          * The interaction settings. Interaction settings define how the system
          * interacts with webpages to mimic the behavior of real people.
          * */
-        var interactSettings = InteractSettings.DEFAULT
+        var INTERACT_SETTINGS = InteractSettings.DEFAULT
         
         /**
          * Check if the current environment supports only headless mode.
@@ -44,7 +45,6 @@ open class BrowserSettings(
         /**
          * Specify the browser type to fetch webpages.
          * */
-        @Deprecated("Inappropriate name", ReplaceWith("withBrowser(browserType)"))
         @JvmStatic
         fun withBrowser(browserType: String): Companion {
             System.setProperty(BROWSER_TYPE, browserType)
@@ -74,7 +74,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SystemDefaultPrivacyContextIdGenerator"
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.UserDefaultPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
@@ -93,7 +93,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withPrototypeBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyContextIdGenerator"
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
@@ -384,7 +384,7 @@ open class BrowserSettings(
      * The interaction settings. Interaction settings define how the system
      * interacts with webpages to mimic the behavior of real people.
      * */
-    val interactSettings get() = Companion.interactSettings
+    val interactSettings get() = InteractSettings.fromJson(conf[BROWSER_INTERACT_SETTINGS], InteractSettings.DEFAULT)
 
     /**
      * Page load strategy.
@@ -458,7 +458,8 @@ data class InteractSettings(
             else -> 100L + Random.nextInt(500)
         }
     }
-
+    
+    @Deprecated("Use conf[BROWSER_INTERACT_SETTINGS]")
     constructor(conf: ImmutableConfig) : this(
         scrollCount = conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
         scrollInterval = conf.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500)),
@@ -470,7 +471,7 @@ data class InteractSettings(
      * TODO: just use an InteractSettings object, instead of separate properties
      * */
     fun overrideSystemProperties() {
-        Systems.setProperty(FETCH_INTERACT_SETTINGS,
+        Systems.setProperty(BROWSER_INTERACT_SETTINGS,
             pulsarObjectMapper().writeValueAsString(this))
 
         Systems.setProperty(FETCH_SCROLL_DOWN_COUNT, scrollCount)
@@ -483,8 +484,7 @@ data class InteractSettings(
      * TODO: just use an InteractSettings object, instead of separate properties
      * */
     fun overrideConfiguration(conf: MutableConfig) {
-        Systems.setProperty(FETCH_INTERACT_SETTINGS,
-            pulsarObjectMapper().writeValueAsString(this))
+        conf[BROWSER_INTERACT_SETTINGS] = pulsarObjectMapper().writeValueAsString(this)
 
         conf.setInt(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         conf.setDuration(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
@@ -544,7 +544,12 @@ data class InteractSettings(
 
         return positions
     }
-
+    
+    @Throws(JacksonException::class)
+    fun toJson(): String {
+        return pulsarObjectMapper().writeValueAsString(this)
+    }
+    
     companion object {
         /**
          * Default settings for Web page interaction behavior.
@@ -578,5 +583,16 @@ data class InteractSettings(
             scriptTimeout = Duration.ofMinutes(3),
             Duration.ofMinutes(4),
         )
+        
+        @Throws(JacksonException::class)
+        fun fromJson(json: String): InteractSettings {
+            return pulsarObjectMapper().readValue(json, InteractSettings::class.java)
+        }
+        
+        fun fromJson(json: String?, defaultValue: InteractSettings): InteractSettings {
+            return fromJsonOrNull(json) ?: defaultValue
+        }
+        
+        fun fromJsonOrNull(json: String?): InteractSettings? = json?.runCatching { fromJson(json) }?.getOrNull()
     }
 }
