@@ -354,7 +354,7 @@ open class InteractiveBrowserEmulator(
         val fetchTask = navigateTask.fetchTask
         checkState(navigateTask.fetchTask, driver)
 
-        val interactResult = navigateAndInteract(navigateTask, driver, navigateTask.driverSettings)
+        val interactResult = navigateAndInteract(navigateTask, driver, navigateTask.browserSettings)
 
         // TODO: separate status code of pulsar system and the status code from browser
         val httpCode = driver.mainResponseStatus

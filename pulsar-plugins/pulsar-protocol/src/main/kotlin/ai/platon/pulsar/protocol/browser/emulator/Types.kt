@@ -4,24 +4,26 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.HttpHeaders
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INTERACT_SETTINGS
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
-import java.lang.ref.WeakReference
 import java.time.Duration
 import java.time.Instant
 
 class NavigateTask constructor(
     val fetchTask: FetchTask,
     val driver: WebDriver,
-    val driverSettings: BrowserSettings
+    val browserSettings: BrowserSettings
 ) {
     val startTime = Instant.now()
 
     val url get() = fetchTask.url
     val page get() = fetchTask.page
+    
+    val pageConf get() = fetchTask.page.conf
     /**
      * The page datum.
      * */
@@ -34,7 +36,14 @@ class NavigateTask constructor(
      * The page source.
      * */
     var pageSource = ""
-
+    
+    /**
+     * The interact settings.
+     * TODO: page.getVar("InteractSettings") is deprecated, use page.conf[BROWSER_INTERACT_SETTINGS] instead
+     * */
+    val interactSettings get() = page.getVar("InteractSettings") as? InteractSettings
+        ?: InteractSettings.fromJson(pageConf[BROWSER_INTERACT_SETTINGS], browserSettings.interactSettings)
+    
     init {
         pageDatum.headers[HttpHeaders.Q_REQUEST_TIME] = startTime.toEpochMilli().toString()
     }
@@ -53,14 +62,14 @@ class InteractTask(
 ) {
     val url get() = navigateTask.url
     val page get() = navigateTask.page
-    val isCanceled get() = navigateTask.fetchTask.isCanceled
+    val isCanceled get() = navigateTask.fetchTask.page.isCanceled
+    val pageConf get() = navigateTask.fetchTask.page.conf
 
-    val conf get() = navigateTask.fetchTask.volatileConfig
     /**
-     * TODO: this is a temporary solution to set page scope interaction settings, it should be reviewed and improved
+     * The interact settings.
+     * TODO: page.getVar("InteractSettings") is deprecated, use page.conf[BROWSER_INTERACT_SETTINGS] instead
      * */
-    val interactSettings get() = page.getVar("InteractSettings") as? InteractSettings
-        ?: browserSettings.interactSettings
+    val interactSettings get() = navigateTask.interactSettings
 }
 
 class BrowserErrorResponse(

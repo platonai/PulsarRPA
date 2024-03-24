@@ -384,7 +384,7 @@ open class BrowserSettings(
      * The interaction settings. Interaction settings define how the system
      * interacts with webpages to mimic the behavior of real people.
      * */
-    val interactSettings get() = InteractSettings.fromJson(conf[BROWSER_INTERACT_SETTINGS], InteractSettings.DEFAULT)
+    val interactSettings = InteractSettings.fromJson(conf[BROWSER_INTERACT_SETTINGS], InteractSettings.DEFAULT)
 
     /**
      * Page load strategy.
