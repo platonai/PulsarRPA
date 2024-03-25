@@ -9,6 +9,7 @@ import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import org.slf4j.LoggerFactory
+import java.awt.SystemColor.text
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
@@ -180,7 +181,17 @@ class MockWebDriver(
     override suspend fun type(selector: String, text: String) {
         backupDriverOrNull?.type(selector, text)
     }
-
+    
+    @Throws(WebDriverException::class)
+    override suspend fun fill(selector: String, text: String) {
+        backupDriverOrNull?.fill(selector, text)
+    }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun press(selector: String, key: String) {
+        backupDriverOrNull?.press(selector, key)
+    }
+    
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
         backupDriverOrNull?.click(selector, count)

@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.readableClassName
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
@@ -202,7 +201,7 @@ interface PrivacyAgentGenerator {
     operator fun invoke(fingerprint: Fingerprint): PrivacyAgent
 }
 
-class DefaultPrivacyContextIdGenerator: PrivacyAgentGenerator {
+open class DefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     companion object {
         private val sequencer = AtomicInteger()
         private val nextContextDir
@@ -212,36 +211,19 @@ class DefaultPrivacyContextIdGenerator: PrivacyAgentGenerator {
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent = PrivacyAgent(nextContextDir, fingerprint)
 }
 
-@Deprecated("Inappropriate name", ReplaceWith("UserDefaultPrivacyContextIdGenerator"))
-class SystemDefaultPrivacyContextIdGenerator: PrivacyAgentGenerator {
+open class SystemDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.USER_DEFAULT
 }
 
-@Deprecated("Inappropriate name", ReplaceWith("UserDefaultPrivacyAgentGenerator"))
-class UserDefaultPrivacyContextIdGenerator: PrivacyAgentGenerator {
+open class UserDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.USER_DEFAULT
 }
 
-class UserDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
-    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.USER_DEFAULT
-}
-
-@Deprecated("Inappropriate name", ReplaceWith("PrototypePrivacyAgentGenerator"))
-class PrototypePrivacyContextIdGenerator: PrivacyAgentGenerator {
+open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
     override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.PROTOTYPE
 }
 
-class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
-    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.PROTOTYPE
-}
-
-@Deprecated("Inappropriate name", ReplaceWith("SequentialPrivacyAgentGenerator"))
-class SequentialPrivacyContextIdGenerator: PrivacyAgentGenerator {
-    override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
-        PrivacyAgent(PrivacyContext.computeNextSequentialContextDir(), fingerprint)
-}
-
-class SequentialPrivacyAgentGenerator: PrivacyAgentGenerator {
+open class SequentialPrivacyAgentGenerator: PrivacyAgentGenerator {
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
         PrivacyAgent(PrivacyContext.computeNextSequentialContextDir(), fingerprint)
 }
@@ -281,19 +263,19 @@ class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {
      * The default class is `DefaultPageEvent`.
      *
      * Set the class:
-     * `System.setProperty(CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS, "ai.platon.pulsar.crawl.fetch.privacy.DefaultPrivacyContextIdGenerator")`
+     * `System.setProperty(CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS, "ai.platon.pulsar.crawl.fetch.privacy.DefaultPrivacyAgentGenerator")`
      * */
     private fun createUsingGlobalConfig(conf: ImmutableConfig, className: String): PrivacyAgentGenerator {
-        val defaultClazz = DefaultPrivacyContextIdGenerator::class.java
+        val defaultClazz = DefaultPrivacyAgentGenerator::class.java
         val clazz = try {
             conf.getClass(className, defaultClazz)
         } catch (e: Exception) {
-            logger.warn("Configured privacy context id generator {}({}) is not found, use default ({})",
-                className, conf.get(className), defaultClazz.simpleName)
+            logger.warn("No configured privacy agent generator {}({}), use default ({})",
+                className, conf[className], defaultClazz.simpleName)
             defaultClazz
         }
 
-        logger.info("Using id generator {}", readableClassName(clazz))
+        logger.info("Use privacy agent generator {}", clazz.name)
 
         return clazz.constructors.first { it.parameters.isEmpty() }.newInstance() as PrivacyAgentGenerator
     }

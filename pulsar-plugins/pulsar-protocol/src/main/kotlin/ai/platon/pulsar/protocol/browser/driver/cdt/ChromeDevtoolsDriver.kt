@@ -337,6 +337,7 @@ class ChromeDevtoolsDriver(
 
             val timeoutMillis = timeout.toMillis()
 
+            // TODO: use a more efficient way to wait for navigation
             while (elapsedTime < timeoutMillis && !navigated && isActive) {
                 gap("waitForNavigation")
                 elapsedTime = System.currentTimeMillis() - startTime
@@ -510,13 +511,57 @@ class ChromeDevtoolsDriver(
             rpc.invokeDeferred("type") {
                 val nodeId = focusOnSelector(selector)
                 if (nodeId != 0) {
-                    keyboard?.type(nodeId, text, delayPolicy("type"))
+                    keyboard?.type(text, delayPolicy("type"))
                 }
             }
 
             gap("type")
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "type")
+        }
+    }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun fill(selector: String, text: String) {
+        try {
+            rpc.invokeDeferred("fill") {
+                val nodeId = focusOnSelector(selector)
+                if (nodeId != 0) {
+                    // domAPI?.getAttributes(nodeId)
+                    // TODO: only works for input elements
+//                    val oldText = selectFirstAttributeOrNull(selector, "value")
+//                    val length = oldText?.length?:0
+//                    if (length > 0) {
+//                        keyboard?.delete(length, delayPolicy("delete"))
+//                    }
+                    evaluate("__pulsar_utils__.setAttribute('$selector', 'value', '')")
+                    keyboard?.type(text, delayPolicy("fill"))
+                }
+            }
+            
+            gap("fill")
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "fill")
+        }
+    }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun press(selector: String, key: String) {
+        try {
+            val nodeId = rpc.invokeDeferred("press") {
+                focusOnSelector(selector)
+            }
+            
+            if (nodeId != 0) {
+                println("nodeId: $nodeId")
+                rpc.invokeDeferred("press") {
+                    keyboard?.press(key, delayPolicy("keyUpDown"))
+                }
+            }
+            
+            gap("press")
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "press")
         }
     }
 

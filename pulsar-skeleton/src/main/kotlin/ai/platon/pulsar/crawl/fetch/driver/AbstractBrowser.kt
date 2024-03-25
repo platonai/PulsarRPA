@@ -46,6 +46,18 @@ abstract class AbstractBrowser(
         attach()
     }
     
+    override suspend fun listDrivers(): List<WebDriver> {
+        return mutableDrivers.values.toList()
+    }
+    
+    override suspend fun findDriver(url: String): WebDriver? {
+        return mutableDrivers.values.firstOrNull { it.currentUrl() == url }
+    }
+    
+    override suspend fun findDrivers(urlRegex: Regex): WebDriver? {
+        return mutableDrivers.values.firstOrNull { urlRegex.matches(it.currentUrl()) }
+    }
+    
     override fun destroyDriver(driver: WebDriver) {
         // Nothing to do
     }
@@ -54,11 +66,9 @@ abstract class AbstractBrowser(
     
     }
     
-    override fun clearCookies() {
-        runBlocking {
-            val driver = drivers.values.firstOrNull() ?: newDriver()
-            driver.clearBrowserCookies()
-        }
+    override suspend fun clearCookies() {
+        val driver = drivers.values.firstOrNull() ?: newDriver()
+        driver.clearBrowserCookies()
     }
     
     override fun maintain() {

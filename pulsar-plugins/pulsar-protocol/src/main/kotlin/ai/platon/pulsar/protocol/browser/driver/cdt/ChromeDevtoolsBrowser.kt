@@ -52,7 +52,10 @@ class ChromeDevtoolsBrowser(
     @Synchronized
     @Throws(WebDriverException::class)
     fun listTabs(): Array<ChromeTab> {
-        return runCatching { chrome.listTabs() }.getOrElse { throw WebDriverException("listTabs", it) }
+        return runCatching {
+            val tabs = chrome.listTabs()
+            tabs
+        }.getOrElse { throw WebDriverException("listTabs", it) }
     }
     
     @Synchronized
@@ -71,11 +74,23 @@ class ChromeDevtoolsBrowser(
         }
     }
     
-    @Synchronized
+//    @Synchronized
     @Throws(WebDriverException::class)
-    fun findDriver(url: String): ChromeDevtoolsDriver? {
+    override suspend fun listDrivers(): List<WebDriver> {
+        recoverUnmanagedPages()
+        return drivers.values.toList()
+    }
+    
+//    @Synchronized
+    @Throws(WebDriverException::class)
+    override suspend fun findDriver(url: String): ChromeDevtoolsDriver? {
         recoverUnmanagedPages()
         return drivers.values.filterIsInstance<ChromeDevtoolsDriver>().firstOrNull { currentUrl(it) == url }
+    }
+    
+    override suspend fun findDrivers(urlRegex: Regex): WebDriver? {
+        recoverUnmanagedPages()
+        return drivers.values.filterIsInstance<ChromeDevtoolsDriver>().firstOrNull { currentUrl(it).matches(urlRegex) }
     }
     
     override fun destroyDriver(driver: WebDriver) {
@@ -97,6 +112,7 @@ class ChromeDevtoolsBrowser(
         closeRecoveredIdleDrivers()
     }
     
+    @Synchronized
     override fun destroyForcibly() {
         runCatching {
             close()
@@ -119,7 +135,7 @@ class ChromeDevtoolsBrowser(
         }
     }
     
-    private fun currentUrl(driver: WebDriver) = runBlocking { driver.currentUrl() }
+    private suspend fun currentUrl(driver: WebDriver) = driver.currentUrl()
     
     /**
      * Create a new driver.
@@ -133,11 +149,14 @@ class ChromeDevtoolsBrowser(
                 mutableReusedDrivers[driver.chromeTab.id] = driver
                 
                 val currentUrl = runBlocking { driver.currentUrl() }
-                logger.debug("Reuse recovered driver | {}", currentUrl)
+                // require(currentUrl == chromeTab.url)
+
+                logger.info("Reuse recovered driver | {}", currentUrl)
+
                 return driver
             }
         }
-        
+
         val devTools = createDevTools(chromeTab, toolsConfig)
         val driver = ChromeDevtoolsDriver(chromeTab, devTools, browserSettings, this)
         mutableDrivers[chromeTab.id] = driver
@@ -153,9 +172,12 @@ class ChromeDevtoolsBrowser(
     /**
      * Pages can be open in the browser, for example, by a click. We should recover the page
      * and create a web driver to manage it.
+     *
+     * TODO: capture events that open new pages
      * */
     private fun recoverUnmanagedPages() {
-        listTabs().asSequence().filter { it.id !in drivers.keys } // unmanaged
+        listTabs()
+            .filter { it.id !in drivers.keys } // unmanaged
             .filter { it.isPageType() } // handler HTML document only
             .filter { UrlUtils.isStandard(it.url) } // make sure the url is correct
             .map {

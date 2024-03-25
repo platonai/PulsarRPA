@@ -42,6 +42,9 @@ abstract class AbstractWebDriver(
             when (type) {
                 "gap" -> 500L + Random.nextInt(500)
                 "click" -> 500L + Random.nextInt(1000)
+                "delete" -> 50L + Random.nextInt(200)
+                "keyUpDown" -> 300L + Random.nextInt(200)
+                "press" -> 800L + Random.nextInt(200)
                 "type" -> 50L + Random.nextInt(500)
                 "mouseWheel" -> 800L + Random.nextInt(500)
                 "dragAndDrop" -> 800L + Random.nextInt(500)
@@ -202,25 +205,25 @@ abstract class AbstractWebDriver(
     
     @Throws(WebDriverException::class)
     override suspend fun selectFirstTextOrNull(selector: String): String? {
-        val result = evaluate("__pulsar_utils__.firstText('$selector')")
+        val result = evaluate("__pulsar_utils__.selectFirstText('$selector')")
         return result?.toString()
     }
     
     @Throws(WebDriverException::class)
     override suspend fun selectTexts(selector: String): List<String> {
-        val result = evaluate("__pulsar_utils__.allTexts('$selector')")
+        val result = evaluate("__pulsar_utils__.selectTexts('$selector')")
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
     
     @Throws(WebDriverException::class)
     override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
-        val result = evaluate("__pulsar_utils__.firstAttr('$selector', '$attrName')")
+        val result = evaluate("__pulsar_utils__.selectFirstAttribute('$selector', '$attrName')")
         return result?.toString()
     }
     
     @Throws(WebDriverException::class)
     override suspend fun selectAttributes(selector: String, attrName: String): List<String> {
-        val result = evaluate("__pulsar_utils__.allAttrs('$selector', '$attrName')")
+        val result = evaluate("__pulsar_utils__.selectAttributes('$selector', '$attrName')")
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
     

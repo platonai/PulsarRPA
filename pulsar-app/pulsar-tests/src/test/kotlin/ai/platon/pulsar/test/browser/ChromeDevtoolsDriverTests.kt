@@ -8,6 +8,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.net.Proxy
+import java.nio.file.Path
 import java.util.*
 import kotlin.test.*
 
@@ -232,10 +233,30 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         assertNotNull(box2)
         // assertTrue { box2.height > box.height }
     }
+    
+    @Test
+    fun testKeyPress() {
+        System.setProperty("browser.additionalDebugLevel", "10")
+        
+        runWebDriverTest { driver ->
+            open(url, driver)
+            
+            assertTrue { driver.exists("body") }
+            
+            val text = driver.selectFirstTextOrNull("#glow-ingress-block")
+            println("deliver to: $text")
+            
+            driver.press("input[placeholder=Search Amazon]", "KeyA")
+            driver.press("input[placeholder=Search Amazon]", "KeyB")
+            driver.press("input[placeholder=Search Amazon]", "KeyC")
+            
+            readlnOrNull()
+        }
+    }
 
     @Test
     fun testCaptureScreenshot() {
-        System.setProperty("debugLevel", "0")
+        System.setProperty("browser.additionalDebugLevel", "0")
 
         runWebDriverTest { driver ->
             open(url, driver)
@@ -245,16 +266,23 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
             assertNotNull(pageSource)
             assertTrue { pageSource.contains(asin) }
 
+            val paths = mutableListOf<Path>()
             fieldSelectors.forEach { (name, selector) ->
                 val screenshot = driver.captureScreenshot(selector)
 
                 if (screenshot != null) {
-                    exportScreenshot("$name.jpg", screenshot)
+                    val path = exportScreenshot("$name.jpg", screenshot)
+                    paths.add(path)
                     delay(1000)
                 } else {
                     logger.info("Can not take screenshot for {}", selector)
                 }
             }
+            
+            if (paths.isNotEmpty()) {
+                println("Screenshots are saved in: " + paths[0].parent)
+            }
+            assertTrue { paths.isNotEmpty() }
         }
     }
 
@@ -340,9 +368,9 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     }
 
     @Throws(IOException::class)
-    private fun exportScreenshot(filename: String, screenshot: String) {
+    private fun exportScreenshot(filename: String, screenshot: String): Path {
         val path = screenshotDir.resolve(filename)
         val bytes = Base64.getDecoder().decode(screenshot)
-        AppFiles.saveTo(bytes, path, true)
+        return AppFiles.saveTo(bytes, path, true)
     }
 }

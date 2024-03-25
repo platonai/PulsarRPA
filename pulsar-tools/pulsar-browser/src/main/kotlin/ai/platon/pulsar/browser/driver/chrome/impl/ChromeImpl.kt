@@ -42,6 +42,8 @@ class ChromeImpl(
     private val objectMapper = ObjectMapper()
     private val remoteDevTools: MutableMap<String, RemoteDevTools> = ConcurrentHashMap()
     private val closed = AtomicBoolean()
+    
+    val isActive get() = !closed.get()
 
     /**
      * The Chrome version.
@@ -154,7 +156,9 @@ class ChromeImpl(
     private fun <T> request(
         responseType: Class<T>, method: HttpMethod, path: String, vararg params: Any
     ): T? {
-        if (closed.get()) return null
+        if (!isActive) {
+            return null
+        }
 
         var connection: HttpURLConnection? = null
         var inputStream: InputStream? = null
@@ -185,9 +189,16 @@ class ChromeImpl(
                 inputStream = connection.errorStream
                 val responseBody = readString(inputStream)
                 val message = "Received error ($responseCode) - ${connection.responseMessage}\n$responseBody"
+                
+                if (!isActive) {
+                    return null
+                }
                 throw WebSocketServiceException(message)
             }
         } catch (ex: IOException) {
+            if (!isActive) {
+                return null
+            }
             throw ChromeServiceException("Failed sending HTTP request", ex)
         } finally {
             inputStream?.close()

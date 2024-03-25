@@ -709,7 +709,7 @@ open class LoadOptions(
         val b = super.parse()
         if (b) {
             // fix zero-arity boolean parameter overwriting
-            optionFields.asSequence()
+            optionFields
                 .filter { arity0BooleanParams.contains("-${it.name}") }
                 .filter { argv.contains("-${it.name}") }
                 .forEach {
@@ -795,23 +795,39 @@ open class LoadOptions(
      * through a [VolatileConfig] object.
      * */
     fun overrideConfiguration(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
-        val interactSettings = when (netCondition) {
-            Condition.WORSE -> InteractSettings.worseNetSettings
-            Condition.WORST -> InteractSettings.worstNetSettings
-            else -> InteractSettings.goodNetSettings
-        }.copy()
-
-        if (!isDefault("scrollCount")) interactSettings.scrollCount = scrollCount
-        if (!isDefault("scrollInterval")) interactSettings.scrollInterval = scrollInterval
-        if (!isDefault("scriptTimeout")) interactSettings.scriptTimeout = scriptTimeout
-        if (!isDefault("pageLoadTimeout")) interactSettings.pageLoadTimeout = pageLoadTimeout
-
-        interactSettings.overrideConfiguration(conf)
+        setInteractionSettings()
 
         rawEvent?.let { putBean(it) }
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         // incognito mode is never used because the browsers are always running in temporary contexts
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
+    }
+    
+    private fun setInteractionSettings() {
+        val modified = listOf(
+            "netCondition",
+            "scrollCount",
+            "scrollInterval",
+            "scriptTimeout",
+            "pageLoadTimeout"
+        ).any { !isDefault(it) }
+        
+        if (!modified) {
+            return
+        }
+
+        val interactSettings = when (netCondition) {
+            Condition.WORSE -> InteractSettings.WORSE_NET_SETTINGS
+            Condition.WORST -> InteractSettings.WORST_NET_SETTINGS
+            else -> InteractSettings.GOOD_NET_SETTINGS
+        }.copy()
+
+        interactSettings.scrollCount = scrollCount
+        interactSettings.scrollInterval = scrollInterval
+        interactSettings.scriptTimeout = scriptTimeout
+        interactSettings.pageLoadTimeout = pageLoadTimeout
+
+        interactSettings.overrideConfiguration(conf)
     }
 
     /**

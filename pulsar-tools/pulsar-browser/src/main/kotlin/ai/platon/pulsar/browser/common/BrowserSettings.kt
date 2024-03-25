@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JacksonException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 
 /**
@@ -74,7 +75,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.UserDefaultPrivacyAgentGenerator"
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
@@ -107,6 +108,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withGoodNetwork(): Companion {
+            InteractSettings.GOOD_NET_SETTINGS.copy().overrideSystemProperties()
             return BrowserSettings
         }
 
@@ -118,7 +120,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withWorseNetwork(): Companion {
-            InteractSettings.worseNetSettings.overrideSystemProperties()
+            InteractSettings.WORSE_NET_SETTINGS.copy().overrideSystemProperties()
             return BrowserSettings
         }
 
@@ -130,7 +132,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withWorstNetwork(): Companion {
-            InteractSettings.worstNetSettings.overrideSystemProperties()
+            InteractSettings.WORST_NET_SETTINGS.copy().overrideSystemProperties()
             return BrowserSettings
         }
 
@@ -384,7 +386,7 @@ open class BrowserSettings(
      * The interaction settings. Interaction settings define how the system
      * interacts with webpages to mimic the behavior of real people.
      * */
-    val interactSettings = InteractSettings.fromJson(conf[BROWSER_INTERACT_SETTINGS], InteractSettings.DEFAULT)
+    val interactSettings get() = InteractSettings.fromJson(conf[BROWSER_INTERACT_SETTINGS], InteractSettings.DEFAULT)
 
     /**
      * Page load strategy.
@@ -479,30 +481,18 @@ data class InteractSettings(
         Systems.setProperty(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
         Systems.setProperty(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
     }
-
-    /**
-     * TODO: just use an InteractSettings object, instead of separate properties
-     * */
+    
     fun overrideConfiguration(conf: MutableConfig) {
         conf[BROWSER_INTERACT_SETTINGS] = pulsarObjectMapper().writeValueAsString(this)
-
+        /**
+         * TODO: just use an InteractSettings object, instead of separate properties
+         * */
         conf.setInt(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         conf.setDuration(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         conf.setDuration(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
         conf.setDuration(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
     }
     
-    fun copy(settings: InteractSettings): InteractSettings {
-        scrollCount = settings.scrollCount
-        scrollInterval = settings.scrollInterval
-        scriptTimeout = settings.scriptTimeout
-        pageLoadTimeout = settings.pageLoadTimeout
-        bringToFront = settings.bringToFront
-        initScrollPositions = settings.initScrollPositions
-
-        return this
-    }
-
     fun noInitScroll(): InteractSettings {
         initScrollPositions = ""
         return this
@@ -512,12 +502,6 @@ data class InteractSettings(
         scrollCount = 0
         return this
     }
-
-    fun goodNetwork() = copy(goodNetSettings)
-
-    fun worseNetwork() = copy(worseNetSettings)
-
-    fun worstNetwork() = copy(worstNetSettings)
 
     fun buildInitScrollPositions(): List<Double> {
         if (initScrollPositions.isBlank()) {
@@ -551,6 +535,8 @@ data class InteractSettings(
     }
     
     companion object {
+        private val OBJECT_CACHE = ConcurrentHashMap<String, InteractSettings>()
+        
         /**
          * Default settings for Web page interaction behavior.
          * */
@@ -560,13 +546,13 @@ data class InteractSettings(
          * Web page interaction behavior settings under good network conditions, in which case we perform
          * each action faster.
          * */
-        var goodNetSettings = InteractSettings()
+        val GOOD_NET_SETTINGS = InteractSettings()
 
         /**
          * Web page interaction behavior settings under worse network conditions, in which case we perform
          * each action more slowly.
          * */
-        var worseNetSettings = InteractSettings(
+        val WORSE_NET_SETTINGS = InteractSettings(
             scrollCount = 10,
             scrollInterval = Duration.ofSeconds(1),
             scriptTimeout = Duration.ofMinutes(2),
@@ -577,7 +563,7 @@ data class InteractSettings(
          * Web page interaction behavior settings under worst network conditions, in which case we perform
          * each action very slowly.
          * */
-        var worstNetSettings = InteractSettings(
+        val WORST_NET_SETTINGS = InteractSettings(
             scrollCount = 15,
             scrollInterval = Duration.ofSeconds(3),
             scriptTimeout = Duration.ofMinutes(3),
@@ -586,7 +572,9 @@ data class InteractSettings(
         
         @Throws(JacksonException::class)
         fun fromJson(json: String): InteractSettings {
-            return pulsarObjectMapper().readValue(json, InteractSettings::class.java)
+            return OBJECT_CACHE.computeIfAbsent(json) {
+                pulsarObjectMapper().readValue(json, InteractSettings::class.java)
+            }
         }
         
         fun fromJson(json: String?, defaultValue: InteractSettings): InteractSettings {

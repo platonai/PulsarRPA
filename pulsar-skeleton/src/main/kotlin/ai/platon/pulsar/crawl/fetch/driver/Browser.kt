@@ -37,13 +37,27 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
      * */
     @Throws(WebDriverException::class)
     fun newDriver(): WebDriver
-
+    /**
+     * List all drivers, each driver is associated with a Chrome tab.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun listDrivers(): List<WebDriver>
+    /**
+     * Find a driver by url.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun findDriver(url: String): WebDriver?
+    /**
+     * Find drivers by url regex.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun findDrivers(urlRegex: Regex): WebDriver?
     /**
      * Clear all cookies.
      * Notice: even if we clear all cookies, the website still has some technology to track a session.
      * */
     @Throws(WebDriverException::class)
-    fun clearCookies()
+    suspend fun clearCookies()
 
     /**
      * Destroy the web driver, close the associated browser tabs.

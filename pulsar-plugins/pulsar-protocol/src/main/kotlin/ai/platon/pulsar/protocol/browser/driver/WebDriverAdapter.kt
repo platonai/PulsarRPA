@@ -6,6 +6,7 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import java.awt.SystemColor.text
 import java.time.Duration
 
 class WebDriverAdapter(
@@ -127,6 +128,12 @@ class WebDriverAdapter(
 
     @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) = driverOrNull?.type(selector, text) ?: Unit
+    
+    @Throws(WebDriverException::class)
+    override suspend fun fill(selector: String, text: String) = driverOrNull?.fill(selector, text) ?: Unit
+    
+    @Throws(WebDriverException::class)
+    override suspend fun press(selector: String, key: String) = driverOrNull?.press(selector, key) ?: Unit
 
     @Throws(WebDriverException::class)
     override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {

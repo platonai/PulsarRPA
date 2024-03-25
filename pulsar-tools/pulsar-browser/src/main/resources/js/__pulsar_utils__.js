@@ -604,9 +604,21 @@ __pulsar_utils__.firstText = function(selector) {
  * Select elements and extract the texts
  *
  * @param  {String} selector
- * @return {Object} A json object
+ * @return {String} texts in json format
+ *
+ * @deprecated Use selectTexts instead
  */
 __pulsar_utils__.allTexts = function(selector) {
+    return __pulsar_utils__.selectTexts(selector)
+};
+
+/**
+ * Select elements and extract the texts
+ *
+ * @param  {String} selector
+ * @return {String} texts in json format
+ */
+__pulsar_utils__.selectTexts = function(selector) {
     let elements = document.querySelectorAll(selector)
     let texts = Array.from(elements).map(e => e.textContent)
     return JSON.stringify(texts)
@@ -617,9 +629,22 @@ __pulsar_utils__.allTexts = function(selector) {
  *
  * @param  {String} selector
  * @param  {String} attrName
- * @return {String}
+ * @return {String|null}
+ *
+ * @deprecated Use selectFirstAttribute instead
  */
 __pulsar_utils__.firstAttr = function(selector, attrName) {
+    return __pulsar_utils__.selectFirstAttribute(selector, attrName)
+};
+
+/**
+ * Select the first element and extract the text
+ *
+ * @param  {String} selector
+ * @param  {String} attrName
+ * @return {String|null}
+ */
+__pulsar_utils__.selectFirstAttribute = function(selector, attrName) {
     let element = document.querySelector(selector)
     if (element != null) {
         return element.getAttribute(attrName)
@@ -633,19 +658,58 @@ __pulsar_utils__.firstAttr = function(selector, attrName) {
  * @param  {String} selector
  * @param  {String} attrName
  * @return {String} attribute values separated by line break "\n"
+ *
+ * @deprecated Use selectAttributes instead
  */
 __pulsar_utils__.allAttrs = function(selector, attrName) {
+    return __pulsar_utils__.selectAttributes(selector, attrName)
+};
+
+/**
+ * Select elements and extract the texts
+ *
+ * @param  {String} selector
+ * @param  {String} attrName
+ * @return {String} attribute values separated by line break "\n"
+ */
+__pulsar_utils__.selectAttributes = function(selector, attrName) {
     let elements = document.querySelectorAll(selector)
     return Array.from(elements).map(e => e.getAttribute(attrName)).join("\n")
+};
+
+/**
+ * Select elements and extract the texts
+ *
+ * @param {String} selector
+ * @param {String} attrName
+ * @param {String} attrValue
+ */
+__pulsar_utils__.setAttribute = function(selector, attrName, attrValue) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        element.setAttribute(attrName, attrValue)
+    }
+};
+
+/**
+ * Select elements and extract the texts
+ *
+ * @param {String} selector
+ * @param {String} attrName
+ * @param {String} attrValue
+ */
+__pulsar_utils__.setAttributeAll = function(selector, attrName, attrValue) {
+    let elements = document.querySelectorAll(selector)
+    elements.forEach(e => e.setAttribute(attrName, attrValue))
 };
 
 /**
  * Select the first anchor element and extract the link.
  *
  * @param  {String} selector
- * @return {String}
+ * @return {String|null}
  */
-__pulsar_utils__.firstLink = function(selector) {
+__pulsar_utils__.selectFirstHyperlink = function(selector) {
     let element = document.querySelector(selector)
     if (element != null && element.nodeName === 'A') {
         return element.href
@@ -659,7 +723,7 @@ __pulsar_utils__.firstLink = function(selector) {
  * @param  {String} selector
  * @return {String} links separated by line break "\n"
  */
-__pulsar_utils__.allLinks = function(selector) {
+__pulsar_utils__.selectHyperlinks = function(selector) {
     let elements = document.querySelectorAll(selector)
     return Array.from(elements).filter(e => e.nodeName === 'A').map(e => e.href).join("\n")
 };

@@ -56,14 +56,14 @@ enum class ItemExtractor {
 
     companion object {
         fun fromString(s: String?): ItemExtractor {
-            if (s == null || s.isEmpty()) {
+            if (s.isNullOrEmpty()) {
                 return DEFAULT
             }
-
-            try {
-                return valueOf(s.uppercase(Locale.getDefault()))
+            
+            return try {
+                valueOf(s.uppercase(Locale.getDefault()))
             } catch (e: Throwable) {
-                return DEFAULT
+                DEFAULT
             }
 
         }

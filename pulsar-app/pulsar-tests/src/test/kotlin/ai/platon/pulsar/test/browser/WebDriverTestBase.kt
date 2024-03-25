@@ -38,6 +38,7 @@ class WebDriverTestBase: TestBase() {
         driver.navigateTo(warnUpUrl)
         driver.navigateTo(url)
         driver.waitForSelector("body")
+        driver.waitForSelector("input[id]")
 //        driver.bringToFront()
         var n = scrollCount
         while (n-- > 0) {

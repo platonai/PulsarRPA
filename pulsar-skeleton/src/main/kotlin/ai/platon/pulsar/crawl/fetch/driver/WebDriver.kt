@@ -418,6 +418,29 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun type(selector: String, text: String)
     /**
+     * This method emulates inserting text that doesn't come from a key press.
+     *
+     * Unlike [type], this method clears the existing value before typing.
+     *
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to focus. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * @param text The text to insert.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun fill(selector: String, text: String)
+    /**
+     * Shortcut for keyboard down and keyboard up.
+     *
+     * @param key - Name of key to press, such as `ArrowLeft`.
+     * See {@link KeyInput} for a list of all key names.
+     *
+     * see {@link https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/editing/commands/editor_command_names.h | Chromium Source Code} for valid command names.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun press(selector: String, key: String)
+    /**
      * This method clicks an element with [selector] and focuses it. If there's no
      * element matching `selector`, nothing to do.
      *
