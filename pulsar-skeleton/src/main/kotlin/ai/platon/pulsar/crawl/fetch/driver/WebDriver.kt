@@ -649,7 +649,11 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun selectAttributes(selector: String, attrName: String): List<String>
     
+    @Throws(WebDriverException::class)
+    suspend fun setAttribute(selector: String, attrName: String, attrValue: String)
     
+    @Throws(WebDriverException::class)
+    suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String)
     
     /**
      * Find hyperlinks in elements matching the CSS query.

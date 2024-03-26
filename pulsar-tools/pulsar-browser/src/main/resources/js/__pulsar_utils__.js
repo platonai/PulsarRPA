@@ -1354,6 +1354,18 @@ __pulsar_utils__.add = function(a, b) {
 };
 
 /**
+ * Press a key.
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/KeyboardEvent/key)
+ * */
+__pulsar_utils__.press = function(selector, key) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        element.dispatchEvent(new KeyboardEvent('keypress', {key: key}));
+    }
+};
+
+/**
  * Return type information.
  *
  * @return {Object}

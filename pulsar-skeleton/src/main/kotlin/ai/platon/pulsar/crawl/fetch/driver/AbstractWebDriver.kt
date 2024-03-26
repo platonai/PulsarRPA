@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.nodes.GeoAnchor
@@ -40,11 +41,11 @@ abstract class AbstractWebDriver(
     override val delayPolicy: (String) -> Long
         get() = { type ->
             when (type) {
-                "gap" -> 500L + Random.nextInt(500)
+                "gap" -> 200L + Random.nextInt(500)
                 "click" -> 500L + Random.nextInt(1000)
-                "delete" -> 50L + Random.nextInt(200)
-                "keyUpDown" -> 300L + Random.nextInt(200)
-                "press" -> 800L + Random.nextInt(200)
+                "delete" -> 30L + Random.nextInt(50)
+                "keyUpDown" -> 50L + Random.nextInt(100)
+                "press" -> 100L + Random.nextInt(300)
                 "type" -> 50L + Random.nextInt(500)
                 "mouseWheel" -> 800L + Random.nextInt(500)
                 "dragAndDrop" -> 800L + Random.nextInt(500)
@@ -226,9 +227,17 @@ abstract class AbstractWebDriver(
         val result = evaluate("__pulsar_utils__.selectAttributes('$selector', '$attrName')")
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
+
+    @Throws(WebDriverException::class)
+    override suspend fun setAttribute(selector: String, attrName: String, attrValue: String) {
+        evaluate("__pulsar_utils__.setAttribute('$selector', '$attrName', '$attrValue')")
+    }
     
-    
-    
+    @Throws(WebDriverException::class)
+    override suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String) {
+        evaluate("__pulsar_utils__.setAttributeAll('$selector', '$attrName', '$attrValue')")
+    }
+
     /**
      * Find hyperlinks in elements matching the CSS query.
      * */

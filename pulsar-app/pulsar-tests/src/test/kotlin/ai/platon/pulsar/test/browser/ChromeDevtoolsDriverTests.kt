@@ -237,7 +237,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     @Test
     fun testKeyPress() {
         System.setProperty("browser.additionalDebugLevel", "10")
-        
+
         runWebDriverTest { driver ->
             open(url, driver)
             driver.waitForSelector("#productTitle")

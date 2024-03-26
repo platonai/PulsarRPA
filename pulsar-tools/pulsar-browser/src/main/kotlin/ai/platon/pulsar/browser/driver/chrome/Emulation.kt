@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.math.geometric.DimD
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
 import com.github.kklisura.cdt.protocol.v2023.commands.DOM
 import com.github.kklisura.cdt.protocol.v2023.commands.Page
@@ -20,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.commons.math3.util.Precision
 import java.awt.Robot
+import java.awt.event.KeyEvent
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -123,13 +123,11 @@ class ClickableDOM(
     }
 
     fun boundingBox(): RectD? {
-        val box = kotlin.runCatching { dom.getBoxModel(nodeId, null, null) }
-            .getOrNull() ?: return null
+//        val box = dom.getBoxModel(nodeId, null, null)
 
-        val quad = box.border
-        if (quad.isEmpty()) {
-            return null
-        }
+        val box = dom.runCatching { getBoxModel(nodeId, null, null) }.getOrNull() ?: return null
+
+        val quad = box.border.takeIf { it.isNotEmpty() } ?: return null
 
         val x = arrayOf(quad[0], quad[2], quad[4], quad[6]).minOrNull()!!
         val y = arrayOf(quad[1], quad[3], quad[5], quad[7]).minOrNull()!!
@@ -193,6 +191,8 @@ class Mouse(private val devTools: ChromeDevTools) {
      * @param y - Vertical position of the mouse.
      */
     suspend fun click(x: Double, y: Double, clickCount: Int = 1, delayMillis: Long = 500) {
+// println("click($x, $y, $clickCount, $delayMillis)")
+        
         moveTo(x, y)
         down(x, y, clickCount)
 
@@ -508,34 +508,43 @@ class Mouse(private val devTools: ChromeDevTools) {
  * */
 class Keyboard(private val devTools: ChromeDevTools) {
     private val input get() = devTools.input
+    private val robot = Robot()
     
-    suspend fun type(text: String, delayMillis: Long) {
-        text.forEach { char ->
-            if (Character.isISOControl(char)) {
-                // TODO:
+    suspend fun type(key: String, delayMillis: Long) {
+        key.forEach { ch ->
+            val k = KeyboardDescription.US_KEYBOARD_LAYOUT[key]
+            if (k != null) {
+                press(k, delayMillis)
             } else {
-                input.insertText("$char")
+                input.insertText(ch.toString())
             }
             delay(delayMillis)
         }
     }
     
     suspend fun delete(n: Int, delayMillis: Long) {
-        repeat(n + 1) {
+        repeat(n) {
             press("Backspace", delayMillis)
         }
     }
-
+    
     suspend fun press(key: String, delayMillis: Long) {
-        val k = KeyboardDescription.US_KEYBOARD_LAYOUT[key] ?: return
-        
-//        println("Pressing $key, delay $delayMillis | " + pulsarObjectMapper().writeValueAsString(k))
-        
-        dispatchKeyEvent(DispatchKeyEventType.RAW_KEY_DOWN, k)
-        if (delayMillis > 0) {
-            delay(delayMillis)
+        val k = KeyboardDescription.US_KEYBOARD_LAYOUT[key] ?: throw IllegalArgumentException("Unknown key: $key, " +
+            "use type() or fill() if you want to type arbitrary text")
+        press(k, delayMillis)
+    }
+    
+    suspend fun press(key: KeyDescription, delayMillis: Long) {
+        if (key.key != "Backspace") {
+            // println("Pressing ${key.key}, delay $delayMillis: \n" + pulsarObjectMapper().writeValueAsString(key))
         }
-        dispatchKeyEvent(DispatchKeyEventType.KEY_UP, k)
+
+        try {
+            dispatchKeyEvent(DispatchKeyEventType.RAW_KEY_DOWN, key)
+            delay(delayMillis.coerceAtLeast(50))
+        } finally {
+            dispatchKeyEvent(DispatchKeyEventType.KEY_UP, key)
+        }
     }
 
     suspend fun down(key: String) {
@@ -549,8 +558,24 @@ class Keyboard(private val devTools: ChromeDevTools) {
     }
 
     private suspend fun dispatchKeyEvent(type: DispatchKeyEventType, key: KeyDescription) {
+        var jKeyCode = key.keyCode
+        if (key.key == "Enter") {
+            jKeyCode = KeyEvent.VK_ENTER
+        }
+        
         withContext(Dispatchers.IO) {
-            dispatchKeyEvent(type,
+            when (type) {
+                // Presses a given key. The key should be released using the keyRelease method.
+                DispatchKeyEventType.RAW_KEY_DOWN -> robot.keyPress(jKeyCode)
+                DispatchKeyEventType.KEY_UP -> robot.keyRelease(jKeyCode)
+                else -> dispatchKeyEvent0(type, key)
+            }
+        }
+    }
+    
+    private suspend fun dispatchKeyEvent0(type: DispatchKeyEventType, key: KeyDescription) {
+        withContext(Dispatchers.IO) {
+            dispatchKeyEvent1(type,
                 key = key.key,
                 code = key.code,
                 windowsVirtualKeyCode = key.keyCodeWithoutLocation,
@@ -588,7 +613,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
      *     https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/editing/commands/editor_command_names.h
      *     for valid command names.
      */
-    private fun dispatchKeyEvent(
+    private fun dispatchKeyEvent1(
         @ParamName("type") type: DispatchKeyEventType? = null,
         @Optional @ParamName("modifiers") modifiers: Int? = null,
         @Optional @ParamName("timestamp") timestamp: Double? = null,

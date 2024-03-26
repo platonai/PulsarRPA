@@ -468,20 +468,10 @@ class ChromeDevtoolsDriver(
         try {
             val nodeId = rpc.invokeDeferred("click") {
                 page.scrollIntoViewIfNeeded(selector)
-            } ?: return
+            } ?: 0
 
-            val offset = OffsetD(4.0, 4.0)
-
-            val p = pageAPI
-            val d = domAPI
-            if (p != null && d != null) {
-                val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value ?: return
-
-                rpc.invokeDeferred("click") {
-                    mouse?.click(point.x, point.y, count, delayPolicy("click"))
-                }
-
-                gap("click")
+            if (nodeId > 0) {
+                click(nodeId, count)
             }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "click")
@@ -489,14 +479,33 @@ class ChromeDevtoolsDriver(
     }
 
     @Throws(WebDriverException::class)
-    private suspend fun click(nodeId: Int, count: Int) {
-        val offset = OffsetD(4.0, 4.0)
+    private suspend fun click(nodeId: Int, count: Int, position: String = "center") {
+        val deltaX = 4.0 + Random.nextInt(4)
+        val deltaY = 4.0
+        val offset = OffsetD(deltaX, deltaY)
 
         val p = pageAPI
         val d = domAPI
         if (p != null && d != null) {
-            val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value ?: return
-            mouse?.click(point.x, point.y, count, delayPolicy("click"))
+            val clickableDOM = ClickableDOM(p, d, nodeId, offset)
+            val point = clickableDOM.clickablePoint().value ?: return
+            val box = clickableDOM.boundingBox()
+            val width = box?.width ?: 0.0
+            // if it's an input element, we should click on the right side of the element,
+            // so the cursor is at the tail of the text
+            val offsetX = when (position) {
+                "left" -> 0.0 + deltaX
+                "right" -> width - deltaX
+                else -> width / 2
+            }
+
+            point.x += offsetX
+
+            rpc.invokeDeferred("click") {
+                mouse?.click(point.x, point.y, count, delayPolicy("click"))
+            }
+            
+            gap("click")
         }
     }
 
@@ -510,7 +519,8 @@ class ChromeDevtoolsDriver(
         try {
             rpc.invokeDeferred("type") {
                 val nodeId = focusOnSelector(selector)
-                if (nodeId != 0) {
+                if (nodeId > 0) {
+                    click(nodeId, 1)
                     keyboard?.type(text, delayPolicy("type"))
                 }
             }
@@ -529,12 +539,13 @@ class ChromeDevtoolsDriver(
                 if (nodeId != 0) {
                     // domAPI?.getAttributes(nodeId)
                     // TODO: only works for input elements
-//                    val oldText = selectFirstAttributeOrNull(selector, "value")
-//                    val length = oldText?.length?:0
-//                    if (length > 0) {
-//                        keyboard?.delete(length, delayPolicy("delete"))
-//                    }
-                    evaluate("__pulsar_utils__.setAttribute('$selector', 'value', '')")
+                    val oldText = selectFirstAttributeOrNull(selector, "value")
+                    val length = oldText?.length?:0
+                    if (length > 0) {
+                        keyboard?.delete(length, delayPolicy("delete"))
+                    }
+                    
+                    click(nodeId, 1)
                     keyboard?.type(text, delayPolicy("fill"))
                 }
             }
@@ -550,8 +561,11 @@ class ChromeDevtoolsDriver(
         try {
             rpc.invokeDeferred("press") {
                 bringToFront()
-                focusOnSelector(selector)
-                keyboard?.press(key, delayPolicy("keyUpDown"))
+                val nodeId = focusOnSelector(selector)
+                if (nodeId != 0) {
+                    // click(nodeId, 1)
+                    keyboard?.press(key, delayPolicy("keyUpDown"))
+                }
             }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "press")

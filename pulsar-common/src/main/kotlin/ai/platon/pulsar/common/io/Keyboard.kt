@@ -20,19 +20,9 @@ data class KeyDescription(
     var shifted: KeyDescription? = null
 )
 
-val aliases = mapOf(
-    "ShiftLeft" to listOf("Shift"),
-    "ControlLeft" to listOf("Control"),
-    "AltLeft" to listOf("Alt"),
-    "MetaLeft" to listOf("Meta"),
-    "Enter" to listOf("\n", "\r")
-)
-
-const val keypadLocation = 3
-
 typealias KeyboardLayout = Map<String, KeyDefinition>
 
-val USKeyboardLayout: Map<String, KeyDefinition> = mapOf(
+val USKeyboardLayout: KeyboardLayout = mapOf(
     // Functions row
     "Escape" to KeyDefinition("Escape", 27),
     "F1" to KeyDefinition("F1", 112),
@@ -160,10 +150,21 @@ val USKeyboardLayout: Map<String, KeyDefinition> = mapOf(
 
 object KeyboardDescription {
     
+    val aliases = mapOf(
+        "ShiftLeft" to listOf("Shift"),
+        "ControlLeft" to listOf("Control"),
+        "AltLeft" to listOf("Alt"),
+        "MetaLeft" to listOf("Meta"),
+        "Enter" to listOf("\n", "\r")
+    )
+    
+    const val keypadLocation = 3
+    
     val US_KEYBOARD_LAYOUT = buildLayoutClosure(USKeyboardLayout)
     
     private fun buildLayoutClosure(layout: KeyboardLayout): Map<String, KeyDescription> {
         val result = mutableMapOf<String, KeyDescription>()
+        // code: KeyA, KeyB, Enter, ...
         for ((code, definition) in layout) {
             val description = KeyDescription(
                 key = definition.key ?: "",
@@ -179,11 +180,11 @@ object KeyboardDescription {
 
             val shiftKey = definition.shiftKey
             val shiftedDescription = if (shiftKey != null) {
-                require(definition.shiftKey.length === 1)
                 description.copy(
                     key = shiftKey,
                     text = shiftKey,
-                    keyCode = definition.shiftKeyCode ?: 0
+                    keyCode = definition.shiftKeyCode ?: definition.keyCode,
+                    shifted = null
                 )
             } else null
 
