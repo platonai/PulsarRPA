@@ -34,7 +34,7 @@ class TestBase {
     val context get() = session.context
 
     val globalCache get() = session.globalCache
-
+    
     @Test
     fun smoke() {
         assertTrue { alwaysTrue() }

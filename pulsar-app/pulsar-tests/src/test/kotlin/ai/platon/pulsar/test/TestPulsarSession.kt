@@ -20,8 +20,8 @@ class TestPulsarSession: TestBase() {
 
     @BeforeTest
     fun setup() {
-//        webDB.delete(url)
-//        webDB.delete(url2)
+        webDB.delete(url)
+        webDB.delete(url2)
     }
 
     @Test

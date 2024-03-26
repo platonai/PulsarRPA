@@ -1,5 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.DescriptiveResult
 import ai.platon.pulsar.common.io.KeyDescription
 import ai.platon.pulsar.common.io.KeyboardDescription
@@ -508,15 +509,14 @@ class Mouse(private val devTools: ChromeDevTools) {
  * */
 class Keyboard(private val devTools: ChromeDevTools) {
     private val input get() = devTools.input
-    private val robot = Robot()
-    
-    suspend fun type(key: String, delayMillis: Long) {
-        key.forEach { ch ->
-            val k = KeyboardDescription.US_KEYBOARD_LAYOUT[key]
-            if (k != null) {
-                press(k, delayMillis)
+    private val robot = if (AppContext.isGUIAvailable) Robot() else null
+
+    suspend fun type(text: String, delayMillis: Long) {
+        text.forEach { char ->
+            if (Character.isISOControl(char)) {
+                // TODO:
             } else {
-                input.insertText(ch.toString())
+                input.insertText("$char")
             }
             delay(delayMillis)
         }
@@ -564,11 +564,15 @@ class Keyboard(private val devTools: ChromeDevTools) {
         }
         
         withContext(Dispatchers.IO) {
-            when (type) {
-                // Presses a given key. The key should be released using the keyRelease method.
-                DispatchKeyEventType.RAW_KEY_DOWN -> robot.keyPress(jKeyCode)
-                DispatchKeyEventType.KEY_UP -> robot.keyRelease(jKeyCode)
-                else -> dispatchKeyEvent0(type, key)
+            if (robot != null) {
+                when (type) {
+                    // Presses a given key. The key should be released using the keyRelease method.
+                    DispatchKeyEventType.RAW_KEY_DOWN -> robot.keyPress(jKeyCode)
+                    DispatchKeyEventType.KEY_UP -> robot.keyRelease(jKeyCode)
+                    else -> dispatchKeyEvent0(type, key)
+                }
+            } else {
+                dispatchKeyEvent0(type, key)
             }
         }
     }

@@ -20,11 +20,6 @@ class LoadComponentTests: TestBase() {
     @Autowired
     lateinit var loadComponent: LoadComponent
 
-    @BeforeTest
-    fun setup() {
-        crawlLoops.start()
-    }
-
     @Test
     fun testLoadAll() {
         val normUrls = urls.take(5).map { session.normalize(it, args) }

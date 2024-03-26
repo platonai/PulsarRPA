@@ -496,7 +496,7 @@ class ChromeDevtoolsDriver(
             val offsetX = when (position) {
                 "left" -> 0.0 + deltaX
                 "right" -> width - deltaX
-                else -> width / 2
+                else -> width / 2 + deltaX
             }
 
             point.x += offsetX
@@ -643,11 +643,10 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun captureScreenshot(selector: String): String? {
         return try {
-            rpc.invokeDeferred("captureScreenshot") {
-                // Force the page stop all navigations and pending resource fetches.
-                rpc.invoke("stopLoading") { pageAPI?.stopLoading() }
-                rpc.invoke("captureScreenshot") { screenshot.captureScreenshot(selector) }
-            }
+            val nodeId = page.scrollIntoViewIfNeeded(selector) ?: return null
+            // Force the page stop all navigations and pending resource fetches.
+            rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
+            rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(selector) }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "captureScreenshot")
             null
@@ -657,11 +656,9 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun captureScreenshot(clip: RectD): String? {
         return try {
-            rpc.invokeDeferred("captureScreenshot") {
-                // Force the page stop all navigations and pending resource fetches.
-                rpc.invoke("stopLoading") { pageAPI?.stopLoading() }
-                rpc.invoke("captureScreenshot") { screenshot.captureScreenshot(clip) }
-            }
+            // Force the page stop all navigations and pending resource fetches.
+            rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
+            rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(clip) }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "captureScreenshot")
             null

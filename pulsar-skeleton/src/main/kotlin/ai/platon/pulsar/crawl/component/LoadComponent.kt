@@ -31,6 +31,7 @@ import java.time.Instant
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -71,7 +72,7 @@ class LoadComponent(
     private val tracer = logger.takeIf { it.isTraceEnabled }
 
     private val loadStrategy = immutableConfig.get(LOAD_STRATEGY, "SIMPLE")
-    
+
     private val deactivateFetchComponent1 = immutableConfig.getBoolean(LOAD_DEACTIVATE_FETCH_COMPONENT, false)
     @Deprecated("Use LOAD_DEACTIVATE_FETCH_COMPONENT instead")
     private val deactivateFetchComponent2 = immutableConfig.getBoolean(LOAD_DISABLE_FETCH, false)
@@ -97,6 +98,7 @@ class LoadComponent(
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
     private var reportCount = 0
+    private val batchTaskCount = AtomicInteger()
 
     /**
      * Retrieve the fetch state of a page, which determines whether the page should be fetched from the Internet.
@@ -214,39 +216,23 @@ class LoadComponent(
 
     /**
      * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
-     *
-     * TODO: use coroutine
      * */
     fun loadAll(normUrls: Iterable<NormUrl>): List<WebPage> {
         if (!normUrls.iterator().hasNext()) {
             return listOf()
         }
-
+        
+        val batchId = batchTaskCount.incrementAndGet()
         val futures = loadAllAsync(normUrls.filter { !it.isNil })
 
-        logger.info("Waiting for {} completable links | @{}", futures.size, futures.hashCode())
+        logger.info("Waiting for {} completable links | #{}", futures.size, batchId)
 
         val future = CompletableFuture.allOf(*futures.toTypedArray())
         future.join()
 
         val pages = futures.mapNotNull { it.get().takeIf { it.isNotNil } }
 
-        logger.info("Finished {}/{} pages | @{}", pages.size, futures.size, futures.hashCode())
-
-        return pages
-    }
-
-    suspend fun loadAllDeferred(normUrls: Iterable<NormUrl>): List<WebPage> {
-        val deferredPages = LinkedBlockingQueue<Deferred<WebPage>>()
-        val jobs = normUrls.filter { !it.isNil }
-            .map { coroutineScope { launch { async { loadDeferred(it) }.also(deferredPages::add) } } }
-
-        logger.info("Waiting for {} completable links | @{}", jobs.size, jobs.hashCode())
-
-        jobs.joinAll()
-
-        val pages = deferredPages.mapNotNull { it.await().takeIf { it.isNotNil } }
-        logger.info("Finished {}/{} pages | @{}", pages.size, pages.size, pages.hashCode())
+        logger.info("Finished {}/{} pages | #{}", pages.size, futures.size, batchId)
 
         return pages
     }
@@ -270,7 +256,7 @@ class LoadComponent(
         if (!normUrls.iterator().hasNext()) {
             return listOf()
         }
-
+        
         val linkFutures = normUrls.asSequence().filter { !it.isNil }.distinctBy { it.spec }
             .map { it.toCompletableListenableHyperlink() }
             .toList()
