@@ -587,12 +587,23 @@ __pulsar_utils__.outerHTML = function(selector) {
 };
 
 /**
+ * @deprecated Use selectFirstText instead
+ */
+__pulsar_utils__.firstText = function(selector) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        return element.textContent
+    }
+    return null
+};
+
+/**
  * Select the first element and extract the text
  *
  * @param  {String} selector
- * @return {String}
+ * @return {String|null}
  */
-__pulsar_utils__.firstText = function(selector) {
+__pulsar_utils__.selectFirstText = function(selector) {
     let element = document.querySelector(selector)
     if (element != null) {
         return element.textContent

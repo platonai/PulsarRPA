@@ -548,18 +548,11 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun press(selector: String, key: String) {
         try {
-            val nodeId = rpc.invokeDeferred("press") {
+            rpc.invokeDeferred("press") {
+                bringToFront()
                 focusOnSelector(selector)
+                keyboard?.press(key, delayPolicy("keyUpDown"))
             }
-            
-            if (nodeId != 0) {
-                println("nodeId: $nodeId")
-                rpc.invokeDeferred("press") {
-                    keyboard?.press(key, delayPolicy("keyUpDown"))
-                }
-            }
-            
-            gap("press")
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "press")
         }

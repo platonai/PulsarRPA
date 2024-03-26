@@ -35,7 +35,9 @@ class WebDriverTestBase: TestBase() {
     }
 
     protected suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) {
-        driver.navigateTo(warnUpUrl)
+//        driver.navigateTo(warnUpUrl)
+//        delay(1000)
+//        driver.navigateTo("about:blank")
         driver.navigateTo(url)
         driver.waitForSelector("body")
         driver.waitForSelector("input[id]")

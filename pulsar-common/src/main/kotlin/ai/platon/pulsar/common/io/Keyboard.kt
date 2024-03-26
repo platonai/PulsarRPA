@@ -176,44 +176,41 @@ object KeyboardDescription {
             if (definition.key.length == 1) {
                 description.text = description.key
             }
-            
+
             val shiftKey = definition.shiftKey
             val shiftedDescription = if (shiftKey != null) {
                 require(definition.shiftKey.length === 1)
-                KeyDescription(
+                description.copy(
                     key = shiftKey,
-                    keyCode = definition.shiftKeyCode ?: 0,
-                    keyCodeWithoutLocation = description.keyCodeWithoutLocation,
-                    code = code,
                     text = shiftKey,
-                    location = description.location
+                    keyCode = definition.shiftKeyCode ?: 0
                 )
             } else null
-            
+
             // Map from code: Digit3 -> { ... description, shifted }
             result[code] = description.copy(shifted = shiftedDescription)
-            
+
             // Map from aliases: Shift -> non-shiftable definition
             aliases[code]?.forEach { alias ->
                 result[alias] = description
             }
-            
+
             // Do not use numpad when converting keys to codes.
             if (definition.location != null) {
                 continue
             }
-            
+
             // Map from key, no shifted
             if (description.key.length == 1) {
                 result[description.key] = description
             }
-            
+
             // Map from shiftKey, no shifted
             shiftedDescription?.let { shifted ->
                 result[shifted.key] = shifted.copy(shifted = null)
             }
         }
-        
+
         return result
     }
 }

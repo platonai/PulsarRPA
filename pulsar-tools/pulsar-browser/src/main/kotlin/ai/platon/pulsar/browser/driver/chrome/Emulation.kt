@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.math.geometric.DimD
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
 import com.github.kklisura.cdt.protocol.v2023.commands.DOM
 import com.github.kklisura.cdt.protocol.v2023.commands.Page
@@ -527,14 +528,19 @@ class Keyboard(private val devTools: ChromeDevTools) {
 
     suspend fun press(key: String, delayMillis: Long) {
         val k = KeyboardDescription.US_KEYBOARD_LAYOUT[key] ?: return
-        dispatchKeyEvent(DispatchKeyEventType.KEY_DOWN, k)
-        delay(delayMillis)
+        
+//        println("Pressing $key, delay $delayMillis | " + pulsarObjectMapper().writeValueAsString(k))
+        
+        dispatchKeyEvent(DispatchKeyEventType.RAW_KEY_DOWN, k)
+        if (delayMillis > 0) {
+            delay(delayMillis)
+        }
         dispatchKeyEvent(DispatchKeyEventType.KEY_UP, k)
     }
 
     suspend fun down(key: String) {
         val k = KeyboardDescription.US_KEYBOARD_LAYOUT[key] ?: return
-        dispatchKeyEvent(DispatchKeyEventType.KEY_DOWN, k)
+        dispatchKeyEvent(DispatchKeyEventType.RAW_KEY_DOWN, k)
     }
 
     suspend fun up(key: String) {
@@ -547,7 +553,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
             dispatchKeyEvent(type,
                 key = key.key,
                 code = key.code,
-                windowsVirtualKeyCode = key.keyCode,
+                windowsVirtualKeyCode = key.keyCodeWithoutLocation,
                 keyIdentifier = key.key,
                 location = key.location
             )

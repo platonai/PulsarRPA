@@ -240,15 +240,26 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         
         runWebDriverTest { driver ->
             open(url, driver)
-            
-            assertTrue { driver.exists("body") }
-            
-            val text = driver.selectFirstTextOrNull("#glow-ingress-block")
-            println("deliver to: $text")
-            
-            driver.press("input[placeholder=Search Amazon]", "KeyA")
-            driver.press("input[placeholder=Search Amazon]", "KeyB")
-            driver.press("input[placeholder=Search Amazon]", "KeyC")
+            driver.waitForSelector("#productTitle")
+
+            assertTrue { driver.exists("#productTitle") }
+
+            var text = driver.selectFirstTextOrNull("#productTitle")
+            println("Product title: $text")
+
+            val searchBoxSelector = "input[placeholder*=Search]"
+            text = driver.selectFirstAttributeOrNull(searchBoxSelector, "placeholder")
+            println("Search bar - placeholder - : $text")
+            text = driver.selectFirstAttributeOrNull(searchBoxSelector, "value")
+            println("Search bar value - 1: $text")
+
+            driver.press(searchBoxSelector, "KeyA")
+            driver.press(searchBoxSelector, "KeyB")
+            driver.press(searchBoxSelector, "KeyC")
+            driver.press(searchBoxSelector, "Enter")
+
+            text = driver.selectFirstAttributeOrNull(searchBoxSelector, "value")
+            println("Search bar value - 2: $text")
             
             readlnOrNull()
         }
