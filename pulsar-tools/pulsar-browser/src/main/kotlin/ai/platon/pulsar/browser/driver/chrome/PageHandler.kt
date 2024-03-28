@@ -1,6 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome
 
-import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.common.ScriptConfuser
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
@@ -9,7 +9,7 @@ import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 
 class PageHandler(
     private val devTools: RemoteDevTools,
-    private val browserSettings: BrowserSettings
+    private val confuser: ScriptConfuser,
 ) {
     companion object {
         // see org.w3c.dom.Node.ELEMENT_NODE
@@ -102,7 +102,7 @@ class PageHandler(
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
     fun evaluateDetail(expression: String): Evaluate? {
-        return runtime?.evaluate(browserSettings.confuser.confuse(expression))
+        return runtime?.evaluate(confuser.confuse(expression))
     }
 
     /**

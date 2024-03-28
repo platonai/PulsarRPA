@@ -60,10 +60,9 @@ class ChromeDevtoolsDriver(
     val blockedURLs: List<String> get() = _blockedURLs
     val probabilisticBlockedURLs: List<String> get() = _probabilityBlockedURLs
 
-    private val page = PageHandler(devTools, browserSettings)
+    private val page = PageHandler(devTools, browser.confuser)
     private val screenshot = Screenshot(page, devTools)
 
-    private var lastSessionId: String? = null
     private var navigateUrl = chromeTab.url ?: ""
 
     private val browserAPI get() = devTools.browser.takeIf { isActive }
