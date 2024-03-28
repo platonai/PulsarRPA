@@ -13,7 +13,12 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
      * */
     val id: BrowserId
     /**
-     * The user agent to override, do not override if it's null.
+     * The user agent. A user agent is a string that a browser sends to each website you visit.
+     * It's created when the browser first connected to the remote browser.
+     * */
+    val userAgent: String
+    /**
+     * The user agent to override, do not override if it's null or empty.
      * */
     var userAgentOverride: String?
     /**

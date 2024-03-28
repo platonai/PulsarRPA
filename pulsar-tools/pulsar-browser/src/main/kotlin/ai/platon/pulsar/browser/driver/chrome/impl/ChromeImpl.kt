@@ -45,10 +45,10 @@ class ChromeImpl(
     
     val isActive get() = !closed.get()
 
+    private val _version: Lazy<ChromeVersion> = lazy { refreshVersion() }
     /**
      * The Chrome version.
      * */
-    private val _version: Lazy<ChromeVersion> = lazy { refreshVersion() }
     override val version get() = _version.value
 
     constructor(host: String, port: Int): this(host, port, object: WebSocketServiceFactory {

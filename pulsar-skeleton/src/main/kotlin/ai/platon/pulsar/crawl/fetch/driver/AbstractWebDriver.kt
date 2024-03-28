@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.nodes.GeoAnchor
@@ -58,8 +57,6 @@ abstract class AbstractWebDriver(
     override var navigateEntry: NavigateEntry = NavigateEntry("")
     
     override val navigateHistory = NavigateHistory()
-    
-    override val userAgent: String? by lazy { runBlocking { evaluate("navigator.userAgent")?.toString() } }
     
     override val supportJavascript: Boolean = true
     
@@ -346,7 +343,7 @@ abstract class AbstractWebDriver(
             .ignoreContentType(true)
             .ignoreHttpErrors(true)
         
-        userAgent?.let { session.userAgent(it) }
+        session.userAgent(browser.userAgent)
         
         if (cookies.isNotEmpty()) {
             session.cookies(cookies.first())

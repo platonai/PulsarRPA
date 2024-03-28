@@ -105,10 +105,6 @@ interface WebDriver: Closeable {
      * */
     val navigateHistory: NavigateHistory
     /**
-     * The current navigation entry.
-     * */
-    val userAgent: String?
-    /**
      * Whether the driver supports javascript. Web drivers such as MockDriver do not
      * support javascript.
      * */

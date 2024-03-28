@@ -16,6 +16,9 @@ abstract class AbstractBrowser(
     override val id: BrowserId,
     val browserSettings: BrowserSettings
 ): Browser, AbstractEventEmitter<BrowserEvents>() {
+    companion object {
+        val DEFAULT_USER_AGENT = "PulsarRobot/1.0"
+    }
     
     protected val mutableDrivers = ConcurrentHashMap<String, WebDriver>()
     protected val mutableRecoveredDrivers = ConcurrentHashMap<String, WebDriver>()
@@ -24,6 +27,8 @@ abstract class AbstractBrowser(
     protected val initialized = AtomicBoolean()
     protected val closed = AtomicBoolean()
     protected var lastActiveTime = Instant.now()
+    
+    override val userAgent get() = DEFAULT_USER_AGENT
     
     override var userAgentOverride = getRandomUserAgentOrNull()
     

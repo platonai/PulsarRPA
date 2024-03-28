@@ -1,6 +1,7 @@
 package ai.platon.pulsar.t
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -11,13 +12,20 @@ import com.google.common.collect.Iterators
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicInteger
 
 class Twitter {
     private val session = PulsarContexts.createSession()
     private val interactSessionId = AtomicInteger()
+    private val accountPath = AppPaths.DATA_DIR.resolve("accounts/enabled-accounts/twitter-accounts.txt")
+    private val accounts = Files.readAllLines(accountPath)
+        .map { it.split("\\s".toRegex()) }
+        .filter { it.size == 2 }
+        .associate { it[0] to it[1] }
     
-    private val keywords = listOf("Facebook", "Google", "Amazon", "Microsoft", "Apple", "Netflix", "Tesla", "Alibaba", "Tencent", "Baidu")
+    private val keywords = listOf("Facebook", "Google", "Amazon", "Microsoft", "Apple", "Netflix", "Tesla", "Alibaba",
+        "Tencent", "Baidu", "JD", "Pinduoduo", "Meituan", "ByteDance", "Huawei", "Xiaomi", "Oppo", "Vivo", "OnePlus",)
     private val iterator = Iterators.cycle(keywords)
     
     fun visit() {
@@ -43,10 +51,14 @@ class Twitter {
     }
     
     private suspend fun interact(page: WebPage, driver: WebDriver) {
-        interact0(page, driver)
+        loginIfNecessary(page, driver)
+        
+        supervisorScope {
+            launch { interact1(page, driver) }
+        }
     }
     
-    private suspend fun interact0(page: WebPage, driver: WebDriver) {
+    private suspend fun loginIfNecessary(page: WebPage, driver: WebDriver) {
         // login
         if (page.url.contains("login")) {
 //            driver.findElementByCssSelector("input[name='session[username_or_email]']").sendKeys("username")
@@ -63,15 +75,8 @@ class Twitter {
             
             driver.waitForNavigation()
         }
-
-//            scheduledExecutor.scheduleAtFixedRate({ monitor(page, driver) },
-//                1000, 2000, TimeUnit.SECONDS)
-        
-        supervisorScope {
-            launch { interact1(page, driver) }
-        }
     }
-
+    
     private suspend fun interact1(page: WebPage, driver: WebDriver) {
         val id = interactSessionId.incrementAndGet()
         val browser = driver.browser
@@ -83,17 +88,10 @@ class Twitter {
 
         val twitterDrivers = drivers.filter { it.currentUrl().contains("twitter.com") }
 
-        twitterDrivers.forEach { driver1 ->
-            println(driver1.currentUrl())
+        twitterDrivers.forEach { dr ->
+            println(dr.currentUrl())
             delay(1000)
-
-            val selector = "input[placeholder*=搜索], input[placeholder*=Search]"
-            if (driver1.exists(selector)) {
-                driver1.fill(selector, iterator.next())
-                driver1.press(selector, "Space")
-                "Email".uppercase().forEach { driver1.press(selector, "Key$it") }
-                driver1.press(selector, "Enter")
-            }
+            interactWithPage(dr)
         }
 
         delay(2000)
@@ -101,6 +99,19 @@ class Twitter {
         supervisorScope {
             launch { interact1(page, driver) }
         }
+    }
+
+    private suspend fun interactWithPage(driver: WebDriver) {
+        // interact with the page
+        val selector = "input[placeholder*=搜索], input[placeholder*=Search]"
+        if (!driver.exists(selector)) {
+            return
+        }
+
+        driver.fill(selector, iterator.next())
+        driver.press(selector, "Space")
+        "Email".uppercase().forEach { driver.press(selector, "Key$it") }
+        driver.press(selector, "Enter")
     }
 }
 

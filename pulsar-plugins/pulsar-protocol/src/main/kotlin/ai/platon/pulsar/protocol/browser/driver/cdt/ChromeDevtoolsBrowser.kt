@@ -34,6 +34,8 @@ class ChromeDevtoolsBrowser(
     private val devtools: List<ChromeDevTools>
         get() = drivers.values.filterIsInstance<ChromeDevtoolsDriver>().map { it.devTools }
     
+    override val userAgent get() = chrome.version.userAgent ?: DEFAULT_USER_AGENT
+    
     @Synchronized
     @Throws(WebDriverException::class)
     fun createTab(): ChromeTab {
