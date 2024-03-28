@@ -103,6 +103,7 @@ class TransportImpl : Transport {
         meterRequests.mark()
         
         return try {
+            tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.asyncRemote.sendText(message)
         } catch (e: IOException) {
             throw WebSocketServiceException("The connection is closed", e)

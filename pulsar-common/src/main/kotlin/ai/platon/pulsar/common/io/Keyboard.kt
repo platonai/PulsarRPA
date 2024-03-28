@@ -10,17 +10,23 @@ data class KeyDefinition(
     val location: Int? = null
 )
 
-data class KeyDescription(
-    var keyCode: Int,
-    var keyCodeWithoutLocation: Int,
+data class VKeyDescription(
     var key: String,
-    var text: String,
+    var keyCodeWithoutLocation: Int,
     var code: String,
-    var location: Int,
-    var shifted: KeyDescription? = null
+    var location: Int = 0,
+    var keyCode: Int,
+    var text: String,
+    var shifted: VKeyDescription? = null,
 )
 
 typealias KeyboardLayout = Map<String, KeyDefinition>
+
+enum class KeyboardModifier {
+    Alt, Control, Meta, Shift
+}
+
+val USKeypadLocation = 3;
 
 val USKeyboardLayout: KeyboardLayout = mapOf(
     // Functions row
@@ -157,21 +163,21 @@ object KeyboardDescription {
         "MetaLeft" to listOf("Meta"),
         "Enter" to listOf("\n", "\r")
     )
-    
-    const val keypadLocation = 3
-    
-    val US_KEYBOARD_LAYOUT = buildLayoutClosure(USKeyboardLayout)
-    
-    private fun buildLayoutClosure(layout: KeyboardLayout): Map<String, KeyDescription> {
-        val result = mutableMapOf<String, KeyDescription>()
+
+    val keypadLocation = USKeypadLocation
+
+    val KEYBOARD_LAYOUT = buildLayoutClosure(USKeyboardLayout)
+
+    private fun buildLayoutClosure(layout: KeyboardLayout): Map<String, VKeyDescription> {
+        val result = mutableMapOf<String, VKeyDescription>()
         // code: KeyA, KeyB, Enter, ...
         for ((code, definition) in layout) {
-            val description = KeyDescription(
-                key = definition.key ?: "",
-                keyCode = definition.keyCode ?: 0,
-                keyCodeWithoutLocation = definition.keyCodeWithoutLocation ?: definition.keyCode ?: 0,
+            val description = VKeyDescription(
+                key = definition.key,
+                keyCode = definition.keyCode,
+                keyCodeWithoutLocation = definition.keyCodeWithoutLocation ?: definition.keyCode,
                 code = code,
-                text = definition.text ?: "",
+                text = definition.text ?: definition.key,
                 location = definition.location ?: 0
             )
             if (definition.key.length == 1) {

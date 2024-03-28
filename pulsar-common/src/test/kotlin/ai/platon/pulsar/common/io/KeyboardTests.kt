@@ -6,7 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class KeyboardTests {
-    private val keyboard = KeyboardDescription.US_KEYBOARD_LAYOUT
+    private val keyboard = KeyboardDescription.KEYBOARD_LAYOUT
     private val robot = Robot()
     
     @Test

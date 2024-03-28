@@ -254,9 +254,11 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
             text = driver.selectFirstAttributeOrNull(selector, "value")
             println("Search bar value - 1: $text")
 
-            driver.press(selector, "KeyA")
-            driver.press(selector, "KeyB")
-            driver.press(selector, "KeyC")
+            "Mate".uppercase().forEach { ch ->
+                driver.press(selector, "Key$ch")
+            }
+            driver.press(selector, "Digit6")
+            driver.press(selector, "Digit0")
             driver.press(selector, "Enter")
 
             text = driver.selectFirstAttributeOrNull(selector, "value")

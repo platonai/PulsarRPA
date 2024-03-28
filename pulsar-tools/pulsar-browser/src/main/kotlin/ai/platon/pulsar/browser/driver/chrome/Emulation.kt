@@ -2,8 +2,9 @@ package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.DescriptiveResult
-import ai.platon.pulsar.common.io.KeyDescription
+import ai.platon.pulsar.common.io.VKeyDescription
 import ai.platon.pulsar.common.io.KeyboardDescription
+import ai.platon.pulsar.common.io.KeyboardDescription.keypadLocation
 import ai.platon.pulsar.common.math.geometric.DimD
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
@@ -529,64 +530,65 @@ class Keyboard(private val devTools: ChromeDevTools) {
     }
     
     suspend fun press(key: String, delayMillis: Long) {
-        val k = KeyboardDescription.US_KEYBOARD_LAYOUT[key] ?: throw IllegalArgumentException("Unknown key: $key, " +
+        val k = KeyboardDescription.KEYBOARD_LAYOUT[key] ?: throw IllegalArgumentException("Unknown key: $key, " +
             "use type() or fill() if you want to type arbitrary text")
         press(k, delayMillis)
     }
     
-    suspend fun press(key: KeyDescription, delayMillis: Long) {
-        if (key.key != "Backspace") {
-            // println("Pressing ${key.key}, delay $delayMillis: \n" + pulsarObjectMapper().writeValueAsString(key))
-        }
-
+    suspend fun press(key: VKeyDescription, delayMillis: Long) {
         try {
-            dispatchKeyEvent(DispatchKeyEventType.RAW_KEY_DOWN, key)
-            delay(delayMillis.coerceAtLeast(50))
+            down(key)
+            delay(delayMillis.coerceAtLeast(20))
         } finally {
-            dispatchKeyEvent(DispatchKeyEventType.KEY_UP, key)
+            up(key)
         }
     }
 
-    suspend fun down(key: String) {
-        val k = KeyboardDescription.US_KEYBOARD_LAYOUT[key] ?: return
-        dispatchKeyEvent(DispatchKeyEventType.RAW_KEY_DOWN, k)
-    }
-
-    suspend fun up(key: String) {
-        val k = KeyboardDescription.US_KEYBOARD_LAYOUT[key] ?: return
-        dispatchKeyEvent(DispatchKeyEventType.KEY_UP, k)
-    }
-
-    private suspend fun dispatchKeyEvent(type: DispatchKeyEventType, key: KeyDescription) {
-        var jKeyCode = key.keyCode
-        if (key.key == "Enter") {
-            jKeyCode = KeyEvent.VK_ENTER
-        }
+    suspend fun down(key: VKeyDescription) {
+        // From playwright:
+        // {"type":"keyDown","modifiers":0,"windowsVirtualKeyCode":13,"code":"Enter","commands":[],"key":"Enter","text":"\r","unmodifiedText":"\r","autoRepeat":false,"location":0,"isKeypad":false},"sessionId":"45E0A2ABC64CE5ACDC8A98061CC4667B"}
         
+        val type = if (key.text.isEmpty()) DispatchKeyEventType.RAW_KEY_DOWN else DispatchKeyEventType.KEY_DOWN
+        val modifiers = emptySet<String>()
+        val commands = emptyList<String>()
         withContext(Dispatchers.IO) {
-            if (robot != null) {
-                when (type) {
-                    // Presses a given key. The key should be released using the keyRelease method.
-                    DispatchKeyEventType.RAW_KEY_DOWN -> robot.keyPress(jKeyCode)
-                    DispatchKeyEventType.KEY_UP -> robot.keyRelease(jKeyCode)
-                    else -> dispatchKeyEvent0(type, key)
-                }
-            } else {
-                dispatchKeyEvent0(type, key)
-            }
+            dispatchKeyEvent1(type,
+                modifiers = toModifiersMask(modifiers),
+                windowsVirtualKeyCode = key.keyCodeWithoutLocation,
+                code = key.code,
+                commands = commands,
+                key = key.key,
+                text = key.text,
+                unmodifiedText = key.text,
+                location = key.location,
+                isKeypad = key.location == keypadLocation,
+            )
+        }
+    }
+
+    suspend fun up(key: VKeyDescription) {
+        // From playwright:
+        // {"type":"keyUp","modifiers":0,"key":"Enter","windowsVirtualKeyCode":13,"code":"Enter","location":0}
+
+        val modifiers = emptySet<String>()
+        withContext(Dispatchers.IO) {
+            dispatchKeyEvent1(DispatchKeyEventType.KEY_UP,
+                modifiers = toModifiersMask(modifiers),
+                key = key.key,
+                windowsVirtualKeyCode = key.keyCodeWithoutLocation,
+                code = key.code,
+                location = key.location,
+            )
         }
     }
     
-    private suspend fun dispatchKeyEvent0(type: DispatchKeyEventType, key: KeyDescription) {
-        withContext(Dispatchers.IO) {
-            dispatchKeyEvent1(type,
-                key = key.key,
-                code = key.code,
-                windowsVirtualKeyCode = key.keyCodeWithoutLocation,
-                keyIdentifier = key.key,
-                location = key.location
-            )
-        }
+    private fun toModifiersMask(modifiers: Set<String>): Int {
+        var mask = 0
+        if (modifiers.contains("Alt")) mask = mask or 1
+        if (modifiers.contains("Control")) mask = mask or 2
+        if (modifiers.contains("Meta")) mask = mask or 4
+        if (modifiers.contains("Shift")) mask = mask or 8
+        return mask
     }
     
     /**

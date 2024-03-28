@@ -12,10 +12,7 @@ import ai.platon.pulsar.common.concurrent.RuntimeShutdownHookRegistry
 import ai.platon.pulsar.common.concurrent.ShutdownHookRegistry
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
-import java.io.BufferedReader
-import java.io.FileFilter
-import java.io.IOException
-import java.io.InputStreamReader
+import java.io.*
 import java.nio.channels.FileChannel
 import java.nio.file.*
 import java.time.Duration
@@ -37,7 +34,7 @@ class ChromeLauncher(
         
         var DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
         var PID_FILE_NAME = "chrome.launcher.pid"
-        var TEMPORARY_UDD_EXPIRY = Duration.ofHours(24)
+        var TEMPORARY_UDD_EXPIRY = Duration.ofHours(1)
 
         fun deleteTemporaryUserDataDirWithLock(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
             synchronized(AppPaths.BROWSER_TMP_DIR_LOCK) {
@@ -330,9 +327,15 @@ class ChromeLauncher(
                     Files.list(prototypeUserDataDir)
                         .filter { Files.isSymbolicLink(it) && !Files.exists(it) }
                         .forEach { Files.delete(it) }
+
                     // ISSUE#29: https://github.com/platonai/PulsarRPA/issues/29
                     // Failed to copy chrome data dir when there is a SingletonSocket symbol link
                     val fileFilter = FileFilter { !Files.isSymbolicLink(it.toPath()) }
+
+//                    val fileFilter = { f: File -> !Files.isSymbolicLink(f.toPath())
+//                        // Copy only the default profile directory
+//                        && f.name == "Default"
+//                    }
                     FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile(), fileFilter)
                 } else {
                     Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
