@@ -334,15 +334,33 @@ interface WebDriver: Closeable {
      * Returns when element specified by selector satisfies {@code state} option.
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForSelector(selector: String): Long
+    suspend fun waitForSelector(selector: String): Long = waitForSelector(selector) {}
+    
     /**
      * Returns when element specified by selector satisfies {@code state} option.
      * Returns the time remaining until timeout.
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long
+    suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long = waitForSelector(selector, timeoutMillis) {}
     @Throws(WebDriverException::class)
-    suspend fun waitForSelector(selector: String, timeout: Duration): Long
+    suspend fun waitForSelector(selector: String, timeout: Duration): Long = waitForSelector(selector, timeout) {}
+    
+    
+    /**
+     * Returns when element specified by selector satisfies {@code state} option.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun waitForSelector(selector: String, action: suspend () -> Unit): Long
+    /**
+     * Returns when element specified by selector satisfies {@code state} option.
+     * Returns the time remaining until timeout.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun waitForSelector(selector: String, timeoutMillis: Long, action: suspend () -> Unit): Long
+    @Throws(WebDriverException::class)
+    suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Long
+    
+    
     @Throws(WebDriverException::class)
     suspend fun waitForNavigation(): Long
     @Throws(WebDriverException::class)

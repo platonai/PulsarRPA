@@ -627,7 +627,7 @@ __pulsar_utils__.allTexts = function(selector) {
 __pulsar_utils__.selectTextAll = function(selector) {
     let elements = document.querySelectorAll(selector)
     let texts = Array.from(elements).map(e => e.textContent)
-    return JSON.stringify(texts)
+    return JSON.stringify(texts, null, 2)
 };
 
 /**
@@ -669,6 +669,7 @@ __pulsar_utils__.allAttrs = function(selector, attrName) {
 __pulsar_utils__.selectAttributeAll = function(selector, attrName) {
     let elements = document.querySelectorAll(selector)
     return Array.from(elements).map(e => e.getAttribute(attrName)).join("\n")
+    // return JSON.stringify(texts, null, 2)
 };
 
 /**

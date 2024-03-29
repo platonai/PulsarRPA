@@ -1,8 +1,12 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.nodes.GeoAnchor
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -134,11 +138,11 @@ abstract class AbstractWebDriver(
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long =
-        waitForSelector(selector, Duration.ofMillis(timeoutMillis))
+    override suspend fun waitForSelector(selector: String, timeoutMillis: Long, action: suspend () -> Unit): Long =
+        waitForSelector(selector, Duration.ofMillis(timeoutMillis), action)
     
     @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String): Long = waitForSelector(selector, waitForElementTimeout)
+    override suspend fun waitForSelector(selector: String, action: suspend () -> Unit): Long = waitForSelector(selector, waitForElementTimeout, action)
     
     @Throws(WebDriverException::class)
     override suspend fun waitForNavigation(): Long = waitForNavigation(Duration.ofSeconds(10))
@@ -209,8 +213,9 @@ abstract class AbstractWebDriver(
     
     @Throws(WebDriverException::class)
     override suspend fun selectTextAll(selector: String): List<String> {
-        val result = evaluate("__pulsar_utils__.selectTextAll('$selector')")
-        return result?.toString()?.split("\n")?.toList() ?: listOf()
+        val json = evaluate("__pulsar_utils__.selectTextAll('$selector')")?.toString()?: "[]"
+        val result: List<String> = jacksonObjectMapper().readValue(json)
+        return result
     }
     
     @Throws(WebDriverException::class)

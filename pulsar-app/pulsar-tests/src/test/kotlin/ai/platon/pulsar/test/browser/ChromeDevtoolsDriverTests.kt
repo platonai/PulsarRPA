@@ -3,6 +3,7 @@ package ai.platon.pulsar.test.browser
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.ScriptConfuser.Companion.IDENTITY_NAME_MANGLER
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppSystemInfo.Companion.elapsedTime
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
@@ -10,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.net.Proxy
 import java.nio.file.Path
+import java.time.Duration
 import java.util.*
 import kotlin.test.*
 
@@ -38,6 +40,11 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     fun setup() {
         session.globalCache.resetCaches()
         confuser.nameMangler = IDENTITY_NAME_MANGLER
+    }
+    
+    fun tearDown() {
+        session.globalCache.resetCaches()
+        confuser.reset()
     }
     
     @Test
@@ -113,12 +120,12 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
 //            assertTrue { nodeVariables.contains("querySelector") }
 //            assertTrue { nodeVariables.contains("textContent") }
 
-            println(nodeVariables)
+            val variables = nodeVariables.split(",").map { it.trim('\"') }
 
-            val variables = nodeVariables.split(",")
-                .map { it.trim('\"') }
-                .filter { it.contains("__pulsar_") }
-            println(variables.joinToString("\n"))
+            println(variables)
+
+            val pulsarVariables = variables.filter { it.contains("__pulsar_") }
+            assertTrue { pulsarVariables.isEmpty() }
 
             var result = driver.evaluate("typeof(document.__pulsar_setAttributeIfNotBlank)").toString()
             assertEquals("function", result)
@@ -174,6 +181,27 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
             driver.waitForSelector("body")
             driver.scrollDown(5)
         }
+    }
+
+    @Test
+    fun testSelectTextAll() = runWebDriverTest { driver ->
+        driver.navigateTo(url)
+
+        driver.waitForSelector("#productTitle")
+
+        val timeout = Duration.ofSeconds(120)
+        val remainingTime = driver.waitForSelector("#reviewsMedley", timeout) {
+            driver.mouseWheelDown()
+            driver.scrollTo("#reviewsMedley")
+        }
+        println("Remaining time: $remainingTime ms")
+        assertTrue { remainingTime > 0 }
+        assertTrue { driver.exists("#reviewsMedley") }
+
+        driver.waitForSelector("a[data-hook=review]") { driver.mouseWheelDown() }
+        val texts = driver.selectTextAll("a[data-hook=review-title]")
+        assertTrue { texts.isNotEmpty() }
+        texts.map { it.replace("\\s+".toRegex(), " ") }.forEach { text -> println(">>>$text<<<") }
     }
 
     @Test

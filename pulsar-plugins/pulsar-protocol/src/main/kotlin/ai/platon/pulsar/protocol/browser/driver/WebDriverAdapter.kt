@@ -63,19 +63,8 @@ class WebDriverAdapter(
     override suspend fun pageSource() = driverOrNull?.pageSource()
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String) = driverOrNull?.waitForSelector(selector) ?: 0
-
-    @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, timeoutMillis: Long) = driverOrNull?.waitForSelector(selector, timeoutMillis) ?: 0
-
-    @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, timeout: Duration) = driverOrNull?.waitForSelector(selector, timeout) ?: 0
-
-    @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation() = driverOrNull?.waitForNavigation() ?: 0
-
-    @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(timeoutMillis: Long) = driverOrNull?.waitForNavigation(timeoutMillis) ?: 0
+    override suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit) =
+        driverOrNull?.waitForSelector(selector, timeout, action) ?: 0
 
     @Throws(WebDriverException::class)
     override suspend fun waitForNavigation(timeout: Duration) = driverOrNull?.waitForNavigation(timeout) ?: 0

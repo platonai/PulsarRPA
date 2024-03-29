@@ -74,8 +74,8 @@ class MockWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
-        return backupDriverOrNull?.waitForSelector(selector, timeout) ?: 0
+    override suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Long {
+        return backupDriverOrNull?.waitForSelector(selector, timeout, action) ?: 0
     }
 
     @Throws(WebDriverException::class)

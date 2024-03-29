@@ -306,7 +306,7 @@ class ChromeDevtoolsDriver(
      * Wait until [selector] for [timeout] at most
      * */
     @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
+    override suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Long {
         val timeoutMillis = timeout.toMillis()
         val startTime = System.currentTimeMillis()
         var elapsedTime = 0L
@@ -314,6 +314,7 @@ class ChromeDevtoolsDriver(
         try {
             var nodeId = querySelector(selector)
             while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0) && isActive) {
+                action()
                 gap("waitForSelector")
                 elapsedTime = System.currentTimeMillis() - startTime
                 nodeId = querySelector(selector)
