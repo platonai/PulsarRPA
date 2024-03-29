@@ -64,15 +64,15 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
         interopScope.future { selectFirstTextOrNull(selector) }
     override fun selectFirstTextOptionalAsync(selector: String): CompletableFuture<Optional<String>> =
         interopScope.future { Optional.ofNullable(selectFirstTextOrNull(selector)) }
-    override fun selectTextsAsync(selector: String): CompletableFuture<List<String>> =
-        interopScope.future { selectTexts(selector) }
+    override fun selectTextAllAsync(selector: String): CompletableFuture<List<String>> =
+        interopScope.future { selectTextAll(selector) }
     
     override fun selectFirstAttributeOrNullAsync(selector: String, attrName: String): CompletableFuture<String?> =
         interopScope.future { selectFirstAttributeOrNull(selector, attrName) }
     override fun selectFirstAttributeOptionalAsync(selector: String, attrName: String): CompletableFuture<Optional<String>> =
         interopScope.future { Optional.ofNullable(selectFirstAttributeOrNull(selector, attrName)) }
-    override fun selectAttributesAsync(selector: String, attrName: String): CompletableFuture<List<String>> =
-        interopScope.future { selectAttributes(selector, attrName) }
+    override fun selectAttributeAllAsync(selector: String, attrName: String): CompletableFuture<List<String>> =
+        interopScope.future { selectAttributeAll(selector, attrName) }
     
     override fun evaluateAsync(expression: String) = interopScope.future { evaluate(expression) }
     override fun evaluateSilentlyAsync(expression: String) = interopScope.future { evaluateSilently(expression) }

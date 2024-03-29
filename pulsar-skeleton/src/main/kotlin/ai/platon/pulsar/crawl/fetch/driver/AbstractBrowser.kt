@@ -38,12 +38,9 @@ abstract class AbstractBrowser(
      * The associated data.
      * */
     override val data: MutableMap<String, Any?> = mutableMapOf()
-    
+
     override val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
-    
-    val confuser = ScriptConfuser()
-    val scriptLoader = ScriptLoader(confuser, conf = browserSettings.conf)
-    
+
     val isGUI get() = browserSettings.isGUI
     val idleTimeout = Duration.ofMinutes(10)
     

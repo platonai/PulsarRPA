@@ -208,8 +208,8 @@ abstract class AbstractWebDriver(
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun selectTexts(selector: String): List<String> {
-        val result = evaluate("__pulsar_utils__.selectTexts('$selector')")
+    override suspend fun selectTextAll(selector: String): List<String> {
+        val result = evaluate("__pulsar_utils__.selectTextAll('$selector')")
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
     
@@ -220,8 +220,8 @@ abstract class AbstractWebDriver(
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun selectAttributes(selector: String, attrName: String): List<String> {
-        val result = evaluate("__pulsar_utils__.selectAttributes('$selector', '$attrName')")
+    override suspend fun selectAttributeAll(selector: String, attrName: String): List<String> {
+        val result = evaluate("__pulsar_utils__.selectAttributeAll('$selector', '$attrName')")
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
 
@@ -242,7 +242,7 @@ abstract class AbstractWebDriver(
     override suspend fun selectHyperlinks(selector: String, offset: Int, limit: Int): List<Hyperlink> {
         // val result = evaluate("__pulsar_utils__.allAttrs('$selector', 'abs:href')")
         // TODO: add __pulsar_utils__.selectHyperlinks()
-        return selectAttributes(selector, "abs:href").drop(offset).take(limit).map { Hyperlink(it) }
+        return selectAttributeAll(selector, "abs:href").drop(offset).take(limit).map { Hyperlink(it) }
     }
     
     /**
@@ -251,7 +251,7 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun selectAnchors(selector: String, offset: Int, limit: Int): List<GeoAnchor> {
         // TODO: add __pulsar_utils__.selectAnchors()
-        return selectAttributes(selector, "abs:href").drop(offset).take(limit).map { GeoAnchor(it, "") }
+        return selectAttributeAll(selector, "abs:href").drop(offset).take(limit).map { GeoAnchor(it, "") }
     }
     
     /**
@@ -259,7 +259,7 @@ abstract class AbstractWebDriver(
      * */
     @Throws(WebDriverException::class)
     override suspend fun selectImages(selector: String, offset: Int, limit: Int): List<String> {
-        return selectAttributes(selector, "abs:src").drop(offset).take(limit)
+        return selectAttributeAll(selector, "abs:src").drop(offset).take(limit)
     }
     
     

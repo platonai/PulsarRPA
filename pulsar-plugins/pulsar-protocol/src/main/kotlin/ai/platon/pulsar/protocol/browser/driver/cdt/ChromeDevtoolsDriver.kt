@@ -25,7 +25,8 @@ import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourceOptions
 import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
@@ -60,7 +61,7 @@ class ChromeDevtoolsDriver(
     val blockedURLs: List<String> get() = _blockedURLs
     val probabilisticBlockedURLs: List<String> get() = _probabilityBlockedURLs
 
-    private val page = PageHandler(devTools, browser.confuser)
+    private val page = PageHandler(devTools, browserSettings.confuser)
     private val screenshot = Screenshot(page, devTools)
 
     private var navigateUrl = chromeTab.url ?: ""
@@ -348,6 +349,28 @@ class ChromeDevtoolsDriver(
             rpc.handleRPCException(e, "waitForNavigation $timeout")
         }
 
+        return -1
+    }
+    
+    @Throws(WebDriverException::class)
+    private suspend fun waitForNavigationExperimental(timeout: Duration): Long {
+        try {
+            val channel = Channel<String>()
+            val oldUrl = currentUrl()
+            
+            pageAPI?.onDocumentOpened {
+                val navigated = it.frame.url != oldUrl
+                // emit(Navigation)
+                channel.trySend("navigated")
+            }
+            
+            channel.receive()
+
+            return 1
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "waitForNavigation $timeout")
+        }
+        
         return -1
     }
 

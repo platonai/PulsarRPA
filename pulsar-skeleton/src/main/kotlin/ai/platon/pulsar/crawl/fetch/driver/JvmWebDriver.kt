@@ -1,17 +1,12 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import org.jsoup.Connection
-import java.io.Closeable
 import java.time.Duration
-import java.time.Instant
 import java.util.Optional
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.random.Random
 
 /**
  * [JvmWebDriver] defines a concise interface to visit and interact with web pages,
@@ -181,14 +176,14 @@ interface JvmWebDriver {
     @Throws(WebDriverException::class)
     fun selectFirstTextOptionalAsync(selector: String): CompletableFuture<Optional<String>>
     @Throws(WebDriverException::class)
-    fun selectTextsAsync(selector: String): CompletableFuture<List<String>>
+    fun selectTextAllAsync(selector: String): CompletableFuture<List<String>>
     
     @Throws(WebDriverException::class)
     fun selectFirstAttributeOrNullAsync(selector: String, attrName: String): CompletableFuture<String?>
     @Throws(WebDriverException::class)
     fun selectFirstAttributeOptionalAsync(selector: String, attrName: String): CompletableFuture<Optional<String>>
     @Throws(WebDriverException::class)
-    fun selectAttributesAsync(selector: String, attrName: String): CompletableFuture<List<String>>
+    fun selectAttributeAllAsync(selector: String, attrName: String): CompletableFuture<List<String>>
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.

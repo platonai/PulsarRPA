@@ -595,9 +595,9 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun firstText(selector: String): String? = selectFirstTextOrNull(selector)
     /** Returns the nodes' text contents. */
-    @Deprecated("Inappropriate name", ReplaceWith("selectTexts(selector)"))
+    @Deprecated("Inappropriate name", ReplaceWith("selectTextAll(selector)"))
     @Throws(WebDriverException::class)
-    suspend fun allTexts(selector: String): List<String> = selectTexts(selector)
+    suspend fun allTexts(selector: String): List<String> = selectTextAll(selector)
     /**
      * Returns the node's text content, the node is located by [selector].
      *
@@ -608,16 +608,27 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun selectFirstTextOrNull(selector: String): String?
+    
     /**
-     * Returns the nodes' text contents.
+     * Returns a list of text contents of all the elements matching the specified selector within the page.
      *
-     * If the nodes do not exist, returns an empty list.
+     * If no elements match the selector, returns an empty list.
      *
      * @param selector The selector to locate the nodes.
      * @return The text contents of the nodes.
      * */
     @Throws(WebDriverException::class)
-    suspend fun selectTexts(selector: String): List<String>
+    suspend fun selectTexts(selector: String): List<String> = selectTextAll(selector)
+    /**
+     * Returns a list of text contents of all the elements matching the specified selector within the page.
+     *
+     * If no elements match the selector, returns an empty list.
+     *
+     * @param selector The selector to locate the nodes.
+     * @return The text contents of the nodes.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectTextAll(selector: String): List<String>
     /**
      * Returns the node's attribute value, the node is located by [selector], the attribute is [attrName].
      *
@@ -639,7 +650,18 @@ interface WebDriver: Closeable {
      * @return The attribute values of the nodes.
      * */
     @Throws(WebDriverException::class)
-    suspend fun selectAttributes(selector: String, attrName: String): List<String>
+    suspend fun selectAttributes(selector: String, attrName: String) = selectAttributeAll(selector, attrName)
+    /**
+     * Returns the nodes' attribute values, the nodes are located by [selector], the attribute is [attrName].
+     *
+     * If the nodes do not exist, or the attribute does not exist, returns an empty list.
+     *
+     * @param selector The selector to locate the nodes.
+     * @param attrName The attribute name to retrieve.
+     * @return The attribute values of the nodes.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectAttributeAll(selector: String, attrName: String): List<String>
     
     @Throws(WebDriverException::class)
     suspend fun setAttribute(selector: String, attrName: String, attrValue: String)

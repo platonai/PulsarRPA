@@ -1,6 +1,7 @@
 package ai.platon.pulsar.test.browser
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.common.ScriptConfuser.Companion.IDENTITY_NAME_MANGLER
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
@@ -36,7 +37,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     @BeforeTest
     fun setup() {
         session.globalCache.resetCaches()
-        confuser.nameMangler = { script -> script }
+        confuser.nameMangler = IDENTITY_NAME_MANGLER
     }
     
     @Test
@@ -248,10 +249,11 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
             var text = driver.selectFirstTextOrNull("#productTitle")
             println("Product title: $text")
 
-            val selector = "input[placeholder*=Search]"
+//            val selector = "#nav-search input[placeholder*=Search]"
+            val selector = "form input[type=text]"
             text = driver.selectFirstAttributeOrNull(selector, "placeholder")
             println("Search bar - placeholder - : $text")
-            text = driver.selectFirstAttributeOrNull(selector, "value")
+            text = driver.selectAttributeAll(selector, "value").joinToString()
             println("Search bar value - 1: $text")
 
             "Mate".uppercase().forEach { ch ->
@@ -261,8 +263,11 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
             driver.press(selector, "Digit0")
             driver.press(selector, "Enter")
 
-            text = driver.selectFirstAttributeOrNull(selector, "value")
+            text = driver.selectAttributeAll(selector, "value").joinToString()
             println("Search bar value - 2: $text")
+
+            text = driver.evaluate("document.querySelector('$selector').value")?.toString() ?: ""
+            println("Search bar value - 3: $text")
         }
     }
 

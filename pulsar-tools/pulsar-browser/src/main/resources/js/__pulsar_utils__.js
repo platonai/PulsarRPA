@@ -612,15 +612,10 @@ __pulsar_utils__.selectFirstText = function(selector) {
 };
 
 /**
- * Select elements and extract the texts
- *
- * @param  {String} selector
- * @return {String} texts in json format
- *
- * @deprecated Use selectTexts instead
+ * @deprecated Use selectTextAll instead
  */
 __pulsar_utils__.allTexts = function(selector) {
-    return __pulsar_utils__.selectTexts(selector)
+    return __pulsar_utils__.selectTextAll(selector)
 };
 
 /**
@@ -629,20 +624,14 @@ __pulsar_utils__.allTexts = function(selector) {
  * @param  {String} selector
  * @return {String} texts in json format
  */
-__pulsar_utils__.selectTexts = function(selector) {
+__pulsar_utils__.selectTextAll = function(selector) {
     let elements = document.querySelectorAll(selector)
     let texts = Array.from(elements).map(e => e.textContent)
     return JSON.stringify(texts)
 };
 
 /**
- * Select the first element and extract the text
- *
- * @param  {String} selector
- * @param  {String} attrName
- * @return {String|null}
- *
- * @deprecated Use selectFirstAttribute instead
+ * @deprecated Use {@code __pulsar_utils__.selectFirstAttribute()} instead
  */
 __pulsar_utils__.firstAttr = function(selector, attrName) {
     return __pulsar_utils__.selectFirstAttribute(selector, attrName)
@@ -664,16 +653,10 @@ __pulsar_utils__.selectFirstAttribute = function(selector, attrName) {
 };
 
 /**
- * Select elements and extract the texts
- *
- * @param  {String} selector
- * @param  {String} attrName
- * @return {String} attribute values separated by line break "\n"
- *
- * @deprecated Use selectAttributes instead
+ * @deprecated Use selectAttribute instead
  */
 __pulsar_utils__.allAttrs = function(selector, attrName) {
-    return __pulsar_utils__.selectAttributes(selector, attrName)
+    return __pulsar_utils__.selectAttributeAll(selector, attrName)
 };
 
 /**
@@ -683,7 +666,7 @@ __pulsar_utils__.allAttrs = function(selector, attrName) {
  * @param  {String} attrName
  * @return {String} attribute values separated by line break "\n"
  */
-__pulsar_utils__.selectAttributes = function(selector, attrName) {
+__pulsar_utils__.selectAttributeAll = function(selector, attrName) {
     let elements = document.querySelectorAll(selector)
     return Array.from(elements).map(e => e.getAttribute(attrName)).join("\n")
 };
