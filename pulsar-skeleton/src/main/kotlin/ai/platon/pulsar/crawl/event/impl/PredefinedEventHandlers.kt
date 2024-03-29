@@ -36,7 +36,7 @@ open class LoginHandler(
             logger.info("Waiting for login panel ... | {}", activateSelector)
 
             val time = driver.waitForSelector(activateSelector, activateTimeout)
-            if (time <= 0) {
+            if (time.isNegative) {
                 logger.info("Can not active login panel in {}", activateTimeout)
                 return null
             }

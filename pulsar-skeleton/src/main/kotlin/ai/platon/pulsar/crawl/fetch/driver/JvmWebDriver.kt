@@ -99,7 +99,7 @@ interface JvmWebDriver {
      * Returns when element specified by selector satisfies {@code state} option.
      * */
     @Throws(WebDriverException::class)
-    fun waitForSelectorAsync(selector: String): CompletableFuture<Long>
+    fun waitForSelectorAsync(selector: String): CompletableFuture<Duration>
     /**
      * Returns when element specified by selector satisfies {@code state} option.
      * Returns the time remaining until timeout.
@@ -107,13 +107,13 @@ interface JvmWebDriver {
     @Throws(WebDriverException::class)
     fun waitForSelectorAsync(selector: String, timeoutMillis: Long): CompletableFuture<Long>
     @Throws(WebDriverException::class)
-    fun waitForSelectorAsync(selector: String, timeout: Duration): CompletableFuture<Long>
+    fun waitForSelectorAsync(selector: String, timeout: Duration): CompletableFuture<Duration>
     @Throws(WebDriverException::class)
-    fun waitForNavigationAsync(): CompletableFuture<Long>
+    fun waitForNavigationAsync(): CompletableFuture<Duration>
     @Throws(WebDriverException::class)
     fun waitForNavigationAsync(timeoutMillis: Long): CompletableFuture<Long>
     @Throws(WebDriverException::class)
-    fun waitForNavigationAsync(timeout: Duration): CompletableFuture<Long>
+    fun waitForNavigationAsync(timeout: Duration): CompletableFuture<Duration>
 
     @Throws(WebDriverException::class)
     fun existsAsync(selector: String): CompletableFuture<Boolean>

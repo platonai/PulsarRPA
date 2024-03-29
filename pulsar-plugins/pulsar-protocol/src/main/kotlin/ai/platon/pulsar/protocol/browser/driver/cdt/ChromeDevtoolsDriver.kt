@@ -282,7 +282,7 @@ class ChromeDevtoolsDriver(
     override suspend fun exists(selector: String): Boolean {
         try {
             val nodeId = querySelector(selector)
-            return nodeId != null && nodeId > 0
+            return isValidNodeId(nodeId)
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "exists $selector")
         }
@@ -305,10 +305,9 @@ class ChromeDevtoolsDriver(
      * Wait until [selector] for [timeout] at most
      * */
     @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Long {
-        val timeoutMillis = timeout.toMillis()
-        val startTime = System.currentTimeMillis()
-        var elapsedTime = 0L
+    override suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Duration {
+        val startTime = Instant.now()
+        var elapsedTime = Duration.ZERO
 
         try {
             var nodeId = querySelector(selector)
@@ -316,46 +315,44 @@ class ChromeDevtoolsDriver(
             // Delay() is efficient, it delays the coroutine for a given time without blocking a thread and resumes it
             // after a specified time.
             // TODO: check if it's better to use a event listener and a Channel to receive signal here
-            while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0) && isActive) {
+            while (elapsedTime < timeout && !isValidNodeId(nodeId)) {
                 action()
                 gap("waitForSelector")
-                elapsedTime = System.currentTimeMillis() - startTime
+                elapsedTime = DateTimes.elapsedTime(startTime)
                 nodeId = querySelector(selector)
             }
-
-            return timeoutMillis - elapsedTime
+            
+            return timeout - elapsedTime
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "waitForSelector $selector")
         }
 
-        return -1L
+        return Duration.ofSeconds(-1)
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(timeout: Duration): Long {
+    override suspend fun waitForNavigation(timeout: Duration): Duration {
         try {
             val oldUrl = currentUrl()
             var navigated = isNavigated(oldUrl)
-            val startTime = System.currentTimeMillis()
-            var elapsedTime = 0L
-
-            val timeoutMillis = timeout.toMillis()
+            val startTime = Instant.now()
+            var elapsedTime = Duration.ZERO
 
             // Delay() is efficient, it delays the coroutine for a given time without blocking a thread and resumes it
             // after a specified time.
             // TODO: check if it's better to use a event listener and a Channel to receive signal here
-            while (elapsedTime < timeoutMillis && !navigated && isActive) {
+            while (elapsedTime < timeout && !navigated) {
                 gap("waitForNavigation")
-                elapsedTime = System.currentTimeMillis() - startTime
+                elapsedTime = DateTimes.elapsedTime(startTime)
                 navigated = isNavigated(oldUrl)
             }
-
-            return timeoutMillis - elapsedTime
+            
+            return timeout - elapsedTime
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "waitForNavigation $timeout")
         }
-
-        return -1
+        
+        return Duration.ofSeconds(-1)
     }
     
     @Throws(WebDriverException::class)
@@ -393,6 +390,20 @@ class ChromeDevtoolsDriver(
         return driver
     }
 
+    override suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean) = waitUntil0(timeout, predicate)
+    
+    private suspend fun waitUntil0(timeout: Duration, predicate: suspend () -> Boolean): Duration {
+        val startTime = Instant.now()
+        var elapsedTime = Duration.ZERO
+        
+        while (elapsedTime < timeout && !predicate()) {
+            gap("waitUntil")
+            elapsedTime = DateTimes.elapsedTime(startTime)
+        }
+        
+        return timeout - elapsedTime
+    }
+    
     @Throws(WebDriverException::class)
     private suspend fun isNavigated(oldUrl: String): Boolean {
         if (oldUrl != currentUrl()) {
@@ -693,10 +704,10 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    @Throws(WebDriverCancellationException::class)
+    @Throws(IllegalWebDriverStateException::class)
     internal fun checkState(action: String = ""): Boolean {
         if (!isActive) {
-            return false
+            throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
         }
 
         if (isCanceled) {
@@ -711,28 +722,59 @@ class ChromeDevtoolsDriver(
 
         return isActive
     }
-
+    
+    /**
+     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
+     *
+     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
+     * this suspending function is waiting, this function immediately resumes with CancellationException.
+     * */
+    @Throws(IllegalWebDriverStateException::class)
     private suspend fun gap() {
-        if (isActive) {
-            delay(delayPolicy("gap"))
+        if (!isActive) {
+            throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
         }
+        
+        // Delays coroutine for a given time without blocking a thread and resumes it after a specified time.
+        delay(delayPolicy("gap"))
     }
-
+    
+    /**
+     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
+     *
+     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
+     * this suspending function is waiting, this function immediately resumes with CancellationException.
+     * */
+    @Throws(IllegalWebDriverStateException::class)
     private suspend fun gap(type: String) {
-        if (isActive) {
-            delay(delayPolicy(type))
+        if (!isActive) {
+            throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
         }
+        
+        delay(delayPolicy(type))
     }
-
+    
+    /**
+     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
+     *
+     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
+     * this suspending function is waiting, this function immediately resumes with CancellationException.
+     * */
+    @Throws(IllegalWebDriverStateException::class)
     private suspend fun gap(millis: Long) {
-        if (isActive) {
-            delay(millis)
+        if (!isActive) {
+            throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
         }
+        
+        delay(millis)
     }
 
     /**
      * This method fetches an element with `selector` and focuses it. If there's no
      * element matching `selector`, the method throws an error.
+     *
+     * TODO: clarify the meaning of non-positive nodeIds, especially the meaning of 0
+     *
      * @param selector - A
      * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
      * of an element to focus. If there are multiple elements satisfying the
@@ -760,6 +802,9 @@ class ChromeDevtoolsDriver(
         return nodeId ?: 0
     }
 
+    /**
+     * TODO: clarify the meaning of non-positive nodeIds, especially the meaning of 0
+     * */
     @Throws(WebDriverException::class)
     private suspend fun querySelector(selector: String): Int? {
         if (!checkState()) return null
@@ -853,7 +898,7 @@ class ChromeDevtoolsDriver(
     }
 
     override fun toString() = "Driver#$id"
-
+    
     /**
      * Navigate to the page and inject scripts.
      * */
@@ -1052,5 +1097,9 @@ class ChromeDevtoolsDriver(
         Files.createDirectories(dir)
         val report = Files.writeString(dir.resolve("preload.all.js"), script)
         tracer?.trace("All injected js: file://{}", report)
+    }
+    
+    private fun isValidNodeId(nodeId: Int?): Boolean {
+        return nodeId != null && nodeId > 0
     }
 }

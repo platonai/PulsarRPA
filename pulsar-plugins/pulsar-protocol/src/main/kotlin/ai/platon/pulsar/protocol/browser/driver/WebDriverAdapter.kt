@@ -19,7 +19,11 @@ class WebDriverAdapter(
     override var idleTimeout: Duration
         get() = driver.idleTimeout
         set(value) { driver.idleTimeout = value }
-
+    
+    override var waitTimeout: Duration
+        get() = driver.waitTimeout
+        set(value) { driver.waitTimeout = value }
+    
     override var waitForElementTimeout: Duration
         get() = driver.waitForElementTimeout
         set(value) { driver.waitForElementTimeout = value }
@@ -64,11 +68,14 @@ class WebDriverAdapter(
 
     @Throws(WebDriverException::class)
     override suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit) =
-        driverOrNull?.waitForSelector(selector, timeout, action) ?: 0
+        driverOrNull?.waitForSelector(selector, timeout, action) ?: timeout
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(timeout: Duration) = driverOrNull?.waitForNavigation(timeout) ?: 0
-
+    override suspend fun waitForNavigation(timeout: Duration) = driverOrNull?.waitForNavigation(timeout) ?: timeout
+    
+    override suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean): Duration =
+        driverOrNull?.waitUntil(timeout, predicate) ?: timeout
+    
     @Throws(WebDriverException::class)
     override suspend fun waitForPage(url: String, timeout: Duration) = driverOrNull?.waitForPage(url, timeout)
 

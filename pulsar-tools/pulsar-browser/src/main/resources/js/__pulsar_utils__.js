@@ -668,8 +668,8 @@ __pulsar_utils__.allAttrs = function(selector, attrName) {
  */
 __pulsar_utils__.selectAttributeAll = function(selector, attrName) {
     let elements = document.querySelectorAll(selector)
-    return Array.from(elements).map(e => e.getAttribute(attrName)).join("\n")
-    // return JSON.stringify(texts, null, 2)
+    let values = Array.from(elements).map(e => e.getAttribute(attrName))
+    return JSON.stringify(values, null, 2)
 };
 
 /**

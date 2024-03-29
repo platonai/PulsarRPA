@@ -74,20 +74,24 @@ class MockWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Long {
-        return backupDriverOrNull?.waitForSelector(selector, timeout, action) ?: 0
+    override suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Duration {
+        return backupDriverOrNull?.waitForSelector(selector, timeout, action) ?: timeout
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(timeout: Duration): Long {
-        return backupDriverOrNull?.waitForNavigation(timeout) ?: 0
+    override suspend fun waitForNavigation(timeout: Duration): Duration {
+        return backupDriverOrNull?.waitForNavigation(timeout) ?: timeout
     }
-
+    
     @Throws(WebDriverException::class)
     override suspend fun waitForPage(url: String, timeout: Duration): WebDriver? {
         return backupDriverOrNull?.waitForPage(url, timeout)
     }
-
+    
+    override suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean): Duration {
+        return backupDriverOrNull?.waitUntil(timeout, predicate) ?: timeout
+    }
+    
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 

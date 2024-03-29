@@ -147,10 +147,6 @@ interface WebDriver: Closeable {
      * */
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
     /**
-     * The timeout to wait for an element to appear.
-     * */
-    var waitForElementTimeout: Duration
-    /**
      * Whether the driver is initialized.
      * */
     val isInit: Boolean
@@ -178,6 +174,14 @@ interface WebDriver: Closeable {
      * Whether the driver is crashed.
      * */
     val isCrashed: Boolean
+    /**
+     * The default timeout to wait for any resources.
+     * */
+    var waitTimeout: Duration
+    /**
+     * The default timeout to wait for an element to appear.
+     * */
+    var waitForElementTimeout: Duration
     /**
      * The delay policy to wait for the next action, such as click, type, etc.
      * The delay policy is a function that returns a delay time in milliseconds.
@@ -334,7 +338,7 @@ interface WebDriver: Closeable {
      * Returns when element specified by selector satisfies {@code state} option.
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForSelector(selector: String): Long = waitForSelector(selector) {}
+    suspend fun waitForSelector(selector: String): Duration = waitForSelector(selector) {}
     
     /**
      * Returns when element specified by selector satisfies {@code state} option.
@@ -343,36 +347,53 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long = waitForSelector(selector, timeoutMillis) {}
     @Throws(WebDriverException::class)
-    suspend fun waitForSelector(selector: String, timeout: Duration): Long = waitForSelector(selector, timeout) {}
-    
+    suspend fun waitForSelector(selector: String, timeout: Duration): Duration = waitForSelector(selector, timeout) {}
     
     /**
      * Returns when element specified by selector satisfies {@code state} option.
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForSelector(selector: String, action: suspend () -> Unit): Long
+    suspend fun waitForSelector(selector: String, action: suspend () -> Unit): Duration =
+        waitForSelector(selector, waitTimeout, action)
     /**
-     * Returns when element specified by selector satisfies {@code state} option.
+     * Waits for the element specified by selector to satisfy the state option.
      * Returns the time remaining until timeout.
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForSelector(selector: String, timeoutMillis: Long, action: suspend () -> Unit): Long
+    suspend fun waitForSelector(selector: String, timeoutMillis: Long, action: suspend () -> Unit): Long =
+        waitForSelector(selector, Duration.ofMillis(timeoutMillis), action).toMillis()
     @Throws(WebDriverException::class)
-    suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Long
+    suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Duration
     
-    
     @Throws(WebDriverException::class)
-    suspend fun waitForNavigation(): Long
+    suspend fun waitForNavigation(): Duration = waitForNavigation(waitTimeout)
     @Throws(WebDriverException::class)
-    suspend fun waitForNavigation(timeoutMillis: Long): Long
+    suspend fun waitForNavigation(timeoutMillis: Long): Long = waitForNavigation(Duration.ofMillis(timeoutMillis)).toMillis()
     @Throws(WebDriverException::class)
-    suspend fun waitForNavigation(timeout: Duration): Long
+    suspend fun waitForNavigation(timeout: Duration): Duration
     @Throws(WebDriverException::class)
     suspend fun waitForPage(url: String, timeout: Duration): WebDriver?
-
-    /*
-     * Status checking
-     **/
+    
+    /**
+     * Waits until the predicate returns true.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun waitUntil(predicate: suspend () -> Boolean): Duration = waitUntil(waitTimeout, predicate)
+    /**
+     * Waits until the predicate returns true.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun waitUntil(timeoutMillis: Long, predicate: suspend () -> Boolean): Long =
+        waitUntil(Duration.ofMillis(timeoutMillis), predicate).toMillis()
+    /**
+     * Waits until the predicate returns true.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean): Duration
+    
+    ///////////////////////////////////////////////////////////////////
+    // Status checking
+    //
 
     /**
      * Returns whether the element exists.

@@ -37,6 +37,8 @@ abstract class AbstractWebDriver(
     
     override var idleTimeout: Duration = Duration.ofMinutes(10)
     
+    override var waitTimeout = Duration.ofSeconds(60)
+    
     override var waitForElementTimeout = Duration.ofSeconds(20)
     
     override val name get() = javaClass.simpleName + "-" + id
@@ -137,20 +139,6 @@ abstract class AbstractWebDriver(
         return result?.toString() ?: ""
     }
     
-    @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, timeoutMillis: Long, action: suspend () -> Unit): Long =
-        waitForSelector(selector, Duration.ofMillis(timeoutMillis), action)
-    
-    @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, action: suspend () -> Unit): Long = waitForSelector(selector, waitForElementTimeout, action)
-    
-    @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(): Long = waitForNavigation(Duration.ofSeconds(10))
-    
-    @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(timeoutMillis: Long): Long =
-        waitForNavigation(Duration.ofMillis(timeoutMillis))
-    
     override suspend fun evaluateSilently(expression: String): Any? =
         takeIf { isWorking }?.runCatching { evaluate(expression) }
     
@@ -226,8 +214,9 @@ abstract class AbstractWebDriver(
     
     @Throws(WebDriverException::class)
     override suspend fun selectAttributeAll(selector: String, attrName: String): List<String> {
-        val result = evaluate("__pulsar_utils__.selectAttributeAll('$selector', '$attrName')")
-        return result?.toString()?.split("\n")?.toList() ?: listOf()
+        val json = evaluate("__pulsar_utils__.selectAttributeAll('$selector', '$attrName')")?.toString()?:"[]"
+        val result: List<String> = jacksonObjectMapper().readValue(json)
+        return result
     }
 
     @Throws(WebDriverException::class)
