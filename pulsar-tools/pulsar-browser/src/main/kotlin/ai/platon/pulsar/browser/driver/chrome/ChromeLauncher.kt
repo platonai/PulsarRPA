@@ -39,12 +39,10 @@ class ChromeLauncher(
         fun deleteTemporaryUserDataDirWithLock(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
             synchronized(AppPaths.BROWSER_TMP_DIR_LOCK) {
                 val lock = AppPaths.BROWSER_TMP_DIR_LOCK
-                if (isActive && Files.exists(userDataDir)) {
+                if (Files.exists(userDataDir)) {
                     FileChannel.open(lock, StandardOpenOption.APPEND).use {
                         it.lock()
-                        if (isActive) {
-                            deleteTemporaryUserDataDir(userDataDir, expiry)
-                        }
+                        deleteTemporaryUserDataDir(userDataDir, expiry)
                     }
                 }
             }
@@ -52,9 +50,7 @@ class ChromeLauncher(
 
         fun deleteTemporaryUserDataDir(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
             synchronized(AppPaths.BROWSER_TMP_DIR_LOCK) {
-                if (isActive) {
-                    deleteTemporaryUserDataDir0(userDataDir, expiry)
-                }
+                deleteTemporaryUserDataDir0(userDataDir, expiry)
             }
         }
 
@@ -68,16 +64,15 @@ class ChromeLauncher(
             // Double check to ensure it's safe to delete the directory
             val hasPidSiblingFile = Files.exists(dirToDelete.resolveSibling(PID_FILE_NAME))
             // be careful, do not delete files by mistake, so delete files only inside AppPaths.CONTEXT_TMP_DIR
-            if (isActive && isTemporary && isExpired && hasPidSiblingFile) {
+            if (isTemporary && isExpired && hasPidSiblingFile) {
                 FileUtils.deleteQuietly(dirToDelete.toFile())
                 // Make sure the last operation is finished
-                sleepSeconds(1)
-                if (isActive && Files.exists(dirToDelete)) {
-                    logger.warn("Failed to delete browser cache, try again | {}", dirToDelete)
+                if (Files.exists(dirToDelete)) {
+                    logger.warn("Failed to delete browser data, try again | {}", dirToDelete)
                     forceDeleteDirectory(dirToDelete)
 
                     if (Files.exists(dirToDelete)) {
-                        logger.error("Could not delete browser cache | {}", dirToDelete)
+                        logger.error("Could not delete browser data | {}", dirToDelete)
                     }
                 }
             }
@@ -91,14 +86,13 @@ class ChromeLauncher(
             synchronized(ChromeLauncher::class.java) {
                 val maxTry = 10
                 var i = 0
-                while (isActive && i++ < maxTry && Files.exists(dirToDelete) && !Files.isSymbolicLink(dirToDelete)) {
+                while (i++ < maxTry && Files.exists(dirToDelete) && !Files.isSymbolicLink(dirToDelete)) {
                     kotlin.runCatching {
                         FileUtils.deleteDirectory(dirToDelete.toFile())
                         Thread.sleep(500)
-                    }.onFailure { 
-                            warnInterruptible(this,
-                                it, "Failed to delete directory | {} | {}", dirToDelete, it.message)
-                        }
+                    }.onFailure {
+                        warnInterruptible(this, it, "Failed to delete directory | {} | {}", dirToDelete, it.message)
+                    }
                 }
             }
         }
@@ -152,6 +146,10 @@ class ChromeLauncher(
         }
     }
 
+    /**
+     * Close the chrome process.
+     * The method throws nothing by design.
+     * */
     override fun close() {
         val p = process ?: return
         this.process = null
@@ -161,10 +159,7 @@ class ChromeLauncher(
 //                    .onFailure { logger.warn("Unexpected exception", it) }
         }
 
-        kotlin.runCatching { cleanUp() }.onFailure {
-            logger.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
-            warnForClose(this, it)
-        }
+        kotlin.runCatching { cleanUp() }.onFailure { warnForClose(this, it) }
     }
 
     /**
@@ -246,6 +241,7 @@ class ChromeLauncher(
             shutdownHookRegistry.remove(shutdownHookThread)
             throw ChromeProcessException("Failed to start chrome", e)
         } catch (e: Exception) {
+            // Close the process if failed to start, it throws nothing by design.
             close()
             throw e
         }
@@ -357,7 +353,7 @@ class ChromeLauncher(
     @Throws(IOException::class)
     private fun cleanUp() {
         val hasPidSiblingFile: (Path) -> Boolean = { path -> Files.exists(path.resolveSibling(PID_FILE_NAME)) }
-        Files.walk(AppPaths.CONTEXT_TMP_DIR).filter { isActive && it.isDirectory() && hasPidSiblingFile(it) }.forEach { path ->
+        Files.walk(AppPaths.CONTEXT_TMP_DIR).filter { it.isDirectory() && hasPidSiblingFile(it) }.forEach { path ->
             deleteTemporaryUserDataDirWithLock(path, temporaryUddExpiry)
         }
     }

@@ -1,10 +1,11 @@
 package ai.platon.pulsar.common.emoji
 
 /**
- * Popular emoji used by PulsarRPA.
+ * Popular Emojis used by PulsarRPA.
  *
- * [Emoji data](https://unicode.org/Public/emoji/1.0/emoji-data.txt)
- * [Unicode® Technical Standard #51](http://www.unicode.org/reports/tr51/)
+ * @see [Emoji data](https://unicode.org/Public/emoji/1.0/emoji-data.txt)
+ * @see [Unicode® Technical Standard #51](http://www.unicode.org/reports/tr51/)
+ * @see [JEmoji](https://github.com/felldo/JEmoji)
  * */
 enum class PopularEmoji(val value: String, val alt: String) {
     CANCELLATION_X("\uD83D\uDDD9", "x"),
@@ -15,7 +16,8 @@ enum class PopularEmoji(val value: String, val alt: String) {
     OPTICAL_DISC("\uD83D\uDCBF", "✉"),
     BUG("\uD83D\uDC1B", "☹"),
     SKULL_CROSSBONES("☠", "☠"),
-    HUNDRED_POINTS("\uD83D\uDCAF", "✨"),
+    HUNDRED_POINTS("\uD83D\uDCAF", "100!"),
+    SPARKLES("✨", "✨"),
     BROKEN_HEART("\uD83D\uDC94", "☹"),
     RACING_CAR("\uD83C\uDFCE", "⏭"),
     DELIVERY_TRUCK("\uD83D\uDE9A", "▶"),
@@ -29,7 +31,7 @@ enum class PopularEmoji(val value: String, val alt: String) {
     ;
 
     override fun toString() = if (emojiVersion() <= 1.1) alt else value
-
+    
     private fun emojiVersion(): Double {
         return System.getProperty("emoji.version")?.toDoubleOrNull() ?: 6.0
     }

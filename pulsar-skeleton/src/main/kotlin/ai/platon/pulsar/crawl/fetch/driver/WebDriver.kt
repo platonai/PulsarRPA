@@ -468,7 +468,12 @@ interface WebDriver: Closeable {
     /**
      * Shortcut for keyboard down and keyboard up.
      *
-     * @param key - Name of key to press, such as `ArrowLeft`.
+     * The key is specified as a string, which can be a single character, a key name, or a combination of both.
+     * For example, 'a', 'A', 'KeyA', 'Enter', 'Shift+A', and 'Control+Shift+Tab' are all valid keys.
+     *
+     * TODO: find out can we press keys on pages which are not in the front.
+     *
+     * @param key - A key to press. The key can be a single character, a key name, or a combination of both.
      * See {@link KeyInput} for a list of all key names.
      *
      * see {@link https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/editing/commands/editor_command_names.h | Chromium Source Code} for valid command names.

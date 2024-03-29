@@ -4,8 +4,11 @@ import ai.platon.pulsar.browser.common.ScriptConfuser
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.math.geometric.OffsetD
 import com.github.kklisura.cdt.protocol.v2023.types.dom.Rect
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
+import com.google.common.base.Preconditions.checkState
+import kotlin.random.Random
 
 class PageHandler(
     private val devTools: RemoteDevTools,
@@ -65,6 +68,31 @@ class PageHandler(
 
         return isVisible
     }
+    
+    /**
+     * This method fetches an element with `selector` and focuses it. If there's no
+     * element matching `selector`, the method returns 0.
+     *
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to focus. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * @returns  NodeId which resolves when the element matching selector is
+     * successfully focused. returns 0 if there is no element
+     * matching selector.
+     */
+    fun focusOnSelector(selector: String): Int {
+        val rootId = dom?.document?.nodeId ?: return 0
+        
+        val nodeId = dom?.querySelector(rootId, selector)
+        if (nodeId == 0) {
+            return 0
+        }
+
+        dom?.focus(nodeId, rootId, null)
+        
+        return nodeId ?: 0
+    }
 
     fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Int? {
         val nodeId = querySelector(selector)
@@ -94,7 +122,7 @@ class PageHandler(
 
         return nodeId
     }
-
+    
     /**
      * Evaluates expression on global object.
      *

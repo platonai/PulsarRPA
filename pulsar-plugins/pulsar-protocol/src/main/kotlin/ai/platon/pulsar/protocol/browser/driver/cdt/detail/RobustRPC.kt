@@ -99,10 +99,6 @@ internal class RobustRPC(
 
     @Throws(ChromeRPCException::class)
     private suspend fun <T> invokeDeferred0(action: String, block: suspend CoroutineScope.() -> T): T? {
-        if (!driver.checkState()) {
-            return null
-        }
-
         return withContext(Dispatchers.IO) {
             if (!driver.checkState(action)) {
                 return@withContext null

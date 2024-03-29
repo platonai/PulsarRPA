@@ -17,7 +17,7 @@ open class SessionLostException(
     message: String? = null,
     driver: WebDriver? = null,
     cause: Throwable? = null
-): WebDriverException(message, driver, cause) {
+): SessionException(message, driver, cause) {
     constructor(message: String?, cause: Throwable) : this(message, null, cause)
 
     constructor(cause: Throwable?) : this(null, null, cause)

@@ -27,6 +27,7 @@ import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import org.jetbrains.kotlin.utils.addToStdlib.ifFalse
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
@@ -61,6 +62,9 @@ class ChromeDevtoolsDriver(
     val blockedURLs: List<String> get() = _blockedURLs
     val probabilisticBlockedURLs: List<String> get() = _probabilityBlockedURLs
 
+    /**
+     * TODO: distinguish the navigateUrl, currentUrl, chromeTab.url, mainFrameAPI.url, dom.document.documentURL, dom.document.baseURL
+     * */
     private var navigateUrl = chromeTab.url ?: ""
 
     private val browserAPI get() = devTools.browser.takeIf { isActive }
@@ -187,11 +191,12 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun pause() {
-        try {
-            rpc.invokeDeferred("pause") { pageAPI?.stopLoading() }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "pause")
-        }
+        invokeOnPage("pause") { pageAPI?.stopLoading() }
+//        try {
+//            rpc.invokeDeferred("pause") { pageAPI?.stopLoading() }
+//        } catch (e: ChromeRPCException) {
+//            rpc.handleRPCException(e, "pause")
+//        }
     }
 
     @Throws(WebDriverException::class)
@@ -221,138 +226,34 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun evaluate(expression: String): Any? {
-        try {
-            return rpc.invokeDeferred("evaluate") { page.evaluate(expression) }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "evaluate")
-        }
-
-        return null
+        return invokeOnPage("evaluate") { page.evaluate(expression) }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun evaluateDetail(expression: String): JsEvaluation? {
-        try {
-            return rpc.invokeDeferred("evaluateDetail") {
-                createJsEvaluate(page.evaluateDetail(expression))
-            }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "evaluateDetail")
-        }
-
-        return null
-    }
-
-    private fun createJsEvaluate(evaluate: Evaluate?): JsEvaluation? {
-        evaluate ?: return null
-
-        val result = evaluate.result
-        val exception = evaluate.exceptionDetails
-        return if (exception != null) {
-            val jsException = JsException(
-                text = exception.text,
-                lineNumber = exception.lineNumber,
-                columnNumber = exception.columnNumber,
-                url = exception.url,
-            )
-            JsEvaluation(exception = jsException)
-        } else {
-            JsEvaluation(
-                value = result.value,
-                unserializableValue = result.unserializableValue,
-                className = result.className,
-                description = result.description
-            )
-        }
+        return invokeOnPage("evaluateDetail") { createJsEvaluate(page.evaluateDetail(expression)) }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String {
-        navigateUrl = try {
-            return rpc.invokeDeferred("currentUrl") { mainFrameAPI?.url ?: navigateUrl } ?: ""
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "currentUrl")
-            ""
-        }
-
+        navigateUrl = invokeOnPage("currentUrl") { mainFrameAPI?.url } ?: navigateUrl
         return navigateUrl
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun exists(selector: String): Boolean {
-        try {
-            val nodeId = querySelector(selector)
-            return isValidNodeId(nodeId)
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "exists $selector")
-        }
-
-        return false
-    }
-
-    @Throws(WebDriverException::class)
-    override suspend fun isVisible(selector: String): Boolean {
-        try {
-            return rpc.invokeDeferred("isVisible") { page.visible(selector) } ?: false
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "visible >$selector<")
-        }
-
-        return false
-    }
+    override suspend fun exists(selector: String) = predicateOnElement(selector, "exists") { it > 0 }
 
     /**
      * Wait until [selector] for [timeout] at most
      * */
     @Throws(WebDriverException::class)
     override suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Duration {
-        val startTime = Instant.now()
-        var elapsedTime = Duration.ZERO
-
-        try {
-            var nodeId = querySelector(selector)
-            
-            // Delay() is efficient, it delays the coroutine for a given time without blocking a thread and resumes it
-            // after a specified time.
-            // TODO: check if it's better to use a event listener and a Channel to receive signal here
-            while (elapsedTime < timeout && !isValidNodeId(nodeId)) {
-                action()
-                gap("waitForSelector")
-                elapsedTime = DateTimes.elapsedTime(startTime)
-                nodeId = querySelector(selector)
-            }
-            
-            return timeout - elapsedTime
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "waitForSelector $selector")
-        }
-
-        return Duration.ofSeconds(-1)
+        return waitUntil("waitForSelector", timeout) { exists(selector).apply { ifFalse { action() } } }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun waitForNavigation(timeout: Duration): Duration {
-        try {
-            val oldUrl = currentUrl()
-            var navigated = isNavigated(oldUrl)
-            val startTime = Instant.now()
-            var elapsedTime = Duration.ZERO
-
-            // Delay() is efficient, it delays the coroutine for a given time without blocking a thread and resumes it
-            // after a specified time.
-            // TODO: check if it's better to use a event listener and a Channel to receive signal here
-            while (elapsedTime < timeout && !navigated) {
-                gap("waitForNavigation")
-                elapsedTime = DateTimes.elapsedTime(startTime)
-                navigated = isNavigated(oldUrl)
-            }
-            
-            return timeout - elapsedTime
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "waitForNavigation $timeout")
-        }
-        
-        return Duration.ofSeconds(-1)
+        return waitUntil("waitForNavigation", timeout) { isNavigated(navigateUrl) }
     }
     
     @Throws(WebDriverException::class)
@@ -379,42 +280,38 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun waitForPage(url: String, timeout: Duration): WebDriver? {
-        var now = Instant.now()
-        val endTime = now + timeout
-        var driver = browser.findDriver(url)
-        while (driver == null && now < endTime) {
-            delay(1000)
-            now = Instant.now()
-            driver = browser.findDriver(url)
-        }
-        return driver
+        return waitFor("waitForPage", timeout) { browser.findDriver(url) }
     }
 
-    override suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean) = waitUntil0(timeout, predicate)
+    override suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean) =
+        waitUntil("waitUtil", timeout, predicate)
     
-    private suspend fun waitUntil0(timeout: Duration, predicate: suspend () -> Boolean): Duration {
+    private suspend fun waitUntil(type: String, timeout: Duration, predicate: suspend () -> Boolean): Duration {
         val startTime = Instant.now()
         var elapsedTime = Duration.ZERO
         
         while (elapsedTime < timeout && !predicate()) {
-            gap("waitUntil")
+            gap(type)
             elapsedTime = DateTimes.elapsedTime(startTime)
         }
         
         return timeout - elapsedTime
     }
     
-    @Throws(WebDriverException::class)
-    private suspend fun isNavigated(oldUrl: String): Boolean {
-        if (oldUrl != currentUrl()) {
-            return true
+    private suspend fun <T> waitFor(type: String, timeout: Duration, supplier: suspend () -> T): T? {
+        val startTime = Instant.now()
+        var elapsedTime = Duration.ZERO
+        var result: T? = supplier()
+
+        while (elapsedTime < timeout && result == null) {
+            gap(type)
+            result = supplier()
+            elapsedTime = DateTimes.elapsedTime(startTime)
         }
-
-        // TODO: other signals
-
-        return false
+        
+        return result
     }
-
+    
     @Throws(WebDriverException::class)
     override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
         try {
@@ -454,11 +351,7 @@ class ChromeDevtoolsDriver(
      * */
     @Throws(WebDriverException::class)
     override suspend fun moveMouseTo(x: Double, y: Double) {
-        try {
-            rpc.invokeDeferred("moveMouseTo") { mouse?.moveTo(x, y) }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "moveMouseTo")
-        }
+        invokeOnPage("moveMouseTo") { mouse?.moveTo(x, y) }
     }
 
     @Throws(WebDriverException::class)
@@ -504,17 +397,21 @@ class ChromeDevtoolsDriver(
      */
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
-        try {
-            val nodeId = rpc.invokeDeferred("click") {
-                page.scrollIntoViewIfNeeded(selector)
-            } ?: 0
-
-            if (nodeId > 0) {
-                click(nodeId, count)
-            }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "click")
+        invokeOnElement(selector, "click", scrollIntoView = true) { nodeId ->
+            click(nodeId, count)
         }
+        
+//        try {
+//            val nodeId = rpc.invokeDeferred("click") {
+//                page.scrollIntoViewIfNeeded(selector)
+//            } ?: 0
+//
+//            if (nodeId > 0) {
+//                click(nodeId, count)
+//            }
+//        } catch (e: ChromeRPCException) {
+//            rpc.handleRPCException(e, "click")
+//        }
     }
 
     @Throws(WebDriverException::class)
@@ -525,46 +422,45 @@ class ChromeDevtoolsDriver(
 
         val p = pageAPI
         val d = domAPI
-        if (p != null && d != null) {
-            val clickableDOM = ClickableDOM(p, d, nodeId, offset)
-            val point = clickableDOM.clickablePoint().value ?: return
-            val box = clickableDOM.boundingBox()
-            val width = box?.width ?: 0.0
-            // if it's an input element, we should click on the right side of the element,
-            // so the cursor is at the tail of the text
-            val offsetX = when (position) {
-                "left" -> 0.0 + deltaX
-                "right" -> width - deltaX
-                else -> width / 2 + deltaX
-            }
-
-            point.x += offsetX
-
-            rpc.invokeDeferred("click") {
-                mouse?.click(point.x, point.y, count, delayPolicy("click"))
-            }
-            
-            gap("click")
+        if (p == null || d == null) {
+            return
         }
+        
+        val clickableDOM = ClickableDOM(p, d, nodeId, offset)
+        val point = clickableDOM.clickablePoint().value ?: return
+        val box = clickableDOM.boundingBox()
+        val width = box?.width ?: 0.0
+        // if it's an input element, we should click on the right side of the element,
+        // so the cursor is at the tail of the text
+        val offsetX = when (position) {
+            "left" -> 0.0 + deltaX
+            "right" -> width - deltaX
+            else -> width / 2 + deltaX
+        }
+        
+        point.x += offsetX
+        
+        mouse?.click(point.x, point.y, count, delayPolicy("click"))
+        
+        gap("click")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun focus(selector: String) {
-        rpc.invokeDeferredSilently("focus") { focusOnSelector(selector) }
+        rpc.invokeDeferredSilently("focus") { page.focusOnSelector(selector) }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) {
         try {
             rpc.invokeDeferred("type") {
-                val nodeId = focusOnSelector(selector)
+                val nodeId = page.focusOnSelector(selector)
                 if (nodeId > 0) {
                     click(nodeId, 1)
                     keyboard?.type(text, delayPolicy("type"))
+                    gap("type")
                 }
             }
-
-            gap("type")
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "type")
         }
@@ -572,42 +468,24 @@ class ChromeDevtoolsDriver(
     
     @Throws(WebDriverException::class)
     override suspend fun fill(selector: String, text: String) {
-        try {
-            rpc.invokeDeferred("fill") {
-                val nodeId = focusOnSelector(selector)
-                if (nodeId != 0) {
-                    // domAPI?.getAttributes(nodeId)
-                    // TODO: only works for input elements
-                    val oldText = selectFirstAttributeOrNull(selector, "value")
-                    val length = oldText?.length?:0
-                    if (length > 0) {
-                        keyboard?.delete(length, delayPolicy("delete"))
-                    }
-                    
-                    click(nodeId, 1)
-                    keyboard?.type(text, delayPolicy("fill"))
-                }
+        invokeOnElement(selector, "fill", focus = true) { nodeId ->
+            // domAPI?.getAttributes(nodeId)
+            
+            val oldText = selectFirstAttributeOrNull(selector, "value")
+            val length = oldText?.length?:0
+            if (length > 0) {
+                keyboard?.delete(length, delayPolicy("delete"))
             }
             
-            gap("fill")
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "fill")
+            click(nodeId, 1)
+            keyboard?.type(text, delayPolicy("type"))
         }
     }
     
     @Throws(WebDriverException::class)
     override suspend fun press(selector: String, key: String) {
-        try {
-            rpc.invokeDeferred("press") {
-                bringToFront()
-                val nodeId = focusOnSelector(selector)
-                if (nodeId != 0) {
-                    // click(nodeId, 1)
-                    keyboard?.press(key, delayPolicy("keyUpDown"))
-                }
-            }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "press")
+        invokeOnElement(selector, "press", focus = true) { nodeId ->
+            keyboard?.press(key, delayPolicy("press"))
         }
     }
 
@@ -643,11 +521,22 @@ class ChromeDevtoolsDriver(
     
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(): String? {
-        return rpc.invokeDeferredSilently("outerHTML") { domAPI?.outerHTML }
+        return invokeOnPage("outerHTML") { domAPI?.outerHTML }
+    }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun outerHTML(selector: String): String? {
+        return invokeOnElement(selector, "outerHTML") { nodeId ->
+            domAPI?.getOuterHTML(nodeId, null, null)
+        }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun clickablePoint(selector: String): PointD? {
+//        invokeOnElementOrNull(selector, "clickablePoint") { nodeId ->
+//            ClickableDOM.create(pageAPI, domAPI, nodeId)?.clickablePoint()?.value
+//        }
+        
         try {
             return rpc.invokeDeferred("clickablePoint") {
                 val nodeId = page.scrollIntoViewIfNeeded(selector)
@@ -769,46 +658,8 @@ class ChromeDevtoolsDriver(
         delay(millis)
     }
 
-    /**
-     * This method fetches an element with `selector` and focuses it. If there's no
-     * element matching `selector`, the method throws an error.
-     *
-     * TODO: clarify the meaning of non-positive nodeIds, especially the meaning of 0
-     *
-     * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
-     * of an element to focus. If there are multiple elements satisfying the
-     * selector, the first will be focused.
-     * @returns  NodeId which resolves when the element matching selector is
-     * successfully focused. returns 0 if there is no element
-     * matching selector.
-     */
-    private fun focusOnSelector(selector: String): Int {
-        if (!checkState()) return 0
-
-        val rootId = domAPI?.document?.nodeId ?: return 0
-        val nodeId = domAPI?.querySelector(rootId, selector)
-        if (nodeId == 0) {
-            logger.warn("No node found for selector: $selector")
-            return 0
-        }
-
-        try {
-            domAPI?.focus(nodeId, rootId, null)
-        } catch (e: Exception) {
-            logger.warn("Failed to focus #$nodeId | {}", e.message)
-        }
-
-        return nodeId ?: 0
-    }
-
-    /**
-     * TODO: clarify the meaning of non-positive nodeIds, especially the meaning of 0
-     * */
     @Throws(WebDriverException::class)
     private suspend fun querySelector(selector: String): Int? {
-        if (!checkState()) return null
-
         try {
             return rpc.invokeDeferred("querySelector") { page.querySelector(selector) }
         } catch (e: ChromeRPCException) {
@@ -820,8 +671,6 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun pageSource(): String? {
-        if (!checkState()) return null
-
         try {
             return rpc.invokeDeferred("pageSource") {
                 domAPI?.getOuterHTML(domAPI?.document?.nodeId, null, null)
@@ -834,7 +683,6 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun bringToFront() {
-        if (!checkState()) return
         rpc.invokeDeferredSilently("bringToFront") {
             pageAPI?.bringToFront()
         }
@@ -1099,7 +947,79 @@ class ChromeDevtoolsDriver(
         tracer?.trace("All injected js: file://{}", report)
     }
     
+    private suspend fun <T> invokeOnPage(name: String, message: String? = null, action: suspend () -> T): T? {
+        try {
+            return rpc.invokeDeferred(name) {
+                action()
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, name, message)
+        }
+        
+        return null
+    }
+    
+    private suspend fun <T> invokeOnElement(
+        selector: String, name: String, focus: Boolean = false, scrollIntoView: Boolean = false,
+        action: suspend (Int) -> T
+    ): T? {
+        try {
+            return rpc.invokeDeferred(name) {
+                val nodeId = if (focus) {
+                    page.focusOnSelector(selector)
+                } else if (scrollIntoView) {
+                    page.scrollIntoViewIfNeeded(selector)
+                } else {
+                    page.querySelector(selector)
+                }
+
+                if (nodeId != null && nodeId > 0) {
+                    action(nodeId)
+                } else {
+                    null
+                }
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, name, "selector: [$selector], focus: $focus, scrollIntoView: $scrollIntoView")
+        }
+        
+        return null
+    }
+    
+    private suspend fun predicateOnElement(
+        selector: String, name: String, focus: Boolean = false, scrollIntoView: Boolean = false,
+        predicate: suspend (Int) -> Boolean
+    ): Boolean = invokeOnElement(selector, name, focus, scrollIntoView, predicate) == true
+    
+    @Throws(WebDriverException::class)
+    private suspend fun isNavigated(oldUrl: String): Boolean {
+        return oldUrl != currentUrl()
+    }
+    
     private fun isValidNodeId(nodeId: Int?): Boolean {
         return nodeId != null && nodeId > 0
+    }
+    
+    private fun createJsEvaluate(evaluate: Evaluate?): JsEvaluation? {
+        evaluate ?: return null
+        
+        val result = evaluate.result
+        val exception = evaluate.exceptionDetails
+        return if (exception != null) {
+            val jsException = JsException(
+                text = exception.text,
+                lineNumber = exception.lineNumber,
+                columnNumber = exception.columnNumber,
+                url = exception.url,
+            )
+            JsEvaluation(exception = jsException)
+        } else {
+            JsEvaluation(
+                value = result.value,
+                unserializableValue = result.unserializableValue,
+                className = result.className,
+                description = result.description
+            )
+        }
     }
 }
