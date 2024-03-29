@@ -1,12 +1,33 @@
 package ai.platon.pulsar.common.io
 
 data class KeyDefinition(
+    /**
+     * The key name, like "Enter", "KeyA", "Digit3", ...
+     * */
     val key: String,
+    /**
+     * The key code, like 13, 65, 51, ...
+     * */
     val keyCode: Int,
+    /**
+     * The key code without location, like 13, 65, 51, ...
+     * */
     val keyCodeWithoutLocation: Int? = null,
+    /**
+     * The key name of the shifted key, like "KeyA", "KeyB", ...
+     * */
     val shiftKey: String? = null,
+    /**
+     * The key code of the shifted key, like 65, 66, ...
+     * */
     val shiftKeyCode: Int? = null,
+    /**
+     * The text of the key, like "Enter", "a", "3", ...
+     * */
     val text: String? = null,
+    /**
+     * The location of the key, like 0, 1, 2, 3, ...
+     * */
     val location: Int? = null
 )
 
@@ -18,7 +39,10 @@ data class VKeyDescription(
     var keyCode: Int,
     var text: String,
     var shifted: VKeyDescription? = null,
-)
+) {
+    val isModifier: Boolean
+        get() = key in KeyboardDescription.KEYBOARD_MODIFIERS
+}
 
 typealias KeyboardLayout = Map<String, KeyDefinition>
 
@@ -26,7 +50,7 @@ enum class KeyboardModifier {
     Alt, Control, Meta, Shift
 }
 
-val USKeypadLocation = 3;
+val USKeypadLocation = 3
 
 val USKeyboardLayout: KeyboardLayout = mapOf(
     // Functions row
@@ -156,21 +180,30 @@ val USKeyboardLayout: KeyboardLayout = mapOf(
 
 object KeyboardDescription {
     
-    val aliases = mapOf(
+    val KEY_CODE_ALIASES = mapOf(
         "ShiftLeft" to listOf("Shift"),
         "ControlLeft" to listOf("Control"),
         "AltLeft" to listOf("Alt"),
         "MetaLeft" to listOf("Meta"),
         "Enter" to listOf("\n", "\r")
     )
+    
+    val KEYBOARD_MODIFIERS = KeyboardModifier.entries.map { it.name }
+    
+    val KEYPAD_LOCATION = USKeypadLocation
 
-    val keypadLocation = USKeypadLocation
+    val KEYBOARD_LAYOUT = buildExtendedKeyboardLayoutMapping(USKeyboardLayout)
 
-    val KEYBOARD_LAYOUT = buildLayoutClosure(USKeyboardLayout)
-
-    private fun buildLayoutClosure(layout: KeyboardLayout): Map<String, VKeyDescription> {
+    /**
+     * Build a closure that maps from key codes and key texts to key descriptions.
+     * The keys of the map like the following:
+     * Key code: "Digit3", "KeyA", "Enter", ...
+     * Key text: "3", "a", "\r", ...
+     * Key code aliases: "\n", "ShiftLeft", ...
+     * */
+    private fun buildExtendedKeyboardLayoutMapping(layout: KeyboardLayout): Map<String, VKeyDescription> {
         val result = mutableMapOf<String, VKeyDescription>()
-        // code: KeyA, KeyB, Enter, ...
+        // The key code: KeyA, KeyB, Enter, ...
         for ((code, definition) in layout) {
             val description = VKeyDescription(
                 key = definition.key,
@@ -198,7 +231,7 @@ object KeyboardDescription {
             result[code] = description.copy(shifted = shiftedDescription)
 
             // Map from aliases: Shift -> non-shiftable definition
-            aliases[code]?.forEach { alias ->
+            KEY_CODE_ALIASES[code]?.forEach { alias ->
                 result[alias] = description
             }
 

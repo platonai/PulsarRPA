@@ -1,10 +1,9 @@
 package ai.platon.pulsar.browser.driver.chrome
 
-import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.DescriptiveResult
-import ai.platon.pulsar.common.io.VKeyDescription
 import ai.platon.pulsar.common.io.KeyboardDescription
-import ai.platon.pulsar.common.io.KeyboardDescription.keypadLocation
+import ai.platon.pulsar.common.io.KeyboardDescription.KEYPAD_LOCATION
+import ai.platon.pulsar.common.io.VKeyDescription
 import ai.platon.pulsar.common.math.geometric.DimD
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
@@ -21,7 +20,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.commons.math3.util.Precision
 import java.awt.Robot
-import java.awt.event.KeyEvent
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -510,12 +508,13 @@ class Mouse(private val devTools: ChromeDevTools) {
  * */
 class Keyboard(private val devTools: ChromeDevTools) {
     private val input get() = devTools.input
-    private val robot = if (AppContext.isGUIAvailable) Robot() else null
+    private val pressedModifiers = mutableSetOf<String>()
+    private val pressedKeys = mutableSetOf<String>()
 
     suspend fun type(text: String, delayMillis: Long) {
         text.forEach { char ->
             if (Character.isISOControl(char)) {
-                // TODO:
+                press("$char", delayMillis)
             } else {
                 input.insertText("$char")
             }
@@ -528,11 +527,21 @@ class Keyboard(private val devTools: ChromeDevTools) {
             press("Backspace", delayMillis)
         }
     }
-    
-    suspend fun press(key: String, delayMillis: Long) {
-        val k = KeyboardDescription.KEYBOARD_LAYOUT[key] ?: throw IllegalArgumentException("Unknown key: $key, " +
-            "use type() or fill() if you want to type arbitrary text")
-        press(k, delayMillis)
+
+    /**
+     * Presses a key.
+     * The key is specified as a string, which can be a single character, a key name, or a combination of both.
+     * For example, 'a', 'A', 'KeyA', 'Enter', 'Shift+A', and 'Control+Shift+Tab' are all valid keys.
+     * */
+    suspend fun press(keyString: String, delayMillis: Long) {
+        val tokens = splitKeyString(keyString)
+        if (tokens.isEmpty()) {
+            return
+        }
+        
+        tokens.forEach { down(it) }
+        delay(delayMillis)
+        tokens.reversed().forEach { up(it) }
     }
     
     suspend fun press(key: VKeyDescription, delayMillis: Long) {
@@ -544,42 +553,71 @@ class Keyboard(private val devTools: ChromeDevTools) {
         }
     }
 
+    suspend fun down(singleKey: String) {
+        val description = virtualKeyDescriptionForSingleKeyString(singleKey)
+        down(description)
+    }
+
+    suspend fun up(singleKey: String) {
+        val description = virtualKeyDescriptionForSingleKeyString(singleKey)
+        up(description)
+    }
+
     suspend fun down(key: VKeyDescription) {
         // From playwright:
         // {"type":"keyDown","modifiers":0,"windowsVirtualKeyCode":13,"code":"Enter","commands":[],"key":"Enter","text":"\r","unmodifiedText":"\r","autoRepeat":false,"location":0,"isKeypad":false},"sessionId":"45E0A2ABC64CE5ACDC8A98061CC4667B"}
         
-        val type = if (key.text.isEmpty()) DispatchKeyEventType.RAW_KEY_DOWN else DispatchKeyEventType.KEY_DOWN
-        val modifiers = emptySet<String>()
-        val commands = emptyList<String>()
-        withContext(Dispatchers.IO) {
-            dispatchKeyEvent1(type,
-                modifiers = toModifiersMask(modifiers),
-                windowsVirtualKeyCode = key.keyCodeWithoutLocation,
-                code = key.code,
-                commands = commands,
-                key = key.key,
-                text = key.text,
-                unmodifiedText = key.text,
-                location = key.location,
-                isKeypad = key.location == keypadLocation,
-            )
-        }
+        down(pressedModifiers, key)
     }
 
     suspend fun up(key: VKeyDescription) {
-        // From playwright:
         // {"type":"keyUp","modifiers":0,"key":"Enter","windowsVirtualKeyCode":13,"code":"Enter","location":0}
 
-        val modifiers = emptySet<String>()
-        withContext(Dispatchers.IO) {
-            dispatchKeyEvent1(DispatchKeyEventType.KEY_UP,
-                modifiers = toModifiersMask(modifiers),
-                key = key.key,
-                windowsVirtualKeyCode = key.keyCodeWithoutLocation,
-                code = key.code,
-                location = key.location,
-            )
+        up(pressedModifiers, key)
+    }
+    
+    /**
+     * Splits a key string into its components.
+     * The key string can be a single character, a key name, or a combination of both.
+     * For example, 'a', 'A', 'KeyA', 'Enter', 'Shift+A', and 'Control+Shift+Tab' are all valid key strings.
+     * */
+    private fun splitKeyString(keyString: String): List<String> {
+        val keys = mutableListOf<String>()
+        val token = StringBuilder()
+        
+        keyString.forEach { char ->
+            if (char == '+' && token.isNotEmpty()) {
+                keys.add(token.toString().trim())
+                token.clear()
+            } else {
+                token.append(char)
+            }
         }
+        
+        if (token.isNotEmpty()) {
+            keys.add(token.toString().trim())
+        }
+        
+        return keys
+    }
+    
+    private fun virtualKeyDescriptionForSingleKeyString(singleKey: String): VKeyDescription {
+        var description = KeyboardDescription.KEYBOARD_LAYOUT[singleKey] ?:
+            throw IllegalArgumentException("Unknown key: $singleKey")
+
+        val shift = isShifted(description)
+        val shifted = description.shifted
+        description = if (shift && shifted != null) shifted else description
+        
+        return when {
+            pressedModifiers.size > 1 -> description.copy(text = "")
+            shift && pressedModifiers.size == 1 -> description.copy(text = "")
+            else -> description
+        }
+    }
+    
+    private fun isShifted(key: VKeyDescription): Boolean {
+        return pressedModifiers.contains("Shift") && key.shifted != null
     }
     
     private fun toModifiersMask(modifiers: Set<String>): Int {
@@ -589,6 +627,56 @@ class Keyboard(private val devTools: ChromeDevTools) {
         if (modifiers.contains("Meta")) mask = mask or 4
         if (modifiers.contains("Shift")) mask = mask or 8
         return mask
+    }
+    
+    private suspend fun down(modifiers: Set<String>, key: VKeyDescription) {
+        // playwright format:
+        // {"type":"keyDown","modifiers":0,"windowsVirtualKeyCode":13,"code":"Enter","commands":[],"key":"Enter","text":"\r","unmodifiedText":"\r","autoRepeat":false,"location":0,"isKeypad":false},"sessionId":"45E0A2ABC64CE5ACDC8A98061CC4667B"}
+        
+        val autoRepeat = pressedKeys.contains(key.code)
+        pressedKeys.add(key.code)
+        if (key.isModifier) {
+            pressedModifiers.add(key.key)
+        }
+        
+        val type = if (key.text.isEmpty()) DispatchKeyEventType.RAW_KEY_DOWN else DispatchKeyEventType.KEY_DOWN
+        val commands = emptyList<String>()
+        withContext(Dispatchers.IO) {
+            dispatchKeyEvent1(
+                type,
+                modifiers = toModifiersMask(modifiers),
+                windowsVirtualKeyCode = key.keyCodeWithoutLocation,
+                code = key.code,
+                commands = commands,
+                key = key.key,
+                text = key.text,
+                unmodifiedText = key.text,
+                location = key.location,
+                isKeypad = key.location == KEYPAD_LOCATION,
+                autoRepeat = autoRepeat,
+            )
+        }
+    }
+    
+    private suspend fun up(modifiers: Set<String>, key: VKeyDescription) {
+        // playwright format:
+        // {"type":"keyUp","modifiers":0,"key":"Enter","windowsVirtualKeyCode":13,"code":"Enter","location":0}
+        
+        if (key.isModifier) {
+            pressedModifiers.remove(key.key)
+        }
+        pressedKeys.remove(key.code)
+
+        withContext(Dispatchers.IO) {
+            dispatchKeyEvent1(
+                DispatchKeyEventType.KEY_UP,
+                modifiers = toModifiersMask(modifiers),
+                key = key.key,
+                windowsVirtualKeyCode = key.keyCodeWithoutLocation,
+                code = key.code,
+                location = key.location,
+            )
+        }
     }
     
     /**

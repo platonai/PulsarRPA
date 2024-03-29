@@ -207,14 +207,13 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     @Test
     fun testClickTextMatches() = runWebDriverTest { driver ->
         open(url, driver, 1)
-        delay(1000)
+        driver.waitForSelector("a[href*=stores]")
 
         // should match the anchor text "Visit the Apple Store"
         driver.clickTextMatches("a[href*=stores]", "Store")
         driver.waitForNavigation()
         driver.waitForSelector("body")
-        delay(1000)
-        
+
         // expected url like: https://www.amazon.com/stores/Apple/page/77D9E1F7-0337-4282-9DB6-B6B8FB2DC98D?ref_=ast_bln
         val currentUrl = driver.currentUrl()
         println(currentUrl)
@@ -280,22 +279,37 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
 //            val selector = "#nav-search input[placeholder*=Search]"
             val selector = "form input[type=text]"
             text = driver.selectFirstAttributeOrNull(selector, "placeholder")
-            println("Search bar - placeholder - : $text")
+            println("Search bar - placeholder: <$text>")
+            assertTrue("Placeholder should not be empty") { !text.isNullOrBlank() }
+            
             text = driver.selectAttributeAll(selector, "value").joinToString()
-            println("Search bar value - 1: $text")
+            println("Search bar value (should be empty) - 1: <$text>")
+            assertEquals("", text)
 
-            "Mate".uppercase().forEach { ch ->
-                driver.press(selector, "Key$ch")
+            "Mate".forEach { ch ->
+                driver.press(selector, "$ch")
             }
             driver.press(selector, "Digit6")
-            driver.press(selector, "Digit0")
-            driver.press(selector, "Enter")
+            driver.press(selector, "0")
+            
+            delay(1000)
 
             text = driver.selectAttributeAll(selector, "value").joinToString()
             println("Search bar value - 2: $text")
+//            assertEquals("Mate60", text)
 
-            text = driver.evaluate("document.querySelector('$selector').value")?.toString() ?: ""
-            println("Search bar value - 3: $text")
+            val evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
+            println("Search bar value - 3: $evaluate")
+//            assertEquals("Mate60", evaluate?.value)
+
+            val html = driver.outerHTML(selector)
+            println("Search bar html: $html")
+            assertNotNull(html)
+//            assertTrue { html.contains("Mate60") }
+            
+            driver.press(selector, "Enter")
+            driver.waitForNavigation()
+            assertTrue { driver.currentUrl() != url }
         }
     }
 

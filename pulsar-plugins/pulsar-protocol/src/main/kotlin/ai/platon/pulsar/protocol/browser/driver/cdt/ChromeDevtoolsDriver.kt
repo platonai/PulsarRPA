@@ -61,9 +61,6 @@ class ChromeDevtoolsDriver(
     val blockedURLs: List<String> get() = _blockedURLs
     val probabilisticBlockedURLs: List<String> get() = _probabilityBlockedURLs
 
-    private val page = PageHandler(devTools, browserSettings.confuser)
-    private val screenshot = Screenshot(page, devTools)
-
     private var navigateUrl = chromeTab.url ?: ""
 
     private val browserAPI get() = devTools.browser.takeIf { isActive }
@@ -78,10 +75,12 @@ class ChromeDevtoolsDriver(
     private val runtimeAPI get() = devTools.runtime.takeIf { isActive }
     private val emulationAPI get() = devTools.emulation.takeIf { isActive }
 
+    private val rpc = RobustRPC(this)
+    private val page = PageHandler(devTools, browserSettings.confuser)
     private val mouse get() = page.mouse.takeIf { isActive }
     private val keyboard get() = page.keyboard.takeIf { isActive }
+    private val screenshot = Screenshot(page, devTools)
 
-    private val rpc = RobustRPC(this)
     private var credentials: Credentials? = null
 
     private val networkManager by lazy { NetworkManager(this, rpc) }
@@ -313,6 +312,10 @@ class ChromeDevtoolsDriver(
 
         try {
             var nodeId = querySelector(selector)
+            
+            // Delay() is efficient, it delays the coroutine for a given time without blocking a thread and resumes it
+            // after a specified time.
+            // TODO: check if it's better to use a event listener and a Channel to receive signal here
             while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0) && isActive) {
                 action()
                 gap("waitForSelector")
@@ -338,7 +341,9 @@ class ChromeDevtoolsDriver(
 
             val timeoutMillis = timeout.toMillis()
 
-            // TODO: use a more efficient way to wait for navigation
+            // Delay() is efficient, it delays the coroutine for a given time without blocking a thread and resumes it
+            // after a specified time.
+            // TODO: check if it's better to use a event listener and a Channel to receive signal here
             while (elapsedTime < timeoutMillis && !navigated && isActive) {
                 gap("waitForNavigation")
                 elapsedTime = System.currentTimeMillis() - startTime
@@ -866,6 +871,9 @@ class ChromeDevtoolsDriver(
         networkManager.on(NetworkEvents.ResponseReceived) { event: ResponseReceived -> handleResponseReceived(entry, event) }
 
         pageAPI?.onDocumentOpened { entry.mainRequestCookies = getCookies0() }
+
+//        pageAPI?.onFrameAttached {  }
+//        pageAPI?.onDomContentEventFired {  }
 
         val proxyUsername = browser.id.fingerprint.proxyUsername
         if (!proxyUsername.isNullOrBlank()) {
