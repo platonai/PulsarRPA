@@ -32,6 +32,8 @@ interface CoTransport: AutoCloseable {
 
 interface RemoteChrome: AutoCloseable {
 
+    val isActive: Boolean
+    
     val version: ChromeVersion
 
     @Throws(ChromeServiceException::class)

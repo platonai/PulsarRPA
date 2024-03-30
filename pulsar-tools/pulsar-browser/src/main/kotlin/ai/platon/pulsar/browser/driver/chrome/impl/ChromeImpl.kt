@@ -43,7 +43,7 @@ class ChromeImpl(
     private val remoteDevTools: MutableMap<String, RemoteDevTools> = ConcurrentHashMap()
     private val closed = AtomicBoolean()
     
-    val isActive get() = !closed.get()
+    override val isActive get() = !closed.get()
 
     private val _version: Lazy<ChromeVersion> = lazy { refreshVersion() }
     /**

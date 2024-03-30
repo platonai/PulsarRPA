@@ -34,6 +34,8 @@ class ChromeDevtoolsBrowser(
     private val devtools: List<ChromeDevTools>
         get() = drivers.values.filterIsInstance<ChromeDevtoolsDriver>().map { it.devTools }
     
+    override val isActive get() = super.isActive && chrome.isActive
+    
     override val userAgent get() = chrome.version.userAgent ?: DEFAULT_USER_AGENT
     
     @Synchronized
@@ -54,10 +56,7 @@ class ChromeDevtoolsBrowser(
     @Synchronized
     @Throws(WebDriverException::class)
     fun listTabs(): Array<ChromeTab> {
-        return runCatching {
-            val tabs = chrome.listTabs()
-            tabs
-        }.getOrElse { throw WebDriverException("listTabs", it) }
+        return chrome.runCatching { listTabs() }.getOrElse { throw WebDriverException("listTabs", it) }
     }
     
     @Synchronized
@@ -178,6 +177,15 @@ class ChromeDevtoolsBrowser(
      * TODO: capture events that open new pages
      * */
     private fun recoverUnmanagedPages() {
+        try {
+            recoverUnmanagedPages0()
+        } catch (e: WebDriverException) {
+            logger.warn("Failed to recover unmanaged pages | {}", e.message)
+        }
+    }
+    
+    @Throws(WebDriverException::class)
+    private fun recoverUnmanagedPages0() {
         listTabs()
             .filter { it.id !in drivers.keys } // unmanaged
             .filter { it.isPageType() } // handler HTML document only

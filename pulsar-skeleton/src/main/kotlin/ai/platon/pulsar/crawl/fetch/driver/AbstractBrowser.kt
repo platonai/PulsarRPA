@@ -1,16 +1,13 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.browser.common.ScriptConfuser
-import ai.platon.pulsar.browser.common.ScriptLoader
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlinx.coroutines.runBlocking
 
 abstract class AbstractBrowser(
     override val id: BrowserId,
@@ -27,6 +24,8 @@ abstract class AbstractBrowser(
     protected val initialized = AtomicBoolean()
     protected val closed = AtomicBoolean()
     protected var lastActiveTime = Instant.now()
+    
+    open val isActive get() = AppContext.isActive && !closed.get() && initialized.get()
     
     override val userAgent get() = DEFAULT_USER_AGENT
     

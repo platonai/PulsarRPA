@@ -937,7 +937,7 @@ class ChromeDevtoolsDriver(
                 } else {
                     page.querySelector(selector)
                 }
-
+                
                 if (nodeId != null && nodeId > 0) {
                     action(nodeId)
                 } else {

@@ -661,7 +661,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
     private suspend fun down(modifiers: Set<String>, key: VirtualKey) {
         // playwright format:
         // {"type":"keyDown","modifiers":0,"windowsVirtualKeyCode":13,"code":"Enter","commands":[],"key":"Enter","text":"\r","unmodifiedText":"\r","autoRepeat":false,"location":0,"isKeypad":false},"sessionId":"45E0A2ABC64CE5ACDC8A98061CC4667B"}
-
+        
         val autoRepeat = pressedKeys.contains(key.code)
         pressedKeys.add(key.code)
         if (key.isModifier) {
