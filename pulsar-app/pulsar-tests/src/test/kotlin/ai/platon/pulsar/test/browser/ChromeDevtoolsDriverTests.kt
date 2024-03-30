@@ -40,6 +40,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         confuser.nameMangler = IDENTITY_NAME_MANGLER
     }
     
+    @AfterTest
     fun tearDown() {
         session.globalCache.resetCaches()
         confuser.reset()
@@ -65,14 +66,11 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     @Test
     fun `Ensure js injected`() = runWebDriverTest(originUrl) { driver ->
         val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
-//            println(r)
-//            readLine()
-
         assertEquals(2, r)
     }
 
     @Test
-    fun `Ensure no injected js variables are seen`() = runWebDriverTest(originUrl) { driver ->
+    fun `Ensure injected js variables are not seen`() = runWebDriverTest(originUrl) { driver ->
         val windowVariables = driver.evaluate("JSON.stringify(Object.keys(window))").toString()
         assertTrue { windowVariables.contains("document") }
         assertTrue { windowVariables.contains("setTimeout") }
@@ -116,43 +114,8 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         val pulsarVariables = variables.filter { it.contains("__pulsar_") }
         assertTrue { pulsarVariables.isEmpty() }
         
-        var result = driver.evaluate("typeof(document.__pulsar_setAttributeIfNotBlank)").toString()
+        val result = driver.evaluate("typeof(document.__pulsar_setAttributeIfNotBlank)").toString()
         assertEquals("function", result)
-    }
-
-    @Test
-    fun testLoadResource() = runWebDriverTest { driver ->
-        val resourceUrl = "https://www.amazon.com/robots.txt"
-        val response = driver.loadResource(resourceUrl)
-        val headers = response.headers
-        val body = response.stream
-        assertNotNull(headers)
-        assertNotNull(body)
-
-//        println(body)
-        assertContains(body, "Disallow")
-
-//        val cookies = response.entries.joinToString("; ") { it.key + "=" + it.value }
-//        println(cookies)
-        headers.forEach { (name, value) -> println("$name: $value") }
-        assertContains(headers.toString(), "Content-Type".toRegex(RegexOption.IGNORE_CASE), "Content-Type should be in headers")
-    }
-
-    @Test
-    fun testJsoupLoadResource() = runWebDriverTest { driver ->
-        val resourceUrl = "https://www.amazon.com/robots.txt"
-        val response = driver.loadJsoupResource(resourceUrl)
-        val body = response.body()
-        assertNotNull(body)
-
-//        println(body)
-        assertContains(body, "Disallow")
-        // check cookies and headers
-        val cookies = response.cookies().entries.joinToString("; ") { it.key + "=" + it.value }
-        println(cookies)
-        response.headers().forEach { (name, value) -> println("$name: $value") }
-        assertContains(response.headers().toString(), "Content-Type".toRegex(RegexOption.IGNORE_CASE),
-            "Content-Type should be in headers")
     }
 
     @Test

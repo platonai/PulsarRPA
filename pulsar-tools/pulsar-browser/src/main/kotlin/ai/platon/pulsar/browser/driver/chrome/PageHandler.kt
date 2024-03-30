@@ -4,11 +4,8 @@ import ai.platon.pulsar.browser.common.ScriptConfuser
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.math.geometric.OffsetD
 import com.github.kklisura.cdt.protocol.v2023.types.dom.Rect
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
-import com.google.common.base.Preconditions.checkState
-import kotlin.random.Random
 
 class PageHandler(
     private val devTools: RemoteDevTools,

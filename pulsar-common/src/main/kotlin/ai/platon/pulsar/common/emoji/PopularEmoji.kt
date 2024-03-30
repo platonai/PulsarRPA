@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package ai.platon.pulsar.common.emoji
 
 /**
@@ -5,7 +7,7 @@ package ai.platon.pulsar.common.emoji
  *
  * @see [Emoji data](https://unicode.org/Public/emoji/1.0/emoji-data.txt)
  * @see [Unicode® Technical Standard #51](http://www.unicode.org/reports/tr51/)
- * @see [JEmoji](https://github.com/felldo/JEmoji)
+ * @see [JEmoji ](https://github.com/felldo/JEmoji)
  * */
 enum class PopularEmoji(val value: String, val alt: String) {
     CANCELLATION_X("\uD83D\uDDD9", "x"),

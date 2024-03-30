@@ -32,7 +32,7 @@ class ChromeLauncher(
         private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
         private val isActive get() = AppContext.isActive && !Thread.currentThread().isInterrupted
         
-        var DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
+        var DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws://.+:(\\d+)/")
         var PID_FILE_NAME = "chrome.launcher.pid"
         var TEMPORARY_UDD_EXPIRY = Duration.ofHours(1)
 
@@ -107,9 +107,6 @@ class ChromeLauncher(
      * Launch the chrome
      * */
     fun launch(chromeBinaryPath: Path, options: ChromeOptions): RemoteChrome {
-        // if the data dir is the default dir, we might have problem to prepare user dir
-        if ("context\\default--" !in userDataDir.toString()) {
-        }
         kotlin.runCatching { prepareUserDataDir() }.onFailure {
             warnInterruptible(this, it, "Failed to prepare user data dir | {} | {}", userDataDir, it.message)
         }
