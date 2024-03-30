@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppContext.state
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
@@ -94,7 +95,6 @@ class ChromeDevtoolsDriver(
     private val initScriptCache = mutableListOf<String>()
     private val closed = AtomicBoolean()
 
-    override var lastActiveTime = Instant.now()
     val isGone get() = closed.get() || isQuit || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone
 
@@ -596,8 +596,8 @@ class ChromeDevtoolsDriver(
     }
 
     fun doClose() {
+        super.close()
         if (closed.compareAndSet(false, true)) {
-            state.set(WebDriver.State.QUIT)
             devTools.runCatching { close() }.onFailure { warnForClose(this, it) }
         }
     }
@@ -627,11 +627,6 @@ class ChromeDevtoolsDriver(
         }
     }
     
-    @Throws(WebDriverException::class)
-    override suspend fun terminate() {
-        stop()
-    }
-
     override fun toString() = "Driver#$id"
     
     fun enableAPIAgents() {

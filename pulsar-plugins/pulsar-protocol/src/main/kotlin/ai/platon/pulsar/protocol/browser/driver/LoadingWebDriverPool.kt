@@ -7,10 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.crawl.BrowseEvent
-import ai.platon.pulsar.crawl.fetch.driver.Browser
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
@@ -244,6 +241,7 @@ class LoadingWebDriverPool constructor(
     }
 
     private fun offerOrDismiss(driver: WebDriver) {
+        require(driver is AbstractWebDriver)
         if (driver.isWorking) {
             statefulDriverPool.offer(driver)
             meterOffer.mark()
@@ -273,6 +271,7 @@ class LoadingWebDriverPool constructor(
 
     fun cancel(url: String): WebDriver? {
         return activeDrivers.lastOrNull { it.navigateEntry.pageUrl == url }?.also {
+            require(it is AbstractWebDriver)
             it.cancel()
         }
     }
@@ -349,9 +348,6 @@ class LoadingWebDriverPool constructor(
             }
 
             val driver = computeBrowserAndDriver(priority, conf)
-            
-            // TODO: wait until the driver is ready
-            driver.state
         }
     }
 
@@ -377,7 +373,9 @@ class LoadingWebDriverPool constructor(
         // Using the count of non-quit drivers can better match the memory consumption,
         // but it's easy to wrongly count the quit drivers, a tiny bug can lead to a big mistake.
         // We leave a debug log here for diagnosis purpose.
-        val resourceConsumingDriversInBrowser = _browser?.drivers?.values?.count { !it.isQuit } ?: 0
+        val resourceConsumingDriversInBrowser = _browser?.drivers?.values
+            ?.filterIsInstance<AbstractWebDriver>()
+            ?.count { !it.isQuit } ?: 0
         // Number of active drivers in this driver pool
         val resourceConsumingDriversInPool = statefulDriverPool.activeDriverCount
         if (resourceConsumingDriversInBrowser != resourceConsumingDriversInPool) {
@@ -436,6 +434,7 @@ class LoadingWebDriverPool constructor(
     }
 
     private fun logDriverOnline(driver: WebDriver) {
+        require(driver is AbstractWebDriver)
         val driverSettings = driverFactory.driverSettings
         logger.trace("The {}th web driver is active, browser: {} pageLoadStrategy: {} capacity: {}",
             numActive, driver.name,

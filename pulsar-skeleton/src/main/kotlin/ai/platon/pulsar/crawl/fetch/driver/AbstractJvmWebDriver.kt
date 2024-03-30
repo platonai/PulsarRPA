@@ -84,5 +84,4 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     override fun loadResourceAsync(url: String) = interopScope.future { loadResource(url) }
     override fun pauseAsync() = interopScope.future { pause() }
     override fun stopAsync() = interopScope.future { stop() }
-    override fun terminateAsync() = interopScope.future { terminate() }
 }

@@ -249,18 +249,8 @@ class MockWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun terminate() {
-        backupDriverOrNull?.terminate()
-    }
-
-    @Throws(WebDriverException::class)
     override suspend fun pause() {
         backupDriverOrNull?.pause()
-    }
-
-    @Throws(WebDriverException::class)
-    override fun awaitTermination() {
-        backupDriverOrNull?.awaitTermination()
     }
 
     /**

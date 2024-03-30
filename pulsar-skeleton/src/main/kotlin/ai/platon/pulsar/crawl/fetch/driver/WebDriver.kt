@@ -10,8 +10,6 @@ import com.google.common.annotations.Beta
 import org.jsoup.Connection
 import java.io.Closeable
 import java.time.Duration
-import java.time.Instant
-import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
 /**
@@ -34,59 +32,9 @@ import kotlin.random.Random
  */
 interface WebDriver: Closeable {
     /**
-     * The state of the driver.
-     * */
-    enum class State {
-        /**
-         * The driver is initialized.
-         * */
-        INIT,
-        /**
-         * The driver is ready to work.
-         * */
-        READY,
-        /**
-         * The driver is working.
-         * */
-        WORKING,
-        /**
-         * The driver is retired and should be quit as soon as possible.
-         * */
-        RETIRED,
-        /**
-         * The driver is quit.
-         * */
-        QUIT;
-        /**
-         * Whether the driver is initialized.
-         * */
-        val isInit get() = this == INIT
-        /**
-         * Whether the driver is ready to work.
-         * */
-        val isReady get() = this == READY
-        /**
-         * Whether the driver is working.
-         * */
-        val isWorking get() = this == WORKING
-        /**
-         * Whether the driver is quit.
-         * */
-        val isQuit get() = this == QUIT
-        /**
-         * Whether the driver is retired and should be quit as soon as possible.
-         * */
-        val isRetired get() = this == RETIRED
-    }
-    
-    /**
      * The driver id.
      * */
     val id: Int
-    /**
-     * The driver name.
-     * */
-    val name: String
     /**
      * The browser of the driver.
      * The browser defines methods and events to manipulate a real browser.
@@ -122,58 +70,10 @@ interface WebDriver: Closeable {
      * */
     var isReused: Boolean
     /**
-     * The state of the driver.
-     * * [State.INIT]: The driver is initialized.
-     * * [State.READY]: The driver is ready to work.
-     * * [State.WORKING]: The driver is working.
-     * * [State.RETIRED]: The driver is retired and should be quit as soon as possible.
-     * * [State.QUIT]: The driver is quit.
-     * */
-    val state: AtomicReference<State>
-    /**
      * The associated data of the driver.
      * */
     val data: MutableMap<String, Any?>
-    /**
-     * The time of the last active action.
-     * */
-    val lastActiveTime: Instant
-    /**
-     * The idle timeout.
-     * */
-    var idleTimeout: Duration
-    /**
-     * Whether the driver is idle. The driver is idle if it is not working for a period of time.
-     * */
-    val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
-    /**
-     * Whether the driver is initialized.
-     * */
-    val isInit: Boolean
-    /**
-     * Whether the driver is ready to work.
-     * */
-    val isReady: Boolean
-    /**
-     * Whether the driver is working.
-     * */
-    val isWorking: Boolean
-    /**
-     * Whether the driver is retired and should be quit as soon as possible.
-     * */
-    val isRetired: Boolean
-    /**
-     * Whether the driver is quit.
-     * */
-    val isQuit: Boolean
-    /**
-     * Whether the current driver task is canceled and should return as soon as possible.
-     * */
-    val isCanceled: Boolean
-    /**
-     * Whether the driver is crashed.
-     * */
-    val isCrashed: Boolean
+
     /**
      * The default timeout to wait for any resources.
      * */
@@ -815,33 +715,4 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun stop()
-    /**
-     * Force the page stop all navigations and RELEASES all resources.
-     * If a web driver is terminated, it should not be used any more and should be quit
-     * as soon as possible.
-     * */
-    @Throws(WebDriverException::class)
-    suspend fun terminate()
-    
-    /** Wait until the tab is terminated and closed. */
-    @Throws(Exception::class)
-    fun awaitTermination()
-    /**
-     * Mark the driver as free, so it can be used to fetch a new page.
-     * */
-    fun free()
-    /**
-     * Mark the driver as working, so it can not be used to fetch another page.
-     * */
-    fun startWork()
-    /**
-     * Mark the driver as retired, so it can not be used to fetch any page,
-     * and should be quit as soon as possible.
-     * */
-    fun retire()
-    /**
-     * Mark the driver as canceled, so the fetch process should return as soon as possible,
-     * and the fetch result should be dropped.
-     * */
-    fun cancel()
 }

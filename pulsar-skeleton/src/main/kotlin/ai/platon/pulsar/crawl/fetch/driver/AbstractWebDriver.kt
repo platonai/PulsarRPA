@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -21,25 +22,96 @@ import kotlin.random.Random
 
 abstract class AbstractWebDriver(
     override val browser: Browser,
-    override val id: Int = instanceSequencer.incrementAndGet()
+    override val id: Int = ID_SUPPLIER.incrementAndGet()
 ): Comparable<AbstractWebDriver>, AbstractJvmWebDriver(), WebDriver, JvmWebDriver {
     companion object {
-        private val instanceSequencer = AtomicInteger()
+        private val ID_SUPPLIER = AtomicInteger()
+    }
+
+    /**
+     * The state of the driver.
+     * */
+    enum class State {
+        /**
+         * The driver is initialized.
+         * */
+        INIT,
+        /**
+         * The driver is ready to work.
+         * */
+        READY,
+        /**
+         * The driver is working.
+         * */
+        WORKING,
+        /**
+         * The driver is retired and should be quit as soon as possible.
+         * */
+        RETIRED,
+        /**
+         * The driver is quit.
+         * */
+        QUIT;
+        /**
+         * Whether the driver is initialized.
+         * */
+        val isInit get() = this == INIT
+        /**
+         * Whether the driver is ready to work.
+         * */
+        val isReady get() = this == READY
+        /**
+         * Whether the driver is working.
+         * */
+        val isWorking get() = this == WORKING
+        /**
+         * Whether the driver is quit.
+         * */
+        val isQuit get() = this == QUIT
+        /**
+         * Whether the driver is retired and should be quit as soon as possible.
+         * */
+        val isRetired get() = this == RETIRED
     }
     
-    private val jsoupCreateDestroyMonitor = Any()
-    private var jsoupSession: Connection? = null
+    /**
+     * The state of the driver.
+     * * [State.INIT]: The driver is initialized.
+     * * [State.READY]: The driver is ready to work.
+     * * [State.WORKING]: The driver is working.
+     * * [State.RETIRED]: The driver is retired and should be quit as soon as possible.
+     * * [State.QUIT]: The driver is quit.
+     * */
+    private val state = AtomicReference(State.INIT)
     
     private val canceled = AtomicBoolean()
     private val crashed = AtomicBoolean()
     
-    override var idleTimeout: Duration = Duration.ofMinutes(10)
+    private val jsoupCreateDestroyMonitor = Any()
+    private var jsoupSession: Connection? = null
+    
+    var idleTimeout: Duration = Duration.ofMinutes(10)
+    var lastActiveTime: Instant = Instant.now()
+    /**
+     * Whether the driver is idle. The driver is idle if it is not working for a period of time.
+     * */
+    val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
+    
+    val isInit get() = state.get().isInit
+    val isReady get() = state.get().isReady
+    
+    val isWorking get() = state.get().isWorking
+    val isRetired get() = state.get().isRetired
+    val isQuit get() = state.get().isQuit
+    
+    val isCanceled get() = canceled.get()
+    val isCrashed get() = crashed.get()
     
     override var waitTimeout = Duration.ofSeconds(60)
     
     override var waitForElementTimeout = Duration.ofSeconds(20)
     
-    override val name get() = javaClass.simpleName + "-" + id
+    open val name get() = javaClass.simpleName + "-" + id
     
     override val delayPolicy: (String) -> Long
         get() = { type ->
@@ -71,47 +143,47 @@ abstract class AbstractWebDriver(
     
     override var isReused: Boolean = false
     
-    override val state = AtomicReference(WebDriver.State.INIT)
-    
     /**
      * The associated data.
      * */
     override val data: MutableMap<String, Any?> = mutableMapOf()
     
-    override var lastActiveTime: Instant = Instant.now()
-    
-    override val isInit get() = state.get().isInit
-    override val isReady get() = state.get().isReady
-    
-    override val isWorking get() = state.get().isWorking
-    override val isRetired get() = state.get().isRetired
-    override val isQuit get() = state.get().isQuit
-    
-    override val isCanceled get() = canceled.get()
-    override val isCrashed get() = crashed.get()
-    
-    override fun free() {
+    /**
+     * Mark the driver as free, so it can be used to fetch a new page.
+     * */
+    fun free() {
         canceled.set(false)
         crashed.set(false)
         if (!isInit && !isWorking) {
             // It's a bad idea to throw an exception, which lead to inconsistency within the ConcurrentStatefulDriverPool.
             // throw IllegalWebDriverStateException("The driver is expected to be INIT or WORKING to be ready, actually $state")
         }
-        state.set(WebDriver.State.READY)
+        state.set(State.READY)
     }
     
-    override fun startWork() {
+    /**
+     * Mark the driver as working, so it can not be used to fetch another page.
+     * */
+    fun startWork() {
         canceled.set(false)
         crashed.set(false)
         if (!isInit && !isReady) {
             // It's a bad idea to throw an exception, which lead to inconsistency within the ConcurrentStatefulDriverPool.
             // throw IllegalWebDriverStateException("The driver is expected to be INIT or READY to work, actually $state")
         }
-        state.set(WebDriver.State.WORKING)
+        state.set(State.WORKING)
     }
     
-    override fun retire() = state.set(WebDriver.State.RETIRED)
-    override fun cancel() {
+    /**
+     * Mark the driver as retired, so it can not be used to fetch any page,
+     * and should be quit as soon as possible.
+     * */
+    fun retire() = state.set(State.RETIRED)
+    /**
+     * Mark the driver as canceled, so the fetch process should return as soon as possible,
+     * and the fetch result should be dropped.
+     * */
+    fun cancel() {
         canceled.set(true)
     }
     
@@ -319,6 +391,30 @@ abstract class AbstractWebDriver(
     override fun compareTo(other: AbstractWebDriver): Int = id - other.id
     
     override fun toString(): String = "#$id"
+    /**
+     * Force the page stop all navigations and RELEASES all resources.
+     * If a web driver is terminated, it should not be used any more and should be quit
+     * as soon as possible.
+     * */
+    @Throws(WebDriverException::class)
+    open suspend fun terminate() {
+        stop()
+    }
+    
+    /** Wait until the tab is terminated and closed. */
+    @Throws(Exception::class)
+    open fun awaitTermination() {
+    
+    }
+    
+    override fun close() {
+        if (isQuit) {
+            return
+        }
+        
+        state.set(State.QUIT)
+        runCatching { runBlocking { stop() } }.onFailure { warnForClose(this, it) }
+    }
     
     private fun getHeadersAndCookies(): Pair<Map<String, String>, List<Map<String, String>>> {
         return runBlocking {

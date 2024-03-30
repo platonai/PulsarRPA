@@ -251,11 +251,4 @@ interface JvmWebDriver {
      * */
     @Throws(WebDriverException::class)
     fun stopAsync(): CompletableFuture<Unit>
-    /**
-     * Force the page stop all navigations and RELEASES all resources.
-     * If a web driver is terminated, it should not be used any more and should be quit
-     * as soon as possible.
-     * */
-    @Throws(WebDriverException::class)
-    fun terminateAsync(): CompletableFuture<Unit>
 }

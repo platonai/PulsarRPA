@@ -35,11 +35,11 @@ class Twitter {
         val options = session.options(args)
         val be = options.event.browseEvent
         
-        be.onDidScroll.addLast { page, driver ->
+        be.onDocumentSteady.addLast { page, driver ->
             interact(page, driver)
         }
         
-        session.load(url, options)
+        session.open(url)
     }
     
     private suspend fun checkPreference() {
