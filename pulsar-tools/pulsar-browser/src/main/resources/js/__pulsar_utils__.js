@@ -653,22 +653,30 @@ __pulsar_utils__.selectFirstAttribute = function(selector, attrName) {
 };
 
 /**
- * @deprecated Use selectAttribute instead
- */
-__pulsar_utils__.allAttrs = function(selector, attrName) {
-    return __pulsar_utils__.selectAttributeAll(selector, attrName)
+ * Select the first matching element and extract all the attributes.
+ *
+ * @param  {String} selector
+ * @return {String} attribute values in json format
+ * */
+__pulsar_utils__.selectAttributes = function(selector) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        let attrs = Array.from(element.attributes).flatMap(a => [a.name, a.value])
+        return JSON.stringify(attrs, null, 2)
+    }
+    return "[]"
 };
 
 /**
- * Select elements and extract the texts
+ * Select all the matching elements and extract the attribute with given name.
  *
  * @param  {String} selector
  * @param  {String} attrName
- * @return {String} attribute values separated by line break "\n"
+ * @return {string} attribute values in json format
  */
 __pulsar_utils__.selectAttributeAll = function(selector, attrName) {
     let elements = document.querySelectorAll(selector)
-    let values = Array.from(elements).map(e => e.getAttribute(attrName))
+    let values = Array.from(elements).map(e => e.getAttribute(attrName)).filter(v => v != null)
     return JSON.stringify(values, null, 2)
 };
 

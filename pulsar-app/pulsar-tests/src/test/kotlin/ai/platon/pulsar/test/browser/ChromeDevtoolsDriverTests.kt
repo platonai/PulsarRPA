@@ -127,7 +127,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     }
 
     @Test
-    fun testSelectTextAll() = runWebDriverTest { driver ->
+    fun test_selectTextAll() = runWebDriverTest { driver ->
         driver.navigateTo(url)
 
         driver.waitForSelector("#productTitle")
@@ -146,7 +146,52 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         assertTrue { texts.isNotEmpty() }
         texts.map { it.replace("\\s+".toRegex(), " ") }.forEach { text -> println(">>>$text<<<") }
     }
-
+    
+    @Test
+    fun test_selectFirstAttributeOrNull() = runWebDriverTest { driver ->
+        driver.navigateTo(url)
+        
+        driver.waitForSelector("#productTitle")
+        
+        val cssClass = driver.selectFirstAttributeOrNull("#productTitle", "class")
+        assertNotNull(cssClass)
+        println("Product title class: $cssClass")
+    }
+    
+    @Test
+    fun test_selectAttributes() = runWebDriverTest { driver ->
+        driver.navigateTo(originUrl)
+        
+        val selector = "input[type=text]"
+        driver.waitForSelector(selector)
+        
+        val attributes = driver.selectAttributes(selector)
+        assertTrue { attributes.isNotEmpty() }
+        println("attributes: $attributes")
+    }
+    
+    @Test
+    fun test_selectAttributeAll() = runWebDriverTest { driver ->
+        driver.navigateTo(originUrl)
+        
+        val selector = ".product-shoveler a[href]"
+        driver.waitForSelector(selector)
+        
+        println("Selecting attributes: ")
+        
+        var links = driver.selectAttributeAll(selector, "href")
+        assertTrue { links.isNotEmpty() }
+        
+        println("Href: ")
+        links.forEach { println(it) }
+        
+        links = driver.selectAttributeAll(selector, "abs:href")
+        println("NOTE: abs:href not supported by WebDriver.selectAttributeXXX()")
+        println("Abs:href: ")
+        links.forEach { println(it) }
+        // assertTrue { links.isEmpty() }
+    }
+    
     @Test
     fun testClickTextMatches() = runWebDriverTest { driver ->
         open(url, driver, 1)
@@ -243,16 +288,16 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         assertEquals("Mate60", evaluate?.value)
 
         text = driver.selectAttributeAll(selector, "value").joinToString()
-        println("Search bar value - 3: $text")
+        println("Search bar value - 3 - selectAttributeAll() : <$text>")
 //            assertEquals("Mate60", text)
 
         val html = driver.outerHTML(selector)
-        println("Search bar html: $html")
+        println("Search bar html: >>>\n$html\n<<<")
         assertNotNull(html)
 // assertTrue { html.contains("Mate60") }
 
         evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
-        println("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
+        println("Search bar evaluate result - driver.evaluateDetail() : >>>\n$evaluate\n<<<")
         println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
         assertEquals("Mate60", evaluate?.value)
         

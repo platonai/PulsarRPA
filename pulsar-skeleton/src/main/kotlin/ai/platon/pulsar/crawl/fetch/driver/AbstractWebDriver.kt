@@ -56,6 +56,7 @@ abstract class AbstractWebDriver(
                 "dragAndDrop" -> 800L + Random.nextInt(500)
                 "waitForNavigation" -> 500L
                 "waitForSelector" -> 1000L
+                "waitUntil" -> 1000L
                 else -> 100L + Random.nextInt(500)
             }
         }
@@ -212,11 +213,16 @@ abstract class AbstractWebDriver(
         return result?.toString()
     }
     
+    override suspend fun selectAttributes(selector: String): Map<String, String> {
+        val json = evaluate("__pulsar_utils__.selectAttributes('$selector')")?.toString() ?: return mapOf()
+        val attributes: List<String> = jacksonObjectMapper().readValue(json)
+        return attributes.zipWithNext().associate { it }
+    }
+    
     @Throws(WebDriverException::class)
-    override suspend fun selectAttributeAll(selector: String, attrName: String): List<String> {
-        val json = evaluate("__pulsar_utils__.selectAttributeAll('$selector', '$attrName')")?.toString()?:"[]"
-        val result: List<String> = jacksonObjectMapper().readValue(json)
-        return result
+    override suspend fun selectAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
+        val json = evaluate("__pulsar_utils__.selectAttributeAll('$selector', '$attrName')")?.toString() ?: return listOf()
+        return jacksonObjectMapper().readValue(json)
     }
 
     @Throws(WebDriverException::class)

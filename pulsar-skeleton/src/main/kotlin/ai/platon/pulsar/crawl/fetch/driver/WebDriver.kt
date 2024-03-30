@@ -690,11 +690,10 @@ interface WebDriver: Closeable {
      * If the nodes do not exist, or the attribute does not exist, returns an empty list.
      *
      * @param selector The selector to locate the nodes.
-     * @param attrName The attribute name to retrieve.
-     * @return The attribute values of the nodes.
+     * @return The attribute pairs of the nodes.
      * */
     @Throws(WebDriverException::class)
-    suspend fun selectAttributes(selector: String, attrName: String) = selectAttributeAll(selector, attrName)
+    suspend fun selectAttributes(selector: String): Map<String, String>
     /**
      * Returns the nodes' attribute values, the nodes are located by [selector], the attribute is [attrName].
      *
@@ -705,7 +704,7 @@ interface WebDriver: Closeable {
      * @return The attribute values of the nodes.
      * */
     @Throws(WebDriverException::class)
-    suspend fun selectAttributeAll(selector: String, attrName: String): List<String>
+    suspend fun selectAttributeAll(selector: String, attrName: String, start: Int = 0, limit: Int = 1000): List<String>
     
     @Throws(WebDriverException::class)
     suspend fun setAttribute(selector: String, attrName: String, attrValue: String)

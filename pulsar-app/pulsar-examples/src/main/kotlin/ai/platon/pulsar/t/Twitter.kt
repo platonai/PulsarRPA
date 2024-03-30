@@ -108,9 +108,14 @@ class Twitter {
             return
         }
 
+        // 1. running with chrome in the background - OK
+        // 2. running with headless mode - ?
+        // 3. running with supervised mode - ?
+        // 4. running with multiple browsers - ?
+        
         driver.fill(selector, iterator.next())
         driver.press(selector, "Space")
-        "Email".uppercase().forEach { driver.press(selector, "Key$it") }
+        "Email".forEach { driver.press(selector, "$it") }
         driver.press(selector, "Enter")
     }
 }

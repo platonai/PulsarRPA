@@ -206,12 +206,12 @@ object KeyboardDescription {
         // The key code: KeyA, KeyB, Enter, ...
         for ((code, definition) in layout) {
             val description = VKeyDescription(
-                key = definition.key,
-                keyCode = definition.keyCode,
-                keyCodeWithoutLocation = definition.keyCodeWithoutLocation ?: definition.keyCode,
+                key = definition.key, // default ""
+                keyCode = definition.keyCode, // default 0
+                keyCodeWithoutLocation = definition.keyCodeWithoutLocation ?: definition.keyCode, // default 0
                 code = code,
-                text = definition.text ?: definition.key,
-                location = definition.location ?: 0
+                text = definition.text ?: "", // default ""
+                location = definition.location ?: 0 // default 0
             )
             if (definition.key.length == 1) {
                 description.text = description.key
@@ -219,6 +219,7 @@ object KeyboardDescription {
 
             val shiftKey = definition.shiftKey
             val shiftedDescription = if (shiftKey != null) {
+                require(shiftKey.length == 1)
                 description.copy(
                     key = shiftKey,
                     text = shiftKey,
@@ -230,7 +231,7 @@ object KeyboardDescription {
             // Map from code: Digit3 -> { ... description, shifted }
             result[code] = description.copy(shifted = shiftedDescription)
 
-            // Map from aliases: Shift -> non-shiftable definition
+            // Map from aliases: Shift -> non-shift definition
             KEY_CODE_ALIASES[code]?.forEach { alias ->
                 result[alias] = description
             }

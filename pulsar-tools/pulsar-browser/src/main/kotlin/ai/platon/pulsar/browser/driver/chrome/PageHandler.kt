@@ -15,33 +15,51 @@ class PageHandler(
         // see org.w3c.dom.Node.ELEMENT_NODE
         const val ELEMENT_NODE = 1
     }
-
+    
     private val logger = getLogger(this)
-
+    
     private val isActive get() = AppContext.isActive && devTools.isOpen
-    private val page get() = devTools.page.takeIf { isActive }
-    private val dom get() = devTools.dom.takeIf { isActive }
-    private val css get() = devTools.css.takeIf { isActive }
+    private val pageAPI get() = devTools.page.takeIf { isActive }
+    private val domAPI get() = devTools.dom.takeIf { isActive }
+    private val cssAPI get() = devTools.css.takeIf { isActive }
     private val runtime get() = devTools.runtime.takeIf { isActive }
-
+    
     val mouse = Mouse(devTools)
     val keyboard = Keyboard(devTools)
-
+    
+    /**
+     * TODO: make sure the meaning of 0 node id
+     * */
     fun querySelector(selector: String): Int? {
-        val rootId = dom?.document?.nodeId
-        return if (rootId != null && rootId > 0) {
-            dom?.querySelector(rootId, selector)
-        } else null
+        return querySelectorOrNull(selector)
     }
-
-    fun visible(selector: String): Boolean {
-        val nodeId = querySelector(selector)
-        if (nodeId == null || nodeId <= 0) {
-            return false
-        }
-
-        return visible(nodeId)
+    
+    fun querySelectorAll(selector: String): List<Int> {
+        return invokeOnElement(selector) { nodeId ->
+            domAPI?.querySelectorAll(nodeId, selector)
+        } ?: listOf()
     }
+    
+    fun getAttributes(selector: String): Map<String, String> {
+        return invokeOnElement(selector) { nodeId ->
+            domAPI?.getAttributes(nodeId)?.zipWithNext()?.toMap()
+        } ?: emptyMap()
+    }
+    
+    fun getAttribute(selector: String, attrName: String) = invokeOnElement(selector) { getAttribute(it, attrName) }
+    
+    fun getAttribute(nodeId: Int, attrName: String): String? {
+        val attributes = domAPI?.getAttributes(nodeId)
+        return attributes?.getOrNull(attributes.indexOf(attrName) + 1)
+    }
+    
+    fun getAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
+        return querySelectorAll(selector).asSequence().drop(start).take(limit)
+            .mapNotNull { getAttribute(it, attrName) }
+            .toList()
+    }
+    
+    fun visible(selector: String) = predicateOnElement(selector) { visible(it) }
 
     fun visible(nodeId: Int): Boolean {
         if (nodeId <= 0) {
@@ -50,7 +68,7 @@ class PageHandler(
 
         var isVisible = true
 
-        val properties = css?.getComputedStyleForNode(nodeId)
+        val properties = cssAPI?.getComputedStyleForNode(nodeId)
         properties?.forEach { prop ->
             when {
                 prop.name == "display" && prop.value == "none" -> isVisible = false
@@ -60,7 +78,7 @@ class PageHandler(
         }
 
         if (isVisible) {
-            isVisible = ClickableDOM.create(page, dom, nodeId)?.isVisible() ?: false
+            isVisible = ClickableDOM.create(pageAPI, domAPI, nodeId)?.isVisible() ?: false
         }
 
         return isVisible
@@ -79,14 +97,14 @@ class PageHandler(
      * matching selector.
      */
     fun focusOnSelector(selector: String): Int {
-        val rootId = dom?.document?.nodeId ?: return 0
+        val rootId = domAPI?.document?.nodeId ?: return 0
         
-        val nodeId = dom?.querySelector(rootId, selector)
+        val nodeId = domAPI?.querySelector(rootId, selector)
         if (nodeId == 0) {
             return 0
         }
 
-        dom?.focus(nodeId, rootId, null)
+        domAPI?.focus(nodeId, rootId, null)
         
         return nodeId ?: 0
     }
@@ -103,13 +121,13 @@ class PageHandler(
 
     fun scrollIntoViewIfNeeded(nodeId: Int, selector: String? = null, rect: Rect? = null): Int? {
         try {
-            val node = dom?.describeNode(nodeId, null, null, null, false)
+            val node = domAPI?.describeNode(nodeId, null, null, null, false)
             if (node?.nodeType != ELEMENT_NODE) {
                 logger.info("Node is not of type HTMLElement | {}", selector ?: nodeId)
                 return null
             }
 
-            dom?.scrollIntoViewIfNeeded(nodeId, node.backendNodeId, null, rect)
+            domAPI?.scrollIntoViewIfNeeded(nodeId, node.backendNodeId, null, rect)
         } catch (e: ChromeRPCException) {
             logger.debug("DOM.scrollIntoViewIfNeeded is not supported, fallback to Element.scrollIntoView | {} | {} | {}",
                 nodeId, e.message, selector)
@@ -148,5 +166,30 @@ class PageHandler(
 
         val result = evaluate?.result
         return result?.value
+    }
+    
+    private fun querySelectorOrNull(selector: String): Int? {
+        val rootId = domAPI?.document?.nodeId
+        return if (rootId != null && rootId > 0) {
+            domAPI?.querySelector(rootId, selector)
+        } else null
+    }
+    
+    private fun <T> invokeOnElement(selector: String, action: (Int) -> T): T? {
+        val nodeId = querySelectorOrNull(selector)
+        if (nodeId != null && nodeId > 0) {
+            return action(nodeId)
+        }
+        
+        return null
+    }
+    
+    private fun predicateOnElement(selector: String, action: (Int) -> Boolean): Boolean {
+        val nodeId = querySelectorOrNull(selector)
+        if (nodeId != null && nodeId > 0) {
+            return action(nodeId)
+        }
+        
+        return false
     }
 }

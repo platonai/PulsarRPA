@@ -194,13 +194,21 @@ class Mouse(private val devTools: ChromeDevTools) {
 // println("click($x, $y, $clickCount, $delayMillis)")
         
         moveTo(x, y)
-        down(x, y, clickCount)
+        
+//        down(x, y, clickCount)
+//        if (delayMillis > 0) {
+//            delay(delayMillis)
+//        }
+//        up(x, y, clickCount)
 
-        if (delayMillis > 0) {
+        for (cc in 1..clickCount) {
+            down(x, y, cc)
             delay(delayMillis)
+            up(x, y, cc)
+            if (cc < clickCount) {
+                delay(delayMillis)
+            }
         }
-
-        up(x, y, clickCount)
     }
 
     suspend fun moveTo(point: PointD, steps: Int = 5, delayMillis: Long = 50) {
@@ -233,20 +241,20 @@ class Mouse(private val devTools: ChromeDevTools) {
      * TODO: input.dispatchMouseEvent(MOUSE_MOVED) not work, the reason is unknown. Robot.mouseMove works.
      * */
     private fun chromeMoveTo(x: Double, y: Double) {
-        input.dispatchMouseEvent(
-            DispatchMouseEventType.MOUSE_MOVED, x, y,
-            null, null,
-            null, // button
-            null, // buttons
-            null,
-            null, // force
-            null,
-            null,
-            null,
-            null, // twist
-            null,
-            null,
-            null
+        dispatchMouseEvent(
+            type = DispatchMouseEventType.MOUSE_MOVED, x = x, y = y,
+            modifiers = null, timestamp = null,
+            button = null, // button
+            buttons = null, // buttons
+            clickCount = null,
+            force = null, // force
+            tangentialPressure = null,
+            tiltX = null,
+            tiltY = null,
+            twist = null, // twist
+            deltaX = null,
+            deltaY = null,
+            pointerType = null
         )
     }
 
@@ -276,21 +284,22 @@ class Mouse(private val devTools: ChromeDevTools) {
      * @param y Y coordinate
      */
     suspend fun down(x: Double, y: Double, clickCount: Int = 1) {
+        // TODO: handle modifiers
         withContext(Dispatchers.IO) {
-            input.dispatchMouseEvent(
-                DispatchMouseEventType.MOUSE_PRESSED, x, y,
-                null, null,
-                MouseButton.LEFT,
-                null, // buttons
-                clickCount,
-                0.5, // force
-                null,
-                null,
-                null,
-                null, // twist
-                null,
-                null,
-                null
+            dispatchMouseEvent(
+                type = DispatchMouseEventType.MOUSE_PRESSED, x = x, y = y,
+                modifiers = null, timestamp = null,
+                button = MouseButton.LEFT,
+                buttons = null, // buttons
+                clickCount = clickCount,
+                force = 0.5, // force
+                tangentialPressure = null,
+                tiltX = null,
+                tiltY = null,
+                twist = null, // twist
+                deltaX = null,
+                deltaY = null,
+                pointerType = null
             )
         }
     }
@@ -304,41 +313,32 @@ class Mouse(private val devTools: ChromeDevTools) {
     }
 
     suspend fun up(x: Double, y: Double, clickCount: Int = 1) {
+        // TODO: handle modifiers
         withContext(Dispatchers.IO) {
-            input.dispatchMouseEvent(
-                DispatchMouseEventType.MOUSE_RELEASED, x, y,
-                null, null,
-                MouseButton.LEFT,
-                null, // buttons
-                clickCount,
-                null, // force
-                null,
-                null, // tiltX
-                null, // tiltY
-                null, // twist
-                null, // deltaX
-                null, // deltaY
-                null
+            dispatchMouseEvent(
+                type = DispatchMouseEventType.MOUSE_RELEASED, x = x, y = y,
+                button = MouseButton.LEFT,
+                clickCount = clickCount
             )
         }
     }
 
     suspend fun scroll(deltaX: Double = 0.0, deltaY: Double = 10.0) {
         withContext(Dispatchers.IO) {
-            input.dispatchMouseEvent(
-                DispatchMouseEventType.MOUSE_WHEEL, currentX, currentY,
-                null, null,
-                null, // button
-                null, // buttons
-                null,
-                null, // force
-                null,
-                null, // tiltX
-                null, // tiltY
-                null, // twist
-                deltaX, // deltaX
-                deltaY, // deltaY
-                null
+            dispatchMouseEvent(
+                type = DispatchMouseEventType.MOUSE_WHEEL, x = currentX, y = currentY,
+                modifiers = null, timestamp = null,
+                button = null, // button
+                buttons = null, // buttons
+                clickCount = null,
+                force = null, // force
+                tangentialPressure = null,
+                tiltX = null, // tiltX
+                tiltY = null, // tiltY
+                twist = null, // twist
+                deltaX = deltaX, // deltaX
+                deltaY = deltaY, // deltaY
+                pointerType = null
             )
         }
     }
@@ -404,20 +404,20 @@ class Mouse(private val devTools: ChromeDevTools) {
      */
     suspend fun wheel(x: Double, y: Double, deltaX: Double, deltaY: Double) {
         withContext(Dispatchers.IO) {
-            input.dispatchMouseEvent(
-                DispatchMouseEventType.MOUSE_WHEEL, x, y,
-                null, null,
-                null, // button
-                null, // buttons
-                null,
-                null, // force
-                null,
-                null, // tiltX
-                null, // tiltY
-                null, // twist
-                deltaX, // deltaX
-                deltaY, // deltaY
-                null
+            dispatchMouseEvent(
+                type = DispatchMouseEventType.MOUSE_WHEEL, x = x, y = y,
+                modifiers = null, timestamp = null,
+                button = null, // button
+                buttons = null, // buttons
+                clickCount = null,
+                force = null, // force
+                tangentialPressure = null,
+                tiltX = null, // tiltX
+                tiltY = null, // tiltY
+                twist = null, // twist
+                deltaX = deltaX, // deltaX
+                deltaY = deltaY, // deltaY
+                pointerType = null
             )
         }
     }
@@ -501,6 +501,29 @@ class Mouse(private val devTools: ChromeDevTools) {
         drop(target, data)
         up()
     }
+    
+    private fun dispatchMouseEvent(
+        @ParamName("type") type: DispatchMouseEventType,
+        @ParamName("x") x: Double? = null,
+        @ParamName("y") y: Double? = null,
+        @Optional @ParamName("modifiers") modifiers: Int? = null,
+        @Optional @ParamName("timestamp") timestamp: Double? = null,
+        @Optional @ParamName("button") button: MouseButton? = null,
+        @Optional @ParamName("buttons") buttons: Int? = null,
+        @Optional @ParamName("clickCount") clickCount: Int? = null,
+        @Experimental @Optional @ParamName("force") force: Double? = null,
+        @Experimental @Optional @ParamName("tangentialPressure") tangentialPressure: Double? = null,
+        @Experimental @Optional @ParamName("tiltX") tiltX: Int? = null,
+        @Experimental @Optional @ParamName("tiltY") tiltY: Int? = null,
+        @Experimental @Optional @ParamName("twist") twist: Int? = null,
+        @Optional @ParamName("deltaX") deltaX: Double? = null,
+        @Optional @ParamName("deltaY") deltaY: Double? = null,
+        @Optional @ParamName("pointerType") pointerType: DispatchMouseEventPointerType? = null
+    ) {
+        input.dispatchMouseEvent(
+            type, x, y, modifiers, timestamp, button, buttons, clickCount, force, tangentialPressure, tiltX, tiltY, twist, deltaX, deltaY, pointerType
+        )
+    }
 }
 
 /**
@@ -534,14 +557,20 @@ class Keyboard(private val devTools: ChromeDevTools) {
      * For example, 'a', 'A', 'KeyA', 'Enter', 'Shift+A', and 'Control+Shift+Tab' are all valid keys.
      * */
     suspend fun press(keyString: String, delayMillis: Long) {
-        val tokens = splitKeyString(keyString)
-        if (tokens.isEmpty()) {
-            return
+        val tokens = splitKeyString(keyString).ifEmpty { return@press }
+        
+        val key = tokens.last()
+        for (i in 0 until tokens.size - 1) {
+            down(tokens[i])
         }
         
-        tokens.forEach { down(it) }
+        down(key)
         delay(delayMillis)
-        tokens.reversed().forEach { up(it) }
+        up(key)
+        
+        for (i in tokens.size - 2 downTo 0) {
+            up(tokens[i])
+        }
     }
     
     suspend fun press(key: VKeyDescription, delayMillis: Long) {
@@ -632,7 +661,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
     private suspend fun down(modifiers: Set<String>, key: VKeyDescription) {
         // playwright format:
         // {"type":"keyDown","modifiers":0,"windowsVirtualKeyCode":13,"code":"Enter","commands":[],"key":"Enter","text":"\r","unmodifiedText":"\r","autoRepeat":false,"location":0,"isKeypad":false},"sessionId":"45E0A2ABC64CE5ACDC8A98061CC4667B"}
-        
+
         val autoRepeat = pressedKeys.contains(key.code)
         pressedKeys.add(key.code)
         if (key.isModifier) {

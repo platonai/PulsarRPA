@@ -155,75 +155,31 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
-        return rpc.invokeDeferredSilently("getCookies") { getCookies0() } ?: listOf()
+        return invokeOnPage("getCookies") { getCookies0() } ?: listOf()
     }
 
     override suspend fun deleteCookies(name: String) {
-        rpc.invokeDeferredSilently("deleteCookies") {
-            networkAPI?.deleteCookies(name)
-        }
+        invokeOnPage("deleteCookies") { networkAPI?.deleteCookies(name) }
     }
 
     override suspend fun deleteCookies(name: String, url: String?, domain: String?, path: String?) {
-        rpc.invokeDeferredSilently("deleteCookies") {
-            networkAPI?.deleteCookies(name, url, domain, path)
-        }
+        invokeOnPage("deleteCookies") { networkAPI?.deleteCookies(name, url, domain, path) }
     }
 
     override suspend fun clearBrowserCookies() {
-        rpc.invokeDeferredSilently("clearBrowserCookies") {
-            networkAPI?.clearBrowserCookies()
-        }
+        invokeOnPage("clearBrowserCookies") { networkAPI?.clearBrowserCookies() }
     }
-
-    @Throws(WebDriverException::class)
-    private fun getCookies0(): List<Map<String, String>> {
-        val cookies = networkAPI?.cookies?.map { serialize(it) }
-        return cookies ?: listOf()
+    
+    override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
+        val name = "selectFirstAttributeOrNull"
+        return invokeOnElement(selector, name) { page.getAttribute(it, attrName) }
     }
-
-    private fun serialize(cookie: Cookie): Map<String, String> {
-        val mapper = jacksonObjectMapper()
-        val json = mapper.writeValueAsString(cookie)
-        val map: Map<String, String?> = mapper.readValue(json)
-        return map.filterValues { it != null }.mapValues { it.toString() }
+    
+    override suspend fun selectAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
+        val name = "selectAttributeAll"
+        return invokeOnPage(name) { page.getAttributeAll(selector, attrName, start, limit) } ?: listOf()
     }
-
-    @Throws(WebDriverException::class)
-    override suspend fun pause() {
-        invokeOnPage("pause") { pageAPI?.stopLoading() }
-//        try {
-//            rpc.invokeDeferred("pause") { pageAPI?.stopLoading() }
-//        } catch (e: ChromeRPCException) {
-//            rpc.handleRPCException(e, "pause")
-//        }
-    }
-
-    @Throws(WebDriverException::class)
-    override suspend fun stop() {
-        navigateEntry.stopped = true
-        try {
-            handleRedirect()
-
-            if (browser.isGUI) {
-                // in gui mode, just stop the loading, so we can diagnose
-                pageAPI?.stopLoading()
-            } else {
-                // go to about:blank, so the browser stops the previous page and releases all resources
-                navigateTo(ChromeImpl.ABOUT_BLANK_PAGE)
-            }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "terminate")
-        } catch (e: ChromeDriverException) {
-            logger.info("Terminate exception: {}", e.message)
-        }
-    }
-
-    @Throws(WebDriverException::class)
-    override suspend fun terminate() {
-        stop()
-    }
-
+    
     @Throws(WebDriverException::class)
     override suspend fun evaluate(expression: String): Any? {
         return invokeOnPage("evaluate") { page.evaluate(expression) }
@@ -282,7 +238,7 @@ class ChromeDevtoolsDriver(
     override suspend fun waitForPage(url: String, timeout: Duration): WebDriver? {
         return waitFor("waitForPage", timeout) { browser.findDriver(url) }
     }
-
+    
     override suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean) =
         waitUntil("waitUtil", timeout, predicate)
     
@@ -400,21 +356,8 @@ class ChromeDevtoolsDriver(
         invokeOnElement(selector, "click", scrollIntoView = true) { nodeId ->
             click(nodeId, count)
         }
-        
-//        try {
-//            val nodeId = rpc.invokeDeferred("click") {
-//                page.scrollIntoViewIfNeeded(selector)
-//            } ?: 0
-//
-//            if (nodeId > 0) {
-//                click(nodeId, count)
-//            }
-//        } catch (e: ChromeRPCException) {
-//            rpc.handleRPCException(e, "click")
-//        }
     }
 
-    @Throws(WebDriverException::class)
     private suspend fun click(nodeId: Int, count: Int, position: String = "center") {
         val deltaX = 4.0 + Random.nextInt(4)
         val deltaY = 4.0
@@ -441,8 +384,6 @@ class ChromeDevtoolsDriver(
         point.x += offsetX
         
         mouse?.click(point.x, point.y, count, delayPolicy("click"))
-        
-        gap("click")
     }
 
     @Throws(WebDriverException::class)
@@ -469,14 +410,13 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun fill(selector: String, text: String) {
         invokeOnElement(selector, "fill", focus = true) { nodeId ->
-            // domAPI?.getAttributes(nodeId)
-            
-            val oldText = selectFirstAttributeOrNull(selector, "value")
-            val length = oldText?.length?:0
-            if (length > 0) {
-                keyboard?.delete(length, delayPolicy("delete"))
+            // val value = evaluateDetail("document.querySelector('$selector').value")?.value?.toString() ?: ""
+            val value = page.getAttribute(nodeId, "value")
+            if (value != null) {
+                click(nodeId, 1)
+                keyboard?.delete(value.length, delayPolicy("delete"))
             }
-            
+
             click(nodeId, 1)
             keyboard?.type(text, delayPolicy("type"))
         }
@@ -596,7 +536,8 @@ class ChromeDevtoolsDriver(
     @Throws(IllegalWebDriverStateException::class)
     internal fun checkState(action: String = ""): Boolean {
         if (!isActive) {
-            throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
+            return false
+            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
         }
 
         if (isCanceled) {
@@ -612,74 +553,9 @@ class ChromeDevtoolsDriver(
         return isActive
     }
     
-    /**
-     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
-     *
-     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
-     * this suspending function is waiting, this function immediately resumes with CancellationException.
-     * */
-    @Throws(IllegalWebDriverStateException::class)
-    private suspend fun gap() {
-        if (!isActive) {
-            throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
-        }
-        
-        // Delays coroutine for a given time without blocking a thread and resumes it after a specified time.
-        delay(delayPolicy("gap"))
-    }
-    
-    /**
-     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
-     *
-     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
-     * this suspending function is waiting, this function immediately resumes with CancellationException.
-     * */
-    @Throws(IllegalWebDriverStateException::class)
-    private suspend fun gap(type: String) {
-        if (!isActive) {
-            throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
-        }
-        
-        delay(delayPolicy(type))
-    }
-    
-    /**
-     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
-     *
-     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
-     * this suspending function is waiting, this function immediately resumes with CancellationException.
-     * */
-    @Throws(IllegalWebDriverStateException::class)
-    private suspend fun gap(millis: Long) {
-        if (!isActive) {
-            throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
-        }
-        
-        delay(millis)
-    }
-
-    @Throws(WebDriverException::class)
-    private suspend fun querySelector(selector: String): Int? {
-        try {
-            return rpc.invokeDeferred("querySelector") { page.querySelector(selector) }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "querySelector")
-        }
-
-        return null
-    }
-
     @Throws(WebDriverException::class)
     override suspend fun pageSource(): String? {
-        try {
-            return rpc.invokeDeferred("pageSource") {
-                domAPI?.getOuterHTML(domAPI?.document?.nodeId, null, null)
-            }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "pageSource")
-        }
-
-        return null
+        return invokeOnPage("pageSource") { domAPI?.getOuterHTML(domAPI?.document?.nodeId, null, null) }
     }
 
     override suspend fun bringToFront() {
@@ -726,17 +602,49 @@ class ChromeDevtoolsDriver(
         }
     }
 
+    @Throws(WebDriverException::class)
+    override suspend fun pause() {
+        invokeOnPage("pause") { pageAPI?.stopLoading() }
+    }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun stop() {
+        navigateEntry.stopped = true
+        try {
+            handleRedirect()
+            
+            if (browser.isGUI) {
+                // in gui mode, just stop the loading, so we can diagnose
+                pageAPI?.stopLoading()
+            } else {
+                // go to about:blank, so the browser stops the previous page and releases all resources
+                navigateTo(ChromeImpl.ABOUT_BLANK_PAGE)
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "terminate")
+        } catch (e: ChromeDriverException) {
+            logger.info("Terminate exception: {}", e.message)
+        }
+    }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun terminate() {
+        stop()
+    }
+
+    override fun toString() = "Driver#$id"
+    
     fun enableAPIAgents() {
         pageAPI?.enable()
         domAPI?.enable()
         runtimeAPI?.enable()
         networkAPI?.enable()
         cssAPI?.enable()
-
+        
         if (resourceBlockProbability > 1e-6) {
             fetchAPI?.enable()
         }
-
+        
         val proxyUsername = browser.id.fingerprint.proxyUsername
         if (!proxyUsername.isNullOrBlank()) {
             // allow all url patterns
@@ -744,13 +652,11 @@ class ChromeDevtoolsDriver(
             fetchAPI?.enable(patterns, true)
         }
     }
-
-    override fun toString() = "Driver#$id"
     
     /**
      * Navigate to the page and inject scripts.
      * */
-    private suspend fun navigateInvaded(entry: NavigateEntry) {
+    private fun navigateInvaded(entry: NavigateEntry) {
         val url = entry.url
 
         addScriptToEvaluateOnNewDocument()
@@ -937,6 +843,19 @@ class ChromeDevtoolsDriver(
         // the cache is used for a single document, so we have to clear it
         initScriptCache.clear()
     }
+    
+    @Throws(WebDriverException::class)
+    private fun getCookies0(): List<Map<String, String>> {
+        val cookies = networkAPI?.cookies?.map { serialize(it) }
+        return cookies ?: listOf()
+    }
+    
+    private fun serialize(cookie: Cookie): Map<String, String> {
+        val mapper = jacksonObjectMapper()
+        val json = mapper.writeValueAsString(cookie)
+        val map: Map<String, String?> = mapper.readValue(json)
+        return map.filterValues { it != null }.mapValues { it.toString() }
+    }
 
     private fun reportInjectedJs() {
         val script = browserSettings.confuser.confuse(initScriptCache.joinToString("\n;\n\n\n;\n"))
@@ -945,6 +864,52 @@ class ChromeDevtoolsDriver(
         Files.createDirectories(dir)
         val report = Files.writeString(dir.resolve("preload.all.js"), script)
         tracer?.trace("All injected js: file://{}", report)
+    }
+    
+    /**
+     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
+     *
+     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
+     * this suspending function is waiting, this function immediately resumes with CancellationException.
+     * */
+    @Throws(IllegalWebDriverStateException::class)
+    private suspend fun gap() {
+        if (!isActive) {
+            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
+        }
+        
+        // Delays coroutine for a given time without blocking a thread and resumes it after a specified time.
+        delay(delayPolicy("gap"))
+    }
+    
+    /**
+     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
+     *
+     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
+     * this suspending function is waiting, this function immediately resumes with CancellationException.
+     * */
+    @Throws(IllegalWebDriverStateException::class)
+    private suspend fun gap(type: String) {
+        if (!isActive) {
+            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
+        }
+        
+        delay(delayPolicy(type))
+    }
+    
+    /**
+     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
+     *
+     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
+     * this suspending function is waiting, this function immediately resumes with CancellationException.
+     * */
+    @Throws(IllegalWebDriverStateException::class)
+    private suspend fun gap(millis: Long) {
+        if (!isActive) {
+            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
+        }
+        
+        delay(millis)
     }
     
     private suspend fun <T> invokeOnPage(name: String, message: String? = null, action: suspend () -> T): T? {
