@@ -4,10 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.crawl.fetch.driver.Browser
-import ai.platon.pulsar.crawl.fetch.driver.BrowserEvents
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import java.util.concurrent.ConcurrentHashMap
@@ -53,7 +50,7 @@ open class BrowserManager(
     @Synchronized
     fun closeBrowser(browserId: BrowserId) {
         val browser = _browsers.remove(browserId)
-        if (browser != null) {
+        if (browser is AbstractBrowser) {
             kotlin.runCatching { browser.close() }.onFailure { warnForClose(this, it) }
             closedBrowsers.add(browser)
         }
@@ -115,6 +112,7 @@ open class BrowserManager(
 
     fun maintain() {
         browsers.values.forEach {
+            require(it is AbstractBrowser)
             it.emit(BrowserEvents.willMaintain)
             it.emit(BrowserEvents.maintain)
             it.emit(BrowserEvents.didMaintain)
@@ -125,6 +123,7 @@ open class BrowserManager(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             _browsers.values.forEach { browser ->
+                require(browser is AbstractBrowser)
                 kotlin.runCatching { browser.close() }.onFailure { warnForClose(this, it) }
             }
             _browsers.clear()

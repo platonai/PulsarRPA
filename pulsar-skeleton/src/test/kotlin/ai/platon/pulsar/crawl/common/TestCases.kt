@@ -11,7 +11,6 @@ import org.apache.avro.util.Utf8
 import org.apache.commons.lang3.StringUtils
 import org.junit.Assert
 import org.junit.Ignore
-import kotlin.test.*
 import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL
@@ -20,17 +19,13 @@ import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
-import kotlin.random.Random
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Created by vincent on 16-7-20.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class TestCases {
-    private val volatileConfig = VolatileConfig()
 
     @Test
     @Ignore
@@ -109,7 +104,7 @@ class TestCases {
     @Test
     @Throws(MalformedURLException::class)
     fun testURL() {
-        val urls: List<String> = Lists.newArrayList(
+        val urls = listOf(
             "http://bond.eastmoney.com/news/1326,20160811671616734.html",
             "http://bond.eastmoney.com/news/1326,20161011671616734.html",
             "http://tech.huanqiu.com/photo/2016-09/2847279.html",
@@ -134,7 +129,7 @@ class TestCases {
     @Test
     fun testSplitUrlArgs() {
         assertTrue { LoadOptionDefaults.storeContent }
-        // String configuredUrl = "http://list.mogujie.com/book/jiadian/1005951 -prst --expires PT1S --auto-flush --fetch-mode NATIVE --browser NONE";
+//        val configuredUrl = "http://list.mogujie.com/book/jiadian/1005951 -prst --expires PT1S --auto-flush --fetch-mode NATIVE --browser NONE"
         val configuredUrl = "http://list.mogujie.com/book/jiadian/1005951"
         val (url, args) = splitUrlArgs(configuredUrl)
         assertEquals(configuredUrl, url)

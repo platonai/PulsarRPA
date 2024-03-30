@@ -1,13 +1,11 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
-import ai.platon.pulsar.common.event.EventEmitter
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 
 /**
  * The Browser defines methods and events to manipulate a real browser.
  */
-interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
-
+interface Browser {
     /**
      * The unique browser id
      * */
@@ -17,10 +15,6 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
      * It's created when the browser first connected to the remote browser.
      * */
     val userAgent: String
-    /**
-     * The user agent to override, do not override if it's null or empty.
-     * */
-    var userAgentOverride: String?
     /**
      * The navigation history.
      * */
@@ -58,34 +52,20 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
     @Throws(WebDriverException::class)
     suspend fun findDrivers(urlRegex: Regex): WebDriver?
     /**
+     * Destroy the web driver, close the associated browser tabs.
+     * */
+    @Throws(WebDriverException::class)
+    fun destroyDriver(driver: WebDriver)
+    /**
+     * Destroy the browser forcibly, kill the associated browser processes, release all allocated resources,
+     * regardless of whether the browser is closed or not.
+     * */
+    @Throws(WebDriverException::class)
+    fun destroyForcibly()
+    /**
      * Clear all cookies.
      * Notice: even if we clear all cookies, the website still has some technology to track a session.
      * */
     @Throws(WebDriverException::class)
     suspend fun clearCookies()
-
-    /**
-     * Destroy the web driver, close the associated browser tabs.
-     * */
-    fun destroyDriver(driver: WebDriver)
-
-    /**
-     * Destroy the browser forcibly, kill the associated browser processes, release all allocated resources,
-     * regardless of whether the browser is closed or not.
-     * */
-    fun destroyForcibly()
-    /**
-     * Initialize the browser.
-     * */
-    fun onInitialize()
-
-    /**
-     * Register event handler before navigating to a url.
-     * */
-    fun onWillNavigate(entry: NavigateEntry)
-
-    /**
-     * Maintain the browser
-     * */
-    fun maintain()
 }

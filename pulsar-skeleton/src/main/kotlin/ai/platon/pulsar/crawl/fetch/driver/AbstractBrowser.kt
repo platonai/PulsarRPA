@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 abstract class AbstractBrowser(
     override val id: BrowserId,
     val browserSettings: BrowserSettings
-): Browser, AbstractEventEmitter<BrowserEvents>() {
+): Browser, AutoCloseable, AbstractEventEmitter<BrowserEvents>() {
     companion object {
         val DEFAULT_USER_AGENT = "PulsarRobot/1.0"
     }
@@ -29,7 +29,7 @@ abstract class AbstractBrowser(
     
     override val userAgent get() = DEFAULT_USER_AGENT
     
-    override var userAgentOverride = getRandomUserAgentOrNull()
+    var userAgentOverride = getRandomUserAgentOrNull()
     
     override val navigateHistory = NavigateHistory()
     override val drivers: Map<String, WebDriver> get() = mutableDrivers
@@ -71,16 +71,12 @@ abstract class AbstractBrowser(
         val driver = drivers.values.firstOrNull() ?: newDriver()
         driver.clearBrowserCookies()
     }
-    
-    override fun maintain() {
-        // Nothing to do
-    }
-    
-    override fun onInitialize() {
+
+    fun onInitialize() {
         initialized.set(true)
     }
-    
-    override fun onWillNavigate(entry: NavigateEntry) {
+
+    fun onWillNavigate(entry: NavigateEntry) {
         navigateHistory.add(entry)
     }
     
@@ -88,6 +84,10 @@ abstract class AbstractBrowser(
         detach()
         mutableRecoveredDrivers.clear()
         mutableDrivers.clear()
+    }
+    
+    fun maintain() {
+        // Nothing to do
     }
     
     private fun getRandomUserAgentOrNull() = if (browserSettings.isUserAgentOverridingEnabled) {
