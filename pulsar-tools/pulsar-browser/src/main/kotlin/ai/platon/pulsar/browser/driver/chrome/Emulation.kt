@@ -1,9 +1,9 @@
 package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.common.DescriptiveResult
-import ai.platon.pulsar.common.io.KeyboardDescription
-import ai.platon.pulsar.common.io.KeyboardDescription.KEYPAD_LOCATION
-import ai.platon.pulsar.common.io.VKeyDescription
+import ai.platon.pulsar.common.io.VirtualKeyboard
+import ai.platon.pulsar.common.io.VirtualKeyboard.KEYPAD_LOCATION
+import ai.platon.pulsar.common.io.VirtualKey
 import ai.platon.pulsar.common.math.geometric.DimD
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
@@ -573,7 +573,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
         }
     }
     
-    suspend fun press(key: VKeyDescription, delayMillis: Long) {
+    suspend fun press(key: VirtualKey, delayMillis: Long) {
         try {
             down(key)
             delay(delayMillis.coerceAtLeast(20))
@@ -583,23 +583,23 @@ class Keyboard(private val devTools: ChromeDevTools) {
     }
 
     suspend fun down(singleKey: String) {
-        val description = virtualKeyDescriptionForSingleKeyString(singleKey)
-        down(description)
+        val virtualKey = createVirtualKeyForSingleKeyString(singleKey)
+        down(virtualKey)
     }
 
     suspend fun up(singleKey: String) {
-        val description = virtualKeyDescriptionForSingleKeyString(singleKey)
-        up(description)
+        val virtualKey = createVirtualKeyForSingleKeyString(singleKey)
+        up(virtualKey)
     }
 
-    suspend fun down(key: VKeyDescription) {
+    suspend fun down(key: VirtualKey) {
         // From playwright:
         // {"type":"keyDown","modifiers":0,"windowsVirtualKeyCode":13,"code":"Enter","commands":[],"key":"Enter","text":"\r","unmodifiedText":"\r","autoRepeat":false,"location":0,"isKeypad":false},"sessionId":"45E0A2ABC64CE5ACDC8A98061CC4667B"}
         
         down(pressedModifiers, key)
     }
 
-    suspend fun up(key: VKeyDescription) {
+    suspend fun up(key: VirtualKey) {
         // {"type":"keyUp","modifiers":0,"key":"Enter","windowsVirtualKeyCode":13,"code":"Enter","location":0}
 
         up(pressedModifiers, key)
@@ -630,22 +630,22 @@ class Keyboard(private val devTools: ChromeDevTools) {
         return keys
     }
     
-    private fun virtualKeyDescriptionForSingleKeyString(singleKey: String): VKeyDescription {
-        var description = KeyboardDescription.KEYBOARD_LAYOUT[singleKey] ?:
+    private fun createVirtualKeyForSingleKeyString(singleKey: String): VirtualKey {
+        var virtualKey = VirtualKeyboard.KEYBOARD_LAYOUT[singleKey] ?:
             throw IllegalArgumentException("Unknown key: $singleKey")
 
-        val shift = isShifted(description)
-        val shifted = description.shifted
-        description = if (shift && shifted != null) shifted else description
+        val shift = isShifted(virtualKey)
+        val shifted = virtualKey.shifted
+        virtualKey = if (shift && shifted != null) shifted else virtualKey
         
         return when {
-            pressedModifiers.size > 1 -> description.copy(text = "")
-            shift && pressedModifiers.size == 1 -> description.copy(text = "")
-            else -> description
+            pressedModifiers.size > 1 -> virtualKey.copy(text = "")
+            shift && pressedModifiers.size == 1 -> virtualKey.copy(text = "")
+            else -> virtualKey
         }
     }
     
-    private fun isShifted(key: VKeyDescription): Boolean {
+    private fun isShifted(key: VirtualKey): Boolean {
         return pressedModifiers.contains("Shift") && key.shifted != null
     }
     
@@ -658,7 +658,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
         return mask
     }
     
-    private suspend fun down(modifiers: Set<String>, key: VKeyDescription) {
+    private suspend fun down(modifiers: Set<String>, key: VirtualKey) {
         // playwright format:
         // {"type":"keyDown","modifiers":0,"windowsVirtualKeyCode":13,"code":"Enter","commands":[],"key":"Enter","text":"\r","unmodifiedText":"\r","autoRepeat":false,"location":0,"isKeypad":false},"sessionId":"45E0A2ABC64CE5ACDC8A98061CC4667B"}
 
@@ -687,7 +687,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
         }
     }
     
-    private suspend fun up(modifiers: Set<String>, key: VKeyDescription) {
+    private suspend fun up(modifiers: Set<String>, key: VirtualKey) {
         // playwright format:
         // {"type":"keyUp","modifiers":0,"key":"Enter","windowsVirtualKeyCode":13,"code":"Enter","location":0}
         
