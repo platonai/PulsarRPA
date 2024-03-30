@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
@@ -225,7 +226,7 @@ open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
 
 open class SequentialPrivacyAgentGenerator: PrivacyAgentGenerator {
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
-        PrivacyAgent(PrivacyContext.computeNextSequentialContextDir(), fingerprint)
+        PrivacyAgent(BrowserFiles.computeNextSequentialContextDir(), fingerprint)
 }
 
 class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {

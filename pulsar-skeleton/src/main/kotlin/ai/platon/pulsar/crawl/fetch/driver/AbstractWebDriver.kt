@@ -1,10 +1,8 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.nodes.GeoAnchor
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.Dispatchers

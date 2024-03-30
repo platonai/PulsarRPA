@@ -685,7 +685,7 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String?
     /**
-     * Returns the nodes' attribute values, the nodes are located by [selector], the attribute is [attrName].
+     * Returns the nodes' attribute values, the nodes are located by [selector].
      *
      * If the nodes do not exist, or the attribute does not exist, returns an empty list.
      *

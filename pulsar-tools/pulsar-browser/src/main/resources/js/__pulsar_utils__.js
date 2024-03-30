@@ -53,11 +53,7 @@ __pulsar_utils__.checkStatus = function(scroll = 3) {
 };
 
 __pulsar_utils__.isBrowserError = function () {
-    if (document.documentURI.startsWith("chrome-error")) {
-        return true
-    }
-
-    return false
+    return document.documentURI.startsWith("chrome-error");
 };
 
 __pulsar_utils__.createDataIfAbsent = function() {
@@ -1363,6 +1359,5 @@ __pulsar_utils__.press = function(selector, key) {
  * @return {Object}
  * */
 __pulsar_utils__.typeInfo = function() {
-    let fields = Object.keys(__pulsar_utils__).join(", ")
-    return fields
+    return Object.keys(__pulsar_utils__).join(", ")
 };

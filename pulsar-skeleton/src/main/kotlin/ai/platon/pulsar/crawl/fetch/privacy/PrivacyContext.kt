@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.HtmlIntegrity
+import ai.platon.pulsar.common.browser.BrowserFiles.computeNextSequentialContextDir
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -15,13 +16,10 @@ import ai.platon.pulsar.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.RetryScope
 import com.google.common.annotations.Beta
-import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
-import java.time.MonthDay
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -43,7 +41,6 @@ abstract class PrivacyContext(
 ) : Comparable<PrivacyContext>, AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()
-        private val contextDirSequencer = AtomicInteger()
         
         // The prefix for all temporary privacy contexts. System context, prototype context and default context are not
         // required to start with the prefix.
@@ -69,24 +66,6 @@ abstract class PrivacyContext(
         val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT: Duration = Duration.ofMinutes(30)
 
         val globalMetrics by lazy { PrivacyContextMetrics() }
-
-        /**
-         * TODO: use a file lock
-         * */
-        @Synchronized
-        fun computeNextSequentialContextDir(): Path {
-            contextDirSequencer.incrementAndGet()
-            val prefix = CONTEXT_DIR_PREFIX
-            val contextCount = 1 + Files.list(AppPaths.CONTEXT_TMP_DIR)
-                .filter { Files.isDirectory(it) }
-                .filter { it.toString().contains(prefix) }
-                .count()
-            val rand = RandomStringUtils.randomAlphanumeric(5)
-            val monthDay = MonthDay.now()
-            val fileName = String.format("%s%02d%02d%s%s%s",
-                prefix, monthDay.monthValue, monthDay.dayOfMonth, contextDirSequencer, rand, contextCount)
-            return AppPaths.CONTEXT_TMP_DIR.resolve(monthDay.monthValue.toString()).resolve(fileName)
-        }
     }
 
     private val logger = LoggerFactory.getLogger(PrivacyContext::class.java)
