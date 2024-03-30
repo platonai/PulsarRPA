@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.persist.ext.event
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
@@ -253,7 +254,11 @@ open class WebDriverPoolManager(
      * */
     fun cancel(browserId: BrowserId, url: String): WebDriver? {
         val driverPool = workingDriverPools[browserId] ?: return null
-        return driverPool.firstOrNull { it.navigateEntry.pageUrl == url }?.also { it.cancel() }
+        val driver = driverPool.firstOrNull { it.navigateEntry.pageUrl == url }
+        if (driver is AbstractWebDriver) {
+            driver.cancel()
+        }
+        return driver
     }
 
     /**

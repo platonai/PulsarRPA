@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_REUSE_RECOVERED_DRIVERS
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
@@ -204,7 +205,7 @@ class ChromeDevtoolsBrowser(
         val seconds = if (AppSystemInfo.isCriticalResources) 15L else pageLoadTimeout.seconds
         val unmanagedTabTimeout = Duration.ofSeconds(seconds)
         val isIdle =
-            { driver: WebDriver -> Duration.between(driver.lastActiveTime, Instant.now()) > unmanagedTabTimeout }
+            { driver: AbstractWebDriver -> Duration.between(driver.lastActiveTime, Instant.now()) > unmanagedTabTimeout }
         val unmanagedTimeoutDrivers = chromeDrivers.filter { it.isRecovered && !it.isReused && isIdle(it) }
         if (unmanagedTimeoutDrivers.isNotEmpty()) {
             logger.debug("Closing {} unmanaged drivers", unmanagedTimeoutDrivers.size)

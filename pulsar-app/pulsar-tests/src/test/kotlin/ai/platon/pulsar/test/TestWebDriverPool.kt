@@ -2,6 +2,7 @@ package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
@@ -11,9 +12,6 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.test.*
 
-/**
- * TODO: move to pulsar-skeleton module
- * */
 class TestWebDriverPool {
     companion object {
         val log = LoggerFactory.getLogger(TestWebDriverPool::class.java)
@@ -24,7 +22,6 @@ class TestWebDriverPool {
 
         val context = PulsarContexts.create()
         val conf = context.unmodifiedConfig
-        val driverControl = WebDriverSettings(conf)
         val driverPoolManager = DefaultWebDriverPoolManager(conf)
         var quitMultiThreadTesting = false
     }
@@ -43,6 +40,7 @@ class TestWebDriverPool {
         val numDrivers = driverPool.capacity
         repeat(numDrivers) {
             val driver = driverPool.poll()
+            require(driver is AbstractWebDriver)
             assertTrue { driver.isWorking }
             workingDrivers.add(driver)
         }
@@ -52,6 +50,8 @@ class TestWebDriverPool {
         assertEquals(numDrivers, driverPool.numActive)
 
         workingDrivers.forEachIndexed { i, driver ->
+            require(driver is AbstractWebDriver)
+            
             if (i % 2 == 0) {
                 driver.retire()
                 assertTrue { driver.isRetired }
@@ -96,6 +96,8 @@ class TestWebDriverPool {
                 val i = Random().nextInt()
                 val driver = workingDrivers.poll()
                 if (driver != null) {
+                    require(driver is AbstractWebDriver)
+                    
                     if (i % 3 == 0) {
                         log.info("Offer {}", driver)
                         driverPool.put(driver)

@@ -200,6 +200,8 @@ open class InteractiveBrowserEmulator(
     
     @Throws(Exception::class)
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
+        require(driver is AbstractWebDriver)
+        
         // page.lastBrowser is used by AppFiles.export, so it has to be set before export
         // TODO: page should not be modified in browser phase, it should only be updated using PageDatum
         task.page.lastBrowser = driver.browserType
@@ -508,6 +510,9 @@ open class InteractiveBrowserEmulator(
      * */
     @Throws(NavigateTaskCancellationException::class)
     protected open suspend fun waitForDocumentActuallyReady(interactTask: InteractTask, result: InteractResult) {
+        val driver = interactTask.driver
+        require(driver is AbstractWebDriver)
+        
         var status = ProtocolStatus.STATUS_SUCCESS
         val scriptTimeout = interactTask.interactSettings.scriptTimeout
         val fetchTask = interactTask.navigateTask.fetchTask
@@ -535,7 +540,7 @@ open class InteractiveBrowserEmulator(
             message = msg
         } finally {
             if (message == null) {
-                if (!fetchTask.isCanceled && !interactTask.driver.isQuit && isActive) {
+                if (!fetchTask.isCanceled && !driver.isQuit && isActive) {
                     logger.warn("Timeout to wait for document ready after ${i.dec()} round, retry is supposed | {}",
                         interactTask.url)
                     status = ProtocolStatus.retry(RetryScope.PRIVACY, "Timeout to wait for document ready")

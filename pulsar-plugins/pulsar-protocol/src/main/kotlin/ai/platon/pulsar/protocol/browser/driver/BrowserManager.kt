@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.BrowserEvents
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -107,7 +108,9 @@ open class BrowserManager(
     }
 
     private fun findLeastValuableDriver(drivers: Iterable<WebDriver>): WebDriver? {
-        return drivers.filter { !it.isReady && !it.isWorking }.minByOrNull { it.lastActiveTime }
+        return drivers.filterIsInstance<AbstractWebDriver>()
+            .filter { !it.isReady && !it.isWorking }
+            .minByOrNull { it.lastActiveTime }
     }
 
     fun maintain() {
