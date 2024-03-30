@@ -13,6 +13,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.annotations.Beta
+import org.jetbrains.kotlin.ir.types.IdSignatureValues.sequence
 import org.slf4j.LoggerFactory
 
 open class BrowserPrivacyContext(
@@ -96,7 +97,7 @@ open class BrowserPrivacyContext(
         
         if (smallPageRate > 0.5) {
             report += String.format("Privacy context #%s is disqualified, too many small pages: %s(%s)",
-                sequence, meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate))
+                seq, meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate))
             report += "\n"
         }
         

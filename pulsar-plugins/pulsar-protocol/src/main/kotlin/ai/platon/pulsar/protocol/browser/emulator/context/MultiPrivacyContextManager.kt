@@ -498,7 +498,7 @@ class MultiPrivacyContextManager(
             logger.info(
                 "$symbol Privacy leak warning {}/{} | {}#{} | {}. {}",
                 warnings, privacyContext.maximumWarnings,
-                privacyContext.sequence, privacyContext.display,
+                privacyContext.seq, privacyContext.display,
                 result.task.page.id, status
             )
         }
@@ -511,7 +511,7 @@ class MultiPrivacyContextManager(
     private fun tracePrivacyContextInactive(privacyContext: PrivacyContext, result: FetchResult) {
         tracer?.trace(
             "{}. Context {}/#{} is not active | {} | {}",
-            result.task.id, privacyContext.sequence, privacyContext.privacyLeakWarnings,
+            result.task.id, privacyContext.seq, privacyContext.privacyLeakWarnings,
             result.status, result.task.url
         )
     }

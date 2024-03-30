@@ -35,12 +35,11 @@ import java.util.concurrent.atomic.AtomicInteger
  * and Pulsar will visit the page in another privacy context.
  * */
 abstract class PrivacyContext(
-    @Deprecated("Inappropriate name", ReplaceWith("privacyAgent"))
-    private val id: PrivacyAgent,
+    val privacyAgent: PrivacyAgent,
     val conf: ImmutableConfig
 ) : Comparable<PrivacyContext>, AutoCloseable {
     companion object {
-        private val instanceSequencer = AtomicInteger()
+        private val SEQUENCER = AtomicInteger()
         
         // The prefix for all temporary privacy contexts. System context, prototype context and default context are not
         // required to start with the prefix.
@@ -70,12 +69,8 @@ abstract class PrivacyContext(
 
     private val logger = LoggerFactory.getLogger(PrivacyContext::class.java)
 
-    val sequence = instanceSequencer.incrementAndGet()
-    val privacyAgent get() = id
-    /**
-     * The real id, will replace the current inappropriate [id]
-     * */
-    val id0 get() = privacyAgent.id
+    val id get() = privacyAgent.id
+    val seq = SEQUENCER.incrementAndGet()
     val display get() = privacyAgent.display
     val baseDir get() = privacyAgent.contextDir
 
@@ -88,10 +83,10 @@ abstract class PrivacyContext(
 
     private val registry = MetricsSystem.defaultMetricRegistry
     private val sms = MetricsSystem.SHADOW_METRIC_SYMBOL
-    val meterTasks = registry.meter(this, "$sequence$sms", "tasks")
-    val meterSuccesses = registry.meter(this, "$sequence$sms", "successes")
-    val meterFinishes = registry.meter(this, "$sequence$sms", "finishes")
-    val meterSmallPages = registry.meter(this, "$sequence$sms", "smallPages")
+    val meterTasks = registry.meter(this, "$SEQUENCER$sms", "tasks")
+    val meterSuccesses = registry.meter(this, "$SEQUENCER$sms", "successes")
+    val meterFinishes = registry.meter(this, "$SEQUENCER$sms", "finishes")
+    val meterSmallPages = registry.meter(this, "$SEQUENCER$sms", "smallPages")
     val smallPageRate get() = 1.0 * meterSmallPages.count / meterTasks.count.coerceAtLeast(1)
     val successRate = meterSuccesses.count.toFloat() / meterTasks.count
     /**
@@ -319,11 +314,11 @@ abstract class PrivacyContext(
      * */
     abstract fun maintain()
 
-    override fun compareTo(other: PrivacyContext) = id0.compareTo(other.id0)
+    override fun compareTo(other: PrivacyContext) = id.compareTo(other.id)
 
-    override fun equals(other: Any?) = other is PrivacyContext && other.id0 == id0
+    override fun equals(other: Any?) = other is PrivacyContext && other.id == id
 
-    override fun hashCode() = id0.hashCode()
+    override fun hashCode() = id.hashCode()
 
     protected fun beforeRun(task: FetchTask) {
         lastActiveTime = Instant.now()
@@ -371,10 +366,10 @@ abstract class PrivacyContext(
     }
 
     open fun getReport(): String {
-        return String.format("Privacy context #%s has lived for %s", sequence, elapsedTime.readable())
+        return String.format("Privacy context #%s has lived for %s", SEQUENCER, elapsedTime.readable())
     }
 
     open fun report() {
-        logger.info("Privacy context #{} has lived for {}", sequence, elapsedTime.readable())
+        logger.info("Privacy context #{} has lived for {}", SEQUENCER, elapsedTime.readable())
     }
 }

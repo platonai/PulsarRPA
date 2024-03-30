@@ -21,7 +21,7 @@ object BrowserFiles {
     
     private val logger = getLogger(this)
     /**
-     * The sequencer for generating temporary context directories
+     * The sequencer to generate temporary context directories.
      * */
     private val SEQUENCER = AtomicInteger()
     
