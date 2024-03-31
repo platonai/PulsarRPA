@@ -47,7 +47,7 @@ abstract class AbstractPulsarContext(
     /**
      * Registered closable objects, will be closed by Pulsar object
      * */
-    private val closableObjects = ConcurrentSkipListSet<AutoCloseable>()
+    private val closableObjects = Collections.synchronizedSet(mutableSetOf<AutoCloseable>())
 
     /** Flag that indicates whether this context has been closed already. */
     private val closed = AtomicBoolean()
