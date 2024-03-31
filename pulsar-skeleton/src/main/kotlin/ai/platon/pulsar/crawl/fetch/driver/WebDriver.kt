@@ -68,6 +68,20 @@ interface WebDriver: Closeable {
      * */
     val browser: Browser
     /**
+     * Web pages for the page open from the current page, via window.open(), link click, form submission,
+     * etc.
+     * */
+    val frames: List<WebDriver>
+    /**
+     * The driver from whom opens the current page.
+     * */
+    val opener: WebDriver?
+    /**
+     * Web pages for the page open from the current page, via window.open(), link click, form submission,
+     * etc.
+     * */
+    val outgoingPages: Set<WebDriver>
+    /**
      * The browser type.
      * */
     val browserType: BrowserType
@@ -79,14 +93,6 @@ interface WebDriver: Closeable {
      * The navigation history.
      * */
     val navigateHistory: NavigateHistory
-    /**
-     * Whether the driver is recovered from the browser's tab list.
-     * */
-    var isRecovered: Boolean
-    /**
-     * Whether the driver is recovered and is reused to serve new tasks.
-     * */
-    var isReused: Boolean
     /**
      * The associated data of the driver.
      * */
@@ -131,16 +137,14 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun setTimeouts(browserSettings: BrowserSettings)
     /**
-     * Returns the main resource response. In case of multiple redirects, the navigation
-     * will resolve with the first non-redirect response.
+     * Navigates current page to the given URL.
      *
      * @param url URL to navigate page to.
      */
     @Throws(WebDriverException::class)
     suspend fun navigateTo(url: String)
     /**
-     * Returns the response of the main resource. In case of multiple redirects, the navigation will resolve
-     * with the first non-redirect response.
+     * Navigates current page to the given URL.
      *
      * @param entry NavigateEntry to navigate page to.
      */

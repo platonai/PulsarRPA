@@ -37,6 +37,11 @@ interface Browser {
     @Throws(WebDriverException::class)
     fun newDriver(): WebDriver
     /**
+     * Create a new driver.
+     * */
+    @Throws(WebDriverException::class)
+    fun newDriver(url: String): WebDriver
+    /**
      * List all drivers, each driver is associated with a Chrome tab.
      * */
     @Throws(WebDriverException::class)

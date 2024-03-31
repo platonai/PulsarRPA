@@ -4,7 +4,13 @@ import ai.platon.pulsar.browser.common.ScriptConfuser
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
 import com.github.kklisura.cdt.protocol.v2023.types.dom.Rect
+import com.github.kklisura.cdt.protocol.v2023.types.page.Navigate
+import com.github.kklisura.cdt.protocol.v2023.types.page.ReferrerPolicy
+import com.github.kklisura.cdt.protocol.v2023.types.page.TransitionType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 
 class PageHandler(
@@ -26,6 +32,21 @@ class PageHandler(
     
     val mouse = Mouse(devTools)
     val keyboard = Keyboard(devTools)
+    
+    
+    fun navigate(@ParamName("url") url: String): Navigate? {
+        return pageAPI?.navigate(url)
+    }
+    
+    fun navigate(
+        @ParamName("url") url: String,
+        @Optional @ParamName("referrer") referrer: String? = null,
+        @Optional @ParamName("transitionType") transitionType: TransitionType? = null,
+        @Optional @ParamName("frameId") frameId: String? = null,
+        @Experimental @Optional @ParamName("referrerPolicy") referrerPolicy: ReferrerPolicy? = null
+    ): Navigate? {
+        return pageAPI?.navigate(url, referrer, transitionType, frameId, referrerPolicy)
+    }
     
     /**
      * TODO: make sure the meaning of 0 node id

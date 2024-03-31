@@ -131,11 +131,7 @@ class TransportImpl : Transport {
     }
     
     private fun onClose(session: Session, closeReason: CloseReason) {
-        logger.info(
-            "Web socket connection closed {} {}",
-            closeReason.closeCode,
-            closeReason.reasonPhrase
-        )
+        logger.info("Web socket connection closed {} {}", closeReason.closeCode, closeReason.reasonPhrase)
         
         if (WebSocketUtils.isTyrusBufferOverflowCloseReason(closeReason)) {
             logger.error(
@@ -152,6 +148,7 @@ class TransportImpl : Transport {
     
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+            // Close the current conversation with a normal status code and no reason phrase.
             session.runCatching { close() }.onFailure { warnForClose(this, it) }
         }
     }

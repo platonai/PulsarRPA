@@ -17,9 +17,9 @@ abstract class AbstractBrowser(
         val DEFAULT_USER_AGENT = "PulsarRobot/1.0"
     }
     
-    protected val mutableDrivers = ConcurrentHashMap<String, WebDriver>()
-    protected val mutableRecoveredDrivers = ConcurrentHashMap<String, WebDriver>()
-    protected val mutableReusedDrivers = ConcurrentHashMap<String, WebDriver>()
+    protected val _drivers = ConcurrentHashMap<String, WebDriver>()
+    protected val _recoveredDrivers = ConcurrentHashMap<String, WebDriver>()
+    protected val _reusedDrivers = ConcurrentHashMap<String, WebDriver>()
     
     protected val initialized = AtomicBoolean()
     protected val closed = AtomicBoolean()
@@ -32,7 +32,7 @@ abstract class AbstractBrowser(
     var userAgentOverride = getRandomUserAgentOrNull()
     
     override val navigateHistory = NavigateHistory()
-    override val drivers: Map<String, WebDriver> get() = mutableDrivers
+    override val drivers: Map<String, WebDriver> get() = _drivers
     /**
      * The associated data.
      * */
@@ -48,15 +48,15 @@ abstract class AbstractBrowser(
     }
     
     override suspend fun listDrivers(): List<WebDriver> {
-        return mutableDrivers.values.toList()
+        return _drivers.values.toList()
     }
     
     override suspend fun findDriver(url: String): WebDriver? {
-        return mutableDrivers.values.firstOrNull { it.currentUrl() == url }
+        return _drivers.values.firstOrNull { it.currentUrl() == url }
     }
     
     override suspend fun findDrivers(urlRegex: Regex): WebDriver? {
-        return mutableDrivers.values.firstOrNull { urlRegex.matches(it.currentUrl()) }
+        return _drivers.values.firstOrNull { urlRegex.matches(it.currentUrl()) }
     }
     
     override fun destroyDriver(driver: WebDriver) {
@@ -82,8 +82,8 @@ abstract class AbstractBrowser(
     
     override fun close() {
         detach()
-        mutableRecoveredDrivers.clear()
-        mutableDrivers.clear()
+        _recoveredDrivers.clear()
+        _drivers.clear()
     }
     
     open fun maintain() {

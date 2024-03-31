@@ -25,6 +25,10 @@ class MockBrowser(
     override fun newDriver(): WebDriver {
         return MockWebDriver(this) { backupBrowser.newDriver() }
     }
+    
+    override fun newDriver(url: String): WebDriver {
+        return MockWebDriver(this) { backupBrowser.newDriver(url) }
+    }
 }
 
 class MockWebDriver(

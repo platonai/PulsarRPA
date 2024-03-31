@@ -139,9 +139,15 @@ abstract class AbstractWebDriver(
     
     open val isMockedPageSource: Boolean = false
     
-    override var isRecovered: Boolean = false
+    override val frames: MutableList<WebDriver> = mutableListOf()
     
-    override var isReused: Boolean = false
+    override var opener: WebDriver? = null
+    
+    override val outgoingPages: MutableSet<WebDriver> = mutableSetOf()
+    
+    var isRecovered: Boolean = false
+    
+    var isReused: Boolean = false
     
     /**
      * The associated data.
