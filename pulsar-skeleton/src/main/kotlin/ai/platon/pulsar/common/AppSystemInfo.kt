@@ -15,7 +15,7 @@ import java.time.Instant
  * */
 class AppSystemInfo {
     companion object {
-        private val logger = getLogger(this)
+        private val logger = getLogger(AppSystemInfo::class)
         
         private var prevCPUTicks = LongArray(CentralProcessor.TickType.entries.size)
         

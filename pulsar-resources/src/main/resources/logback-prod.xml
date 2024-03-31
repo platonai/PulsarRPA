@@ -214,6 +214,9 @@
     <logger name="ai.platon.pulsar.browser" level="WARN" additivity="false">
         <appender-ref ref="BROWSER"/>
     </logger>
+    <logger name="ai.platon.pulsar.browser.driver.chrome.impl" level="WARM" additivity="false">
+        <appender-ref ref="BROWSER"/>
+    </logger>
 
     <logger name="ai.platon.pulsar.common.metrics.MetricsSystem" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
