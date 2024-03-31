@@ -2,16 +2,13 @@ package ai.platon.pulsar.crawl.event
 
 import ai.platon.pulsar.common.lang.*
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.driver.JvmWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.experimental.WebAsset
-import org.jetbrains.annotations.NotNull
-import kotlin.coroutines.Continuation
+import ai.platon.pulsar.persist.KWebAsset
 
 abstract class VoidHandler: PFunction0<Unit>, AbstractPHandler() {
     abstract override operator fun invoke()
@@ -86,14 +83,14 @@ open class UrlEventHandler: AbstractChainedFunction1<String, String?>() {
 /**
  * A readonly handler, the Web asset will not be changed
  * */
-open class WebAssetEventHandler: AbstractChainedFunction1<WebAsset, Any?>()
+open class WebAssetEventHandler: AbstractChainedFunction1<KWebAsset, Any?>()
 
 open class WebPageEventHandler: AbstractChainedFunction1<WebPage, Any?>()
 
 /**
  * A readonly handler, the Web asset will not be changed.
  * */
-open class UrlAwareWebAssetEventHandler: AbstractChainedFunction2<UrlAware, WebAsset?, Any?>()
+open class UrlAwareWebAssetEventHandler: AbstractChainedFunction2<UrlAware, KWebAsset?, Any?>()
 
 /**
  * An event handler that accepts a [UrlAware] and a [WebPage], anything can be returned.
@@ -101,7 +98,7 @@ open class UrlAwareWebAssetEventHandler: AbstractChainedFunction2<UrlAware, WebA
  * The Web asset might be changed by the handler since [WebPage] has setters.
  *
  * If the Web asset is not supposed to be changed, readonly handlers should be used which
- * accept a [WebAsset] instead of [WebPage].
+ * accept a [KWebAsset] instead of [WebPage].
  *
  * Another possible way to write more robust code is to remove all setters in [WebPage],
  * and add a MutableWebPage subclass.
@@ -111,7 +108,7 @@ open class UrlAwareWebPageEventHandler: AbstractChainedFunction2<UrlAware, WebPa
 /**
  * A readonly handler, the Web asset will not be changed
  * */
-open class WebAssetHTMLDocumentEventHandler: AbstractChainedFunction2<WebAsset, FeaturedDocument, Any?>()
+open class WebAssetHTMLDocumentEventHandler: AbstractChainedFunction2<KWebAsset, FeaturedDocument, Any?>()
 
 /**
  * An event handler that accepts a [WebPage] and a [FeaturedDocument], anything can be returned.
@@ -122,7 +119,7 @@ open class WebAssetHTMLDocumentEventHandler: AbstractChainedFunction2<WebAsset, 
  * The Web asset might be changed by the handler since [WebPage] has setters.
  *
  * If the Web asset is not supposed to be changed, readonly handlers should be used which
- * accept a [WebAsset] instead of [WebPage].
+ * accept a [KWebAsset] instead of [WebPage].
  *
  * Another possible way to write more robust code is to remove all setters in [WebPage],
  * and add a MutableWebPage subclass.
@@ -136,7 +133,7 @@ open class PageDatumEventHandler: AbstractChainedFunction2<String, PageDatum, An
 /**
  * A readonly handler, the Web asset will not be changed
  * */
-open class WebAssetWebDriverEventHandler: AbstractChainedPDFunction2<WebAsset, WebDriver, Any?>()
+open class WebAssetWebDriverEventHandler: AbstractChainedPDFunction2<KWebAsset, WebDriver, Any?>()
 
 /**
  * An event handler that accepts a [WebPage] and a [WebDriver], anything can be returned.
@@ -145,7 +142,7 @@ open class WebAssetWebDriverEventHandler: AbstractChainedPDFunction2<WebAsset, W
  * The Web asset might be changed by the handler since [WebPage] has setters.
  *
  * If the Web asset is not supposed to be changed, readonly handlers should be used which
- * accept a [WebAsset] instead of [WebPage].
+ * accept a [KWebAsset] instead of [WebPage].
  *
  * Another possible way to write more robust code is to remove all setters in [WebPage],
  * and add a MutableWebPage subclass.

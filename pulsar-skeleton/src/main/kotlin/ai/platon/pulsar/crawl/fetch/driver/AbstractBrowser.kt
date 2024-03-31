@@ -86,7 +86,7 @@ abstract class AbstractBrowser(
         mutableDrivers.clear()
     }
     
-    fun maintain() {
+    open fun maintain() {
         // Nothing to do
     }
     
