@@ -65,7 +65,7 @@ public class GoraStorage {
             dataStores.put(realSchema, dataStore);
 
             logger.info("Backend data store: {}, real schema: {}, storage id: <{}>, " +
-                            "set config `storage.crawl.id` to define the storage",
+                            "set config `storage.crawl.id` to define the real schema",
                     dataStore.getClass().getSimpleName(), dataStore.getSchemaName(), schemaPrefix);
 
             return dataStore;
