@@ -84,10 +84,6 @@ interface JvmWebDriver {
     fun pageSourceAsync(): CompletableFuture<String?>
 
     @Throws(WebDriverException::class)
-    fun mainRequestHeadersAsync(): CompletableFuture<Map<String, Any>>
-    @Throws(WebDriverException::class)
-    fun mainRequestCookiesAsync(): CompletableFuture<List<Map<String, String>>>
-    @Throws(WebDriverException::class)
     fun getCookiesAsync(): CompletableFuture<List<Map<String, String>>>
 
     /**

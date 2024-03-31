@@ -355,7 +355,8 @@ open class InteractiveBrowserEmulator(
     private suspend fun browseWithWebDriver(navigateTask: NavigateTask, driver: WebDriver): Response {
         val fetchTask = navigateTask.fetchTask
         checkState(navigateTask.fetchTask, driver)
-
+        require(driver is AbstractWebDriver)
+        
         val interactResult = navigateAndInteract(navigateTask, driver, navigateTask.browserSettings)
 
         // TODO: separate status code of pulsar system and the status code from browser
@@ -422,6 +423,7 @@ open class InteractiveBrowserEmulator(
             emit1(EmulateEvents.navigated, page, driver)
         }
 
+        require(driver is AbstractWebDriver)
         if (!driver.supportJavascript) {
             return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         }

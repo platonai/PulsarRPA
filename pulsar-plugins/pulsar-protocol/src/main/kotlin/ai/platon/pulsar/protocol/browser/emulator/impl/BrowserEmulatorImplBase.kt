@@ -155,8 +155,9 @@ abstract class BrowserEmulatorImplBase(
                 // messageWriter?.debugRedirects(pageDatum.url, urls)
             }
         }
-
-        if (!task.driver.isMockedPageSource) {
+        
+        val driver = task.driver as AbstractWebDriver
+        if (!driver.isMockedPageSource) {
             exportIfNecessary(task)
         }
 

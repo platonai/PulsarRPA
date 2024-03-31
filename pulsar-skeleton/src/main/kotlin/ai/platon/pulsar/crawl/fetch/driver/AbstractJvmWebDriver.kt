@@ -21,8 +21,6 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     override fun setTimeoutsAsync(browserSettings: BrowserSettings) = interopScope.future { setTimeouts(browserSettings) }
     override fun currentUrlAsync() = interopScope.future { currentUrl() }
     override fun pageSourceAsync() = interopScope.future { pageSource() }
-    override fun mainRequestHeadersAsync() = interopScope.future { mainRequestHeaders }
-    override fun mainRequestCookiesAsync() = interopScope.future { mainRequestCookies }
     override fun getCookiesAsync() = interopScope.future { getCookies() }
     override fun bringToFrontAsync() = interopScope.future { bringToFront() }
     override fun waitForSelectorAsync(selector: String) = interopScope.future { waitForSelector(selector) }

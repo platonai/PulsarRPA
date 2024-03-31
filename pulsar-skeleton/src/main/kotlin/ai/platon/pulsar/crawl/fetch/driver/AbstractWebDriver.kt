@@ -107,13 +107,13 @@ abstract class AbstractWebDriver(
     val isCanceled get() = canceled.get()
     val isCrashed get() = crashed.get()
     
-    override var waitTimeout = Duration.ofSeconds(60)
+    var waitTimeout = Duration.ofSeconds(60)
     
-    override var waitForElementTimeout = Duration.ofSeconds(20)
+    var waitForElementTimeout = Duration.ofSeconds(20)
     
     open val name get() = javaClass.simpleName + "-" + id
     
-    override val delayPolicy: (String) -> Long
+    val delayPolicy: (String) -> Long
         get() = { type ->
             when (type) {
                 "gap" -> 200L + Random.nextInt(500)
@@ -135,9 +135,9 @@ abstract class AbstractWebDriver(
     
     override val navigateHistory = NavigateHistory()
     
-    override val supportJavascript: Boolean = true
+    open val supportJavascript: Boolean = true
     
-    override val isMockedPageSource: Boolean = false
+    open val isMockedPageSource: Boolean = false
     
     override var isRecovered: Boolean = false
     
@@ -189,26 +189,28 @@ abstract class AbstractWebDriver(
     
     override fun jvm(): JvmWebDriver = this
     
-    override val mainRequestHeaders: Map<String, Any> get() = navigateEntry.mainRequestHeaders
-    override val mainRequestCookies: List<Map<String, String>> get() = navigateEntry.mainRequestCookies
-    override val mainResponseStatus: Int get() = navigateEntry.mainResponseStatus
-    override val mainResponseStatusText: String get() = navigateEntry.mainResponseStatusText
-    override val mainResponseHeaders: Map<String, Any> get() = navigateEntry.mainResponseHeaders
+    val mainRequestHeaders: Map<String, Any> get() = navigateEntry.mainRequestHeaders
+    val mainRequestCookies: List<Map<String, String>> get() = navigateEntry.mainRequestCookies
+    val mainResponseStatus: Int get() = navigateEntry.mainResponseStatus
+    val mainResponseStatusText: String get() = navigateEntry.mainResponseStatusText
+    val mainResponseHeaders: Map<String, Any> get() = navigateEntry.mainResponseHeaders
     
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
     
-    @Throws(WebDriverException::class)
-    override suspend fun location(): String {
-        val result = evaluate("window.location")
-        return result?.toString() ?: ""
-    }
+    override suspend fun currentUrl(): String = url()
     
     @Throws(WebDriverException::class)
-    override suspend fun baseURI(): String {
-        val result = evaluate("document.baseURI")
-        return result?.toString() ?: ""
-    }
+    override suspend fun url() = evaluateStringValueOrEmpty("document.URL")
+    
+    @Throws(WebDriverException::class)
+    override suspend fun documentURI() = evaluateStringValueOrEmpty("document.documentURI")
+    
+    @Throws(WebDriverException::class)
+    override suspend fun baseURI() = evaluateStringValueOrEmpty("document.baseURI")
+    
+    @Throws(WebDriverException::class)
+    override suspend fun referrer() = evaluateStringValueOrEmpty("document.referrer")
     
     override suspend fun evaluateSilently(expression: String): Any? =
         takeIf { isWorking }?.runCatching { evaluate(expression) }
@@ -333,7 +335,6 @@ abstract class AbstractWebDriver(
     }
     
     
-    
     @Throws(WebDriverException::class)
     override suspend fun clickTextMatches(selector: String, pattern: String, count: Int) {
         evaluate("__pulsar_utils__.clickTextMatches('$selector', '$pattern')")
@@ -353,6 +354,19 @@ abstract class AbstractWebDriver(
     override suspend fun uncheck(selector: String) {
         evaluate("__pulsar_utils__.uncheck('$selector')")
     }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun waitForSelector(selector: String) = waitForSelector(selector, waitTimeout)
+    
+    @Throws(WebDriverException::class)
+    override suspend fun waitForSelector(selector: String, action: suspend () -> Unit) =
+        waitForSelector(selector, waitTimeout, action)
+    
+    @Throws(WebDriverException::class)
+    override suspend fun waitUntil(predicate: suspend () -> Boolean) = waitUntil(waitTimeout, predicate)
+    
+    @Throws(WebDriverException::class)
+    override suspend fun waitForNavigation() = waitForNavigation(waitTimeout)
     
     @Throws(WebDriverException::class)
     override suspend fun newJsoupSession(): Connection {
@@ -414,6 +428,14 @@ abstract class AbstractWebDriver(
         
         state.set(State.QUIT)
         runCatching { runBlocking { stop() } }.onFailure { warnForClose(this, it) }
+    }
+    
+    protected suspend fun evaluateStringValueOrNull(expression: String): String? {
+        return evaluate(expression)?.toString()
+    }
+    
+    protected suspend fun evaluateStringValueOrEmpty(expression: String): String {
+        return evaluateStringValueOrNull(expression) ?: ""
     }
     
     private fun getHeadersAndCookies(): Pair<Map<String, String>, List<Map<String, String>>> {

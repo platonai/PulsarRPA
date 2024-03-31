@@ -39,7 +39,7 @@ class Twitter {
             interact(page, driver)
         }
         
-        session.open(url)
+        session.load(url, options)
     }
     
     private suspend fun checkPreference() {
@@ -72,7 +72,7 @@ class Twitter {
                 driver.type("input[name='session[username_or_email]']", password)
                 driver.click("div[data-testid='LoginForm_Login_Button']")
             }
-            
+
             driver.waitForNavigation()
         }
     }

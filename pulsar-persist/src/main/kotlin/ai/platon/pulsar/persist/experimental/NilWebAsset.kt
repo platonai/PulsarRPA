@@ -17,7 +17,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 
-class NILWebAsset : KWebAsset {
+class NilWebAsset : KWebAsset {
     override val id: Int = 0
     override val url: String = ""
     override val location: String? = null

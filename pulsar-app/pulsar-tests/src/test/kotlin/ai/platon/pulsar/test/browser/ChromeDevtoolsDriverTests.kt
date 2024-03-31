@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.common.ScriptConfuser.Companion.IDENTITY_NAME_MA
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -55,6 +56,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         assertTrue { navigateEntry.networkRequestCount.get() > 0 }
         assertTrue { navigateEntry.networkResponseCount.get() > 0 }
         
+        require(driver is AbstractWebDriver)
         assertEquals(200, driver.mainResponseStatus)
         assertTrue { driver.mainResponseStatus == 200 }
         assertTrue { driver.mainResponseHeaders.isNotEmpty() }

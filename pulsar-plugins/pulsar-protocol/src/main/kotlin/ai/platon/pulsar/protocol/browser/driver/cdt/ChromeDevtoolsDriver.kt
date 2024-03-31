@@ -195,7 +195,7 @@ class ChromeDevtoolsDriver(
         navigateUrl = invokeOnPage("currentUrl") { mainFrameAPI?.url } ?: navigateUrl
         return navigateUrl
     }
-
+    
     @Throws(WebDriverException::class)
     override suspend fun exists(selector: String) = predicateOnElement(selector, "exists") { it > 0 }
 
