@@ -155,6 +155,8 @@ abstract class DevToolsImpl(
         numInvokes.inc()
         lastActiveTime = Instant.now()
 
+        // blocks the current thread which is optimized by Kotlin since this method is running within
+        // withContext(Dispatchers.IO), so it's OK for the client code to run efficiently.
         val (future, responded) = invoke1(returnProperty, method)
         
         if (!responded) {
@@ -188,11 +190,12 @@ abstract class DevToolsImpl(
         }
 
         // await() blocks the current thread
-        // 1. the current thread is managed by Kotlin since this method is running within withContext(Dispatchers.IO)
+        // 1. the current thread is optimized by Kotlin since this method is running within withContext(Dispatchers.IO)
         // 2. there are still better solutions to avoid blocking the current thread
         // 3. it is unclear whether there is a significant performance improvement by using non-blocking solution
         // 4. unfortunately, there is no easy way to combine the coroutine with the [ProxyClasses.createProxyFromAbstract]
         // 5. a possible solutions is to send CDP messages directly instead of using the proxy classes
+        // 6. kotlin channel can help which do not block the current thread
 
         // see: https://ktor.io/docs/websocket-client.html
         val responded = future.await(config.readTimeout)

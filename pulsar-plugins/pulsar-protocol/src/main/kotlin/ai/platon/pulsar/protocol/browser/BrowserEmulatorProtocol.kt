@@ -18,7 +18,6 @@
  */
 package ai.platon.pulsar.protocol.browser
 
-import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response

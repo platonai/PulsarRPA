@@ -149,9 +149,9 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             activeContexts.values.toCollection(zombieContexts)
             permanentContexts.clear()
             temporaryContexts.clear()
+            closeDyingContexts()
 
             cleaningService.runCatching { shutdown() }.onFailure { warnForClose(this, it) }
-            closeDyingContexts()
         }
     }
 
@@ -208,24 +208,17 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * Close the zombie contexts, and the resources release immediately.
      * */
     private fun closeDyingContexts() {
-        logger.debug("Closing zombie contexts ...")
-
-        val dyingContexts = zombieContexts.filter { !it.isClosed }
-        if (isClosed) {
-            zombieContexts.clear()
+        val dyingContexts = zombieContexts.filter { !it.isClosed }.ifEmpty { return@closeDyingContexts }
+        
+        logger.info("Closing {} zombie contexts ...", dyingContexts.size)
+        
+        dyingContexts.forEach { privacyContext ->
+            privacyContext.runCatching { close() }.onFailure { warnForClose(this, it) }
+            zombieContexts.remove(privacyContext)
+            deadContexts.add(privacyContext)
         }
-
-        if (dyingContexts.isNotEmpty()) {
-            logger.debug("Closing {} zombie contexts ...", dyingContexts.size)
-
-            dyingContexts.forEach { privacyContext ->
-                privacyContext.runCatching { close() }.onFailure { warnForClose(this, it) }
-                zombieContexts.remove(privacyContext)
-                deadContexts.add(privacyContext)
-            }
-            
-            reportHistoricalContexts()
-        }
+        
+        reportHistoricalContexts()
     }
 
     private fun reportHistoricalContexts() {

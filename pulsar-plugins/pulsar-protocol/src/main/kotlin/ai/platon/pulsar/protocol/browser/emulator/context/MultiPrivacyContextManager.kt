@@ -279,10 +279,6 @@ class MultiPrivacyContextManager(
         dumpIfNecessary()
     }
 
-    override fun close() {
-        super.close()
-    }
-
     private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): PrivacyAgent {
         // Specify the privacy agent by the user code
         // TODO: this is a temporary solution to specify a privacy agent, try a better and consistent solution

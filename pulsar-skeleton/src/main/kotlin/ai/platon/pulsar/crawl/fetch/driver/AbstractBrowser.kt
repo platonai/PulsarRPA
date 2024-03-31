@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.fetch.driver
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.event.AbstractEventEmitter
+import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import java.time.Duration
 import java.time.Instant
@@ -22,7 +23,7 @@ abstract class AbstractBrowser(
     protected val _reusedDrivers = ConcurrentHashMap<String, WebDriver>()
     
     protected val initialized = AtomicBoolean()
-    protected val closed = AtomicBoolean()
+    private val closed = AtomicBoolean()
     protected var lastActiveTime = Instant.now()
     
     open val isActive get() = AppContext.isActive && !closed.get() && initialized.get()
@@ -81,9 +82,12 @@ abstract class AbstractBrowser(
     }
     
     override fun close() {
-        detach()
-        _recoveredDrivers.clear()
-        _drivers.clear()
+        if (closed.compareAndSet(false, true)) {
+            detach()
+            _recoveredDrivers.clear()
+            _drivers.values.forEach { runCatching { it.close() }.onFailure { warnForClose(this, it) } }
+            _drivers.clear()
+        }
     }
     
     open fun maintain() {

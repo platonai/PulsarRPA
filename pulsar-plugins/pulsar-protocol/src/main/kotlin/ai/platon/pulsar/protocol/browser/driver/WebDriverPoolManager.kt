@@ -403,7 +403,7 @@ open class WebDriverPoolManager(
                 it.cancel("This process is closing")
             }
             _deferredTasks.clear()
-
+            
             // Actually no exception to catch
             kotlin.runCatching { driverPoolPool.close() }.onFailure { warnForClose(this, it) }
             // Actually no exception to catch
@@ -547,7 +547,7 @@ private class BrowserAccompaniedDriverPoolCloser(
     private val retiredDriverPools get() = driverPoolPool.retiredDriverPools
 
     private val logger = getLogger(this)
-
+    
     /**
      * Mark the browser as retired, remove it from the working driver pool, so it can no longer be used for new tasks.
      * All drivers in the browser are marked as retired, any task should be canceled who is using an inactive driver.

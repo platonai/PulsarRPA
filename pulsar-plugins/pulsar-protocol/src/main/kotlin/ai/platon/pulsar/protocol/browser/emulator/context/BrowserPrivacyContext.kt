@@ -123,7 +123,6 @@ open class BrowserPrivacyContext(
      *
      * */
     override fun close() {
-        logger.debug("Closing browser privacy context ...")
         if (closed.compareAndSet(false, true)) {
             try {
                 report()

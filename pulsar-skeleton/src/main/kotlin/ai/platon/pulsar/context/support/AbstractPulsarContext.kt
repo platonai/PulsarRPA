@@ -27,8 +27,8 @@ import java.net.URL
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
@@ -47,7 +47,7 @@ abstract class AbstractPulsarContext(
     /**
      * Registered closable objects, will be closed by Pulsar object
      * */
-    private val closableObjects = ConcurrentLinkedQueue<AutoCloseable>()
+    private val closableObjects = ConcurrentSkipListSet<AutoCloseable>()
 
     /** Flag that indicates whether this context has been closed already. */
     private val closed = AtomicBoolean()
@@ -195,16 +195,6 @@ abstract class AbstractPulsarContext(
         closableObjects.add(closable)
     }
 
-    /**
-     * Normalize an url, the url can be one of the following:
-     * 1. a normal url
-     * 2. a configured url
-     * 3. a base64 encoded url
-     * 4. a base64 encoded configured url
-     *
-     * An url can be configured by appending arguments to the url, and it also can be used with load options,
-     * If both tailing arguments and load options are present, the tailing arguments override the load options.
-     * */
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
         val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
         return normalize(PlainUrl(url0), options, toItemOption)
@@ -215,23 +205,10 @@ abstract class AbstractPulsarContext(
         return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
     }
 
-    /**
-     * Normalize urls, remove invalid ones
-     *
-     * @param urls The urls to normalize
-     * @param options The load options applied to each url
-     * @param toItemOption If true, [options] will be converted to item load options
-     * @return All normalized urls, all invalid input urls are removed
-     * */
     override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormUrl> {
         return urls.mapNotNull { normalizeOrNull(it, options, toItemOption) }
     }
-
-    /**
-     * Normalize an url.
-     *
-     * If both tailing arguments and load options are present, the tailing arguments override the load options.
-     * */
+    
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
         return CombinedUrlNormalizer(urlNormalizerOrNull).normalize(url, options, toItemOption)
     }
@@ -241,14 +218,6 @@ abstract class AbstractPulsarContext(
         return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
     }
 
-    /**
-     * Normalize urls, remove invalid ones
-     *
-     * @param urls The urls to normalize
-     * @param options The LoadOptions applied to each url
-     * @param toItemOption If the LoadOptions is converted to item load options
-     * @return All normalized urls, all invalid input urls are removed
-     * */
     override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean): List<NormUrl> {
         return urls.mapNotNull { normalizeOrNull(it, options, toItemOption) }
     }
@@ -554,7 +523,7 @@ abstract class AbstractPulsarContext(
     }
 
     protected open fun doClose0() {
-        logger.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
+        logger.info("Closing context #{} with {} sessions | {}", id, sessions.size, this::class.java.simpleName)
         
         val sessions1 = sessions.values.toList()
         sessions.clear()

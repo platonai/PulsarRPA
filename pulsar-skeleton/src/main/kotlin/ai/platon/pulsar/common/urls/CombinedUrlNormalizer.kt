@@ -9,6 +9,11 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
      * Normalize an url.
      *
      * If both url arguments and [LoadOptions] are present, the url arguments overrides the [LoadOptions].
+     *
+     * @param url the url to be normalized
+     * @param options the options to be used
+     * @param toItemOption whether to create item options
+     * @return the normalized url, or [NormUrl.NIL] if the url is invalid
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
         val (spec, args1) = UrlUtils.splitUrlArgs(url.url)

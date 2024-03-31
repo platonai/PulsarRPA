@@ -6,13 +6,14 @@ import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.context.support.ClassPathXmlPulsarContext
 import ai.platon.pulsar.context.support.StaticPulsarContext
-import ai.platon.pulsar.persist.WebDBException
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
 
 object PulsarContexts {
     private val logger = getLogger(this)
+    
     private val contexts = mutableSetOf<PulsarContext>()
+    
     var activeContext: PulsarContext? = null
         private set
 
@@ -38,7 +39,7 @@ object PulsarContexts {
         activeContext = context
 
         // TODO: do not call getBean in close() function, it's better to close pulsar context before application context.
-        // TODO: The order of registered shutdown hooks is not guaranteed.
+        // NOTE: The order of registered shutdown hooks is not guaranteed.
         (context as? AbstractPulsarContext)?.applicationContext?.registerShutdownHook()
         context.registerShutdownHook()
         logger.info("Active context | {}", contexts.joinToString { it::class.qualifiedName + "#" + it.id })
@@ -65,7 +66,12 @@ object PulsarContexts {
     fun await() {
         activeContext?.await()
     }
-
+    
+    @JvmStatic
+    fun registerClosable(closable: AutoCloseable) {
+        activeContext?.registerClosable(closable)
+    }
+    
     @Synchronized
     @JvmStatic
     fun shutdown() {

@@ -15,12 +15,15 @@ import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicBoolean
 
 class ChromeDevtoolsBrowser(
     id: BrowserId, val chrome: RemoteChrome, private val launcher: ChromeLauncher
 ) : AbstractBrowser(id, launcher.options.browserSettings) {
     
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsBrowser::class.java)
+    
+    private val closed = AtomicBoolean()
     
     private val toolsConfig = DevToolsConfig()
     
@@ -277,19 +280,15 @@ class ChromeDevtoolsBrowser(
     }
     
     private fun closeDrivers() {
-        val nonSynchronized = drivers.toList()
+        val dyingDrivers = drivers.toList().ifEmpty { return@closeDrivers }
         
         _recoveredDrivers.clear()
         _reusedDrivers.clear()
         _drivers.clear()
+
+        logger.info("Closing browser with {} drivers/devtools ... | #{}", dyingDrivers.size, id)
         
-        if (drivers.isEmpty()) {
-            return
-        }
-        
-        logger.info("Closing browser with {} drivers/devtools ... | #{}", drivers.size, id)
-        
-        nonSynchronized.forEach { (id, driver) ->
+        dyingDrivers.forEach { (id, driver) ->
             kotlin.runCatching { driver.close() }.onFailure { warnForClose(this, it) }
         }
     }

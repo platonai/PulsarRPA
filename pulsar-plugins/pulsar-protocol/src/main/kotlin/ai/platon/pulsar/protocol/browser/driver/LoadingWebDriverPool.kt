@@ -262,7 +262,9 @@ class LoadingWebDriverPool constructor(
     }
     
     override fun close() {
-        statefulDriverPool.close()
+        if (closed.compareAndSet(false, true)) {
+            statefulDriverPool.clear()
+        }
     }
 
     fun forEach(action: (WebDriver) -> Unit) = activeDrivers.forEach(action)

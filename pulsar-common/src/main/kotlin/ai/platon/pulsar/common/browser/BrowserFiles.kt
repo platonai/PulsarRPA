@@ -127,12 +127,14 @@ object BrowserFiles {
         }
     }
     
+    @Throws(IOException::class)
     private fun computeNextSequentialContextDir0(): Path {
         val prefix = CONTEXT_DIR_PREFIX
         val monthDay = MonthDay.now()
         val monthValue = monthDay.monthValue
         val dayOfMonth = monthDay.dayOfMonth
         val baseDir = AppPaths.CONTEXT_TMP_DIR.resolve("$monthValue")
+        Files.createDirectories(baseDir)
         val sequence = SEQUENCER.incrementAndGet()
         val rand = RandomStringUtils.randomAlphanumeric(5)
         val contextCount = 1 + Files.list(baseDir)
