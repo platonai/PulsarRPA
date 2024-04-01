@@ -677,10 +677,15 @@ public class Params {
         sb.append(inline ? formatAsLine() : format());
         sb.append(postfix);
 
+        String message = sb.toString();
+        if (message.isEmpty()) {
+            return;
+        }
+
         if (defaultLog != null) {
-            defaultLog.info(sb.toString());
+            defaultLog.info("{}", sb);
         } else {
-            log.info(sb.toString());
+            log.info("{}", sb);
         }
     }
 

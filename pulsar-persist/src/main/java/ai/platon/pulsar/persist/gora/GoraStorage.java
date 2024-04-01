@@ -64,9 +64,16 @@ public class GoraStorage {
 
             dataStores.put(realSchema, dataStore);
 
-            logger.info("Backend data store: {}, real schema: {}, storage id: <{}>, " +
-                            "set config `storage.crawl.id` to define the real schema",
-                    dataStore.getClass().getSimpleName(), dataStore.getSchemaName(), schemaPrefix);
+            String className = dataStore.getClass().getName();
+            if (!className.equals("FileBackendPageStore")) {
+                logger.info("Backend data store: {}, real schema: {}", className, dataStore.getSchemaName());
+                logger.info("FileBackendPageStore is only for development and testing, " +
+                        "it is not suitable for production environment");
+            } else {
+                logger.info("Backend data store: {}, real schema: {}, storage id: <{}>, " +
+                                "set config `storage.crawl.id` to define the real schema",
+                        className, dataStore.getSchemaName(), schemaPrefix);
+            }
 
             return dataStore;
         }

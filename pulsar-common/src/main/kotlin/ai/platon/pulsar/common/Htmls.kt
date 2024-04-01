@@ -163,7 +163,7 @@ object HtmlUtils {
         var p = h.indexOf(tagStart) // pos of <body ...>
         p = h.indexOf(">", p) + 1
 
-        while (h[p].isWhitespace() && p < h.length) {
+        while (p < h.length && h[p].isWhitespace()) {
             ++p
         }
 

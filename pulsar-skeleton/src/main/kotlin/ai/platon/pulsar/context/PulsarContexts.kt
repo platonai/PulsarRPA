@@ -42,7 +42,7 @@ object PulsarContexts {
         // NOTE: The order of registered shutdown hooks is not guaranteed.
         (context as? AbstractPulsarContext)?.applicationContext?.registerShutdownHook()
         context.registerShutdownHook()
-        logger.info("Active context | {}", contexts.joinToString { it::class.qualifiedName + "#" + it.id })
+        logger.info("Active context | {}", contexts.joinToString(" | ") { it::class.qualifiedName + " #" + it.id })
 
         return context
     }
