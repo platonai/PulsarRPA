@@ -79,14 +79,16 @@ open class LoadOptions(
     var taskId = ""
 
     /**
-     * The taskTime is usually used to denote the name of a batch of tasks.
+     * Task time is usually used to denote the name of a batch of tasks.
+     *
+     * The task time is initialized to Instant.EPOCH, so parse() and toString() operations are symmetric.
      * */
     @ApiPublic
     @Parameter(
         names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
         description = "The taskTime is usually used to denote the name of a batch of tasks."
     )
-    var taskTime = Instant.now().truncatedTo(ChronoUnit.MINUTES)
+    var taskTime = Instant.EPOCH
 
     /**
      * The task's deadline indicates the time by which it should be completed. If this deadline is surpassed,
@@ -164,16 +166,6 @@ open class LoadOptions(
                 "If the expiry time is exceeded, the page should be fetched from the Internet."
     )
     var expireAt = LoadOptionDefaults.expireAt
-
-    /**
-     * The fetch interval, used for periodically fetch tasks.
-     * */
-    @ApiPublic
-    @Parameter(
-        names = ["-fi", "-fetchInterval", "--fetch-interval"], converter = DurationConverter::class,
-        description = "The fetch interval, used for periodically fetch tasks."
-    )
-    var fetchInterval = ChronoUnit.DECADES.duration
 
     /**
      * The selector to extract links in portal pages.

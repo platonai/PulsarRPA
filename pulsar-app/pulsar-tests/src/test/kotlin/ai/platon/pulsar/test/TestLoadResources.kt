@@ -58,7 +58,7 @@ class TestLoadResources: WebDriverTestBase() {
         assertContains(headers.toString(), "Content-Type", ignoreCase = true,
             message = "Content-Type should be in headers: >>>\n$headers\n<<<")
     }
-    
+
     @Test
     fun testJsoupLoadResource() = runWebDriverTest { driver ->
         val resourceUrl = "https://www.amazon.com/robots.txt"

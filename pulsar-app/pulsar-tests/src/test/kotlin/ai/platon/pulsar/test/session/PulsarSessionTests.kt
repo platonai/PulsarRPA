@@ -1,18 +1,18 @@
-package ai.platon.pulsar.test
+package ai.platon.pulsar.test.session
 
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.persist.model.WebPageFormatter
+import ai.platon.pulsar.test.TestBase
 import com.google.gson.Gson
 import kotlin.test.*
 import java.time.Instant
-import kotlin.test.*
 
 /**
  * Created by vincent on 16-7-20.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-class TestPulsarSession: TestBase() {
+class PulsarSessionTests: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers/zgbs/"
     private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     

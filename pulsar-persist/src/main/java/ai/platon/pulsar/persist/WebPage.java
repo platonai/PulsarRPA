@@ -223,7 +223,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         page.setLocation(url);
         page.setModifiedTime(Instant.EPOCH);
         page.setPrevFetchTime(Instant.EPOCH);
-        page.setFetchTime(Instant.EPOCH.plus(ChronoUnit.CENTURIES.getDuration()));
+        page.setFetchTime(DateTimes.INSTANCE.getDoomsday());
         page.setFetchInterval(ChronoUnit.CENTURIES.getDuration());
         page.setFetchPriority(FETCH_PRIORITY_MIN);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);

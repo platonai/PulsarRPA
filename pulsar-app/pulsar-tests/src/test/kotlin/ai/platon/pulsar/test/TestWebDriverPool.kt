@@ -112,7 +112,7 @@ class TestWebDriverPool {
 
         val closer = Thread {
             while (!quitMultiThreadTesting) {
-                log.info("Close all")
+                // log.info("Close all")
                 driverPool.close()
                 driverPool.close()
                 Thread.sleep(1000)

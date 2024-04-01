@@ -16,6 +16,7 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
@@ -129,12 +130,13 @@ class TestCases {
     @Test
     fun testSplitUrlArgs() {
         assertTrue { LoadOptionDefaults.storeContent }
-//        val configuredUrl = "http://list.mogujie.com/book/jiadian/1005951 -prst --expires PT1S --auto-flush --fetch-mode NATIVE --browser NONE"
-        val configuredUrl = "http://list.mogujie.com/book/jiadian/1005951"
+//        val configuredUrl = "https://www.amazon.com/dp/B0C1H26C46 -prst --expires PT1S --auto-flush --fetch-mode NATIVE --browser NONE"
+        val configuredUrl = "https://www.amazon.com/dp/B0C1H26C46"
         val (url, args) = splitUrlArgs(configuredUrl)
         assertEquals(configuredUrl, url)
         assertEquals("", args)
         val options = LoadOptions.parse(args, VolatileConfig())
+        assertEquals(Instant.EPOCH, options.taskTime)
         assertEquals("", options.toString())
     }
 }

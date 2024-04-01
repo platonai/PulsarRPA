@@ -201,13 +201,6 @@ class WebPageExt(private val page: WebPage) {
         page.metadata[Name.FETCH_TIME_HISTORY] = fetchTimeHistory
     }
 
-    fun updateFetchTime(prevFetchTime: Instant?, fetchTime: Instant) {
-        page.prevFetchTime = prevFetchTime!!
-        // the next time supposed to fetch
-        page.fetchTime = fetchTime
-        updateFetchTimeHistory(fetchTime)
-    }
-
     /**
      * Get the first fetch time
      */
