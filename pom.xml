@@ -21,7 +21,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.12.3-SNAPSHOT</version>
+    <version>1.12.4-SNAPSHOT</version>
 
     <name>Pulsar</name>
     <description>Scrape Web data at scale completely and accurately with high performance, distributed AI-RPA.</description>
@@ -46,7 +46,7 @@
         <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
         <url>https://github.com/platonai/pulsar</url>
-        <tag>v1.12.3</tag>
+        <tag>v1.12.4</tag>
     </scm>
 
     <repositories>
