@@ -7,6 +7,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.warnForClose
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
@@ -22,8 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 abstract class DevToolsImpl(
-    private val browserClient: Transport,
-    private val pageClient: Transport,
+    private val browserTransport: Transport,
+    private val pageTransport: Transport,
     private val config: DevToolsConfig
 ) : RemoteDevTools, AutoCloseable {
 
@@ -52,13 +53,13 @@ abstract class DevToolsImpl(
 
     private val closeLatch = CountDownLatch(1)
     private val closed = AtomicBoolean()
-    override val isOpen get() = !closed.get() && !pageClient.isClosed
+    override val isOpen get() = !closed.get() && pageTransport.isOpen
 
     private val dispatcher = EventDispatcher()
 
     init {
-        browserClient.addMessageHandler(dispatcher)
-        pageClient.addMessageHandler(dispatcher)
+        browserTransport.addMessageHandler(dispatcher)
+        pageTransport.addMessageHandler(dispatcher)
     }
     
     /**
@@ -131,10 +132,6 @@ abstract class DevToolsImpl(
         returnTypeClasses: Array<Class<out Any>>?,
         method: MethodInvocation
     ): T? {
-        if (!isOpen || !dispatcher.isActive) {
-            return null
-        }
-        
         numInvokes.inc()
         lastActiveTime = Instant.now()
 
@@ -167,9 +164,9 @@ abstract class DevToolsImpl(
         // See https://github.com/hardkoded/puppeteer-sharp/issues/796 to understand why we need handle Target methods
         // differently.
         if (method.method.startsWith("Target.")) {
-            browserClient.sendAsync(message)
+            browserTransport.sendAsync(message)
         } else {
-            pageClient.sendAsync(message)
+            pageTransport.sendAsync(message)
         }
 
         // await() blocks the current thread
@@ -242,16 +239,18 @@ abstract class DevToolsImpl(
 
     @Throws(Exception::class)
     private fun doClose() {
-        // NOTE:
-        // 1. It's a bad idea to throw an InterruptedException in close() method
-        // 2. No need to wait for the dispatcher to be idle
-        // waitUntilIdle(Duration.ofSeconds(5))
-        
-        dispatcher.close()
+        // waitUntilIdle(Duration.ofSeconds(10))
 
         logger.info("Closing devtools client ...")
 
-        browserClient.close()
-        pageClient.close()
+        pageTransport.close()
+        browserTransport.close()
+    }
+
+    private fun waitUntilIdle(timeout: Duration) {
+        val endTime = Instant.now().plus(timeout)
+        while (dispatcher.hasFutures() && Instant.now().isBefore(endTime)) {
+            sleepSeconds(1)
+        }
     }
 }

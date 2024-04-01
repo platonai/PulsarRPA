@@ -132,18 +132,6 @@ class ChromeImpl(
             ?: throw ChromeServiceException("Failed to get version")
     }
     
-    private fun clearDevTools(tab: ChromeTab) {
-        remoteDevTools.remove(tab.id)?.runCatching { close() }?.onFailure { warnForClose(this, it) }
-    }
-
-//    override fun close() {
-//        if (closed.compareAndSet(false, true)) {
-//            val devTools = remoteDevTools.values
-//            remoteDevTools.clear()
-//            devTools.forEach { it.runCatching { close() }.onFailure { warnForClose(this, it) } }
-//        }
-//    }
-
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             if (!canConnect()) {
@@ -151,8 +139,8 @@ class ChromeImpl(
             }
 
             val devTools = remoteDevTools.values
-            remoteDevTools.clear()
             devTools.forEach { it.runCatching { close() }.onFailure { warnForClose(this, it) } }
+            remoteDevTools.clear()
         }
     }
     
@@ -167,18 +155,18 @@ class ChromeImpl(
 
         val browserUrl = version.webSocketDebuggerUrl
             ?: throw WebSocketServiceException("Invalid web socket url to browser")
-        val browserClient = wss.createWebSocketService(browserUrl)
+        val browserTransport = wss.createWebSocketService(browserUrl)
 
         // Connect to a tab via web socket
         val debuggerUrl = tab.webSocketDebuggerUrl
                 ?: throw WebSocketServiceException("Invalid web socket url to page")
-        val pageClient = wss.createWebSocketService(debuggerUrl)
+        val pageTransport = wss.createWebSocketService(debuggerUrl)
 
         // Create concrete dev tools instance from interface
         return ProxyClasses.createProxyFromAbstract(
                 DevToolsImpl::class.java,
                 arrayOf(Transport::class.java, Transport::class.java, DevToolsConfig::class.java),
-                arrayOf(browserClient, pageClient, config),
+                arrayOf(browserTransport, pageTransport, config),
                 invocationHandler
         ).also { commandHandler.devTools = it }
     }
@@ -197,10 +185,6 @@ class ChromeImpl(
     private fun <T> request(
         responseType: Class<T>, method: HttpMethod, path: String, vararg params: Any
     ): T? {
-        if (!isActive) {
-            return null
-        }
-
         var connection: HttpURLConnection? = null
         var inputStream: InputStream? = null
 
@@ -231,16 +215,10 @@ class ChromeImpl(
                 inputStream = connection.errorStream
                 val responseBody = readString(inputStream)
                 val message = "Received error ($responseCode) - ${connection.responseMessage}\n$responseBody"
-                
-                if (!isActive) {
-                    return null
-                }
+
                 throw WebSocketServiceException(message)
             }
         } catch (ex: IOException) {
-            if (!isActive) {
-                return null
-            }
             throw ChromeServiceException("Failed sending HTTP request", ex)
         } finally {
             inputStream?.close()

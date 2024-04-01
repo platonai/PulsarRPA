@@ -28,7 +28,7 @@ class TransportImpl : Transport {
     private val meterRequests = metrics.meter("$metricsPrefix.requests")
     
     val id = instanceSequencer.incrementAndGet()
-    override val isClosed: Boolean get() = !session.isOpen || closed.get()
+    override val isOpen: Boolean get() = session.isOpen || !closed.get()
     
     class DevToolsMessageHandler(val consumer: Consumer<String>) : MessageHandler.Whole<String> {
         override fun onMessage(message: String) {
@@ -149,10 +149,12 @@ class TransportImpl : Transport {
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             // Close the current conversation with a normal status code and no reason phrase.
-            session.runCatching { close() }.onFailure { warnForClose(this, it) }
+            if (session.isOpen) {
+                session.runCatching { close() }.onFailure { warnForClose(this, it) }
+            }
         }
     }
-    
+
     override fun toString(): String {
         return session.requestURI.toString()
     }

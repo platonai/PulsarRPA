@@ -70,9 +70,6 @@ class ChromeDevtoolsBrowser(
         try {
             chrome.closeTab(tab)
         } catch (e: ChromeServiceException) {
-            if (!isActive) {
-                return
-            }
             throw WebDriverException("closeTab", e)
         }
     }

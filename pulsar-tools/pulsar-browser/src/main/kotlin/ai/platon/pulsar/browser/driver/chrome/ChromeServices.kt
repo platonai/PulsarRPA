@@ -10,7 +10,7 @@ import java.util.concurrent.Future
 import java.util.function.Consumer
 
 interface Transport: AutoCloseable {
-    val isClosed: Boolean
+    val isOpen: Boolean
     
     @Throws(WebSocketServiceException::class)
     fun connect(uri: URI)
