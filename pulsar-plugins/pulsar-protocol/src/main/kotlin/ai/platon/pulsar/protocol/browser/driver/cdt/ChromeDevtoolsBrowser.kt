@@ -288,20 +288,21 @@ class ChromeDevtoolsBrowser(
     
     private fun doClose() {
         closeDrivers()
-        
+
+        // if all drivers are closed, it means that all the tabs are closed and so the browser is closed.
+        // it's safe to close the browser multiple times and even if the remote browser is already closed.
         chrome.close()
-        
-        // wait for a while to hope the connections to the devtools are closed
-        sleepSeconds(5)
-        
+
+        // if the browser is closed, it means the launcher is also closed.
+        // it's safe to close the browser multiple times and even if the remote browser is already closed.
         launcher.close()
-        
+
         logger.info("Browser is closed successfully | #{}", id.display)
     }
     
     private fun closeDrivers() {
         val dyingDrivers = drivers.toList().ifEmpty { return@closeDrivers }
-        
+
         _recoveredDrivers.clear()
         _reusedDrivers.clear()
         _drivers.clear()

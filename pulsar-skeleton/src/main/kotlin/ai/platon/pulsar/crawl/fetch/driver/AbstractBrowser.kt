@@ -18,6 +18,9 @@ abstract class AbstractBrowser(
         val DEFAULT_USER_AGENT = "PulsarRobot/1.0"
     }
     
+    /**
+     * All drivers, including the recovered drivers and the reused drivers.
+     * */
     protected val _drivers = ConcurrentHashMap<String, WebDriver>()
     protected val _recoveredDrivers = ConcurrentHashMap<String, WebDriver>()
     protected val _reusedDrivers = ConcurrentHashMap<String, WebDriver>()

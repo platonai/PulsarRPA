@@ -40,7 +40,10 @@ class ChromeLauncher(
     private val pidPath get() = userDataDir.resolveSibling(PID_FILE_NAME)
     private val temporaryUddExpiry = BrowserFiles.TEMPORARY_UDD_EXPIRY
     private var process: Process? = null
-    private val shutdownHookThread = Thread { this.close() }
+    private val shutdownHookThread = Thread {
+        System.err.println("Shutting down chrome process ...")
+        // this.close()
+    }
 
     /**
      * Launch the chrome
@@ -92,10 +95,10 @@ class ChromeLauncher(
             this.process = null
             if (p.isAlive) {
                 Runtimes.destroyProcess(p, options.shutdownWaitTime)
-//            kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
-//                    .onFailure { logger.warn("Unexpected exception", it) }
+                kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
+                        .onFailure { logger.warn("Unexpected exception", it) }
             }
-            
+
             BrowserFiles.runCatching { cleanUpContextTmpDir(temporaryUddExpiry) }.onFailure { warnForClose(this, it) }
         }
     }

@@ -36,6 +36,8 @@ interface RemoteChrome: AutoCloseable {
     
     val version: ChromeVersion
 
+    fun canConnect(): Boolean
+    
     @Throws(ChromeServiceException::class)
     fun listTabs(): Array<ChromeTab>
 

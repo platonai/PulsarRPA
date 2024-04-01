@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.browser.driver.chrome.util.ProxyClasses
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnForClose
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -120,6 +121,11 @@ class ChromeImpl(
         }
     }
     
+    override fun canConnect(): Boolean {
+        val url = URL("http://$host:$port")
+        return NetUtil.testHttpNetwork(url)
+    }
+    
     @Throws(ChromeServiceException::class)
     private fun refreshVersion(): ChromeVersion {
         return request(ChromeVersion::class.java, HttpMethod.GET, "http://%s:%d/%s", host, port, VERSION)
@@ -140,6 +146,10 @@ class ChromeImpl(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+            if (!canConnect()) {
+                return
+            }
+
             val devTools = remoteDevTools.values
             remoteDevTools.clear()
             devTools.forEach { it.runCatching { close() }.onFailure { warnForClose(this, it) } }
