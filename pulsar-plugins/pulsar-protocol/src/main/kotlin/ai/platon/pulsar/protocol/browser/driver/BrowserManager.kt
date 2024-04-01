@@ -156,7 +156,7 @@ open class BrowserManager(
         if (registered.compareAndSet(false, true)) {
             // Actually, it's safe to register multiple times, the manager will be closed only once, and the browsers
             // will be closed in the manager's close function.
-            PulsarContexts.registerClosable(this)
+            PulsarContexts.registerClosable(this, -100)
         }
     }
 }

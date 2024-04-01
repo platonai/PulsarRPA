@@ -32,9 +32,9 @@ class BrowserEmulatorProtocol : ForwardingProtocol() {
     private val browserEmulator by lazy {
         // require(conf === context.unmodifiedConfig)
         context.getBeanOrNull(BrowserEmulatedFetcher::class)
-            ?: Defaults(conf).browserEmulatedFetcher.also { context.registerClosable(it) }
+            ?: Defaults(conf).browserEmulatedFetcher.also { PulsarContexts.registerClosable(it) }
     }
-    
+
     private val browserEmulatorOrNull get() = if (context.isActive) browserEmulator else null
     
     @Throws(Exception::class)

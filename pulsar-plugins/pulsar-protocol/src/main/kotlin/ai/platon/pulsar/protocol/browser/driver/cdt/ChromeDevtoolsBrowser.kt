@@ -7,6 +7,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_REUSE_RECOVERED_DRIVERS
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -34,6 +35,12 @@ class ChromeDevtoolsBrowser(
     override val isActive get() = super.isActive && chrome.isActive
     
     override val userAgent get() = chrome.version.userAgent ?: DEFAULT_USER_AGENT
+    
+    init {
+        // Actually, it's safe to register multiple times, the manager will be closed only once, and the browsers
+        // will be closed in the manager's close function.
+        PulsarContexts.registerClosable(launcher, Int.MIN_VALUE)
+    }
     
     @Synchronized
     @Throws(WebDriverException::class)

@@ -87,8 +87,9 @@ interface PulsarContext: AutoCloseable {
      * It's safe to register the same object multiple times, the object will be closed only once.
      *
      * @param closable The object to close
+     * @param priority The priority of the object, the higher the priority, the earlier the object is closed
      * */
-    fun registerClosable(closable: AutoCloseable)
+    fun registerClosable(closable: AutoCloseable, priority: Int = 0)
 
     /**
      * Normalize an url, the url can be in one of the following forms:

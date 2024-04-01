@@ -67,9 +67,12 @@ object PulsarContexts {
         activeContext?.await()
     }
     
+    /**
+     * TODO: might fail before the context is created
+     */
     @JvmStatic
-    fun registerClosable(closable: AutoCloseable) {
-        activeContext?.registerClosable(closable)
+    fun registerClosable(closable: AutoCloseable, priority: Int = 0) {
+        activeContext?.registerClosable(closable, priority)
     }
     
     @Synchronized

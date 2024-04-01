@@ -49,18 +49,21 @@ class TestLoadResources: WebDriverTestBase() {
         assertNotNull(body)
 
 //        println(body)
-        assertContains(body, "Disallow")
+        assertContains(body, "Disallow", ignoreCase = true,
+            message = "Disallow should be in body: >>>\n${body.substring(0, 100)}\n<<<")
 
 //        val cookies = response.entries.joinToString("; ") { it.key + "=" + it.value }
 //        println(cookies)
-        headers.forEach { (name, value) -> println("$name: $value") }
-        assertContains(headers.toString(), "Content-Type".toRegex(RegexOption.IGNORE_CASE), "Content-Type should be in headers")
+        // headers.forEach { (name, value) -> println("$name: $value") }
+        assertContains(headers.toString(), "Content-Type", ignoreCase = true,
+            message = "Content-Type should be in headers: >>>\n$headers\n<<<")
     }
     
     @Test
     fun testJsoupLoadResource() = runWebDriverTest { driver ->
         val resourceUrl = "https://www.amazon.com/robots.txt"
         val response = driver.loadJsoupResource(resourceUrl)
+        val headers = response.headers()
         val body = response.body()
         assertNotNull(body)
 
@@ -70,7 +73,8 @@ class TestLoadResources: WebDriverTestBase() {
         val cookies = response.cookies().entries.joinToString("; ") { it.key + "=" + it.value }
         println(cookies)
         response.headers().forEach { (name, value) -> println("$name: $value") }
-        assertContains(response.headers().toString(), "Content-Type".toRegex(RegexOption.IGNORE_CASE),
-            "Content-Type should be in headers")
+
+        assertContains(headers.toString(), "Content-Type", ignoreCase = true,
+            message = "Content-Type should be in headers: >>>\n$headers\n<<<")
     }
 }

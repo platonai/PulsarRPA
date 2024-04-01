@@ -43,11 +43,11 @@ abstract class AbstractPulsarContext(
     }
 
     private val logger = LoggerFactory.getLogger(AbstractPulsarContext::class.java)
-
+    
     /**
      * Registered closable objects, will be closed by Pulsar object
      * */
-    private val closableObjects = Collections.synchronizedSet(mutableSetOf<AutoCloseable>())
+    private val closableObjects = ConcurrentSkipListSet<PrioriClosable>()
 
     /** Flag that indicates whether this context has been closed already. */
     private val closed = AtomicBoolean()
@@ -188,11 +188,11 @@ abstract class AbstractPulsarContext(
     /**
      * Register close objects, the objects will be closed when the context closes
      * */
-    override fun registerClosable(closable: AutoCloseable) {
+    override fun registerClosable(closable: AutoCloseable, priority: Int) {
         if (!isActive) {
             return
         }
-        closableObjects.add(closable)
+        closableObjects.add(PrioriClosable(priority, closable))
     }
 
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
@@ -497,7 +497,7 @@ abstract class AbstractPulsarContext(
             }
         }
     }
-
+    
     protected open fun doClose() {
         AppContext.terminate()
 
@@ -534,8 +534,8 @@ abstract class AbstractPulsarContext(
             runCatching { session.close() }.onFailure { warnForClose(this, it) }
         }
         
-        closableObjects1.forEach { closable ->
-            runCatching { closable.close() }.onFailure { warnForClose(this, it) }
+        closableObjects1.sortedByDescending { it.priority }.forEach { closable ->
+            runCatching { closable.closeable.close() }.onFailure { warnForClose(this, it) }
         }
     }
 
