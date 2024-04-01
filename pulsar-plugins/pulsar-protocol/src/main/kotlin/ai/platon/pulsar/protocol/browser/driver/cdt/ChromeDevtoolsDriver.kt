@@ -33,14 +33,13 @@ import java.nio.file.Files
 import java.text.MessageFormat
 import java.time.Duration
 import java.time.Instant
-import java.util.TreeSet
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.random.Random
 
 class ChromeDevtoolsDriver(
     val chromeTab: ChromeTab,
     val devTools: RemoteDevTools,
-    val browserSettings: BrowserSettings,
+    private val browserSettings: BrowserSettings,
     override val browser: ChromeDevtoolsBrowser,
 ) : AbstractWebDriver(browser) {
     
@@ -599,6 +598,7 @@ class ChromeDevtoolsDriver(
     
     fun doClose() {
         super.close()
+        
         if (closed.compareAndSet(false, true)) {
             devTools.runCatching { close() }.onFailure { warnForClose(this, it) }
         }

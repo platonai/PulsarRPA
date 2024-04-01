@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl.Companion.ABOUT_BLANK_PAGE
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_REUSE_RECOVERED_DRIVERS
 import ai.platon.pulsar.common.urls.UrlUtils
@@ -11,7 +12,6 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
-import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -30,13 +30,7 @@ class ChromeDevtoolsBrowser(
     private val conf get() = browserSettings.conf
     
     private val reuseRecoveredDriver get() = conf.getBoolean(BROWSER_REUSE_RECOVERED_DRIVERS, false)
-    
-    private val chromeTabs: List<ChromeTab>
-        get() = drivers.values.filterIsInstance<ChromeDevtoolsDriver>().map { it.chromeTab }
-    
-    private val devtools: List<ChromeDevTools>
-        get() = drivers.values.filterIsInstance<ChromeDevtoolsDriver>().map { it.devTools }
-    
+
     override val isActive get() = super.isActive && chrome.isActive
     
     override val userAgent get() = chrome.version.userAgent ?: DEFAULT_USER_AGENT
@@ -49,20 +43,38 @@ class ChromeDevtoolsBrowser(
     @Throws(WebDriverException::class)
     fun createTab(url: String): ChromeTab {
         lastActiveTime = Instant.now()
-        return chrome.runCatching { createTab(url) }.getOrElse { throw WebDriverException("createTab", it) }
+        try {
+            return chrome.runCatching { createTab(url) }.getOrElse { throw WebDriverException("createTab", it) }
+        } catch (e: ChromeServiceException) {
+            throw WebDriverException("createTab", e)
+        }
+    }
+    
+    @Synchronized
+    @Throws(WebDriverException::class)
+    fun listTabs(): Array<ChromeTab> {
+        try {
+            return chrome.listTabs()
+        } catch (e: ChromeServiceException) {
+            if (!isActive) {
+                return arrayOf()
+            }
+            throw WebDriverException("listTabs", e)
+        }
     }
     
     @Synchronized
     @Throws(WebDriverException::class)
     fun closeTab(tab: ChromeTab) {
         logger.debug("Closing tab | {}", tab.url)
-        return runCatching { chrome.closeTab(tab) }.getOrElse { throw WebDriverException("closeTab", it) }
-    }
-    
-    @Synchronized
-    @Throws(WebDriverException::class)
-    fun listTabs(): Array<ChromeTab> {
-        return chrome.runCatching { listTabs() }.getOrElse { throw WebDriverException("listTabs", it) }
+        try {
+            chrome.closeTab(tab)
+        } catch (e: ChromeServiceException) {
+            if (!isActive) {
+                return
+            }
+            throw WebDriverException("closeTab", e)
+        }
     }
     
     @Synchronized
@@ -112,7 +124,7 @@ class ChromeDevtoolsBrowser(
             _recoveredDrivers.remove(chromeTabId)
             _reusedDrivers.remove(chromeTabId)
             _drivers.remove(chromeTabId)
-            
+
             runCatching { driver.doClose() }.onFailure { warnForClose(this, it) }
             runCatching { closeTab(driver.chromeTab) }.onFailure { warnForClose(this, it) }
         }
@@ -217,7 +229,11 @@ class ChromeDevtoolsBrowser(
         try {
             recoverUnmanagedPages0()
         } catch (e: WebDriverException) {
-            logger.warn("Failed to recover unmanaged pages | {}", e.message)
+            if (isActive) {
+                logger.warn("Failed to recover unmanaged pages | {}", e.message)
+            } else {
+                logger.info("No page recovering, browser is closed.")
+            }
         }
     }
     
@@ -274,9 +290,13 @@ class ChromeDevtoolsBrowser(
         closeDrivers()
         
         chrome.close()
+        
+        // wait for a while to hope the connections to the devtools are closed
+        sleepSeconds(5)
+        
         launcher.close()
         
-        logger.info("Browser is closed | #{}", id.display)
+        logger.info("Browser is closed successfully | #{}", id.display)
     }
     
     private fun closeDrivers() {

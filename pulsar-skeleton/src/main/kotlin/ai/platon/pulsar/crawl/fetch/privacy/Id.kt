@@ -23,7 +23,7 @@ data class PrivacyAgentId(
     /**
      * If true, the privacy agent opens browser just like a real user does every day.
      * */
-    val isUserDefault get() = this.contextDir == PrivacyContext.USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER
+    val isUserDefault get() = this.contextDir == AppPaths.USER_BROWSER_CONTEXT_DIR_PLACEHOLDER
     /**
      * If true, the privacy agent opens browser with the default data dir, the default data dir will not be removed
      * after the browser closes.
@@ -110,7 +110,7 @@ data class PrivacyAgent(
         /**
          * The user default privacy agent opens browser just like real users do every day.
          * */
-        val USER_DEFAULT = PrivacyAgent(PrivacyContext.USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
+        val USER_DEFAULT = PrivacyAgent(AppPaths.USER_BROWSER_CONTEXT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
         /**
          * The prototype privacy agent opens browser with the prototype data dir.
          * Every change to the browser will be kept in the prototype data dir, and every temporary privacy agent
@@ -143,7 +143,7 @@ data class BrowserId(
     val browserType: BrowserType get() = fingerprint.browserType
 
     val userDataDir: Path get() = when {
-        privacyAgent.isUserDefault -> PrivacyContext.USER_DEFAULT_DATA_DIR_PLACEHOLDER
+        privacyAgent.isUserDefault -> AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
         privacyAgent.isPrototype -> PrivacyContext.PROTOTYPE_DATA_DIR
         else -> contextDir.resolve(browserType.name.lowercase())
     }

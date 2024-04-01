@@ -44,14 +44,8 @@ abstract class PrivacyContext(
         // The prefix for all temporary privacy contexts. System context, prototype context and default context are not
         // required to start with the prefix.
         const val CONTEXT_DIR_PREFIX = "cx."
-        val USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER: Path = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
-        // The placeholder directory for the user's default browser. This is a placeholder, actually no data dir
-        // should be specified, so the browser driver opens a browser just like a normal user opens it.
-        // The actual data dir of user's browser are different on different operating systems, for example,
-        // on linux, chrome's data dir is: ~/.config/google-chrome/
-        val USER_DEFAULT_DATA_DIR_PLACEHOLDER: Path = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
-        // The default context directory, if you need a semi-permanent context, use this one.
-        // NOTICE: the user-default context dir is not a default context dir.
+        // The default context directory, if you need a permanent and isolate context, use this one.
+        // NOTE: the user-default context is not a default context.
         val DEFAULT_CONTEXT_DIR: Path = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         // A random context directory, if you need a random temporary context, use this one
         val RANDOM_CONTEXT_DIR get() = computeNextSequentialContextDir()

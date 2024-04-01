@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory
 import java.io.*
 import java.nio.channels.FileChannel
 import java.nio.file.*
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
 
 /**
@@ -35,6 +36,7 @@ class ChromeLauncher(
         private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws://.+:(\\d+)/")
     }
 
+    private val closed = AtomicBoolean()
     private val pidPath get() = userDataDir.resolveSibling(PID_FILE_NAME)
     private val temporaryUddExpiry = BrowserFiles.TEMPORARY_UDD_EXPIRY
     private var process: Process? = null
@@ -85,15 +87,17 @@ class ChromeLauncher(
      * The method throws nothing by design.
      * */
     override fun close() {
-        val p = process ?: return
-        this.process = null
-        if (p.isAlive) {
-            Runtimes.destroyProcess(p, options.shutdownWaitTime)
+        if (closed.compareAndSet(false, true)) {
+            val p = process ?: return
+            this.process = null
+            if (p.isAlive) {
+                Runtimes.destroyProcess(p, options.shutdownWaitTime)
 //            kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
 //                    .onFailure { logger.warn("Unexpected exception", it) }
+            }
+            
+            BrowserFiles.runCatching { cleanUpContextTmpDir(temporaryUddExpiry) }.onFailure { warnForClose(this, it) }
         }
-        
-        BrowserFiles.runCatching { cleanUpContextTmpDir(temporaryUddExpiry) }.onFailure { warnForClose(this, it) }
     }
 
     /**
