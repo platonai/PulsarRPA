@@ -97,8 +97,9 @@ class ChromeLauncher(
             this.process = null
             if (p.isAlive) {
                 Runtimes.destroyProcess(p, options.shutdownWaitTime)
-                kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
-                        .onFailure { logger.warn("Unexpected exception", it) }
+                // TODO: java.lang.IllegalStateException: Shutdown in progress
+//                kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
+//                        .onFailure { logger.warn("Unexpected exception", it) }
             }
 
             BrowserFiles.runCatching { cleanUpContextTmpDir(temporaryUddExpiry) }.onFailure { warnForClose(this, it) }
