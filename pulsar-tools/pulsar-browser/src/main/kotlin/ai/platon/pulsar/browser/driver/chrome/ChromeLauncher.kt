@@ -41,8 +41,8 @@ class ChromeLauncher(
     private val temporaryUddExpiry = BrowserFiles.TEMPORARY_UDD_EXPIRY
     private var process: Process? = null
     private val shutdownHookThread = Thread {
-        System.err.println("Shutting down chrome process ...")
-        // this.close()
+        // System.err.println("Shutting down chrome process ...")
+        this.close()
     }
 
     /**

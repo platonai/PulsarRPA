@@ -68,6 +68,10 @@ class ChromeDevtoolsBrowser(
     fun closeTab(tab: ChromeTab) {
         logger.debug("Closing tab | {}", tab.url)
         try {
+            if (!isActive) {
+                return
+            }
+            
             chrome.closeTab(tab)
         } catch (e: ChromeServiceException) {
             throw WebDriverException("closeTab", e)
@@ -123,7 +127,16 @@ class ChromeDevtoolsBrowser(
             _drivers.remove(chromeTabId)
 
             runCatching { driver.doClose() }.onFailure { warnForClose(this, it) }
-            runCatching { closeTab(driver.chromeTab) }.onFailure { warnForClose(this, it) }
+
+            try {
+                closeTab(driver.chromeTab)
+            } catch (e: WebDriverException) {
+                if (isActive) {
+                    throw e
+                }
+            } catch (e: Exception) {
+                warnInterruptible(this, e, "Failed to close tab")
+            }
         }
     }
     
@@ -287,6 +300,7 @@ class ChromeDevtoolsBrowser(
         closeDrivers()
 
         // if all drivers are closed, it means that all the tabs are closed and so the browser is closed.
+        // but, we may not hold all the open tabs, so we still need close the chrome explicitly.
         // it's safe to close the browser multiple times and even if the remote browser is already closed.
         chrome.close()
 

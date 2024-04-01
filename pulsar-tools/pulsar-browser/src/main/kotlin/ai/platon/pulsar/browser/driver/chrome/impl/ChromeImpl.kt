@@ -105,6 +105,9 @@ class ChromeImpl(
     @Throws(ChromeServiceException::class)
     override fun closeTab(tab: ChromeTab) {
         try {
+            if (!isActive || !canConnect()) {
+                return
+            }
             request(Void::class.java, HttpMethod.PUT, "http://%s:%d/%s/%s", host, port, CLOSE_TAB, tab.id)
         } catch (e: WebSocketServiceException) {
             throw ChromeServiceException("Failed to close tab", e)

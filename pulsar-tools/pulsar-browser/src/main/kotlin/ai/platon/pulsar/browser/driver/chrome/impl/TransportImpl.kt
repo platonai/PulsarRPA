@@ -87,11 +87,11 @@ class TransportImpl : Transport {
             tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.basicRemote.sendText(message)
         } catch (e: IOException) {
-            throw WebSocketServiceException("The connection is closed", e)
+            throw WebSocketServiceException("Connection is closed", e)
         } catch (e: IllegalArgumentException) {
-            throw WebSocketServiceException("The connection is closed", e)
+            throw WebSocketServiceException("Connection is closed", e)
         } catch (e: java.lang.IllegalStateException) {
-            throw WebSocketServiceException("The connection is closed", e)
+            throw WebSocketServiceException("Connection is closed", e)
         } catch (e: Exception) {
             logger.error("[Unexpected] | ${session.requestURI}", e)
         }
@@ -105,11 +105,11 @@ class TransportImpl : Transport {
             tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.asyncRemote.sendText(message)
         } catch (e: IOException) {
-            throw WebSocketServiceException("The connection is closed", e)
+            throw WebSocketServiceException("Connection is closed", e)
         } catch (e: IllegalArgumentException) {
-            throw WebSocketServiceException("The connection is closed", e)
+            throw WebSocketServiceException("Connection is closed", e)
         } catch (e: java.lang.IllegalStateException) {
-            throw WebSocketServiceException("The connection is closed", e)
+            throw WebSocketServiceException("Connection is closed", e)
         } catch (e: Exception) {
             logger.error("Unexpected exception | ${session.requestURI}", e)
             throw e
@@ -131,7 +131,7 @@ class TransportImpl : Transport {
     
     private fun onClose(session: Session, closeReason: CloseReason) {
         /**
-         * TODO: closeReason.closeCode CLOSED_ABNORMALLY occurs.
+         * If closeReason.closeCode CLOSED_ABNORMALLY occurs:
          *
          * CLOSED_ABNORMALLY is a reserved value and MUST NOT be set as a status code in a
          * Close control frame by an endpoint.  It is designated for use in
@@ -139,7 +139,11 @@ class TransportImpl : Transport {
          * connection was closed abnormally, e.g., without sending or
          * receiving a Close control frame.
          */
-        logger.info("Web socket connection closed {} {}", closeReason.closeCode, closeReason.reasonPhrase)
+        if (closeReason.closeCode == CloseReason.CloseCodes.CLOSED_ABNORMALLY) {
+            logger.warn("Web socket {} {} | {}", closeReason.reasonPhrase, closeReason.closeCode, session.requestURI)
+        } else {
+            logger.info("Web socket connection closed {} {}", closeReason.closeCode, closeReason.reasonPhrase)
+        }
     }
     
     private fun onError(session: Session, e: Throwable?) {

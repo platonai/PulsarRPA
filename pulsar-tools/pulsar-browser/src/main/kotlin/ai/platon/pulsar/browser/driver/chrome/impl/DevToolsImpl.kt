@@ -105,7 +105,6 @@ abstract class DevToolsImpl(
      * @param <T> The return type.
      * @return The result of the invocation.
      * */
-    @Throws(InterruptedException::class)
     override operator fun <T> invoke(
         returnProperty: String?,
         clazz: Class<T>,
@@ -153,7 +152,7 @@ abstract class DevToolsImpl(
         }
     }
     
-    @Throws(InterruptedException::class, ChromeServiceException::class)
+    @Throws(InterruptedException::class)
     private fun invoke1(
         returnProperty: String?,
         method: MethodInvocation
@@ -239,7 +238,7 @@ abstract class DevToolsImpl(
 
     @Throws(Exception::class)
     private fun doClose() {
-        // waitUntilIdle(Duration.ofSeconds(10))
+        waitUntilIdle(Duration.ofSeconds(10))
 
         logger.info("Closing devtools client ...")
 
