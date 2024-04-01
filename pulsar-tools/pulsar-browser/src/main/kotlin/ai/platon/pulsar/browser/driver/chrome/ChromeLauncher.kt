@@ -44,8 +44,8 @@ class ChromeLauncher(
         // System.err.println("Shutting down chrome process ...")
         
         // Shutdown by the upper layer
-        this.close()
-    }.also { it.priority = Thread.MIN_PRIORITY }
+        // this.close()
+    }
 
     /**
      * Launch the chrome

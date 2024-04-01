@@ -1,9 +1,6 @@
 package ai.platon.pulsar.common.browser
 
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.warnInterruptible
+import ai.platon.pulsar.common.*
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.RandomStringUtils
 import java.io.IOException
@@ -95,38 +92,16 @@ object BrowserFiles {
         if (!hasSiblingPidFile) {
             return
         }
-        
+
         FileUtils.deleteQuietly(dirToDelete.toFile())
-        // Make sure the last operation is finished
-        if (Files.exists(dirToDelete)) {
-            logger.warn("Failed to delete browser data, try again | {}", dirToDelete)
-            forceDeleteDirectory(dirToDelete)
-        }
-        
+
         if (Files.exists(dirToDelete)) {
             logger.error("Could not delete browser data | {}", dirToDelete)
         } else {
             cleanedUserDataDirs.add(dirToDelete)
         }
     }
-    
-    /**
-     * Force delete all browser data
-     * */
-    @Throws(IOException::class)
-    private fun forceDeleteDirectory(dirToDelete: Path) {
-        val maxTry = 10
-        var i = 0
-        while (i++ < maxTry && Files.exists(dirToDelete) && !Files.isSymbolicLink(dirToDelete)) {
-            kotlin.runCatching {
-                FileUtils.deleteDirectory(dirToDelete.toFile())
-                Thread.sleep(500)
-            }.onFailure {
-                warnInterruptible(this, it, "Failed to delete directory | {} | {}", dirToDelete, it.message)
-            }
-        }
-    }
-    
+
     @Throws(IOException::class)
     private fun computeNextSequentialContextDir0(): Path {
         val prefix = CONTEXT_DIR_PREFIX

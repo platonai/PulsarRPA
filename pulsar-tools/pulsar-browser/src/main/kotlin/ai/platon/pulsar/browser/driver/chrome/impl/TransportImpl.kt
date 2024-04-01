@@ -140,7 +140,7 @@ class TransportImpl : Transport {
          * receiving a Close control frame.
          */
         if (closeReason.closeCode != CloseReason.CloseCodes.NORMAL_CLOSURE) {
-            logger.warn("Web socket {} {} | {}", closeReason.reasonPhrase, closeReason.closeCode, session.requestURI)
+            logger.info("Web socket {} {} | {}", closeReason.reasonPhrase, closeReason.closeCode, session.requestURI)
         } else {
             logger.debug("Web socket {} {}", closeReason.reasonPhrase, closeReason.closeCode)
         }
