@@ -100,7 +100,7 @@ class ChromeDevtoolsDriver(
     val isActive get() = !isGone
     
     /**
-     * Expose the underlying implementation, used for development purpose
+     * Expose the underlying implementation, used for diagnosis purpose
      * */
     val implementation get() = devTools
     
@@ -363,6 +363,7 @@ class ChromeDevtoolsDriver(
         val deltaX = 4.0 + Random.nextInt(4)
         val deltaY = 4.0
         val offset = OffsetD(deltaX, deltaY)
+        val minDeltaX = 2.0
         
         val p = pageAPI
         val d = domAPI
@@ -376,11 +377,12 @@ class ChromeDevtoolsDriver(
         val width = box?.width ?: 0.0
         // if it's an input element, we should click on the right side of the element,
         // so the cursor is at the tail of the text
-        val offsetX = when (position) {
+        var offsetX = when (position) {
             "left" -> 0.0 + deltaX
             "right" -> width - deltaX
             else -> width / 2 + deltaX
         }
+        offsetX = offsetX.coerceAtMost(width - minDeltaX).coerceAtLeast(minDeltaX)
         
         point.x += offsetX
         
@@ -414,8 +416,12 @@ class ChromeDevtoolsDriver(
             // val value = evaluateDetail("document.querySelector('$selector').value")?.value?.toString() ?: ""
             val value = page.getAttribute(nodeId, "value")
             if (value != null) {
-                click(nodeId, 1)
+                // it's an input element, we should click on the right side of the element,
+                // so the cursor appears at the tail of the text
+                click(nodeId, 1, "right")
                 keyboard?.delete(value.length, delayPolicy("delete"))
+                // ensure the input is empty
+                // page.setAttribute(nodeId, "value", "")
             }
             
             click(nodeId, 1)

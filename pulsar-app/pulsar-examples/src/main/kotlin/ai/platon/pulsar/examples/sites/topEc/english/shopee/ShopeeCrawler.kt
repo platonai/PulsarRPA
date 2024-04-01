@@ -1,8 +1,11 @@
 package ai.platon.pulsar.examples.sites.topEc.english.shopee
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.context.PulsarContexts
 
 fun main() {
+    BrowserSettings.withSystemDefaultBrowser()
+    
     val portalUrl = "https://shopee.sg/Computers-Peripherals-cat.11013247"
     val args = "-i 1s -ii 5d -ol a[href~=sp_atk] -tl 20 -ignoreFailure"
     val session = PulsarContexts.createSession()

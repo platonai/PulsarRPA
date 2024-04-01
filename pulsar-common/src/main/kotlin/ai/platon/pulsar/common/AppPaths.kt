@@ -35,8 +35,8 @@ object AppPaths {
      * The actual data dir of user's browser are different on different operating systems, for example,
      * on linux, chrome's data dir is: ~/.config/google-chrome/
      */
-    val USER_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".USER_BROWSER_DATA_DIR_PLACEHOLDER")
-    val USER_BROWSER_CONTEXT_DIR_PLACEHOLDER = USER_BROWSER_DATA_DIR_PLACEHOLDER
+    val SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".SYSTEM_DEFAULT_DATA_DIR_PLACEHOLDER")
+    val SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER = SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER
 
     // Directory for symbolic links, this path should be as short as possible
     @RequiredDirectory

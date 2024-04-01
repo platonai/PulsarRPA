@@ -57,7 +57,12 @@ open class ChromeRPCTimeoutException : ChromeRPCException {
     constructor(message: String, cause: Throwable): super(message, cause)
 }
 
-open class ChromeLostException : ChromeRPCException {
+open class ChromeDevToolsLostException : ChromeRPCException {
+    constructor(message: String) : super(message)
+    constructor(message: String, cause: Throwable): super(message, cause)
+}
+
+open class ChromeDevToolsClosedException : ChromeDevToolsLostException {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable): super(message, cause)
 }

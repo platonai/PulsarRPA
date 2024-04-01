@@ -337,9 +337,9 @@ abstract class AbstractWebDriver(
      * */
     @Throws(WebDriverException::class)
     override suspend fun selectImages(selector: String, offset: Int, limit: Int): List<String> {
+        // TODO: add __pulsar_utils__.selectImages()
         return selectAttributeAll(selector, "abs:src").drop(offset).take(limit)
     }
-    
     
     @Throws(WebDriverException::class)
     override suspend fun clickTextMatches(selector: String, pattern: String, count: Int) {

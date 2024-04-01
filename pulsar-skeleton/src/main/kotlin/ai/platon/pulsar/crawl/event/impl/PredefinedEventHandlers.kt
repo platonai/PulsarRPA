@@ -30,7 +30,11 @@ open class LoginHandler(
         }
 
         driver.navigateTo(loginUrl)
-        driver.waitForNavigation(Duration.ofSeconds(10))
+        val remainingTime = driver.waitUntil { driver.selectImages("img:expr(width > 250)").size >= 10 }
+        if (remainingTime.seconds > 0) {
+            // already logged in
+            return null
+        }
 
         if (activateSelector != null) {
             logger.info("Waiting for login panel ... | {}", activateSelector)

@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.fetch
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserId.Companion.SYSTEM_DEFAULT
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import java.nio.file.Files
 import kotlin.test.*
@@ -43,13 +44,13 @@ class BrowserIdTests {
 
     @Test
     fun testSystemDefaultBrowserId() {
-        val id = BrowserId.USER_DEFAULT
+        val id = SYSTEM_DEFAULT
         println(id)
         println(id.contextDir)
         println(id.userDataDir)
         assertFalse { id.userDataDir.toString().contains("google-chrome") }
-        assertEquals(id.contextDir, AppPaths.USER_BROWSER_CONTEXT_DIR_PLACEHOLDER)
-        assertTrue { id.userDataDir.startsWith(AppPaths.USER_BROWSER_CONTEXT_DIR_PLACEHOLDER) }
-        assertEquals(id.userDataDir, AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER)
+        assertEquals(id.contextDir, AppPaths.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER)
+        assertTrue { id.userDataDir.startsWith(AppPaths.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER) }
+        assertEquals(id.userDataDir, AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER)
     }
 }

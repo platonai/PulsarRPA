@@ -76,7 +76,7 @@ open class BrowserSettings(
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
-            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS_KEY, clazz)
             withBrowser(browserType)
             return BrowserSettings
         }
@@ -95,7 +95,20 @@ open class BrowserSettings(
         @JvmStatic
         fun withPrototypeBrowser(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
-            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS_KEY, clazz)
+            withBrowser(browserType)
+            return BrowserSettings
+        }
+        
+        /**
+         * Use the specified browser with the prototype environment, any change to the browser will be kept.
+         *
+         * PULSAR_CHROME is the only supported browser currently.
+         * */
+        @JvmStatic
+        fun withTemporaryBrowser(browserType: BrowserType): Companion {
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS_KEY, clazz)
             withBrowser(browserType)
             return BrowserSettings
         }

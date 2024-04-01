@@ -126,7 +126,7 @@ class TransportImpl : Transport {
     }
     
     private fun onOpen(session: Session, config: EndpointConfig) {
-        logger.info("Web socket connected | {}", session.requestURI)
+        logger.debug("Web socket connected | {}", session.requestURI)
     }
     
     private fun onClose(session: Session, closeReason: CloseReason) {
@@ -139,10 +139,10 @@ class TransportImpl : Transport {
          * connection was closed abnormally, e.g., without sending or
          * receiving a Close control frame.
          */
-        if (closeReason.closeCode == CloseReason.CloseCodes.CLOSED_ABNORMALLY) {
+        if (closeReason.closeCode != CloseReason.CloseCodes.NORMAL_CLOSURE) {
             logger.warn("Web socket {} {} | {}", closeReason.reasonPhrase, closeReason.closeCode, session.requestURI)
         } else {
-            logger.info("Web socket {} {}", closeReason.reasonPhrase, closeReason.closeCode)
+            logger.debug("Web socket {} {}", closeReason.reasonPhrase, closeReason.closeCode)
         }
     }
     

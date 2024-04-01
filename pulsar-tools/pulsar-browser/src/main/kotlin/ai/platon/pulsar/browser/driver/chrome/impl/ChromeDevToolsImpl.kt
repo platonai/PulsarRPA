@@ -1,10 +1,7 @@
 package ai.platon.pulsar.browser.driver.chrome.impl
 
 import ai.platon.pulsar.browser.driver.chrome.*
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCTimeoutException
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
-import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.browser.driver.chrome.util.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.sleepSeconds
@@ -159,7 +156,7 @@ abstract class ChromeDevToolsImpl(
     ): Pair<InvocationFuture, Boolean> {
         val future = dispatcher.subscribe(method.id, returnProperty)
         val message = dispatcher.serialize(method)
-
+        
         // See https://github.com/hardkoded/puppeteer-sharp/issues/796 to understand why we need handle Target methods
         // differently.
         if (method.method.startsWith("Target.")) {
@@ -240,7 +237,7 @@ abstract class ChromeDevToolsImpl(
     private fun doClose() {
         waitUntilIdle(Duration.ofSeconds(10))
 
-        logger.info("Closing devtools client ...")
+        logger.debug("Closing devtools client ...")
 
         pageTransport.close()
         browserTransport.close()

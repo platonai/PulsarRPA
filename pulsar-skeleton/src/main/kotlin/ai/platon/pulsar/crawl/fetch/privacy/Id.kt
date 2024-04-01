@@ -4,9 +4,10 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
-import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
+import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS_KEY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent.Companion.SYSTEM_DEFAULT
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
@@ -23,7 +24,7 @@ data class PrivacyAgentId(
     /**
      * If true, the privacy agent opens browser just like a real user does every day.
      * */
-    val isUserDefault get() = this.contextDir == AppPaths.USER_BROWSER_CONTEXT_DIR_PLACEHOLDER
+    val isSystemDefault get() = this.contextDir == AppPaths.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER
     /**
      * If true, the privacy agent opens browser with the default data dir, the default data dir will not be removed
      * after the browser closes.
@@ -41,7 +42,7 @@ data class PrivacyAgentId(
      * */
     val isTemporary get() = this.contextDir.startsWith(AppPaths.CONTEXT_TMP_DIR)
 
-    val isPermanent get() = isUserDefault || isPrototype
+    val isPermanent get() = isSystemDefault || isPrototype
 
     /**
      * The PrivacyAgent equality.
@@ -86,7 +87,7 @@ data class PrivacyAgent(
     val ident get() = id.ident
     val display get() = id.display
     val browserType get() = fingerprint.browserType
-    val isUserDefault get() = id.isUserDefault
+    val isSystemDefault get() = id.isSystemDefault
     val isDefault get() = id.isDefault
     val isPrototype get() = id.isPrototype
     val isTemporary get() = id.isTemporary
@@ -108,9 +109,9 @@ data class PrivacyAgent(
 
     companion object {
         /**
-         * The user default privacy agent opens browser just like real users do every day.
+         * The system default privacy agent opens browser just like real users do every day.
          * */
-        val USER_DEFAULT = PrivacyAgent(AppPaths.USER_BROWSER_CONTEXT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
+        val SYSTEM_DEFAULT = PrivacyAgent(AppPaths.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
         /**
          * The prototype privacy agent opens browser with the prototype data dir.
          * Every change to the browser will be kept in the prototype data dir, and every temporary privacy agent
@@ -143,7 +144,7 @@ data class BrowserId(
     val browserType: BrowserType get() = fingerprint.browserType
 
     val userDataDir: Path get() = when {
-        privacyAgent.isUserDefault -> AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
+        privacyAgent.isSystemDefault -> AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER
         privacyAgent.isPrototype -> PrivacyContext.PROTOTYPE_DATA_DIR
         else -> contextDir.resolve(browserType.name.lowercase())
     }
@@ -182,7 +183,9 @@ data class BrowserId(
         /**
          * Represent the real user's default browser.
          * */
-        val USER_DEFAULT = BrowserId(PrivacyAgent.USER_DEFAULT)
+        val SYSTEM_DEFAULT = BrowserId(PrivacyAgent.SYSTEM_DEFAULT)
+        @Deprecated("Use SYSTEM_DEFAULT instead", ReplaceWith("SYSTEM_DEFAULT"))
+        val USER_DEFAULT = SYSTEM_DEFAULT
         /**
          * Represent the default browser.
          * */
@@ -213,11 +216,12 @@ open class DefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
 }
 
 open class SystemDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
-    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.USER_DEFAULT
+    override fun invoke(fingerprint: Fingerprint) = SYSTEM_DEFAULT
 }
 
+@Deprecated("Use SystemDefaultPrivacyAgentGenerator instead", ReplaceWith("SystemDefaultPrivacyAgentGenerator"))
 open class UserDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
-    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.USER_DEFAULT
+    override fun invoke(fingerprint: Fingerprint) = SYSTEM_DEFAULT
 }
 
 open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
@@ -230,32 +234,35 @@ open class SequentialPrivacyAgentGenerator: PrivacyAgentGenerator {
 }
 
 class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {
+    companion object {
+        private val generators = ConcurrentHashMap<String, PrivacyAgentGenerator>()
+    }
+    
     private val logger = LoggerFactory.getLogger(PrivacyAgentGeneratorFactory::class.java)
     
-    val generators = ConcurrentHashMap<String, PrivacyAgentGenerator>()
+    // TODO: there is always one generator.
+    val generator: PrivacyAgentGenerator get() = getOrCreate(PRIVACY_AGENT_GENERATOR_CLASS_KEY)
     
-    val generator: PrivacyAgentGenerator get() = create("")
+    private fun getOrCreate(classKey: String): PrivacyAgentGenerator {
+        synchronized(generators) {
+            return getOrCreate0(PRIVACY_AGENT_GENERATOR_CLASS_KEY)
+        }
+    }
     
-    @Synchronized
-    fun create(className: String): PrivacyAgentGenerator {
-        var gen = generators[className]
+    private fun getOrCreate0(classKey: String): PrivacyAgentGenerator {
+        var gen = generators[classKey]
         if (gen != null) {
             return gen
         }
         
-        gen = when (className) {
-            PrototypePrivacyAgentGenerator::class.java.name -> PrototypePrivacyAgentGenerator()
-            UserDefaultPrivacyAgentGenerator::class.java.name -> UserDefaultPrivacyAgentGenerator()
-            else -> createUsingGlobalConfig(conf)
-        }
+        gen = createUsingGlobalConfig(conf, PRIVACY_AGENT_GENERATOR_CLASS_KEY)
         
         generators[gen::class.java.name] = gen
+        generators[classKey] = gen
+
+        logger.info("Created privacy agent generator | {}", gen::class.java.name)
         
         return gen
-    }
-    
-    private fun createUsingGlobalConfig(conf: ImmutableConfig): PrivacyAgentGenerator {
-        return createUsingGlobalConfig(conf, PRIVACY_AGENT_GENERATOR_CLASS)
     }
     
     /**
@@ -266,17 +273,15 @@ class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {
      * Set the class:
      * `System.setProperty(CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS, "ai.platon.pulsar.crawl.fetch.privacy.DefaultPrivacyAgentGenerator")`
      * */
-    private fun createUsingGlobalConfig(conf: ImmutableConfig, className: String): PrivacyAgentGenerator {
+    private fun createUsingGlobalConfig(conf: ImmutableConfig, classKey: String): PrivacyAgentGenerator {
         val defaultClazz = DefaultPrivacyAgentGenerator::class.java
         val clazz = try {
-            conf.getClass(className, defaultClazz)
+            conf.getClass(classKey, defaultClazz)
         } catch (e: Exception) {
             logger.warn("No configured privacy agent generator {}({}), use default ({})",
-                className, conf[className], defaultClazz.simpleName)
+                classKey, conf[classKey], defaultClazz.simpleName)
             defaultClazz
         }
-
-        logger.info("Use privacy agent generator {}", clazz.name)
 
         return clazz.constructors.first { it.parameters.isEmpty() }.newInstance() as PrivacyAgentGenerator
     }

@@ -205,7 +205,7 @@ public interface CapabilityTypes {
     /**
      * The class name of privacy agent generator
      * */
-    String PRIVACY_AGENT_GENERATOR_CLASS = "privacy.agent.generator.class";
+    String PRIVACY_AGENT_GENERATOR_CLASS_KEY = "privacy.agent.generator.class";
     String PRIVACY_MINOR_WARNING_FACTOR = "privacy.minor.warning.factor";
 
 

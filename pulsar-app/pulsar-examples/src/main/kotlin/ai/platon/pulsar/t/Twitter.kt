@@ -26,6 +26,7 @@ class Twitter {
     
     private val keywords = listOf("Facebook", "Google", "Amazon", "Microsoft", "Apple", "Netflix", "Tesla", "Alibaba",
         "Tencent", "Baidu", "JD", "Pinduoduo", "Meituan", "ByteDance", "Huawei", "Xiaomi", "Oppo", "Vivo", "OnePlus",)
+        .shuffled()
     private val iterator = Iterators.cycle(keywords)
     
     fun visit() {

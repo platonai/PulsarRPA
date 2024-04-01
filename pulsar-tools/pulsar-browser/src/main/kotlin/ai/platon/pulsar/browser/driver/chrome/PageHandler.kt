@@ -33,7 +33,6 @@ class PageHandler(
     val mouse = Mouse(devTools)
     val keyboard = Keyboard(devTools)
     
-    
     fun navigate(@ParamName("url") url: String): Navigate? {
         return pageAPI?.navigate(url)
     }
@@ -74,6 +73,14 @@ class PageHandler(
         return attributes?.getOrNull(attributes.indexOf(attrName) + 1)
     }
     
+    fun setAttribute(nodeId: Int, attrName: String, attrValue: String) {
+        domAPI?.setAttributeValue(nodeId, attrName, attrValue)
+    }
+    
+    /**
+     * TODO: too many requests, need to optimize
+     * RobustRPC - Too many RPC failures: selectAttributeAll (6/5) | DOM Error while querying
+     * */
     fun getAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
         return querySelectorAll(selector).asSequence().drop(start).take(limit)
             .mapNotNull { getAttribute(it, attrName) }
