@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_TIMEOUT
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -45,7 +46,7 @@ class LoadingWebDriverPool constructor(
     /**
      * The max number of drivers the pool can hold
      * */
-    val capacity get() = immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    val capacity get() = immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, DEFAULT_BROWSER_MAX_ACTIVE_TABS)
 
     /**
      * The browser who create all drivers for this pool.
@@ -246,7 +247,10 @@ class LoadingWebDriverPool constructor(
             statefulDriverPool.offer(driver)
             meterOffer.mark()
         } else {
-            logger.info("The driver is not working unexpectedly, mark it as retired and close it")
+            if (isActive) {
+                logger.warn("The driver is not working unexpectedly, mark it as retired and close it")
+            }
+
             statefulDriverPool.close(driver)
             meterClosed.mark()
         }

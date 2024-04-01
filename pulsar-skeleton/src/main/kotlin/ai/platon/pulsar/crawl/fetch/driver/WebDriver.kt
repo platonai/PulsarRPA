@@ -703,6 +703,15 @@ interface WebDriver: Closeable {
      * fragment provided will be executed as the body of an anonymous function.
      *
      * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun <T> evaluate(expression: String, defaultValue: T): T
+    /**
+     * Executes JavaScript in the context of the currently selected frame or window. The script
+     * fragment provided will be executed as the body of an anonymous function.
+     *
+     * @param expression Javascript expression to evaluate
      * @return expression result
      * */
     @Beta

@@ -247,6 +247,7 @@ class ChromeDevtoolsDriver(
         val startTime = Instant.now()
         var elapsedTime = Duration.ZERO
         
+        // it's OK to wait using a while loop, because all the operations are coroutines
         while (elapsedTime < timeout && !predicate()) {
             gap(type)
             elapsedTime = DateTimes.elapsedTime(startTime)
@@ -260,6 +261,7 @@ class ChromeDevtoolsDriver(
         var elapsedTime = Duration.ZERO
         var result: T? = supplier()
         
+        // it's OK to wait using a while loop, because all the operations are coroutines
         while (elapsedTime < timeout && result == null) {
             gap(type)
             result = supplier()

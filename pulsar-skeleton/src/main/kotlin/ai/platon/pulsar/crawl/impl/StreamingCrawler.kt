@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.impl
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
@@ -177,7 +178,7 @@ open class StreamingCrawler(
     /**
      * The maximum number of open tabs allowed in each open browser.
      * */
-    val numMaxActiveTabs get() = sessionConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    val numMaxActiveTabs get() = sessionConfig.getInt(BROWSER_MAX_ACTIVE_TABS, DEFAULT_BROWSER_MAX_ACTIVE_TABS)
 
     /**
      * The fetch concurrency equals to the number of all allowed open tabs.

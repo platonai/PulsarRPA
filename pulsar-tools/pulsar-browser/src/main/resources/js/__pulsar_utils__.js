@@ -728,6 +728,17 @@ __pulsar_utils__.selectHyperlinks = function(selector) {
 };
 
 /**
+ * Select all img elements and extract all the links.
+ *
+ * @param  {String} selector
+ * @return {String} links separated by line break "\n"
+ */
+__pulsar_utils__.selectImages = function(selector) {
+    let elements = document.querySelectorAll(selector)
+    return Array.from(elements).filter(e => e.nodeName === 'IMG').map(e => e.src).join("\n")
+};
+
+/**
  * Select elements and extract the texts
  *
  * @param  {string} pattern

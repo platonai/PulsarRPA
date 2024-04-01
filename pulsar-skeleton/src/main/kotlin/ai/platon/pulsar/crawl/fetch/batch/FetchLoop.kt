@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.batch
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -48,7 +49,7 @@ class FetchLoop(
     private val closed = AtomicBoolean(false)
 
     private val numPrivacyContexts = immutableConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-    private val maxActiveTabs = immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    private val maxActiveTabs = immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, DEFAULT_BROWSER_MAX_ACTIVE_TABS)
     private val fetchConcurrency = numPrivacyContexts * maxActiveTabs
 
     private val isAppActive get() = !fetchMonitor.isMissionComplete && !closed.get() && !illegalState.get()

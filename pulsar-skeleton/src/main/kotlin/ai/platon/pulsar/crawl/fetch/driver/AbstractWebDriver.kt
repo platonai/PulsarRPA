@@ -218,6 +218,12 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun referrer() = evaluateStringValueOrEmpty("document.referrer")
     
+    @Suppress("UNCHECKED_CAST")
+    @Throws(WebDriverException::class)
+    override suspend fun <T> evaluate(expression: String, defaultValue: T): T {
+        return evaluate(expression) as? T ?: defaultValue
+    }
+    
     override suspend fun evaluateSilently(expression: String): Any? =
         takeIf { isWorking }?.runCatching { evaluate(expression) }
     

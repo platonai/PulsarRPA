@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.batch
 
-import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.ReducerContext
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -34,7 +34,7 @@ class FeedLoop(
     private val checkInterval = Duration.ofSeconds(2)
 
     private val numPrivacyContexts = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-    private val maxActiveTabs = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    private val maxActiveTabs = conf.getInt(BROWSER_MAX_ACTIVE_TABS, DEFAULT_BROWSER_MAX_ACTIVE_TABS)
     private val fetchConcurrency = numPrivacyContexts * maxActiveTabs
 
     private val fetchJobTimeout = conf.getDuration(FETCH_JOB_TIMEOUT, Duration.ofDays(2))
