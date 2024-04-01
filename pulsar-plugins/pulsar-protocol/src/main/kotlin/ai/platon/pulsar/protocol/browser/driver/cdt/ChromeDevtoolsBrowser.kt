@@ -164,7 +164,6 @@ class ChromeDevtoolsBrowser(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             kotlin.runCatching { doClose() }.onFailure { warnForClose(this, it) }
-            super.close()
         }
     }
     

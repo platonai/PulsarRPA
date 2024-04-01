@@ -42,7 +42,9 @@ class ChromeLauncher(
     private var process: Process? = null
     private val shutdownHookThread = Thread {
         // System.err.println("Shutting down chrome process ...")
-        this.close()
+        
+        // Shutdown by the upper layer
+        // this.close()
     }
 
     /**

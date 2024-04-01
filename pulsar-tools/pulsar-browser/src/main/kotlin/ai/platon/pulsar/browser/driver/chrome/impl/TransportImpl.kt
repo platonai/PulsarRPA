@@ -142,7 +142,7 @@ class TransportImpl : Transport {
         if (closeReason.closeCode == CloseReason.CloseCodes.CLOSED_ABNORMALLY) {
             logger.warn("Web socket {} {} | {}", closeReason.reasonPhrase, closeReason.closeCode, session.requestURI)
         } else {
-            logger.info("Web socket connection closed {} {}", closeReason.closeCode, closeReason.reasonPhrase)
+            logger.info("Web socket {} {}", closeReason.reasonPhrase, closeReason.closeCode)
         }
     }
     

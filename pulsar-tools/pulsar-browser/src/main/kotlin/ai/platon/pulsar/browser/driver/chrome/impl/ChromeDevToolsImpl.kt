@@ -22,7 +22,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-abstract class DevToolsImpl(
+abstract class ChromeDevToolsImpl(
     private val browserTransport: Transport,
     private val pageTransport: Transport,
     private val config: DevToolsConfig
@@ -48,7 +48,7 @@ abstract class DevToolsImpl(
         }
     }
 
-    private val logger = LoggerFactory.getLogger(DevToolsImpl::class.java)
+    private val logger = LoggerFactory.getLogger(ChromeDevToolsImpl::class.java)
     private val id = instanceSequencer.incrementAndGet()
 
     private val closeLatch = CountDownLatch(1)

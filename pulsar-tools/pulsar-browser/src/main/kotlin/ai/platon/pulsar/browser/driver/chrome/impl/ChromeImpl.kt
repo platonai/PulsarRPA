@@ -167,7 +167,7 @@ class ChromeImpl(
 
         // Create concrete dev tools instance from interface
         return ProxyClasses.createProxyFromAbstract(
-                DevToolsImpl::class.java,
+                ChromeDevToolsImpl::class.java,
                 arrayOf(Transport::class.java, Transport::class.java, DevToolsConfig::class.java),
                 arrayOf(browserTransport, pageTransport, config),
                 invocationHandler

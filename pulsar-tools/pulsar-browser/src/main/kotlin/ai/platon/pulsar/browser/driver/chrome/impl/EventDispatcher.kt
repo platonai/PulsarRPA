@@ -155,7 +155,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
     override fun accept(message: String) {
         tracer?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
         
-        DevToolsImpl.numAccepts.inc()
+        ChromeDevToolsImpl.numAccepts.inc()
         try {
             val jsonNode = OBJECT_MAPPER.readTree(message)
             val idNode = jsonNode.get(ID_PROPERTY)
