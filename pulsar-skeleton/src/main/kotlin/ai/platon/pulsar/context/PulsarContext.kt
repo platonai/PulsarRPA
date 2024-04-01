@@ -83,9 +83,13 @@ interface PulsarContext: AutoCloseable {
     fun closeSession(session: PulsarSession)
 
     /**
-     * Register close objects, the objects will be closed when the context closes
+     * Register closable objects, the objects will be closed when the context closes.
+     * It's safe to register the same object multiple times, the object will be closed only once.
+     *
+     * @param closable The object to close
+     * @param priority The priority of the object, the higher the priority, the earlier the object is closed
      * */
-    fun registerClosable(closable: AutoCloseable)
+    fun registerClosable(closable: AutoCloseable, priority: Int = 0)
 
     /**
      * Normalize an url, the url can be in one of the following forms:
@@ -97,9 +101,30 @@ interface PulsarContext: AutoCloseable {
      * An url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
      * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
      * but default values in LoadOptions are ignored.
+     *
+     * @param url The url to normalize
+     * @param options The LoadOptions applied to the url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return The normalized url or NIL if the input url is invalid
      * */
     fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormUrl
 
+    /**
+     * Normalize an url, the url can be in one of the following forms:
+     * 1. a normal url
+     * 2. a configured url
+     * 3. a base64 encoded url
+     * 4. a base64 encoded configured url
+     *
+     * An url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
+     * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
+     * but default values in LoadOptions are ignored.
+     *
+     * @param url The url to normalize
+     * @param options The LoadOptions applied to the url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return The normalized url or null if the input url is invalid
+     * */
     fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean = false): NormUrl?
 
     /**
@@ -111,17 +136,35 @@ interface PulsarContext: AutoCloseable {
      * @return All normalized urls, all invalid input urls are removed
      * */
     fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
-
     /**
      * Normalize an url.
      *
      * If both url arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
      * but default values in LoadOptions are ignored.
+     *
+     * @param url The url to normalize
+     * @param options The LoadOptions applied to the url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return The normalized url or NIL if the input url is invalid
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormUrl
-
+    /**
+     * Normalize an url, the url can be in one of the following forms:
+     * 1. a normal url
+     * 2. a configured url
+     * 3. a base64 encoded url
+     * 4. a base64 encoded configured url
+     *
+     * An url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
+     * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
+     * but default values in LoadOptions are ignored.
+     *
+     * @param url The url to normalize
+     * @param options The LoadOptions applied to the url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return The normalized url or null if the input url is invalid
+     * */
     fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean = false): NormUrl?
-
     /**
      * Normalize urls, remove invalid ones
      *
@@ -131,7 +174,6 @@ interface PulsarContext: AutoCloseable {
      * @return All normalized urls, all invalid input urls are removed
      * */
     fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
-
     /**
      * Inject an url
      *
@@ -139,7 +181,6 @@ interface PulsarContext: AutoCloseable {
      * @return The web page created
      */
     fun inject(url: String): WebPage
-
     /**
      * Inject an url
      *
@@ -147,7 +188,6 @@ interface PulsarContext: AutoCloseable {
      * @return The web page created
      */
     fun inject(url: NormUrl): WebPage
-
     /**
      * Get a webpage from the storage
      *

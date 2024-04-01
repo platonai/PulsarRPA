@@ -53,11 +53,7 @@ __pulsar_utils__.checkStatus = function(scroll = 3) {
 };
 
 __pulsar_utils__.isBrowserError = function () {
-    if (document.documentURI.startsWith("chrome-error")) {
-        return true
-    }
-
-    return false
+    return document.documentURI.startsWith("chrome-error");
 };
 
 __pulsar_utils__.createDataIfAbsent = function() {
@@ -587,10 +583,7 @@ __pulsar_utils__.outerHTML = function(selector) {
 };
 
 /**
- * Select the first element and extract the text
- *
- * @param  {String} selector
- * @return {String}
+ * @deprecated Use selectFirstText instead
  */
 __pulsar_utils__.firstText = function(selector) {
     let element = document.querySelector(selector)
@@ -601,15 +594,43 @@ __pulsar_utils__.firstText = function(selector) {
 };
 
 /**
+ * Select the first element and extract the text
+ *
+ * @param  {String} selector
+ * @return {String|null}
+ */
+__pulsar_utils__.selectFirstText = function(selector) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        return element.textContent
+    }
+    return null
+};
+
+/**
+ * @deprecated Use selectTextAll instead
+ */
+__pulsar_utils__.allTexts = function(selector) {
+    return __pulsar_utils__.selectTextAll(selector)
+};
+
+/**
  * Select elements and extract the texts
  *
  * @param  {String} selector
- * @return {Object} A json object
+ * @return {String} texts in json format
  */
-__pulsar_utils__.allTexts = function(selector) {
+__pulsar_utils__.selectTextAll = function(selector) {
     let elements = document.querySelectorAll(selector)
     let texts = Array.from(elements).map(e => e.textContent)
-    return JSON.stringify(texts)
+    return JSON.stringify(texts, null, 2)
+};
+
+/**
+ * @deprecated Use {@code __pulsar_utils__.selectFirstAttribute()} instead
+ */
+__pulsar_utils__.firstAttr = function(selector, attrName) {
+    return __pulsar_utils__.selectFirstAttribute(selector, attrName)
 };
 
 /**
@@ -617,9 +638,9 @@ __pulsar_utils__.allTexts = function(selector) {
  *
  * @param  {String} selector
  * @param  {String} attrName
- * @return {String}
+ * @return {String|null}
  */
-__pulsar_utils__.firstAttr = function(selector, attrName) {
+__pulsar_utils__.selectFirstAttribute = function(selector, attrName) {
     let element = document.querySelector(selector)
     if (element != null) {
         return element.getAttribute(attrName)
@@ -628,24 +649,66 @@ __pulsar_utils__.firstAttr = function(selector, attrName) {
 };
 
 /**
- * Select elements and extract the texts
+ * Select the first matching element and extract all the attributes.
+ *
+ * @param  {String} selector
+ * @return {String} attribute values in json format
+ * */
+__pulsar_utils__.selectAttributes = function(selector) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        let attrs = Array.from(element.attributes).flatMap(a => [a.name, a.value])
+        return JSON.stringify(attrs, null, 2)
+    }
+    return "[]"
+};
+
+/**
+ * Select all the matching elements and extract the attribute with given name.
  *
  * @param  {String} selector
  * @param  {String} attrName
- * @return {String} attribute values separated by line break "\n"
+ * @return {string} attribute values in json format
  */
-__pulsar_utils__.allAttrs = function(selector, attrName) {
+__pulsar_utils__.selectAttributeAll = function(selector, attrName) {
     let elements = document.querySelectorAll(selector)
-    return Array.from(elements).map(e => e.getAttribute(attrName)).join("\n")
+    let values = Array.from(elements).map(e => e.getAttribute(attrName)).filter(v => v != null)
+    return JSON.stringify(values, null, 2)
+};
+
+/**
+ * Select elements and extract the texts
+ *
+ * @param {String} selector
+ * @param {String} attrName
+ * @param {String} attrValue
+ */
+__pulsar_utils__.setAttribute = function(selector, attrName, attrValue) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        element.setAttribute(attrName, attrValue)
+    }
+};
+
+/**
+ * Select elements and extract the texts
+ *
+ * @param {String} selector
+ * @param {String} attrName
+ * @param {String} attrValue
+ */
+__pulsar_utils__.setAttributeAll = function(selector, attrName, attrValue) {
+    let elements = document.querySelectorAll(selector)
+    elements.forEach(e => e.setAttribute(attrName, attrValue))
 };
 
 /**
  * Select the first anchor element and extract the link.
  *
  * @param  {String} selector
- * @return {String}
+ * @return {String|null}
  */
-__pulsar_utils__.firstLink = function(selector) {
+__pulsar_utils__.selectFirstHyperlink = function(selector) {
     let element = document.querySelector(selector)
     if (element != null && element.nodeName === 'A') {
         return element.href
@@ -659,9 +722,20 @@ __pulsar_utils__.firstLink = function(selector) {
  * @param  {String} selector
  * @return {String} links separated by line break "\n"
  */
-__pulsar_utils__.allLinks = function(selector) {
+__pulsar_utils__.selectHyperlinks = function(selector) {
     let elements = document.querySelectorAll(selector)
     return Array.from(elements).filter(e => e.nodeName === 'A').map(e => e.href).join("\n")
+};
+
+/**
+ * Select all img elements and extract all the links.
+ *
+ * @param  {String} selector
+ * @return {String} links separated by line break "\n"
+ */
+__pulsar_utils__.selectImages = function(selector) {
+    let elements = document.querySelectorAll(selector)
+    return Array.from(elements).filter(e => e.nodeName === 'IMG').map(e => e.src).join("\n")
 };
 
 /**
@@ -1279,11 +1353,22 @@ __pulsar_utils__.add = function(a, b) {
 };
 
 /**
+ * Press a key.
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/KeyboardEvent/key)
+ * */
+__pulsar_utils__.press = function(selector, key) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        element.dispatchEvent(new KeyboardEvent('keypress', {key: key}));
+    }
+};
+
+/**
  * Return type information.
  *
  * @return {Object}
  * */
 __pulsar_utils__.typeInfo = function() {
-    let fields = Object.keys(__pulsar_utils__).join(", ")
-    return fields
+    return Object.keys(__pulsar_utils__).join(", ")
 };

@@ -1,13 +1,18 @@
 package ai.platon.pulsar.test.browser
 
-import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.common.ScriptConfuser.Companion.IDENTITY_NAME_MANGLER
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.net.Proxy
+import java.nio.file.Path
+import java.text.MessageFormat
+import java.time.Duration
 import java.util.*
 import kotlin.test.*
 
@@ -28,14 +33,18 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         "12review5" to "#cm-cr-dp-review-list div[data-hook=review]:nth-child(5)",
     )
 
-    private val screenshotDir = AppPaths.WEB_CACHE_DIR
-        .resolve("tests")
-        .resolve("screenshot")
+    private val screenshotDir = AppPaths.TEST_DIR.resolve("screenshot")
 
     @BeforeTest
     fun setup() {
-        // identity name mangler
-        confuser.nameMangler = { script -> script }
+        session.globalCache.resetCaches()
+        confuser.nameMangler = IDENTITY_NAME_MANGLER
+    }
+    
+    @AfterTest
+    fun tearDown() {
+        session.globalCache.resetCaches()
+        confuser.reset()
     }
     
     @Test
@@ -47,6 +56,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         assertTrue { navigateEntry.networkRequestCount.get() > 0 }
         assertTrue { navigateEntry.networkResponseCount.get() > 0 }
         
+        require(driver is AbstractWebDriver)
         assertEquals(200, driver.mainResponseStatus)
         assertTrue { driver.mainResponseStatus == 200 }
         assertTrue { driver.mainResponseHeaders.isNotEmpty() }
@@ -56,20 +66,13 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     }
 
     @Test
-    fun `Ensure js injected`() = runWebDriverTest { driver ->
-        open(url, driver, 1)
-
+    fun `Ensure js injected`() = runWebDriverTest(originUrl) { driver ->
         val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
-//            println(r)
-//            readLine()
-
         assertEquals(2, r)
     }
 
     @Test
-    fun `Ensure no injected js variables are seen`() = runWebDriverTest { driver ->
-        open(url, driver, 3)
-
+    fun `Ensure injected js variables are not seen`() = runWebDriverTest(originUrl) { driver ->
         val windowVariables = driver.evaluate("JSON.stringify(Object.keys(window))").toString()
         assertTrue { windowVariables.contains("document") }
         assertTrue { windowVariables.contains("setTimeout") }
@@ -101,89 +104,106 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     }
 
     @Test
-    fun `Ensure no injected document variables are seen`() {
-        val driver = driverFactory.create()
-
-        runBlocking {
-            open(url, driver, 3)
-
-            val nodeVariables = driver.evaluate("JSON.stringify(Object.keys(document))").toString()
+    fun `Ensure no injected document variables are seen`() = runWebDriverTest(originUrl) { driver ->
+        val nodeVariables = driver.evaluate("JSON.stringify(Object.keys(document))").toString()
 //            assertTrue { nodeVariables.contains("querySelector") }
 //            assertTrue { nodeVariables.contains("textContent") }
+        
+        val variables = nodeVariables.split(",").map { it.trim('\"') }
+        
+        println(variables)
+        
+        val pulsarVariables = variables.filter { it.contains("__pulsar_") }
+        assertTrue { pulsarVariables.isEmpty() }
+        
+        val result = driver.evaluate("typeof(document.__pulsar_setAttributeIfNotBlank)").toString()
+        assertEquals("function", result)
+    }
 
-            println(nodeVariables)
+    @Test
+    fun testOpenNewTab() = runWebDriverTest(url) { driver ->
+        driver.clickMatches("ol li a", "href", "product-reviews")
+        driver.waitForNavigation()
+        driver.waitForSelector("body")
+        driver.scrollDown(5)
+    }
 
-            val variables = nodeVariables.split(",")
-                .map { it.trim('\"') }
-                .filter { it.contains("__pulsar_") }
-            println(variables.joinToString("\n"))
+    @Test
+    fun test_selectTextAll() = runWebDriverTest { driver ->
+        driver.navigateTo(url)
 
-            var result = driver.evaluate("typeof(document.__pulsar_setAttributeIfNotBlank)").toString()
-            assertEquals("function", result)
+        driver.waitForSelector("#productTitle")
 
-            driver.stop()
+        val timeout = Duration.ofSeconds(120)
+        val remainingTime = driver.waitForSelector("#reviewsMedley", timeout) {
+            driver.mouseWheelDown()
+            driver.scrollTo("#reviewsMedley")
         }
-    }
+        println("Remaining time: $remainingTime ms")
+        assertTrue { !remainingTime.isNegative }
+        assertTrue { driver.exists("#reviewsMedley") }
 
+        driver.waitForSelector("a[data-hook=review]") { driver.mouseWheelDown() }
+        val texts = driver.selectTextAll("a[data-hook=review-title]")
+        assertTrue { texts.isNotEmpty() }
+        texts.map { it.replace("\\s+".toRegex(), " ") }.forEach { text -> println(">>>$text<<<") }
+    }
+    
     @Test
-    fun testLoadResource() = runWebDriverTest { driver ->
-        val resourceUrl = "https://www.amazon.com/robots.txt"
-        val response = driver.loadResource(resourceUrl)
-        val headers = response.headers
-        val body = response.stream
-        assertNotNull(headers)
-        assertNotNull(body)
-
-//        println(body)
-        assertContains(body, "Disallow")
-
-//        val cookies = response.entries.joinToString("; ") { it.key + "=" + it.value }
-//        println(cookies)
-        headers.forEach { (name, value) -> println("$name: $value") }
-        assertContains(headers, "Content-Type", "Content-Type should be in headers")
+    fun test_selectFirstAttributeOrNull() = runWebDriverTest { driver ->
+        driver.navigateTo(url)
+        
+        driver.waitForSelector("#productTitle")
+        
+        val cssClass = driver.selectFirstAttributeOrNull("#productTitle", "class")
+        assertNotNull(cssClass)
+        println("Product title class: $cssClass")
     }
-
+    
     @Test
-    fun testJsoupLoadResource() = runWebDriverTest { driver ->
-        val resourceUrl = "https://www.amazon.com/robots.txt"
-        val response = driver.loadJsoupResource(resourceUrl)
-        val body = response.body()
-        assertNotNull(body)
-
-//        println(body)
-        assertContains(body, "Disallow")
-        // check cookies and headers
-        val cookies = response.cookies().entries.joinToString("; ") { it.key + "=" + it.value }
-        println(cookies)
-        response.headers().forEach { (name, value) -> println("$name: $value") }
-        assertContains(response.headers(), "Content-Type", "Content-Type should be in headers")
+    fun test_selectAttributes() = runWebDriverTest { driver ->
+        driver.navigateTo(originUrl)
+        
+        val selector = "input[type=text]"
+        driver.waitForSelector(selector)
+        
+        val attributes = driver.selectAttributes(selector)
+        assertTrue { attributes.isNotEmpty() }
+        println("attributes: $attributes")
     }
-
+    
     @Test
-    fun testOpenNewTab() {
-        val driver = driverFactory.create()
-
-        runBlocking {
-            open(url, driver)
-
-            driver.clickMatches("ol li a", "href", "product-reviews")
-            driver.waitForNavigation()
-            driver.waitForSelector("body")
-            driver.scrollDown(5)
-        }
+    fun test_selectAttributeAll() = runWebDriverTest { driver ->
+        driver.navigateTo(originUrl)
+        
+        val selector = ".product-shoveler a[href]"
+        driver.waitForSelector(selector)
+        
+        println("Selecting attributes: ")
+        
+        var links = driver.selectAttributeAll(selector, "href")
+        assertTrue { links.isNotEmpty() }
+        
+        println("Href: ")
+        links.forEach { println(it) }
+        
+        links = driver.selectAttributeAll(selector, "abs:href")
+        println("NOTE: abs:href not supported by WebDriver.selectAttributeXXX()")
+        println("Abs:href: ")
+        links.forEach { println(it) }
+        // assertTrue { links.isEmpty() }
     }
-
+    
     @Test
     fun testClickTextMatches() = runWebDriverTest { driver ->
         open(url, driver, 1)
-        delay(1000)
+        driver.waitForSelector("a[href*=stores]")
 
         // should match the anchor text "Visit the Apple Store"
         driver.clickTextMatches("a[href*=stores]", "Store")
         driver.waitForNavigation()
         driver.waitForSelector("body")
-        delay(1000)
-        
+
         // expected url like: https://www.amazon.com/stores/Apple/page/77D9E1F7-0337-4282-9DB6-B6B8FB2DC98D?ref_=ast_bln
         val currentUrl = driver.currentUrl()
         println(currentUrl)
@@ -193,9 +213,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     }
 
     @Test
-    fun testClickNthAnchor() = runWebDriverTest { driver ->
-        open(url, driver)
-
+    fun testClickNthAnchor() = runWebDriverTest(originUrl) { driver ->
         driver.clickNthAnchor(100, "body")
 //        println(href)
 
@@ -205,7 +223,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     }
 
     @Test
-    fun testMouseMove() = runWebDriverTest(url) { driver ->
+    fun testMouseMove() = runWebDriverTest(originUrl) { driver ->
         repeat(10) { i ->
             val x = 100.0 + 2 * i
             val y = 100.0 + 3 * i
@@ -217,7 +235,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     }
 
     @Test
-    fun testMouseWheel() = runWebDriverTest(url) { driver ->
+    fun testMouseWheel() = runWebDriverTest(originUrl) { driver ->
         driver.mouseWheelDown(5)
         val box = driver.boundingBox("body")
         println(box)
@@ -232,49 +250,151 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         assertNotNull(box2)
         // assertTrue { box2.height > box.height }
     }
-
+    
     @Test
-    fun testCaptureScreenshot() {
-        System.setProperty("debugLevel", "0")
+    fun testKeyPress() = runWebDriverTest { driver ->
+        driver.navigateTo(url)
+        driver.waitForSelector("#productTitle")
 
-        runWebDriverTest { driver ->
-            open(url, driver)
+        assertTrue { driver.exists("#productTitle") }
 
-            assertTrue { driver.exists("body") }
-            val pageSource = driver.pageSource()
-            assertNotNull(pageSource)
-            assertTrue { pageSource.contains(asin) }
+        var text = driver.selectFirstTextOrNull("#productTitle")
+        println("Product title: $text")
 
-            fieldSelectors.forEach { (name, selector) ->
-                val screenshot = driver.captureScreenshot(selector)
-
-                if (screenshot != null) {
-                    exportScreenshot("$name.jpg", screenshot)
-                    delay(1000)
-                } else {
-                    logger.info("Can not take screenshot for {}", selector)
-                }
-            }
+        // val selector = "#nav-search input[placeholder*=Search]"
+        val selector = "form input[type=text]"
+        text = driver.selectFirstAttributeOrNull(selector, "placeholder")
+        println("Search bar - placeholder - 1 - driver.selectFirstAttributeOrNull() : <$text>")
+        assertTrue("Placeholder should not be empty") { !text.isNullOrBlank() }
+        text = driver.selectAttributeAll(selector, "placeholder").joinToString()
+        println("Search bar - placeholder - 2 - driver.selectAttributeAll() : <$text>")
+        assertTrue("Placeholder should not be empty") { !text.isNullOrBlank() }
+        
+        text = driver.selectAttributeAll(selector, "value").joinToString()
+        println("Search bar value (should be empty) - 1: <$text>")
+        assertEquals("", text)
+        
+        "Mate".forEach { ch ->
+            driver.press(selector, "$ch")
         }
+        driver.press(selector, "Digit6")
+        driver.press(selector, "0")
+        
+        delay(1000)
+        
+        MessageFormat.format("{0} key pressed {0}", PopularEmoji.SPARKLES).also { println(it) }
+        
+        var evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
+        println("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
+        println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
+        assertEquals("Mate60", evaluate?.value)
+
+        text = driver.selectAttributeAll(selector, "value").joinToString()
+        println("Search bar value - 3 - selectAttributeAll() : <$text>")
+//            assertEquals("Mate60", text)
+
+        val html = driver.outerHTML(selector)
+        println("Search bar html: >>>\n$html\n<<<")
+        assertNotNull(html)
+// assertTrue { html.contains("Mate60") }
+
+        evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
+        println("Search bar evaluate result - driver.evaluateDetail() : >>>\n$evaluate\n<<<")
+        println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
+        assertEquals("Mate60", evaluate?.value)
+        
+        driver.press(selector, "Enter")
+        driver.waitForNavigation()
+        assertTrue { driver.currentUrl() != url }
+    }
+    
+    @Test
+    fun testTypeText() = runWebDriverTest { driver ->
+        driver.navigateTo(url)
+        driver.waitForSelector("#productTitle")
+        
+        assertTrue { driver.exists("#productTitle") }
+        
+        var text = driver.selectFirstTextOrNull("#productTitle")
+        println("Product title: $text")
+        
+        // val selector = "#nav-search input[placeholder*=Search]"
+        val selector = "form input[type=text]"
+        text = driver.selectFirstAttributeOrNull(selector, "placeholder")
+        println("Search bar - placeholder - 1 - driver.selectFirstAttributeOrNull() : <$text>")
+        assertTrue("Placeholder should not be empty") { !text.isNullOrBlank() }
+        text = driver.selectAttributeAll(selector, "placeholder").joinToString()
+        println("Search bar - placeholder - 2 - driver.selectAttributeAll() : <$text>")
+        assertTrue("Placeholder should not be empty") { !text.isNullOrBlank() }
+        
+        text = driver.selectAttributeAll(selector, "value").joinToString()
+        println("Search bar value (should be empty) - 1: <$text>")
+        assertEquals("", text)
+        
+        driver.type(selector, "Mate60")
+        
+        MessageFormat.format("{0} text typed {0}", PopularEmoji.SPARKLES).also { println(it) }
+        
+        var evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
+        println("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
+        println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
+        assertEquals("Mate60", evaluate?.value)
+        
+        text = driver.selectAttributeAll(selector, "value").joinToString()
+        println("Search bar value - 3: $text")
+//            assertEquals("Mate60", text)
+        
+        val html = driver.outerHTML(selector)
+        println("Search bar html: $html")
+        assertNotNull(html)
+// assertTrue { html.contains("Mate60") }
+        
+        evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
+        println("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
+        println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
+        assertEquals("Mate60", evaluate?.value)
+        
+        driver.press(selector, "Enter")
+        driver.waitForNavigation()
+        assertTrue { driver.currentUrl() != url }
     }
 
     @Test
-    fun testDragAndHold() {
-        val walmartUrl = "https://www.walmart.com/ip/584284401"
+    fun testCaptureScreenshot() = runWebDriverTest(url) { driver ->
+        driver.waitForSelector("#productTitle")
+        assertTrue { driver.exists("body") }
+        val pageSource = driver.pageSource()
+        assertNotNull(pageSource)
+        assertTrue { pageSource.contains(asin) }
+        
+        val paths = mutableListOf<Path>()
+        fieldSelectors.entries.take(3).forEach { (name, selector) ->
+            val screenshot = driver.runCatching { captureScreenshot(selector) }
+                .onFailure { logger.info("Failed to captureScreenshot | $name - $selector") }
+                .getOrNull()
+            
+            if (screenshot != null) {
+                val path = exportScreenshot("$name.jpg", screenshot)
+                paths.add(path)
+                delay(1000)
+            }
+        }
+        
+        if (paths.isNotEmpty()) {
+            println(String.format("%d screenshots are saved | %s", paths.size, paths[0].parent))
+        }
+        
+        // assertTrue { paths.isNotEmpty() }
+    }
+
+    @Test
+    fun testDragAndHold() = runWebDriverTest(walmartUrl) { driver ->
         // 2022.09.06:
         // override the user agent, and walmart shows robot check page.
-        BrowserSettings.enableUserAgentOverriding()
-        val driver = driverFactory.create()
+        // BrowserSettings.enableUserAgentOverriding()
 
-        runBlocking {
-            open(walmartUrl, driver)
-
-            driver.waitForNavigation()
-            driver.waitForSelector("body")
-
-            val result = driver.evaluate("__pulsar_utils__.doForAllFrames('HOLD', 'ME')")
-            println(result)
-        }
+        val result = driver.evaluate("__pulsar_utils__.doForAllFrames('HOLD', 'ME')")
+        println(result)
     }
 
     @Test
@@ -340,9 +460,9 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     }
 
     @Throws(IOException::class)
-    private fun exportScreenshot(filename: String, screenshot: String) {
+    private fun exportScreenshot(filename: String, screenshot: String): Path {
         val path = screenshotDir.resolve(filename)
         val bytes = Base64.getDecoder().decode(screenshot)
-        AppFiles.saveTo(bytes, path, true)
+        return AppFiles.saveTo(bytes, path, true)
     }
 }

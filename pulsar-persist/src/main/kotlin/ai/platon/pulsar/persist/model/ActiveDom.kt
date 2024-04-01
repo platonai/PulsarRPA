@@ -29,7 +29,54 @@ data class ActiveDOMStat(
 )
 
 /**
+ * The Location interface represents the location (URL) of the object it is linked to. Changes done on it are reflected
+ * on the object it relates to. Both the Document and Window interface have such a linked Location, accessible via
+ * `Document.location` and `Window.location` respectively.
+ *
+ * @see [Location ](https://developer.mozilla.org/en-US/docs/Web/API/Location)
+ * */
+data class Location(
+    var href: String = "",
+    var origin: String = "",
+    var protocol: String = "",
+    var host: String = "",
+    var hostname: String = "",
+    var port: String = "",
+    var pathname: String = "",
+    var search: String = "",
+    var hash: String = ""
+)
+
+/**
  * URLs of a document computed by javascript in a real browser.
+ *
+ * URLs and location properties in the browser:
+ *
+ * In the Document Object Model (DOM), the relationship between `document.URL`, `document.documentURI`,
+ * `document.location`, and the URL displayed in the browser's address bar is as follows:
+ * 1. `document.URL`:
+ *    - This property returns the URL of the document as a string.
+ *    - It is a read-only property and reflects the current URL of the document.
+ *    - Changes to `document.location` will also update `document.URL`.
+ * 2. `document.documentURI`:
+ *    - This property returns the URI of the document.
+ *    - It is also a read-only property and typically contains the same value as `document.URL`.
+ *    - However, `document.documentURI` is defined to be the URI that was provided to the parser, which could
+ *      potentially differ from `document.URL` in certain cases, although in practice, this is rare.
+ * 3. `document.location`:
+ *    - This property represents the location (URL) of the current page and allows you to manipulate the URL.
+ *    - It is a read-write property, which means you can change it to navigate to a different page or to manipulate
+ *      query strings, fragments, etc.
+ *    - Changes to `document.location` will cause the browser to navigate to the new URL, updating both `document.URL`
+ *      and the URL displayed in the address bar.
+ * 4. URL displayed in the address bar:
+ *    - The URL displayed in the browser's address bar is what users see and can edit directly.
+ *    - It is typically synchronized with `document.URL` and `document.location.href` (a property of `document.location`).
+ *    - When the page is loaded or when `document.location` is modified, the address bar is updated to reflect the new URL.
+ * In summary, `document.URL` and `document.documentURI` are read-only properties that reflect the current URL of the
+ * document, while `document.location` is a read-write property that not only reflects the current URL but also allows
+ * you to navigate to a new one. The URL displayed in the address bar is a user-facing representation of the current
+ * document's URL, which is usually in sync with `document.location`.
  * */
 data class ActiveDOMUrls(
     /**
@@ -50,6 +97,8 @@ data class ActiveDOMUrls(
      * 2. If the document has an `<base>` element, its href attribute is used.
      * */
     var baseURI: String = "",
+    @Deprecated("Use location2 instead")
+    var location: String = "",
     /**
      * In javascript, the `window.location`, or `document.location`, is a read-only property
      * returns a Location object, which contains information about the URL of the
@@ -59,8 +108,10 @@ data class ActiveDOMUrls(
      *
      * To retrieve just the URL as a string, the read-only `document.URL` property can
      * also be used.
+     *
+     * @see [Location ](https://developer.mozilla.org/en-US/docs/Web/API/Location)
      * */
-    var location: String = "",
+    var location2: Location? = null,
     /**
      * Returns the document location as a string.
      *
@@ -84,7 +135,7 @@ data class ActiveDOMUrls(
 
     companion object {
         private val gson = Gson()
-        val default = ActiveDOMUrls()
+        val DEFAULT = ActiveDOMUrls()
 
         fun fromJson(json: String): ActiveDOMUrls {
             return gson.fromJson(json, ActiveDOMUrls::class.java)

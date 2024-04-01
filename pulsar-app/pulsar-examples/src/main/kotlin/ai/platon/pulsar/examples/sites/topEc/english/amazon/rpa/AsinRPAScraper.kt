@@ -76,8 +76,8 @@ class AsinRPAScraper {
         val requiredElement = "#pinned-de-id"
         logger.info("Waiting for $requiredElement | $asinUrl")
 
-        val timeMillis = driver.waitForSelector(requiredElement)
-        val seen = timeMillis > 0
+        val remainder = driver.waitForSelector(requiredElement)
+        val seen = !remainder.isNegative
         if (seen) {
             logger.info("Seen selector $requiredElement")
             val sellerUrls = extractSellerUrlsFromPopupLayer(page, driver)

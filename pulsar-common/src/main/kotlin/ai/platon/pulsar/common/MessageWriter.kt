@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.io.path.isRegularFile
 import kotlin.reflect.KClass
 
@@ -31,13 +32,15 @@ class MessageWriter(
         var DEFAULT_LOG_LEVEL = INFO
         /**
          * The default maximum trace file size. It is currently 512 MB. Additionally,
-         * there could be a .old file of the same size.
+         * there could be a .1, .2, ... file of the same size.
          */
         var DEFAULT_MAX_FILE_SIZE = 512 * 1024 * 1024
 
         var CHECK_SIZE_EACH_WRITES = 4096
 
         var IDLE_TIMEOUT = Duration.ofMinutes(5)
+        
+        private val ID_SUPPLIER = AtomicLong()
     }
 
     private val logger = LoggerFactory.getLogger(MessageWriter::class.java)
@@ -46,8 +49,11 @@ class MessageWriter(
     private var printWriter: PrintWriter? = null
     private val closed = AtomicBoolean()
 
+    val id = ID_SUPPLIER.incrementAndGet()
+    
     var lastActiveTime = Instant.now()
         private set
+    val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     var idleTimeout = IDLE_TIMEOUT
     val isIdle get() = DateTimes.isExpired(lastActiveTime, idleTimeout)
     var maxFileSize = DEFAULT_MAX_FILE_SIZE
@@ -81,7 +87,7 @@ class MessageWriter(
     
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            closeWriter()
+            closeWriter("close writer")
         }
     }
 
@@ -95,7 +101,7 @@ class MessageWriter(
         try {
             if (checkSize++ >= CHECK_SIZE_EACH_WRITES) {
                 checkSize = 0
-                closeWriter()
+                closeWriter("rotate file")
                 val count = Files.list(filePath.parent)
                     .filter { it.isRegularFile() }
                     .filter { it.fileName.toString().contains(filePath.fileName.toString()) }
@@ -141,8 +147,8 @@ class MessageWriter(
     }
 
     @Synchronized
-    private fun closeWriter() {
-        logger.info("Closing writer | $filePath")
+    private fun closeWriter(message: String) {
+        logger.info("Closing writer #$id | ${idleTime.readable()} | $message | $filePath")
         printWriter?.flush()
         printWriter?.close()
         fileWriter?.close()

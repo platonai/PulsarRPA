@@ -11,7 +11,9 @@ class WebDriverTestBase: TestBase() {
 
     protected val logger = getLogger(this)
     protected val warnUpUrl = "https://www.amazon.com/"
+    protected val originUrl = "https://www.amazon.com/"
     protected val url = "https://www.amazon.com/dp/B0C1H26C46"
+    protected val walmartUrl = "https://www.walmart.com/ip/584284401"
     protected val asin get() = url.substringAfterLast("/dp/")
     protected val driverFactory get() = session.context.getBean(WebDriverFactory::class)
     protected val settings get() = driverFactory.driverSettings
@@ -35,9 +37,9 @@ class WebDriverTestBase: TestBase() {
     }
 
     protected suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) {
-        driver.navigateTo(warnUpUrl)
         driver.navigateTo(url)
         driver.waitForSelector("body")
+        driver.waitForSelector("input[id]")
 //        driver.bringToFront()
         var n = scrollCount
         while (n-- > 0) {

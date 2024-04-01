@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
@@ -86,6 +87,7 @@ open class DefaultBrowseRPA: BrowseRPA {
 
         val testNav = navigateHistory.history.lastOrNull { mayWaitFor(it, driver.navigateEntry) }
 
+        require(driver is AbstractWebDriver)
         val code = when {
             !isActive -> PREV_PAGE_NEVER_READY
             !driver.isWorking -> PREV_PAGE_NEVER_READY

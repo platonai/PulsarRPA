@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.impl
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
@@ -106,8 +107,6 @@ open class StreamingCrawler(
         private val lastCancelReason = Frequency<String>()
         private val isIllegalApplicationState = AtomicBoolean()
 
-        @Deprecated("Use wrong profile instead", ReplaceWith("wrongProfile"))
-        private var wrongDistrict = MetricsSystem.reg.multiMetric(this, "WRONG_DISTRICT_COUNT")
         private var wrongProfile = MetricsSystem.reg.multiMetric(this, "WRONG_PROFILE_COUNT")
 
         private val readableCriticalWarning: String
@@ -179,7 +178,7 @@ open class StreamingCrawler(
     /**
      * The maximum number of open tabs allowed in each open browser.
      * */
-    val numMaxActiveTabs get() = sessionConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    val numMaxActiveTabs get() = sessionConfig.getInt(BROWSER_MAX_ACTIVE_TABS, DEFAULT_BROWSER_MAX_ACTIVE_TABS)
 
     /**
      * The fetch concurrency equals to the number of all allowed open tabs.
@@ -298,62 +297,10 @@ open class StreamingCrawler(
     protected suspend fun startCrawlLoop(scope: CoroutineScope) {
         logger.info("Starting crawler | {} | #{} | {} ...", name, id, session::class.java)
 
-        globalRunningInstances.incrementAndGet()
-
         val startTime = Instant.now()
 
-        var idleSeconds = 0
-        while (isActive) {
-            checkEmptyUrlSequence(++idleSeconds)
-
-            urls.forEachIndexed { j, url ->
-                idleSeconds = 0
-                globalTasks.incrementAndGet()
-
-                if (!isActive) {
-                    globalMetrics.drops.mark()
-                    return@startCrawlLoop
-                }
-
-                tracer?.trace(
-                    "{}. {}/{} running tasks, processing {}",
-                    globalTasks, globalLoadingUrls.size, globalRunningTasks, url.configuredUrl
-                )
-
-                // The largest disk must have at least 10 GiB remaining space
-                val freeSpace =
-                    Runtimes.unallocatedDiskSpaces().maxOfOrNull { ByteUnit.BYTE.toGB(it) } ?: 0.0
-                if (freeSpace < 10.0) {
-                    val diskSpaces = Runtimes.unallocatedDiskSpaces().joinToString { ByteUnit.BYTE.toGB(it).toString() }
-                    logger.error("Disk space is full! | {}", diskSpaces)
-                    criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
-                    return@startCrawlLoop
-                }
-
-                if (url.isNil) {
-                    globalMetrics.drops.mark()
-                    return@forEachIndexed
-                }
-
-                // disabled, might be slow
-                val urlSpec = UrlUtils.splitUrlArgs(url.url).first
-                if (alwaysFalse() && doLaterIfProcessing(urlSpec, url, Duration.ofSeconds(10))) {
-                    return@forEachIndexed
-                }
-
-                globalLoadingUrls.add(urlSpec)
-                val state = runWithStatusCheck(1 + j, url, scope)
-
-                if (state != FlowState.CONTINUE) {
-                    return@startCrawlLoop
-                } else {
-                    // if urls is ConcurrentLoadingIterable
-                    // TODO: the line below can be removed
-                    (urls.iterator() as? ConcurrentLoadingIterable.LoadingIterator)?.tryLoad()
-                }
-            }
-        }
-
+        globalRunningInstances.incrementAndGet()
+        runCrawlLoopWhileActive(scope)
         globalRunningInstances.decrementAndGet()
 
         logger.info(
@@ -361,6 +308,60 @@ open class StreamingCrawler(
             globalMetrics.tasks.counter.count, session,
             DateTimes.elapsedTime(startTime).readable()
         )
+    }
+    
+    private suspend fun runCrawlLoopWhileActive(scope: CoroutineScope) {
+        var idleSeconds = 0
+        while (isActive) {
+            checkEmptyUrlSequence(++idleSeconds)
+            
+            urls.forEachIndexed { j, url ->
+                idleSeconds = 0
+                globalTasks.incrementAndGet()
+                
+                if (!isActive) {
+                    globalMetrics.drops.mark()
+                    return@runCrawlLoopWhileActive
+                }
+                
+                tracer?.trace(
+                    "{}. {}/{} running tasks, processing {}",
+                    globalTasks, globalLoadingUrls.size, globalRunningTasks, url.configuredUrl
+                )
+                
+                // The largest disk must have at least 10 GiB remaining space
+                val freeSpace =
+                    Runtimes.unallocatedDiskSpaces().maxOfOrNull { ByteUnit.BYTE.toGB(it) } ?: 0.0
+                if (freeSpace < 10.0) {
+                    val diskSpaces = Runtimes.unallocatedDiskSpaces().joinToString { ByteUnit.BYTE.toGB(it).toString() }
+                    logger.error("Disk space is full! | {}", diskSpaces)
+                    criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
+                    return@runCrawlLoopWhileActive
+                }
+                
+                if (url.isNil) {
+                    globalMetrics.drops.mark()
+                    return@forEachIndexed
+                }
+                
+                // disabled, might be slow
+                val urlSpec = UrlUtils.splitUrlArgs(url.url).first
+                if (alwaysFalse() && doLaterIfProcessing(urlSpec, url, Duration.ofSeconds(10))) {
+                    return@forEachIndexed
+                }
+                
+                globalLoadingUrls.add(urlSpec)
+                val state = runWithStatusCheck(1 + j, url, scope)
+                
+                if (state != FlowState.CONTINUE) {
+                    return@runCrawlLoopWhileActive
+                } else {
+                    // if urls is ConcurrentLoadingIterable
+                    // TODO: the line below can be removed
+                    (urls.iterator() as? ConcurrentLoadingIterable.LoadingIterator)?.tryLoad()
+                }
+            }
+        }
     }
 
     private suspend fun checkEmptyUrlSequence(idleSeconds: Int) {

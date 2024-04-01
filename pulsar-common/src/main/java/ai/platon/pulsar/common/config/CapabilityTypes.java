@@ -185,7 +185,6 @@ public interface CapabilityTypes {
     /**
      * Browser
      * */
-    String FETCH_INTERACT_SETTINGS = "interact.settings";
     String FETCH_PAGE_LOAD_TIMEOUT = "fetch.page.load.timeout";
     String FETCH_SCRIPT_TIMEOUT = "fetch.script.timeout";
     String FETCH_SCROLL_DOWN_COUNT = "fetch.scroll.down.count";
@@ -206,7 +205,7 @@ public interface CapabilityTypes {
     /**
      * The class name of privacy agent generator
      * */
-    String PRIVACY_AGENT_GENERATOR_CLASS = "privacy.agent.generator.class";
+    String PRIVACY_AGENT_GENERATOR_CLASS_KEY = "privacy.agent.generator.class";
     String PRIVACY_MINOR_WARNING_FACTOR = "privacy.minor.warning.factor";
 
 
@@ -237,6 +236,10 @@ public interface CapabilityTypes {
     String BROWSER_TYPE = "browser.type";
     // not used since the browser is always running in temporary contexts
     String BROWSER_INCOGNITO = "browser.incognito";
+    /**
+     * The browser interact settings
+     * */
+    String BROWSER_INTERACT_SETTINGS = "browser.interact.settings";
     String BROWSER_DISPLAY_MODE = "browser.display.mode";
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
     String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";

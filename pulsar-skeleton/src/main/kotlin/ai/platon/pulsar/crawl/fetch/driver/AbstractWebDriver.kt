@@ -1,6 +1,11 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
+import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.warnForClose
+import ai.platon.pulsar.dom.nodes.GeoAnchor
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -17,34 +22,111 @@ import kotlin.random.Random
 
 abstract class AbstractWebDriver(
     override val browser: Browser,
-    override val id: Int = instanceSequencer.incrementAndGet()
+    override val id: Int = ID_SUPPLIER.incrementAndGet()
 ): Comparable<AbstractWebDriver>, AbstractJvmWebDriver(), WebDriver, JvmWebDriver {
     companion object {
-        private val instanceSequencer = AtomicInteger()
+        private val ID_SUPPLIER = AtomicInteger()
+    }
+
+    /**
+     * The state of the driver.
+     * */
+    enum class State {
+        /**
+         * The driver is initialized.
+         * */
+        INIT,
+        /**
+         * The driver is ready to work.
+         * */
+        READY,
+        /**
+         * The driver is working.
+         * */
+        WORKING,
+        /**
+         * The driver is retired and should be quit as soon as possible.
+         * */
+        RETIRED,
+        /**
+         * The driver is quit.
+         * */
+        QUIT;
+        /**
+         * Whether the driver is initialized.
+         * */
+        val isInit get() = this == INIT
+        /**
+         * Whether the driver is ready to work.
+         * */
+        val isReady get() = this == READY
+        /**
+         * Whether the driver is working.
+         * */
+        val isWorking get() = this == WORKING
+        /**
+         * Whether the driver is quit.
+         * */
+        val isQuit get() = this == QUIT
+        /**
+         * Whether the driver is retired and should be quit as soon as possible.
+         * */
+        val isRetired get() = this == RETIRED
     }
     
-    private val jsoupCreateDestroyMonitor = Any()
-    private var jsoupSession: Connection? = null
+    /**
+     * The state of the driver.
+     * * [State.INIT]: The driver is initialized.
+     * * [State.READY]: The driver is ready to work.
+     * * [State.WORKING]: The driver is working.
+     * * [State.RETIRED]: The driver is retired and should be quit as soon as possible.
+     * * [State.QUIT]: The driver is quit.
+     * */
+    private val state = AtomicReference(State.INIT)
     
     private val canceled = AtomicBoolean()
     private val crashed = AtomicBoolean()
     
-    override var idleTimeout: Duration = Duration.ofMinutes(10)
+    private val jsoupCreateDestroyMonitor = Any()
+    private var jsoupSession: Connection? = null
     
-    override var waitForElementTimeout = Duration.ofSeconds(20)
+    var idleTimeout: Duration = Duration.ofMinutes(10)
+    var lastActiveTime: Instant = Instant.now()
+    /**
+     * Whether the driver is idle. The driver is idle if it is not working for a period of time.
+     * */
+    val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
     
-    override val name get() = javaClass.simpleName + "-" + id
+    val isInit get() = state.get().isInit
+    val isReady get() = state.get().isReady
     
-    override val delayPolicy: (String) -> Long
+    val isWorking get() = state.get().isWorking
+    val isRetired get() = state.get().isRetired
+    val isQuit get() = state.get().isQuit
+    
+    val isCanceled get() = canceled.get()
+    val isCrashed get() = crashed.get()
+    
+    var waitTimeout = Duration.ofSeconds(60)
+    
+    var waitForElementTimeout = Duration.ofSeconds(20)
+    
+    open val name get() = javaClass.simpleName + "-" + id
+    
+    val delayPolicy: (String) -> Long
         get() = { type ->
             when (type) {
-                "gap" -> 500L + Random.nextInt(500)
+                "gap" -> 200L + Random.nextInt(500)
                 "click" -> 500L + Random.nextInt(1000)
+                "delete" -> 30L + Random.nextInt(50)
+                "keyUpDown" -> 50L + Random.nextInt(100)
+                "press" -> 100L + Random.nextInt(300)
                 "type" -> 50L + Random.nextInt(500)
                 "mouseWheel" -> 800L + Random.nextInt(500)
                 "dragAndDrop" -> 800L + Random.nextInt(500)
                 "waitForNavigation" -> 500L
                 "waitForSelector" -> 1000L
+                "waitUntil" -> 1000L
                 else -> 100L + Random.nextInt(500)
             }
         }
@@ -53,94 +135,94 @@ abstract class AbstractWebDriver(
     
     override val navigateHistory = NavigateHistory()
     
-    override val supportJavascript: Boolean = true
+    open val supportJavascript: Boolean = true
     
-    override val isMockedPageSource: Boolean = false
+    open val isMockedPageSource: Boolean = false
     
-    override var isRecovered: Boolean = false
+    override val frames: MutableList<WebDriver> = mutableListOf()
     
-    override var isReused: Boolean = false
+    override var opener: WebDriver? = null
     
-    override val state = AtomicReference(WebDriver.State.INIT)
+    override val outgoingPages: MutableSet<WebDriver> = mutableSetOf()
+    
+    var isRecovered: Boolean = false
+    
+    var isReused: Boolean = false
     
     /**
      * The associated data.
      * */
     override val data: MutableMap<String, Any?> = mutableMapOf()
     
-    override var lastActiveTime: Instant = Instant.now()
-    
-    override val isInit get() = state.get().isInit
-    override val isReady get() = state.get().isReady
-    
-    override val isWorking get() = state.get().isWorking
-    override val isRetired get() = state.get().isRetired
-    override val isQuit get() = state.get().isQuit
-    
-    override val isCanceled get() = canceled.get()
-    override val isCrashed get() = crashed.get()
-    
-    override fun free() {
+    /**
+     * Mark the driver as free, so it can be used to fetch a new page.
+     * */
+    fun free() {
         canceled.set(false)
         crashed.set(false)
         if (!isInit && !isWorking) {
             // It's a bad idea to throw an exception, which lead to inconsistency within the ConcurrentStatefulDriverPool.
             // throw IllegalWebDriverStateException("The driver is expected to be INIT or WORKING to be ready, actually $state")
         }
-        state.set(WebDriver.State.READY)
+        state.set(State.READY)
     }
     
-    override fun startWork() {
+    /**
+     * Mark the driver as working, so it can not be used to fetch another page.
+     * */
+    fun startWork() {
         canceled.set(false)
         crashed.set(false)
         if (!isInit && !isReady) {
             // It's a bad idea to throw an exception, which lead to inconsistency within the ConcurrentStatefulDriverPool.
             // throw IllegalWebDriverStateException("The driver is expected to be INIT or READY to work, actually $state")
         }
-        state.set(WebDriver.State.WORKING)
+        state.set(State.WORKING)
     }
     
-    override fun retire() = state.set(WebDriver.State.RETIRED)
-    override fun cancel() {
+    /**
+     * Mark the driver as retired, so it can not be used to fetch any page,
+     * and should be quit as soon as possible.
+     * */
+    fun retire() = state.set(State.RETIRED)
+    /**
+     * Mark the driver as canceled, so the fetch process should return as soon as possible,
+     * and the fetch result should be dropped.
+     * */
+    fun cancel() {
         canceled.set(true)
     }
     
     override fun jvm(): JvmWebDriver = this
     
-    override val mainRequestHeaders: Map<String, Any> get() = navigateEntry.mainRequestHeaders
-    override val mainRequestCookies: List<Map<String, String>> get() = navigateEntry.mainRequestCookies
-    override val mainResponseStatus: Int get() = navigateEntry.mainResponseStatus
-    override val mainResponseStatusText: String get() = navigateEntry.mainResponseStatusText
-    override val mainResponseHeaders: Map<String, Any> get() = navigateEntry.mainResponseHeaders
+    val mainRequestHeaders: Map<String, Any> get() = navigateEntry.mainRequestHeaders
+    val mainRequestCookies: List<Map<String, String>> get() = navigateEntry.mainRequestCookies
+    val mainResponseStatus: Int get() = navigateEntry.mainResponseStatus
+    val mainResponseStatusText: String get() = navigateEntry.mainResponseStatusText
+    val mainResponseHeaders: Map<String, Any> get() = navigateEntry.mainResponseHeaders
     
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
     
+    override suspend fun currentUrl(): String = url()
+    
     @Throws(WebDriverException::class)
-    override suspend fun location(): String {
-        val result = evaluate("window.location")
-        return result?.toString() ?: ""
+    override suspend fun url() = evaluateStringValueOrEmpty("document.URL")
+    
+    @Throws(WebDriverException::class)
+    override suspend fun documentURI() = evaluateStringValueOrEmpty("document.documentURI")
+    
+    @Throws(WebDriverException::class)
+    override suspend fun baseURI() = evaluateStringValueOrEmpty("document.baseURI")
+    
+    @Throws(WebDriverException::class)
+    override suspend fun referrer() = evaluateStringValueOrEmpty("document.referrer")
+    
+    @Suppress("UNCHECKED_CAST")
+    @Throws(WebDriverException::class)
+    override suspend fun <T> evaluate(expression: String, defaultValue: T): T {
+        return evaluate(expression) as? T ?: defaultValue
     }
-    
-    @Throws(WebDriverException::class)
-    override suspend fun baseURI(): String {
-        val result = evaluate("document.baseURI")
-        return result?.toString() ?: ""
-    }
-    
-    @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long =
-        waitForSelector(selector, Duration.ofMillis(timeoutMillis))
-    
-    @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String): Long = waitForSelector(selector, waitForElementTimeout)
-    
-    @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(): Long = waitForNavigation(Duration.ofSeconds(10))
-    
-    @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(timeoutMillis: Long): Long =
-        waitForNavigation(Duration.ofMillis(timeoutMillis))
     
     override suspend fun evaluateSilently(expression: String): Any? =
         takeIf { isWorking }?.runCatching { evaluate(expression) }
@@ -198,26 +280,71 @@ abstract class AbstractWebDriver(
     
     @Throws(WebDriverException::class)
     override suspend fun selectFirstTextOrNull(selector: String): String? {
-        val result = evaluate("__pulsar_utils__.firstText('$selector')")
+        val result = evaluate("__pulsar_utils__.selectFirstText('$selector')")
         return result?.toString()
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun selectTexts(selector: String): List<String> {
-        val result = evaluate("__pulsar_utils__.allTexts('$selector')")
-        return result?.toString()?.split("\n")?.toList() ?: listOf()
+    override suspend fun selectTextAll(selector: String): List<String> {
+        val json = evaluate("__pulsar_utils__.selectTextAll('$selector')")?.toString()?: "[]"
+        val result: List<String> = jacksonObjectMapper().readValue(json)
+        return result
     }
     
     @Throws(WebDriverException::class)
     override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
-        val result = evaluate("__pulsar_utils__.firstAttr('$selector', '$attrName')")
+        val result = evaluate("__pulsar_utils__.selectFirstAttribute('$selector', '$attrName')")
         return result?.toString()
     }
     
+    override suspend fun selectAttributes(selector: String): Map<String, String> {
+        val json = evaluate("__pulsar_utils__.selectAttributes('$selector')")?.toString() ?: return mapOf()
+        val attributes: List<String> = jacksonObjectMapper().readValue(json)
+        return attributes.zipWithNext().associate { it }
+    }
+    
     @Throws(WebDriverException::class)
-    override suspend fun selectAttributes(selector: String, attrName: String): List<String> {
-        val result = evaluate("__pulsar_utils__.allAttrs('$selector', '$attrName')")
-        return result?.toString()?.split("\n")?.toList() ?: listOf()
+    override suspend fun selectAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
+        val json = evaluate("__pulsar_utils__.selectAttributeAll('$selector', '$attrName')")?.toString() ?: return listOf()
+        return jacksonObjectMapper().readValue(json)
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun setAttribute(selector: String, attrName: String, attrValue: String) {
+        evaluate("__pulsar_utils__.setAttribute('$selector', '$attrName', '$attrValue')")
+    }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String) {
+        evaluate("__pulsar_utils__.setAttributeAll('$selector', '$attrName', '$attrValue')")
+    }
+
+    /**
+     * Find hyperlinks in elements matching the CSS query.
+     * */
+    @Throws(WebDriverException::class)
+    override suspend fun selectHyperlinks(selector: String, offset: Int, limit: Int): List<Hyperlink> {
+        // val result = evaluate("__pulsar_utils__.allAttrs('$selector', 'abs:href')")
+        // TODO: add __pulsar_utils__.selectHyperlinks()
+        return selectAttributeAll(selector, "abs:href").drop(offset).take(limit).map { Hyperlink(it) }
+    }
+    
+    /**
+     * Find image elements matching the CSS query.
+     * */
+    @Throws(WebDriverException::class)
+    override suspend fun selectAnchors(selector: String, offset: Int, limit: Int): List<GeoAnchor> {
+        // TODO: add __pulsar_utils__.selectAnchors()
+        return selectAttributeAll(selector, "abs:href").drop(offset).take(limit).map { GeoAnchor(it, "") }
+    }
+    
+    /**
+     * Find image elements matching the CSS query.
+     * */
+    @Throws(WebDriverException::class)
+    override suspend fun selectImages(selector: String, offset: Int, limit: Int): List<String> {
+        // TODO: add __pulsar_utils__.selectImages()
+        return selectAttributeAll(selector, "abs:src").drop(offset).take(limit)
     }
     
     @Throws(WebDriverException::class)
@@ -239,6 +366,19 @@ abstract class AbstractWebDriver(
     override suspend fun uncheck(selector: String) {
         evaluate("__pulsar_utils__.uncheck('$selector')")
     }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun waitForSelector(selector: String) = waitForSelector(selector, waitTimeout)
+    
+    @Throws(WebDriverException::class)
+    override suspend fun waitForSelector(selector: String, action: suspend () -> Unit) =
+        waitForSelector(selector, waitTimeout, action)
+    
+    @Throws(WebDriverException::class)
+    override suspend fun waitUntil(predicate: suspend () -> Boolean) = waitUntil(waitTimeout, predicate)
+    
+    @Throws(WebDriverException::class)
+    override suspend fun waitForNavigation() = waitForNavigation(waitTimeout)
     
     @Throws(WebDriverException::class)
     override suspend fun newJsoupSession(): Connection {
@@ -277,6 +417,38 @@ abstract class AbstractWebDriver(
     override fun compareTo(other: AbstractWebDriver): Int = id - other.id
     
     override fun toString(): String = "#$id"
+    /**
+     * Force the page stop all navigations and RELEASES all resources.
+     * If a web driver is terminated, it should not be used any more and should be quit
+     * as soon as possible.
+     * */
+    @Throws(WebDriverException::class)
+    open suspend fun terminate() {
+        stop()
+    }
+    
+    /** Wait until the tab is terminated and closed. */
+    @Throws(Exception::class)
+    open fun awaitTermination() {
+    
+    }
+    
+    override fun close() {
+        if (isQuit) {
+            return
+        }
+        
+        state.set(State.QUIT)
+        runCatching { runBlocking { stop() } }.onFailure { warnForClose(this, it) }
+    }
+    
+    protected suspend fun evaluateStringValueOrNull(expression: String): String? {
+        return evaluate(expression)?.toString()
+    }
+    
+    protected suspend fun evaluateStringValueOrEmpty(expression: String): String {
+        return evaluateStringValueOrNull(expression) ?: ""
+    }
     
     private fun getHeadersAndCookies(): Pair<Map<String, String>, List<Map<String, String>>> {
         return runBlocking {
@@ -292,16 +464,14 @@ abstract class AbstractWebDriver(
      * The browser should be initialized by opening a page before the session is created.
      * */
     private fun newSession(headers: Map<String, String>, cookies: List<Map<String, String>>): Connection {
-        // TODO: use the same user agent as this browser
-        val userAgent = browser.userAgent ?: (browser as AbstractBrowser).browserSettings.userAgent.getRandomUserAgent()
-        
         val httpTimeout = Duration.ofSeconds(20)
         val session = Jsoup.newSession()
             .timeout(httpTimeout.toMillis().toInt())
-            .userAgent(userAgent)
             .headers(headers)
             .ignoreContentType(true)
             .ignoreHttpErrors(true)
+        
+        session.userAgent(browser.userAgent)
         
         if (cookies.isNotEmpty()) {
             session.cookies(cookies.first())

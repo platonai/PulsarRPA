@@ -12,6 +12,7 @@ import ai.platon.pulsar.common.files.ext.export
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -154,8 +155,9 @@ abstract class BrowserEmulatorImplBase(
                 // messageWriter?.debugRedirects(pageDatum.url, urls)
             }
         }
-
-        if (!task.driver.isMockedPageSource) {
+        
+        val driver = task.driver as AbstractWebDriver
+        if (!driver.isMockedPageSource) {
             exportIfNecessary(task)
         }
 
@@ -185,6 +187,7 @@ abstract class BrowserEmulatorImplBase(
     protected fun checkState(driver: WebDriver) {
         checkState()
 
+        require(driver is AbstractWebDriver)
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should be redo
@@ -198,7 +201,8 @@ abstract class BrowserEmulatorImplBase(
     @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
     protected fun checkState(task: FetchTask, driver: WebDriver) {
         checkState()
-
+        
+        require(driver is AbstractWebDriver)
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should run again.

@@ -59,8 +59,7 @@ abstract class AbstractConfiguration {
 
     /**
      * Create a [ai.platon.pulsar.common.config.AbstractConfiguration]. This will load the standard
-     * resources, `pulsar-default.xml`, `pulsar-site.xml`, `pulsar-task.xml`
-     * and hadoop resources.
+     * resources, `pulsar-default.xml`, `pulsar-site.xml` and hadoop resources.
      */
     constructor(
         profile: String = System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),

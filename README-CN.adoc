@@ -181,14 +181,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.12.2</version>
+  <version>1.12.3</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.12.2")
+implementation("ai.platon.pulsar:pulsar-all:1.12.3")
 ----
 
 也可以从 github.com 克隆模板项目: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17]。
@@ -230,7 +230,7 @@ val pages = session.loadOutPages(url, "-expires 10s -itemExpires 10s -outLink a[
 // Load the portal page and submit the out links specified by `-outLink` to the URL pool.
 // Option `-outLink` specifies the cssSelector to select links in the portal page to submit.
 // Option `-topLinks` specifies the maximal number of links selected by `-outLink`.
-session.submitForOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/] -topLinks 10")
+session.submitOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/] -topLinks 10")
 
 // Load, parse and scrape fields
 val fields = session.scrape(url, "-expires 10s", "#centerCol",

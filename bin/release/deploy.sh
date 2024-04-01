@@ -19,7 +19,7 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       ;;
     -test)
-      TEST=false
+      TEST=true
       shift # past argument
       ;;
     -h|-help|--help)
@@ -55,9 +55,9 @@ if $CLEAN; then
 fi
 
 if $TEST; then
-  mvn deploy -Pplaton-release -Pplaton-deploy -DskipTests=true
-else
   mvn deploy -Pplaton-release -Pplaton-deploy
+else
+  mvn deploy -Pplaton-release -Pplaton-deploy -DskipTests=true
 fi
 
 exitCode=$?

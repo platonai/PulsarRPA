@@ -62,7 +62,9 @@ open class GlobalCache(val conf: ImmutableConfig) {
     /**
      * Fetching cache holds the URLs being fetched.
      *
-     * Urls will be added to the cache before fetching and will be deleted after fetching.
+     * URLs are cached before being fetched and removed from the cache after retrieval.
+     *
+     * The cache is used to avoid fetching the same URL multiple times.
      * */
     open val fetchingCache = FetchingCache()
     /**

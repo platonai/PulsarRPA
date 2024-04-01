@@ -7,20 +7,18 @@ import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.browser.BrowserFiles
+import ai.platon.pulsar.common.browser.BrowserFiles.PID_FILE_NAME
 import ai.platon.pulsar.common.browser.Browsers
 import ai.platon.pulsar.common.concurrent.RuntimeShutdownHookRegistry
 import ai.platon.pulsar.common.concurrent.ShutdownHookRegistry
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
-import java.io.BufferedReader
-import java.io.FileFilter
-import java.io.IOException
-import java.io.InputStreamReader
+import java.io.*
 import java.nio.channels.FileChannel
 import java.nio.file.*
-import java.time.Duration
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
-import kotlin.io.path.isDirectory
 
 /**
  * The chrome launcher
@@ -35,90 +33,24 @@ class ChromeLauncher(
         private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
         private val isActive get() = AppContext.isActive && !Thread.currentThread().isInterrupted
         
-        var DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
-        var PID_FILE_NAME = "chrome.launcher.pid"
-        var TEMPORARY_UDD_EXPIRY = Duration.ofHours(24)
-
-        fun deleteTemporaryUserDataDirWithLock(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
-            synchronized(AppPaths.BROWSER_TMP_DIR_LOCK) {
-                val lock = AppPaths.BROWSER_TMP_DIR_LOCK
-                if (isActive && Files.exists(userDataDir)) {
-                    FileChannel.open(lock, StandardOpenOption.APPEND).use {
-                        it.lock()
-                        if (isActive) {
-                            deleteTemporaryUserDataDir(userDataDir, expiry)
-                        }
-                    }
-                }
-            }
-        }
-
-        fun deleteTemporaryUserDataDir(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
-            synchronized(AppPaths.BROWSER_TMP_DIR_LOCK) {
-                if (isActive) {
-                    deleteTemporaryUserDataDir0(userDataDir, expiry)
-                }
-            }
-        }
-
-        private fun deleteTemporaryUserDataDir0(userDataDir: Path, expiry: Duration = TEMPORARY_UDD_EXPIRY) {
-            val dirToDelete = userDataDir
-
-            // It's in the context tmp dir, delete the user data dir safely
-            val isTemporary = dirToDelete.startsWith(AppPaths.CONTEXT_TMP_DIR)
-            val lastModifiedTime = Files.getLastModifiedTime(dirToDelete).toInstant()
-            val isExpired = DateTimes.isExpired(lastModifiedTime, expiry)
-            // Double check to ensure it's safe to delete the directory
-            val hasPidSiblingFile = Files.exists(dirToDelete.resolveSibling(PID_FILE_NAME))
-            // be careful, do not delete files by mistake, so delete files only inside AppPaths.CONTEXT_TMP_DIR
-            if (isActive && isTemporary && isExpired && hasPidSiblingFile) {
-                FileUtils.deleteQuietly(dirToDelete.toFile())
-                // Make sure the last operation is finished
-                sleepSeconds(1)
-                if (isActive && Files.exists(dirToDelete)) {
-                    logger.warn("Failed to delete browser cache, try again | {}", dirToDelete)
-                    forceDeleteDirectory(dirToDelete)
-
-                    if (Files.exists(dirToDelete)) {
-                        logger.error("Could not delete browser cache | {}", dirToDelete)
-                    }
-                }
-            }
-        }
-
-        /**
-         * Force delete all browser data
-         * */
-        @Throws(IOException::class)
-        private fun forceDeleteDirectory(dirToDelete: Path) {
-            synchronized(ChromeLauncher::class.java) {
-                val maxTry = 10
-                var i = 0
-                while (isActive && i++ < maxTry && Files.exists(dirToDelete) && !Files.isSymbolicLink(dirToDelete)) {
-                    kotlin.runCatching {
-                        FileUtils.deleteDirectory(dirToDelete.toFile())
-                        Thread.sleep(500)
-                    }.onFailure { 
-                            warnInterruptible(this,
-                                it, "Failed to delete directory | {} | {}", dirToDelete, it.message)
-                        }
-                }
-            }
-        }
+        private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws://.+:(\\d+)/")
     }
 
-    val pidPath get() = userDataDir.resolveSibling(PID_FILE_NAME)
-    val temporaryUddExpiry = TEMPORARY_UDD_EXPIRY
+    private val closed = AtomicBoolean()
+    private val pidPath get() = userDataDir.resolveSibling(PID_FILE_NAME)
+    private val temporaryUddExpiry = BrowserFiles.TEMPORARY_UDD_EXPIRY
     private var process: Process? = null
-    private val shutdownHookThread = Thread { this.close() }
+    private val shutdownHookThread = Thread {
+        // System.err.println("Shutting down chrome process ...")
+        
+        // Shutdown by the upper layer
+        // this.close()
+    }
 
     /**
      * Launch the chrome
      * */
     fun launch(chromeBinaryPath: Path, options: ChromeOptions): RemoteChrome {
-        // if the data dir is the default dir, we might have problem to prepare user dir
-        if ("context\\default--" !in userDataDir.toString()) {
-        }
         kotlin.runCatching { prepareUserDataDir() }.onFailure {
             warnInterruptible(this, it, "Failed to prepare user data dir | {} | {}", userDataDir, it.message)
         }
@@ -155,18 +87,22 @@ class ChromeLauncher(
         }
     }
 
+    /**
+     * Close the chrome process.
+     * The method throws nothing by design.
+     * */
     override fun close() {
-        val p = process ?: return
-        this.process = null
-        if (p.isAlive) {
-            Runtimes.destroyProcess(p, options.shutdownWaitTime)
-//            kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
-//                    .onFailure { logger.warn("Unexpected exception", it) }
-        }
+        if (closed.compareAndSet(false, true)) {
+            val p = process ?: return
+            this.process = null
+            if (p.isAlive) {
+                Runtimes.destroyProcess(p, options.shutdownWaitTime)
+                // TODO: java.lang.IllegalStateException: Shutdown in progress
+//                kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
+//                        .onFailure { logger.warn("Unexpected exception", it) }
+            }
 
-        kotlin.runCatching { cleanUp() }.onFailure {
-            logger.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
-            warnForClose(this, it)
+            BrowserFiles.runCatching { cleanUpContextTmpDir(temporaryUddExpiry) }.onFailure { warnForClose(this, it) }
         }
     }
 
@@ -222,8 +158,8 @@ class ChromeLauncher(
         var arguments = if (supervisorProcess == null) chromeOptions.toList() else {
             options.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
         }.toMutableList()
-
-        if (userDataDir == AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER) {
+        
+        if (userDataDir.startsWith(AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER)) {
             // Open the default browser just like a real user daily do,
             // open a blank page not to choose the profile
             val args = "--remote-debugging-port=0 --remote-allow-origins=* about:blank"
@@ -249,6 +185,7 @@ class ChromeLauncher(
             shutdownHookRegistry.remove(shutdownHookThread)
             throw ChromeProcessException("Failed to start chrome", e)
         } catch (e: Exception) {
+            // Close the process if failed to start, it throws nothing by design.
             close()
             throw e
         }
@@ -330,9 +267,15 @@ class ChromeLauncher(
                     Files.list(prototypeUserDataDir)
                         .filter { Files.isSymbolicLink(it) && !Files.exists(it) }
                         .forEach { Files.delete(it) }
+
                     // ISSUE#29: https://github.com/platonai/PulsarRPA/issues/29
                     // Failed to copy chrome data dir when there is a SingletonSocket symbol link
                     val fileFilter = FileFilter { !Files.isSymbolicLink(it.toPath()) }
+
+//                    val fileFilter = { f: File -> !Files.isSymbolicLink(f.toPath())
+//                        // Copy only the default profile directory
+//                        && f.name == "Default"
+//                    }
                     FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile(), fileFilter)
                 } else {
                     Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
@@ -348,14 +291,6 @@ class ChromeLauncher(
                     }
                 }
             }
-        }
-    }
-
-    @Throws(IOException::class)
-    private fun cleanUp() {
-        val hasPidSiblingFile: (Path) -> Boolean = { path -> Files.exists(path.resolveSibling(PID_FILE_NAME)) }
-        Files.walk(AppPaths.CONTEXT_TMP_DIR).filter { isActive && it.isDirectory() && hasPidSiblingFile(it) }.forEach { path ->
-            deleteTemporaryUserDataDirWithLock(path, temporaryUddExpiry)
         }
     }
 }

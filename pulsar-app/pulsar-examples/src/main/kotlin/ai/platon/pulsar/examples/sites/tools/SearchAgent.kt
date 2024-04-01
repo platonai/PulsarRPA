@@ -71,7 +71,7 @@ class SearchAgent {
             val resultStats = driver.selectFirstTextOrNull("#b_tween")
             println(resultStats)
 
-            val texts = driver.selectTexts("ol#b_results li h2")
+            val texts = driver.selectTextAll("ol#b_results li h2")
             println(texts)
         }
 
@@ -106,7 +106,7 @@ class SearchAgent {
             println(String.format("%d.\t%s", page.id, page.url))
             val resultStats = driver.selectFirstTextOrNull("#result-stats")
             println(resultStats)
-            val texts = driver.selectTexts("h3")
+            val texts = driver.selectTextAll("h3")
             println(texts)
         }
         

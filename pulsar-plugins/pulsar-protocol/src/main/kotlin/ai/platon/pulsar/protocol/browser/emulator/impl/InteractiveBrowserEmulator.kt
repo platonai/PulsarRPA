@@ -21,7 +21,6 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.*
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
-import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.Instant
@@ -50,7 +49,7 @@ open class InteractiveBrowserEmulator(
     private val tracer = getTracer(this)
     private val taskLogger = getLogger(this, ".Task")
 
-    val numDeferredNavigates by lazy { MetricsSystem.reg.meter(this, "deferredNavigates") }
+    private val numDeferredNavigates by lazy { MetricsSystem.reg.meter(this, "deferredNavigates") }
 
     init {
         // Attach event handlers
@@ -114,6 +113,9 @@ open class InteractiveBrowserEmulator(
         on1(EmulateEvents.didScroll) { page: WebPage, driver: WebDriver ->
             this.onDidScroll(page, driver)
         }
+        on1(EmulateEvents.documentSteady) { page: WebPage, driver: WebDriver ->
+            this.onDocumentSteady(page, driver)
+        }
         on1(EmulateEvents.willComputeFeature) { page: WebPage, driver: WebDriver ->
             this.onWillComputeFeature(page, driver)
         }
@@ -165,7 +167,11 @@ open class InteractiveBrowserEmulator(
     override suspend fun onDidScroll(page: WebPage, driver: WebDriver) {
         page.browseEvent?.onDidScroll?.invoke(page, driver)
     }
-
+    
+    override suspend fun onDocumentSteady(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onDocumentSteady?.invoke(page, driver)
+    }
+    
     override suspend fun onWillComputeFeature(page: WebPage, driver: WebDriver) {
         page.browseEvent?.onWillComputeFeature?.invoke(page, driver)
     }
@@ -194,6 +200,8 @@ open class InteractiveBrowserEmulator(
     
     @Throws(Exception::class)
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
+        require(driver is AbstractWebDriver)
+        
         // page.lastBrowser is used by AppFiles.export, so it has to be set before export
         // TODO: page should not be modified in browser phase, it should only be updated using PageDatum
         task.page.lastBrowser = driver.browserType
@@ -347,8 +355,9 @@ open class InteractiveBrowserEmulator(
     private suspend fun browseWithWebDriver(navigateTask: NavigateTask, driver: WebDriver): Response {
         val fetchTask = navigateTask.fetchTask
         checkState(navigateTask.fetchTask, driver)
-
-        val interactResult = navigateAndInteract(navigateTask, driver, navigateTask.driverSettings)
+        require(driver is AbstractWebDriver)
+        
+        val interactResult = navigateAndInteract(navigateTask, driver, navigateTask.browserSettings)
 
         // TODO: separate status code of pulsar system and the status code from browser
         val httpCode = driver.mainResponseStatus
@@ -388,6 +397,7 @@ open class InteractiveBrowserEmulator(
         val page = task.page
 
         logBeforeNavigate(fetchTask, settings)
+        // TODO: not implemented yet
         driver.setTimeouts(settings)
         // TODO: handle frames
         // driver.switchTo().frame(1);
@@ -413,6 +423,7 @@ open class InteractiveBrowserEmulator(
             emit1(EmulateEvents.navigated, page, driver)
         }
 
+        require(driver is AbstractWebDriver)
         if (!driver.supportJavascript) {
             return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         }
@@ -460,6 +471,7 @@ open class InteractiveBrowserEmulator(
 
         emit1(EmulateEvents.willCheckDocumentState, page, driver)
 
+        // Wait until the document is actually ready, or timeout.
         waitForDocumentActuallyReady(task, result)
 
         if (result.protocolStatus.isSuccess) {
@@ -475,7 +487,14 @@ open class InteractiveBrowserEmulator(
             emit1(EmulateEvents.didScroll, page, driver)
         }
 
-        // TODO: which place is the better to set originalContentLength? 1. here 2. in createResponse()
+        if (result.state.isContinue) {
+            // TODO: check if state.isContinue is necessary
+            emit1(EmulateEvents.documentSteady, page, driver)
+        }
+        
+        // With the scrolling operation finished, the page is stable and unlikely to experience significant updates.
+        // Therefore, we can now proceed to calculate the document’s features.
+        // TODO: driver.pageSource() might be huge so there might be a performance issue
         task.navigateTask.originalContentLength = driver.pageSource()?.length ?: 0
         if (result.state.isContinue) {
             emit1(EmulateEvents.willComputeFeature, page, driver)
@@ -484,7 +503,7 @@ open class InteractiveBrowserEmulator(
 
             emit1(EmulateEvents.featureComputed, page, driver)
         }
-
+        
         return result
     }
 
@@ -493,6 +512,9 @@ open class InteractiveBrowserEmulator(
      * */
     @Throws(NavigateTaskCancellationException::class)
     protected open suspend fun waitForDocumentActuallyReady(interactTask: InteractTask, result: InteractResult) {
+        val driver = interactTask.driver
+        require(driver is AbstractWebDriver)
+        
         var status = ProtocolStatus.STATUS_SUCCESS
         val scriptTimeout = interactTask.interactSettings.scriptTimeout
         val fetchTask = interactTask.navigateTask.fetchTask
@@ -520,11 +542,9 @@ open class InteractiveBrowserEmulator(
             message = msg
         } finally {
             if (message == null) {
-                if (!fetchTask.isCanceled && !interactTask.driver.isQuit && isActive) {
-                    logger.warn(
-                        "Timeout to wait for document ready after ${i.dec()} round, " +
-                                "retry is supposed | {}", interactTask.url
-                    )
+                if (!fetchTask.isCanceled && !driver.isQuit && isActive) {
+                    logger.warn("Timeout to wait for document ready after ${i.dec()} round, retry is supposed | {}",
+                        interactTask.url)
                     status = ProtocolStatus.retry(RetryScope.PRIVACY, "Timeout to wait for document ready")
                     result.state = FlowState.BREAK
                 }

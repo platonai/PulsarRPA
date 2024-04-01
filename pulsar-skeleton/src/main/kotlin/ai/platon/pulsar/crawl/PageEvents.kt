@@ -142,8 +142,13 @@ interface BrowseEvent {
     val onWillCheckDocumentState: WebPageWebDriverEventHandler
 
     /**
-     * Fire when the document is actually ready. The document state is checked(computed)
-     * using an algorithm in javascript.
+     * Fire when the document is actually ready. The actuallyReady state is determined using an algorithm that is executed
+     * within the browser.
+     *
+     * This actuallyReady state differs from the standard Document.readyState, which describes the loading state of the
+     * document. When Document.readyState changes, a readystatechange event fires on the document object.
+     *
+     * @see [https://developer.mozilla.org/en-US/docs/Web/API/Document/readyState]
      * */
     val onDocumentActuallyReady: WebPageWebDriverEventHandler
 
@@ -155,9 +160,25 @@ interface BrowseEvent {
      * Fire when we have performed scrolling on the page.
      * */
     val onDidScroll: WebPageWebDriverEventHandler
+    
+    /**
+     * Fire when we have performed scrolling on the page, at which point the document is considered not to change
+     * unless other interactive actions occur. It is a good time to perform custom actions.
+     *
+     * Custom actions are defined by the user using code snippets that are written for a specific purpose, such as
+     * clicking a button, filling a form, and so on.
+     *
+     * The event is fired after the completion of the following actions:
+     * onDocumentActuallyReady, onWillScroll, onDidScroll
+     *
+     * The event is fired before the following actions:
+     * onWillComputeFeature, onFeatureComputed, onDidInteract, onWillStopTab, onTabStopped
+     * */
+    val onDocumentSteady: WebPageWebDriverEventHandler
 
     /**
      * Fire when the webpage features are about to be computed.
+     *
      * */
     val onWillComputeFeature: WebPageWebDriverEventHandler
     /**

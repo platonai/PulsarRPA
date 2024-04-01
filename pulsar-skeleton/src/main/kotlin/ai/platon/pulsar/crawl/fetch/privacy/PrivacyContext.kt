@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.HtmlIntegrity
+import ai.platon.pulsar.common.browser.BrowserFiles.computeNextSequentialContextDir
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -15,13 +16,10 @@ import ai.platon.pulsar.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.RetryScope
 import com.google.common.annotations.Beta
-import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
-import java.time.MonthDay
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -37,23 +35,17 @@ import java.util.concurrent.atomic.AtomicInteger
  * and Pulsar will visit the page in another privacy context.
  * */
 abstract class PrivacyContext(
-    @Deprecated("Inappropriate name", ReplaceWith("privacyAgent"))
-    val id: PrivacyAgent,
+    val privacyAgent: PrivacyAgent,
     val conf: ImmutableConfig
 ) : Comparable<PrivacyContext>, AutoCloseable {
     companion object {
-        private val instanceSequencer = AtomicInteger()
-        private val contextDirSequencer = AtomicInteger()
+        private val SEQUENCER = AtomicInteger()
         
-        // The prefix for all temporary privacy contexts, system context, prototype context and default context are not included.
+        // The prefix for all temporary privacy contexts. System context, prototype context and default context are not
+        // required to start with the prefix.
         const val CONTEXT_DIR_PREFIX = "cx."
-        val USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER: Path = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
-        // The placeholder directory for the user's default browser. This is a placeholder, actually no data dir
-        // should be specified, so the browser driver opens a browser just like a normal user opens it.
-        // The actual data dir of user's browser are different on different operating systems, for example,
-        // on linux, chrome's data dir is: ~/.config/google-chrome/
-        val USER_DEFAULT_DATA_DIR_PLACEHOLDER: Path = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
-        // The default context directory, if you need a semi-permanent context, use this one
+        // The default context directory, if you need a permanent and isolate context, use this one.
+        // NOTE: the user-default context is not a default context.
         val DEFAULT_CONTEXT_DIR: Path = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         // A random context directory, if you need a random temporary context, use this one
         val RANDOM_CONTEXT_DIR get() = computeNextSequentialContextDir()
@@ -67,34 +59,12 @@ abstract class PrivacyContext(
         val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT: Duration = Duration.ofMinutes(30)
 
         val globalMetrics by lazy { PrivacyContextMetrics() }
-
-        /**
-         * TODO: use a file lock
-         * */
-        @Synchronized
-        fun computeNextSequentialContextDir(): Path {
-            contextDirSequencer.incrementAndGet()
-            val prefix = CONTEXT_DIR_PREFIX
-            val contextCount = 1 + Files.list(AppPaths.CONTEXT_TMP_DIR)
-                .filter { Files.isDirectory(it) }
-                .filter { it.toString().contains(prefix) }
-                .count()
-            val rand = RandomStringUtils.randomAlphanumeric(5)
-            val monthDay = MonthDay.now()
-            val fileName = String.format("%s%02d%02d%s%s%s",
-                prefix, monthDay.monthValue, monthDay.dayOfMonth, contextDirSequencer, rand, contextCount)
-            return AppPaths.CONTEXT_TMP_DIR.resolve(monthDay.monthValue.toString()).resolve(fileName)
-        }
     }
 
     private val logger = LoggerFactory.getLogger(PrivacyContext::class.java)
 
-    val sequence = instanceSequencer.incrementAndGet()
-    val privacyAgent get() = id
-    /**
-     * The real id, will replace the current inappropriate [id]
-     * */
-    val id0 get() = privacyAgent.id
+    val id get() = privacyAgent.id
+    val seq = SEQUENCER.incrementAndGet()
     val display get() = privacyAgent.display
     val baseDir get() = privacyAgent.contextDir
 
@@ -107,10 +77,10 @@ abstract class PrivacyContext(
 
     private val registry = MetricsSystem.defaultMetricRegistry
     private val sms = MetricsSystem.SHADOW_METRIC_SYMBOL
-    val meterTasks = registry.meter(this, "$sequence$sms", "tasks")
-    val meterSuccesses = registry.meter(this, "$sequence$sms", "successes")
-    val meterFinishes = registry.meter(this, "$sequence$sms", "finishes")
-    val meterSmallPages = registry.meter(this, "$sequence$sms", "smallPages")
+    val meterTasks = registry.meter(this, "$SEQUENCER$sms", "tasks")
+    val meterSuccesses = registry.meter(this, "$SEQUENCER$sms", "successes")
+    val meterFinishes = registry.meter(this, "$SEQUENCER$sms", "finishes")
+    val meterSmallPages = registry.meter(this, "$SEQUENCER$sms", "smallPages")
     val smallPageRate get() = 1.0 * meterSmallPages.count / meterTasks.count.coerceAtLeast(1)
     val successRate = meterSuccesses.count.toFloat() / meterTasks.count
     /**
@@ -123,43 +93,69 @@ abstract class PrivacyContext(
      * High failure rate make sense only when there are many tasks.
      * */
     val isHighFailureRate get() = meterTasks.count > 100 && failureRate > failureRateThreshold
-
+    /**
+     * The start time of the privacy context.
+     * */
     val startTime = Instant.now()
+    /**
+     * The last active time of the privacy context.
+     * */
     var lastActiveTime = Instant.now()
+        private set
+    /**
+     * The elapsed time of the privacy context since it's started.
+     * */
     val elapsedTime get() = Duration.between(startTime, Instant.now())
+    
     private val fetchTaskTimeout
         get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
     private val privacyContextIdleTimeout
         get() = conf.getDuration(PRIVACY_CONTEXT_IDLE_TIMEOUT, PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT)
     private val idleTimeout: Duration get() = privacyContextIdleTimeout.coerceAtLeast(fetchTaskTimeout)
-
+    /**
+     * The privacy context is retired, and should be closed soon.
+     * */
     protected var retired = false
-
+    /**
+     * The idle time of the privacy context.
+     * */
     val idelTime get() = Duration.between(lastActiveTime, Instant.now())
+    /**
+     * Whether the privacy context is idle.
+     * */
     open val isIdle get() = idelTime > idleTimeout
 
 //    val historyUrls = PassiveExpiringMap<String, String>()
-
+    /**
+     * Whether the privacy context is closed.
+     * */
     protected val closed = AtomicBoolean()
     /**
-     * The privacy context works fine and the fetch speed is qualified.
+     * Check whether the privacy context works fine and the fetch speed is qualified.
      * */
     open val isGood get() = meterSuccesses.meanRate >= minimumThroughput
     /**
-     * The privacy has been leaked since there are too many warnings about privacy leakage.
+     * Check whether the privacy has been leaked since there are too many warnings about privacy leakage.
      * */
     open val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
     /**
-     * The privacy context works fine and the fetch speed is qualified.
+     * Check whether the privacy context works fine and the fetch speed is qualified.
      * */
     open val isRetired get() = retired
     /**
-     * Check if the privacy context is active.
+     * Check whether the privacy context is active.
      * An active privacy context can be used to serve tasks, and an inactive one should be closed.
+     *
+     * An active privacy context has to meet the following requirements:
+     * 1. not closed
+     * 2. not leaked
+     * 3. not retired
+     *
+     * Note: this flag does not guarantee consistency, and can change immediately after it's read
      * */
     open val isActive get() = !isLeaked && !isRetired && !isClosed
     /**
-     * Check if the privacy context is closed
+     * Check whether the privacy context is closed.
      * */
     open val isClosed get() = closed.get()
     /**
@@ -169,8 +165,9 @@ abstract class PrivacyContext(
      * 1. not closed
      * 2. not leaked
      * 3. [requirement removed] not idle
-     * 4. if there is a proxy, the proxy has to be ready
-     * 5. the associated driver pool promises to provide an available driver, ether one of the following:
+     * 4. not retired
+     * 5. if there is a proxy, the proxy has to be ready
+     * 6. the associated driver pool promises to provide an available driver, ether one of the following:
      *    1. it has slots to create new drivers
      *    2. it has standby drivers
      *
@@ -178,15 +175,15 @@ abstract class PrivacyContext(
      * */
     open val isReady get() = hasWebDriverPromise() && isActive
     /**
-     * Check if the privacy context is full capacity. If the privacy context is full capacity, it should
-     * not be used for new tasks, the underlying layer might refuse to serve.
+     * Check whether the privacy context is at full capacity. If the privacy context is indeed at full capacity, it
+     * should not be used for processing new tasks, and the underlying services may potentially refuse to provide service.
      *
-     * A privacy context is running at full load when the underlying webdriver pool is full capacity,
+     * A privacy context is running at full capacity when the underlying webdriver pool is full capacity,
      * so the webdriver pool can not provide a webdriver for new tasks.
      *
      * Note that if a driver pool is retired or closed, it's not full capacity.
      *
-     * @return True if the privacy context is running at full load, false otherwise.
+     * @return True if the privacy context is running at full capacity, false otherwise.
      * */
     open val isFullCapacity = false
 
@@ -311,11 +308,11 @@ abstract class PrivacyContext(
      * */
     abstract fun maintain()
 
-    override fun compareTo(other: PrivacyContext) = id0.compareTo(other.id0)
+    override fun compareTo(other: PrivacyContext) = id.compareTo(other.id)
 
-    override fun equals(other: Any?) = other is PrivacyContext && other.id0 == id0
+    override fun equals(other: Any?) = other is PrivacyContext && other.id == id
 
-    override fun hashCode() = id0.hashCode()
+    override fun hashCode() = id.hashCode()
 
     protected fun beforeRun(task: FetchTask) {
         lastActiveTime = Instant.now()
@@ -363,10 +360,10 @@ abstract class PrivacyContext(
     }
 
     open fun getReport(): String {
-        return String.format("Privacy context #%s has lived for %s", sequence, elapsedTime.readable())
+        return String.format("Privacy context #%s has lived for %s", SEQUENCER, elapsedTime.readable())
     }
 
     open fun report() {
-        logger.info("Privacy context #{} has lived for {}", sequence, elapsedTime.readable())
+        logger.info("Privacy context #{} has lived for {}", SEQUENCER, elapsedTime.readable())
     }
 }

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.examples.sites.topEc.english.walmart
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlUtils
@@ -78,6 +79,8 @@ class WalmartCrawler(private val session: PulsarSession = PulsarContexts.createS
 }
 
 fun main() {
+    BrowserSettings.withSystemDefaultBrowser()
+    
     val portalUrl = ResourceLoader.readAllLines("seeds.walmart.txt")
         .filter { UrlUtils.isStandard(it) }
         .shuffled()

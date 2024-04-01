@@ -79,14 +79,16 @@ open class LoadOptions(
     var taskId = ""
 
     /**
-     * The taskTime is usually used to denote the name of a batch of tasks.
+     * Task time is usually used to denote the name of a batch of tasks.
+     *
+     * The task time is initialized to Instant.EPOCH, so parse() and toString() operations are symmetric.
      * */
     @ApiPublic
     @Parameter(
         names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
         description = "The taskTime is usually used to denote the name of a batch of tasks."
     )
-    var taskTime = Instant.now().truncatedTo(ChronoUnit.MINUTES)
+    var taskTime = Instant.EPOCH
 
     /**
      * The task's deadline indicates the time by which it should be completed. If this deadline is surpassed,
@@ -164,16 +166,6 @@ open class LoadOptions(
                 "If the expiry time is exceeded, the page should be fetched from the Internet."
     )
     var expireAt = LoadOptionDefaults.expireAt
-
-    /**
-     * The fetch interval, used for periodically fetch tasks.
-     * */
-    @ApiPublic
-    @Parameter(
-        names = ["-fi", "-fetchInterval", "--fetch-interval"], converter = DurationConverter::class,
-        description = "The fetch interval, used for periodically fetch tasks."
-    )
-    var fetchInterval = ChronoUnit.DECADES.duration
 
     /**
      * The selector to extract links in portal pages.
@@ -595,7 +587,7 @@ open class LoadOptions(
     var parse = LoadOptionDefaults.parse
 
     /**
-     * Re-parse links if the page has been parsed before.
+     * Reparse links if the page has been parsed before.
      * */
     @Parameter(
         names = ["-rpl", "-reparseLinks", "--reparse-links"],
@@ -709,7 +701,7 @@ open class LoadOptions(
         val b = super.parse()
         if (b) {
             // fix zero-arity boolean parameter overwriting
-            optionFields.asSequence()
+            optionFields
                 .filter { arity0BooleanParams.contains("-${it.name}") }
                 .filter { argv.contains("-${it.name}") }
                 .forEach {
@@ -795,23 +787,39 @@ open class LoadOptions(
      * through a [VolatileConfig] object.
      * */
     fun overrideConfiguration(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
-        val interactSettings = when (netCondition) {
-            Condition.WORSE -> InteractSettings.worseNetSettings
-            Condition.WORST -> InteractSettings.worstNetSettings
-            else -> InteractSettings.goodNetSettings
-        }.copy()
-
-        if (!isDefault("scrollCount")) interactSettings.scrollCount = scrollCount
-        if (!isDefault("scrollInterval")) interactSettings.scrollInterval = scrollInterval
-        if (!isDefault("scriptTimeout")) interactSettings.scriptTimeout = scriptTimeout
-        if (!isDefault("pageLoadTimeout")) interactSettings.pageLoadTimeout = pageLoadTimeout
-
-        interactSettings.overrideConfiguration(conf)
+        setInteractionSettings()
 
         rawEvent?.let { putBean(it) }
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         // incognito mode is never used because the browsers are always running in temporary contexts
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
+    }
+    
+    private fun setInteractionSettings() {
+        val modified = listOf(
+            "netCondition",
+            "scrollCount",
+            "scrollInterval",
+            "scriptTimeout",
+            "pageLoadTimeout"
+        ).any { !isDefault(it) }
+        
+        if (!modified) {
+            return
+        }
+
+        val interactSettings = when (netCondition) {
+            Condition.WORSE -> InteractSettings.WORSE_NET_SETTINGS
+            Condition.WORST -> InteractSettings.WORST_NET_SETTINGS
+            else -> InteractSettings.GOOD_NET_SETTINGS
+        }.copy()
+
+        interactSettings.scrollCount = scrollCount
+        interactSettings.scrollInterval = scrollInterval
+        interactSettings.scriptTimeout = scriptTimeout
+        interactSettings.pageLoadTimeout = pageLoadTimeout
+
+        interactSettings.overrideConfiguration(conf)
     }
 
     /**
@@ -957,7 +965,6 @@ open class LoadOptions(
          * A list of the options who's arity is 0.
          * */
         val arity0BooleanParams = optionFields
-            .asSequence()
             .onEach { it.isAccessible = true }
             .filter { it.get(DEFAULT) is Boolean }
             .flatMap { it.annotations.toList() }
@@ -970,7 +977,6 @@ open class LoadOptions(
          * A list of the options who's arity is 1.
          * */
         val arity1BooleanParams = optionFields
-            .asSequence()
             .onEach { it.isAccessible = true }
             .filter { it.get(DEFAULT) is Boolean }
             .flatMap { it.annotations.toList() }
@@ -983,7 +989,6 @@ open class LoadOptions(
          * A list of all the option names.
          * */
         val optionNames = optionFields
-            .asSequence()
             .flatMap { it.annotations.toList() }
             .filterIsInstance<Parameter>()
             .flatMap { it.names.toList() }
@@ -993,7 +998,6 @@ open class LoadOptions(
          * A list of all the names of options who are allowed with REST APIs.
          * */
         val apiPublicOptionNames = optionFields
-            .asSequence()
             .filter { it.kotlinProperty?.hasAnnotation<ApiPublic>() == true }
             .flatMap { it.annotations.toList() }
             .filterIsInstance<Parameter>()
@@ -1006,7 +1010,6 @@ open class LoadOptions(
         val helpList: List<List<String>>
             get() =
                 optionFields
-                    .asSequence()
                     .mapNotNull { (it.annotations.firstOrNull { it is Parameter } as? Parameter)?.to(it) }
                     .map {
                         listOf(
@@ -1035,7 +1038,6 @@ open class LoadOptions(
          * */
         fun getOptionNames(fieldName: String): List<String> {
             return optionFields
-                .asSequence()
                 .filter { it.name == fieldName }
                 .flatMap { it.annotations.toList() }
                 .filterIsInstance<Parameter>()

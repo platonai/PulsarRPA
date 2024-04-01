@@ -15,7 +15,7 @@ import java.time.Instant
  * */
 class AppSystemInfo {
     companion object {
-        private val logger = getLogger(this)
+        private val logger = getLogger(AppSystemInfo::class)
         
         private var prevCPUTicks = LongArray(CentralProcessor.TickType.entries.size)
         
@@ -65,7 +65,7 @@ class AppSystemInfo {
          * Load average is considered to be ideal when its value is lower than the number of CPUs in the Linux server.
          * For example, with only one CPU in the Linux server, it’s best if the load average is below 1.
          *
-         * High load average tends to occurfor the three reasons mentioned below:
+         * High load average tends to occur for the three reasons mentioned below:
          * 1. A high number of threads executed in the server
          * 2. Lack of RAM forcing the server to use swap memory
          * 3. A high number of I/O traffic
@@ -227,6 +227,3 @@ class AppSystemInfo {
         }
     }
 }
-
-@Deprecated("Inappropriate name", ReplaceWith("AppSystemInfo"))
-typealias AppRuntime = AppSystemInfo

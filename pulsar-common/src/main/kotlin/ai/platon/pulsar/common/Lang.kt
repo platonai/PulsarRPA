@@ -231,3 +231,28 @@ object ObjectConverter {
 )
 @MustBeDocumented
 annotation class ExperimentalApi
+
+class PrioriClosable(
+    val priority: Int,
+    val closeable: AutoCloseable,
+): Comparable<PrioriClosable>, AutoCloseable by closeable {
+    override fun compareTo(other: PrioriClosable): Int {
+        return priority.compareTo(other.priority)
+    }
+    
+    override fun hashCode(): Int {
+        return 31 * priority + closeable.hashCode()
+    }
+    
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        
+        other as PrioriClosable
+        
+        if (priority != other.priority) return false
+        if (closeable != other.closeable) return false
+        
+        return true
+    }
+}

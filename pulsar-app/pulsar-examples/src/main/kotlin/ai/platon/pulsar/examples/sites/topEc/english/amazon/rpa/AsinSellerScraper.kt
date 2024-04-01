@@ -100,8 +100,8 @@ class AsinSellerScraper {
             driver.click(sellerListSelector, 1)
             val requiredElement = "#pinned-de-id"
             logger.info("Waiting for $requiredElement | $asinUrl")
-            val timeMillis = driver.waitForSelector(requiredElement)
-            if (timeMillis > 0) {
+            val remainder = driver.waitForSelector(requiredElement)
+            if (!remainder.isNegative) {
                 logger.info("Seen selector $requiredElement")
 
                 extractSellerUrls(page, driver)

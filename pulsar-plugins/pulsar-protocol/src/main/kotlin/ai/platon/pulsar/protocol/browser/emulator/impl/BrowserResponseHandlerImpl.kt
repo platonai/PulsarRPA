@@ -1,6 +1,5 @@
 package ai.platon.pulsar.protocol.browser.emulator.impl
 
-import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserErrorCode
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS
@@ -17,8 +16,6 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.protocol.browser.emulator.*
 import ai.platon.pulsar.protocol.browser.emulator.util.*
-import org.apache.commons.io.FileUtils
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -94,7 +91,7 @@ open class BrowserResponseHandlerImpl(
             val length = task.pageSource.length
             val link = AppPaths.uniqueSymbolicLinkForUri(task.page.url)
 
-            val settings = InteractSettings(task.fetchTask.volatileConfig)
+            val settings = task.browserSettings.interactSettings
             logger.info(
                 "Timeout ({}) after {} with {} timeouts: {}/{}/{} | file://{}",
                 task.pageDatum.protocolStatus.minorName,

@@ -1,11 +1,11 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnInterruptible
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.runBlocking
-import java.util.Queue
+import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
@@ -53,10 +53,11 @@ class ConcurrentStatefulDriverPool(
     @get:Synchronized
     val activeDriverCount get() = workingDrivers.size + standbyDrivers.size
     
+    @Throws(InterruptedException::class)
     @Synchronized
     fun poll(timeout: Long, unit: TimeUnit): WebDriver? {
         val driver = _standbyDrivers.poll(timeout, unit)
-        if (driver != null) {
+        if (driver is AbstractWebDriver) {
             driver.startWork()
             _workingDrivers.add(driver)
         }
@@ -65,6 +66,7 @@ class ConcurrentStatefulDriverPool(
 
     @Synchronized
     fun offer(driver: WebDriver) {
+        require(driver is AbstractWebDriver)
         driver.free()
         _workingDrivers.remove(driver)
         _standbyDrivers.offer(driver)
@@ -72,6 +74,7 @@ class ConcurrentStatefulDriverPool(
 
     @Synchronized
     fun close(driver: WebDriver) {
+        require(driver is AbstractWebDriver)
         driver.retire()
         _standbyDrivers.remove(driver)
         _workingDrivers.remove(driver)
@@ -91,26 +94,26 @@ class ConcurrentStatefulDriverPool(
         _retiredDrivers.addAll(drivers)
 
         drivers.forEach { driver ->
+            require(driver is AbstractWebDriver)
             // cancel the driver so the fetch task return immediately
             driver.cancel()
             // retire the driver, so it should not be used to fetch pages anymore
             driver.retire()
             // stop the driver so no more resource it uses
-            kotlin.runCatching { runBlocking { driver.stop() } }
+            kotlin.runCatching { runBlocking { driver.stop() } }.onFailure { warnInterruptible(this, it) }
         }
     }
 
     @Synchronized
     fun cancelAll() {
-        _workingDrivers.forEach { it.cancel() }
+        _workingDrivers.forEach { (it as? AbstractWebDriver)?.cancel() }
     }
-
+    
     @Synchronized
-    fun close() {
-        // do not clear, keep the state
-//        standbyDrivers.clear()
-//        workingDrivers.clear()
-//        retiredDrivers.clear()
-//        closedDrivers.clear()
+    fun clear() {
+        standbyDrivers.clear()
+        workingDrivers.clear()
+        retiredDrivers.clear()
+        closedDrivers.clear()
     }
 }

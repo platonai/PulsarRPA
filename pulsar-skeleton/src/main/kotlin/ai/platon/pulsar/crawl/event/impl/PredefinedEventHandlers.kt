@@ -24,19 +24,30 @@ open class LoginHandler(
     override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         logger.info("Navigating to login page ... | {}", loginUrl)
 
+        driver.navigateTo(loginUrl)
+        driver.waitForNavigation()
+        if (!driver.currentUrl().contains("login")) {
+            logger.info("Already logged in")
+            return null
+        }
+
+        driver.waitUntil { driver.evaluate("document.body.scrollHeight", 0) > 1000 }
+
         warnUpUrl?.let {
             driver.navigateTo(it)
             driver.waitForNavigation(Duration.ofSeconds(10))
         }
-
-        driver.navigateTo(loginUrl)
-        driver.waitForNavigation(Duration.ofSeconds(10))
-
+        
+        if (!driver.currentUrl().contains("login")) {
+            logger.info("Already logged in")
+            return null
+        }
+        
         if (activateSelector != null) {
             logger.info("Waiting for login panel ... | {}", activateSelector)
 
             val time = driver.waitForSelector(activateSelector, activateTimeout)
-            if (time <= 0) {
+            if (time.isNegative) {
                 logger.info("Can not active login panel in {}", activateTimeout)
                 return null
             }

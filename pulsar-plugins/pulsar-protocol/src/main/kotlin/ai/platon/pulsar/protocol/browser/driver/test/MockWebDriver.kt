@@ -9,6 +9,7 @@ import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import org.slf4j.LoggerFactory
+import java.awt.SystemColor.text
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
@@ -23,6 +24,10 @@ class MockBrowser(
     
     override fun newDriver(): WebDriver {
         return MockWebDriver(this) { backupBrowser.newDriver() }
+    }
+    
+    override fun newDriver(url: String): WebDriver {
+        return MockWebDriver(this) { backupBrowser.newDriver(url) }
     }
 }
 
@@ -73,20 +78,24 @@ class MockWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
-        return backupDriverOrNull?.waitForSelector(selector, timeout) ?: 0
+    override suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Duration {
+        return backupDriverOrNull?.waitForSelector(selector, timeout, action) ?: timeout
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(timeout: Duration): Long {
-        return backupDriverOrNull?.waitForNavigation(timeout) ?: 0
+    override suspend fun waitForNavigation(timeout: Duration): Duration {
+        return backupDriverOrNull?.waitForNavigation(timeout) ?: timeout
     }
-
+    
     @Throws(WebDriverException::class)
     override suspend fun waitForPage(url: String, timeout: Duration): WebDriver? {
         return backupDriverOrNull?.waitForPage(url, timeout)
     }
-
+    
+    override suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean): Duration {
+        return backupDriverOrNull?.waitUntil(timeout, predicate) ?: timeout
+    }
+    
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 
@@ -156,8 +165,6 @@ class MockWebDriver(
 
     override suspend fun baseURI() = backupDriverOrNull?.baseURI() ?: ""
 
-    override suspend fun location() = backupDriverOrNull?.location() ?: ""
-
     @Throws(WebDriverException::class)
     override suspend fun pageSource(): String = mockPageSource ?: (backupDriverOrNull?.pageSource()) ?: ""
 
@@ -180,7 +187,17 @@ class MockWebDriver(
     override suspend fun type(selector: String, text: String) {
         backupDriverOrNull?.type(selector, text)
     }
-
+    
+    @Throws(WebDriverException::class)
+    override suspend fun fill(selector: String, text: String) {
+        backupDriverOrNull?.fill(selector, text)
+    }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun press(selector: String, key: String) {
+        backupDriverOrNull?.press(selector, key)
+    }
+    
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
         backupDriverOrNull?.click(selector, count)
@@ -188,12 +205,6 @@ class MockWebDriver(
 
     override suspend fun clickTextMatches(selector: String, pattern: String, count: Int) {
         backupDriverOrNull?.clickTextMatches(selector, pattern, count)
-    }
-
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("clickTextMatches(selector, pattern, count"))
-    @Throws(WebDriverException::class)
-    override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
-        backupDriverOrNull?.clickMatches(selector, pattern, count)
     }
 
     @Throws(WebDriverException::class)
@@ -240,18 +251,8 @@ class MockWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun terminate() {
-        backupDriverOrNull?.terminate()
-    }
-
-    @Throws(WebDriverException::class)
     override suspend fun pause() {
         backupDriverOrNull?.pause()
-    }
-
-    @Throws(WebDriverException::class)
-    override fun awaitTermination() {
-        backupDriverOrNull?.awaitTermination()
     }
 
     /**

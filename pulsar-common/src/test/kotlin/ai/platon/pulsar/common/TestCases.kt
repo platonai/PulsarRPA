@@ -89,7 +89,27 @@ class TestCases {
         assertTrue { 201 in numbers }
         assertTrue { 561 in numbers }
     }
-
+    
+    @Test
+    fun testIfEmpty() {
+        val s = ""
+        assertTrue { s.isEmpty() }
+        assertTrue { s.isBlank() }
+        assertTrue { s.ifEmpty { "empty" } == "empty" }
+        assertTrue { s.ifBlank { "blank" } == "blank" }
+    }
+    
+    @Test
+    fun testReturnInIfEmpty() {
+        val s = ""
+        var result = s.ifEmpty { return }
+        assertTrue { result == "This will never happen" }
+        
+        println("Will return to the caller")
+        result = s.ifEmpty { return@testReturnInIfEmpty }
+        assertTrue { result == "This will never happen" }
+    }
+    
     @Test
     fun testOptional() {
         val s1 = Optional.ofNullable("hello")

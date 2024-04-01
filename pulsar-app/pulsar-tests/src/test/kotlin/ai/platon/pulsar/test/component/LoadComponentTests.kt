@@ -2,13 +2,17 @@ package ai.platon.pulsar.test.component
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.crawl.component.LoadComponent
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.test.TestBase
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.annotation.Autowired
+import java.text.MessageFormat
 import java.util.concurrent.CompletableFuture
 import kotlin.test.*
 
@@ -19,11 +23,6 @@ class LoadComponentTests: TestBase() {
 
     @Autowired
     lateinit var loadComponent: LoadComponent
-
-    @BeforeTest
-    fun setup() {
-        crawlLoops.start()
-    }
 
     @Test
     fun testLoadAll() {
@@ -68,20 +67,38 @@ class LoadComponentTests: TestBase() {
     }
 
     @Test
-    fun testLoadAllAsFlow() {
+    fun testLoadAllAsFlow() = runBlocking {
         val normUrls = urls.take(5).map { session.normalize(it, args) }
-
+        
         val resultUrls = mutableListOf<String>()
-        runBlocking {
-            normUrls.asFlow()
-                .map { loadComponent.loadDeferred(it) }
-                .onEach { resultUrls.add(it.url) }
-                .map { it.contentLength }
-                .collect()
-        }
-
+        normUrls.asFlow()
+            .map { loadComponent.loadDeferred(it) }
+            .onEach { resultUrls.add(it.url) }
+            .map { it.contentLength }
+            .collect()
+        
         assertEquals(normUrls.size, resultUrls.size)
         assertEquals(resultUrls[0], normUrls[0].spec)
         assertEquals(resultUrls[1], normUrls[1].spec)
+    }
+    
+    @Test
+    fun testLoadWithChannel() = runBlocking {
+        val channel = Channel<WebPage>()
+        
+        val options = session.options()
+        options.event.loadEvent.onLoaded.addLast { page ->
+            launch {
+                channel.send(page)
+                MessageFormat.format("SEND ► page {0} | {1}", page.id, page.url).also { println(it) }
+            }
+        }
+        session.submitAll(urls, options)
+        
+        repeat(urls.size) {
+            val page = channel.receive()
+            MessageFormat.format("RECV ◀ page {0} | {1}", page.id, page.url).also { println(it) }
+        }
+        println("Done!")
     }
 }

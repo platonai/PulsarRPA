@@ -15,6 +15,7 @@ enum class EmulateEvents {
     documentActuallyReady,
     willScroll,
     didScroll,
+    documentSteady,
     willComputeFeature,
     featureComputed,
     willStopTab,
@@ -60,6 +61,8 @@ interface BrowserEmulator: EventEmitter<EmulateEvents>, AutoCloseable {
 
     suspend fun onDidScroll(page: WebPage, driver: WebDriver)
 
+    suspend fun onDocumentSteady(page: WebPage, driver: WebDriver)
+    
     suspend fun onWillComputeFeature(page: WebPage, driver: WebDriver)
 
     suspend fun onFeatureComputed(page: WebPage, driver: WebDriver)

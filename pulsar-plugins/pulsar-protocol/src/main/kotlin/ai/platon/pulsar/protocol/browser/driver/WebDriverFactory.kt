@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
@@ -80,7 +81,7 @@ open class WebDriverFactory(
         }
     }
     /**
-     * Launch a browser and a WebDriver.
+     * Launch a [Browser] with a [WebDriver].
      */
     @Throws(BrowserLaunchException::class)
     private fun launchBrowserAndDriver(
@@ -88,13 +89,13 @@ open class WebDriverFactory(
     ): Pair<Browser, WebDriver> {
         try {
             val browser = launchBrowser(browserId, conf)
-            val driver = browser.newDriver()
+            val driver = browser.newDriver() as AbstractWebDriver
 
             if (start) {
                 driver.startWork()
             }
 
-            return browser to WebDriverAdapter(driver, priority)
+            return browser to driver
         } catch (e: BrowserLaunchException) {
             logger.error("Can not launch browser | {}", e.message)
             throw e

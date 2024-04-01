@@ -1,18 +1,17 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
-import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourcePageResult
-import java.util.Queue
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
-class JsException(
+data class JsException(
     val text: String? = null,
     val lineNumber: Int? = null,
     val columnNumber: Int? = null,
     val url: String? = null
 )
 
-class JsEvaluation(
+data class JsEvaluation(
     var value: Any? = null,
     var unserializableValue: String? = null,
     var className: String? = null,

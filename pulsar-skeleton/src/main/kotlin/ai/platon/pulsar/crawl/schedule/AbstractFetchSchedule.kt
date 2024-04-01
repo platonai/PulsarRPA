@@ -81,7 +81,8 @@ abstract class AbstractFetchSchedule(
             page.fetchRetries = 0
         }
 
-        page.fetchInterval = page.options.fetchInterval
+//        page.fetchInterval = page.options.fetchInterval
+        page.fetchInterval = page.options.expires
 
         // note: page.fetchTime might not be the same as the actual fetch time
         val now = Instant.now()

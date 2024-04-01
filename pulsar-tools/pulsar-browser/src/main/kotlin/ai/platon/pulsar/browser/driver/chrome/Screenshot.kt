@@ -17,7 +17,7 @@ class Screenshot(
     private val isActive get() = AppContext.isActive && devTools.isOpen
     private val page get() = devTools.page.takeIf { isActive }
     private val dom get() = devTools.dom.takeIf { isActive }
-    private val debugLevel = System.getProperty("debugLevel")?.toIntOrNull() ?: 0
+    private val debugLevel = System.getProperty("browser.additionalDebugLevel")?.toIntOrNull() ?: 0
 
     fun captureScreenshot(selector: String): String? {
         val nodeId = pageHandler.querySelector(selector)
@@ -80,7 +80,7 @@ class Screenshot(
 
     private fun captureScreenshot0(nodeId: Int, viewport: Viewport): String? {
         val format = CaptureScreenshotFormat.JPEG
-        val quality = BrowserSettings.screenshotQuality
+        val quality = BrowserSettings.SCREENSHOT_QUALITY
 
         if (debugLevel > 50) {
             println("viewport: ")

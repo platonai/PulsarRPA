@@ -4,9 +4,8 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.fetch.driver.Browser
-import ai.platon.pulsar.crawl.fetch.driver.BrowserEvents
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import java.util.concurrent.ConcurrentHashMap
@@ -17,6 +16,7 @@ open class BrowserManager(
     val conf: ImmutableConfig
 ): AutoCloseable {
     private val logger = getLogger(this)
+    private var registered = AtomicBoolean()
     private val closed = AtomicBoolean()
     private val browserFactory = BrowserFactory()
     private val _browsers = ConcurrentHashMap<BrowserId, Browser>()
@@ -31,6 +31,8 @@ open class BrowserManager(
      * */
     @Throws(BrowserLaunchException::class)
     fun launch(browserId: BrowserId, driverSettings: WebDriverSettings, capabilities: Map<String, Any>): Browser {
+        registerAsClosableIfNecessary()
+
         val launcherOptions = LauncherOptions(driverSettings)
         if (driverSettings.isSupervised) {
             launcherOptions.supervisorProcess = driverSettings.supervisorProcess
@@ -52,7 +54,7 @@ open class BrowserManager(
     @Synchronized
     fun closeBrowser(browserId: BrowserId) {
         val browser = _browsers.remove(browserId)
-        if (browser != null) {
+        if (browser is AbstractBrowser) {
             kotlin.runCatching { browser.close() }.onFailure { warnForClose(this, it) }
             closedBrowsers.add(browser)
         }
@@ -107,11 +109,14 @@ open class BrowserManager(
     }
 
     private fun findLeastValuableDriver(drivers: Iterable<WebDriver>): WebDriver? {
-        return drivers.filter { !it.isReady && !it.isWorking }.minByOrNull { it.lastActiveTime }
+        return drivers.filterIsInstance<AbstractWebDriver>()
+            .filter { !it.isReady && !it.isWorking }
+            .minByOrNull { it.lastActiveTime }
     }
 
     fun maintain() {
         browsers.values.forEach {
+            require(it is AbstractBrowser)
             it.emit(BrowserEvents.willMaintain)
             it.emit(BrowserEvents.maintain)
             it.emit(BrowserEvents.didMaintain)
@@ -122,6 +127,7 @@ open class BrowserManager(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             _browsers.values.forEach { browser ->
+                require(browser is AbstractBrowser)
                 kotlin.runCatching { browser.close() }.onFailure { warnForClose(this, it) }
             }
             _browsers.clear()
@@ -138,9 +144,19 @@ open class BrowserManager(
         }
 
         synchronized(browserFactory) {
-            return _browsers.computeIfAbsent(browserId) {
-                browserFactory.launch(browserId, launcherOptions, launchOptions)
-            }.also { historicalBrowsers.add(it) }
+            val browser1 = browserFactory.launch(browserId, launcherOptions, launchOptions)
+            _browsers[browserId] = browser1
+            historicalBrowsers.add(browser1)
+            
+            return browser1
+        }
+    }
+    
+    private fun registerAsClosableIfNecessary() {
+        if (registered.compareAndSet(false, true)) {
+            // Actually, it's safe to register multiple times, the manager will be closed only once, and the browsers
+            // will be closed in the manager's close function.
+            PulsarContexts.registerClosable(this, -100)
         }
     }
 }

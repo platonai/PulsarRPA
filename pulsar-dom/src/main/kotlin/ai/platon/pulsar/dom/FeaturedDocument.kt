@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
 import ai.platon.pulsar.common.math.vectors.isNotEmpty
+import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.dom.nodes.*
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.dom.select.*
@@ -375,6 +376,7 @@ open class FeaturedDocument(val document: Document) {
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined.
      * */
+    @Throws(NoSuchElementException::class)
     fun selectFirst(query: String) =
         document.selectFirstOrNull(query) ?: throw NoSuchElementException("No element matching $query")
 
@@ -385,6 +387,7 @@ open class FeaturedDocument(val document: Document) {
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined.
      * */
+    @Throws(NoSuchElementException::class)
     fun <T> selectFirst(query: String, transformer: (Element) -> T) =
         document.selectFirstOrNull(query)?.let { transformer(it) }
             ?: throw NoSuchElementException("No element matching $query")
@@ -529,21 +532,21 @@ open class FeaturedDocument(val document: Document) {
      * Find hyperlinks in elements matching the CSS query.
      * */
     @JvmOverloads
-    fun selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
+    fun selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<Hyperlink> =
         document.selectHyperlinks(query, offset, limit)
     
     /**
      * Find anchor elements matching the CSS query.
      * */
     @JvmOverloads
-    fun selectAnchors(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
+    fun selectAnchors(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor> =
         document.selectAnchors(query, offset, limit)
 
     /**
      * Find image elements matching the CSS query.
      * */
     @JvmOverloads
-    fun selectImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
+    fun selectImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> =
         document.selectImages(query, offset, limit)
 
     /**

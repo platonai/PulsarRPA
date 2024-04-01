@@ -4,13 +4,12 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
+import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.dom.nodes.GeoAnchor
 import com.google.common.annotations.Beta
 import org.jsoup.Connection
 import java.io.Closeable
 import java.time.Duration
-import java.time.Instant
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.random.Random
 
 /**
  * [WebDriver] defines a concise interface to visit and interact with web pages,
@@ -29,67 +28,63 @@ import kotlin.random.Random
  * most modern webpages support lazy loading using ajax tech, where the page
  * content only starts to load when it is scrolled into view.
  * * [pageSource]: retrieve the source code of a webpage.
+ *
+ * URLs and location properties in the browser:
+ *
+ * In the Document Object Model (DOM), the relationship between `document.URL`, `document.documentURI`,
+ * `document.location`, and the URL displayed in the browser's address bar is as follows:
+ * 1. `document.URL`:
+ *    - This property returns the URL of the document as a string.
+ *    - It is a read-only property and reflects the current URL of the document.
+ *    - Changes to `document.location` will also update `document.URL`.
+ * 2. `document.documentURI`:
+ *    - This property returns the URI of the document.
+ *    - It is also a read-only property and typically contains the same value as `document.URL`.
+ *    - However, `document.documentURI` is defined to be the URI that was provided to the parser, which could
+ *      potentially differ from `document.URL` in certain cases, although in practice, this is rare.
+ * 3. `document.location`:
+ *    - This property represents the location (URL) of the current page and allows you to manipulate the URL.
+ *    - It is a read-write property, which means you can change it to navigate to a different page or to manipulate
+ *      query strings, fragments, etc.
+ *    - Changes to `document.location` will cause the browser to navigate to the new URL, updating both `document.URL`
+ *      and the URL displayed in the address bar.
+ * 4. URL displayed in the address bar:
+ *    - The URL displayed in the browser's address bar is what users see and can edit directly.
+ *    - It is typically synchronized with `document.URL` and `document.location.href` (a property of `document.location`).
+ *    - When the page is loaded or when `document.location` is modified, the address bar is updated to reflect the new URL.
+ * In summary, `document.URL` and `document.documentURI` are read-only properties that reflect the current URL of the
+ * document, while `document.location` is a read-write property that not only reflects the current URL but also allows
+ * you to navigate to a new one. The URL displayed in the address bar is a user-facing representation of the current
+ * document's URL, which is usually in sync with `document.location`.
  */
 interface WebDriver: Closeable {
-    /**
-     * The state of the driver.
-     * */
-    enum class State {
-        /**
-         * The driver is initialized.
-         * */
-        INIT,
-        /**
-         * The driver is ready to work.
-         * */
-        READY,
-        /**
-         * The driver is working.
-         * */
-        WORKING,
-        /**
-         * The driver is retired and should be quit as soon as possible.
-         * */
-        RETIRED,
-        /**
-         * The driver is quit.
-         * */
-        QUIT;
-        /**
-         * Whether the driver is initialized.
-         * */
-        val isInit get() = this == INIT
-        /**
-         * Whether the driver is ready to work.
-         * */
-        val isReady get() = this == READY
-        /**
-         * Whether the driver is working.
-         * */
-        val isWorking get() = this == WORKING
-        /**
-         * Whether the driver is quit.
-         * */
-        val isQuit get() = this == QUIT
-        /**
-         * Whether the driver is retired and should be quit as soon as possible.
-         * */
-        val isRetired get() = this == RETIRED
-    }
-    
     /**
      * The driver id.
      * */
     val id: Int
     /**
-     * The driver name.
-     * */
-    val name: String
-    /**
      * The browser of the driver.
      * The browser defines methods and events to manipulate a real browser.
      * */
     val browser: Browser
+    /**
+     * Web pages for the page open from the current page, via window.open(), link click, form submission,
+     * etc.
+     * */
+    val frames: List<WebDriver>
+    /**
+     * The driver from whom opens the current page.
+     * */
+    val opener: WebDriver?
+    /**
+     * Web pages for the page open from the current page, via window.open(), link click, form submission,
+     * etc.
+     * */
+    val outgoingPages: Set<WebDriver>
+    /**
+     * The browser type.
+     * */
+    val browserType: BrowserType
     /**
      * The current navigation entry.
      * */
@@ -99,109 +94,9 @@ interface WebDriver: Closeable {
      * */
     val navigateHistory: NavigateHistory
     /**
-     * The browser type.
-     * */
-    val browserType: BrowserType
-    /**
-     * Whether the driver supports javascript. Web drivers such as MockDriver do not
-     * support javascript.
-     * */
-    val supportJavascript: Boolean
-    /**
-     * Whether the page source is mocked.
-     * */
-    val isMockedPageSource: Boolean
-    /**
-     * Whether the driver is recovered from the browser's tab list.
-     * */
-    var isRecovered: Boolean
-    /**
-     * Whether the driver is recovered and is reused to serve new tasks.
-     * */
-    var isReused: Boolean
-    /**
-     * The state of the driver.
-     * * [State.INIT]: The driver is initialized.
-     * * [State.READY]: The driver is ready to work.
-     * * [State.WORKING]: The driver is working.
-     * * [State.RETIRED]: The driver is retired and should be quit as soon as possible.
-     * * [State.QUIT]: The driver is quit.
-     * */
-    val state: AtomicReference<State>
-    /**
      * The associated data of the driver.
      * */
     val data: MutableMap<String, Any?>
-    /**
-     * The time of the last active action.
-     * */
-    val lastActiveTime: Instant
-    /**
-     * The idle timeout.
-     * */
-    var idleTimeout: Duration
-    /**
-     * Whether the driver is idle. The driver is idle if it is not working for a period of time.
-     * */
-    val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
-    /**
-     * The timeout to wait for an element to appear.
-     * */
-    var waitForElementTimeout: Duration
-    /**
-     * Whether the driver is initialized.
-     * */
-    val isInit: Boolean
-    /**
-     * Whether the driver is ready to work.
-     * */
-    val isReady: Boolean
-    /**
-     * Whether the driver is working.
-     * */
-    val isWorking: Boolean
-    /**
-     * Whether the driver is retired and should be quit as soon as possible.
-     * */
-    val isRetired: Boolean
-    /**
-     * Whether the driver is quit.
-     * */
-    val isQuit: Boolean
-    /**
-     * Whether the current driver task is canceled and should return as soon as possible.
-     * */
-    val isCanceled: Boolean
-    /**
-     * Whether the driver is crashed.
-     * */
-    val isCrashed: Boolean
-    /**
-     * The delay policy to wait for the next action, such as click, type, etc.
-     * The delay policy is a function that returns a delay time in milliseconds.
-     * It is used to mimic real people to interact with webpages.
-     * */
-    val delayPolicy: (String) -> Long get() = { 300L + Random.nextInt(500) }
-    /**
-     * The main request's http headers.
-     * */
-    val mainRequestHeaders: Map<String, Any>
-    /**
-     * The main request's http cookies.
-     * */
-    val mainRequestCookies: List<Map<String, String>>
-    /**
-     * The main response's status.
-     * */
-    val mainResponseStatus: Int
-    /**
-     * The main response's status text.
-     * */
-    val mainResponseStatusText: String
-    /**
-     * The main response's http headers.
-     * */
-    val mainResponseHeaders: Map<String, Any>
     /**
      * Returns a JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on,
      * the other JVM languages might have difficulty to handle kotlin suspend methods.
@@ -237,30 +132,27 @@ interface WebDriver: Closeable {
      */
     suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>)
     /**
-     * Returns the main resource response. In case of multiple redirects, the navigation
-     * will resolve with the first non-redirect response.
+     * TODO: NOT IMPLEMENTED
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun setTimeouts(browserSettings: BrowserSettings)
+    /**
+     * Navigates current page to the given URL.
      *
      * @param url URL to navigate page to.
      */
     @Throws(WebDriverException::class)
     suspend fun navigateTo(url: String)
     /**
-     * Returns the response of the main resource. In case of multiple redirects, the navigation will resolve
-     * with the first non-redirect response.
+     * Navigates current page to the given URL.
      *
      * @param entry NavigateEntry to navigate page to.
      */
     @Throws(WebDriverException::class)
     suspend fun navigateTo(entry: NavigateEntry)
-    
     /**
-     * TODO: NOT IMPLEMENTED
-     * */
-    @Throws(WebDriverException::class)
-    suspend fun setTimeouts(browserSettings: BrowserSettings)
-    
-    /**
-     * Returns a string representing the current URL that the browser is looking at.
+     * Returns a string representing the current URL that the browser is looking at. The current url is always
+     * the main frame's url if the browser succeed to return it, and is displayed in the browser's address bar.
      *
      * If the browser failed to return a proper url, return the passed in url to navigate.
      *
@@ -269,29 +161,58 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun currentUrl(): String
     /**
-     * Returns the document's location evaluated by javascript.
+     * The URL read-only property of the Document interface returns the document location as a string.
      *
-     * In javascript, the `window.location`, or `document.location`, is a read-only property
-     * returns a Location object, which contains information about the URL of the
-     * document and provides methods for changing that URL and loading another URL.
+     * This property equals to javascript `document.URL`.
+     * The `document.URL` property returns the same value. The `document.documentURI` property can be used on
+     * any document types, while the `document.URL` property can only be used on HTML documents.
      *
-     * To retrieve just the URL as a string, the read-only `document.URL` property can
-     * also be used.
-     * */
-    suspend fun location(): String
+     * @see [Document: URL property](https://developer.mozilla.org/en-US/docs/Web/API/Document/URL)
+     *
+     * @return A string containing the URL of the document.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun url(): String
     /**
-     * Returns the document's baseURI evaluated by javascript.
+     * Returns the document location as a string.
      *
-     * In javascript, the baseURI is a property of Node, it's the absolute base URL of the
+     * This property equals to javascript `document.documentURI`.
+     *
+     * The `document.URL` property which returns the same value. The `document.documentURI` property can be used on
+     * any document types, while the `document.URL` property can only be used on HTML documents.
+     *
+     * @see [Document: documentURI property](https://developer.mozilla.org/en-US/docs/Web/API/Document/documentURI)
+     *
+     * @return The document's documentURI.
+     * */
+    suspend fun documentURI(): String
+    /**
+     * Returns the document's baseURI.
+     *
+     * The baseURI is a property of Node, it's the absolute base URL of the
      * document containing the node. A baseURI is used to resolve relative URLs.
      *
      * The base URL is determined as follows:
      * 1. By default, the base URL is the location of the document
      *    (as determined by window.location).
      * 2. If the document has an `<base>` element, its href attribute is used.
+     *
+     * @return The document's baseURI.
      * */
     suspend fun baseURI(): String
-    
+    /**
+     * The referrer property returns the URI of the page that linked to this page.
+     *
+     * The value is an empty string if the user navigated to the page directly (not through a link, but, for example,
+     * by using a bookmark).
+     *
+     * Inside an <iframe>, the referrer will initially be set to the same value as the href of the parent
+     * window's Window.location.
+     *
+     * @return The document's referrer.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun referrer(): String
     /**
      * Returns the source of the last loaded page. If the page has been modified after loading (for
      * example, by Javascript) there is no guarantee that the returned text is that of the modified
@@ -303,7 +224,11 @@ interface WebDriver: Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun pageSource(): String?
-    
+    /**
+     * Returns the cookies of the current page.
+     *
+     * @return The cookies of the current page.
+     */
     @Throws(WebDriverException::class)
     suspend fun getCookies(): List<Map<String, String>>
     /**
@@ -327,32 +252,84 @@ interface WebDriver: Closeable {
     /** Clears browser cookies. */
     @Throws(WebDriverException::class)
     suspend fun clearBrowserCookies()
-    
     /**
-     * Returns when element specified by selector satisfies {@code state} option.
+     * Wait until the element identified by the selector becomes present in the DOM or timeout.
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForSelector(selector: String): Long
+    suspend fun waitForSelector(selector: String): Duration = waitForSelector(selector) {}
     /**
-     * Returns when element specified by selector satisfies {@code state} option.
-     * Returns the time remaining until timeout.
+     * Wait until the element identified by the selector becomes present in the DOM or timeout.
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long
+    suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long = waitForSelector(selector, timeoutMillis) {}
+    /**
+     * Wait for the element identified by the selector to become present in the DOM, or until timeout.
+     * */
     @Throws(WebDriverException::class)
-    suspend fun waitForSelector(selector: String, timeout: Duration): Long
+    suspend fun waitForSelector(selector: String, timeout: Duration): Duration = waitForSelector(selector, timeout) {}
+    /**
+     * Wait for the element identified by the selector to become present in the DOM, or until timeout.
+     * This method periodically checks for the existence of the element. If the element is not found during a check,
+     * the action will be executed, such as scrolling the page down.
+     * */
     @Throws(WebDriverException::class)
-    suspend fun waitForNavigation(): Long
+    suspend fun waitForSelector(selector: String, action: suspend () -> Unit): Duration
+    /**
+     * Wait for the element identified by the selector to become present in the DOM, or until timeout.
+     * This method periodically checks for the existence of the element. If the element is not found during a check, 
+     * the action will be executed, such as scrolling the page down.
+     * */
     @Throws(WebDriverException::class)
-    suspend fun waitForNavigation(timeoutMillis: Long): Long
+    suspend fun waitForSelector(selector: String, timeoutMillis: Long, action: suspend () -> Unit): Long =
+        waitForSelector(selector, Duration.ofMillis(timeoutMillis), action).toMillis()
+    /**
+     * Wait for the element identified by the selector to become present in the DOM, or until timeout.
+     * This method periodically checks for the existence of the element. If the element is not found during a check,
+     * the action will be executed, such as scrolling the page down.
+     * */
     @Throws(WebDriverException::class)
-    suspend fun waitForNavigation(timeout: Duration): Long
+    suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Duration
+    /**
+     * Wait until the current url changes or timeout.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun waitForNavigation(): Duration
+    /**
+     * Wait until the current url changes or timeout.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun waitForNavigation(timeoutMillis: Long): Long = waitForNavigation(Duration.ofMillis(timeoutMillis)).toMillis()
+    /**
+     * Wait until the current url changes or timeout.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun waitForNavigation(timeout: Duration): Duration
+    /**
+     * Await navigation to the specified URL page or timeout if necessary.
+     * */
     @Throws(WebDriverException::class)
     suspend fun waitForPage(url: String, timeout: Duration): WebDriver?
-
-    /*
-     * Status checking
-     **/
+    
+    /**
+     * Wait until the predication returns true.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun waitUntil(predicate: suspend () -> Boolean): Duration
+    /**
+     * Wait until the predication returns true.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun waitUntil(timeoutMillis: Long, predicate: suspend () -> Boolean): Long =
+        waitUntil(Duration.ofMillis(timeoutMillis), predicate).toMillis()
+    /**
+     * Wait until the predication returns true.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean): Duration
+    
+    ///////////////////////////////////////////////////////////////////
+    // Status checking
+    //
 
     /**
      * Returns whether the element exists.
@@ -412,6 +389,34 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun type(selector: String, text: String)
     /**
+     * This method emulates inserting text that doesn't come from a key press.
+     *
+     * Unlike [type], this method clears the existing value before typing.
+     *
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to focus. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * @param text The text to insert.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun fill(selector: String, text: String)
+    /**
+     * Shortcut for keyboard down and keyboard up.
+     *
+     * The key is specified as a string, which can be a single character, a key name, or a combination of both.
+     * For example, 'a', 'A', 'KeyA', 'Enter', 'Shift+A', and 'Control+Shift+Tab' are all valid keys.
+     *
+     * TODO: find out can we press keys on pages which are not in the front.
+     *
+     * @param key - A key to press. The key can be a single character, a key name, or a combination of both.
+     * See {@link KeyInput} for a list of all key names.
+     *
+     * see {@link https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/editing/commands/editor_command_names.h | Chromium Source Code} for valid command names.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun press(selector: String, key: String)
+    /**
      * This method clicks an element with [selector] and focuses it. If there's no
      * element matching `selector`, nothing to do.
      *
@@ -434,12 +439,6 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun clickTextMatches(selector: String, pattern: String, count: Int = 1)
-    /**
-     * Use clickTextMatches instead
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("clickTextMatches(selector, pattern, count"))
-    @Throws(WebDriverException::class)
-    suspend fun clickMatches(selector: String, pattern: String, count: Int = 1) = clickTextMatches(selector, pattern, count)
     @Throws(WebDriverException::class)
     suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
     @Throws(WebDriverException::class)
@@ -574,9 +573,9 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun firstText(selector: String): String? = selectFirstTextOrNull(selector)
     /** Returns the nodes' text contents. */
-    @Deprecated("Inappropriate name", ReplaceWith("selectTexts(selector)"))
+    @Deprecated("Inappropriate name", ReplaceWith("selectTextAll(selector)"))
     @Throws(WebDriverException::class)
-    suspend fun allTexts(selector: String): List<String> = selectTexts(selector)
+    suspend fun allTexts(selector: String): List<String> = selectTextAll(selector)
     /**
      * Returns the node's text content, the node is located by [selector].
      *
@@ -588,15 +587,26 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun selectFirstTextOrNull(selector: String): String?
     /**
-     * Returns the nodes' text contents.
+     * Returns a list of text contents of all the elements matching the specified selector within the page.
      *
-     * If the nodes do not exist, returns an empty list.
+     * If no elements match the selector, returns an empty list.
+     *
+     * @param selector The selector to locate the nodes.
+     * @return The text contents of the nodes.
+     * */
+    @Deprecated("Inappropriate name", ReplaceWith("selectTextAll(selector)"))
+    @Throws(WebDriverException::class)
+    suspend fun selectTexts(selector: String): List<String> = selectTextAll(selector)
+    /**
+     * Returns a list of text contents of all the elements matching the specified selector within the page.
+     *
+     * If no elements match the selector, returns an empty list.
      *
      * @param selector The selector to locate the nodes.
      * @return The text contents of the nodes.
      * */
     @Throws(WebDriverException::class)
-    suspend fun selectTexts(selector: String): List<String>
+    suspend fun selectTextAll(selector: String): List<String>
     /**
      * Returns the node's attribute value, the node is located by [selector], the attribute is [attrName].
      *
@@ -609,16 +619,76 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String?
     /**
+     * Returns the node's attribute values, the node is located by [selector].
+     *
+     * If the node do not exist, or the attribute does not exist, returns an empty list.
+     *
+     * @param selector The selector to locate the nodes.
+     * @return The attribute pairs of the nodes.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectAttributes(selector: String): Map<String, String>
+    /**
      * Returns the nodes' attribute values, the nodes are located by [selector], the attribute is [attrName].
      *
      * If the nodes do not exist, or the attribute does not exist, returns an empty list.
      *
      * @param selector The selector to locate the nodes.
      * @param attrName The attribute name to retrieve.
+     * @param start The offset of the first node to select.
+     * @param limit The maximum number of nodes to select.
      * @return The attribute values of the nodes.
      * */
     @Throws(WebDriverException::class)
-    suspend fun selectAttributes(selector: String, attrName: String): List<String>
+    suspend fun selectAttributeAll(selector: String, attrName: String, start: Int = 0, limit: Int = 1000): List<String>
+    /**
+     * Set the attribute of an element located by [selector].
+     *
+     * @param selector The CSS query to select an element.
+     * @param attrName The attribute name to set.
+     * @param attrValue The attribute value to set.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun setAttribute(selector: String, attrName: String, attrValue: String)
+    /**
+     * Set the attribute of all elements matching the CSS query.
+     *
+     * @param selector The CSS query to select elements.
+     * @param attrName The attribute name to set.
+     * @param attrValue The attribute value to set.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String)
+    /**
+     * Find hyperlinks in elements matching the CSS query.
+     *
+     * @param selector The CSS query to select elements.
+     * @param offset The offset of the first element to select.
+     * @param limit The maximum number of elements to select.
+     * @return The hyperlinks in the elements.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectHyperlinks(selector: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<Hyperlink>
+    /**
+     * Find anchor elements matching the CSS query.
+     *
+     * @param selector The CSS query to select elements.
+     * @param offset The offset of the first element to select.
+     * @param limit The maximum number of elements to select.
+     * @return The anchors.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectAnchors(selector: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor>
+    /**
+     * Find image elements matching the CSS query.
+     *
+     * @param selector The CSS query to select elements.
+     * @param offset The offset of the first element to select.
+     * @param limit The maximum number of elements to select.
+     * @return The image URLs.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectImages(selector: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String>
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
@@ -628,6 +698,15 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun evaluate(expression: String): Any?
+    /**
+     * Executes JavaScript in the context of the currently selected frame or window. The script
+     * fragment provided will be executed as the body of an anonymous function.
+     *
+     * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun <T> evaluate(expression: String, defaultValue: T): T
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
@@ -671,8 +750,7 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun boundingBox(selector: String): RectD?
     /**
-     * Create a new Jsoup session with the last page's context, which means, the same
-     * headers and cookies.
+     * Create a new Jsoup session with the last page's context, which means, the same headers and cookies.
      * */
     @Throws(WebDriverException::class)
     suspend fun newJsoupSession(): Connection
@@ -683,14 +761,14 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun loadJsoupResource(url: String): Connection.Response
     /**
-     * Load url as a resource without browser rendering, with the last page's context,
-     * which means, the same headers and cookies.
+     * Load the url as a resource without browser rendering, with the last page's context, which means, the same headers
+     * and cookies.
      * */
     @Throws(WebDriverException::class)
     suspend fun loadResource(url: String): NetworkResourceResponse
     /**
      * Force the page pauses all navigations and PENDING resource fetches.
-     * If the page loading stops, the user can still interact with the page,
+     * If the page loading pauses, the user can still interact with the page,
      * and therefore resources can continue to load.
      * */
     @Throws(WebDriverException::class)
@@ -699,37 +777,8 @@ interface WebDriver: Closeable {
      * Force the page stop all navigations and RELEASES all resources. Interaction with the
      * stop page results in undefined behavior and the results should not be trusted.
      *
-     * If a web driver stops, it can later be used to visit new pages.
+     * If a web driver stops, it can later be used to visit other pages.
      * */
     @Throws(WebDriverException::class)
     suspend fun stop()
-    /**
-     * Force the page stop all navigations and RELEASES all resources.
-     * If a web driver is terminated, it should not be used any more and should be quit
-     * as soon as possible.
-     * */
-    @Throws(WebDriverException::class)
-    suspend fun terminate()
-    
-    /** Wait until the tab is terminated and closed. */
-    @Throws(Exception::class)
-    fun awaitTermination()
-    /**
-     * Mark the driver as free, so it can be used to fetch a new page.
-     * */
-    fun free()
-    /**
-     * Mark the driver as working, so it can not be used to fetch another page.
-     * */
-    fun startWork()
-    /**
-     * Mark the driver as retired, so it can not be used to fetch any page,
-     * and should be quit as soon as possible.
-     * */
-    fun retire()
-    /**
-     * Mark the driver as canceled, so the fetch process should return as soon as possible,
-     * and the fetch result should be dropped.
-     * */
-    fun cancel()
 }

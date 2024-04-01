@@ -3,6 +3,7 @@ package ai.platon.pulsar.test.session
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.session.BasicPulsarSession
@@ -89,6 +90,7 @@ class SessionTests {
     fun `When loaded a HTML page then the navigate state are correct`() {
         val options = session.options("-refresh")
         options.event.browseEvent.onDidScroll.addLast { page, driver ->
+            require(driver is ChromeDevtoolsDriver)
             val navigateEntry = driver.navigateEntry
             assertTrue { navigateEntry.documentTransferred }
             assertTrue { navigateEntry.networkRequestCount.get() > 0 }

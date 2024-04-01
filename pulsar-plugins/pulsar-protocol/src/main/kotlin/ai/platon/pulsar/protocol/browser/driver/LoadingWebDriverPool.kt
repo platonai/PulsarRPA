@@ -1,16 +1,14 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_TIMEOUT
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.metrics.MetricsSystem
 import ai.platon.pulsar.crawl.BrowseEvent
-import ai.platon.pulsar.crawl.fetch.driver.Browser
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
@@ -32,7 +30,7 @@ class LoadingWebDriverPool constructor(
     val driverPoolManager: WebDriverPoolManager,
     val driverFactory: WebDriverFactory,
     val immutableConfig: ImmutableConfig
-) {
+): AutoCloseable {
     companion object {
         var CLOSE_ALL_TIMEOUT = Duration.ofSeconds(60)
         var POLLING_TIMEOUT = Duration.ofSeconds(60)
@@ -48,7 +46,7 @@ class LoadingWebDriverPool constructor(
     /**
      * The max number of drivers the pool can hold
      * */
-    val capacity get() = immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    val capacity get() = immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, DEFAULT_BROWSER_MAX_ACTIVE_TABS)
 
     /**
      * The browser who create all drivers for this pool.
@@ -72,7 +70,9 @@ class LoadingWebDriverPool constructor(
      * Retired but not closed yet.
      * */
     private var isRetired = false
-    val isActive get() = !isRetired && AppContext.isActive
+    private val closed = AtomicBoolean()
+    val isClosed get() = closed.get()
+    val isActive get() = !isClosed && !isRetired && AppContext.isActive
     private val launchEventsEmitted = AtomicBoolean()
     private val _numCreatedDrivers = AtomicInteger()
     private val _numWaitingTasks = AtomicInteger()
@@ -177,6 +177,7 @@ class LoadingWebDriverPool constructor(
     /**
      * Allocate [capacity] drivers
      * */
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun allocate(conf: VolatileConfig) {
         repeat(capacity) {
             runCatching { put(poll(priority, conf, POLLING_TIMEOUT.seconds, TimeUnit.SECONDS)) }.onFailure {
@@ -191,20 +192,21 @@ class LoadingWebDriverPool constructor(
      *
      * @return the head of the free driver queue, or {@code null} if this queue is empty
      */
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun poll(): WebDriver = poll(VolatileConfig.UNSAFE)
 
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun poll(conf: VolatileConfig): WebDriver = poll(0, conf, POLLING_TIMEOUT.seconds, TimeUnit.SECONDS)
 
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun poll(conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver = poll(0, conf, timeout, unit)
 
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun poll(priority: Int, conf: VolatileConfig, timeout: Duration): WebDriver {
         return poll(priority, conf, timeout.seconds, TimeUnit.SECONDS)
     }
 
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun poll(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver {
         val driver = pollWebDriver(priority, conf, timeout, unit)
         if (driver == null) {
@@ -240,11 +242,15 @@ class LoadingWebDriverPool constructor(
     }
 
     private fun offerOrDismiss(driver: WebDriver) {
+        require(driver is AbstractWebDriver)
         if (driver.isWorking) {
             statefulDriverPool.offer(driver)
             meterOffer.mark()
         } else {
-            logger.info("The driver is not working unexpectedly, mark it as retired and close it")
+            if (isActive) {
+                logger.warn("The driver is not working unexpectedly, mark it as retired and close it")
+            }
+
             statefulDriverPool.close(driver)
             meterClosed.mark()
         }
@@ -258,9 +264,11 @@ class LoadingWebDriverPool constructor(
         isRetired = true
         statefulDriverPool.retire()
     }
-
-    fun close() {
-        statefulDriverPool.close()
+    
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            statefulDriverPool.clear()
+        }
     }
 
     fun forEach(action: (WebDriver) -> Unit) = activeDrivers.forEach(action)
@@ -269,6 +277,7 @@ class LoadingWebDriverPool constructor(
 
     fun cancel(url: String): WebDriver? {
         return activeDrivers.lastOrNull { it.navigateEntry.pageUrl == url }?.also {
+            require(it is AbstractWebDriver)
             it.cancel()
         }
     }
@@ -314,16 +323,13 @@ class LoadingWebDriverPool constructor(
         }
     }
 
-    @Throws(BrowserLaunchException::class)
+    @Throws(BrowserLaunchException::class, InterruptedException::class)
     private fun pollWebDriver(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver? {
         _numWaitingTasks.incrementAndGet()
 
         val driver = try {
             resourceSafeCreateDriverIfNecessary(priority, conf)
             statefulDriverPool.poll(timeout, unit)
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            null
         } finally {
             _numWaitingTasks.decrementAndGet()
             lastActiveTime = Instant.now()
@@ -339,14 +345,15 @@ class LoadingWebDriverPool constructor(
     @Throws(BrowserLaunchException::class)
     private fun resourceSafeCreateDriverIfNecessary(priority: Int, conf: VolatileConfig) {
         synchronized(driverFactory) {
+            if (!isActive) {
+                return
+            }
+            
             if (!shouldCreateWebDriver()) {
                 return
             }
 
             val driver = computeBrowserAndDriver(priority, conf)
-            
-            // TODO: wait until the driver is ready
-            driver.state
         }
     }
 
@@ -372,7 +379,9 @@ class LoadingWebDriverPool constructor(
         // Using the count of non-quit drivers can better match the memory consumption,
         // but it's easy to wrongly count the quit drivers, a tiny bug can lead to a big mistake.
         // We leave a debug log here for diagnosis purpose.
-        val resourceConsumingDriversInBrowser = _browser?.drivers?.values?.count { !it.isQuit } ?: 0
+        val resourceConsumingDriversInBrowser = _browser?.drivers?.values
+            ?.filterIsInstance<AbstractWebDriver>()
+            ?.count { !it.isQuit } ?: 0
         // Number of active drivers in this driver pool
         val resourceConsumingDriversInPool = statefulDriverPool.activeDriverCount
         if (resourceConsumingDriversInBrowser != resourceConsumingDriversInPool) {
@@ -431,6 +440,7 @@ class LoadingWebDriverPool constructor(
     }
 
     private fun logDriverOnline(driver: WebDriver) {
+        require(driver is AbstractWebDriver)
         val driverSettings = driverFactory.driverSettings
         logger.trace("The {}th web driver is active, browser: {} pageLoadStrategy: {} capacity: {}",
             numActive, driver.name,

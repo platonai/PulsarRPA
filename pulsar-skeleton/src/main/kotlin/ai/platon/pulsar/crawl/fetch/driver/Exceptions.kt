@@ -27,7 +27,7 @@ open class WebDriverCancellationException(
     message: String? = null,
     driver: WebDriver? = null,
     cause: Throwable? = null
-): WebDriverException(message, driver, cause) {
+): IllegalWebDriverStateException(message, driver, cause) {
     constructor(message: String?, cause: Throwable) : this(message, null, cause)
 
     constructor(cause: Throwable?) : this(null, null, cause)
@@ -36,7 +36,7 @@ open class WebDriverCancellationException(
 open class WebDriverUnavailableException(
     message: String? = null,
     cause: Throwable? = null
-): WebDriverException(message, null, cause) {
+): IllegalWebDriverStateException(message, null, cause) {
     constructor(cause: Throwable?) : this(null, cause)
 }
 

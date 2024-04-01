@@ -39,7 +39,7 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
         }
 
     private fun formatViewPort(delimiter: String = ","): String {
-        val vp = BrowserSettings.screenViewport
+        val vp = BrowserSettings.SCREEN_VIEWPORT
         return "${vp.width}$delimiter${vp.height}"
     }
 

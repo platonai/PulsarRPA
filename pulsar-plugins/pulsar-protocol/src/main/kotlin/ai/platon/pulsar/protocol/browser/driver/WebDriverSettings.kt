@@ -71,7 +71,7 @@ open class WebDriverSettings(conf: ImmutableConfig): BrowserSettings(conf) {
     // var mobileEmulationEnabled = true
 
     open fun formatViewPort(delimiter: String = ","): String {
-        return "${screenViewport.width}$delimiter${screenViewport.height}"
+        return "${SCREEN_VIEWPORT.width}$delimiter${SCREEN_VIEWPORT.height}"
     }
 
     open fun createGeneralOptions(): MutableMap<String, Any> {

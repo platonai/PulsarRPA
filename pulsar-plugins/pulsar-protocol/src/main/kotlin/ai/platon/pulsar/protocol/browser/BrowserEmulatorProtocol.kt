@@ -18,7 +18,6 @@
  */
 package ai.platon.pulsar.protocol.browser
 
-import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -33,9 +32,9 @@ class BrowserEmulatorProtocol : ForwardingProtocol() {
     private val browserEmulator by lazy {
         // require(conf === context.unmodifiedConfig)
         context.getBeanOrNull(BrowserEmulatedFetcher::class)
-            ?: Defaults(conf).browserEmulatedFetcher.also { context.registerClosable(it) }
+            ?: Defaults(conf).browserEmulatedFetcher.also { PulsarContexts.registerClosable(it) }
     }
-    
+
     private val browserEmulatorOrNull get() = if (context.isActive) browserEmulator else null
     
     @Throws(Exception::class)

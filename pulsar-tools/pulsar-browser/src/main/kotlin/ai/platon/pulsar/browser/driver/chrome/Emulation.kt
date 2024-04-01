@@ -1,6 +1,9 @@
 package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.common.DescriptiveResult
+import ai.platon.pulsar.common.io.VirtualKeyboard
+import ai.platon.pulsar.common.io.VirtualKeyboard.KEYPAD_LOCATION
+import ai.platon.pulsar.common.io.VirtualKey
 import ai.platon.pulsar.common.math.geometric.DimD
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
@@ -8,6 +11,9 @@ import ai.platon.pulsar.common.math.geometric.RectD
 import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
 import com.github.kklisura.cdt.protocol.v2023.commands.DOM
 import com.github.kklisura.cdt.protocol.v2023.commands.Page
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
 import com.github.kklisura.cdt.protocol.v2023.types.input.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -117,13 +123,11 @@ class ClickableDOM(
     }
 
     fun boundingBox(): RectD? {
-        val box = kotlin.runCatching { dom.getBoxModel(nodeId, null, null) }
-            .getOrNull() ?: return null
+//        val box = dom.getBoxModel(nodeId, null, null)
 
-        val quad = box.border
-        if (quad.isEmpty()) {
-            return null
-        }
+        val box = dom.runCatching { getBoxModel(nodeId, null, null) }.getOrNull() ?: return null
+
+        val quad = box.border.takeIf { it.isNotEmpty() } ?: return null
 
         val x = arrayOf(quad[0], quad[2], quad[4], quad[6]).minOrNull()!!
         val y = arrayOf(quad[1], quad[3], quad[5], quad[7]).minOrNull()!!
@@ -187,14 +191,24 @@ class Mouse(private val devTools: ChromeDevTools) {
      * @param y - Vertical position of the mouse.
      */
     suspend fun click(x: Double, y: Double, clickCount: Int = 1, delayMillis: Long = 500) {
+// println("click($x, $y, $clickCount, $delayMillis)")
+        
         moveTo(x, y)
-        down(x, y, clickCount)
+        
+//        down(x, y, clickCount)
+//        if (delayMillis > 0) {
+//            delay(delayMillis)
+//        }
+//        up(x, y, clickCount)
 
-        if (delayMillis > 0) {
+        for (cc in 1..clickCount) {
+            down(x, y, cc)
             delay(delayMillis)
+            up(x, y, cc)
+            if (cc < clickCount) {
+                delay(delayMillis)
+            }
         }
-
-        up(x, y, clickCount)
     }
 
     suspend fun moveTo(point: PointD, steps: Int = 5, delayMillis: Long = 50) {
@@ -227,20 +241,20 @@ class Mouse(private val devTools: ChromeDevTools) {
      * TODO: input.dispatchMouseEvent(MOUSE_MOVED) not work, the reason is unknown. Robot.mouseMove works.
      * */
     private fun chromeMoveTo(x: Double, y: Double) {
-        input.dispatchMouseEvent(
-            DispatchMouseEventType.MOUSE_MOVED, x, y,
-            null, null,
-            null, // button
-            null, // buttons
-            null,
-            null, // force
-            null,
-            null,
-            null,
-            null, // twist
-            null,
-            null,
-            null
+        dispatchMouseEvent(
+            type = DispatchMouseEventType.MOUSE_MOVED, x = x, y = y,
+            modifiers = null, timestamp = null,
+            button = null, // button
+            buttons = null, // buttons
+            clickCount = null,
+            force = null, // force
+            tangentialPressure = null,
+            tiltX = null,
+            tiltY = null,
+            twist = null, // twist
+            deltaX = null,
+            deltaY = null,
+            pointerType = null
         )
     }
 
@@ -270,21 +284,22 @@ class Mouse(private val devTools: ChromeDevTools) {
      * @param y Y coordinate
      */
     suspend fun down(x: Double, y: Double, clickCount: Int = 1) {
+        // TODO: handle modifiers
         withContext(Dispatchers.IO) {
-            input.dispatchMouseEvent(
-                DispatchMouseEventType.MOUSE_PRESSED, x, y,
-                null, null,
-                MouseButton.LEFT,
-                null, // buttons
-                clickCount,
-                0.5, // force
-                null,
-                null,
-                null,
-                null, // twist
-                null,
-                null,
-                null
+            dispatchMouseEvent(
+                type = DispatchMouseEventType.MOUSE_PRESSED, x = x, y = y,
+                modifiers = null, timestamp = null,
+                button = MouseButton.LEFT,
+                buttons = null, // buttons
+                clickCount = clickCount,
+                force = 0.5, // force
+                tangentialPressure = null,
+                tiltX = null,
+                tiltY = null,
+                twist = null, // twist
+                deltaX = null,
+                deltaY = null,
+                pointerType = null
             )
         }
     }
@@ -298,41 +313,32 @@ class Mouse(private val devTools: ChromeDevTools) {
     }
 
     suspend fun up(x: Double, y: Double, clickCount: Int = 1) {
+        // TODO: handle modifiers
         withContext(Dispatchers.IO) {
-            input.dispatchMouseEvent(
-                DispatchMouseEventType.MOUSE_RELEASED, x, y,
-                null, null,
-                MouseButton.LEFT,
-                null, // buttons
-                clickCount,
-                null, // force
-                null,
-                null, // tiltX
-                null, // tiltY
-                null, // twist
-                null, // deltaX
-                null, // deltaY
-                null
+            dispatchMouseEvent(
+                type = DispatchMouseEventType.MOUSE_RELEASED, x = x, y = y,
+                button = MouseButton.LEFT,
+                clickCount = clickCount
             )
         }
     }
 
     suspend fun scroll(deltaX: Double = 0.0, deltaY: Double = 10.0) {
         withContext(Dispatchers.IO) {
-            input.dispatchMouseEvent(
-                DispatchMouseEventType.MOUSE_WHEEL, currentX, currentY,
-                null, null,
-                null, // button
-                null, // buttons
-                null,
-                null, // force
-                null,
-                null, // tiltX
-                null, // tiltY
-                null, // twist
-                deltaX, // deltaX
-                deltaY, // deltaY
-                null
+            dispatchMouseEvent(
+                type = DispatchMouseEventType.MOUSE_WHEEL, x = currentX, y = currentY,
+                modifiers = null, timestamp = null,
+                button = null, // button
+                buttons = null, // buttons
+                clickCount = null,
+                force = null, // force
+                tangentialPressure = null,
+                tiltX = null, // tiltX
+                tiltY = null, // tiltY
+                twist = null, // twist
+                deltaX = deltaX, // deltaX
+                deltaY = deltaY, // deltaY
+                pointerType = null
             )
         }
     }
@@ -398,20 +404,20 @@ class Mouse(private val devTools: ChromeDevTools) {
      */
     suspend fun wheel(x: Double, y: Double, deltaX: Double, deltaY: Double) {
         withContext(Dispatchers.IO) {
-            input.dispatchMouseEvent(
-                DispatchMouseEventType.MOUSE_WHEEL, x, y,
-                null, null,
-                null, // button
-                null, // buttons
-                null,
-                null, // force
-                null,
-                null, // tiltX
-                null, // tiltY
-                null, // twist
-                deltaX, // deltaX
-                deltaY, // deltaY
-                null
+            dispatchMouseEvent(
+                type = DispatchMouseEventType.MOUSE_WHEEL, x = x, y = y,
+                modifiers = null, timestamp = null,
+                button = null, // button
+                buttons = null, // buttons
+                clickCount = null,
+                force = null, // force
+                tangentialPressure = null,
+                tiltX = null, // tiltX
+                tiltY = null, // tiltY
+                twist = null, // twist
+                deltaX = deltaX, // deltaX
+                deltaY = deltaY, // deltaY
+                pointerType = null
             )
         }
     }
@@ -495,6 +501,29 @@ class Mouse(private val devTools: ChromeDevTools) {
         drop(target, data)
         up()
     }
+    
+    private fun dispatchMouseEvent(
+        @ParamName("type") type: DispatchMouseEventType,
+        @ParamName("x") x: Double? = null,
+        @ParamName("y") y: Double? = null,
+        @Optional @ParamName("modifiers") modifiers: Int? = null,
+        @Optional @ParamName("timestamp") timestamp: Double? = null,
+        @Optional @ParamName("button") button: MouseButton? = null,
+        @Optional @ParamName("buttons") buttons: Int? = null,
+        @Optional @ParamName("clickCount") clickCount: Int? = null,
+        @Experimental @Optional @ParamName("force") force: Double? = null,
+        @Experimental @Optional @ParamName("tangentialPressure") tangentialPressure: Double? = null,
+        @Experimental @Optional @ParamName("tiltX") tiltX: Int? = null,
+        @Experimental @Optional @ParamName("tiltY") tiltY: Int? = null,
+        @Experimental @Optional @ParamName("twist") twist: Int? = null,
+        @Optional @ParamName("deltaX") deltaX: Double? = null,
+        @Optional @ParamName("deltaY") deltaY: Double? = null,
+        @Optional @ParamName("pointerType") pointerType: DispatchMouseEventPointerType? = null
+    ) {
+        input.dispatchMouseEvent(
+            type, x, y, modifiers, timestamp, button, buttons, clickCount, force, tangentialPressure, tiltX, tiltY, twist, deltaX, deltaY, pointerType
+        )
+    }
 }
 
 /**
@@ -502,37 +531,231 @@ class Mouse(private val devTools: ChromeDevTools) {
  * */
 class Keyboard(private val devTools: ChromeDevTools) {
     private val input get() = devTools.input
+    private val pressedModifiers = mutableSetOf<String>()
+    private val pressedKeys = mutableSetOf<String>()
 
-    suspend fun type(nodeId: Int, text: String, delayMillis: Long) {
+    suspend fun type(text: String, delayMillis: Long) {
         text.forEach { char ->
             if (Character.isISOControl(char)) {
-                // TODO:
+                press("$char", delayMillis)
             } else {
                 input.insertText("$char")
             }
             delay(delayMillis)
         }
     }
+    
+    suspend fun delete(n: Int, delayMillis: Long) {
+        repeat(n) {
+            press("Backspace", delayMillis)
+        }
+    }
 
-    suspend fun press(key: String, delayMillis: Long) {
+    /**
+     * Presses a key.
+     * The key is specified as a string, which can be a single character, a key name, or a combination of both.
+     * For example, 'a', 'A', 'KeyA', 'Enter', 'Shift+A', and 'Control+Shift+Tab' are all valid keys.
+     * */
+    suspend fun press(keyString: String, delayMillis: Long) {
+        val tokens = splitKeyString(keyString).ifEmpty { return@press }
+        
+        val key = tokens.last()
+        for (i in 0 until tokens.size - 1) {
+            down(tokens[i])
+        }
+        
         down(key)
         delay(delayMillis)
         up(key)
+        
+        for (i in tokens.size - 2 downTo 0) {
+            up(tokens[i])
+        }
+    }
+    
+    suspend fun press(key: VirtualKey, delayMillis: Long) {
+        try {
+            down(key)
+            delay(delayMillis.coerceAtLeast(20))
+        } finally {
+            up(key)
+        }
     }
 
-    fun down(key: String) {
+    suspend fun down(singleKey: String) {
+        val virtualKey = createVirtualKeyForSingleKeyString(singleKey)
+        down(virtualKey)
+    }
+
+    suspend fun up(singleKey: String) {
+        val virtualKey = createVirtualKeyForSingleKeyString(singleKey)
+        up(virtualKey)
+    }
+
+    suspend fun down(key: VirtualKey) {
+        // From playwright:
+        // {"type":"keyDown","modifiers":0,"windowsVirtualKeyCode":13,"code":"Enter","commands":[],"key":"Enter","text":"\r","unmodifiedText":"\r","autoRepeat":false,"location":0,"isKeypad":false},"sessionId":"45E0A2ABC64CE5ACDC8A98061CC4667B"}
+        
+        down(pressedModifiers, key)
+    }
+
+    suspend fun up(key: VirtualKey) {
+        // {"type":"keyUp","modifiers":0,"key":"Enter","windowsVirtualKeyCode":13,"code":"Enter","location":0}
+
+        up(pressedModifiers, key)
+    }
+    
+    /**
+     * Splits a key string into its components.
+     * The key string can be a single character, a key name, or a combination of both.
+     * For example, 'a', 'A', 'KeyA', 'Enter', 'Shift+A', and 'Control+Shift+Tab' are all valid key strings.
+     * */
+    private fun splitKeyString(keyString: String): List<String> {
+        val keys = mutableListOf<String>()
+        val token = StringBuilder()
+        
+        keyString.forEach { char ->
+            if (char == '+' && token.isNotEmpty()) {
+                keys.add(token.toString().trim())
+                token.clear()
+            } else {
+                token.append(char)
+            }
+        }
+        
+        if (token.isNotEmpty()) {
+            keys.add(token.toString().trim())
+        }
+        
+        return keys
+    }
+    
+    private fun createVirtualKeyForSingleKeyString(singleKey: String): VirtualKey {
+        var virtualKey = VirtualKeyboard.KEYBOARD_LAYOUT[singleKey] ?:
+            throw IllegalArgumentException("Unknown key: $singleKey")
+
+        val shift = isShifted(virtualKey)
+        val shifted = virtualKey.shifted
+        virtualKey = if (shift && shifted != null) shifted else virtualKey
+        
+        return when {
+            pressedModifiers.size > 1 -> virtualKey.copy(text = "")
+            shift && pressedModifiers.size == 1 -> virtualKey.copy(text = "")
+            else -> virtualKey
+        }
+    }
+    
+    private fun isShifted(key: VirtualKey): Boolean {
+        return pressedModifiers.contains("Shift") && key.shifted != null
+    }
+    
+    private fun toModifiersMask(modifiers: Set<String>): Int {
+        var mask = 0
+        if (modifiers.contains("Alt")) mask = mask or 1
+        if (modifiers.contains("Control")) mask = mask or 2
+        if (modifiers.contains("Meta")) mask = mask or 4
+        if (modifiers.contains("Shift")) mask = mask or 8
+        return mask
+    }
+    
+    private suspend fun down(modifiers: Set<String>, key: VirtualKey) {
+        // playwright format:
+        // {"type":"keyDown","modifiers":0,"windowsVirtualKeyCode":13,"code":"Enter","commands":[],"key":"Enter","text":"\r","unmodifiedText":"\r","autoRepeat":false,"location":0,"isKeypad":false},"sessionId":"45E0A2ABC64CE5ACDC8A98061CC4667B"}
+        
+        val autoRepeat = pressedKeys.contains(key.code)
+        pressedKeys.add(key.code)
+        if (key.isModifier) {
+            pressedModifiers.add(key.key)
+        }
+        
+        val type = if (key.text.isEmpty()) DispatchKeyEventType.RAW_KEY_DOWN else DispatchKeyEventType.KEY_DOWN
+        val commands = emptyList<String>()
+        withContext(Dispatchers.IO) {
+            dispatchKeyEvent1(
+                type,
+                modifiers = toModifiersMask(modifiers),
+                windowsVirtualKeyCode = key.keyCodeWithoutLocation,
+                code = key.code,
+                commands = commands,
+                key = key.key,
+                text = key.text,
+                unmodifiedText = key.text,
+                location = key.location,
+                isKeypad = key.location == KEYPAD_LOCATION,
+                autoRepeat = autoRepeat,
+            )
+        }
+    }
+    
+    private suspend fun up(modifiers: Set<String>, key: VirtualKey) {
+        // playwright format:
+        // {"type":"keyUp","modifiers":0,"key":"Enter","windowsVirtualKeyCode":13,"code":"Enter","location":0}
+        
+        if (key.isModifier) {
+            pressedModifiers.remove(key.key)
+        }
+        pressedKeys.remove(key.code)
+
+        withContext(Dispatchers.IO) {
+            dispatchKeyEvent1(
+                DispatchKeyEventType.KEY_UP,
+                modifiers = toModifiersMask(modifiers),
+                key = key.key,
+                windowsVirtualKeyCode = key.keyCodeWithoutLocation,
+                code = key.code,
+                location = key.location,
+            )
+        }
+    }
+    
+    /**
+     * Dispatches a key event to the page.
+     *
+     * @param type Type of the key event.
+     * @param modifiers Bit field representing pressed modifier keys. Alt=1, Ctrl=2, Meta/Command=4,
+     *     Shift=8 (default: 0).
+     * @param timestamp Time at which the event occurred.
+     * @param text Text as generated by processing a virtual key code with a keyboard layout. Not
+     *     needed for `keyUp` and `rawKeyDown` events (default: "")
+     * @param unmodifiedText Text that would have been generated by the keyboard if no modifiers were
+     *     pressed (except for shift). Useful for shortcut (accelerator) key handling (default: "").
+     * @param keyIdentifier Unique key identifier (e.g., 'U+0041') (default: "").
+     * @param code Unique DOM defined string value for each physical key (e.g., 'KeyA') (default: "").
+     * @param key Unique DOM defined string value describing the meaning of the key in the context of
+     *     active modifiers, keyboard layout, etc. (e.g., 'AltGr') (default: "").
+     * @param windowsVirtualKeyCode Windows virtual key code (default: 0).
+     * @param nativeVirtualKeyCode Native virtual key code (default: 0).
+     * @param autoRepeat Whether the event was generated from auto repeat (default: false).
+     * @param isKeypad Whether the event was generated from the keypad (default: false).
+     * @param isSystemKey Whether the event was a system key event (default: false).
+     * @param location Whether the event was from the left or right side of the keyboard. 1=Left,
+     *     2=Right (default: 0).
+     * @param commands Editing commands to send with the key event (e.g., 'selectAll') (default: []).
+     *     These are related to but not equal the command names used in `document.execCommand` and
+     *     NSStandardKeyBindingResponding. See
+     *     https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/editing/commands/editor_command_names.h
+     *     for valid command names.
+     */
+    private fun dispatchKeyEvent1(
+        @ParamName("type") type: DispatchKeyEventType? = null,
+        @Optional @ParamName("modifiers") modifiers: Int? = null,
+        @Optional @ParamName("timestamp") timestamp: Double? = null,
+        @Optional @ParamName("text") text: String? = null,
+        @Optional @ParamName("unmodifiedText") unmodifiedText: String? = null,
+        @Optional @ParamName("keyIdentifier") keyIdentifier: String? = null,
+        @Optional @ParamName("code") code: String? = null,
+        @Optional @ParamName("key") key: String? = null,
+        @Optional @ParamName("windowsVirtualKeyCode") windowsVirtualKeyCode: Int? = null,
+        @Optional @ParamName("nativeVirtualKeyCode") nativeVirtualKeyCode: Int? = null,
+        @Optional @ParamName("autoRepeat") autoRepeat: Boolean? = null,
+        @Optional @ParamName("isKeypad") isKeypad: Boolean? = null,
+        @Optional @ParamName("isSystemKey") isSystemKey: Boolean? = null,
+        @Optional @ParamName("location") location: Int? = null,
+        @Experimental @Optional @ParamName("commands") commands: List<String?>? = null
+    ) {
         input.dispatchKeyEvent(
-            DispatchKeyEventType.KEY_DOWN
+            type, modifiers, timestamp, text, unmodifiedText, keyIdentifier, code, key, windowsVirtualKeyCode,
+            nativeVirtualKeyCode, autoRepeat, isKeypad, isSystemKey, location, commands
         )
     }
-
-    fun up(key: String) {
-        input.dispatchKeyEvent(
-            DispatchKeyEventType.KEY_UP
-        )
-    }
-}
-
-class Touchscreen() {
-
 }

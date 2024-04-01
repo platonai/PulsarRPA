@@ -81,7 +81,7 @@ abstract class AbstractPulsarSession(
 
     private val closableObjects = mutableSetOf<AutoCloseable>()
 
-    override fun registerClosable(closable: AutoCloseable) = ensureActive { closableObjects.add(closable) }
+    fun registerClosable(closable: AutoCloseable) = ensureActive { closableObjects.add(closable) }
 
     override fun disablePDCache() = run { enablePDCache = false }
 
@@ -158,6 +158,8 @@ abstract class AbstractPulsarSession(
     override fun fetchState(page: WebPage, options: LoadOptions) = context.fetchState(page, options)
 
     override fun open(url: String): WebPage = load(url, "-refresh")
+    
+    override fun open(url: String, event: PageEvent): WebPage = load(url, options("-refresh", event))
 
     override fun load(url: String): WebPage = load(url, options())
 

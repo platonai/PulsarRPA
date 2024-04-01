@@ -19,6 +19,7 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.annotations.Beta
+import org.apache.commons.lang3.NotImplementedException
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
@@ -56,8 +57,8 @@ import java.util.concurrent.CompletableFuture
  * 1. parse the page content into an HTML document
  * 2. extract fields from the HTML document
  * 3. write the extraction results to a destination, such as
- *    1. plain file, avro file, CSV, excel, mongodb, mysql, etc
- *    2. solr, elastic, etc
+ *    1. plain file, avro file, CSV, excel, mongodb, mysql, etc.
+ *    2. solr, elastic, etc.
  *
  * There are many ways to fetch the content of a page from the Internet:
  * 1. through HTTP protocol
@@ -82,28 +83,23 @@ import java.util.concurrent.CompletableFuture
  * and puppeteer does, all actions and behaviors are optimized to mimic real people as closely as possible.
  * */
 interface PulsarSession : AutoCloseable {
-    
     /**
      * The session id
      * */
     val id: Int
-    
     /**
      * The pulsar context
      * */
     val context: PulsarContext
-    
     /**
-     * An immutable config which is loaded from the config file at process startup, and never changes
+     * An immutable config which is loaded from the config file at process startup, it will never change once the
+     * process is started.
      * */
     val unmodifiedConfig: ImmutableConfig
-    
     /**
-     * The session scope volatile config, every setting is supposed to be changed at any time
-     * and any place
+     * The session scope volatile config, every setting is supposed to be changed at any time and any place.
      * */
     val sessionConfig: VolatileConfig
-    
     /**
      * A short descriptive display text.
      * */
@@ -120,11 +116,6 @@ interface PulsarSession : AutoCloseable {
      * The global cache
      * */
     val globalCache: GlobalCache
-    
-    /**
-     * Close objects when the session closes
-     * */
-    fun registerClosable(closable: AutoCloseable): Boolean
     /**
      * Disable page cache and document cache
      * */
@@ -322,7 +313,17 @@ interface PulsarSession : AutoCloseable {
     fun open(url: String): WebPage
     
     /**
-     * Load a url with specified arguments.
+     * Open a url with page events.
+     *
+     * This method opens the url immediately, regardless of the previous state of the page.
+     *
+     * @param url The url to open
+     * @return The webpage loaded or NIL
+     */
+    fun open(url: String, event: PageEvent): WebPage
+    
+    /**
+     * Load a url.
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
@@ -345,7 +346,7 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
-     * Other fetch conditions can be specified by load arguments:
+     * Fetch conditions can be specified by load arguments:
      *
      * 1. expiration
      * 2. page size requirement
@@ -364,7 +365,7 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
-     * Other fetch conditions can be specified by load arguments:
+     * Fetch conditions can be specified by load arguments:
      *
      * 1. expiration
      * 2. page size requirement
@@ -754,7 +755,9 @@ interface PulsarSession : AutoCloseable {
     fun submit(url: UrlAware, args: String): PulsarSession
     
     // No such version, it's too complicated to handle events
-    // fun submit(url: UrlAware, options: LoadOptions): PulsarSession
+    fun submit(url: UrlAware, options: LoadOptions): PulsarSession = throw NotImplementedError(
+        "The signature submit(UrlAware, LoadOptions) is a confusing version, " +
+            "it's too complicated to handle events and should not be implemented.")
     
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
@@ -799,10 +802,14 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Collection<UrlAware>, args: String): PulsarSession
     
     // No such version, it's too complicated to handle events
-    // fun submitAll(urls: Collection<UrlAware>, options: LoadOptions): PulsarSession
+    fun submitAll(urls: Collection<UrlAware>, options: LoadOptions): PulsarSession =
+        throw NotImplementedError("The signature submitAll(Collection<UrlAware>, LoadOptions) is a confusing version, " +
+            "it's too complicated to handle events and should not be implemented.")
     
     // No such confusing version
-    // fun loadOutPages(portalUrl: String): List<WebPage>
+    fun loadOutPages(portalUrl: String): List<WebPage> =
+        throw NotImplementedError("The signature loadOutPages(String) is a confusing version and should not be " +
+            "implemented.")
     
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
@@ -830,8 +837,8 @@ interface PulsarSession : AutoCloseable {
      * A confusing version, it's too complicated to handle events and should not be implemented.
      */
     fun loadOutPages(portalUrl: UrlAware): List<WebPage> =
-        throw NotImplementedError("The signature loadOutPages(UrlAware) is " +
-            "a confusing version, it's too complicated to handle events and should not be implemented.")
+        throw NotImplementedError("The signature loadOutPages(UrlAware) is a confusing version, it's too complicated to " +
+            "handle events and should not be implemented.")
     
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
@@ -1250,26 +1257,6 @@ interface PulsarSession : AutoCloseable {
     ): List<Map<String, String?>>
     
     /**
-     * Delete a webpage from the storage
-     *
-     * @param url The url of the webpage
-     * */
-    fun delete(url: String)
-    
-    /**
-     * Flush to the storage
-     * */
-    fun flush()
-    
-    /**
-     * Persist the content of a webpage.
-     *
-     * @param page Page to persist
-     * @return True if the page is persisted successfully
-     * */
-    fun persist(page: WebPage): Boolean
-    
-    /**
      * Export the content of a webpage.
      *
      * @param page Page to export
@@ -1289,7 +1276,7 @@ interface PulsarSession : AutoCloseable {
     /**
      * Export the whole HTML of the document to the given path.
      *
-     * @param doc Document to export
+     * @param page Webpage to export
      * @param path Path to save the exported content
      * @return The path of the exported document
      * */
@@ -1320,4 +1307,23 @@ interface PulsarSession : AutoCloseable {
      * @return The path of the exported document
      * */
     fun exportTo(doc: FeaturedDocument, path: Path): Path
+    
+    /**
+     * Persist the content of a webpage.
+     *
+     * @param page Page to persist
+     * @return True if the page is persisted successfully
+     * */
+    fun persist(page: WebPage): Boolean
+    /**
+     * Delete a webpage from the storage
+     *
+     * @param url The url of the webpage
+     * */
+    fun delete(url: String)
+    
+    /**
+     * Flush to the storage
+     * */
+    fun flush()
 }

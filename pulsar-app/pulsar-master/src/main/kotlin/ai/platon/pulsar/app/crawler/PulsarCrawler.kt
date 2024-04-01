@@ -1,10 +1,8 @@
 package ai.platon.pulsar.app.crawler
 
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean

@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common.message
 
 import ai.platon.pulsar.common.MultiSinkWriter
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
@@ -11,7 +10,6 @@ import ai.platon.pulsar.persist.model.ActiveDOMUrls
 import ai.platon.pulsar.persist.model.DomStatistics
 import java.time.LocalDateTime
 import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Created by vincent on 16-10-12.

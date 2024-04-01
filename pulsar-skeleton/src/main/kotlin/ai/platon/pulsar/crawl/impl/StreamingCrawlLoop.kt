@@ -80,7 +80,7 @@ open class StreamingCrawlLoop(
         logger.info("Registered {} link collectors | {} | @{}", urlFeeder.collectors.size, display, hashCode())
 
         val urls = urlFeeder.asSequence()
-        _crawler = StreamingCrawler(urls, context.createSession())
+        _crawler = StreamingCrawler(urls, context.createSession(), autoClose = false)
 
         crawlJob = scope.launch {
             supervisorScope {

@@ -29,10 +29,14 @@ object AppPaths {
     val SYS_USER_HOME = Paths.get(AppContext.USER_HOME)
     /**
      * The directory for the user's default browser.
-     * This is a placeholder, actually no data dir should be specified to launch the browser,
-     * so the web driver opens a browser just like a real user opens it.
+     *
+     * The placeholder directory for the user's default browser. This is a placeholder, actually no data dir
+     * should be specified, so the browser driver opens a browser just like a normal user opens it.
+     * The actual data dir of user's browser are different on different operating systems, for example,
+     * on linux, chrome's data dir is: ~/.config/google-chrome/
      */
-    val USER_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".USER_BROWSER_DATA_DIR")
+    val SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".SYSTEM_DEFAULT_DATA_DIR_PLACEHOLDER")
+    val SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER = SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER
 
     // Directory for symbolic links, this path should be as short as possible
     @RequiredDirectory
