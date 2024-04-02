@@ -60,18 +60,31 @@ import java.util.concurrent.CompletableFuture
  * session.submitForOutPages("http://example.com", "-outLink a[rel='next']")
  * ```
  *
- * The first thing to understand is how to load a page. Load methods like [load] first
- * check the local storage and return the local version if the required page exists and meets the
- * requirements, otherwise it will be fetched from the Internet.
+ * The primary consideration is understanding how to load a page efficiently. Load methods, such as [load],
+ * initially check local storage for the required page. If the page exists locally and meets the necessary criteria,
+ * it is retrieved from the local storage; otherwise, the page is fetched from the internet.
  *
- * `Load parameters` or `load options` can be used to specify when the system will fetch a webpage
- * from the Internet:
+ * To load a page, PulsarRPA follows these steps:
  *
- * 1. Expiration
- * 2. Force refresh
- * 3. Page size
- * 4. Required fields
- * 5. Other conditions
+ * 1. Check the local storage for the required page.
+ * 2. If the page exists in local storage and meets the specified criteria (such as being up-to-date or valid),
+ *    return the local version.
+ * 3. If the page does not exist in local storage or does not meet the criteria, fetch the page from the internet.
+ * 4. Handle any errors that occur during the process, such as issues with local storage access or problems with
+ *    the network fetch.
+ *
+ * To optimize the retrieval of webpages, `load parameters` or `load options` are used to establish the conditions
+ * under which a page should be fetched from the internet.
+ *
+ * These conditions may encompass:
+ *
+ * * Expiration timestamps to determine if the local page is still valid.
+ * * A directive for a forced refresh to ensure the latest content is retrieved.
+ * * Specifications regarding the minimal acceptable page size.
+ * * Identifiers for essential fields that must be present in the page.
+ * * Additional custom criteria that align with the application’s needs.
+ *
+ * For example:
  *
  * ```kotlin
  * val url = "http://example.com"
@@ -84,23 +97,34 @@ import java.util.concurrent.CompletableFuture
  * val page3 = session.load(url3, "-requireSize 100000")
  * ```
  *
- * Once a page is loaded from local storage, or fetched from the Internet, we come to the next process steps:
- * 1. parse the page content into an HTML document
- * 2. extract fields from the HTML document
- * 3. write the extraction results to a destination, such as
- *    1. plain file, avro file, CSV, excel, mongodb, mysql, etc.
- *    2. solr, elastic, etc.
+ * Once a page has been retrieved from either local storage or the internet, the subsequent processing steps include:
  *
- * There are many ways to fetch the content of a page from the Internet:
+ * * Parsing the page content to construct an HTML document.
+ * * Extracting relevant data fields from the parsed HTML document.
+ * * Recording the extracted data to a designated destination.
+ *
+ * For example:
+ *
+ * ```kotlin
+ * val url = "http://example.com"
+ * val page = session.load(url)
+ * val document = session.parse(page)
+ *
+ * val title = document.selectFirstTextOrNull(".title")
+ * val content = document.selectFirstTextOrNull(".content")
+ *
+ * val path = session.exportTo(page, Paths.get("/tmp/example.html"))
+ * ```
+ *
+ * There are many ways to fetch the content of a page from the Internet, but the two primary methods are:
  * 1. through HTTP protocol
  * 2. through a real browser
  *
- * Since the webpages are becoming more and more complex, fetching webpages through
- * real browsers is the primary way nowadays.
+ * Since the webpages are becoming more and more complex, fetching webpages through real browsers is the
+ * primary way nowadays.
  *
- * When we fetch webpages using a real browser, we need to interact with pages to
- * ensure the required fields are loaded correctly and completely. Enable [PageEvent]
- * and use [WebDriver] to archive such purpose.
+ * When we fetch webpages using a real browser, sometimes we need to interact with pages to ensure the required
+ * fields are loaded correctly and completely. Enable [PageEvent] and use [WebDriver] to archive such purpose.
  *
  * ```kotlin
  * val options = session.options(args)
@@ -111,8 +135,8 @@ import java.util.concurrent.CompletableFuture
  * session.load(url, options)
  * ```
  *
- * [WebDriver] provides a complete method set for RPA, just like selenium, playwright
- * and puppeteer does, all actions and behaviors are optimized to mimic real people as closely as possible.
+ * [WebDriver] offers a comprehensive method set for browser automation, meticulously designed to replicate
+ * real human actions and behaviors with precision.
  *
  * @see UrlAware
  * @see LoadOptions
@@ -159,29 +183,33 @@ interface PulsarSession : AutoCloseable {
      * Disable page cache and document cache
      * */
     fun disablePDCache()
-    
+    /**
+     * deprecated
+     * */
     @Deprecated("Inappropriate name", ReplaceWith("data(name)"))
     fun getVariable(name: String): Any? = data(name)
-    
+    /**
+     * deprecated
+     * */
     @Deprecated("Inappropriate name", ReplaceWith("data(name, value)"))
     fun setVariable(name: String, value: Any) = data(name, value)
     
     /**
-     * Get a variable from this session
+     * Get a variable which is stored in this session
      *
      * @param name The name of the variable
      * @return The value of the variable
      * */
     fun data(name: String): Any?
     /**
-     * Set a variable into this session
+     * Store a variable in this session
      *
      * @param name The name of the variable
      * @param value The value of the variable
      * */
     fun data(name: String, value: Any)
     /**
-     * Get a property.
+     * Get a property from the session scope.
      * */
     fun property(name: String): String?
     /**
@@ -194,50 +222,102 @@ interface PulsarSession : AutoCloseable {
     fun options(args: String = "", event: PageEvent? = null): LoadOptions
     /**
      * Normalize a url.
+     *
+     * @param url The url to normalize
+     * @return The normalized url
      * */
     fun normalize(url: String): NormUrl
     /**
      * Normalize a url.
+     *
+     * @param url The url to normalize
+     * @param args The arguments
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return The normalized url
      * */
     fun normalize(url: String, args: String, toItemOption: Boolean = false): NormUrl
     /**
      * Normalize a url.
+     *
+     * @param url The url to normalize
+     * @param options The LoadOptions applied to the url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return The normalized url
      * */
     fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormUrl
     /**
      * Normalize a url.
+     *
+     * @param url The url to normalize
+     * @param options The LoadOptions applied to the url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return The normalized url or null
      * */
     fun normalizeOrNull(url: String?, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl?
     /**
      * Normalize urls.
+     *
+     * @param urls The urls to normalize
+     * @return All normalized urls
      * */
     fun normalize(urls: Iterable<String>): List<NormUrl>
     /**
      * Normalize urls.
+     *
+     * @param urls The urls to normalize
+     * @param args The arguments
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return All normalized urls
      * */
     fun normalize(urls: Iterable<String>, args: String, toItemOption: Boolean = false): List<NormUrl>
     /**
      * Normalize urls.
+     *
+     * @param urls The urls to normalize
+     * @param options The LoadOptions applied to each url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return All normalized urls
      * */
     fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
     /**
      * Normalize a url.
+     *
+     * @param url The url to normalize
+     * @return The normalized url
      * */
     fun normalize(url: UrlAware): NormUrl
     /**
      * Normalize a url.
+     *
+     * @param url The url to normalize
+     * @param args The arguments
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return The normalized url
      * */
     fun normalize(url: UrlAware, args: String, toItemOption: Boolean = false): NormUrl
     /**
      * Normalize a url.
+     *
+     * @param url The url to normalize
+     * @param options The LoadOptions applied to the url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return The normalized url
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormUrl
     /**
      * Normalize a url.
+     *
+     * @param url The url to normalize
+     * @param options The LoadOptions applied to the url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return The normalized url or null
      * */
     fun normalizeOrNull(url: UrlAware?, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl?
     /**
      * Normalize urls.
+     *
+     * @param urls The urls to normalize
+     * @return All normalized urls
      * */
     fun normalize(urls: Collection<UrlAware>): List<NormUrl>
     /**

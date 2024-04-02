@@ -139,8 +139,6 @@ abstract class AbstractPulsarSession(
     override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean) =
         context.normalize(urls, options, toItemOption)
 
-    override fun inject(url: String): WebPage = ensureActive { context.inject(normalize(url)) }
-
     override fun get(url: String): WebPage = ensureActive { context.get(url) }
 
     override fun get(url: String, vararg fields: String): WebPage = ensureActive { context.get(url, *fields) }
