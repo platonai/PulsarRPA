@@ -67,7 +67,7 @@ class MockWebDriver(
         backupDriverOrNull?.addInitScript(script)
     }
 
-    override suspend fun addBlockedURLs(urls: List<String>) = backupDriverOrNull?.addBlockedURLs(urls) ?: Unit
+    override suspend fun addBlockedURLs(urlPatterns: List<String>) = backupDriverOrNull?.addBlockedURLs(urlPatterns) ?: Unit
 
     override suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>) =
         backupDriverOrNull?.addProbabilityBlockedURLs(urlPatterns) ?: Unit

@@ -2,8 +2,12 @@ package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.math.geometric.RectD
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.Returns
 import com.github.kklisura.cdt.protocol.v2023.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.v2023.types.page.Viewport
 import com.google.gson.Gson
@@ -101,7 +105,11 @@ class Screenshot(
             return null
         }
 
-        return page?.captureScreenshot(format, quality, viewport, true, false, false)
+        // return page?.captureScreenshot(format, quality, viewport, true, false, false)
+        return captureScreenshot(format, quality, viewport,
+            fromSurface = true,
+            captureBeyondViewport = false,
+            optimizeForSpeed = true)
     }
 
     private fun calculateNodeClip(nodeId: Int, selector: String): NodeClip? {
@@ -200,5 +208,29 @@ class Screenshot(
         val width = (clip.width + clip.x - x).roundToInt()
         val height = (clip.height + clip.y - y).roundToInt()
         return RectD(x.toDouble(), y.toDouble(), width.toDouble(), height.toDouble())
+    }
+    
+    /**
+     * Capture page screenshot.
+     *
+     * @param format Image compression format (defaults to png).
+     * @param quality Compression quality from range [0..100] (jpeg only).
+     * @param clip Capture the screenshot of a given region only.
+     * @param fromSurface Capture the screenshot from the surface, rather than the view. Defaults to
+     * true.
+     * @param captureBeyondViewport Capture the screenshot beyond the viewport. Defaults to false.
+     * @param optimizeForSpeed Optimize image encoding for speed, not for resulting size (defaults to
+     * false)
+     */
+    @Returns("data")
+    private fun captureScreenshot(
+        @Optional @ParamName("format") format: CaptureScreenshotFormat?,
+        @Optional @ParamName("quality") quality: Int?,
+        @Optional @ParamName("clip") clip: Viewport?,
+        @Experimental @Optional @ParamName("fromSurface") fromSurface: Boolean?,
+        @Experimental @Optional @ParamName("captureBeyondViewport") captureBeyondViewport: Boolean?,
+        @Experimental @Optional @ParamName("optimizeForSpeed") optimizeForSpeed: Boolean?
+    ): String? {
+        return page?.captureScreenshot(format, quality, clip, fromSurface, captureBeyondViewport, optimizeForSpeed)
     }
 }

@@ -185,10 +185,10 @@ interface WebDriver: Closeable {
     /**
      * Blocks resource URLs from loading.
      *
-     * @param urls URL patterns to block. Wildcards ('*') are allowed.
+     * @param urlPatterns URL patterns to block. Wildcards ('*') are allowed.
      */
     @Throws(WebDriverException::class)
-    suspend fun addBlockedURLs(urls: List<String>)
+    suspend fun addBlockedURLs(urlPatterns: List<String>)
     /**
      * Block resource URL loading with a certain probability.
      *
@@ -788,13 +788,29 @@ interface WebDriver: Closeable {
      * The current page frame scrolls to the middle.
      *
      * ```kotlin
+     * driver.scrollToMiddle(0.2f)
      * driver.scrollToMiddle(0.5f)
+     * driver.scrollToMiddle(0.8f)
+     * ```
+     *
+     * @param ratio The ratio of the page to scroll to, 0.0 means the top, 1.0 means the bottom.
+     */
+    @Deprecated("Use scrollToMiddle(Double) instead", ReplaceWith("scrollToMiddle(ratio.toDouble())"))
+    @Throws(WebDriverException::class)
+    suspend fun scrollToMiddle(ratio: Float)
+    /**
+     * The current page frame scrolls to the middle.
+     *
+     * ```kotlin
+     * driver.scrollToMiddle(0.2)
+     * driver.scrollToMiddle(0.5)
+     * driver.scrollToMiddle(0.8)
      * ```
      *
      * @param ratio The ratio of the page to scroll to, 0.0 means the top, 1.0 means the bottom.
      */
     @Throws(WebDriverException::class)
-    suspend fun scrollToMiddle(ratio: Float)
+    suspend fun scrollToMiddle(ratio: Double)
     /**
      * The mouse wheels down for [count] times.
      *
@@ -1097,44 +1113,64 @@ interface WebDriver: Closeable {
      *
      * ```kotlin
      * val screenshot = driver.captureScreenshot("h2.title")
+     * val bytes = Base64.getDecoder().decode(screenshot)
+     * val path = AppPaths.TMP_DIR.resolve("screenshot.jpg")
+     * AppFiles.saveTo(bytes, path, true)
      * ```
      *
      * @param selector The selector of the element to capture.
-     * @return The screenshot of the element.
+     * @return The screenshot of the element in base64 format.
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(selector: String): String?
     /**
      * This method scrolls element into view if needed, and then ake a screenshot of the element.
+     *
+     * @param rect The rectangle of the element to capture.
+     * @return The screenshot of the element in base64 format.
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(rect: RectD): String?
     /**
      * Calculate the clickable point of an element located by [selector].
      * If the element does not exist, or is not clickable, returns null.
+     *
+     * @param selector The selector of the element to calculate the clickable point.
+     * @return The clickable point of the element.
      * */
     @Throws(WebDriverException::class)
     suspend fun clickablePoint(selector: String): PointD?
     /**
      * Return the bounding box of an element located by [selector].
      * If the element does not exist, returns null.
+     *
+     * @param selector The selector of the element to calculate the bounding box.
+     * @return The bounding box of the element.
      * */
     @Throws(WebDriverException::class)
     suspend fun boundingBox(selector: String): RectD?
     /**
      * Create a new Jsoup session with the last page's context, which means, the same headers and cookies.
+     *
+     * @return The Jsoup session.
      * */
     @Throws(WebDriverException::class)
     suspend fun newJsoupSession(): Connection
     /**
      * Load the url as a resource with Jsoup rather than browser rendering, with the last page's context,
      * which means, the same headers and cookies.
+     *
+     * @param url The URL to load.
+     * @return The Jsoup response.
      * */
     @Throws(WebDriverException::class)
     suspend fun loadJsoupResource(url: String): Connection.Response
     /**
      * Load the url as a resource without browser rendering, with the last page's context, which means, the same headers
      * and cookies.
+     *
+     * @param url The URL to load.
+     * @return The network resource response.
      * */
     @Throws(WebDriverException::class)
     suspend fun loadResource(url: String): NetworkResourceResponse

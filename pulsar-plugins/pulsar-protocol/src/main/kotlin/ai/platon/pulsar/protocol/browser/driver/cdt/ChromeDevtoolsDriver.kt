@@ -115,20 +115,10 @@ class ChromeDevtoolsDriver(
         initScriptCache.add(script)
     }
     
-    /**
-     * Blocks URLs from loading.
-     *
-     * @param urls URL patterns to block. Wildcards ('*') are allowed.
-     */
-    override suspend fun addBlockedURLs(urls: List<String>) {
-        _blockedURLs.addAll(urls)
+    override suspend fun addBlockedURLs(urlPatterns: List<String>) {
+        _blockedURLs.addAll(urlPatterns)
     }
     
-    /**
-     * Blocks URLs from loading with a probability.
-     *
-     * @param urlPatterns URL patterns in regular expression to block.
-     */
     override suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>) {
         _probabilityBlockedURLs.addAll(urlPatterns)
     }
