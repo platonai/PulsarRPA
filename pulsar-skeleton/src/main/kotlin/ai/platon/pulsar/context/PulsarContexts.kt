@@ -14,9 +14,17 @@ object PulsarContexts {
     
     private val contexts = mutableSetOf<PulsarContext>()
     
+    /**
+     * The active context, it's the last created context.
+     */
     var activeContext: PulsarContext? = null
         private set
 
+    /**
+     * Create a new context, if there is already an active context, return it.
+     *
+     * @return the created context
+     */
     @Synchronized
     @JvmStatic
     fun create(): PulsarContext {
@@ -26,6 +34,12 @@ object PulsarContexts {
         return activeContext!!
     }
 
+    /**
+     * Create a new context, if there is already an active context, return it.
+     *
+     * @param context the context to be created
+     * @return the created context
+     */
     @Synchronized
     @JvmStatic
     fun create(context: PulsarContext): PulsarContext {
@@ -47,20 +61,40 @@ object PulsarContexts {
         return context
     }
 
+    /**
+     * Create a new context, if there is already an active context, return it.
+     *
+     * @param contextLocation the location of the context
+     * @return the created context
+     */
     @Synchronized
     @JvmStatic
     fun create(contextLocation: String) = create(ClassPathXmlPulsarContext(contextLocation))
 
+    /**
+     * Create a new context, if there is already an active context, return it.
+     *
+     * @param applicationContext the Spring application context
+     * @return the created context
+     */
     @Synchronized
     @JvmStatic
     fun create(applicationContext: ApplicationContext) =
         create(BasicPulsarContext(applicationContext as AbstractApplicationContext))
-
+    
+    /**
+     * Create a PulsarSession with the active context.
+     *
+     * @return the created session
+     */
     @Synchronized
     @JvmStatic
     @Throws(Exception::class)
     fun createSession() = create().createSession()
 
+    /**
+     * Wait for all submitted urls to be processed.
+     */
     @JvmStatic
     @Throws(InterruptedException::class)
     fun await() {
@@ -68,13 +102,22 @@ object PulsarContexts {
     }
     
     /**
+     * Register a closable object to the active context.
      * TODO: might fail before the context is created
+     *
+     * @param closable the closable object
+     * @param priority the priority of the closable object
+     * @see AutoCloseable
+     * @see AbstractPulsarContext.registerClosable
      */
     @JvmStatic
     fun registerClosable(closable: AutoCloseable, priority: Int = 0) {
         activeContext?.registerClosable(closable, priority)
     }
     
+    /**
+     * Close the all the created context.
+     */
     @Synchronized
     @JvmStatic
     fun shutdown() {

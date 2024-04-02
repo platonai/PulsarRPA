@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import org.apache.commons.io.FileUtils
+import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.StringUtils.SPACE
 import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.lang3.math.NumberUtils
@@ -8,9 +9,12 @@ import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
+import kotlin.io.path.createFile
+import kotlin.random.Random
 
 object AppFiles {
 
@@ -33,6 +37,24 @@ object AppFiles {
         } else {
             Files.newBufferedWriter(dstFile).use { writer -> writer.write(String.format("Please see %s%n", target.toString())) }
         }
+    }
+    
+    /**
+     * Create a temporary file with the given prefix and suffix.
+     *
+     * @param prefix The prefix string to be used in generating the file's name
+     * @param suffix The suffix string to be used in generating the file's name
+     * @return The temporary file
+     */
+    @Throws(IOException::class)
+    fun createTempFile(prefix: String, suffix: String = ""): Path {
+        val rand = RandomStringUtils.randomAlphanumeric(12)
+        val path = AppPaths.getProcTmp("tmp", "$prefix$rand$suffix")
+        // This method works as if the CREATE, TRUNCATE_EXISTING, and WRITE options are present. In other words,
+        // it opens the file for writing, creating the file if it doesn't exist, or initially truncating an existing
+        // regular-file to a size of 0.
+        Files.writeString(path, "")
+        return path
     }
     
     fun saveTo(any: Any, path: Path, deleteIfExists: Boolean = false): Path {

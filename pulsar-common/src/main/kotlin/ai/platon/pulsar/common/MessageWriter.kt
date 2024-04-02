@@ -62,6 +62,8 @@ class MessageWriter(
 
     var checkSize: Int = 0
     var writingError: Boolean = false
+    
+    var closeCount = 0
 
     fun write(s: String) {
         writeFile(s)
@@ -148,7 +150,10 @@ class MessageWriter(
 
     @Synchronized
     private fun closeWriter(message: String) {
-        logger.info("Closing writer #$id | ${idleTime.readable()} | $message | $filePath")
+        if (closeCount++ < 20) {
+            // logger.info("Closing writer #$id | ${idleTime.readable()} | $message | $filePath")
+        }
+
         printWriter?.flush()
         printWriter?.close()
         fileWriter?.close()

@@ -1,11 +1,13 @@
 package ai.platon.pulsar.ql
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.dom.nodes.node.ext.uniqueName
 import ai.platon.pulsar.ql.h2.H2Db
 import ai.platon.pulsar.ql.h2.H2DbConfig
 import ai.platon.pulsar.ql.types.ValueDom
+import org.apache.commons.io.FileUtils
 import org.h2.engine.SysProperties
 import org.h2.tools.Server
 import org.h2.util.JdbcUtils
@@ -24,8 +26,9 @@ import kotlin.test.assertTrue
 class TestJavaObjectSerializer: TestBase() {
 
     companion object {
-
-        val conf = H2DbConfig(baseDir = Files.createTempDirectory("pulsar-test"), networked = true)
+        
+        private val baseDir = AppPaths.TEST_DIR.resolve("unittests/TestJavaObjectSerializer")
+        val conf = H2DbConfig(baseDir = baseDir, networked = true)
         val remoteDB = H2Db(conf)
         var server: Server? = null
 
@@ -43,6 +46,7 @@ class TestJavaObjectSerializer: TestBase() {
         @AfterClass
         fun destroy() {
             destroyDatabase()
+            runCatching { FileUtils.deleteDirectory(baseDir.toFile()) }.onFailure { it.printStackTrace() }
         }
 
         /**

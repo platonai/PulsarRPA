@@ -13,7 +13,7 @@ open class H2Shell: Shell() {
     override fun runTool(vararg args: String) {
         H2Config.config()
 
-        var url = "jdbc:h2:tcp://localhost/~/test"
+        var url = "jdbc:h2:tcp://localhost/~/.pulsar/data/h2"
         var user = "sa"
         var password = "sa"
         var driver = "org.h2.Driver"

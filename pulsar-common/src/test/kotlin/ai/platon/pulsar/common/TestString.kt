@@ -356,11 +356,12 @@ class TestString {
         if (seeds.startsWith("@")) {
             seeds = ResourceLoader.readAllLines(seeds.substring(1)).joinToString("\n")
         }
-        val seedFile = File.createTempFile("seed", ".txt")
+        val seedFile = AppFiles.createTempFile("seed", ".txt")
         val unslashedLines = Strings.getUnslashedLines(seeds)
         assertEquals(111, unslashedLines.size.toLong())
-        FileUtils.writeLines(seedFile, unslashedLines)
-        assertEquals(111, Files.readAllLines(seedFile.toPath()).size.toLong())
+        Files.write(seedFile, unslashedLines)
+        assertEquals(111, Files.readAllLines(seedFile).size.toLong())
+        Files.deleteIfExists(seedFile)
     }
 
     @Test

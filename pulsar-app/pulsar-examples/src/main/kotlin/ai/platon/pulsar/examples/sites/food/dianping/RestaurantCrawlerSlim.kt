@@ -1,5 +1,6 @@
 package ai.platon.pulsar.examples.sites.food.dianping
 
+import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.session.PulsarSession
@@ -41,7 +42,7 @@ class RestaurantCrawlerSlim(val session: PulsarSession) {
                 if (driver.exists(selector)) {
                     val screenshot = driver.captureScreenshot(selector)
 
-                    val path = Files.createTempFile("screenshot", "png")
+                    val path = AppFiles.createTempFile("screenshot", "png")
                     val bytes = Base64.getDecoder().decode(screenshot)
                     Files.write(path, bytes)
 
