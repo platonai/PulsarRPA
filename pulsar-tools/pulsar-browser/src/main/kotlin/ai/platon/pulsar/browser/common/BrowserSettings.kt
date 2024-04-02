@@ -460,20 +460,17 @@ data class InteractSettings(
      * */
     var initScrollPositions: String = "0.3,0.75,0.4,0.5"
 ) {
-    @JsonIgnore
-    var delayPolicy: (String) -> Long = { type ->
-        when (type) {
-            "gap" -> 500L + Random.nextInt(500)
-            "click" -> 500L + Random.nextInt(1000)
-            "type" -> 50L + Random.nextInt(500)
-            "mouseWheel" -> 800L + Random.nextInt(500)
-            "dragAndDrop" -> 800L + Random.nextInt(500)
-            "waitForNavigation" -> 500L
-            "waitForSelector" -> 500L
-            else -> 100L + Random.nextInt(500)
-        }
-    }
-    
+    val delayPolicy = """
+        gap: (200, 700)
+        click: (500, 1500)
+        delete: (30, 80)
+        keyUpDown: (50, 150)
+        press: (100, 400)
+        type: (50, 550)
+        mouseWheel: (800, 1300)
+        dragAndDrop: (800, 1300)
+    """.trimIndent()
+
     @Deprecated("Use conf[BROWSER_INTERACT_SETTINGS]")
     constructor(conf: ImmutableConfig) : this(
         scrollCount = conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5),

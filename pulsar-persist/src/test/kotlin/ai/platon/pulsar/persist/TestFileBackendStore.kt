@@ -1,21 +1,28 @@
 package ai.platon.pulsar.persist
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.gora.FileBackendPageStore
+import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.RandomUtils
 import java.nio.file.Files
 import kotlin.test.*
 
 class TestFileBackendStore {
     private val url = "https://www.amazon.com/dp/B0C1H26C46"
-    private val persistDirectory = Files.createTempDirectory("pulsar-test")
+    private val persistDirectory = AppPaths.TEST_DIR.resolve("unittests/TestFileBackendStore")
     private val store = FileBackendPageStore(persistDirectory)
     private lateinit var page: WebPage
 
     @BeforeTest
     fun setup() {
         page = WebPageExt.newTestWebPage(url)
+    }
+
+    @AfterTest
+    fun tearDown() {
+        runCatching { FileUtils.deleteDirectory(persistDirectory.toFile()) }.onFailure { it.printStackTrace() }
     }
 
     @Test

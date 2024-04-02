@@ -94,9 +94,7 @@ class Twitter {
             delay(1000)
             interactWithPage(dr)
         }
-
         delay(2000)
-
         supervisorScope {
             launch { interact1(page, driver) }
         }

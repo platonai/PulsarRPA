@@ -259,11 +259,15 @@ interface WebDriver: Closeable {
     suspend fun waitForSelector(selector: String): Duration = waitForSelector(selector) {}
     /**
      * Wait until the element identified by the selector becomes present in the DOM or timeout.
+     *
+     * @param timeoutMillis The maximum time to wait for the element to become present.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long = waitForSelector(selector, timeoutMillis) {}
     /**
      * Wait for the element identified by the selector to become present in the DOM, or until timeout.
+     *
+     * @param timeout The maximum time to wait for the element to become present.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String, timeout: Duration): Duration = waitForSelector(selector, timeout) {}
@@ -271,6 +275,8 @@ interface WebDriver: Closeable {
      * Wait for the element identified by the selector to become present in the DOM, or until timeout.
      * This method periodically checks for the existence of the element. If the element is not found during a check,
      * the action will be executed, such as scrolling the page down.
+     *
+     * @param action The action to execute when the element is not found.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String, action: suspend () -> Unit): Duration
@@ -278,6 +284,10 @@ interface WebDriver: Closeable {
      * Wait for the element identified by the selector to become present in the DOM, or until timeout.
      * This method periodically checks for the existence of the element. If the element is not found during a check, 
      * the action will be executed, such as scrolling the page down.
+     *
+     * @param timeoutMillis The maximum time to wait for the element to become present.
+     * @param action The action to execute when the element is not found.
+     * @return The remaining time until timeout when the element becomes present.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String, timeoutMillis: Long, action: suspend () -> Unit): Long =
@@ -286,6 +296,10 @@ interface WebDriver: Closeable {
      * Wait for the element identified by the selector to become present in the DOM, or until timeout.
      * This method periodically checks for the existence of the element. If the element is not found during a check,
      * the action will be executed, such as scrolling the page down.
+     *
+     * @param timeout The maximum time to wait for the element to become present.
+     * @param action The action to execute when the element is not found.
+     * @return The remaining time until timeout when the element becomes present.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Duration
@@ -296,33 +310,51 @@ interface WebDriver: Closeable {
     suspend fun waitForNavigation(): Duration
     /**
      * Wait until the current url changes or timeout.
+     *
+     * @param timeoutMillis The maximum time to wait for the url to change.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForNavigation(timeoutMillis: Long): Long = waitForNavigation(Duration.ofMillis(timeoutMillis)).toMillis()
     /**
      * Wait until the current url changes or timeout.
+     *
+     * @param timeout The maximum time to wait for the url to change.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForNavigation(timeout: Duration): Duration
     /**
      * Await navigation to the specified URL page or timeout if necessary.
+     *
+     * @param url The URL to navigate to.
+     * @return The remaining time until timeout when the predicate returns true.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForPage(url: String, timeout: Duration): WebDriver?
     
     /**
-     * Wait until the predication returns true.
+     * Wait until the predicate returns true.
+     *
+     * @param predicate The predicate to check.
+     * @return The remaining time until timeout when the predicate returns true.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitUntil(predicate: suspend () -> Boolean): Duration
     /**
-     * Wait until the predication returns true.
+     * Wait until the predicate returns true.
+     *
+     * @param timeoutMillis The maximum time to wait for the predicate to return true.
+     * @param predicate The predicate to check.
+     * @return The remaining time until timeout when the predicate returns true.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitUntil(timeoutMillis: Long, predicate: suspend () -> Boolean): Long =
         waitUntil(Duration.ofMillis(timeoutMillis), predicate).toMillis()
     /**
-     * Wait until the predication returns true.
+     * Wait until the predicate returns true.
+     * 
+     * @param timeout The maximum time to wait for the predicate to return true.
+     * @param predicate The predicate to check.
+     * @return The remaining time until timeout when the predicate returns true.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean): Duration
@@ -333,26 +365,41 @@ interface WebDriver: Closeable {
 
     /**
      * Returns whether the element exists.
+     * 
+     * @param selector - The selector of the element to check.
+     * @return Whether the element exists.
      * */
     @Throws(WebDriverException::class)
     suspend fun exists(selector: String): Boolean
     /**
      * Returns whether the element is hidden.
+     * 
+     * @param selector - The selector of the element to check.
+     * @return Whether the element is hidden.
      * */
     @Throws(WebDriverException::class)
     suspend fun isHidden(selector: String): Boolean = !isVisible(selector)
     /**
      * Returns whether the element is visible.
+     * 
+     * @param selector - The selector of the element to check.
+     * @return Whether the element is visible.
      * */
     @Throws(WebDriverException::class)
     suspend fun isVisible(selector: String): Boolean
     /**
      * Returns whether the element is visible.
+     * 
+     * @param selector - The selector of the element to check.
+     * @return Whether the element is visible.
      * */
     @Throws(WebDriverException::class)
     suspend fun visible(selector: String): Boolean = isVisible(selector)
     /**
      * Returns whether the element is checked.
+     * 
+     * @param selector - The selector of the element to check.
+     * @return Whether the element is checked.
      * */
     @Throws(WebDriverException::class)
     suspend fun isChecked(selector: String): Boolean
@@ -370,18 +417,15 @@ interface WebDriver: Closeable {
      * This method fetches an element with `selector` and focuses it. If there's no
      * element matching `selector`, nothing to do.
      *
-     * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
-     * of an element to focus. If there are multiple elements satisfying the
-     * selector, the first will be focused.
+     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) 
+     * of an element to focus. If there are multiple elements satisfying the selector, the first will be focused.
      */
     @Throws(WebDriverException::class)
     suspend fun focus(selector: String)
     /**
      * This method emulates inserting text that doesn't come from a key press.
      *
-     * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
      * of an element to focus. If there are multiple elements satisfying the
      * selector, the first will be focused.
      * @param text The text to insert.
@@ -393,11 +437,10 @@ interface WebDriver: Closeable {
      *
      * Unlike [type], this method clears the existing value before typing.
      *
-     * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
-     * of an element to focus. If there are multiple elements satisfying the
+     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
+     * of an element to focus, and then fill text into it. If there are multiple elements satisfying the
      * selector, the first will be focused.
-     * @param text The text to insert.
+     * @param text The text to fill.
      */
     @Throws(WebDriverException::class)
     suspend fun fill(selector: String, text: String)
@@ -413,6 +456,11 @@ interface WebDriver: Closeable {
      * See {@link KeyInput} for a list of all key names.
      *
      * see {@link https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/editing/commands/editor_command_names.h | Chromium Source Code} for valid command names.
+     *
+     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
+     * of an element to focus, and then press a key. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * @param key The key to press.
      */
     @Throws(WebDriverException::class)
     suspend fun press(selector: String, key: String)
@@ -420,10 +468,10 @@ interface WebDriver: Closeable {
      * This method clicks an element with [selector] and focuses it. If there's no
      * element matching `selector`, nothing to do.
      *
-     * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
      * of an element to focus. If there are multiple elements satisfying the
      * selector, the first will be focused.
+     * @param count The number of times to click.
      * */
     @Throws(WebDriverException::class)
     suspend fun click(selector: String, count: Int = 1)
@@ -433,7 +481,7 @@ interface WebDriver: Closeable {
      * If there's no element matching [selector], or the element's text content doesn't match [pattern], nothing to do.
      *
      * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
      * of an element to focus. If there are multiple elements satisfying the
      * selector, the first will be focused.
      * */
@@ -447,7 +495,7 @@ interface WebDriver: Closeable {
      * This method check an element with [selector]. If there's no element matching [selector], nothing to do.
      *
      * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
      * of an element to check. If there are multiple elements satisfying the
      * selector, the first will be focused.
      * */
@@ -457,7 +505,7 @@ interface WebDriver: Closeable {
      * This method uncheck an element with [selector]. If there's no element matching [selector], nothing to do.
      *
      * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
      * of an element to uncheck. If there are multiple elements satisfying the
      * selector, the first will be focused.
      * */
