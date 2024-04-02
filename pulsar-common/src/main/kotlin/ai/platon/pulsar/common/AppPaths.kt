@@ -166,11 +166,6 @@ object AppPaths {
 
     fun fileId(uri: String) = DigestUtils.md5Hex(uri)
 
-    fun createTempFile(prefix: String, suffix: String): Path {
-        val rand = RandomStringUtils.randomAlphanumeric(12)
-        return getProcTmp("tmp", "$prefix$rand$suffix")
-    }
-
     /**
      * Create a mock page path.
      * */
