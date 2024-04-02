@@ -107,30 +107,30 @@ abstract class AbstractWebDriver(
     
     val isCanceled get() = canceled.get()
     val isCrashed get() = crashed.get()
-
-    open val name get() = javaClass.simpleName + "-" + id
-    
-    override val delayPolicy by lazy { browser.browserSettings.interactSettings.generateRestrictedDelayPolicy() }
-    
-    override val timeoutPolicy by lazy { browser.browserSettings.interactSettings.generateRestrictedTimeoutPolicy() }
-
-    override var navigateEntry: NavigateEntry = NavigateEntry("")
-    
-    override val navigateHistory = NavigateHistory()
     
     open val supportJavascript: Boolean = true
     
     open val isMockedPageSource: Boolean = false
+    
+    var isRecovered: Boolean = false
+    
+    var isReused: Boolean = false
+    
+    open val name get() = javaClass.simpleName + "-" + id
+    
+    override var navigateEntry: NavigateEntry = NavigateEntry("")
+    
+    override val navigateHistory = NavigateHistory()
+    
+    override val delayPolicy by lazy { browser.browserSettings.interactSettings.generateRestrictedDelayPolicy() }
+    
+    override val timeoutPolicy by lazy { browser.browserSettings.interactSettings.generateRestrictedTimeoutPolicy() }
     
     override val frames: MutableList<WebDriver> = mutableListOf()
     
     override var opener: WebDriver? = null
     
     override val outgoingPages: MutableSet<WebDriver> = mutableSetOf()
-    
-    var isRecovered: Boolean = false
-    
-    var isReused: Boolean = false
     
     /**
      * The associated data.

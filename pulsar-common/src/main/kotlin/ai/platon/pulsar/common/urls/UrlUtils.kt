@@ -1,9 +1,7 @@
 package ai.platon.pulsar.common.urls
 
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
 import org.apache.commons.lang3.StringUtils
-import org.apache.http.NameValuePair
 import org.apache.http.client.utils.URIBuilder
 import java.net.MalformedURLException
 import java.net.URI
@@ -12,9 +10,23 @@ import java.net.URL
 
 object UrlUtils {
 
+    /**
+     * Test if the url is an internal URL. Internal URLs are URLs that are used to identify internal resources and
+     * will never be fetched from the internet.
+     *
+     * @param  url   The url to test
+     * @return true if the given str is an internal URL, false otherwise
+     * */
     @JvmStatic
     fun isInternal(url: String) = url.startsWith(INTERNAL_URL_PREFIX)
 
+    /**
+     * Test if the url is not an internal URL. Internal URLs are URLs that are used to identify internal resources and
+     * will never be fetched from the internet.
+     *
+     * @param  url   The url to test
+     * @return true if the given str is not an internal URL, false otherwise
+     * */
     @JvmStatic
     fun isNotInternal(url: String) = !isInternal(url)
 
@@ -141,21 +153,59 @@ object UrlUtils {
         }
     }
 
+    /**
+     * Normalize a url spec.
+     *
+     * A URL may have appended to it a "fragment", also known as a "ref" or a "reference".
+     * The fragment is indicated by the sharp sign character "#" followed by more characters.
+     * For example: http://java.sun.com/index.html#chapter1
+     *
+     * The fragment will be removed after the normalization.
+     * If ignoreQuery is true, the query string will be removed.
+     *
+     * @param urls
+     *        The urls to normalize, a tailing argument list is allowed and will be removed
+     *
+     * @param ignoreQuery
+     *        If true, the result url does not contain a query string
+     *
+     * @return The normalized URLs
+     * */
     @JvmStatic
     fun normalizeUrls(urls: Iterable<String>, ignoreQuery: Boolean = false): List<String> {
         return urls.mapNotNull { normalizeOrNull(it, ignoreQuery) }
     }
 
+    /**
+     * Split the query parameters of a url.
+     *
+     * @param url The url to split
+     * @return The query parameters of the url
+     * */
     @Throws(URISyntaxException::class)
     fun splitQueryParameters(url: String): Map<String, String> {
         return URIBuilder(url).queryParams?.associate { it.name to it.value } ?: mapOf()
     }
 
+    /**
+     * Get the query parameter of a url.
+     *
+     * @param url The url to split
+     * @param parameterName The name of the query parameter
+     * @return The query parameter of the url
+     * */
     @Throws(URISyntaxException::class)
     fun getQueryParameters(url: String, parameterName: String): String? {
         return URIBuilder(url).queryParams?.firstOrNull { it.name == parameterName }?.value
     }
 
+    /**
+     * Remove the query parameters of a url.
+     *
+     * @param url The url to split
+     * @param parameterNames The names of the query parameters
+     * @return The url without the query parameters
+     * */
     @Throws(URISyntaxException::class)
     fun removeQueryParameters(url: String, vararg parameterNames: String): String {
         val uriBuilder = URIBuilder(url)
@@ -163,6 +213,13 @@ object UrlUtils {
         return uriBuilder.build().toString()
     }
 
+    /**
+     * Keep the query parameters of a url, and remove the others.
+     *
+     * @param url The url to split
+     * @param parameterNames The names of the query parameters
+     * @return The url with only the query parameters
+     * */
     @Throws(URISyntaxException::class)
     fun keepQueryParameters(url: String, vararg parameterNames: String): String {
         val uriBuilder = URIBuilder(url)
@@ -202,6 +259,10 @@ object UrlUtils {
 
     /**
      * Handle the case in RFC3986 section 5.4.1 example 7, and similar.
+     *
+     * @param base      base url
+     * @param targetUrl target url
+     * @return resolved absolute url.
      */
     private fun fixPureQueryTargets(base: URL, targetUrl: String): URL {
         var target = targetUrl.trim()
@@ -223,6 +284,12 @@ object UrlUtils {
         return URL(base, target)
     }
 
+    /**
+     * Split url and args
+     *
+     * @param configuredUrl url and args in `$url $args` format
+     * @return url and args pair
+     */
     @JvmStatic
     fun splitUrlArgs(configuredUrl: String): Pair<String, String> {
         var url = configuredUrl.trim().replace("[\\r\\n\\t]".toRegex(), "");
@@ -237,11 +304,24 @@ object UrlUtils {
         return url.trim() to args.trim()
     }
 
+    /**
+     * Merge url and args
+     *
+     * @param url  url
+     * @param args args
+     * @return url and args in `$url $args` format
+     */
     @JvmStatic
     fun mergeUrlArgs(url: String, args: String? = null): String {
         return if (args.isNullOrBlank()) url.trim() else "${url.trim()} ${args.trim()}"
     }
 
+    /**
+     * Get the url without parameters
+     *
+     * @param url url
+     * @return url without parameters
+     */
     @JvmStatic
     fun getUrlWithoutParameters(url: String): String {
         try {
@@ -257,7 +337,14 @@ object UrlUtils {
 
         return ""
     }
-
+    
+    /**
+     * Returns the normalized url and key
+     *
+     * @param originalUrl
+     * @param norm
+     * @return normalized url and key
+     */
     @JvmStatic
     fun normalizedUrlAndKey(originalUrl: String, norm: Boolean = false): Pair<String, String> {
         val url = if (norm) (normalizeOrNull(originalUrl) ?: "") else originalUrl
@@ -280,7 +367,17 @@ object UrlUtils {
     fun reverseUrl(url: String): String {
         return reverseUrl(URL(url))
     }
-
+    
+    /**
+     * Reverses a url's domain. This form is better for storing in hbase. Because
+     * scans within the same domain are faster.
+     *
+     * E.g. "http://bar.foo.com:8983/to/index.html?a=b" becomes
+     * "com.foo.bar:8983:http/to/index.html?a=b".
+     *
+     * @param url url to be reversed
+     * @return Reversed url or empty string if the url is invalid
+     */
     @JvmStatic
     fun reverseUrlOrEmpty(url: String): String {
         return try {
@@ -290,6 +387,16 @@ object UrlUtils {
         }
     }
 
+    /**
+     * Reverses a url's domain. This form is better for storing in hbase. Because
+     * scans within the same domain are faster.
+     *
+     * E.g. "http://bar.foo.com:8983/to/index.html?a=b" becomes
+     * "com.foo.bar:8983:http/to/index.html?a=b".
+     *
+     * @param url url to be reversed
+     * @return Reversed url or null if the url is invalid
+     */
     @JvmStatic
     fun reverseUrlOrNull(url: String): String? {
         return try {
@@ -300,12 +407,10 @@ object UrlUtils {
     }
 
     /**
-     * Reverses a url's domain. This form is better for storing in hbase. Because
-     * scans within the same domain are faster.
+     * Reverses a url's domain. This form is better for storing in hbase. Because scans within the same domain are
+     * faster.
      *
-     *
-     * E.g. "http://bar.foo.com:8983/to/index.html?a=b" becomes
-     * "com.foo.bar:http:8983/to/index.html?a=b".
+     * E.g. "http://bar.foo.com:8983/to/index.html?a=b" becomes "com.foo.bar:http:8983/to/index.html?a=b".
      *
      * @param url url to be reversed
      * @return Reversed url
@@ -345,7 +450,6 @@ object UrlUtils {
      * Get the reversed and tenanted format of unreversedUrl, unreversedUrl can be both tenanted or not tenanted
      * This method might change the tenant id of the original url
      *
-     *
      * Zero tenant id means no tenant
      *
      * @param unreversedUrl the unreversed url, can be both tenanted or not tenanted
@@ -356,7 +460,13 @@ object UrlUtils {
         val tenantedUrl = TenantedUrl.split(unreversedUrl)
         return TenantedUrl.combine(tenantId, reverseUrl(tenantedUrl.url))
     }
-
+    
+    /**
+     * Get the unreversed url of a reversed url.
+     *
+     * @param reversedUrl
+     * @return the unreversed url of reversedUrl
+     */
     @JvmStatic
     fun unreverseUrl(reversedUrl: String): String {
         val buf = StringBuilder(reversedUrl.length + 2)
@@ -383,6 +493,12 @@ object UrlUtils {
         return buf.toString()
     }
 
+    /**
+     * Get the unreversed url of a reversed url.
+     *
+     * @param reversedUrl
+     * @return the unreversed url of reversedUrl or null if the url is invalid
+     */
     @JvmStatic
     fun unreverseUrlOrNull(reversedUrl: String) = kotlin.runCatching { unreverseUrl(reversedUrl) }.getOrNull()
 
@@ -536,6 +652,30 @@ object UrlUtils {
         return reversedUrl.substring(0, reversedUrl.indexOf(':'))
     }
 
+    /**
+     * Reverse the host name.
+     *
+     * @param hostName host name
+     * @return reversed host name
+     */
+    @JvmStatic
+    fun reverseHost(hostName: String): String {
+        val buf = StringBuilder()
+        reverseAppendSplits(hostName, buf)
+        return buf.toString()
+    }
+
+    /**
+     * Unreverse the host name.
+     *
+     * @param reversedHostName reversed host name
+     * @return host name
+     */
+    @JvmStatic
+    fun unreverseHost(reversedHostName: String): String {
+        return reverseHost(reversedHostName) // Reversible
+    }
+    
     private fun reverseAppendSplits(string: String, buf: StringBuilder) {
         val splits = StringUtils.split(string, '.')
         if (splits.isNotEmpty()) {
@@ -547,17 +687,5 @@ object UrlUtils {
         } else {
             buf.append(string)
         }
-    }
-
-    @JvmStatic
-    fun reverseHost(hostName: String): String {
-        val buf = StringBuilder()
-        reverseAppendSplits(hostName, buf)
-        return buf.toString()
-    }
-
-    @JvmStatic
-    fun unreverseHost(reversedHostName: String): String {
-        return reverseHost(reversedHostName) // Reversible
     }
 }
