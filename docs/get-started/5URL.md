@@ -35,7 +35,7 @@ UrlAware 提供了更复杂的控制来描述采集任务，是所有 Hyperlink 
 
 ## Hyperlinks
 
-[超链接](https://en.wikipedia.org/wiki/Hyperlink)，或简称为链接，特指 Web 上对数据的引用，通常包含一个 URL，一个文本和一组属性，用户可以通过单击或点击来跟随它。[Pulsar 中的 Hyperlink](../../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) 如同普通超链接，但带有描述任务的额外信息。
+[超链接](https://en.wikipedia.org/wiki/Hyperlink)，或简称为链接，特指 Web 上对数据的引用，通常包含一个 URL，一个文本和一组属性，用户可以通过单击或点击来跟随它。[PulsarRPA 中的 Hyperlink](../../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) 如同普通超链接，但带有描述任务的额外信息。
 
 Pulsar 预定义了几个超链接：
 

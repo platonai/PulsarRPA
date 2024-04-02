@@ -38,7 +38,6 @@ import kotlin.reflect.jvm.kotlinProperty
  * session.load('https://www.jd.com', '-storeContent')
  * ```
  * TODO: support new options: -priority
- * TODO: keep unsupported options
  * */
 open class LoadOptions(
     argv: Array<String>,

@@ -20,7 +20,7 @@ BrowserSettings.privacy(5).maxTabs(15).headless()
 
 本文演示如何通过不同的 URLCache 来满足不同的采集要求。
 
-首先创建 Pulsar 会话并准备一批测试用的 URL：
+首先创建 PulsarRPA 会话并准备一批测试用的 URL：
 
 ```kotlin
 val session = PulsarContexts.createSession()

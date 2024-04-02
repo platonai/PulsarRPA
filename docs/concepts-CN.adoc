@@ -1,13 +1,13 @@
-= Pulsar 概念
+= PulsarRPA 概念
 Vincent Zhang <ivincent.zhang@gmail.com>
-3.0, July 29, 2022: The Pulsar concepts
+3.0, July 29, 2022: The PulsarRPA concepts
 :toc:
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
 link:concepts.adoc[English] | 简体中文
 
-本文件描述了 Pulsar 的概念。
+本文件描述了 PulsarRPA 的概念。
 
 [#_the_core_concepts_of_pulsar]
 == 核心概念
@@ -18,7 +18,7 @@ link:concepts.adoc[English] | 简体中文
 === 网络即数据库
 互联网，尤其是万维网，是世界上最大的数据库，但从网络上提取数据从来都不是一件容易的事。
 
-Pulsar 像对待内部数据库一样对待外部网络，如果需要的数据不在本地存储中，或者现存版本不满足分析需要，则系统会从互联网上采集该数据的最新版本。
+PulsarRPA 像对待内部数据库一样对待外部网络，如果需要的数据不在本地存储中，或者现存版本不满足分析需要，则系统会从互联网上采集该数据的最新版本。
 
 我们也可以使用简单的 SQL 将 Web 直接转换为表格和图表，更进一步，我们可以使用 SQL 直接查询 Web。
 
@@ -32,7 +32,7 @@ Web 数据抽取在过去三十年中已经从使用统计方法发展到更高�
 
 === 浏览器渲染
 
-尽管 Pulsar 支持各种网页抓取方法，但浏览器渲染是 Pulsar 抓取网页的首要方式。
+尽管 PulsarRPA 支持各种网页抓取方法，但浏览器渲染是 PulsarRPA 抓取网页的首要方式。
 
 浏览器渲染意味着每个网页都由真正的浏览器打开，以确保网页上的所有字段都正确显示。
 
@@ -134,9 +134,9 @@ link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebD
 === URLs
 统一资源定位符(URL)，俗称网址，是对网络资源的引用，指定其在计算机网络上的位置和检索它的机制。
 
-Pulsar 中的 URL 是一个普通的 link:https://en.wikipedia.org/wiki/URL[URL]，带有描述任务的额外信息。Pulsar 中的每个任务都被定义为某种形式的URL。
+PulsarRPA 中的 URL 是一个普通的 link:https://en.wikipedia.org/wiki/URL[URL]，带有描述任务的额外信息。PulsarRPA 中的每个任务都被定义为某种形式的URL。
 
-Pulsar 中有几种基本的 URL 形式:
+PulsarRPA 中有几种基本的 URL 形式:
 
 * A link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormUrl.kt[ NormUrl]
 * A String
@@ -170,9 +170,9 @@ UrlAware 提供了更复杂的控制来完成采集任务。UrlAware 是所有 H
 
 link:https://en.wikipedia.org/wiki/Hyperlink[超链接]，或简称为链接，特指 Web 上对数据的引用，通常包含一个 URL，一个文本和一组属性，用户可以通过单击或点击来跟随它。
 
-link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[Pulsar 中的 Hyperlink] 如同普通超链接，但带有描述任务的额外信息。
+link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[PulsarRPA 中的 Hyperlink] 如同普通超链接，但带有描述任务的额外信息。
 
-Pulsar 预定义了几个超链接:
+PulsarRPA 预定义了几个超链接:
 
 ParsableHyperlink 是在连续爬虫作业中执行获取-解析任务的一种便捷抽象:
 
@@ -285,7 +285,7 @@ link:../pulsar-tools/pulsar-browser/src/main/kotlin/ai/platon/pulsar/browser/com
 
 === X-SQL
 
-Pulsar 支持网络即数据库范式，我们开发了X-SQL来直接查询网页，并将网页转换成表格和图表。
+PulsarRPA 支持网络即数据库范式，我们开发了X-SQL来直接查询网页，并将网页转换成表格和图表。
 
 点击 link:x-sql-CN.adoc[X-SQL] 查看关于 X-SQL 的详细介绍和函数说明。
 
@@ -301,11 +301,11 @@ Pulsar 支持网络即数据库范式，我们开发了X-SQL来直接查询网�
 
 当运行连续爬网时，系统会启动一个主循环来不断从 link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt[UrlPool] 获取 URL，然后在 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt[PulsarSession] 中异步加载或获取它们。
 
-请记住，Pulsar 中的每个任务都是一个 URL，因此主循环可以接受和执行任何类型的任务。
+请记住，PulsarRPA 中的每个任务都是一个 URL，因此主循环可以接受和执行任何类型的任务。
 
 === 隐私上下文
 
-网页采集任务中最大的困难之一是机器人隐身。对于采集任务，网站不应该知道访问是来自人类还是机器人。一旦网页访问被网站怀疑，我们称之为隐私泄露，隐私上下文必须被丢弃，Pulsar 将在另一个隐私上下文中重新访问该页面。
+网页采集任务中最大的困难之一是机器人隐身。对于采集任务，网站不应该知道访问是来自人类还是机器人。一旦网页访问被网站怀疑，我们称之为隐私泄露，隐私上下文必须被丢弃，PulsarRPA 将在另一个隐私上下文中重新访问该页面。
 
 === IP 代理管理
 
@@ -317,4 +317,4 @@ Pulsar 支持网络即数据库范式，我们开发了X-SQL来直接查询网�
 
 === 后端存储
 
-Pulsar 支持各种后端存储解决方案，以满足我们客户的迫切需要：本地文件系统、MongoDB、HBase、Gora 等。
+PulsarRPA 支持各种后端存储解决方案，以满足我们客户的迫切需要：本地文件系统、MongoDB、HBase、Gora 等。
