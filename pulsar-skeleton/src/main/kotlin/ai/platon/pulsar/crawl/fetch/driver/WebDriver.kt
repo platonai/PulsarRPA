@@ -929,6 +929,10 @@ interface WebDriver: Closeable {
      *
      * If the node does not exist, or the attribute does not exist, returns null.
      *
+     * ```kotlin
+     * val classes = driver.selectFirstAttributeOrNull("h2.title", "class")
+     * ```
+     *
      * @param selector The selector to locate the node.
      * @param attrName The attribute name to retrieve.
      * @return The attribute value of the node.
@@ -940,6 +944,10 @@ interface WebDriver: Closeable {
      *
      * If the node do not exist, or the attribute does not exist, returns an empty list.
      *
+     * ```kotlin
+     * val classes = driver.selectAttributes("h2.title", "class")
+     * ```
+     *
      * @param selector The selector to locate the nodes.
      * @return The attribute pairs of the nodes.
      * */
@@ -949,6 +957,10 @@ interface WebDriver: Closeable {
      * Returns the nodes' attribute values, the nodes are located by [selector], the attribute is [attrName].
      *
      * If the nodes do not exist, or the attribute does not exist, returns an empty list.
+     *
+     * ```kotlin
+     * val classes = driver.selectAttributeAll("h2.title", "class")
+     * ```
      *
      * @param selector The selector to locate the nodes.
      * @param attrName The attribute name to retrieve.
@@ -961,6 +973,10 @@ interface WebDriver: Closeable {
     /**
      * Set the attribute of an element located by [selector].
      *
+     * ```kotlin
+     * driver.setAttribute("h2.title", "class", "header")
+     * ```
+     *
      * @param selector The CSS query to select an element.
      * @param attrName The attribute name to set.
      * @param attrValue The attribute value to set.
@@ -970,6 +986,10 @@ interface WebDriver: Closeable {
     /**
      * Set the attribute of all elements matching the CSS query.
      *
+     * ```kotlin
+     * driver.setAttributeAll("h2.title", "class", "header")
+     * ```
+     *
      * @param selector The CSS query to select elements.
      * @param attrName The attribute name to set.
      * @param attrValue The attribute value to set.
@@ -978,6 +998,10 @@ interface WebDriver: Closeable {
     suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String)
     /**
      * Find hyperlinks in elements matching the CSS query.
+     *
+     * ```kotlin
+     * val hyperlinks = driver.selectHyperlinks("a.product-link")
+     * ```
      *
      * @param selector The CSS query to select elements.
      * @param offset The offset of the first element to select.
@@ -989,6 +1013,10 @@ interface WebDriver: Closeable {
     /**
      * Find anchor elements matching the CSS query.
      *
+     * ```kotlin
+     * val anchors = driver.selectAnchors("a.product-link")
+     * ```
+     *
      * @param selector The CSS query to select elements.
      * @param offset The offset of the first element to select.
      * @param limit The maximum number of elements to select.
@@ -998,6 +1026,10 @@ interface WebDriver: Closeable {
     suspend fun selectAnchors(selector: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor>
     /**
      * Find image elements matching the CSS query.
+     *
+     * ```kotlin
+     * val images = driver.selectImages("img.product-image")
+     * ```
      *
      * @param selector The CSS query to select elements.
      * @param offset The offset of the first element to select.
@@ -1010,6 +1042,10 @@ interface WebDriver: Closeable {
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
      *
+     * ```kotlin
+     * val title = driver.evaluate("document.title")
+     * ```
+     *
      * @param expression Javascript expression to evaluate
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
@@ -1019,6 +1055,10 @@ interface WebDriver: Closeable {
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
      *
+     * ```kotlin
+     * val title = driver.evaluate("document.title", "Untitled")
+     * ```
+     *
      * @param expression Javascript expression to evaluate
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
@@ -1027,6 +1067,10 @@ interface WebDriver: Closeable {
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
+     *
+     * ```kotlin
+     * val title = driver.evaluate("document.title")
+     * ```
      *
      * @param expression Javascript expression to evaluate
      * @return expression result
@@ -1040,12 +1084,23 @@ interface WebDriver: Closeable {
      *
      * All possible exceptions are suppressed and do not throw.
      *
+     * ```kotlin
+     * val title = driver.evaluateSilently("document.title")
+     * ```
+     *
      * @param expression Javascript expression to evaluate
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
     suspend fun evaluateSilently(expression: String): Any?
     /**
      * This method scrolls element into view if needed, and then ake a screenshot of the element.
+     *
+     * ```kotlin
+     * val screenshot = driver.captureScreenshot("h2.title")
+     * ```
+     *
+     * @param selector The selector of the element to capture.
+     * @return The screenshot of the element.
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(selector: String): String?
