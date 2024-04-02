@@ -78,11 +78,12 @@ import java.util.concurrent.CompletableFuture
  * [WebDriver] provides a complete method set for RPA, just like selenium, playwright
  * and puppeteer does, all actions and behaviors are optimized to mimic real people as closely as possible.
  *
- * @see WebDriver
- * @see LoadOptions
- * @see PageEvent
  * @see UrlAware
- * @see PulsarContext
+ * @see LoadOptions
+ * @see WebPage
+ * @see FeaturedDocument
+ * @see PageEvent
+ * @see WebDriver
  * */
 interface PulsarSession : AutoCloseable {
     /**
