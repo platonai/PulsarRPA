@@ -30,10 +30,35 @@ import java.util.concurrent.CompletableFuture
  * * [scrape]: load a webpage, parse it into a document and then extract fields from the document.
  * * [submit]: submit a url to the URL pool, the url will be processed in the main loop later.
  *
+ * Basic examples:
+ *
+ * ```kotlin
+ * val url = "http://example.com"
+ * val page = session.load(url)
+ * val document = session.parse(page)
+ * val fields = session.scrape("http://example.com", "-expire 1d", listOf(".title", ".content"))
+ *
+ * val document2 = session.loadDocument(url)
+ *
+ * val url2 = "http://example.com/1"
+ * session.submit(url2)
+ * ```
+ *
  * And also the batch versions:
  *
  * * [loadOutPages]: load the portal page and out pages.
  * * [scrapeOutPages]: load the portal page and out pages, extract fields from out pages.
+ *
+ * ```kotlin
+ * val urls = listOf("http://example.com", "http://example.com/1")
+ * val pages = session.loadAll(urls)
+ *
+ * val pages2 = session.loadOutPages("http://example.com", "-outLink a[rel='next']")
+ * val fields = session.scrapeOutPages("http://example.com", "-outLink a", listOf("title", "content"))
+ *
+ * session.submitAll(urls)
+ * session.submitForOutPages("http://example.com", "-outLink a[rel='next']")
+ * ```
  *
  * The first thing to understand is how to load a page. Load methods like [load] first
  * check the local storage and return the local version if the required page exists and meets the
@@ -47,6 +72,17 @@ import java.util.concurrent.CompletableFuture
  * 3. Page size
  * 4. Required fields
  * 5. Other conditions
+ *
+ * ```kotlin
+ * val url = "http://example.com"
+ * val page = session.load(url, "-expire 1d")
+ *
+ * val url2 = "http://example.com/1"
+ * val page2 = session.load(url2, "-refresh")
+ *
+ * val url3 = "http://example.com/2"
+ * val page3 = session.load(url3, "-requireSize 100000")
+ * ```
  *
  * Once a page is loaded from local storage, or fetched from the Internet, we come to the next process steps:
  * 1. parse the page content into an HTML document
