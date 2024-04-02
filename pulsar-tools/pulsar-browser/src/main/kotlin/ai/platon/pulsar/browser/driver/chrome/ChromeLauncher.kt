@@ -24,7 +24,7 @@ import java.util.regex.Pattern
  * The chrome launcher
  * */
 class ChromeLauncher(
-    val userDataDir: Path = BrowserSettings.generateUserDataDir(),
+    val userDataDir: Path = BrowserFiles.computeNextSequentialContextDir(),
     val options: LauncherOptions = LauncherOptions(),
     private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry()
 ) : AutoCloseable {

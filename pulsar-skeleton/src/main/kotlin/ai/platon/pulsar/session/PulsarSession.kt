@@ -1,25 +1,20 @@
 package ai.platon.pulsar.session
 
-import ai.platon.pulsar.common.BeanFactory
 import ai.platon.pulsar.common.CheckState
-import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.DocumentCatch
 import ai.platon.pulsar.crawl.common.GlobalCache
-import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.PageCatch
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.annotations.Beta
-import org.apache.commons.lang3.NotImplementedException
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
@@ -462,6 +457,11 @@ interface PulsarSession : AutoCloseable {
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
+     *
+     * ```kotlin
+     * val url = Hyperlink("http://example.com")
+     * val page = session.loadDeferred(url, "-expire 1d")
+     * ```
      *
      * @param url  The url to load
      * @param args The load args
