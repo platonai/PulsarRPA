@@ -200,23 +200,23 @@ abstract class AbstractWebDriver(
     val mainResponseStatus: Int get() = navigateEntry.mainResponseStatus
     val mainResponseStatusText: String get() = navigateEntry.mainResponseStatusText
     val mainResponseHeaders: Map<String, Any> get() = navigateEntry.mainResponseHeaders
-    
+
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
-    
-    override suspend fun currentUrl(): String = url()
-    
-    @Throws(WebDriverException::class)
-    override suspend fun url() = evaluateStringValueOrEmpty("document.URL")
+
+    override suspend fun currentUrl(): String = evaluate("document.URL", navigateEntry.url)
     
     @Throws(WebDriverException::class)
-    override suspend fun documentURI() = evaluateStringValueOrEmpty("document.documentURI")
+    override suspend fun url() = evaluate("document.URL", "")
     
     @Throws(WebDriverException::class)
-    override suspend fun baseURI() = evaluateStringValueOrEmpty("document.baseURI")
+    override suspend fun documentURI() = evaluate("document.documentURI", "")
     
     @Throws(WebDriverException::class)
-    override suspend fun referrer() = evaluateStringValueOrEmpty("document.referrer")
+    override suspend fun baseURI() = evaluate("document.baseURI", "")
+    
+    @Throws(WebDriverException::class)
+    override suspend fun referrer() = evaluate("document.referrer", "")
     
     @Suppress("UNCHECKED_CAST")
     @Throws(WebDriverException::class)

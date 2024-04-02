@@ -203,6 +203,11 @@ interface WebDriver: Closeable {
     /**
      * Navigates current page to the given URL.
      *
+     * ```kotlin
+     * driver.navigateTo("https://www.example.com")
+     * driver.waitForNavigation()
+     * ```
+     *
      * @param url URL to navigate page to.
      */
     @Throws(WebDriverException::class)
@@ -210,17 +215,25 @@ interface WebDriver: Closeable {
     /**
      * Navigates current page to the given URL.
      *
+     * ```kotlin
+     * val entry = NavigateEntry("https://www.example.com?timestamp=11712067353", pageUrl = "https://www.example.com")
+     * driver.navigateTo(entry)
+     * driver.waitForNavigation()
+     * ```
+     *
      * @param entry NavigateEntry to navigate page to.
      */
     @Throws(WebDriverException::class)
     suspend fun navigateTo(entry: NavigateEntry)
     /**
      * Returns a string representing the current URL that the browser is looking at. The current url is always
-     * the main frame's url if the browser succeed to return it, and is displayed in the browser's address bar.
+     * the main frame's `document.documentURI` if the browser succeed to return it, and is displayed in the browser's
+     * address bar.
      *
-     * If the browser failed to return a proper url, return the passed in url to navigate.
+     * If the browser failed to return a proper url, returns the passed in url to navigate, just like a real user enter
+     * a url in the address bar but the browser failed to load the page.
      *
-     * @return The document's URL without fragment, or the passed in url to navigate.
+     * @return The document's `document.documentURI`, or the passed in url to navigate.
      */
     @Throws(WebDriverException::class)
     suspend fun currentUrl(): String
@@ -337,6 +350,7 @@ interface WebDriver: Closeable {
      * ```
      *
      * TODO: consider only use driver.browser.clearCookies()
+     * @see Browser.clearCookies
      * */
     @Throws(WebDriverException::class)
     suspend fun clearBrowserCookies()
