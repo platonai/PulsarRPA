@@ -12,9 +12,15 @@ import java.io.Closeable
 import java.time.Duration
 
 /**
- * [WebDriver] defines a concise interface to visit and interact with web pages,
- * all actions and behaviors are optimized to mimic real people as closely as possible,
- * such as scrolling, clicking, typing text, dragging and dropping, etc.
+ * [WebDriver] defines a concise interface to visit and manipulate webpages.
+ *
+ * The webpage is rendered to a Document Object Model (DOM) in a real browser, and the interface provides methods to
+ * control the browser, select textContent and attributes of Elements, and interact with the webpage.
+ *
+ * All actions and behaviors are optimized to mimic real people as closely as possible, such as scrolling, clicking,
+ * typing text, dragging and dropping, etc.
+ *
+ * The term `document` here refers to a Document Object Model (DOM) within a browser.
  *
  * The methods in this interface fall into three categories:
  *
@@ -23,39 +29,57 @@ import java.time.Duration
  * * Interact with the webpage
  *
  * Key methods:
- * * [navigateTo]: open a page.
- * * [scrollDown]: scroll down on a web page to fully load the page,
- * most modern webpages support lazy loading using ajax tech, where the page
- * content only starts to load when it is scrolled into view.
- * * [pageSource]: retrieve the source code of a webpage.
+ * * [navigateTo]: navigate to a URL.
+ * * [currentUrl]: get the current URL displayed in the address bar.
+ * * [scrollDown]: scroll down on a webpage to fully load the page. Most modern webpages support lazy loading
+ * using ajax tech, where the page content only starts to load when it is scrolled into view.
+ * * [pageSource]: retrieve the source code of the webpage.
  *
- * URLs and location properties in the browser:
+ * For each document, there are several properties that represent the URL of the document:
+ * * `driver.currentUrl()`: Returns the URL displayed in the address bar, it can be either navigated or not.
+ * * `driver.url()`, `document.URL`: Returns the URL of the document.
+ * * `driver.documentURI()`, `document.documentURI`: Returns the URI of the document.
+ * * `driver.baseURI()`, `document.baseURI`: Returns the base URI of the document.
+ * * `document.location`: Represents the location (URL) of the current page and allows you to manipulate the URL.
  *
  * In the Document Object Model (DOM), the relationship between `document.URL`, `document.documentURI`,
  * `document.location`, and the URL displayed in the browser's address bar is as follows:
- * 1. `document.URL`:
+ * * `driver.currentUrl()`:
+ *    - This ready-only property displayed in the browser's address bar is what users see and can edit directly.
+ *    - This ready-only property can be either navigated or not.
+ *    - When the page is loaded or when `document.location` is modified, the address bar is updated to reflect the new URL.
+ *    - It is typically synchronized with `document.URL` and `document.location.href` (a property of `document.location`).
+ * * `driver.url()`, `document.URL`:
  *    - This property returns the URL of the document as a string.
  *    - It is a read-only property and reflects the current URL of the document.
  *    - Changes to `document.location` will also update `document.URL`.
- * 2. `document.documentURI`:
+ * * `driver.documentURI()`, `document.documentURI`:
  *    - This property returns the URI of the document.
  *    - It is also a read-only property and typically contains the same value as `document.URL`.
  *    - However, `document.documentURI` is defined to be the URI that was provided to the parser, which could
  *      potentially differ from `document.URL` in certain cases, although in practice, this is rare.
- * 3. `document.location`:
+ * * `driver.baseURI()`, `document.baseURI`:
+ *    - This property returns the base URI of the document.
+ *    - The base URI is used to resolve relative URLs within the document.
+ *    - It is a read-only property and is typically the URL of the document, unless a `<base>` element is present
+ *    in the document, in which case the value of the `href` attribute of the `<base>` element is used.
+ *    - If no `<base>` element is present, the base URI is the same as `document.URL`.
+ * * `document.location`:
  *    - This property represents the location (URL) of the current page and allows you to manipulate the URL.
  *    - It is a read-write property, which means you can change it to navigate to a different page or to manipulate
  *      query strings, fragments, etc.
  *    - Changes to `document.location` will cause the browser to navigate to the new URL, updating both `document.URL`
  *      and the URL displayed in the address bar.
- * 4. URL displayed in the address bar:
- *    - The URL displayed in the browser's address bar is what users see and can edit directly.
- *    - It is typically synchronized with `document.URL` and `document.location.href` (a property of `document.location`).
- *    - When the page is loaded or when `document.location` is modified, the address bar is updated to reflect the new URL.
+ *
  * In summary, `document.URL` and `document.documentURI` are read-only properties that reflect the current URL of the
  * document, while `document.location` is a read-write property that not only reflects the current URL but also allows
  * you to navigate to a new one. The URL displayed in the address bar is a user-facing representation of the current
  * document's URL, which is usually in sync with `document.location`.
+ *
+ * In addition to the above properties, The method `driver.referrer()` returns the document's referrer.
+ * The `document.referrer` property returns the URI of the page that linked to the current page. If the user navigated
+ * directly to the page (e.g., via a bookmark), the value is an empty string. Inside an `<iframe>`, the referrer is
+ * initially set to the same value as the `href` of the parent window's `Window.location`.
  *
  * The following example demonstrates how to use the WebDriver interface to visit a webpage and interact with it:
  *
@@ -69,19 +93,29 @@ import java.time.Duration
  *          interact(page, driver)
  *      }
  *
- *     session.load(url, options)
+ *      session.load(url, options)
  *  }
  *
+ *  // interact with the page
  *  private suspend fun interact(driver: WebDriver) {
- *     // interact with the page
- *     val selector = "input[placeholder*=搜索], input[placeholder*=Search]"
- *     driver.waitForSelector(selector)
- *     driver.fill(selector, iterator.next())
- *     driver.press(selector, "Space")
- *     "Email".forEach { driver.press(selector, "$it") }
- *     driver.press(selector, "Enter")
+ *      val selector = "input[placeholder*=搜索], input[placeholder*=Search]"
+ *      driver.waitForSelector(selector)
+ *      driver.fill(selector, "Facebook")
+ *      driver.press(selector, "Space")
+ *      "Email".forEach { driver.press(selector, "$it") }
+ *      driver.press(selector, "Enter")
  *  }
  * ```
+ *
+ * @see [Document ](https://developer.mozilla.org/en-US/docs/Web/API/Document)
+ * @see [Document Object Model (DOM)](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model)
+ * @see [Document: URL property](https://developer.mozilla.org/en-US/docs/Web/API/Document/URL)
+ * @see [Document: documentURI property](https://developer.mozilla.org/en-US/docs/Web/API/Document/documentURI)
+ * @see [Document: baseURI property](https://developer.mozilla.org/en-US/docs/Web/API/Document/baseURI)
+ * @see [Document: referrer property](https://developer.mozilla.org/en-US/docs/Web/API/Document/referrer)
+ * @see [Document: location property](https://developer.mozilla.org/en-US/docs/Web/API/Document/location)
+ *
+ * @see BrowserSettings
  */
 interface WebDriver: Closeable {
     /**
@@ -111,6 +145,7 @@ interface WebDriver: Closeable {
     val outgoingPages: Set<WebDriver>
     /**
      * The browser type.
+     * BrowserType.PULSAR_CHROME is the only supported browser type currently.
      * */
     val browserType: BrowserType
     /**
@@ -128,6 +163,7 @@ interface WebDriver: Closeable {
     /**
      * Returns a JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on,
      * the other JVM languages might have difficulty to handle kotlin suspend methods.
+     * @see JvmWebDriver
      * */
     fun jvm(): JvmWebDriver
     /**

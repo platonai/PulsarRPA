@@ -68,14 +68,21 @@ import java.util.concurrent.CompletableFuture
  *
  * ```kotlin
  * val options = session.options(args)
- * options.event.browseEvent.onDidDOMStateCheck.addLast { page, driver ->
- *   driver.scrollDown()
+ * options.event.browseEvent.onDocumentSteady.addLast { page, driver ->
+ *   driver.fill("input[name='search']", "geek")
+ *   driver.click("button[type='submit']")
  * }
  * session.load(url, options)
  * ```
  *
  * [WebDriver] provides a complete method set for RPA, just like selenium, playwright
  * and puppeteer does, all actions and behaviors are optimized to mimic real people as closely as possible.
+ *
+ * @see WebDriver
+ * @see LoadOptions
+ * @see PageEvent
+ * @see UrlAware
+ * @see PulsarContext
  * */
 interface PulsarSession : AutoCloseable {
     /**
@@ -217,20 +224,12 @@ interface PulsarSession : AutoCloseable {
     fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
     
     /**
-     * Inject a url as a seed to fetch. Injection is usually used in Nutch style crawls
-     * where the execution flow is the following:
-     *
-     * inject -> generate -> fetch -> parse [ -> index ] -> update
-     *              ^                                          ^
-     *              |    <-     <-      <-         <-          |
-     *
-     * @param url The url to inject, con be followed by arguments
-     * @return A newly created webpage record which is ready to be generated
-     */
-    fun inject(url: String): WebPage
-    
-    /**
      * Get a page from storage.
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val page = session.get(url)
+     * ```
      *
      * @param url The url
      * @return The webpage in storage if exists, otherwise returns a NIL page
@@ -239,6 +238,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Get a page from storage.
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val page = session.get(url, "content", "metadata")
+     * ```
      *
      * @param url The url
      * @param fields The fields to load from local storage
@@ -249,6 +253,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Get a page from storage.
      *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val page = session.getOrNull(url)
+     * ```
+     *
      * @param url The url
      * @return The page in storage if exists, otherwise returns null
      */
@@ -256,6 +265,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Get a page from storage.
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val page = session.getOrNull(url, "content", "metadata")
+     * ```
      *
      * @param url The url
      * @param fields The fields to load from local storage
@@ -266,6 +280,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Get the content of the page from the storage
      *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val content = session.getContent(url)
+     * ```
+     *
      * @param url The url of the page to retrieve
      * @return The page content or null
      */
@@ -273,6 +292,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Get the content of the page from the storage
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val content = session.getContentAsString(url)
+     * ```
      *
      * @param url The url of the page to retrieve
      * @return The page content in string format or null
@@ -283,6 +307,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Check if the page exists in the storage.
      *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val exists = session.exists(url)
+     * ```
+     *
      * @param url The url to check
      * @return true if the page exists, false otherwise
      */
@@ -290,6 +319,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Return the fetch state of the page.
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val state = session.fetchState(url)
+     * ```
      *
      * @param page The webpage
      * @param options The load options
@@ -302,6 +336,11 @@ interface PulsarSession : AutoCloseable {
      *
      * This method opens the url immediately, regardless of the previous state of the page.
      *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val page = session.open(url)
+     * ```
+     *
      * @param url The url to open
      * @return The webpage loaded or NIL
      */
@@ -311,6 +350,12 @@ interface PulsarSession : AutoCloseable {
      * Open a url with page events.
      *
      * This method opens the url immediately, regardless of the previous state of the page.
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val event = PrintFlowEvent()
+     * val page = session.open(url, event)
+     * ```
      *
      * @param url The url to open
      * @return The webpage loaded or NIL
@@ -330,6 +375,11 @@ interface PulsarSession : AutoCloseable {
      * 3. fields requirement
      * 4. other
      *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val page = session.load(url)
+     * ```
+     *
      * @param url The url to load
      * @return The webpage loaded or NIL
      */
@@ -347,6 +397,12 @@ interface PulsarSession : AutoCloseable {
      * 2. page size requirement
      * 3. fields requirement
      * 4. other
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val args = "-expire 1d"
+     * val page = session.load(url, args)
+     * ```
      *
      * @param url The url to load
      * @param args The load arguments
@@ -367,6 +423,12 @@ interface PulsarSession : AutoCloseable {
      * 3. fields requirement
      * 4. other
      *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val options = session.options("-expire 1d")
+     * val page = session.load(url, options)
+     * ```
+     *
      * @param url The url to load
      * @param options The load options
      * @return The webpage loaded or NIL
@@ -379,6 +441,11 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
+     * ```kotlin
+     * val url = Hyperlink("http://example.com")
+     * val page = session.load(url)
+     * ```
+     *
      * @param url  The url to load
      * @return The webpage loaded or NIL
      */
@@ -389,6 +456,11 @@ interface PulsarSession : AutoCloseable {
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
+     *
+     * ```kotlin
+     * val url = Hyperlink("http://example.com")
+     * val page = session.load(url, "-expire 1d")
+     * ```
      *
      * @param url  The url to load
      * @param args The load arguments
@@ -402,6 +474,12 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
+     * ```kotlin
+     * val url = Hyperlink("http://example.com")
+     * val options = session.options("-expire 1d")
+     * val page = session.load(url, options)
+     * ```
+     *
      * @param url     The url to load
      * @param options The load options
      * @return The webpage loaded or NIL
@@ -414,7 +492,12 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
-     * @param url The normal url
+     * ```kotlin
+     * val url = session.normalize("http://example.com")
+     * val page = session.load(url)
+     * ```
+     *
+     * * @param url The normal url
      * @return The webpage loaded or NIL
      */
     fun load(url: NormUrl): WebPage
@@ -427,6 +510,12 @@ interface PulsarSession : AutoCloseable {
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val args = "-expire 1d"
+     * val page = session.loadDeferred(url, args)
+     * ```
      *
      * @param url     The url to load
      * @param args The load options
@@ -442,6 +531,12 @@ interface PulsarSession : AutoCloseable {
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val options = session.options("-expire 1d")
+     * val page = session.loadDeferred(url, options)
+     * ```
      *
      * @param url     The url to load
      * @param options The load options
@@ -478,6 +573,12 @@ interface PulsarSession : AutoCloseable {
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
+     * ```kotlin
+     * val url = Hyperlink("http://example.com")
+     * val options = session.options("-expire 1d")
+     * val page = session.loadDeferred(url, options)
+     * ```
+     *
      * @param url     The url to load
      * @param options The load options
      * @return The webpage loaded or NIL
@@ -493,6 +594,11 @@ interface PulsarSession : AutoCloseable {
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
+     * ```kotlin
+     * val url = session.normalize("http://example.com")
+     * val page = session.loadDeferred(url)
+     * ```
+     *
      * @param url The normal url
      * @return The webpage loaded or NIL
      */
@@ -504,6 +610,11 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
+     * ```kotlin
+     * val urls = listOf("http://example.com", "http://example.com/1")
+     * val pages = session.loadAll(urls)
+     * ```
+     *
      * @param urls    The urls to load
      * @return The webpage loaded or NIL
      */
@@ -514,6 +625,11 @@ interface PulsarSession : AutoCloseable {
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
+     *
+     * ```kotlin
+     * val urls = listOf("http://example.com", "http://example.com/1")
+     * val pages = session.loadAll(urls, "-expire 1d")
+     * ```
      *
      * @param urls    The urls to load
      * @param args The load arguments
@@ -527,6 +643,11 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
+     * ```kotlin
+     * val urls = listOf("http://example.com", "http://example.com/1")
+     * val pages = session.loadAll(urls, session.options("-expire 1d"))
+     * ```
+     *
      * @param urls    The urls to load
      * @param options The load options
      * @return The webpage loaded or NIL
@@ -539,6 +660,11 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
+     * ```kotlin
+     * val urls = listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1"))
+     * val pages = session.loadAll(urls)
+     * ```
+     *
      * @param urls    The urls to load
      * @return The webpage loaded or NIL
      */
@@ -549,6 +675,11 @@ interface PulsarSession : AutoCloseable {
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
+     *
+     * ```kotlin
+     * val urls = listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1"))
+     * val pages = session.loadAll(urls, "-expire 1d")
+     * ```
      *
      * @param urls    The urls to load
      * @param args The load arguments
@@ -562,6 +693,11 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
+     * ```kotlin
+     * val urls = listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1"))
+     * val pages = session.loadAll(urls, session.options("-expire 1d"))
+     * ```
+     *
      * @param urls    The urls to load
      * @param options The load options
      * @return The webpage loaded or NIL
@@ -574,6 +710,11 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
+     * ```kotlin
+     * val urls = listOf("http://example.com", "http://example.com/1").map { session.normalize(it) }
+     * val pages = session.loadAll(urls)
+     * ```
+     *
      * @param normUrls    The normal urls to load
      * @return The loaded webpages
      */
@@ -581,6 +722,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Load a normal url in java async style
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val page = session.loadAsync(url).get()
+     * ```
      *
      * @param url     The url to load
      * @return A completable future of webpage
@@ -590,6 +736,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a normal url in java async style
      *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val page = session.loadAsync(url, "-expire 1d").get()
+     * ```
+     *
      * @param url     The url to load
      * @return A completable future of webpage
      */
@@ -597,6 +748,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Load a normal url in java async style
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val page = session.loadAsync(url, session.options("-expire 1d")).get()
+     * ```
      *
      * @param url     The url to load
      * @return A completable future of webpage
@@ -606,6 +762,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a normal url in java async style
      *
+     * ```kotlin
+     * val url = Hyperlink("http://example.com")
+     * val page = session.loadAsync(url).get()
+     * ```
+     *
      * @param url     The url to load
      * @return A completable future of webpage
      */
@@ -613,6 +774,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Load a normal url in java async style
+     *
+     * ```kotlin
+     * val url = Hyperlink("http://example.com")
+     * val page = session.loadAsync(url, "-expire 1d").get()
+     * ```
      *
      * @param url     The url to load
      * @return A completable future of webpage
@@ -622,6 +788,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a normal url in java async style
      *
+     * ```kotlin
+     * val url = Hyperlink("http://example.com")
+     * val page = session.loadAsync(url, session.options("-expire 1d")).get()
+     * ```
+     *
      * @param url     The url to load
      * @return A completable future of webpage
      */
@@ -629,6 +800,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Load a normal url in java async style
+     *
+     * ```kotlin
+     * val url = session.normalize("http://example.com")
+     * val page = session.loadAsync(url).get()
+     * ```
      *
      * @param url     The normal url to load
      * @return A completable future of webpage
@@ -641,6 +817,11 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
+     * ```kotlin
+     * val urls = listOf("http://example.com", "http://example.com/1")
+     * val pages = session.loadAllAsync(urls)
+     * ```
+     *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
      */
@@ -651,6 +832,11 @@ interface PulsarSession : AutoCloseable {
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
+     *
+     * ```kotlin
+     * val urls = listOf("http://example.com", "http://example.com/1")
+     * val pages = session.loadAllAsync(urls, "-expire 1d")
+     * ```
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -663,6 +849,11 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
+     * ```kotlin
+     * val urls = listOf("http://example.com", "http://example.com/1")
+     * val pages = session.loadAllAsync(urls, session.options("-expire 1d"))
+     * ```
+     *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
      */
@@ -673,6 +864,11 @@ interface PulsarSession : AutoCloseable {
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
+     *
+     * ```kotlin
+     * val urls = listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1"))
+     * val pages = session.loadAllAsync(urls)
+     * ```
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -685,6 +881,11 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
+     * ```kotlin
+     * val urls = listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1"))
+     * val pages = session.loadAllAsync(urls, "-expire 1d")
+     * ```
+     *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
      */
@@ -695,6 +896,11 @@ interface PulsarSession : AutoCloseable {
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
+     *
+     * ```kotlin
+     * val urls = listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1"))
+     * val pages = session.loadAllAsync(urls, session.options("-expire 1d"))
+     * ```
      *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
@@ -707,6 +913,11 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
+     * ```kotlin
+     * val urls = listOf("http://example.com", "http://example.com/1").map { session.normalize(it) }
+     * val pages = session.loadAllAsync(urls)
+     * ```
+     *
      * @param urls The normal urls to load
      * @return The completable futures of webpages
      */
@@ -715,6 +926,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Submit a url to the URL pool, the url will be processed in the crawl loop later
      *
+     * ```kotlin
+     * session.submit("http://example.com")
+     * PulsarContexts.await()
+     * ```
+     *
      * @param url The url to submit
      * @return The [PulsarSession] itself to enabled chained operations
      */
@@ -722,6 +938,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Submit a url to the URL pool, and it will be processed in a crawl loop
+     *
+     * ```kotlin
+     * session.submit("http://example.com", "-expire 1d")
+     * PulsarContexts.await()
+     * ```
      *
      * @param url The url to submit
      * @param args The load arguments
@@ -732,6 +953,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
+     * ```kotlin
+     * session.submit("http://example.com", session.options("-expire 1d"))
+     * PulsarContexts.await()
+     * ```
+     *
      * @param url The url to submit
      * @param options The load options
      * @return The [PulsarSession] itself to enabled chained operations
@@ -741,6 +967,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
+     * ```kotlin
+     * session.submit(Hyperlink("http://example.com"))
+     * PulsarContexts.await()
+     * ```
+     *
      * @param url The url to submit
      * @return The [PulsarSession] itself to enabled chained operations
      */
@@ -749,18 +980,30 @@ interface PulsarSession : AutoCloseable {
     /**
      * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
+     * ```kotlin
+     * session.submit(Hyperlink("http://example.com"), "-expire 1d")
+     * PulsarContexts.await()
+     * ```
+     *
      * @param url The url to submit
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submit(url: UrlAware, args: String): PulsarSession
     
-    // No such version, it's too complicated to handle events
+    /**
+     * No such version, it's too complicated to handle events
+     * */
     fun submit(url: UrlAware, options: LoadOptions): PulsarSession = throw NotImplementedError(
         "The signature submit(UrlAware, LoadOptions) is a confusing version, " +
             "it's too complicated to handle events and should not be implemented.")
     
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
+     *
+     * ```kotlin
+     * session.submitAll(listOf("http://example.com", "http://example.com/1"))
+     * PulsarContexts.await()
+     * ```
      *
      * @param urls The urls to submit
      * @return The [PulsarSession] itself to enabled chained operations
@@ -769,6 +1012,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
+     *
+     * ```kotlin
+     * session.submitAll(listOf("http://example.com", "http://example.com/1"), "-expire 1d")
+     * PulsarContexts.await()
+     * ```
      *
      * @param urls The urls to submit
      * @param args The load arguments
@@ -779,6 +1027,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
+     * ```kotlin
+     * session.submitAll(listOf("http://example.com", "http://example.com/1"), session.options("-expire 1d"))
+     * PulsarContexts.await()
+     * ```
+     *
      * @param urls The urls to submit
      * @param options The load options
      * @return The [PulsarSession] itself to enabled chained operations
@@ -788,6 +1041,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
+     * ```kotlin
+     * session.submitAll(listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1")))
+     * PulsarContexts.await()
+     * ```
+     *
      * @param urls The urls to submit
      * @return The [PulsarSession] itself to enabled chained operations
      */
@@ -796,17 +1054,26 @@ interface PulsarSession : AutoCloseable {
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
+     * ```kotlin
+     * session.submitAll(listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1")), "-expire 1d")
+     * PulsarContexts.await()
+     * ```
+     *
      * @param urls The urls to submit
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submitAll(urls: Collection<UrlAware>, args: String): PulsarSession
-    
-    // No such version, it's too complicated to handle events
+
+    /**
+     * No such version, it's too complicated to handle events
+     * */
     fun submitAll(urls: Collection<UrlAware>, options: LoadOptions): PulsarSession =
         throw NotImplementedError("The signature submitAll(Collection<UrlAware>, LoadOptions) is a confusing version, " +
             "it's too complicated to handle events and should not be implemented.")
-    
-    // No such confusing version
+
+    /**
+     * No such confusing version
+     * */
     fun loadOutPages(portalUrl: String): List<WebPage> =
         throw NotImplementedError("The signature loadOutPages(String) is a confusing version and should not be " +
             "implemented.")
@@ -815,6 +1082,11 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
      *
      * Option `-outLink` specifies the cssSelector for links in the portal page to load.
+     *
+     * ```kotlin
+     * val pages = session.loadOutPages("http://example.com", "-outLink a")
+     * val pages2 = session.loadOutPages("http://example.com", "-outLink a -expire 1d")
+     * ```
      *
      * @param portalUrl    The portal url from where to load pages
      * @param args         The load arguments
@@ -826,6 +1098,11 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
      *
      * Option `-outLink` specifies the cssSelector for links in the portal page to load.
+     *
+     * ```kotlin
+     * val pages = session.loadOutPages("http://example.com", session.options("-outLink a"))
+     * val pages2 = session.loadOutPages("http://example.com", session.options("-outLink a -expire 1d"))
+     * ```
      *
      * @param portalUrl The portal url from where to load pages
      * @param options   The load options
@@ -845,6 +1122,11 @@ interface PulsarSession : AutoCloseable {
      *
      * Option `-outLink` specifies the cssSelector for links in the portal page to load.
      *
+     * ```kotlin
+     * val pages = session.loadOutPages("http://example.com", "-outLink a")
+     * val pages2 = session.loadOutPages("http://example.com", "-outLink a -expire 1d")
+     * ```
+     *
      * @param portalUrl    The portal url from where to load pages
      * @param args         The load arguments
      * @return The loaded out pages
@@ -855,6 +1137,11 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
      *
      * Option `-outLink` specifies the cssSelector for links in the portal page to load.
+     *
+     * ```kotlin
+     * val pages = session.loadOutPages("http://example.com", session.options("-outLink a"))
+     * val pages2 = session.loadOutPages("http://example.com", session.options("-outLink a -expire 1d"))
+     * ```
      *
      * @param portalUrl The portal url from where to load pages
      * @param options   The load options
@@ -874,6 +1161,11 @@ interface PulsarSession : AutoCloseable {
      *
      * Option `-outLink` specifies the cssSelector for links in the portal page to load.
      *
+     * ```kotlin
+     * val pages = session.loadOutPagesAsync("http://example.com", "-outLink a")
+     * val pages2 = session.loadOutPagesAsync("http://example.com", "-outLink a -expire 1d")
+     * ```
+     *
      * @param portalUrl The portal url from where to load pages
      * @param args   The load arguments
      * @return The loaded out pages
@@ -884,6 +1176,11 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option asynchronously.
      *
      * Option `-outLink` specifies the cssSelector for links in the portal page to load.
+     *
+     * ```kotlin
+     * val pages = session.loadOutPagesAsync("http://example.com", session.options("-outLink a"))
+     * val pages2 = session.loadOutPagesAsync("http://example.com", session.options("-outLink a -expire 1d"))
+     * ```
      *
      * @param portalUrl The portal url from where to load pages
      * @param options   The load options
@@ -898,6 +1195,12 @@ interface PulsarSession : AutoCloseable {
      *
      * The submitted urls will be processed in a crawl loop later.
      *
+     * ```kotlin
+     * session.submitForOutPages("http://example.com", "-outLink a[href*=review]")
+     * session.submitForOutPages("http://example.com", "-outLink a[href*=item] -expire 1d")
+     * PulsarContexts.await()
+     * ```
+     *
      * @param portalUrl The portal url from where to load pages
      * @param args      The load arguments
      * @return The [PulsarSession] itself to enable chained operation
@@ -910,6 +1213,12 @@ interface PulsarSession : AutoCloseable {
      * Option `-outLink` specifies the cssSelector for links in the portal page to load.
      *
      * The submitted urls will be processed in a crawl loop later.
+     *
+     * ```kotlin
+     * session.submitForOutPages("http://example.com", session.options("-outLink a[href*=review]"))
+     * session.submitForOutPages("http://example.com", session.options("-outLink a[href*=item] -expire 1d"))
+     * PulsarContexts.await()
+     * ```
      *
      * @param portalUrl The portal url from where to load pages
      * @param options   The load options
@@ -924,6 +1233,12 @@ interface PulsarSession : AutoCloseable {
      *
      * The submitted urls will be processed in a crawl loop later.
      *
+     * ```kotlin
+     * session.submitForOutPages(Hyperlink("http://example.com"), "-outLink a[href*=review]")
+     * session.submitForOutPages(Hyperlink("http://example.com"), "-outLink a[href*=item] -expire 1d")
+     * PulsarContexts.await()
+     * ```
+     *
      * @param portalUrl The portal url from where to load pages
      * @param args      The load arguments
      * @return The [PulsarSession] itself to enable chained operation
@@ -937,6 +1252,12 @@ interface PulsarSession : AutoCloseable {
      *
      * The submitted urls will be processed in a crawl loop later.
      *
+     * ```kotlin
+     * session.submitForOutPages(Hyperlink("http://example.com"), session.options("-outLink a[href*=review]"))
+     * session.submitForOutPages(Hyperlink("http://example.com"), session.options("-outLink a[href*=item] -expire 1d"))
+     * PulsarContexts.await()
+     * ```
+     *
      * @param portalUrl The portal url from where to load pages
      * @param options   The load options
      * @return The [PulsarSession] itself to enable chained operation
@@ -949,6 +1270,10 @@ interface PulsarSession : AutoCloseable {
      * Referrer will be opened by a browser first to obtain browsing environment,
      * such as headers and cookies, and then the browsing environment will be applied to the later resource fetching.
      *
+     * ```kotlin
+     * val page = session.loadResource("http://example.com/robots.txt", "http://example.com")
+     * ```
+     *
      * @param url  The url to load
      * @param referrer The referrer URL
      * @return The webpage containing the resource
@@ -959,6 +1284,10 @@ interface PulsarSession : AutoCloseable {
      *
      * Referrer will be opened by a browser first to obtain browsing environment,
      * such as headers and cookies, and then the browsing environment will be applied to the later resource fetching.
+     *
+     * ```kotlin
+     * val page = session.loadResource("http://example.com/robots.txt", "http://example.com", "-expire 1d")
+     * ```
      *
      * @param url  The url to load
      * @param referrer The referrer URL
@@ -971,6 +1300,10 @@ interface PulsarSession : AutoCloseable {
      *
      * Referrer will be opened by a browser first to obtain browsing environment,
      * such as headers and cookies, and then the browsing environment will be applied to the later resource fetching.
+     *
+     * ```kotlin
+     * val page = session.loadResource("http://example.com/robots.txt", "http://example.com", session.options("-expire 1d"))
+     * ```
      *
      * @param url     The url to load
      * @param referrer The referrer URL
@@ -988,6 +1321,10 @@ interface PulsarSession : AutoCloseable {
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
+     * ```kotlin
+     * val page = session.loadResourceDeferred("http://example.com/robots.txt", "http://example.com")
+     * ```
+     *
      * @param url  The url to load
      * @param referrer The referrer URL
      * @return The webpage containing the resource
@@ -1001,6 +1338,10 @@ interface PulsarSession : AutoCloseable {
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
+     *
+     * ```kotlin
+     * val page = session.loadResourceDeferred("http://example.com/robots.txt", "http://example.com", "-expire 1d")
+     * ```
      *
      * @param url  The url to load
      * @param referrer The referrer URL
@@ -1017,6 +1358,10 @@ interface PulsarSession : AutoCloseable {
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
+     * ```kotlin
+     * val page = session.loadResourceDeferred("http://example.com/robots.txt", "http://example.com", session.options("-expire 1d"))
+     * ```
+     *
      * @param url     The url to load
      * @param referrer The referrer URL
      * @param options The load options
@@ -1025,43 +1370,117 @@ interface PulsarSession : AutoCloseable {
     suspend fun loadResourceDeferred(url: String, referrer: String, options: LoadOptions): WebPage
     /**
      * Parse a webpage into an HTML document.
+     *
+     * ```kotlin
+     * val page = session.load("http://example.com")
+     * val document = session.parse(page)
+     * ```
+     *
+     * @param page The webpage to parse
+     * @return The parsed HTML document
      */
     fun parse(page: WebPage): FeaturedDocument
     /**
      * Parse a webpage into an HTML document.
+     *
+     * ```kotlin
+     * val page = session.load("http://example.com")
+     * val document = session.parse(page, true)
+     * ```
+     *
+     * @param page The webpage to parse
+     * @param noCache Whether to skip the cache
+     * @return The parsed HTML document
      */
     fun parse(page: WebPage, noCache: Boolean): FeaturedDocument
     /**
      * Load or fetch a webpage and parse it into an HTML document
+     *
+     * ```kotlin
+     * val document = session.loadDocument("http://example.com")
+     * ```
+     *
+     * @param url The url to load
+     * @return The parsed HTML document
      * */
     fun loadDocument(url: String): FeaturedDocument
     /**
      * Load or fetch a webpage and parse it into an HTML document
+     *
+     * ```kotlin
+     * val document = session.loadDocument("http://example.com", "-expire 1d")
+     * ```
+     *
+     * @param url The url to load
+     * @param args The load arguments
+     * @return The parsed HTML document
      * */
     fun loadDocument(url: String, args: String): FeaturedDocument
     /**
      * Load or fetch a webpage and parse it into an HTML document
+     *
+     * ```kotlin
+     * val document = session.loadDocument("http://example.com", session.options("-expire 1d"))
+     * ```
+     *
+     * @param url The url to load
+     * @param options The load options
+     * @return The parsed HTML document
      * */
     fun loadDocument(url: String, options: LoadOptions): FeaturedDocument
     /**
      * Load or fetch a webpage and parse it into an HTML document
+     *
+     * ```kotlin
+     * val document = session.loadDocument(Hyperlink("http://example.com"))
+     * ```
+     *
+     * @param url The url to load
+     * @return The parsed HTML document
      * */
     fun loadDocument(url: UrlAware): FeaturedDocument
     /**
      * Load or fetch a webpage and parse it into an HTML document
+     *
+     * ```kotlin
+     * val document = session.loadDocument(Hyperlink("http://example.com"), "-expire 1d")
+     * ```
+     *
+     * @param url The url to load
+     * @param args The load arguments
+     * @return The parsed HTML document
      * */
     fun loadDocument(url: UrlAware, args: String): FeaturedDocument
     /**
      * Load or fetch a webpage and parse it into an HTML document
+     *
+     * ```kotlin
+     * val document = session.loadDocument(Hyperlink("http://example.com"), session.options("-expire 1d"))
+     * ```
+     *
+     * @param url The url to load
+     * @param options The load options
+     * @return The parsed HTML document
      * */
     fun loadDocument(url: UrlAware, options: LoadOptions): FeaturedDocument
     /**
      * Load or fetch a webpage and then parse it into an HTML document.
+     *
+     * ```kotlin
+     * val document = session.loadDocument("http://example.com")
+     * ```
+     *
+     * @param url The url to load
+     * @return The parsed HTML document
      * */
     fun loadDocument(url: NormUrl): FeaturedDocument
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
+     *
+     * ```kotlin
+     * val fields = session.scrape("http://example.com", "-expire 1d", listOf(".title", ".content"))
+     * ```
      *
      * @param url The url to scrape
      * @param args The load arguments
@@ -1073,6 +1492,10 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
      *
+     * ```kotlin
+     * val fields = session.scrape("http://example.com", session.options("-expire 1d"), listOf(".title", ".content"))
+     * ```
+     *
      * @param url The url to scrape
      * @param options The load options
      * @param fieldSelectors The selectors to extract fields
@@ -1082,6 +1505,10 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
+     *
+     * ```kotlin
+     * val fields = session.scrape("http://example.com", "-expire 1d", ".title", ".content")
+     * ```
      *
      * @param url The url to scrape
      * @param args The load arguments
@@ -1093,6 +1520,10 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
      *
+     * ```kotlin
+     * val fields = session.scrape("http://example.com", session.options("-expire 1d"), ".title", ".content")
+     * ```
+     *
      * @param url The url to scrape
      * @param options The load options
      * @param fieldSelectors The selectors to extract fields
@@ -1102,6 +1533,10 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
+     *
+     * ```kotlin
+     * val fields = session.scrape("http://example.com", "-expire 1d", ".container", listOf(".title", ".content"))
+     * ```
      *
      * @param url The url to scrape
      * @param args The load arguments
@@ -1117,6 +1552,11 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
      *
+     * ```kotlin
+     * val fields = session.scrape("http://example.com", session.options("-expire 1d"), ".container",
+     *      listOf(".title", ".content"))
+     * ```
+     *
      * @param url The url to scrape
      * @param options The load options
      * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
@@ -1130,6 +1570,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
+     *
+     * ```kotlin
+     * val fields = session.scrape("http://example.com", "-expire 1d", ".container",
+     *      mapOf("title" to ".title", "content" to ".content"))
+     * ```
      *
      * @param url The url to scrape
      * @param args The load arguments
@@ -1145,6 +1590,11 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
      *
+     * ```kotlin
+     * val fields = session.scrape("http://example.com", session.options("-expire 1d"), ".container",
+     *      mapOf("title" to ".title", "content" to ".content"))
+     * ```
+     *
      * @param url The url to scrape
      * @param options The load options
      * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
@@ -1159,6 +1609,10 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
      *
+     * ```kotlin
+     * val fields = session.scrapeOutPages("http://example.com", "-outLink a", listOf(".title", ".content"))
+     * ```
+     *
      * @param portalUrl The portal url to start scraping
      * @param args Load arguments for both the portal page and out pages
      * @param fieldSelectors CSS selectors to extract fields from out pages
@@ -1171,6 +1625,10 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
      *
+     * ```kotlin
+     * val fields = session.scrapeOutPages("http://example.com", session.options("-outLink a"), listOf(".title", ".content"))
+     * ```
+     *
      * @param portalUrl The portal url to start scraping
      * @param options Load options for both the portal page and out pages
      * @param fieldSelectors CSS selectors to extract fields from out pages
@@ -1181,6 +1639,10 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
+     *
+     * ```kotlin
+     * val fields = session.scrapeOutPages("http://example.com", "-outLink a", mapOf("title" to ".title", "content" to ".content"))
+     * ```
      *
      * @param portalUrl The portal url to start scraping
      * @param args Load arguments for both the portal page and out pages
@@ -1196,6 +1658,11 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
      *
+     * ```kotlin
+     * val fields = session.scrapeOutPages("http://example.com", session.options("-outLink a"),
+     *      mapOf("title" to ".title", "content" to ".content"))
+     * ```
+     *
      * @param portalUrl The portal url to start scraping
      * @param options Load options for both the portal page and out pages
      * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
@@ -1210,6 +1677,10 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
      *
+     * ```kotlin
+     * val fields = session.scrapeOutPages("http://example.com", "-outLink a", mapOf("title" to ".title", "content" to ".content"))
+     * ```
+     *
      * @param portalUrl The portal url to start scraping
      * @param args Load arguments for both the portal page and out pages
      * @param fieldSelectors CSS selectors to extract fields from out pages
@@ -1221,6 +1692,11 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
      *
+     * ```kotlin
+     * val fields = session.scrapeOutPages("http://example.com", session.options("-outLink a"),
+     *      mapOf("title" to ".title", "content" to ".content"))
+     * ```
+     *
      * @param portalUrl The portal url to start scraping
      * @param options Load options for both the portal page and out pages
      * @param fieldSelectors CSS selectors to extract fields from out pages
@@ -1231,6 +1707,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
+     *
+     * ```kotlin
+     * val fields = session.scrapeOutPages("http://example.com", "-outLink a", ".container",
+     *      mapOf("title" to ".title", "content" to ".content"))
+     * ```
      *
      * @param portalUrl The portal url to start scraping
      * @param args Load arguments for both the portal page and out pages
@@ -1246,6 +1727,11 @@ interface PulsarSession : AutoCloseable {
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
      * field selectors from each out page.
      *
+     * ```kotlin
+     * val fields = session.scrapeOutPages("http://example.com", session.options("-outLink a"), ".container",
+     *      mapOf("title" to ".title", "content" to ".content"))
+     * ```
+     *
      * @param portalUrl The portal url to start scraping
      * @param options Load options for both the portal page and out pages
      * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
@@ -1259,6 +1745,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Export the content of a webpage.
      *
+     * ```kotlin
+     * val page = session.load("http://example.com")
+     * val path = session.export(page)
+     * ```
+     *
      * @param page Page to export
      * @return The path of the exported page
      * */
@@ -1266,6 +1757,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Export the content of a webpage.
+     *
+     * ```kotlin
+     * val page = session.load("http://example.com")
+     * val path = session.export(page, "example")
+     * ```
      *
      * @param page Page to export
      * @param ident File name identifier used to distinguish from other files
@@ -1275,6 +1771,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Export the whole HTML of the document to the given path.
+     *
+     * ```kotlin
+     * val page = session.load("http://example.com")
+     * val path = session.exportTo(page, Paths.get("/tmp/example.html"))
+     * ```
      *
      * @param page Webpage to export
      * @param path Path to save the exported content
@@ -1293,6 +1794,11 @@ interface PulsarSession : AutoCloseable {
     /**
      * Export the outer HTML of the document.
      *
+     * ```kotlin
+     * val document = session.loadDocument("http://example.com")
+     * val path = session.export(document, "example")
+     * ```
+     *
      * @param doc Document to export
      * @param ident File name identifier used to distinguish from other files
      * @return The path of the exported document
@@ -1301,6 +1807,11 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Export the whole HTML of the document to the given path.
+     *
+     * ```kotlin
+     * val document = session.loadDocument("http://example.com")
+     * val path = session.exportTo(document, Paths.get("/tmp/example.html"))
+     * ```
      *
      * @param doc Document to export
      * @param path Path to save the exported content
@@ -1311,17 +1822,25 @@ interface PulsarSession : AutoCloseable {
     /**
      * Persist the content of a webpage.
      *
+     * ```kotlin
+     * val page = session.load("http://example.com")
+     * session.persist(page)
+     * ```
+     *
      * @param page Page to persist
-     * @return True if the page is persisted successfully
+     * @return Whether the page is persisted successfully
      * */
     fun persist(page: WebPage): Boolean
     /**
      * Delete a webpage from the storage
      *
-     * @param url The url of the webpage
+     * ```kotlin
+     * session.delete("http://example.com")
+     * ```
+     *
+     * @param url The url to delete
      * */
     fun delete(url: String)
-    
     /**
      * Flush to the storage
      * */
