@@ -16,6 +16,6 @@
  */
 
 /**
- * Persist level of the Pulsar System
+ * Persist layer of the PulsarRPA system.
  */
 package ai.platon.pulsar.persist;

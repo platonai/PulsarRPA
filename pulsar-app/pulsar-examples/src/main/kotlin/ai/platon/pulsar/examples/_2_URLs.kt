@@ -9,7 +9,7 @@ import ai.platon.pulsar.crawl.common.url.ParsableHyperlink
 import ai.platon.pulsar.persist.WebPage
 
 /**
- * Demonstrates various URLs in Pulsar.
+ * Demonstrates various URLs in PulsarRPA.
  * */
 fun main() {
     // Create a pulsar session
