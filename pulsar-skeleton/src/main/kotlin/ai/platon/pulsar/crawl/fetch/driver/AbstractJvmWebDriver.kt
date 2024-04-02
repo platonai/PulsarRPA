@@ -73,7 +73,6 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
         interopScope.future { selectAttributeAll(selector, attrName) }
     
     override fun evaluateAsync(expression: String) = interopScope.future { evaluate(expression) }
-    override fun evaluateSilentlyAsync(expression: String) = interopScope.future { evaluateSilently(expression) }
     override fun captureScreenshotAsync(selector: String) = interopScope.future { captureScreenshot(selector) }
     override fun captureScreenshotAsync(rect: RectD) = interopScope.future { captureScreenshot(rect) }
     override fun clickablePointAsync(selector: String) = interopScope.future { clickablePoint(selector) }

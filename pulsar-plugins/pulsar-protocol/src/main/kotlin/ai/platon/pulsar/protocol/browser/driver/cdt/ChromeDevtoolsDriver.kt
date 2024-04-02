@@ -378,7 +378,7 @@ class ChromeDevtoolsDriver(
         
         point.x += offsetX
         
-        mouse?.click(point.x, point.y, count, delayPolicy("click"))
+        mouse?.click(point.x, point.y, count, randomDelayMillis("click"))
     }
     
     @Throws(WebDriverException::class)
@@ -393,7 +393,7 @@ class ChromeDevtoolsDriver(
                 val nodeId = page.focusOnSelector(selector)
                 if (nodeId > 0) {
                     click(nodeId, 1)
-                    keyboard?.type(text, delayPolicy("type"))
+                    keyboard?.type(text, randomDelayMillis("type"))
                     gap("type")
                 }
             }
@@ -411,20 +411,20 @@ class ChromeDevtoolsDriver(
                 // it's an input element, we should click on the right side of the element,
                 // so the cursor appears at the tail of the text
                 click(nodeId, 1, "right")
-                keyboard?.delete(value.length, delayPolicy("delete"))
+                keyboard?.delete(value.length, randomDelayMillis("delete"))
                 // ensure the input is empty
                 // page.setAttribute(nodeId, "value", "")
             }
             
             click(nodeId, 1)
-            keyboard?.type(text, delayPolicy("type"))
+            keyboard?.type(text, randomDelayMillis("type"))
         }
     }
     
     @Throws(WebDriverException::class)
     override suspend fun press(selector: String, key: String) {
         invokeOnElement(selector, "press", focus = true) { nodeId ->
-            keyboard?.press(key, delayPolicy("press"))
+            keyboard?.press(key, randomDelayMillis("press"))
         }
     }
     
@@ -448,7 +448,7 @@ class ChromeDevtoolsDriver(
                     val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value
                     if (point != null) {
                         val point2 = PointD(point.x + deltaX, point.y + deltaY)
-                        mouse?.dragAndDrop(point, point2, delayPolicy("dragAndDrop"))
+                        mouse?.dragAndDrop(point, point2, randomDelayMillis("dragAndDrop"))
                     }
                     gap()
                 }
@@ -892,7 +892,7 @@ class ChromeDevtoolsDriver(
         }
         
         // Delays coroutine for a given time without blocking a thread and resumes it after a specified time.
-        delay(delayPolicy("gap"))
+        delay(randomDelayMillis("gap"))
     }
     
     /**
@@ -907,7 +907,7 @@ class ChromeDevtoolsDriver(
             // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
         }
         
-        delay(delayPolicy(type))
+        delay(randomDelayMillis(type))
     }
     
     /**

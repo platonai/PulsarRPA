@@ -19,9 +19,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
+import kotlin.random.nextInt
 
 abstract class AbstractWebDriver(
-    override val browser: Browser,
+    override val browser: AbstractBrowser,
     override val id: Int = ID_SUPPLIER.incrementAndGet()
 ): Comparable<AbstractWebDriver>, AbstractJvmWebDriver(), WebDriver, JvmWebDriver {
     companion object {
@@ -106,31 +107,13 @@ abstract class AbstractWebDriver(
     
     val isCanceled get() = canceled.get()
     val isCrashed get() = crashed.get()
-    
-    var waitTimeout = Duration.ofSeconds(60)
-    
-    var waitForElementTimeout = Duration.ofSeconds(20)
-    
+
     open val name get() = javaClass.simpleName + "-" + id
     
-    val delayPolicy: (String) -> Long
-        get() = { type ->
-            when (type) {
-                "gap" -> 200L + Random.nextInt(500)
-                "click" -> 500L + Random.nextInt(1000)
-                "delete" -> 30L + Random.nextInt(50)
-                "keyUpDown" -> 50L + Random.nextInt(100)
-                "press" -> 100L + Random.nextInt(300)
-                "type" -> 50L + Random.nextInt(500)
-                "mouseWheel" -> 800L + Random.nextInt(500)
-                "dragAndDrop" -> 800L + Random.nextInt(500)
-                "waitForNavigation" -> 500L
-                "waitForSelector" -> 1000L
-                "waitUntil" -> 1000L
-                else -> 100L + Random.nextInt(500)
-            }
-        }
+    override val delayPolicy by lazy { browser.browserSettings.interactSettings.generateRestrictedDelayPolicy() }
     
+    override val timeoutPolicy by lazy { browser.browserSettings.interactSettings.generateRestrictedTimeoutPolicy() }
+
     override var navigateEntry: NavigateEntry = NavigateEntry("")
     
     override val navigateHistory = NavigateHistory()
@@ -223,9 +206,6 @@ abstract class AbstractWebDriver(
     override suspend fun <T> evaluate(expression: String, defaultValue: T): T {
         return evaluate(expression) as? T ?: defaultValue
     }
-    
-    override suspend fun evaluateSilently(expression: String): Any? =
-        takeIf { isWorking }?.runCatching { evaluate(expression) }
     
     @Throws(WebDriverException::class)
     override suspend fun isVisible(selector: String): Boolean {
@@ -372,17 +352,17 @@ abstract class AbstractWebDriver(
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String) = waitForSelector(selector, waitTimeout)
+    override suspend fun waitForSelector(selector: String) = waitForSelector(selector, timeout("waitForSelector"))
     
     @Throws(WebDriverException::class)
     override suspend fun waitForSelector(selector: String, action: suspend () -> Unit) =
-        waitForSelector(selector, waitTimeout, action)
+        waitForSelector(selector, timeout("waitForSelector"), action)
     
     @Throws(WebDriverException::class)
-    override suspend fun waitUntil(predicate: suspend () -> Boolean) = waitUntil(waitTimeout, predicate)
+    override suspend fun waitUntil(predicate: suspend () -> Boolean) = waitUntil(timeout("waitUntil"), predicate)
     
     @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation() = waitForNavigation(waitTimeout)
+    override suspend fun waitForNavigation() = waitForNavigation(timeout("waitForNavigation"))
     
     @Throws(WebDriverException::class)
     override suspend fun newJsoupSession(): Connection {
@@ -445,13 +425,27 @@ abstract class AbstractWebDriver(
         state.set(State.QUIT)
         runCatching { runBlocking { stop() } }.onFailure { warnForClose(this, it) }
     }
-    
-    protected suspend fun evaluateStringValueOrNull(expression: String): String? {
-        return evaluate(expression)?.toString()
+
+    /**
+     * Generate a random delay in milliseconds.
+     *
+     * The generated delay time is an int random value uniformly distributed in a specified range.
+     *
+     * The delay range should be in [1, 10000], and the default range is [500, 1000].
+     * */
+    fun randomDelayMillis(action: String, fallback: IntRange = 500..1000): Long {
+        val default = delayPolicy["default"] ?: fallback
+        var range = delayPolicy[action] ?: default
+        
+        if (range.first <= 0 || range.last > 10000) {
+            range = fallback
+        }
+
+        return Random.nextInt(range).toLong()
     }
     
-    protected suspend fun evaluateStringValueOrEmpty(expression: String): String {
-        return evaluateStringValueOrNull(expression) ?: ""
+    fun timeout(action: String, fallback: Duration = Duration.ofSeconds(60)): Duration {
+        return timeoutPolicy[action] ?: timeoutPolicy["default"] ?: timeoutPolicy[""] ?: fallback
     }
     
     private fun getHeadersAndCookies(): Pair<Map<String, String>, List<Map<String, String>>> {

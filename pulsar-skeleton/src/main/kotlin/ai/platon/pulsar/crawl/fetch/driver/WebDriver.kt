@@ -161,6 +161,26 @@ interface WebDriver: Closeable {
      * */
     val data: MutableMap<String, Any?>
     /**
+     * The delay policy of the driver. The delay policy is a map of delay ranges in milliseconds for different actions.
+     *
+     * The delay policy is used to simulate human behaviors, such as typing, clicking, scrolling, etc.
+     *
+     * ```kotlin
+     * delayPolicy["click"] == 500..1000
+     * ```
+     * */
+    val delayPolicy: Map<String, IntRange>
+    /**
+     * The timeout policy of the driver. The timeout policy is a map of timeout durations for different actions.
+     *
+     * The timeout policy is used to set the maximum time to wait for an action to complete.
+     *
+     * ```kotlin
+     * timeoutPolicy["click"] == Duration.ofSeconds(30)
+     * ```
+     * */
+    val timeoutPolicy: Map<String, Duration>
+    /**
      * Returns a JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on,
      * the other JVM languages might have difficulty to handle kotlin suspend methods.
      * @see JvmWebDriver
@@ -233,7 +253,7 @@ interface WebDriver: Closeable {
      * If the browser failed to return a proper url, returns the passed in url to navigate, just like a real user enter
      * a url in the address bar but the browser failed to load the page.
      *
-     * @return The document's `document.documentURI`, or the passed in url to navigate.
+     * @return A string containing the URL of the document, or the passed in url to navigate.
      */
     @Throws(WebDriverException::class)
     suspend fun currentUrl(): String
@@ -1108,20 +1128,6 @@ interface WebDriver: Closeable {
     @Beta
     @Throws(WebDriverException::class)
     suspend fun evaluateDetail(expression: String): JsEvaluation?
-    /**
-     * Executes JavaScript in the context of the currently selected frame or window. The script
-     * fragment provided will be executed as the body of an anonymous function.
-     *
-     * All possible exceptions are suppressed and do not throw.
-     *
-     * ```kotlin
-     * val title = driver.evaluateSilently("document.title")
-     * ```
-     *
-     * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or JSON values (if it was requested).
-     * */
-    suspend fun evaluateSilently(expression: String): Any?
     /**
      * This method scrolls element into view if needed, and then ake a screenshot of the element.
      *

@@ -482,33 +482,118 @@ data class InteractSettings(
     var initScrollPositions: String = "0.3,0.75,0.4,0.5"
 ) {
     /**
+     * The minimum delay time in milliseconds.
+     * */
+    var minDelayMillis = 100
+    /**
+     * The minimum delay time in milliseconds.
+     * */
+    var maxDelayMillis = 2000
+    /**
      * The delay policy for each action.
      * The delay policy is a map from action to a range of delay time in milliseconds.
      * */
-    var delayPolicy = """
-        gap: [200, 700]
-        click: [500, 1500]
-        delete: [30, 80]
-        keyUpDown: [50, 150]
-        press: [100, 400]
-        type: [50, 550]
-        mouseWheel: [800, 1300]
-        dragAndDrop: [800, 1300]
-    """
+    var delayPolicy = mutableMapOf(
+        "gap" to 200..700,
+        "click" to 500..1500,
+        "delete" to 30..80,
+        "keyUpDown" to 50..150,
+        "press" to 100..400,
+        "type" to 50..550,
+        "mouseWheel" to 800..1300,
+        "dragAndDrop" to 800..1300,
+        "waitForNavigation" to 500..1000,
+        "waitForSelector" to 500..1000,
+        "waitUntil" to 500..1000,
+        "default" to 100..600,
+        "" to 100..600
+    )
+    /**
+     * The minimum delay time in milliseconds.
+     * */
+    var minTimeout = Duration.ofSeconds(1)
+    /**
+     * The minimum delay time in milliseconds.
+     * */
+    var maxTimeout = Duration.ofMinutes(3)
+    /**
+     * Timeout policy for each action in seconds.
+     * */
+    var timeoutPolicy = mutableMapOf(
+        "pageLoad" to pageLoadTimeout,
+        "script" to scriptTimeout,
+        "waitForNavigation" to Duration.ofSeconds(60),
+        "waitForSelector" to Duration.ofSeconds(60),
+        "waitUntil" to Duration.ofSeconds(60),
+        "default" to Duration.ofSeconds(60),
+        "" to Duration.ofSeconds(60)
+    )
 
     /**
      * The delay policy for each action.
      * The delay policy is a map from action to a range of delay time in milliseconds.
      *
+     * The map should contain the following keys:
+     * * gap
+     * * click
+     * * delete
+     * * keyUpDown
+     * * press
+     * * type
+     * * mouseWheel
+     * * dragAndDrop
+     * * waitForNavigation
+     * * waitForSelector
+     * * waitUntil
+     * * default
+     * * ""(empty key)
+     *
      * @return a map from action to a range of delay time in milliseconds.
      * */
-    fun delayPolicy(): Map<String, IntRange> {
-        val policy = mutableMapOf<String, IntRange>()
-        DELAY_POLICY_PATTERN.findAll(delayPolicy).forEach {
-            val (action, min, max) = it.destructured
-            policy[action] = (min.toInt() .. max.toInt())
+    fun generateRestrictedDelayPolicy(): Map<String, IntRange> {
+        val fallback = (minDelayMillis..maxDelayMillis)
+        
+        delayPolicy.forEach { (action, delay) ->
+            if (delay.first < minDelayMillis) {
+                delayPolicy[action] = minDelayMillis..delay.last.coerceAtLeast(minDelayMillis)
+            } else if (delay.last > maxDelayMillis) {
+                delayPolicy[action] = delay.first.coerceAtMost(maxDelayMillis)..maxDelayMillis
+            }
         }
-        return policy
+        
+        delayPolicy["default"] = delayPolicy["default"] ?: fallback
+        delayPolicy[""] = delayPolicy["default"] ?: fallback
+        
+        return delayPolicy
+    }
+    
+    /**
+     * Timeout policy for each action.
+     *
+     * The map should contain the following keys:
+     * * waitForNavigation
+     * * waitForSelector
+     * * waitUntil
+     * * default
+     * * ""(empty key)
+     *
+     * @return a map from action to a range of delay time in milliseconds.
+     * */
+    fun generateRestrictedTimeoutPolicy(): Map<String, Duration> {
+        val fallback = Duration.ofSeconds(60)
+        
+        timeoutPolicy.forEach { (action, timeout) ->
+            if (timeout < minTimeout) {
+                timeoutPolicy[action] = minTimeout
+            } else if (timeout > maxTimeout) {
+                timeoutPolicy[action] = maxTimeout
+            }
+        }
+        
+        timeoutPolicy["default"] = timeoutPolicy["default"] ?: fallback
+        timeoutPolicy[""] = timeoutPolicy["default"] ?: fallback
+        
+        return timeoutPolicy
     }
     
     /**
@@ -517,7 +602,7 @@ data class InteractSettings(
     fun overrideSystemProperties() {
         Systems.setProperty(BROWSER_INTERACT_SETTINGS,
             pulsarObjectMapper().writeValueAsString(this))
-
+        
         Systems.setProperty(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         Systems.setProperty(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         Systems.setProperty(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
@@ -585,14 +670,9 @@ data class InteractSettings(
     fun toJson(): String {
         return pulsarObjectMapper().writeValueAsString(this)
     }
-    
+
     companion object {
         private val OBJECT_CACHE = ConcurrentHashMap<String, InteractSettings>()
-        
-        /**
-         * The delay policy pattern.
-         * */
-        val DELAY_POLICY_PATTERN = Regex("""(\w+):\s*\[(\d+),\s*(\d+)]""")
         
         /**
          * Default settings for Web page interaction behavior.
