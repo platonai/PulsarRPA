@@ -208,7 +208,7 @@ interface BrowseEvent {
 }
 
 /**
- * All event handlers of the webpage lifecycle.
+ * The `PageEvent` class specifies all event handlers that are triggered at various stages of a webpage’s lifecycle.
  *
  * The events are fall into three groups:
  *

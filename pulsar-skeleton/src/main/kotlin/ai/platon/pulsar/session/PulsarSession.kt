@@ -143,12 +143,12 @@ import java.util.concurrent.CompletableFuture
  * [WebDriver] offers a comprehensive method set for browser automation, meticulously designed to replicate
  * real human actions and behaviors with precision.
  *
- * @see UrlAware
- * @see LoadOptions
- * @see WebPage
- * @see FeaturedDocument
- * @see PageEvent
- * @see WebDriver
+ * @see UrlAware Encapsulates a URL along with additional specifications defining its loading behavior.
+ * @see LoadOptions A set of parameters that define how a page should be loaded.
+ * @see WebPage Store the content, metadata, and other data of a page.
+ * @see FeaturedDocument The HTML document.
+ * @see PageEvent  Specifies all event handlers that are triggered at various stages of a webpage’s lifecycle.
+ * @see WebDriver Offers a comprehensive method set for browser automation.
  * */
 interface PulsarSession : AutoCloseable {
     /**

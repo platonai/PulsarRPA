@@ -18,7 +18,8 @@ import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.jvm.kotlinProperty
 
 /**
- * A [LoadOptions] object contains a set of control parameters that affect how we load a webpage.
+ * Load options are a set of parameters that define how a page should be loaded, including any specific
+ * behaviors or conditions that should be applied during the loading process.
  *
  * The load options, or load arguments, can be a plain string in the form of command line parameters,
  * and can be parsed into a [LoadOptions] object.

@@ -17,13 +17,13 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * A "featured document" is "very important" and the numerical features of each node are calculated,
- * the numerical feature can be used to locate nodes or can be used by machine learning algorithms.
+ * An HTML Document.
+ *
+ * A ‘featured document’ refers to a ‘very important document.’ Additionally, the numerical features of each node are
+ * calculated, and these numerical features can be used to locate nodes or utilized by machine learning algorithms.
  *
  * [FeaturedDocument] is a wrapper for [org.jsoup.nodes.Document], every node's numerical features are
  * calculated by a [ai.platon.pulsar.dom.features.FeatureCalculator] which can be customized.
- *
- * The DOM of a [FeaturedDocument] is immutable, no method is provided to append or insert elements or nodes.
  *
  * [FeaturedDocument] provides a set of powerful methods to select elements, text contexts, attributes
  * and so on:
