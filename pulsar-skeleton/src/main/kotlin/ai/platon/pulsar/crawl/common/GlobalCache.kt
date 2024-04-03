@@ -44,7 +44,7 @@ class FetchingCache {
 }
 
 /**
- * The global cache
+ * The global cache.
  * */
 open class GlobalCache(val conf: ImmutableConfig) {
     /**
@@ -135,5 +135,8 @@ class GlobalCacheFactory(val immutableConfig: ImmutableConfig) {
 
     var specifiedGlobalCache: GlobalCache? = null
 
+    /**
+     * Get the global cache.
+     * */
     val globalCache get() = specifiedGlobalCache ?: reflectedGlobalCache
 }

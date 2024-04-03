@@ -173,15 +173,15 @@ interface PulsarSession : AutoCloseable {
      * */
     val display: String
     /**
-     * The global page cache
+     * The global page cache.
      * */
     val pageCache: PageCatch
     /**
-     * The global document cache
+     * The global document cache.
      * */
     val documentCache: DocumentCatch
     /**
-     * The global cache
+     * The global cache.
      * */
     val globalCache: GlobalCache
     /**
@@ -255,7 +255,7 @@ interface PulsarSession : AutoCloseable {
      * */
     fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormUrl
     /**
-     * Normalize a url.
+     * Normalize a url, return null if the url is invalid.
      *
      * @param url The url to normalize
      * @param options The LoadOptions applied to the url
@@ -264,14 +264,14 @@ interface PulsarSession : AutoCloseable {
      * */
     fun normalizeOrNull(url: String?, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl?
     /**
-     * Normalize urls.
+     * Normalize urls, remove invalid ones.
      *
      * @param urls The urls to normalize
      * @return All normalized urls
      * */
     fun normalize(urls: Iterable<String>): List<NormUrl>
     /**
-     * Normalize urls.
+     * Normalize urls, remove invalid ones.
      *
      * @param urls The urls to normalize
      * @param args The arguments
@@ -280,7 +280,7 @@ interface PulsarSession : AutoCloseable {
      * */
     fun normalize(urls: Iterable<String>, args: String, toItemOption: Boolean = false): List<NormUrl>
     /**
-     * Normalize urls.
+     * Normalize urls, remove invalid ones.
      *
      * @param urls The urls to normalize
      * @param options The LoadOptions applied to each url
@@ -289,14 +289,14 @@ interface PulsarSession : AutoCloseable {
      * */
     fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
     /**
-     * Normalize a url.
+     * Normalize a url, return `NormUrl.NIL` if the url is invalid.
      *
      * @param url The url to normalize
      * @return The normalized url
      * */
     fun normalize(url: UrlAware): NormUrl
     /**
-     * Normalize a url.
+     * Normalize a url, return `NormUrl.NIL` if the url is invalid.
      *
      * @param url The url to normalize
      * @param args The arguments
@@ -305,7 +305,7 @@ interface PulsarSession : AutoCloseable {
      * */
     fun normalize(url: UrlAware, args: String, toItemOption: Boolean = false): NormUrl
     /**
-     * Normalize a url.
+     * Normalize a url, return `NormUrl.NIL` if the url is invalid.
      *
      * @param url The url to normalize
      * @param options The LoadOptions applied to the url
@@ -314,7 +314,7 @@ interface PulsarSession : AutoCloseable {
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormUrl
     /**
-     * Normalize a url.
+     * Normalize a url, return null if the url is invalid.
      *
      * @param url The url to normalize
      * @param options The LoadOptions applied to the url
@@ -323,7 +323,7 @@ interface PulsarSession : AutoCloseable {
      * */
     fun normalizeOrNull(url: UrlAware?, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl?
     /**
-     * Normalize urls.
+     * Normalize urls, remove invalid ones.
      *
      * @param urls The urls to normalize
      * @return All normalized urls
