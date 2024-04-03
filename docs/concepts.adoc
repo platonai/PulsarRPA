@@ -28,7 +28,7 @@ We provided a preview project to show how to use our world-leading machine learn
 You can also use https://github.com/platonai/PulsarRPAPro[PulsarRPAPro] as an intelligent CSS selector generator. The generated CSS selectors can be used in any traditional scraping systems to extract data from web pages.
 
 === Browser Rendering
-Although Pulsar supports various web scraping methods, browser rendering is the primary way Pulsar scrapes web pages.
+Although PulsarRPA supports various web scraping methods, browser rendering is the primary way Pulsar scrapes web pages.
 
 Browser rendering means every web page is opened by a real browser to ensure all fields on the web page are present correctly.
 
@@ -279,7 +279,7 @@ Check link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/exampl
 
 === X-SQL
 
-Pulsar supports the Network As A Database paradigm, we developed X-SQL to query the Web directly and convert webpages into tables and charts.
+PulsarRPA supports the Network As A Database paradigm, we developed X-SQL to query the Web directly and convert webpages into tables and charts.
 
 Click link:x-sql.adoc[X-SQL] to see a detailed introduction and function descriptions about X-SQL.
 
