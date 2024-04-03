@@ -1,11 +1,11 @@
-连续采集
+Continuous Crawling
 =
 
-在 PulsarRPA 中，连续采集非常简单，只需要将链接提交到 UrlPool 就行了，采集循环会自动启动。而 PulsarRPA 的基础设施也会去确保数据质量、调度质量等核心问题。
+In PulsarRPA, continuous crawling is very simple; you just need to submit links to the UrlPool, and the crawling loop will start automatically. PulsarRPA's infrastructure also ensures core issues such as data quality and scheduling quality.
 
-在小规模的数据采集项目中，譬如每天监控竞争对手的数百个产品价格、库存状态、新增评论等，可以使用连续采集。
+For small-scale data collection projects, such as monitoring hundreds of competitor product prices, inventory status, and new reviews every day, continuous crawling can be used.
 
-连续采集可以从下面的代码开始：
+You can start continuous crawling with the following code:
 
 ```kotlin
 fun main() {

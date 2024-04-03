@@ -1,13 +1,13 @@
-事件处理
+Event Handling
 =
 
-事件处理机制提供了一种方法，可以在网页的整个生命周期中捕获和处理事件。下面的简单程序，打印所有页面事件的调用顺序和事件名称。
+The event handling mechanism provides a way to capture and process events throughout the entire lifecycle of a web page. The following simple program prints the order of all page events and their names.
 
-网页事件处理器由 PageEvent 定义，并被分成三个类别，以处理三个不同阶段的事件：
+Web page event handlers are defined by `PageEvent` and are divided into three categories to handle events at different stages:
 
-1. CrawlEvent - 处理在 crawl loop 中的事件
-2. LoadEvent - 处理在加载、解析流程中的事件
-3. BrowseEvent - 处理在网页浏览阶段的事件，譬如和浏览器交互，以触发相关字段被加载或者显示
+1. `CrawlEvent` - Handles events in the crawl loop
+2. `LoadEvent` - Handles events in the loading and parsing process
+3. `BrowseEvent` - Handles events during the web page browsing stage, such as interacting with the browser to trigger the loading or display of related fields
 
 ```kotlin
 class PrintFlowEvent: DefaultPageEvent() {
@@ -29,9 +29,6 @@ class PrintFlowEvent: DefaultPageEvent() {
             }
             onFetched.addLast { page ->
                 println("$seq. load - onFetched")
-            }
-            onWillParseHTMLDocument.addLast { page ->
-                println("$seq. load - onWillParseHTMLDocument")
             }
             onWillParseHTMLDocument.addLast { page ->
                 println("$seq. load - onWillParseHTMLDocument")
@@ -109,7 +106,7 @@ class PrintFlowEvent: DefaultPageEvent() {
 }
 ```
 
-以及调用入口：
+And the entry point for the call:
 
 ```kotlin
 /**
@@ -123,7 +120,7 @@ fun main() {
 }
 ```
 
-该示例程序输出如下：
+The example program outputs the following:
 
 ```
 1. crawl - onWillLoad
