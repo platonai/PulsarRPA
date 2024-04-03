@@ -1,7 +1,7 @@
 控制台
 =
 
-[Exotic](https://github.com/platonai/exotic) ，[国内镜像](https://gitee.com/platonai_galaxyeye/exotic)，代表奇异星（Exotic Star），是 PulsarRPA 的专业版和控制台，它包含：
+[PulsarRPAPro](https://github.com/platonai/exotic) ，[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPAPro)，代表奇异星（Exotic Star），是 PulsarRPA 的专业版和控制台，它包含：
 
 - 一个**命令行工具**，可以从命令行直接执行网页数据采集任务，而不需要打开 IDE 写代码
 - 一个 **Web 控制台**，方便我们管理 PulsarRPA 服务，并编写 SQL 来访问 Web，提取数据
@@ -10,7 +10,7 @@
 - 一个基于 自监督机器学习 自动学习并输出所有采集规则的小程序
 - 一组顶尖站点的数据采集示例
 
-**Exotic 可以从网站学习，自动生成所有提取规则，将 Web 当作数据库进行查询，完整精确地交付规模化的 Web 数据：**
+**PulsarRPAPro 可以从网站学习，自动生成所有提取规则，将 Web 当作数据库进行查询，完整精确地交付规模化的 Web 数据：**
 
 1. 步骤1：使用高级人工智能自动提取网页中的每个字段，并生成提取 SQL
 2. 步骤2：测试 SQL，并在必要时改进它们以匹配前端业务需求
@@ -18,7 +18,7 @@
 
 ## 运行 Exotic 服务器并打开控制台
 
-你可以选择直接下载可执行 jar 包或者从源代码构建 Exotic。
+你可以选择直接下载可执行 jar 包或者从源代码构建 PulsarRPAPro。
 
 下载最新的可执行 jar 包：
 
@@ -29,8 +29,8 @@ wget http://static.platonic.fun/repo/ai/platon/exotic/exotic-standalone.jar
 从源代码构建：
 
 ```bash
-git clone https://github.com/platonai/exotic.git
-cd exotic
+git clone https://github.com/platonai/PulsarRPAPro.git
+cd PulsarRPAPro
 mvn clean && mvn
 cd exotic-standalone/target/
 ```
@@ -47,7 +47,7 @@ java -jar exotic-standalone[-the-actual-version].jar serve
 
 注意:如果您在 Windows 上使用 CMD 或 PowerShell，您可能需要删除通配符 * 并使用 jar 包的全名。
 
-如果 Exotic 在 GUI 模式下运行，Web 控制台应该在几秒钟内打开，或者您可以手动打开它：
+如果 PulsarRPAPro 在 GUI 模式下运行，Web 控制台应该在几秒钟内打开，或者您可以手动打开它：
 
 http://localhost:2718/exotic/crawl/
 
@@ -95,7 +95,7 @@ from load_and_select('https://shopee.sg/(Local-Stock)-(GEBIZ-ACRA-REG)-PLA-3D-Pr
 "
 ```
 
-## 探索 Exotic 的其他能力
+## 探索 PulsarRPAPro 的其他能力
 
 直接运行可执行的 jar 包来获得帮助，以探索所提供的更多功能：
 

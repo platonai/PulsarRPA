@@ -168,7 +168,7 @@ We have released a standalone executable jar based on PulsarRPA, which includes:
 * An upgraded PulsarRPA server to which we can send SQLs to collect Web data
 * A Web UI from which we can write SQLs and send them to the server
 
-Download https://github.com/platonai/exotic#download[Exotic] and explore its capabilities with a single command line:
+Download https://github.com/platonai/PulsarRPAPro#download[PulsarRPAPro] and explore its capabilities with a single command line:
 
     java -jar exotic-standalone.jar
 

@@ -11,7 +11,7 @@ PlatonAI 的算法能够 100% 无人干预将网页变成数据 -- 不需要配�
     <img width="400px" src=https://pica.zhimg.com/80/v2-1262abb4d28b31a00bcf1199b1aba441_1440w.jpeg?source=d16d100b  alt="auto extracted chart"/>
 </div>
 
-你可以[下载](https://github.com/platonai/exotic#download)并试用：
+你可以[下载](https://github.com/platonai/PulsarRPAPro#download)并试用：
 
 ```
 // Given a portal url, automatically extract all the fields from out pages
