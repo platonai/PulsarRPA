@@ -26,9 +26,9 @@ PulsarRPA 像对待内部数据库一样对待外部网络，如果需要的数�
 
 Web 数据抽取在过去三十年中已经从使用统计方法发展到更高级的机器学习方法。由于对上线时间、开发者生产率和成本的考虑，机器学习技术现在更受欢迎。
 
-我们提供了一个预览项目，展示如何使用我们领先的机器学习算法来自动提取网页中的几乎每个字段: https://github.com/platonai/exotic[Exotic]。
+我们提供了一个预览项目，展示如何使用我们领先的机器学习算法来自动提取网页中的几乎每个字段: https://github.com/platonai/PulsarRPAPro[PulsarRPAPro]。
 
-您也可以将 https://github.com/platonai/exotic[Exotic] 用作一个智能 CSS 路径生成器，生成的 CSS 选择器可以在传统爬虫系统中使用，从网页中提取数据。
+您也可以将 https://github.com/platonai/PulsarRPAPro[PulsarRPAPro] 用作一个智能 CSS 路径生成器，生成的 CSS 选择器可以在传统爬虫系统中使用，从网页中提取数据。
 
 === 浏览器渲染
 

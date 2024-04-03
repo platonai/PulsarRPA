@@ -138,11 +138,11 @@ TODO:
 
 == How to automatically generate the css selectors for fields to scrape?
 
-. Use link:https://github.com/platonai/exotic[Exotic]
+. Use link:https://github.com/platonai/PulsarRPAPro[PulsarRPAPro]
 
 == How to extract content from websites using machine learning automatically with commercial accuracy?
 
-. Use link:https://github.com/platonai/exotic[Exotic]
+. Use link:https://github.com/platonai/PulsarRPAPro[PulsarRPAPro]
 
 == How to scrape amazon.com to match industrial needs?
 We will release a complete solution to crawl the entire amazon website: link:https://github.com/platonai/exotic-amazon[TODO]

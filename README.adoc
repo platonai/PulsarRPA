@@ -122,7 +122,7 @@ We have released complete solutions for site-wide Web scraping for some of the l
 
 🔪 *PulsarRPA supports single resource collection.* PulsarRPA's default data collection method is to harvest the `complete` Web data through browser rendering, but if the data you need can be retrieved through a single link, for example, it can be returned through an ajax interface, you can also call PulsarRPA's resource collection method for super High-speed collection.
 
-💯 *PulsarRPA plans to support cutting-edge information extraction technology.* We plan to release an advanced AI to automatically extract every field from all valuable webpages (e.g. product detail pages) with remarkable accuracy, and we currently offer a https://github.com/platonai/exotic#run-auto-extract[preview] version.
+💯 *PulsarRPA plans to support cutting-edge information extraction technology.* We plan to release an advanced AI to automatically extract every field from all valuable webpages (e.g. product detail pages) with remarkable accuracy, and we currently offer a https://github.com/platonai/PulsarRPAPro#run-auto-extract[preview] version.
 
 == 🚀 Features
 
@@ -193,7 +193,7 @@ implementation("ai.platon.pulsar:pulsar-all:1.12.4")
 
 You can clone the template project from github.com: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17].
 
-You can also start your own large-scale web crawler projects based on our commercial-grade open source projects: link:https://github.com/platonai/exotic[Exotic], link:https://github.com/platonai/exotic-amazon[Exotic-amazon].
+You can also start your own large-scale web crawler projects based on our commercial-grade open source projects: link:https://github.com/platonai/PulsarRPAPro[PulsarRPAPro], link:https://github.com/platonai/exotic-amazon[Exotic-amazon].
 
 === Basic usage
 
