@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.PageEvent
-import ai.platon.pulsar.crawl.event.impl.PageEventFactory
+import ai.platon.pulsar.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
@@ -909,7 +909,7 @@ open class LoadOptions(
      * Ensure [event] is created.
      * */
     private fun enableEvent(): PageEvent {
-        val eh = rawEvent ?: PageEventFactory(conf).create()
+        val eh = rawEvent ?: PageEventHandlersFactory(conf).create()
         rawEvent = eh
         return eh
     }
@@ -918,7 +918,7 @@ open class LoadOptions(
      * Ensure [rawItemEvent] is created.
      * */
     private fun enableItemEvent(): PageEvent {
-        val eh = rawEvent ?: PageEventFactory(conf).create()
+        val eh = rawEvent ?: PageEventHandlersFactory(conf).create()
         rawItemEvent = eh
         return eh
     }

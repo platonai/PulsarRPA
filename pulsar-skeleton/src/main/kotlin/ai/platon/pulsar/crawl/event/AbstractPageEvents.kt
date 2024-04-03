@@ -2,7 +2,7 @@ package ai.platon.pulsar.crawl.event
 
 import ai.platon.pulsar.crawl.*
 
-abstract class AbstractLoadEvent(
+abstract class AbstractLoadEventHandlers(
     override val onNormalize: UrlFilterEventHandler = UrlFilterEventHandler(),
     override val onWillLoad: UrlEventHandler = UrlEventHandler(),
     override val onWillFetch: WebPageEventHandler = WebPageEventHandler(),
@@ -12,9 +12,9 @@ abstract class AbstractLoadEvent(
     override val onHTMLDocumentParsed: HTMLDocumentEventHandler = HTMLDocumentEventHandler(),
     override val onParsed: WebPageEventHandler = WebPageEventHandler(),
     override val onLoaded: WebPageEventHandler = WebPageEventHandler()
-): LoadEvent {
+): LoadEventHandlers {
     
-    override fun chain(other: LoadEvent): AbstractLoadEvent {
+    override fun chain(other: LoadEventHandlers): AbstractLoadEventHandlers {
         onNormalize.addLast(other.onNormalize)
         onWillLoad.addLast(other.onWillLoad)
         onWillFetch.addLast(other.onWillFetch)
@@ -29,12 +29,13 @@ abstract class AbstractLoadEvent(
     }
 }
 
-abstract class AbstractCrawlEvent(
+abstract class AbstractCrawlEventHandlers(
     override val onWillLoad: UrlAwareEventHandler = UrlAwareEventHandler(),
+    @Deprecated("No such event handler required", level = DeprecationLevel.WARNING)
     override val onLoad: UrlAwareEventHandler = UrlAwareEventHandler(),
     override val onLoaded: UrlAwareWebPageEventHandler = UrlAwareWebPageEventHandler()
-): CrawlEvent {
-    override fun chain(other: CrawlEvent): CrawlEvent {
+): CrawlEventHandlers {
+    override fun chain(other: CrawlEventHandlers): CrawlEventHandlers {
         onWillLoad.addLast(other.onWillLoad)
         onLoad.addLast(other.onLoad)
         onLoaded.addLast(other.onLoaded)
@@ -42,7 +43,7 @@ abstract class AbstractCrawlEvent(
     }
 }
 
-abstract class AbstractBrowseEvent(
+abstract class AbstractBrowseEventHandlers(
     override val onWillLaunchBrowser: WebPageEventHandler = WebPageEventHandler(),
     override val onBrowserLaunched: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
 
@@ -68,9 +69,9 @@ abstract class AbstractBrowseEvent(
 
     override val onWillStopTab: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
     override val onTabStopped: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler()
-): BrowseEvent {
+): BrowseEventHandlers {
 
-    override fun chain(other: BrowseEvent): BrowseEvent {
+    override fun chain(other: BrowseEventHandlers): BrowseEventHandlers {
         onWillLaunchBrowser.addLast(other.onWillLaunchBrowser)
         onBrowserLaunched.addLast(other.onBrowserLaunched)
 
@@ -101,16 +102,38 @@ abstract class AbstractBrowseEvent(
     }
 }
 
-abstract class AbstractPageEvent(
-    override var loadEvent: LoadEvent,
-    override var browseEvent: BrowseEvent,
-    override var crawlEvent: CrawlEvent
-): PageEvent {
-
-    override fun chain(other: PageEvent): PageEvent {
-        loadEvent.chain(other.loadEvent)
-        browseEvent.chain(other.browseEvent)
-        crawlEvent.chain(other.crawlEvent)
+abstract class AbstractPageEventHandlers(
+    override var loadEventHandlers: LoadEventHandlers,
+    override var browseEventHandlers: BrowseEventHandlers,
+    override var crawlEventHandlers: CrawlEventHandlers
+): PageEventHandlers {
+    
+    @Deprecated("Use loadEventHandlers instead", ReplaceWith("loadEventHandlers"))
+    override var loadEvent: LoadEventHandlers
+        get() = loadEventHandlers
+        set(value) { loadEventHandlers = value }
+    @Deprecated("Use browseEventHandlers instead", ReplaceWith("browseEventHandlers"))
+    override var browseEvent: BrowseEventHandlers
+        get() = browseEventHandlers
+        set(value) { browseEventHandlers = value }
+    @Deprecated("Use crawlEventHandlers instead", ReplaceWith("crawlEventHandlers"))
+    override var crawlEvent: CrawlEventHandlers
+        get() = crawlEventHandlers
+        set(value) { crawlEventHandlers = value }
+    
+    override fun chain(other: PageEventHandlers): PageEventHandlers {
+        loadEventHandlers.chain(other.loadEventHandlers)
+        browseEventHandlers.chain(other.browseEventHandlers)
+        crawlEventHandlers.chain(other.crawlEventHandlers)
         return this
     }
 }
+
+@Deprecated("Use AbstractLoadEventHandlers instead", ReplaceWith("AbstractLoadEventHandlers"))
+typealias AbstractLoadEvent = AbstractLoadEventHandlers
+
+@Deprecated("Use AbstractBrowseEventHandlers instead", ReplaceWith("AbstractBrowseEventHandlers"))
+typealias AbstractBrowseEvent = AbstractBrowseEventHandlers
+
+@Deprecated("Use AbstractCrawlEventHandlers instead", ReplaceWith("AbstractCrawlEventHandlers"))
+typealias AbstractCrawlEvent = AbstractCrawlEventHandlers

@@ -3,10 +3,7 @@ package ai.platon.pulsar.crawl.event.impl
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.BrowseEvent
-import ai.platon.pulsar.crawl.CrawlEvent
-import ai.platon.pulsar.crawl.LoadEvent
-import ai.platon.pulsar.crawl.PageEvent
+import ai.platon.pulsar.crawl.*
 import ai.platon.pulsar.crawl.event.*
 import ai.platon.pulsar.crawl.fetch.driver.rpa.BrowseRPA
 import ai.platon.pulsar.crawl.fetch.driver.rpa.DefaultBrowseRPA
@@ -15,24 +12,24 @@ import org.slf4j.LoggerFactory
 /**
  * The default load event handler.
  */
-open class DefaultLoadEvent(
+open class DefaultLoadEventHandlers(
     val rpa: BrowseRPA = DefaultBrowseRPA()
-) : AbstractLoadEvent()
+) : AbstractLoadEventHandlers()
 
 /**
  * The default crawl event handler.
  */
-open class DefaultCrawlEvent : AbstractCrawlEvent()
+open class DefaultCrawlEventHandlers : AbstractCrawlEventHandlers()
 
 /**
  * The perfect trace browse event handler.
  */
-class PerfectTraceBrowseEvent(
+class PerfectTraceBrowseEventHandlers(
     /**
      * The RPA to use.
      * */
     val rpa: BrowseRPA = DefaultBrowseRPA()
-) : AbstractBrowseEvent() {
+) : AbstractBrowseEventHandlers() {
     /**
      * Fire when a browser is launched.
      * */
@@ -54,40 +51,40 @@ class PerfectTraceBrowseEvent(
 /**
  * The empty browse event handler.
  */
-class EmptyBrowseEvent(
+class EmptyBrowseEventHandlers(
     /**
      * The RPA to use.
      * */
     val rpa: BrowseRPA = DefaultBrowseRPA()
-) : AbstractBrowseEvent() {
+) : AbstractBrowseEventHandlers() {
 
 }
 
 /**
- * The default browse event handler.
+ * The default browse event handlers.
  */
-typealias DefaultBrowseEvent = EmptyBrowseEvent
+typealias DefaultBrowseEventHandlers = EmptyBrowseEventHandlers
 
 /**
- * The default page event handler.
+ * The default page event handlers.
  */
-open class DefaultPageEvent(
-    loadEvent: LoadEvent = DefaultLoadEvent(),
-    browseEvent: BrowseEvent = DefaultBrowseEvent(),
-    crawlEvent: CrawlEvent = DefaultCrawlEvent()
-) : AbstractPageEvent(loadEvent, browseEvent, crawlEvent)
+open class DefaultPageEventHandlers(
+    loadEventHandlers: LoadEventHandlers = DefaultLoadEventHandlers(),
+    browseEventHandlers: BrowseEventHandlers = DefaultBrowseEventHandlers(),
+    crawlEventHandlers: CrawlEventHandlers = DefaultCrawlEventHandlers()
+) : AbstractPageEventHandlers(loadEventHandlers, browseEventHandlers, crawlEventHandlers)
 
 /**
  * The factory to create page event handler.
  */
-class PageEventFactory(val conf: ImmutableConfig = ImmutableConfig()) {
-    private val logger = LoggerFactory.getLogger(PageEventFactory::class.java)
+class PageEventHandlersFactory(val conf: ImmutableConfig = ImmutableConfig()) {
+    private val logger = LoggerFactory.getLogger(PageEventHandlersFactory::class.java)
 
     /**
      * Create a page event handler.
      * */
     @Synchronized
-    fun create(): PageEvent = createUsingGlobalConfig(conf)
+    fun create(): PageEventHandlers = createUsingGlobalConfig(conf)
 
     /**
      * Create a page event handler with [className].
@@ -95,22 +92,22 @@ class PageEventFactory(val conf: ImmutableConfig = ImmutableConfig()) {
     @Synchronized
     fun create(className: String): PageEvent {
         val gen = when (className) {
-            DefaultPageEvent::class.java.name -> DefaultPageEvent()
+            DefaultPageEventHandlers::class.java.name -> DefaultPageEventHandlers()
             else -> createUsingGlobalConfig(conf)
         }
 
         return gen
     }
-
+    
     /**
-     * Create a page event handler with [loadEvent], [browseEvent] and [crawlEvent].
+     * Create a page event handler with [loadEventHandlers], [browseEventHandlers] and [crawlEventHandlers].
      * */
     @Synchronized
     fun create(
-        loadEvent: LoadEvent = DefaultLoadEvent(),
-        browseEvent: BrowseEvent = DefaultBrowseEvent(),
-        crawlEvent: CrawlEvent = DefaultCrawlEvent()
-    ): PageEvent = DefaultPageEvent(loadEvent, browseEvent, crawlEvent)
+        loadEventHandlers: LoadEventHandlers = DefaultLoadEventHandlers(),
+        browseEventHandlers: BrowseEventHandlers = DefaultBrowseEventHandlers(),
+        crawlEventHandlers: CrawlEventHandlers = DefaultCrawlEventHandlers()
+    ): PageEventHandlers = DefaultPageEventHandlers(loadEventHandlers, browseEventHandlers, crawlEventHandlers)
 
     private fun createUsingGlobalConfig(conf: ImmutableConfig): PageEvent {
         return createUsingGlobalConfig(conf, CapabilityTypes.PAGE_EVENT_CLASS)
@@ -125,7 +122,7 @@ class PageEventFactory(val conf: ImmutableConfig = ImmutableConfig()) {
      * `System.setProperty(CapabilityTypes.PAGE_EVENT_CLASS, "ai.platon.pulsar.crawl.event.impl.DefaultPageEvent")`
      * */
     private fun createUsingGlobalConfig(conf: ImmutableConfig, className: String): PageEvent {
-        val defaultClazz = DefaultPageEvent::class.java
+        val defaultClazz = DefaultPageEventHandlers::class.java
         val clazz = try {
             // Get the value of the `name` property as a `Class`.
             // If the property is not set, or the class is not found, use the default class.

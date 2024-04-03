@@ -3,13 +3,12 @@ package ai.platon.pulsar.crawl.common.url
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.OptionUtils
 import ai.platon.pulsar.common.urls.*
-import ai.platon.pulsar.crawl.PageEvent
+import ai.platon.pulsar.crawl.PageEventHandlers
 import ai.platon.pulsar.crawl.event.WebPageHandler
-import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
-import ai.platon.pulsar.crawl.event.impl.PageEventFactory
+import ai.platon.pulsar.crawl.event.impl.DefaultPageEventHandlers
+import ai.platon.pulsar.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.net.MalformedURLException
@@ -21,14 +20,14 @@ import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 
 /**
- * A url that contains a [PageEvent] to handle page events.
+ * A url that contains a [PageEventHandlers] to handle page events.
  * */
 interface ListenableUrl: UrlAware {
-    val event: PageEvent
+    val event: PageEventHandlers
 }
 
 /**
- * A hyperlink that contains a [PageEvent] to handle page events.
+ * A hyperlink that contains a [PageEventHandlers] to handle page events.
  * */
 open class ListenableHyperlink(
     /**
@@ -59,7 +58,7 @@ open class ListenableHyperlink(
     /**
      * The event handler
      * */
-    override var event: PageEvent = PageEventFactory().create(),
+    override var event: PageEventHandlers = PageEventHandlersFactory().create(),
 ): Hyperlink(url, text, order, referrer, args, href), ListenableUrl {
     /**
      * A listenable url is not a persistence object because the event handler is not persistent
@@ -67,6 +66,9 @@ open class ListenableHyperlink(
     override val isPersistable: Boolean = false
 }
 
+/**
+ * A stateful hyperlink that has status and contains a [PageEventHandlers] to handle page events.
+ * */
 open class StatefulListenableHyperlink(
         /**
          * The url of this hyperlink
@@ -96,7 +98,7 @@ open class StatefulListenableHyperlink(
         /**
          * The event handler
          * */
-        override var event: PageEvent = PageEventFactory().create()
+        override var event: PageEventHandlers = PageEventHandlersFactory().create()
 ): StatefulHyperlink(url, text, order, referrer, args, href), ListenableUrl {
 
     override val isPersistable: Boolean = false
@@ -104,11 +106,18 @@ open class StatefulListenableHyperlink(
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
 }
 
+/**
+ * A hyperlink that contains a `onParse` event handler. The `onParse` event handler
+ * will be called when the page is parsed.
+ * */
 open class ParsableHyperlink(
     /**
      * The url of this hyperlink
      * */
     url: String,
+    /**
+     * A event handler that will be called when the page is parsed.
+     * */
     val onParse: (WebPage, FeaturedDocument) -> Any?
 ): Hyperlink(url, args = "-parse"), ListenableUrl {
 
@@ -118,8 +127,11 @@ open class ParsableHyperlink(
     constructor(url: String, onParse: BiConsumer<WebPage, FeaturedDocument>):
             this(url, { page, document -> onParse.accept(page, document) })
 
-    override var event: PageEvent = DefaultPageEvent().also {
-        it.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
+    /**
+     * The PageEvent handlers of this hyperlink.
+     * */
+    override var event: PageEventHandlers = DefaultPageEventHandlers().also {
+        it.loadEventHandlers.onHTMLDocumentParsed.addLast { page, document ->
             onParse(page, document)
         }
     }
@@ -259,14 +271,14 @@ open class CompletableListenableHyperlink<T>(
     /**
      * The event handler
      * */
-    override var event: PageEvent = PageEventFactory().create(),
+    override var event: PageEventHandlers = PageEventHandlersFactory().create(),
 ): UrlAware, Comparable<UrlAware>, ListenableUrl,
     CompletableHyperlink<T>(url, text, order, referrer, args, href)
 
 internal class CompleteWebPageHyperlinkHandler(val link: CompletableListenableHyperlink<WebPage>): WebPageHandler() {
     override fun invoke(page: WebPage) {
         link.complete(page)
-        link.event.loadEvent.onLoaded.remove(this)
+        link.event.loadEventHandlers.onLoaded.remove(this)
 
         // TODO: the following code might be better
 //        if (link.event.loadEvent.onLoaded.remove(this)) {
@@ -281,7 +293,7 @@ internal class CompleteWebPageHyperlinkHandler(val link: CompletableListenableHy
 fun NormUrl.toCompletableListenableHyperlink(): CompletableListenableHyperlink<WebPage> {
     val link = CompletableListenableHyperlink<WebPage>(spec, args = args, href = hrefSpec)
 
-    link.event.loadEvent.onLoaded.addLast(CompleteWebPageHyperlinkHandler(link))
+    link.event.loadEventHandlers.onLoaded.addLast(CompleteWebPageHyperlinkHandler(link))
     options.rawEvent?.let { link.event.chain(it) }
 
     link.completeOnTimeout(WebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)

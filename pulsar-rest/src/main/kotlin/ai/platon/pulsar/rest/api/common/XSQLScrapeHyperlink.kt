@@ -3,13 +3,12 @@ package ai.platon.pulsar.rest.api.common
 import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
-import ai.platon.pulsar.common.persist.ext.loadEvent
-import ai.platon.pulsar.crawl.event.impl.DefaultLoadEvent
-import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
+import ai.platon.pulsar.crawl.event.impl.DefaultLoadEventHandlers
 import ai.platon.pulsar.crawl.PageEvent
+import ai.platon.pulsar.crawl.PageEventHandlers
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
-import ai.platon.pulsar.crawl.event.impl.PageEventFactory
+import ai.platon.pulsar.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.AbstractSQLContext
@@ -24,10 +23,10 @@ import java.time.Instant
 import java.util.*
 import kotlin.system.measureTimeMillis
 
-class ScrapeLoadEvent(
+class ScrapeLoadEventHandlers(
     val hyperlink: XSQLScrapeHyperlink,
     val response: ScrapeResponse,
-) : DefaultLoadEvent() {
+) : DefaultLoadEventHandlers() {
     init {
         onWillLoad.addLast {
             response.pageStatusCode = ResourceStatus.SC_PROCESSING
@@ -66,7 +65,7 @@ open class XSQLScrapeHyperlink(
     val response = ScrapeResponse()
 
     override var args: String? = "-parse ${sql.args}"
-    override var event: PageEvent = PageEventFactory().create(loadEvent = ScrapeLoadEvent(this, response))
+    override var event: PageEventHandlers = PageEventHandlersFactory().create(loadEventHandlers = ScrapeLoadEventHandlers(this, response))
 
     open fun executeQuery(): ResultSet = executeQuery(request, response)
 
