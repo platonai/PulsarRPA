@@ -1111,7 +1111,7 @@ interface PulsarSession : AutoCloseable {
      * PulsarContexts.await()
      * ```
      *
-     * The code snippet below shows how to submit a hyperlink with a sequence of event handlers attached.
+     * The code snippet below shows how to submit a hyperlink with every supported event handlers attached.
      * Each event handler will print a message when its associated event is triggered.
      *
      * ````kotlin
@@ -1167,7 +1167,7 @@ interface PulsarSession : AutoCloseable {
      * PulsarContexts.await()
      * ```
      *
-     * ParsableHyperlink can be employed to simplify the load-and-parse tasks.
+     * ParsableHyperlink can be used to simplify the load-and-parse tasks.
      *
      * ````kotlin
      * val hyperlink = ParsableHyperlink("http://example.com") { page, document ->
@@ -1177,6 +1177,8 @@ interface PulsarSession : AutoCloseable {
      * session.submit(hyperlink)
      * PulsarContexts.await()
      * ```
+     * The code snippet below shows how to submit a hyperlink with every supported event handlers attached.
+     * Each event handler will print a message when its associated event is triggered.
      *
      * ````kotlin
      * val event = PrintFlowEvent()
@@ -1187,6 +1189,11 @@ interface PulsarSession : AutoCloseable {
      *
      * @param url The url to submit
      * @return The [PulsarSession] itself to enabled chained operations
+     *
+     * @see PageEvent
+     * @see Hyperlink
+     * @see ListenableHyperlink
+     * @see ParsableHyperlink
      */
     fun submit(url: UrlAware): PulsarSession
     
