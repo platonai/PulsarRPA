@@ -125,7 +125,8 @@ val Document.pulsarScriptElement get() = getElementById(PULSAR_SCRIPT_SECTION_ID
  * */
 val Document.pulsarScript get() = pulsarScriptElement?.text()
 /**
- * The normalized URI of the document, it's also the key to retrieve the document from the database.
+ * The normalized URI of the document, it's also the key to retrieve the document from the database
+ * and always be the same as [ai.platon.pulsar.persist.WebPage].url.
  * */
 val Document.normalizedURI: String? get() {
     if (isNil) {

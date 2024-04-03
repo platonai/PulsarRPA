@@ -28,15 +28,19 @@ import java.util.concurrent.atomic.AtomicInteger
  * [FeaturedDocument] provides a set of powerful methods to select elements, text contexts, attributes
  * and so on:
  *
- * * [select]: retrieves a list of elements matching the CSS query
- * * [selectFirst]: retrieves the first matching element
- * * [selectFirstText]: retrieves the text content of the first matching element
- * * [selectFirstAttribute]: retrieves the attribute value associated to the given name of the first matching element
- * * [selectHyperlinks]: retrieves all hyperlinks of elements matching the CSS query
- * * [selectAnchors]: retrieves all anchor elements matching the CSS query
- * * [selectImages]: retrieves all image elements matching the CSS query
+ * * [select]: retrieves a list of elements matching the CSS query.
+ * * [selectFirstOrNull]: retrieves the first matching element.
+ * * [selectFirstTextOrNull]: retrieves the text content of the first matching element.
+ * * [selectFirstAttributeOrNull]: retrieves the attribute value associated to the given name of the first matching element.
+ * * [selectHyperlinks]: retrieves all hyperlinks of elements matching the CSS query.
+ * * [selectAnchors]: retrieves all anchor elements matching the CSS query.
+ * * [selectImages]: retrieves all image elements matching the CSS query.
  *
  * Other methods provided include DOM traversal, node counting, document attribute retrieval, export, and so on.
+ *
+ * @param document The underlying [org.jsoup.nodes.Document]
+ *
+ * @see org.jsoup.nodes.Document
  * */
 open class FeaturedDocument(val document: Document) {
     companion object {
@@ -85,15 +89,16 @@ open class FeaturedDocument(val document: Document) {
      * The process scope unique sequence.
      * */
     val sequence = instanceSequencer.incrementAndGet()
-
+    /**
+     * The normalized URI of the document, it's also the key to retrieve the document from the database
+     * and always be the same as [ai.platon.pulsar.persist.WebPage].url.
+     * */
     val normalizedURI get() = document.normalizedURI
-
     /**
      * Get the URL this Document was parsed from. If the starting URL is a redirect,
      * this will return the final URL from which the document was served from.
      */
     val location get() = document.location()
-
     /**
      * The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
      * before the HTML declares a `<base href>` tag.
@@ -102,12 +107,10 @@ open class FeaturedDocument(val document: Document) {
      * @see #absUrl
      */
     val baseURI get() = document.baseUri()
-    
     /**
-     * Get document title.
+     * Get the document title.
      * */
     val title get() = document.title()
-
     /**
      * Get this document's head element.
      *
