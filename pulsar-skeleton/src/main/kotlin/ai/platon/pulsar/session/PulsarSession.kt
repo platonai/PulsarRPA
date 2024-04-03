@@ -1166,7 +1166,7 @@ interface PulsarSession : AutoCloseable {
     fun submit(url: UrlAware): PulsarSession
     
     /**
-     * Submit a url to the URL pool, and it will be processed in a crawl loop
+     * Submit a url to the URL pool, and it will be processed in a crawl loop.
      *
      * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
      * suspending the current coroutine.
@@ -1190,7 +1190,7 @@ interface PulsarSession : AutoCloseable {
             "it's too complicated to handle events and should not be implemented.")
     
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop.
      *
      * Submit operations are non-blocking, meaning they return immediately without blocking the current thread or
      * suspending the current coroutine.
@@ -1206,7 +1206,10 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Iterable<String>): PulsarSession
     
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop.
+     *
+     * Submit operations are non-blocking, meaning they return immediately without blocking the current thread or
+     * suspending the current coroutine.
      *
      * ```kotlin
      * session.submitAll(listOf("http://example.com", "http://example.com/1"), "-expire 1d")
@@ -1220,7 +1223,10 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Iterable<String>, args: String): PulsarSession
     
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop.
+     *
+     * Submit operations are non-blocking, meaning they return immediately without blocking the current thread or
+     * suspending the current coroutine.
      *
      * ```kotlin
      * session.submitAll(listOf("http://example.com", "http://example.com/1"), session.options("-expire 1d"))
@@ -1234,7 +1240,10 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Iterable<String>, options: LoadOptions): PulsarSession
     
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
+     * Submit a url to the URL pool, and it will be processed in a crawl loop.
+     *
+     * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
+     * suspending the current coroutine.
      *
      * ```kotlin
      * val urls = listOf("http://example.com", "http://example.com/1").map { Hyperlink(it) }
@@ -1248,7 +1257,10 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Collection<UrlAware>): PulsarSession
     
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
+     * Submit a url to the URL pool, and it will be processed in a crawl loop.
+     *
+     * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
+     * suspending the current coroutine.
      *
      * ```kotlin
      * val urls = listOf("http://example.com", "http://example.com/1").map { Hyperlink(it) }
