@@ -1130,19 +1130,19 @@ interface PulsarSession : AutoCloseable {
     fun submit(url: String, options: LoadOptions): PulsarSession
     
     /**
-     * Submit a url to the URL pool, and it will be processed in a crawl loop
+     * Submit a url to the URL pool, and it will be processed in a crawl loop.
      *
      * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
      * suspending the current coroutine.
      *
-     * Here is a simple example:
+     * Basic usage:
      *
      * ```kotlin
      * session.submit(Hyperlink("http://example.com"))
      * PulsarContexts.await()
      * ```
      *
-     * Submit method can be used with event listeners to handle the page events.
+     * Submit methods are commonly be used in conjunction with event listeners to handle page events.
      *
      * The code snippet below shows how to submit a hyperlink with an attached load event handler.
      * This handler is invoked once the page is loaded, and it prints the URL of the page.
