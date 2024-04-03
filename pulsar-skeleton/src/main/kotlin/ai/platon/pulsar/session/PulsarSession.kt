@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.PageEvent
+import ai.platon.pulsar.crawl.PageEventHandlers
 import ai.platon.pulsar.crawl.common.DocumentCatch
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.PageCatch
@@ -129,7 +130,7 @@ import java.util.concurrent.CompletableFuture
  * primary way nowadays.
  *
  * When we fetch webpages using a real browser, sometimes we need to interact with pages to ensure the required
- * fields are loaded correctly and completely. Enable [PageEvent] and use [WebDriver] to archive such purpose.
+ * fields are loaded correctly and completely. Enable [PageEventHandlers] and use [WebDriver] to archive such purpose.
  *
  * ```kotlin
  * val options = session.options(args)
@@ -147,7 +148,7 @@ import java.util.concurrent.CompletableFuture
  * @see LoadOptions A set of parameters that define how a page should be loaded.
  * @see WebPage Store the content, metadata, and other data of a page.
  * @see FeaturedDocument The HTML document.
- * @see PageEvent  Specifies all event handlers that are triggered at various stages of a webpage’s lifecycle.
+ * @see PageEventHandlers  Specifies all event handlers that are triggered at various stages of a webpage’s lifecycle.
  * @see WebDriver Offers a comprehensive method set for browser automation.
  * */
 interface PulsarSession : AutoCloseable {
@@ -228,7 +229,7 @@ interface PulsarSession : AutoCloseable {
     /**
      * Create a new [LoadOptions] object with [args] and [event].
      * */
-    fun options(args: String = "", event: PageEvent?): LoadOptions
+    fun options(args: String = "", event: PageEventHandlers?): LoadOptions
     /**
      * Normalize a url.
      *
@@ -486,7 +487,7 @@ interface PulsarSession : AutoCloseable {
      * @param url The url to open
      * @return The webpage loaded or NIL
      */
-    fun open(url: String, event: PageEvent): WebPage
+    fun open(url: String, event: PageEventHandlers): WebPage
     
     /**
      * Load a url.
@@ -1191,7 +1192,7 @@ interface PulsarSession : AutoCloseable {
      * @param url The url to submit
      * @return The [PulsarSession] itself to enabled chained operations
      *
-     * @see PageEvent
+     * @see PageEventHandlers
      * @see ai.platon.pulsar.common.urls.Hyperlink
      * @see ai.platon.pulsar.crawl.common.url.ListenableHyperlink
      * @see ai.platon.pulsar.crawl.common.url.ParsableHyperlink

@@ -90,7 +90,7 @@ class PageEventHandlersFactory(val conf: ImmutableConfig = ImmutableConfig()) {
      * Create a page event handler with [className].
      * */
     @Synchronized
-    fun create(className: String): PageEvent {
+    fun create(className: String): PageEventHandlers {
         val gen = when (className) {
             DefaultPageEventHandlers::class.java.name -> DefaultPageEventHandlers()
             else -> createUsingGlobalConfig(conf)
@@ -98,7 +98,7 @@ class PageEventHandlersFactory(val conf: ImmutableConfig = ImmutableConfig()) {
 
         return gen
     }
-    
+
     /**
      * Create a page event handler with [loadEventHandlers], [browseEventHandlers] and [crawlEventHandlers].
      * */
@@ -109,7 +109,7 @@ class PageEventHandlersFactory(val conf: ImmutableConfig = ImmutableConfig()) {
         crawlEventHandlers: CrawlEventHandlers = DefaultCrawlEventHandlers()
     ): PageEventHandlers = DefaultPageEventHandlers(loadEventHandlers, browseEventHandlers, crawlEventHandlers)
 
-    private fun createUsingGlobalConfig(conf: ImmutableConfig): PageEvent {
+    private fun createUsingGlobalConfig(conf: ImmutableConfig): PageEventHandlers {
         return createUsingGlobalConfig(conf, CapabilityTypes.PAGE_EVENT_CLASS)
     }
 
@@ -121,12 +121,12 @@ class PageEventHandlersFactory(val conf: ImmutableConfig = ImmutableConfig()) {
      * Set the class:
      * `System.setProperty(CapabilityTypes.PAGE_EVENT_CLASS, "ai.platon.pulsar.crawl.event.impl.DefaultPageEvent")`
      * */
-    private fun createUsingGlobalConfig(conf: ImmutableConfig, className: String): PageEvent {
+    private fun createUsingGlobalConfig(conf: ImmutableConfig, className: String): PageEventHandlers {
         val defaultClazz = DefaultPageEventHandlers::class.java
         val clazz = try {
             // Get the value of the `name` property as a `Class`.
             // If the property is not set, or the class is not found, use the default class.
-            kotlin.runCatching { ResourceLoader.loadUserClass<PageEvent>(className) }.getOrNull() ?: defaultClazz
+            kotlin.runCatching { ResourceLoader.loadUserClass<PageEventHandlers>(className) }.getOrNull() ?: defaultClazz
 //             conf.getClass(className, defaultClazz)
         } catch (e: Exception) {
             logger.warn(
@@ -136,6 +136,6 @@ class PageEventHandlersFactory(val conf: ImmutableConfig = ImmutableConfig()) {
             defaultClazz
         }
         
-        return clazz.constructors.first { it.parameters.isEmpty() }.newInstance() as PageEvent
+        return clazz.constructors.first { it.parameters.isEmpty() }.newInstance() as PageEventHandlers
     }
 }

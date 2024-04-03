@@ -156,7 +156,7 @@ open class MockDegeneratedListenableHyperlink : ListenableHyperlink(""), Degener
         }
     }
 
-    override var event: PageEvent = DefaultPageEventHandlers(
+    override var event: PageEventHandlers = DefaultPageEventHandlers(
         crawlEventHandlers = MockCrawlEventHandlers(this)
     )
 

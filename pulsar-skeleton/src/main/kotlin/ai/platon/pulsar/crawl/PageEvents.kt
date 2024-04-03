@@ -242,13 +242,13 @@ interface PageEventHandlers {
     var crawlEvent: CrawlEvent
 }
 
-@Deprecated("Use PageEventHandlers instead", ReplaceWith("PageEventHandlers"))
+@Deprecated("Use LoadEventHandlers instead", ReplaceWith("LoadEventHandlers"))
 typealias LoadEvent = LoadEventHandlers
 
-@Deprecated("Use PageEventHandlers instead", ReplaceWith("PageEventHandlers"))
+@Deprecated("Use BrowseEventHandlers instead", ReplaceWith("BrowseEventHandlers"))
 typealias BrowseEvent = BrowseEventHandlers
 
-@Deprecated("Use PageEventHandlers instead", ReplaceWith("PageEventHandlers"))
+@Deprecated("Use CrawlEventHandlers instead", ReplaceWith("CrawlEventHandlers"))
 typealias CrawlEvent = CrawlEventHandlers
 
 @Deprecated("Use PageEventHandlers instead", ReplaceWith("PageEventHandlers"))

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.PageEvent
+import ai.platon.pulsar.crawl.PageEventHandlers
 import ai.platon.pulsar.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -42,8 +43,8 @@ import kotlin.reflect.jvm.kotlinProperty
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
-    var rawEvent: PageEvent? = null,
-    var rawItemEvent: PageEvent? = null,
+    var rawEvent: PageEventHandlers? = null,
+    var rawItemEvent: PageEventHandlers? = null,
     var referrer: String? = null,
 ) : CommonOptions(argv) {
 
@@ -652,9 +653,9 @@ open class LoadOptions(
     val outLinkSelectorOrNull
         get() = outLinkSelector.takeIf { it.isNotBlank() }
 
-    val event: PageEvent get() = enableEvent()
+    val event: PageEventHandlers get() = enableEventHandlers()
 
-    val itemEvent: PageEvent get() = enableItemEvent()
+    val itemEvent: PageEventHandlers get() = enableItemEventHandlers()
 
     /**
      * Find out the modified fields and return a [Params].
@@ -908,7 +909,7 @@ open class LoadOptions(
     /**
      * Ensure [event] is created.
      * */
-    private fun enableEvent(): PageEvent {
+    private fun enableEventHandlers(): PageEventHandlers {
         val eh = rawEvent ?: PageEventHandlersFactory(conf).create()
         rawEvent = eh
         return eh
@@ -917,7 +918,7 @@ open class LoadOptions(
     /**
      * Ensure [rawItemEvent] is created.
      * */
-    private fun enableItemEvent(): PageEvent {
+    private fun enableItemEventHandlers(): PageEventHandlers {
         val eh = rawEvent ?: PageEventHandlersFactory(conf).create()
         rawItemEvent = eh
         return eh
