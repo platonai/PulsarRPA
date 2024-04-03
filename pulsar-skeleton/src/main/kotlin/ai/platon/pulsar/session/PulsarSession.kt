@@ -20,15 +20,16 @@ import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 
 /**
- * [PulsarSession] defines an interface to load webpages from local storage or fetch from the Internet,
- * as well as methods for parsing, extracting, saving and exporting webpages.
+ * The [PulsarSession] interface is designed to provide methods for loading pages from either
+ * local storage or from the internet. Additionally, it offers functionality for parsing
+ * these pages, extracting relevant data, and saving or exporting the web content.
  *
  * Key methods:
  *
- * * [load]: load a webpage from local storage, or fetch it from the Internet.
- * * [parse]: parse a webpage into a document.
- * * [scrape]: load a webpage, parse it into a document and then extract fields from the document.
+ * * [load]: load a page from local storage or the Internet.
+ * * [parse]: parse a page into a document.
  * * [submit]: submit a url to the URL pool, the url will be processed in the main loop later.
+ * * [scrape]: load a page, parse it into a document and then extract fields from the document.
  *
  * Basic examples:
  *
@@ -36,6 +37,10 @@ import java.util.concurrent.CompletableFuture
  * val url = "http://example.com"
  * val page = session.load(url)
  * val document = session.parse(page)
+ *
+ * val title = document.selectFirstTextOrNull(".title")
+ * val content = document.selectFirstTextOrNull(".content")
+ *
  * val fields = session.scrape("http://example.com", "-expire 1d", listOf(".title", ".content"))
  *
  * val document2 = session.loadDocument(url)
@@ -47,6 +52,7 @@ import java.util.concurrent.CompletableFuture
  * And also the batch versions:
  *
  * * [loadOutPages]: load the portal page and out pages.
+ * * [submitForOutPages]: load the portal page and submit out pages.
  * * [scrapeOutPages]: load the portal page and out pages, extract fields from out pages.
  *
  * ```kotlin
@@ -106,8 +112,7 @@ import java.util.concurrent.CompletableFuture
  * For example:
  *
  * ```kotlin
- * val url = "http://example.com"
- * val page = session.load(url)
+ * val page = session.load("http://example.com")
  * val document = session.parse(page)
  *
  * val title = document.selectFirstTextOrNull(".title")
@@ -1096,7 +1101,7 @@ interface PulsarSession : AutoCloseable {
      *
      * Submit can be used with event listeners to handle the page events.
      *
-     * The code snippet below shows how to submit a hyperlink with an attached load event handler.
+     * The code snippet below shows how to submit a url with an attached load event handler.
      * This handler is invoked once the page is loaded, and it prints the URL of the page.
      *
      * ````kotlin
@@ -1165,13 +1170,14 @@ interface PulsarSession : AutoCloseable {
      *
      * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
      * suspending the current coroutine.
-     * 
+     *
      * ```kotlin
      * session.submit(Hyperlink("http://example.com"), "-expire 1d")
      * PulsarContexts.await()
      * ```
      *
      * @param url The url to submit
+     * @param args The load arguments
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submit(url: UrlAware, args: String): PulsarSession

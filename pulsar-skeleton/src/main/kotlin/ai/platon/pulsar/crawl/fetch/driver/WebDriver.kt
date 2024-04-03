@@ -681,15 +681,11 @@ interface WebDriver: Closeable {
      * driver.press("input[name='q']", "Enter")
      * ```
      *
-     * @param key - A key to press. The key can be a single character, a key name, or a combination of both.
-     * See {@link KeyInput} for a list of all key names.
-     *
-     * see {@link https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/editing/commands/editor_command_names.h | Chromium Source Code} for valid command names.
-     *
      * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
      * of an element to focus, and then press a key. If there are multiple elements satisfying the
      * selector, the first will be focused.
-     * @param key The key to press.
+     * @param key - A key to press. The key can be a single character, a key name, or a combination of both.
+     *      See [Code values for keyboard events](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values)
      */
     @Throws(WebDriverException::class)
     suspend fun press(selector: String, key: String)
