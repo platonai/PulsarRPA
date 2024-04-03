@@ -5,9 +5,9 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
-Pulsar has carefully designed the logging and metrics subsystem to record every event that occurs in the system. This document explained the format of typical logs.
+PulsarRPA has carefully designed the logging and metrics subsystem to record every event that occurs in the system. This document explained the format of typical logs.
 
-Pulsar splits all logs into several separate files:
+PulsarRPA splits all logs into several separate files:
 
 ----
 logs/pulsar.log    - the default logs
