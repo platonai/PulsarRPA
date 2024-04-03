@@ -70,7 +70,7 @@ let popupCode = `
     <div class="loginPopup">
       <div class="formPopup" id="popupForm">
         <form action="" class="formContainer">
-          <h2>Please Log in</h2>
+          <h2>Injected script - Please NOT Log in</h2>
           <label for="email">
             <strong>E-mail</strong>
           </label>

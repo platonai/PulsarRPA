@@ -26,4 +26,6 @@ fun main() {
     }
 
     session.load("https://www.amazon.com/dp/B0C1H26C46", options)
+    
+    readlnOrNull()
 }

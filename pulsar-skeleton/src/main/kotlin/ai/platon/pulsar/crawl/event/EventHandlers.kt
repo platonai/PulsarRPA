@@ -8,7 +8,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.KWebAsset
+import ai.platon.pulsar.persist.experimental.WebAsset
 
 abstract class VoidHandler: PFunction0<Unit>, AbstractPHandler() {
     abstract override operator fun invoke()
@@ -83,14 +83,14 @@ open class UrlEventHandler: AbstractChainedFunction1<String, String?>() {
 /**
  * A readonly handler, the Web asset will not be changed
  * */
-open class WebAssetEventHandler: AbstractChainedFunction1<KWebAsset, Any?>()
+open class WebAssetEventHandler: AbstractChainedFunction1<WebAsset, Any?>()
 
 open class WebPageEventHandler: AbstractChainedFunction1<WebPage, Any?>()
 
 /**
  * A readonly handler, the Web asset will not be changed.
  * */
-open class UrlAwareWebAssetEventHandler: AbstractChainedFunction2<UrlAware, KWebAsset?, Any?>()
+open class UrlAwareWebAssetEventHandler: AbstractChainedFunction2<UrlAware, WebAsset?, Any?>()
 
 /**
  * An event handler that accepts a [UrlAware] and a [WebPage], anything can be returned.
@@ -98,7 +98,7 @@ open class UrlAwareWebAssetEventHandler: AbstractChainedFunction2<UrlAware, KWeb
  * The Web asset might be changed by the handler since [WebPage] has setters.
  *
  * If the Web asset is not supposed to be changed, readonly handlers should be used which
- * accept a [KWebAsset] instead of [WebPage].
+ * accept a [WebAsset] instead of [WebPage].
  *
  * Another possible way to write more robust code is to remove all setters in [WebPage],
  * and add a MutableWebPage subclass.
@@ -108,7 +108,7 @@ open class UrlAwareWebPageEventHandler: AbstractChainedFunction2<UrlAware, WebPa
 /**
  * A readonly handler, the Web asset will not be changed
  * */
-open class WebAssetHTMLDocumentEventHandler: AbstractChainedFunction2<KWebAsset, FeaturedDocument, Any?>()
+open class WebAssetHTMLDocumentEventHandler: AbstractChainedFunction2<WebAsset, FeaturedDocument, Any?>()
 
 /**
  * An event handler that accepts a [WebPage] and a [FeaturedDocument], anything can be returned.
@@ -119,7 +119,7 @@ open class WebAssetHTMLDocumentEventHandler: AbstractChainedFunction2<KWebAsset,
  * The Web asset might be changed by the handler since [WebPage] has setters.
  *
  * If the Web asset is not supposed to be changed, readonly handlers should be used which
- * accept a [KWebAsset] instead of [WebPage].
+ * accept a [WebAsset] instead of [WebPage].
  *
  * Another possible way to write more robust code is to remove all setters in [WebPage],
  * and add a MutableWebPage subclass.
@@ -133,7 +133,7 @@ open class PageDatumEventHandler: AbstractChainedFunction2<String, PageDatum, An
 /**
  * A readonly handler, the Web asset will not be changed
  * */
-open class WebAssetWebDriverEventHandler: AbstractChainedPDFunction2<KWebAsset, WebDriver, Any?>()
+open class WebAssetWebDriverEventHandler: AbstractChainedPDFunction2<WebAsset, WebDriver, Any?>()
 
 /**
  * An event handler that accepts a [WebPage] and a [WebDriver], anything can be returned.
@@ -142,21 +142,12 @@ open class WebAssetWebDriverEventHandler: AbstractChainedPDFunction2<KWebAsset, 
  * The Web asset might be changed by the handler since [WebPage] has setters.
  *
  * If the Web asset is not supposed to be changed, readonly handlers should be used which
- * accept a [KWebAsset] instead of [WebPage].
+ * accept a [WebAsset] instead of [WebPage].
  *
  * Another possible way to write more robust code is to remove all setters in [WebPage],
  * and add a MutableWebPage subclass.
  * */
 open class WebPageWebDriverEventHandler: AbstractChainedPDFunction2<WebPage, WebDriver, Any?>()
-
-@Deprecated("Use JvmWebPageWebDriverEventHandler instead")
-abstract class WebPageJvmWebDriverEventHandler: WebPageWebDriverEventHandler() {
-    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
-        return invoke(page, driver.jvm())
-    }
-
-    abstract suspend fun invoke(page: WebPage, driver: JvmWebDriver): Any?
-}
 
 abstract class JvmWebPageWebDriverEventHandler: WebPageWebDriverEventHandler() {
     override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
