@@ -1039,7 +1039,7 @@ interface PulsarSession : AutoCloseable {
     fun loadAllAsync(urls: Collection<UrlAware>, options: LoadOptions): List<CompletableFuture<WebPage>>
     
     /**
-     * Load all normal urls in java async style
+     * Load all normal urls in java async style.
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
@@ -1056,7 +1056,7 @@ interface PulsarSession : AutoCloseable {
     fun loadAllAsync(urls: List<NormUrl>): List<CompletableFuture<WebPage>>
     
     /**
-     * Submit a url to the URL pool, the url will be processed in the crawl loop later
+     * Submit a url to the URL pool, and it will be subsequently processed in the crawl loop.
      *
      * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
      * suspending the current coroutine.
@@ -1072,7 +1072,7 @@ interface PulsarSession : AutoCloseable {
     fun submit(url: String): PulsarSession
     
     /**
-     * Submit a url to the URL pool, and it will be processed in a crawl loop
+     * Submit a url to the URL pool, and it will be subsequently processed in the crawl loop.
      *
      * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
      * suspending the current coroutine.
@@ -1089,7 +1089,7 @@ interface PulsarSession : AutoCloseable {
     fun submit(url: String, args: String): PulsarSession
     
     /**
-     * Submit a url to the URL pool, and it will be processed in a crawl loop
+     * Submit a url to the URL pool, and it will be subsequently processed in the crawl loop.
      *
      * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
      * suspending the current coroutine.
@@ -1130,7 +1130,7 @@ interface PulsarSession : AutoCloseable {
     fun submit(url: String, options: LoadOptions): PulsarSession
     
     /**
-     * Submit a url to the URL pool, and it will be processed in a crawl loop.
+     * Submit a url to the URL pool, and it will be subsequently processed in the crawl loop.
      *
      * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
      * suspending the current coroutine.
