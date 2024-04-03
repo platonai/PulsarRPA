@@ -350,7 +350,7 @@ interface PulsarSession : AutoCloseable {
     fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
     
     /**
-     * Get a page from storage.
+     * Get a page from local storage.
      *
      * ```kotlin
      * val url = "http://example.com"
@@ -363,7 +363,7 @@ interface PulsarSession : AutoCloseable {
     fun get(url: String): WebPage
     
     /**
-     * Get a page from storage.
+     * Get a page from local storage.
      *
      * ```kotlin
      * val url = "http://example.com"
@@ -377,7 +377,7 @@ interface PulsarSession : AutoCloseable {
     fun get(url: String, vararg fields: String): WebPage
     
     /**
-     * Get a page from storage.
+     * Get a page from local storage.
      *
      * ```kotlin
      * val url = "http://example.com"
@@ -390,7 +390,7 @@ interface PulsarSession : AutoCloseable {
     fun getOrNull(url: String): WebPage?
     
     /**
-     * Get a page from storage.
+     * Get a page from local storage.
      *
      * ```kotlin
      * val url = "http://example.com"
@@ -404,7 +404,7 @@ interface PulsarSession : AutoCloseable {
     fun getOrNull(url: String, vararg fields: String): WebPage?
     
     /**
-     * Get the content of the page from the storage
+     * Get the content of the page from the storage.
      *
      * ```kotlin
      * val url = "http://example.com"
@@ -1125,7 +1125,7 @@ interface PulsarSession : AutoCloseable {
      * @param options The load options
      * @return The [PulsarSession] itself to enabled chained operations
      *
-     * @see submit(UrlAware) for more examples.
+     * @see submit(UrlAware) to learn more.
      */
     fun submit(url: String, options: LoadOptions): PulsarSession
     
@@ -1177,6 +1177,7 @@ interface PulsarSession : AutoCloseable {
      * session.submit(hyperlink)
      * PulsarContexts.await()
      * ```
+     * 
      * The code snippet below shows how to submit a hyperlink with every supported event handlers attached.
      * Each event handler will print a message when its associated event is triggered.
      *
@@ -1191,9 +1192,9 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enabled chained operations
      *
      * @see PageEvent
-     * @see Hyperlink
-     * @see ListenableHyperlink
-     * @see ParsableHyperlink
+     * @see ai.platon.pulsar.common.urls.Hyperlink
+     * @see ai.platon.pulsar.crawl.common.url.ListenableHyperlink
+     * @see ai.platon.pulsar.crawl.common.url.ParsableHyperlink
      */
     fun submit(url: UrlAware): PulsarSession
     
@@ -1212,7 +1213,7 @@ interface PulsarSession : AutoCloseable {
      * @param args The load arguments
      * @return The [PulsarSession] itself to enabled chained operations
      *
-     * @see submit(UrlAware) for more examples.
+     * @see submit(UrlAware) to learn more.
      */
     fun submit(url: UrlAware, args: String): PulsarSession
     
@@ -1271,7 +1272,7 @@ interface PulsarSession : AutoCloseable {
      * @param options The load options
      * @return The [PulsarSession] itself to enabled chained operations
      *
-     * @see submit(UrlAware) for more examples.
+     * @see submit(UrlAware) to learn more.
      */
     fun submitAll(urls: Iterable<String>, options: LoadOptions): PulsarSession
     
@@ -1290,7 +1291,7 @@ interface PulsarSession : AutoCloseable {
      * @param urls The urls to submit
      * @return The [PulsarSession] itself to enabled chained operations
      *
-     * @see submit(UrlAware) for more examples.
+     * @see submit(UrlAware) to learn more.
      */
     fun submitAll(urls: Collection<UrlAware>): PulsarSession
     
@@ -1309,7 +1310,7 @@ interface PulsarSession : AutoCloseable {
      * @param urls The urls to submit
      * @return The [PulsarSession] itself to enabled chained operations
      *
-     * @see submit(UrlAware) for more examples.
+     * @see submit(UrlAware) to learn more.
      */
     fun submitAll(urls: Collection<UrlAware>, args: String): PulsarSession
 
