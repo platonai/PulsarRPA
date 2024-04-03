@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.crawl.common.url.ParsableHyperlink
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
@@ -123,7 +124,14 @@ fun main() {
 
     // submit the link to the fetch pool.
     session.submit(link)
-
+    
+    val hyperlink = ParsableHyperlink("http://example.com") { page, document ->
+        val title = document.selectFirstOrNull(".title")?.text() ?: ""
+        println(title)
+    }
+    session.submit(hyperlink)
+    PulsarContexts.await()
+    
     // wait until all done.
     PulsarContexts.await()
 }

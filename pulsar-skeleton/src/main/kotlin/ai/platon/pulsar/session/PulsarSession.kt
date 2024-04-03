@@ -1124,6 +1124,8 @@ interface PulsarSession : AutoCloseable {
      * @param url The url to submit
      * @param options The load options
      * @return The [PulsarSession] itself to enabled chained operations
+     *
+     * @see submit(UrlAware) for more examples.
      */
     fun submit(url: String, options: LoadOptions): PulsarSession
     
@@ -1133,12 +1135,14 @@ interface PulsarSession : AutoCloseable {
      * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
      * suspending the current coroutine.
      *
+     * Here is a simple example:
+     *
      * ```kotlin
      * session.submit(Hyperlink("http://example.com"))
      * PulsarContexts.await()
      * ```
      *
-     * Submit can be used with event listeners to handle the page events.
+     * Submit method can be used with event listeners to handle the page events.
      *
      * The code snippet below shows how to submit a hyperlink with an attached load event handler.
      * This handler is invoked once the page is loaded, and it prints the URL of the page.
@@ -1150,8 +1154,29 @@ interface PulsarSession : AutoCloseable {
      * PulsarContexts.await()
      * ```
      *
-     * The code snippet below shows how to submit a hyperlink with a sequence of event handlers attached.
-     * Each event handler will print a message when its associated event is triggered.
+     * The code snippet below shows how to submit a hyperlink with a event handler attached that processes
+     * the parsed document once the relevant event is triggered.
+     *
+     * ````kotlin
+     * val hyperlink = ListenableHyperlink("http://example.com", args = "-parse", event = PrintFlowEvent())
+     * hyperlink.event.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
+     *      val title = document.selectFirstOrNull(".title")?.text() ?: "Not found"
+     *      println(title)
+     * }
+     * session.submit(hyperlink)
+     * PulsarContexts.await()
+     * ```
+     *
+     * ParsableHyperlink can be employed to simplify the load-and-parse tasks.
+     *
+     * ````kotlin
+     * val hyperlink = ParsableHyperlink("http://example.com") { page, document ->
+     * val title = document.selectFirstOrNull(".title")?.text() ?: ""
+     *      println(title)
+     * }
+     * session.submit(hyperlink)
+     * PulsarContexts.await()
+     * ```
      *
      * ````kotlin
      * val event = PrintFlowEvent()
@@ -1179,6 +1204,8 @@ interface PulsarSession : AutoCloseable {
      * @param url The url to submit
      * @param args The load arguments
      * @return The [PulsarSession] itself to enabled chained operations
+     *
+     * @see submit(UrlAware) for more examples.
      */
     fun submit(url: UrlAware, args: String): PulsarSession
     
@@ -1190,7 +1217,7 @@ interface PulsarSession : AutoCloseable {
             "it's too complicated to handle events and should not be implemented.")
     
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop.
+     * Submit urls to the URL pool, and they will be subsequently processed in the crawl loop.
      *
      * Submit operations are non-blocking, meaning they return immediately without blocking the current thread or
      * suspending the current coroutine.
@@ -1206,7 +1233,7 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Iterable<String>): PulsarSession
     
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop.
+     * Submit urls to the URL pool, and they will be subsequently processed in the crawl loop.
      *
      * Submit operations are non-blocking, meaning they return immediately without blocking the current thread or
      * suspending the current coroutine.
@@ -1223,7 +1250,7 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Iterable<String>, args: String): PulsarSession
     
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop.
+     * Submit urls to the URL pool, and they will be subsequently processed in the crawl loop.
      *
      * Submit operations are non-blocking, meaning they return immediately without blocking the current thread or
      * suspending the current coroutine.
@@ -1236,11 +1263,13 @@ interface PulsarSession : AutoCloseable {
      * @param urls The urls to submit
      * @param options The load options
      * @return The [PulsarSession] itself to enabled chained operations
+     *
+     * @see submit(UrlAware) for more examples.
      */
     fun submitAll(urls: Iterable<String>, options: LoadOptions): PulsarSession
     
     /**
-     * Submit a url to the URL pool, and it will be processed in a crawl loop.
+     * Submit urls to the URL pool, and they will be subsequently processed in the crawl loop.
      *
      * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
      * suspending the current coroutine.
@@ -1253,11 +1282,13 @@ interface PulsarSession : AutoCloseable {
      *
      * @param urls The urls to submit
      * @return The [PulsarSession] itself to enabled chained operations
+     *
+     * @see submit(UrlAware) for more examples.
      */
     fun submitAll(urls: Collection<UrlAware>): PulsarSession
     
     /**
-     * Submit a url to the URL pool, and it will be processed in a crawl loop.
+     * Submit urls to the URL pool, and they will be subsequently processed in the crawl loop.
      *
      * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
      * suspending the current coroutine.
@@ -1270,6 +1301,8 @@ interface PulsarSession : AutoCloseable {
      *
      * @param urls The urls to submit
      * @return The [PulsarSession] itself to enabled chained operations
+     *
+     * @see submit(UrlAware) for more examples.
      */
     fun submitAll(urls: Collection<UrlAware>, args: String): PulsarSession
 
@@ -1402,11 +1435,15 @@ interface PulsarSession : AutoCloseable {
      *
      * Option `-outLink` specifies the cssSelector for links in the portal page to load.
      *
-     * The submitted urls will be processed in a crawl loop later.
+     * The submitted urls will be subsequently processed in the crawl loop.
+     *
+     * Submit operations are non-blocking, meaning they return immediately without blocking the current thread or
+     * suspending the current coroutine.
      *
      * ```kotlin
-     * session.submitForOutPages("http://example.com", "-outLink a[href*=review]")
-     * session.submitForOutPages("http://example.com", "-outLink a[href*=item] -expire 1d")
+     * session
+     *   .submitForOutPages("http://example.com", "-outLink a[href*=review]")
+     *   .submitForOutPages("http://example.com", "-outLink a[href*=item] -expire 1d")
      * PulsarContexts.await()
      * ```
      *
@@ -1421,11 +1458,15 @@ interface PulsarSession : AutoCloseable {
      *
      * Option `-outLink` specifies the cssSelector for links in the portal page to load.
      *
-     * The submitted urls will be processed in a crawl loop later.
+     * The submitted urls will be subsequently processed in the crawl loop.
+     *
+     * Submit operations are non-blocking, meaning they return immediately without blocking the current thread or
+     * suspending the current coroutine.
      *
      * ```kotlin
-     * session.submitForOutPages("http://example.com", session.options("-outLink a[href*=review]"))
-     * session.submitForOutPages("http://example.com", session.options("-outLink a[href*=item] -expire 1d"))
+     * session
+     *   .submitForOutPages("http://example.com", session.options("-outLink a[href*=review]"))
+     *   .submitForOutPages("http://example.com", session.options("-outLink a[href*=item] -expire 1d"))
      * PulsarContexts.await()
      * ```
      *
@@ -1440,11 +1481,15 @@ interface PulsarSession : AutoCloseable {
      *
      * Option `-outLink` specifies the cssSelector for links in the portal page to load.
      *
-     * The submitted urls will be processed in a crawl loop later.
+     * The submitted urls will be subsequently processed in the crawl loop.
+     *
+     * Submit operations are non-blocking, meaning they return immediately without blocking the current thread or
+     * suspending the current coroutine.
      *
      * ```kotlin
-     * session.submitForOutPages(Hyperlink("http://example.com"), "-outLink a[href*=review]")
-     * session.submitForOutPages(Hyperlink("http://example.com"), "-outLink a[href*=item] -expire 1d")
+     * session
+     *   .submitForOutPages(Hyperlink("http://example.com"), "-outLink a[href*=review]")
+     *   .submitForOutPages(Hyperlink("http://example.com"), "-outLink a[href*=item] -expire 1d")
      * PulsarContexts.await()
      * ```
      *
@@ -1459,11 +1504,15 @@ interface PulsarSession : AutoCloseable {
      *
      * Option `-outLink` specifies the cssSelector for links in the portal page to load.
      *
-     * The submitted urls will be processed in a crawl loop later.
+     * The submitted urls will be subsequently processed in the crawl loop.
+     *
+     * Submit operations are non-blocking, meaning they return immediately without blocking the current thread or
+     * suspending the current coroutine.
      *
      * ```kotlin
-     * session.submitForOutPages(Hyperlink("http://example.com"), session.options("-outLink a[href*=review]"))
-     * session.submitForOutPages(Hyperlink("http://example.com"), session.options("-outLink a[href*=item] -expire 1d"))
+     * session
+     *   .submitForOutPages(Hyperlink("http://example.com"), session.options("-outLink a[href*=review]"))
+     *   .submitForOutPages(Hyperlink("http://example.com"), session.options("-outLink a[href*=item] -expire 1d"))
      * PulsarContexts.await()
      * ```
      *
