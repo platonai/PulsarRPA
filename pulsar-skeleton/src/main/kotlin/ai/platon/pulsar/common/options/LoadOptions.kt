@@ -37,7 +37,6 @@ import kotlin.reflect.jvm.kotlinProperty
  * // write the page content into storage
  * session.load('https://www.jd.com', '-storeContent')
  * ```
- * TODO: support new options: -priority
  * */
 open class LoadOptions(
     argv: Array<String>,

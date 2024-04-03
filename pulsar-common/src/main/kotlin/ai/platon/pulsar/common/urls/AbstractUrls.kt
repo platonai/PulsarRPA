@@ -8,6 +8,9 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.time.Instant
 
+/**
+ * An abstract url is a url with some common properties and methods.
+ * */
 abstract class AbstractUrl(
     override var url: String,
     override var args: String? = null,
@@ -27,10 +30,6 @@ abstract class AbstractUrl(
 
     override val isNil get() = url == AppConstants.NIL_PAGE_URL
 
-    /**
-     * If this url is persistable.
-     * Not all urls are persistable, for example, a ListenableHyperlink with events is not persistable.
-     * */
     override val isPersistable: Boolean = true
 
     override val label: String get() = OptionUtils.findOption(args, listOf("-l", "-label", "--label")) ?: ""
@@ -41,24 +40,12 @@ abstract class AbstractUrl(
             return DateTimes.parseBestInstantOrNull(deadTime) ?: DateTimes.doomsday
         }
 
-    /**
-     * Required website language
-     * */
     override var lang: String = "*"
 
-    /**
-     * Required website country
-     * */
     override var country: String = "*"
 
-    /**
-     * Required website district
-     * */
     override var district: String = "*"
 
-    /**
-     * The maximum retry times
-     * */
     override var nMaxRetry: Int = 3
 
     /**
@@ -87,11 +74,17 @@ abstract class AbstractUrl(
     override fun hashCode() = url.hashCode()
 
     override fun toString() = url
-
+    
+    /**
+     * Serialize the url to a string
+     * */
     open fun serialize(): String {
         return serializeTo(StringBuilder()).toString()
     }
 
+    /**
+     * Serialize the url to a string builder
+     * */
     protected open fun serializeTo(sb: StringBuilder): StringBuilder {
         sb.append(url)
 
@@ -109,6 +102,9 @@ abstract class AbstractUrl(
     }
 }
 
+/**
+ * An abstract stateful url is a [StatefulUrl] with some common properties and methods.
+ * */
 abstract class AbstractStatefulUrl(
     url: String,
     args: String? = null,

@@ -1104,7 +1104,7 @@ interface PulsarSession : AutoCloseable {
      * The code snippet below shows how to submit a url with an attached load event handler.
      * This handler is invoked once the page is loaded, and it prints the URL of the page.
      *
-     * ````kotlin
+     * ```kotlin
      * val options = session.options("-expire 1d")
      * options.event.loadEvent.onLoaded.addLast { println(it.url) }
      * session.submit("http://example.com", options)
@@ -1114,7 +1114,7 @@ interface PulsarSession : AutoCloseable {
      * The code snippet below shows how to submit a hyperlink with every supported event handlers attached.
      * Each event handler will print a message when its associated event is triggered.
      *
-     * ````kotlin
+     * ```kotlin
      * val event = PrintFlowEvent()
      * val options = session.options("-expire 1d", event)
      * session.submit("http://example.com", options)
@@ -1147,7 +1147,7 @@ interface PulsarSession : AutoCloseable {
      * The code snippet below shows how to submit a hyperlink with an attached load event handler.
      * This handler is invoked once the page is loaded, and it prints the URL of the page.
      *
-     * ````kotlin
+     * ```kotlin
      * val hyperlink = ListenableHyperlink("http://example.com")
      * hyperlink.event.loadEvent.onLoaded.addLast { page -> println(page.url) }
      * session.submit(hyperlink)
@@ -1157,7 +1157,7 @@ interface PulsarSession : AutoCloseable {
      * The code snippet below shows how to submit a hyperlink with a event handler attached that processes
      * the parsed document once the relevant event is triggered.
      *
-     * ````kotlin
+     * ```kotlin
      * val hyperlink = ListenableHyperlink("http://example.com", args = "-parse", event = PrintFlowEvent())
      * hyperlink.event.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
      *      val title = document.selectFirstOrNull(".title")?.text() ?: "Not found"
@@ -1169,7 +1169,7 @@ interface PulsarSession : AutoCloseable {
      *
      * ParsableHyperlink can be used to simplify the load-and-parse tasks.
      *
-     * ````kotlin
+     * ```kotlin
      * val hyperlink = ParsableHyperlink("http://example.com") { page, document ->
      * val title = document.selectFirstOrNull(".title")?.text() ?: ""
      *      println(title)
@@ -1181,7 +1181,7 @@ interface PulsarSession : AutoCloseable {
      * The code snippet below shows how to submit a hyperlink with every supported event handlers attached.
      * Each event handler will print a message when its associated event is triggered.
      *
-     * ````kotlin
+     * ```kotlin
      * val event = PrintFlowEvent()
      * val options = session.options("-expire 1d", event)
      * session.submit("http://example.com", options)
@@ -1199,7 +1199,7 @@ interface PulsarSession : AutoCloseable {
     fun submit(url: UrlAware): PulsarSession
     
     /**
-     * Submit a url to the URL pool, and it will be processed in a crawl loop.
+     * Submit a url to the URL pool, and it will be subsequently processed in the crawl loop.
      *
      * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
      * suspending the current coroutine.

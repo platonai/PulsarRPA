@@ -83,9 +83,10 @@ interface UrlAware {
      * An url is Nil if it equals to AppConstants.NIL_PAGE_URL
      * */
     val isNil: Boolean
-
+    
     /**
-     * If this link is persistable
+     * If true, the url is persistable, it can be saved to the database.
+     * Not all urls are persistable, for example, a ListenableHyperlink with events is not persistable.
      * */
     val isPersistable: Boolean
 
@@ -121,7 +122,7 @@ interface UrlAware {
 }
 
 /**
- * The ComparableUrlAware interface. A ComparableUrlAware is an UrlAware with comparable.
+ * The ComparableUrlAware interface. A ComparableUrlAware is an [UrlAware] with comparable.
  * */
 interface ComparableUrlAware : UrlAware, Comparable<UrlAware>
 
