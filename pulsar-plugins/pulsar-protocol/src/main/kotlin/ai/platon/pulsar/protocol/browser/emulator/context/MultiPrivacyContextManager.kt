@@ -521,6 +521,10 @@ class MultiPrivacyContextManager(
 //                Files.createDirectories(SNAPSHOT_PATH.parent)
 //            }
             
+            if (activeContexts.isEmpty()) {
+                return
+            }
+            
             val count = snapshotDumpCount.incrementAndGet()
             val sb = StringBuilder()
             sb.append("\n\n\n$count. Privacy contexts snapshot \n")
