@@ -217,9 +217,13 @@ interface PulsarSession : AutoCloseable {
      * */
     fun property(name: String, value: String)
     /**
-     * Create a new [LoadOptions] object with [args], [event], and [sessionConfig].
+     * Create a new [LoadOptions] object with [args].
      * */
-    fun options(args: String = "", event: PageEvent? = null): LoadOptions
+    fun options(args: String = ""): LoadOptions
+    /**
+     * Create a new [LoadOptions] object with [args] and [event].
+     * */
+    fun options(args: String = "", event: PageEvent?): LoadOptions
     /**
      * Normalize a url.
      *
@@ -733,7 +737,7 @@ interface PulsarSession : AutoCloseable {
      * ```
      *
      * @param urls    The urls to load
-     * @return The webpage loaded or NIL
+     * @return The successfully loaded webpages, all failed urls are ignored
      */
     fun loadAll(urls: Iterable<String>): List<WebPage>
     
@@ -750,7 +754,7 @@ interface PulsarSession : AutoCloseable {
      *
      * @param urls    The urls to load
      * @param args The load arguments
-     * @return The webpage loaded or NIL
+     * @return The successfully loaded webpages, all failed urls are ignored
      */
     fun loadAll(urls: Iterable<String>, args: String): List<WebPage>
     
@@ -767,7 +771,7 @@ interface PulsarSession : AutoCloseable {
      *
      * @param urls    The urls to load
      * @param options The load options
-     * @return The webpage loaded or NIL
+     * @return The successfully loaded webpages, all failed urls are ignored
      */
     fun loadAll(urls: Iterable<String>, options: LoadOptions): List<WebPage>
     
@@ -783,7 +787,7 @@ interface PulsarSession : AutoCloseable {
      * ```
      *
      * @param urls    The urls to load
-     * @return The webpage loaded or NIL
+     * @return The successfully loaded webpages, all failed urls are ignored
      */
     fun loadAll(urls: Collection<UrlAware>): List<WebPage>
     
@@ -800,7 +804,7 @@ interface PulsarSession : AutoCloseable {
      *
      * @param urls    The urls to load
      * @param args The load arguments
-     * @return The webpage loaded or NIL
+     * @return The successfully loaded webpages, all failed urls are ignored
      */
     fun loadAll(urls: Collection<UrlAware>, args: String): List<WebPage>
     
@@ -817,7 +821,7 @@ interface PulsarSession : AutoCloseable {
      *
      * @param urls    The urls to load
      * @param options The load options
-     * @return The webpage loaded or NIL
+     * @return The successfully loaded webpages, all failed urls are ignored
      */
     fun loadAll(urls: Collection<UrlAware>, options: LoadOptions): List<WebPage>
     
@@ -833,16 +837,16 @@ interface PulsarSession : AutoCloseable {
      * ```
      *
      * @param normUrls    The normal urls to load
-     * @return The loaded webpages
+     * @return The successfully loaded webpages, all failed urls are ignored
      */
     fun loadAll(normUrls: List<NormUrl>): List<WebPage>
     
     /**
-     * Load a normal url in java async style
+     * Load a url in java async style
      *
-     * ```kotlin
-     * val url = "http://example.com"
-     * val page = session.loadAsync(url).get()
+     * ```java
+     * String url = "http://example.com";
+     * WebPage page = session.loadAsync(url).join();
      * ```
      *
      * @param url     The url to load
@@ -851,11 +855,11 @@ interface PulsarSession : AutoCloseable {
     fun loadAsync(url: String): CompletableFuture<WebPage>
     
     /**
-     * Load a normal url in java async style
+     * Load a url in java async style
      *
-     * ```kotlin
-     * val url = "http://example.com"
-     * val page = session.loadAsync(url, "-expire 1d").get()
+     * ```java
+     * String url = "http://example.com";
+     * WebPage page = session.loadAsync(url, "-expire 1d").join();
      * ```
      *
      * @param url     The url to load
@@ -864,11 +868,11 @@ interface PulsarSession : AutoCloseable {
     fun loadAsync(url: String, args: String): CompletableFuture<WebPage>
     
     /**
-     * Load a normal url in java async style
+     * Load a url in java async style
      *
-     * ```kotlin
-     * val url = "http://example.com"
-     * val page = session.loadAsync(url, session.options("-expire 1d")).get()
+     * ```java
+     * String url = "http://example.com";
+     * WebPage page = session.loadAsync(url, session.options("-expire 1d")).join();
      * ```
      *
      * @param url     The url to load
@@ -877,11 +881,11 @@ interface PulsarSession : AutoCloseable {
     fun loadAsync(url: String, options: LoadOptions): CompletableFuture<WebPage>
     
     /**
-     * Load a normal url in java async style
+     * Load a url in java async style
      *
-     * ```kotlin
-     * val url = Hyperlink("http://example.com")
-     * val page = session.loadAsync(url).get()
+     * ```java
+     * Hyperlink url = new Hyperlink("http://example.com");
+     * WebPage page = session.loadAsync(url).join();
      * ```
      *
      * @param url     The url to load
@@ -890,11 +894,11 @@ interface PulsarSession : AutoCloseable {
     fun loadAsync(url: UrlAware): CompletableFuture<WebPage>
     
     /**
-     * Load a normal url in java async style
+     * Load a url in java async style
      *
-     * ```kotlin
-     * val url = Hyperlink("http://example.com")
-     * val page = session.loadAsync(url, "-expire 1d").get()
+     * ```java
+     * Hyperlink url = new Hyperlink("http://example.com");
+     * WebPage page = session.loadAsync(url, "-expire 1d").join();
      * ```
      *
      * @param url     The url to load
@@ -903,13 +907,12 @@ interface PulsarSession : AutoCloseable {
     fun loadAsync(url: UrlAware, args: String): CompletableFuture<WebPage>
     
     /**
-     * Load a normal url in java async style
+     * Load a url in java async style
      *
-     * ```kotlin
-     * val url = Hyperlink("http://example.com")
-     * val page = session.loadAsync(url, session.options("-expire 1d")).get()
+     * ```java
+     * Hyperlink url = new Hyperlink("http://example.com");
+     * WebPage page = session.loadAsync(url, session.options("-expire 1d")).join();
      * ```
-     *
      * @param url     The url to load
      * @return A completable future of webpage
      */
@@ -918,9 +921,9 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a normal url in java async style
      *
-     * ```kotlin
-     * val url = session.normalize("http://example.com")
-     * val page = session.loadAsync(url).get()
+     * ```java
+     * NormUrl url = session.normalize("http://example.com");
+     * WebPage page = session.loadAsync(url).join();
      * ```
      *
      * @param url     The normal url to load
@@ -929,14 +932,15 @@ interface PulsarSession : AutoCloseable {
     fun loadAsync(url: NormUrl): CompletableFuture<WebPage>
     
     /**
-     * Load all normal urls in java async style
+     * Load all urls in java async style
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
-     * ```kotlin
-     * val urls = listOf("http://example.com", "http://example.com/1")
-     * val pages = session.loadAllAsync(urls)
+     * ```java
+     * List<String> urls = Arrays.asList("http://example.com", "http://example.com/1");
+     * CompletableFuture<?>[] pages = session.loadAllAsync(urls).toArray(CompletableFuture<?>[]::new);
+     * CompletableFuture.allOf(futures).join();
      * ```
      *
      * @param urls The normal urls to load
@@ -945,14 +949,15 @@ interface PulsarSession : AutoCloseable {
     fun loadAllAsync(urls: Iterable<String>): List<CompletableFuture<WebPage>>
     
     /**
-     * Load all normal urls in java async style.
+     * Load all urls in java async style.
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
-     * ```kotlin
-     * val urls = listOf("http://example.com", "http://example.com/1")
-     * val pages = session.loadAllAsync(urls, "-expire 1d")
+     * ```java
+     * List<String> urls = Arrays.asList("http://example.com", "http://example.com/1");
+     * CompletableFuture<?>[] pages = session.loadAllAsync(urls, "-expire 1d").toArray(CompletableFuture<?>[]::new);
+     * CompletableFuture.allOf(futures).join();
      * ```
      *
      * @param urls The normal urls to load
@@ -966,9 +971,10 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
-     * ```kotlin
-     * val urls = listOf("http://example.com", "http://example.com/1")
-     * val pages = session.loadAllAsync(urls, session.options("-expire 1d"))
+     * ```java
+     * List<String> urls = Arrays.asList("http://example.com", "http://example.com/1");
+     * CompletableFuture<?>[] pages = session.loadAllAsync(urls, session.options("-expire 1d")).toArray(CompletableFuture<?>[]::new);
+     * CompletableFuture.allOf(futures).join();
      * ```
      *
      * @param urls The normal urls to load
@@ -977,14 +983,15 @@ interface PulsarSession : AutoCloseable {
     fun loadAllAsync(urls: Iterable<String>, options: LoadOptions): List<CompletableFuture<WebPage>>
     
     /**
-     * Load all normal urls in java async style.
+     * Load all urls in java async style.
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
-     * ```kotlin
-     * val urls = listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1"))
-     * val pages = session.loadAllAsync(urls)
+     * ```java
+     * List<UrlAware> urls = Arrays.asList(new Hyperlink("http://example.com"), new Hyperlink("http://example.com/1"));
+     * CompletableFuture<?>[] pages = session.loadAllAsync(urls).toArray(CompletableFuture<?>[]::new);
+     * CompletableFuture.allOf(futures).join();
      * ```
      *
      * @param urls The normal urls to load
@@ -998,9 +1005,10 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
-     * ```kotlin
-     * val urls = listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1"))
-     * val pages = session.loadAllAsync(urls, "-expire 1d")
+     * ```java
+     * List<UrlAware> urls = Arrays.asList(new Hyperlink("http://example.com"), new Hyperlink("http://example.com/1"));
+     * CompletableFuture<?>[] pages = session.loadAllAsync(urls, "-expire 1d").toArray(CompletableFuture<?>[]::new);
+     * CompletableFuture.allOf(futures).join();
      * ```
      *
      * @param urls The normal urls to load
@@ -1014,9 +1022,10 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
-     * ```kotlin
-     * val urls = listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1"))
-     * val pages = session.loadAllAsync(urls, session.options("-expire 1d"))
+     * ```java
+     * List<UrlAware> urls = Arrays.asList(new Hyperlink("http://example.com"), new Hyperlink("http://example.com/1"));
+     * CompletableFuture<?>[] pages = session.loadAllAsync(urls, session.options("-expire 1d")).toArray(CompletableFuture<?>[]::new);
+     * CompletableFuture.allOf(futures).join();
      * ```
      *
      * @param urls The normal urls to load
@@ -1030,9 +1039,10 @@ interface PulsarSession : AutoCloseable {
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
-     * ```kotlin
-     * val urls = listOf("http://example.com", "http://example.com/1").map { session.normalize(it) }
-     * val pages = session.loadAllAsync(urls)
+     * ```java
+     * List<NormUrl> urls = Arrays.asList(session.normalize("http://example.com"), session.normalize("http://example.com/1"));
+     * CompletableFuture<?>[] pages = session.loadAllAsync(urls).toArray(CompletableFuture<?>[]::new);
+     * CompletableFuture.allOf(futures).join();
      * ```
      *
      * @param urls The normal urls to load
@@ -1042,6 +1052,9 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Submit a url to the URL pool, the url will be processed in the crawl loop later
+     *
+     * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
+     * suspending the current coroutine.
      *
      * ```kotlin
      * session.submit("http://example.com")
@@ -1055,6 +1068,9 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Submit a url to the URL pool, and it will be processed in a crawl loop
+     *
+     * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
+     * suspending the current coroutine.
      *
      * ```kotlin
      * session.submit("http://example.com", "-expire 1d")
@@ -1070,8 +1086,33 @@ interface PulsarSession : AutoCloseable {
     /**
      * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
+     * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
+     * suspending the current coroutine.
+     *
      * ```kotlin
      * session.submit("http://example.com", session.options("-expire 1d"))
+     * PulsarContexts.await()
+     * ```
+     *
+     * Submit can be used with event listeners to handle the page events.
+     *
+     * The code snippet below shows how to submit a hyperlink with an attached load event handler.
+     * This handler is invoked once the page is loaded, and it prints the URL of the page.
+     *
+     * ````kotlin
+     * val options = session.options("-expire 1d")
+     * options.event.loadEvent.onLoaded.addLast { println(it.url) }
+     * session.submit("http://example.com", options)
+     * PulsarContexts.await()
+     * ```
+     *
+     * The code snippet below shows how to submit a hyperlink with a sequence of event handlers attached.
+     * Each event handler will print a message when its associated event is triggered.
+     *
+     * ````kotlin
+     * val event = PrintFlowEvent()
+     * val options = session.options("-expire 1d", event)
+     * session.submit("http://example.com", options)
      * PulsarContexts.await()
      * ```
      *
@@ -1084,8 +1125,33 @@ interface PulsarSession : AutoCloseable {
     /**
      * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
+     * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
+     * suspending the current coroutine.
+     *
      * ```kotlin
      * session.submit(Hyperlink("http://example.com"))
+     * PulsarContexts.await()
+     * ```
+     *
+     * Submit can be used with event listeners to handle the page events.
+     *
+     * The code snippet below shows how to submit a hyperlink with an attached load event handler.
+     * This handler is invoked once the page is loaded, and it prints the URL of the page.
+     *
+     * ````kotlin
+     * val hyperlink = ListenableHyperlink("http://example.com")
+     * hyperlink.event.loadEvent.onLoaded.addLast { page -> println(page.url) }
+     * session.submit(hyperlink)
+     * PulsarContexts.await()
+     * ```
+     *
+     * The code snippet below shows how to submit a hyperlink with a sequence of event handlers attached.
+     * Each event handler will print a message when its associated event is triggered.
+     *
+     * ````kotlin
+     * val event = PrintFlowEvent()
+     * val options = session.options("-expire 1d", event)
+     * session.submit("http://example.com", options)
      * PulsarContexts.await()
      * ```
      *
@@ -1097,6 +1163,9 @@ interface PulsarSession : AutoCloseable {
     /**
      * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
+     * A submit operation is non-blocking, meaning it returns immediately without blocking the current thread or
+     * suspending the current coroutine.
+     * 
      * ```kotlin
      * session.submit(Hyperlink("http://example.com"), "-expire 1d")
      * PulsarContexts.await()
@@ -1116,6 +1185,9 @@ interface PulsarSession : AutoCloseable {
     
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
+     *
+     * Submit operations are non-blocking, meaning they return immediately without blocking the current thread or
+     * suspending the current coroutine.
      *
      * ```kotlin
      * session.submitAll(listOf("http://example.com", "http://example.com/1"))
@@ -1159,7 +1231,8 @@ interface PulsarSession : AutoCloseable {
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
      * ```kotlin
-     * session.submitAll(listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1")))
+     * val urls = listOf("http://example.com", "http://example.com/1").map { Hyperlink(it) }
+     * session.submitAll(urls)
      * PulsarContexts.await()
      * ```
      *
@@ -1172,7 +1245,8 @@ interface PulsarSession : AutoCloseable {
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
      * ```kotlin
-     * session.submitAll(listOf(Hyperlink("http://example.com"), Hyperlink("http://example.com/1")), "-expire 1d")
+     * val urls = listOf("http://example.com", "http://example.com/1").map { Hyperlink(it) }
+     * session.submitAll(urls, "-expire 1d")
      * PulsarContexts.await()
      * ```
      *
@@ -1887,7 +1961,7 @@ interface PulsarSession : AutoCloseable {
     fun export(page: WebPage, ident: String = ""): Path
     
     /**
-     * Export the whole HTML of the document to the given path.
+     * Export the content of a webpage.
      *
      * ```kotlin
      * val page = session.load("http://example.com")
@@ -1923,7 +1997,7 @@ interface PulsarSession : AutoCloseable {
     fun export(doc: FeaturedDocument, ident: String = ""): Path
     
     /**
-     * Export the whole HTML of the document to the given path.
+     * Export the outer HTML of the document.
      *
      * ```kotlin
      * val document = session.loadDocument("http://example.com")
@@ -1937,7 +2011,7 @@ interface PulsarSession : AutoCloseable {
     fun exportTo(doc: FeaturedDocument, path: Path): Path
     
     /**
-     * Persist the content of a webpage.
+     * Persist the webpage.
      *
      * ```kotlin
      * val page = session.load("http://example.com")

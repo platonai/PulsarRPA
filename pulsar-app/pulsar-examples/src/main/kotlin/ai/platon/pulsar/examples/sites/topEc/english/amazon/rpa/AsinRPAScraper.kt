@@ -45,8 +45,8 @@ class AsinRPAScraper {
     private fun createASINHyperlink(domain: String, asinUrl: String): ListenableHyperlink {
         val hyperlink = ListenableHyperlink(asinUrl, args = asinLoadArgs)
         val be = hyperlink.event.browseEvent
-
-        be.onWillComputeFeature.addLast { page, driver ->
+        
+        be.onDocumentSteady.addLast { page, driver ->
             val district = driver.selectFirstTextOrNull(districtSelector)
             logger.info("District: {}", district)
             null

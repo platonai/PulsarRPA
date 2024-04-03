@@ -80,11 +80,17 @@ open class Hyperlink(
     href: String? = null,
 ) : AbstractUrl(url, args, referrer, href) {
     var depth: Int = 0
-
+    
+    /**
+     * Construct a hyperlink.
+     *
+     * This method is compatible with Java.
+     * */
+    constructor(url: String) : this(url, "", 0)
     constructor(url: UrlAware) : this(url.url, "", 0, url.referrer, url.args, href = url.href)
     constructor(url: Hyperlink) : this(url.url, url.text, url.order, url.referrer, url.args, href = url.href)
     constructor(url: HyperlinkDatum) : this(url.url, url.text, url.order, url.referrer, url.args, href = url.href)
-
+    
     fun data() = HyperlinkDatum(url, text, order, referrer = referrer, args = args, href = href, true, 0)
 
     override fun serializeTo(sb: StringBuilder): StringBuilder {

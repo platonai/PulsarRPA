@@ -84,7 +84,9 @@ abstract class AbstractPulsarSession(
     fun registerClosable(closable: AutoCloseable) = ensureActive { closableObjects.add(closable) }
 
     override fun disablePDCache() = run { enablePDCache = false }
-
+    
+    override fun options(args: String) = options(args, null)
+    
     override fun options(args: String, event: PageEvent?): LoadOptions {
         val opts = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
         if (event != null) {
