@@ -87,7 +87,7 @@ class PrintFlowEventHandlers: DefaultPageEventHandlers() {
                 println("$seq. browse - onFeatureComputed")
             }
             onDidInteract.addLast { page, driver ->
-                println("$seq. browse - onWillInteract")
+                println("$seq. browse - onDidInteract")
             }
             onWillStopTab.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. browse - onWillStopTab")
@@ -100,10 +100,6 @@ class PrintFlowEventHandlers: DefaultPageEventHandlers() {
         crawlEventHandlers.apply {
             onWillLoad.addLast { url: UrlAware ->
                 println("$seq. crawl - onWillLoad")
-                url
-            }
-            onLoad.addLast { url: UrlAware ->
-                println("$seq. crawl - onLoad")
                 url
             }
             onLoaded.addLast { url, page ->

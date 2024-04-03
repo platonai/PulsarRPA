@@ -9,7 +9,7 @@ fun main() {
     val session = PulsarContexts.createSession()
     val options = session.options("-refresh")
 
-    val be = options.event.browseEvent
+    val be = options.event.browseEventHandlers
     be.onWillNavigate.addFirst { _, driver ->
         println("onWillNavigate " + driver.navigateHistory.history.joinToString { it.url })
         scripts.forEach { driver.addInitScript(it) }
@@ -26,6 +26,4 @@ fun main() {
     }
 
     session.load("https://www.amazon.com/dp/B0C1H26C46", options)
-
-    readLine()
 }

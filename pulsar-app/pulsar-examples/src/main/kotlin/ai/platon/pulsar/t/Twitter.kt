@@ -34,7 +34,7 @@ class Twitter {
         
         val url = "https://twitter.com/home"
         val options = session.options(args)
-        val be = options.event.browseEvent
+        val be = options.event.browseEventHandlers
         
         be.onDocumentSteady.addLast { page, driver ->
             interact(page, driver)

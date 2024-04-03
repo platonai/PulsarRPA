@@ -104,7 +104,7 @@ When we fetch webpages using a real browser, we may need to interact with pages 
 [source,kotlin]
 ----
 val options = session.options(args)
-options.event.browseEvent.onDidDOMStateCheck.addLast { page, driver ->
+options.event.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
   driver.scrollDown()
 }
 session.load(url, options)

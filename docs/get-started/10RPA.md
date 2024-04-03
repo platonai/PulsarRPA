@@ -11,7 +11,7 @@ The most complex data collection projects often require complex interactions wit
 
 ```kotlin
 val options = session.options(args)
-val event = options.event.browseEvent
+val event = options.event.browseEventHandlers
 event.onBrowserLaunched.addLast { page, driver ->
     // Warm up the browser to avoid being blocked by the website,
     // or choose global settings, such as your location.

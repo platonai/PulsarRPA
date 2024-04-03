@@ -662,7 +662,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="kotlin">val options = session.options(args)
-val event = options.event.browseEvent
+val event = options.event.browseEventHandlers
 event.onBrowserLaunched.addLast { page, driver -&gt;
     // warp up the browser to avoid being blocked by the website,
     // or choose the global settings, such as your location.
@@ -1105,7 +1105,7 @@ val price = document.selectFirst('.price').text()</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="kotlin">val options = session.options(args)
-val event = options.event.browseEvent
+val event = options.event.browseEventHandlers
 event.onBrowserLaunched.addLast { page, driver -&gt;
     // 预热浏览器，以避免被网站阻止，或选择全局设置，例如您的位置
     warnUpBrowser(page, driver)

@@ -54,7 +54,7 @@ link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_Con
 *Kotlin:*
 ```kotlin
 val options = session.options(args)
-val event = options.event.browseEvent
+val event = options.event.browseEventHandlers
 event.onBrowserLaunched.addLast { page, driver ->
     // warp up the browser to avoid being blocked by the website,
     // or choose the global settings, such as your location.
@@ -346,7 +346,7 @@ PulsarRPA 包含一个 RPA 子系统，提供了一种在网页生命周期中�
 
 ```kotlin
 val options = session.options(args)
-val event = options.event.browseEvent
+val event = options.event.browseEventHandlers
 event.onBrowserLaunched.addLast { page, driver ->
     // 预热浏览器，以避免被网站阻止，或选择全局设置，例如您的位置
     warnUpBrowser(page, driver)

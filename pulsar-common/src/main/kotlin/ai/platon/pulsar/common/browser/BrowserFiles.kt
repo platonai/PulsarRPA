@@ -28,7 +28,7 @@ object BrowserFiles {
     
     const val PID_FILE_NAME = "launcher.pid"
     
-    val TEMPORARY_UDD_EXPIRY = Duration.ofHours(1)
+    val TEMPORARY_UDD_EXPIRY = Duration.ofHours(12)
 
     private val cleanedUserDataDirs = ConcurrentSkipListSet<Path>()
     
@@ -96,7 +96,7 @@ object BrowserFiles {
         FileUtils.deleteQuietly(dirToDelete.toFile())
 
         if (Files.exists(dirToDelete)) {
-            logger.error("Could not delete browser data | {}", dirToDelete)
+            logger.error("Browser data dir not deleted | {}", dirToDelete)
         } else {
             cleanedUserDataDirs.add(dirToDelete)
         }

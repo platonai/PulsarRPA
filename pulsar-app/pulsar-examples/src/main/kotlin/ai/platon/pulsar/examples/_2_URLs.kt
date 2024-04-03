@@ -63,7 +63,7 @@ fun main() {
 
     // Load a ListenableHyperlink so we can register various event handlers
     val listenableLink = ListenableHyperlink(url)
-    listenableLink.event.browseEvent.onDidInteract.addLast { pg, driver ->
+    listenableLink.event.browseEventHandlers.onDidInteract.addLast { pg, driver ->
         println("Interaction finished " + page.url)
     }
     val page3 = session.load(listenableLink, "-expires 10s")

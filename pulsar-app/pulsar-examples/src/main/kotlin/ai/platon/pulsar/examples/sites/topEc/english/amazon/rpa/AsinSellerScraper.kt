@@ -66,7 +66,7 @@ class AsinSellerScraper {
 
     fun createASINHyperlink(domain: String, asinUrl: String): ListenableHyperlink {
         val hyperlink = ListenableHyperlink(asinUrl, args = "-i 5s -parse -requireSize 800000")
-        val be = hyperlink.event.browseEvent
+        val be = hyperlink.event.browseEventHandlers
 
         be.onWillComputeFeature.addLast { page, driver ->
             val district = driver.selectFirstTextOrNull("#glow-ingress-block, .nav-global-location-slot") ?: ""
@@ -179,7 +179,7 @@ class AsinSellerScraper {
                     href = link.href
                 }
                 .apply {
-                    event.browseEvent.onWillNavigate.addLast { page, _ ->
+                    event.browseEventHandlers.onWillNavigate.addLast { page, _ ->
                         page.referrer = null
                         null
                     }

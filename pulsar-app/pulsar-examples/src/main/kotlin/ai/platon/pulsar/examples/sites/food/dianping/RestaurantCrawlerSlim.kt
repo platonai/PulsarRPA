@@ -25,7 +25,7 @@ class RestaurantCrawlerSlim(val session: PulsarSession) {
 
     fun options(args: String): LoadOptions {
         val options = session.options(args)
-        val browseEvent = options.event.browseEvent
+        val browseEvent = options.event.browseEventHandlers
         browseEvent.onWillComputeFeature.addLast { page, driver ->
             IntRange(1, commentSelectors.size)
                 .map { i -> "#reviewlist-wrapper .comment-item:nth-child($i) .more" }

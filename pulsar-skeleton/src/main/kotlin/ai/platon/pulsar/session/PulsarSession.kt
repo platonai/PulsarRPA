@@ -134,7 +134,7 @@ import java.util.concurrent.CompletableFuture
  *
  * ```kotlin
  * val options = session.options(args)
- * options.event.browseEvent.onDocumentSteady.addLast { page, driver ->
+ * options.event.browseEventHandlers.onDocumentSteady.addLast { page, driver ->
  *   driver.fill("input[name='search']", "geek")
  *   driver.click("button[type='submit']")
  * }
@@ -153,16 +153,16 @@ import java.util.concurrent.CompletableFuture
  * */
 interface PulsarSession : AutoCloseable {
     /**
-     * The session id
+     * The session id.
      * */
     val id: Int
     /**
-     * The pulsar context
+     * The pulsar context which is used to create this session.
      * */
     val context: PulsarContext
     /**
-     * An immutable config which is loaded from the config file at process startup, it will never change once the
-     * process is started.
+     * This is an immutable configuration, loaded from the configuration file during process startup.
+     * Once the process has started, this configuration remains unchangeable.
      * */
     val unmodifiedConfig: ImmutableConfig
     /**
@@ -190,7 +190,7 @@ interface PulsarSession : AutoCloseable {
      * */
     fun disablePDCache()
     /**
-     * deprecated
+     * deprecated.
      * */
     @Deprecated("Inappropriate name", ReplaceWith("data(name)"))
     fun getVariable(name: String): Any? = data(name)
