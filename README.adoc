@@ -11,9 +11,27 @@ English | link:README-CN.adoc[简体中文] | https://gitee.com/platonai_galaxye
 
 💖 PulsarRPA is All You Need! 💖
 
-PulsarRPA is the ultimate open source solution to scrape Web data at scale, based on high performance, distributed RPA.
+PulsarRPA is a high-performance, distributed, open-source Robotic Process Automation (RPA) framework. It is designed to handle large-scale RPA tasks with ease, providing a comprehensive solution for browser automation, web content understanding, and data extraction.
 
-Extracting Web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, PulsarRPA has developed a range of cutting-edge technologies to solve this problem.
+PulsarRPA represents the pinnacle of open-source solutions for large-scale web data extraction, leveraging the power of high-performance, distributed RPA). It addresses the inherent challenges of browser automation and extracting accurate, comprehensive web data amidst rapidly evolving and increasingly intricate websites.
+
+*Challenges in Large-Scale Web Data Extraction:*
+
+1. Frequent Website Changes: Online platforms continuously update their layouts, structures, and content, making it difficult to maintain reliable extraction processes over time. Traditional scraping tools may struggle to adapt promptly to these changes, leading to outdated or irrelevant data.
+2. Complex Website Architecture: Modern websites often employ sophisticated design patterns, dynamic content loading, and advanced security measures, presenting formidable obstacles for conventional scraping techniques. Extracting data from such sites requires deep understanding of their structure and behavior, as well as the ability to interact with them as a human user would.
+
+*PulsarRPA: A Game-Changer in Web Data Collection*
+
+To conquer these challenges, PulsarRPA incorporates a suite of innovative technologies that ensure efficient, accurate, and scalable web data extraction:
+
+1. **Browser Rendering:** Utilizes browser rendering and AJAX data crawling to extract content from websites.
+2. **RPA (Robotic Process Automation):** Employs human-like behaviors to interact with webpages, enabling data collection from modern, complex websites.
+3. **Adaptive Crawling:** PulsarRPA employs intelligent crawling algorithms capable of automatically detecting and adapting to website updates in real-time. By monitoring changes in site structure, content, and navigation patterns, it maintains up-to-date extraction rules, ensuring consistent and relevant data collection even as target websites evolve.
+4. **Advanced DOM Parsing:** Leveraging advanced Document Object Model (DOM) parsing techniques, PulsarRPA can navigate complex website architectures with ease. It accurately identifies and extracts data from nested elements, handles dynamic content rendering, and bypasses anti-scraping measures, delivering complete and accurate datasets despite website intricacies.
+5. **Distributed Architecture:** Built on a distributed architecture, PulsarRPA harnesses the combined processing power of multiple nodes to handle large-scale extraction tasks efficiently. This allows for parallel crawling, faster data retrieval, and seamless scalability as your data requirements grow, without compromising performance or reliability.
+6. **Open-Source & Customizable:** As an open-source solution, PulsarRPA offers unparalleled flexibility and extensibility. Developers can easily customize its components, integrate with existing systems, or contribute new features to meet specific project requirements. This collaborative approach fosters a vibrant community that continually enhances the platform's capabilities and adapts to emerging web scraping challenges.
+
+In summary, PulsarRPA stands out as the go-to open-source solution for large-scale web data extraction. Its unique blend of adaptive crawling, advanced DOM parsing, distributed processing, robust exception handling, and open-source nature empowers users to overcome the complexities and challenges associated with extracting valuable web data at scale, ultimately driving more informed decision-making and competitive advantage.
 
 *Most scraping attempts can start with (almost) a single line of code:*
 
@@ -481,18 +499,24 @@ Click link:docs/x-sql.adoc[X-SQL] to see a detailed introduction and function de
 
 We have a step-by-step course by example:
 
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt[BasicUsage]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt[LoadOptions]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_2_URLs.kt[URLs]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt[JvmAsync]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_4_Coroutine.kt[Kotlin Coroutine]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt[Continuous Crawler]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_6_EventHandler.kt[Event Handler]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_7_RPA.kt[RPA]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_8_WebDriver.kt[WebDriver]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt[Large Scale Crawler]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt[X-SQL]
-. link:https://github.com/platonai/exotic-amazon[Practice: Crawl the Top 1 E-comm Site at Scale]
+. link:docs/get-started/1home.md[Home]
+. link:docs/get-started/2basic-usage.md[Basic Usage]
+. link:docs/get-started/3load-options.md[Load Options]
+. link:docs/get-started/4data-extraction.md[Data Extraction]
+. link:docs/get-started/5URL.md[URL]
+. link:docs/get-started/6Java-style-async.md[Java-style Async]
+. link:docs/get-started/7Kotlin-style-async.md[Kotlin-style Async]
+. link:docs/get-started/8continuous-crawling.md[Continuous Crawling]
+. link:docs/get-started/9event-handling.md[Event Handling]
+. link:docs/get-started/10RPA.md[RPA]
+. link:docs/get-started/11WebDriver.md[WebDriver]
+. link:docs/get-started/12massive-crawling.md[Massive Crawling]
+. link:docs/get-started/13X-SQL.md[X-SQL]
+. link:docs/get-started/14AI-extraction.md[AI Extraction]
+. link:docs/get-started/15REST.md[REST]
+. link:docs/get-started/16console.md[Console]
+. link:docs/get-started/17top-practice.md[Top Practice]
+. link:docs/get-started/18miscellaneous.md[Miscellaneous]
 
 == 📊 Logs & Metrics
 
