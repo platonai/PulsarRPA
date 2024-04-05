@@ -195,30 +195,30 @@ abstract class AbstractPulsarContext(
         closableObjects.add(PrioriClosable(priority, closable))
     }
 
-    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
+    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormURL {
         val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
         return normalize(PlainUrl(url0), options, toItemOption)
     }
 
-    override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormUrl? {
+    override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormURL? {
         if (url == null) return null
         return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
     }
 
-    override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormUrl> {
+    override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormURL> {
         return urls.mapNotNull { normalizeOrNull(it, options, toItemOption) }
     }
     
-    override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
+    override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormURL {
         return CombinedUrlNormalizer(urlNormalizerOrNull).normalize(url, options, toItemOption)
     }
 
-    override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl? {
+    override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormURL? {
         if (url == null) return null
         return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
     }
 
-    override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean): List<NormUrl> {
+    override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean): List<NormURL> {
         return urls.mapNotNull { normalizeOrNull(it, options, toItemOption) }
     }
 
@@ -240,7 +240,7 @@ abstract class AbstractPulsarContext(
      * @return The web page created
      */
     @Throws(WebDBException::class)
-    override fun inject(url: NormUrl): WebPage {
+    override fun inject(url: NormURL): WebPage {
         return abnormalPage ?: injectComponent.inject(url.spec, url.args)
     }
 
@@ -324,8 +324,8 @@ abstract class AbstractPulsarContext(
      */
     @Throws(WebDBException::class)
     override fun load(url: String, options: LoadOptions): WebPage {
-        val normUrl = normalize(url, options)
-        return abnormalPage ?: loadComponent.load(normUrl)
+        val normURL = normalize(url, options)
+        return abnormalPage ?: loadComponent.load(normURL)
     }
 
     /**
@@ -347,12 +347,12 @@ abstract class AbstractPulsarContext(
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     @Throws(WebDBException::class)
-    override fun load(url: NormUrl): WebPage {
+    override fun load(url: NormURL): WebPage {
         return abnormalPage ?: loadComponent.load(url)
     }
     
     @Throws(WebDBException::class)
-    override suspend fun loadDeferred(url: NormUrl): WebPage {
+    override suspend fun loadDeferred(url: NormURL): WebPage {
         return abnormalPage ?: loadComponent.loadDeferred(url)
     }
 
@@ -376,19 +376,19 @@ abstract class AbstractPulsarContext(
     }
     
     @Throws(WebDBException::class)
-    override fun loadAll(urls: Iterable<NormUrl>): List<WebPage> {
+    override fun loadAll(urls: Iterable<NormURL>): List<WebPage> {
         startLoopIfNecessary()
         return abnormalPages ?: loadComponent.loadAll(urls)
     }
     
     @Throws(WebDBException::class)
-    override fun loadAsync(url: NormUrl): CompletableFuture<WebPage> {
+    override fun loadAsync(url: NormURL): CompletableFuture<WebPage> {
         startLoopIfNecessary()
         return loadComponentOrNull?.loadAsync(url) ?: CompletableFuture.completedFuture(WebPage.NIL)
     }
     
     @Throws(WebDBException::class)
-    override fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>> {
+    override fun loadAllAsync(urls: Iterable<NormURL>): List<CompletableFuture<WebPage>> {
         startLoopIfNecessary()
         return loadComponentOrNull?.loadAllAsync(urls) ?: listOf()
     }

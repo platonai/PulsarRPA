@@ -7,7 +7,7 @@ In PulsarRPA, each task is defined as some form of URL, which often appears with
 
 A Uniform Resource Locator (URL), commonly known as a web address, is a reference to a network resource that specifies its location on a computer network and the mechanism for retrieving it. URLs in PulsarRPA carry additional information for describing data collection tasks and come in several basic forms:
 
-- A [NormURL](../../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormUrl.kt)
+- A [NormURL](../../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormURL.kt)
 - A String
 - A [UrlAware](../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)
 - A [DegenerateUrl](../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)

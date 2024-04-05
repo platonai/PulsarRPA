@@ -134,12 +134,12 @@ A URL in Pulsar is a normal link:https://en.wikipedia.org/wiki/URL[URL] with ext
 
 There are several basic forms of urls in Pulsar:
 
-* A link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormUrl.kt[ NormUrl]
+* A link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormURL.kt[ NormURL]
 * A String
 * A link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[UrlAware]
 * A link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[DegenerateUrl]
 
-NormUrl stands for `normal url`, which means the url is the final form, and is usually passed to a real browser eventually.
+NormURL stands for `normal url`, which means the url is the final form, and is usually passed to a real browser eventually.
 
 If not specified, a url in string format actually means a `configured url`, or `a url with arguments`, for example:
 [source,kotlin]

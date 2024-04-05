@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.PageEvent
@@ -236,7 +236,7 @@ interface PulsarSession : AutoCloseable {
      * @param url The url to normalize
      * @return The normalized url
      * */
-    fun normalize(url: String): NormUrl
+    fun normalize(url: String): NormURL
     /**
      * Normalize a url.
      *
@@ -245,7 +245,7 @@ interface PulsarSession : AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return The normalized url
      * */
-    fun normalize(url: String, args: String, toItemOption: Boolean = false): NormUrl
+    fun normalize(url: String, args: String, toItemOption: Boolean = false): NormURL
     /**
      * Normalize a url.
      *
@@ -254,7 +254,7 @@ interface PulsarSession : AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return The normalized url
      * */
-    fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormUrl
+    fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormURL
     /**
      * Normalize a url, return null if the url is invalid.
      *
@@ -263,14 +263,14 @@ interface PulsarSession : AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return The normalized url or null
      * */
-    fun normalizeOrNull(url: String?, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl?
+    fun normalizeOrNull(url: String?, options: LoadOptions = options(), toItemOption: Boolean = false): NormURL?
     /**
      * Normalize urls, remove invalid ones.
      *
      * @param urls The urls to normalize
      * @return All normalized urls
      * */
-    fun normalize(urls: Iterable<String>): List<NormUrl>
+    fun normalize(urls: Iterable<String>): List<NormURL>
     /**
      * Normalize urls, remove invalid ones.
      *
@@ -279,7 +279,7 @@ interface PulsarSession : AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return All normalized urls
      * */
-    fun normalize(urls: Iterable<String>, args: String, toItemOption: Boolean = false): List<NormUrl>
+    fun normalize(urls: Iterable<String>, args: String, toItemOption: Boolean = false): List<NormURL>
     /**
      * Normalize urls, remove invalid ones.
      *
@@ -288,32 +288,32 @@ interface PulsarSession : AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return All normalized urls
      * */
-    fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
+    fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormURL>
     /**
-     * Normalize a url, return `NormUrl.NIL` if the url is invalid.
+     * Normalize a url, return `NormURL.NIL` if the url is invalid.
      *
      * @param url The url to normalize
      * @return The normalized url
      * */
-    fun normalize(url: UrlAware): NormUrl
+    fun normalize(url: UrlAware): NormURL
     /**
-     * Normalize a url, return `NormUrl.NIL` if the url is invalid.
+     * Normalize a url, return `NormURL.NIL` if the url is invalid.
      *
      * @param url The url to normalize
      * @param args The arguments
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return The normalized url
      * */
-    fun normalize(url: UrlAware, args: String, toItemOption: Boolean = false): NormUrl
+    fun normalize(url: UrlAware, args: String, toItemOption: Boolean = false): NormURL
     /**
-     * Normalize a url, return `NormUrl.NIL` if the url is invalid.
+     * Normalize a url, return `NormURL.NIL` if the url is invalid.
      *
      * @param url The url to normalize
      * @param options The LoadOptions applied to the url
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return The normalized url
      * */
-    fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormUrl
+    fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormURL
     /**
      * Normalize a url, return null if the url is invalid.
      *
@@ -322,14 +322,14 @@ interface PulsarSession : AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return The normalized url or null
      * */
-    fun normalizeOrNull(url: UrlAware?, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl?
+    fun normalizeOrNull(url: UrlAware?, options: LoadOptions = options(), toItemOption: Boolean = false): NormURL?
     /**
      * Normalize urls, remove invalid ones.
      *
      * @param urls The urls to normalize
      * @return All normalized urls
      * */
-    fun normalize(urls: Collection<UrlAware>): List<NormUrl>
+    fun normalize(urls: Collection<UrlAware>): List<NormURL>
     /**
      * Normalize urls, remove invalid ones
      *
@@ -338,7 +338,7 @@ interface PulsarSession : AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return All normalized urls, all invalid input urls are removed
      * */
-    fun normalize(urls: Collection<UrlAware>, args: String, toItemOption: Boolean = false): List<NormUrl>
+    fun normalize(urls: Collection<UrlAware>, args: String, toItemOption: Boolean = false): List<NormURL>
     
     /**
      * Normalize urls, remove invalid ones
@@ -348,7 +348,7 @@ interface PulsarSession : AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return All normalized urls, all invalid input urls are removed
      * */
-    fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
+    fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean = false): List<NormURL>
     
     /**
      * Get a page from local storage.
@@ -627,7 +627,7 @@ interface PulsarSession : AutoCloseable {
      * * @param url The normal url
      * @return The webpage loaded or NIL
      */
-    fun load(url: NormUrl): WebPage
+    fun load(url: NormURL): WebPage
     
     /**
      * Load a url with specified options.
@@ -729,7 +729,7 @@ interface PulsarSession : AutoCloseable {
      * @param url The normal url
      * @return The webpage loaded or NIL
      */
-    suspend fun loadDeferred(url: NormUrl): WebPage
+    suspend fun loadDeferred(url: NormURL): WebPage
     
     /**
      * Load all urls with specified options
@@ -845,7 +845,7 @@ interface PulsarSession : AutoCloseable {
      * @param normUrls    The normal urls to load
      * @return The successfully loaded webpages, all failed urls are ignored
      */
-    fun loadAll(normUrls: List<NormUrl>): List<WebPage>
+    fun loadAll(normUrls: List<NormURL>): List<WebPage>
     
     /**
      * Load a url in java async style
@@ -928,14 +928,14 @@ interface PulsarSession : AutoCloseable {
      * Load a normal url in java async style
      *
      * ```java
-     * NormUrl url = session.normalize("http://example.com");
+     * NormURL url = session.normalize("http://example.com");
      * WebPage page = session.loadAsync(url).join();
      * ```
      *
      * @param url     The normal url to load
      * @return A completable future of webpage
      */
-    fun loadAsync(url: NormUrl): CompletableFuture<WebPage>
+    fun loadAsync(url: NormURL): CompletableFuture<WebPage>
     
     /**
      * Load all urls in java async style
@@ -1046,7 +1046,7 @@ interface PulsarSession : AutoCloseable {
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
      *
      * ```java
-     * List<NormUrl> urls = Arrays.asList(session.normalize("http://example.com"), session.normalize("http://example.com/1"));
+     * List<NormURL> urls = Arrays.asList(session.normalize("http://example.com"), session.normalize("http://example.com/1"));
      * CompletableFuture<?>[] pages = session.loadAllAsync(urls).toArray(CompletableFuture<?>[]::new);
      * CompletableFuture.allOf(futures).join();
      * ```
@@ -1054,7 +1054,7 @@ interface PulsarSession : AutoCloseable {
      * @param urls The normal urls to load
      * @return The completable futures of webpages
      */
-    fun loadAllAsync(urls: List<NormUrl>): List<CompletableFuture<WebPage>>
+    fun loadAllAsync(urls: List<NormURL>): List<CompletableFuture<WebPage>>
     
     /**
      * Submit a url to the URL pool, and it will be subsequently processed in the crawl loop.
@@ -1403,8 +1403,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * A confusing version, it's too complicated to handle events and should not be implemented.
      */
-    fun loadOutPages(portalUrl: NormUrl): List<WebPage> =
-        throw NotImplementedError("The signature loadOutPages(NormUrl) is " +
+    fun loadOutPages(portalUrl: NormURL): List<WebPage> =
+        throw NotImplementedError("The signature loadOutPages(NormURL) is " +
             "a confusing version, it's too complicated to handle events and should not be implemented.")
     
     /**
@@ -1740,7 +1740,7 @@ interface PulsarSession : AutoCloseable {
      * @param url The url to load
      * @return The parsed HTML document
      * */
-    fun loadDocument(url: NormUrl): FeaturedDocument
+    fun loadDocument(url: NormURL): FeaturedDocument
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.

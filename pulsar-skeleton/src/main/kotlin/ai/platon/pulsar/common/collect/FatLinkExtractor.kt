@@ -68,9 +68,9 @@ class FatLinkExtractor(
         createFatLink(page, document, options)
     }
 
-    fun createFatLink(seed: NormUrl): PageFatLink? = createFatLink(seed, listOf())
+    fun createFatLink(seed: NormURL): PageFatLink? = createFatLink(seed, listOf())
 
-    fun createFatLink(seed: NormUrl, page: WebPage, denyList: Collection<UrlAware>): PageFatLink? {
+    fun createFatLink(seed: NormURL, page: WebPage, denyList: Collection<UrlAware>): PageFatLink? {
         ++counters.loadedSeeds
         ++globalCounters.loadedSeeds
 
@@ -83,7 +83,7 @@ class FatLinkExtractor(
         return createFatLink(seed, page, document, denyList)
     }
 
-    fun createFatLink(seed: NormUrl, denyList: Collection<UrlAware>): PageFatLink? {
+    fun createFatLink(seed: NormURL, denyList: Collection<UrlAware>): PageFatLink? {
         // TODO: we can use an event handler to extract links
 //        val handler = object: HtmlDocumentHandler() {
 //            override val name = CapabilityTypes.FETCH_AFTER_EXTRACT_HANDLER
@@ -105,10 +105,10 @@ class FatLinkExtractor(
     }
 
     fun createFatLink(page: WebPage, document: FeaturedDocument, options: LoadOptions): PageFatLink? {
-        return createFatLink(NormUrl(page.url, options), page, document)
+        return createFatLink(NormURL(page.url, options), page, document)
     }
 
-    fun createFatLink(seed: NormUrl, page: WebPage, document: FeaturedDocument): PageFatLink? {
+    fun createFatLink(seed: NormURL, page: WebPage, document: FeaturedDocument): PageFatLink? {
         return createFatLink(seed, page, document, listOf())
     }
 
@@ -118,7 +118,7 @@ class FatLinkExtractor(
      * vivid link, the vivid link can be parsed and saved recently
      * */
     fun createFatLink(
-        seed: NormUrl, page: WebPage, document: FeaturedDocument? = null, denyList: Collection<UrlAware>
+        seed: NormURL, page: WebPage, document: FeaturedDocument? = null, denyList: Collection<UrlAware>
     ): PageFatLink? {
         val fatLinkSpec = seed.spec
         val normalizedFatLink = normalizer.invoke(fatLinkSpec) ?: fatLinkSpec
@@ -167,7 +167,7 @@ class FatLinkExtractor(
     }
 
     private fun parseVividLinks(
-        seed: NormUrl, page: WebPage, document: FeaturedDocument, denyList: Collection<UrlAware>
+        seed: NormURL, page: WebPage, document: FeaturedDocument, denyList: Collection<UrlAware>
     ): List<StatefulHyperlink> {
         val now = Instant.now()
         val fatLinkSpec = seed.spec
@@ -194,9 +194,9 @@ class FatLinkExtractor(
     }
 
     private fun normalizeOrNull(hyperlink: Hyperlink): Hyperlink? {
-        val normUrl = normalizer(hyperlink.url)
-        return if (normUrl != null) {
-            hyperlink.also { it.url = normUrl }
+        val normURL = normalizer(hyperlink.url)
+        return if (normURL != null) {
+            hyperlink.also { it.url = normURL }
         } else null
     }
 

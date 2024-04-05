@@ -43,8 +43,8 @@ class LoadComponentTests: TestBase() {
 
     @Test
     fun testLoadAsync() {
-        val normUrl = session.normalize(url, args)
-        val future = loadComponent.loadAsync(normUrl)
+        val normURL = session.normalize(url, args)
+        val future = loadComponent.loadAsync(normURL)
         assertFalse(future.isCancelled)
         assertFalse(future.isDone)
         future.thenAccept { println(it.url) }

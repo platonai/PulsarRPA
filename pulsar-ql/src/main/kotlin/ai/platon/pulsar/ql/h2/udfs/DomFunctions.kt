@@ -53,8 +53,8 @@ object DomFunctions {
 
         val h2session = H2SessionFactory.getH2Session(conn)
         val session = sqlContext.getSession(h2session.serialId)
-        val normUrl = session.normalize(configuredUrl).apply { options.expires = Duration.ZERO }
-        return session.parseValueDom(session.load(normUrl))
+        val normURL = session.normalize(configuredUrl).apply { options.expires = Duration.ZERO }
+        return session.parseValueDom(session.load(normURL))
     }
 
     /**

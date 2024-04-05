@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.common.GlobalCache
@@ -107,7 +107,7 @@ interface PulsarContext: AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return The normalized url or NIL if the input url is invalid
      * */
-    fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormUrl
+    fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormURL
 
     /**
      * Normalize an url, the url can be in one of the following forms:
@@ -125,7 +125,7 @@ interface PulsarContext: AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return The normalized url or null if the input url is invalid
      * */
-    fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean = false): NormUrl?
+    fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean = false): NormURL?
 
     /**
      * Normalize urls, remove invalid ones
@@ -135,7 +135,7 @@ interface PulsarContext: AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return All normalized urls, all invalid input urls are removed
      * */
-    fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
+    fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormURL>
     /**
      * Normalize an url.
      *
@@ -147,7 +147,7 @@ interface PulsarContext: AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return The normalized url or NIL if the input url is invalid
      * */
-    fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormUrl
+    fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormURL
     /**
      * Normalize an url, the url can be in one of the following forms:
      * 1. a normal url
@@ -164,7 +164,7 @@ interface PulsarContext: AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return The normalized url or null if the input url is invalid
      * */
-    fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean = false): NormUrl?
+    fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean = false): NormURL?
     /**
      * Normalize urls, remove invalid ones
      *
@@ -173,7 +173,7 @@ interface PulsarContext: AutoCloseable {
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return All normalized urls, all invalid input urls are removed
      * */
-    fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
+    fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean = false): List<NormURL>
     /**
      * Inject an url
      *
@@ -187,7 +187,7 @@ interface PulsarContext: AutoCloseable {
      * @param url The url followed by config options
      * @return The web page created
      */
-    fun inject(url: NormUrl): WebPage
+    fun inject(url: NormURL): WebPage
     /**
      * Get a webpage from the storage
      *
@@ -291,7 +291,7 @@ interface PulsarContext: AutoCloseable {
      * @param url The url followed by options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
-    fun load(url: NormUrl): WebPage
+    fun load(url: NormURL): WebPage
 
     /**
      * Load a url, options can be specified following the url, see [LoadOptions] for all options
@@ -299,7 +299,7 @@ interface PulsarContext: AutoCloseable {
      * @param url The url followed by options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
-    suspend fun loadDeferred(url: NormUrl): WebPage
+    suspend fun loadDeferred(url: NormURL): WebPage
 
     /**
      * Load a batch of urls with the specified options.
@@ -328,17 +328,17 @@ interface PulsarContext: AutoCloseable {
      * @param urls    The urls to load
      * @return Pages for all urls.
      */
-    fun loadAll(urls: Iterable<NormUrl>): Collection<WebPage>
+    fun loadAll(urls: Iterable<NormURL>): Collection<WebPage>
 
     /**
      * Load a url asynchronously, the url is added to the task queue, and will be executed asynchronously
      * */
-    fun loadAsync(url: NormUrl): CompletableFuture<WebPage>
+    fun loadAsync(url: NormURL): CompletableFuture<WebPage>
 
     /**
      * Load a batch of urls asynchronously, the urls are added to the task queue, and will be executed asynchronously
      * */
-    fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>>
+    fun loadAllAsync(urls: Iterable<NormURL>): List<CompletableFuture<WebPage>>
 
     /**
      * Submit a url, the url will be added to the task queue, and will be executed asynchronously.

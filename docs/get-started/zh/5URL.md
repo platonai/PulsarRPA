@@ -7,7 +7,7 @@ URL
 
 统一资源定位符(URL)，俗称网址，是对网络资源的引用，指定其在计算机网络上的位置和检索它的机制。PulsarRPA 中的 URL 带有描述数据采集任务的额外信息，有几种基本形式：
 
-- A [NormURL](../../../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormUrl.kt)
+- A [NormURL](../../../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormURL.kt)
 - A String
 - A [UrlAware](../../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)
 - A [DegenerateUrl](../../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)

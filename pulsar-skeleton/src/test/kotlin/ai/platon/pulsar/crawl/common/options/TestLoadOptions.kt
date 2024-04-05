@@ -259,8 +259,8 @@ class TestLoadOptions {
     @Test
     fun testNormalizeOptions() {
         val op = LoadOptions.parse(UrlUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure").second, conf)
-        val normUrl = i.normalize(url, op)
-        val options = normUrl.options
+        val normURL = i.normalize(url, op)
+        val options = normURL.options
         assertTrue(options.incognito)
         assertEquals(1, options.expires.seconds)
         assertTrue(options.ignoreFailure)
@@ -269,10 +269,10 @@ class TestLoadOptions {
     @Test
     fun testNormalizeOptions2() {
         val options = LoadOptions.parse(UrlUtils.splitUrlArgs("$url $args -incognito -expires 1s -ignoreFailure -storeContent false").second, conf)
-        val normUrl = i.normalize(url, options)
+        val normURL = i.normalize(url, options)
 
-        println(normUrl.configuredUrl)
-        val normUrl2 = i.normalize(normUrl.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d", conf))
+        println(normURL.configuredUrl)
+        val normUrl2 = i.normalize(normURL.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d", conf))
 
         assertTrue { normUrl2.options.ignoreFailure }
 
@@ -286,8 +286,8 @@ class TestLoadOptions {
         val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
         val hyperlink = StatefulListenableHyperlink(url, args = "-i 0s")
         
-        val normUrl = i.normalize(hyperlink)
-        assertEquals(0, normUrl.options.expires.seconds)
+        val normURL = i.normalize(hyperlink)
+        assertEquals(0, normURL.options.expires.seconds)
     }
 
     @Test
@@ -299,10 +299,10 @@ class TestLoadOptions {
     @Test
     fun testNormalizeItemOptions() {
         val options = LoadOptions.parse(UrlUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure").second, conf)
-        val normUrl = i.normalize(url, options)
-        println(normUrl.configuredUrl)
+        val normURL = i.normalize(url, options)
+        println(normURL.configuredUrl)
 
-        val normUrl2 = i.normalize(normUrl.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d", conf), toItemOption = true)
+        val normUrl2 = i.normalize(normURL.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d", conf), toItemOption = true)
         println(normUrl2.configuredUrl)
 
         assertEquals(Duration.ofDays(1), normUrl2.options.expires)

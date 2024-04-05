@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
@@ -173,12 +173,12 @@ abstract class AbstractPulsarSession(
 
     override fun load(url: UrlAware, options: LoadOptions): WebPage = load(normalize(url, options))
 
-    override fun load(normUrl: NormUrl): WebPage {
+    override fun load(normURL: NormURL): WebPage {
         if (!enablePDCache) {
-            return context.load(normUrl)
+            return context.load(normURL)
         }
 
-        return createPageWithCachedCoreOrNull(normUrl) ?: loadAndCache(normUrl)
+        return createPageWithCachedCoreOrNull(normURL) ?: loadAndCache(normURL)
     }
 
     override suspend fun loadDeferred(url: String, args: String) = loadDeferred(normalize(url, options(args)))
@@ -191,7 +191,7 @@ abstract class AbstractPulsarSession(
     override suspend fun loadDeferred(url: UrlAware, options: LoadOptions): WebPage =
         loadDeferred(normalize(url, options))
 
-    override suspend fun loadDeferred(url: NormUrl): WebPage {
+    override suspend fun loadDeferred(url: NormURL): WebPage {
         if (!enablePDCache) {
             return context.loadDeferred(url)
         }
@@ -211,7 +211,7 @@ abstract class AbstractPulsarSession(
 
     override fun loadAll(urls: Collection<UrlAware>, options: LoadOptions) = loadAll(normalize(urls, options))
 
-    override fun loadAll(normUrls: List<NormUrl>) = context.loadAll(normUrls)
+    override fun loadAll(normUrls: List<NormURL>) = context.loadAll(normUrls)
 
     override fun loadAsync(url: String) = loadAsync(normalize(url))
 
@@ -225,7 +225,7 @@ abstract class AbstractPulsarSession(
 
     override fun loadAsync(url: UrlAware, options: LoadOptions) = loadAsync(normalize(url, options))
 
-    override fun loadAsync(url: NormUrl) = context.loadAsync(url)
+    override fun loadAsync(url: NormURL) = context.loadAsync(url)
 
     override fun loadAllAsync(urls: Iterable<String>) = loadAllAsync(normalize(urls))
 
@@ -239,7 +239,7 @@ abstract class AbstractPulsarSession(
 
     override fun loadAllAsync(urls: Collection<UrlAware>, options: LoadOptions) = loadAllAsync(normalize(urls, options))
 
-    override fun loadAllAsync(urls: List<NormUrl>) = context.loadAllAsync(urls)
+    override fun loadAllAsync(urls: List<NormURL>) = context.loadAllAsync(urls)
 
     override fun submit(url: String) = submit(PlainUrl(url))
 
@@ -317,7 +317,7 @@ abstract class AbstractPulsarSession(
 
     override fun loadDocument(url: UrlAware, options: LoadOptions) = parse(load(url, options))
 
-    override fun loadDocument(url: NormUrl) = parse(load(url))
+    override fun loadDocument(url: NormURL) = parse(load(url))
 
     override fun scrape(url: String, args: String, fieldSelectors: Iterable<String>): Map<String, String?> =
         scrape(url, options(args), fieldSelectors)
@@ -478,14 +478,14 @@ abstract class AbstractPulsarSession(
         return context.parse(page) ?: nil
     }
 
-    private fun loadAndCache(normUrl: NormUrl): WebPage {
-        return context.load(normUrl).also {
+    private fun loadAndCache(normURL: NormURL): WebPage {
+        return context.load(normURL).also {
             pageCacheOrNull?.putDatum(it.url, it)
         }
     }
 
-    private suspend fun loadAndCacheDeferred(normUrl: NormUrl): WebPage {
-        return context.loadDeferred(normUrl).also {
+    private suspend fun loadAndCacheDeferred(normURL: NormURL): WebPage {
+        return context.loadDeferred(normURL).also {
             pageCacheOrNull?.putDatum(it.url, it)
         }
     }
@@ -498,18 +498,18 @@ abstract class AbstractPulsarSession(
      *
      * TODO: handle the session cache and the FetchComponent cache
      * */
-    private fun createPageWithCachedCoreOrNull(normUrl: NormUrl): WebPage? {
-        if (!normUrl.options.readonly) {
+    private fun createPageWithCachedCoreOrNull(normURL: NormURL): WebPage? {
+        if (!normURL.options.readonly) {
             return null
         }
 
         // We have events to handle, so do not use the cached version
-        if (normUrl.options.rawEvent != null) {
+        if (normURL.options.rawEvent != null) {
             return null
         }
 
-        val cachedPage = getCachedPageOrNull(normUrl)
-        val page = FetchEntry.createPageShell(normUrl)
+        val cachedPage = getCachedPageOrNull(normURL)
+        val page = FetchEntry.createPageShell(normURL)
 
         if (cachedPage != null) {
             // the cached page can be or not be persisted, but not guaranteed
@@ -518,7 +518,7 @@ abstract class AbstractPulsarSession(
 
             page.isCached = true
             page.tmpContent = cachedPage.tmpContent
-            page.args = normUrl.args
+            page.args = normURL.args
 
             return page
         }
@@ -526,8 +526,8 @@ abstract class AbstractPulsarSession(
         return null
     }
 
-    private fun getCachedPageOrNull(normUrl: NormUrl): WebPage? {
-        val (url, options) = normUrl
+    private fun getCachedPageOrNull(normURL: NormURL): WebPage? {
+        val (url, options) = normURL
         if (options.refresh) {
             // refresh the page, do not take cached version
             return null
@@ -554,16 +554,16 @@ abstract class AbstractPulsarSession(
     }
 
     private fun loadOutPages0(portalUrl: UrlAware, options: LoadOptions): List<WebPage> {
-        val normUrl = normalize(portalUrl, options)
-        val opts = normUrl.options
+        val normURL = normalize(portalUrl, options)
+        val opts = normURL.options
 
         val selector = opts.outLinkSelectorOrNull ?: return listOf()
-        val itemOpts = normUrl.options.createItemOptions()
+        val itemOpts = normURL.options.createItemOptions()
 
-        require(normUrl.options.rawEvent == options.rawEvent)
+        require(normURL.options.rawEvent == options.rawEvent)
         require(options.rawItemEvent == itemOpts.rawEvent)
 
-        val links = loadDocument(normUrl)
+        val links = loadDocument(normURL)
             .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
             .mapNotNullTo(mutableSetOf()) { it }
             .take(opts.topLinks)
@@ -572,12 +572,12 @@ abstract class AbstractPulsarSession(
     }
 
     private fun submitForOutPages0(portalUrl: UrlAware, options: LoadOptions): AbstractPulsarSession {
-        val normUrl = normalize(portalUrl, options)
-        val opts = normUrl.options
+        val normURL = normalize(portalUrl, options)
+        val opts = normURL.options
         val selector = opts.outLinkSelectorOrNull ?: return this
-        val itemOpts = normUrl.options.createItemOptions()
+        val itemOpts = normURL.options.createItemOptions()
 
-        val outLinks = loadDocument(normUrl)
+        val outLinks = loadDocument(normURL)
             .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
             .mapNotNullTo(mutableSetOf()) { it }
             .take(opts.topLinks)
@@ -590,16 +590,16 @@ abstract class AbstractPulsarSession(
     }
 
     private fun loadOutPagesAsync0(portalUrl: String, options: LoadOptions): List<CompletableFuture<WebPage>> {
-        val normUrl = normalize(portalUrl, options)
-        val opts = normUrl.options
-        val itemOpts = normUrl.options.createItemOptions()
+        val normURL = normalize(portalUrl, options)
+        val opts = normURL.options
+        val itemOpts = normURL.options.createItemOptions()
         val selector = opts.outLinkSelectorOrNull ?: return listOf()
 
-        val outLinks = loadDocument(normUrl)
+        val outLinks = loadDocument(normURL)
             .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
             .mapNotNullTo(mutableSetOf()) { it }
             .take(opts.topLinks)
-            .map { NormUrl(it, itemOpts) }
+            .map { NormURL(it, itemOpts) }
 
         return loadAllAsync(outLinks)
     }
