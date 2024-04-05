@@ -1,6 +1,6 @@
 # X-SQL
 
-English | [简体中文](x-sql-CN.adoc)
+English | [简体中文](zh/x-sql.md)
 
 ## Introduction
 

@@ -31,8 +31,8 @@ Get-ChildItem "$APP_HOME" -Depth 3 -Filter 'pom.xml' -Recurse | ForEach-Object {
 
 # Files containing the version number to upgrade
 $VERSION_AWARE_FILES = @(
-  "$APP_HOME\README.adoc"
-  "$APP_HOME\README-CN.adoc"
+  "$APP_HOME\README.md"
+  "$APP_HOME\README.md"
 )
 
 # Replace version numbers in files

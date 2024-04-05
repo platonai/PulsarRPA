@@ -182,8 +182,8 @@
                             <!-- List of '.md' files with package and module docs -->
                             <!-- https://kotlinlang.org/docs/reference/kotlin-doc.html#module-and-package-documentation -->
 <!--                            <includes>-->
-<!--                                <include>README.adoc</include>-->
-<!--                                <include>README-CN.adoc</include>-->
+<!--                                <include>README.md</include>-->
+<!--                                <include>README.md</include>-->
 <!--                            </includes>-->
 
                             <!-- List of sample roots -->

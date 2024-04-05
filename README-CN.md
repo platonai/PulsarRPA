@@ -280,7 +280,7 @@ session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(sess
 - `-parse`       // 激活解析子系统
 - `-resource`    // 无需浏览器渲染获取 URL 作为资源
 
-点击 [Load Options](https://www.example.com/docs/concepts-CN.adoc#_load_options) 查看详情。
+点击 [Load Options](https://www.example.com/docs/concepts.md#_load_options) 查看详情。
 
 # 提取网页数据
 
@@ -429,7 +429,7 @@ git clone https://github.com/platonai/pulsar.git
 cd pulsar && bin/build-run.sh
 ```
 
-对于国内开发者，我们强烈建议您按照 [这个](https://github.com/platonai/pulsar/blob/master/bin/tools/maven/maven-settings.adoc) 指导来加速构建。
+对于国内开发者，我们强烈建议您按照 [这个](https://github.com/platonai/pulsar/blob/master/bin/tools/maven/maven-settings.md) 指导来加速构建。
 
 ## 使用 X-SQL 查询 Web
 
@@ -519,7 +519,7 @@ Json 格式的响应如下：
 
 PulsarRPA 精心设计了日志和指标子系统，以记录系统中发生的每一个事件。通过 PulsarRPA 的日志系统，您可以轻松地了解系统中发生的每一件事情，判断系统运行是否健康，以及成功获取了多少页面、重试了多少页面、使用了多少代理 IP 等信息。
 
-通过观察几个简单的符号，您可以快速了解整个系统的状态：💯 💔 🗙 ⚡ 💿 🔃 🤺。以下是一组典型的页面加载日志。要了解如何阅读日志，请查看 [日志格式]( docs/log-format.adoc)，以便快速掌握整个系统的状态。
+通过观察几个简单的符号，您可以快速了解整个系统的状态：💯 💔 🗙 ⚡ 💿 🔃 🤺。以下是一组典型的页面加载日志。要了解如何阅读日志，请查看 [日志格式]( docs/log-format.md)，以便快速掌握整个系统的状态。
 
 ```text
 2022-09-24 11:46:26.045  INFO [-worker-14] a.p.p.c.c.L.Task - 3313. 💯 ⚡ U for N got 200 580.92 KiB in 1m14.277s, fc:1 | 75/284/96/277/6554 | 106.32.12.75 | 3xBpaR2 | https://www.walmart.com/ip/Restored-iPhone-7-32GB-Black-T-Mobile-Refurbished/329207863 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
@@ -541,7 +541,7 @@ PulsarRPA 已在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上�
 
 # 🛸 高级主题
 
-如果您对 PulsarRPA 的高级主题感兴趣，可以查看 [advanced topics]( docs/faq/advanced-topics.adoc) 以获取以下问题的答案：
+如果您对 PulsarRPA 的高级主题感兴趣，可以查看 [advanced topics]( docs/faq/advanced-topics.md) 以获取以下问题的答案：
 
 - 大规模网络爬虫有什么困难？
 - 如何每天从电子商务网站上抓取一百万个产品页面？
@@ -566,7 +566,7 @@ PulsarRPA 已在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上�
 
 # 🆚 同其他方案的对比
 
-PulsarRPA 在 “主要特性” 部分中提到的特性都得到了良好的支持，而其他解决方案可能不支持或者支持不好。您可以点击 [solution comparison]( docs/faq/solution-comparison.adoc) 查看以下问题的答案：
+PulsarRPA 在 “主要特性” 部分中提到的特性都得到了良好的支持，而其他解决方案可能不支持或者支持不好。您可以点击 [solution comparison]( docs/faq/solution-comparison.md) 查看以下问题的答案：
 
 - PulsarRPA vs selenium/puppeteer/playwright
 - PulsarRPA vs nutch
@@ -574,7 +574,7 @@ PulsarRPA 在 “主要特性” 部分中提到的特性都得到了良好的�
 
 # 🤓 技术细节
 
-如果您对 PulsarRPA 的技术细节感兴趣，可以查看 [technical details]( docs/faq/technical-details.adoc) 以获取以下问题的答案：
+如果您对 PulsarRPA 的技术细节感兴趣，可以查看 [technical details]( docs/faq/technical-details.md) 以获取以下问题的答案：
 
 - 如何轮换我的 IP 地址？
 - 如何隐藏我的机器人不被检测到？

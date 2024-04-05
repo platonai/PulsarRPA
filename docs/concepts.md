@@ -1,6 +1,6 @@
 # PulsarRPA Concepts
 
-English | [简体中文](concepts-CN.adoc)
+English | [简体中文](zh/concepts.md)
 
 This document describes the concepts of PulsarRPA.
 

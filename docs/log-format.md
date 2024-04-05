@@ -1,19 +1,13 @@
 The Pulsar log format explained
 =============================
 
-Vincent Zhang <ivincent.zhang@gmail.com>
-3.0, Sep 24, 2022: The Pulsar log format explained
-
-:toc:
-:icons: font
-
 PulsarRPA has carefully designed the logging and metrics subsystem to record every event that occurs in the system. This document explains the format of typical logs.
 
 PulsarRPA splits all logs into several separate files:
 
 ```
 logs/pulsar.log    - the default logs
-logs/pulsar.pg.log - mainly reports the status of load/fetch tasks
+logs/pulsar.pg.log - mainly reports the status of load tasks
 logs/pulsar.m.log  - the metrics
 ```
 
@@ -161,4 +155,5 @@ https://www.walmart.com/ip/182353175  -expires PT24H -ignoreFailure -itemExpires
 https://www.walmart.com/ip/209201965  -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 ```
 
-The URL field is the URL to fetch, which can be followed by load arguments or load options. For details, check [Load Options].
+The URL field is the URL to fetch, which can be followed by load arguments or load options. 
+For details, check [Load Options](zh/get-started/3load-options.md).

@@ -508,7 +508,7 @@ class LoadComponent(
             taskLogger.info(report)
 
             if (reportCount == 0) {
-                val logExplainUrl = "https://github.com/platonai/PulsarRPA/blob/master/docs/log-format.adoc"
+                val logExplainUrl = "https://github.com/platonai/PulsarRPA/blob/master/docs/log-format.md"
                 taskLogger.info("Log explanation: $logExplainUrl")
             }
 

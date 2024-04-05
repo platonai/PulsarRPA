@@ -1,6 +1,6 @@
 # What is PulsarRPA?
 
-English | [简体中文](README-CN.adoc) | [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
+English | [简体中文](README.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
 
 ## 🚄 Get started
 
@@ -10,10 +10,10 @@ PulsarRPA is a high-performance, distributed, open-source Robotic Process Automa
 
 PulsarRPA represents the pinnacle of open-source solutions for large-scale web data extraction, leveraging the power of high-performance, distributed RPA. It addresses the inherent challenges of browser automation and extracting accurate, comprehensive web data amidst rapidly evolving and increasingly intricate websites.
 
-### Challenges in Large-Scale Web Data Extraction:
+### Challenges in Large-Scale Web Data Extraction
 
-1. Frequent Website Changes: Online platforms continuously update their layouts, structures, and content, making it difficult to maintain reliable extraction processes over time. Traditional scraping tools may struggle to adapt promptly to these changes, leading to outdated or irrelevant data.
-2. Complex Website Architecture: Modern websites often employ sophisticated design patterns, dynamic content loading, and advanced security measures, presenting formidable obstacles for conventional scraping techniques. Extracting data from such sites requires deep understanding of their structure and behavior, as well as the ability to interact with them as a human user would.
+1. **Frequent Website Changes**: Online platforms continuously update their layouts, structures, and content, making it difficult to maintain reliable extraction processes over time. Traditional scraping tools may struggle to adapt promptly to these changes, leading to outdated or irrelevant data.
+2. **Complex Website Architecture**: Modern websites often employ sophisticated design patterns, dynamic content loading, and advanced security measures, presenting formidable obstacles for conventional scraping techniques. Extracting data from such sites requires deep understanding of their structure and behavior, as well as the ability to interact with them as a human user would.
 
 ### PulsarRPA: A Game-Changer in Web Data Collection
 
@@ -34,6 +34,7 @@ Most scraping attempts can start with (almost) a single line of code:
 fun main() = PulsarContexts.createSession().scrapeOutPages(
   "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ```
+
 The code above scrapes fields specified by CSS selectors #title and #acrCustomerReviewText from a set of product pages.
 
 Example code: [kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt).
@@ -55,6 +56,7 @@ fun main() {
     context.submitAll(urls).await()
 }
 ```
+
 Example code: [kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
 
 The #most complicated# crawl challenges can be resolved with advanced RPA:
@@ -82,6 +84,7 @@ event.onWillCheckDocumentState.addLast { page, driver ->
 // visit the URL and trigger events
 session.load(url, options)
 ```
+
 Example code: [kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
 The #most complicated# Web data extraction problems can be handled by X-SQL:
@@ -95,6 +98,7 @@ select
     str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
 from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body');
 ```
+
 Example code:
 
 * [X-SQL to scrape 100+ fields from an Amazon's product page](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
@@ -153,7 +157,7 @@ The core PulsarRPA concepts include the following, knowing these core concepts, 
 * Load Options: load options, or load arguments are control parameters that affect how PulsarRPA loads, fetches, and crawls webpages
 * Event Handlers: capture and process events throughout the lifecycle of webpages
 
-Check [PulsarRPA concepts](docs/concepts.adoc#_the_core_concepts_of_pulsar) for details.
+Check [PulsarRPA concepts](docs/concepts.md#_the_core_concepts_of_pulsar) for details.
 
 ## 🧮 PulsarRPA as an executable jar
 
@@ -168,12 +172,13 @@ We have released a standalone executable jar based on PulsarRPA, which includes:
 
 Download [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro#download) and explore its capabilities with a single command line:
 
-    java -jar exotic-standalone.jar
-
+java -jar exotic-standalone.jar
 ## 🎁 PulsarRPA as a java library
+
 The simplest way to leverage the power of PulsarRPA is to add it to your project as a library.
 
 Maven:
+
 ```xml
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
@@ -181,12 +186,11 @@ Maven:
   <version>1.12.4</version>
 </dependency>
 ```
-
 Gradle:
+
 ```kotlin
 implementation("ai.platon.pulsar:pulsar-all:1.12.4")
 ```
-
 You can clone the template project from github.com: [kotlin](https://github.com/platonai/pulsar-kotlin-template), [java-11](https://github.com/platonai/pulsar-java-template), [java-17](https://github.com/platonai/pulsar-java-17-template).
 
 You can also start your own large-scale web crawler projects based on our commercial-grade open source projects: [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro), [Exotic-amazon](https://github.com/platonai/exotic-amazon).
@@ -248,21 +252,19 @@ val page11 = runBlocking { session.loadDeferred(url, "-expires 10s") }
 // Java-style async calls
 session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(session::export)
 ```
-
 Example code: [kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt), [java](pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java).
 
 ### Load options
 
 Most of our scrape methods accept a parameter called load options, or load arguments, to control how to load, fetch, and scrape a webpage.
 
-    -expires     // The expiry time of a page
-    -itemExpires // The expiry time of item pages in batch scraping methods
-    -outLink     // The selector of out links to scrape
-    -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
-    -parse       // Activate parse subsystem
-    -resource    // Fetch the URL as a resource without browser rendering
-
-Check [Load Options](docs/concepts.adoc#_load_options) for details.
+-expires     // The expiry time of a page
+-itemExpires // The expiry time of item pages in batch scraping methods
+-outLink     // The selector of out links to scrape
+-refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
+-parse       // Activate parse subsystem
+-resource    // Fetch the URL as a resource without browser rendering
+Check [Load Options](docs/concepts.md#_load_options) for details.
 
 ### Extracting web data
 
@@ -274,7 +276,6 @@ PulsarRPA utilizes [jsoup](https://jsoup.org/) to extract data from HTML documen
 val document = session.loadDocument(url, "-expires 1d")
 val price = document.selectFirst('.price').text()
 ```
-
 ### Continuous crawls
 
 Performing large-scale scraping or running continuous crawls is straightforward with PulsarRPA.
@@ -298,7 +299,6 @@ fun main() {
     context.await()
 }
 ```
-
 *Java:*
 
 ```java
@@ -324,7 +324,6 @@ public class ContinuousCrawler {
     }
 }
 ```
-
 Example code can be found in the [Kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt) and [Java](pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java) versions.
 
 ### 👽 RPA (Robotic Process Automation)
@@ -360,7 +359,6 @@ event.onWillCheckDocumentState.addLast { page, driver ->
 // Navigate to the URL and initiate events
 session.load(url, options)
 ```
-
 Example code can be reviewed [here](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
 ### Use X-SQL to query the web
@@ -376,7 +374,6 @@ select
     str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
 from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body');
 ```
-
 To execute the X-SQL query, you can use the following Kotlin code:
 
 ```kotlin
@@ -384,15 +381,13 @@ val context = SQLContexts.create()
 val rs = context.executeQuery(sql)
 println(ResultSetFormatter(rs, withHeader = true))
 ```
-
 The result of the query will be:
 
 ```
 TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
 HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $6.10 | 1,349 ratings | 4.40
 ```
-
-For more detailed information on X-SQL and its functions, you can visit the [X-SQL documentation](X-SQL.adoc). 
+For more detailed information on X-SQL and its functions, you can visit the [X-SQL documentation](X-SQL.md).
 Example code for this query can be found [here](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt).
 
 # 🌐 PulsarRPA as a REST Service
@@ -405,8 +400,7 @@ When PulsarRPA runs as a REST service, X-SQL can be used to scrape webpages or t
 git clone https://github.com/platonai/pulsar.git
 cd pulsar && bin/build-run.sh
 ```
-
-For Chinese developers, we strongly suggest you to follow [this](bin/tools/maven/maven-settings.adoc) instruction to accelerate the building process.
+For Chinese developers, we strongly suggest you to follow [this](bin/tools/maven/maven-settings.md) instruction to accelerate the building process.
 
 ## Use X-SQL to Query the Web
 
@@ -415,13 +409,11 @@ Start the pulsar server if it is not started:
 ```shell
 bin/pulsar
 ```
-
 Scrape a webpage in another terminal window:
 
 ```shell
 bin/scrape.sh
 ```
-
 The bash script is quite simple; it just uses curl to post an X-SQL:
 
 ```sql
@@ -439,7 +431,6 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
   from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1d -njr 3', 'body');
 "
 ```
-
 Example code: [bash](bin/scrape.sh), [batch](bin/scrape.bat), [java](pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java), [kotlin](pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt), [php](pulsar-client/src/main/php/Scraper.php).
 
 The response is as follows in JSON format:
@@ -463,8 +454,7 @@ The response is as follows in JSON format:
     "status": "OK"
 }
 ```
-
-Click [X-SQL](docs/x-sql.adoc) to see a detailed introduction and function descriptions about X-SQL.
+Click [X-SQL](docs/x-sql.md) to see a detailed introduction and function descriptions about X-SQL.
 
 # 📖 Step-by-Step Course
 
@@ -495,7 +485,7 @@ PulsarRPA has carefully designed the logging and metrics subsystem to record eve
 
 By focusing on a concise set of indicators, you can unlock a deeper understanding of the system’s overall condition: 💯 💔 🗙 ⚡ 💿 🔃 🤺.
 
-Typical page loading logs are shown below. Check the [log-format](docs/log-format.adoc) to learn how to read the logs and gain insight into the state of the entire system at a glance.
+Typical page loading logs are shown below. Check the [log-format](docs/log-format.md) to learn how to read the logs and gain insight into the state of the entire system at a glance.
 
 ```plaintext
 2022-09-24 11:46:26.045  INFO [-worker-14] a.p.p.c.c.L.Task - 3313. 💯 ⚡ U for N got 200 580.92 KiB in 1m14.277s, fc:1 | 75/284/96/277/6554 | 106.32.12.75 | 3xBpaR2 | https://www.walmart.com/ip/Restored-iPhone-7-32GB-Black-T-Mobile-Refurbished/329207863  -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
@@ -504,13 +494,12 @@ Typical page loading logs are shown below. Check the [log-format](docs/log-forma
 2022-09-24 11:47:18.390  INFO [r-worker-8] a.p.p.c.c.L.Task - 3732. 💔 ⚡ U for N got 1601 0 <- 0 in 32.201s, fc:1/1 Retry(1601) rsp: CRAWL, rrs: EMPTY_0B | 2zYxg52 | https://www.walmart.com/ip/Apple-iPhone-7-256GB-Jet-Black-AT-T-Locked-Smartphone-Grade-B-Used/182353175?variantFieldId=actual_color  -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 2022-09-24 11:47:13.860  INFO [-worker-60] a.p.p.c.c.L.Task - 2828. 🗙 🗙 U for SC got 200 0 <- 348.31 KiB <- 684.75 KiB in 0s, last fetched 18m55s ago, fc:2 | 34/130/52/181/5747 | 60.184.124.232 | 11zTa0r2 | https://www.walmart.com/ip/Walmart-Family-Mobile-Apple-iPhone-11-64GB-Black-Prepaid-Smartphone/209201965?athbdg=L1200  -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 ```
-
 # 💻 System Requirements
 
 - Memory 4G+
 - Maven 3.2+
 - The latest version of the Java 11 JDK
-- `java` and `jar` on the PATH
+- `java` on the PATH
 - Google Chrome 90+
 - [Optional] MongoDB started
 
@@ -518,7 +507,7 @@ PulsarRPA is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 7, Windows 11, WSL, a
 
 # 🛸 Advanced Topics
 
-Check the [advanced topics](docs/faq/advanced-topics.adoc) to find out the answers for the following questions:
+Check the [advanced topics](docs/faq/advanced-topics.md) to find out the answers for the following questions:
 
 - What’s so difficult about scraping web data at scale?
 - How to scrape a million product pages from an e-commerce website a day?
@@ -545,7 +534,7 @@ Check the [advanced topics](docs/faq/advanced-topics.adoc) to find out the answe
 
 In general, the features mentioned in the Feature section are well-supported by PulsarRPA, but other solutions do not.
 
-Check the [solution comparison](docs/faq/solution-comparison.adoc) to see the detailed comparison to the other solutions:
+Check the [solution comparison](docs/faq/solution-comparison.md) to see the detailed comparison to the other solutions:
 
 - PulsarRPA vs selenium/puppeteer/playwright
 - PulsarRPA vs nutch
@@ -553,7 +542,7 @@ Check the [solution comparison](docs/faq/solution-comparison.adoc) to see the de
 
 # 🤓 Technical Details
 
-Check the [technical details](docs/faq/technical-details.adoc) to see answers for the following questions:
+Check the [technical details](docs/faq/technical-details.md) to see answers for the following questions:
 
 - How to rotate my IP addresses?
 - How to hide my bot from being detected?
