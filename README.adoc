@@ -13,7 +13,7 @@ English | link:README-CN.adoc[简体中文] | https://gitee.com/platonai_galaxye
 
 PulsarRPA is a high-performance, distributed, open-source Robotic Process Automation (RPA) framework. It is designed to handle large-scale RPA tasks with ease, providing a comprehensive solution for browser automation, web content understanding, and data extraction.
 
-PulsarRPA represents the pinnacle of open-source solutions for large-scale web data extraction, leveraging the power of high-performance, distributed RPA). It addresses the inherent challenges of browser automation and extracting accurate, comprehensive web data amidst rapidly evolving and increasingly intricate websites.
+PulsarRPA represents the pinnacle of open-source solutions for large-scale web data extraction, leveraging the power of high-performance, distributed RPA. It addresses the inherent challenges of browser automation and extracting accurate, comprehensive web data amidst rapidly evolving and increasingly intricate websites.
 
 *Challenges in Large-Scale Web Data Extraction:*
 
@@ -26,10 +26,10 @@ To conquer these challenges, PulsarRPA incorporates a suite of innovative techno
 
 1. **Browser Rendering:** Utilizes browser rendering and AJAX data crawling to extract content from websites.
 2. **RPA (Robotic Process Automation):** Employs human-like behaviors to interact with webpages, enabling data collection from modern, complex websites.
-3. **Adaptive Crawling:** PulsarRPA employs intelligent crawling algorithms capable of automatically detecting and adapting to website updates in real-time. By monitoring changes in site structure, content, and navigation patterns, it maintains up-to-date extraction rules, ensuring consistent and relevant data collection even as target websites evolve.
+3. **Intelligent Crawling:** PulsarRPA employs intelligent crawling technology, enabling it to automatically recognize and adapt to changes in websites, thereby ensuring the accuracy and timeliness of data extraction. Leveraging intelligent algorithms and machine learning techniques, PulsarRPA is capable of autonomously learning and applying data extraction models, significantly enhancing both the efficiency and precision of data retrieval.
 4. **Advanced DOM Parsing:** Leveraging advanced Document Object Model (DOM) parsing techniques, PulsarRPA can navigate complex website architectures with ease. It accurately identifies and extracts data from nested elements, handles dynamic content rendering, and bypasses anti-scraping measures, delivering complete and accurate datasets despite website intricacies.
 5. **Distributed Architecture:** Built on a distributed architecture, PulsarRPA harnesses the combined processing power of multiple nodes to handle large-scale extraction tasks efficiently. This allows for parallel crawling, faster data retrieval, and seamless scalability as your data requirements grow, without compromising performance or reliability.
-6. **Open-Source & Customizable:** As an open-source solution, PulsarRPA offers unparalleled flexibility and extensibility. Developers can easily customize its components, integrate with existing systems, or contribute new features to meet specific project requirements. This collaborative approach fosters a vibrant community that continually enhances the platform's capabilities and adapts to emerging web scraping challenges.
+6. **Open-Source & Customizable:** As an open-source solution, PulsarRPA offers unparalleled flexibility and extensibility. Developers can easily customize its components, integrate with existing systems, or contribute new features to meet specific project requirements.
 
 In summary, PulsarRPA stands out as the go-to open-source solution for large-scale web data extraction. Its unique blend of adaptive crawling, advanced DOM parsing, distributed processing, robust exception handling, and open-source nature empowers users to overcome the complexities and challenges associated with extracting valuable web data at scale, ultimately driving more informed decision-making and competitive advantage.
 
@@ -522,9 +522,9 @@ We have a step-by-step course by example:
 
 PulsarRPA has carefully designed the logging and metrics subsystem to record every event that occurs in the system.
 
-PulsarRPA logs the status for every load execution, so it's easy to know what happened in the system, find out answers such as is the system running healthy, how many pages were successfully fetched, how many pages were retried, how many proxy ips were used, etc.
+PulsarRPA logs the status for every load execution, providing a clear and comprehensive overview of system performance. This detailed logging allows for quick assessment of the system’s health and efficiency. It answers key questions such as: Is the system operating smoothly? How many pages have been successfully retrieved? How many attempts were made to reload pages? And how many proxy IP addresses have been utilized? This information is invaluable for monitoring and troubleshooting purposes, ensuring that any issues can be promptly identified and addressed.
 
-By paying attention to just a few symbols, you can gain insight into the state of the entire system: 💯 💔 🗙 ⚡ 💿 🔃 🤺。
+By focusing on a concise set of indicators, you can unlock a deeper understanding of the system’s overall condition: 💯 💔 🗙 ⚡ 💿 🔃 🤺。
 
 Typical page loading logs are shown below, check link:docs/log-format.adoc[log-format] to learn how to read the logs and gain insight into the state of the entire system at a glance.
 
@@ -573,6 +573,7 @@ Check link:docs/faq/advanced-topics.adoc[advanced topics] to find out the answer
 * How to scrape amazon.com to match industrial needs?
 
 == 🆚 Compare with other solutions
+
 In general, the features mentioned in the Feature section are well-supported by PulsarRPA, but other solutions do not.
 
 Check link:docs/faq/solution-comparison.adoc[solution comparison] to see the detailed comparison to the other solutions:
@@ -582,6 +583,7 @@ Check link:docs/faq/solution-comparison.adoc[solution comparison] to see the det
 * PulsarRPA vs scrapy+splash
 
 == 🤓 Technical details
+
 Check link:docs/faq/technical-details.adoc[technical details] to see answers for the following questions:
 
 * How to rotate my ip addresses?
