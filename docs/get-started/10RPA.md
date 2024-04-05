@@ -1,6 +1,8 @@
 Robotic Process Automation (RPA)
 =
 
+[Prev](9event-handling.md) [Home](1home.md) [Next](11WebDriver.md)
+
 Web data collection is very challenging, as websites often change and become increasingly complex, resulting in collected data that is usually inaccurate or incomplete.
 
 Tools like Scrapy and requests are becoming less and less suitable for modern web pages. Against this backdrop, browser automation technology, along with RPA technology, is the solution to the problem. It replaces manual web page visits, performing the same actions as a human to collect all the data that humans can see.

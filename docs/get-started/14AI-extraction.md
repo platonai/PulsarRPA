@@ -1,6 +1,8 @@
 AI Automated Extraction
 =======================
 
+[Prev](13X-SQL.md) [Home](1home.md) [Next](15REST.md)
+
 Platon.ai's goal is to develop an AI that efficiently collects and reads complex websites, accurately outputting data 
 and knowledge. We have open-sourced the "efficient collection" component. We have also released a preview version that 
 "reads and understands webpage structures and accurately outputs data," which will also be open-sourced in the near future.
@@ -70,4 +72,5 @@ Using PulsarRPA's auto extraction technology and SQL to fully automate the trans
 
 ---
 
-[Prev](13X-SQL.md) [Home](1home.md) [Next](15REST.md)
+[Prev](13X-SQL.md) | [Home](1home.md) | [Next](15REST.md)
+

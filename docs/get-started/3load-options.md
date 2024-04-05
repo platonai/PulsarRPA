@@ -1,6 +1,8 @@
 Load Options
 =
 
+[Prev](2basic-usage.md) [Home](1home.md) [Next](4data-extraction.md)
+
 PulsarRPA uses simple load options to precisely describe a collection task, such as data lifecycle, page quality requirements, task deadlines, task retries, etc. In most cases, a data collection task can be uniquely determined by URL arguments in the form of text, making it easy to copy, manage, store, transmit, parallelize, and communicate.
 
 Starting with PulsarSession:

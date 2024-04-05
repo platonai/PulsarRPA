@@ -1,5 +1,6 @@
 X-SQL
 =
+[Prev](12massive-crawling.md) [Home](1home.md) [Next](14AI-extraction.md)
 
 PulsarRPA has developed X-SQL to directly query the internet and convert web pages into tables and charts. X-SQL extends SQL to manage web data, including web crawling, data collection, data extraction, web content mining, web BI, and more.
 
@@ -179,4 +180,4 @@ from
 
 ------
 
-[Prev](12massive-crawling.md) [Home](1home.md) [Next](14AI-extraction.md)
+[Prev](12massive-crawling.md) | [Home](1home.md) | [Next](14AI-extraction.md)

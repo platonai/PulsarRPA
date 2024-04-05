@@ -1,6 +1,8 @@
 Massive Crawling
 =
 
+[Prev](11WebDriver.md) | [Home](1home.md) | [Next](13X-SQL.md)
+
 > "Bad programmers worry about code. Good programmers worry about data structures and their relationships."
 > -- Linus Torvalds
 
@@ -98,4 +100,4 @@ This course provides [complete code](../../pulsar-app/pulsar-examples/src/main/k
 
 ------
 
-[Prev](11WebDriver.md) [Home](1home.md) [Next](13X-SQL.md)
+[Prev](11WebDriver.md) | [Home](1home.md) | [Next](13X-SQL.md)

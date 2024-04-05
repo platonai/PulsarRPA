@@ -1,6 +1,8 @@
 WebDriver
 =
 
+[Prev](10RPA.md) | [Home](1home.md) | [Next](12massive-crawling.md)
+
 [WebDriver](../../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebDriver.kt) provides a concise interface for accessing and interacting with web pages, with all actions and behaviors optimized to mimic real humans as closely as possible, such as scrolling, clicking, typing text, dragging and dropping, etc.
 
 The methods in this interface are mainly divided into three categories:
@@ -114,4 +116,4 @@ Complete code: [kotlin](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/plat
 
 ------
 
-[Prev](10RPA.md) [Home](1home.md) [Next](12massive-crawling.md)
+[Prev](10RPA.md) | [Home](1home.md) | [Next](12massive-crawling.md)

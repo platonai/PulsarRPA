@@ -1,6 +1,8 @@
 REST Service
 =
 
+[Prev](14AI-extraction.md) [Home](1home.md) [Next](16console.md)
+
 When PulsarRPA runs as a REST service, X-SQL can be used to collect web pages or directly query web data from anywhere at any time, without the need to open an IDE. It's like an upgraded version of the Google search box: upgrading keyword queries to SQL queries.
 
 Example:
@@ -24,4 +26,4 @@ Example code can be found here: [bash](../../bin/scrape.sh), [batch](../../bin/s
 
 ------
 
-[Prev](14AI-extraction.md) [Home](1home.md) [Next](16console.md)
+[Prev](14AI-extraction.md) | [Home](1home.md) | [Next](16console.md)

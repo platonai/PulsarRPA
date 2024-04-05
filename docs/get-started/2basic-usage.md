@@ -1,6 +1,8 @@
 Basic Usage
 =
 
+Prev [Home](1home.md) [Next](3load-options.md)
+
 In a nutshell, PulsarRPA is all about **correctly implementing two methods: loading web pages and extracting data**. To achieve this goal, PulsarRPA has written and refined nearly a million lines of code, developing a range of cutting-edge technologies.
 
 **Loading Web Pages:**

@@ -1,6 +1,8 @@
 Continuous Crawling
 =
 
+[Prev](7Kotlin-style-async.md) [Home](1home.md) [Next](9event-handling.md)
+
 In PulsarRPA, continuous crawling is very simple; you just need to submit links to the UrlPool, and the crawling loop will start automatically. PulsarRPA's infrastructure also ensures core issues such as data quality and scheduling quality.
 
 For small-scale data collection projects, such as monitoring hundreds of competitor product prices, inventory status, and new reviews every day, continuous crawling can be used.

@@ -1,6 +1,8 @@
 Data Extraction
 =
 
+[Prev](3load-options.md) [Home](1home.md) [Next](5URL.md)
+
 PulsarRPA uses [jsoup](https://jsoup.org/) to extract data from HTML documents. Jsoup parses HTML into a DOM that mirrors modern browsers. Check out [selector-syntax](https://jsoup.org/cookbook/extracting-data/selector-syntax) for all supported CSS selectors, and [here](https://www.w3school.com.cn/cssref/css_selectors.asp) for a detailed table of standard CSS selectors in Chinese.
 
 Modern web page source codes change very frequently, but the web page "looks" not much different, to ensure a consistent user experience. At this time, examining web page elements from visual features is particularly effective. To better view web pages from visual and numerical features, PulsarRPA extends CSS to solve the most complex real-world problems.

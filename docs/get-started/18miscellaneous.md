@@ -1,6 +1,8 @@
 Miscellaneous
 =
 
+[Prev](16console.md) | [Home](1home.md)
+
 Browser settings
 ==
 
@@ -39,6 +41,6 @@ Privacy agents
 
 A privacy agent is an identifier that ensures distinct identities for website visits. When different privacy agents are used, page visits should not be attributed to the same individual, regardless of whether they originate from the same host.
 
-```kotlin
+------
 
-[Prev](16console.md) [Home](1home.md)
+[Prev](16console.md) | [Home](1home.md)

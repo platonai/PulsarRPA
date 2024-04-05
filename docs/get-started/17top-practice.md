@@ -1,6 +1,8 @@
 Top Project Practical Combat
 =
 
+[Prev](16console.md) | [Home](1home.md) | [Next](18miscellaneous.md)
+
 [Exotic Amazon](https://github.com/platonai/exotic-amazon) (Domestic mirror: [exotic-amazon](https://gitee.com/platonai_galaxyeye/exotic-amazon)) is a **complete solution** for crawling the entire amazon.com website, **ready to use out of the box**, containing most data types of Amazon, and it will be permanently provided for free and open source.
 
 The methods and processes for data collection of other e-commerce platforms are basically similar. You can modify and adjust the business logic based on this project, and its infrastructure solves all the difficulties faced by large-scale data collection.
@@ -53,4 +55,4 @@ There are several ways to save results to the database:
 
 ------
 
-[Prev](16console.md) [Home](1home.md) [Next](18miscellaneous.md)
+[Prev](16console.md) | [Home](1home.md) | [Next](18miscellaneous.md)
