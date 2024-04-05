@@ -56,7 +56,7 @@ http://localhost:2718/exotic/crawl/
 我们可以使用 harvest 命令，使用无监督的机器学习从一组项目页面中学习：
 
 ```bash
-java -jar exotic-standalone*.jar harvest https://shopee.sg/Computers-Peripherals-cat.11013247 -diagnose -refresh
+java -jar exotic-standalone*.jar harvest https://www.hua.com/flower/ -diagnose -refresh
 ```
 
 ## 使用生成的 SQL 采集页面

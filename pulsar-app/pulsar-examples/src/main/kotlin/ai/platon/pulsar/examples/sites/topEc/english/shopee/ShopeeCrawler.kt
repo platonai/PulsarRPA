@@ -6,7 +6,7 @@ import ai.platon.pulsar.context.PulsarContexts
 fun main() {
     BrowserSettings.withSystemDefaultBrowser()
     
-    val portalUrl = "https://shopee.sg/Computers-Peripherals-cat.11013247"
+    val portalUrl = "https://www.hua.com/flower/"
     val args = "-i 1s -ii 5d -ol a[href~=sp_atk] -tl 20 -ignoreFailure"
     val session = PulsarContexts.createSession()
 

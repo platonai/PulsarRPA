@@ -56,7 +56,7 @@ http://localhost:2718/exotic/crawl/
 We can use the harvest command to learn from a set of item pages using unsupervised machine learning:
 
 ```bash
-java -jar exotic-standalone*.jar harvest https://shopee.sg/Computers-Peripherals-cat.11013247  -diagnose -refresh
+java -jar exotic-standalone*.jar harvest https://www.hua.com/flower/  -diagnose -refresh
 ```
 
 ## Collecting Pages Using Generated SQL
