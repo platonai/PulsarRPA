@@ -1,7 +1,5 @@
 package ai.platon.pulsar.common.extractor
 
-import java.time.Instant
-
 /**
  * Represents a text document extracted from a text page, such as a news article.
  * */
@@ -25,13 +23,5 @@ open class TextDocument(
     /**
      * The extracted fields.
      * */
-    var fields: MutableMap<String, String> = mutableMapOf(),
-    /**
-     * The publishing time of the document.
-     * */
-    var publishTime: Instant? = null,
-    /**
-     * The modified time of the document.
-     * */
-    var modifiedTime: Instant? = null,
+    var additionalFields: Map<String, String>? = null
 )

@@ -2028,7 +2028,6 @@ interface PulsarSession : AutoCloseable {
      * @see [boilerpipe-web](https://boilerpipe-web.appspot.com/)
      * */
     fun harvest(url: String, args: String = "", engine: String = "boilerpipe"): TextDocument
-    
     /**
      * Harvest the content of a webpage using a web content extractor engine.
      *

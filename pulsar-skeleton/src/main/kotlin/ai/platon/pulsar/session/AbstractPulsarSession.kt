@@ -24,6 +24,8 @@ import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
+import org.xml.sax.InputSource
+import java.io.StringReader
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.time.Instant
@@ -416,7 +418,7 @@ abstract class AbstractPulsarSession(
     }
     
     override fun harvest(url: String, args: String, engine: String): TextDocument = harvest(load(url, args), engine)
-    
+
     override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
     
     override fun data(name: String): Any? = let { dataCache[name] }
@@ -488,27 +490,30 @@ abstract class AbstractPulsarSession(
         
         return context.parse(page) ?: nil
     }
-
-    private fun harvest0(page: WebPage, engine: String): TextDocument {
+    
+    private fun harvest0(page: WebPage, engine: String) = harvest0(page.url, page.contentAsString, engine)
+    
+    private fun harvest0(url: String, html: String, engine: String) = harvest0(url, InputSource(StringReader(html)), engine)
+    
+    private fun harvest0(url: String, inputSource: InputSource, engine: String): TextDocument {
         if (engine != "boilerpipe") {
             throw IllegalArgumentException("Unsupported engine: $engine")
         }
         
-        val d = SAXInput().parse(page.location, page.contentAsSaxInputSource)
+        val d = SAXInput().parse(url, inputSource)
         val success = ArticleExtractor().process(d)
         if (!success) {
-            return TextDocument(page.url)
+            return TextDocument(url)
         }
         
-        return TextDocument(d.baseUrl,
+        return TextDocument(url,
             pageTitle = d.pageTitle,
             contentTitle = d.contentTitle,
             textContent = d.textContent,
-            fields = d.fields.toMutableMap(),
-            publishTime = d.publishTime, modifiedTime = d.modifiedTime
+            additionalFields = d.fields.takeIf { it.isNotEmpty() }
         )
     }
-
+    
     private fun loadAndCache(normURL: NormURL): WebPage {
         return context.load(normURL).also {
             pageCacheOrNull?.putDatum(it.url, it)
