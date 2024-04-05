@@ -1,21 +1,24 @@
 Event Handling
 =
 
-The event handling mechanism provides a way to capture and process events throughout the entire lifecycle of a web page. The following simple program prints the order of all page events and their names.
+The event handling mechanism offers a comprehensive approach to capture and process events across the entire lifecycle of a web page. The following concise program logs the sequence of all page events along with their respective names.
+Page event handlers are encapsulated within the `PageEventHandlers` class, categorized into three distinct groups to manage events at various phases:
 
-Web page event handlers are defined by `PageEvent` and are divided into three categories to handle events at different stages:
-
-1. `CrawlEvent` - Handles events in the crawl loop
-2. `LoadEvent` - Handles events in the loading and parsing process
-3. `BrowseEvent` - Handles events during the web page browsing stage, such as interacting with the browser to trigger the loading or display of related fields
+1. `CrawlEventHandlers` - Deals with events occurring within the crawling iteration.
+2. `LoadEventHandlers` - Manages events related to the loading and parsing of the page.
+3. `BrowseEventHandlers` - Controls events that happen during the interactive browsing phase, including actions that prompt the loading or display of associated elements.
 
 ```kotlin
-class PrintFlowEvent: DefaultPageEvent() {
+
+/**
+ * Print the call sequence and the event name of all page event handlers
+ * */
+class PrintFlowEventHandlers: DefaultPageEventHandlers() {
     private val sequencer = AtomicInteger()
     private val seq get() = sequencer.incrementAndGet()
-
+    
     init {
-        loadEvent.apply {
+        loadEventHandlers.apply {
             onNormalize.addLast { url ->
                 println("$seq. load - onNormalize")
                 url
@@ -30,14 +33,11 @@ class PrintFlowEvent: DefaultPageEvent() {
             onFetched.addLast { page ->
                 println("$seq. load - onFetched")
             }
+            onWillParse.addLast { page ->
+                println("$seq. load - onWillParse")
+            }
             onWillParseHTMLDocument.addLast { page ->
                 println("$seq. load - onWillParseHTMLDocument")
-            }
-            onWillExtractData.addLast { page ->
-                println("$seq. load - onWillExtractData")
-            }
-            onDataExtracted.addLast { page: WebPage, document: FeaturedDocument ->
-                println("$seq. load - onDataExtracted")
             }
             onHTMLDocumentParsed.addLast { page: WebPage, document: FeaturedDocument ->
                 println("$seq. load - onHTMLDocumentParsed")
@@ -49,8 +49,8 @@ class PrintFlowEvent: DefaultPageEvent() {
                 println("$seq. load - onLoaded")
             }
         }
-
-        browseEvent.apply {
+        
+        browseEventHandlers.apply {
             onWillLaunchBrowser.addLast { page ->
                 println("$seq. browse - onWillLaunchBrowser")
             }
@@ -59,6 +59,9 @@ class PrintFlowEvent: DefaultPageEvent() {
             }
             onWillNavigate.addLast { page, driver ->
                 println("$seq. browse - onWillNavigate")
+            }
+            onNavigated.addLast { page, driver ->
+                println("$seq. browse - onNavigated")
             }
             onWillInteract.addLast { page, driver ->
                 println("$seq. browse - onWillInteract")
@@ -69,6 +72,15 @@ class PrintFlowEvent: DefaultPageEvent() {
             onDocumentActuallyReady.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. browse - onDocumentActuallyReady")
             }
+            onWillScroll.addLast { page: WebPage, driver: WebDriver ->
+                println("$seq. browse - onWillScroll")
+            }
+            onDidScroll.addLast { page: WebPage, driver: WebDriver ->
+                println("$seq. browse - onDidScroll")
+            }
+            onDocumentSteady.addLast { page: WebPage, driver: WebDriver ->
+                println("$seq. browse - onDocumentSteady")
+            }
             onWillComputeFeature.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. browse - onWillComputeFeature")
             }
@@ -76,10 +88,7 @@ class PrintFlowEvent: DefaultPageEvent() {
                 println("$seq. browse - onFeatureComputed")
             }
             onDidInteract.addLast { page, driver ->
-                println("$seq. browse - onWillInteract")
-            }
-            onNavigated.addLast { page, driver ->
-                println("$seq. browse - onNavigated")
+                println("$seq. browse - onDidInteract")
             }
             onWillStopTab.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. browse - onWillStopTab")
@@ -88,14 +97,10 @@ class PrintFlowEvent: DefaultPageEvent() {
                 println("$seq. browse - onTabStopped")
             }
         }
-
-        crawlEvent.apply {
+        
+        crawlEventHandlers.apply {
             onWillLoad.addLast { url: UrlAware ->
                 println("$seq. crawl - onWillLoad")
-                url
-            }
-            onLoad.addLast { url: UrlAware ->
-                println("$seq. crawl - onLoad")
                 url
             }
             onLoaded.addLast { url, page ->
@@ -106,18 +111,26 @@ class PrintFlowEvent: DefaultPageEvent() {
 }
 ```
 
-And the entry point for the call:
+The entry point for the call is as follows:
 
 ```kotlin
 /**
  * Demonstrates how to use event handlers.
  * */
 fun main() {
+    BrowserSettings.withSystemDefaultBrowser()
+    
     val url = "https://www.amazon.com/dp/B0C1H26C46"
     val session = PulsarContexts.createSession()
-    val link = ListenableHyperlink(url, args = "-refresh -parse", event = PrintFlowEvent())
-    session.load(link)
+    val link = ListenableHyperlink(url, args = "-refresh -parse", event = PrintFlowEventHandlers())
+    
+    // submit the link to the fetch pool.
+    session.submit(link)
+    
+    // wait until all done.
+    PulsarContexts.await()
 }
+
 ```
 
 The example program outputs the following:
@@ -134,17 +147,21 @@ The example program outputs the following:
 9. browse - onWillNavigate
 10. browse - onWillCheckDocumentState
 11. browse - onDocumentActuallyReady
-12. browse - onWillComputeFeature
-13. browse - onFeatureComputed
-14. browse - onWillInteract
-15. browse - onWillStopTab
-16. browse - onTabStopped
-17. load - onFetched
-18. load - onWillParseHTMLDocument
-19. load - onHTMLDocumentParsed
-20. load - onParsed
-21. load - onLoaded
-22. crawl - onLoaded
+12. browse - onWillScroll
+13. browse - onDidScroll
+14. browse - onDocumentSteady
+15. browse - onWillComputeFeature
+16. browse - onFeatureComputed
+17. browse - onDidInteract
+18. browse - onWillStopTab
+19. browse - onTabStopped
+20. load - onFetched
+21. load - onWillParse
+22. load - onWillParseHTMLDocument
+23. load - onHTMLDocumentParsed
+24. load - onParsed
+25. load - onLoaded
+26. crawl - onLoaded
 ```
 
 ------

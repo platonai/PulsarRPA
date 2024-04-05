@@ -10,7 +10,7 @@ import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Print the call sequence and the event name of all page events
+ * Print the call sequence and the event name of all page event handlers
  * */
 class PrintFlowEventHandlers: DefaultPageEventHandlers() {
     private val sequencer = AtomicInteger()
