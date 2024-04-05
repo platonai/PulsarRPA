@@ -205,15 +205,20 @@ class ChromeLauncher(
         val readLineThread = Thread {
             BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
                 // Wait for DevTools listening line and extract port number.
-                var line: String
-                while (reader.readLine().also { line = it } != null) {
-                    logger.takeIf { line.isNotBlank() }?.info("[output] - $line")
+                var line: String? = reader.readLine()
+                while (line != null) {
+                    if (line.isNotBlank()) {
+                        logger.info("[output] - $line")
+                    }
+
                     val matcher = DEVTOOLS_LISTENING_LINE_PATTERN.matcher(line)
                     if (matcher.find()) {
                         port = matcher.group(1).toInt()
                         break
                     }
                     processOutput.appendLine(line)
+                    
+                    line = reader.readLine()
                 }
             }
         }
@@ -225,6 +230,9 @@ class ChromeLauncher(
             if (port == 0) {
                 close(readLineThread)
                 logger.info("Process output:>>>\n$processOutput\n<<<")
+                
+                handleChromeFailedToStart()
+                
                 throw ChromeProcessTimeoutException("Timeout to waiting for chrome to start")
             }
         } catch (e: InterruptedException) {
@@ -235,7 +243,7 @@ class ChromeLauncher(
 
         return port
     }
-
+    
     private fun close(thread: Thread) {
         try {
             thread.join(options.threadWaitTime.toMillis())
@@ -244,6 +252,33 @@ class ChromeLauncher(
         }
     }
 
+    private fun handleChromeFailedToStart() {
+        val count = Runtimes.countSystemProcess("chrome")
+        if (count == 0) {
+            logger.warn("Failed to start Chrome, no chrome process running in the system")
+            return
+        }
+        
+        // val isSystemDefaultBrowser = userDataDir == AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER
+        
+        val message = """
+
+===============================================================================
+!!!   FAILED TO START CHROME   !!!
+
+Failed to start Chrome programmatically, but there are already $count chrome
+processes running in the system.
+
+Close Chrome and run the program again.
+
+===============================================================================
+
+                    """.trimIndent()
+        
+        logger.warn(message)
+        return
+    }
+    
     @Throws(IOException::class)
     private fun prepareUserDataDir() {
         val prototypeUserDataDir = AppPaths.CHROME_DATA_DIR_PROTOTYPE
