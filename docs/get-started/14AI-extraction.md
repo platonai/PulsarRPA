@@ -17,7 +17,7 @@ Thus, **a web page can be visualized as a geometric graph composed of many recta
 combined, it resembles a bundle of newspapers. The World Wide Web (WWW) can be viewed as a fiber bundle with a 
 three-dimensional manifold as the base space.**
 
-<div align="center">
+<div style="text-align: center">
     <img width="400px" src=https://pica.zhimg.com/80/v2-1262abb4d28b31a00bcf1199b1aba441_1440w.jpeg?source=d16d100b   alt="auto extracted chart"/>
 </div>
 
@@ -39,19 +39,19 @@ In this way, the problem of web page extraction that originally required manuall
 
 Finally, we have equipped the crawler system and data analysis system with an SQL engine, so we can monitor a website column and extract key data in real-time with just one SQL statement. In fact, with the SQL engine, the internet and local databases can almost be treated as the same (except for the longer response time of internet data).
 
-<div align="center">
+<div style="text-align: center">
     <img width="80%" src=https://pic3.zhimg.com/80/v2-dfb9ae6163db8c84b4d7e223c60f8835_1440w.jpg?source=d16d100b   alt="product"/>
 </div>
 
 A typical web page section
 
-<div align="center">
+<div style="text-align: center">
     <img width="80%" src=https://pica.zhimg.com/80/v2-d10694d76cfa5cf148a67c1576ca8f29_1440w.jpg?source=d16d100b   alt="auto extracted data"/>
 </div>
 
 Data extracted using PulsarRPA's auto extraction technology
 
-<div align="center">
+<div style="text-align: center">
     <img width="80%" src=https://pic3.zhimg.com/80/v2-ffe172327bbac5bbc5b43f1ae9d54864_1440w.jpg?source=d16d100b   alt="auto extracted chart"/>
 </div>
 

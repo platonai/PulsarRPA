@@ -7,7 +7,7 @@ Platon.ai 的算法能够 100% 无人干预将网页变成数据 -- 不需要配
 
 我们将每个网页在浏览器中渲染后，通过 js 计算出每个网页元素的一系列属性，主要包括元素的位置和大小。同时，我们构造了网页元素的更多有趣的隐含特征，譬如拓扑和语义相关的特征。目前，包括位置和大小在内，我们为每个网页元素构造了 100 多个独立特征。这样，**一张网页可视作由很多个带属性的矩形组成的几何图形（Geometric graph），将全体网页压到一起，如同一捆报纸，万维网（WWW）可以被视作以三维流形为基空间的纤维丛。**
 
-<div align="center">
+<div style="text-align: center">
     <img width="400px" src=https://pica.zhimg.com/80/v2-1262abb4d28b31a00bcf1199b1aba441_1440w.jpeg?source=d16d100b  alt="auto extracted chart"/>
 </div>
 
@@ -31,19 +31,19 @@ java -jar exotic-standalone*.jar arrange https://www.hua.com/flower/
 最后，我们为爬虫系统和数据分析系统配备了 SQL 引擎，这样，我们可以仅仅使用一条 SQL 语句就实现监控一个网站栏目，实时提取关键数据。事实上，配备 SQL 
 引擎后，互联网和本地数据库几乎就可以同等待了（除了互联网数据响应时间较久外）。
 
-<div align="center">
+<div style="text-align: center">
     <img width="80%" src=https://pic3.zhimg.com/80/v2-dfb9ae6163db8c84b4d7e223c60f8835_1440w.jpg?source=d16d100b  alt="product"/>
 </div>
 
 一个典型网页局部
 
-<div align="center">
+<div style="text-align: center">
     <img width="80%" src=https://pica.zhimg.com/80/v2-d10694d76cfa5cf148a67c1576ca8f29_1440w.jpg?source=d16d100b  alt="auto extracted data"/>
 </div>
 
 使用 PulsarRPA 的自动提取技术提取的数据
 
-<div align="center">
+<div style="text-align: center">
     <img width="80%" src=https://pic3.zhimg.com/80/v2-ffe172327bbac5bbc5b43f1ae9d54864_1440w.jpg?source=d16d100b  alt="auto extracted chart"/>
 </div>
 
