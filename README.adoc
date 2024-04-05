@@ -289,7 +289,7 @@ Check link:docs/concepts.adoc#_load_options[Load Options] for details.
 
 === Extracting web data
 
-PulsarRPA uses https://jsoup.org/[jsoup] to extract data from HTML documents. Jsoup parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all the supported CSS selectors.
+PulsarRPA uses https://jsoup.org/[jsoup] to extract data from HTML documents. Jsoup parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all the supported CSS selectors. Additionally, we have extended the standard CSS syntax, augmenting the capabilities of CSS selectors to enable them to effortlessly handle modern web page layouts.
 
 *Kotlin:*
 

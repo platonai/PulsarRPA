@@ -290,7 +290,7 @@ session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(sess
 
 === 提取网页数据
 
-PulsarRPA 使用 https://jsoup.org/[jsoup] 从 HTML 文档中提取数据。 Jsoup 将 HTML 解析为与现代浏览器相同的 DOM。 查看  https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] 以获取所有受支持的 CSS 选择器。
+PulsarRPA 使用 https://jsoup.org/[jsoup] 从 HTML 文档中提取数据。 Jsoup 将 HTML 解析为与现代浏览器相同的 DOM。 查看  https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] 以获取所有受支持的 CSS 选择器。同时，我们扩展了标准 CSS 语法，增强了 CSS 选择器的能力，使得其能够轻松处理现代网页布局。
 
 *Kotlin:*
 
