@@ -44,6 +44,11 @@
             <artifactId>pulsar-ql-common</artifactId>
             <classifier>shaded</classifier>
         </dependency>
+        <!-- add boilerpipe -->
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-boilerpipe</artifactId>
+        </dependency>
 
         <!-- Requires org.springframework.context.support.AbstractApplicationContext -->
         <dependency>

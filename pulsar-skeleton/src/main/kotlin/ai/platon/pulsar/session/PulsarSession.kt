@@ -1,13 +1,13 @@
 package ai.platon.pulsar.session
 
 import ai.platon.pulsar.common.CheckState
+import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContext
-import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.PageEventHandlers
 import ai.platon.pulsar.crawl.common.DocumentCatch
 import ai.platon.pulsar.crawl.common.GlobalCache
@@ -1178,7 +1178,7 @@ interface PulsarSession : AutoCloseable {
      * session.submit(hyperlink)
      * PulsarContexts.await()
      * ```
-     * 
+     *
      * The code snippet below shows how to submit a hyperlink with every supported event handlers attached.
      * Each event handler will print a message when its associated event is triggered.
      *
@@ -2009,6 +2009,46 @@ interface PulsarSession : AutoCloseable {
         portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
     
+    /**
+     * Harvest the content of a webpage using a web content extractor engine.
+     *
+     * Available engines are "boilerpipe".
+     *
+     * ```kotlin
+     * val document = session.harvest("http://example.com", "-expire 1d")
+     * println(document.textContent)
+     * ```
+     *
+     * @param url The url to harvest
+     * @param args The load arguments
+     * @param engine The content extractor engine, default is "boilerpipe".
+     * @return The harvested text document
+     *
+     * @see [boilerpipe ](https://github.com/kohlschutter/boilerpipe)
+     * @see [boilerpipe-web](https://boilerpipe-web.appspot.com/)
+     * */
+    fun harvest(url: String, args: String = "", engine: String = "boilerpipe"): TextDocument
+    
+    /**
+     * Harvest the content of a webpage using a web content extractor engine.
+     *
+     * Available engines are "boilerpipe".
+     *
+     * ```kotlin
+     * val page = session.load("http://example.com")
+     * val document = session.harvest(page, "boilerpipe")
+     * println(document.textContent)
+     * ```
+     *
+     * @param page The webpage to harvest
+     * @param engine The content extractor engine, default is "boilerpipe".
+     * @return The harvested text document
+     *
+     * @see [boilerpipe ](https://github.com/kohlschutter/boilerpipe)
+     * @see [boilerpipe-web](https://boilerpipe-web.appspot.com/)
+     * */
+    fun harvest(page: WebPage, engine: String = "boilerpipe"): TextDocument
+
     /**
      * Export the content of a webpage.
      *

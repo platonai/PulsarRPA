@@ -652,11 +652,16 @@ open class LoadOptions(
      * */
     val outLinkSelectorOrNull
         get() = outLinkSelector.takeIf { it.isNotBlank() }
-
+    
+    /**
+     * Enable the page event handlers and return it.
+     * */
     val event: PageEventHandlers get() = enableEventHandlers()
-
+    /**
+     * Enable the item event handlers and return it.
+     * */
     val itemEvent: PageEventHandlers get() = enableItemEventHandlers()
-
+    
     /**
      * Find out the modified fields and return a [Params].
      * */
