@@ -10,10 +10,9 @@ Platon.ai's algorithm can transform web pages into data with 100% zero human int
 and even without machine learning training. It is driven by unsupervised machine learning, similar to how humans read 
 and understand the internet.
 
-After rendering each web page in a browser, we use JavaScript to calculate a series of properties for each web page 
-element, mainly including the element's position and size. At the same time, we construct more interesting implicit 
-features of web page elements, such as topological and semantic features. 
-Thus, **a web page can be visualized as a geometric graph composed of many rectangles with attributes, and when 
+We calculate a series of features for each element on a webpage after rendering it in a browser, including visual, 
+geometric, topological, and semantic features.
+**A web page can be considered as a geometric graph composed of many rectangles with attributes, and when 
 combined, it resembles a bundle of newspapers. The World Wide Web (WWW) can be viewed as a fiber bundle with a 
 three-dimensional manifold as the base space.**
 
