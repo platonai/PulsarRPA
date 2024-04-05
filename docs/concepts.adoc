@@ -1,6 +1,6 @@
-= Pulsar Concepts
+= PulsarRPA Concepts
 Vincent Zhang <ivincent.zhang@gmail.com>
-3.0, July 29, 2022: The Pulsar Concepts
+3.0, July 29, 2022: The PulsarRPA Concepts
 :toc:
 :icons: font
 

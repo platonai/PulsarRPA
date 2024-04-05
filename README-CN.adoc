@@ -1,9 +1,4 @@
 = PulsarRPA 简介
-Vincent Zhang <ivincent.zhang@gmail.com>
-3.0, July 29, 2022: PulsarRPA README
-:toc:
-:icons: font
-:url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
 link:README.adoc[English] | 简体中文 | https://gitee.com/platonai_galaxyeye/PulsarRPA[中国镜像]
 

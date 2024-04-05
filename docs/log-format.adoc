@@ -1,4 +1,4 @@
-= The Pulsar log format explained
+= The PulsarRPA log format explained
 Vincent Zhang <ivincent.zhang@gmail.com>
 3.0, Sep 24, 2022: The Pulsar log format explained
 :toc:
