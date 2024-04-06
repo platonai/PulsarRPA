@@ -37,7 +37,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
   "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ```
 
-上面的代码从一组产品页面中抓取由 css 选择器 #title 和 #acrCustomerReviewText 指定的字段。 示例代码：[kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt), [java](pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/sites/amazon/AmazonCrawler.java).
+上面的代码从一组产品页面中抓取由 css 选择器 #title 和 #acrCustomerReviewText 指定的字段。 示例代码：[kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/sites/amazon/AmazonCrawler.java).
 
 ### 大多数 #生产环境# 数据采集项目可以从以下代码片段开始：
 
@@ -60,7 +60,7 @@ fun main() {
 ```
 
 示例代码：
-[kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
+[kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
 
 ### #最复杂# 的数据采集项目需要使用 RPA：
 
@@ -90,7 +90,7 @@ event.onWillCheckDocumentState.addLast { page, driver ->
 session.load(url, options)
 ```
 
-示例代码: [kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
+示例代码: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
 ### #最复杂# 的 Web 数据抽取难题需要用 X-SQL 来解决:
 
@@ -267,7 +267,7 @@ val page11 = runBlocking { session.loadDeferred(url, "-expires 10s") }
 session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(session::export)
 ```
 
-示例代码: [kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt), [java](pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java).
+示例代码: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java).
 
 ## 加载选项
 
@@ -343,7 +343,7 @@ public class ContinuousCrawler {
 }
 ```
 
-示例代码: [kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt), [java](pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
+示例代码: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
 
 
 

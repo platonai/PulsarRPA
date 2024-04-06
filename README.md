@@ -37,7 +37,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
 
 The code above scrapes fields specified by CSS selectors #title and #acrCustomerReviewText from a set of product pages.
 
-Example code: [kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt).
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt).
 
 Most #real world# crawl projects can start with the following code snippet:
 
@@ -57,7 +57,7 @@ fun main() {
 }
 ```
 
-Example code: [kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
 
 The #most complicated# crawl challenges can be resolved with advanced RPA:
 
@@ -85,7 +85,7 @@ event.onWillCheckDocumentState.addLast { page, driver ->
 session.load(url, options)
 ```
 
-Example code: [kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
 The #most complicated# Web data extraction problems can be handled by X-SQL:
 
@@ -252,7 +252,7 @@ val page11 = runBlocking { session.loadDeferred(url, "-expires 10s") }
 // Java-style async calls
 session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(session::export)
 ```
-Example code: [kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt), [java](pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java).
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java).
 
 ### Load options
 
@@ -324,7 +324,7 @@ public class ContinuousCrawler {
     }
 }
 ```
-Example code can be found in the [Kotlin](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt) and [Java](pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java) versions.
+Example code can be found in the [Kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt) and [Java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java) versions.
 
 ### 👽 RPA (Robotic Process Automation)
 
@@ -359,7 +359,7 @@ event.onWillCheckDocumentState.addLast { page, driver ->
 // Navigate to the URL and initiate events
 session.load(url, options)
 ```
-Example code can be reviewed [here](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
+Example code can be reviewed [here](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
 ### Use X-SQL to query the web
 
@@ -387,8 +387,9 @@ The result of the query will be:
 TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
 HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $6.10 | 1,349 ratings | 4.40
 ```
-For more detailed information on X-SQL and its functions, you can visit the [X-SQL documentation](X-SQL.md).
-Example code for this query can be found [here](pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt).
+
+For more detailed information on X-SQL and its functions, you can visit the [X-SQL documentation](docs/get-started/13X-SQL.md).
+Example code for this query can be found [here](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt).
 
 # 🌐 PulsarRPA as a REST Service
 
@@ -400,7 +401,7 @@ When PulsarRPA runs as a REST service, X-SQL can be used to scrape webpages or t
 git clone https://github.com/platonai/pulsar.git
 cd pulsar && bin/build-run.sh
 ```
-For Chinese developers, we strongly suggest you to follow [this](bin/tools/maven/maven-settings.md) instruction to accelerate the building process.
+For Chinese developers, we strongly suggest you to follow [this](/bin/tools/maven/maven-settings.md) instruction to accelerate the building process.
 
 ## Use X-SQL to Query the Web
 
@@ -431,7 +432,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
   from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1d -njr 3', 'body');
 "
 ```
-Example code: [bash](bin/scrape.sh), [batch](bin/scrape.bat), [java](pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java), [kotlin](pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt), [php](pulsar-client/src/main/php/Scraper.php).
+Example code: [bash](bin/scrape.sh), [batch](bin/scrape.bat), [java](/pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java), [kotlin](/pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt), [php](/pulsar-client/src/main/php/Scraper.php).
 
 The response is as follows in JSON format:
 
@@ -454,6 +455,7 @@ The response is as follows in JSON format:
     "status": "OK"
 }
 ```
+
 Click [X-SQL](docs/x-sql.md) to see a detailed introduction and function descriptions about X-SQL.
 
 # 📖 Step-by-Step Course

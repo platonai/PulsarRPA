@@ -52,9 +52,9 @@ Programmers can write their own Pulsar Contexts to extend the system.
 
 
 
-# Pulsar Session
+### Pulsar Session
 
-PulsarSession defines an interface to load web pages from local storage or fetch from the Internet, as well as methods for parsing, extracting, saving, indexing, and exporting web pages.
+`PulsarSession` defines an interface to load web pages from local storage or fetch from the Internet, as well as methods for parsing, extracting, saving, indexing, and exporting web pages.
 
 Key methods:
 
@@ -111,16 +111,16 @@ When fetching webpages using a real browser, we may need to interact with the pa
 ```kotlin
 val options = session.options(args)
 options.event.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
-  driver.scrollDown()
+    driver.scrollDown()
 }
 session.load(url, options)
 ```
 
-WebDriver provides a complete set of methods for RPA, similar to selenium, playwright, and puppeteer. All actions and behaviors are optimized to mimic real people as closely as possible.
+`WebDriver` provides a complete set of methods for RPA, similar to selenium, playwright, and puppeteer. All actions and behaviors are optimized to mimic real people as closely as possible.
 
-## Web Driver
+### Web Driver
 
-WebDriver defines a concise interface to visit and interact with web pages, with all actions and behaviors optimized to mimic real people as closely as possible, such as scrolling, clicking, typing text, dragging and dropping, etc.
+`WebDriver` 定义了一个简洁的界面来访问网页并与之交互，所有的动作和行为都经过优化，尽可能地模仿真人，比如滚动、点击、键入文本、拖放等。
 
 The methods in this interface fall into three categories:
 
@@ -134,7 +134,7 @@ Key methods:
 - `.scrollDown()`: scroll down on a webpage to fully load the page. Most modern webpages support lazy loading using AJAX technology, where the page content only starts to load when it is scrolled into view.
 - `.pageSource()`: retrieve the source code of a webpage.
 
-## URLs
+### URLs
 
 A Uniform Resource Locator (URL), commonly referred to as a web address, is a reference to a web resource that specifies its location on a computer network and a mechanism for retrieving it.
 
@@ -142,12 +142,12 @@ A URL in PulsarRPA is a normal URL with extra information to describe a task. Ev
 
 There are several basic forms of URLs in PulsarRPA:
 
-- A NormURL.
+- A `NormURL`.
 - A String.
-- A UrlAware.
-- A DegenerateUrl.
+- A `UrlAware`.
+- A `DegenerateUrl`.
 
-NormURL stands for 'normal url', which means the URL is in its final form and is usually passed to a real browser eventually.
+`NormURL` stands for 'normal url', which means the URL is in its final form and is usually passed to a real browser eventually.
 
 If not specified, a URL in string format is actually a 'configured url', or 'a URL with arguments'. For example:
 
@@ -159,7 +159,7 @@ session.load(url)
 The above code has the same meaning as the following code:
 
 ```kotlin
-val url = "https://www.amazon.com/dp/B10000"
+val url = "https://www.amazon.com/dp/B10000" 
 val args = "-taskName amazon -expires 1d -ignoreFailure"
 session.load(url, args)
 ```
@@ -177,7 +177,137 @@ Finally, a DegenerateUrl is not actually a URL; it's an interface for any task t
 
 
 
-# Browser Settings
+
+
+
+
+
+
+
+
+
+
+Finally, `DegenerateUrl` is, in fact, not a link; it is designed as an interface for non-collection tasks to be executed within the Crawl Loop.
+
+### Hyperlinks
+
+Hyperlinks, commonly referred to as links, are references to data on the Web, typically containing a URL, text, and a set of attributes, which users can follow by clicking or tapping.
+
+Hyperlinks in PulsarRPA are similar to standard hyperlinks but include additional information describing the task.
+PulsarRPA predefines several hyperlinks:
+
+`ParsableHyperlink` is a convenient abstraction for executing a get-parse task within a continuous crawling job:
+
+```kotlin
+val parseHandler = { _: WebPage, document: FeaturedDocument ->
+  // do something wonderful with the document
+}
+val urls = LinkExtractors.fromResource("seeds.txt").map { ParsableHyperlink(it, parseHandler) }
+PulsarContexts.create().submitAll(urls).await()
+```
+
+`CompletableHyperlink` helps us perform Java-style asynchronous computations: submit a hyperlink and wait for the task to complete.
+`ListenableHyperlink` helps us attach event handlers:
+
+```kotlin
+val session = PulsarContexts.createSession()
+val link = ListenableHyperlink(portalUrl, args = "-refresh -parse", event = PrintFlowEventHandlers())
+session.submit(link)
+```
+
+Example code: [kotlin](../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_6_EventHandler.kt).
+
+`CompletableListenableHyperlink` allows us to do both:
+
+```kotlin
+fun executeQuery(request: ScrapeRequest): ScrapeResponse {
+  // the hyperlink is a CompletableListenableHyperlink
+  val hyperlink = createScrapeHyperlink(request)
+  session.submit(hyperlink)
+  // wait for the task to complete or timeout
+  return hyperlink.get(3, TimeUnit.MINUTES)
+}
+```
+
+Example code: [kotlin](../pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/service/ScrapeService.kt).
+
+### Load Options
+
+Almost every method in a Pulsar Session accepts an argument named `load arguments` or `load options` to control how web pages are loaded, retrieved, and extracted.
+There are three ways to combine URLs and their arguments:
+1. URL-argument form
+2. URL-options form
+3. configured-URL form
+
+```kotlin
+// use URL-argument form:
+val page = session.load(url, "-expires 1d")
+val page2 = session.load(url, "-refresh")
+val document = session.loadDocument(url, "-expires 1d -ignoreFailure")
+val pages = session.loadOutPages(url, "-outLink a[href~=item] -itemExpires 7d")
+session.submit(Hyperlink(url, args = "-expires 1d"))
+// Or use configured-URL form:
+val page = session.load("$url -expires 1d")
+val page2 = session.load("$url -refresh")
+val document = session.loadDocument("$url -expires 1d -ignoreFailure")
+val pages = session.loadOutPages("$url -expires 1d -ignoreFailure", "-outLink a[href~=item] -itemExpires 7d")
+session.submit(Hyperlink("$url -expires 1d"))
+// Or use URL-options form:
+var options = session.options("-expires 1d -ignoreFailure")
+val document = session.loadDocument(url, options)
+options = session.options("-outLink a[href~=item] -itemExpires 7d")
+val pages = session.loadOutPages("$url -expires 1d -ignoreFailure", options)
+// ...
+```
+
+The configured-URL form can be mixed with the other two forms and has higher priority.
+
+The most important load options include:
+- `-expires`     // Expiration time of the page
+- `-itemExpires` // Expiration time of product pages in batch fetching methods
+- `-outLink`     // Selector for external links to be fetched
+- `-refresh`     // Force (re)fetching the page, just like clicking the refresh button in a real browser
+- `-parse`       // Activate the parsing subsystem
+- `-resource`    // Obtain the URL as a resource without browser rendering
+
+
+Load arguments are all parsed into a `LoadOptions` object; check the code to learn about all supported options.
+
+It's worth noting that when we execute the `load()` series of methods, the system does not parse the web page, but instead provides the `parse()` method for parsing. However, once we add the `-parse` parameter, the system activates the parsing subsystem and automatically parses the web page. We can register handlers to perform tasks such as data extraction, persistence of extraction results, and collecting more links.
+
+There are two ways to register handlers in the parsing subsystem: using `ParseFilters` to register a global `ParseFilter`, or using `PageEventHandlers` to register a page-scoped event handler.
+
+A good case for using `ParseFilters` to execute complex tasks is e-commerce full-site data collection, where different `ParseFilter` are registered for each type of page to handle tasks such as data extraction, persistence of extraction results, and link collection.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Browser Settings
 
 BrowserSettings provides a convenient interface to define the behavior of browser automation, such as:
 
@@ -188,96 +318,60 @@ BrowserSettings provides a convenient interface to define the behavior of browse
 
 For more details, refer to BrowserSettings.
 
-# Event Handler
+### Event Handler
 
-Event handlers here refer to webpage event handlers that capture and process events throughout the lifecycle of webpages.
+`Event handlers` here refer to webpage event handlers that capture and process events throughout the lifecycle of webpages.
 
 For information on all available event handlers, refer to EventHandlerUsage.
 
-# X-SQL
+### X-SQL
 
 PulsarRPA supports the Network As A Database paradigm, and we have developed X-SQL to query the Web directly and convert webpages into tables and charts.
 
 For a detailed introduction and function descriptions about X-SQL, refer to X-SQL.
 
-# Implementation Concepts
+## Implementation Concepts
 
 Developers are not required to study the implementation concepts, but understanding these concepts can help us better grasp how the entire system operates.
 
-## Url Pool
+### Url Pool
 
 During continuous crawls, URLs are added to a UrlPool. A UrlPool contains various UrlCaches to meet different requirements, such as priority, delaying, deadline, and external loading requirements.
 
-## Crawl Loop
-
-During continuous crawls, a crawl loop is initiated to continuously fetch URLs from the UrlPool, and then load/fetch them asynchronously in a PulsarSession.
-
-Remember that every task in # Browser Settings
-
-BrowserSettings provides a convenient interface to define the behavior of browser automation, such as:
-
-- Headed or headless?
-- Single Page Application (SPA) or not?
-- Enable proxy IPs or not?
-- Block media resources or not?
-
-For more details, refer to BrowserSettings.
-
-# Event Handler
-
-Event handlers here refer to webpage event handlers that capture and process events throughout the lifecycle of webpages.
-
-For information on all available event handlers, refer to EventHandlerUsage.
-
-# X-SQL
-
-PulsarRPA supports the Network As A Database paradigm, and we have developed X-SQL to query the Web directly and convert webpages into tables and charts.
-
-For a detailed introduction and function descriptions about X-SQL, refer to X-SQL.
-
-# Implementation Concepts
-
-Developers are not required to study the implementation concepts, but understanding these concepts can help us better grasp how the entire system operates.
-
-## Url Pool
-
-During continuous crawls, URLs are added to a UrlPool. A UrlPool contains various UrlCaches to meet different requirements, such as priority, delaying, deadline, and external loading requirements.
-
-## Crawl Loop
+### Crawl Loop
 
 During continuous crawls, a crawl loop is initiated to continuously fetch URLs from the UrlPool, and then load/fetch them asynchronously in a PulsarSession.
 
 Remember that every task in PulsarRPA is a URL, so the crawl loop can accept and execute any type of task.
 
-## Privacy Context
+### Privacy Context
 
 One of the biggest challenges in web scraping tasks is maintaining bot stealth. For web scraping tasks, it's crucial that the website cannot discern whether a visit is from a human or a bot. If a page visit is suspected by the website, known as a privacy leak, the privacy context must be discarded, and Pulsar will visit the page in a different privacy context.
 
-## Proxy Management
+### Proxy Management
 
 This involves obtaining IPs from proxy vendors, recording proxy status, smart and automatic IP rotation, and more.
 
-## Web Driver Stealth
+### Web Driver Stealth
 
 When a browser is programmed to access a webpage, the website may detect that the visit is automated. Web Driver stealth technology is used to prevent such detection.
 
-## Backend Storage
+### Backend Storage
 
 PulsarRPA supports a variety of backend storage solutions to meet our customers' urgent needs, such as Local File System, MongoDB, HBase, Gora, and so on. is a URL, so the crawl loop can accept and execute any type of task.
 
-## Privacy Context
+### Privacy Context
 
 One of the biggest challenges in web scraping tasks is maintaining bot stealth. For web scraping tasks, it's crucial that the website cannot discern whether a visit is from a human or a bot. If a page visit is suspected by the website, known as a privacy leak, the privacy context must be discarded, and Pulsar will visit the page in a different privacy context.
 
-## Proxy Management
+### Proxy Management
 
 This involves obtaining IPs from proxy vendors, recording proxy status, smart and automatic IP rotation, and more.
 
-## Web Driver Stealth
+### Web Driver Stealth
 
 When a browser is programmed to access a webpage, the website may detect that the visit is automated. Web Driver stealth technology is used to prevent such detection.
 
-## Backend Storage
+### Backend Storage
 
 PulsarRPA supports a variety of backend storage solutions to meet our customers' urgent needs, such as Local File System, MongoDB, HBase, Gora, and so on.
-
