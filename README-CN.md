@@ -385,7 +385,7 @@ event.onWillCheckDocumentState.addLast { page, driver ->
 session.load(url, options)
 ```
 
-示例代码可以在 [这里](https://github.com/platonai/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt) 找到。
+示例代码可以在 [这里](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt) 找到。
 
 ## 使用 X-SQL 查询 Web
 
@@ -416,7 +416,7 @@ TITLE                                                   | BRAND                 
 HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $6.10 | 1,349 ratings | 4.40
 ```
 
-示例代码可以在 [这里](https://github.com/platonai/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt) 找到。
+示例代码可以在 [这里](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt) 找到。
 
 # 🌐 将 PulsarRPA 作为 REST 服务运行
 
