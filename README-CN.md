@@ -199,9 +199,7 @@ java -jar exotic-standalone.jar
 implementation("ai.platon.pulsar:pulsar-all:1.12.4")
 ```
 
-也可以从 [github.com](https://github.com/platonai/pulsar-kotlin-template) 克隆模板项目，包括 [kotlin](https://github.com/platonai/pulsar-kotlin-template), [java-11](https://github.com/platonai/pulsar-java-template), [java-17](https://github.com/platonai/pulsar-java-17-template)。
-
-对于国内开发者，我们建议您按照 [这个](https://github.com/platonai/pulsar-kotlin-template) 指导来加速构建过程。
+也可以从 Github 克隆模板项目，包括 [kotlin](https://github.com/platonai/pulsar-kotlin-template), [java-11](https://github.com/platonai/pulsar-java-template), [java-17](https://github.com/platonai/pulsar-java-17-template)。
 
 
 
@@ -249,15 +247,15 @@ session.submitOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/] 
 val fields = session.scrape(url, "-expires 10s", "#centerCol",
     listOf("#title", "#acrCustomerReviewText"))
 
-// 加载、解析并抓取名字段
+// 加载、解析并抓具名字段
 val fields2 = session.scrape(url, "-i 10s", "#centerCol",
     mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText"))
 
-// 加载、解析并抓取名字段
+// 加载、解析并抓具名字段
 val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s -outLink a[href~=/dp/] -topLink 10", "#centerCol",
     mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText"))
 
-// 添加 `-parse` 选项以激活解析子系统
+// 添加 `-parse` 选项以激活解析子系统（激活后可以注册 DOM 文档相关的事件处理器，并进一步处理 DOM 文档）
 val page10 = session.load(url, "-parse -expires 10s")
 
 // Kotlin 挂起调用
@@ -277,14 +275,16 @@ session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(sess
 - `-itemExpires` // 批量抓取方法中项目页面的过期时间
 - `-outLink`     // 要抓取的外部链接的选择器
 - `-refresh`     // 强制（重新）获取页面，就像在真实浏览器中点击刷新按钮一样
-- `-parse`       // 激活解析子系统
+- `-parse`       // 激活解析子系统，激活后可以注册 DOM 文档相关的事件处理器，并进一步处理 DOM 文档
 - `-resource`    // 无需浏览器渲染获取 URL 作为资源
 
-点击 [Load Options](https://www.example.com/docs/concepts.md#_load_options) 查看详情。
+点击 [Load Options](/docs/concepts.md#load-options) 查看详情。
 
 # 提取网页数据
 
-PulsarRPA 使用 [jsoup](https://jsoup.org/) 从 HTML 文档中提取数据。 Jsoup 将 HTML 解析为与现代浏览器相同的 DOM。 查看 [selector-syntax](https://jsoup.org/cookbook/extracting-data/selector-syntax) 以获取所有受支持的 CSS 选择器。同时，我们扩展了标准 CSS 语法，增强了 CSS 选择器的能力，使得其能够轻松处理现代网页布局。
+PulsarRPA 使用 [jsoup](https://jsoup.org/) 从 HTML 文档中提取数据。 Jsoup 将 HTML 解析为与现代浏览器相同的 DOM。 
+查看 [selector-syntax](https://jsoup.org/cookbook/extracting-data/selector-syntax) 以获取所有受支持的 CSS 选择器。
+同时，我们扩展了标准 CSS 语法，增强了 CSS 选择器的能力，使得其能够轻松处理现代网页布局。
 
 ## Kotlin:
 
@@ -517,9 +517,11 @@ Json 格式的响应如下：
 
 # 📊 日志和指标
 
-PulsarRPA 精心设计了日志和指标子系统，以记录系统中发生的每一个事件。通过 PulsarRPA 的日志系统，您可以轻松地了解系统中发生的每一件事情，判断系统运行是否健康，以及成功获取了多少页面、重试了多少页面、使用了多少代理 IP 等信息。
+PulsarRPA 精心设计了日志和指标子系统，以记录系统中发生的每一个事件。通过 PulsarRPA 的日志系统，您可以轻松地了解系统中发生的每一件事情，
+判断系统运行是否健康，以及成功获取了多少页面、重试了多少页面、使用了多少代理 IP 等信息。
 
-通过观察几个简单的符号，您可以快速了解整个系统的状态：💯 💔 🗙 ⚡ 💿 🔃 🤺。以下是一组典型的页面加载日志。要了解如何阅读日志，请查看 [日志格式]( docs/log-format.md)，以便快速掌握整个系统的状态。
+通过观察几个简单的符号，您可以快速了解整个系统的状态：💯 💔 🗙 ⚡ 💿 🔃 🤺。以下是一组典型的页面加载日志。要了解如何阅读日志，
+请查看 [日志格式]( docs/log-format.md)，以便快速掌握整个系统的状态。
 
 ```text
 2022-09-24 11:46:26.045  INFO [-worker-14] a.p.p.c.c.L.Task - 3313. 💯 ⚡ U for N got 200 580.92 KiB in 1m14.277s, fc:1 | 75/284/96/277/6554 | 106.32.12.75 | 3xBpaR2 | https://www.walmart.com/ip/Restored-iPhone-7-32GB-Black-T-Mobile-Refurbished/329207863 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
@@ -541,7 +543,7 @@ PulsarRPA 已在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上�
 
 # 🛸 高级主题
 
-如果您对 PulsarRPA 的高级主题感兴趣，可以查看 [advanced topics]( docs/faq/advanced-topics.md) 以获取以下问题的答案：
+如果您对 PulsarRPA 的高级主题感兴趣，可以查看 [advanced topics](/docs/faq/advanced-topics.md) 以获取以下问题的答案：
 
 - 大规模网络爬虫有什么困难？
 - 如何每天从电子商务网站上抓取一百万个产品页面？

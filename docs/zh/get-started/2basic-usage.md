@@ -136,10 +136,11 @@ val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s -outLink a[href~=/dp/]
     mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText"))
 ```
 
-在**大规模采集**项目中，我们通常不会编写 load() -> parse() -> select() 这样的顺序性代码，而是会激活**解析子系统**，并在解析子系统中注册事件处理器，通过事件处理器来执行文档相关任务，譬如提取字段，将字段保存到数据库，收集更多链接等等：
+在**大规模采集**项目中，我们可以激活**解析子系统**，并在解析子系统中注册
+事件处理器，通过事件处理器来执行文档相关任务，譬如提取字段，将字段保存到数据库，收集更多链接等等。
 
 ```kotlin
-// 添加 `-parse` 选项来激活解析子系统
+// 添加 `-parse` 选项来激活解析子系统，（激活后可以注册 DOM 文档相关的事件处理器，并进一步处理 DOM 文档）
 val page = session.load(url, "-parse")
 ```
 

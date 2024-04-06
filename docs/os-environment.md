@@ -7,14 +7,14 @@ Linux
 Update the system:
 
 ```bash
-root@galaxyeye$ apt update
-root@galaxyeye$ apt upgrade
+sudo apt update
+sudo apt upgrade
 ```
 
 Install necessary software:
 
 ```bash
-root@galaxyeye$ apt install wget vim default-jdk maven git
+sudo apt install wget vim default-jdk maven git
 ```
 
 Install mongodb:

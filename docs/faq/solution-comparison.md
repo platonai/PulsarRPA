@@ -1,9 +1,4 @@
-= Compare with other solutions
-Vincent Zhang <ivincent.zhang@gmail.com>
-3.0, July 29, 2022: Frequently Asked Questions
-:toc:
-:icons: font
-:url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
+# Compare with other solutions
 
 The following advanced features are not supported by all other popular solutions:
 
@@ -19,7 +14,7 @@ The following features supported by Pulsar are not supported or not well-support
 * X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
 * Logs &amp; metrics: monitored closely and every event is recorded
 
-== PulsarRPA vs selenium/puppeteer/playwright
+## PulsarRPA vs selenium/puppeteer/playwright
 The following features supported by PulsarRPA are not supported or not well-supported by selenium/puppeteer/playwright:
 
 * Performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
@@ -32,7 +27,7 @@ The following features supported by PulsarRPA are not supported or not well-supp
 * Big data: various backend storage support: MongoDB/HBase/Gora
 * Logs &amp; metrics: monitored closely and every event is recorded
 
-== PulsarRPA vs nutch
+## PulsarRPA vs nutch
 The following features supported by PulsarRPA are not supported or not well-supported by nutch:
 
 * Web spider: browser rendering, ajax data crawling
@@ -43,7 +38,7 @@ The following features supported by PulsarRPA are not supported or not well-supp
 * RPA: simulating human behaviors, SPA crawling, or do something else awesome
 * Logs &amp; metrics: monitored closely and every event is recorded
 
-== PulsarRPA vs scrapy+splash
+## PulsarRPA vs scrapy+splash
 The following features supported by PulsarRPA are not supported or not well-supported by scrapy+splash:
 
 * Performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked

@@ -160,7 +160,9 @@ from
 
 ## String Functions
 
-Most string functions are automatically converted from `org.apache.commons.lang3.StringUtils` through programming. You can find the UDF definitions in the following file: [StringFunctions](https://github.com/apache/pulsar/blob/master/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt).
+Most string functions are automatically converted from `org.apache.commons.lang3.StringUtils` through programming. 
+You can find the UDF definitions in the following file: 
+[StringFunctions](https://github.com/apache/pulsar/blob/master/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt).
 
 All string functions belong to the namespace `STR`.
 
