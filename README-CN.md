@@ -496,24 +496,24 @@ Json 格式的响应如下：
 
 我们提供了一个循序渐进的示例课程，帮助您逐步了解和掌握 PulsarRPA 的使用：
 
-1. [Home]( docs/zh/get-started/1home.md)
-2. [Basic Usage]( docs/zh/get-started/2basic-usage.md)
-3. [Load Options]( docs/zh/get-started/3load-options.md)
-4. [Data Extraction]( docs/zh/get-started/4data-extraction.md)
-5. [URL]( docs/zh/get-started/5URL.md)
-6. [Java-style Async]( docs/zh/get-started/6Java-style-async.md)
-7. [Kotlin-style Async]( docs/zh/get-started/7Kotlin-style-async.md)
-8. [Continuous Crawling]( docs/zh/get-started/8continuous-crawling.md)
-9. [Event Handling]( docs/zh/get-started/9event-handling.md)
-10. [RPA]( docs/zh/get-started/10RPA.md)
-11. [WebDriver]( docs/zh/get-started/11WebDriver.md)
-12. [Massive Crawling]( docs/zh/get-started/12massive-crawling.md)
-13. [X-SQL]( docs/zh/get-started/13X-SQL.md)
-14. [AI Extraction]( docs/zh/get-started/14AI-extraction.md)
-15. [REST]( docs/zh/get-started/15REST.md)
-16. [Console]( docs/zh/get-started/16console.md)
-17. [Top Practice]( docs/zh/get-started/17top-practice.md)
-18. [Miscellaneous]( docs/zh/get-started/18miscellaneous.md)
+1. [Home](docs/zh/get-started/1home.md)
+2. [Basic Usage](docs/zh/get-started/2basic-usage.md)
+3. [Load Options](docs/zh/get-started/3load-options.md)
+4. [Data Extraction](docs/zh/get-started/4data-extraction.md)
+5. [URL](docs/zh/get-started/5URL.md)
+6. [Java-style Async](docs/zh/get-started/6Java-style-async.md)
+7. [Kotlin-style Async](docs/zh/get-started/7Kotlin-style-async.md)
+8. [Continuous Crawling](docs/zh/get-started/8continuous-crawling.md)
+9. [Event Handling](docs/zh/get-started/9event-handling.md)
+10. [RPA](docs/zh/get-started/10RPA.md)
+11. [WebDriver](docs/zh/get-started/11WebDriver.md)
+12. [Massive Crawling](docs/zh/get-started/12massive-crawling.md)
+13. [X-SQL](docs/zh/get-started/13X-SQL.md)
+14. [AI Extraction](docs/zh/get-started/14AI-extraction.md)
+15. [REST](docs/zh/get-started/15REST.md)
+16. [Console](docs/zh/get-started/16console.md)
+17. [Top Practice](docs/zh/get-started/17top-practice.md)
+18. [Miscellaneous](docs/zh/get-started/18miscellaneous.md)
 
 # 📊 日志和指标
 
@@ -521,7 +521,7 @@ PulsarRPA 精心设计了日志和指标子系统，以记录系统中发生的�
 判断系统运行是否健康，以及成功获取了多少页面、重试了多少页面、使用了多少代理 IP 等信息。
 
 通过观察几个简单的符号，您可以快速了解整个系统的状态：💯 💔 🗙 ⚡ 💿 🔃 🤺。以下是一组典型的页面加载日志。要了解如何阅读日志，
-请查看 [日志格式]( docs/log-format.md)，以便快速掌握整个系统的状态。
+请查看 [日志格式](docs/log-format.md)，以便快速掌握整个系统的状态。
 
 ```text
 2022-09-24 11:46:26.045  INFO [-worker-14] a.p.p.c.c.L.Task - 3313. 💯 ⚡ U for N got 200 580.92 KiB in 1m14.277s, fc:1 | 75/284/96/277/6554 | 106.32.12.75 | 3xBpaR2 | https://www.walmart.com/ip/Restored-iPhone-7-32GB-Black-T-Mobile-Refurbished/329207863 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
@@ -568,7 +568,7 @@ PulsarRPA 已在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上�
 
 # 🆚 同其他方案的对比
 
-PulsarRPA 在 “主要特性” 部分中提到的特性都得到了良好的支持，而其他解决方案可能不支持或者支持不好。您可以点击 [solution comparison]( docs/faq/solution-comparison.md) 查看以下问题的答案：
+PulsarRPA 在 “主要特性” 部分中提到的特性都得到了良好的支持，而其他解决方案可能不支持或者支持不好。您可以点击 [solution comparison](docs/faq/solution-comparison.md) 查看以下问题的答案：
 
 - PulsarRPA vs selenium/puppeteer/playwright
 - PulsarRPA vs nutch
@@ -576,7 +576,7 @@ PulsarRPA 在 “主要特性” 部分中提到的特性都得到了良好的�
 
 # 🤓 技术细节
 
-如果您对 PulsarRPA 的技术细节感兴趣，可以查看 [technical details]( docs/faq/technical-details.md) 以获取以下问题的答案：
+如果您对 PulsarRPA 的技术细节感兴趣，可以查看 [technical details](docs/faq/technical-details.md) 以获取以下问题的答案：
 
 - 如何轮换我的 IP 地址？
 - 如何隐藏我的机器人不被检测到？

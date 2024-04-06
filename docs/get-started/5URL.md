@@ -8,10 +8,10 @@ In PulsarRPA, each task is defined as some form of URL, which often appears with
 
 A Uniform Resource Locator (URL), commonly known as a web address, is a reference to a network resource that specifies its location on a computer network and the mechanism for retrieving it. URLs in PulsarRPA carry additional information for describing data collection tasks and come in several basic forms:
 
-- A [NormURL](../../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormURL.kt)
+- A [NormURL](/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormURL.kt)
 - A String
-- A [UrlAware](../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)
-- A [DegenerateUrl](../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)
+- A [UrlAware](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)
+- A [DegenerateUrl](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)
 
 NormURL represents a "normalized URL," meaning that this URL is the final form for the fetch component and is usually ultimately passed to the actual browser.
 
@@ -32,11 +32,11 @@ session.load(url, args)
 
 UrlAware provides more complex control to describe collection tasks and is the interface for all Hyperlinks.
 
-Finally, [DegenerateUrl](../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) literally means a "degenerate link," which is not actually a link. It is designed to describe non-collection tasks, such as local computing tasks that do not involve the network, to be executed in the main loop.
+Finally, [DegenerateUrl](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) literally means a "degenerate link," which is not actually a link. It is designed to describe non-collection tasks, such as local computing tasks that do not involve the network, to be executed in the main loop.
 
 ## Hyperlinks
 
-A [hyperlink](https://en.wikipedia.org/wiki/Hyperlink), or simply a link, specifically refers to a reference to data on the Web, usually containing a URL, text, and a set of attributes that users can follow by clicking or tapping. [Hyperlinks in PulsarRPA](../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) are like ordinary hyperlinks but with additional information to describe tasks.
+A [hyperlink](https://en.wikipedia.org/wiki/Hyperlink), or simply a link, specifically refers to a reference to data on the Web, usually containing a URL, text, and a set of attributes that users can follow by clicking or tapping. [Hyperlinks in PulsarRPA](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) are like ordinary hyperlinks but with additional information to describe tasks.
 
 Pulsar predefines several hyperlinks:
 

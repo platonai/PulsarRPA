@@ -22,7 +22,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
   from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1d -njr 3', 'body');");
 ```
 
-Example code can be found here: [bash](../../bin/scrape.sh), [batch](../../bin/scrape.bat), [java](../../pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java), [kotlin](../../pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt), [php](../../pulsar-client/src/main/php/Scraper.php).
+Example code can be found here: [bash](/bin/scrape.sh), [batch](/bin/scrape.bat), [java](/pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java), [kotlin](/pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt), [php](/pulsar-client/src/main/php/Scraper.php).
 
 ------
 

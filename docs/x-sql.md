@@ -1,6 +1,6 @@
 # X-SQL
 
-English | [简体中文](zh/x-sql.md)
+English | [简体中文](/docs/zh/x-sql.md)
 
 ## Introduction
 

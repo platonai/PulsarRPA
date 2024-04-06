@@ -10,7 +10,7 @@ Massively extracting Web data is very challenging. **Websites frequently change 
 
 PulsarRPA has designed a set of data structures to handle the problem of URL pools. This allows PulsarRPA not only to handle millions of URLs simultaneously but also to accurately define the behavior of these URLs.
 
-When running continuous crawling, URLs are added to [URLPool](../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt). URLPool contains various carefully designed [URLCache](../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlCache.kt) to meet different needs, such as priority tasks, delayed tasks, deadlines, external loading, and so on.
+When running continuous crawling, URLs are added to [URLPool](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt). URLPool contains various carefully designed [URLCache](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlCache.kt) to meet different needs, such as priority tasks, delayed tasks, deadlines, external loading, and so on.
 
 By combining URLCache and LoadOptions, we can meet the most complex collection requirements.
 
@@ -96,7 +96,7 @@ The most important purpose of designing the delay cache is to handle failed task
 
 By default, URLCache is based on memory, but we can also reconfigure it to use cache implementations that support file systems or databases.
 
-This course provides [complete code](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt), [domestic mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt).
+This course provides [complete code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt), [domestic mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt).
 
 ------
 

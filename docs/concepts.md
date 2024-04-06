@@ -215,7 +215,7 @@ val link = ListenableHyperlink(portalUrl, args = "-refresh -parse", event = Prin
 session.submit(link)
 ```
 
-Example code: [kotlin](../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_6_EventHandler.kt).
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_6_EventHandler.kt).
 
 `CompletableListenableHyperlink` allows us to do both:
 
@@ -229,7 +229,7 @@ fun executeQuery(request: ScrapeRequest): ScrapeResponse {
 }
 ```
 
-Example code: [kotlin](../pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/service/ScrapeService.kt).
+Example code: [kotlin](/pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/service/ScrapeService.kt).
 
 ### Load Options
 

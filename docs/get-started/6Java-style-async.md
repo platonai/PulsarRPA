@@ -46,7 +46,7 @@ object JvmAsync {
 }
 ```
 
-Online code: [kotlin](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt), [domestic mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt).
+Online code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt), [domestic mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt).
 
 ------
 
