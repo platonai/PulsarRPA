@@ -1,5 +1,4 @@
-The Pulsar log format explained
-=============================
+# The Pulsar log format explained
 
 PulsarRPA has carefully designed the logging and metrics subsystem to record every event that occurs in the system. This document explains the format of typical logs.
 
@@ -12,9 +11,6 @@ logs/pulsar.m.log  - the metrics
 ```
 
 The status of loading tasks is the primary concern. You can gain insight into the state of the entire system just by noticing a few symbols: 💯 💔 🗙 ⚡💿 🔃🤺。
-
-Loading task logs explained
-------------------------
 
 Here are 5 example logs which report the status of loaded tasks:
 
@@ -34,7 +30,7 @@ The following example log reports a retrying page:
 
 This document explains each field in the logs.
 
-Part I: general information pre-defined by the logging system
+## Part I: general information pre-defined by the logging system
 
 ```
 Date       Time          LogLevel  ThreadName   LogName
@@ -42,7 +38,7 @@ Date       Time          LogLevel  ThreadName   LogName
 2022-09-24 11:46:09.190  INFO      [-worker-32] a.p.p.c.c.L.Task -
 ```
 
-Part II: PageId, TaskStatus, PageStatus, PageCategory, FetchReason, FetchCode, PageSize and FetchTime
+## Part II: PageId, TaskStatus, PageStatus, PageCategory, FetchReason, FetchCode, PageSize and FetchTime
 
 ```
 PageId    TaskStatus PageStatus  PageCategory   FetchReason     FetchCode      PageSize                        FetchTime
@@ -53,23 +49,23 @@ PageId    TaskStatus PageStatus  PageCategory   FetchReason     FetchCode      P
 2828.     🗙          🗙           U            for SC          got 200          0 <- 348.31 KiB <- 684.75 KiB  in 0s
 ```
 
-PageId is the id of the WebPage object and is unique process-wide.
+`PageId` is the id of the WebPage object and is unique process-wide.
 
-TaskStatus is a unicode symbol, can be one of the following:
+`TaskStatus` is a unicode symbol, can be one of the following:
 
 - 💯 - Task is success
 - 💔 - Task is failed
 - 🗙 - Task is canceled
 - 🤺 - Task is retrying
 
-PageStatus is a unicode symbol, can be one of the following:
+`PageStatus` is a unicode symbol, can be one of the following:
 
 - ⚡ - Page is first fetched from the Internet
 - 💿 - Page is loaded from hard disk
 - 🔃 - Page is updated from the Internet
 - 🗙 - Page is canceled and remains unchanged
 
-FetchReason indicates why the page was fetched. The reason can be one of the following:
+`FetchReason` indicates why the page was fetched. The reason can be one of the following:
 
 - The page was never fetched
 - The page has expired since the last fetch
@@ -83,7 +79,7 @@ FetchReason indicates why the page was fetched. The reason can be one of the fol
 
 
 
-FetchReason contains one or two characters, defined as follows:
+`FetchReason` contains one or two characters, defined as follows:
 
 ```
 symbols[DO_NOT_FETCH] = ""
@@ -99,7 +95,7 @@ symbols[TEMP_MOVED] = "TM"
 symbols[UNKNOWN] = "U"
 ```
 
-FetchCode is a number describing the fetch phase state, inherited from standard HTTP error codes, and is usually one of the following:
+`FetchCode` is a number describing the fetch phase state, inherited from standard HTTP error codes, and is usually one of the following:
 
 ```
 200 - success
@@ -108,7 +104,7 @@ FetchCode is a number describing the fetch phase state, inherited from standard 
 
 All possible codes are defined in `ProtocolStatusCodes.java`.
 
-### Part III - PrevFetchTime, FetchCount, FetchFailure, DOMStatistic, ProxyIP, and PrivacyContext
+## Part III - PrevFetchTime, FetchCount, FetchFailure, DOMStatistic, ProxyIP, and PrivacyContext
 
 ```
 PrevFetchTime               FetchCount        FetchFailure                           DOMStatistic         ProxyIP           PrivacyContext
@@ -119,13 +115,13 @@ last fetched 16m58s ago,    fc:6 |                                              
 last fetched 18m55s ago,    fc:2 |                                                   34/130/52/181/5747 | 60.184.124.232  | 11zTa0r2
 ```
 
-PrevFetchTime is the time when the previous fetch completed.
+`PrevFetchTime` is the time when the previous fetch completed.
 
-FetchCount is the count of all fetch executions, excluding cancelled fetches.
+`FetchCount` is the count of all fetch executions, excluding cancelled fetches.
 
-FetchFailure is the failure information of the previous fetch execution, and it is empty if it succeeds.
+`FetchFailure` is the failure information of the previous fetch execution, and it is empty if it succeeds.
 
-DOMStatistic contains simple statistics on the HTML document, calculated using JavaScript in a real browser, in the following format:
+`DOMStatistic` contains simple statistics on the HTML document, calculated using JavaScript in a real browser, in the following format:
 
 ```
 58/230/98/295/6272
@@ -140,11 +136,11 @@ Where:
 - st: small text count
 - h: scroll height of the document in pixels
 
-DOMStatistic indicates whether the page was fetched correctly; a fully loaded page usually has a scroll height higher than 5,000 pixels, and pages below this value may need to be re-fetched.
+`DOMStatistic` indicates whether the page was fetched correctly; a fully loaded page usually has a scroll height higher than 5,000 pixels, and pages below this value may need to be re-fetched.
 
 For other fields, such as ProxyIP and PrivacyContext, no explanation is needed.
 
-### Part IV: the task URL
+## Part IV: the task URL
 
 ```
 URL

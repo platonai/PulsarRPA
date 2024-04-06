@@ -1,5 +1,4 @@
-Pulsar 日志格式解释
-=============================
+# Pulsar 日志格式解释
 
 PulsarRPA 精心设计了日志和指标子系统，以记录系统中发生的每个事件。本文档解释了典型日志的格式。
 
@@ -13,8 +12,7 @@ logs/pulsar.m.log  - 指标
 
 加载任务的状态是主要关注点。您只需注意几个符号：💯 💔 🗙 ⚡💿 🔃🤺，就可以洞察整个系统的状态。
 
-加载任务日志解释
-------------------------
+**加载任务日志解释**
 
 以下是5个报告已加载任务状态的示例日志：
 
@@ -34,7 +32,7 @@ logs/pulsar.m.log  - 指标
 
 本文档解释了日志中的每个字段。
 
-第一部分：由日志系统预定义的一般信息
+## 第一部分：由日志系统预定义的一般信息
 
 ```
 日期       时间         日志级别  线程名称   日志名称
@@ -42,7 +40,9 @@ logs/pulsar.m.log  - 指标
 2022-09-24 11:46:09.190  INFO      [-worker-32] a.p.p.c.c.L.Task -
 ```
 
-第二部分：PageId、TaskStatus、PageStatus、PageCategory、FetchReason、FetchCode、PageSize 和 FetchTime
+## 第二部分：页面加载状态
+
+这部分包含了 PageId、TaskStatus、PageStatus、PageCategory、FetchReason、FetchCode、PageSize 和 FetchTime 等信息。
 
 ```
 PageId    任务状态  页面状态  页面类别   获取原因     获取代码      页面大小                        获取时间
@@ -53,23 +53,23 @@ PageId    任务状态  页面状态  页面类别   获取原因     获取代�
 2828.     🗙          🗙           U            for SC          got 200          0 <- 348.31 KiB <- 684.75 KiB  in 0s
 ```
 
-PageId 是 WebPage 对象的 ID，在进程范围内是唯一的。
+`PageId` 是 WebPage 对象的 ID，在进程范围内是唯一的。
 
-TaskStatus 是一个 Unicode 符号，可以是以下之一：
+`TaskStatus` 是一个 Unicode 符号，可以是以下之一：
 
 - 💯 - 任务成功
 - 💔 - 任务失败
 - 🗙 - 任务已取消
 - 🤺 - 任务正在重试
 
-PageStatus 是一个 Unicode 符号，可以是以下之一：
+`PageStatus` 是一个 Unicode 符号，可以是以下之一：
 
 - ⚡ - 页面首次从互联网获取
 - 💿 - 页面从硬盘加载
 - 🔃 - 页面从互联网更新
 - 🗙 - 页面已取消且保持不变
 
-FetchReason 指示为什么获取页面。原因可以是以下之一：
+`FetchReason` 指示为什么获取页面。原因可以是以下之一：
 
 - 页面从未被获取
 - 自上次获取以来页面已过期
@@ -81,7 +81,7 @@ FetchReason 指示为什么获取页面。原因可以是以下之一：
 - 上次获取的页面内容中缺失了所需字段
 - 页面被临时移动
 
-FetchReason 包含一个或两个字符，定义如下：
+`FetchReason` 包含一个或两个字符，定义如下：
 
 ```
 symbols[DO_NOT_FETCH] = ""
@@ -97,7 +97,7 @@ symbols[TEMP_MOVED] = "TM"
 symbols[UNKNOWN] = "U"
 ```
 
-FetchCode 是描述获取阶段状态的数字，继承自标准 HTTP 错误代码，通常如下：
+`FetchCode` 是描述获取阶段状态的数字，继承自标准 HTTP 错误代码，通常如下：
 
 ```
 200 - 成功
@@ -106,7 +106,7 @@ FetchCode 是描述获取阶段状态的数字，继承自标准 HTTP 错误代�
 
 所有可能的代码都在 `ProtocolStatusCodes.java` 中定义。
 
-### 第三部分 - PrevFetchTime、FetchCount、FetchFailure、DOMStatistic、ProxyIP 和 PrivacyContext
+## 第三部分 - PrevFetchTime、FetchCount、FetchFailure、DOMStatistic、ProxyIP 和 PrivacyContext
 
 ```
 PrevFetchTime               FetchCount        FetchFailure                           DOMStatistic         ProxyIP           PrivacyContext
@@ -117,13 +117,13 @@ PrevFetchTime               FetchCount        FetchFailure                      
 上次获取完成时间为 18分钟55秒前,    fc:2 |                                                   34/130/52/181/5747 | 60.184.124.232  | 11zTa0r2
 ```
 
-PrevFetchTime 是上次获取操作完成的时间。
+`PrevFetchTime` 是上次获取操作完成的时间。
 
-FetchCount 是所有获取执行的次数，不包括已取消的获取。
+`FetchCount` 是所有获取执行的次数，不包括已取消的获取。
 
-FetchFailure 是上次获取执行失败的信息，如果成功则为空。
+`FetchFailure` 是上次获取执行失败的信息，如果成功则为空。
 
-DOMStatistic 包含了使用真实浏览器中的 JavaScript 计算的 HTML 文档的简单统计信息，格式如下：
+`DOMStatistic` 包含了使用真实浏览器中的 JavaScript 计算的 HTML 文档的简单统计信息，格式如下：
 
 ```
 58/230/98/295/6272
@@ -138,11 +138,11 @@ DOMStatistic 包含了使用真实浏览器中的 JavaScript 计算的 HTML 文�
 - st: 小文本数量
 - h: 文档的滚动高度（像素）
 
-DOMStatistic 表示页面是否正确获取；一个完全加载的页面通常滚动高度超过 5000 像素，低于这个值的页面可能需要重新获取。
+`DOMStatistic` 表示页面是否正确获取；一个完全加载的页面通常滚动高度超过 5000 像素，低于这个值的页面可能需要重新获取。
 
 对于其他字段，如 ProxyIP 和 PrivacyContext，并不需要解释。
 
-### 第四部分：任务 URL
+## 第四部分：任务 URL
 
 ```
 URL
