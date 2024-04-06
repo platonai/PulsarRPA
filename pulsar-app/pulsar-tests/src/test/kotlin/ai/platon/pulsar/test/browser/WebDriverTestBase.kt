@@ -13,6 +13,7 @@ class WebDriverTestBase: TestBase() {
     protected val warnUpUrl = "https://www.amazon.com/"
     protected val originUrl = "https://www.amazon.com/"
     protected val url = "https://www.amazon.com/dp/B0C1H26C46"
+    protected val resourceUrl = "https://www.amazon.com/robots.txt"
     protected val walmartUrl = "https://www.walmart.com/ip/584284401"
     protected val asin get() = url.substringAfterLast("/dp/")
     protected val driverFactory get() = session.context.getBean(WebDriverFactory::class)
@@ -32,6 +33,8 @@ class WebDriverTestBase: TestBase() {
         runBlocking {
             driverFactory.create().use { driver ->
                 block(driver)
+                driver.navigateTo("about:blank")
+                driver.clearBrowserCookies()
             }
         }
     }

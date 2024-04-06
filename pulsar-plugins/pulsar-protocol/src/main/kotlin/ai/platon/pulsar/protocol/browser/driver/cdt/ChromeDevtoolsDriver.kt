@@ -199,12 +199,12 @@ class ChromeDevtoolsDriver(
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(timeout: Duration): Duration {
-        return waitUntil("waitForNavigation", timeout) { isNavigated(navigateUrl) }
+    override suspend fun waitForNavigation(oldUrl: String, timeout: Duration): Duration {
+        return waitUntil("waitForNavigation", timeout) { isNavigated(oldUrl) }
     }
     
     @Throws(WebDriverException::class)
-    private suspend fun waitForNavigationExperimental(timeout: Duration): Long {
+    private suspend fun waitForNavigationExperimental(oldUrl: String, timeout: Duration): Long {
         try {
             val channel = Channel<String>()
             val oldUrl = currentUrl()
@@ -574,8 +574,13 @@ class ChromeDevtoolsDriver(
         }
         
         val frameId = pageAPI?.frameTree?.frame?.id
-        val response = rpc.invokeDeferredSilently("loadNetworkResource") {
-            networkAPI?.loadNetworkResource(frameId, url, options)?.let { NetworkResourceResponse.from(it) }
+        val response = rpc.invokeDeferred("loadNetworkResource") {
+            // failed to load the amazon.com/robots.txt using the networkAPI while successful using the jsoup
+//            val resource = networkAPI?.loadNetworkResource(frameId, url, options)
+            val resource = loadJsoupResource(url)
+            resource?.let {
+                NetworkResourceResponse.from(it)
+            }
         }
         
         return response ?: NetworkResourceResponse()

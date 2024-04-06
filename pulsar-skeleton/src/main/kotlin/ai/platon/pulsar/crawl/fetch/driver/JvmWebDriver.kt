@@ -105,11 +105,11 @@ interface JvmWebDriver {
     @Throws(WebDriverException::class)
     fun waitForSelectorAsync(selector: String, timeout: Duration): CompletableFuture<Duration>
     @Throws(WebDriverException::class)
-    fun waitForNavigationAsync(): CompletableFuture<Duration>
+    fun waitForNavigationAsync(oldUrl: String): CompletableFuture<Duration>
     @Throws(WebDriverException::class)
-    fun waitForNavigationAsync(timeoutMillis: Long): CompletableFuture<Long>
+    fun waitForNavigationAsync(oldUrl: String, timeoutMillis: Long): CompletableFuture<Long>
     @Throws(WebDriverException::class)
-    fun waitForNavigationAsync(timeout: Duration): CompletableFuture<Duration>
+    fun waitForNavigationAsync(oldUrl: String, timeout: Duration): CompletableFuture<Duration>
 
     @Throws(WebDriverException::class)
     fun existsAsync(selector: String): CompletableFuture<Boolean>

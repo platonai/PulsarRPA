@@ -129,10 +129,7 @@ internal class RobustRPC(
     }
 
     private fun decreaseRPCFailures() {
-        rpcFailures.decrementAndGet()
-        if (rpcFailures.get() < 0) {
-            rpcFailures.set(0)
-        }
+        rpcFailures.getAndUpdate { it.dec().coerceAtLeast(0) }
     }
 
     private fun increaseRPCFailures() {

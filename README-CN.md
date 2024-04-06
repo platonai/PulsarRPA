@@ -39,7 +39,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
 
 上面的代码从一组产品页面中抓取由 css 选择器 #title 和 #acrCustomerReviewText 指定的字段。 示例代码：[kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/sites/amazon/AmazonCrawler.java).
 
-### 大多数 #生产环境# 数据采集项目可以从以下代码片段开始：
+### 大多数 *生产环境* 数据采集项目可以从以下代码片段开始：
 
 *Kotlin:*
 
@@ -62,7 +62,7 @@ fun main() {
 示例代码：
 [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
 
-### #最复杂# 的数据采集项目需要使用 RPA：
+### **最复杂** 的数据采集项目需要使用 RPA：
 
 *Kotlin:*
 
@@ -92,7 +92,7 @@ session.load(url, options)
 
 示例代码: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
-### #最复杂# 的 Web 数据抽取难题需要用 X-SQL 来解决:
+### *最复杂* 的 Web 数据抽取难题需要用 X-SQL 来解决:
 
 1. 您的 Web 数据提取规则非常复杂，例如，每个单独的页面有 100 多个规则
 2. 需要维护的数据提取规则很多，比如全球 20 多个亚马逊网站，每个网站 20 多个数据类型

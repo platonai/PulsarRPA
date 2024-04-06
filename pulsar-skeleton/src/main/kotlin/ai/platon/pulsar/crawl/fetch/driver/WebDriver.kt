@@ -464,33 +464,53 @@ interface WebDriver: Closeable {
      * Wait until the current url changes or timeout.
      *
      * ```kotlin
-     * val remainingTime = driver.waitForNavigation()
+     * val url = "https://www.example.com"
+     * driver.navigateTo(url)
+     * var remainingTime = driver.waitForNavigation()
+     * if (remainingTime > 0) {
+     *   driver.click("a[href='/next']")
+     *   remainingTime = driver.waitForNavigation(url)
+     * }
      * ```
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForNavigation(): Duration
+    suspend fun waitForNavigation(oldUrl: String = ""): Duration
     /**
      * Wait until the current url changes or timeout.
      *
      * ```kotlin
-     * val remainingTime = driver.waitForNavigation(10000)
+     * val url = "https://www.example.com"
+     * driver.navigateTo(url)
+     * var remainingTime = driver.waitForNavigation(1000)
+     * if (remainingTime > 0) {
+     *   driver.click("a[href='/next']")
+     *   remainingTime = driver.waitForNavigation(url, 1000)
+     * }
      * ```
      *
      * @param timeoutMillis The maximum time to wait for the url to change.
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForNavigation(timeoutMillis: Long): Long = waitForNavigation(Duration.ofMillis(timeoutMillis)).toMillis()
+    suspend fun waitForNavigation(oldUrl: String = "", timeoutMillis: Long): Long =
+        waitForNavigation(oldUrl, Duration.ofMillis(timeoutMillis)).toMillis()
     /**
      * Wait until the current url changes or timeout.
      *
      * ```kotlin
-     * val remainingTime = driver.waitForNavigation(Duration.ofSeconds(30))
+     * val timeout = Duration.ofSeconds(30)
+     * val url = "https://www.example.com"
+     * driver.navigateTo(url)
+     * var remainingTime = driver.waitForNavigation(timeout)
+     * if (remainingTime > 0) {
+     *   driver.click("a[href='/next']")
+     *   remainingTime = driver.waitForNavigation(url, timeout)
+     * }
      * ```
      *
      * @param timeout The maximum time to wait for the url to change.
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForNavigation(timeout: Duration): Duration
+    suspend fun waitForNavigation(oldUrl: String = "", timeout: Duration): Duration
     /**
      * Await navigation to the specified URL page or timeout if necessary.
      *

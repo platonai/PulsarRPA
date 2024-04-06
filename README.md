@@ -39,7 +39,7 @@ The code above scrapes fields specified by CSS selectors #title and #acrCustomer
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt).
 
-Most #real world# crawl projects can start with the following code snippet:
+Most *real world* crawl projects can start with the following code snippet:
 
 ```kotlin
 fun main() {
@@ -59,7 +59,7 @@ fun main() {
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
 
-The #most complicated# crawl challenges can be resolved with advanced RPA:
+The *most complicated* crawl challenges can be resolved with advanced RPA:
 
 ```kotlin
 val options = session.options(args)
@@ -87,7 +87,7 @@ session.load(url, options)
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
-The #most complicated# Web data extraction problems can be handled by X-SQL:
+The *most complicated* Web data extraction problems can be handled by X-SQL:
 
 ```sql
 select
@@ -417,7 +417,7 @@ bin/scrape.sh
 ```
 The bash script is quite simple; it just uses curl to post an X-SQL:
 
-```sql
+```
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
       dom_base_uri(dom) as url,

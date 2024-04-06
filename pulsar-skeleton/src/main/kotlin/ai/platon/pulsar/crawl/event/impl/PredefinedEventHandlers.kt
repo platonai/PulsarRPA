@@ -35,7 +35,7 @@ open class LoginHandler(
 
         warnUpUrl?.let {
             driver.navigateTo(it)
-            driver.waitForNavigation(Duration.ofSeconds(10))
+            driver.waitForNavigation(timeout = Duration.ofSeconds(10))
         }
         
         if (!driver.currentUrl().contains("login")) {

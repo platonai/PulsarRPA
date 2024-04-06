@@ -1,8 +1,8 @@
-package ai.platon.pulsar.test
+package ai.platon.pulsar.test.browser
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.test.browser.WebDriverTestBase
+import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
 
 /**
@@ -50,7 +50,7 @@ class TestLoadResources: WebDriverTestBase() {
 
 //        println(body)
         assertContains(body, "Disallow", ignoreCase = true,
-            message = "Disallow should be in body: >>>\n${body.substring(0, 100)}\n<<<")
+            message = "Disallow should be in body: >>>\n${StringUtils.abbreviateMiddle(body, "...", 100)}\n<<<")
 
 //        val cookies = response.entries.joinToString("; ") { it.key + "=" + it.value }
 //        println(cookies)

@@ -362,7 +362,7 @@ abstract class AbstractWebDriver(
     override suspend fun waitUntil(predicate: suspend () -> Boolean) = waitUntil(timeout("waitUntil"), predicate)
     
     @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation() = waitForNavigation(timeout("waitForNavigation"))
+    override suspend fun waitForNavigation(oldUrl: String) = waitForNavigation(oldUrl, timeout("waitForNavigation"))
     
     @Throws(WebDriverException::class)
     override suspend fun newJsoupSession(): Connection {
