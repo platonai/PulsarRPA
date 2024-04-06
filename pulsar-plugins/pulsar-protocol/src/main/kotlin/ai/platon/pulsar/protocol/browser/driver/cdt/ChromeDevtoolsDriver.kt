@@ -522,11 +522,11 @@ class ChromeDevtoolsDriver(
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun captureScreenshot(clip: RectD): String? {
+    override suspend fun captureScreenshot(rect: RectD): String? {
         return try {
             // Force the page stop all navigations and pending resource fetches.
             rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
-            rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(clip) }
+            rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(rect) }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "captureScreenshot")
             null
@@ -576,9 +576,7 @@ class ChromeDevtoolsDriver(
         
         val frameId = pageAPI?.frameTree?.frame?.id
         val response = rpc.invokeDeferred("loadNetworkResource") {
-            // failed to load the amazon.com/robots.txt using the networkAPI while successful using the jsoup
-//            val resource = networkAPI?.loadNetworkResource(frameId, url, options)
-            val resource = loadJsoupResource(url)
+            val resource = networkAPI?.loadNetworkResource(frameId, url, options)
             resource?.let {
                 NetworkResourceResponse.from(it)
             }
