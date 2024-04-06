@@ -3,11 +3,11 @@ package ai.platon.pulsar.browser.driver
 import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
-import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import com.google.gson.Gson
-import java.time.LocalDateTime
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class TestChromeImplLauncher {
     private val USER_DATA_DIR_REGEX = ".+pulsar-.+/context/cx.+".toRegex()
@@ -39,10 +39,7 @@ class TestChromeImplLauncher {
         val launchOptions = ChromeOptions()
         launchOptions.headless = false
 
-        val userDataDir = AppPaths.CONTEXT_BASE_DIR
-            .resolve("test")
-            .resolve("google-chrome")
-            .resolve(LocalDateTime.now().second.toString())
+        val userDataDir = BrowserFiles.computeTestContextDir()
 
         val launcher = ChromeLauncher(userDataDir, options = LauncherOptions())
         launcher.use {

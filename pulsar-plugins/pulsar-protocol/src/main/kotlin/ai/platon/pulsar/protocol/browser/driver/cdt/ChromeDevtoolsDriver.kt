@@ -165,11 +165,12 @@ class ChromeDevtoolsDriver(
         val name = "selectFirstAttributeOrNull"
         return invokeOnElement(selector, name) { page.getAttribute(it, attrName) }
     }
-    
-    override suspend fun selectAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
-        val name = "selectAttributeAll"
-        return invokeOnPage(name) { page.getAttributeAll(selector, attrName, start, limit) } ?: listOf()
-    }
+
+    // Unittest failed
+//    override suspend fun selectAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
+//        val name = "selectAttributeAll"
+//        return invokeOnPage(name) { page.getAttributeAll(selector, attrName, start, limit) } ?: listOf()
+//    }
     
     @Throws(WebDriverException::class)
     override suspend fun evaluate(expression: String): Any? {
@@ -200,6 +201,7 @@ class ChromeDevtoolsDriver(
     
     @Throws(WebDriverException::class)
     override suspend fun waitForNavigation(oldUrl: String, timeout: Duration): Duration {
+        // TODO: listen to the navigation event
         return waitUntil("waitForNavigation", timeout) { isNavigated(oldUrl) }
     }
     

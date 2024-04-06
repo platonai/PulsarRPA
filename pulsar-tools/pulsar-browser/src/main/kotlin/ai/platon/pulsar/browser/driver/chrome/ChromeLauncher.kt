@@ -31,7 +31,6 @@ class ChromeLauncher(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
-        private val isActive get() = AppContext.isActive && !Thread.currentThread().isInterrupted
         
         private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws://.+:(\\d+)/")
     }
@@ -40,13 +39,19 @@ class ChromeLauncher(
     private val pidPath get() = userDataDir.resolveSibling(PID_FILE_NAME)
     private val temporaryUddExpiry = BrowserFiles.TEMPORARY_UDD_EXPIRY
     private var process: Process? = null
+    
+    private val isClosed get() = closed.get()
+    private val isActive get() = AppContext.isActive && !Thread.currentThread().isInterrupted
     private val shutdownHookThread = Thread {
         // System.err.println("Shutting down chrome process ...")
         
-        // Shutdown by the upper layer
-        // this.close()
+        // the upper layer should also close the launcher
+        if (!isClosed) {
+            sleepSeconds(10)
+            this.close()
+        }
     }
-
+    
     /**
      * Launch the chrome
      * */

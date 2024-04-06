@@ -354,9 +354,11 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
         println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
         assertEquals("Mate60", evaluate?.value)
         
+        val lastUrl = driver.currentUrl()
+        
         driver.press(selector, "Enter")
-        driver.waitForNavigation()
-        assertTrue { driver.currentUrl() != url }
+        driver.waitForNavigation(lastUrl)
+        assertTrue { driver.currentUrl() != lastUrl }
     }
 
     @Test

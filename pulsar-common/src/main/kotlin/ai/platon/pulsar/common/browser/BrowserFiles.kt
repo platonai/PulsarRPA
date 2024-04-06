@@ -34,14 +34,18 @@ object BrowserFiles {
     
     @Throws(IOException::class)
     @Synchronized
-    fun computeNextSequentialContextDir(): Path {
-        return runWithFileLock { computeNextSequentialContextDir0() }
+    fun computeTestContextDir() = computeNextSequentialContextDir0("test")
+    
+    @Throws(IOException::class)
+    @Synchronized
+    fun computeNextSequentialContextDir(ident: String = ""): Path {
+        return runWithFileLock { computeNextSequentialContextDir0(ident) }
     }
 
     @Throws(IOException::class)
     fun cleanUpContextTmpDir(expiry: Duration) {
         val hasSiblingPidFile: (Path) -> Boolean = { path -> Files.exists(path.resolveSibling(PID_FILE_NAME)) }
-        Files.walk(AppPaths.CONTEXT_TMP_DIR)
+        Files.walk(AppPaths.CONTEXT_TMP_DIR, 3)
             .filter { it !in cleanedUserDataDirs }
             .filter { it.isDirectory() && hasSiblingPidFile(it) }.forEach { path ->
                 deleteTemporaryUserDataDirWithLock(path, expiry)
@@ -103,7 +107,7 @@ object BrowserFiles {
     }
 
     @Throws(IOException::class)
-    private fun computeNextSequentialContextDir0(): Path {
+    private fun computeNextSequentialContextDir0(ident: String): Path {
         val prefix = CONTEXT_DIR_PREFIX
         val monthDay = MonthDay.now()
         val monthValue = monthDay.monthValue
@@ -118,6 +122,6 @@ object BrowserFiles {
             .count()
         val fileName = String.format("%s%02d%02d%s%s%s",
             prefix, monthValue, dayOfMonth, sequence, rand, contextCount)
-        return baseDir.resolve(fileName)
+        return baseDir.resolve(ident).resolve(fileName)
     }
 }

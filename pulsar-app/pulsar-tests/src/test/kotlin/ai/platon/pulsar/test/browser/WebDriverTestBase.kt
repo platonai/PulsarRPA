@@ -25,6 +25,8 @@ class WebDriverTestBase: TestBase() {
             driverFactory.create().use { driver ->
                 open(url, driver)
                 block(driver)
+                driver.navigateTo("about:blank")
+                driver.clearBrowserCookies()
             }
         }
     }
