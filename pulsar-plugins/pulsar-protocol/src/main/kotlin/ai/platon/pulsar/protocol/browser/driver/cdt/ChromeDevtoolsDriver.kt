@@ -206,10 +206,11 @@ class ChromeDevtoolsDriver(
     }
     
     @Throws(WebDriverException::class)
-    private suspend fun waitForNavigationExperimental(oldUrl: String, timeout: Duration): Long {
+    private suspend fun waitForNavigationExperimental(oldUrl: String, timeout: Duration): Duration {
+        val startTime = Instant.now()
+        
         try {
             val channel = Channel<String>()
-            val oldUrl = currentUrl()
             
             pageAPI?.onDocumentOpened {
                 val navigated = it.frame.url != oldUrl
@@ -218,13 +219,11 @@ class ChromeDevtoolsDriver(
             }
             
             channel.receive()
-            
-            return 1
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "waitForNavigation $timeout")
         }
         
-        return -1
+        return timeout - DateTimes.elapsedTime(startTime)
     }
     
     @Throws(WebDriverException::class)

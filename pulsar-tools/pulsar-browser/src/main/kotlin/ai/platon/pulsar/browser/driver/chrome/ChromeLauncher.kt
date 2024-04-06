@@ -44,7 +44,7 @@ class ChromeLauncher(
     private val isActive get() = AppContext.isActive && !Thread.currentThread().isInterrupted
     private val shutdownHookThread = Thread {
         // System.err.println("Shutting down chrome process ...")
-        
+
         // the upper layer should also close the launcher
         if (!isClosed) {
             sleepSeconds(10)
