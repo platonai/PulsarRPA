@@ -35,7 +35,7 @@ class PrivacyContextManagerTests {
     @BeforeTest
     fun setup() {
         System.setProperty(
-            CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS_KEY,
+            CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS,
             SequentialPrivacyAgentGenerator::class.java.name
         )
         BrowserSettings.privacy(6).maxTabs(10)

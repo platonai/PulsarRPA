@@ -476,7 +476,7 @@ __pulsar_utils__.click = function(selector) {
 }
 
 /**
- * Select the first element and click it
+ * Select the first element and click it.
  *
  * @param  {String} selector
  * @param  {String} pattern

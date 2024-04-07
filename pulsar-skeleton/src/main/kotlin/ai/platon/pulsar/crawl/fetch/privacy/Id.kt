@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
-import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS_KEY
+import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent.Companion.SYSTEM_DEFAULT
@@ -241,11 +241,11 @@ class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {
     private val logger = LoggerFactory.getLogger(PrivacyAgentGeneratorFactory::class.java)
     
     // TODO: there is always one generator.
-    val generator: PrivacyAgentGenerator get() = getOrCreate(PRIVACY_AGENT_GENERATOR_CLASS_KEY)
+    val generator: PrivacyAgentGenerator get() = getOrCreate(PRIVACY_AGENT_GENERATOR_CLASS)
     
     private fun getOrCreate(classKey: String): PrivacyAgentGenerator {
         synchronized(generators) {
-            return getOrCreate0(PRIVACY_AGENT_GENERATOR_CLASS_KEY)
+            return getOrCreate0(PRIVACY_AGENT_GENERATOR_CLASS)
         }
     }
     
@@ -255,7 +255,7 @@ class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {
             return gen
         }
         
-        gen = createUsingGlobalConfig(conf, PRIVACY_AGENT_GENERATOR_CLASS_KEY)
+        gen = createUsingGlobalConfig(conf, PRIVACY_AGENT_GENERATOR_CLASS)
         
         generators[gen::class.java.name] = gen
         generators[classKey] = gen

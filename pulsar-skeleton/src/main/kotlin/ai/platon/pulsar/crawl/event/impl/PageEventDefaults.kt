@@ -74,6 +74,9 @@ open class DefaultPageEventHandlers(
     crawlEventHandlers: CrawlEventHandlers = DefaultCrawlEventHandlers()
 ) : AbstractPageEventHandlers(loadEventHandlers, browseEventHandlers, crawlEventHandlers)
 
+@Deprecated("Use DefaultPageEventHandlers instead", ReplaceWith("DefaultPageEventHandlers"))
+typealias DefaultPageEvent = DefaultPageEventHandlers
+
 /**
  * The factory to create page event handler.
  */
