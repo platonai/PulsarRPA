@@ -67,7 +67,6 @@ class InteractTask(
 
     /**
      * The interact settings.
-     * TODO: page.getVar("InteractSettings") is deprecated, use page.conf[BROWSER_INTERACT_SETTINGS] instead
      * */
     val interactSettings get() = navigateTask.interactSettings
 }

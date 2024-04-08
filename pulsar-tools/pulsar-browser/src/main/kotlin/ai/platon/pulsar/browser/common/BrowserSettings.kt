@@ -263,6 +263,13 @@ open class BrowserSettings(
             return BrowserSettings
         }
         /**
+         * Use the specified interact settings to interact with webpages.
+         * */
+        fun withInteractSettings(settings: InteractSettings): Companion {
+            settings.overrideSystemProperties()
+            return BrowserSettings
+        }
+        /**
          * Enable url blocking. If url blocking is enabled and the blocking rules are set,
          * resources matching the rules will be blocked by the browser.
          * */
@@ -599,18 +606,19 @@ data class InteractSettings(
     /**
      * TODO: just use an InteractSettings object, instead of separate properties
      * */
-    fun overrideSystemProperties() {
-        Systems.setProperty(BROWSER_INTERACT_SETTINGS,
-            pulsarObjectMapper().writeValueAsString(this))
+    fun overrideSystemProperties(): InteractSettings {
+        Systems.setProperty(BROWSER_INTERACT_SETTINGS, toJson())
         
         Systems.setProperty(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         Systems.setProperty(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         Systems.setProperty(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
         Systems.setProperty(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+        
+        return this
     }
     
-    fun overrideConfiguration(conf: MutableConfig) {
-        conf[BROWSER_INTERACT_SETTINGS] = pulsarObjectMapper().writeValueAsString(this)
+    fun overrideConfiguration(conf: MutableConfig): InteractSettings {
+        conf[BROWSER_INTERACT_SETTINGS] = toJson()
         /**
          * TODO: just use an InteractSettings object, instead of separate properties
          * */
@@ -618,8 +626,9 @@ data class InteractSettings(
         conf.setDuration(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         conf.setDuration(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
         conf.setDuration(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+        
+        return this
     }
-
     /**
      * Do not scroll the page by default.
      * */
@@ -677,19 +686,19 @@ data class InteractSettings(
         /**
          * Default settings for Web page interaction behavior.
          * */
-        val DEFAULT = InteractSettings()
+        val DEFAULT get() = InteractSettings()
 
         /**
          * Web page interaction behavior settings under good network conditions, in which case we perform
          * each action faster.
          * */
-        val GOOD_NET_SETTINGS = InteractSettings()
+        val GOOD_NET_SETTINGS get() = InteractSettings()
 
         /**
          * Web page interaction behavior settings under worse network conditions, in which case we perform
          * each action more slowly.
          * */
-        val WORSE_NET_SETTINGS = InteractSettings(
+        val WORSE_NET_SETTINGS get() = InteractSettings(
             scrollCount = 10,
             scrollInterval = Duration.ofSeconds(1),
             scriptTimeout = Duration.ofMinutes(2),
@@ -700,7 +709,7 @@ data class InteractSettings(
          * Web page interaction behavior settings under worst network conditions, in which case we perform
          * each action very slowly.
          * */
-        val WORST_NET_SETTINGS = InteractSettings(
+        val WORST_NET_SETTINGS get() = InteractSettings(
             scrollCount = 15,
             scrollInterval = Duration.ofSeconds(3),
             scriptTimeout = Duration.ofMinutes(3),
