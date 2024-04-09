@@ -53,6 +53,7 @@ object AppFiles {
         // This method works as if the CREATE, TRUNCATE_EXISTING, and WRITE options are present. In other words,
         // it opens the file for writing, creating the file if it doesn't exist, or initially truncating an existing
         // regular-file to a size of 0.
+        Files.createDirectories(path.parent)
         Files.writeString(path, "")
         return path
     }
