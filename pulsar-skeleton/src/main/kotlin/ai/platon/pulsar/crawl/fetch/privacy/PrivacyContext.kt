@@ -46,7 +46,7 @@ abstract class PrivacyContext(
         const val CONTEXT_DIR_PREFIX = "cx."
         // The default context directory, if you need a permanent and isolate context, use this one.
         // NOTE: the user-default context is not a default context.
-        val DEFAULT_CONTEXT_DIR: Path = AppPaths.CONTEXT_TMP_DIR.resolve("default")
+        val DEFAULT_CONTEXT_DIR: Path = AppPaths.CONTEXT_BASE_DIR.resolve("default")
         // A random context directory, if you need a random temporary context, use this one
         val RANDOM_CONTEXT_DIR get() = computeNextSequentialContextDir()
         // The prototype context directory, all privacy contexts copies browser data from the prototype.
