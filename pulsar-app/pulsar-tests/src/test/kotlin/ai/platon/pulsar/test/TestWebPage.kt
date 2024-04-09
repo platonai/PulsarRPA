@@ -104,8 +104,9 @@ class TestWebPage: TestBase() {
         println("fieldGroup2.fieldsCopy: " + fieldGroup2?.fieldsCopy)
 
 //        assertEquals("2", fieldGroup2.fields["b"])
-        assertEquals("2", fieldGroup2?.fieldsCopy?.get("b2"))
-        assertEquals("2", fieldGroup2?.get("b2"))
+        assertNull(fieldGroup2?.fieldsCopy?.get("b2"), "b2 should be cleared in emplace")
+        assertNull(fieldGroup2?.get("b2"), "b2 should be cleared in emplace")
+
         assertEquals("3", fieldGroup2?.get("c3"))
         session.persist(page2)
 

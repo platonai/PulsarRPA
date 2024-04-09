@@ -70,6 +70,7 @@ class LoadComponentTests: TestBase() {
     fun testLoadAllAsFlow() = runBlocking {
         val normUrls = urls.take(5).map { session.normalize(it, args) }
         
+        // TODO: seems it's sequential, not parallel
         val resultUrls = mutableListOf<String>()
         normUrls.asFlow()
             .map { loadComponent.loadDeferred(it) }
