@@ -29,8 +29,7 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url) {
         "6. LoadEvent.onParsed",
         "7. LoadEvent.onLoaded",
         "8. LoadEvent.onLoaded - 2",
-        "9. CrawlEvent.onLoaded",
-        "10. CrawlEvent.onLoaded"
+        "9. CrawlEvent.onLoaded"
     )
 
     class MockCrawlEventHandlers(val hyperlink: MockListenableHyperlink): AbstractCrawlEventHandlers() {

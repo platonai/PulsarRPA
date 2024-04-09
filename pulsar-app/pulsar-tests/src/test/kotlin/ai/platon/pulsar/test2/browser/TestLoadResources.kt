@@ -1,4 +1,4 @@
-package ai.platon.pulsar.test.browser
+package ai.platon.pulsar.test2.browser
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.crawl.common.URLUtil

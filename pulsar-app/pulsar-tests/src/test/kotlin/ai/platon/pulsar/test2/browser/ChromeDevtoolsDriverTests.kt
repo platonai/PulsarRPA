@@ -1,4 +1,4 @@
-package ai.platon.pulsar.test.browser
+package ai.platon.pulsar.test2.browser
 
 import ai.platon.pulsar.browser.common.ScriptConfuser.Companion.IDENTITY_NAME_MANGLER
 import ai.platon.pulsar.common.*

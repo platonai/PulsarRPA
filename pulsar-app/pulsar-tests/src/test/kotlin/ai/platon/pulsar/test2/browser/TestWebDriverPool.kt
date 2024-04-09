@@ -1,4 +1,4 @@
-package ai.platon.pulsar.test
+package ai.platon.pulsar.test2.browser
 
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
 import ai.platon.pulsar.context.PulsarContexts
@@ -13,7 +13,7 @@ import kotlin.test.*
 
 class TestWebDriverPool {
     companion object {
-        val log = LoggerFactory.getLogger(TestWebDriverPool::class.java)
+        val logger = LoggerFactory.getLogger(TestWebDriverPool::class.java)
 
         init {
             System.setProperty(PROXY_USE_PROXY, "no")
@@ -31,6 +31,11 @@ class TestWebDriverPool {
 //        generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
 //        generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
 //    }
+    
+    @AfterTest
+    fun tearDown() {
+        driverPoolManager.close()
+    }
 
     @Test
     fun testWebDriverPool() {
@@ -98,10 +103,10 @@ class TestWebDriverPool {
                     require(driver is AbstractWebDriver)
                     
                     if (i % 3 == 0) {
-                        log.info("Offer {}", driver)
+                        logger.info("Offer {}", driver)
                         driverPool.put(driver)
                     } else {
-                        log.info("Retire {}", driver)
+                        logger.info("Retire {}", driver)
                         driver.retire()
                         driverPool.put(driver)
                     }
@@ -130,8 +135,8 @@ class TestWebDriverPool {
         while (n-- > 0) {
             TimeUnit.SECONDS.sleep(1)
         }
-
-        log.info("All done.")
+        
+        logger.info("All done.")
         quitMultiThreadTesting = true
         producer.join()
         consumer.join()
