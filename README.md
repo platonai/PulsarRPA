@@ -12,8 +12,9 @@ PulsarRPA represents the pinnacle of open-source solutions for large-scale web d
 
 ### Challenges in Large-Scale Web Data Extraction
 
-1. **Frequent Website Changes**: Online platforms continuously update their layouts, structures, and content, making it difficult to maintain reliable extraction processes over time. Traditional scraping tools may struggle to adapt promptly to these changes, leading to outdated or irrelevant data.
-2. **Complex Website Architecture**: Modern websites often employ sophisticated design patterns, dynamic content loading, and advanced security measures, presenting formidable obstacles for conventional scraping techniques. Extracting data from such sites requires deep understanding of their structure and behavior, as well as the ability to interact with them as a human user would.
+1. **Intelligent Extraction of Web Content**: The internet hosts billions of websites, each containing vast amounts of data. To extract information from this multitude of sites, technology for intelligently harvesting webpage content is crucial. Traditional data scraping methods are inadequate in effectively dealing with large numbers of webpages, resulting in diminished data extraction efficiency.
+2. **Frequent Website Changes**: Online platforms continuously update their layouts, structures, and content, making it difficult to maintain reliable extraction processes over time. Traditional scraping tools may struggle to adapt promptly to these changes, leading to outdated or irrelevant data.
+3. **Complex Website Architecture**: Modern websites often employ sophisticated design patterns, dynamic content loading, and advanced security measures, presenting formidable obstacles for conventional scraping techniques. Extracting data from such sites requires deep understanding of their structure and behavior, as well as the ability to interact with them as a human user would.
 
 ### PulsarRPA: A Game-Changer in Web Data Collection
 
@@ -39,7 +40,7 @@ The code above scrapes fields specified by CSS selectors #title and #acrCustomer
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt).
 
-Most *real world* crawl projects can start with the following code snippet:
+### Most *real world* crawl projects can start with the following code snippet:
 
 ```kotlin
 fun main() {
@@ -59,7 +60,7 @@ fun main() {
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
 
-The *most complicated* crawl challenges can be resolved with advanced RPA:
+### The *most complicated* crawl challenges can be resolved with advanced RPA:
 
 ```kotlin
 val options = session.options(args)
@@ -87,7 +88,20 @@ session.load(url, options)
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
-The *most complicated* Web data extraction problems can be handled by X-SQL:
+### Automated extraction techniques can be utilized for data extraction from large numbers of sites:
+
+```kotlin
+val document = session.harvest("https://www.eeo.com.cn/2024/0330/648712.shtml")
+
+println(document.contentTitle)
+println(document.textContent)
+```
+
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/article/EEO.kt).
+
+In this case, we employ the popular boilerpipe technique to automatically extract news webpages. At PulsarRPAPro, we support even more intelligent data extraction technologies to automatically extract a wide variety of webpages, such as product detail pages.
+
+### The *most complicated* Web data extraction problems can be handled by X-SQL:
 
 ```sql
 select
