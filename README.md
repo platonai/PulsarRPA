@@ -8,7 +8,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 PulsarRPA is a high-performance, distributed, open-source Robotic Process Automation (RPA) framework. It is designed to handle large-scale RPA tasks with ease, providing a comprehensive solution for browser automation, web content understanding, and data extraction.
 
-PulsarRPA represents the pinnacle of open-source solutions for large-scale web data extraction, leveraging the power of high-performance, distributed RPA. It addresses the inherent challenges of browser automation and extracting accurate, comprehensive web data amidst rapidly evolving and increasingly intricate websites.
+PulsarRPA represents the pinnacle of open-source solutions for large-scale webpage understanding and web data extraction, leveraging the power of high-performance, distributed RPA. It addresses the inherent challenges of browser automation and extracting accurate, comprehensive web data amidst rapidly evolving and increasingly intricate websites.
 
 ### Challenges in Large-Scale Web Data Extraction
 
