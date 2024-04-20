@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.browser
 
 import ai.platon.pulsar.common.*
+import com.google.common.collect.Iterators
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.RandomStringUtils
 import java.io.IOException
@@ -10,9 +11,37 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.time.MonthDay
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.io.path.isDirectory
+import kotlin.io.path.listDirectoryEntries
+
+internal class ContextGroup(val group: String) {
+    
+    class PathIterator(private val paths: Iterable<Path>): Iterator<Path> {
+        private val iterator = Iterators.cycle(paths)
+        
+        override fun hasNext(): Boolean {
+            return paths.iterator().hasNext()
+        }
+        
+        override fun next(): Path {
+            return iterator.next()
+        }
+    }
+    
+    private val paths = ConcurrentSkipListSet<Path>()
+    
+    val size: Int
+        get() = paths.size
+    
+    val iterator = PathIterator(paths)
+    
+    fun add(path: Path) {
+        paths.add(path)
+    }
+}
 
 object BrowserFiles {
     
@@ -30,16 +59,26 @@ object BrowserFiles {
     
     val TEMPORARY_UDD_EXPIRY = Duration.ofHours(12)
 
+    private val contextGroups = ConcurrentHashMap<String, ContextGroup>()
+    
     private val cleanedUserDataDirs = ConcurrentSkipListSet<Path>()
     
     @Throws(IOException::class)
     @Synchronized
-    fun computeTestContextDir() = computeNextSequentialContextDir0("test")
+    fun computeTestContextDir() {
+        return runWithFileLock { computeNextSequentialContextDir0("test", 5) }
+    }
+
+    @Throws(IOException::class)
+    @Synchronized
+    fun computeNextSequentialContextDir(group: String = "default", maxContexts: Int = 10): Path {
+        return runWithFileLock { computeNextSequentialContextDir0(group, maxContexts) }
+    }
     
     @Throws(IOException::class)
     @Synchronized
-    fun computeNextSequentialContextDir(ident: String = ""): Path {
-        return runWithFileLock { computeNextSequentialContextDir0(ident) }
+    fun computeRandomContextDir(ident: String = ""): Path {
+        return runWithFileLock { computeRandomContextDir0(ident) }
     }
 
     @Throws(IOException::class)
@@ -105,23 +144,57 @@ object BrowserFiles {
             cleanedUserDataDirs.add(dirToDelete)
         }
     }
-
+    
+    /**
+     * Compute the next sequential context directory.
+     * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/cx.1
+     * */
     @Throws(IOException::class)
-    private fun computeNextSequentialContextDir0(ident: String): Path {
+    private fun computeNextSequentialContextDir0(group: String, maxContexts: Int): Path {
+        val prefix = CONTEXT_DIR_PREFIX
+        val baseDir = AppPaths.CONTEXT_GROUP_BASE_DIR
+        val contextCount = computeContextCount(baseDir, prefix)
+        val contextGroup = contextGroups.computeIfAbsent(group) { ContextGroup(group) }
+        
+        baseDir.listDirectoryEntries()
+            .filter { it.isDirectory() && it.startsWith(prefix) }
+            .forEach { contextGroup.add(it) }
+        
+        if (contextGroup.size >= maxContexts) {
+            return contextGroup.iterator.next()
+        }
+        
+        val fileName = String.format("%s%s", prefix, contextCount)
+        val path = baseDir.resolve(group).resolve(fileName)
+        Files.createDirectories(path)
+        
+        return path
+    }
+
+    /**
+     * Compute a random context directory.
+     * A typical context directory is like: /tmp/pulsar-vincent/context/tmp/01/cx.0109aNcTxq5
+     * */
+    @Throws(IOException::class)
+    private fun computeRandomContextDir0(ident: String): Path {
         val prefix = CONTEXT_DIR_PREFIX
         val monthDay = MonthDay.now()
         val monthValue = monthDay.monthValue
         val dayOfMonth = monthDay.dayOfMonth
         val baseDir = AppPaths.CONTEXT_TMP_DIR.resolve("$monthValue")
         Files.createDirectories(baseDir)
-        val sequence = SEQUENCER.incrementAndGet()
         val rand = RandomStringUtils.randomAlphanumeric(5)
-        val contextCount = 1 + Files.list(baseDir)
+        val contextCount = computeContextCount(baseDir, prefix)
+        val fileName = String.format("%s%02d%02d%s%s", prefix, monthValue, dayOfMonth, rand, contextCount)
+        val path = baseDir.resolve(ident).resolve(fileName)
+        Files.createDirectories(baseDir)
+        return path
+    }
+    
+    private fun computeContextCount(baseDir: Path, prefix: String): Long {
+        return 1 + Files.list(baseDir)
             .filter { Files.isDirectory(it) }
             .filter { it.toString().contains(prefix) }
             .count()
-        val fileName = String.format("%s%02d%02d%s%s%s",
-            prefix, monthValue, dayOfMonth, sequence, rand, contextCount)
-        return baseDir.resolve(ident).resolve(fileName)
     }
 }

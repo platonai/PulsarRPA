@@ -124,6 +124,10 @@ data class PrivacyAgent(
          * */
         val DEFAULT = PrivacyAgent(PrivacyContext.DEFAULT_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
         /**
+         * The privacy agent opens browser with a sequential data dir.
+         * */
+        val NEXT_SEQUENTIAL get() = PrivacyAgent(PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
+        /**
          * The random privacy agent opens browser with a random data dir.
          * */
         val RANDOM get() = PrivacyAgent(PrivacyContext.RANDOM_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
@@ -195,7 +199,11 @@ data class BrowserId(
          * */
         val PROTOTYPE = BrowserId(PrivacyAgent.PROTOTYPE)
         /**
-         * Represent a browser with random context dir.
+         * Represent a browser with a sequential context dir.
+         * */
+        val NEXT_SEQUENTIAL get() = BrowserId(PrivacyAgent.NEXT_SEQUENTIAL)
+        /**
+         * Create a browser with random context dir.
          * */
         val RANDOM get() = BrowserId(PrivacyAgent.RANDOM)
     }
@@ -231,6 +239,11 @@ open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
 open class SequentialPrivacyAgentGenerator: PrivacyAgentGenerator {
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
         PrivacyAgent(BrowserFiles.computeNextSequentialContextDir(), fingerprint)
+}
+
+open class RandomPrivacyAgentGenerator: PrivacyAgentGenerator {
+    override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
+        PrivacyAgent(BrowserFiles.computeRandomContextDir(), fingerprint)
 }
 
 class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {

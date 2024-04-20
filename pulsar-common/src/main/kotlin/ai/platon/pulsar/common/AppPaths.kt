@@ -87,6 +87,10 @@ object AppPaths {
     @RequiredDirectory
     val CONTEXT_BASE_DIR = PROC_TMP_DIR.resolve( "context")
     @RequiredDirectory
+    val CONTEXT_GROUP_BASE_DIR = CONTEXT_BASE_DIR.resolve( "group")
+    @RequiredDirectory
+    val CONTEXT_DEFAULT_DIR = CONTEXT_BASE_DIR.resolve( "default")
+    @RequiredDirectory
     val CONTEXT_TMP_DIR = CONTEXT_BASE_DIR.resolve( "tmp")
     @RequiredFile
     val BROWSER_TMP_DIR_LOCK = CONTEXT_BASE_DIR.resolve( "browser.lock")
