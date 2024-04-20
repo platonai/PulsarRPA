@@ -3,11 +3,31 @@ REST Service
 
 [Prev](14AI-extraction.md) [Home](1home.md) [Next](16console.md)
 
-When PulsarRPA runs as a REST service, X-SQL can be used to collect web pages or directly query web data from anywhere at any time, without the need to open an IDE. It's like an upgraded version of the Google search box: upgrading keyword queries to SQL queries.
+When PulsarRPA runs as a REST service, X-SQL can be used to scrape webpages or to query web data directly at any time, from anywhere, without opening an IDE.
 
-Example:
+## Build from Source
 
-```bash
+```
+git clone https://github.com/platonai/pulsar.git
+cd pulsar && bin/build-run.sh
+```
+For Chinese developers, we strongly suggest you to follow [this](/bin/tools/maven/maven-settings.md) instruction to accelerate the building process.
+
+## Use X-SQL to Query the Web
+
+Start the pulsar server if it is not started:
+
+```shell
+bin/pulsar
+```
+Scrape a webpage in another terminal window:
+
+```shell
+bin/scrape.sh
+```
+The bash script is quite simple; it just uses curl to post an X-SQL:
+
+```shell
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
       dom_base_uri(dom) as url,
@@ -19,10 +39,32 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
       dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
       dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
       str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1d -njr 3', 'body');");
+  from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1d -njr 3', 'body');
+"
 ```
+Example code: [bash](bin/scrape.sh), [batch](bin/scrape.bat), [java](/pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java), [kotlin](/pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt), [php](/pulsar-client/src/main/php/Scraper.php).
 
-Example code can be found here: [bash](/bin/scrape.sh), [batch](/bin/scrape.bat), [java](/pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java), [kotlin](/pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt), [php](/pulsar-client/src/main/php/Scraper.php).
+The response is as follows in JSON format:
+
+```json
+{
+    "uuid": "cc611841-1f2b-4b6b-bcdd-ce822d97a2ad",
+    "statusCode": 200,
+    "pageStatusCode": 200,
+    "pageContentBytes": 1607636,
+    "resultSet": [
+        {
+            "title": "Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394)",
+            "listprice": "$19.99",
+            "price": "$12.99",
+            "categories": "Toys & Games|Arts & Crafts|Craft Kits|Jewelry",
+            "baseuri": "https://www.amazon.com/dp/B0C1H26C46"
+        }
+    ],
+    "pageStatus": "OK",
+    "status": "OK"
+}
+```
 
 ------
 

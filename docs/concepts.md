@@ -1,8 +1,9 @@
 # PulsarRPA Concepts
 
-English | [简体中文](zh/concepts.md)
+English | [简体中文](/docs/zh/concepts.md)
 
-This document describes the concepts of PulsarRPA.
+To unlock the full potential of PulsarRPA and tackle even the most complex data scraping tasks, a solid understanding of its core concepts is essential. By grasping these fundamental principles, you'll be equipped to wield PulsarRPA as a powerful tool for extracting valuable information from the web.
+Let's delve into the key concepts that form the foundation of your data scraping journey with PulsarRPA:
 
 ## Core Concepts
 
@@ -72,7 +73,7 @@ For a comprehensive understanding of all methods, please refer to PulsarSession.
 
 The first step is to understand how to load a page. Load methods like `session.load()` first check the local storage and return the local version if the required page exists and meets the requirements; otherwise, it will be fetched from the Internet.
 
-The `load parameters` or `load options` can be used to specify when the system will fetch a web page from the Internet:
+The `load options`, also known as `load parameters` can be used to specify when the system will fetch a web page from the Internet:
 
 - Expiration
 - Force refresh
@@ -120,19 +121,19 @@ session.load(url, options)
 
 ### Web Driver
 
-`WebDriver` 定义了一个简洁的界面来访问网页并与之交互，所有的动作和行为都经过优化，尽可能地模仿真人，比如滚动、点击、键入文本、拖放等。
+[WebDriver](/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebDriver.kt) provides a concise interface for accessing and interacting with web pages, with all actions and behaviors optimized to mimic real humans as closely as possible, such as scrolling, clicking, typing text, dragging and dropping, etc.
 
-The methods in this interface fall into three categories:
+The methods in this interface are mainly divided into three categories:
 
-- Control of the browser itself.
-- Selection of elements, extracting textContent and attributes.
-- Interaction with the webpage.
+1. Control over the browser itself.
+2. Selecting elements, extracting text content, and attributes.
+3. Interacting with web pages.
 
-Key methods:
+The main methods include:
 
-- `.navigateTo()`: load a new webpage.
-- `.scrollDown()`: scroll down on a webpage to fully load the page. Most modern webpages support lazy loading using AJAX technology, where the page content only starts to load when it is scrolled into view.
-- `.pageSource()`: retrieve the source code of a webpage.
+- `.navigateTo()`: Load a new web page.
+- `.scrollDown()`: Scroll down on the web page to fully load the page. Most modern web pages support lazy loading using AJAX technology, meaning that web page content only begins to load when it scrolls into view.
+- `.pageSource()`: Obtain the web page source code.
 
 ### URLs
 

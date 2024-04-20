@@ -41,6 +41,13 @@ Privacy agents
 
 A privacy agent is an identifier that ensures distinct identities for website visits. When different privacy agents are used, page visits should not be attributed to the same individual, regardless of whether they originate from the same host.
 
+Concepts
+==
+
+To unlock the full potential of PulsarRPA and tackle even the most complex data scraping tasks, a solid understanding of its core concepts is essential. By grasping these fundamental principles, you'll be equipped to wield PulsarRPA as a powerful tool for extracting valuable information from the web.
+
+[PulsarRPA Concepts](/docs/concepts.md).
+
 ------
 
 [Prev](16console.md) | [Home](1home.md)

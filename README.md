@@ -246,6 +246,7 @@ bin/scrape.sh
 
 The bash script is straightforward. It merely uses curl to send a POST request with an X-SQL.
 
+
 ```shell
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select

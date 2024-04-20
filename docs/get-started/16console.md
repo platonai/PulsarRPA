@@ -12,15 +12,15 @@ Console
 - A mini-program based on self-supervised machine learning that automatically learns and outputs all collection rules.
 - A set of data collection examples from top-tier sites.
 
-**Exotic can learn from websites, automatically generate all extraction rules, treat the Web as a database for querying, and deliver scalable Web data in a complete and precise manner:**
+**PulsarRPAPro can learn from websites, automatically generate all extraction rules, treat the Web as a database for querying, and deliver scalable Web data in a complete and precise manner:**
 
 1. Step 1: Use advanced artificial intelligence to automatically extract each field from web pages and generate extraction SQL.
 2. Step 2: Test SQL and improve them as necessary to match front-end business requirements.
 3. Step 3: Create scheduling rules in the Web console to continuously run SQL and download all Web data, thus driving your business forward.
 
-## Running Exotic Server and Opening the Console
+## Running PulsarRPAPro Server and Opening the Console
 
-You can choose to directly download the executable jar package or build Exotic from the source code.
+You can choose to directly download the executable jar package or build PulsarRPAPro from source code.
 
 Download the latest executable jar package:
 
@@ -107,7 +107,7 @@ java -jar exotic-standalone*.jar
 
 The command will print help information:
 
-```
+```text
 Usage: java -jar exotic-standalone*.jar [options] harvest <url> [args...]
            (to harvest webpages automatically using our advanced AI)
    or  java -jar exotic-standalone*.jar [options] scrape <url> [args...]
