@@ -164,19 +164,20 @@ PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎�
 
 # ♾ 核心概念
 
-PulsarRPA 的核心概念包括以下内容，了解这些概念后，您可以利用 PulsarRPA 解决各种高要求的数据采集任务：
+要释放 PulsarRPA 的全部潜能并应对最复杂的数据抓取任务，对其核心概念的扎实理解至关重要。通过掌握这些基本原理，您将能够使用 PulsarRPA 作为从网络中提取有价值信息的强大工具。
 
-- 网络数据采集（Web Scraping）：使用机器人自动从网站中提取内容和数据。
+让我们深入探讨构成您使用 PulsarRPA 进行数据抓取之旅基础的关键概念：
+
+- 网页抓取（Web Scraping）：使用机器人自动从网站中提取内容和数据。
 - 自动提取（Auto Extract）：通过自动学习数据模式并从网页中提取每个字段，由先进的人工智能算法驱动。
 - RPA：机器人流程自动化，是抓取现代网页的有效方法。
 - 网络即数据库（Network As A Database）：像访问本地数据库一样访问网络资源。
 - X-SQL：使用 SQL 语言直接查询 Web 数据。
 - Pulsar Session：提供一组简单、强大和灵活的 API 来执行 Web 抓取任务。
 - Web Driver：定义了一个简洁的接口来访问和交互网页，所有行为都经过优化以尽可能接近真实人类的行为。
-- URL：在 PulsarRPA 中，URL 不仅是普通的网址，还包含了描述任务的额外信息。PulsarRPA 中的每个任务都被定义为某种形式的 URL。
-- Hyperlink：在 PulsarRPA 中，超链接不仅是普通的链接，还包含了描述任务的额外信息。
-- Load Options：加载选项或加载参数会影响 PulsarRPA 如何加载、获取和抓取网页。
-- Event Handlers：在网页的整个生命周期中捕获和处理事件。
+- UrlAware：包含了 URL 和描述任务的额外信息。PulsarRPA 中的每个任务都被定义为某种形式的 URLAware，主要有：PlainUrl, HyperLink, ListenableHyperlink, ParsableHyperlink。
+- Load Options：加载选项或加载参数会影响 PulsarRPA 如何加载或者抓取网页。
+- Event Handlers：捕获和处理在网页抓取的整个生命周期中发生的事件。
 
 # 🧮 通过可执行 jar 使用 PulsarRPA
 

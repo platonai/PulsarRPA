@@ -29,7 +29,21 @@ To conquer these challenges, PulsarRPA incorporates a suite of innovative techno
 
 In summary, PulsarRPA, with its web content understanding, intelligent scraping, advanced DOM parsing, distributed processing, and open-source features, becomes the preferred open-source solution for large-scale web data extraction. Its unique technology combination allows users to effectively address the complexities and challenges associated with extracting valuable web data on a large scale, ultimately facilitating wiser decision-making and competitive advantage.
 
-Most scraping attempts can start with (almost) a single line of code:
+### *Automated extraction techniques* can be utilized for data extraction from large numbers of sites:
+
+```kotlin
+val session = PulsarContexts.createSession()
+val document = session.harvest("https://www.eeo.com.cn/2024/0330/648712.shtml")
+
+println(document.contentTitle)
+println(document.textContent)
+```
+
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/article/EEO.kt).
+
+In this scenario, we employed the popular boilerpipe technology to automatically extract content from news webpages. However, PulsarRPAPro offers more advanced data extraction techniques that can automatically handle a wider variety of webpages, including product detail pages.
+
+### Most scraping attempts can start with (almost) a single line of code:
 
 ```kotlin
 fun main() = PulsarContexts.createSession().scrapeOutPages(
@@ -40,7 +54,7 @@ The code above scrapes fields specified by CSS selectors #title and #acrCustomer
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt).
 
-### Most *real world* crawl projects can start with the following code snippet:
+### The majority of *real-world* web crawling projects can initiate with the following code template:
 
 ```kotlin
 fun main() {
@@ -60,7 +74,7 @@ fun main() {
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
 
-### The *most complicated* crawl challenges can be resolved with advanced RPA:
+### The *most complicated* web crawling challenges can be overcome with cutting-edge robotic process automation (RPA) technologies:
 
 ```kotlin
 val options = session.options(args)
@@ -88,20 +102,7 @@ session.load(url, options)
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
-### Automated extraction techniques can be utilized for data extraction from large numbers of sites:
-
-```kotlin
-val document = session.harvest("https://www.eeo.com.cn/2024/0330/648712.shtml")
-
-println(document.contentTitle)
-println(document.textContent)
-```
-
-Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/article/EEO.kt).
-
-In this case, we employ the popular boilerpipe technique to automatically extract news webpages. At PulsarRPAPro, we support even more intelligent data extraction technologies to automatically extract a wide variety of webpages, such as product detail pages.
-
-### The *most complicated* Web data extraction problems can be handled by X-SQL:
+### The *most complicated* Web data extraction problems can be effectively managed using X-SQL technology:
 
 ```sql
 select
@@ -157,7 +158,8 @@ We have released complete solutions for site-wide Web scraping for some of the l
 
 ## ♾ Core concepts
 
-The core PulsarRPA concepts include the following, knowing these core concepts, you can use PulsarRPA to solve the most demanding data scraping tasks:
+To unlock the full potential of PulsarRPA and tackle even the most complex data scraping tasks, a solid understanding of its core concepts is essential. By grasping these fundamental principles, you'll be equipped to wield PulsarRPA as a powerful tool for extracting valuable information from the web.
+Let's delve into the key concepts that form the foundation of your data scraping journey with PulsarRPA:
 
 * Web Scraping: the process of using bots to extract content and data from a website
 * Auto Extract: learn the data schema automatically and extract every field from webpages, powered by cutting-edge AI algorithm
@@ -166,10 +168,9 @@ The core PulsarRPA concepts include the following, knowing these core concepts, 
 * X-SQL: query the Web using SQL directly
 * Pulsar Session: provides a set of simple, powerful, and flexible APIs to do web scraping tasks
 * Web Driver: defines a concise interface to visit and interact with webpages, all behaviors are optimized to mimic real people as closely as possible
-* URLs: a URL in PulsarRPA is a normal [URL](https://en.wikipedia.org/wiki/URL) with extra information to describe a task. Every task in PulsarRPA is defined as some form of URL
-* Hyperlinks: a Hyperlink in PulsarRPA is a normal [Hyperlink](https://en.wikipedia.org/wiki/Hyperlink) with extra information to describe a task
-* Load Options: load options, or load arguments are control parameters that affect how PulsarRPA loads, fetches, and crawls webpages
-* Event Handlers: capture and process events throughout the lifecycle of webpages
+* UrlAware: This concept encompasses URLs and additional information describing a task. In PulsarRPA, every task is defined as a type of UrlAware, with the main types being: PlainUrl, HyperLink, ListenableHyperlink, and ParsableHyperlink.
+* Load Options: also known as `load arguments`. These control parameters fine-tune how PulsarRPA loads and scrapes webpages, allowing you to tailor the process to specific requirements.
+* Event Handlers: capture and process various events that occur throughout the entire lifecycle of webpage scraping
 
 Check [PulsarRPA concepts](docs/concepts.md#_the_core_concepts_of_pulsar) for details.
 
@@ -186,7 +187,10 @@ We have released a standalone executable jar based on PulsarRPA, which includes:
 
 Download [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro#download) and explore its capabilities with a single command line:
 
+```bash
 java -jar exotic-standalone.jar
+```
+
 ## 🎁 PulsarRPA as a java library
 
 The simplest way to leverage the power of PulsarRPA is to add it to your project as a library.
@@ -200,210 +204,18 @@ Maven:
   <version>1.12.5</version>
 </dependency>
 ```
+
 Gradle:
 
 ```kotlin
 implementation("ai.platon.pulsar:pulsar-all:1.12.5")
 ```
+
 You can clone the template project from github.com: [kotlin](https://github.com/platonai/pulsar-kotlin-template), [java-11](https://github.com/platonai/pulsar-java-template), [java-17](https://github.com/platonai/pulsar-java-17-template).
 
-You can also start your own large-scale web crawler projects based on our commercial-grade open source projects: [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro), [Exotic-amazon](https://github.com/platonai/exotic-amazon).
+You can also start your own large-scale web crawling projects based on our commercial-grade open source projects: [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro), [Exotic-amazon](https://github.com/platonai/exotic-amazon).
 
-## Basic usage
-
-*Kotlin:*
-
-```kotlin
-// Create a pulsar session
-val session = PulsarContexts.createSession()
-// The main URL we are playing with
-val url = "https://www.amazon.com/dp/B0C1H26C46"
-
-// Load a page from local storage, or fetch it from the Internet if it does not exist or has expired
-val page = session.load(url, "-expires 10s")
-
-// Submit a URL to the URL pool, the submitted URL will be processed in a crawl loop
-session.submit(url, "-expires 10s")
-
-// Parse the page content into a document
-val document = session.parse(page)
-// do something with the document
-// ...
-
-// Load and parse
-val document2 = session.loadDocument(url, "-expires 10s")
-// do something with the document
-// ...
-
-// Load the portal page and then load all links specified by `-outLink`.
-// Option `-outLink` specifies the cssSelector to select links in the portal page to load.
-// Option `-topLinks` specifies the maximal number of links selected by `-outLink`.
-val pages = session.loadOutPages(url, "-expires 10s -itemExpires 10s -outLink a[href~=/dp/] -topLinks 10")
-
-// Load the portal page and submit the out links specified by `-outLink` to the URL pool.
-// Option `-outLink` specifies the cssSelector to select links in the portal page to submit.
-// Option `-topLinks` specifies the maximal number of links selected by `-outLink`.
-session.submitForOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/] -topLinks 10")
-
-// Load, parse and scrape fields
-val fields = session.scrape(url, "-expires 10s", "#centerCol",
-    listOf("#title", "#acrCustomerReviewText"))
-
-// Load, parse and scrape named fields
-val fields2 = session.scrape(url, "-i 10s", "#centerCol",
-    mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText"))
-
-// Load, parse and scrape named fields
-val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s -outLink a[href~=/dp/] -topLink 10", "#centerCol",
-    mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText"))
-
-// Add `-parse` option to activate the parsing subsystem
-val page10 = session.load(url, "-parse -expires 10s")
-
-// Kotlin suspend calls
-val page11 = runBlocking { session.loadDeferred(url, "-expires 10s") }
-
-// Java-style async calls
-session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(session::export)
-```
-Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java).
-
-### Load options
-
-Most of our scrape methods accept a parameter called load options, or load arguments, to control how to load, fetch, and scrape a webpage.
-
--expires     // The expiry time of a page
--itemExpires // The expiry time of item pages in batch scraping methods
--outLink     // The selector of out links to scrape
--refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
--parse       // Activate parse subsystem
--resource    // Fetch the URL as a resource without browser rendering
-Check [Load Options](docs/concepts.md#_load_options) for details.
-
-### Extracting web data
-
-PulsarRPA utilizes [jsoup](https://jsoup.org/) to extract data from HTML documents. Jsoup parses HTML into a DOM structure that mirrors what modern browsers see. For a comprehensive list of supported CSS selectors, refer to the jsoup documentation on [selector syntax](https://jsoup.org/cookbook/extracting-data/selector-syntax). Additionally, PulsarRPA extends the standard CSS syntax to enhance the capabilities of CSS selectors, allowing them to handle complex modern web page layouts with ease.
-
-*Kotlin:*
-
-```kotlin
-val document = session.loadDocument(url, "-expires 1d")
-val price = document.selectFirst('.price').text()
-```
-### Continuous crawls
-
-Performing large-scale scraping or running continuous crawls is straightforward with PulsarRPA.
-
-*Kotlin:*
-
-```kotlin
-fun main() {
-    val context = PulsarContexts.create()
-
-    val parseHandler = { _: WebPage, document: FeaturedDocument ->
-        // do something wonderful with the document
-        println(document.getTitle() + "\t|\t" + document.getBaseUri())
-    }
-    val urls = LinkExtractors.fromResource("seeds.txt")
-        .map { ParsableHyperlink("$it -refresh", parseHandler) }
-    context.submitAll(urls)
-    // feel free to submit millions of urls here
-    context.submitAll(urls)
-    // wait until all tasks are done
-    context.await()
-}
-```
-*Java:*
-
-```java
-public class ContinuousCrawler {
-
-    private static void onParse(WebPage page, FeaturedDocument document) {
-        // do something wonderful with the document
-        System.out.println(document.getTitle() + "\t|\t" + document.getBaseUri());
-    }
-
-    public static void main(String[] args) {
-        PulsarContext context = PulsarContexts.create();
-
-        List<Hyperlink> urls = LinkExtractors.fromResource("seeds.txt")
-                .stream()
-                .map(seed -> new ParsableHyperlink(seed, ContinuousCrawler::onParse))
-                .collect(Collectors.toList());
-        context.submitAll(urls);
-        // feel free to submit millions of urls here
-        context.submitAll(urls);
-        // wait until all tasks are done
-        context.await();
-    }
-}
-```
-Example code can be found in the [Kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt) and [Java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java) versions.
-
-### 👽 RPA (Robotic Process Automation)
-
-As websites grow increasingly complex, RPA has become essential for data collection from certain sites, especially those employing custom font technologies.
-
-PulsarRPA offers a seamless method to replicate human interactions throughout a webpage's lifecycle, utilizing a web driver to engage with the page through scrolling, typing, capturing screenshots, dragging and dropping items, clicking, and more. All actions are designed to emulate human behavior as closely as possible.
-
-Here's a representative RPA code segment necessary for gathering data from most leading e-commerce sites.
-
-*Kotlin:*
-
-```kotlin
-val options = session.options(args)
-val event = options.event.browseEventHandlers
-event.onBrowserLaunched.addLast { page, driver ->
-    // Prepare the browser to avoid being blocked by the website,
-    // or select global settings such as your location.
-    warnUpBrowser(page, driver)
-}
-event.onWillFetch.addLast { page, driver ->
-    // Need to visit a referrer page before the desired page can be accessed
-    waitForReferrer(page, driver)
-    // Some websites limit the number of pages that can be opened at once, so open links one by one.
-    waitForPreviousPage(page, driver)
-}
-event.onWillCheckDocumentState.addLast { page, driver ->
-    // Await the appearance of specific fields on the page
-    driver.waitForSelector("body h1[itemprop=name]")
-    // Close the mask layer, which may contain promotions, ads, or other elements.
-    driver.click(".mask-layer-close-button")
-}
-// Navigate to the URL and initiate events
-session.load(url, options)
-```
-Example code can be reviewed [here](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
-
-### Use X-SQL to query the web
-
-To scrape data from a single page, you can use X-SQL, which extends SQL to manage web data and allows you to query the web directly.
-
-```sql
-select
-    dom_first_text(dom, '#productTitle') as title,
-    dom_first_text(dom, '#bylineInfo') as brand,
-    dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
-    dom_first_text(dom, '#acrCustomerReviewText') as ratings,
-    str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body');
-```
-To execute the X-SQL query, you can use the following Kotlin code:
-
-```kotlin
-val context = SQLContexts.create()
-val rs = context.executeQuery(sql)
-println(ResultSetFormatter(rs, withHeader = true))
-```
-The result of the query will be:
-
-```
-TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
-HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $6.10 | 1,349 ratings | 4.40
-```
-
-For more detailed information on X-SQL and its functions, you can visit the [X-SQL documentation](docs/get-started/13X-SQL.md).
-Example code for this query can be found [here](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt).
+Check the [quick start](docs/get-started/2basic-usage.md) for more details.
 
 # 🌐 PulsarRPA as a REST Service
 
