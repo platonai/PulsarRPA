@@ -36,6 +36,13 @@ BrowserSettings.withSystemDefaultBrowser().withGUI().withSPA()
 隐私代理
 ==
 
-   隐私代理是一个标识符，它确保网站访问具有不同的身份。当使用不同的隐私代理时，无论它们是否来自同一主机，页面访问不应归因于同一个人。
-```kotlin
+隐私代理确保网站访问具有不同的身份。当使用不同的隐私代理时，无论它们是否来自同一主机，页面访问不应被识别为同一个人。
+
+Concepts
+==
+
+要释放 PulsarRPA 的全部潜能并应对最复杂的数据抓取任务，对其核心概念的扎实理解至关重要。通过掌握这些基本原理，您将能够使用 PulsarRPA 作为从网络中提取有价值信息的强大工具。
+
+[PulsarRPA 概念](../concepts.md)
+
 [上一篇](16console.md) [主页](1home.md)
