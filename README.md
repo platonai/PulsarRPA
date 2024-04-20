@@ -172,7 +172,7 @@ Let's delve into the key concepts that form the foundation of your data scraping
 * Load Options: also known as `load arguments`. These control parameters fine-tune how PulsarRPA loads and scrapes webpages, allowing you to tailor the process to specific requirements.
 * Event Handlers: capture and process various events that occur throughout the entire lifecycle of webpage scraping
 
-Check [PulsarRPA concepts](docs/concepts.md#_the_core_concepts_of_pulsar) for details.
+Check [PulsarRPA concepts](docs/concepts.md) for details.
 
 ## 🧮 PulsarRPA as an executable jar
 

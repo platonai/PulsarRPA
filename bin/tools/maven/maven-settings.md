@@ -1,3 +1,5 @@
+# Maven 配置说明
+
 For Chinese developers, we suggest that you add the domestic maven mirror in the global maven settings to speed up the build.
 
 对于中国开发者，我们建议您在全局 maven 设置中添加国内的 maven 镜像，以加快构建速度。
