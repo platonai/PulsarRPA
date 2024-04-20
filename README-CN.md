@@ -206,234 +206,21 @@ java -jar exotic-standalone.jar
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.12.4</version>
+  <version>1.12.5</version>
 </dependency>
 ```
 
 使用 Gradle 时，可以在 `build.gradle` 文件中添加以下依赖：
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-all:1.12.4")
+implementation("ai.platon.pulsar:pulsar-all:1.12.5")
 ```
 
 也可以从 Github 克隆模板项目，包括 [kotlin](https://github.com/platonai/pulsar-kotlin-template), [java-11](https://github.com/platonai/pulsar-java-template), [java-17](https://github.com/platonai/pulsar-java-17-template)。
 
+您还可以基于我们的商业级开源项目启动自己的大规模网络爬虫项目: [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro), [Exotic-amazon](https://github.com/platonai/exotic-amazon)。
 
-
-
-
-
-
-# 基本用法
-
-## Kotlin:
-
-```kotlin
-// 创建一个 Pulsar 会话
-val session = PulsarContexts.createSession()
-// 我们正在处理的主要 URL
-val url = "https://www.amazon.com/dp/B0C1H26C46" 
-
-// 从本地存储加载页面，或者如果不存在或已过期，则从互联网获取
-val page = session.load(url, "-expires 10s")
-
-// 将 URL 提交到 URL 池，提交的 URL 将在爬取循环中处理
-session.submit(url, "-expires 10s")
-
-// 解析页面内容为文档
-val document = session.parse(page)
-// 对文档进行操作
-// ...
-
-// 加载并解析
-val document2 = session.loadDocument(url, "-expires 10s")
-// 对文档进行操作
-// ...
-
-// 加载门户页面，然后加载由 `-outLink` 指定的所有链接。
-// 选项 `-outLink` 指定了在门户页面中选择链接以加载的 css 选择器。
-// 选项 `-topLinks` 指定了由 `-outLink` 选择的最大链接数。
-val pages = session.loadOutPages(url, "-expires 10s -itemExpires 10s -outLink a[href~=/dp/] -topLinks 10")
-
-// 加载门户页面并将由 `-outLink` 指定的外部链接提交到 URL 池。
-// 选项 `-outLink` 指定了在门户页面中选择链接以提交的 css 选择器。
-// 选项 `-topLinks` 指定了由 `-outLink` 选择的最大链接数。
-session.submitOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/] -topLinks 10")
-
-// 加载、解析并抓取字段
-val fields = session.scrape(url, "-expires 10s", "#centerCol",
-    listOf("#title", "#acrCustomerReviewText"))
-
-// 加载、解析并抓具名字段
-val fields2 = session.scrape(url, "-i 10s", "#centerCol",
-    mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText"))
-
-// 加载、解析并抓具名字段
-val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s -outLink a[href~=/dp/] -topLink 10", "#centerCol",
-    mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText"))
-
-// 添加 `-parse` 选项以激活解析子系统（激活后可以注册 DOM 文档相关的事件处理器，并进一步处理 DOM 文档）
-val page10 = session.load(url, "-parse -expires 10s")
-
-// Kotlin 挂起调用
-val page11 = runBlocking { session.loadDeferred(url, "-expires 10s") }
-
-// Java 风格的异步调用
-session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(session::export)
-```
-
-示例代码: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java).
-
-## 加载选项
-
-请注意，我们的大多数抓取方法都接受一个称为加载参数或加载选项的参数，以控制如何加载/获取网页。
-
-- `-expires`     // 页面的过期时间
-- `-itemExpires` // 批量抓取方法中项目页面的过期时间
-- `-outLink`     // 要抓取的外部链接的选择器
-- `-refresh`     // 强制（重新）获取页面，就像在真实浏览器中点击刷新按钮一样
-- `-parse`       // 激活解析子系统，激活后可以注册 DOM 文档相关的事件处理器，并进一步处理 DOM 文档
-- `-resource`    // 无需浏览器渲染获取 URL 作为资源
-
-点击 [Load Options](/docs/concepts.md#load-options) 查看详情。
-
-# 提取网页数据
-
-PulsarRPA 使用 [jsoup](https://jsoup.org/) 从 HTML 文档中提取数据。 Jsoup 将 HTML 解析为与现代浏览器相同的 DOM。 
-查看 [selector-syntax](https://jsoup.org/cookbook/extracting-data/selector-syntax) 以获取所有受支持的 CSS 选择器。
-同时，我们扩展了标准 CSS 语法，增强了 CSS 选择器的能力，使得其能够轻松处理现代网页布局。
-
-## Kotlin:
-
-```kotlin
-val document = session.loadDocument(url, "-expires 1d")
-val price = document.selectFirst('.price').text()
-```
-
-# 连续采集
-
-在 PulsarRPA 中抓取大量 URL 集合或运行连续采集非常简单。
-
-## Kotlin:
-
-```kotlin
-fun main() {
-    val context = PulsarContexts.create()
-
-    val parseHandler = { _: WebPage, document: FeaturedDocument ->
-        // 对文档进行操作
-        System.out.println(document.getTitle() + "\t|\t" + document.getBaseUri())
-    }
-    val urls = LinkExtractors.fromResource("seeds.txt")
-        .map { ParsableHyperlink("$it -refresh", parseHandler) }
-    context.submitAll(urls)
-    // 可以在这里提交数百万的 URL
-    context.submitAll(urls)
-    // ...
-    context.await()
-}
-```
-
-## Java:
-
-```java
-public class ContinuousCrawler {
-
-    private static void onParse(WebPage page, FeaturedDocument document) {
-        // 对文档进行操作
-        System.out.println(document.getTitle() + "\t|\t" + document.getBaseUri());
-    }
-
-    public static void main(String[] args) {
-        PulsarContext context = PulsarContexts.create();
-
-        List<Hyperlink> urls = LinkExtractors.fromResource("seeds.txt")
-                .stream()
-                .map(seed -> new ParsableHyperlink(seed, ContinuousCrawler::onParse))
-                .collect(Collectors.toList());
-        context.submitAll(urls);
-        // 可以在这里提交数百万的 URL
-        context.submitAll(urls);
-        // ...
-        context.await();
-    }
-}
-```
-
-示例代码: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
-
-
-
-
-
-
-
-
-
-
-# 👽 RPA (机器人流程自动化)
-
-随着网站变得越来越复杂，RPA 已成为从某些网站收集数据的唯一途径，例如某些使用自定义字体技术的网站。
-
-PulsarRPA 包含一个 RPA 子系统，提供了一种在网页生命周期中模仿真人的便捷方式，使用 Web 驱动程序与网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。这和大家所熟知的 selenium，playwright，puppeteer 类似，不同的是，PulsarRPA 的所有行为都针对大规模数据采集进行优化。
-
-以下是一个典型的 RPA 代码片段，它是从顶级电子商务网站收集数据所必需的：
-
-```kotlin
-val options = session.options(args)
-val event = options.event.browseEventHandlers
-event.onBrowserLaunched.addLast { page, driver ->
-    // 预热浏览器，以避免被网站阻止，或选择全局设置，例如您的位置
-    warnUpBrowser(page, driver)
-}
-event.onWillFetch.addLast { page, driver ->
-    // 必须先访问引荐来源页面，然后才能访问所需页面
-    waitForReferrer(page, driver)
-    // 网站可能会阻止我们同时打开过多页面，因此我们应该逐一打开链接
-    waitForPreviousPage(page, driver)
-}
-event.onWillCheckDocumentState.addLast { page, driver ->
-    // 等待特殊字段出现在页面上
-    driver.waitForSelector("body h1[itemprop=name]")
-    // 关闭遮罩层，它可能是促销、广告或其他东西
-    driver.click(".mask-layer-close-button")
-}
-// 访问 URL 并触发事件
-session.load(url, options)
-```
-
-示例代码可以在 [这里](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt) 找到。
-
-## 使用 X-SQL 查询 Web
-
-提取单个页面：
-
-```sql
-select
-      dom_first_text(dom, '#productTitle') as title,
-      dom_first_text(dom, '#bylineInfo') as brand,
-      dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
-      dom_first_text(dom, '#acrCustomerReviewText') as ratings,
-      str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body');
-```
-
-执行 X-SQL：
-
-```kotlin
-val context = SQLContexts.create()
-val rs = context.executeQuery(sql)
-println(ResultSetFormatter(rs, withHeader = true))
-```
-
-结果如下：
-
-```
-TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
-HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $6.10 | 1,349 ratings | 4.40
-```
-
-示例代码可以在 [这里](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt) 找到。
+点击 [基本用法](docs/get-started/2basic-usage.md) 查看详情。
 
 # 🌐 将 PulsarRPA 作为 REST 服务运行
 
@@ -441,7 +228,7 @@ HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store
 
 ## 从源代码构建
 
-```
+```shell
 git clone https://github.com/platonai/pulsar.git 
 cd pulsar && bin/build-run.sh
 ```
@@ -452,57 +239,31 @@ cd pulsar && bin/build-run.sh
 
 如果未启动，则启动 pulsar 服务器：
 
-```
+```shell
 bin/pulsar
 ```
 
 在另一个终端窗口中抓取网页：
 
-```
+```shell
 bin/scrape.sh
 ```
 
 该 bash 脚本非常简单，只需使用 curl 发送 X-SQL：
 
-```
+```shell
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
       dom_base_uri(dom) as url,
       dom_first_text(dom, '#productTitle') as title,
-      str_substring_after(dom_first_href(dom, '#wayfinding-breadcrumbs_container ul li:last-child a'), '&node=') as category,
-      dom_first_slim_html(dom, '#bylineInfo') as brand,
-      cast(dom_all_slim_htmls(dom, '#imageBlock img') as varchar) as gallery,
-      dom_first_slim_html(dom, '#landingImage, #imgTagWrapperId img, #imageBlock img:expr(width > 400)') as img,
-      dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
-      dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
-      str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1d -njr 3', 'body');
+      dom_first_slim_html(dom, 'img:expr(width > 400)') as img
+  from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+"
 ```
 
 示例代码可以在 [这里](https://github.com/platonai/pulsar/blob/master/bin/scrape.sh) 找到。
 
-Json 格式的响应如下：
-
-```json
-{
-    "uuid": "cc611841-1f2b-4b6b-bcdd-ce822d97a2ad",
-    "statusCode": 200,
-    "pageStatusCode": 200,
-    "pageContentBytes": 1607636,
-    "resultSet": [
-        {
-            "title": "Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394)",
-            "listprice": "$19.99",
-            "price": "$12.99",
-            "categories": "Toys & Games|Arts & Crafts|Craft Kits|Jewelry",
-            "baseuri": "https://www.amazon.com/dp/B0C1H26C46"
-        }
-    ],
-    "pageStatus": "OK",
-    "status": "OK"
-}
-```
-
+点击 [X-SQL](docs/x-sql.md) 查看有关X-SQL的详细介绍和功能描述。
 
 
 
