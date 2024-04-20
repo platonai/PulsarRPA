@@ -3,7 +3,7 @@ Console
 
 [Prev](15REST.md) [Home](1home.md) [Next](17top-practice.md)
 
-[PulsarRPAPro](https://github.com/platonai/PulsarRPAPro), [domestic mirror](https://gitee.com/platonai_galaxyeye/PulsarRPAPro), includes:
+[PulsarRPAPro](https://github.com/platonai/PulsarRPAPro), [Chinese mirror](https://gitee.com/platonai_galaxyeye/PulsarRPAPro), includes:
 
 - A **command-line tool** that can directly execute web data collection tasks from the command line without the need to open an IDE to write code.
 - A **Web console** that facilitates the management of PulsarRPA services and writing SQL to access the Web and extract data.

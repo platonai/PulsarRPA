@@ -20,8 +20,8 @@ The simplest data extraction:
 
 ```kotlin
 // Do something with the document
-val title = document.selectFirst('.title').text()
-val price = document.selectFirst('.price').text()
+val title = document.selectFirstTextOrNull('.title')
+val price = document.selectFirstTextOrNull('.price')
 ```
 
 A slightly more complex example:
@@ -34,7 +34,7 @@ val links = document.select("a[href]")
 val pngs = document.select("img[src$=.png]")
 
 // div with class=masthead
-val masthead = document.select("div.masthead").first()
+val masthead = document.select("div.masthead")
 
 // direct a after h3
 val resultLinks = document.select("h3.r > a")

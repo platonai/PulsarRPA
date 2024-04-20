@@ -6,9 +6,9 @@ PulsarRPA has developed X-SQL to directly query the internet and convert web pag
 
 When PulsarRPA runs as a REST service, X-SQL can be used to collect web pages or directly query the internet anytime, anywhere, without opening an IDE, just like an upgraded version of Google and Baidu.
 
-Now, in large-scale data collection projects, all [extraction rules](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/) ([domestic mirror](https://gitee.com/platonai_galaxyeye/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/)) are written in X-SQL, with data type conversion and data cleaning also handled by the powerful X-SQL inline processing. The experience of writing X-SQL for data collection projects is as simple and efficient as traditional CRUD projects. A good example is [x-asin.sql](https://github.com/platonai/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql) ([domestic mirror](https://gitee.com/platonai_galaxyeye/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)), which extracts more than 70 fields from each product page.
+Now, in large-scale data collection projects, all [extraction rules](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/) ([Chinese mirror](https://gitee.com/platonai_galaxyeye/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/)) are written in X-SQL, with data type conversion and data cleaning also handled by the powerful X-SQL inline processing. The experience of writing X-SQL for data collection projects is as simple and efficient as traditional CRUD projects. A good example is [x-asin.sql](https://github.com/platonai/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql) ([Chinese mirror](https://gitee.com/platonai_galaxyeye/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)), which extracts more than 70 fields from each product page.
 
-[Exotic Amazon](https://github.com/platonai/exotic-amazon) ([domestic mirror](https://gitee.com/platonai_galaxyeye/exotic-amazon)) is a complete solution for collecting the entire amazon.com website, ready to use out of the box, covering most data types on Amazon, and it will be permanently provided for free and open source. Thanks to the comprehensive web data management infrastructure provided by PulsarRPA, the entire solution consists of no more than 3500 lines of Kotlin code and less than 700 lines of X-SQL to extract over 650 fields.
+[Exotic Amazon](https://github.com/platonai/exotic-amazon) ([Chinese mirror](https://gitee.com/platonai_galaxyeye/exotic-amazon)) is a complete solution for collecting the entire amazon.com website, ready to use out of the box, covering most data types on Amazon, and it will be permanently provided for free and open source. Thanks to the comprehensive web data management infrastructure provided by PulsarRPA, the entire solution consists of no more than 3500 lines of Kotlin code and less than 700 lines of X-SQL to extract over 650 fields.
 
 This course introduces the basic concepts, basic usage, and the most common SQL functions of X-SQL.
 
@@ -31,7 +31,7 @@ select
 }
 ```
 
-Complete code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt), [domestic mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt).
+Complete code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt), [Chinese mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt).
 
 ## Language Introduction
 
@@ -159,7 +159,7 @@ from
 
 ## String Functions
 
-Most string functions are automatically converted from org.apache.commons.lang3.StringUtils through programming. You can find the UDF definitions in the following file: [StringFunctions](/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt) ([domestic mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt)), and all string functions are in the namespace STR.
+Most string functions are automatically converted from org.apache.commons.lang3.StringUtils through programming. You can find the UDF definitions in the following file: [StringFunctions](/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt) ([Chinese mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt)), and all string functions are in the namespace STR.
 
 ### STR_SUBSTRING_AFTER
 

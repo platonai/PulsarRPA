@@ -1,4 +1,4 @@
-# What is PulsarRPA?
+# PulsarRPA
 
 English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
 

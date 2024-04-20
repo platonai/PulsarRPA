@@ -3,7 +3,7 @@ Top Project Practical Combat
 
 [Prev](16console.md) | [Home](1home.md) | [Next](18miscellaneous.md)
 
-[Exotic Amazon](https://github.com/platonai/exotic-amazon) (Domestic mirror: [exotic-amazon](https://gitee.com/platonai_galaxyeye/exotic-amazon)) is a **complete solution** for crawling the entire amazon.com website, **ready to use out of the box**, containing most data types of Amazon, and it will be permanently provided for free and open source.
+[Exotic Amazon](https://github.com/platonai/exotic-amazon) (Chinese mirror: [exotic-amazon](https://gitee.com/platonai_galaxyeye/exotic-amazon)) is a **complete solution** for crawling the entire amazon.com website, **ready to use out of the box**, containing most data types of Amazon, and it will be permanently provided for free and open source.
 
 The methods and processes for data collection of other e-commerce platforms are basically similar. You can modify and adjust the business logic based on this project, and its infrastructure solves all the difficulties faced by large-scale data collection.
 
@@ -39,7 +39,7 @@ Open [System Glances](http://localhost:8182/api/system/status/glances) to get a 
 
 ### Extraction Rules
 
-All [extraction rules](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/) (Domestic mirror: [exotic-amazon](https://gitee.com/platonai_galaxyeye/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/)) are written in X-SQL. Data type conversion and data cleaning are also handled by powerful X-SQL inline processing, which is an important reason why we developed X-SQL. A good example of X-SQL is [x-asin.sql](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql) (Domestic mirror: [exotic-amazon](https://gitee.com/platonai_galaxyeye/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)), which extracts more than 70 fields from each product page.
+All [extraction rules](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/) (Chinese mirror: [exotic-amazon](https://gitee.com/platonai_galaxyeye/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/)) are written in X-SQL. Data type conversion and data cleaning are also handled by powerful X-SQL inline processing, which is an important reason why we developed X-SQL. A good example of X-SQL is [x-asin.sql](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql) (Chinese mirror: [exotic-amazon](https://gitee.com/platonai_galaxyeye/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)), which extracts more than 70 fields from each product page.
 
 ### Saving Extraction Results in the Local File System
 

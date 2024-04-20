@@ -334,19 +334,17 @@ For a detailed introduction and function descriptions about X-SQL, refer to X-SQ
 
 Developers are not required to study the implementation concepts, but understanding these concepts can help us better grasp how the entire system operates.
 
-### Url Pool
+### URL Pool
 
 During continuous crawls, URLs are added to a UrlPool. A UrlPool contains various UrlCaches to meet different requirements, such as priority, delaying, deadline, and external loading requirements.
 
 ### Crawl Loop
 
-During continuous crawls, a crawl loop is initiated to continuously fetch URLs from the UrlPool, and then load/fetch them asynchronously in a PulsarSession.
-
-Remember that every task in PulsarRPA is a URL, so the crawl loop can accept and execute any type of task.
+During continuous crawls, a crawl loop is initiated to continuously visit URLs from the UrlPool, and then load/fetch them asynchronously in a PulsarSession.
 
 ### Privacy Context
 
-One of the biggest challenges in web scraping tasks is maintaining bot stealth. For web scraping tasks, it's crucial that the website cannot discern whether a visit is from a human or a bot. If a page visit is suspected by the website, known as a privacy leak, the privacy context must be discarded, and Pulsar will visit the page in a different privacy context.
+One of the biggest challenges in web scraping tasks is maintaining bot stealth. For web scraping tasks, it's crucial that the website cannot discern whether a visit is from a human or a bot. If a page visit is suspected by the website, known as a privacy leak, the privacy context must be discarded, and PulsarRPA will visit the page in a different privacy context.
 
 ### Proxy Management
 
@@ -359,19 +357,3 @@ When a browser is programmed to access a webpage, the website may detect that th
 ### Backend Storage
 
 PulsarRPA supports a variety of backend storage solutions to meet our customers' urgent needs, such as Local File System, MongoDB, HBase, Gora, and so on. is a URL, so the crawl loop can accept and execute any type of task.
-
-### Privacy Context
-
-One of the biggest challenges in web scraping tasks is maintaining bot stealth. For web scraping tasks, it's crucial that the website cannot discern whether a visit is from a human or a bot. If a page visit is suspected by the website, known as a privacy leak, the privacy context must be discarded, and Pulsar will visit the page in a different privacy context.
-
-### Proxy Management
-
-This involves obtaining IPs from proxy vendors, recording proxy status, smart and automatic IP rotation, and more.
-
-### Web Driver Stealth
-
-When a browser is programmed to access a webpage, the website may detect that the visit is automated. Web Driver stealth technology is used to prevent such detection.
-
-### Backend Storage
-
-PulsarRPA supports a variety of backend storage solutions to meet our customers' urgent needs, such as Local File System, MongoDB, HBase, Gora, and so on.

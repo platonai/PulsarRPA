@@ -1,4 +1,4 @@
-# The Pulsar log format explained
+# PulsarRPA log format explained
 
 PulsarRPA has carefully designed the logging and metrics subsystem to record every event that occurs in the system. This document explains the format of typical logs.
 

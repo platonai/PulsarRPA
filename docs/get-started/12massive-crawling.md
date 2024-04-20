@@ -96,7 +96,7 @@ The most important purpose of designing the delay cache is to handle failed task
 
 By default, URLCache is based on memory, but we can also reconfigure it to use cache implementations that support file systems or databases.
 
-This course provides [complete code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt), [domestic mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt).
+This course provides [complete code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt), [Chinese mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt).
 
 ------
 

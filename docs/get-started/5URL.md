@@ -2,7 +2,7 @@ URL
 =
 [Prev](4data-extraction.md) [Home](1home.md) [Next](6Java-style-async.md)
 
-In PulsarRPA, each task is defined as some form of URL, which often appears with a loading argument to finely control a collection task, such as data expiration, basic data requirements, task deadlines, task retries, etc. In most cases, a data collection task can be uniquely determined by the form of **url arguments**, so it can be easily copied, managed, stored, transferred, parallelized, and used for communication.
+In PulsarRPA, each task is defined as some form of URL, which often appears with a loading argument to finely control a collection task, such as data expiration, basic data requirements, task deadlines, task retries, etc. In most cases, a data collection task can be uniquely determined by the form of *URL-arguments*, so it can be easily copied, managed, stored, transferred, parallelized, and used for communication.
 
 ## URLs
 
@@ -11,7 +11,7 @@ A Uniform Resource Locator (URL), commonly known as a web address, is a referenc
 - A [NormURL](/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormURL.kt)
 - A String
 - A [UrlAware](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)
-- A [DegenerateUrl](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)
+- A [DegenerateUrl](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Urls.kt)
 
 NormURL represents a "normalized URL," meaning that this URL is the final form for the fetch component and is usually ultimately passed to the actual browser.
 
@@ -32,7 +32,7 @@ session.load(url, args)
 
 UrlAware provides more complex control to describe collection tasks and is the interface for all Hyperlinks.
 
-Finally, [DegenerateUrl](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) literally means a "degenerate link," which is not actually a link. It is designed to describe non-collection tasks, such as local computing tasks that do not involve the network, to be executed in the main loop.
+Finally, [DegenerateUrl](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Urls.kt) literally means a "degenerate url," which is not actually a url. It is designed to describe non-scraping tasks, such as local computing tasks that do not involve the network, to be executed in the main loop.
 
 ## Hyperlinks
 
