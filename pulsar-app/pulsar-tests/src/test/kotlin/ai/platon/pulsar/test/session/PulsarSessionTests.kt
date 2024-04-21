@@ -104,6 +104,7 @@ class PulsarSessionTests: TestBase() {
         assertTrue { prevFetchTime2 > prevFetchTime1 }
         assertTrue { fetchTime2 > startTime }
         assertTrue { fetchTime2 > page2.prevFetchTime }
+        
         assertEquals(fetchCount1 + 1, fetchCount2)
     }
 
@@ -111,7 +112,8 @@ class PulsarSessionTests: TestBase() {
     fun testFetchForExpireAt() {
         val now = Instant.now()
         val seconds = 5L
-        var options = session.options()
+        val args = "-i ${seconds}s"
+        var options = session.options(args)
         var startTime = Instant.now()
         println("Start time: $startTime")
 

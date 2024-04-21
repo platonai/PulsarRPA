@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.persist.WebDb
+import ai.platon.pulsar.persist.gora.FileBackendPageStore
 import ai.platon.pulsar.session.PulsarSession
 import kotlin.test.*
 import org.junit.runner.RunWith
@@ -34,6 +35,8 @@ class TestBase {
     val context get() = session.context
 
     val globalCache get() = session.globalCache
+    
+    val isFileBackendPageStore get() = webDB.dataStore is FileBackendPageStore
     
     @Test
     fun smoke() {

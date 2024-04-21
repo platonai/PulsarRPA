@@ -8,11 +8,9 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent.Companion.SYSTEM_DEFAULT
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
 
 data class PrivacyAgentId(
     val contextDir: Path,
@@ -216,25 +214,19 @@ interface PrivacyAgentGenerator {
 }
 
 open class DefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
-    companion object {
-        private val SEQUENCER = AtomicInteger()
-        private val nextContextDir
-            get() = PrivacyContext.DEFAULT_CONTEXT_DIR.resolve(SEQUENCER.incrementAndGet().toString())
-    }
-
     override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
-    override fun invoke(fingerprint: Fingerprint): PrivacyAgent = PrivacyAgent(nextContextDir, fingerprint)
+    override fun invoke(fingerprint: Fingerprint): PrivacyAgent = PrivacyAgent.DEFAULT
 }
 
 open class SystemDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig()
-    override fun invoke(fingerprint: Fingerprint) = SYSTEM_DEFAULT
+    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.SYSTEM_DEFAULT
 }
 
 @Deprecated("Use SystemDefaultPrivacyAgentGenerator instead", ReplaceWith("SystemDefaultPrivacyAgentGenerator"))
 open class UserDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
-    override fun invoke(fingerprint: Fingerprint) = SYSTEM_DEFAULT
+    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.SYSTEM_DEFAULT
 }
 
 open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
