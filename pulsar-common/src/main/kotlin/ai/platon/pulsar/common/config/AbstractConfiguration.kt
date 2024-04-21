@@ -139,14 +139,12 @@ abstract class AbstractConfiguration {
         }
 
     /**
-     * Return the boxed KConfiguration
+     * Return the boxed KConfiguration.
      */
     fun unbox() = conf
 
     /**
      * The configured item size.
-     *
-     * @return a int.
      */
     fun size() = conf.size()
 
@@ -155,8 +153,7 @@ abstract class AbstractConfiguration {
      * no such property exists.
      *
      * @param name the property name, will be trimmed before get value.
-     * @return the value of the `name`,
-     * or null if no such property exists.
+     * @return the value of the `name`, or null if no such property exists.
      */
     open operator fun get(name: String): String? {
         return System.getenv(name) ?: System.getProperty(name) ?: environment?.get(name) ?: conf[name]
@@ -171,8 +168,7 @@ abstract class AbstractConfiguration {
      *
      * @param name         property name, will be trimmed before get value.
      * @param defaultValue default value.
-     * @return property value, or `defaultValue` if the property
-     * doesn't exist.
+     * @return property value, or `defaultValue` if the property doesn't exist.
      */
     open operator fun get(name: String, defaultValue: String) = get(name) ?: defaultValue
 
@@ -186,8 +182,7 @@ abstract class AbstractConfiguration {
      *
      * @param name         property name.
      * @param defaultValue default value.
-     * @return property value as an `int`,
-     * or `defaultValue`.
+     * @return property value as an `int`, or `defaultValue`.
      * @throws java.lang.NumberFormatException when the value is invalid
      */
     fun getInt(name: String, defaultValue: Int) = p(name).getInt(defaultValue)

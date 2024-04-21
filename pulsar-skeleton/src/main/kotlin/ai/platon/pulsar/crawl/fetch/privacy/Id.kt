@@ -245,16 +245,24 @@ open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
 open class SequentialPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent {
+        val minAgents = 10
         // The number of allowed active privacy contexts
         val privacyContextNumber = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
         // The maximum number of sequential privacy agents, the active privacy contexts is chosen from them
-        var maxAgents = conf.getInt(CapabilityTypes.MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, 10)
-        maxAgents = maxAgents.coerceAtLeast(privacyContextNumber)
-        
+        var maxAgents = conf.getInt(CapabilityTypes.MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, minAgents)
+        maxAgents = maxAgents.coerceAtLeast(privacyContextNumber).coerceAtLeast(minAgents)
+
         return PrivacyAgent(BrowserFiles.computeNextSequentialContextDir("default", fingerprint, maxAgents), fingerprint)
     }
 }
 
+/**
+ * The random privacy agent generator.
+ *
+ * If the prototype Chrome browser does not exist, it acts as "New Incognito window", or in Chinese, "打开无痕浏览器".
+ * If the prototype Chrome browser exists, it copies the prototype Chrome browser's user data directory, and inherits
+ * the prototype Chrome browser's settings.
+ * */
 open class RandomPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
