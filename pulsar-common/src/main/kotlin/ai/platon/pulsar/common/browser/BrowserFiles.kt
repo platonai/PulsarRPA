@@ -61,7 +61,7 @@ object BrowserFiles {
     
     @Throws(IOException::class)
     @Synchronized
-    fun computeTestContextDir() {
+    fun computeTestContextDir(): Path {
         return runWithFileLock { computeNextSequentialContextDir0("test", 5) }
     }
 
