@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
@@ -210,38 +211,52 @@ data class BrowserId(
 }
 
 interface PrivacyAgentGenerator {
+    var conf: ImmutableConfig
     operator fun invoke(fingerprint: Fingerprint): PrivacyAgent
 }
 
 open class DefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     companion object {
-        private val sequencer = AtomicInteger()
+        private val SEQUENCER = AtomicInteger()
         private val nextContextDir
-            get() = PrivacyContext.DEFAULT_CONTEXT_DIR.resolve(sequencer.incrementAndGet().toString())
+            get() = PrivacyContext.DEFAULT_CONTEXT_DIR.resolve(SEQUENCER.incrementAndGet().toString())
     }
 
+    override var conf: ImmutableConfig = ImmutableConfig()
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent = PrivacyAgent(nextContextDir, fingerprint)
 }
 
 open class SystemDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
+    override var conf: ImmutableConfig = ImmutableConfig()
     override fun invoke(fingerprint: Fingerprint) = SYSTEM_DEFAULT
 }
 
 @Deprecated("Use SystemDefaultPrivacyAgentGenerator instead", ReplaceWith("SystemDefaultPrivacyAgentGenerator"))
 open class UserDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
+    override var conf: ImmutableConfig = ImmutableConfig()
     override fun invoke(fingerprint: Fingerprint) = SYSTEM_DEFAULT
 }
 
 open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
+    override var conf: ImmutableConfig = ImmutableConfig()
     override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.PROTOTYPE
 }
 
 open class SequentialPrivacyAgentGenerator: PrivacyAgentGenerator {
-    override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
-        PrivacyAgent(BrowserFiles.computeNextSequentialContextDir("default", fingerprint), fingerprint)
+    override var conf: ImmutableConfig = ImmutableConfig()
+    override fun invoke(fingerprint: Fingerprint): PrivacyAgent {
+        // The number of allowed active privacy contexts
+        val privacyContextNumber = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
+        // The maximum number of sequential privacy agents, the active privacy contexts is chosen from them
+        var maxAgents = conf.getInt(CapabilityTypes.MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, 10)
+        maxAgents = maxAgents.coerceAtLeast(privacyContextNumber)
+        
+        return PrivacyAgent(BrowserFiles.computeNextSequentialContextDir("default", fingerprint, maxAgents), fingerprint)
+    }
 }
 
 open class RandomPrivacyAgentGenerator: PrivacyAgentGenerator {
+    override var conf: ImmutableConfig = ImmutableConfig()
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
         PrivacyAgent(BrowserFiles.computeRandomContextDir(), fingerprint)
 }
@@ -296,6 +311,8 @@ class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {
             defaultClazz
         }
 
-        return clazz.constructors.first { it.parameters.isEmpty() }.newInstance() as PrivacyAgentGenerator
+        val gen = clazz.constructors.first { it.parameters.isEmpty() }.newInstance() as PrivacyAgentGenerator
+        gen.conf = conf
+        return gen
     }
 }

@@ -130,14 +130,29 @@ open class BrowserSettings(
             return BrowserSettings
         }
         /**
-         * Use a temporary browser that inherits from the prototype browser’s environment; the temporary browser
+         * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
+         * permanent unless the context directories are deleted manually.
+         *
+         * PULSAR_CHROME is the only supported browser currently.
+         *
+         * @param maxAgents The maximum number of sequential privacy agents, the active privacy contexts is chosen from them.
+         * @return the BrowserSettings itself
+         * */
+        fun withSequentialBrowsers(maxAgents: Int = 10): Companion {
+            System.setProperty(MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, "$maxAgents")
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            return BrowserSettings
+        }
+        /**
+         * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
          * will not be used again after it is shut down.
          *
          * PULSAR_CHROME is the only supported browser currently.
          * */
         @JvmStatic
         fun withTemporaryBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.RandomPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
@@ -150,7 +165,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withGoodNetwork(): Companion {
-            InteractSettings.GOOD_NET_SETTINGS.copy().overrideSystemProperties()
+            InteractSettings.GOOD_NET_SETTINGS.overrideSystemProperties()
             return BrowserSettings
         }
         /**
@@ -161,7 +176,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withWorseNetwork(): Companion {
-            InteractSettings.WORSE_NET_SETTINGS.copy().overrideSystemProperties()
+            InteractSettings.WORSE_NET_SETTINGS.overrideSystemProperties()
             return BrowserSettings
         }
         /**
@@ -172,7 +187,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withWorstNetwork(): Companion {
-            InteractSettings.WORST_NET_SETTINGS.copy().overrideSystemProperties()
+            InteractSettings.WORST_NET_SETTINGS.overrideSystemProperties()
             return BrowserSettings
         }
         /**

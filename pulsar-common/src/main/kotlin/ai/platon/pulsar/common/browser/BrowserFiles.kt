@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.*
 import com.google.common.collect.Iterators
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.RandomStringUtils
-import org.apache.commons.lang3.StringUtils.startsWith
 import java.io.IOException
 import java.nio.channels.FileChannel
 import java.nio.file.Files
@@ -14,9 +13,7 @@ import java.time.Duration
 import java.time.MonthDay
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.io.path.isDirectory
-import kotlin.io.path.listDirectoryEntries
 
 internal class ContextGroup(val group: String) {
     
@@ -63,13 +60,18 @@ object BrowserFiles {
     @Throws(IOException::class)
     @Synchronized
     fun computeTestContextDir(fingerprint: Fingerprint = Fingerprint.DEFAULT): Path {
-        return runWithFileLock { channel -> computeNextSequentialContextDir0("test", fingerprint, 5, channel = channel) }
+        return runWithFileLock { channel ->
+            computeNextSequentialContextDir0("test", fingerprint, 5, channel = channel)
+        }
     }
 
     @Throws(IOException::class)
     @Synchronized
-    fun computeNextSequentialContextDir(group: String = "default", fingerprint: Fingerprint = Fingerprint.DEFAULT, maxContexts: Int = 10): Path {
-        return runWithFileLock { channel -> computeNextSequentialContextDir0(group, fingerprint, maxContexts, channel = channel) }
+    fun computeNextSequentialContextDir(
+        group: String = "default", fingerprint: Fingerprint = Fingerprint.DEFAULT, maxContexts: Int = 10): Path {
+        return runWithFileLock { channel ->
+            computeNextSequentialContextDir0(group, fingerprint, maxContexts, channel = channel)
+        }
     }
     
     @Throws(IOException::class)
