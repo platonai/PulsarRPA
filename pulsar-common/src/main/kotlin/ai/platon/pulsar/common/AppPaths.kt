@@ -63,6 +63,8 @@ object AppPaths {
     @RequiredDirectory
     val PROC_TMP_DIR = AppContext.APP_PROC_TMP_DIR
     @RequiredDirectory
+    val PROC_TMP_TMP_DIR = PROC_TMP_DIR.resolve("tmp")
+    @RequiredDirectory
     val CACHE_DIR = PROC_TMP_DIR.resolve("cache")
     @RequiredDirectory
     val WEB_CACHE_DIR = CACHE_DIR.resolve("web")

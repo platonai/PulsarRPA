@@ -70,5 +70,5 @@ open class LocalFileUrlLoader(val path: Path): OneLoadExternalUrlLoader() {
 }
 
 open class TemporaryLocalFileUrlLoader: LocalFileUrlLoader(
-    AppPaths.PROC_TMP_DIR.resolve("hyperlink.${Random.nextLong()}.txt")
+    AppPaths.PROC_TMP_TMP_DIR.resolve("hyperlink.${Random.nextLong()}.txt")
 )
