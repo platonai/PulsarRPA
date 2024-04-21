@@ -100,6 +100,7 @@ class PrivacyContextManagerTests {
             val userAgent = userAgents.getRandomUserAgent()
             val fingerprint = Fingerprint(BrowserType.PULSAR_CHROME, proxyServer, userAgent = userAgent)
             val pc = privacyManager.computeNextContext(fingerprint)
+            
             assertTrue { pc.isActive }
             privacyManager.close(pc)
             assertTrue { !pc.isActive }

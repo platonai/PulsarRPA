@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.*
 import com.google.common.collect.Iterators
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.RandomStringUtils
+import org.apache.commons.lang3.StringUtils.startsWith
 import java.io.IOException
 import java.nio.channels.FileChannel
 import java.nio.file.Files
@@ -62,19 +63,19 @@ object BrowserFiles {
     @Throws(IOException::class)
     @Synchronized
     fun computeTestContextDir(): Path {
-        return runWithFileLock { computeNextSequentialContextDir0("test", 5) }
+        return runWithFileLock { channel -> computeNextSequentialContextDir0("test", 5, channel = channel) }
     }
 
     @Throws(IOException::class)
     @Synchronized
     fun computeNextSequentialContextDir(group: String = "default", maxContexts: Int = 10): Path {
-        return runWithFileLock { computeNextSequentialContextDir0(group, maxContexts) }
+        return runWithFileLock { channel -> computeNextSequentialContextDir0(group, maxContexts, channel = channel) }
     }
     
     @Throws(IOException::class)
     @Synchronized
     fun computeRandomContextDir(ident: String = ""): Path {
-        return runWithFileLock { computeRandomContextDir0(ident) }
+        return runWithFileLock { channel -> computeRandomContextDir0(ident, channel = channel) }
     }
 
     @Throws(IOException::class)
@@ -89,23 +90,25 @@ object BrowserFiles {
     
     @Throws(IOException::class)
     fun deleteTemporaryUserDataDirWithLock(userDataDir: Path, expiry: Duration) {
-        runWithFileLock { deleteTemporaryUserDataDir0(userDataDir, expiry) }
+        runWithFileLock { channel -> deleteTemporaryUserDataDir0(userDataDir, expiry, channel) }
     }
     
     @Throws(IOException::class)
     @Synchronized
-    private fun <T> runWithFileLock(supplier: () -> T): T {
+    private fun <T> runWithFileLock(supplier: (FileChannel) -> T): T {
         val lockFile = AppPaths.BROWSER_TMP_DIR_LOCK
         // Opens or creates a file, returning a file channel to access the file.
         val channel = FileChannel.open(lockFile, StandardOpenOption.APPEND)
         channel.use {
             it.lock()
-            return supplier()
+            return supplier(it)
         }
     }
 
     @Throws(IOException::class)
-    private fun deleteTemporaryUserDataDir0(userDataDir: Path, expiry: Duration) {
+    private fun deleteTemporaryUserDataDir0(userDataDir: Path, expiry: Duration, channel: FileChannel) {
+        require(channel.isOpen) { "The lock file channel is closed" }
+        
         val dirToDelete = userDataDir
         
         val cleanedUp = dirToDelete in cleanedUserDataDirs
@@ -146,22 +149,28 @@ object BrowserFiles {
      * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/cx.1
      * */
     @Throws(IOException::class)
-    private fun computeNextSequentialContextDir0(group: String, maxContexts: Int): Path {
+    private fun computeNextSequentialContextDir0(group: String, maxContexts: Int, channel: FileChannel): Path {
+        require(channel.isOpen) { "The lock file channel is closed" }
+        
         val prefix = CONTEXT_DIR_PREFIX
-        val baseDir = AppPaths.CONTEXT_GROUP_BASE_DIR
-        val contextCount = computeContextCount(baseDir, prefix)
+        val groupBaseDir = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve(group)
+        Files.createDirectories(groupBaseDir)
         val contextGroup = contextGroups.computeIfAbsent(group) { ContextGroup(group) }
         
-        baseDir.listDirectoryEntries()
-            .filter { it.isDirectory() && it.startsWith(prefix) }
+        Files.list(groupBaseDir)
+            .filter { Files.isDirectory(it) && it.fileName.toString().startsWith(prefix) }
             .forEach { contextGroup.add(it) }
+        
+        // println("contextGroup.size: ${contextGroup.size} maxContexts: $maxContexts")
         
         if (contextGroup.size >= maxContexts) {
             return contextGroup.iterator.next()
         }
         
+        val contextCount = computeContextCount(groupBaseDir, prefix, channel)
+        
         val fileName = String.format("%s%s", prefix, contextCount)
-        val path = baseDir.resolve(group).resolve(fileName)
+        val path = groupBaseDir.resolve(fileName)
         Files.createDirectories(path)
         
         return path
@@ -172,7 +181,9 @@ object BrowserFiles {
      * A typical context directory is like: /tmp/pulsar-vincent/context/tmp/01/cx.0109aNcTxq5
      * */
     @Throws(IOException::class)
-    private fun computeRandomContextDir0(ident: String): Path {
+    private fun computeRandomContextDir0(ident: String, channel: FileChannel): Path {
+        require(channel.isOpen) { "The lock file channel is closed" }
+        
         val prefix = CONTEXT_DIR_PREFIX
         val monthDay = MonthDay.now()
         val monthValue = monthDay.monthValue
@@ -180,14 +191,16 @@ object BrowserFiles {
         val baseDir = AppPaths.CONTEXT_TMP_DIR.resolve("$monthValue")
         Files.createDirectories(baseDir)
         val rand = RandomStringUtils.randomAlphanumeric(5)
-        val contextCount = computeContextCount(baseDir, prefix)
+        val contextCount = computeContextCount(baseDir, prefix, channel)
         val fileName = String.format("%s%02d%02d%s%s", prefix, monthValue, dayOfMonth, rand, contextCount)
         val path = baseDir.resolve(ident).resolve(fileName)
         Files.createDirectories(baseDir)
         return path
     }
     
-    private fun computeContextCount(baseDir: Path, prefix: String): Long {
+    private fun computeContextCount(baseDir: Path, prefix: String, channel: FileChannel): Long {
+        require(channel.isOpen) { "The lock file channel is closed" }
+
         return 1 + Files.list(baseDir)
             .filter { Files.isDirectory(it) }
             .filter { it.toString().contains(prefix) }
