@@ -62,14 +62,14 @@ object BrowserFiles {
     
     @Throws(IOException::class)
     @Synchronized
-    fun computeTestContextDir(): Path {
-        return runWithFileLock { channel -> computeNextSequentialContextDir0("test", 5, channel = channel) }
+    fun computeTestContextDir(fingerprint: Fingerprint = Fingerprint.DEFAULT): Path {
+        return runWithFileLock { channel -> computeNextSequentialContextDir0("test", fingerprint, 5, channel = channel) }
     }
 
     @Throws(IOException::class)
     @Synchronized
-    fun computeNextSequentialContextDir(group: String = "default", maxContexts: Int = 10): Path {
-        return runWithFileLock { channel -> computeNextSequentialContextDir0(group, maxContexts, channel = channel) }
+    fun computeNextSequentialContextDir(group: String = "default", fingerprint: Fingerprint = Fingerprint.DEFAULT, maxContexts: Int = 10): Path {
+        return runWithFileLock { channel -> computeNextSequentialContextDir0(group, fingerprint, maxContexts, channel = channel) }
     }
     
     @Throws(IOException::class)
@@ -149,11 +149,11 @@ object BrowserFiles {
      * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/cx.1
      * */
     @Throws(IOException::class)
-    private fun computeNextSequentialContextDir0(group: String, maxContexts: Int, channel: FileChannel): Path {
+    private fun computeNextSequentialContextDir0(group: String, fingerprint: Fingerprint, maxContexts: Int, channel: FileChannel): Path {
         require(channel.isOpen) { "The lock file channel is closed" }
         
         val prefix = CONTEXT_DIR_PREFIX
-        val groupBaseDir = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve(group)
+        val groupBaseDir = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve(group).resolve(fingerprint.browserType.name)
         Files.createDirectories(groupBaseDir)
         val contextGroup = contextGroups.computeIfAbsent(group) { ContextGroup(group) }
         

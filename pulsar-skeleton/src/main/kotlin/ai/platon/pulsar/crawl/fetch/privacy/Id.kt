@@ -238,7 +238,7 @@ open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
 
 open class SequentialPrivacyAgentGenerator: PrivacyAgentGenerator {
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
-        PrivacyAgent(BrowserFiles.computeNextSequentialContextDir(), fingerprint)
+        PrivacyAgent(BrowserFiles.computeNextSequentialContextDir("default", fingerprint), fingerprint)
 }
 
 open class RandomPrivacyAgentGenerator: PrivacyAgentGenerator {
