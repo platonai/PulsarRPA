@@ -46,10 +46,6 @@ internal class ContextGroup(val group: String) {
 object BrowserFiles {
     
     private val logger = getLogger(this)
-    /**
-     * The sequencer to generate temporary context directories.
-     * */
-    private val SEQUENCER = AtomicInteger()
     
     // The prefix for all temporary privacy contexts. System context, prototype context and default context are not
     // required to start with the prefix.
