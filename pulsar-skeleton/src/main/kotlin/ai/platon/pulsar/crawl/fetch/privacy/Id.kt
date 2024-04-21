@@ -222,7 +222,7 @@ open class DefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
             get() = PrivacyContext.DEFAULT_CONTEXT_DIR.resolve(SEQUENCER.incrementAndGet().toString())
     }
 
-    override var conf: ImmutableConfig = ImmutableConfig()
+    override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent = PrivacyAgent(nextContextDir, fingerprint)
 }
 
@@ -233,17 +233,17 @@ open class SystemDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
 
 @Deprecated("Use SystemDefaultPrivacyAgentGenerator instead", ReplaceWith("SystemDefaultPrivacyAgentGenerator"))
 open class UserDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
-    override var conf: ImmutableConfig = ImmutableConfig()
+    override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
     override fun invoke(fingerprint: Fingerprint) = SYSTEM_DEFAULT
 }
 
 open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
-    override var conf: ImmutableConfig = ImmutableConfig()
+    override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
     override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.PROTOTYPE
 }
 
 open class SequentialPrivacyAgentGenerator: PrivacyAgentGenerator {
-    override var conf: ImmutableConfig = ImmutableConfig()
+    override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent {
         // The number of allowed active privacy contexts
         val privacyContextNumber = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
@@ -256,7 +256,7 @@ open class SequentialPrivacyAgentGenerator: PrivacyAgentGenerator {
 }
 
 open class RandomPrivacyAgentGenerator: PrivacyAgentGenerator {
-    override var conf: ImmutableConfig = ImmutableConfig()
+    override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
         PrivacyAgent(BrowserFiles.computeRandomContextDir(), fingerprint)
 }
