@@ -1,7 +1,6 @@
 package ai.platon.pulsar.t
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -12,7 +11,6 @@ import com.google.common.collect.Iterators
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicInteger
 
 class Twitter {
