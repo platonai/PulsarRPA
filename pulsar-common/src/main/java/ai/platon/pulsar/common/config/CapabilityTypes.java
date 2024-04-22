@@ -203,6 +203,10 @@ public interface CapabilityTypes {
      */
     String PRIVACY_CONTEXT_NUMBER = "privacy.context.number";
     /**
+     * The minimal number of sequential privacy agents, the active privacy contexts is chosen from them.
+     * */
+    String MIN_SEQUENTIAL_PRIVACY_AGENT_NUMBER = "min.sequential.privacy.agent.number";
+    /**
      * The maximum number of sequential privacy agents, the active privacy contexts is chosen from them.
      * */
     String MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER = "max.sequential.privacy.agent.number";

@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.MIN_SEQUENTIAL_PRIVACY_AGENT_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
@@ -237,9 +238,10 @@ open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
 open class SequentialPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent {
-        val minAgents = 10
         // The number of allowed active privacy contexts
         val privacyContextNumber = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
+        // The minimum number of sequential privacy agents, the active privacy contexts is chosen from them
+        val minAgents = conf.getInt(MIN_SEQUENTIAL_PRIVACY_AGENT_NUMBER, 10)
         // The maximum number of sequential privacy agents, the active privacy contexts is chosen from them
         var maxAgents = conf.getInt(CapabilityTypes.MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, minAgents)
         maxAgents = maxAgents.coerceAtLeast(privacyContextNumber).coerceAtLeast(minAgents)
