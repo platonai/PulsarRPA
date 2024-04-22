@@ -29,6 +29,19 @@ PulsarRPA 是一款高性能、分布式、开源的机器人流程自动化（R
 
 综上所述，PulsarRPA 凭借其网页内容理解、智能抓取、先进 DOM 解析、分布式处理及开源特性，成为大规模网页数据提取首选的开源解决方案。其独特的技术组合使用户能够有效应对与大规模提取宝贵网页数据相关的复杂性和挑战，最终推动更明智的决策制定和竞争优势。
 
+### *大批量*站点的数据提取可以使用自动化提取技术:
+
+```kotlin
+val document = session.harvest("https://www.eeo.com.cn/2024/0330/648712.shtml")
+
+println(document.contentTitle)
+println(document.textContent)
+```
+
+示例代码: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/article/EEO.kt).
+
+在这个案例中，我们使用流行的 biolerpipe 技术来自动提取新闻网页。在 PulsarRPAPro 中，我们支持更加智能的数据提取技术，来自动提取各种各样的网页，譬如商品详情页。
+
 ### 大多数抓取尝试可以从几乎一行代码开始：
 
 *Kotlin:*
@@ -92,19 +105,6 @@ session.load(url, options)
 ```
 
 示例代码: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
-
-### *大批量*站点的数据提取可以使用自动化提取技术:
-
-```kotlin
-val document = session.harvest("https://www.eeo.com.cn/2024/0330/648712.shtml")
-
-println(document.contentTitle)
-println(document.textContent)
-```
-
-示例代码: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/article/EEO.kt).
-
-在这个案例中，我们使用流行的 biolerpipe 技术来自动提取新闻网页。在 PulsarRPAPro 中，我们支持更加智能的数据提取技术，来自动提取各种各样的网页，譬如商品详情页。
 
 ### *最复杂* 的 Web 数据抽取难题需要用 X-SQL 来解决：
 
