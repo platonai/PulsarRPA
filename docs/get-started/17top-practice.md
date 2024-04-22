@@ -1,26 +1,28 @@
-顶尖项目实战
+Top Project Practice
 =
 
-[Exotic Amazon](https://github.com/platonai/exotic-amazon) （[国内镜像](https://gitee.com/platonai_galaxyeye/exotic-amazon)）是采集整个 amazon.com 网站的**完整解决方案**，**开箱即用**，包含亚马逊大多数数据类型，它将永久免费提供并开放源代码。
+[Prev](16console.md) | [Home](1home.md) | [Next](18miscellaneous.md)
 
-其他电商平台数据采集，其方法和流程基本类似，可以在该项目基础上修改调整业务逻辑即可，其基础设施解决了所有大规模数据采集面临的难题。
+[Exotic Amazon](https://github.com/platonai/exotic-amazon) (Chinese mirror: [exotic-amazon](https://gitee.com/platonai_galaxyeye/exotic-amazon)) is a **complete solution** for crawling the entire amazon.com website, **ready to use out of the box**, containing most data types of Amazon, and it will be permanently provided for free and open source.
 
-得益于 PulsarRPA 提供的完善的 Web 数据管理基础设施，整个解决方案由不超过 3500 行的 Kotlin 代码和不到 700 行的 X-SQL 组成，以提取 650 多个字段。
+The methods and processes for data collection of other e-commerce platforms are basically similar. You can modify and adjust the business logic based on this project, and its infrastructure solves all the difficulties faced by large-scale data collection.
 
-## 数据简介
+Thanks to the comprehensive Web data management infrastructure provided by PulsarRPA, the entire solution consists of no more than 3500 lines of Kotlin code and less than 700 lines of X-SQL to extract more than 650 fields.
 
-- Best Seller - 每天更新，约 32,000 个类别，约 4,000,000 个产品记录
-- Most Wished For - 每天更新约 25,000 个类别，约 3,500,000 个产品记录
-- New Releases - 每天更新，约 25,000 个类别，约 3,000,000 条产品记录
-- Movers and Shakers - 约 20 个类别，每小时更新一次
-- Products - 约 20,000,000 个产品，每月更新
-- 70 多个字段
-- 标题、价格、库存、图像、描述、规格、店铺等
-- 赞助产品、类似产品、相关产品等
-- 热门评论等
-- Review - 每天更新
+## Data Introduction
 
-## 开始
+- Best Seller - Updated daily, about 32,000 categories, about 4,000,000 product records
+- Most Wished For - Updated daily, about 25,000 categories, about 3,500,000 product records
+- New Releases - Updated daily, about 25,000 categories, about 3,000,000 product records
+- Movers and Shakers - About 20 categories, updated every hour
+- Products - About 20,000,000 products, updated monthly
+- 70+ fields
+- Titles, prices, inventory, images, descriptions, specifications, stores, etc.
+- Sponsored products, similar products, related products, etc.
+- Hot reviews, etc.
+- Review - Updated daily
+
+## Getting Started
 
 ```bash
 git clone https://github.com/platonai/exotic-amazon.git
@@ -31,26 +33,26 @@ java -jar target/exotic-amazon*.jar
 java -jar target/exotic-amazon-{the-actual-version}.jar
 ```
 
-打开 [System Glances](http://localhost:8182/api/system/status/glances) 以一目了然地查看系统状态。
+Open [System Glances](http://localhost:8182/api/system/status/glances) to get a clear view of the system status.
 
-## 提取结果处理
+## Handling Extraction Results
 
-### 提取规则
+### Extraction Rules
 
-所有 [提取规则](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/)（[国内镜像](https://gitee.com/platonai_galaxyeye/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/)）都是用 X-SQL 编写的。数据类型转换、数据清理也由强大的 X-SQL 内联处理，这也是我们开发 X-SQL 的重要原因。一个很好的 X-SQL 例子是 [x-asin.sql](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)（[国内镜像](https://gitee.com/platonai_galaxyeye/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)），它从每个产品页面中提取 70 多个字段。
+All [extraction rules](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/) (Chinese mirror: [exotic-amazon](https://gitee.com/platonai_galaxyeye/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/)) are written in X-SQL. Data type conversion and data cleaning are also handled by powerful X-SQL inline processing, which is an important reason why we developed X-SQL. A good example of X-SQL is [x-asin.sql](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql) (Chinese mirror: [exotic-amazon](https://gitee.com/platonai_galaxyeye/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)), which extracts more than 70 fields from each product page.
 
-### 将提取结果保存在本地文件系统中
+### Saving Extraction Results in the Local File System
 
-默认情况下，结果以 json 格式写入本地文件系统。
+By default, results are written in json format to the local file system.
 
-### 将提取结果保存到数据库中
+### Saving Extraction Results to the Database
 
-有几种方法可以将结果保存到数据库中：
+There are several ways to save results to the database:
 
-1. 将结果序列化为键值对，并保存为 WebPage 对象的一个字段，WebPage 是整个系统的核心数据结构，这项特性也会默认开启
-2. 将结果写入 JDBC 兼容的数据库，如 MySQL、PostgreSQL、MS SQL Server、Oracle 等
-3. 自行编写几行代码，将结果保存到您希望的任何地方
+1. Serialize the results as key-value pairs and save them as a field of the WebPage object, which is the core data structure of the entire system and this feature is also enabled by default.
+2. Write the results to a JDBC-compatible database, such as MySQL, PostgreSQL, MS SQL Server, Oracle, etc.
+3. Write a few lines of code to save the results to any destination you wish.
 
 ------
 
-[Prev](16console.md) [Home](1home.md) [Next](18miscellaneous.md)
+[Prev](16console.md) | [Home](1home.md) | [Next](18miscellaneous.md)

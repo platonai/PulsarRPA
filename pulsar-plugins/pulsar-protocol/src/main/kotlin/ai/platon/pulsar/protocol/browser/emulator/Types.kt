@@ -39,7 +39,7 @@ class NavigateTask constructor(
     
     /**
      * The interact settings.
-     * TODO: page.getVar("InteractSettings") is deprecated, use page.conf[BROWSER_INTERACT_SETTINGS] instead
+     * TODO: page.getVar("InteractSettings") is deprecated, use pageConf[BROWSER_INTERACT_SETTINGS] instead
      * */
     val interactSettings get() = page.getVar("InteractSettings") as? InteractSettings
         ?: InteractSettings.fromJson(pageConf[BROWSER_INTERACT_SETTINGS], browserSettings.interactSettings)
@@ -67,7 +67,6 @@ class InteractTask(
 
     /**
      * The interact settings.
-     * TODO: page.getVar("InteractSettings") is deprecated, use page.conf[BROWSER_INTERACT_SETTINGS] instead
      * */
     val interactSettings get() = navigateTask.interactSettings
 }

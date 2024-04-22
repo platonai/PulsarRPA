@@ -64,4 +64,8 @@ data class Fingerprint(
     override fun toString(): String = listOfNotNull(
         browserType, proxyServer, username
     ).joinToString()
+    
+    companion object {
+        val DEFAULT = Fingerprint(BrowserType.PULSAR_CHROME)
+    }
 }

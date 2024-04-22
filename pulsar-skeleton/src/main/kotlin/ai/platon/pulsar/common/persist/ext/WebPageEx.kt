@@ -2,25 +2,22 @@ package ai.platon.pulsar.common.persist.ext
 
 import ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.crawl.CrawlEvent
-import ai.platon.pulsar.crawl.LoadEvent
-import ai.platon.pulsar.crawl.PageEvent
-import ai.platon.pulsar.crawl.BrowseEvent
+import ai.platon.pulsar.crawl.*
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt
 import java.time.Instant
 
-val WebPage.event: PageEvent?
+val WebPage.event: PageEventHandlers?
     get() = this.options.rawEvent
 
-val WebPage.crawlEvent: CrawlEvent?
-    get() = this.options.rawEvent?.crawlEvent
+val WebPage.crawlEvent: CrawlEventHandlers?
+    get() = this.options.rawEvent?.crawlEventHandlers
 
-val WebPage.loadEvent: LoadEvent?
-    get() = this.options.rawEvent?.loadEvent
+val WebPage.loadEvent: LoadEventHandlers?
+    get() = this.options.rawEvent?.loadEventHandlers
 
-val WebPage.browseEvent: BrowseEvent?
-    get() = this.options.rawEvent?.browseEvent
+val WebPage.browseEvent: BrowseEventHandlers?
+    get() = this.options.rawEvent?.browseEventHandlers
 
 /**
  * Get or create a LoadOptions from the args

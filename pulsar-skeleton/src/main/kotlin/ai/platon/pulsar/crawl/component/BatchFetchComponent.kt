@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
@@ -169,7 +169,7 @@ class BatchFetchComponent(
 
         if (lazyTasks.isNotEmpty()) {
             val mode = options.fetchMode
-            val links = lazyTasks.map { NormUrl(it, options) }.map { Hyperlink(it.spec, args = it.args) }
+            val links = lazyTasks.map { NormURL(it, options) }.map { Hyperlink(it.spec, args = it.args) }
             globalCache.urlPool.normalCache.nReentrantQueue.addAll(links)
             if (logger.isDebugEnabled) {
                 logger.debug("Committed {} lazy tasks in mode {}", lazyTasks.size, mode)

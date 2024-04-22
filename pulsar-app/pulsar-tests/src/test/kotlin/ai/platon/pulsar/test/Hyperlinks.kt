@@ -5,12 +5,11 @@ import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.PageEvent
-import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.crawl.PageEventHandlers
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
-import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
-import ai.platon.pulsar.crawl.event.AbstractCrawlEvent
-import ai.platon.pulsar.crawl.event.AbstractLoadEvent
-import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
+import ai.platon.pulsar.crawl.event.AbstractCrawlEventHandlers
+import ai.platon.pulsar.crawl.event.AbstractLoadEventHandlers
+import ai.platon.pulsar.crawl.event.impl.DefaultPageEventHandlers
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
@@ -30,11 +29,10 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url) {
         "6. LoadEvent.onParsed",
         "7. LoadEvent.onLoaded",
         "8. LoadEvent.onLoaded - 2",
-        "9. CrawlEvent.onLoaded",
-        "10. CrawlEvent.onLoaded"
+        "9. CrawlEvent.onLoaded"
     )
 
-    class MockCrawlEvent(val hyperlink: MockListenableHyperlink): AbstractCrawlEvent() {
+    class MockCrawlEventHandlers(val hyperlink: MockListenableHyperlink): AbstractCrawlEventHandlers() {
         val seq get() = hyperlink.sequencer.incrementAndGet()
 
         init {
@@ -68,7 +66,7 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url) {
         }
     }
 
-    class MockLoadEvent(val hyperlink: MockListenableHyperlink) : AbstractLoadEvent() {
+    class MockLoadEventHandlers(val hyperlink: MockListenableHyperlink) : AbstractLoadEventHandlers() {
         val seq get() = hyperlink.sequencer.incrementAndGet()
         private val thisHandler = this
 
@@ -115,9 +113,9 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url) {
     }
 
     override var args: String? = "-cacheContent true -storeContent false -parse -refresh"
-    override var event: PageEvent = DefaultPageEvent(
-        loadEvent = MockLoadEvent(this),
-        crawlEvent = MockCrawlEvent(this)
+    override var event: PageEventHandlers = DefaultPageEventHandlers(
+        loadEventHandlers = MockLoadEventHandlers(this),
+        crawlEventHandlers = MockCrawlEventHandlers(this)
     )
 
     var page: WebPage? = null
@@ -136,7 +134,7 @@ open class MockDegeneratedListenableHyperlink : ListenableHyperlink(""), Degener
         "3. CrawlEvent.onLoaded"
     )
 
-    class MockCrawlEvent(val hyperlink: MockDegeneratedListenableHyperlink): AbstractCrawlEvent() {
+    class MockCrawlEventHandlers(val hyperlink: MockDegeneratedListenableHyperlink): AbstractCrawlEventHandlers() {
         val seq get() = hyperlink.sequencer.incrementAndGet()
 
         init {
@@ -157,8 +155,8 @@ open class MockDegeneratedListenableHyperlink : ListenableHyperlink(""), Degener
         }
     }
 
-    override var event: PageEvent = DefaultPageEvent(
-        crawlEvent = MockCrawlEvent(this)
+    override var event: PageEventHandlers = DefaultPageEventHandlers(
+        crawlEventHandlers = MockCrawlEventHandlers(this)
     )
 
     private val isDone = CountDownLatch(1)

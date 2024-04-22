@@ -20,14 +20,14 @@ package ai.platon.pulsar.crawl.common
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
- * Test class for NormUrl
+ * Test class for NormURL
  */
 class NormUrlTests {
     private val defaultUrl = "https://shopee.co.th/กระเป๋าเป้ผู้ชาย-cat.49.1037.10297?page=1"
@@ -45,8 +45,8 @@ class NormUrlTests {
         val url = defaultUrl
         val args = defaultNormalizedArgs
         val configuredUrl = defaultNormalizedConfiguredUrl
-        val normUrl = NormUrl.parse(configuredUrl, volatileConfig)
-        assertNormUrl(url, args, configuredUrl, normUrl)
+        val normURL = NormURL.parse(configuredUrl, volatileConfig)
+        assertNormUrl(url, args, configuredUrl, normURL)
     }
 
     @Test
@@ -54,16 +54,16 @@ class NormUrlTests {
         val url = AppConstants.NIL_PAGE_URL
         val args = ""
         val configuredUrl = url
-        assertNormUrl(url, args, configuredUrl, NormUrl.NIL)
+        assertNormUrl(url, args, configuredUrl, NormURL.NIL)
     }
 
-    private fun assertNormUrl(url: String, args: String, configuredUrl: String, normUrl: NormUrl) {
-        assertEquals(url, normUrl.url.toString())
-        assertEquals(url, normUrl.spec)
-        assertEquals(configuredUrl, normUrl.configuredUrl)
-        assertEquals(configuredUrl, normUrl.toString())
+    private fun assertNormUrl(url: String, args: String, configuredUrl: String, normURL: NormURL) {
+        assertEquals(url, normURL.url.toString())
+        assertEquals(url, normURL.spec)
+        assertEquals(configuredUrl, normURL.configuredUrl)
+        assertEquals(configuredUrl, normURL.toString())
 
-        val (spec, options) = normUrl
+        val (spec, options) = normURL
         assertEquals(spec, url)
     }
 }

@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.fetch.privacy
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.browser.BrowserFiles.computeNextSequentialContextDir
+import ai.platon.pulsar.common.browser.BrowserFiles.computeRandomContextDir
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -44,11 +45,14 @@ abstract class PrivacyContext(
         // The prefix for all temporary privacy contexts. System context, prototype context and default context are not
         // required to start with the prefix.
         const val CONTEXT_DIR_PREFIX = "cx."
+        
         // The default context directory, if you need a permanent and isolate context, use this one.
         // NOTE: the user-default context is not a default context.
-        val DEFAULT_CONTEXT_DIR: Path = AppPaths.CONTEXT_TMP_DIR.resolve("default")
+        val DEFAULT_CONTEXT_DIR: Path = AppPaths.CONTEXT_DEFAULT_DIR
         // A random context directory, if you need a random temporary context, use this one
-        val RANDOM_CONTEXT_DIR get() = computeNextSequentialContextDir()
+        val NEXT_SEQUENTIAL_CONTEXT_DIR get() = computeNextSequentialContextDir()
+        // A random context directory, if you need a random temporary context, use this one
+        val RANDOM_CONTEXT_DIR get() = computeRandomContextDir()
         // The prototype context directory, all privacy contexts copies browser data from the prototype.
         // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
         val PROTOTYPE_DATA_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE

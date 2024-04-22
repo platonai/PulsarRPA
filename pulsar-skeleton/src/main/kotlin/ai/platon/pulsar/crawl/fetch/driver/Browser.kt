@@ -5,7 +5,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 /**
  * The Browser defines methods and events to manipulate a real browser.
  */
-interface Browser {
+interface Browser: AutoCloseable {
     /**
      * The unique browser id
      * */

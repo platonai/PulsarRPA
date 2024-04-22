@@ -21,12 +21,12 @@ class WalmartRPA(
     fun options(args: String): LoadOptions {
         val options = session.options(args)
 
-        val le = options.event.loadEvent
+        val le = options.event.loadEventHandlers
         le.onHTMLDocumentParsed.addLast { _, _ ->
             // use the document
         }
 
-        val be = options.itemEvent.browseEvent
+        val be = options.itemEvent.browseEventHandlers
         be.onBrowserLaunched.addLast { page, driver ->
             warnUpBrowser(page, driver)
         }

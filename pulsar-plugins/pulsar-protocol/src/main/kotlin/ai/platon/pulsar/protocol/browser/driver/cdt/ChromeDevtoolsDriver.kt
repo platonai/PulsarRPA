@@ -115,20 +115,10 @@ class ChromeDevtoolsDriver(
         initScriptCache.add(script)
     }
     
-    /**
-     * Blocks URLs from loading.
-     *
-     * @param urls URL patterns to block. Wildcards ('*') are allowed.
-     */
-    override suspend fun addBlockedURLs(urls: List<String>) {
-        _blockedURLs.addAll(urls)
+    override suspend fun addBlockedURLs(urlPatterns: List<String>) {
+        _blockedURLs.addAll(urlPatterns)
     }
     
-    /**
-     * Blocks URLs from loading with a probability.
-     *
-     * @param urlPatterns URL patterns in regular expression to block.
-     */
     override suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>) {
         _probabilityBlockedURLs.addAll(urlPatterns)
     }
@@ -175,11 +165,12 @@ class ChromeDevtoolsDriver(
         val name = "selectFirstAttributeOrNull"
         return invokeOnElement(selector, name) { page.getAttribute(it, attrName) }
     }
-    
-    override suspend fun selectAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
-        val name = "selectAttributeAll"
-        return invokeOnPage(name) { page.getAttributeAll(selector, attrName, start, limit) } ?: listOf()
-    }
+
+    // Unittest failed
+//    override suspend fun selectAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
+//        val name = "selectAttributeAll"
+//        return invokeOnPage(name) { page.getAttributeAll(selector, attrName, start, limit) } ?: listOf()
+//    }
     
     @Throws(WebDriverException::class)
     override suspend fun evaluate(expression: String): Any? {
@@ -209,15 +200,17 @@ class ChromeDevtoolsDriver(
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(timeout: Duration): Duration {
-        return waitUntil("waitForNavigation", timeout) { isNavigated(navigateUrl) }
+    override suspend fun waitForNavigation(oldUrl: String, timeout: Duration): Duration {
+        // TODO: listen to the navigation event
+        return waitUntil("waitForNavigation", timeout) { isNavigated(oldUrl) }
     }
     
     @Throws(WebDriverException::class)
-    private suspend fun waitForNavigationExperimental(timeout: Duration): Long {
+    private suspend fun waitForNavigationExperimental(oldUrl: String, timeout: Duration): Duration {
+        val startTime = Instant.now()
+        
         try {
             val channel = Channel<String>()
-            val oldUrl = currentUrl()
             
             pageAPI?.onDocumentOpened {
                 val navigated = it.frame.url != oldUrl
@@ -226,13 +219,11 @@ class ChromeDevtoolsDriver(
             }
             
             channel.receive()
-            
-            return 1
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "waitForNavigation $timeout")
         }
         
-        return -1
+        return timeout - DateTimes.elapsedTime(startTime)
     }
     
     @Throws(WebDriverException::class)
@@ -388,7 +379,7 @@ class ChromeDevtoolsDriver(
         
         point.x += offsetX
         
-        mouse?.click(point.x, point.y, count, delayPolicy("click"))
+        mouse?.click(point.x, point.y, count, randomDelayMillis("click"))
     }
     
     @Throws(WebDriverException::class)
@@ -403,7 +394,7 @@ class ChromeDevtoolsDriver(
                 val nodeId = page.focusOnSelector(selector)
                 if (nodeId > 0) {
                     click(nodeId, 1)
-                    keyboard?.type(text, delayPolicy("type"))
+                    keyboard?.type(text, randomDelayMillis("type"))
                     gap("type")
                 }
             }
@@ -421,20 +412,20 @@ class ChromeDevtoolsDriver(
                 // it's an input element, we should click on the right side of the element,
                 // so the cursor appears at the tail of the text
                 click(nodeId, 1, "right")
-                keyboard?.delete(value.length, delayPolicy("delete"))
+                keyboard?.delete(value.length, randomDelayMillis("delete"))
                 // ensure the input is empty
                 // page.setAttribute(nodeId, "value", "")
             }
             
             click(nodeId, 1)
-            keyboard?.type(text, delayPolicy("type"))
+            keyboard?.type(text, randomDelayMillis("type"))
         }
     }
     
     @Throws(WebDriverException::class)
     override suspend fun press(selector: String, key: String) {
         invokeOnElement(selector, "press", focus = true) { nodeId ->
-            keyboard?.press(key, delayPolicy("press"))
+            keyboard?.press(key, randomDelayMillis("press"))
         }
     }
     
@@ -458,7 +449,7 @@ class ChromeDevtoolsDriver(
                     val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value
                     if (point != null) {
                         val point2 = PointD(point.x + deltaX, point.y + deltaY)
-                        mouse?.dragAndDrop(point, point2, delayPolicy("dragAndDrop"))
+                        mouse?.dragAndDrop(point, point2, randomDelayMillis("dragAndDrop"))
                     }
                     gap()
                 }
@@ -531,11 +522,11 @@ class ChromeDevtoolsDriver(
     }
     
     @Throws(WebDriverException::class)
-    override suspend fun captureScreenshot(clip: RectD): String? {
+    override suspend fun captureScreenshot(rect: RectD): String? {
         return try {
             // Force the page stop all navigations and pending resource fetches.
             rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
-            rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(clip) }
+            rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(rect) }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "captureScreenshot")
             null
@@ -584,8 +575,11 @@ class ChromeDevtoolsDriver(
         }
         
         val frameId = pageAPI?.frameTree?.frame?.id
-        val response = rpc.invokeDeferredSilently("loadNetworkResource") {
-            networkAPI?.loadNetworkResource(frameId, url, options)?.let { NetworkResourceResponse.from(it) }
+        val response = rpc.invokeDeferred("loadNetworkResource") {
+            val resource = networkAPI?.loadNetworkResource(frameId, url, options)
+            resource?.let {
+                NetworkResourceResponse.from(it)
+            }
         }
         
         return response ?: NetworkResourceResponse()
@@ -902,7 +896,7 @@ class ChromeDevtoolsDriver(
         }
         
         // Delays coroutine for a given time without blocking a thread and resumes it after a specified time.
-        delay(delayPolicy("gap"))
+        delay(randomDelayMillis("gap"))
     }
     
     /**
@@ -917,7 +911,7 @@ class ChromeDevtoolsDriver(
             // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
         }
         
-        delay(delayPolicy(type))
+        delay(randomDelayMillis(type))
     }
     
     /**

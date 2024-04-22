@@ -1,27 +1,28 @@
 URL
 =
+[Prev](4data-extraction.md) [Home](1home.md) [Next](6Java-style-async.md)
 
-在 PulsarRPA 中，每个任务都被定义为某种形式的 URL，这些 URL 往往和一个加载参数一起出现，来精细控制一个采集任务，譬如数据过期，数据基本要求，任务截止日期，任务重试等。绝大多数情况下，一个数据采集任务可以用 **url arguments** 的形式来唯一确定，因此它可以很轻松地被拷贝、管理、存储、传输、并行化，以及沟通交流。
+In PulsarRPA, each task is defined as some form of URL, which often appears with a loading argument to finely control a collection task, such as data expiration, basic data requirements, task deadlines, task retries, etc. In most cases, a data collection task can be uniquely determined by the form of *URL-arguments*, so it can be easily copied, managed, stored, transferred, parallelized, and used for communication.
 
 ## URLs
 
-统一资源定位符(URL)，俗称网址，是对网络资源的引用，指定其在计算机网络上的位置和检索它的机制。PulsarRPA 中的 URL 带有描述数据采集任务的额外信息，有几种基本形式：
+A Uniform Resource Locator (URL), commonly known as a web address, is a reference to a network resource that specifies its location on a computer network and the mechanism for retrieving it. URLs in PulsarRPA carry additional information for describing data collection tasks and come in several basic forms:
 
-- A [NormURL](../../../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormUrl.kt)
+- A [NormURL](/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormURL.kt)
 - A String
-- A [UrlAware](../../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)
-- A [DegenerateUrl](../../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)
+- A [UrlAware](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt)
+- A [DegenerateUrl](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Urls.kt)
 
-NormURL 代表 “规范化的 URL”，这意味着该 url 是 fetch 组件的最终形式，并且通常最终被传递给真正的浏览器。
+NormURL represents a "normalized URL," meaning that this URL is the final form for the fetch component and is usually ultimately passed to the actual browser.
 
-如果未指定，字符串格式的 url 实际上意味着  configured url ，url with parameters或 url with arguments，例如：
+If not specified, the string format of the URL actually means a configured URL, a URL with parameters, or a URL with arguments, for example:
 
 ```kotlin
-val url = "https://www.amazon.com/dp/B10000 -taskName amazon -expires 1d -ignoreFailure"
+val url = "https://www.amazon.com/dp/B10000  -taskName amazon -expires 1d -ignoreFailure"
 session.load(url)
 ```
 
-上面的代码与下面的代码意义相同：
+The above code is equivalent to the following code:
 
 ```kotlin
 val url = "https://www.amazon.com/dp/B10000"
@@ -29,17 +30,17 @@ val args = "-taskName amazon -expires 1d -ignoreFailure"
 session.load(url, args)
 ```
 
-UrlAware 提供了更复杂的控制来描述采集任务，是所有 Hyperlink 的接口。
+UrlAware provides more complex control to describe collection tasks and is the interface for all Hyperlinks.
 
-最后，[DegenerateUrl](../../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) 字面意思是“退化链接”，事实上不是链接，它被设计来描述非采集任务，譬如不涉及网络的本地计算任务，以便在主循环中执行。
+Finally, [DegenerateUrl](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Urls.kt) literally means a "degenerate url," which is not actually a url. It is designed to describe non-scraping tasks, such as local computing tasks that do not involve the network, to be executed in the main loop.
 
 ## Hyperlinks
 
-[超链接](https://en.wikipedia.org/wiki/Hyperlink)，或简称为链接，特指 Web 上对数据的引用，通常包含一个 URL，一个文本和一组属性，用户可以通过单击或点击来跟随它。[Pulsar 中的 Hyperlink](../../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) 如同普通超链接，但带有描述任务的额外信息。
+A [hyperlink](https://en.wikipedia.org/wiki/Hyperlink), or simply a link, specifically refers to a reference to data on the Web, usually containing a URL, text, and a set of attributes that users can follow by clicking or tapping. [Hyperlinks in PulsarRPA](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) are like ordinary hyperlinks but with additional information to describe tasks.
 
-Pulsar 预定义了几个超链接：
+Pulsar predefines several hyperlinks:
 
-**ParsableHyperlink** 是在连续采集作业中执行 **获取-解析** 任务的一种便捷抽象：
+**ParsableHyperlink** is a convenient abstraction for performing **fetch-parse** tasks in a continuous collection job:
 
 ```kotlin
 val parseHandler = { _: WebPage, document: FeaturedDocument ->
@@ -50,9 +51,9 @@ val urls = LinkExtractors.fromResource("seeds.txt").map { ParsableHyperlink(it, 
 PulsarContexts.create().submitAll(urls).await()
 ```
 
-**CompletableHyperlink** 帮助我们进行 Java 风格的异步计算：提交一个超链接并等待任务完成。
+**CompletableHyperlink** helps us with Java-style asynchronous computing: submit a hyperlink and wait for the task to complete.
 
-**ListenableHyperlink** 帮助我们附加事件处理程序：
+**ListenableHyperlink** helps us attach event handlers:
 
 ```kotlin
 val session = PulsarContexts.createSession()
@@ -60,7 +61,7 @@ val link = ListenableHyperlink(portalUrl, args = "-refresh -parse", event = Prin
 session.load(link)
 ```
 
-**CompletableListenableHyperlink** 帮助我们同时做到这两点：
+**CompletableListenableHyperlink** helps us do both at the same time:
 
 ```kotlin
 // Load a CompletableListenableHyperlink, so we can register various event handlers,
@@ -73,9 +74,9 @@ val page4 = completableListenableHyperlink.join()
 println("CompletableListenableHyperlink loaded | " + page4.url)
 ```
 
-## 详细代码
+## Detailed Code
 
-下面的代码作出了详细解释：
+The following code provides a detailed explanation:
 
 ```kotlin
 // Create a pulsar session
@@ -129,7 +130,7 @@ println("ParsableHyperlink loaded | " + page2.url)
 
 // Load a ListenableHyperlink so we can register various event handlers
 val listenableLink = ListenableHyperlink(url)
-listenableLink.event.browseEvent.onDidInteract.addLast { pg, driver ->
+listenableLink.event.browseEventHandlers.onDidInteract.addLast { pg, driver ->
     println("Interaction finished " + page.url)
 }
 val page3 = session.load(listenableLink, "-expires 10s")

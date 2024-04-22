@@ -13,23 +13,25 @@ import java.time.Instant
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class PulsarSessionTests: TestBase() {
-    private val url = "https://www.amazon.com/Best-Sellers/zgbs/"
-    private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
+    private val timestamp = System.currentTimeMillis()
+    private val url = "https://www.amazon.com/Best-Sellers/zgbs?t=$timestamp"
+    private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty?t=$timestamp"
     
-    private val resourceUrl = "https://www.amazon.com/robots.txt"
+    private val resourceUrl = "https://www.amazon.com/robots.txt?t=$timestamp"
 
     @BeforeTest
     fun setup() {
-        webDB.delete(url)
-        webDB.delete(url2)
+        // The data store is FileStore, and delete does not work
+//        webDB.delete(url)
+//        webDB.delete(url2)
     }
 
     @Test
     fun testNormalize() {
-        val normUrl = session.normalize(url)
-        assertNotEquals(session.sessionConfig, normUrl.options.conf)
-        val page = session.load(normUrl)
-        assertEquals(normUrl.options.conf, page.conf)
+        val normURL = session.normalize(url)
+        assertNotEquals(session.sessionConfig, normURL.options.conf)
+        val page = session.load(normURL)
+        assertEquals(normURL.options.conf, page.conf)
     }
 
     @Test
@@ -85,7 +87,8 @@ class PulsarSessionTests: TestBase() {
         assertTrue { page.fetchTime > startTime }
         assertEquals(page.prevFetchTime.plusSeconds(seconds), page.fetchTime)
         assertTrue { page.fetchTime > page.prevFetchTime }
-        assertTrue { page.fetchCount > 1 }
+//        assertTrue { page.fetchCount > 1 }
+        assertEquals(1, page.fetchCount)
 
         sleepSeconds(6)
         startTime = Instant.now()
@@ -101,6 +104,7 @@ class PulsarSessionTests: TestBase() {
         assertTrue { prevFetchTime2 > prevFetchTime1 }
         assertTrue { fetchTime2 > startTime }
         assertTrue { fetchTime2 > page2.prevFetchTime }
+        
         assertEquals(fetchCount1 + 1, fetchCount2)
     }
 
@@ -108,7 +112,8 @@ class PulsarSessionTests: TestBase() {
     fun testFetchForExpireAt() {
         val now = Instant.now()
         val seconds = 5L
-        var options = session.options()
+        val args = "-i ${seconds}s"
+        var options = session.options(args)
         var startTime = Instant.now()
         println("Start time: $startTime")
 
@@ -119,8 +124,8 @@ class PulsarSessionTests: TestBase() {
 
         println("Round 1 checking ....")
         assertTrue("${page.protocolStatus}") { page.protocolStatus.isSuccess }
-        assertFalse("Should be loaded") { page.isFetched }
-        assertFalse("Content should not be updated") { page.isContentUpdated }
+        assertTrue("Should be fetched for random url") { page.isFetched }
+        assertTrue("Content should be updated for random url") { page.isContentUpdated }
         assertTrue { page.options.expires.seconds > 0 }
         assertTrue("Not expired, prevFetchTime should be before startTime: $prevFetchTime1 -> $startTime") {
             startTime > prevFetchTime1

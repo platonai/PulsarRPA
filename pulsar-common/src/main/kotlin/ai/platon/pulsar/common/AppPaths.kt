@@ -3,18 +3,17 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang3.RandomStringUtils
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 
-@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)
 annotation class RequiredFile
 
-@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)
 annotation class RequiredDirectory
 
@@ -64,6 +63,8 @@ object AppPaths {
     @RequiredDirectory
     val PROC_TMP_DIR = AppContext.APP_PROC_TMP_DIR
     @RequiredDirectory
+    val PROC_TMP_TMP_DIR = PROC_TMP_DIR.resolve("tmp")
+    @RequiredDirectory
     val CACHE_DIR = PROC_TMP_DIR.resolve("cache")
     @RequiredDirectory
     val WEB_CACHE_DIR = CACHE_DIR.resolve("web")
@@ -86,6 +87,10 @@ object AppPaths {
 
     @RequiredDirectory
     val CONTEXT_BASE_DIR = PROC_TMP_DIR.resolve( "context")
+    @RequiredDirectory
+    val CONTEXT_GROUP_BASE_DIR = CONTEXT_BASE_DIR.resolve( "group")
+    @RequiredDirectory
+    val CONTEXT_DEFAULT_DIR = CONTEXT_BASE_DIR.resolve( "default")
     @RequiredDirectory
     val CONTEXT_TMP_DIR = CONTEXT_BASE_DIR.resolve( "tmp")
     @RequiredFile
@@ -165,11 +170,6 @@ object AppPaths {
     }
 
     fun fileId(uri: String) = DigestUtils.md5Hex(uri)
-
-    fun createTempFile(prefix: String, suffix: String): Path {
-        val rand = RandomStringUtils.randomAlphanumeric(12)
-        return getProcTmp("tmp", "$prefix$rand$suffix")
-    }
 
     /**
      * Create a mock page path.

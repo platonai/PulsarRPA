@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.12.3-SNAPSHOT</version>
+        <version>1.12.5-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-skeleton</artifactId>
@@ -43,6 +43,11 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-ql-common</artifactId>
             <classifier>shaded</classifier>
+        </dependency>
+        <!-- add boilerpipe -->
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-boilerpipe</artifactId>
         </dependency>
 
         <!-- Requires org.springframework.context.support.AbstractApplicationContext -->

@@ -12,9 +12,15 @@ import java.io.Closeable
 import java.time.Duration
 
 /**
- * [WebDriver] defines a concise interface to visit and interact with web pages,
- * all actions and behaviors are optimized to mimic real people as closely as possible,
- * such as scrolling, clicking, typing text, dragging and dropping, etc.
+ * [WebDriver] defines a concise interface to visit and manipulate webpages.
+ *
+ * The webpage is rendered to a Document Object Model (DOM) in a real browser, and the interface provides methods to
+ * control the browser, select textContent and attributes of Elements, and interact with the webpage.
+ *
+ * All actions and behaviors are optimized to mimic real people as closely as possible, such as scrolling, clicking,
+ * typing text, dragging and dropping, etc.
+ *
+ * The term `document` here refers to a Document Object Model (DOM) within a browser.
  *
  * The methods in this interface fall into three categories:
  *
@@ -23,39 +29,93 @@ import java.time.Duration
  * * Interact with the webpage
  *
  * Key methods:
- * * [navigateTo]: open a page.
- * * [scrollDown]: scroll down on a web page to fully load the page,
- * most modern webpages support lazy loading using ajax tech, where the page
- * content only starts to load when it is scrolled into view.
- * * [pageSource]: retrieve the source code of a webpage.
+ * * [navigateTo]: navigate to a URL.
+ * * [currentUrl]: get the current URL displayed in the address bar.
+ * * [scrollDown]: scroll down on a webpage to fully load the page. Most modern webpages support lazy loading
+ * using ajax tech, where the page content only starts to load when it is scrolled into view.
+ * * [pageSource]: retrieve the source code of the webpage.
  *
- * URLs and location properties in the browser:
+ * For each document, there are several properties that represent the URL of the document:
+ * * `driver.currentUrl()`: Returns the URL displayed in the address bar, it can be either navigated or not.
+ * * `driver.url()`, `document.URL`: Returns the URL of the document.
+ * * `driver.documentURI()`, `document.documentURI`: Returns the URI of the document.
+ * * `driver.baseURI()`, `document.baseURI`: Returns the base URI of the document.
+ * * `document.location`: Represents the location (URL) of the current page and allows you to manipulate the URL.
  *
  * In the Document Object Model (DOM), the relationship between `document.URL`, `document.documentURI`,
  * `document.location`, and the URL displayed in the browser's address bar is as follows:
- * 1. `document.URL`:
+ * * `driver.currentUrl()`:
+ *    - This ready-only property displayed in the browser's address bar is what users see and can edit directly.
+ *    - This ready-only property can be either navigated or not.
+ *    - When the page is loaded or when `document.location` is modified, the address bar is updated to reflect the new URL.
+ *    - It is typically synchronized with `document.URL` and `document.location.href` (a property of `document.location`).
+ * * `driver.url()`, `document.URL`:
  *    - This property returns the URL of the document as a string.
  *    - It is a read-only property and reflects the current URL of the document.
  *    - Changes to `document.location` will also update `document.URL`.
- * 2. `document.documentURI`:
+ * * `driver.documentURI()`, `document.documentURI`:
  *    - This property returns the URI of the document.
  *    - It is also a read-only property and typically contains the same value as `document.URL`.
  *    - However, `document.documentURI` is defined to be the URI that was provided to the parser, which could
  *      potentially differ from `document.URL` in certain cases, although in practice, this is rare.
- * 3. `document.location`:
+ * * `driver.baseURI()`, `document.baseURI`:
+ *    - This property returns the base URI of the document.
+ *    - The base URI is used to resolve relative URLs within the document.
+ *    - It is a read-only property and is typically the URL of the document, unless a `<base>` element is present
+ *    in the document, in which case the value of the `href` attribute of the `<base>` element is used.
+ *    - If no `<base>` element is present, the base URI is the same as `document.URL`.
+ * * `document.location`:
  *    - This property represents the location (URL) of the current page and allows you to manipulate the URL.
  *    - It is a read-write property, which means you can change it to navigate to a different page or to manipulate
  *      query strings, fragments, etc.
  *    - Changes to `document.location` will cause the browser to navigate to the new URL, updating both `document.URL`
  *      and the URL displayed in the address bar.
- * 4. URL displayed in the address bar:
- *    - The URL displayed in the browser's address bar is what users see and can edit directly.
- *    - It is typically synchronized with `document.URL` and `document.location.href` (a property of `document.location`).
- *    - When the page is loaded or when `document.location` is modified, the address bar is updated to reflect the new URL.
+ *
  * In summary, `document.URL` and `document.documentURI` are read-only properties that reflect the current URL of the
  * document, while `document.location` is a read-write property that not only reflects the current URL but also allows
  * you to navigate to a new one. The URL displayed in the address bar is a user-facing representation of the current
  * document's URL, which is usually in sync with `document.location`.
+ *
+ * In addition to the above properties, The method `driver.referrer()` returns the document's referrer.
+ * The `document.referrer` property returns the URI of the page that linked to the current page. If the user navigated
+ * directly to the page (e.g., via a bookmark), the value is an empty string. Inside an `<iframe>`, the referrer is
+ * initially set to the same value as the `href` of the parent window's `Window.location`.
+ *
+ * The following example demonstrates how to use the WebDriver interface to visit a webpage and interact with it:
+ *
+ * ```kotlin
+ *  fun visit() {
+ *      val url = "https://twitter.com/home"
+ *      val args = "-refresh"
+ *      val options = session.options(args)
+ *
+ *      options.event.browseEventHandlers.onDocumentSteady.addLast { page, driver ->
+ *          interact(page, driver)
+ *      }
+ *
+ *      session.load(url, options)
+ *  }
+ *
+ *  // interact with the page
+ *  private suspend fun interact(driver: WebDriver) {
+ *      val selector = "input[placeholder*=搜索], input[placeholder*=Search]"
+ *      driver.waitForSelector(selector)
+ *      driver.fill(selector, "Facebook")
+ *      driver.press(selector, "Space")
+ *      "Email".forEach { driver.press(selector, "$it") }
+ *      driver.press(selector, "Enter")
+ *  }
+ * ```
+ *
+ * @see [Document ](https://developer.mozilla.org/en-US/docs/Web/API/Document)
+ * @see [Document Object Model (DOM)](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model)
+ * @see [Document: URL property](https://developer.mozilla.org/en-US/docs/Web/API/Document/URL)
+ * @see [Document: documentURI property](https://developer.mozilla.org/en-US/docs/Web/API/Document/documentURI)
+ * @see [Document: baseURI property](https://developer.mozilla.org/en-US/docs/Web/API/Document/baseURI)
+ * @see [Document: referrer property](https://developer.mozilla.org/en-US/docs/Web/API/Document/referrer)
+ * @see [Document: location property](https://developer.mozilla.org/en-US/docs/Web/API/Document/location)
+ *
+ * @see BrowserSettings
  */
 interface WebDriver: Closeable {
     /**
@@ -70,6 +130,8 @@ interface WebDriver: Closeable {
     /**
      * Web pages for the page open from the current page, via window.open(), link click, form submission,
      * etc.
+     *
+     * NOT IMPLEMENTED
      * */
     val frames: List<WebDriver>
     /**
@@ -83,6 +145,7 @@ interface WebDriver: Closeable {
     val outgoingPages: Set<WebDriver>
     /**
      * The browser type.
+     * BrowserType.PULSAR_CHROME is the only supported browser type currently.
      * */
     val browserType: BrowserType
     /**
@@ -98,8 +161,29 @@ interface WebDriver: Closeable {
      * */
     val data: MutableMap<String, Any?>
     /**
+     * The delay policy of the driver. The delay policy is a map of delay ranges in milliseconds for different actions.
+     *
+     * The delay policy is used to simulate human behaviors, such as typing, clicking, scrolling, etc.
+     *
+     * ```kotlin
+     * delayPolicy["click"] == 500..1000
+     * ```
+     * */
+    val delayPolicy: Map<String, IntRange>
+    /**
+     * The timeout policy of the driver. The timeout policy is a map of timeout durations for different actions.
+     *
+     * The timeout policy is used to set the maximum time to wait for an action to complete.
+     *
+     * ```kotlin
+     * timeoutPolicy["click"] == Duration.ofSeconds(30)
+     * ```
+     * */
+    val timeoutPolicy: Map<String, Duration>
+    /**
      * Returns a JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on,
      * the other JVM languages might have difficulty to handle kotlin suspend methods.
+     * @see JvmWebDriver
      * */
     fun jvm(): JvmWebDriver
     /**
@@ -121,10 +205,10 @@ interface WebDriver: Closeable {
     /**
      * Blocks resource URLs from loading.
      *
-     * @param urls URL patterns to block. Wildcards ('*') are allowed.
+     * @param urlPatterns URL patterns to block. Wildcards ('*') are allowed.
      */
     @Throws(WebDriverException::class)
-    suspend fun addBlockedURLs(urls: List<String>)
+    suspend fun addBlockedURLs(urlPatterns: List<String>)
     /**
      * Block resource URL loading with a certain probability.
      *
@@ -139,6 +223,11 @@ interface WebDriver: Closeable {
     /**
      * Navigates current page to the given URL.
      *
+     * ```kotlin
+     * driver.navigateTo("https://www.example.com")
+     * driver.waitForNavigation()
+     * ```
+     *
      * @param url URL to navigate page to.
      */
     @Throws(WebDriverException::class)
@@ -146,17 +235,25 @@ interface WebDriver: Closeable {
     /**
      * Navigates current page to the given URL.
      *
+     * ```kotlin
+     * val entry = NavigateEntry("https://www.example.com?timestamp=11712067353", pageUrl = "https://www.example.com")
+     * driver.navigateTo(entry)
+     * driver.waitForNavigation()
+     * ```
+     *
      * @param entry NavigateEntry to navigate page to.
      */
     @Throws(WebDriverException::class)
     suspend fun navigateTo(entry: NavigateEntry)
     /**
      * Returns a string representing the current URL that the browser is looking at. The current url is always
-     * the main frame's url if the browser succeed to return it, and is displayed in the browser's address bar.
+     * the main frame's `document.documentURI` if the browser succeed to return it, and is displayed in the browser's
+     * address bar.
      *
-     * If the browser failed to return a proper url, return the passed in url to navigate.
+     * If the browser failed to return a proper url, returns the passed in url to navigate, just like a real user enter
+     * a url in the address bar but the browser failed to load the page.
      *
-     * @return The document's URL without fragment, or the passed in url to navigate.
+     * @return A string containing the URL of the document, or the passed in url to navigate.
      */
     @Throws(WebDriverException::class)
     suspend fun currentUrl(): String
@@ -220,12 +317,20 @@ interface WebDriver: Closeable {
      *
      * TODO: distinguish pageSource and outerHTML
      *
+     * ```kotlin
+     * val pageSource = driver.pageSource()
+     * ```
+     *
      * @return The source of the current page
      */
     @Throws(WebDriverException::class)
     suspend fun pageSource(): String?
     /**
      * Returns the cookies of the current page.
+     *
+     * ```kotlin
+     * val cookies = driver.getCookies()
+     * ```
      *
      * @return The cookies of the current page.
      */
@@ -234,12 +339,20 @@ interface WebDriver: Closeable {
     /**
      * Deletes browser cookies with matching name.
      *
+     * ```kotlin
+     * driver.deleteCookies("name")
+     * ```
+     *
      * @param name Name of the cookies to remove.
      */
     @Throws(WebDriverException::class)
     suspend fun deleteCookies(name: String)
     /**
      * Deletes browser cookies with matching name and url or domain/path pair.
+     *
+     * ```kotlin
+     * driver.deleteCookies("name", "https://www.example.com")
+     * ```
      *
      * @param name Name of the cookies to remove.
      * @param url If specified, deletes all the cookies with the given name where domain and path
@@ -249,21 +362,51 @@ interface WebDriver: Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun deleteCookies(name: String, url: String? = null, domain: String? = null, path: String? = null)
-    /** Clears browser cookies. */
+    /**
+     * Clears browser cookies.
+     *
+     * ```kotlin
+     * driver.clearBrowserCookies()
+     * ```
+     *
+     * TODO: consider only use driver.browser.clearCookies()
+     * @see Browser.clearCookies
+     * */
     @Throws(WebDriverException::class)
     suspend fun clearBrowserCookies()
     /**
      * Wait until the element identified by the selector becomes present in the DOM or timeout.
+     *
+     * ```kotlin
+     * val remainingTime = driver.waitForSelector("h2.title")
+     * ```
+     *
+     * @param selector The selector of the element to wait for.
+     * @return The remaining time until timeout when the element becomes present.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String): Duration = waitForSelector(selector) {}
     /**
      * Wait until the element identified by the selector becomes present in the DOM or timeout.
+     *
+     * ```kotlin
+     * val remainingTime = driver.waitForSelector("h2.title", 30000)
+     * ```
+     *
+     * @param timeoutMillis The maximum time to wait for the element to become present.
+     * @return The remaining time until timeout when the element becomes present.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long = waitForSelector(selector, timeoutMillis) {}
     /**
      * Wait for the element identified by the selector to become present in the DOM, or until timeout.
+     *
+     * ```kotlin
+     * val remainingTime = driver.waitForSelector("h2.title", Duration.ofSeconds(30))
+     * ```
+     *
+     * @param timeout The maximum time to wait for the element to become present.
+     * @return The remaining time until timeout when the element becomes present.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String, timeout: Duration): Duration = waitForSelector(selector, timeout) {}
@@ -271,6 +414,14 @@ interface WebDriver: Closeable {
      * Wait for the element identified by the selector to become present in the DOM, or until timeout.
      * This method periodically checks for the existence of the element. If the element is not found during a check,
      * the action will be executed, such as scrolling the page down.
+     *
+     * ```kotlin
+     * val remainingTime = driver.waitForSelector("h2.title") {
+     *  driver.scrollDown()
+     * }
+     * ```
+     *
+     * @param action The action to execute when the element is not found.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String, action: suspend () -> Unit): Duration
@@ -278,6 +429,16 @@ interface WebDriver: Closeable {
      * Wait for the element identified by the selector to become present in the DOM, or until timeout.
      * This method periodically checks for the existence of the element. If the element is not found during a check, 
      * the action will be executed, such as scrolling the page down.
+     *
+     * ```kotlin
+     * val remainingTime = driver.waitForSelector("h2.title", 30000) {
+     *  driver.scrollDown()
+     * }
+     * ```
+     *
+     * @param timeoutMillis The maximum time to wait for the element to become present.
+     * @param action The action to execute when the element is not found.
+     * @return The remaining time until timeout when the element becomes present.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String, timeoutMillis: Long, action: suspend () -> Unit): Long =
@@ -286,43 +447,125 @@ interface WebDriver: Closeable {
      * Wait for the element identified by the selector to become present in the DOM, or until timeout.
      * This method periodically checks for the existence of the element. If the element is not found during a check,
      * the action will be executed, such as scrolling the page down.
+     *
+     * ```kotlin
+     * val remainingTime = driver.waitForSelector("h2.title", Duration.ofSeconds(30)) {
+     *  driver.scrollDown()
+     * }
+     * ```
+     *
+     * @param timeout The maximum time to wait for the element to become present.
+     * @param action The action to execute when the element is not found.
+     * @return The remaining time until timeout when the element becomes present.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Duration
     /**
      * Wait until the current url changes or timeout.
+     *
+     * ```kotlin
+     * val url = "https://www.example.com"
+     * driver.navigateTo(url)
+     * var remainingTime = driver.waitForNavigation()
+     * if (remainingTime > 0) {
+     *   driver.click("a[href='/next']")
+     *   remainingTime = driver.waitForNavigation(url)
+     * }
+     * ```
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForNavigation(): Duration
+    suspend fun waitForNavigation(oldUrl: String = ""): Duration
     /**
      * Wait until the current url changes or timeout.
+     *
+     * ```kotlin
+     * val url = "https://www.example.com"
+     * driver.navigateTo(url)
+     * var remainingTime = driver.waitForNavigation(1000)
+     * if (remainingTime > 0) {
+     *   driver.click("a[href='/next']")
+     *   remainingTime = driver.waitForNavigation(url, 1000)
+     * }
+     * ```
+     *
+     * @param timeoutMillis The maximum time to wait for the url to change.
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForNavigation(timeoutMillis: Long): Long = waitForNavigation(Duration.ofMillis(timeoutMillis)).toMillis()
+    suspend fun waitForNavigation(oldUrl: String = "", timeoutMillis: Long): Long =
+        waitForNavigation(oldUrl, Duration.ofMillis(timeoutMillis)).toMillis()
     /**
      * Wait until the current url changes or timeout.
+     *
+     * ```kotlin
+     * val timeout = Duration.ofSeconds(30)
+     * val url = "https://www.example.com"
+     * driver.navigateTo(url)
+     * var remainingTime = driver.waitForNavigation(timeout)
+     * if (remainingTime > 0) {
+     *   driver.click("a[href='/next']")
+     *   remainingTime = driver.waitForNavigation(url, timeout)
+     * }
+     * ```
+     *
+     * @param timeout The maximum time to wait for the url to change.
      * */
     @Throws(WebDriverException::class)
-    suspend fun waitForNavigation(timeout: Duration): Duration
+    suspend fun waitForNavigation(oldUrl: String = "", timeout: Duration): Duration
     /**
      * Await navigation to the specified URL page or timeout if necessary.
+     *
+     * ```kotlin
+     * val newDriver = driver.waitForPage("https://www.example.com", Duration.ofSeconds(30))
+     * ```
+     *
+     * @param url The URL to navigate to.
+     * @return The remaining time until timeout when the predicate returns true.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForPage(url: String, timeout: Duration): WebDriver?
     
     /**
-     * Wait until the predication returns true.
+     * Wait until the predicate returns true.
+     *
+     * ```kotlin
+     * val remainingTime = driver.waitUntil {
+     *    driver.exists("h2.title")
+     * }
+     * ```
+     *
+     * @param predicate The predicate to check.
+     * @return The remaining time until timeout when the predicate returns true.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitUntil(predicate: suspend () -> Boolean): Duration
     /**
-     * Wait until the predication returns true.
+     * Wait until the predicate returns true.
+     *
+     * ```kotlin
+     * val remainingTime = driver.waitUntil(10000) {
+     *   driver.exists("h2.title")
+     * }
+     * ```
+     *
+     * @param timeoutMillis The maximum time to wait for the predicate to return true.
+     * @param predicate The predicate to check.
+     * @return The remaining time until timeout when the predicate returns true.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitUntil(timeoutMillis: Long, predicate: suspend () -> Boolean): Long =
         waitUntil(Duration.ofMillis(timeoutMillis), predicate).toMillis()
     /**
-     * Wait until the predication returns true.
+     * Wait until the predicate returns true.
+     *
+     * ```kotlin
+     * val remainingTime = driver.waitUntil(Duration.ofSeconds(10)) {
+     *    driver.exists("h2.title")
+     * }
+     * ```
+     *
+     * @param timeout The maximum time to wait for the predicate to return true.
+     * @param predicate The predicate to check.
+     * @return The remaining time until timeout when the predicate returns true.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean): Duration
@@ -333,26 +576,61 @@ interface WebDriver: Closeable {
 
     /**
      * Returns whether the element exists.
+     *
+     * ```kotlin
+     * driver.exists("h2.title")
+     * ```
+     *
+     * @param selector - The selector of the element to check.
+     * @return Whether the element exists.
      * */
     @Throws(WebDriverException::class)
     suspend fun exists(selector: String): Boolean
     /**
      * Returns whether the element is hidden.
+     *
+     * ```kotlin
+     * driver.isHidden("input[name='q']")
+     * ```
+     *
+     * @param selector - The selector of the element to check.
+     * @return Whether the element is hidden.
      * */
     @Throws(WebDriverException::class)
     suspend fun isHidden(selector: String): Boolean = !isVisible(selector)
     /**
      * Returns whether the element is visible.
+     *
+     * ```kotlin
+     * driver.isVisible("input[name='q']")
+     * ```
+     *
+     * @param selector - The selector of the element to check.
+     * @return Whether the element is visible.
      * */
     @Throws(WebDriverException::class)
     suspend fun isVisible(selector: String): Boolean
     /**
      * Returns whether the element is visible.
+     *
+     * ```kotlin
+     * driver.visible("input[name='q']")
+     * ```
+     *
+     * @param selector - The selector of the element to check.
+     * @return Whether the element is visible.
      * */
     @Throws(WebDriverException::class)
     suspend fun visible(selector: String): Boolean = isVisible(selector)
     /**
      * Returns whether the element is checked.
+     *
+     * ```kotlin
+     * driver.isChecked("input[name='agree']")
+     * ```
+     *
+     * @param selector - The selector of the element to check.
+     * @return Whether the element is checked.
      * */
     @Throws(WebDriverException::class)
     suspend fun isChecked(selector: String): Boolean
@@ -362,6 +640,10 @@ interface WebDriver: Closeable {
     
     /**
      * Brings the browser window to the front.
+     *
+     * ```kotlin
+     * driver.bringToFront()
+     * ```
      */
     @Throws(WebDriverException::class)
     suspend fun bringToFront()
@@ -370,18 +652,23 @@ interface WebDriver: Closeable {
      * This method fetches an element with `selector` and focuses it. If there's no
      * element matching `selector`, nothing to do.
      *
-     * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
-     * of an element to focus. If there are multiple elements satisfying the
-     * selector, the first will be focused.
+     * ```kotlin
+     * driver.focus("input[name='q']")
+     * ```
+     *
+     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) 
+     * of an element to focus. If there are multiple elements satisfying the selector, the first will be focused.
      */
     @Throws(WebDriverException::class)
     suspend fun focus(selector: String)
     /**
      * This method emulates inserting text that doesn't come from a key press.
      *
-     * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * ```kotlin
+     * driver.type("input[name='q']", "Hello, World!")
+     * ```
+     *
+     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
      * of an element to focus. If there are multiple elements satisfying the
      * selector, the first will be focused.
      * @param text The text to insert.
@@ -393,11 +680,14 @@ interface WebDriver: Closeable {
      *
      * Unlike [type], this method clears the existing value before typing.
      *
-     * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
-     * of an element to focus. If there are multiple elements satisfying the
+     * ```kotlin
+     * driver.fill("input[name='q']", "Hello, World!")
+     * ```
+     *
+     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
+     * of an element to focus, and then fill text into it. If there are multiple elements satisfying the
      * selector, the first will be focused.
-     * @param text The text to insert.
+     * @param text The text to fill.
      */
     @Throws(WebDriverException::class)
     suspend fun fill(selector: String, text: String)
@@ -407,12 +697,15 @@ interface WebDriver: Closeable {
      * The key is specified as a string, which can be a single character, a key name, or a combination of both.
      * For example, 'a', 'A', 'KeyA', 'Enter', 'Shift+A', and 'Control+Shift+Tab' are all valid keys.
      *
-     * TODO: find out can we press keys on pages which are not in the front.
+     * ```kotlin
+     * driver.press("input[name='q']", "Enter")
+     * ```
      *
+     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
+     * of an element to focus, and then press a key. If there are multiple elements satisfying the
+     * selector, the first will be focused.
      * @param key - A key to press. The key can be a single character, a key name, or a combination of both.
-     * See {@link KeyInput} for a list of all key names.
-     *
-     * see {@link https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/editing/commands/editor_command_names.h | Chromium Source Code} for valid command names.
+     *      See [Code values for keyboard events](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values)
      */
     @Throws(WebDriverException::class)
     suspend fun press(selector: String, key: String)
@@ -420,10 +713,14 @@ interface WebDriver: Closeable {
      * This method clicks an element with [selector] and focuses it. If there's no
      * element matching `selector`, nothing to do.
      *
-     * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * ```kotlin
+     * driver.click("button[type='submit']")
+     * ```
+     *
+     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
      * of an element to focus. If there are multiple elements satisfying the
      * selector, the first will be focused.
+     * @param count The number of times to click.
      * */
     @Throws(WebDriverException::class)
     suspend fun click(selector: String, count: Int = 1)
@@ -432,13 +729,34 @@ interface WebDriver: Closeable {
      * This method clicks an element with [selector] whose text content matches [pattern], and then focuses it.
      * If there's no element matching [selector], or the element's text content doesn't match [pattern], nothing to do.
      *
-     * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * ```kotlin
+     * driver.clickTextMatches("button", "submit")
+     * ```
+     *
+     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
      * of an element to focus. If there are multiple elements satisfying the
      * selector, the first will be focused.
+     * @param pattern The pattern to match the text content.
+     * @param count The number of times to click.
      * */
     @Throws(WebDriverException::class)
     suspend fun clickTextMatches(selector: String, pattern: String, count: Int = 1)
+    /**
+     * This method clicks an element with [selector] whose attribute name is [attrName] and value matches [pattern],
+     * and then focuses it. If there's no element matching [selector], or the element has no attribute [attrName],
+     * or the element's attribute value doesn't match [pattern], nothing to do.
+     *
+     * ```kotlin
+     * driver.clickAttributeMatches("button", "type", "submit")
+     * ```
+     *
+     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
+     * of an element to focus. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * @param attrName The attribute name to match.
+     * @param pattern The pattern to match the text content.
+     * @param count The number of times to click.
+     * */
     @Throws(WebDriverException::class)
     suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
     @Throws(WebDriverException::class)
@@ -447,9 +765,9 @@ interface WebDriver: Closeable {
      * This method check an element with [selector]. If there's no element matching [selector], nothing to do.
      *
      * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
      * of an element to check. If there are multiple elements satisfying the
-     * selector, the first will be focused.
+     * selector, the first will be checked.
      * */
     @Throws(WebDriverException::class)
     suspend fun check(selector: String)
@@ -457,7 +775,7 @@ interface WebDriver: Closeable {
      * This method uncheck an element with [selector]. If there's no element matching [selector], nothing to do.
      *
      * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
      * of an element to uncheck. If there are multiple elements satisfying the
      * selector, the first will be focused.
      * */
@@ -467,6 +785,10 @@ interface WebDriver: Closeable {
      * This method fetches an element with [selector], scrolls it into view if needed. If there's no element matching
      * [selector], the method does nothing.
      *
+     * ```kotlin
+     * driver.scrollTo("h2.title")
+     * ```
+     *
      * @param selector - A selector to search for element to scroll to. If there are multiple elements satisfying
      * the [selector], the first will be selected.
      */
@@ -475,6 +797,10 @@ interface WebDriver: Closeable {
     /**
      * The current page frame scrolls down for [count] times.
      *
+     * ```kotlin
+     * driver.scrollDown(3)
+     * ```
+     *
      * @param count The times to scroll down.
      */
     @Throws(WebDriverException::class)
@@ -482,29 +808,65 @@ interface WebDriver: Closeable {
     /**
      * The current page frame scrolls up for [count] times.
      *
+     * ```kotlin
+     * driver.scrollUp(3)
+     * ```
+     *
      * @param count The times to scroll up.
      */
     @Throws(WebDriverException::class)
     suspend fun scrollUp(count: Int = 1)
     /**
      * The current page frame scrolls to the top.
+     *
+     * ```kotlin
+     * driver.scrollToTop()
+     * ```
      */
     @Throws(WebDriverException::class)
     suspend fun scrollToTop()
     /**
      * The current page frame scrolls to the bottom.
+     *
+     * ```kotlin
+     * driver.scrollToBottom()
+     * ```
      */
     @Throws(WebDriverException::class)
     suspend fun scrollToBottom()
     /**
      * The current page frame scrolls to the middle.
      *
+     * ```kotlin
+     * driver.scrollToMiddle(0.2f)
+     * driver.scrollToMiddle(0.5f)
+     * driver.scrollToMiddle(0.8f)
+     * ```
+     *
      * @param ratio The ratio of the page to scroll to, 0.0 means the top, 1.0 means the bottom.
      */
+    @Deprecated("Use scrollToMiddle(Double) instead", ReplaceWith("scrollToMiddle(ratio.toDouble())"))
     @Throws(WebDriverException::class)
     suspend fun scrollToMiddle(ratio: Float)
     /**
+     * The current page frame scrolls to the middle.
+     *
+     * ```kotlin
+     * driver.scrollToMiddle(0.2)
+     * driver.scrollToMiddle(0.5)
+     * driver.scrollToMiddle(0.8)
+     * ```
+     *
+     * @param ratio The ratio of the page to scroll to, 0.0 means the top, 1.0 means the bottom.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun scrollToMiddle(ratio: Double)
+    /**
      * The mouse wheels down for [count] times.
+     *
+     * ```kotlin
+     * driver.mouseWheelDown(3)
+     * ```
      *
      * @param count The times to wheel down.
      * @param deltaX The distance to wheel horizontally.
@@ -516,6 +878,10 @@ interface WebDriver: Closeable {
     /**
      * The mouse wheels up for [count] times.
      *
+     * ```kotlin
+     * driver.mouseWheelUp(3)
+     * ```
+     *
      * @param count The times to wheel up.
      * @param deltaX The distance to wheel horizontally.
      * @param deltaY The distance to wheel vertically.
@@ -526,6 +892,10 @@ interface WebDriver: Closeable {
     /**
      * The mouse moves to the position specified by [x] and [y].
      *
+     * ```kotlin
+     * driver.moveMouseTo(100.0, 200.0)
+     * ```
+     *
      * @param x The x coordinate to move to.
      * @param y The y coordinate to move to.
      */
@@ -534,6 +904,10 @@ interface WebDriver: Closeable {
     /**
      * The mouse moves to the element with [selector].
      *
+     * ```kotlin
+     * driver.moveMouseTo("h2.title")
+     * ```
+     *
      * @param deltaX The distance to the left of the element.
      * @param deltaY The distance to the top of the element.
      */
@@ -541,6 +915,7 @@ interface WebDriver: Closeable {
     suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int = 0)
     /**
      * Performs a drag, dragenter, dragover, and drop in sequence.
+     *
      * @param selector - selector of the element to drag from.
      * @param deltaX The distance to drag horizontally.
      * @param deltaY The distance to drag vertically.
@@ -550,6 +925,10 @@ interface WebDriver: Closeable {
 
     /**
      * Returns the document's HTML markup.
+     *
+     * ```kotlin
+     * val html = driver.outerHTML()
+     * ```
      *
      * If the document does not exist, returns null.
      *
@@ -561,6 +940,10 @@ interface WebDriver: Closeable {
      * Returns the node's HTML markup, the node is located by [selector].
      *
      * If the node does not exist, returns null.
+     *
+     * ```kotlin
+     * val html = driver.outerHTML("h2.title")
+     * ```
      *
      * @param selector The selector to locate the node.
      * @return The HTML markup of the node.
@@ -581,19 +964,15 @@ interface WebDriver: Closeable {
      *
      * If the node does not exist, returns null.
      *
+     * ```kotlin
+     * val text = driver.selectFirstTextOrNull("h2.title")
+     * ```
+     *
      * @param selector The selector to locate the node.
      * @return The text content of the node.
      * */
     @Throws(WebDriverException::class)
     suspend fun selectFirstTextOrNull(selector: String): String?
-    /**
-     * Returns a list of text contents of all the elements matching the specified selector within the page.
-     *
-     * If no elements match the selector, returns an empty list.
-     *
-     * @param selector The selector to locate the nodes.
-     * @return The text contents of the nodes.
-     * */
     @Deprecated("Inappropriate name", ReplaceWith("selectTextAll(selector)"))
     @Throws(WebDriverException::class)
     suspend fun selectTexts(selector: String): List<String> = selectTextAll(selector)
@@ -601,6 +980,10 @@ interface WebDriver: Closeable {
      * Returns a list of text contents of all the elements matching the specified selector within the page.
      *
      * If no elements match the selector, returns an empty list.
+     *
+     * ```kotlin
+     * val texts = driver.selectTextAll("h2")
+     * ```
      *
      * @param selector The selector to locate the nodes.
      * @return The text contents of the nodes.
@@ -611,6 +994,10 @@ interface WebDriver: Closeable {
      * Returns the node's attribute value, the node is located by [selector], the attribute is [attrName].
      *
      * If the node does not exist, or the attribute does not exist, returns null.
+     *
+     * ```kotlin
+     * val classes = driver.selectFirstAttributeOrNull("h2.title", "class")
+     * ```
      *
      * @param selector The selector to locate the node.
      * @param attrName The attribute name to retrieve.
@@ -623,6 +1010,10 @@ interface WebDriver: Closeable {
      *
      * If the node do not exist, or the attribute does not exist, returns an empty list.
      *
+     * ```kotlin
+     * val classes = driver.selectAttributes("h2.title", "class")
+     * ```
+     *
      * @param selector The selector to locate the nodes.
      * @return The attribute pairs of the nodes.
      * */
@@ -632,6 +1023,10 @@ interface WebDriver: Closeable {
      * Returns the nodes' attribute values, the nodes are located by [selector], the attribute is [attrName].
      *
      * If the nodes do not exist, or the attribute does not exist, returns an empty list.
+     *
+     * ```kotlin
+     * val classes = driver.selectAttributeAll("h2.title", "class")
+     * ```
      *
      * @param selector The selector to locate the nodes.
      * @param attrName The attribute name to retrieve.
@@ -644,6 +1039,10 @@ interface WebDriver: Closeable {
     /**
      * Set the attribute of an element located by [selector].
      *
+     * ```kotlin
+     * driver.setAttribute("h2.title", "class", "header")
+     * ```
+     *
      * @param selector The CSS query to select an element.
      * @param attrName The attribute name to set.
      * @param attrValue The attribute value to set.
@@ -653,6 +1052,10 @@ interface WebDriver: Closeable {
     /**
      * Set the attribute of all elements matching the CSS query.
      *
+     * ```kotlin
+     * driver.setAttributeAll("h2.title", "class", "header")
+     * ```
+     *
      * @param selector The CSS query to select elements.
      * @param attrName The attribute name to set.
      * @param attrValue The attribute value to set.
@@ -661,6 +1064,10 @@ interface WebDriver: Closeable {
     suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String)
     /**
      * Find hyperlinks in elements matching the CSS query.
+     *
+     * ```kotlin
+     * val hyperlinks = driver.selectHyperlinks("a.product-link")
+     * ```
      *
      * @param selector The CSS query to select elements.
      * @param offset The offset of the first element to select.
@@ -672,6 +1079,10 @@ interface WebDriver: Closeable {
     /**
      * Find anchor elements matching the CSS query.
      *
+     * ```kotlin
+     * val anchors = driver.selectAnchors("a.product-link")
+     * ```
+     *
      * @param selector The CSS query to select elements.
      * @param offset The offset of the first element to select.
      * @param limit The maximum number of elements to select.
@@ -681,6 +1092,10 @@ interface WebDriver: Closeable {
     suspend fun selectAnchors(selector: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor>
     /**
      * Find image elements matching the CSS query.
+     *
+     * ```kotlin
+     * val images = driver.selectImages("img.product-image")
+     * ```
      *
      * @param selector The CSS query to select elements.
      * @param offset The offset of the first element to select.
@@ -693,6 +1108,10 @@ interface WebDriver: Closeable {
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
      *
+     * ```kotlin
+     * val title = driver.evaluate("document.title")
+     * ```
+     *
      * @param expression Javascript expression to evaluate
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
@@ -701,6 +1120,10 @@ interface WebDriver: Closeable {
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
+     *
+     * ```kotlin
+     * val title = driver.evaluate("document.title", "Untitled")
+     * ```
      *
      * @param expression Javascript expression to evaluate
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
@@ -711,6 +1134,10 @@ interface WebDriver: Closeable {
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
      *
+     * ```kotlin
+     * val title = driver.evaluate("document.title")
+     * ```
+     *
      * @param expression Javascript expression to evaluate
      * @return expression result
      * */
@@ -718,51 +1145,68 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun evaluateDetail(expression: String): JsEvaluation?
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. The script
-     * fragment provided will be executed as the body of an anonymous function.
-     *
-     * All possible exceptions are suppressed and do not throw.
-     *
-     * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or JSON values (if it was requested).
-     * */
-    suspend fun evaluateSilently(expression: String): Any?
-    /**
      * This method scrolls element into view if needed, and then ake a screenshot of the element.
+     *
+     * ```kotlin
+     * val screenshot = driver.captureScreenshot("h2.title")
+     * val bytes = Base64.getDecoder().decode(screenshot)
+     * val path = AppPaths.TMP_DIR.resolve("screenshot.jpg")
+     * AppFiles.saveTo(bytes, path, true)
+     * ```
+     *
+     * @param selector The selector of the element to capture.
+     * @return The screenshot of the element in base64 format.
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(selector: String): String?
     /**
      * This method scrolls element into view if needed, and then ake a screenshot of the element.
+     *
+     * @param rect The rectangle of the element to capture.
+     * @return The screenshot of the element in base64 format.
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(rect: RectD): String?
     /**
      * Calculate the clickable point of an element located by [selector].
      * If the element does not exist, or is not clickable, returns null.
+     *
+     * @param selector The selector of the element to calculate the clickable point.
+     * @return The clickable point of the element.
      * */
     @Throws(WebDriverException::class)
     suspend fun clickablePoint(selector: String): PointD?
     /**
      * Return the bounding box of an element located by [selector].
      * If the element does not exist, returns null.
+     *
+     * @param selector The selector of the element to calculate the bounding box.
+     * @return The bounding box of the element.
      * */
     @Throws(WebDriverException::class)
     suspend fun boundingBox(selector: String): RectD?
     /**
      * Create a new Jsoup session with the last page's context, which means, the same headers and cookies.
+     *
+     * @return The Jsoup session.
      * */
     @Throws(WebDriverException::class)
     suspend fun newJsoupSession(): Connection
     /**
      * Load the url as a resource with Jsoup rather than browser rendering, with the last page's context,
      * which means, the same headers and cookies.
+     *
+     * @param url The URL to load.
+     * @return The Jsoup response.
      * */
     @Throws(WebDriverException::class)
     suspend fun loadJsoupResource(url: String): Connection.Response
     /**
      * Load the url as a resource without browser rendering, with the last page's context, which means, the same headers
      * and cookies.
+     *
+     * @param url The URL to load.
+     * @return The network resource response.
      * */
     @Throws(WebDriverException::class)
     suspend fun loadResource(url: String): NetworkResourceResponse

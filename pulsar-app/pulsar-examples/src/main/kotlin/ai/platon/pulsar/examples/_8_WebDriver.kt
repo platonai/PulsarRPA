@@ -22,7 +22,7 @@ internal class WebDriverDemo(private val session: PulsarSession = createSession(
     fun options(args: String): LoadOptions {
         val options = session.options(args)
 
-        val be = options.event.browseEvent
+        val be = options.event.browseEventHandlers
 
         be.onDocumentActuallyReady.addLast { page, driver ->
             fieldSelectors.values.forEach { interact1(it, driver) }

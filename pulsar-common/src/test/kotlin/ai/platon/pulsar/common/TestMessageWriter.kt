@@ -7,7 +7,7 @@ import kotlin.test.*
 
 class TestMessageWriter {
 
-    private val filePath = AppPaths.createTempFile("TestMessageWriter-", ".txt")
+    private val filePath = AppFiles.createTempFile("TestMessageWriter-", ".txt")
     private val sinkWriter = MessageWriter(filePath)
 
     init {
@@ -34,7 +34,7 @@ class TestMessageWriter {
 
     @Test
     fun testExpiry() {
-        val path = Files.createTempFile("test", ".log")
+        val path = AppFiles.createTempFile("test", ".log")
         val writer = MessageWriter(path)
         writer.idleTimeout = Duration.ofSeconds(3)
         writer.write("hello")

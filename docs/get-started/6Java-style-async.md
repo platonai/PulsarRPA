@@ -1,7 +1,9 @@
-Java风格异步编程
+Java-style Asynchronous Programming
 =
 
-PulsarRPA 丰富的 API 使得我们的绝大多数编程场景下，都能够使用一行代码解决“加载-解析-提取”。本文介绍如何使用 Java 风格的异步编程，来解决批量的网页采集问题。
+[Prev](5URL.md) [Home](1home.md) [Next](7Kotlin-style-async.md)
+
+PulsarRPA's rich API allows us to solve the "load-parse-extract" process with just one line of code in most of our programming scenarios. This article introduces how to use Java-style asynchronous programming to solve the problem of batch web page collection.
 
 ```kotlin
 object JvmAsync {
@@ -44,7 +46,7 @@ object JvmAsync {
 }
 ```
 
-在线代码：[kotlin](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt)。
+Online code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt), [Chinese mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt).
 
 ------
 

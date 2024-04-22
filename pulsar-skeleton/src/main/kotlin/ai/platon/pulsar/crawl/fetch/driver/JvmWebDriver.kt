@@ -105,11 +105,11 @@ interface JvmWebDriver {
     @Throws(WebDriverException::class)
     fun waitForSelectorAsync(selector: String, timeout: Duration): CompletableFuture<Duration>
     @Throws(WebDriverException::class)
-    fun waitForNavigationAsync(): CompletableFuture<Duration>
+    fun waitForNavigationAsync(oldUrl: String): CompletableFuture<Duration>
     @Throws(WebDriverException::class)
-    fun waitForNavigationAsync(timeoutMillis: Long): CompletableFuture<Long>
+    fun waitForNavigationAsync(oldUrl: String, timeoutMillis: Long): CompletableFuture<Long>
     @Throws(WebDriverException::class)
-    fun waitForNavigationAsync(timeout: Duration): CompletableFuture<Duration>
+    fun waitForNavigationAsync(oldUrl: String, timeout: Duration): CompletableFuture<Duration>
 
     @Throws(WebDriverException::class)
     fun existsAsync(selector: String): CompletableFuture<Boolean>
@@ -189,16 +189,6 @@ interface JvmWebDriver {
      * */
     @Throws(WebDriverException::class)
     fun evaluateAsync(expression: String): CompletableFuture<Any?>
-    /**
-     * Executes JavaScript in the context of the currently selected frame or window. The script
-     * fragment provided will be executed as the body of an anonymous function.
-     *
-     * All possible exceptions are suppressed and do not throw.
-     *
-     * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or JSON values (if it was requested).
-     * */
-    fun evaluateSilentlyAsync(expression: String): CompletableFuture<Any?>
 
     /**
      * This method scrolls element into view if needed, and then ake a screenshot of the element.

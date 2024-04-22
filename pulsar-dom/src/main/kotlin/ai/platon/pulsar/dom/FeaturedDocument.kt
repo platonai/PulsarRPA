@@ -17,26 +17,30 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * A "featured document" is "very important" and the numerical features of each node are calculated,
- * the numerical feature can be used to locate nodes or can be used by machine learning algorithms.
+ * An HTML Document.
+ *
+ * A ‘featured document’ refers to a ‘very important document.’ Additionally, the numerical features of each node are
+ * calculated, and these numerical features can be used to locate nodes or utilized by machine learning algorithms.
  *
  * [FeaturedDocument] is a wrapper for [org.jsoup.nodes.Document], every node's numerical features are
  * calculated by a [ai.platon.pulsar.dom.features.FeatureCalculator] which can be customized.
  *
- * The DOM of a [FeaturedDocument] is immutable, no method is provided to append or insert elements or nodes.
- *
  * [FeaturedDocument] provides a set of powerful methods to select elements, text contexts, attributes
  * and so on:
  *
- * * [select]: retrieves a list of elements matching the CSS query
- * * [selectFirst]: retrieves the first matching element
- * * [selectFirstText]: retrieves the text content of the first matching element
- * * [selectFirstAttribute]: retrieves the attribute value associated to the given name of the first matching element
- * * [selectHyperlinks]: retrieves all hyperlinks of elements matching the CSS query
- * * [selectAnchors]: retrieves all anchor elements matching the CSS query
- * * [selectImages]: retrieves all image elements matching the CSS query
+ * * [select]: retrieves a list of elements matching the CSS query.
+ * * [selectFirstOrNull]: retrieves the first matching element.
+ * * [selectFirstTextOrNull]: retrieves the text content of the first matching element.
+ * * [selectFirstAttributeOrNull]: retrieves the attribute value associated to the given name of the first matching element.
+ * * [selectHyperlinks]: retrieves all hyperlinks of elements matching the CSS query.
+ * * [selectAnchors]: retrieves all anchor elements matching the CSS query.
+ * * [selectImages]: retrieves all image elements matching the CSS query.
  *
  * Other methods provided include DOM traversal, node counting, document attribute retrieval, export, and so on.
+ *
+ * @param document The underlying [org.jsoup.nodes.Document]
+ *
+ * @see org.jsoup.nodes.Document
  * */
 open class FeaturedDocument(val document: Document) {
     companion object {
@@ -85,15 +89,16 @@ open class FeaturedDocument(val document: Document) {
      * The process scope unique sequence.
      * */
     val sequence = instanceSequencer.incrementAndGet()
-
+    /**
+     * The normalized URI of the document, it's also the key to retrieve the document from the database
+     * and always be the same as [ai.platon.pulsar.persist.WebPage].url.
+     * */
     val normalizedURI get() = document.normalizedURI
-
     /**
      * Get the URL this Document was parsed from. If the starting URL is a redirect,
      * this will return the final URL from which the document was served from.
      */
     val location get() = document.location()
-
     /**
      * The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
      * before the HTML declares a `<base href>` tag.
@@ -102,12 +107,10 @@ open class FeaturedDocument(val document: Document) {
      * @see #absUrl
      */
     val baseURI get() = document.baseUri()
-    
     /**
-     * Get document title.
+     * Get the document title.
      * */
     val title get() = document.title()
-
     /**
      * Get this document's head element.
      *
@@ -156,8 +159,8 @@ open class FeaturedDocument(val document: Document) {
      * Note that the text within the {@code b} element is not returned, as it is not a direct child of the {@code p} element.
      *
      * @return unencoded text, or empty string if none.
-     * @see #text()
-     * @see #textNodes()
+     * @see text
+     * @see textNodes
      */
     val ownText get() = document.ownText()
 
@@ -166,7 +169,7 @@ open class FeaturedDocument(val document: Document) {
      * original.
      *
      * @return unencoded, un-normalized text
-     * @see #text()
+     * @see text
      */
     val wholeText get() = document.wholeText()
 
@@ -180,10 +183,10 @@ open class FeaturedDocument(val document: Document) {
     val html get() = document.html()
 
     /**
-    Get the outer HTML of this document. For example, on a {@code p} element, may return {@code <p>Para</p>}.
-    @return outer HTML
-    @see Element#html()
-    @see Element#text()
+     * Get the outer HTML of this document. For example, on a {@code p} element, may return {@code <p>Para</p>}.
+     * @return outer HTML
+     * @see Element#html()
+     * @see Element#textContent()
      */
     val outerHtml get() = document.outerHtml()
 
@@ -202,7 +205,7 @@ open class FeaturedDocument(val document: Document) {
     val nodeName get() = document.nodeName()
 
     /**
-     * Get the {@code id} attribute of this element.
+     * Get the id attribute of this element.
      *
      * @return The id attribute, if present, or an empty string if not.
      */
@@ -217,12 +220,12 @@ open class FeaturedDocument(val document: Document) {
 
     /**
      * Get the combined data of this element. Data is e.g. the inside of a {@code <script>} tag. Note that data is NOT the
-     * text of the element. Use {@link #text()} to get the text that would be visible to a user, and {@code data()}
+     * text of the element. Use {@link text} to get the text that would be visible to a user, and {@code data()}
      * for the contents of scripts, comments, CSS styles, etc.
      *
      * @return the data, or empty string if none
      *
-     * @see #dataNodes()
+     * @see dataNodes
      */
     val data get() = document.data()
 
@@ -233,7 +236,7 @@ open class FeaturedDocument(val document: Document) {
      * </p>
      * @return child data nodes. If this element has no data nodes, returns an
      * empty list.
-     * @see #data()
+     * @see data
      */
     val dataNodes: List<DataNode> get() = document.dataNodes()
 
@@ -354,6 +357,11 @@ open class FeaturedDocument(val document: Document) {
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined.
+     *
+     * @param query A power-CSS query
+     * @param offset The offset of the first element to return
+     * @param limit The maximum number of elements to return
+     * @return A list of elements that match the query
      * */
     @JvmOverloads
     fun select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
@@ -365,6 +373,12 @@ open class FeaturedDocument(val document: Document) {
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined.
+     *
+     * @param query A power-CSS query
+     * @param offset The offset of the first element to return
+     * @param limit The maximum number of elements to return
+     * @param transformer A transformer to transform the element to the desired type
+     * @return A list of elements that match the query
      * */
     fun <T> select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE, transformer: (Element) -> T) =
         document.select(query, offset, limit, transformer = transformer)
@@ -375,6 +389,10 @@ open class FeaturedDocument(val document: Document) {
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined.
+     *
+     * @param query A power-CSS query
+     * @return The first element that match the query
+     * @throws NoSuchElementException if no element matches the query
      * */
     @Throws(NoSuchElementException::class)
     fun selectFirst(query: String) =
@@ -386,6 +404,11 @@ open class FeaturedDocument(val document: Document) {
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined.
+     *
+     * @param query A power-CSS query
+     * @param transformer A transformer to transform the element to the desired type
+     * @return The first element that match the query
+     * @throws NoSuchElementException if no element matches the query
      * */
     @Throws(NoSuchElementException::class)
     fun <T> selectFirst(query: String, transformer: (Element) -> T) =
@@ -398,6 +421,9 @@ open class FeaturedDocument(val document: Document) {
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined.
+     *
+     * @param query A power-CSS query
+     * @return The first element that match the query, if no element matches the query, return null
      * */
     fun selectFirstOrNull(query: String) = document.selectFirstOrNull(query)
 
@@ -407,6 +433,10 @@ open class FeaturedDocument(val document: Document) {
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined.
+     *
+     * @param query A power-CSS query
+     * @param transformer A transformer to transform the element to the desired type
+     * @return The first element that match the query, if no element matches the query, return null
      * */
     fun <T> selectFirstOrNull(query: String, transformer: (Element) -> T) =
         document.selectFirstOrNull(query)?.let { transformer(it) }
@@ -419,6 +449,9 @@ open class FeaturedDocument(val document: Document) {
      * multiple filters can be combined.
      *
      * Return the first element, if no element matches the query, return an Optional object.
+     *
+     * @param query A power-CSS query
+     * @return The first element that match the query
      * */
     fun selectFirstOptional(query: String) = Optional.ofNullable(document.selectFirstOrNull(query))
 
@@ -430,6 +463,10 @@ open class FeaturedDocument(val document: Document) {
      * multiple filters can be combined.
      *
      * Return the first element, if no element matches the query, return an Optional object.
+     *
+     * @param query A power-CSS query
+     * @param transformer A transformer to transform the element to the desired type
+     * @return The first element that match the query
      * */
     fun <T> selectFirstOptional(query: String, transformer: (Element) -> T) =
         Optional.ofNullable(document.selectFirstOrNull(query)?.let { transformer(it) })
@@ -437,51 +474,83 @@ open class FeaturedDocument(val document: Document) {
     /**
      * Find text of elements that match the CSS query. Matched elements
      * may include the document, or any of its children.
+     *
+     * @param query A power-CSS query
+     * @param attrName The attribute name of the text to return
+     * @param offset The offset of the first element to return
+     * @param limit The maximum number of elements to return
+     * @return A list of attribute values of elements that match the query
      * */
     @JvmOverloads
-    fun selectTexts(query: String, attrName: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
+    fun selectTextAll(query: String, attrName: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
         document.selectAttributes(query, attrName, offset, limit)
 
     /**
      * Find the text content of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
+     *
+     * @param query A power-CSS query
+     * @return The text content of the first element that match the query
+     * @throws NoSuchElementException if no element matches the query
      * */
+    @Throws(NoSuchElementException::class)
     fun selectFirstText(query: String) =
         firstTextOrNull(query) ?: throw NoSuchElementException("No element matching $query")
 
     /**
      * Find the text content of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
+     *
+     * @param query A power-CSS query
+     * @return The text content of the first element that match the query
      * */
     fun selectFirstTextOrNull(query: String) = document.selectFirstOrNull(query)?.text()
 
     /**
      * Find the text content of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
+     *
+     * @param query A power-CSS query
+     * @return The text content of the first element that match the query
      * */
     fun selectFirstTextOptional(query: String) = Optional.ofNullable(firstTextOrNull(query))
 
     /**
      * Find the text content of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
+     *
+     * @param query A power-CSS query
+     * @return The text content of the first element that match the query
      * */
     fun firstText(query: String) = selectFirstText(query)
 
     /**
      * Find the text content of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
+     *
+     * @param query A power-CSS query
+     * @return The text content of the first element that match the query
      * */
     fun firstTextOrNull(query: String) = selectFirstTextOrNull(query)
 
     /**
      * Find the text content of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
+     *
+     * @param query A power-CSS query
+     * @return The text content of the first element that match the query
      * */
     fun firstTextOptional(query: String) = selectFirstTextOptional(query)
     
     /**
      * Find the attribute value of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
+     *
+     * @param query A power-CSS query
+     * @param attrName The attribute name
+     * @param offset The offset of the first element to return
+     * @param limit The maximum number of elements to return
+     * @return A list of attribute values of elements that match the query
      * */
     @JvmOverloads
     fun selectAttributes(query: String, attrName: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
@@ -490,46 +559,54 @@ open class FeaturedDocument(val document: Document) {
     /**
      * Find the attribute value of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
+     *
+     * @param query A power-CSS query
+     * @param attrName The attribute name
+     * @return The attribute value of the first element that match the query
      * */
     @JvmOverloads
     fun selectFirstAttribute(query: String, attrName: String, defaultValue: String = "") =
-        firstAttributeOrNull(query, attrName) ?: defaultValue
+        selectFirstAttributeOrNull(query, attrName) ?: defaultValue
 
     /**
      * Find the attribute value of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
+     *
+     * @param query A power-CSS query
+     * @param attrName The attribute name
+     * @return The attribute value of the first element that match the query
      * */
     fun selectFirstAttributeOrNull(query: String, attrName: String) = selectFirstOrNull(query)?.attr(attrName)
 
     /**
      * Find the attribute value of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
+     *
+     * @param query A power-CSS query
+     * @param attrName The attribute name
+     * @return The attribute value of the first element that match the query
      * */
     fun selectFirstAttributeOptional(query: String, attrName: String) =
         Optional.ofNullable(firstAttributeOrNull(query, attrName))
 
-    /**
-     * Find the attribute value of the first element that match the CSS query.
-     * Matched element may be the document, or any of its children.
-     * */
+    @Deprecated("Use selectFirstAttribute instead", ReplaceWith("selectFirstAttribute(query, attrName)"))
     @JvmOverloads
     fun firstAttribute(query: String, attrName: String, defaultValue: String = "") =
         selectFirstAttribute(query, attrName, defaultValue)
 
-    /**
-     * Find the attribute value of the first element that match the CSS query.
-     * Matched element may be the document, or any of its children.
-     * */
+    @Deprecated("Use selectFirstAttributeOrNull instead", ReplaceWith("selectFirstAttributeOrNull(query, attrName)"))
     fun firstAttributeOrNull(query: String, attrName: String) = selectFirstAttributeOrNull(query, attrName)
 
-    /**
-     * Find the attribute value of the first element that match the CSS query.
-     * Matched element may be the document, or any of its children.
-     * */
+    @Deprecated("Use selectFirstAttributeOptional instead", ReplaceWith("selectFirstAttributeOptional(query, attrName)"))
     fun firstAttributeOptional(query: String, attrName: String) = selectFirstAttributeOptional(query, attrName)
 
     /**
      * Find hyperlinks in elements matching the CSS query.
+     *
+     * @param query A power-CSS query
+     * @param offset The offset of the first element to return
+     * @param limit The maximum number of elements to return
+     * @return A list of hyperlinks of elements that match the query
      * */
     @JvmOverloads
     fun selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<Hyperlink> =
@@ -537,6 +614,11 @@ open class FeaturedDocument(val document: Document) {
     
     /**
      * Find anchor elements matching the CSS query.
+     *
+     * @param query A power-CSS query
+     * @param offset The offset of the first element to return
+     * @param limit The maximum number of elements to return
+     * @return A list of anchor elements that match the query
      * */
     @JvmOverloads
     fun selectAnchors(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor> =
@@ -544,6 +626,11 @@ open class FeaturedDocument(val document: Document) {
 
     /**
      * Find image elements matching the CSS query.
+     *
+     * @param query A power-CSS query
+     * @param offset The offset of the first element to return
+     * @param limit The maximum number of elements to return
+     * @return A list of image elements that match the query
      * */
     @JvmOverloads
     fun selectImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> =
@@ -551,6 +638,8 @@ open class FeaturedDocument(val document: Document) {
 
     /**
      * Traverse the DOM and apply the [action] to each [Node].
+     *
+     * @param action The action to apply to each [Node]
      * */
     fun forEach(action: (Node) -> Unit) {
         NodeTraversor.traverse({ node: Node, _ -> action(node) }, document)
@@ -558,38 +647,54 @@ open class FeaturedDocument(val document: Document) {
 
     /**
      * Traverse the DOM and apply the [action] to each [Node] that matches [predicate].
+     *
+     * @param predicate The predicate to match [Node]
+     * @param action The action to apply to each [Node]
      * */
     fun forEachMatching(predicate: (Node) -> Boolean, action: (Node) -> Unit) =
         document.forEachMatching(predicate, action)
 
     /**
      * Traverse the DOM and apply the [action] to each [Element].
+     *
+     * @param action The action to apply to each [Element]
      * */
     fun forEachElement(action: (Element) -> Unit) = document.forEachElement(true, action)
 
     /**
      * Traverse the DOM and apply the [action] to each [Element] that matches [predicate].
+     *
+     * @param predicate The predicate to match [Element]
+     * @param action The action to apply to each [Element]
      * */
     fun forEachElementMatching(predicate: (Element) -> Boolean, action: (Element) -> Unit) =
         document.forEachElementMatching(predicate, action)
 
     /**
      * Count nodes matching [predicate].
+     *
+     * @param predicate The predicate to match [Node]
      * */
     fun count(predicate: (Node) -> Boolean = {true}) = document.count(predicate)
 
     /**
      * Count elements matching [predicate].
+     *
+     * @param predicate The predicate to match [Element]
      * */
     fun countElements(predicate: (Element) -> Boolean = {true}) = document.countElements(predicate)
 
     /**
      * Retrieves the feature with the given key.
+     *
+     * @param key The key of the feature
      * */
     fun getFeature(key: Int) = document.getFeature(key)
 
     /**
      * Format node features.
+     *
+     * @param featureKeys The keys of the features to format
      * */
     fun formatFeatures(vararg featureKeys: Int) = document.formatEachFeatures(*featureKeys)
 
@@ -639,6 +744,8 @@ open class FeaturedDocument(val document: Document) {
 
     /**
      * Export the document.
+     *
+     * @return The path of the exported document
      * */
     fun export(): Path {
         val filename = AppPaths.fromUri(location, "", ".htm")
@@ -648,6 +755,9 @@ open class FeaturedDocument(val document: Document) {
 
     /**
      * Export the document to the given path.
+     *
+     * @param path The path to export the document
+     * @return The path of the exported document
      * */
     fun exportTo(path: Path): Path {
         return AppFiles.saveTo(prettyHtml.toByteArray(), path, deleteIfExists = true)
@@ -661,8 +771,14 @@ open class FeaturedDocument(val document: Document) {
         return other is FeaturedDocument && location == other.location
     }
 
+    /**
+     * Get the hash code of the document.
+     * */
     override fun hashCode() = location.hashCode()
 
+    /**
+     * Get the string representation of the document.
+     * */
     override fun toString() = document.uniqueName
     
     private fun initialize() {

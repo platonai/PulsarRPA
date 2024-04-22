@@ -5,7 +5,7 @@ import ai.platon.pulsar.crawl.event.*
 /**
  * Event handlers during the crawl phase of the webpage lifecycle.
  * */
-interface CrawlEvent {
+interface CrawlEventHandlers {
 
     /**
      * Fire when the url is about to be loaded.
@@ -14,8 +14,8 @@ interface CrawlEvent {
 
     /**
      * Fire to load the url.
-     * TODO: better name?
      * */
+    @Deprecated("No such event handler required", level = DeprecationLevel.WARNING)
     val onLoad: UrlAwareEventHandler
 
     /**
@@ -26,13 +26,13 @@ interface CrawlEvent {
     /**
      * Chain the other crawl event handler to the tail of this one.
      * */
-    fun chain(other: CrawlEvent): CrawlEvent
+    fun chain(other: CrawlEventHandlers): CrawlEventHandlers
 }
 
 /**
  * Event handlers during the loading phase of the webpage lifecycle.
  * */
-interface LoadEvent {
+interface LoadEventHandlers {
 
     /**
      * Fire when the url is about to be normalized.
@@ -83,13 +83,13 @@ interface LoadEvent {
     /**
      * Chain the other load event handler to the tail of this one.
      * */
-    fun chain(other: LoadEvent): LoadEvent
+    fun chain(other: LoadEventHandlers): LoadEventHandlers
 }
 
 /**
  * Event handlers during the browsing phase of the webpage lifecycle.
  * */
-interface BrowseEvent {
+interface BrowseEventHandlers {
     /**
      * Fire when the browser is about to be launched.
      * */
@@ -204,33 +204,52 @@ interface BrowseEvent {
     /**
      * Chain the other browse event handler to the tail of this one.
      * */
-    fun chain(other: BrowseEvent): BrowseEvent
+    fun chain(other: BrowseEventHandlers): BrowseEventHandlers
 }
 
 /**
- * All event handlers of the webpage lifecycle.
+ * The `PageEventHandlers` class specifies all event handlers that are triggered at various stages of a webpage’s lifecycle.
  *
  * The events are fall into three groups:
  *
- * 1. [LoadEvent] fires in loading phase
- * 2. [BrowseEvent] fires in browsing phase
- * 3. [CrawlEvent] fires in crawling phase
+ * 1. [LoadEventHandlers] triggers in loading stage.
+ * 2. [BrowseEventHandlers] triggers in browsing stage.
+ * 3. [CrawlEventHandlers] triggers in crawl stage, which is before and after loading the page.
  * */
-interface PageEvent {
+interface PageEventHandlers {
     /**
-     * The load phase event handlers
+     * Event handlers during the loading stage.
      * */
+    var loadEventHandlers: LoadEventHandlers
+    /**
+     * Event handlers during the browsing stage.
+     * */
+    var browseEventHandlers: BrowseEventHandlers
+    /**
+     * Event handlers during the crawl stage.
+     * */
+    var crawlEventHandlers: CrawlEventHandlers
+    /**
+     * Chain the other page event handlers to the tail of this one.
+     * */
+    fun chain(other: PageEventHandlers): PageEventHandlers
+    
+    @Deprecated("Use loadEventHandlers instead", ReplaceWith("loadEventHandlers"))
     var loadEvent: LoadEvent
-    /**
-     * The browse phase event handlers
-     * */
+    @Deprecated("Use browseEventHandlers instead", ReplaceWith("browseEventHandlers"))
     var browseEvent: BrowseEvent
-    /**
-     * The crawl phase event handlers
-     * */
+    @Deprecated("Use crawlEventHandlers instead", ReplaceWith("crawlEventHandlers"))
     var crawlEvent: CrawlEvent
-    /**
-     * Chain the other page event handler to the tail of this one.
-     * */
-    fun chain(other: PageEvent): PageEvent
 }
+
+@Deprecated("Use LoadEventHandlers instead", ReplaceWith("LoadEventHandlers"))
+typealias LoadEvent = LoadEventHandlers
+
+@Deprecated("Use BrowseEventHandlers instead", ReplaceWith("BrowseEventHandlers"))
+typealias BrowseEvent = BrowseEventHandlers
+
+@Deprecated("Use CrawlEventHandlers instead", ReplaceWith("CrawlEventHandlers"))
+typealias CrawlEvent = CrawlEventHandlers
+
+@Deprecated("Use PageEventHandlers instead", ReplaceWith("PageEventHandlers"))
+typealias PageEvent = PageEventHandlers

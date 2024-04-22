@@ -8,7 +8,7 @@ package ai.platon.pulsar.common.measure
  * [baeldung](https://www.baeldung.com/javax-measure)
  * [org.apache.commons.io.FileUtils](https://commons.apache.org/proper/commons-io/apidocs/org/apache/commons/io/FileUtils.html#byteCountToDisplaySize-java.math.BigInteger-)
  * */
-@Deprecated("use ByteUnit instead", ReplaceWith("ByteUnit"))
+@Deprecated("use ByteUnit instead")
 object ByteUnitConverter {
 
     fun convert(bytes: Int, unit: String) = convert(bytes.toLong(), unit)

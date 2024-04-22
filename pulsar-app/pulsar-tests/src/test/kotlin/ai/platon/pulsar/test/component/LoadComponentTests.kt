@@ -43,8 +43,8 @@ class LoadComponentTests: TestBase() {
 
     @Test
     fun testLoadAsync() {
-        val normUrl = session.normalize(url, args)
-        val future = loadComponent.loadAsync(normUrl)
+        val normURL = session.normalize(url, args)
+        val future = loadComponent.loadAsync(normURL)
         assertFalse(future.isCancelled)
         assertFalse(future.isDone)
         future.thenAccept { println(it.url) }
@@ -70,6 +70,7 @@ class LoadComponentTests: TestBase() {
     fun testLoadAllAsFlow() = runBlocking {
         val normUrls = urls.take(5).map { session.normalize(it, args) }
         
+        // TODO: seems it's sequential, not parallel
         val resultUrls = mutableListOf<String>()
         normUrls.asFlow()
             .map { loadComponent.loadDeferred(it) }

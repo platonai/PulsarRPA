@@ -89,7 +89,7 @@ class SessionTests {
     @Test
     fun `When loaded a HTML page then the navigate state are correct`() {
         val options = session.options("-refresh")
-        options.event.browseEvent.onDidScroll.addLast { page, driver ->
+        options.event.browseEventHandlers.onDidScroll.addLast { page, driver ->
             require(driver is ChromeDevtoolsDriver)
             val navigateEntry = driver.navigateEntry
             assertTrue { navigateEntry.documentTransferred }

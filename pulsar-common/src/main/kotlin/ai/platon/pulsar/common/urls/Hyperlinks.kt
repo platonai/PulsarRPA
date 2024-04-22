@@ -5,6 +5,9 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 
+/**
+ * A hyperlink datum is a data class that represents a hyperlink.
+ * */
 data class HyperlinkDatum(
     /**
      * The url specification of the hyperlink, it is usually normalized, and can contain load arguments.
@@ -77,11 +80,17 @@ open class Hyperlink(
     href: String? = null,
 ) : AbstractUrl(url, args, referrer, href) {
     var depth: Int = 0
-
+    
+    /**
+     * Construct a hyperlink.
+     *
+     * This method is compatible with Java.
+     * */
+    constructor(url: String) : this(url, "", 0)
     constructor(url: UrlAware) : this(url.url, "", 0, url.referrer, url.args, href = url.href)
     constructor(url: Hyperlink) : this(url.url, url.text, url.order, url.referrer, url.args, href = url.href)
     constructor(url: HyperlinkDatum) : this(url.url, url.text, url.order, url.referrer, url.args, href = url.href)
-
+    
     fun data() = HyperlinkDatum(url, text, order, referrer = referrer, args = args, href = href, true, 0)
 
     override fun serializeTo(sb: StringBuilder): StringBuilder {
@@ -261,6 +270,10 @@ open class StatefulFatLink(
     override fun toString() = "$status $createdAt $modifiedAt ${super.toString()}"
 }
 
+/**
+ * A [crawlable fat link](https://en.wikipedia.org/wiki/Hyperlink#Fat_link) is a hyperlink which leads to multiple endpoints;
+ * the link is a multivalued function. It is used in web crawling to represent a page with multiple links.
+ * */
 open class CrawlableFatLink(
     /**
      * The url specification of the hyperlink, it is usually normalized, and can contain load arguments.
@@ -297,16 +310,31 @@ open class CrawlableFatLink(
     @Volatile
     var finishedTailLinkCount = 0
     var aborted = false
-
+    /**
+     * The number of active tail links
+     * */
     val numActive get() = size - finishedTailLinkCount
+    /**
+     * Whether the crawlable fat link is aborted
+     * */
     val isAborted get() = aborted
+    /**
+     * Whether the crawlable fat link is finished
+     * */
     val isFinished get() = finishedTailLinkCount >= size
+    /**
+     * The idle time of the crawlable fat link
+     * */
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
-
+    /**
+     * Abort the crawlable fat link
+     * */
     fun abort() {
         aborted = true
     }
-
+    /**
+     * Finish a stateful hyperlink
+     * */
     fun finish(url: StatefulHyperlink, status: Int = ResourceStatus.SC_OK): Boolean {
         aborted = false
 
@@ -333,10 +361,13 @@ open class CrawlableFatLink(
 
         return true
     }
-
+    
     override fun toString() = "$finishedTailLinkCount/${tailLinks.size} ${super.toString()}"
 }
 
+/**
+ * The hyperlink helper object.
+ * */
 object Hyperlinks {
 
     /**

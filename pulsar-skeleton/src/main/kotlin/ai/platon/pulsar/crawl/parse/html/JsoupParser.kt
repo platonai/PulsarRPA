@@ -76,7 +76,7 @@ class JsoupParser(
         }
         
         // deprecated, use body head link[rel=normalizedURI] instead
-        metadata.attr("normUrl", page.url)
+        metadata.attr("normURL", page.url)
         // deprecated, use body head link[rel=normalizedURI] instead
         metadata.attr("normalizedUrl", page.url)
 

@@ -27,7 +27,7 @@ import org.jsoup.nodes.Element
 @UDFGroup(namespace = "DOM")
 object DomSelectFunctions {
 
-    @UDFunction(description = "Select the nth element from a DOM by the given css query and return a DOM")
+    @UDFunction(description = "Select the all the elements from a DOM by the given css query")
     @JvmStatic
     fun selectAll(dom: ValueDom, cssQuery: String): ValueArray {
         return Queries.select(dom, cssQuery) { it }

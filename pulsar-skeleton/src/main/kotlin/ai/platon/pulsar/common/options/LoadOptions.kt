@@ -7,7 +7,8 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.PageEvent
-import ai.platon.pulsar.crawl.event.impl.PageEventFactory
+import ai.platon.pulsar.crawl.PageEventHandlers
+import ai.platon.pulsar.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
@@ -18,7 +19,8 @@ import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.jvm.kotlinProperty
 
 /**
- * A [LoadOptions] object contains a set of control parameters that affect how we load a webpage.
+ * Load options are a set of parameters that define how a page should be loaded, including any specific
+ * behaviors or conditions that should be applied during the loading process.
  *
  * The load options, or load arguments, can be a plain string in the form of command line parameters,
  * and can be parsed into a [LoadOptions] object.
@@ -37,14 +39,12 @@ import kotlin.reflect.jvm.kotlinProperty
  * // write the page content into storage
  * session.load('https://www.jd.com', '-storeContent')
  * ```
- * TODO: support new options: -priority
- * TODO: keep unsupported options
  * */
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
-    var rawEvent: PageEvent? = null,
-    var rawItemEvent: PageEvent? = null,
+    var rawEvent: PageEventHandlers? = null,
+    var rawItemEvent: PageEventHandlers? = null,
     var referrer: String? = null,
 ) : CommonOptions(argv) {
 
@@ -652,11 +652,16 @@ open class LoadOptions(
      * */
     val outLinkSelectorOrNull
         get() = outLinkSelector.takeIf { it.isNotBlank() }
-
-    val event: PageEvent get() = enableEvent()
-
-    val itemEvent: PageEvent get() = enableItemEvent()
-
+    
+    /**
+     * Enable the page event handlers and return it.
+     * */
+    val event: PageEventHandlers get() = enableEventHandlers()
+    /**
+     * Enable the item event handlers and return it.
+     * */
+    val itemEvent: PageEventHandlers get() = enableItemEventHandlers()
+    
     /**
      * Find out the modified fields and return a [Params].
      * */
@@ -909,8 +914,8 @@ open class LoadOptions(
     /**
      * Ensure [event] is created.
      * */
-    private fun enableEvent(): PageEvent {
-        val eh = rawEvent ?: PageEventFactory(conf).create()
+    private fun enableEventHandlers(): PageEventHandlers {
+        val eh = rawEvent ?: PageEventHandlersFactory(conf).create()
         rawEvent = eh
         return eh
     }
@@ -918,8 +923,8 @@ open class LoadOptions(
     /**
      * Ensure [rawItemEvent] is created.
      * */
-    private fun enableItemEvent(): PageEvent {
-        val eh = rawEvent ?: PageEventFactory(conf).create()
+    private fun enableItemEventHandlers(): PageEventHandlers {
+        val eh = rawEvent ?: PageEventHandlersFactory(conf).create()
         rawItemEvent = eh
         return eh
     }

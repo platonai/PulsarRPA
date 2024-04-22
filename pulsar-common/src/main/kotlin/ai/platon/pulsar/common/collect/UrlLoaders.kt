@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.collect
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.UrlExtractor
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.HyperlinkDatum
@@ -10,9 +11,9 @@ import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import kotlin.random.Random
 
 open class LocalFileUrlLoader(val path: Path): OneLoadExternalUrlLoader() {
-    private val log = LoggerFactory.getLogger(LocalFileUrlLoader::class.java)
     private val delimiter = "\t"
     private val gson = GsonBuilder().create()
     private val urlExtractor = UrlExtractor()
@@ -20,6 +21,10 @@ open class LocalFileUrlLoader(val path: Path): OneLoadExternalUrlLoader() {
     override fun save(url: UrlAware, topic: UrlTopic) {
         val hyperlink = if (url is Hyperlink) url else Hyperlink(url)
         val json = gson.toJson(hyperlink.data())
+        if (!Files.exists(path)) {
+            Files.createDirectories(path.parent)
+            Files.createFile(path)
+        }
         Files.writeString(path, "${topic.group}$delimiter$json\n", StandardOpenOption.APPEND)
     }
 
@@ -65,5 +70,5 @@ open class LocalFileUrlLoader(val path: Path): OneLoadExternalUrlLoader() {
 }
 
 open class TemporaryLocalFileUrlLoader: LocalFileUrlLoader(
-        Files.createTempFile("hyperlink", ".txt")
+    AppPaths.PROC_TMP_TMP_DIR.resolve("hyperlink.${Random.nextLong()}.txt")
 )

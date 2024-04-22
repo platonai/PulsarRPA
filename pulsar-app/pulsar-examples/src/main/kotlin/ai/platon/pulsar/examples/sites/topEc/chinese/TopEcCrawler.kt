@@ -18,7 +18,7 @@ fun main() {
     val options = session.options(args)
 
     val event = options.event
-    event.browseEvent.onBrowserLaunched.addLast { page, driver ->
+    event.browseEventHandlers.onBrowserLaunched.addLast { page, driver ->
         // TODO: rotate accounts
         val username = System.getenv("PULSAR_TAOBAO_USERNAME") ?: "MustFallUsername"
         val password = System.getenv("PULSAR_TAOBAO_PASSWORD") ?: "MustFallPassword"

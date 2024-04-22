@@ -56,7 +56,7 @@ class SearchAgent {
         val url = URIBuilder("$bingBaseUrl/search").addParameter("q", keyword).build().toURL()
 
         val options = session.options(args)
-        val be = options.event.browseEvent
+        val be = options.event.browseEventHandlers
         val le = options.event.loadEvent
 
         be.onDocumentActuallyReady.addLast { page, driver ->
@@ -92,7 +92,7 @@ class SearchAgent {
         builder.addParameter("q", keyword)
         val url = builder.build().toURL().toString()
         val options = session.options(args)
-        val be = options.event.browseEvent
+        val be = options.event.browseEventHandlers
         val le = options.event.loadEvent
         
         be.onDocumentActuallyReady.addLast { page, driver ->

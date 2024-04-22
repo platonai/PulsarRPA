@@ -58,9 +58,9 @@ if ($CLEAN) {
 }
 
 if ($TEST) {
-  & $MVN deploy -Pplaton-release -Pplaton-deploy -DskipTests=$true
-} else {
   & $MVN deploy -Pplaton-release -Pplaton-deploy
+} else {
+  & $MVN deploy -Pplaton-release -Pplaton-deploy -DskipTests=$true
 }
 
 $exitCode =$LastExitCode

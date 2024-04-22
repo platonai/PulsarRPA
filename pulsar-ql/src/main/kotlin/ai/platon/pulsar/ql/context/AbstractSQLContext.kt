@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.SQLUtils
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.context.support.AbstractPulsarContext
@@ -66,9 +66,9 @@ abstract class AbstractSQLContext constructor(
         status = Status.RUNNING
     }
 
-    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        val normUrl = super.normalize(url, options, toItemOption)
-        return NormUrl(SQLUtils.unsanitizeUrl(normUrl.spec), normUrl.options, hrefSpec = normUrl.hrefSpec)
+    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormURL {
+        val normURL = super.normalize(url, options, toItemOption)
+        return NormURL(SQLUtils.unsanitizeUrl(normURL.spec), normURL.options, hrefSpec = normURL.hrefSpec)
     }
     
     @Throws(Exception::class)

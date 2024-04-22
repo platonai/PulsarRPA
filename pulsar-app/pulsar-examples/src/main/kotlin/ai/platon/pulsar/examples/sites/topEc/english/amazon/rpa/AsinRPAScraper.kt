@@ -44,15 +44,15 @@ class AsinRPAScraper {
 
     private fun createASINHyperlink(domain: String, asinUrl: String): ListenableHyperlink {
         val hyperlink = ListenableHyperlink(asinUrl, args = asinLoadArgs)
-        val be = hyperlink.event.browseEvent
-
-        be.onWillComputeFeature.addLast { page, driver ->
+        val be = hyperlink.event.browseEventHandlers
+        
+        be.onDocumentSteady.addLast { page, driver ->
             val district = driver.selectFirstTextOrNull(districtSelector)
             logger.info("District: {}", district)
             null
         }
 
-        val le = hyperlink.event.loadEvent
+        val le = hyperlink.event.loadEventHandlers
         le.onHTMLDocumentParsed.addLast { page, document ->
             scrapeAsin(page, document)
         }

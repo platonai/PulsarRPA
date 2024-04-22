@@ -1,14 +1,39 @@
 package ai.platon.pulsar.examples.async;
 
 import ai.platon.pulsar.common.LinkExtractors;
+import ai.platon.pulsar.common.urls.Hyperlink;
+import ai.platon.pulsar.common.urls.NormURL;
 import ai.platon.pulsar.context.PulsarContexts;
 import ai.platon.pulsar.dom.FeaturedDocument;
+import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.session.PulsarSession;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 class CrawlAsync {
+
+    private static String url = "https://www.amazon.com/Best-Sellers/zgbs";
+
+    public static void loadAsync() throws Exception {
+        PulsarSession session = PulsarContexts.createSession();
+        WebPage page = session.loadAsync(url).join();
+    }
+
+    public static void loadAsync2() throws Exception {
+        PulsarSession session = PulsarContexts.createSession();
+        FeaturedDocument document = session.loadAsync(url)
+                .thenApply(session::parse)
+                .join();
+    }
+
+    public static void loadAsync3() throws Exception {
+        PulsarSession session = PulsarContexts.createSession();
+        String title = session.loadAsync(url)
+                .thenApply(session::parse)
+                .thenApply(FeaturedDocument::guessTitle)
+                .join();
+    }
 
     public static void loadAll() throws Exception {
         PulsarSession session = PulsarContexts.createSession();

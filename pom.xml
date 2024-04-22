@@ -21,7 +21,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.12.3-SNAPSHOT</version>
+    <version>1.12.5-SNAPSHOT</version>
 
     <name>Pulsar</name>
     <description>Scrape Web data at scale completely and accurately with high performance, distributed AI-RPA.</description>
@@ -46,7 +46,7 @@
         <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
         <url>https://github.com/platonai/pulsar</url>
-        <tag>v1.12.3</tag>
+        <tag>v1.12.5</tag>
     </scm>
 
     <repositories>
@@ -182,8 +182,8 @@
                             <!-- List of '.md' files with package and module docs -->
                             <!-- https://kotlinlang.org/docs/reference/kotlin-doc.html#module-and-package-documentation -->
 <!--                            <includes>-->
-<!--                                <include>README.adoc</include>-->
-<!--                                <include>README-CN.adoc</include>-->
+<!--                                <include>README.md</include>-->
+<!--                                <include>README.md</include>-->
 <!--                            </includes>-->
 
                             <!-- List of sample roots -->

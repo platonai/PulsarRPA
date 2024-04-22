@@ -8,11 +8,12 @@ import kotlin.concurrent.withLock
 
 /**
  * Created by vincent on 18-1-1.
- * Copyright @ 2013-2023 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved.
  */
 data class NavigateEntry(
     /**
-     * The url to navigate to.
+     * The url to navigate.
+     *
      * If page.href exists, the url is the href, otherwise, the url is page.url.
      * The href has the higher priority to locate a resource.
      * */
@@ -30,10 +31,6 @@ data class NavigateEntry(
      * The referrer claimed by the page.
      */
     var pageReferrer: String? = null,
-    /**
-     * The location of the page, it shows in the browser window, can differ from url.
-     */
-    var location: String = url,
     /**
      * Indicate if the navigation is stopped.
      */

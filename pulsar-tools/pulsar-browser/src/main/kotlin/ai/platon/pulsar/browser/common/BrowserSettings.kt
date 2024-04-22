@@ -1,7 +1,6 @@
 package ai.platon.pulsar.browser.common
 
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
@@ -10,83 +9,114 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.core.JacksonException
-import java.nio.file.Files
-import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 
 /**
  * The [BrowserSettings] class defines a convenient interface to control the behavior of browsers.
+ * The [BrowserSettings] class provides a set of static methods to configure the browser settings.
+ *
+ * For example, to run multiple temporary browsers in headless mode, which is usually used in the spider scenario,
+ * you can use the following code:
+ *
+ * ```kotlin
+ * BrowserSettings
+ *    .headless()
+ *    .privacy(4)
+ *    .maxTabs(12)
+ *    .enableUrlBlocking()
+ * ```
+ *
+ * The above code will:
+ * 1. Run the browser in headless mode
+ * 2. Set the number of privacy contexts to 4
+ * 3. Set the max number of open tabs in each browser context to 12
+ * 4. Enable url blocking
+ *
+ * If you want to run your system's default browser in GUI mode, and interact with the webpage, you can use the
+ * following code:
+ *
+ * ```kotlin
+ * BrowserSettings.withSystemDefaultBrowser().withGUI().withSPA()
+ * ```
+ *
+ * The above code will:
+ * 1. Use the system's default browser
+ * 2. Run the browser in GUI mode
+ * 3. Set the system to work with single page application
  * */
 open class BrowserSettings(
+    /**
+     * The configuration.
+     * */
     val conf: ImmutableConfig = ImmutableConfig()
 ) {
     companion object {
-        // The viewport size for browser to rendering all webpages
+        /**
+         * The viewport size for browser to rendering all webpages.
+         * */
         var SCREEN_VIEWPORT = AppConstants.DEFAULT_VIEW_PORT
-
-        // Compression quality from range [0..100] (jpeg only) to capture screenshots
+        /**
+         * The screenshot quality.
+         * Compression quality from range [0..100] (jpeg only) to capture screenshots.
+         * */
         var SCREENSHOT_QUALITY = 50
-
         /**
          * The interaction settings. Interaction settings define how the system
          * interacts with webpages to mimic the behavior of real people.
          * */
         var INTERACT_SETTINGS = InteractSettings.DEFAULT
-        
         /**
          * Check if the current environment supports only headless mode.
-         * TODO: this doesn't work on some platform
+         * TODO: AppContext.isGUIAvailable doesn't work on some platform
          * */
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
-
         /**
          * Specify the browser type to fetch webpages.
+         *
+         * NOTICE: PULSAR_CHROME is the only supported browser currently.
          * */
         @JvmStatic
         fun withBrowser(browserType: String): Companion {
             System.setProperty(BROWSER_TYPE, browserType)
             return BrowserSettings
         }
-
         /**
          * Specify the browser type to fetch webpages.
          *
-         * PULSAR_CHROME is the only supported browser currently.
+         * NOTICE: PULSAR_CHROME is the only supported browser currently.
          * */
         @JvmStatic
         fun withBrowser(browserType: BrowserType): Companion {
             System.setProperty(BROWSER_TYPE, browserType.name)
             return BrowserSettings
         }
-
         /**
-         * Use google-chrome with the default environment, so PulsarRPA visits websites just like you do.
+         * Use the system's default Chrome browser, so PulsarRPA visits websites just like you do.
+         * Any change to the browser will be kept.
          * */
         @JvmStatic
         fun withSystemDefaultBrowser() = withSystemDefaultBrowser(BrowserType.PULSAR_CHROME)
-
         /**
-         * Use the specified browser with the default environment, so PulsarRPA visits websites just like you do.
-         * PULSAR_CHROME is the only supported browser currently.
+         * Use the system's default browser with the given type, so PulsarRPA visits websites just like you do.
+         * Any change to the browser will be kept.
+         *
+         * NOTICE: PULSAR_CHROME is the only supported browser currently.
          * */
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
-            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS_KEY, clazz)
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
         }
-
         /**
          * Use google-chrome with the prototype environment, any change to the browser will be kept.
          * */
         @JvmStatic
         fun withPrototypeBrowser() = withPrototypeBrowser(BrowserType.PULSAR_CHROME)
-
         /**
          * Use the specified browser with the prototype environment, any change to the browser will be kept.
          *
@@ -95,24 +125,38 @@ open class BrowserSettings(
         @JvmStatic
         fun withPrototypeBrowser(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
-            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS_KEY, clazz)
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
         }
-        
         /**
-         * Use the specified browser with the prototype environment, any change to the browser will be kept.
+         * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
+         * permanent unless the context directories are deleted manually.
+         *
+         * PULSAR_CHROME is the only supported browser currently.
+         *
+         * @param maxAgents The maximum number of sequential privacy agents, the active privacy contexts is chosen from them.
+         * @return the BrowserSettings itself
+         * */
+        fun withSequentialBrowsers(maxAgents: Int = 10): Companion {
+            System.setProperty(MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, "$maxAgents")
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            return BrowserSettings
+        }
+        /**
+         * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
+         * will not be used again after it is shut down.
          *
          * PULSAR_CHROME is the only supported browser currently.
          * */
         @JvmStatic
         fun withTemporaryBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
-            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS_KEY, clazz)
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.RandomPrivacyAgentGenerator"
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
         }
-
         /**
          * Indicate the network condition.
          *
@@ -121,10 +165,9 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withGoodNetwork(): Companion {
-            InteractSettings.GOOD_NET_SETTINGS.copy().overrideSystemProperties()
+            InteractSettings.GOOD_NET_SETTINGS.overrideSystemProperties()
             return BrowserSettings
         }
-
         /**
          * Indicate the network condition.
          *
@@ -133,10 +176,9 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withWorseNetwork(): Companion {
-            InteractSettings.WORSE_NET_SETTINGS.copy().overrideSystemProperties()
+            InteractSettings.WORSE_NET_SETTINGS.overrideSystemProperties()
             return BrowserSettings
         }
-
         /**
          * Indicate the network condition.
          *
@@ -145,10 +187,9 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withWorstNetwork(): Companion {
-            InteractSettings.WORST_NET_SETTINGS.copy().overrideSystemProperties()
+            InteractSettings.WORST_NET_SETTINGS.overrideSystemProperties()
             return BrowserSettings
         }
-
         /**
          * Launch the browser in GUI mode.
          * */
@@ -168,13 +209,11 @@ open class BrowserSettings(
 
             return BrowserSettings
         }
-
         /**
          * Launch the browser in GUI mode.
          * */
         @JvmStatic
         fun headed() = withGUI()
-
         /**
          * Launch the browser in headless mode.
          * */
@@ -189,7 +228,6 @@ open class BrowserSettings(
 
             return BrowserSettings
         }
-
         /**
          * Launch the browser in supervised mode.
          * */
@@ -198,14 +236,12 @@ open class BrowserSettings(
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
             return BrowserSettings
         }
-
         /**
          * Set the number of privacy contexts
          * */
         @Deprecated("Verbose name", ReplaceWith("privacy(n)"))
         @JvmStatic
         fun privacyContext(n: Int): Companion = privacy(n)
-
         /**
          * Set the number of privacy contexts
          * */
@@ -218,7 +254,6 @@ open class BrowserSettings(
             System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
             return BrowserSettings
         }
-
         /**
          * Set the max number to open tabs in each browser context
          * */
@@ -231,7 +266,6 @@ open class BrowserSettings(
             System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")
             return BrowserSettings
         }
-
         /**
          * Tell the system to work with single page application.
          * To collect SPA data, the execution needs to have no timeout limit.
@@ -243,7 +277,13 @@ open class BrowserSettings(
             System.setProperty(BROWSER_SPA_MODE, "true")
             return BrowserSettings
         }
-
+        /**
+         * Use the specified interact settings to interact with webpages.
+         * */
+        fun withInteractSettings(settings: InteractSettings): Companion {
+            settings.overrideSystemProperties()
+            return BrowserSettings
+        }
         /**
          * Enable url blocking. If url blocking is enabled and the blocking rules are set,
          * resources matching the rules will be blocked by the browser.
@@ -253,33 +293,33 @@ open class BrowserSettings(
             System.setProperty(BROWSER_RESOURCE_BLOCK_PROBABILITY, "1.0")
             return BrowserSettings
         }
-
+        /**
+         * Enable url blocking with the given probability.
+         * The probability must be in [0, 1].
+         * */
         @JvmStatic
         fun enableUrlBlocking(probability: Float): Companion {
             require(probability in 0.0f..1.0f)
             System.setProperty(BROWSER_RESOURCE_BLOCK_PROBABILITY, "$probability")
             return BrowserSettings
         }
-
         /**
          * Disable url blocking. If url blocking is disabled, blocking rules are ignored.
          * */
         @JvmStatic
         fun disableUrlBlocking(): Companion {
-            System.setProperty(BROWSER_RESOURCE_BLOCK_PROBABILITY, "1.0")
+            System.setProperty(BROWSER_RESOURCE_BLOCK_PROBABILITY, "0.0")
             return BrowserSettings
         }
-
         /**
          * Block all images.
          * */
         @JvmStatic
         fun blockImages(): Companion {
-            enableUrlBlocking()
             TODO("Not implemented")
+            enableUrlBlocking()
             return BrowserSettings
         }
-
         /**
          * Enable user agent overriding.
          *
@@ -291,7 +331,6 @@ open class BrowserSettings(
             System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "true")
             return BrowserSettings
         }
-
         /**
          * Disable user agent overriding.
          *
@@ -303,26 +342,21 @@ open class BrowserSettings(
             System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "false")
             return BrowserSettings
         }
-
+        /**
+         * Enable proxy if available.
+         * */
         @JvmStatic
         fun enableProxy(): Companion {
             ProxyPoolManager.enableProxy()
             return this
         }
-
+        /**
+         * Disable proxy.
+         * */
         @JvmStatic
         fun disableProxy(): Companion {
             ProxyPoolManager.disableProxy()
             return this
-        }
-
-        /**
-         * Generate a user data directory.
-         * */
-        fun generateUserDataDir(): Path {
-            val numInstances = Files.list(AppPaths.CONTEXT_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
-            val rand = Random.nextInt(0, 1000000).toString(Character.MAX_RADIX)
-            return AppPaths.CONTEXT_TMP_DIR.resolve("cx.$numInstances$rand")
         }
     }
 
@@ -372,14 +406,14 @@ open class BrowserSettings(
      * */
     val isGUI get() = displayMode == DisplayMode.GUI
     /**
-     * Check if it's SPA mode, SPA stands for single page application.
+     * Check if it's SPA mode, SPA stands for Single Page Application.
      *
      * If PulsarPRA works in SPA mode:
-     * 1. execution of fetches has no timeout limit
+     * 1. execution of loads and fetches has no timeout limit, so we can interact with the page as long as we want.
      * */
     val isSPA get() = conf.getBoolean(BROWSER_SPA_MODE, false)
     /**
-     * Check if startup scripts are allowed. If true, pulsar injects scripts into the browser
+     * Check if startup scripts are allowed. If true, PulsarPRA injects scripts into the browser
      * before loading a page, and custom scripts are also allowed.
      * */
     val isStartupScriptEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
@@ -411,8 +445,17 @@ open class BrowserSettings(
      * */
     var pageLoadStrategy = "none"
 
+    /**
+     * The user agent to use.
+     * */
     val userAgent = UserAgent()
+    /**
+     * The script confuser.
+     * */
     val confuser = ScriptConfuser()
+    /**
+     * The script loader.
+     * */
     val scriptLoader = ScriptLoader(confuser, conf)
 }
 
@@ -447,7 +490,7 @@ data class InteractSettings(
      * */
     var pageLoadTimeout: Duration = Duration.ofMinutes(3),
     /**
-     * Whether to bring the webpage to the front.
+     * Whether to bring the page to the front.
      * */
     var bringToFront: Boolean = false,
     /**
@@ -460,43 +503,137 @@ data class InteractSettings(
      * */
     var initScrollPositions: String = "0.3,0.75,0.4,0.5"
 ) {
-    @JsonIgnore
-    var delayPolicy: (String) -> Long = { type ->
-        when (type) {
-            "gap" -> 500L + Random.nextInt(500)
-            "click" -> 500L + Random.nextInt(1000)
-            "type" -> 50L + Random.nextInt(500)
-            "mouseWheel" -> 800L + Random.nextInt(500)
-            "dragAndDrop" -> 800L + Random.nextInt(500)
-            "waitForNavigation" -> 500L
-            "waitForSelector" -> 500L
-            else -> 100L + Random.nextInt(500)
-        }
-    }
-    
-    @Deprecated("Use conf[BROWSER_INTERACT_SETTINGS]")
-    constructor(conf: ImmutableConfig) : this(
-        scrollCount = conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
-        scrollInterval = conf.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500)),
-        scriptTimeout = conf.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofMinutes(1)),
-        pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
+    /**
+     * The minimum delay time in milliseconds.
+     * */
+    var minDelayMillis = 100
+    /**
+     * The minimum delay time in milliseconds.
+     * */
+    var maxDelayMillis = 2000
+    /**
+     * The delay policy for each action.
+     * The delay policy is a map from action to a range of delay time in milliseconds.
+     * */
+    var delayPolicy = mutableMapOf(
+        "gap" to 200..700,
+        "click" to 500..1500,
+        "delete" to 30..80,
+        "keyUpDown" to 50..150,
+        "press" to 100..400,
+        "type" to 50..550,
+        "mouseWheel" to 800..1300,
+        "dragAndDrop" to 800..1300,
+        "waitForNavigation" to 500..1000,
+        "waitForSelector" to 500..1000,
+        "waitUntil" to 500..1000,
+        "default" to 100..600,
+        "" to 100..600
+    )
+    /**
+     * The minimum delay time in milliseconds.
+     * */
+    var minTimeout = Duration.ofSeconds(1)
+    /**
+     * The minimum delay time in milliseconds.
+     * */
+    var maxTimeout = Duration.ofMinutes(3)
+    /**
+     * Timeout policy for each action in seconds.
+     * */
+    var timeoutPolicy = mutableMapOf(
+        "pageLoad" to pageLoadTimeout,
+        "script" to scriptTimeout,
+        "waitForNavigation" to Duration.ofSeconds(60),
+        "waitForSelector" to Duration.ofSeconds(60),
+        "waitUntil" to Duration.ofSeconds(60),
+        "default" to Duration.ofSeconds(60),
+        "" to Duration.ofSeconds(60)
     )
 
     /**
+     * The delay policy for each action.
+     * The delay policy is a map from action to a range of delay time in milliseconds.
+     *
+     * The map should contain the following keys:
+     * * gap
+     * * click
+     * * delete
+     * * keyUpDown
+     * * press
+     * * type
+     * * mouseWheel
+     * * dragAndDrop
+     * * waitForNavigation
+     * * waitForSelector
+     * * waitUntil
+     * * default
+     * * ""(empty key)
+     *
+     * @return a map from action to a range of delay time in milliseconds.
+     * */
+    fun generateRestrictedDelayPolicy(): Map<String, IntRange> {
+        val fallback = (minDelayMillis..maxDelayMillis)
+        
+        delayPolicy.forEach { (action, delay) ->
+            if (delay.first < minDelayMillis) {
+                delayPolicy[action] = minDelayMillis..delay.last.coerceAtLeast(minDelayMillis)
+            } else if (delay.last > maxDelayMillis) {
+                delayPolicy[action] = delay.first.coerceAtMost(maxDelayMillis)..maxDelayMillis
+            }
+        }
+        
+        delayPolicy["default"] = delayPolicy["default"] ?: fallback
+        delayPolicy[""] = delayPolicy["default"] ?: fallback
+        
+        return delayPolicy
+    }
+    
+    /**
+     * Timeout policy for each action.
+     *
+     * The map should contain the following keys:
+     * * waitForNavigation
+     * * waitForSelector
+     * * waitUntil
+     * * default
+     * * ""(empty key)
+     *
+     * @return a map from action to a range of delay time in milliseconds.
+     * */
+    fun generateRestrictedTimeoutPolicy(): Map<String, Duration> {
+        val fallback = Duration.ofSeconds(60)
+        
+        timeoutPolicy.forEach { (action, timeout) ->
+            if (timeout < minTimeout) {
+                timeoutPolicy[action] = minTimeout
+            } else if (timeout > maxTimeout) {
+                timeoutPolicy[action] = maxTimeout
+            }
+        }
+        
+        timeoutPolicy["default"] = timeoutPolicy["default"] ?: fallback
+        timeoutPolicy[""] = timeoutPolicy["default"] ?: fallback
+        
+        return timeoutPolicy
+    }
+    
+    /**
      * TODO: just use an InteractSettings object, instead of separate properties
      * */
-    fun overrideSystemProperties() {
-        Systems.setProperty(BROWSER_INTERACT_SETTINGS,
-            pulsarObjectMapper().writeValueAsString(this))
-
+    fun overrideSystemProperties(): InteractSettings {
+        Systems.setProperty(BROWSER_INTERACT_SETTINGS, toJson())
+        
         Systems.setProperty(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         Systems.setProperty(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         Systems.setProperty(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
         Systems.setProperty(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+        
+        return this
     }
     
-    fun overrideConfiguration(conf: MutableConfig) {
-        conf[BROWSER_INTERACT_SETTINGS] = pulsarObjectMapper().writeValueAsString(this)
+    fun overrideConfiguration(conf: MutableConfig): InteractSettings {
+        conf[BROWSER_INTERACT_SETTINGS] = toJson()
         /**
          * TODO: just use an InteractSettings object, instead of separate properties
          * */
@@ -504,18 +641,21 @@ data class InteractSettings(
         conf.setDuration(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         conf.setDuration(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
         conf.setDuration(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
-    }
-    
-    fun noInitScroll(): InteractSettings {
-        initScrollPositions = ""
+        
         return this
     }
-
+    /**
+     * Do not scroll the page by default.
+     * */
     fun noScroll(): InteractSettings {
+        initScrollPositions = ""
         scrollCount = 0
         return this
     }
 
+    /**
+     * Build the initial scroll positions.
+     * */
     fun buildInitScrollPositions(): List<Double> {
         if (initScrollPositions.isBlank()) {
             return listOf()
@@ -524,6 +664,9 @@ data class InteractSettings(
         return initScrollPositions.split(",").mapNotNull { it.trim().toDoubleOrNull() }
     }
 
+    /**
+     * Build the scroll positions.
+     * */
     fun buildScrollPositions(): List<Double> {
         val positions = buildInitScrollPositions().toMutableList()
 
@@ -542,30 +685,35 @@ data class InteractSettings(
         return positions
     }
     
+    /**
+     * Convert the object to a json string.
+     *
+     * @return a json string
+     * */
     @Throws(JacksonException::class)
     fun toJson(): String {
         return pulsarObjectMapper().writeValueAsString(this)
     }
-    
+
     companion object {
         private val OBJECT_CACHE = ConcurrentHashMap<String, InteractSettings>()
         
         /**
          * Default settings for Web page interaction behavior.
          * */
-        val DEFAULT = InteractSettings()
+        val DEFAULT get() = InteractSettings()
 
         /**
          * Web page interaction behavior settings under good network conditions, in which case we perform
          * each action faster.
          * */
-        val GOOD_NET_SETTINGS = InteractSettings()
+        val GOOD_NET_SETTINGS get() = InteractSettings()
 
         /**
          * Web page interaction behavior settings under worse network conditions, in which case we perform
          * each action more slowly.
          * */
-        val WORSE_NET_SETTINGS = InteractSettings(
+        val WORSE_NET_SETTINGS get() = InteractSettings(
             scrollCount = 10,
             scrollInterval = Duration.ofSeconds(1),
             scriptTimeout = Duration.ofMinutes(2),
@@ -576,13 +724,19 @@ data class InteractSettings(
          * Web page interaction behavior settings under worst network conditions, in which case we perform
          * each action very slowly.
          * */
-        val WORST_NET_SETTINGS = InteractSettings(
+        val WORST_NET_SETTINGS get() = InteractSettings(
             scrollCount = 15,
             scrollInterval = Duration.ofSeconds(3),
             scriptTimeout = Duration.ofMinutes(3),
             Duration.ofMinutes(4),
         )
         
+        /**
+         * Parse the json string to an InteractSettings object.
+         *
+         * @param json the json string
+         * @return an InteractSettings object
+         * */
         @Throws(JacksonException::class)
         fun fromJson(json: String): InteractSettings {
             return OBJECT_CACHE.computeIfAbsent(json) {
@@ -590,10 +744,23 @@ data class InteractSettings(
             }
         }
         
+        /**
+         * Parse the json string to an InteractSettings object.
+         *
+         * @param json the json string
+         * @param defaultValue the default value
+         * @return an InteractSettings object
+         * */
         fun fromJson(json: String?, defaultValue: InteractSettings): InteractSettings {
             return fromJsonOrNull(json) ?: defaultValue
         }
         
+        /**
+         * Parse the json string to an InteractSettings object.
+         *
+         * @param json the json string
+         * @return an InteractSettings object, or null if the json string is null, or the json string is invalid
+         * */
         fun fromJsonOrNull(json: String?): InteractSettings? = json?.runCatching { fromJson(json) }?.getOrNull()
     }
 }

@@ -34,11 +34,7 @@ class PrivacyContextManagerTests {
     
     @BeforeTest
     fun setup() {
-        System.setProperty(
-            CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS_KEY,
-            SequentialPrivacyAgentGenerator::class.java.name
-        )
-        BrowserSettings.privacy(6).maxTabs(10)
+        BrowserSettings.privacy(6).maxTabs(10).withSequentialBrowsers(15)
     }
     
     @Test
@@ -100,6 +96,7 @@ class PrivacyContextManagerTests {
             val userAgent = userAgents.getRandomUserAgent()
             val fingerprint = Fingerprint(BrowserType.PULSAR_CHROME, proxyServer, userAgent = userAgent)
             val pc = privacyManager.computeNextContext(fingerprint)
+            
             assertTrue { pc.isActive }
             privacyManager.close(pc)
             assertTrue { !pc.isActive }

@@ -8,6 +8,7 @@ import ai.platon.pulsar.dom.features.defined.HEIGHT
 import ai.platon.pulsar.dom.features.defined.WIDTH
 import ai.platon.pulsar.dom.nodes.node.ext.canonicalName
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
+import ai.platon.pulsar.dom.nodes.node.ext.intValue
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

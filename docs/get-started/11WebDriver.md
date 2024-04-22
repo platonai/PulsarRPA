@@ -1,19 +1,21 @@
 WebDriver
 =
 
-[WebDriver](../../../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebDriver.kt) 定义了一个简洁的界面来访问网页并与之交互，所有的动作和行为都经过优化，尽可能地模仿真人，比如滚动、点击、键入文本、拖放等。
+[Prev](10RPA.md) | [Home](1home.md) | [Next](12massive-crawling.md)
 
-该接口中的方法主要分为三类：
+[WebDriver](/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebDriver.kt) provides a concise interface for accessing and interacting with web pages, with all actions and behaviors optimized to mimic real humans as closely as possible, such as scrolling, clicking, typing text, dragging and dropping, etc.
 
-1. 对浏览器本身的控制
-2. 选择元素，提取文本内容和属性
-3. 与网页互动
+The methods in this interface are mainly divided into three categories:
 
-最主要的方法有：
+1. Control over the browser itself.
+2. Selecting elements, extracting text content, and attributes.
+3. Interacting with web pages.
 
-- .navigateTo(): 加载新网页。
-- .scrollDown(): 在网页上向下滚动以完全加载页面。大多数现代网页支持使用 ajax 技术的延迟加载，即网页内容只有在滚动到视图中时才开始加载。
-- .pageSource(): 获得网页源代码。
+The main methods include:
+
+- `.navigateTo()`: Load a new web page.
+- `.scrollDown()`: Scroll down on the web page to fully load the page. Most modern web pages support lazy loading using AJAX technology, meaning that web page content only begins to load when it scrolls into view.
+- `.pageSource()`: Obtain the web page source code.
 
 ```kotlin
 class WebDriverDemo(private val session: PulsarSession) {
@@ -31,7 +33,7 @@ class WebDriverDemo(private val session: PulsarSession) {
     fun options(args: String): LoadOptions {
         val options = session.options(args)
 
-        val be = options.event.browseEvent
+        val be = options.event.browseEventHandlers
 
         be.onDocumentActuallyReady.addLast { page, driver ->
             fieldSelectors.values.forEach { interact1(it, driver) }
@@ -110,8 +112,8 @@ class WebDriverDemo(private val session: PulsarSession) {
 }
 ```
 
-完整代码：[kotlin](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_8_WebDriver.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_8_WebDriver.kt)。
+Complete code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_8_WebDriver.kt), [Chinese mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_8_WebDriver.kt).
 
 ------
 
-[Prev](10RPA.md) [Home](1home.md) [Next](12massive-crawling.md)
+[Prev](10RPA.md) | [Home](1home.md) | [Next](12massive-crawling.md)

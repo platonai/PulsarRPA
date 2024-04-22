@@ -186,19 +186,21 @@ public class SParser {
     }
 
     /**
-     * <p>getInt.</p>
+     * Get an integer value, if the configured value is invalid or not set, return the default value.
      *
-     * @param defaultValue a int.
-     * @return a int.
-     */
+     * @throws NumberFormatException when the value is invalid
+     * */
     public int getInt(int defaultValue) {
         String valueString = getTrimmed();
-        if (valueString == null)
+        if (valueString == null) {
             return defaultValue;
+        }
+
         String hexString = getHexDigits(valueString);
         if (hexString != null) {
             return Integer.parseInt(hexString, 16);
         }
+
         return Integer.parseInt(valueString);
     }
 

@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.collect.HyperlinkCollector
 import ai.platon.pulsar.common.collect.PeriodicalLocalFileHyperlinkCollector
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.sleep
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import kotlin.test.*

@@ -199,15 +199,27 @@ public interface CapabilityTypes {
     // Privacy context
 
     /**
-     * Privacy context
+     * The number of active privacy contexts.
      */
     String PRIVACY_CONTEXT_NUMBER = "privacy.context.number";
     /**
+     * The minimal number of sequential privacy agents, the active privacy contexts is chosen from them.
+     * */
+    String MIN_SEQUENTIAL_PRIVACY_AGENT_NUMBER = "min.sequential.privacy.agent.number";
+    /**
+     * The maximum number of sequential privacy agents, the active privacy contexts is chosen from them.
+     * */
+    String MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER = "max.sequential.privacy.agent.number";
+    /**
      * The class name of privacy agent generator
      * */
-    String PRIVACY_AGENT_GENERATOR_CLASS_KEY = "privacy.agent.generator.class";
+    String PRIVACY_AGENT_GENERATOR_CLASS = "privacy.agent.generator.class";
+    /**
+     * The class name of privacy agent generator
+     * @deprecated use {@link #PRIVACY_AGENT_GENERATOR_CLASS} instead
+     * */
+    String PRIVACY_AGENT_GENERATOR_CLASS_KEY = PRIVACY_AGENT_GENERATOR_CLASS;
     String PRIVACY_MINOR_WARNING_FACTOR = "privacy.minor.warning.factor";
-
 
     String PRIVACY_CONTEXT_IDLE_TIMEOUT = "privacy.idle.timeout";
 

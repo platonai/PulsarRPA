@@ -27,15 +27,14 @@ class H2Db(val conf: H2DbConfig = H2DbConfig()) {
 
     /**
      * Open a database with a random named connection in admin mode.
-     * The default user name and password is used.
+     * The default username and password is used.
      *
-     * @param name the database name
      * @return the connection
      */
     fun getRandomConnection() = getConnection(generateTempDbName())
 
     /**
-     * Open a database connection in admin mode. The default user name and
+     * Open a database connection in admin mode. The default username and
      * password is used.
      *
      * @param name the database name
@@ -47,7 +46,7 @@ class H2Db(val conf: H2DbConfig = H2DbConfig()) {
      * Open a database connection.
      *
      * @param name the database name
-     * @param user the user name to use
+     * @param user the username to use
      * @param password the password to use
      * @return the connection
      */
@@ -55,7 +54,7 @@ class H2Db(val conf: H2DbConfig = H2DbConfig()) {
             getConnection0(buildURL(name, false), user, password)
 
     /**
-     * Get the password to use to login for the given user password. The file
+     * Get the password to use to log in for the given user password. The file
      * password is added if required.
      *
      * @param userPassword the password of this user
@@ -88,7 +87,7 @@ class H2Db(val conf: H2DbConfig = H2DbConfig()) {
 
     /**
      * Get the database URL for the given database name using the current
-     * confuration options.
+     * configuration options.
      *
      * @param name the database name
      * @param admin true if the current user is an admin
@@ -195,7 +194,7 @@ class H2Db(val conf: H2DbConfig = H2DbConfig()) {
         DeleteDbFiles.execute(dir, name, true)
          val list = FileLister.getDatabaseFiles(conf.baseDir.toString(), name, true);
          if (list.isNotEmpty()) {
-            println("Not deleted: $list")
+             System.err.println("Not deleted: $list")
          }
     }
 

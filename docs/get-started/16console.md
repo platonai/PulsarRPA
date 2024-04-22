@@ -1,41 +1,43 @@
-控制台
+Console
 =
 
-[Exotic](https://github.com/platonai/exotic) ，[国内镜像](https://gitee.com/platonai_galaxyeye/exotic)，代表奇异星（Exotic Star），是 PulsarRPA 的专业版和控制台，它包含：
+[Prev](15REST.md) [Home](1home.md) [Next](17top-practice.md)
 
-- 一个**命令行工具**，可以从命令行直接执行网页数据采集任务，而不需要打开 IDE 写代码
-- 一个 **Web 控制台**，方便我们管理 PulsarRPA 服务，并编写 SQL 来访问 Web，提取数据
-- 一个升级版的 PulsarRPA 服务器，我们可以在客户端编写 SQL 来访问 Web，提取数据
-- 一个基于 自监督机器学习 自动进行信息提取的小程序，AI 算法识别详情页的所有字段，95% 以上字段精确度 99% 以上
-- 一个基于 自监督机器学习 自动学习并输出所有采集规则的小程序
-- 一组顶尖站点的数据采集示例
+[PulsarRPAPro](https://github.com/platonai/PulsarRPAPro), [Chinese mirror](https://gitee.com/platonai_galaxyeye/PulsarRPAPro), includes:
 
-**Exotic 可以从网站学习，自动生成所有提取规则，将 Web 当作数据库进行查询，完整精确地交付规模化的 Web 数据：**
+- A **command-line tool** that can directly execute web data collection tasks from the command line without the need to open an IDE to write code.
+- A **Web console** that facilitates the management of PulsarRPA services and writing SQL to access the Web and extract data.
+- An upgraded PulsarRPA server where we can write SQL on the client side to access the Web and extract data.
+- A mini-program based on self-supervised machine learning for automatic information extraction, where the AI algorithm identifies all fields on the detail page with over 95% of fields having an accuracy of over 99%.
+- A mini-program based on self-supervised machine learning that automatically learns and outputs all collection rules.
+- A set of data collection examples from top-tier sites.
 
-1. 步骤1：使用高级人工智能自动提取网页中的每个字段，并生成提取 SQL
-2. 步骤2：测试 SQL，并在必要时改进它们以匹配前端业务需求
-3. 步骤3：在 Web 控制台中创建调度规则，以连续运行 SQL 并下载所有 Web 数据，从而推动您的业务向前发展
+**PulsarRPAPro can learn from websites, automatically generate all extraction rules, treat the Web as a database for querying, and deliver scalable Web data in a complete and precise manner:**
 
-## 运行 Exotic 服务器并打开控制台
+1. Step 1: Use advanced artificial intelligence to automatically extract each field from web pages and generate extraction SQL.
+2. Step 2: Test SQL and improve them as necessary to match front-end business requirements.
+3. Step 3: Create scheduling rules in the Web console to continuously run SQL and download all Web data, thus driving your business forward.
 
-你可以选择直接下载可执行 jar 包或者从源代码构建 Exotic。
+## Running PulsarRPAPro Server and Opening the Console
 
-下载最新的可执行 jar 包：
+You can choose to directly download the executable jar package or build PulsarRPAPro from source code.
+
+Download the latest executable jar package:
 
 ```bash
 wget http://static.platonic.fun/repo/ai/platon/exotic/exotic-standalone.jar
 ```
 
-从源代码构建：
+Build from source code:
 
 ```bash
-git clone https://github.com/platonai/exotic.git
-cd exotic
+git clone https://github.com/platonai/PulsarRPAPro.git
+cd PulsarRPAPro
 mvn clean && mvn
 cd exotic-standalone/target/
 ```
 
-运行服务器并打开 Web 控制台：
+Run the server and open the Web console:
 
 ```bash
 # Linux:
@@ -45,25 +47,25 @@ java -jar exotic-standalone*.jar serve
 java -jar exotic-standalone[-the-actual-version].jar serve
 ```
 
-注意:如果您在 Windows 上使用 CMD 或 PowerShell，您可能需要删除通配符 * 并使用 jar 包的全名。
+Note: If you are using CMD or PowerShell on Windows, you may need to remove the wildcard * and use the full name of the jar package.
 
-如果 Exotic 在 GUI 模式下运行，Web 控制台应该在几秒钟内打开，或者您可以手动打开它：
+If PulsarRPAPro is running in GUI mode, the Web console should open within a few seconds, or you can manually open it:
 
 http://localhost:2718/exotic/crawl/
 
-## 执行自动提取
+## Performing Auto Extraction
 
-我们可以使用 harvest 命令，使用无监督的机器学习从一组项目页面中学习：
+We can use the harvest command to learn from a set of item pages using unsupervised machine learning:
 
 ```bash
-java -jar exotic-standalone*.jar harvest https://shopee.sg/Computers-Peripherals-cat.11013247 -diagnose -refresh
+java -jar exotic-standalone*.jar harvest https://www.hua.com/flower/  -diagnose -refresh
 ```
 
-## 使用生成的 SQL 采集页面
+## Collecting Pages Using Generated SQL
 
-Harvest 命令使用无监督的机器学习自动提取字段，并为所有可能的字段和提取 SQL 生成最佳 CSS 选择器。我们可以使用 sql 命令来执行 SQL。
+The Harvest command uses unsupervised machine learning to automatically extract fields and generate the best CSS selectors for all possible fields and extraction SQL. We can use the sql command to execute SQL.
 
-请注意，本演示中的网站使用了 **CSS 混淆**技术，因此 CSS 选择器**很难阅读并且经常改变**。除了基于机器学习的解决方案之外，**没有其他有效的技术**来解决这个问题。
+Please note that the website in this demonstration uses **CSS obfuscation** technology, so the CSS selectors are **difficult to read and often change**. Apart from machine learning-based solutions, **no other effective technology** can solve this problem.
 
 ```bash
 # Note: remove the wildcard `*` and use the full name of the jar on Windows
@@ -91,26 +93,25 @@ select
     dom_first_text(dom, 'div.HLQqkk div.flex-column.imEX5V div.vdf0Mi button.btn.btn-solid-primary.btn--l.GfiOwy') as T1C21,
     dom_first_text(dom, 'div.-Esc+w.card.product-briefing div.HLQqkk div.flex-column.imEX5V span.zevbuo') as T1C22,
     dom_first_text(dom, 'div.-Esc+w.card.product-briefing div.HLQqkk div.flex-column.imEX5V span') as T1C23
-from load_and_select('https://shopee.sg/(Local-Stock)-(GEBIZ-ACRA-REG)-PLA-3D-Printer-Filament-Standard-Colours-Series-1.75mm-1kg-i.182524985.8326053759?sp_atk=3afa9679-22cb-4c30-a1db-9d271e15b7a2&xptdk=3afa9679-22cb-4c30-a1db-9d271e15b7a2', 'div.page-product');
-"
+from load_and_select('https://shopee.sg/(Local-Stock)-(GEBIZ-ACRA-REG)-PLA-3D-Printer-Filament-Standard-Colours-Series-1.75mm-1kg-i.182524985.8326053759?sp_atk=3afa9679-22cb-4c30-a1db-9d271e15b7a2&xptdk=3afa9679-22cb-4c30-a1db-9d271e15b7a2',  'div.page-product');
 ```
 
-## 探索 Exotic 的其他能力
+## Exploring More Capabilities of PulsarRPAPro
 
-直接运行可执行的 jar 包来获得帮助，以探索所提供的更多功能：
+Run the executable jar package directly for help to explore more provided features:
 
 ```bash
 # Note: remove the wildcard `*` and use the full name of the jar on Windows
 java -jar exotic-standalone*.jar
 ```
 
-该命令将打印帮助信息：
+The command will print help information:
 
-```
+```text
 Usage: java -jar exotic-standalone*.jar [options] harvest <url> [args...]
            (to harvest webpages automatically using our advanced AI)
    or  java -jar exotic-standalone*.jar [options] scrape <url> [args...]
-           (to scrape a webpage or a batch of webpages)
+           (to scrape a webpage or a batch ofwebpages)
    or  java -jar exotic-standalone*.jar [options] sql <sql>
            (to execute a X-SQL)
    or  java -jar exotic-standalone*.jar [options] serve
@@ -122,32 +123,32 @@ where options include:
     -headless       to run browser in headless mode
     -? -h -help
                     print this help message to the error stream
-    --help [topic [-v|-verbose]]
+    --help [topic [-v|-verbose])]
                     print this help message to the output stream, or print help message for topic
                     the topic can be one of: [harvest|scrape|SQL], case insensitive
 ```
 
-以及最典型的示例：
+And the most typical examples:
 
 ```
 Examples:
 
 # harvest automatically with diagnosis
-    java -jar exotic-standalone*.jar harvest https://www.amazon.com/Best-Sellers-Automotive/zgbs/automotive/ -diagnose
+    java -jar exotic-standalone*.jar harvest https://www.amazon.com/Best-Sellers-Automotive/zgbs/automotive/  -diagnose
 
 # arrange links
-    java -jar exotic-standalone*.jar arrange https://www.amazon.com/Best-Sellers-Automotive/zgbs/automotive/
+    java -jar exotic-standalone*.jar arrange https://www.amazon.com/Best-Sellers-Automotive/zgbs/automotive/ 
 
 # harvest automatically with page component specified
-    java -jar exotic-standalone*.jar harvest https://www.amazon.com/Best-Sellers-Automotive/zgbs/automotive/ -outLink a[href~=/dp/] -component "#centerCol" -component "#buybox"
+    java -jar exotic-standalone*.jar harvest https://www.amazon.com/Best-Sellers-Automotive/zgbs/automotive/  -outLink a[href~=/dp/] -component "#centerCol" -component "#buybox"
 
 # scrape specified fields in a single page
-    java -jar exotic-standalone*.jar scrape https://www.amazon.com/dp/B0C1H26C46 -field "#productTitle" -field "#acrPopover" -field "#acrCustomerReviewText" -field "#askATFLink"
+    java -jar exotic-standalone*.jar scrape https://www.amazon.com/dp/B0C1H26C46  -field "#productTitle" -field "#acrPopover" -field "#acrCustomerReviewText" -field "#askATFLink"
 
 # scrape specified fields from out pages
-    java -jar exotic-standalone*.jar scrape https://www.amazon.com/Best-Sellers-Automotive/zgbs/automotive/ -outLink a[href~=/dp/] -field "#productTitle" -field "#acrPopover" -field "#acrCustomerReviewText" -field "#askATFLink"
+    java -jar exotic-standalone*.jar scrape https://www.amazon.com/Best-Sellers-Automotive/zgbs/automotive/  -outLink a[href~=/dp/] -field "#productTitle" -field "#acrPopover" -field "#acrCustomerReviewText" -field "#askATFLink"
 ```
 
 ------
 
-[Prev](15REST.md) [Home](1home.md) [Next](17top-practice.md)
+[Prev](15REST.md) | [Home](1home.md) | [Next](17top-practice.md)

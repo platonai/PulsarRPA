@@ -3,7 +3,6 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import kotlinx.coroutines.delay
 import kotlin.test.Test
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 private enum class BarEvents {
