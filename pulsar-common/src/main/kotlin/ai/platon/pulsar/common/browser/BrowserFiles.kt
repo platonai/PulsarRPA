@@ -68,9 +68,9 @@ object BrowserFiles {
     @Throws(IOException::class)
     @Synchronized
     fun computeNextSequentialContextDir(
-        group: String = "default", fingerprint: Fingerprint = Fingerprint.DEFAULT, maxContexts: Int = 10): Path {
+        group: String = "default", fingerprint: Fingerprint = Fingerprint.DEFAULT, maxAgents: Int = 10): Path {
         return runWithFileLock { channel ->
-            computeNextSequentialContextDir0(group, fingerprint, maxContexts, channel = channel)
+            computeNextSequentialContextDir0(group, fingerprint, maxAgents, channel = channel)
         }
     }
     
@@ -112,6 +112,11 @@ object BrowserFiles {
         require(channel.isOpen) { "The lock file channel is closed" }
         
         val dirToDelete = userDataDir
+        
+        if (!Files.exists(dirToDelete)) {
+            // The directory has been deleted by other threads
+            return
+        }
         
         val cleanedUp = dirToDelete in cleanedUserDataDirs
         if (cleanedUp) {

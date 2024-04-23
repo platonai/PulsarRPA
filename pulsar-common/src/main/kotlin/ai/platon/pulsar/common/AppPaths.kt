@@ -88,7 +88,7 @@ object AppPaths {
     @RequiredDirectory
     val CONTEXT_BASE_DIR = PROC_TMP_DIR.resolve( "context")
     @RequiredDirectory
-    val CONTEXT_GROUP_BASE_DIR = CONTEXT_BASE_DIR.resolve( "group")
+    val CONTEXT_GROUP_BASE_DIR = CONTEXT_BASE_DIR.resolve( "groups")
     @RequiredDirectory
     val CONTEXT_DEFAULT_DIR = CONTEXT_BASE_DIR.resolve( "default")
     @RequiredDirectory
