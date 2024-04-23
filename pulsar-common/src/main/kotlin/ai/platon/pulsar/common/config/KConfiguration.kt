@@ -34,7 +34,7 @@ class KConfiguration(
 
     private var resources = ArrayList<Resource>()
     private var properties: Properties? = null
-    private val XML_INPUT_FACTORY = com.ctc.wstx.stax.WstxInputFactory()
+    private val wstxInputFactory = com.ctc.wstx.stax.WstxInputFactory()
 
     val loadedResources get() = resources.map { it.name }
 
@@ -263,7 +263,7 @@ class KConfiguration(
             else -> null
         } as XMLStreamReader2?
     }
-
+    
     @Throws(IOException::class, XMLStreamException::class)
     private fun parse(url: URL): XMLStreamReader {
         val connection = url.openConnection()
@@ -274,9 +274,11 @@ class KConfiguration(
     @Throws(IOException::class, XMLStreamException::class)
     private fun parse(input: InputStream, systemId: String?): XMLStreamReader {
         val id = SystemId.construct(systemId)
-        val readerConfig = XML_INPUT_FACTORY.createPrivateConfig()
+
+        val readerConfig = wstxInputFactory.createPrivateConfig()
+
         val bootstrapper = StreamBootstrapper.getInstance(null, id, input)
-        return XML_INPUT_FACTORY.createSR(readerConfig, id, bootstrapper, false, true)
+        return wstxInputFactory.createSR(readerConfig, systemId, bootstrapper, false, true)
     }
 
     internal class Resource(val resource: Any, val name: String = resource.toString()) {
