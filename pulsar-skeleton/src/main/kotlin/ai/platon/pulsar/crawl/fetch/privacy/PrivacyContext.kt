@@ -3,7 +3,7 @@ package ai.platon.pulsar.crawl.fetch.privacy
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.browser.BrowserFiles.computeNextSequentialContextDir
-import ai.platon.pulsar.common.browser.BrowserFiles.computeRandomContextDir
+import ai.platon.pulsar.common.browser.BrowserFiles.computeRandomTmpContextDir
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -52,7 +52,7 @@ abstract class PrivacyContext(
         // A random context directory, if you need a random temporary context, use this one
         val NEXT_SEQUENTIAL_CONTEXT_DIR get() = computeNextSequentialContextDir()
         // A random context directory, if you need a random temporary context, use this one
-        val RANDOM_CONTEXT_DIR get() = computeRandomContextDir()
+        val RANDOM_CONTEXT_DIR get() = computeRandomTmpContextDir()
         // The prototype context directory, all privacy contexts copies browser data from the prototype.
         // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
         val PROTOTYPE_DATA_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE

@@ -260,7 +260,7 @@ open class SequentialPrivacyAgentGenerator: PrivacyAgentGenerator {
 open class RandomPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
-        PrivacyAgent(BrowserFiles.computeRandomContextDir(), fingerprint)
+        PrivacyAgent(BrowserFiles.computeRandomTmpContextDir(), fingerprint)
 }
 
 class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {
