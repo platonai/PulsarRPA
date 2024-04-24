@@ -94,7 +94,7 @@ object AppPaths {
     @RequiredDirectory
     val CONTEXT_TMP_DIR = CONTEXT_BASE_DIR.resolve( "tmp")
     @RequiredFile
-    val BROWSER_TMP_DIR_LOCK = CONTEXT_BASE_DIR.resolve( "browser.lock")
+    val BROWSER_TMP_DIR_LOCK = CONTEXT_TMP_DIR.resolve( "browser.tmp.lock")
 
     /**
      * Proxy directory
