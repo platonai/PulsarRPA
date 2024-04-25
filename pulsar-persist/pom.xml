@@ -127,103 +127,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <!-- shaded -->
         <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongo-java-driver</artifactId>
-            <version>${mongo.driver.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.gora</groupId>
-            <artifactId>gora-mongodb</artifactId>
-            <version>${gora.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.gora</groupId>
-            <artifactId>gora-core</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <!-- Conflict with tomcat: use javax.servlet:javax.servlet-api:3.1.0 instead -->
-                <exclusion>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>servlet-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-            <version>${avro.version}</version>
-            <exclusions>
-                <!-- tika-parsers-1.25 requires commons-compress-1.20 -->
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-compress</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <!-- Required by gora -->
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-            <version>${hadoop.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <!-- Required by hadoop -->
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.gora</groupId>
-            <artifactId>gora-compiler</artifactId>
-            <version>${gora.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>gora-shaded-mongodb</artifactId>
+            <version>${gora-shaded-mongodb.version}</version>
         </dependency>
 
         <!-- Web graph computing -->
@@ -275,7 +182,6 @@
             <version>${jaxb-api.version}</version>
         </dependency>
 
-
         <!-- Test -->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -285,31 +191,7 @@
     </dependencies>
 
     <properties>
-        <!--  Gora Serialization  -->
-        <!--
-            Gora 0.8 supports:
-            Apache Avro 1.8.1
-            Apache Hadoop 2.5.2
-            Apache HBase 1.2.3
-            Apache Spark 1.4.1
-
-            Gora 0.9 supports:
-            Apache Avro 1.8.2
-            Apache Hadoop 2.5.2
-            Apache HBase 2.1.1
-            Apache Spark 2.2.1
-
-            See more at: http://gora.apache.org/
-          -->
-        <gora.version>0.9</gora.version>
-        <!-- Required by gora-0.8 -->
-        <avro.version>1.8.2</avro.version>
-        <!-- gora-0.9 use 2.5.2 by default, but 2.7.2 is a correct version -->
-        <hadoop.version>2.7.2</hadoop.version>
-
-        <!-- gora-0.9 use mongo-java-driver:3.5.0 by default -->
-        <!--  <mongo.driver.version>3.5.0</mongo.driver.version>-->
-        <mongo.driver.version>3.12.8</mongo.driver.version>
+        <gora-shaded-mongodb.version>0.9-SNAPSHOT</gora-shaded-mongodb.version>
 
         <jaxb-api.version>2.3.1</jaxb-api.version>
     </properties>

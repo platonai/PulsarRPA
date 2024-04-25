@@ -1,8 +1,6 @@
 package ai.platon.pulsar.persist.gora
 
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.alwaysTrue
-import ai.platon.pulsar.common.measure.ByteUnit
 import org.apache.gora.compiler.GoraCompiler
 import org.apache.gora.compiler.utils.LicenseHeaders
 import java.nio.file.Files
