@@ -102,7 +102,7 @@
     </dependencies>
 
     <properties>
-        <gora-shaded-mongodb.version>0.9-SNAPSHOT</gora-shaded-mongodb.version>
+        <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
 
         <jaxb-api.version>2.3.1</jaxb-api.version>
     </properties>
