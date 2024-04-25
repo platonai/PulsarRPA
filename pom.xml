@@ -564,18 +564,7 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-persist</artifactId>
-                <classifier>shaded</classifier>
                 <version>${project.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.mongodb</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mongodb</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
