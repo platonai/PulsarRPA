@@ -23,7 +23,7 @@
     <packaging>pom</packaging>
     <version>1.12.6-SNAPSHOT</version>
 
-    <name>Pulsar</name>
+    <name>Pulsar RPA</name>
     <description>Scrape Web data at scale completely and accurately with high performance, distributed AI-RPA.</description>
 
     <licenses>
