@@ -81,34 +81,16 @@
             Woodstox is required by KConfiguration to parse xml files.
             Woodstox is a high-performance XML processor that implements Stax (JSR-173), SAX2 and Stax2 APIs
          -->
-        <!--
-        There is a bug in Kotlin with Intellij Idea to use org.codehaus.woodstox:stax2-api:4.2.2
-        when pulsar is a submodule inside PulsarRPAUltimate.
-
-        It's OK to use the following dependency if pulsar is not a submodule inside PulsarRPAUltimate.
-
-        Downgrade the version.
-        -->
-
-<!--        <dependency>-->
-<!--            <groupId>org.codehaus.woodstox</groupId>-->
-<!--            <artifactId>stax2-api</artifactId>-->
-<!--            <version>${stax2-api.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.fasterxml.woodstox</groupId>-->
-<!--            <artifactId>woodstox-core</artifactId>-->
-<!--            <version>${woodstox-core.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>stax2-api</artifactId>
+            <version>${stax2-api.version}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.codehaus.woodstox/woodstox-core-asl -->
         <dependency>
             <groupId>org.codehaus.woodstox</groupId>
             <artifactId>woodstox-core-asl</artifactId>
-            <version>4.4.1</version>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>4.0.2</version>
+            <version>${woodstox-core-asl.version}</version>
         </dependency>
 
         <!-- Jackson support for kotlin -->
@@ -162,7 +144,7 @@
     </dependencies>
 
     <properties>
-        <stax2-api.version>4.2.2</stax2-api.version>
-        <woodstox-core.version>6.6.2</woodstox-core.version>
+        <stax2-api.version>4.2.1</stax2-api.version>
+        <woodstox-core-asl.version>4.4.1</woodstox-core-asl.version>
     </properties>
 </project>
