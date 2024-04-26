@@ -760,7 +760,7 @@ open class FeaturedDocument(val document: Document) {
      * @return The path of the exported document
      * */
     fun exportTo(path: Path): Path {
-        return AppFiles.saveTo(prettyHtml.toByteArray(), path, deleteIfExists = true)
+        return AppFiles.saveTo(outerHtml.toByteArray(), path, deleteIfExists = true)
     }
 
     override fun equals(other: Any?): Boolean {
