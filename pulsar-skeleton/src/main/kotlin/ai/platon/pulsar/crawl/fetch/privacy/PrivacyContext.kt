@@ -275,6 +275,9 @@ abstract class PrivacyContext(
         if (privacyAgent.isPermanent) {
             // never mark a permanent privacy context as leaked
         } else {
+            require(maximumWarnings in 1..999) {
+                "The maximum warnings should be set to a reasonable value, but not $maximumWarnings"
+            }
             privacyLeakWarnings.addAndGet(maximumWarnings)
         }
     }
