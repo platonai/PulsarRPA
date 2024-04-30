@@ -25,6 +25,10 @@
         <!-- Internal Dependencies -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
+            <artifactId>gora-shaded-mongodb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
         <!-- TODO: try to remove this dependency -->
@@ -37,11 +41,6 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>gora-shaded-mongodb</artifactId>
-            <version>${gora-shaded-mongodb.version}</version>
         </dependency>
 
         <!-- Web graph computing -->
@@ -102,9 +101,7 @@
     </dependencies>
 
     <properties>
-        <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
 
-        <jaxb-api.version>2.3.1</jaxb-api.version>
     </properties>
 
 </project>

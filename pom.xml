@@ -563,6 +563,11 @@
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
+                <artifactId>gora-shaded-mongodb</artifactId>
+                <version>${gora-shaded-mongodb.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-persist</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -889,9 +894,11 @@
 
         <autolink.version>0.10.0</autolink.version>
         <jackson.version>2.15.3</jackson.version>
+        <jaxb-api.version>2.3.1</jaxb-api.version>
         <commons-text.version>1.11.0</commons-text.version>
         <oshi.version>6.4.13</oshi.version>
 
+        <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
 
         <junit-version>5.8.2</junit-version>
         <!-- Required by spring-boot-starter-test, correct the version -->
