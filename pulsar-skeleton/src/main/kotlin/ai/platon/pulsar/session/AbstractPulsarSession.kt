@@ -449,11 +449,11 @@ abstract class AbstractPulsarSession(
     override fun export(doc: FeaturedDocument, ident: String): Path {
         val filename = AppPaths.fromUri(doc.baseURI, "", ".htm")
         val path = WEB_CACHE_DIR.resolve("export").resolve(ident).resolve(filename)
-        return AppFiles.saveTo(doc.prettyHtml, path, true)
+        return AppFiles.saveTo(doc.outerHtml, path, true)
     }
     
     override fun exportTo(doc: FeaturedDocument, path: Path): Path {
-        return AppFiles.saveTo(doc.prettyHtml.toByteArray(), path, true)
+        return AppFiles.saveTo(doc.outerHtml.toByteArray(), path, true)
     }
     
     override fun equals(other: Any?) = other === this || (other is PulsarSession && other.id == id)

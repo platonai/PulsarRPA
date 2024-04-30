@@ -73,8 +73,8 @@ abstract class PrivacyContext(
     val baseDir get() = privacyAgent.contextDir
 
     protected val numRunningTasks = AtomicInteger()
-    val minimumThroughput = conf.getFloat(PRIVACY_CONTEXT_MIN_THROUGHPUT, 0.3f)
-    val maximumWarnings = conf.getInt(PRIVACY_MAX_WARNINGS, 8)
+    val minimumThroughput = if (privacyAgent.isPermanent) 0f else conf.getFloat(PRIVACY_CONTEXT_MIN_THROUGHPUT, 0.3f)
+    val maximumWarnings = if (privacyAgent.isPermanent) 1000000 else conf.getInt(PRIVACY_MAX_WARNINGS, 8)
     val minorWarningFactor = conf.getInt(PRIVACY_MINOR_WARNING_FACTOR, 5)
     val privacyLeakWarnings = AtomicInteger()
     val privacyLeakMinorWarnings = AtomicInteger()
@@ -141,7 +141,7 @@ abstract class PrivacyContext(
     /**
      * Check whether the privacy has been leaked since there are too many warnings about privacy leakage.
      * */
-    open val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
+    open val isLeaked get() = !privacyAgent.isPermanent && privacyLeakWarnings.get() >= maximumWarnings
     /**
      * Check whether the privacy context works fine and the fetch speed is qualified.
      * */
@@ -271,7 +271,13 @@ abstract class PrivacyContext(
      * Mark the privacy context as leaked. A leaked privacy context should not serve anymore, 
      * and will be closed soon.
      * */
-    fun markLeaked() = privacyLeakWarnings.addAndGet(maximumWarnings)
+    fun markLeaked() {
+        if (privacyAgent.isPermanent) {
+            // never mark a permanent privacy context as leaked
+        } else {
+            privacyLeakWarnings.addAndGet(maximumWarnings)
+        }
+    }
 
     /**
      * Run a task in the privacy context and record the status.

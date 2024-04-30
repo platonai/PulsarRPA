@@ -545,7 +545,8 @@ class ChromeDevtoolsDriver(
         
         if (isCanceled) {
             // is it good to throw here?
-            throw WebDriverCancellationException("WebDriver is canceled #$id | $navigateUrl", this)
+            // throw WebDriverCancellationException("WebDriver is canceled #$id | $navigateUrl", this)
+            return false
         }
         
         if (action.isNotBlank()) {

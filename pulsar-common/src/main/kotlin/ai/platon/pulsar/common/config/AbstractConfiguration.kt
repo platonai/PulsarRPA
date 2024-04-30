@@ -459,7 +459,7 @@ abstract class AbstractConfiguration {
      * If no such property is specified, then `defaultValue` is
      * returned.
      *
-     * @param name         the class name.
+     * @param name         the property name of class.
      * @param defaultValue default value.
      * @return property value as a `Class`,
      * or `defaultValue`.
@@ -472,15 +472,13 @@ abstract class AbstractConfiguration {
      * Get the value of the `name` property as a `Class`
      * implementing the interface specified by `xface`.
      *
-     *
      * If no such property is specified, then `defaultValue` is
      * returned.
-     *
      *
      * An exception is thrown if the returned class does not implement the named
      * interface.
      *
-     * @param name         the class name.
+     * @param name         the property name of class.
      * @param defaultValue default value.
      * @param xface        the interface implemented by the named class.
      * @return property value as a `Class`,
