@@ -13,13 +13,13 @@ abstract class AbstractCrawlLoop(
     override val config: ImmutableConfig
 ) : CrawlLoop {
     companion object {
-        private val sequencer = AtomicInteger()
+        private val ID_SUPPLIER = AtomicInteger()
     }
 
-    override val id: Int = sequencer.incrementAndGet()
+    override val id: Int = ID_SUPPLIER.incrementAndGet()
     
     /**
-     * The fetch iterable from which all fetch tasks are taken
+     * The url feeder is used by the crawl loop to feed urls to the crawler.
      * */
     abstract override val urlFeeder: UrlFeeder
     /**

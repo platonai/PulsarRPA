@@ -20,6 +20,7 @@ open class StreamingCrawlLoop(
      * The loop name
      * */
     name: String = "StreamingCrawlLoop"
+    
 ) : AbstractCrawlLoop(name, unmodifiedConfig) {
     private val logger = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
@@ -39,7 +40,7 @@ open class StreamingCrawlLoop(
     private val context get() = PulsarContexts.create()
 
     init {
-        logger.info("Crawl loop is created | {} | @{}", display, hashCode())
+        // logger.info("Crawl loop is created | #{} | {}@{}", id, this::class.simpleName, hashCode())
     }
 
     @Synchronized
@@ -58,12 +59,11 @@ open class StreamingCrawlLoop(
     override fun stop() {
         if (running.compareAndSet(true, false)) {
             _crawler.close()
-            runBlocking {
-                crawlJob?.cancelAndJoin()
-                crawlJob = null
 
-                logger.info("Crawl loop {} is stopped", display)
-            }
+            runBlocking { crawlJob?.cancelAndJoin() }
+
+            crawlJob = null
+            logger.info("Crawl loop is stopped | #{} | {}@{}", id, this::class.simpleName, hashCode())
         }
     }
 
@@ -77,7 +77,8 @@ open class StreamingCrawlLoop(
     }
 
     private fun start0() {
-        logger.info("Registered {} link collectors | {} | @{}", urlFeeder.collectors.size, display, hashCode())
+        logger.info("Crawl loop is started with {} link collectors | #{} | {}@{}",
+            urlFeeder.collectors.size, id, this, hashCode())
 
         val urls = urlFeeder.asSequence()
         _crawler = StreamingCrawler(urls, context.createSession(), autoClose = false)

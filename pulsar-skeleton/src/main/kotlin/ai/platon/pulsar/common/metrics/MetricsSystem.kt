@@ -129,7 +129,7 @@ open class MetricsSystem(
     val graphiteServerPort = conf.getInt("graphite.server.port", 2004)
     val batchSize = conf.getInt("graphite.pickled.batch.size", 100)
 
-    private val metricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
+    private val metricRegistry = defaultMetricRegistry
 
     private val threadFactory = ThreadFactoryBuilder().setNameFormat("reporter-%d").build()
     private val executor = Executors.newSingleThreadScheduledExecutor(threadFactory)

@@ -185,7 +185,7 @@ class CoreMetrics(
             }
         }.onFailure { warnInterruptible(this, it) }
 
-        params.withLogger(logger).info(true)
+        // params.withLogger(logger).info(true)
     }
 
     override fun getParams(): Params {
