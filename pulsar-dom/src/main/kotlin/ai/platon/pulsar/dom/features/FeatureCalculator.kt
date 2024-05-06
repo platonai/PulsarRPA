@@ -7,6 +7,8 @@ import org.jsoup.nodes.Document
  * */
 interface FeatureCalculator {
     fun calculate(document: Document)
+    
+    fun dispose() {}
 }
 
 /**
