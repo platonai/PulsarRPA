@@ -74,7 +74,7 @@ abstract class PrivacyContext(
 
     protected val numRunningTasks = AtomicInteger()
     val minimumThroughput = if (privacyAgent.isPermanent) 0f else conf.getFloat(PRIVACY_CONTEXT_MIN_THROUGHPUT, 0.3f)
-    val maximumWarnings = if (privacyAgent.isPermanent) 1000000 else conf.getInt(PRIVACY_MAX_WARNINGS, 8)
+    val maximumWarnings = if (privacyAgent.isPermanent) 100000 else conf.getInt(PRIVACY_MAX_WARNINGS, 8)
     val minorWarningFactor = conf.getInt(PRIVACY_MINOR_WARNING_FACTOR, 5)
     val privacyLeakWarnings = AtomicInteger()
     val privacyLeakMinorWarnings = AtomicInteger()
@@ -275,7 +275,7 @@ abstract class PrivacyContext(
         if (privacyAgent.isPermanent) {
             // never mark a permanent privacy context as leaked
         } else {
-            require(maximumWarnings in 1..999) {
+            require(maximumWarnings in 1..1000000) {
                 "The maximum warnings should be set to a reasonable value, but not $maximumWarnings"
             }
             privacyLeakWarnings.addAndGet(maximumWarnings)
