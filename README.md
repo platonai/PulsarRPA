@@ -6,30 +6,9 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 💖 **PulsarRPA is All You Need!** 💖
 
-PulsarRPA is a high-performance, distributed, open-source Robotic Process Automation (RPA) framework. It is designed to handle large-scale RPA tasks with ease, providing a comprehensive solution for browser automation, web content understanding, and data extraction.
+PulsarRPA is a high-performance, distributed, open-source Robotic Process Automation (RPA) framework. It is designed to handle large-scale RPA tasks with ease, providing a comprehensive solution for browser automation, web content understanding, and data extraction. It addresses the inherent challenges of browser automation and extracting accurate, comprehensive web data amidst rapidly evolving and increasingly intricate websites.
 
-PulsarRPA represents the pinnacle of open-source solutions for large-scale webpage understanding and web data extraction, leveraging the power of high-performance, distributed RPA. It addresses the inherent challenges of browser automation and extracting accurate, comprehensive web data amidst rapidly evolving and increasingly intricate websites.
-
-### Challenges in Large-Scale Web Data Extraction
-
-1. **Frequent Website Changes**: Online platforms continuously update their layouts, structures, and content, making it difficult to maintain reliable extraction processes over time. Traditional scraping tools may struggle to adapt promptly to these changes, leading to outdated or irrelevant data.
-2. **Intelligent Extraction of Web Content**: The internet hosts billions of websites, each containing vast amounts of data. To extract information from such a diverse range of websites and keep up with frequent changes, intelligent web content extraction techniques are crucial. Traditional web scraping methods fail to effectively handle large volumes of webpages, leading to inefficient data extraction.
-3. **Complex Website Architecture**: Modern websites often employ sophisticated design patterns, dynamic content loading, and advanced security measures, presenting formidable obstacles for conventional scraping techniques. Extracting data from such sites requires deep understanding of their structure and behavior, as well as the ability to interact with them as a human user would.
-
-### PulsarRPA: A Game-Changer in Web Data Collection
-
-To conquer these challenges, PulsarRPA incorporates a suite of innovative technologies that ensure efficient, accurate, and scalable web data extraction:
-
-1. **Browser Rendering:** Utilizes browser rendering and AJAX data crawling to extract content from websites.
-2. **RPA (Robotic Process Automation):** Employs human-like behaviors to interact with webpages, enabling data collection from modern, complex websites.
-3. **Intelligent Scraping:** PulsarRPA employs intelligent scraping technology that can automatically recognize and understand web content, ensuring accurate and timely data extraction. Utilizing smart algorithms and machine learning techniques, PulsarRPA can independently learn and apply data extraction models, significantly improving the efficiency and accuracy of data retrieval.
-4. **Advanced DOM Parsing:** Leveraging advanced Document Object Model (DOM) parsing techniques, PulsarRPA can navigate complex website architectures with ease. It accurately identifies and extracts data from elements in modern web pages, handles dynamic content rendering, and bypasses anti-scraping measures, delivering complete and accurate datasets despite website intricacies.
-5. **Distributed Architecture:** Built on a distributed architecture, PulsarRPA harnesses the combined processing power of multiple nodes to handle large-scale extraction tasks efficiently. This allows for parallel crawling, faster data retrieval, and seamless scalability as your data requirements grow, without compromising performance or reliability.
-6. **Open-Source & Customizable:** As an open-source solution, PulsarRPA offers unparalleled flexibility and extensibility. Developers can easily customize its components, integrate with existing systems, or contribute new features to meet specific project requirements.
-
-In summary, PulsarRPA, with its web content understanding, intelligent scraping, advanced DOM parsing, distributed processing, and open-source features, becomes the preferred open-source solution for large-scale web data extraction. Its unique technology combination allows users to effectively address the complexities and challenges associated with extracting valuable web data on a large scale, ultimately facilitating wiser decision-making and competitive advantage.
-
-### *Automated extraction techniques* can be utilized for data extraction from large numbers of sites:
+### *Automated extraction techniques* can be utilized for data extraction from large number of sites:
 
 ```kotlin
 val session = PulsarContexts.createSession()
@@ -123,6 +102,25 @@ Example code:
 
 Extracting Web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete. PulsarRPA has developed a range of cutting-edge technologies to solve this problem.
 
+### Challenges in Large-Scale Web Data Extraction
+
+1. **Frequent Website Changes**: Online platforms continuously update their layouts, structures, and content, making it difficult to maintain reliable extraction processes over time. Traditional scraping tools may struggle to adapt promptly to these changes, leading to outdated or irrelevant data.
+2. **Intelligent Extraction of Web Content**: The internet hosts billions of websites, each containing vast amounts of data. To extract information from such a diverse range of websites and keep up with frequent changes, intelligent web content extraction techniques are crucial. Traditional web scraping methods fail to effectively handle large volumes of webpages, leading to inefficient data extraction.
+3. **Complex Website Architecture**: Modern websites often employ sophisticated design patterns, dynamic content loading, and advanced security measures, presenting formidable obstacles for conventional scraping techniques. Extracting data from such sites requires deep understanding of their structure and behavior, as well as the ability to interact with them as a human user would.
+
+### PulsarRPA: A Comprehensive Solution for Web Data Collection
+
+To conquer these challenges, PulsarRPA incorporates a suite of innovative technologies that ensure efficient, accurate, and scalable web data extraction:
+
+1. **Browser Rendering:** Utilizes browser rendering and AJAX data crawling to extract content from websites.
+2. **RPA (Robotic Process Automation):** Employs human-like behaviors to interact with webpages, enabling data collection from modern, complex websites.
+3. **Intelligent Scraping:** PulsarRPA employs intelligent scraping technology that can automatically recognize and understand web content, ensuring accurate and timely data extraction. Utilizing smart algorithms and machine learning techniques, PulsarRPA can independently learn and apply data extraction models, significantly improving the efficiency and accuracy of data retrieval.
+4. **Advanced DOM Parsing:** Leveraging advanced Document Object Model (DOM) parsing techniques, PulsarRPA can navigate complex website architectures with ease. It accurately identifies and extracts data from elements in modern web pages, handles dynamic content rendering, and bypasses anti-scraping measures, delivering complete and accurate datasets despite website intricacies.
+5. **Distributed Architecture:** Built on a distributed architecture, PulsarRPA harnesses the combined processing power of multiple nodes to handle large-scale extraction tasks efficiently. This allows for parallel crawling, faster data retrieval, and seamless scalability as your data requirements grow, without compromising performance or reliability.
+6. **Open-Source & Customizable:** As an open-source solution, PulsarRPA offers unparalleled flexibility and extensibility. Developers can easily customize its components, integrate with existing systems, or contribute new features to meet specific project requirements.
+
+In summary, PulsarRPA, with its web content understanding, intelligent scraping, advanced DOM parsing, distributed processing, and open-source features, becomes the preferred open-source solution for large-scale web data extraction. Its unique technology combination allows users to effectively address the complexities and challenges associated with extracting valuable web data on a large scale, ultimately facilitating wiser decision-making and competitive advantage.
+
 We have released complete solutions for site-wide Web scraping for some of the largest e-commerce websites. These solutions meet the highest standards of performance, quality, and cost. They will be free and open source forever, such as:
 
 * [Exotic Amazon](https://github.com/platonai/exotic-amazon)
@@ -201,14 +199,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.12.5</version>
+  <version>1.12.6</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-all:1.12.5")
+implementation("ai.platon.pulsar:pulsar-all:1.12.6")
 ```
 
 You can clone the template project from github.com: [kotlin](https://github.com/platonai/pulsar-kotlin-template), [java-11](https://github.com/platonai/pulsar-java-template), [java-17](https://github.com/platonai/pulsar-java-17-template).
@@ -288,15 +286,15 @@ We have a step-by-step course by example:
 
 PulsarRPA has carefully designed the logging and metrics subsystem to record every event that occurs in the system. PulsarRPA logs the status for every load execution, providing a clear and comprehensive overview of system performance. This detailed logging allows for quick assessment of the system’s health and efficiency. It answers key questions such as: Is the system operating smoothly? How many pages have been successfully retrieved? How many attempts were made to reload pages? And how many proxy IP addresses have been utilized? This information is invaluable for monitoring and troubleshooting purposes, ensuring that any issues can be promptly identified and addressed.
 
-By focusing on a concise set of indicators, you can unlock a deeper understanding of the system’s overall condition: 💯 💔 🗙 ⚡ 💿 🔃 🤺.
+By focusing on a concise set of indicators, you can unlock a deeper understanding of the system’s overall condition: 💯 💔 🗙  ?💿 🔃 🤺.
 
 Typical page loading logs are shown below. Check the [log-format](docs/log-format.md) to learn how to read the logs and gain insight into the state of the entire system at a glance.
 
 ```plaintext
-2022-09-24 11:46:26.045  INFO [-worker-14] a.p.p.c.c.L.Task - 3313. 💯 ⚡ U for N got 200 580.92 KiB in 1m14.277s, fc:1 | 75/284/96/277/6554 | 106.32.12.75 | 3xBpaR2 | https://www.walmart.com/ip/Restored-iPhone-7-32GB-Black-T-Mobile-Refurbished/329207863  -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
+2022-09-24 11:46:26.045  INFO [-worker-14] a.p.p.c.c.L.Task - 3313. 💯  ?U for N got 200 580.92 KiB in 1m14.277s, fc:1 | 75/284/96/277/6554 | 106.32.12.75 | 3xBpaR2 | https://www.walmart.com/ip/Restored-iPhone-7-32GB-Black-T-Mobile-Refurbished/329207863  -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 2022-09-24 11:46:09.190  INFO [-worker-32] a.p.p.c.c.L.Task - 3738. 💯 💿 U got 200 452.91 KiB in 55.286s, last fetched 9h32m50s ago, fc:1 | 49/171/82/238/6172 | 121.205.220.179 | https://www.walmart.com/ip/Boost-Mobile-Apple-iPhone-SE-2-Cell-Phone-Black-64GB-Prepaid-Smartphone/490934488  -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 2022-09-24 11:46:28.567  INFO [-worker-17] a.p.p.c.c.L.Task - 2269. 💯 🔃 U for SC got 200 565.07 KiB <- 543.41 KiB in 1m22.767s, last fetched 16m58s ago, fc:6 | 58/230/98/295/6272 | 27.158.125.76 | 9uwu602 | https://www.walmart.com/ip/Straight-Talk-Apple-iPhone-11-64GB-Purple-Prepaid-Smartphone/356345388?variantFieldId=actual_color  -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
-2022-09-24 11:47:18.390  INFO [r-worker-8] a.p.p.c.c.L.Task - 3732. 💔 ⚡ U for N got 1601 0 <- 0 in 32.201s, fc:1/1 Retry(1601) rsp: CRAWL, rrs: EMPTY_0B | 2zYxg52 | https://www.walmart.com/ip/Apple-iPhone-7-256GB-Jet-Black-AT-T-Locked-Smartphone-Grade-B-Used/182353175?variantFieldId=actual_color  -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
+2022-09-24 11:47:18.390  INFO [r-worker-8] a.p.p.c.c.L.Task - 3732. 💔  ?U for N got 1601 0 <- 0 in 32.201s, fc:1/1 Retry(1601) rsp: CRAWL, rrs: EMPTY_0B | 2zYxg52 | https://www.walmart.com/ip/Apple-iPhone-7-256GB-Jet-Black-AT-T-Locked-Smartphone-Grade-B-Used/182353175?variantFieldId=actual_color  -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 2022-09-24 11:47:13.860  INFO [-worker-60] a.p.p.c.c.L.Task - 2828. 🗙 🗙 U for SC got 200 0 <- 348.31 KiB <- 684.75 KiB in 0s, last fetched 18m55s ago, fc:2 | 34/130/52/181/5747 | 60.184.124.232 | 11zTa0r2 | https://www.walmart.com/ip/Walmart-Family-Mobile-Apple-iPhone-11-64GB-Black-Prepaid-Smartphone/209201965?athbdg=L1200  -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 ```
 # 💻 System Requirements
