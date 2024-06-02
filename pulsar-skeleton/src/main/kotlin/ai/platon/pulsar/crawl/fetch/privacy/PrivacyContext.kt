@@ -3,7 +3,7 @@ package ai.platon.pulsar.crawl.fetch.privacy
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.browser.BrowserFiles.computeNextSequentialContextDir
-import ai.platon.pulsar.common.browser.BrowserFiles.computeRandomContextDir
+import ai.platon.pulsar.common.browser.BrowserFiles.computeRandomTmpContextDir
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -52,7 +52,7 @@ abstract class PrivacyContext(
         // A random context directory, if you need a random temporary context, use this one
         val NEXT_SEQUENTIAL_CONTEXT_DIR get() = computeNextSequentialContextDir()
         // A random context directory, if you need a random temporary context, use this one
-        val RANDOM_CONTEXT_DIR get() = computeRandomContextDir()
+        val RANDOM_CONTEXT_DIR get() = computeRandomTmpContextDir()
         // The prototype context directory, all privacy contexts copies browser data from the prototype.
         // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
         val PROTOTYPE_DATA_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE
@@ -73,8 +73,8 @@ abstract class PrivacyContext(
     val baseDir get() = privacyAgent.contextDir
 
     protected val numRunningTasks = AtomicInteger()
-    val minimumThroughput = conf.getFloat(PRIVACY_CONTEXT_MIN_THROUGHPUT, 0.3f)
-    val maximumWarnings = conf.getInt(PRIVACY_MAX_WARNINGS, 8)
+    val minimumThroughput = if (privacyAgent.isPermanent) 0f else conf.getFloat(PRIVACY_CONTEXT_MIN_THROUGHPUT, 0.3f)
+    val maximumWarnings = if (privacyAgent.isPermanent) 100000 else conf.getInt(PRIVACY_MAX_WARNINGS, 8)
     val minorWarningFactor = conf.getInt(PRIVACY_MINOR_WARNING_FACTOR, 5)
     val privacyLeakWarnings = AtomicInteger()
     val privacyLeakMinorWarnings = AtomicInteger()
@@ -141,7 +141,7 @@ abstract class PrivacyContext(
     /**
      * Check whether the privacy has been leaked since there are too many warnings about privacy leakage.
      * */
-    open val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
+    open val isLeaked get() = !privacyAgent.isPermanent && privacyLeakWarnings.get() >= maximumWarnings
     /**
      * Check whether the privacy context works fine and the fetch speed is qualified.
      * */
@@ -271,7 +271,16 @@ abstract class PrivacyContext(
      * Mark the privacy context as leaked. A leaked privacy context should not serve anymore, 
      * and will be closed soon.
      * */
-    fun markLeaked() = privacyLeakWarnings.addAndGet(maximumWarnings)
+    fun markLeaked() {
+        if (privacyAgent.isPermanent) {
+            // never mark a permanent privacy context as leaked
+        } else {
+            require(maximumWarnings in 1..1000000) {
+                "The maximum warnings should be set to a reasonable value, but not $maximumWarnings"
+            }
+            privacyLeakWarnings.addAndGet(maximumWarnings)
+        }
+    }
 
     /**
      * Run a task in the privacy context and record the status.

@@ -184,7 +184,7 @@ class MultiPrivacyContextManager(
             
             val privacyAgent = createPrivacyAgent(page, fingerprint)
             if (privacyAgent.isPermanent) {
-                logger.info("Prepare for permanent privacy agent | {}", privacyAgent)
+                // logger.info("Prepare for permanent privacy agent | {}", privacyAgent)
                 reserveResourceForcefully()
                 return computeIfAbsent(privacyAgent)
             }
@@ -487,9 +487,16 @@ class MultiPrivacyContextManager(
         val status = result.status
         if (warnings > 0) {
             val symbol = PopularEmoji.WARNING
+            
+            val warningMessage = if (privacyContext.privacyAgent.isPermanent) {
+                String.format("%s/%s", warnings, privacyContext.maximumWarnings)
+            } else {
+                String.format("%s", warnings)
+            }
+
             logger.info(
-                "$symbol Privacy leak warning {}/{} | {}#{} | {}. {}",
-                warnings, privacyContext.maximumWarnings,
+                "$symbol Privacy leak warning {} | {}#{} | {}. {}",
+                warningMessage,
                 privacyContext.seq, privacyContext.display,
                 result.task.page.id, status
             )

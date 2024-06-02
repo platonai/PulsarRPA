@@ -34,7 +34,7 @@ class KConfiguration(
 
     private var resources = ArrayList<Resource>()
     private var properties: Properties? = null
-    private val XML_INPUT_FACTORY = com.ctc.wstx.stax.WstxInputFactory()
+    private val wstxInputFactory = com.ctc.wstx.stax.WstxInputFactory()
 
     val loadedResources get() = resources.map { it.name }
 
@@ -263,7 +263,7 @@ class KConfiguration(
             else -> null
         } as XMLStreamReader2?
     }
-
+    
     @Throws(IOException::class, XMLStreamException::class)
     private fun parse(url: URL): XMLStreamReader {
         val connection = url.openConnection()
@@ -274,9 +274,11 @@ class KConfiguration(
     @Throws(IOException::class, XMLStreamException::class)
     private fun parse(input: InputStream, systemId: String?): XMLStreamReader {
         val id = SystemId.construct(systemId)
-        val readerConfig = XML_INPUT_FACTORY.createPrivateConfig()
+
+        val readerConfig = wstxInputFactory.createPrivateConfig()
+
         val bootstrapper = StreamBootstrapper.getInstance(null, id, input)
-        return XML_INPUT_FACTORY.createSR(readerConfig, id, bootstrapper, false, true)
+        return wstxInputFactory.createSR(readerConfig, systemId, bootstrapper, false, true)
     }
 
     internal class Resource(val resource: Any, val name: String = resource.toString()) {
@@ -364,14 +366,13 @@ class KConfiguration(
                     confInclude = reader.getAttributeValue(i)
                 }
             }
-            if (confInclude == null) {
-                return
-            }
+            
+            val confInclude2 = confInclude ?: return
 
             // Determine if the included resource is a classpath resource
             // otherwise fallback to a file resource
             // xi:include are treated as inline and retain current source
-            val include: URL? = ResourceLoader.getResource(confInclude!!)
+            val include: URL? = ResourceLoader.getResource(confInclude2)
             if (include != null) {
                 val classpathResource = Resource(include, name)
                 // This is only called recursively while the lock is already held
@@ -384,10 +385,10 @@ class KConfiguration(
             } else {
                 var url: URL
                 try {
-                    url = URL(confInclude)
+                    url = URL(confInclude2)
                     url.openConnection().connect()
                 } catch (ioe: IOException) {
-                    var href = File(confInclude)
+                    var href = File(confInclude2)
                     if (!href.isAbsolute) {
                         // Included resources are relative to the current resource
                         var baseFile = try {
@@ -458,7 +459,7 @@ class KConfiguration(
                 XMLStreamConstants.START_ELEMENT -> handleStartElement()
                 XMLStreamConstants.CHARACTERS, XMLStreamConstants.CDATA -> if (parseToken) {
                     val text = reader.textCharacters
-                    token.append(text, reader.textStart, reader.textLength)
+                    token.appendRange(text, reader.textStart, reader.textStart + reader.textLength)
                 }
                 XMLStreamConstants.END_ELEMENT -> handleEndElement()
                 else -> {

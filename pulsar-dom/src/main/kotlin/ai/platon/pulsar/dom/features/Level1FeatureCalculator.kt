@@ -33,6 +33,10 @@ class Level1FeatureCalculator: AbstractFeatureCalculator() {
     override fun calculate(document: Document) {
         NodeTraversor.traverse(Level1NodeFeatureCalculatorVisitor(), document)
     }
+    
+    override fun dispose() {
+        FeatureRegistry.unregister()
+    }
 }
 
 /**

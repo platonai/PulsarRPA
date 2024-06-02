@@ -65,7 +65,7 @@ public class GoraStorage {
             dataStores.put(realSchema, dataStore);
 
             String className = dataStore.getClass().getName();
-            if (!className.equals("FileBackendPageStore")) {
+            if (className.equals("FileBackendPageStore")) {
                 logger.info("Backend data store: {}, real schema: {}", className, dataStore.getSchemaName());
                 logger.info("FileBackendPageStore is only for development and testing, " +
                         "it is not suitable for production environment");

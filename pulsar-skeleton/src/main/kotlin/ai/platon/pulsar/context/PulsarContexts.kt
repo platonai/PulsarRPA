@@ -52,11 +52,10 @@ object PulsarContexts {
         contexts.add(context)
         activeContext = context
 
-        // TODO: do not call getBean in close() function, it's better to close pulsar context before application context.
         // NOTE: The order of registered shutdown hooks is not guaranteed.
         (context as? AbstractPulsarContext)?.applicationContext?.registerShutdownHook()
         context.registerShutdownHook()
-        logger.info("Active context | {}", contexts.joinToString(" | ") { it::class.qualifiedName + " #" + it.id })
+        logger.info("Active contexts: {}", contexts.joinToString(" | ") { it::class.qualifiedName + " #" + it.id })
 
         return context
     }

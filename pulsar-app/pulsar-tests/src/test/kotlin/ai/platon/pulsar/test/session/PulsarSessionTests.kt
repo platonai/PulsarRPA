@@ -1,12 +1,16 @@
 package ai.platon.pulsar.test.session
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.test.TestBase
 import com.google.gson.Gson
+import java.nio.file.Files
 import kotlin.test.*
 import java.time.Instant
+import java.util.*
 
 /**
  * Created by vincent on 16-7-20.
@@ -64,6 +68,28 @@ class PulsarSessionTests: TestBase() {
         println(WebPageFormatter(page))
         val path = session.export(page)
         println("Webpage exported | $path")
+    }
+
+    @Test
+    fun testLoadLocalFile() {
+        val path = AppPaths.getTmp("test.html")
+        println(path)
+        val html = """
+            <html>
+            <head>
+            <title>Test</title>
+            </head>
+            <body>
+            <h1>Hello</h1>
+            <a href="http://www.example.com">Example</a>
+            </body>
+            </html>
+        """.trimIndent()
+        Files.writeString(path, html)
+        val base64 = Base64.getUrlEncoder().encode(path.toString().toByteArray()).toString(Charsets.UTF_8)
+        val url = "http://localfile.org?path=$base64"
+        val document = session.loadDocument(url, "-refresh")
+        assertEquals("Hello", document.selectFirstTextOrNull("h1"))
     }
 
     @Test

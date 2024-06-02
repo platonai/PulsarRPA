@@ -138,11 +138,32 @@ open class BrowserSettings(
          * @param maxAgents The maximum number of sequential privacy agents, the active privacy contexts is chosen from them.
          * @return the BrowserSettings itself
          * */
-        fun withSequentialBrowsers(maxAgents: Int = 10): Companion {
+        @JvmStatic
+        fun withSequentialBrowsers(): Companion {
+            return withSequentialBrowsers(10)
+        }
+        /**
+         * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
+         * permanent unless the context directories are deleted manually.
+         *
+         * PULSAR_CHROME is the only supported browser currently.
+         *
+         * @param maxAgents The maximum number of sequential privacy agents, the active privacy contexts is chosen from them.
+         * @return the BrowserSettings itself
+         * */
+        @JvmStatic
+        fun withSequentialBrowsers(maxAgents: Int): Companion {
             System.setProperty(MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, "$maxAgents")
             val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             return BrowserSettings
+        }
+        /**
+         * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
+         * will not be used again after it is shut down.* */
+        @JvmStatic
+        fun withTemporaryBrowser(): Companion {
+            return withTemporaryBrowser(BrowserType.PULSAR_CHROME)
         }
         /**
          * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser

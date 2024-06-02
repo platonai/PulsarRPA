@@ -28,11 +28,14 @@ import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import org.apache.commons.lang3.SystemUtils
+import org.apache.http.client.utils.URIBuilder
 import org.jetbrains.kotlin.utils.addToStdlib.ifFalse
 import java.nio.file.Files
 import java.text.MessageFormat
 import java.time.Duration
 import java.time.Instant
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.random.Random
 
@@ -542,7 +545,8 @@ class ChromeDevtoolsDriver(
         
         if (isCanceled) {
             // is it good to throw here?
-            throw WebDriverCancellationException("WebDriver is canceled #$id | $navigateUrl", this)
+            // throw WebDriverCancellationException("WebDriver is canceled #$id | $navigateUrl", this)
+            return false
         }
         
         if (action.isNotBlank()) {
@@ -683,12 +687,11 @@ class ChromeDevtoolsDriver(
             credentials = Credentials(proxyUsername, browser.id.fingerprint.proxyPassword)
             credentials?.let { networkManager.authenticate(it) }
         }
-        
+
         navigateUrl = url
         // TODO: This is a temporary solution to serve local file, for example, file:///tmp/example.html
         if (LOCALHOST_PREFIX in url) {
-            val url0 = url.removePrefix(LOCALHOST_PREFIX)
-            page.navigate("file://$url0")
+            openLocalFile(url)
         } else {
             page.navigate(url, referrer = navigateEntry.pageReferrer)
         }
@@ -702,6 +705,25 @@ class ChromeDevtoolsDriver(
         
         navigateUrl = url
         pageAPI?.navigate(url)
+    }
+    
+    private fun openLocalFile(url: String) {
+        if (url.contains("?path=")) {
+            val queryParams = URIBuilder(url).queryParams
+            val path = queryParams.firstOrNull { it.name == "path" }?.value
+            if (path != null) {
+                val path2 = Base64.getUrlDecoder().decode(path).toString(Charsets.UTF_8)
+                page.navigate(path2)
+            }
+            return
+        }
+
+        val url0 = url.removePrefix(LOCALHOST_PREFIX)
+        if (SystemUtils.IS_OS_WINDOWS) {
+            page.navigate(url0)
+        } else {
+            page.navigate("file:///$url0")
+        }
     }
     
     private fun onWindowOpen(event: WindowOpen) {

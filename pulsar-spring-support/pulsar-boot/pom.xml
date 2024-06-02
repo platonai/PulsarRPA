@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-spring-support</artifactId>
-        <version>1.12.5-SNAPSHOT</version>
+        <version>1.12.6-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-boot</artifactId>
@@ -25,7 +25,6 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-persist</artifactId>
-            <classifier>shaded</classifier>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>

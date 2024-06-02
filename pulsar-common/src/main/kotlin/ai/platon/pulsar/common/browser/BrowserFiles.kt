@@ -60,7 +60,8 @@ object BrowserFiles {
     @Throws(IOException::class)
     @Synchronized
     fun computeTestContextDir(fingerprint: Fingerprint = Fingerprint.DEFAULT): Path {
-        return runWithFileLock { channel ->
+        val lockFile = AppPaths.BROWSER_TMP_DIR_LOCK
+        return runWithFileLock(lockFile) { channel ->
             computeNextSequentialContextDir0("test", fingerprint, 5, channel = channel)
         }
     }
@@ -68,16 +69,21 @@ object BrowserFiles {
     @Throws(IOException::class)
     @Synchronized
     fun computeNextSequentialContextDir(
-        group: String = "default", fingerprint: Fingerprint = Fingerprint.DEFAULT, maxContexts: Int = 10): Path {
-        return runWithFileLock { channel ->
-            computeNextSequentialContextDir0(group, fingerprint, maxContexts, channel = channel)
+        group: String = "default", fingerprint: Fingerprint = Fingerprint.DEFAULT, maxAgents: Int = 10): Path {
+        val lockFile = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve("contex.dir.lock")
+        if (!Files.exists(lockFile)) {
+            Files.createFile(lockFile)
+        }
+        return runWithFileLock(lockFile) { channel ->
+            computeNextSequentialContextDir0(group, fingerprint, maxAgents, channel = channel)
         }
     }
     
     @Throws(IOException::class)
     @Synchronized
-    fun computeRandomContextDir(group: String = "default"): Path {
-        return runWithFileLock { channel -> computeRandomContextDir0(group, channel = channel) }
+    fun computeRandomTmpContextDir(group: String = "default"): Path {
+        val lockFile = AppPaths.BROWSER_TMP_DIR_LOCK
+        return runWithFileLock(lockFile) { channel -> computeRandomContextDir0(group, channel = channel) }
     }
 
     @Throws(IOException::class)
@@ -91,19 +97,24 @@ object BrowserFiles {
     }
     
     @Throws(IOException::class)
+    @Synchronized
     fun deleteTemporaryUserDataDirWithLock(userDataDir: Path, expiry: Duration) {
-        runWithFileLock { channel -> deleteTemporaryUserDataDir0(userDataDir, expiry, channel) }
+        val lockFile = AppPaths.BROWSER_TMP_DIR_LOCK
+        runWithFileLock(lockFile) { channel -> deleteTemporaryUserDataDir0(userDataDir, expiry, channel) }
     }
     
     @Throws(IOException::class)
     @Synchronized
-    private fun <T> runWithFileLock(supplier: (FileChannel) -> T): T {
-        val lockFile = AppPaths.BROWSER_TMP_DIR_LOCK
+    private fun <T> runWithFileLock(lockFile: Path, supplier: (FileChannel) -> T): T {
         // Opens or creates a file, returning a file channel to access the file.
         val channel = FileChannel.open(lockFile, StandardOpenOption.APPEND)
         channel.use {
-            it.lock()
-            return supplier(it)
+            val lock = it.tryLock()
+            try {
+                return supplier(it)
+            } finally {
+                lock?.release()
+            }
         }
     }
 
@@ -112,6 +123,11 @@ object BrowserFiles {
         require(channel.isOpen) { "The lock file channel is closed" }
         
         val dirToDelete = userDataDir
+        
+        if (!Files.exists(dirToDelete)) {
+            // The directory has been deleted by other threads
+            return
+        }
         
         val cleanedUp = dirToDelete in cleanedUserDataDirs
         if (cleanedUp) {

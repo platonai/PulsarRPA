@@ -183,9 +183,19 @@ val Element.isNil get() = this === NILElement
  * Add a class to the element, if the class is already in the element, it will not be added again.
  * */
 fun Element.addClasses(vararg classNames: String): Element {
+    classNames.forEach {
+        it.split("\\s+".toRegex()).forEach { addClass(it) }
+    }
+    return this
+}
+/**
+ * Add a class to the element, if the class is already in the element, it will not be added again.
+ * */
+fun Element.addClasses(classNames: Iterable<String>): Element {
     classNames.forEach { addClass(it) }
     return this
 }
+
 /**
  * Make a copy of the element, the copy is a slim copy, all the attributes are removed.
  * */

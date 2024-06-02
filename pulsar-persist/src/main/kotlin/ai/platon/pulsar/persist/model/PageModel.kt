@@ -24,29 +24,33 @@ class PageModel(
     /**
      * TODO: Find out a way to partially update nested fields.
      * */
+    @Deprecated("Use unboxedFieldGroups instead", ReplaceWith("unboxedFieldGroups"))
     @get:Synchronized
     val fieldGroups get() = pageModel.fieldGroups
+    
+    @get:Synchronized
+    val unboxedFieldGroups get() = pageModel.fieldGroups
+    
+    @get:Synchronized
+    val boxedFieldGroups get() = unboxedFieldGroups.map { FieldGroup.box(it) }
 
     @get:Synchronized
-    val numGroups get() = fieldGroups.size
+    val numGroups get() = unboxedFieldGroups.size
 
     @get:Synchronized
-    val numFields get() = fieldGroups.sumOf { it.fields.size }
+    val numFields get() = unboxedFieldGroups.sumOf { it.fields.size }
 
     @get:Synchronized
-    val numNonNullFields get() = fieldGroups.sumOf { it.fields.count { it.value != null } }
+    val numNonNullFields get() = unboxedFieldGroups.sumOf { it.fields.count { it.value != null } }
 
     @get:Synchronized
-    val numNonBlankFields get() = fieldGroups.sumOf { it.fields.count { !it.value.isNullOrBlank() } }
+    val numNonBlankFields get() = unboxedFieldGroups.sumOf { it.fields.count { !it.value.isNullOrBlank() } }
 
     @get:Synchronized
-    val isEmpty: Boolean get() = fieldGroups.isEmpty()
+    val isEmpty: Boolean get() = unboxedFieldGroups.isEmpty()
 
     @get:Synchronized
     val isNotEmpty: Boolean get() = !isEmpty
-
-    @get:Synchronized
-    val boxedFieldGroups get() = fieldGroups.map { FieldGroup.box(it) }
 
     fun unbox() = pageModel
 
@@ -54,19 +58,19 @@ class PageModel(
      * Return the first field group.
      * */
     @Synchronized
-    fun firstOrNull(): FieldGroup? = fieldGroups.firstOrNull()?.let { FieldGroup.box(it) }
+    fun firstOrNull(): FieldGroup? = unboxedFieldGroups.firstOrNull()?.let { FieldGroup.box(it) }
 
     /**
      * Return the last field group.
      * */
     @Synchronized
-    fun lastOrNull(): FieldGroup? = fieldGroups.lastOrNull()?.let { FieldGroup.box(it) }
+    fun lastOrNull(): FieldGroup? = unboxedFieldGroups.lastOrNull()?.let { FieldGroup.box(it) }
 
     /**
      * Return the n-th field group.
      * */
     @Synchronized
-    operator fun get(index: Int): FieldGroup? = fieldGroups[index]?.let { FieldGroup.box(it) }
+    operator fun get(index: Int): FieldGroup? = unboxedFieldGroups[index]?.let { FieldGroup.box(it) }
 
     /**
      * Get the n-th field group and retrieve the value associated with [name].
@@ -79,7 +83,7 @@ class PageModel(
      * */
     @Synchronized
     fun findGroup(groupId: Int): FieldGroup? {
-        val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+        val gFieldGroup = unboxedFieldGroups.firstOrNull { it.id == groupId.toLong() }
         return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
     }
 
@@ -94,7 +98,7 @@ class PageModel(
      * */
     @Synchronized
     fun add(fieldGroup: FieldGroup) {
-        fieldGroups.add(fieldGroup.unbox())
+        unboxedFieldGroups.add(fieldGroup.unbox())
         pageModel.setDirty()
     }
 
@@ -103,7 +107,7 @@ class PageModel(
      * */
     @Synchronized
     fun add(index: Int, fieldGroup: FieldGroup) {
-        fieldGroups.add(index, fieldGroup.unbox())
+        unboxedFieldGroups.add(index, fieldGroup.unbox())
         pageModel.setDirty()
     }
 
@@ -135,7 +139,7 @@ class PageModel(
 
     @Synchronized
     fun remove(groupId: Int) {
-        fieldGroups.removeIf { it.id == groupId.toLong() }
+        unboxedFieldGroups.removeIf { it.id == groupId.toLong() }
         pageModel.setDirty()
     }
 
@@ -160,7 +164,7 @@ class PageModel(
 
     @Synchronized
     fun clear() {
-        fieldGroups.clear()
+        unboxedFieldGroups.clear()
         pageModel.setDirty()
     }
 
@@ -170,7 +174,7 @@ class PageModel(
         return PageModel(other)
     }
 
-    private fun findRawById(groupId: Int) = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+    private fun findRawById(groupId: Int) = unboxedFieldGroups.firstOrNull { it.id == groupId.toLong() }
 
     private fun removeRawById(groupId: Int, key: String): CharSequence? {
         return findRawById(groupId)?.fields?.remove(u8(key))
@@ -180,10 +184,10 @@ class PageModel(
     private fun emplace0(
         groupId: Int, parentId: Int, groupName: String, fields: Map<String, String?>
     ): FieldGroup {
-        var gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+        var gFieldGroup = unboxedFieldGroups.firstOrNull { it.id == groupId.toLong() }
         if (gFieldGroup == null) {
             gFieldGroup = FieldGroup.newGFieldGroup(groupId, groupName, parentId)
-            fieldGroups.add(gFieldGroup)
+            unboxedFieldGroups.add(gFieldGroup)
         }
 
         gFieldGroup.fields.clear()
@@ -199,10 +203,10 @@ class PageModel(
     private fun put0(
         groupId: Int, parentId: Int, groupName: String, name: String, value: String
     ): Pair<FieldGroup, CharSequence?> {
-        var gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+        var gFieldGroup = unboxedFieldGroups.firstOrNull { it.id == groupId.toLong() }
         if (gFieldGroup == null) {
             gFieldGroup = FieldGroup.newGFieldGroup(groupId, groupName, parentId)
-            fieldGroups.add(gFieldGroup)
+            unboxedFieldGroups.add(gFieldGroup)
         }
 
         val u8key = u8(name)

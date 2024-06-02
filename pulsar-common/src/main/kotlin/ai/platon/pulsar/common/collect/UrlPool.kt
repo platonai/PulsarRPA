@@ -259,7 +259,7 @@ open class ConcurrentUrlPool(conf: ImmutableConfig) : AbstractUrlPool(conf) {
 /**
  * A [LoadingUrlPool] is a [UrlPool], the items can be loaded from external source using [loader].
  * */
-class LoadingUrlPool(
+open class LoadingUrlPool(
     val loader: ExternalUrlLoader,
     val capacity: Int = 10_000,
     conf: ImmutableConfig,

@@ -44,7 +44,7 @@ open class MultiSinkWriter : AutoCloseable {
     }
 
     @Deprecated("Use writeTo instead", ReplaceWith("writeTo(message, path)"))
-    fun write(message: String, file: Path) = writeTo(message, file)
+    fun write(message: String, path: Path) = writeTo(message, path)
     
     fun writeTo(message: String, file: Path) {
         _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)

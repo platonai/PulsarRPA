@@ -99,6 +99,24 @@ object FeatureRegistry {
         floatFeatureNamesToKeys = floatFeatures.associateBy({ it.name }, { it.key })
         floatFeatureKeysToNames = floatFeatures.associateBy({ it.key }, { it.name })
     }
+    
+    fun unregister() {
+        registeredFeatures = setOf()
+        primaryFeatures = listOf()
+        floatFeatures = listOf()
+        featureKeys = listOf()
+        primaryFeatureKeys = listOf()
+        floatFeatureKeys = listOf()
+        featureNames = listOf()
+        primaryFeatureNames = listOf()
+        floatFeatureNames = listOf()
+        featureNamesToKeys = mapOf()
+        featureKeysToNames = mapOf()
+        primaryFeatureNamesToKeys = mapOf()
+        primaryFeatureKeysToNames = mapOf()
+        floatFeatureNamesToKeys = mapOf()
+        floatFeatureKeysToNames = mapOf()
+    }
 }
 
 data class NodeFeature(

@@ -72,17 +72,27 @@ open class MetricsSystem(
 ): AutoCloseable {
     companion object {
         init {
-            if (SharedMetricRegistries.tryGetDefault() == null) {
-                SharedMetricRegistries.setDefault(AppConstants.DEFAULT_METRICS_NAME, AppMetricRegistry())
-            }
+            // Spring boot do not support the companion object initialization, so we disable it.
+            // Spring boot creates delegate classes which are not the same as the original class.
+//            if (SharedMetricRegistries.tryGetDefault() == null) {
+//                SharedMetricRegistries.setDefault(AppConstants.DEFAULT_METRICS_NAME, AppMetricRegistry())
+//            }
         }
 
         /**
-         * A shadow metric should not be displayed, nor be stored
+         * A shadow metric should not be displayed, nor be stored.
          * */
         const val SHADOW_METRIC_SYMBOL = "._."
 
-        val defaultMetricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
+        // Spring boot do not support the object initialization, so we disable it
+//        val defaultMetricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
+//        val reg = defaultMetricRegistry
+
+        /**
+         * The default metric registry
+         * */
+        val defaultMetricRegistry = AppMetricRegistry()
+        // a shortcut to the default metric registry
         val reg = defaultMetricRegistry
 
         init {
@@ -119,7 +129,7 @@ open class MetricsSystem(
     val graphiteServerPort = conf.getInt("graphite.server.port", 2004)
     val batchSize = conf.getInt("graphite.pickled.batch.size", 100)
 
-    private val metricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
+    private val metricRegistry = defaultMetricRegistry
 
     private val threadFactory = ThreadFactoryBuilder().setNameFormat("reporter-%d").build()
     private val executor = Executors.newSingleThreadScheduledExecutor(threadFactory)

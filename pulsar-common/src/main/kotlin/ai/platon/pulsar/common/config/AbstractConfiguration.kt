@@ -37,26 +37,30 @@ import java.util.*
  */
 abstract class AbstractConfiguration {
     protected val logger = LoggerFactory.getLogger(AbstractConfiguration::class.java)
-
+    
+    companion object {
+        // The resources that are loaded by default. The resources are hadoop compatible.
+        const val APPLICATION_SPECIFIED_RESOURCES = "pulsar-default.xml,pulsar-site.xml"
+        val DEFAULT_RESOURCES = LinkedHashSet<String>()
+        private val FULL_PATH_RESOURCES = LinkedHashSet<URL>()
+    }
+    
     private val resources = LinkedHashSet<String>()
     var name = "Configuration#" + hashCode()
     var profile = ""
         private set
     val mode get() = if (isDistributedFs) "cluster" else "local"
-
+    
     /**
      * Hadoop compatible configuration
-     * TODO: we will remove dependency on [KConfiguration] later
      */
     protected val conf: KConfiguration
-
+    
     /**
      * Spring core is the first class dependency now, we will remove dependency on [KConfiguration] later
      */
     var environment: Environment? = null
-
-    private val fullPathResources = LinkedHashSet<URL>()
-
+    
     /**
      * Create a [ai.platon.pulsar.common.config.AbstractConfiguration]. This will load the standard
      * resources, `pulsar-default.xml`, `pulsar-site.xml` and hadoop resources.
@@ -69,15 +73,21 @@ abstract class AbstractConfiguration {
         conf = KConfiguration(loadDefaults)
         loadConfResources(profile, loadDefaults, resources)
     }
-
+    
     /**
      * Constructor for AbstractConfiguration.
      */
     constructor(conf: KConfiguration) {
         this.conf = KConfiguration(conf)
     }
-
+    
     private fun loadConfResources(profile: String, loadDefaults: Boolean, extraResources: Iterable<String>) {
+        synchronized(FULL_PATH_RESOURCES) {
+            loadConfResources0(profile, loadDefaults, extraResources)
+        }
+    }
+    
+    private fun loadConfResources0(profile: String, loadDefaults: Boolean, extraResources: Iterable<String>) {
         extraResources.toCollection(resources)
         this.profile = profile
         if (!loadDefaults) {
@@ -92,14 +102,17 @@ abstract class AbstractConfiguration {
         for (name in resources) {
             val realResource = getRealResource(profile, mode, name)
             if (realResource != null) {
-                fullPathResources.add(realResource)
+                if (realResource !in FULL_PATH_RESOURCES) {
+                    logger.info("Found legacy configuration: $realResource")
+                    FULL_PATH_RESOURCES.add(realResource)
+                }
             } else {
                 logger.info("Resource not find: $name")
             }
         }
 
-        fullPathResources.forEach { conf.addResource(it) }
-        logger.info(toString())
+        FULL_PATH_RESOURCES.forEach { conf.addResource(it) }
+        // logger.info("legacy config profile: <$profile> | $conf")
     }
 
     private fun getRealResource(profile: String, mode: String, name: String): URL? {
@@ -112,9 +125,7 @@ abstract class AbstractConfiguration {
         ).map { it.replace("//", "/") }.distinct().sortedByDescending { it.length }
 
         val resource = searchPaths.firstNotNullOfOrNull { getResource(it) }
-        if (resource != null) {
-            logger.info("Find legacy resource: $resource")
-        }
+
         return resource
     }
 
@@ -459,7 +470,7 @@ abstract class AbstractConfiguration {
      * If no such property is specified, then `defaultValue` is
      * returned.
      *
-     * @param name         the class name.
+     * @param name         the property name of class.
      * @param defaultValue default value.
      * @return property value as a `Class`,
      * or `defaultValue`.
@@ -472,15 +483,13 @@ abstract class AbstractConfiguration {
      * Get the value of the `name` property as a `Class`
      * implementing the interface specified by `xface`.
      *
-     *
      * If no such property is specified, then `defaultValue` is
      * returned.
-     *
      *
      * An exception is thrown if the returned class does not implement the named
      * interface.
      *
-     * @param name         the class name.
+     * @param name         the property name of class.
      * @param defaultValue default value.
      * @param xface        the interface implemented by the named class.
      * @return property value as a `Class`,
@@ -494,10 +503,4 @@ abstract class AbstractConfiguration {
     private fun p(name: String) = SParser(get(name))
 
     override fun toString() = "profile: <$profile> | $conf"
-
-    companion object {
-        // The resources that are loaded by default. The resources are hadoop compatible.
-        const val APPLICATION_SPECIFIED_RESOURCES = "pulsar-default.xml,pulsar-site.xml"
-        val DEFAULT_RESOURCES = LinkedHashSet<String>()
-    }
 }

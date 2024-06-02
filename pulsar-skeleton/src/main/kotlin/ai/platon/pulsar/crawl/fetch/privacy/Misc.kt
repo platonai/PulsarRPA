@@ -11,7 +11,7 @@ enum class CloseStrategy {
 open class PrivacyContextException(message: String) : Exception(message)
 
 class PrivacyContextMetrics {
-    private val registry get() = MetricsSystem.defaultMetricRegistry
+    private val registry get() = MetricsSystem.reg
     val tasks = registry.multiMetric(this, "tasks")
     val successes = registry.multiMetric(this, "successes")
     val finishes = registry.multiMetric(this, "finishes")
