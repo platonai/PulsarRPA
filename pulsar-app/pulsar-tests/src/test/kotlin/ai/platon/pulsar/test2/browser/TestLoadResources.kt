@@ -42,6 +42,9 @@ class TestLoadResources: WebDriverTestBase() {
     @Test
     fun testLoadResource2() = runWebDriverTest { driver ->
         val resourceUrl = "https://www.amazon.com/robots.txt"
+        val referrer = URLUtil.getOrigin(resourceUrl)
+        driver.navigateTo(referrer)
+        driver.waitForNavigation()
         val response = driver.loadResource(resourceUrl)
         val headers = response.headers
         val body = response.stream
