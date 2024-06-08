@@ -110,6 +110,14 @@
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-graphite</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-zhipu-ai</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+
+
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-jdk8</artifactId>

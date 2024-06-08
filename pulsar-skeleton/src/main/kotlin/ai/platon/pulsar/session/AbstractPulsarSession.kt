@@ -23,9 +23,13 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
+import dev.langchain4j.data.message.AiMessage
+import dev.langchain4j.data.message.UserMessage
+import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import org.xml.sax.InputSource
+import java.awt.SystemColor.text
 import java.io.StringReader
 import java.nio.ByteBuffer
 import java.nio.file.Path
@@ -419,8 +423,73 @@ abstract class AbstractPulsarSession(
     }
     
     override fun harvest(url: String, args: String, engine: String): TextDocument = harvest(load(url, args), engine)
-
+    
     override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
+
+    override fun chat(page: WebPage, prompt: String, llm: String): TextDocument {
+        val apiKey = property("ZHIPU_API_KEY")
+
+        val chatModel: ZhipuAiChatModel = ZhipuAiChatModel.builder()
+            .apiKey(apiKey)
+            .logRequests(true)
+            .logResponses(true)
+            .maxRetries(1)
+            .build()
+
+        val prompt1 = prompt + "\n\n" + page.contentAsString
+
+        // given
+        val message = UserMessage.userMessage(prompt1)
+
+        // when
+        val response = chatModel.generate(message)
+
+        return TextDocument(page.url, textContent = response.content().text())
+    }
+
+    override fun chat(document: FeaturedDocument, prompt: String, llm: String): TextDocument {
+        val apiKey = property("ZHIPU_API_KEY") ?: "c1a92bfd50864379f131a9163b3ae603.T9g864K4HqAEP9Wz"
+        
+        val chatModel: ZhipuAiChatModel = ZhipuAiChatModel.builder()
+            .apiKey(apiKey)
+            .logRequests(true)
+            .logResponses(true)
+            .maxRetries(1)
+            .build()
+
+        val url = document.baseURI
+        val text = document.text
+        val prompt1 = prompt + "\n\n" + text
+        
+        // given
+        val message = UserMessage.userMessage(prompt1)
+        
+        // when
+        val response = chatModel.generate(message)
+        
+        return TextDocument(url, textContent = response.content().text())
+    }
+
+    private fun chat0(url: String, text: String, prompt: String, llm: String): TextDocument {
+        val apiKey = property("ZHIPU_API_KEY")
+        
+        val chatModel: ZhipuAiChatModel = ZhipuAiChatModel.builder()
+            .apiKey(apiKey)
+            .logRequests(true)
+            .logResponses(true)
+            .maxRetries(1)
+            .build()
+        
+        val prompt1 = prompt + "\n\n" + text
+        
+        // given
+        val message = UserMessage.userMessage(prompt1)
+        
+        // when
+        val response = chatModel.generate(message)
+        
+        return TextDocument(url, textContent = response.content().text())
+    }
     
     override fun data(name: String): Any? = let { dataCache[name] }
     
@@ -494,7 +563,8 @@ abstract class AbstractPulsarSession(
     
     private fun harvest0(page: WebPage, engine: String) = harvest0(page.url, page.contentAsString, engine)
     
-    private fun harvest0(url: String, html: String, engine: String) = harvest0(url, InputSource(StringReader(html)), engine)
+    private fun harvest0(url: String, html: String, engine: String) =
+        harvest0(url, InputSource(StringReader(html)), engine)
     
     private fun harvest0(url: String, inputSource: InputSource, engine: String): TextDocument {
         if (engine != "boilerpipe") {
@@ -515,18 +585,22 @@ abstract class AbstractPulsarSession(
         )
     }
     
+    private fun chat0() {
+    
+    }
+    
     private fun loadAndCache(normURL: NormURL): WebPage {
         return context.load(normURL).also {
             pageCacheOrNull?.putDatum(it.url, it)
         }
     }
-
+    
     private suspend fun loadAndCacheDeferred(normURL: NormURL): WebPage {
         return context.loadDeferred(normURL).also {
             pageCacheOrNull?.putDatum(it.url, it)
         }
     }
-
+    
     /**
      * Create page with cached core, but not metadata. If the page might be changed, it should be fetched again.
      *
@@ -539,110 +613,110 @@ abstract class AbstractPulsarSession(
         if (!normURL.options.readonly) {
             return null
         }
-
+        
         // We have events to handle, so do not use the cached version
         if (normURL.options.rawEvent != null) {
             return null
         }
-
+        
         val cachedPage = getCachedPageOrNull(normURL)
         val page = FetchEntry.createPageShell(normURL)
-
+        
         if (cachedPage != null) {
             // the cached page can be or not be persisted, but not guaranteed
             // if a page is loaded from cache, the content remains unchanged and should not persist to database
             page.unsafeSetGPage(cachedPage.unbox())
-
+            
             page.isCached = true
             page.tmpContent = cachedPage.tmpContent
             page.args = normURL.args
-
+            
             return page
         }
-
+        
         return null
     }
-
+    
     private fun getCachedPageOrNull(normURL: NormURL): WebPage? {
         val (url, options) = normURL
         if (options.refresh) {
             // refresh the page, do not take cached version
             return null
         }
-
+        
         val now = Instant.now()
         val page = pageCacheOrNull?.getDatum(url, options.expires, now) ?: return null
         if (!options.isExpired(page.prevFetchTime)) {
             pageCacheHits.incrementAndGet()
             return page
         }
-
+        
         return null
     }
-
+    
     private fun parseNormalizedLink(ele: Element, normalize: Boolean = false, ignoreQuery: Boolean = false): String? {
         var link = ele.attr("abs:href").takeIf { it.startsWith("http") } ?: return null
         if (normalize) {
             link = normalizeOrNull(link)?.spec ?: return null
         }
-
+        
         link = link.takeUnless { ignoreQuery } ?: UrlUtils.getUrlWithoutParameters(link)
         return link.substringBeforeLast("#")
     }
-
+    
     private fun loadOutPages0(portalUrl: UrlAware, options: LoadOptions): List<WebPage> {
         val normURL = normalize(portalUrl, options)
         val opts = normURL.options
-
+        
         val selector = opts.outLinkSelectorOrNull ?: return listOf()
         val itemOpts = normURL.options.createItemOptions()
-
+        
         require(normURL.options.rawEvent == options.rawEvent)
         require(options.rawItemEvent == itemOpts.rawEvent)
-
+        
         val links = loadDocument(normURL)
             .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
             .mapNotNullTo(mutableSetOf()) { it }
             .take(opts.topLinks)
-
+        
         return loadAll(links, itemOpts)
     }
-
+    
     private fun submitForOutPages0(portalUrl: UrlAware, options: LoadOptions): AbstractPulsarSession {
         val normURL = normalize(portalUrl, options)
         val opts = normURL.options
         val selector = opts.outLinkSelectorOrNull ?: return this
         val itemOpts = normURL.options.createItemOptions()
-
+        
         val outLinks = loadDocument(normURL)
             .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
             .mapNotNullTo(mutableSetOf()) { it }
             .take(opts.topLinks)
             .map { ListenableHyperlink("$it $itemOpts") }
             .onEach { link -> itemOpts.rawEvent?.let { link.event = it } }
-
+        
         submitAll(outLinks)
-
+        
         return this
     }
-
+    
     private fun loadOutPagesAsync0(portalUrl: String, options: LoadOptions): List<CompletableFuture<WebPage>> {
         val normURL = normalize(portalUrl, options)
         val opts = normURL.options
         val itemOpts = normURL.options.createItemOptions()
         val selector = opts.outLinkSelectorOrNull ?: return listOf()
-
+        
         val outLinks = loadDocument(normURL)
             .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
             .mapNotNullTo(mutableSetOf()) { it }
             .take(opts.topLinks)
             .map { NormURL(it, itemOpts) }
-
+        
         return loadAllAsync(outLinks)
     }
-
+    
     private fun <T> ensureActive(action: () -> T): T =
         if (isActive) action() else throw IllegalApplicationStateException("Pulsar session is not alive")
-
+    
     private fun <T> ensureActive(defaultValue: T, action: () -> T): T = defaultValue.takeIf { !isActive } ?: action()
 }

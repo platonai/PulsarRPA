@@ -897,6 +897,7 @@
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <commons-text.version>1.11.0</commons-text.version>
         <oshi.version>6.4.13</oshi.version>
+        <langchain4j.version>0.31.0</langchain4j.version>
 
         <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
 

@@ -18,37 +18,6 @@ import java.util.*
 import kotlin.random.Random
 import kotlin.test.*
 
-class TestClass(
-    val file: String = "",
-    val preprocessor: String = "",
-    val wordsComparator: Comparator<String> = kotlin.Comparator { t, t2 -> t.compareTo(t2) }
-) {
-    private val lines = TreeMultiset.create<String>()
-    init { load() }
-    fun merge(other: SingleFiledLines) {}
-    operator fun contains(text: String): Boolean = true
-    fun lines(): Multiset<String> = lines
-    val size: Int get() = lines.size
-    val isEmpty: Boolean get() = lines.isEmpty()
-    val isNotEmpty: Boolean get() = lines.isNotEmpty()
-    fun load() {}
-    fun saveTo(destFile: String) {}
-    fun save() {}
-
-    interface Preprocessor {
-        fun process(line: String): String
-    }
-
-    class TextPreprocessor : Preprocessor {
-        override fun process(line: String): String = ""
-    }
-
-    class RegexPreprocessor : Preprocessor {
-        override fun process(line: String): String = ""
-    }
-}
-
-
 class TestCases {
 
     val urls = arrayOf(
@@ -117,19 +86,6 @@ class TestCases {
 
         assertEquals("hello", s1.get())
         assertEquals("(null)", s2.orElse("(null)"))
-    }
-
-    @Test
-    fun testReflection() {
-        val clazz = SingleFiledLines::class
-        assertEquals(1, clazz.constructors.size)
-        // println("constructors: " + clazz.constructors.size)
-        println("members: " + clazz.members.size)
-        assertEquals(16, clazz.members.size)
-
-        val ctor = clazz.constructors.first()
-        assertEquals(3, ctor.parameters.size)
-        // println("first constructor parameters: " + ctor.parameters.size)
     }
 
     @Test

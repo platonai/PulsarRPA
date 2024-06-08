@@ -87,17 +87,6 @@ class TestFrequency {
     }
 
     @Test
-    fun testFrequencyTree() {
-        val frequency: Frequency<String> = urls.flatMapTo(Frequency()) { it.split("/") }
-        println(frequency)
-
-        val tree = FrequencyTree(frequency)
-        // tree.print()
-        val ptree = tree.root.convert()
-        BTreePrinter.print(ptree)
-    }
-
-    @Test
     fun testToString() {
         val frequency = Frequency<String>()
         IntRange(1, 10).forEach {  i ->

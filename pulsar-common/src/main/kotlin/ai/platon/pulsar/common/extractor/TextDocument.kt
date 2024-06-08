@@ -13,7 +13,7 @@ open class TextDocument(
      * */
     var pageTitle: String? = null,
     /**
-     * The title of the content, which extracted from the text content.
+     * The title of the content, which is extracted from the text content.
      * */
     var contentTitle: String? = null,
     /**

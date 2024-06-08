@@ -2047,7 +2047,11 @@ interface PulsarSession : AutoCloseable {
      * @see [boilerpipe-web](https://boilerpipe-web.appspot.com/)
      * */
     fun harvest(page: WebPage, engine: String = "boilerpipe"): TextDocument
-
+    
+    fun chat(page: WebPage, prompts: String = "", llm: String = "glm4"): TextDocument
+    
+    fun chat(document: FeaturedDocument, prompts: String = "", llm: String = "glm4"): TextDocument
+    
     /**
      * Export the content of a webpage.
      *
