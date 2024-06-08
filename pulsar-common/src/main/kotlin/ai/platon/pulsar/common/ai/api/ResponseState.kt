@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common.lm
+package ai.platon.pulsar.common.ai.api
 
 /**
  * The reason why a model call finished.

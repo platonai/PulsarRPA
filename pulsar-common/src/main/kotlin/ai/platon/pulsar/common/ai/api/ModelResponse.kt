@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common.lm
+package ai.platon.pulsar.common.ai.api
 
 open class ModelResponse(
     val content: String,
