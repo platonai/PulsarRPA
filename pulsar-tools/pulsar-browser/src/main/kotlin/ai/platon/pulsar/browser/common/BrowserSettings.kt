@@ -379,6 +379,42 @@ open class BrowserSettings(
             ProxyPoolManager.disableProxy()
             return this
         }
+        /**
+         * Export all pages automatically once they are fetched.
+         *
+         * The export directory is under AppPaths.WEB_CACHE_DIR.
+         * A typical export path is:
+         *
+         * * AppPaths.WEB_CACHE_DIR/default/pulsar_chrome/OK/amazon-com
+         * * C:\Users\pereg\AppData\Local\Temp\pulsar-pereg\cache\web\default\pulsar_chrome\OK\amazon-com
+         * */
+        @JvmStatic
+        fun enableOriginalPageContentAutoExporting(): Companion {
+            System.setProperty(FETCH_PAGE_AUTO_EXPORT_LIMIT, Int.MAX_VALUE.toString())
+            return this
+        }
+        /**
+         * Export at most [limit] pages once they are fetched.
+         *
+         * The export directory is under AppPaths.WEB_CACHE_DIR.
+         * A typical export path is:
+         *
+         * * AppPaths.WEB_CACHE_DIR/default/pulsar_chrome/OK/amazon-com
+         * * C:\Users\pereg\AppData\Local\Temp\pulsar-pereg\cache\web\default\pulsar_chrome\OK\amazon-com
+         * */
+        @JvmStatic
+        fun enableOriginalPageContentAutoExporting(limit: Int): Companion {
+            System.setProperty(FETCH_PAGE_AUTO_EXPORT_LIMIT, limit.toString())
+            return this
+        }
+        /**
+         * Disable original page content exporting.
+         * */
+        @JvmStatic
+        fun disableOriginalPageContentAutoExporting(): Companion {
+            System.setProperty(FETCH_PAGE_AUTO_EXPORT_LIMIT, "0")
+            return this
+        }
     }
 
     /**

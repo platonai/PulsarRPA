@@ -180,7 +180,7 @@ public interface CapabilityTypes {
     /**
      * The maximum number of pages to export in fetch phrase.
      * */
-    String FETCH_MAX_EXPORT_COUNT = "fetch.max.export.count";
+    String FETCH_PAGE_AUTO_EXPORT_LIMIT = "fetch.page.auto.export.limit";
 
     /**
      * Browser

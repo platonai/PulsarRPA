@@ -3,7 +3,6 @@ package ai.platon.pulsar.common.files.ext
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
-import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
@@ -24,7 +23,7 @@ fun AppFiles.export(
     page: WebPage,
     suffix: String = ".htm",
 ): Path {
-    val monthDay = DateTimes.now("MMdd")
+    val domain = AppPaths.fromDomain(page.url)
 
     val document = Documents.parse(content, page.baseUrl)
     document.absoluteLinks()
@@ -32,7 +31,7 @@ fun AppFiles.export(
     val length = prettyHtml.length
 
     sb.setLength(0)
-    sb.append(status.minorName).append('/').append(monthDay)
+    sb.append(status.minorName).append('/').append(domain)
     if (length < 2000) {
         sb.append("/a").append(length / 500 * 500)
     } else {
@@ -55,9 +54,9 @@ fun AppFiles.export(
 ): Path {
     val browser = page.lastBrowser.name.lowercase(Locale.getDefault())
 
-    val filename = AppPaths.fromUri(page.url, prefix, suffix)
-    val path = WEB_CACHE_DIR.resolve(group).resolve(browser).resolve(filename)
-    saveTo(content, path, true)
+    val path0 = AppPaths.fromUri(page.url, prefix, suffix)
+    val path = WEB_CACHE_DIR.resolve(group).resolve(browser).resolve(path0)
+    AppFiles.saveTo(content, path, true)
 
     return path
 }
@@ -66,7 +65,7 @@ fun AppFiles.export(page: WebPage, prefix: String = "", suffix: String = ".htm")
     val filename = page.headers.decodedDispositionFilename ?: AppPaths.fromUri(page.location, prefix, suffix)
     val path = WEB_CACHE_DIR.resolve(filename)
     Files.deleteIfExists(path)
-    saveTo(page.content?.array() ?: "(empty)".toByteArray(), path)
+    AppFiles.saveTo(page.content?.array() ?: "(empty)".toByteArray(), path)
     return path
 }
 

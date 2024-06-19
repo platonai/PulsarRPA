@@ -569,13 +569,13 @@ open class InteractiveBrowserEmulator(
     }
 
     /**
-     * Scroll on page
+     * Scroll on page to ensure all the content is loaded, including lazy content.
      * */
     open suspend fun scrollOnPage(interactTask: InteractTask, result: InteractResult) {
         val expressions = buildScrollExpressions(interactTask)
 
         val interactSettings = interactTask.interactSettings
-        // some website show lazy content only when the page is in the front.
+        // some website shows lazy content only when the page is in the front.
         val bringToFront = interactTask.interactSettings.bringToFront
         val scrollInterval = interactSettings.scrollInterval.toMillis()
         evaluate(interactTask, expressions, scrollInterval, bringToFront = bringToFront)

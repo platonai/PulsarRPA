@@ -581,6 +581,13 @@
                 <artifactId>pulsar-resources</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-resources</artifactId>
+                <scope>test</scope>
+                <classifier>tests</classifier>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>

@@ -2,10 +2,8 @@ package ai.platon.pulsar.session
 
 import ai.platon.pulsar.boilerpipe.extractors.ArticleExtractor
 import ai.platon.pulsar.boilerpipe.sax.SAXInput
-import ai.platon.pulsar.common.AppFiles
-import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
-import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.options.LoadOptions
@@ -13,7 +11,6 @@ import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.PageEventHandlers
@@ -23,13 +20,11 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
-import dev.langchain4j.data.message.AiMessage
 import dev.langchain4j.data.message.UserMessage
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import org.xml.sax.InputSource
-import java.awt.SystemColor.text
 import java.io.StringReader
 import java.nio.ByteBuffer
 import java.nio.file.Path
@@ -427,7 +422,7 @@ abstract class AbstractPulsarSession(
     override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
 
     override fun chat(page: WebPage, prompt: String, llm: String): TextDocument {
-        val apiKey = property("ZHIPU_API_KEY")
+        val apiKey = property("ZHIPU_API_KEY") ?: throw AuthenticationException("ZHIPU_API_KEY is not set")
 
         val chatModel: ZhipuAiChatModel = ZhipuAiChatModel.builder()
             .apiKey(apiKey)
@@ -448,7 +443,7 @@ abstract class AbstractPulsarSession(
     }
 
     override fun chat(document: FeaturedDocument, prompt: String, llm: String): TextDocument {
-        val apiKey = property("ZHIPU_API_KEY") ?: "c1a92bfd50864379f131a9163b3ae603.T9g864K4HqAEP9Wz"
+        val apiKey = property("ZHIPU_API_KEY") ?: throw AuthenticationException("ZHIPU_API_KEY is not set")
         
         val chatModel: ZhipuAiChatModel = ZhipuAiChatModel.builder()
             .apiKey(apiKey)
@@ -470,8 +465,8 @@ abstract class AbstractPulsarSession(
         return TextDocument(url, textContent = response.content().text())
     }
 
-    private fun chat0(url: String, text: String, prompt: String, llm: String): TextDocument {
-        val apiKey = property("ZHIPU_API_KEY")
+    private fun chat0(url: String, context: String, prompt: String, llm: String): TextDocument {
+        val apiKey = property("ZHIPU_API_KEY") ?: throw AuthenticationException("ZHIPU_API_KEY is not set")
         
         val chatModel: ZhipuAiChatModel = ZhipuAiChatModel.builder()
             .apiKey(apiKey)
@@ -480,7 +475,7 @@ abstract class AbstractPulsarSession(
             .maxRetries(1)
             .build()
         
-        val prompt1 = prompt + "\n\n" + text
+        val prompt1 = prompt + "\n\n" + context
         
         // given
         val message = UserMessage.userMessage(prompt1)

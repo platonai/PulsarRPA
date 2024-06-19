@@ -2048,9 +2048,9 @@ interface PulsarSession : AutoCloseable {
      * */
     fun harvest(page: WebPage, engine: String = "boilerpipe"): TextDocument
     
-    fun chat(page: WebPage, prompts: String = "", llm: String = "glm4"): TextDocument
+    fun chat(page: WebPage, prompt: String = "", llm: String = "glm4"): TextDocument
     
-    fun chat(document: FeaturedDocument, prompts: String = "", llm: String = "glm4"): TextDocument
+    fun chat(document: FeaturedDocument, prompt: String = "", llm: String = "glm4"): TextDocument
     
     /**
      * Export the content of a webpage.
