@@ -23,7 +23,6 @@
     <name>Pulsar App</name>
 
     <modules>
-        <module>pulsar-qa</module>
         <module>pulsar-tests</module>
         <module>pulsar-master</module>
         <module>pulsar-examples</module>
