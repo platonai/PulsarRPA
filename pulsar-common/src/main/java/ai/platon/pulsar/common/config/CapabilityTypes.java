@@ -20,6 +20,9 @@ public interface CapabilityTypes {
 
     String LEGACY_CONFIG_PROFILE = "legacy.config.profile";
 
+    /**
+     * @deprecated legacy configurations are deprecated
+     * */
     String SYSTEM_PROPERTY_SPECIFIED_RESOURCES = "system.property.specified.resources";
 
     String DRY_RUN = "pulsar.dry.run";

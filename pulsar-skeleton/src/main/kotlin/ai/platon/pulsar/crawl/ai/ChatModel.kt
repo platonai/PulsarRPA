@@ -13,7 +13,7 @@ import org.jsoup.nodes.Element
 class ChatModel(
     val conf: ImmutableConfig
 ) {
-    private val apiKey = conf["EXTERNAL_AI_API_KEY"] ?: conf["ZHIPU_API_KEY"]
+    private val apiKey = conf["ZHIPU_API_KEY"]
     private val chatModel: ZhipuAiChatModel = ZhipuAiChatModel.builder()
         .apiKey(apiKey)
         .logRequests(true)

@@ -25,7 +25,7 @@ open class VolatileConfig : MutableConfig {
     constructor(
         profile: String = System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
         loadDefaults: Boolean = true,
-        resources: Iterable<String> = DEFAULT_RESOURCES
+        resources: Iterable<String> = mutableSetOf()
     ): super(profile, loadDefaults, resources)
 
     constructor(fallbackConfig: ImmutableConfig) : this("", false) {
