@@ -28,7 +28,7 @@ fun main() {
         // sign in all websites requiring login
     }
 
-    event.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
+    event.loadEventHandlers.onHTMLDocumentParsed.addLast { page, document ->
         println(document.title + " | " + document.baseURI)
     }
     urls.forEach { session.submitForOutPages(it, options) }

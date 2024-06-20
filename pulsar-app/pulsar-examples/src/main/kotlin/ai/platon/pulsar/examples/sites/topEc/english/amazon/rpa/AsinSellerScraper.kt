@@ -78,7 +78,7 @@ class AsinSellerScraper {
             }
         }
 
-        val le = hyperlink.event.loadEvent
+        val le = hyperlink.event.loadEventHandlers
         le.onHTMLDocumentParsed.addLast { page, document ->
             scrapeAsin(page, document)
         }
@@ -183,7 +183,7 @@ class AsinSellerScraper {
                         page.referrer = null
                         null
                     }
-                    event.loadEvent.onFetched.addLast { page ->
+                    event.loadEventHandlers.onFetched.addLast { page ->
                         link.referrer?.let { page.referrer = it }
                     }
                 }

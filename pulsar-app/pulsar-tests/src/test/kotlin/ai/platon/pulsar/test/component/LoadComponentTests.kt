@@ -88,7 +88,7 @@ class LoadComponentTests: TestBase() {
         val channel = Channel<WebPage>()
         
         val options = session.options()
-        options.event.loadEvent.onLoaded.addLast { page ->
+        options.event.loadEventHandlers.onLoaded.addLast { page ->
             launch {
                 channel.send(page)
                 MessageFormat.format("SEND ► page {0} | {1}", page.id, page.url).also { println(it) }

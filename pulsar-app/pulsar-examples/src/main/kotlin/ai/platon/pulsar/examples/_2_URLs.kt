@@ -76,7 +76,7 @@ fun main() {
     // Load a CompletableListenableHyperlink, so we can register various event handlers,
     // and we can wait for the execution to complete.
     val completableListenableHyperlink = CompletableListenableHyperlink<WebPage>(url).apply {
-        event.loadEvent.onLoaded.addLast { complete(it) }
+        event.loadEventHandlers.onLoaded.addLast { complete(it) }
     }
     session.submit(completableListenableHyperlink, "-expires 10s")
     val page4 = completableListenableHyperlink.join()

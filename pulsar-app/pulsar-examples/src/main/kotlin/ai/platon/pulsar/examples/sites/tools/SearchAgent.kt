@@ -57,7 +57,7 @@ class SearchAgent {
 
         val options = session.options(args)
         val be = options.event.browseEventHandlers
-        val le = options.event.loadEvent
+        val le = options.event.loadEventHandlers
 
         be.onDocumentActuallyReady.addLast { page, driver ->
             driver.scrollTo("ol#b_results li:nth-child(3) h2")
@@ -93,7 +93,7 @@ class SearchAgent {
         val url = builder.build().toURL().toString()
         val options = session.options(args)
         val be = options.event.browseEventHandlers
-        val le = options.event.loadEvent
+        val le = options.event.loadEventHandlers
         
         be.onDocumentActuallyReady.addLast { page, driver ->
             driver.scrollTo("h3:nth-child(3)")
@@ -141,5 +141,5 @@ fun main() {
     val agent = SearchAgent()
     agent.search()
     
-    readLine()
+    readlnOrNull()
 }
