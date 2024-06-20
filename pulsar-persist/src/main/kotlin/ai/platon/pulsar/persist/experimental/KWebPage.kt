@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * The core web page structure
  */
-open class BasicWebPage(
+open class KWebPage(
     val page: GWebPage
 ) : KWebAsset, WebAssetState {
     companion object {
@@ -47,7 +47,7 @@ open class BasicWebPage(
     /**
      * Web page scope configuration
      */
-    override val conf: VolatileConfig = TODO()
+    override var conf: VolatileConfig = VolatileConfig()
 
     /**
      * Web page scope variables
@@ -168,7 +168,7 @@ open class BasicWebPage(
      *
      * @return a [String] object.
      * @link {https://jsoup.org/apidocs/org/jsoup/Jsoup.html#parse-java.io.File-java.lang.String-java.lang.String-}
-     * @see BasicWebPage.getLocation
+     * @see KWebPage.getLocation
      */
     override val baseUrl: String
         get() = if (page.baseUrl == null) "" else page.baseUrl.toString()
@@ -267,7 +267,9 @@ open class BasicWebPage(
      *
      * @return The length of the content in bytes.
      */
-    override var contentLength get() = page.contentLength ?: 0
+    override var contentLength
+        get() = page.contentLength ?: 0
+        set(value) = computeContentLength(value)
 
     /**
      * Compute the length of content in bytes.
@@ -292,69 +294,91 @@ open class BasicWebPage(
         page.aveContentLength = aveBytes
     }
 
-    override var persistedContentLength get() = page.persistedContentLength ?: 0
+    override var persistedContentLength 
+        get() = page.persistedContentLength ?: 0
+        set(value) { page.persistedContentLength = value }
 
-    override var lastContentLength get() = page.lastContentLength ?: 0
+    override var lastContentLength 
+        get() = page.lastContentLength ?: 0
+        set(value) { page.lastContentLength = value }
 
-    override var aveContentLength get() = page.aveContentLength ?: 0
+    override var aveContentLength 
+        get() = page.aveContentLength ?: 0
+        set(value) { page.aveContentLength = value }
 
-    override var contentType get() = page.contentType?.toString() ?: ""
-        set(value) = run { page.contentType = value }
+    override var contentType 
+        get() = page.contentType?.toString() ?: ""
+        set(value) { page.contentType = value }
 
     /**
      * The last proxy used to fetch the page
      */
-    override val proxy get() = page.proxy?.toString()
+    override var proxy 
+        get() = page.proxy?.toString()
+        set(value) { page.proxy = value }
 
-    override val activeDOMStatus: ActiveDOMStatus?
+    override var activeDOMStatus: ActiveDOMStatus?
         get() {
             val s = page.activeDOMStatus ?: return null
-            return ActiveDOMStatus(
-                s.n,
-                s.scroll,
-                s.st.toString(),
-                s.r.toString(),
-                s.idl.toString(),
-                s.ec.toString()
-            )
+            return ActiveDOMStatus(s.n, s.scroll, s.st.toString(), s.r.toString(), s.idl.toString(), s.ec.toString())
+        }
+        set(value) {
+            page.activeDOMStatus = GActiveDOMStatus.newBuilder().apply {
+                n = value?.n ?: 0
+                scroll = value?.scroll ?: 0
+                st = value?.st ?: ""
+                r = value?.r ?: ""
+                idl = value?.idl ?: ""
+                ec = value?.ec ?: ""
+            }.build()
         }
 
-    override var activeDOMStatTrace get() = page.activeDOMStatTrace.entries.associate { it.key.toString() to convert(it.value) }
-        set(value) = run { page.activeDOMStatTrace = value.entries.associate { it.key to convert(it.value) } }
+    override var activeDOMStatTrace
+        get() = page.activeDOMStatTrace.entries.associate { it.key.toString() to convert(it.value) }
+        set(value) { page.activeDOMStatTrace = value.entries.associate { it.key to convert(it.value) } }
 
-    override var pageTitle get() = page.pageTitle?.toString() ?: ""
-        set(value) = run { page.pageTitle = value }
+    override var pageTitle
+        get() = page.pageTitle?.toString() ?: ""
+        set(value) { page.pageTitle = value }
 
-    override var parseStatus get() = ParseStatus.box(page.parseStatus ?: GParseStatus.newBuilder().build())
-        set(value) = run { page.parseStatus = value.unbox() }
+    override var parseStatus
+        get() = ParseStatus.box(page.parseStatus ?: GParseStatus.newBuilder().build())
+        set(value) { page.parseStatus = value.unbox() }
 
-    override var liveLinks get() = page.liveLinks
-        set(value) = run { page.liveLinks = value }
+    override var liveLinks
+        get() = page.liveLinks
+        set(value) { page.liveLinks = value }
 
     val simpleLiveLinks get() = page.liveLinks.keys.map { it.toString() }
 
     override var vividLinks get() = page.vividLinks
-        set(value) = run { page.vividLinks = value }
+        set(value) { page.vividLinks = value }
 
     val simpleVividLinks get() = page.vividLinks.keys.map { it.toString() }
 
-    override var deadLinks get() = page.deadLinks
-        set(value) = run { page.deadLinks = value }
+    override var deadLinks
+        get() = page.deadLinks
+        set(value) { page.deadLinks = value }
 
-    override var links get() = page.links
-        set(value) = run { page.links = value }
+    override var links
+        get() = page.links
+        set(value) { page.links = value }
 
-    override var estimatedLinkCount get() = metadata.get(Name.TOTAL_OUT_LINKS)?.toIntOrNull() ?: 0
-        set(value) = run { metadata[Name.TOTAL_OUT_LINKS] = value.toString() }
+    override var estimatedLinkCount
+        get() = metadata.get(Name.TOTAL_OUT_LINKS)?.toIntOrNull() ?: 0
+        set(value) { metadata[Name.TOTAL_OUT_LINKS] = value.toString() }
 
-    override var anchor get() = page.anchor ?: ""
-        set(value) = run { page.anchor = value }
+    override var anchor
+        get() = page.anchor ?: ""
+        set(value) { page.anchor = value }
 
-    override var anchorOrder get() = page.anchorOrder
-        set(value) = run { page.anchorOrder = value }
+    override var anchorOrder
+        get() = page.anchorOrder
+        set(value) { page.anchorOrder = value }
 
-    override var referrer get() = if (page.referrer == null) null else page.referrer.toString()
-        set(value) = run { page.referrer = value }
+    override var referrer
+        get() = if (page.referrer == null) null else page.referrer.toString()
+        set(value) { page.referrer = value }
 
     /**
      * *****************************************************************************
@@ -380,7 +404,7 @@ open class BasicWebPage(
     override fun hashCode() = url.hashCode()
 
     override fun equals(other: Any?): Boolean {
-        return if (this === other) true else other is BasicWebPage && other.url == url
+        return if (this === other) true else other is KWebPage && other.url == url
     }
 
     override fun toString() = url

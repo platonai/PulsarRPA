@@ -15,7 +15,7 @@ import java.time.temporal.ChronoUnit
  */
 open class AdvancedWebPage(
     page: GWebPage
-) : BasicWebPage(page) {
+) : KWebPage(page) {
     
     val isSeed get() = metadata.contains(Name.IS_SEED)
 
