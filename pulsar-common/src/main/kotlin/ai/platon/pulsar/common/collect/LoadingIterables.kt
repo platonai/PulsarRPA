@@ -84,7 +84,8 @@ open class ConcurrentLoadingIterable<E>(
 
         @Synchronized
         override fun next(): E {
-            return cache.removeFirst() ?: throw NoSuchElementException()
+            // do not use MutableList<T>.removeFirst() which can be conflict with List.removeFirst() in JDK-21
+            return cache.removeAt(0) ?: throw NoSuchElementException()
         }
     }
 }
