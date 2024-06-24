@@ -617,6 +617,14 @@
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-browser</artifactId>
                 <version>${project.version}</version>
+                <exclusions>
+                    <!-- exclude javassist, which is replaced by org.javassist:javassist:2.0.4-SNAPSHOT -->
+                    <!-- remove the exclusion below when javassist is upgraded to 3.24.0-GA -->
+                    <exclusion>
+                        <groupId>javassist</groupId>
+                        <artifactId>javassist</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
