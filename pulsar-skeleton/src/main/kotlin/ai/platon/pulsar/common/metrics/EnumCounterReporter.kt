@@ -34,7 +34,6 @@ class EnumCounterReporter(
     private val conf: ImmutableConfig
 ): GracefulScheduledExecutor(initialDelay, watchInterval) {
     private var logger = LoggerFactory.getLogger(EnumCounterReporter::class.java)
-    private val jobName get() = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNNAMED JOB")
     private var lastStatus = ""
     private val tick = AtomicInteger()
 
@@ -60,14 +59,14 @@ class EnumCounterReporter(
     }
 
     private fun reportStarted() {
-        logger.info("Counter reporter is started [ " + DateTimes.now() + " ] [ " + jobName + " ]")
+        logger.info("Counter reporter is started at {}", DateTimes.now())
         report()
     }
     
     private fun report() {
         val counterNames = counter.registeredCounters.map { readableClassName(it) }
         if (counterNames.isNotEmpty()) {
-            logger.info(counterNames.joinToString(", ", "All registered counters : "))
+            logger.info(counterNames.joinToString(", ", "Registered counters : "))
         } else {
             logger.info("No counter is registered")
         }
