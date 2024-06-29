@@ -37,9 +37,12 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.random.Random
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
 
 private class StreamingCrawlerMetrics {
     private val registry = MetricsSystem.defaultMetricRegistry
@@ -106,7 +109,7 @@ open class StreamingCrawler(
         private var lastHtmlIntegrity = ""
         private var lastFetchError = ""
         private val lastCancelReason = Frequency<String>()
-        private val isIllegalApplicationState = AtomicBoolean()
+        private val illegalApplicationState = AtomicBoolean()
 
         private var wrongProfile = MetricsSystem.reg.multiMetric(this, "WRONG_PROFILE_COUNT")
 
@@ -115,6 +118,8 @@ open class StreamingCrawler(
 
         init {
             mapOf(
+                "illegalApplicationState" to Gauge { illegalApplicationState.get() },
+                
                 "globalRunningInstances" to Gauge { globalRunningInstances.get() },
                 "globalRunningTasks" to Gauge { globalRunningTasks.get() },
                 "globalKilledTasks" to Gauge { globalKilledTasks.get() },
@@ -153,8 +158,7 @@ open class StreamingCrawler(
      * */
     private val concurrencyOverride get() = sessionConfig.getInt(MAIN_LOOP_CONCURRENCY_OVERRIDE, 0)
     
-    @Volatile
-    private var flowState = FlowState.CONTINUE
+    private val flowState = AtomicReference(FlowState.CONTINUE)
 
     private var lastActiveTime = Instant.now()
 
@@ -234,7 +238,7 @@ open class StreamingCrawler(
     /**
      * Check if the crawler is active.
      * */
-    override val isActive get() = super.isActive && !forceQuit && !isIllegalApplicationState.get()
+    override val isActive get() = super.isActive && !forceQuit && !illegalApplicationState.get()
 
     /**
      * The job name.
@@ -272,6 +276,16 @@ open class StreamingCrawler(
         startCrawlLoop(scope)
     }
 
+    override fun report() {
+        val sb = StringBuilder()
+        
+        StreamingCrawler::class.memberProperties.filter { it.isAccessible }.forEach {
+            sb.append(it.name).append(": ").append(it.get(this)).append("\n")
+        }
+        
+        logger.info(sb.toString())
+    }
+    
     /**
      * Wait until all tasks are done.
      * */
@@ -448,13 +462,13 @@ open class StreamingCrawler(
 
         if (isActive && FileCommand.check("finish-job")) {
             logger.info("Find finish-job command, quit streaming crawler ...")
-            flowState = FlowState.BREAK
-            return flowState
+            flowState.set(FlowState.BREAK)
+            return flowState.get()
         }
 
         if (!isActive) {
-            flowState = FlowState.BREAK
-            return flowState
+            flowState.set(FlowState.BREAK)
+            return flowState.get()
         }
 
         delayIfEstimatedNoLoadResource(j)
@@ -480,7 +494,7 @@ open class StreamingCrawler(
             }
         }
 
-        return flowState
+        return flowState.get()
     }
 
     /**
@@ -565,10 +579,10 @@ open class StreamingCrawler(
                 // The following exceptions can be caught as a Throwable but not the concrete exception,
                 // one of the reason is the concrete exception is not public.
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
-                    if (isIllegalApplicationState.compareAndSet(false, true)) {
+                    if (illegalApplicationState.compareAndSet(false, true)) {
                         logger.warn("Coroutine was cancelled, quit... (JobCancellationException)")
                     }
-                    flowState = FlowState.BREAK
+                    flowState.set(FlowState.BREAK)
                 }
 
                 e.javaClass.name.contains("DriverLaunchException") -> {
@@ -644,8 +658,8 @@ open class StreamingCrawler(
 //        }
 
         return kotlin.runCatching { session.loadDeferred(url, options) }
-            .onSuccess { flowState = handleLoadSuccess(url, it) }
-            .onFailure { flowState = handleLoadException(url, it) }
+            .onSuccess { flowState.set(handleLoadSuccess(url, it)) }
+            .onFailure { flowState.set(handleLoadException(url, it)) }
             .getOrNull()
     }
 
@@ -654,13 +668,18 @@ open class StreamingCrawler(
 //        if (globalWebDBFailures.get() > 0 && globalWebDBFailures.decrementAndGet() < 0) {
 //            globalWebDBFailures.set(0)
 //        }
-        return FlowState.CONTINUE
+        
+        return when (val state = flowState.get()) {
+            FlowState.BREAK -> FlowState.BREAK
+            else -> state
+        }
     }
 
     @Throws(Exception::class)
     private fun handleLoadException(url: UrlAware, e: Throwable): FlowState {
-        if (flowState == FlowState.BREAK) {
-            return flowState
+        val state = flowState
+        if (state.get() == FlowState.BREAK) {
+            return state.get()
         }
 
         if (!isActive) {
@@ -675,16 +694,18 @@ open class StreamingCrawler(
                 return FlowState.BREAK
             }
             is IllegalApplicationStateException -> {
-                if (isIllegalApplicationState.compareAndSet(false, true)) {
+                if (illegalApplicationState.compareAndSet(false, true)) {
                     logger.warn("\n!!!Illegal application context, quit ... | {}", e.message)
                 }
                 return FlowState.BREAK
             }
             is FatalBeanException -> {
-                if (flowState != FlowState.BREAK) {
+                if (state.compareAndSet(FlowState.CONTINUE, FlowState.BREAK)) {
                     logger.warn("Fatal bean exception, quit...", e)
+                } else {
+                    logger.warn("Fatal bean exception, quit... | {}", e.message)
                 }
-                flowState = FlowState.BREAK
+                return state.get()
             }
             is ProxyInsufficientBalanceException -> {
                 proxyOutOfService++
@@ -714,7 +735,7 @@ open class StreamingCrawler(
 
             is CancellationException -> {
                 // Has to come after TimeoutCancellationException
-                if (isIllegalApplicationState.compareAndSet(false, true)) {
+                if (illegalApplicationState.compareAndSet(false, true)) {
                     logger.warn("Streaming crawler job was canceled, quit ...", e)
                 }
                 return FlowState.BREAK
@@ -722,12 +743,13 @@ open class StreamingCrawler(
 
             is IllegalStateException -> {
                 logger.warn("Illegal state", e)
+                return FlowState.BREAK
             }
 
             else -> throw e
         }
 
-        return FlowState.CONTINUE
+        return state.get()
     }
 
     private fun doLaterIfProcessing(urlSpec: String, url: UrlAware, delay: Duration): Boolean {

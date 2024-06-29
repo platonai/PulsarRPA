@@ -28,6 +28,8 @@ interface Crawler: AutoCloseable {
     @Throws(InterruptedException::class)
     fun await()
 
+    fun report()
+    
     fun onWillLoad(url: UrlAware)
 
     fun onLoad(url: UrlAware)

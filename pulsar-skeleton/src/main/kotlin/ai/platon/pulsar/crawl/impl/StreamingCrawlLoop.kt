@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.CRAWL_ENABLE_DEFAULT_DATA_
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.Crawler
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
@@ -79,9 +80,18 @@ open class StreamingCrawlLoop(
     private fun start0() {
         logger.info("Crawl loop is started with {} link collectors | #{} | {}@{}",
             urlFeeder.collectors.size, id, this, hashCode())
+        
+        val cx = context
+        require(cx is AbstractPulsarContext) { "Expect context is AbstractPulsarContext, actual ${cx::class}#${cx.id}" }
+        val applicationContext = cx.applicationContext
+        require(applicationContext.isActive) { "Expect context is active | ${applicationContext.id}" }
+        require(cx.isActive) { "Expect context is active | ${cx.id}" }
 
+        val session = cx.createSession()
+        require(session.isActive) { "Expect session is active, actual ${session::class}#${session.id}" }
+        
         val urls = urlFeeder.asSequence()
-        _crawler = StreamingCrawler(urls, context.createSession(), autoClose = false)
+        _crawler = StreamingCrawler(urls, session, autoClose = false)
 
         crawlJob = scope.launch {
             supervisorScope {
