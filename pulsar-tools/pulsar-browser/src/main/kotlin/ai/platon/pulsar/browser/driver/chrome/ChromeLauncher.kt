@@ -56,7 +56,7 @@ class ChromeLauncher(
      * */
     fun launch(chromeBinaryPath: Path, options: ChromeOptions): RemoteChrome {
         kotlin.runCatching { prepareUserDataDir() }.onFailure {
-            warnInterruptible(this, it, "Failed to prepare user data dir | {} | {}", userDataDir, it.message)
+            warnInterruptible(this, it, "Failed to prepare user data dir | {} | {}", userDataDir, it.stringify())
         }
 
         val port = launchChromeProcess(chromeBinaryPath, userDataDir, options)
@@ -317,18 +317,27 @@ Close Chrome and run the program again.
 //                    }
                     FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile(), fileFilter)
                 } else {
-                    Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
-                    val leveldb = userDataDir.resolve("Default/Local Storage/leveldb")
-                    if (Files.exists(leveldb)) {
-                        FileUtils.deleteDirectory(leveldb.toFile())
-                    }
-
-                    arrayOf("Default/Cookies", "Default/Local Storage/leveldb").forEach {
-                        val target = userDataDir.resolve(it)
-                        Files.createDirectories(target.parent)
-                        Files.copy(prototypeUserDataDir.resolve(it), target, StandardCopyOption.REPLACE_EXISTING)
-                    }
+                    handleExistUserDataDir(prototypeUserDataDir)
                 }
+            }
+        }
+    }
+    
+    private fun handleExistUserDataDir(prototypeUserDataDir: Path) {
+        // the user data dir exists
+        Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
+        val leveldb = userDataDir.resolve("Default/Local Storage/leveldb")
+        if (Files.exists(leveldb)) {
+            // might have permission issue on Windows
+            // FileUtils.deleteDirectory(leveldb.toFile())
+        }
+        
+        arrayOf("Default/Cookies", "Default/Local Storage/leveldb").forEach {
+            val target = userDataDir.resolve(it)
+            Files.createDirectories(target.parent)
+            val source = prototypeUserDataDir.resolve(it)
+            if (Files.exists(source)) {
+                // Files.copy(prototypeUserDataDir.resolve(it), target, StandardCopyOption.REPLACE_EXISTING)
             }
         }
     }
