@@ -4,18 +4,17 @@ $AppHome = (Resolve-Path "$BIN\..").Path
 $CLEAN = $false
 $SKIP_TEST = $true
 
-$MVNW="$AppHome\mvnw"
-$MVN_OPTS = @()
+$MVNW="$AppHome\mvnw.cmd"
+$MvnOptions = @()
 
 if ($CLEAN) {
-  $MVN_OPTS += "clean"
+  & $MVNW clean
 }
 
 if ($SKIP_TEST) {
-  $MVN_OPTS += "-DskipTests=true"
+  $MvnOptions += "-DskipTests=true"
 }
-$MVN_OPTS += "-Pall-modules"
-
+$MvnOptions += "-Pall-modules"
 
 # Function to execute Maven command in a given directory
 Function Invoke-MavenBuild
@@ -24,7 +23,7 @@ Function Invoke-MavenBuild
   try
   {
     Push-Location $Directory -ErrorAction Stop
-    & $MvnCmd @MvnOptions + $AdditionalMvnArgs
+    & $MVNW @MvnOptions
     if ($LASTEXITCODE -ne 0)
     {
       Write-Warning "Maven command failed in $Directory"
