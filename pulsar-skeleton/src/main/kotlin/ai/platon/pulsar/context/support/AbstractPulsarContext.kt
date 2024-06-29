@@ -75,13 +75,17 @@ abstract class AbstractPulsarContext(
     /**
      * Flag that indicates whether this context is currently active.
      * */
-    override val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
+    override val isActive get() = !closed.get() && applicationContext.isActive
 
     /**
      * The context id
      * */
     override val id = instanceSequencer.incrementAndGet()
 
+    init {
+        AppContext.start()
+    }
+    
     /**
      * An immutable config is which loaded from the config file at process startup, and never changes
      * */

@@ -27,6 +27,7 @@ import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
+import org.springframework.beans.FatalBeanException
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
@@ -575,7 +576,7 @@ open class StreamingCrawler(
                 }
 
                 else -> {
-                    logger.warn("[Unexpected]", e)
+                    logger.warn("[Unexpected] Exception details: >>>>", e)
                 }
             }
         }
@@ -679,7 +680,12 @@ open class StreamingCrawler(
                 }
                 return FlowState.BREAK
             }
-
+            is FatalBeanException -> {
+                if (flowState != FlowState.BREAK) {
+                    logger.warn("Fatal bean exception, quit...", e)
+                }
+                flowState = FlowState.BREAK
+            }
             is ProxyInsufficientBalanceException -> {
                 proxyOutOfService++
                 logger.warn("{}. {}", proxyOutOfService, e.message)

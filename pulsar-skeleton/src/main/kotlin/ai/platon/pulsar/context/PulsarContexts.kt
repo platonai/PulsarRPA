@@ -28,9 +28,13 @@ object PulsarContexts {
     @Synchronized
     @JvmStatic
     fun create(): PulsarContext {
-        if (activeContext == null) {
-            activeContext = create(StaticPulsarContext())
+        val activated = activeContext
+        if (activated != null && activated.isActive) {
+            // logger.info("Context is already activated | {}#{}", activated::class, activated.id)
+            return activated
         }
+
+        activeContext = create(StaticPulsarContext())
         return activeContext!!
     }
 
@@ -44,7 +48,7 @@ object PulsarContexts {
     @JvmStatic
     fun create(context: PulsarContext): PulsarContext {
         val activated = activeContext
-        if (activated != null && activated::class == context::class) {
+        if (activated != null && activated::class == context::class && activated.isActive) {
             logger.info("Context is already activated | {}", activated::class)
             return activated
         }
