@@ -1,27 +1,31 @@
-$MAVEN_HOME = "D:\Program Files\maven\apache-maven-3.8.8"
-$MVN = Join-Path $MAVEN_HOME "bin\mvn.cmd"
+# Define script directory and resolve the application home path
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$AppHome = (Resolve-Path (Join-Path $ScriptDir '..\..')).Path
 
 function printUsage {
-  Write-Host "Usage: deploy [-clean|-test]"
+  Write-Host "Usage: deploy.ps1 [-clean|-test]"
   exit 1
 }
 
-if ($args.Length -gt 0) {
-  printUsage
-}
+# Maven command and options
+$MvnCmd = Join-Path $AppHome '.\mvnw.cmd'
 
-$TEST =$false
-$CLEAN =$false
+# Initialize flags and additional arguments
+$PerformClean = $false
+$SkipTests = $true
 
-while ($args.Length -gt 0) {
-  switch ($args[0]) {
-    "-clean" {
-      $CLEAN =$true
-      $args =$args[1..($args.Length-1)] # past argument
+$AdditionalMvnArgs = @()
+
+# Parse command-line arguments
+foreach ($Arg in $args)
+{
+  switch ($Arg)
+  {
+    '-clean' {
+      $PerformClean = $true;
     }
-    "-test" {
-      $TEST =$true
-      $args =$args[1..($args.Length-1)] # past argument
+    { '-t', '-test' } {
+      $SkipTests = $false;
     }
     { $_ -in "-h", "-help", "--help" } {
       printUsage
@@ -29,38 +33,34 @@ while ($args.Length -gt 0) {
     { $_ -in "-*", "--*" } {
       printUsage
     }
-    default {
-      printUsage
+    Default {
+      $AdditionalMvnArgs += $Arg
     }
   }
 }
 
-$bin = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$bin = (Resolve-Path "$bin\..").Path
-$APP_HOME = (Resolve-Path "$bin\..").Path
-
 Write-Host "Deploy the project ..."
 Write-Host "Changing version ..."
 
-$SNAPSHOT_VERSION = Get-Content "$APP_HOME\VERSION" -TotalCount 1
+$SNAPSHOT_VERSION = Get-Content "$AppHome\VERSION" -TotalCount 1
 $VERSION =$SNAPSHOT_VERSION -replace "-SNAPSHOT", ""
-$VERSION | Set-Content "$APP_HOME\VERSION"
+$VERSION | Set-Content "$AppHome\VERSION"
 
-Get-ChildItem -Path "$APP_HOME" -Depth 2 -Filter 'pom.xml' -Recurse | ForEach-Object {
+Get-ChildItem -Path "$AppHome" -Depth 2 -Filter 'pom.xml' -Recurse | ForEach-Object {
   (Get-Content $_.FullName) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content $_.FullName
 }
 
-if ($CLEAN) {
-  & $MVN clean
+if ($PerformClean) {
+  & $MvnCmd clean -Pall-modules
   if ($LastExitCode -ne 0) {
     exit $LastExitCode
   }
 }
 
-if ($TEST) {
-  & $MVN deploy -Pplaton-release -Pplaton-deploy
+if ($SkipTests) {
+  & $MvnCmd deploy -Pplaton-release -Pplaton-deploy -DskipTests
 } else {
-  & $MVN deploy -Pplaton-release -Pplaton-deploy -DskipTests=$true
+  & $MvnCmd deploy -Pplaton-release -Pplaton-deploy
 }
 
 $exitCode =$LastExitCode

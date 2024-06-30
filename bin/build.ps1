@@ -1,33 +1,72 @@
-$BIN = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$AppHome = (Resolve-Path "$BIN\..").Path
+# Define script directory and resolve the application home path
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$AppHome = (Resolve-Path (Join-Path $ScriptDir '..')).Path
 
-$CLEAN = $false
-$SKIP_TEST = $true
+function printUsage {
+  Write-Host "Usage: deploy.ps1 [-clean|-test]"
+  exit 1
+}
 
-$MVNW="$AppHome\mvnw.cmd"
+# Maven command and options
+$MvnCmd = Join-Path $AppHome '.\mvnw'
+
+# Initialize flags and additional arguments
+$PerformClean = $false
+$SkipTests = $true
+
 $MvnOptions = @()
+$AdditionalMvnArgs = @()
 
-if ($CLEAN) {
-  & $MVNW clean
+# Parse command-line arguments
+foreach ($Arg in $args)
+{
+  switch ($Arg)
+  {
+    '-clean' {
+      $PerformClean = $true;
+    }
+    { '-t', '-test' } {
+      $SkipTests = $false;
+    }
+    { $_ -in "-h", "-help", "--help" } {
+      printUsage
+    }
+    { $_ -in "-*", "--*" } {
+      printUsage
+    }
+    Default {
+      $AdditionalMvnArgs += $Arg
+    }
+  }
 }
 
-if ($SKIP_TEST) {
-  $MvnOptions += "-DskipTests=true"
+# Conditionally add Maven options based on flags
+if ($PerformClean)
+{
+  $MvnOptions += 'clean'
 }
-$MvnOptions += "-Pall-modules"
+
+if ($SkipTests)
+{
+  $AdditionalMvnArgs += '-DskipTests'
+}
 
 # Function to execute Maven command in a given directory
 Function Invoke-MavenBuild
 {
-  param([string]$Directory)
+  param([string]$Directory, [Object]$MvnOptions)
+
   try
   {
     Push-Location $Directory -ErrorAction Stop
-    & $MVNW @MvnOptions
+
+    & $MvnCmd @MvnOptions
+
     if ($LASTEXITCODE -ne 0)
     {
       Write-Warning "Maven command failed in $Directory"
     }
+
     Pop-Location
   }
   catch
@@ -37,4 +76,8 @@ Function Invoke-MavenBuild
 }
 
 # Execute Maven package in the application home directory
-Invoke-MavenBuild -Directory $AppHome
+$MvnOptions += 'install'
+$AdditionalMvnArgs += '-Pall-modules'
+
+$MvnOptions += $AdditionalMvnArgs
+Invoke-MavenBuild -Directory $AppHome -MvnOptions $MvnOptions
