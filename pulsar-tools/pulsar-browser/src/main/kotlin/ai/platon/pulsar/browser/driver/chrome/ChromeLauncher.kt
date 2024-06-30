@@ -273,7 +273,7 @@ class ChromeLauncher(
 Failed to start Chrome programmatically, but there are already $count chrome
 processes running in the system.
 
-Close Chrome and run the program again.
+Kill all Chrome processes and run the program again.
 
 ===============================================================================
 

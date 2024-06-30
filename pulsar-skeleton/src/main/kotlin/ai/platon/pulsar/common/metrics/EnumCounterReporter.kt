@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class EnumCounterReporter(
     private val counter: EnumCounterRegistry,
     initialDelay: Duration = Duration.ofMinutes(3),
-    watchInterval: Duration = Duration.ofSeconds(30),
+    watchInterval: Duration = Duration.ofSeconds(10),
     private val conf: ImmutableConfig
 ): GracefulScheduledExecutor(initialDelay, watchInterval) {
     private var logger = LoggerFactory.getLogger(EnumCounterReporter::class.java)
