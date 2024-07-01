@@ -3,7 +3,6 @@ package ai.platon.pulsar.crawl.impl
 import ai.platon.pulsar.common.collect.UrlFeeder
 import ai.platon.pulsar.common.config.CapabilityTypes.CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.Crawler
@@ -89,7 +88,9 @@ open class StreamingCrawlLoop(
 
         val session = cx.createSession()
         require(session.isActive) { "Expect session is active, actual ${session::class}#${session.id}" }
-        
+
+        StreamingCrawler.clearIllegalState()
+
         val urls = urlFeeder.asSequence()
         _crawler = StreamingCrawler(urls, session, autoClose = false)
 
