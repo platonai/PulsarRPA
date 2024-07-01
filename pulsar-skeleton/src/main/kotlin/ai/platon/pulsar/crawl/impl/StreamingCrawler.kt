@@ -140,10 +140,18 @@ open class StreamingCrawler(
             ).let { MetricsSystem.reg.registerAll(this, it) }
         }
         
-        fun clearGlobalState() {
+        /**
+         * Reset the global state to the initial state. The global state is shared by all [StreamingCrawler]s.
+         * */
+        fun resetGlobalState() {
             globalState = GlobalCrawlState()
         }
         
+        /**
+         * Clears all the illegal states shared by all [StreamingCrawler]s.
+         * Only when there is no illegal states set, the newly created crawler can work properly.
+         * Other object scope data will keep unchanged, so we can still know what happened.
+         * */
         fun clearIllegalState() {
             globalState.illegalApplicationState.set(false)
         }

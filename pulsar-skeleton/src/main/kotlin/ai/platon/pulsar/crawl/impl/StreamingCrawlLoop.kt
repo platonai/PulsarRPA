@@ -89,6 +89,7 @@ open class StreamingCrawlLoop(
         val session = cx.createSession()
         require(session.isActive) { "Expect session is active, actual ${session::class}#${session.id}" }
 
+        // clear the global illegal states, so the newly created crawler can work properly
         StreamingCrawler.clearIllegalState()
 
         val urls = urlFeeder.asSequence()
