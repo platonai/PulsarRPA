@@ -20,21 +20,19 @@ enum class BrowserResponseEvents {
     browseTimeout,
 }
 
+/**
+ * The browser response handler. It's a component of the browser emulator, it's used to handle the response from
+ * the browser.
+ * */
 interface BrowserResponseHandler: EventEmitter<BrowserResponseEvents> {
-
+    /**
+     * TODO: a better extension point to add sniffers
+     * */
     val pageCategorySniffer: ChainedPageCategorySniffer
-
+    /**
+     * TODO: a better extension point to add checkers
+     * */
     val htmlIntegrityChecker: ChainedHtmlIntegrityChecker
-
-    fun onInitPageCategorySniffer(sniffer: PageCategorySniffer)
-
-    fun onInitHTMLIntegrityChecker(checker: HtmlIntegrityChecker)
-
-    fun onWillCreateResponse(task: FetchTask, driver: WebDriver)
-
-    fun onResponseCreated(task: FetchTask, driver: WebDriver, response: Response)
-
-    fun checkErrorPage(page: WebPage, status: ProtocolStatus): ProtocolStatus
 
     /**
      * Normalize the page source.
@@ -44,8 +42,6 @@ interface BrowserResponseHandler: EventEmitter<BrowserResponseEvents> {
      */
     fun normalizePageSource(url: String, pageSource: String): StringBuilder
 
-    fun onBrowseTimeout(task: NavigateTask)
-
     /**
      * Chrome redirected to the error page chrome-error://
      * This page should be text analyzed to determine the actual error.
@@ -53,4 +49,16 @@ interface BrowserResponseHandler: EventEmitter<BrowserResponseEvents> {
     fun createBrowserErrorResponse(message: String): BrowserErrorResponse
 
     fun createProtocolStatusForBrokenContent(task: FetchTask, htmlIntegrity: HtmlIntegrity): ProtocolStatus
+    
+    fun checkErrorPage(page: WebPage, status: ProtocolStatus): ProtocolStatus
+    
+    fun onInitPageCategorySniffer(sniffer: PageCategorySniffer)
+    
+    fun onInitHTMLIntegrityChecker(checker: HtmlIntegrityChecker)
+    
+    fun onWillCreateResponse(task: FetchTask, driver: WebDriver)
+    
+    fun onResponseCreated(task: FetchTask, driver: WebDriver, response: Response)
+    
+    fun onBrowseTimeout(task: NavigateTask)
 }
