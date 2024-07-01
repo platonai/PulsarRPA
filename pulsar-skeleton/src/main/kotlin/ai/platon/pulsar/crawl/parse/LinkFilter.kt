@@ -79,7 +79,7 @@ class LinkFilter(private val crawlFilters: CrawlFilters, val conf: ImmutableConf
             return 112
         }
         val destHost = URLUtil.getHost(url, groupMode)
-        if (destHost == null || destHost.isEmpty()) {
+        if (destHost.isNullOrEmpty()) {
             return 104
         }
         if (ignoreExternalLinks && sourceHost != destHost) {
