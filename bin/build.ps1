@@ -1,6 +1,9 @@
-# Define script directory and resolve the application home path
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$AppHome = (Resolve-Path (Join-Path $ScriptDir '..')).Path
+# Find the first parent directory containing the VERSION file
+$AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
+while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
+  $AppHome=$AppHome.Parent
+}
+cd $AppHome
 
 function printUsage {
   Write-Host "Usage: deploy.ps1 [-clean|-test]"
