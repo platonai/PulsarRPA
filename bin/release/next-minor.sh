@@ -28,10 +28,10 @@ find "$APP_HOME" -name 'pom.xml' -exec sed -i "s/$SNAPSHOT_VERSION/$NEXT_SNAPSHO
 
 # The following files contains the version number to upgrade
 VERSION_AWARE_FILES=(
+  "$APP_HOME/README.adoc"
   "$APP_HOME/README.md"
-  "$APP_HOME/README.md"
-  "$APP_HOME/README.md"
-  "$APP_HOME/README.md"
+  "$APP_HOME/README-CN.adoc"
+  "$APP_HOME/README-CN.md"
 )
 # replace version numbers to be the next numbers in files
 for F in "${VERSION_AWARE_FILES[@]}"; do

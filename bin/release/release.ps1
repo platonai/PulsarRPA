@@ -1,13 +1,17 @@
-# Set up variables
-$bin = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$APP_HOME = (Resolve-Path "$bin\..").Path
+# Find the first parent directory containing the VERSION file
+$AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
+while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
+  $AppHome=$AppHome.Parent
+}
+cd $AppHome
+
 $gitExe = "git" # Assuming git is in the system PATH
 
 # Switching remote URLs from HTTPS to SSH
 & $gitExe remote set-url origin git@github.com:platonai/PulsarRPA.git
 
 # Get version information
-$SNAPSHOT_VERSION = Get-Content "$APP_HOME\VERSION" -TotalCount 1
+$SNAPSHOT_VERSION = Get-Content "$AppHome\VERSION" -TotalCount 1
 $VERSION =$SNAPSHOT_VERSION -replace "-SNAPSHOT", ""
 $LAST_COMMIT_ID = &$gitExe log --format="%H" -n 1
 $BRANCH = &$gitExe branch --show-current
