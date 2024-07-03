@@ -3,10 +3,10 @@ package ai.platon.pulsar.test
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.CrawlLoops
+import ai.platon.pulsar.skeleton.crawl.CrawlLoops
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.gora.FileBackendPageStore
-import ai.platon.pulsar.session.PulsarSession
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import kotlin.test.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired

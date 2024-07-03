@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese.dangdang
 
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 
 fun main() {
     val portalUrl = "http://category.dangdang.com/cid4010209.html"

@@ -22,7 +22,7 @@ package ai.platon.pulsar.filter
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
+import ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilter
 import org.slf4j.LoggerFactory
 import java.io.*
 import java.util.*

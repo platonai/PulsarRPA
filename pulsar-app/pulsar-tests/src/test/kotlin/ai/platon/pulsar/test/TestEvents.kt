@@ -1,8 +1,8 @@
 package ai.platon.pulsar.test
 
-import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
-import ai.platon.pulsar.crawl.component.FetchComponent
+import ai.platon.pulsar.skeleton.common.persist.ext.options
+import ai.platon.pulsar.skeleton.crawl.common.url.StatefulListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.component.FetchComponent
 import kotlin.test.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

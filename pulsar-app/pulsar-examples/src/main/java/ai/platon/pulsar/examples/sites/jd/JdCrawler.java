@@ -1,8 +1,8 @@
 package ai.platon.pulsar.examples.sites.jd;
 
 import ai.platon.pulsar.browser.common.BrowserSettings;
-import ai.platon.pulsar.context.PulsarContexts;
-import ai.platon.pulsar.session.PulsarSession;
+import ai.platon.pulsar.skeleton.context.PulsarContexts;
+import ai.platon.pulsar.skeleton.session.PulsarSession;
 
 class JdCrawler {
 

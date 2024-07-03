@@ -3,11 +3,11 @@ package ai.platon.pulsar.ql.h2
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
-import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.common.urls.NormURL
+import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureRegistry.registeredFeatures
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
@@ -19,7 +19,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.ql.common.ResultSets
 import ai.platon.pulsar.ql.common.types.ValueDom
-import ai.platon.pulsar.session.PulsarSession
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.apache.commons.math3.linear.RealVector
 import org.h2.api.ErrorCode
 import org.h2.message.DbException

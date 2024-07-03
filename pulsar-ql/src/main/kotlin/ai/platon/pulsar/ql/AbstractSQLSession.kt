@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.session.AbstractPulsarSession
-import ai.platon.pulsar.context.support.AbstractPulsarContext
+import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
+import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.common.types.ValueDom
 import kotlin.reflect.KClass

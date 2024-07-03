@@ -3,7 +3,7 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.skeleton.crawl.common.URLUtil
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.common.ResultSets

@@ -1,9 +1,9 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese.login.tmall
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.examples.sites.topEc.chinese.login.taobao.TaobaoLoginHandler
-import ai.platon.pulsar.session.PulsarSession
+import ai.platon.pulsar.skeleton.session.PulsarSession
 
 fun main() {
     BrowserSettings.withSystemDefaultBrowser()

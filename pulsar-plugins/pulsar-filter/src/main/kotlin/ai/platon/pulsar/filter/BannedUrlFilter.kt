@@ -24,7 +24,7 @@ import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
 import ai.platon.pulsar.common.FSUtils
 import ai.platon.pulsar.common.LocalFSUtils
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
+import ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilter
 import java.util.*
 
 /**

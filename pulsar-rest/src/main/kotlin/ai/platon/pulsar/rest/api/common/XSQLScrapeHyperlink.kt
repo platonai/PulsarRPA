@@ -1,13 +1,13 @@
 package ai.platon.pulsar.rest.api.common
 
-import ai.platon.pulsar.session.PulsarSession
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
-import ai.platon.pulsar.crawl.event.impl.DefaultLoadEventHandlers
-import ai.platon.pulsar.crawl.PageEventHandlers
-import ai.platon.pulsar.crawl.common.GlobalCacheFactory
-import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
-import ai.platon.pulsar.crawl.event.impl.PageEventHandlersFactory
+import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultLoadEventHandlers
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
+import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
+import ai.platon.pulsar.skeleton.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.AbstractSQLContext

@@ -1,13 +1,10 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams
-import ai.platon.pulsar.common.message.PageLoadStatusFormatter
-import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
-import com.google.gson.GsonBuilder
-import kotlin.test.*
+import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
+import ai.platon.pulsar.skeleton.common.persist.ext.options
 import java.time.Instant
 import kotlin.test.*
 
@@ -62,10 +59,10 @@ class TestWebPage: TestBase() {
         println("fetchInterval: " + page.fetchInterval)
 
         assertTrue { prevFetchTime1 < prevFetchTime2 }
-        
+
         // Not required currently
         // assertEquals(prevFetchTime2, page.fetchTime)
-        
+
         assertTrue { fetchTime1 < page.fetchTime }
         assertEquals(2, page.fetchCount)
     }

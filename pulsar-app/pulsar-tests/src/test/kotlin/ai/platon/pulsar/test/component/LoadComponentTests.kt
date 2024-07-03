@@ -1,7 +1,7 @@
 package ai.platon.pulsar.test.component
 
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.crawl.component.LoadComponent
+import ai.platon.pulsar.skeleton.crawl.component.LoadComponent
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.test.TestBase
 import kotlinx.coroutines.channels.Channel

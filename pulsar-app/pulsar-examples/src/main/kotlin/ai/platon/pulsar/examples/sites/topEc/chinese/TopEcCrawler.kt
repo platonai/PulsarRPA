@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese
 
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.examples.sites.topEc.chinese.login.taobao.TaobaoLoginHandler
 
 fun main() {

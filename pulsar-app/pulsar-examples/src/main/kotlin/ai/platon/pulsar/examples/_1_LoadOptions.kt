@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples
 
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.common.url.ParsableHyperlink
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 
 /**
  * Demonstrates the usage of load options.

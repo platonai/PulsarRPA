@@ -4,8 +4,8 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import org.openqa.selenium.By
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.chrome.ChromeDriver

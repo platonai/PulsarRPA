@@ -41,7 +41,6 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-ql-common</artifactId>
-            <classifier>shaded</classifier>
         </dependency>
         <!-- add boilerpipe -->
         <dependency>

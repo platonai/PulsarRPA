@@ -3,12 +3,12 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.metrics.MetricsSystem
+import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.proxy.*
-import ai.platon.pulsar.crawl.fetch.FetchResult
-import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -106,7 +106,7 @@ open class ProxyContext(
     init {
         maxAllowedProxyAbsence = conf.getInt(CapabilityTypes.PROXY_MAX_ALLOWED_PROXY_ABSENCE, 10)
     }
-    
+
     @Throws(ProxyException::class, Exception::class)
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         return checkAbnormalResult(task) ?:run0(task, browseFun)

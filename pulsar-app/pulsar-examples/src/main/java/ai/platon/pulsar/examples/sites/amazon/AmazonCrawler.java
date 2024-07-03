@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples.sites.amazon;
 
-import ai.platon.pulsar.context.PulsarContexts;
+import ai.platon.pulsar.skeleton.context.PulsarContexts;
 
 import java.util.Map;
 

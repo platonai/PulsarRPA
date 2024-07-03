@@ -19,7 +19,7 @@
 package ai.platon.pulsar.filter.common
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
+import ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilter
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.IOException

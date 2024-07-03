@@ -10,7 +10,7 @@
     <bean id="productScoringFilter" class="ai.platon.pulsar.scoring.ProductMonitorScoringFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="scoringFilters" class="ai.platon.pulsar.crawl.scoring.ScoringFilters">
+    <bean id="scoringFilters" class="ai.platon.pulsar.skeleton.crawl.scoring.ScoringFilters">
         <constructor-arg>
             <list>
                 <ref bean="productScoringFilter" />

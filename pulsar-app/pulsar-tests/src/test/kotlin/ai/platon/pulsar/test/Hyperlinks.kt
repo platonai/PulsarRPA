@@ -1,15 +1,15 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
-import ai.platon.pulsar.common.persist.ext.loadEvent
+import ai.platon.pulsar.skeleton.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.crawl.PageEvent
-import ai.platon.pulsar.crawl.PageEventHandlers
-import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
-import ai.platon.pulsar.crawl.event.AbstractCrawlEventHandlers
-import ai.platon.pulsar.crawl.event.AbstractLoadEventHandlers
-import ai.platon.pulsar.crawl.event.impl.DefaultPageEventHandlers
+import ai.platon.pulsar.skeleton.crawl.PageEvent
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
+import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.event.AbstractCrawlEventHandlers
+import ai.platon.pulsar.skeleton.crawl.event.AbstractLoadEventHandlers
+import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEventHandlers
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger

@@ -59,10 +59,10 @@
         <appender-ref ref="Console"/>
     </root>
 
-    <logger name="ai.platon.pulsar.common.metrics.MetricsSystem" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.skeleton.common.metrics.MetricsSystem" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
     </logger>
-    <logger name="ai.platon.pulsar.common.metrics.AppMetrics" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.skeleton.common.metrics.AppMetrics" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
     </logger>
 
@@ -85,21 +85,21 @@
 
     <logger name="ai.platon.pulsar" level="INFO"/>
     <logger name="ai.platon.pulsar.common" level="WARN"/>
-    <logger name="ai.platon.pulsar.context" level="WARN"/>
-    <logger name="ai.platon.pulsar.session" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.skeleton.context" level="WARN"/>
+    <logger name="ai.platon.pulsar.skeleton.session" level="DEBUG"/>
     <logger name="ai.platon.pulsar.ql" level="DEBUG"/>
     <logger name="ai.platon.pulsar.ql.context" level="DEBUG"/>
 
     <logger name="ai.platon.pulsar.net" level="INFO"/>
     <logger name="ai.platon.pulsar.browser" level="DEBUG"/>
     <logger name="ai.platon.pulsar.parse.html" level="INFO"/>
-    <logger name="ai.platon.pulsar.crawl.parse" level="INFO"/>
-    <logger name="ai.platon.pulsar.crawl" level="INFO"/>
-    <logger name="ai.platon.pulsar.crawl.protocol" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.skeleton.crawl.parse" level="INFO"/>
+    <logger name="ai.platon.pulsar.skeleton.crawl" level="INFO"/>
+    <logger name="ai.platon.pulsar.skeleton.crawl.protocol" level="DEBUG"/>
     <logger name="ai.platon.pulsar.protocol.browser" level="DEBUG"/>
     <logger name="ai.platon.pulsar.protocol.browser.driver" level="DEBUG"/>
 
-    <logger name="ai.platon.pulsar.crawl.component" level="INFO"/>
+    <logger name="ai.platon.pulsar.skeleton.crawl.component" level="INFO"/>
     <logger name="ai.platon.pulsar.protocol.browser.emulator.BrowserResponseHandler" level="INFO"/>
     <logger name="ai.platon.pulsar.protocol.browser.emulator.context" level="INFO"/>
 

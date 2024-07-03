@@ -1,9 +1,9 @@
 package ai.platon.pulsar.examples;
 
-import ai.platon.pulsar.context.PulsarContexts;
+import ai.platon.pulsar.skeleton.context.PulsarContexts;
 import ai.platon.pulsar.dom.FeaturedDocument;
 import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.session.PulsarSession;
+import ai.platon.pulsar.skeleton.session.PulsarSession;
 import com.google.gson.Gson;
 import org.jsoup.nodes.Element;
 

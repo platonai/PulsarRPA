@@ -1,7 +1,7 @@
 package ai.platon.pulsar.test2.browser
 
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking

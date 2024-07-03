@@ -1,11 +1,11 @@
 package ai.platon.pulsar.test
 
-import ai.platon.pulsar.session.PulsarSession
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.context.PulsarContext
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.PulsarContext
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
 import org.slf4j.LoggerFactory

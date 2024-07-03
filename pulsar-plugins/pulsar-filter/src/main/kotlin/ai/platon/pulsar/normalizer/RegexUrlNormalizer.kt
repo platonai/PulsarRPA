@@ -22,8 +22,8 @@ import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.crawl.filter.AbstractScopedUrlNormalizer
-import ai.platon.pulsar.crawl.filter.UrlNormalizer
+import ai.platon.pulsar.skeleton.crawl.filter.AbstractScopedUrlNormalizer
+import ai.platon.pulsar.skeleton.crawl.filter.UrlNormalizer
 import org.slf4j.LoggerFactory
 import org.w3c.dom.Element
 import org.w3c.dom.Text

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.test2.browser
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.skeleton.crawl.common.URLUtil
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
 

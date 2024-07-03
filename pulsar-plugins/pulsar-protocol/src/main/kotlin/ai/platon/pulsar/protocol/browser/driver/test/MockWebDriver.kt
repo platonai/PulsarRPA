@@ -5,8 +5,8 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.math.geometric.RectD
-import ai.platon.pulsar.crawl.fetch.driver.*
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import org.slf4j.LoggerFactory
 import java.awt.SystemColor.text
@@ -21,11 +21,11 @@ class MockBrowser(
     browserSettings: BrowserSettings,
     private val backupBrowser: Browser,
 ): AbstractBrowser(id, browserSettings) {
-    
+
     override fun newDriver(): WebDriver {
         return MockWebDriver(this) { backupBrowser.newDriver() }
     }
-    
+
     override fun newDriver(url: String): WebDriver {
         return MockWebDriver(this) { backupBrowser.newDriver(url) }
     }
@@ -86,16 +86,16 @@ class MockWebDriver(
     override suspend fun waitForNavigation(oldUrl: String, timeout: Duration): Duration {
         return backupDriverOrNull?.waitForNavigation(oldUrl, timeout) ?: timeout
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun waitForPage(url: String, timeout: Duration): WebDriver? {
         return backupDriverOrNull?.waitForPage(url, timeout)
     }
-    
+
     override suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean): Duration {
         return backupDriverOrNull?.waitUntil(timeout, predicate) ?: timeout
     }
-    
+
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 
@@ -187,17 +187,17 @@ class MockWebDriver(
     override suspend fun type(selector: String, text: String) {
         backupDriverOrNull?.type(selector, text)
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun fill(selector: String, text: String) {
         backupDriverOrNull?.fill(selector, text)
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun press(selector: String, key: String) {
         backupDriverOrNull?.press(selector, key)
     }
-    
+
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
         backupDriverOrNull?.click(selector, count)

@@ -1,10 +1,10 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.context.PulsarContexts.createSession
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.session.PulsarSession
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.context.PulsarContexts.createSession
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.slf4j.LoggerFactory
 
 internal class WebDriverDemo(private val session: PulsarSession = createSession()) {

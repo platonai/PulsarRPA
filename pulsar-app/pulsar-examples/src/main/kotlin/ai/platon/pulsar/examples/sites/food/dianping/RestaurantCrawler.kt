@@ -1,11 +1,11 @@
 package ai.platon.pulsar.examples.sites.food.dianping
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.session.PulsarSession
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

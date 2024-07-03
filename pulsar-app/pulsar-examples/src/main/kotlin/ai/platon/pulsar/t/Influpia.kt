@@ -1,7 +1,7 @@
 package ai.platon.pulsar.t
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 
 class Influpia {
     private val session = PulsarContexts.createSession()

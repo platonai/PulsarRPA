@@ -2,8 +2,8 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnInterruptible
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.runBlocking
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
@@ -52,7 +52,7 @@ class ConcurrentStatefulDriverPool(
 
     @get:Synchronized
     val activeDriverCount get() = workingDrivers.size + standbyDrivers.size
-    
+
     @Throws(InterruptedException::class)
     @Synchronized
     fun poll(timeout: Long, unit: TimeUnit): WebDriver? {
@@ -82,7 +82,7 @@ class ConcurrentStatefulDriverPool(
         _closedDrivers.add(driver)
 
         runCatching { browserManager.closeDriver(driver) }.onFailure { warnInterruptible(this, it) }
-        
+
         // require(driver.isQuit)
     }
 
@@ -108,7 +108,7 @@ class ConcurrentStatefulDriverPool(
     fun cancelAll() {
         _workingDrivers.forEach { (it as? AbstractWebDriver)?.cancel() }
     }
-    
+
     @Synchronized
     fun clear() {
         standbyDrivers.clear()

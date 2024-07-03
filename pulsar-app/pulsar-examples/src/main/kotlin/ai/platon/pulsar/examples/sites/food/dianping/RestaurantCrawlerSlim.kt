@@ -1,9 +1,9 @@
 package ai.platon.pulsar.examples.sites.food.dianping
 
 import ai.platon.pulsar.common.AppFiles
-import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.session.PulsarSession
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.delay
 import java.nio.file.Files

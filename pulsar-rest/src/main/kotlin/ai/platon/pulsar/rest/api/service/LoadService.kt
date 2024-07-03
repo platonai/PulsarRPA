@@ -1,6 +1,6 @@
 package ai.platon.pulsar.rest.api.service
 
-import ai.platon.pulsar.session.PulsarSession
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory

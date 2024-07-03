@@ -23,10 +23,10 @@ import ai.platon.pulsar.common.DateTimes.HOURS_PER_YEAR
 import ai.platon.pulsar.common.config.AppConstants.TCP_IP_STANDARDIZED_TIME
 import ai.platon.pulsar.common.config.AppConstants.YES_STRING
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.message.MiscMessageWriter
-import ai.platon.pulsar.crawl.filter.CrawlFilter
-import ai.platon.pulsar.crawl.schedule.AdaptiveFetchSchedule
-import ai.platon.pulsar.crawl.schedule.ModifyInfo
+import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
+import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilter
+import ai.platon.pulsar.skeleton.crawl.schedule.AdaptiveFetchSchedule
+import ai.platon.pulsar.skeleton.crawl.schedule.ModifyInfo
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark

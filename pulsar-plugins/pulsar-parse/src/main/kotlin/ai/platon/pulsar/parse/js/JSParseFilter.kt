@@ -19,11 +19,11 @@ package ai.platon.pulsar.parse.js
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.parse.AbstractParseFilter
-import ai.platon.pulsar.crawl.parse.FilterResult
-import ai.platon.pulsar.crawl.parse.ParseResult
-import ai.platon.pulsar.crawl.parse.Parser
-import ai.platon.pulsar.crawl.parse.html.ParseContext
+import ai.platon.pulsar.skeleton.crawl.parse.AbstractParseFilter
+import ai.platon.pulsar.skeleton.crawl.parse.FilterResult
+import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
+import ai.platon.pulsar.skeleton.crawl.parse.Parser
+import ai.platon.pulsar.skeleton.crawl.parse.html.ParseContext
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebPage
 

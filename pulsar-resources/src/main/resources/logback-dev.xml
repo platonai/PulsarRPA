@@ -182,10 +182,10 @@
     <logger name="ai.platon.pulsar" level="INFO">
         <appender-ref ref="SERVER"/>
     </logger>
-    <logger name="ai.platon.pulsar.crawl.impl.StreamingCrawler" level="INFO">
+    <logger name="ai.platon.pulsar.skeleton.crawl.impl.StreamingCrawler" level="INFO">
         <appender-ref ref="SERVER"/>
     </logger>
-    <logger name="ai.platon.pulsar.crawl.component" level="INFO">
+    <logger name="ai.platon.pulsar.skeleton.crawl.component" level="INFO">
         <appender-ref ref="SERVER"/>
     </logger>
 
@@ -203,10 +203,10 @@
         <appender-ref ref="SERVER"/>
     </logger>
 
-    <logger name="ai.platon.pulsar.crawl.impl.StreamingCrawler.Task" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.skeleton.crawl.impl.StreamingCrawler.Task" level="INFO" additivity="false">
         <appender-ref ref="PAGES"/>
     </logger>
-    <logger name="ai.platon.pulsar.crawl.component.LoadComponent.Task" level="INFO" additivity="true">
+    <logger name="ai.platon.pulsar.skeleton.crawl.component.LoadComponent.Task" level="INFO" additivity="true">
 <!--        <appender-ref ref="Console"/>-->
         <appender-ref ref="PAGES"/>
     </logger>
@@ -220,10 +220,10 @@
         <appender-ref ref="PAGES"/>
     </logger>
 
-    <logger name="ai.platon.pulsar.common.metrics.MetricsSystem" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.skeleton.common.metrics.MetricsSystem" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
     </logger>
-    <logger name="ai.platon.pulsar.common.metrics.AppMetrics" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.skeleton.common.metrics.AppMetrics" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
     </logger>
 

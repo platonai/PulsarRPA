@@ -1,7 +1,7 @@
 package ai.platon.pulsar.test.session
 
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.persist.ext.options
+import ai.platon.pulsar.skeleton.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.model.WebPageFormatter

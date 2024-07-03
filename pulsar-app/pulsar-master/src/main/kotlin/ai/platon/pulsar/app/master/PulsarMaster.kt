@@ -1,7 +1,7 @@
 package ai.platon.pulsar.app.master
 
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextInitializer
-import ai.platon.pulsar.crawl.CrawlLoops
+import ai.platon.pulsar.skeleton.crawl.CrawlLoops
 import org.h2.tools.Server
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication

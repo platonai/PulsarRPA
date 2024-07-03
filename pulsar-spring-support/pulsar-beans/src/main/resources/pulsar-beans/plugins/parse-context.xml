@@ -8,14 +8,14 @@
     <import resource="../common-context.xml"/>
     <import resource="urlfilter-context.xml"/>
 
-    <bean id="signature" class="ai.platon.pulsar.crawl.signature.TextMD5Signature"/>
+    <bean id="signature" class="ai.platon.pulsar.skeleton.signature.TextMD5Signature"/>
 
-    <bean id="linkFilter" class="ai.platon.pulsar.crawl.parse.LinkFilter">
+    <bean id="linkFilter" class="ai.platon.pulsar.skeleton.crawl.parse.LinkFilter">
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="htmlParser" class="ai.platon.pulsar.crawl.parse.html.PrimerHtmlParser">
+    <bean id="htmlParser" class="ai.platon.pulsar.skeleton.crawl.parse.html.PrimerHtmlParser">
         <constructor-arg ref="parseFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -26,7 +26,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="parserFactory" class="ai.platon.pulsar.crawl.parse.ParserFactory">
+    <bean id="parserFactory" class="ai.platon.pulsar.skeleton.crawl.parse.ParserFactory">
         <constructor-arg>
             <list>
                 <ref bean="htmlParser"/>
@@ -42,7 +42,7 @@
     <bean id="jsParseFilter" class="ai.platon.pulsar.parse.js.JSParseFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="parseFilters" class="ai.platon.pulsar.crawl.parse.ParseFilters"
+    <bean id="parseFilters" class="ai.platon.pulsar.skeleton.crawl.parse.ParseFilters"
           init-method="initialize" destroy-method="close">
         <constructor-arg>
             <list>
@@ -54,7 +54,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="pageParser" class="ai.platon.pulsar.crawl.parse.PageParser" destroy-method="close">
+    <bean id="pageParser" class="ai.platon.pulsar.skeleton.crawl.parse.PageParser" destroy-method="close">
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parserFactory"/>
         <constructor-arg ref="signature"/>

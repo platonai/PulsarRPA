@@ -1,9 +1,9 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.event.EventEmitter
-import ai.platon.pulsar.crawl.fetch.FetchResult
-import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 
 enum class EmulateEvents {

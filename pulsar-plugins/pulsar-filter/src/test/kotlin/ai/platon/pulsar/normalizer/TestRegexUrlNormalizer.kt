@@ -19,12 +19,12 @@
 package ai.platon.pulsar.normalizer
 
 import ai.platon.pulsar.common.ResourceLoader.getResource
-import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
+import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import kotlin.test.*
 import org.junit.runner.RunWith
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import ai.platon.pulsar.crawl.filter.SCOPE_DEFAULT
+import ai.platon.pulsar.skeleton.crawl.filter.SCOPE_DEFAULT
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.File

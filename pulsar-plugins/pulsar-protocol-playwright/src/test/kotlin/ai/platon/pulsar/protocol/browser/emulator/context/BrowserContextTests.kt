@@ -4,11 +4,11 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.fetch.FetchResult
-import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
-import ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyAgentGenerator
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.SequentialPrivacyAgentGenerator
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.DefaultBrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager

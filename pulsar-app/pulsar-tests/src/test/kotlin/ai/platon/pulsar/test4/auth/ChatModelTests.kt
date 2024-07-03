@@ -3,8 +3,8 @@ package ai.platon.pulsar.test4.auth
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.ai.api.ResponseState
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.ai.ChatModel
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.crawl.ai.ChatModel
 import ai.platon.pulsar.dom.Documents
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import kotlin.test.Test

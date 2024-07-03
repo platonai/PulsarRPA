@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql.h2
 
 import ai.platon.pulsar.common.warnForClose
-import ai.platon.pulsar.context.support.AbstractPulsarContext
+import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SessionConfig
 import ai.platon.pulsar.ql.common.annotation.UDAggregation

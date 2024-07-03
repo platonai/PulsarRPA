@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.urls.DegenerateHyperlink
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts

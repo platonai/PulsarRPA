@@ -2,7 +2,7 @@ package ai.platon.pulsar.boot.autoconfigure
 
 import ai.platon.pulsar.ql.context.H2SQLContext
 import ai.platon.pulsar.ql.context.SQLContexts
-import ai.platon.pulsar.session.PulsarSession
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

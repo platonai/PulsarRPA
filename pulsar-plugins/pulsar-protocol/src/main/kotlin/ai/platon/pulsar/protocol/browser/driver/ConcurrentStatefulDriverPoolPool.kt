@@ -2,8 +2,8 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnForClose
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import com.google.common.annotations.Beta
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.ConcurrentSkipListSet

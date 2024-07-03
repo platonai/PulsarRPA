@@ -19,8 +19,8 @@
 package ai.platon.pulsar.parse.common
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.parse.ParserConfigReader
-import ai.platon.pulsar.crawl.parse.ParserFactory
+import ai.platon.pulsar.skeleton.crawl.parse.ParserConfigReader
+import ai.platon.pulsar.skeleton.crawl.parse.ParserFactory
 import kotlin.test.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired

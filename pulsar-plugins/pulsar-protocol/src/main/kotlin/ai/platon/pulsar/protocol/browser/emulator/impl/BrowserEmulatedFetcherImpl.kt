@@ -4,16 +4,16 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.persist.ext.browseEvent
+import ai.platon.pulsar.skeleton.common.persist.ext.browseEvent
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.crawl.fetch.FetchResult
-import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
-import ai.platon.pulsar.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverCancellationException
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyManager
+import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
+import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverTask
@@ -46,10 +46,10 @@ open class BrowserEmulatedFetcherImpl(
         willFetch,
         fetched
     }
-    
+
     @Throws(Exception::class)
     override fun fetch(url: String) = fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
-    
+
     @Throws(Exception::class)
     override fun fetch(url: String, conf: VolatileConfig) = fetchContent(WebPage.newWebPage(url, conf))
 
@@ -60,11 +60,11 @@ open class BrowserEmulatedFetcherImpl(
     override fun fetchContent(page: WebPage): Response = runBlocking {
         fetchContentDeferred(page)
     }
-    
+
     @Throws(Exception::class)
     override suspend fun fetchDeferred(url: String) =
         fetchContentDeferred(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
-    
+
     @Throws(Exception::class)
     override suspend fun fetchDeferred(url: String, volatileConfig: VolatileConfig) =
         fetchContentDeferred(WebPage.newWebPage(url, volatileConfig))

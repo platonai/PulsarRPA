@@ -1,6 +1,6 @@
 package ai.platon.pulsar.rest.api
 
-import ai.platon.pulsar.crawl.CrawlLoops
+import ai.platon.pulsar.skeleton.crawl.CrawlLoops
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
 import org.springframework.boot.autoconfigure.domain.EntityScan

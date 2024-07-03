@@ -20,7 +20,7 @@ package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
+import ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilter
 import org.junit.Assert
 import java.io.BufferedReader
 import java.io.Reader

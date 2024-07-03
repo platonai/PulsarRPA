@@ -19,9 +19,9 @@
 package ai.platon.pulsar.index
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.index.IndexDocument
-import ai.platon.pulsar.crawl.index.IndexingException
-import ai.platon.pulsar.crawl.index.IndexingFilter
+import ai.platon.pulsar.skeleton.crawl.index.IndexDocument
+import ai.platon.pulsar.skeleton.crawl.index.IndexingException
+import ai.platon.pulsar.skeleton.crawl.index.IndexingFilter
 import ai.platon.pulsar.persist.WebPage
 
 /**
@@ -30,12 +30,12 @@ import ai.platon.pulsar.persist.WebPage
 class GeneralIndexingFilter(
     override var conf: ImmutableConfig,
 ) : IndexingFilter {
-    
+
     /**
      */
     override fun setup(conf: ImmutableConfig) {
     }
-    
+
     /**
      * @param doc  The [IndexDocument] object
      * @param url  URL to be filtered for anchor text

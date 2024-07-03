@@ -107,7 +107,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
+            val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
@@ -124,7 +124,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withPrototypeBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
+            val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
@@ -154,7 +154,7 @@ open class BrowserSettings(
         @JvmStatic
         fun withSequentialBrowsers(maxAgents: Int): Companion {
             System.setProperty(MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, "$maxAgents")
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
+            val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             return BrowserSettings
         }
@@ -173,7 +173,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withTemporaryBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.RandomPrivacyAgentGenerator"
+            val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.RandomPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings

@@ -6,10 +6,10 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_T
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.metrics.MetricsSystem
-import ai.platon.pulsar.crawl.BrowseEventHandlers
-import ai.platon.pulsar.crawl.fetch.driver.*
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
+import ai.platon.pulsar.skeleton.crawl.BrowseEventHandlers
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException

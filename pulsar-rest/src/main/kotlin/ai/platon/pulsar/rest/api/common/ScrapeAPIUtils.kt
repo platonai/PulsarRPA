@@ -1,6 +1,6 @@
 package ai.platon.pulsar.rest.api.common
 
-import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import org.nibor.autolink.LinkExtractor

@@ -19,7 +19,7 @@ package ai.platon.pulsar.normalizer
 import org.junit.Assert
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
-import ai.platon.pulsar.crawl.filter.SCOPE_DEFAULT
+import ai.platon.pulsar.skeleton.crawl.filter.SCOPE_DEFAULT
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import kotlin.test.*

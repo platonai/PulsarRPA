@@ -1,8 +1,8 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
-import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyManager
+import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 

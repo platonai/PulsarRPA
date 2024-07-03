@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples
 
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 

@@ -2,7 +2,7 @@ package ai.platon.pulsar.app.crawler
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.crawl.common.GlobalCacheFactory
+import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean

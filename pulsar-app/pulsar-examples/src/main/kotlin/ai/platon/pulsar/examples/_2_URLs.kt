@@ -2,10 +2,10 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.PlainUrl
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
-import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
-import ai.platon.pulsar.crawl.common.url.ParsableHyperlink
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 import ai.platon.pulsar.persist.WebPage
 
 /**
