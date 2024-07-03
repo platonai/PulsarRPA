@@ -2,8 +2,8 @@ package ai.platon.pulsar.test.collect
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.collect.HyperlinkCollector
-import ai.platon.pulsar.common.collect.PeriodicalLocalFileHyperlinkCollector
+import ai.platon.pulsar.skeleton.common.collect.HyperlinkCollector
+import ai.platon.pulsar.skeleton.common.collect.PeriodicalLocalFileHyperlinkCollector
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.sleep
 import ai.platon.pulsar.skeleton.common.urls.NormURL
