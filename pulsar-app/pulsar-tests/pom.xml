@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-app</artifactId>
-        <version>1.13.0-SNAPSHOT</version>
+        <version>1.12.7-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-tests</artifactId>
@@ -43,12 +43,6 @@
             <artifactId>pulsar-rest</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-resources</artifactId>
-            <scope>test</scope>
-            <classifier>tests</classifier>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

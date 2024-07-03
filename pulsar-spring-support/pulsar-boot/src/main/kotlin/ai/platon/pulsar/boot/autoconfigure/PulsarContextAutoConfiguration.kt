@@ -1,7 +1,8 @@
 package ai.platon.pulsar.boot.autoconfigure
 
-import ai.platon.pulsar.session.PulsarSession
+import ai.platon.pulsar.ql.context.H2SQLContext
 import ai.platon.pulsar.ql.context.SQLContexts
+import ai.platon.pulsar.session.PulsarSession
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -14,6 +15,9 @@ class PulsarContextAutoConfiguration(
     @Bean
     @Scope("prototype")
     fun getPulsarSession(): PulsarSession {
-        return SQLContexts.create(applicationContext).createSession()
+        val context = SQLContexts.create(applicationContext)
+        require(context is H2SQLContext)
+        require(context.applicationContext == applicationContext)
+        return context.createSession()
     }
 }

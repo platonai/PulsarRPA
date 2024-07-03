@@ -138,6 +138,7 @@ object AppContext {
     val state = AtomicReference(State.NEW)
     /**
      * The application is active.
+     * TODO: avoid this global state, use a more flexible way to manage the state.
      * */
     val isActive get() = state.get().ordinal < State.TERMINATING.ordinal
 

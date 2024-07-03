@@ -40,6 +40,14 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
         }
     }
 
+    fun remove(id: Int) {
+        _parseFilters.removeIf { it.id == id }
+    }
+    
+    fun remove(parseFilter: ParseFilter) {
+        _parseFilters.remove(parseFilter)
+    }
+    
     fun hasFilter(parseFilter: ParseFilter) = parseFilters.contains(parseFilter)
 
     fun addFirst(parseFilter: ParseFilter) = _parseFilters.add(0, parseFilter)

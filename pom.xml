@@ -21,7 +21,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.13.0-SNAPSHOT</version>
+    <version>1.12.7-SNAPSHOT</version>
 
     <name>Pulsar RPA</name>
     <description>Scrape Web data at scale completely and accurately with high performance, distributed AI-RPA.</description>
@@ -46,7 +46,7 @@
         <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
         <url>https://github.com/platonai/pulsar</url>
-        <tag>v1.13.0</tag>
+        <tag>v1.12.7</tag>
     </scm>
 
     <repositories>
@@ -297,7 +297,7 @@
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.7</version>
+                        <version>1.7.0</version>
                         <configuration>
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
@@ -317,14 +317,7 @@
             </activation>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.0.1</version>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
+
                 </plugins>
             </build>
         </profile>
@@ -581,13 +574,6 @@
                 <artifactId>pulsar-resources</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-resources</artifactId>
-                <scope>test</scope>
-                <classifier>tests</classifier>
-                <version>${project.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
@@ -624,6 +610,14 @@
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-browser</artifactId>
                 <version>${project.version}</version>
+                <exclusions>
+                    <!-- exclude javassist, which is replaced by org.javassist:javassist:2.0.4-SNAPSHOT -->
+                    <!-- remove the exclusion below when javassist is upgraded to 3.24.0-GA -->
+                    <exclusion>
+                        <groupId>javassist</groupId>
+                        <artifactId>javassist</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
@@ -676,6 +670,19 @@
                 <artifactId>pulsar-resources</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-qa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-qa</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <classifier>tests</classifier>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -891,7 +898,6 @@
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <commons-text.version>1.11.0</commons-text.version>
         <oshi.version>6.4.13</oshi.version>
-        <langchain4j.version>0.31.0</langchain4j.version>
 
         <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
 

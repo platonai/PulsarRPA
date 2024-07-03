@@ -4,7 +4,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-tools</artifactId>
-        <version>1.13.0-SNAPSHOT</version>
+        <version>1.12.7-SNAPSHOT</version>
     </parent>
 
     <name>Pulsar Browser</name>
@@ -32,8 +32,9 @@
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/javassist/javassist -->
+        <!-- deprecated, use org.javassist:javassist instead -->
         <dependency>
-            <groupId>javassist</groupId>
+            <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
             <version>${javassist.version}</version>
         </dependency>
@@ -41,5 +42,6 @@
 
     <properties>
         <ktor.version>2.3.9</ktor.version>
+        <javassist.version>3.30.2-GA</javassist.version>
     </properties>
 </project>

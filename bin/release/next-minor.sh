@@ -1,8 +1,13 @@
 #bin
 
-bin=$(dirname "$0")/..
-bin=$(cd "$bin">/dev/null || exit; pwd)
-APP_HOME=$(cd "$bin"/..>/dev/null || exit; pwd)
+# Find the first parent directory that contains a pom.xml file
+APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
+while [[ "$APP_HOME" != "/" ]]; do
+  if [[ -f "$APP_HOME/pom.xml" ]]; then
+    break
+  fi
+  APP_HOME=$(dirname "$APP_HOME")
+done
 
 SNAPSHOT_VERSION=$(head -n 1 "$APP_HOME/VERSION")
 VERSION=${SNAPSHOT_VERSION//"-SNAPSHOT"/""}
@@ -23,10 +28,10 @@ find "$APP_HOME" -name 'pom.xml' -exec sed -i "s/$SNAPSHOT_VERSION/$NEXT_SNAPSHO
 
 # The following files contains the version number to upgrade
 VERSION_AWARE_FILES=(
+  "$APP_HOME/README.adoc"
   "$APP_HOME/README.md"
-  "$APP_HOME/README.md"
-  "$APP_HOME/README.md"
-  "$APP_HOME/README.md"
+  "$APP_HOME/README-CN.adoc"
+  "$APP_HOME/README-CN.md"
 )
 # replace version numbers to be the next numbers in files
 for F in "${VERSION_AWARE_FILES[@]}"; do

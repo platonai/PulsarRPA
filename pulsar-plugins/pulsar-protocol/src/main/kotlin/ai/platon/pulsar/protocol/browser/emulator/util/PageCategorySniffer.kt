@@ -31,12 +31,14 @@ class ChainedPageCategorySniffer(val conf: ImmutableConfig): PageCategorySniffer
         return OpenPageCategory(PageCategory.UNKNOWN)
     }
 
-    fun addFirst(sniffer: PageCategorySniffer) {
+    fun addFirst(sniffer: PageCategorySniffer): ChainedPageCategorySniffer {
         sniffers.add(0, sniffer)
+        return this
     }
 
-    fun addLast(sniffer: PageCategorySniffer) {
+    fun addLast(sniffer: PageCategorySniffer): ChainedPageCategorySniffer {
         sniffers.add(sniffer)
+        return this
     }
 
     fun remove(sniffer: PageCategorySniffer) {

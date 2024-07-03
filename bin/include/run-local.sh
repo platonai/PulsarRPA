@@ -1,30 +1,9 @@
 #!/bin/bash
 
-# local mode, add class paths
-if [[ $APP_RUNTIME_MODE == "DEVELOPMENT" ]]; then
-  # development mode
-  __dev_mode_enable_module "$MODULE" "$JAR1"
-elif [[ $APP_RUNTIME_MODE == "ASSEMBLY" ]]; then
-  for f in "$APP_HOME"/lib/*.jar; do
-    CLASSPATH=${CLASSPATH}:$f;
-  done
-
-  for f in "$APP_HOME"/ext/*.jar; do
-    CLASSPATH=${CLASSPATH}:$f;
-  done
-
-  for f in "$APP_HOME"/*.jar; do
-    CLASSPATH=${CLASSPATH}:$f;
-  done
-fi
+__dev_mode_enable_module "$MODULE" "$JAR1"
 
 PID="$APP_PID_DIR/pulsar-$APP_IDENT_STRING-$COMMAND.pid"
-
-if [[ "$CLASS" == *"JobRunner"* ]]; then
-  APP_LOG_PREFIX="pulsar-$APP_IDENT_STRING-$COMMAND-$HOSTNAME"
-else
-  APP_LOG_PREFIX=pulsar-$APP_IDENT_STRING-all-$HOSTNAME
-fi
+APP_LOG_PREFIX=pulsar-$APP_IDENT_STRING-all-$HOSTNAME
 
 APP_LOGFILE="$APP_LOG_PREFIX.log"
 APP_LOGOUT="$APP_LOG_PREFIX.out"

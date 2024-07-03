@@ -43,6 +43,8 @@ install_chrome() {
 
 cd /tmp/ || exit
 
+install_utils
+
 start_dependent_daemon
 
 # find out chrome version
@@ -51,7 +53,5 @@ CHROME_VERSION="$(google-chrome -version | head -n1 | awk -F '[. ]' '{print $3}'
 if [[ "$CHROME_VERSION" == "" ]]; then
     install_chrome
 fi
-
-install_utils
 
 cd - || exit

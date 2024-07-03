@@ -1,20 +1,9 @@
 #!/usr/bin/env bash
-#
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+
+set -e
+
+BIN=$(dirname "$0")
+APP_HOME=$(realpath "$BIN/..")
 
 # find out chrome version
 CHROME_VERSION="$(google-chrome -version | head -n1 | awk -F '[. ]' '{print $3}')"
@@ -23,122 +12,15 @@ if [[ "$CHROME_VERSION" == "" ]]; then
   exit
 fi
 
-function printUsage() {
-  echo "Usage: pulsar [options...] <COMMAND> [<args>]"
-  echo "COMMAND is one of:"
-  echo
-  echo "  start         Start pulsar server as a daemon"
-  echo "  stop          Stop pulsar server safely"
-  echo "  server        Run pulsar server with parameters"
-  echo "  sql           Run h2 sql client"
-  echo "  example       Run an example program"
-
-  echo
-  echo "Options: "
-  echo "  -c, --config     Config dir"
-  echo "  -v, --verbose    Issue more message"
-  echo "  -V, --version    Show version number and quit"
-  echo "  -h, --help       The help text"
-  exit 1
-}
-
-MODULE=
-# the default number of fetch thread is the number of cpu cores
-while [[ $# -gt 0 ]]
-do
-case $1 in
-    -m|--module)
-        shift
-        MODULE=$1
-        shift
-        ;;
-    -v|--verbose)
-        export VERBOSE_LEVEL=1
-        shift
-        ;;
-    -h|--help)
-        SHOW_HELP=true
-        shift
-        ;;
-    -V|--version)
-        SHOW_VERSION=true
-        shift
-        ;;
-    -*)
-        echo "Unrecognized option : $1"
-        echo "Try 'pulsar --help' for more information."
-        exit 0
-        ;;
-    *)
-        break
-        ;;
-esac
-done
-
-COMMAND=$1
-shift
-
-bin=$(dirname "$0")
-bin=$(cd "$bin">/dev/null || exit; pwd)
-
-if [ "$APP_HOME" = "" ]; then
- # shellcheck source=bin/include/config.sh
-source "$bin"/include/config.sh
+UBERJAR=./target/uberjar/PulsarRPA.jar
+if [ ! -f "$UBERJAR" ]; then
+  SERVER_HOME=$APP_HOME/pulsar-app/pulsar-master
+  cp "$SERVER_HOME"/target/uberjar/PulsarRPA.jar "$UBERJAR"
 fi
 
-bin="$APP_HOME"/bin
+# Other Java options
+JAVA_OPTS="$JAVA_OPTS -Dfile.encoding=UTF-8"            # Use UTF-8
 
-if [[ "$SHOW_HELP" ]]; then
-  printUsage;
-  exit 0
-fi
+echo "Using these JAVA_OPTS: ${JAVA_OPTS}"
 
-if [[ "$SHOW_VERSION" ]]; then
-  "$bin"/version
-  exit 0
-fi
-
-# if no args specified, show usage
-if [[ "$COMMAND" == "" ]]; then
-  COMMAND=server
-fi
-
-# CLASSPATH="${CLASSPATH}:$JAVA_HOME/lib/tools.jar"
-
-VERSION="$(cat "$APP_HOME"/VERSION)"
-export VERSION
-
-# Choose runnable
-if [[ "$COMMAND" = "start" ]] ; then
-  export RUN_AS_DAEMON=true
-  "$bin"/pulsar server -tcp -web -webAllowOthers
-  exit 0
-elif [[ "$COMMAND" = "stop" ]] ; then
-  "$bin"/pulsar server -tcpShutdown tcp://127.0.1.1:9092
-  exit 0
-elif [[ "$COMMAND" = "server" ]] ; then
-  MODULE=pulsar-app/pulsar-master
-  JAR1="pulsar-master-$VERSION.jar"
-  CLASS=ai.platon.pulsar.app.master.PulsarMasterKt
-elif [[ "$COMMAND" = "sql" ]] ; then
-  MODULE=pulsar-app/pulsar-master
-  JAR1="pulsar-master-$VERSION.jar"
-  CLASS=ai.platon.pulsar.app.h2.H2ShellKt
-elif [[ "$COMMAND" = "example" ]] ; then
-  MODULE=pulsar-app/pulsar-examples
-  JAR1="pulsar-examples-$VERSION.jar"
-  PROC=$1
-  if [[ -z "$PROC" ]]; then
-    PROC=ManualKt
-  fi
-  CLASS="ai.platon.pulsar.examples.$1"
-  shift
-elif [[ -n "$MODULE" ]]; then
-  CLASS=$COMMAND
-else
-  printUsage
-  exit 0
-fi
-
-source "$bin"/include/common.sh
-source "$bin"/include/run-local.sh
+exec java "$JAVA_OPTS" -jar "$UBERJAR"

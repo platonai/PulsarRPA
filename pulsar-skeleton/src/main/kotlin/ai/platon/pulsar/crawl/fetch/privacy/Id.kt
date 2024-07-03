@@ -37,6 +37,11 @@ data class PrivacyAgentId(
      * */
     val isPrototype get() = this.contextDir == PrivacyContext.PROTOTYPE_CONTEXT_DIR
     /**
+     * If true, the privacy agent opens browser with one of a set of pre-created data dirs, the pre-created data dirs will
+     * not be removed after the browser closes.
+     * */
+    val isGroup get() = this.contextDir.startsWith(AppPaths.CONTEXT_GROUP_BASE_DIR)
+    /**
      * If true, the privacy agent opens browser with a temporary data dir, the temporary data dir is created before the
      * browser starts and will be deleted after the browser closes.
      * */
@@ -90,6 +95,7 @@ data class PrivacyAgent(
     val isSystemDefault get() = id.isSystemDefault
     val isDefault get() = id.isDefault
     val isPrototype get() = id.isPrototype
+    val isGroup get() = id.isGroup
     val isTemporary get() = id.isTemporary
     val isPermanent get() = id.isPermanent
 

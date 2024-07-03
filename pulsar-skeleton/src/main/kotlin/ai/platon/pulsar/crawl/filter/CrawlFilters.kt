@@ -25,7 +25,6 @@ import org.w3c.dom.Node
 
 /**
  * TODO : need full unit test
- * TODO : Move to plugin, urlfilter/contentfilter, etc
  */
 class CrawlFilters(
     val crawlFilters: List<CrawlFilter>,

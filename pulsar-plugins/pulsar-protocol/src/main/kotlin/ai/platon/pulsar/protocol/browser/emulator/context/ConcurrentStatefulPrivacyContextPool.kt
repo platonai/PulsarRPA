@@ -79,12 +79,20 @@ class ConcurrentStatefulPrivacyContextPool(
         val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, privacyAgent)
         if (privacyAgent.isPermanent) {
             logger.info("Permanent privacy context is created #{} | {}", context.display, context.baseDir)
-        } else {
+        } else if (privacyAgent.isTemporary) {
             logger.info(
                 "Temporary privacy context is created #{}, active: {}, allowed: {} | {}",
                 context.display, temporaryContexts.size, allowedPrivacyContextCount, context.baseDir
             )
+        } else if (privacyAgent.isGroup) {
+            logger.info(
+                "Sequential privacy context in group is created #{}, active: {}, allowed: {} | {}",
+                context.display, temporaryContexts.size, allowedPrivacyContextCount, context.baseDir
+            )
+        } else {
+            logger.warn("Unexpected privacy context is created #{} | {}", context.display, context.baseDir)
         }
+        
         return context
     }
     
