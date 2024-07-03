@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.urls.HyperlinkDatum
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.warnInterruptible
 import com.google.gson.GsonBuilder
-import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption

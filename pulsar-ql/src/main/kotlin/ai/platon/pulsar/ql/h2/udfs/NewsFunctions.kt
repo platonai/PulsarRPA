@@ -1,8 +1,8 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.boilerpipe.utils.BoiConstants
-import ai.platon.pulsar.ql.annotation.UDFGroup
-import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.ql.common.annotation.UDFGroup
+import ai.platon.pulsar.ql.common.annotation.UDFunction
 import java.sql.ResultSet
 import java.sql.SQLException
 

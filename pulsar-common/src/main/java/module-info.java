@@ -1,18 +1,29 @@
 module ai.platon.pulsar.common {
     requires commons.math3;
-    requires org.apache.commons.lang3;
-    requires org.apache.httpcomponents.httpclient;
-    requires kotlin.stdlib;
-    requires org.slf4j;
-    requires org.apache.commons.io;
+
     requires com.google.common;
-    requires kotlin.reflect;
-    requires kotlinx.coroutines.core;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.datatype.jsr310;
     requires com.fasterxml.jackson.kotlin;
+
+    requires kotlin.stdlib;
+    requires kotlin.reflect;
+    requires kotlinx.coroutines.core;
+
+    requires java.desktop;
+    requires java.sql;
+
+    requires org.apache.commons.lang3;
+    requires org.apache.httpcomponents.httpclient;
+    requires org.slf4j;
+    requires org.apache.commons.io;
     requires org.apache.commons.collections4;
+    requires woodstox.core.asl;
+    requires org.codehaus.stax2;
+    requires com.google.gson;
+    requires annotations;
+    requires jsr305;
 
     exports ai.platon.pulsar.common;
     exports ai.platon.pulsar.common.config;
@@ -38,4 +49,5 @@ module ai.platon.pulsar.common {
     exports ai.platon.pulsar.common.serialize.json;
     exports ai.platon.pulsar.common.sql;
     exports ai.platon.pulsar.common.urls;
+    exports ai.platon.pulsar.common.urls.preprocess;
 }

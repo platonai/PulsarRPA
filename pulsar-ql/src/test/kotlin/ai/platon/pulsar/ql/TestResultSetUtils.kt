@@ -2,6 +2,7 @@ package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.sql.SQLTemplate
+import ai.platon.pulsar.ql.common.ResultSets
 import ai.platon.pulsar.ql.h2.addColumn
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import org.h2.value.ValueString

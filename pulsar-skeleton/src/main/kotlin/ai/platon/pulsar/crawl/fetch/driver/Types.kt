@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
-import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourcePageResult
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -65,39 +64,5 @@ class NavigateHistory {
 
     fun clear() {
         history.clear()
-    }
-}
-
-class NetworkResourceResponse(
-    val success: Boolean = false,
-    val netError: Int = 0,
-    val netErrorName: String = "",
-    /** Request not made */
-    val httpStatusCode: Int = 0,
-    val stream: String? = null,
-    val headers: Map<String, Any>? = null,
-) {
-    companion object {
-        fun from(response: org.jsoup.Connection.Response): NetworkResourceResponse {
-            val success = response.statusCode() == 200
-            val httpStatusCode = response.statusCode()
-            //    val stream = response.bodyStream()
-            val stream = response.body()
-            val headers = response.headers().toMutableMap()
-            // All pulsar added headers have a prefix Q-
-            headers["Q-client"] = "Jsoup"
-            return NetworkResourceResponse(success, 0, "", httpStatusCode, stream, headers)
-        }
-        
-        fun from(res: LoadNetworkResourcePageResult): NetworkResourceResponse {
-            val success = res.success ?: false
-            val netError = res.netError?.toInt() ?: 0
-            val netErrorName = res.netErrorName ?: ""
-            val httpStatusCode = res.httpStatusCode?.toInt() ?: 400
-            // All pulsar added headers have a prefix Q-
-            val headers = res.headers.toMutableMap()
-            headers["Q-client"] = "Chrome"
-            return NetworkResourceResponse(success, netError, netErrorName, httpStatusCode, res.stream, headers)
-        }
     }
 }

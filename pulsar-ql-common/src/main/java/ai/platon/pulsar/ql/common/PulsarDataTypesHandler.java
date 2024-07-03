@@ -1,7 +1,7 @@
-package ai.platon.pulsar.ql;
+package ai.platon.pulsar.ql.common;
 
-import ai.platon.pulsar.ql.types.ValueDom;
-import ai.platon.pulsar.ql.types.ValueURI;
+import ai.platon.pulsar.ql.common.types.ValueDom;
+import ai.platon.pulsar.ql.common.types.ValueURI;
 import org.h2.api.CustomDataTypesHandler;
 import org.h2.api.ErrorCode;
 import org.h2.message.DbException;

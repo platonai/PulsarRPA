@@ -1,7 +1,7 @@
-package ai.platon.pulsar.ql;
+package ai.platon.pulsar.ql.common;
 
-import ai.platon.pulsar.ql.io.ValueDomWritable;
-import ai.platon.pulsar.ql.types.ValueDom;
+import ai.platon.pulsar.ql.common.io.ValueDomWritable;
+import ai.platon.pulsar.ql.common.types.ValueDom;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.h2.api.ErrorCode;

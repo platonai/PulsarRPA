@@ -1,4 +1,4 @@
-package ai.platon.pulsar.ql;
+package ai.platon.pulsar.ql.common;
 
 import org.h2.tools.SimpleResultSet;
 import org.h2.value.DataType;

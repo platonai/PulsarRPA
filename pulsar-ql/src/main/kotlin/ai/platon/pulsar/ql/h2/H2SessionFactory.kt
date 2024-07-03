@@ -5,10 +5,9 @@ import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.*
 import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.ql.SQLSession
-import org.h2.api.ErrorCode
+import ai.platon.pulsar.ql.common.H2Config
 import org.h2.engine.*
 import org.h2.jdbc.JdbcConnection
-import org.h2.message.DbException
 import org.h2.message.TraceSystem
 import org.h2.util.JdbcUtils
 import org.h2.util.Utils

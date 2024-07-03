@@ -3,11 +3,11 @@
  * and the EPL 1.0 (http://h2database.com/html/license.html).
  * Initial Developer: H2 Group
  */
-package ai.platon.pulsar.ql.types;
+package ai.platon.pulsar.ql.common.types;
 
 import ai.platon.pulsar.dom.FeaturedDocument;
 import ai.platon.pulsar.dom.nodes.node.ext.NodeExtKt;
-import ai.platon.pulsar.ql.PulsarDataTypesHandler;
+import ai.platon.pulsar.ql.common.PulsarDataTypesHandler;
 import org.h2.api.ErrorCode;
 import org.h2.message.DbException;
 import org.h2.util.JdbcUtils;

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.ql;
+package ai.platon.pulsar.ql.common;
 
 import org.h2.engine.SysProperties;
 import org.h2.util.JdbcUtils;

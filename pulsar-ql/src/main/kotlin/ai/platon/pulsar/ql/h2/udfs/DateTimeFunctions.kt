@@ -2,8 +2,8 @@ package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.ql.annotation.UDFGroup
-import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.ql.common.annotation.UDFGroup
+import ai.platon.pulsar.ql.common.annotation.UDFunction
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 

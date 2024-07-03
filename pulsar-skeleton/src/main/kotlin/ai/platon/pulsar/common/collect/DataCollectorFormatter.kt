@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.sql.ResultSetFormatter
-import ai.platon.pulsar.ql.ResultSets
+import ai.platon.pulsar.ql.common.ResultSets
 import org.apache.commons.lang3.StringUtils
 import org.h2.tools.SimpleResultSet
 import java.time.Duration

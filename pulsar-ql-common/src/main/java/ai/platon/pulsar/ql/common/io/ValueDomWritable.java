@@ -1,9 +1,9 @@
-package ai.platon.pulsar.ql.io;
+package ai.platon.pulsar.ql.common.io;
 
 import ai.platon.pulsar.common.concurrent.ConcurrentLRUCache;
 import ai.platon.pulsar.dom.Documents;
 import ai.platon.pulsar.dom.FeaturedDocument;
-import ai.platon.pulsar.ql.types.ValueDom;
+import ai.platon.pulsar.ql.common.types.ValueDom;
 import org.apache.hadoop.io.Writable;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

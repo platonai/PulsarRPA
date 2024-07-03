@@ -17,8 +17,8 @@ import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.WebPageFormatter
-import ai.platon.pulsar.ql.ResultSets
-import ai.platon.pulsar.ql.types.ValueDom
+import ai.platon.pulsar.ql.common.ResultSets
+import ai.platon.pulsar.ql.common.types.ValueDom
 import ai.platon.pulsar.session.PulsarSession
 import org.apache.commons.math3.linear.RealVector
 import org.h2.api.ErrorCode

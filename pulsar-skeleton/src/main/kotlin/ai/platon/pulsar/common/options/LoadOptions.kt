@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.PageEventHandlers
 import ai.platon.pulsar.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
@@ -652,7 +651,7 @@ open class LoadOptions(
      * */
     val outLinkSelectorOrNull
         get() = outLinkSelector.takeIf { it.isNotBlank() }
-    
+
     /**
      * Enable the page event handlers and return it.
      * */
@@ -661,7 +660,7 @@ open class LoadOptions(
      * Enable the item event handlers and return it.
      * */
     val itemEvent: PageEventHandlers get() = enableItemEventHandlers()
-    
+
     /**
      * Find out the modified fields and return a [Params].
      * */
@@ -799,7 +798,7 @@ open class LoadOptions(
         // incognito mode is never used because the browsers are always running in temporary contexts
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
     }
-    
+
     private fun setInteractionSettings() {
         val modified = listOf(
             "netCondition",
@@ -808,7 +807,7 @@ open class LoadOptions(
             "scriptTimeout",
             "pageLoadTimeout"
         ).any { !isDefault(it) }
-        
+
         if (!modified) {
             return
         }
@@ -1119,17 +1118,17 @@ object LoadOptionDefaults {
      * The default expiry time, some time we may need expire all pages by default, for example, in test mode
      * */
     val EXPIRES = ChronoUnit.DECADES.duration
-    
+
     /**
      * The default time to expire
      * */
     val EXPIRE_AT = DateTimes.doomsday
-    
+
     /**
      * Lazy flush.
      * */
     const val LAZY_FLUSH = true
-    
+
     /**
      * Trigger the parse phase or not.
      *
@@ -1139,7 +1138,7 @@ object LoadOptionDefaults {
      * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
      * */
     const val PARSE = false
-    
+
     /**
      * Store webpage content or not.
      *
@@ -1160,24 +1159,24 @@ object LoadOptionDefaults {
      * If true, still fetch the page even if it is gone.
      * */
     const val IGNORE_FAILURE = false
-    
+
     /**
      * There are several cases to enable jit retry.
      * For example, in a test environment.
      * */
     const val N_JIT_RETRY = -1
-    
+
     /**
      * The default browser is chrome with pulsar implemented web driver.
      * */
     val BROWSER = BrowserType.PULSAR_CHROME
-    
+
     /**
      * Set to be > 0 if we are doing unit test or other test.
      * We will talk more, log more and trace more in test mode.
      * */
     const val TEST = 0
-    
+
     /**
      * The default expiry time, some time we may need expire all pages by default, for example, in test mode
      * */
@@ -1240,7 +1239,7 @@ object LoadOptionDefaults {
      * We will talk more, log more and trace more in test mode.
      * */
     var test = TEST
-    
+
     /**
      * Reset all the options to default.
      * */

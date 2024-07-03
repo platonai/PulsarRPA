@@ -1,4 +1,4 @@
-package ai.platon.pulsar.ql.annotation;
+package ai.platon.pulsar.ql.common.annotation;
 
 import javax.annotation.meta.TypeQualifier;
 import java.lang.annotation.Documented;

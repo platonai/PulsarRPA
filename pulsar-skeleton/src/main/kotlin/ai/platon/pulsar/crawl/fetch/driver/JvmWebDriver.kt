@@ -1,11 +1,12 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import org.jsoup.Connection
 import java.time.Duration
-import java.util.Optional
+import java.util.*
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -166,14 +167,14 @@ interface JvmWebDriver {
 
     @Throws(WebDriverException::class)
     fun outerHTMLAsync(selector: String): CompletableFuture<String?>
-    
+
     @Throws(WebDriverException::class)
     fun selectFirstTextOrNullAsync(selector: String): CompletableFuture<String?>
     @Throws(WebDriverException::class)
     fun selectFirstTextOptionalAsync(selector: String): CompletableFuture<Optional<String>>
     @Throws(WebDriverException::class)
     fun selectTextAllAsync(selector: String): CompletableFuture<List<String>>
-    
+
     @Throws(WebDriverException::class)
     fun selectFirstAttributeOrNullAsync(selector: String, attrName: String): CompletableFuture<String?>
     @Throws(WebDriverException::class)

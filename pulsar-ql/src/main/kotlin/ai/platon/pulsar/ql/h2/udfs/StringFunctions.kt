@@ -1,8 +1,8 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.ql.annotation.UDFGroup
-import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.ql.common.annotation.UDFGroup
+import ai.platon.pulsar.ql.common.annotation.UDFunction
 import org.apache.commons.lang3.StringUtils
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
@@ -213,7 +213,7 @@ object StringFunctions {
         val analyzer = SmartChineseAnalyzer()
 
         val sb = StringBuilder()
-        
+
         val tokenStream = analyzer.tokenStream("field", str)
         val term = tokenStream.addAttribute(CharTermAttribute::class.java)
         tokenStream.reset()
@@ -223,7 +223,7 @@ object StringFunctions {
         }
         tokenStream.end()
         tokenStream.close()
-        
+
         return sb.toString()
     }
 }
