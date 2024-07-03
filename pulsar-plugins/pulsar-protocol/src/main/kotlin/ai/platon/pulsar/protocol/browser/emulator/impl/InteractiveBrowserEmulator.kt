@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator.impl
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.MetricsSystem
@@ -167,11 +168,11 @@ open class InteractiveBrowserEmulator(
     override suspend fun onDidScroll(page: WebPage, driver: WebDriver) {
         page.browseEvent?.onDidScroll?.invoke(page, driver)
     }
-    
+
     override suspend fun onDocumentSteady(page: WebPage, driver: WebDriver) {
         page.browseEvent?.onDocumentSteady?.invoke(page, driver)
     }
-    
+
     override suspend fun onWillComputeFeature(page: WebPage, driver: WebDriver) {
         page.browseEvent?.onWillComputeFeature?.invoke(page, driver)
     }
@@ -197,11 +198,11 @@ open class InteractiveBrowserEmulator(
             detach()
         }
     }
-    
+
     @Throws(Exception::class)
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
         require(driver is AbstractWebDriver)
-        
+
         // page.lastBrowser is used by AppFiles.export, so it has to be set before export
         // TODO: page should not be modified in browser phase, it should only be updated using PageDatum
         task.page.lastBrowser = driver.browserType
@@ -286,8 +287,8 @@ open class InteractiveBrowserEmulator(
         val resourceLoader = page.conf["resource.loader", "jsoup"]
         val response = when (resourceLoader) {
             "web.driver" -> driver.loadResource(navigateTask.url)
-            "jsoup" -> NetworkResourceResponse.from(driver.loadJsoupResource(navigateTask.url))
-            else -> NetworkResourceResponse.from(driver.loadJsoupResource(navigateTask.url))
+            "jsoup" -> NetworkResourceHelper.fromJsoup(driver.loadJsoupResource(navigateTask.url))
+            else -> NetworkResourceHelper.fromJsoup(driver.loadJsoupResource(navigateTask.url))
         }
 
         // TODO: transform protocol status in AbstractHttpProtocol
@@ -356,7 +357,7 @@ open class InteractiveBrowserEmulator(
         val fetchTask = navigateTask.fetchTask
         checkState(navigateTask.fetchTask, driver)
         require(driver is AbstractWebDriver)
-        
+
         val interactResult = navigateAndInteract(navigateTask, driver, navigateTask.browserSettings)
 
         // TODO: separate status code of pulsar system and the status code from browser
@@ -491,7 +492,7 @@ open class InteractiveBrowserEmulator(
             // TODO: check if state.isContinue is necessary
             emit1(EmulateEvents.documentSteady, page, driver)
         }
-        
+
         // With the scrolling operation finished, the page is stable and unlikely to experience significant updates.
         // Therefore, we can now proceed to calculate the document’s features.
         // TODO: driver.pageSource() might be huge so there might be a performance issue
@@ -503,7 +504,7 @@ open class InteractiveBrowserEmulator(
 
             emit1(EmulateEvents.featureComputed, page, driver)
         }
-        
+
         return result
     }
 
@@ -514,7 +515,7 @@ open class InteractiveBrowserEmulator(
     protected open suspend fun waitForDocumentActuallyReady(interactTask: InteractTask, result: InteractResult) {
         val driver = interactTask.driver
         require(driver is AbstractWebDriver)
-        
+
         var status = ProtocolStatus.STATUS_SUCCESS
         val scriptTimeout = interactTask.interactSettings.scriptTimeout
         val fetchTask = interactTask.navigateTask.fetchTask
