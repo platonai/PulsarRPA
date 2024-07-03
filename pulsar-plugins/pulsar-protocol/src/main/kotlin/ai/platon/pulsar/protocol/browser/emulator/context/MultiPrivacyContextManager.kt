@@ -19,6 +19,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import com.google.common.collect.Iterables
 import kotlinx.coroutines.delay
 import java.io.IOException

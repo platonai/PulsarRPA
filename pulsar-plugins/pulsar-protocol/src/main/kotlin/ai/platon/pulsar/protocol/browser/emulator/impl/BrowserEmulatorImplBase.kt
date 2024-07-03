@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_PAGE_AUTO_EXPORT_LIM
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.event.AbstractEventEmitter
-import ai.platon.pulsar.common.files.ext.export
+import ai.platon.pulsar.skeleton.common.files.ext.export
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
@@ -54,18 +54,18 @@ abstract class BrowserEmulatorImplBase(
      * The maximum length of the page source, 8M by default.
      * */
     protected val maxPageSourceLength = immutableConfig.getInt(FETCH_MAX_CONTENT_LENGTH, 8 * FileUtils.ONE_MB.toInt())
-    
+
     private val registry = MetricsSystem.reg
     protected val pageSourceByteHistogram by lazy { registry.histogram(this, "hPageSourceBytes") }
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
-    
+
     protected val meterNavigates by lazy { registry.meter(this, "navigates") }
     protected val counterJsEvaluates by lazy { registry.counter(this, "jsEvaluates") }
     protected val counterJsWaits by lazy { registry.counter(this, "jsWaits") }
     protected val counterCancels by lazy { registry.counter(this, "cancels") }
-    
+
     protected val closed = AtomicBoolean(false)
-    
+
     /**
      * Whether the emulator is active.
      * */
@@ -154,7 +154,7 @@ abstract class BrowserEmulatorImplBase(
                 // messageWriter?.debugRedirects(pageDatum.url, urls)
             }
         }
-        
+
         val driver = task.driver as AbstractWebDriver
         if (!driver.isMockedPageSource) {
             exportIfNecessary(task)
@@ -200,7 +200,7 @@ abstract class BrowserEmulatorImplBase(
     @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
     protected fun checkState(task: FetchTask, driver: WebDriver) {
         checkState()
-        
+
         require(driver is AbstractWebDriver)
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
@@ -298,7 +298,7 @@ abstract class BrowserEmulatorImplBase(
         } else {
             createSymbolicLink(path, page)
         }
-        
+
         return path
     }
 
