@@ -50,7 +50,7 @@ abstract class AbstractConfiguration {
     protected val conf: KConfiguration
 
     /**
-     * Spring core is the first class dependency now, we will remove dependency on [KConfiguration] later
+     * Spring core is the first class dependency now
      */
     var environment: Environment? = null
     

@@ -23,7 +23,7 @@ class ChatModelTests {
     private val productHtml = ResourceLoader.readString("pages/amazon/B0C1H26C46.original.htm")
     private val productText = ResourceLoader.readString("prompts/product.txt")
     private val conf = ImmutableConfig.UNSAFE
-    private val component = ChatModel(conf)
+    private val model = ChatModel(conf)
     private val session = PulsarContexts.createSession()
 
     @Test
@@ -31,7 +31,7 @@ class ChatModelTests {
 //        val document = session.loadDocument(url, args)
         val document = Documents.parse(productHtml, url)
         val prompt = "以下是一个电商网站的网页内容，找出商品标题、商品价格："
-        val response = component.call(document, prompt)
+        val response = model.call(document, prompt)
         println(response.content)
 
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
@@ -57,7 +57,7 @@ class ChatModelTests {
 - **商品评分**:
     （这里是商品评分）
         """.trimIndent()
-        val response = component.call(text, prompt)
+        val response = model.call(text, prompt)
         println(response.content)
 
         assertTrue { response.tokenUsage.inputTokenCount > 0 }

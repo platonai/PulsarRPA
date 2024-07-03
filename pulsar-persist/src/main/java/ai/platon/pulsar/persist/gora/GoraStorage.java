@@ -1,7 +1,6 @@
 package ai.platon.pulsar.persist.gora;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.persist.HadoopUtils;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import org.apache.gora.persistency.Persistent;
