@@ -134,6 +134,11 @@ class MockWebDriver(
     override suspend fun deleteCookies(name: String, url: String?, domain: String?, path: String?) {
         backupDriverOrNull?.deleteCookies(name, url, domain, path)
     }
+    
+    @Throws(WebDriverException::class)
+    override suspend fun captureScreenshot(): String? {
+        return backupDriverOrNull?.captureScreenshot()
+    }
 
     @Throws(WebDriverException::class)
     override suspend fun captureScreenshot(selector: String): String? {

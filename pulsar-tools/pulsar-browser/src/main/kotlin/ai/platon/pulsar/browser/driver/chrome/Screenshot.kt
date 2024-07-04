@@ -22,6 +22,13 @@ class Screenshot(
     private val page get() = devTools.page.takeIf { isActive }
     private val dom get() = devTools.dom.takeIf { isActive }
     private val debugLevel = System.getProperty("browser.additionalDebugLevel")?.toIntOrNull() ?: 0
+    
+    /**
+     * Capture page screenshot.
+     * */
+    fun captureScreenshot(): String? {
+        return page?.captureScreenshot()
+    }
 
     fun captureScreenshot(selector: String): String? {
         val nodeId = pageHandler.querySelector(selector)

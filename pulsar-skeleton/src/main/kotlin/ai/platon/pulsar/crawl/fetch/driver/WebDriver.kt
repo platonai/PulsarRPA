@@ -1148,6 +1148,20 @@ interface WebDriver: Closeable {
      * This method scrolls element into view if needed, and then ake a screenshot of the element.
      *
      * ```kotlin
+     * val screenshot = driver.captureScreenshot()
+     * val bytes = Base64.getDecoder().decode(screenshot)
+     * val path = AppPaths.TMP_DIR.resolve("screenshot.jpg")
+     * AppFiles.saveTo(bytes, path, true)
+     * ```
+     *
+     * @return The screenshot of the element in base64 format.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun captureScreenshot(): String?
+    /**
+     * This method scrolls element into view if needed, and then ake a screenshot of the element.
+     *
+     * ```kotlin
      * val screenshot = driver.captureScreenshot("h2.title")
      * val bytes = Base64.getDecoder().decode(screenshot)
      * val path = AppPaths.TMP_DIR.resolve("screenshot.jpg")
