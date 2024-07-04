@@ -1,5 +1,14 @@
 #bin
 
+# Find the first parent directory that contains a pom.xml file
+APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
+while [[ "$APP_HOME" != "/" ]]; do
+  if [[ -f "$APP_HOME/pom.xml" ]]; then
+    break
+  fi
+  APP_HOME=$(dirname "$APP_HOME")
+done
+
 printUsage() {
   echo "Usage: deploy [-clean|-test]"
 }
@@ -35,11 +44,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-
-bin=$(dirname "$0")/..
-bin=$(cd "$bin">/dev/null || exit; pwd)
-APP_HOME=$(cd "$bin"/..>/dev/null || exit; pwd)
 
 echo "Deploy the project ..."
 echo "Changing version ..."

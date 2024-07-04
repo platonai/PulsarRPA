@@ -84,11 +84,13 @@ open class ChainedHtmlIntegrityChecker(val conf: ImmutableConfig): AbstractHtmlI
         checkers.add(0, checker)
     }
 
-    fun addLast(checker: HtmlIntegrityChecker) {
+    fun addLast(checker: HtmlIntegrityChecker): ChainedHtmlIntegrityChecker {
         checkers.add(checker)
+        return this
     }
 
-    fun remove(checker: HtmlIntegrityChecker) {
+    fun remove(checker: HtmlIntegrityChecker): ChainedHtmlIntegrityChecker {
         checkers.remove(checker)
+        return this
     }
 }

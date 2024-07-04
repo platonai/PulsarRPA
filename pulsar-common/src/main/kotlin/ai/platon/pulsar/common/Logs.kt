@@ -70,11 +70,12 @@ fun warnInterruptible(target: Any, t: Throwable) = warnInterruptible(target, t, 
  * @param t the exception thrown by the close method
  * @param message the message to log
  * */
-fun warnInterruptible(target: Any, t: Throwable, message: String, vararg args: Any?) {
+fun warnInterruptible(target: Any, t: Throwable, message: String?, vararg args: Any?) {
+    val message1 = message ?: ""
     try {
-        getLogger(target).warn(message, *args)
+        getLogger(target).warn(message1, *args)
     } catch (t2: Throwable) {
-        catastrophicError(t2, message, *args)
+        catastrophicError(t2, message1, *args)
     }
     
     if (t is InterruptedException) {

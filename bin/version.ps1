@@ -1,10 +1,11 @@
-#!/usr/bin/env ps1
+# Find the first parent directory containing the VERSION file
+$AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
+while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
+    $AppHome=$AppHome.Parent
+}
+cd $AppHome
 
-$bin = Split-Path $MyInvocation.MyCommand.Path
-Push-Location $bin -ErrorAction SilentlyContinue; Pop-Location
-$APP_HOME = Split-Path $bin
-
-$VERSION = "v$(Get-Content "$APP_HOME/VERSION")"
+$VERSION = "v$(Get-Content "$AppHome/VERSION")"
 
 if ($args.Count -gt 0 -and $args[0] -eq "-v") {
     # dynamically pull more interesting stuff from latest git commit

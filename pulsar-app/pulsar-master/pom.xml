@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-app</artifactId>
-        <version>1.12.6-SNAPSHOT</version>
+        <version>1.12.7-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-master</artifactId>
@@ -53,4 +53,26 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <defaultGoal>package</defaultGoal>
+        <finalName>PulsarRPA</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>ai.platon.pulsar.app.master.PulsarMasterKt</mainClass>
+                    <addResources>true</addResources>
+                    <executable>true</executable>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

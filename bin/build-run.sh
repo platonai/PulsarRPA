@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 
-bin=$(dirname "$0")
-bin=$(cd "$bin">/dev/null || exit; pwd)
+BIN=$(dirname "$0")
+APP_HOME=$(realpath "$BIN/..")
+MVNW="$APP_HOME"/mvnw
 
-"$bin"/tools/install-depends.sh
+"$BIN"/build.sh "$@"
 
-mvn clean && mvn -Pall-modules -DskipTests=true
+SERVER_HOME=$APP_HOME/pulsar-app/pulsar-master
+cd "$SERVER_HOME" || exit
 
-"$bin"/pulsar
+"$BIN"/tools/install-depends.sh
+"$MVNW" spring-boot:run
+
+cd "$APP_HOME" || exit

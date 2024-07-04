@@ -27,6 +27,7 @@ import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
+import org.springframework.beans.FatalBeanException
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
@@ -36,9 +37,12 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.random.Random
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
 
 private class StreamingCrawlerMetrics {
     private val registry = MetricsSystem.defaultMetricRegistry
@@ -68,6 +72,32 @@ private enum class CriticalWarning(val message: String) {
     WRONG_PROFILE("WRONG PROFILE! ALL RESIDENT TASKS ARE PAUSED"),
 }
 
+private class GlobalCrawlState {
+    val globalRunningInstances = AtomicInteger()
+    val globalRunningTasks = AtomicInteger()
+    val globalKilledTasks = AtomicInteger()
+    val globalTasks = AtomicInteger()
+    var globalWebDBFailures = AtomicInteger()
+    
+    val globalMetrics = StreamingCrawlerMetrics()
+    
+    val globalLoadingUrls = ConcurrentSkipListSet<String>()
+    
+    var contextLeakWaitingTime = Duration.ZERO
+    var proxyVendorWaitingTime = Duration.ZERO
+    var criticalWarning: CriticalWarning? = null
+    var lastUrl = ""
+    var lastHtmlIntegrity = ""
+    var lastFetchError = ""
+    val lastCancelReason = Frequency<String>()
+    val illegalApplicationState = AtomicBoolean()
+    
+    var wrongProfile = MetricsSystem.reg.multiMetric(this, "WRONG_PROFILE_COUNT")
+    
+    val readableCriticalWarning: String
+        get() = criticalWarning?.message?.let { "!!! WARNING !!! $it !!! ${Instant.now()}" } ?: ""
+}
+
 open class StreamingCrawler(
     /**
      * The url sequence
@@ -88,46 +118,42 @@ open class StreamingCrawler(
     autoClose: Boolean = true,
 ): AbstractCrawler(session, autoClose) {
     companion object {
-        private val globalRunningInstances = AtomicInteger()
-        private val globalRunningTasks = AtomicInteger()
-        private val globalKilledTasks = AtomicInteger()
-        private val globalTasks = AtomicInteger()
-        private var globalWebDBFailures = AtomicInteger()
-
-        private val globalMetrics = StreamingCrawlerMetrics()
-
-        private val globalLoadingUrls = ConcurrentSkipListSet<String>()
-
-        private var contextLeakWaitingTime = Duration.ZERO
-        private var proxyVendorWaitingTime = Duration.ZERO
-        private var criticalWarning: CriticalWarning? = null
-        private var lastUrl = ""
-        private var lastHtmlIntegrity = ""
-        private var lastFetchError = ""
-        private val lastCancelReason = Frequency<String>()
-        private val isIllegalApplicationState = AtomicBoolean()
-
-        private var wrongProfile = MetricsSystem.reg.multiMetric(this, "WRONG_PROFILE_COUNT")
-
-        private val readableCriticalWarning: String
-            get() = criticalWarning?.message?.let { "!!! WARNING !!! $it !!! ${Instant.now()}" } ?: ""
+        private var globalState = GlobalCrawlState()
 
         init {
             mapOf(
-                "globalRunningInstances" to Gauge { globalRunningInstances.get() },
-                "globalRunningTasks" to Gauge { globalRunningTasks.get() },
-                "globalKilledTasks" to Gauge { globalKilledTasks.get() },
-                "globalWebDBFailures" to Gauge { globalWebDBFailures.get() },
+                "illegalApplicationState" to Gauge { globalState.illegalApplicationState.get() },
+                
+                "globalState.globalRunningInstances" to Gauge { globalState.globalRunningInstances.get() },
+                "globalState.globalRunningTasks" to Gauge { globalState.globalRunningTasks.get() },
+                "globalState.globalKilledTasks" to Gauge { globalState.globalKilledTasks.get() },
+                "globalState.globalWebDBFailures" to Gauge { globalState.globalWebDBFailures.get() },
 
-                "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
-                "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
-                "000WARNING" to Gauge { readableCriticalWarning },
-                "lastCancelReason" to Gauge { lastCancelReason.toString() },
+                "contextLeakWaitingTime" to Gauge { globalState.contextLeakWaitingTime },
+                "proxyVendorWaitingTime" to Gauge { globalState.proxyVendorWaitingTime },
+                "000WARNING" to Gauge { globalState.readableCriticalWarning },
+                "lastCancelReason" to Gauge { globalState.lastCancelReason.toString() },
 
-                "lastUrl" to Gauge { lastUrl },
-                "lastHtmlIntegrity" to Gauge { lastHtmlIntegrity },
-                "lastFetchError" to Gauge { lastFetchError },
+                "lastUrl" to Gauge { globalState.lastUrl },
+                "lastHtmlIntegrity" to Gauge { globalState.lastHtmlIntegrity },
+                "lastFetchError" to Gauge { globalState.lastFetchError },
             ).let { MetricsSystem.reg.registerAll(this, it) }
+        }
+        
+        /**
+         * Reset the global state to the initial state. The global state is shared by all [StreamingCrawler]s.
+         * */
+        fun resetGlobalState() {
+            globalState = GlobalCrawlState()
+        }
+        
+        /**
+         * Clears all the illegal states shared by all [StreamingCrawler]s.
+         * Only when there is no illegal states set, the newly created crawler can work properly.
+         * Other object scope data will keep unchanged, so we can still know what happened.
+         * */
+        fun clearIllegalState() {
+            globalState.illegalApplicationState.set(false)
         }
     }
 
@@ -152,8 +178,7 @@ open class StreamingCrawler(
      * */
     private val concurrencyOverride get() = sessionConfig.getInt(MAIN_LOOP_CONCURRENCY_OVERRIDE, 0)
     
-    @Volatile
-    private var flowState = FlowState.CONTINUE
+    private val flowState = AtomicReference(FlowState.CONTINUE)
 
     private var lastActiveTime = Instant.now()
 
@@ -226,14 +251,14 @@ open class StreamingCrawler(
      * */
     val isIdle: Boolean
         get() {
-            return !urls.iterator().hasNext() && globalLoadingUrls.isEmpty()
+            return !urls.iterator().hasNext() && globalState.globalLoadingUrls.isEmpty()
                     && idleTime > Duration.ofSeconds(10)
         }
 
     /**
      * Check if the crawler is active.
      * */
-    override val isActive get() = super.isActive && !forceQuit && !isIllegalApplicationState.get()
+    override val isActive get() = super.isActive && !forceQuit && !globalState.illegalApplicationState.get()
 
     /**
      * The job name.
@@ -271,6 +296,16 @@ open class StreamingCrawler(
         startCrawlLoop(scope)
     }
 
+    override fun report() {
+        val sb = StringBuilder()
+        
+        StreamingCrawler::class.memberProperties.filter { it.isAccessible }.forEach {
+            sb.append(it.name).append(": ").append(it.get(this)).append("\n")
+        }
+        
+        logger.info(sb.toString())
+    }
+    
     /**
      * Wait until all tasks are done.
      * */
@@ -299,13 +334,13 @@ open class StreamingCrawler(
 
         val startTime = Instant.now()
 
-        globalRunningInstances.incrementAndGet()
+        globalState.globalRunningInstances.incrementAndGet()
         runCrawlLoopWhileActive(scope)
-        globalRunningInstances.decrementAndGet()
+        globalState.globalRunningInstances.decrementAndGet()
 
         logger.info(
             "All done. Total {} tasks are processed in session {} in {}",
-            globalMetrics.tasks.counter.count, session,
+            globalState.globalMetrics.tasks.counter.count, session,
             DateTimes.elapsedTime(startTime).readable()
         )
     }
@@ -317,16 +352,16 @@ open class StreamingCrawler(
             
             urls.forEachIndexed { j, url ->
                 idleSeconds = 0
-                globalTasks.incrementAndGet()
+                globalState.globalTasks.incrementAndGet()
                 
                 if (!isActive) {
-                    globalMetrics.drops.mark()
+                    globalState.globalMetrics.drops.mark()
                     return@runCrawlLoopWhileActive
                 }
                 
                 tracer?.trace(
                     "{}. {}/{} running tasks, processing {}",
-                    globalTasks, globalLoadingUrls.size, globalRunningTasks, url.configuredUrl
+                    globalState.globalTasks, globalState.globalLoadingUrls.size, globalState.globalRunningTasks, url.configuredUrl
                 )
                 
                 // The largest disk must have at least 10 GiB remaining space
@@ -335,12 +370,12 @@ open class StreamingCrawler(
                 if (freeSpace < 10.0) {
                     val diskSpaces = Runtimes.unallocatedDiskSpaces().joinToString { ByteUnit.BYTE.toGB(it).toString() }
                     logger.error("Disk space is full! | {}", diskSpaces)
-                    criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
+                    globalState.criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
                     return@runCrawlLoopWhileActive
                 }
                 
                 if (url.isNil) {
-                    globalMetrics.drops.mark()
+                    globalState.globalMetrics.drops.mark()
                     return@forEachIndexed
                 }
                 
@@ -350,7 +385,7 @@ open class StreamingCrawler(
                     return@forEachIndexed
                 }
                 
-                globalLoadingUrls.add(urlSpec)
+                globalState.globalLoadingUrls.add(urlSpec)
                 val state = runWithStatusCheck(1 + j, url, scope)
                 
                 if (state != FlowState.CONTINUE) {
@@ -376,7 +411,7 @@ open class StreamingCrawler(
         }
 
         if (idleSeconds % reportPeriod == 0) {
-            logger.debug("The url sequence is empty. {} {}", globalLoadingUrls.size, idleTime)
+            logger.debug("The url sequence is empty. {} {}", globalState.globalLoadingUrls.size, idleTime)
         }
 
         delay(1_000)
@@ -401,7 +436,7 @@ open class StreamingCrawler(
         delayIfEstimatedNoLoadResource(j)
 
         while (isActive && AppSystemInfo.isCriticalCPULoad) {
-            criticalWarning = CriticalWarning.HIGH_CPU_LOAD
+            globalState.criticalWarning = CriticalWarning.HIGH_CPU_LOAD
             // CPU load changes very fast, it drops immediately when a web driver becomes free,
             // so we delay for short and random time.
             randomDelay(200, 300)
@@ -416,7 +451,7 @@ open class StreamingCrawler(
                 // k is the number of consecutive warnings, the sequence of k is: 1, 21, 41, 61, ...
                 handleMemoryShortage(k)
             }
-            criticalWarning = CriticalWarning.OUT_OF_MEMORY
+            globalState.criticalWarning = CriticalWarning.OUT_OF_MEMORY
             randomDelay(500, 500)
         }
         k = 0 // reset k explicitly
@@ -427,59 +462,59 @@ open class StreamingCrawler(
          * */
         val contextLeaksRate = PrivacyContext.globalMetrics.contextLeaks.meter.fifteenMinuteRate
         if (isActive && contextLeaksRate >= 5 / 60f) {
-            criticalWarning = CriticalWarning.FAST_CONTEXT_LEAK
+            globalState.criticalWarning = CriticalWarning.FAST_CONTEXT_LEAK
             handleContextLeaks()
         }
 
-        if (isActive && wrongProfile.hourlyCounter.count > 60) {
+        if (isActive && globalState.wrongProfile.hourlyCounter.count > 60) {
             handleWrongProfile()
         }
 
         if (isActive && proxyOutOfService > 0) {
-            criticalWarning = CriticalWarning.NO_PROXY
+            globalState.criticalWarning = CriticalWarning.NO_PROXY
             handleProxyOutOfService()
         }
 
-        if (isActive && globalWebDBFailures.get() > 0) {
-            criticalWarning = CriticalWarning.WEB_DB_LOST
+        if (isActive && globalState.globalWebDBFailures.get() > 0) {
+            globalState.criticalWarning = CriticalWarning.WEB_DB_LOST
             handleWebDBLost()
         }
 
         if (isActive && FileCommand.check("finish-job")) {
             logger.info("Find finish-job command, quit streaming crawler ...")
-            flowState = FlowState.BREAK
-            return flowState
+            flowState.set(FlowState.BREAK)
+            return flowState.get()
         }
 
         if (!isActive) {
-            flowState = FlowState.BREAK
-            return flowState
+            flowState.set(FlowState.BREAK)
+            return flowState.get()
         }
 
         delayIfEstimatedNoLoadResource(j)
 
-        criticalWarning = null
+        globalState.criticalWarning = null
 
         val context = Dispatchers.Default + CoroutineName("w")
         val urlSpec = UrlUtils.splitUrlArgs(url.url).first
         // We must increase the number before the task is actually launched in a coroutine,
         // otherwise, it's easy to grow larger than fetchConcurrency.
-        globalRunningTasks.incrementAndGet()
+        globalState.globalRunningTasks.incrementAndGet()
         scope.launch(context) {
             try {
-                globalMetrics.tasks.mark()
+                globalState.globalMetrics.tasks.mark()
                 runTaskWithEventHandlers(url)
             } finally {
                 lastActiveTime = Instant.now()
 
-                globalLoadingUrls.remove(urlSpec)
-                globalRunningTasks.decrementAndGet()
+                globalState.globalLoadingUrls.remove(urlSpec)
+                globalState.globalRunningTasks.decrementAndGet()
 
-                globalMetrics.finishes.mark()
+                globalState.globalMetrics.finishes.mark()
             }
         }
 
-        return flowState
+        return flowState.get()
     }
 
     /**
@@ -488,10 +523,10 @@ open class StreamingCrawler(
      * */
     private suspend fun delayIfEstimatedNoLoadResource(j: Int, maxTry: Int = 1000) {
         var k = 0
-        while (isActive && ++k < maxTry && globalRunningTasks.get() >= concurrency) {
+        while (isActive && ++k < maxTry && globalState.globalRunningTasks.get() >= concurrency) {
             if (j % 120 == 0) {
                 logger.info(
-                    "$j. Long time to run $globalRunningTasks tasks | $lastActiveTime -> {}",
+                    "$j. Long time to run $globalState.globalRunningTasks tasks | $lastActiveTime -> {}",
                     idleTime.readable()
                 )
             }
@@ -554,20 +589,20 @@ open class StreamingCrawler(
                 loadWithMinorExceptionHandled(url)
             }
         } catch (e: TimeoutCancellationException) {
-            globalMetrics.timeouts.mark()
+            globalState.globalMetrics.timeouts.mark()
             logger.info(
                 "{}. Task timeout ({}) to load page, thrown by [withTimeout] | {}",
-                globalMetrics.timeouts.count, timeout, url
+                globalState.globalMetrics.timeouts.count, timeout, url
             )
         } catch (e: Throwable) {
             when {
                 // The following exceptions can be caught as a Throwable but not the concrete exception,
                 // one of the reason is the concrete exception is not public.
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
-                    if (isIllegalApplicationState.compareAndSet(false, true)) {
+                    if (globalState.illegalApplicationState.compareAndSet(false, true)) {
                         logger.warn("Coroutine was cancelled, quit... (JobCancellationException)")
                     }
-                    flowState = FlowState.BREAK
+                    flowState.set(FlowState.BREAK)
                 }
 
                 e.javaClass.name.contains("DriverLaunchException") -> {
@@ -575,7 +610,7 @@ open class StreamingCrawler(
                 }
 
                 else -> {
-                    logger.warn("[Unexpected]", e)
+                    logger.warn("[Unexpected] Exception details: >>>>", e)
                 }
             }
         }
@@ -587,27 +622,27 @@ open class StreamingCrawler(
         if (page.isCanceled) {
             return
         }
-
-        lastFetchError = page.protocolStatus.takeIf { !it.isSuccess }?.toString() ?: ""
+        
+        globalState.lastFetchError = page.protocolStatus.takeIf { !it.isSuccess }?.toString() ?: ""
         if (!page.protocolStatus.isSuccess) {
             return
         }
-
-        lastUrl = page.configuredUrl
-        lastHtmlIntegrity = page.htmlIntegrity.toString()
+        
+        globalState.lastUrl = page.configuredUrl
+        globalState.lastHtmlIntegrity = page.htmlIntegrity.toString()
 
 
         if (page.htmlIntegrity.isWrongProfile) {
-            wrongProfile.mark()
+            globalState.wrongProfile.mark()
         } else {
-            wrongProfile.reset()
+            globalState.wrongProfile.reset()
         }
 
         if (page.isFetched) {
-            globalMetrics.fetchSuccesses.mark()
+            globalState.globalMetrics.fetchSuccesses.mark()
         }
 
-        globalMetrics.successes.mark()
+        globalState.globalMetrics.successes.mark()
     }
 
     /**
@@ -622,7 +657,7 @@ open class StreamingCrawler(
             page.protocolStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isGone -> {
-                globalMetrics.gone.mark()
+                globalState.globalMetrics.gone.mark()
                 taskLogger.info("{}", PageLoadStatusFormatter(page, prefix = "Gone"))
             }
         }
@@ -633,7 +668,7 @@ open class StreamingCrawler(
         val options = session.options(url.args ?: "")
         if (options.isDead()) {
             // The url is dead, drop the task
-            globalKilledTasks.incrementAndGet()
+            globalState.globalKilledTasks.incrementAndGet()
             return null
         }
 
@@ -643,23 +678,28 @@ open class StreamingCrawler(
 //        }
 
         return kotlin.runCatching { session.loadDeferred(url, options) }
-            .onSuccess { flowState = handleLoadSuccess(url, it) }
-            .onFailure { flowState = handleLoadException(url, it) }
+            .onSuccess { flowState.set(handleLoadSuccess(url, it)) }
+            .onFailure { flowState.set(handleLoadException(url, it)) }
             .getOrNull()
     }
 
     @Throws(Exception::class)
     private fun handleLoadSuccess(url: UrlAware, page: WebPage): FlowState {
-//        if (globalWebDBFailures.get() > 0 && globalWebDBFailures.decrementAndGet() < 0) {
-//            globalWebDBFailures.set(0)
+//        if (globalState.globalWebDBFailures.get() > 0 && globalState.globalWebDBFailures.decrementAndGet() < 0) {
+//            globalState.globalWebDBFailures.set(0)
 //        }
-        return FlowState.CONTINUE
+        
+        return when (val state = flowState.get()) {
+            FlowState.BREAK -> FlowState.BREAK
+            else -> state
+        }
     }
 
     @Throws(Exception::class)
     private fun handleLoadException(url: UrlAware, e: Throwable): FlowState {
-        if (flowState == FlowState.BREAK) {
-            return flowState
+        val state = flowState
+        if (state.get() == FlowState.BREAK) {
+            return state.get()
         }
 
         if (!isActive) {
@@ -674,12 +714,19 @@ open class StreamingCrawler(
                 return FlowState.BREAK
             }
             is IllegalApplicationStateException -> {
-                if (isIllegalApplicationState.compareAndSet(false, true)) {
+                if (globalState.illegalApplicationState.compareAndSet(false, true)) {
                     logger.warn("\n!!!Illegal application context, quit ... | {}", e.message)
                 }
                 return FlowState.BREAK
             }
-
+            is FatalBeanException -> {
+                if (state.compareAndSet(FlowState.CONTINUE, FlowState.BREAK)) {
+                    logger.warn("Fatal bean exception, quit...", e)
+                } else {
+                    logger.warn("Fatal bean exception, quit... | {}", e.message)
+                }
+                return state.get()
+            }
             is ProxyInsufficientBalanceException -> {
                 proxyOutOfService++
                 logger.warn("{}. {}", proxyOutOfService, e.message)
@@ -695,7 +742,7 @@ open class StreamingCrawler(
             }
 
             is WebDBException -> {
-                globalWebDBFailures.incrementAndGet()
+                globalState.globalWebDBFailures.incrementAndGet()
                 // logger.warn("Web DB failure | {} | the Web DB layer should have reported the detail", continousWebDBFailureCount)
             }
 
@@ -705,10 +752,10 @@ open class StreamingCrawler(
                     e.brief(), url
                 )
             }
-
+            
             is CancellationException -> {
                 // Has to come after TimeoutCancellationException
-                if (isIllegalApplicationState.compareAndSet(false, true)) {
+                if (globalState.illegalApplicationState.compareAndSet(false, true)) {
                     logger.warn("Streaming crawler job was canceled, quit ...", e)
                 }
                 return FlowState.BREAK
@@ -716,16 +763,17 @@ open class StreamingCrawler(
 
             is IllegalStateException -> {
                 logger.warn("Illegal state", e)
+                return FlowState.BREAK
             }
 
             else -> throw e
         }
 
-        return FlowState.CONTINUE
+        return state.get()
     }
 
     private fun doLaterIfProcessing(urlSpec: String, url: UrlAware, delay: Duration): Boolean {
-        if (urlSpec in globalLoadingUrls || urlSpec in globalCache.fetchingCache) {
+        if (urlSpec in globalState.globalLoadingUrls || urlSpec in globalCache.fetchingCache) {
             // process later, hope the page is fetched
             logger.debug("Task is in process, do it {} later | {}", delay.readable(), url.configuredUrl)
             fetchDelayed(url, delay)
@@ -736,7 +784,7 @@ open class StreamingCrawler(
     }
 
     private suspend fun handleCanceled(url: UrlAware, page: WebPage?) {
-        globalMetrics.cancels.mark()
+        globalState.globalMetrics.cancels.mark()
         val delay = page?.retryDelay?.takeIf { !it.isZero } ?: Duration.ofSeconds(10)
         // Delay fetching the page.
         fetchDelayed(url, delay)
@@ -745,16 +793,16 @@ open class StreamingCrawler(
         if (page != null) {
             // page is not updated using page datum if the page is canceled, so use pageDatum
             val reason = page.pageDatum?.protocolStatus?.reason ?: "unknown"
-            lastCancelReason.add(reason.toString())
+            globalState.lastCancelReason.add(reason.toString())
         }
 
         // Set a guard to prevent too many cancels.
         // If there are too many cancels, the loop should have a rest.
         //
         // rate_unit=events/second
-        val oneMinuteRate = globalMetrics.cancels.meter.oneMinuteRate
+        val oneMinuteRate = globalState.globalMetrics.cancels.meter.oneMinuteRate
         if (isActive && oneMinuteRate >= 1.0) {
-            criticalWarning = CriticalWarning.FAST_CANCELS
+            globalState.criticalWarning = CriticalWarning.FAST_CANCELS
             delay(1_000)
         }
     }
@@ -763,19 +811,19 @@ open class StreamingCrawler(
         val nextRetryNumber = 1 + (page?.fetchRetries ?: 0)
         if (page != null && nextRetryNumber > page.maxRetries) {
             // should not go here, because the page should be marked as GONE
-            globalMetrics.gone.mark()
+            globalState.globalMetrics.gone.mark()
             taskLogger.info("{}", PageLoadStatusFormatter(page, prefix = "Gone (unexpected)"))
             return
         }
 
         val delay = page?.retryDelay?.takeIf { !it.isZero } ?: retryDelayPolicy(nextRetryNumber, url)
-//        val delayCache = globalCache.urlPool.delayCache
+//        val delayCache = globalState.globalCache.urlPool.delayCache
 //        // erase -refresh options
 //        url.args = url.args?.replace("-refresh", "-refresh-erased")
 //        delayCache.add(DelayUrl(url, delay))
         fetchDelayed(url, delay)
 
-        globalMetrics.retries.mark()
+        globalState.globalMetrics.retries.mark()
         if (page != null) {
             val symbol = PopularEmoji.FENCER
             val prefix = "$symbol Trying ${nextRetryNumber}th ${delay.readable()} later | "
@@ -797,7 +845,7 @@ open class StreamingCrawler(
         logger.info(
             "{}. runningTasks: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
             consecutiveWarningCount,
-            globalRunningTasks, AppSystemInfo.formatAvailableMemory(),
+            globalState.globalRunningTasks, AppSystemInfo.formatAvailableMemory(),
             AppSystemInfo.formatMemoryToReserve(), AppSystemInfo.formatMemoryShortage()
         )
         session.globalCache.clearPDCaches()
@@ -824,21 +872,21 @@ open class StreamingCrawler(
             delay(1000)
             
             contextLeaks.update()
-
-            contextLeakWaitingTime += Duration.ofSeconds(1)
+            
+            globalState.contextLeakWaitingTime += Duration.ofSeconds(1)
         }
-
-        contextLeakWaitingTime = Duration.ZERO
+        
+        globalState.contextLeakWaitingTime = Duration.ZERO
     }
 
     private suspend fun handleProxyOutOfService() {
         while (isActive && proxyOutOfService > 0) {
             delay(1000)
-            proxyVendorWaitingTime += Duration.ofSeconds(1)
+            globalState.proxyVendorWaitingTime += Duration.ofSeconds(1)
             handleProxyOutOfService0()
         }
-
-        proxyVendorWaitingTime = Duration.ZERO
+        
+        globalState.proxyVendorWaitingTime = Duration.ZERO
     }
 
     private fun handleProxyOutOfService0() {
@@ -886,15 +934,15 @@ open class StreamingCrawler(
         }
 
         if (canConnect) {
-            globalWebDBFailures.set(0)
+            globalState.globalWebDBFailures.set(0)
         }
     }
 
     private suspend fun handleWrongProfile() {
         var k = 0
-        while (wrongProfile.hourlyCounter.count > 60) {
-            criticalWarning = CriticalWarning.WRONG_PROFILE
-            logger.takeIf { k++ % 20 == 0 }?.warn("{}", criticalWarning?.message ?: "")
+        while (globalState.wrongProfile.hourlyCounter.count > 60) {
+            globalState.criticalWarning = CriticalWarning.WRONG_PROFILE
+            logger.takeIf { k++ % 20 == 0 }?.warn("{}", globalState.criticalWarning?.message ?: "")
             delay(1000)
         }
     }

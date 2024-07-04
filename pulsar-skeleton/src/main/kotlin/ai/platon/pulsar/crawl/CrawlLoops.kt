@@ -24,13 +24,19 @@ class CrawlLoops(val loops: MutableList<CrawlLoop>) : StartStopRunnable {
 
     inline fun <reified T: CrawlLoop> lastIsInstance() = loops.filterIsInstance<T>().last()
 
+    /**
+     * Start all loops matching the filter if not started.
+     * */
     override fun start() {
         if (started.compareAndSet(false, true)) {
             loops.filter { loop -> filters.isEmpty() || filters.all { it.test(loop) } }
                 .forEach { it.start() }
         }
     }
-
+    
+    /**
+     * Stop all loops matching the filter if started.
+     * */
     override fun stop() {
         if (started.compareAndSet(true, false)) {
             loops.filter { loop -> filters.isEmpty() || filters.all { it.test(loop) } }

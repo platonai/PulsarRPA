@@ -22,6 +22,7 @@ import ai.platon.pulsar.session.PulsarEnvironment
 import ai.platon.pulsar.session.PulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
+import org.springframework.beans.factory.BeanCreationException
 import org.springframework.context.support.AbstractApplicationContext
 import java.net.URL
 import java.nio.ByteBuffer
@@ -58,30 +59,60 @@ abstract class AbstractPulsarContext(
     /** Reference to the JVM shutdown hook, if registered */
     private var shutdownHook: Thread? = null
 
-    private val webDbOrNull: WebDb? get() = if (isActive) webDb else null
+    private val beanCreationFailures = AtomicInteger()
+    
+    private val webDbOrNull: WebDb? get() = when {
+        isActive -> webDb
+        else -> null
+    }
 
-    private val loadComponentOrNull: LoadComponent? get() = if (isActive) loadComponent else null
+    private val loadComponentOrNull: LoadComponent? get() = when {
+        beanCreationFailures.get() > 0 -> null
+        isActive -> {
+            try {
+                loadComponent
+            } catch (e: BeanCreationException) {
+                if (beanCreationFailures.compareAndSet(0, 1)) {
+                    logger.error("Failed to create LoadComponent bean", e)
+                } else {
+                    beanCreationFailures.incrementAndGet()
+                }
+                null
+            }
+        }
+        else -> null
+    }
 
     /**
      * Return null if everything is OK, or return NIL if something wrong
      * */
-    private val abnormalPage get() = if (isActive) null else WebPage.NIL
+    private val abnormalPage get() = when {
+        loadComponentOrNull != null -> null // everything is OK
+        else -> WebPage.NIL
+    }
 
     /**
      * Return null if everything is OK, or return a empty list if something wrong
      * */
-    private val abnormalPages: List<WebPage>? get() = if (isActive) null else listOf()
+    private val abnormalPages: List<WebPage>? get() = when {
+        loadComponentOrNull != null -> null // everything is OK
+        else -> listOf()
+    }
 
     /**
      * Flag that indicates whether this context is currently active.
      * */
-    override val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
+    override val isActive get() = !closed.get() && applicationContext.isActive
 
     /**
      * The context id
      * */
     override val id = instanceSequencer.incrementAndGet()
 
+    init {
+        AppContext.start()
+    }
+    
     /**
      * An immutable config is which loaded from the config file at process startup, and never changes
      * */
@@ -143,9 +174,6 @@ abstract class AbstractPulsarContext(
      * */
     @Throws(BeansException::class, IllegalStateException::class)
     override fun <T : Any> getBean(requiredType: KClass<T>): T {
-        if (!isActive) {
-            throw IllegalApplicationStateException("This program is being shut down.")
-        }
         return applicationContext.getBean(requiredType.java)
     }
 
@@ -538,7 +566,7 @@ abstract class AbstractPulsarContext(
             runCatching { closable.closeable.close() }.onFailure { warnForClose(this, it) }
         }
     }
-
+    
     private fun startLoopIfNecessary() {
         if (isActive && !crawlLoops.isStarted) {
             crawlLoops.start()

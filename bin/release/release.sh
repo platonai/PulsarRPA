@@ -1,8 +1,13 @@
 #bin
 
-bin=$(dirname "$0")/..
-bin=$(cd "$bin">/dev/null || exit; pwd)
-APP_HOME=$(cd "$bin"/..>/dev/null || exit; pwd)
+# Find the first parent directory that contains a pom.xml file
+APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
+while [[ "$APP_HOME" != "/" ]]; do
+  if [[ -f "$APP_HOME/pom.xml" ]]; then
+    break
+  fi
+  APP_HOME=$(dirname "$APP_HOME")
+done
 
 # Switching remote URLs from HTTPS to SSH
 git remote set-url origin git@github.com:platonai/PulsarRPA.git
@@ -107,6 +112,6 @@ function checkout_working_branch() {
 
 restore_working_branch
 pull
+add_tag
 merge_to_main_branch
 checkout_working_branch
-add_tag

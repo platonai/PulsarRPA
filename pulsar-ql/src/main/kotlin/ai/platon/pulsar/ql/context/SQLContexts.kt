@@ -161,9 +161,15 @@ object SQLContexts {
     fun create(context: SQLContext): SQLContext = context.also { PulsarContexts.create(it) }
 
     @Synchronized
-    fun create(context: ApplicationContext): SQLContext =
-        create(H2SQLContext(context as AbstractApplicationContext))
-
+    fun create(applicationContext: ApplicationContext): SQLContext {
+        val context = PulsarContexts.activeContext
+        if (context is H2SQLContext && context.applicationContext == applicationContext) {
+            return PulsarContexts.activeContext as SQLContext
+        }
+        
+        return create(H2SQLContext(applicationContext as AbstractApplicationContext))
+    }
+    
     @Synchronized
     fun create(contextLocation: String): SQLContext = create(ClassPathXmlSQLContext(contextLocation))
 

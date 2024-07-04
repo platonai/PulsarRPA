@@ -75,24 +75,6 @@ class ScrapeServiceTests {
         assertTrue { actualUrl == url }
     }
 
-    @Ignore("Disabled temporary, amazon_suggestions have to use a real browser with js support, not a mock browser")
-    @Test
-    fun `When call amazon_suggestions then the suggestions are retrieved`() {
-        val url = "https://www.amazon.com/"
-        val sql = "select amazon_suggestions('$url -i 0s', 'cups') as suggestions"
-        val request = ScrapeRequest(sql)
-
-        val response = service.executeQuery(request)
-        val records = response.resultSet
-        println(pulsarObjectMapper().writeValueAsString(response))
-
-        assertEquals(200, response.pageStatusCode, response.pageStatus)
-        assertEquals(200, response.statusCode, response.status)
-        assertNotNull(records)
-
-        assertTrue { records.isNotEmpty() }
-    }
-
     @Test
     fun `When scrape jd then the base uri returns asynchronously`() {
         val url = "https://www.jd.com/ -i 0s"

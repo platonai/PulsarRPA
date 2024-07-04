@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl.impl
 
-import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.persist.ext.event
 import ai.platon.pulsar.common.urls.UrlAware
@@ -21,7 +20,7 @@ enum class CrawlEvents {
 }
 
 abstract class AbstractCrawler(
-    val session: PulsarSession = PulsarContexts.createSession(),
+    val session: PulsarSession,
     val autoClose: Boolean = true
 ): Crawler, AbstractEventEmitter<CrawlEvents>() {
     companion object {
@@ -40,7 +39,7 @@ abstract class AbstractCrawler(
 
     protected val closed = AtomicBoolean()
 
-    open val isActive get() = !closed.get() && AppContext.isActive
+    open val isActive get() = !closed.get()
 
     init {
         attach()
@@ -53,25 +52,29 @@ abstract class AbstractCrawler(
     override fun resume() {
         isPaused = false
     }
-
+    
+    override fun report() {
+        // Nothing to do
+    }
+    
     override fun onWillLoad(url: UrlAware) {
         if (url is ListenableUrl) {
-            url.event.crawlEvent.onWillLoad(url)
+            url.event.crawlEventHandlers.onWillLoad(url)
         }
     }
 
     override fun onLoad(url: UrlAware) {
         if (url is ListenableUrl) {
-            url.event.crawlEvent.onLoad(url)
+            url.event.crawlEventHandlers.onLoad(url)
         }
     }
 
     override fun onLoaded(url: UrlAware, page: WebPage?) {
-        val event = page?.event?.crawlEvent
+        val event = page?.event?.crawlEventHandlers
         if (event != null) {
             event.onLoaded(url, page)
         } else if (url is ListenableUrl) {
-            url.event.crawlEvent.onLoaded(url, page)
+            url.event.crawlEventHandlers.onLoaded(url, page)
         }
     }
 

@@ -119,14 +119,28 @@ class MultiPrivacyContextManager(
     @Throws(ProxyException::class)
     override fun createUnmanagedContext(privacyAgent: PrivacyAgent): BrowserPrivacyContext {
         val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, privacyAgent)
-        if (privacyAgent.isPermanent) {
-            logger.info("Permanent privacy context is created #{} | {}", context.display, context.baseDir)
-        } else {
-            logger.info(
-                "Temporary privacy context is created #{}, active: {}, allowed: {} | {}",
-                context.display, temporaryContexts.size, allowedPrivacyContextCount, context.baseDir
-            )
+        
+        when {
+            privacyAgent.isPermanent -> {
+                logger.info("Permanent privacy context is created #{} | {}", context.display, context.baseDir)
+            }
+            privacyAgent.isTemporary -> {
+                logger.info(
+                    "Temporary privacy context is created #{}, active: {}, allowed: {} | {}",
+                    context.display, temporaryContexts.size, allowedPrivacyContextCount, context.baseDir
+                )
+            }
+            privacyAgent.isGroup -> {
+                logger.info(
+                    "Sequential privacy context in group is created #{}, active: {}, allowed: {} | {}",
+                    context.display, temporaryContexts.size, allowedPrivacyContextCount, context.baseDir
+                )
+            }
+            else -> {
+                logger.warn("Unexpected privacy context is created #{} | {}", context.display, context.baseDir)
+            }
         }
+        
         return context
     }
     
