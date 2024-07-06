@@ -512,6 +512,22 @@ class ChromeDevtoolsDriver(
      * If the element is detached from DOM, the method throws an error.
      */
     @Throws(WebDriverException::class)
+    override suspend fun captureScreenshot(): String? {
+        return try {
+            rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
+            rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot() }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "captureScreenshot")
+            null
+        }
+    }
+    
+    /**
+     * This method scrolls element into view if needed, and then uses
+     * {@link page.captureScreenshot} to take a screenshot of the element.
+     * If the element is detached from DOM, the method throws an error.
+     */
+    @Throws(WebDriverException::class)
     override suspend fun captureScreenshot(selector: String): String? {
         return try {
             val nodeId = page.scrollIntoViewIfNeeded(selector) ?: return null
