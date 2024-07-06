@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon</groupId>
         <artifactId>platon</artifactId>
-        <version>3.7.0</version>
+        <version>3.7.2-SNAPSHOT</version>
     </parent>
 
     <groupId>ai.platon.pulsar</groupId>
@@ -640,11 +640,6 @@
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-ql-common</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-ql</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -832,11 +827,15 @@
                 <version>${log4j.version}</version>
             </dependency>
 
-            <!-- Unit test system -->
+            <!--
+            Unit test system.
+            Unless you’re using Spring Boot which defines its own way of managing dependencies,
+            it is recommended to use the JUnit Platform BOM to align the versions of all JUnit 5 artifacts.
+            -->
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>${junit-version}</version>
+                <version>${junit-bom.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -868,47 +867,14 @@
     </dependencies>
 
     <properties>
-
-        <!--  Java  -->
-        <javac.src.version>11</javac.src.version>
-        <javac.target.version>11</javac.target.version>
-        <!--  Kotlin  -->
-        <!-- supported languageVersion: 1.8, 1.9, 2.0, etc -->
-<!--        <kotlin.compiler.languageVersion>1.9</kotlin.compiler.languageVersion>-->
-        <!-- Target version of the generated JVM bytecode, 1.8, 9, 10, ..., 21, default 1.8 -->
-        <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
-
-        <kotlin.version>1.9.24</kotlin.version>
-        <kotlin.coroutine.version>1.8.1</kotlin.coroutine.version>
-        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
-
-        <dokka.version>1.9.10</dokka.version>
-
-        <javax.servlet-api.version>3.1.0</javax.servlet-api.version>
-        <!-- guava-32.1.3-jre has compatibility problem with kotlin-1.9.20,
-            kotlin contains the source code of com.google.common.collect.ImmutableMap,
-            which conflicts with guava-32.1.3-jre.
-        -->
-        <!-- <guava.version>32.1.3-jre</guava.version>-->
-        <guava.version>30.1.1-jre</guava.version>
-        <tika.version>2.9.0</tika.version>
-
-        <autolink.version>0.10.0</autolink.version>
-        <jackson.version>2.15.3</jackson.version>
+        <!-- JAXB provides an API and tools that automate the mapping between XML documents and Java objects. -->
+        <!-- This artifact was moved to: jakarta.xml.bind » jakarta.xml.bind-api -->
+        <!-- deprecated -->
         <jaxb-api.version>2.3.1</jaxb-api.version>
-        <commons-text.version>1.11.0</commons-text.version>
-        <oshi.version>6.4.13</oshi.version>
+
         <langchain4j.version>0.31.0</langchain4j.version>
-
         <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
-
-        <junit-version>5.8.2</junit-version>
-        <!-- Required by spring-boot-starter-test, correct the version -->
-        <byte-buddy.version>1.12.9</byte-buddy.version>
-<!--        <slf4j.version>2.0.9</slf4j.version>-->
-        <slf4j.version>1.7.36</slf4j.version>
-        <log4j.version>2.20.0</log4j.version>
-        <logback.version>1.2.12</logback.version>
+        <junit-bom.version>5.10.3</junit-bom.version>
     </properties>
 
 </project>
