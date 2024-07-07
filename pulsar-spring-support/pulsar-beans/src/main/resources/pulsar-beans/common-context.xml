@@ -33,7 +33,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="appStatusTracker" class="ai.platon.pulsar.common.AppStatusTracker">
+    <bean id="appStatusTracker" class="ai.platon.pulsar.skeleton.common.AppStatusTracker">
         <constructor-arg ref="metricsSystem"/>
         <constructor-arg ref="coreMetrics"/>
         <constructor-arg ref="messageWriter"/>

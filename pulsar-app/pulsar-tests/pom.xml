@@ -44,11 +44,16 @@
         </dependency>
 
         <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
         <!-- Required by spring-boot-starter-test, correct the version -->
         <dependency>
             <groupId>net.bytebuddy</groupId>
@@ -64,4 +69,7 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <defaultGoal>test</defaultGoal>
+    </build>
 </project>

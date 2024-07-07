@@ -41,6 +41,12 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.13</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- For ai.platon.pulsar.common.EncodingDetector -->
@@ -58,6 +64,11 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -118,24 +129,20 @@
             <artifactId>autolink</artifactId>
         </dependency>
 
-        <!-- Logging and diagnose -->
-        <!--
-        The SLF4J serves as a simple facade or abstraction for various logging frameworks,
-        such as java.util.logging, log4j 1.x, reload4j and logback.
-        -->
+        <!-- Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
-        <!--
-        Fix the following error:
-        ERROR StatusLogger Log4j2 could not find a logging implementation.
-        Please add log4j-core to the classpath. Using SimpleLogger to log to the console...
-        -->
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-logging</artifactId>
+            <version>${spring-boot.version}</version>
+            <scope>test</scope>
         </dependency>
+
+        <!-- Test Libraries -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
