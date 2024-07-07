@@ -499,7 +499,11 @@
                 </configuration>
             </plugin>
 
-            <!-- unit test support -->
+            <!--
+            The Surefire Plugin is used during the test phase of the build lifecycle to execute the unit tests of
+            an application.
+            see https://maven.apache.org/surefire/maven-surefire-plugin/
+            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -507,6 +511,14 @@
                 <configuration>
                     <excludedGroups>SlowTest,IntegrationTest</excludedGroups>
                 </configuration>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-engine</artifactId>
+                        <version>${junit5.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -822,7 +834,6 @@
 
         <langchain4j.version>0.31.0</langchain4j.version>
         <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
-        <junit-bom.version>5.10.3</junit-bom.version>
     </properties>
 
 </project>

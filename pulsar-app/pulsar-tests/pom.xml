@@ -49,11 +49,26 @@
             <version>${logback.version}</version>
         </dependency>
 
+        <!--
+        If your build relies on dependency management support from Spring Boot, you should not import
+        the junit-bom in your build script since that will result in duplicate
+        (and potentially conflicting) management of JUnit dependencies.
+        see https://junit.org/junit5/docs/current/user-guide/#running-tests-build-spring-boot
+         -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-test-junit5 -->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test-junit5</artifactId>
+            <version>${kotlin.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+
         <!-- Required by spring-boot-starter-test, correct the version -->
         <dependency>
             <groupId>net.bytebuddy</groupId>
@@ -68,8 +83,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <defaultGoal>test</defaultGoal>
-    </build>
 </project>
