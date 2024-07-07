@@ -6,10 +6,10 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
-import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
+import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import com.beust.jcommander.Parameter
 import java.time.Duration
 import java.time.Instant
@@ -46,7 +46,7 @@ open class LoadOptions(
     var rawItemEvent: PageEventHandlers? = null,
     var referrer: String? = null,
 ) : CommonOptions(argv) {
-
+    
     /**
      * The entity name of the page, for example, article, product, hotel, flower, etc., it's optional.
      * */
@@ -56,7 +56,7 @@ open class LoadOptions(
         description = "The entity of the page, it's optional."
     )
     var entity = ""
-
+    
     /**
      * The task label is optional and may be utilized to categorize tasks into groups.
      * */
@@ -66,7 +66,7 @@ open class LoadOptions(
         description = "The task label, it's optional and can be used to group tasks"
     )
     var label = ""
-
+    
     /**
      * The taskId is optional and serves to differentiate tasks if needed.
      * */
@@ -76,7 +76,7 @@ open class LoadOptions(
         description = "The taskId is optional and serves to differentiate tasks if needed."
     )
     var taskId = ""
-
+    
     /**
      * Task time is usually used to denote the name of a batch of tasks.
      *
@@ -88,7 +88,7 @@ open class LoadOptions(
         description = "The taskTime is usually used to denote the name of a batch of tasks."
     )
     var taskTime = Instant.EPOCH
-
+    
     /**
      * The task's deadline indicates the time by which it should be completed. If this deadline is surpassed,
      * the task must be promptly discarded.
@@ -97,10 +97,10 @@ open class LoadOptions(
     @Parameter(
         names = ["-deadline", "--deadline"], converter = InstantConverter::class,
         description = "The task's deadline indicates the time by which it should be completed. If this deadline is surpassed, " +
-                " the task must be promptly discarded."
+            " the task must be promptly discarded."
     )
     var deadline = DateTimes.doomsday
-
+    
     /**
      * The auth token, used for authorization purpose.
      * */
@@ -110,7 +110,7 @@ open class LoadOptions(
         description = "The auth token, can be used for authorization purpose."
     )
     var authToken = ""
-
+    
     /**
      * Specify whether the load execution is read-only or not. When a load execution is read-only, it ensures that the
      * webpage loaded remains unchanged by the execution.
@@ -119,10 +119,10 @@ open class LoadOptions(
     @Parameter(
         names = ["-readonly"],
         description = "Specify whether the load execution is read-only or not. " +
-                "When a load execution is read-only, it ensures that the webpage loaded remains unchanged by the execution."
+            "When a load execution is read-only, it ensures that the webpage loaded remains unchanged by the execution."
     )
     var readonly = false
-
+    
     /**
      * If true, fetch the url as a resource without browser rendering.
      * */
@@ -132,7 +132,7 @@ open class LoadOptions(
         description = "If true, fetch the url as a resource without browser rendering."
     )
     var isResource = false
-
+    
     /**
      * The expiry duration. If the expiry time is exceeded, the page should be fetched from the Internet.
      *
@@ -147,10 +147,10 @@ open class LoadOptions(
     @Parameter(
         names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
         description = "The expiry duration. " +
-                "If the expiry time is exceeded, the page should be fetched from the Internet."
+            "If the expiry time is exceeded, the page should be fetched from the Internet."
     )
     var expires = LoadOptionDefaults.expires
-
+    
     /**
      * The expiry time point. If the expiry time is exceeded, the page should be fetched from the Internet.
      *
@@ -162,10 +162,10 @@ open class LoadOptions(
     @Parameter(
         names = ["-expireAt", "--expire-at"], converter = InstantConverter::class,
         description = "The expiry time point. " +
-                "If the expiry time is exceeded, the page should be fetched from the Internet."
+            "If the expiry time is exceeded, the page should be fetched from the Internet."
     )
     var expireAt = LoadOptionDefaults.expireAt
-
+    
     /**
      * The selector to extract links in portal pages.
      * */
@@ -175,7 +175,7 @@ open class LoadOptions(
         description = "The selector to extract links in portal pages."
     )
     var outLinkSelector = ""
-
+    
     /**
      * The pattern to select out links in the portal page.
      * */
@@ -185,7 +185,7 @@ open class LoadOptions(
         description = "The pattern to select out links in the portal page"
     )
     var outLinkPattern = ".+"
-
+    
     /**
      * The selector for element to click.
      * TODO: not implemented yet
@@ -196,7 +196,7 @@ open class LoadOptions(
         description = "The selector for element to click."
     )
     var clickTarget = ""
-
+    
     /**
      * The selector for next page anchor.
      * TODO: not implemented yet
@@ -207,7 +207,7 @@ open class LoadOptions(
         description = "The css selector of next page anchor"
     )
     var nextPageSelector = ""
-
+    
     /**
      * The iframe id to switch to.
      * TODO: not implemented yet
@@ -215,7 +215,7 @@ open class LoadOptions(
     @ApiPublic
     @Parameter(names = ["-ifr", "-iframe", "--iframe"], description = "The iframe id to switch to")
     var iframe = 0
-
+    
     /**
      * Specify how many links to extract for out pages.
      * */
@@ -225,7 +225,7 @@ open class LoadOptions(
         description = "Specify how many links to extract for out pages."
     )
     var topLinks = 20
-
+    
     /**
      * Choose the top N anchor groups for further process. Used by auto web mining project.
      * */
@@ -235,7 +235,7 @@ open class LoadOptions(
         description = "Try the top N anchor groups"
     )
     var topNAnchorGroups = 3
-
+    
     /**
      * The selector specified element should have a non-blank text, the system should
      * wait until the element is filled by a non-blank text, or until it times out.
@@ -247,7 +247,7 @@ open class LoadOptions(
         description = "The selector specified element should have a non-blank text"
     )
     var waitNonBlank: String = ""
-
+    
     /**
      * The selector specified element should have a non-blank text, the task should
      * be retried if the element's text content is empty or blank.
@@ -259,7 +259,7 @@ open class LoadOptions(
         description = "The selector specified element should have a non-blank text"
     )
     var requireNotBlank: String = ""
-
+    
     /**
      * The minimum page size expected, if it is less than that, it will need to be re-fetched.
      *
@@ -271,7 +271,7 @@ open class LoadOptions(
         description = "The minimum page size expected"
     )
     var requireSize = 0
-
+    
     /**
      * The minimum number of images expected in the page, if it is less than that,
      * it will need to be re-fetched.
@@ -282,7 +282,7 @@ open class LoadOptions(
         description = "The minimum number of images expected in the page"
     )
     var requireImages = 0
-
+    
     /**
      * The minimum number of anchors expected in the page, if it is less than that,
      * it will need to be re-fetched.
@@ -293,7 +293,7 @@ open class LoadOptions(
         description = "The minimum number of anchors expected in the page"
     )
     var requireAnchors = 0
-
+    
     /**
      * The fetch mode.
      *
@@ -304,7 +304,7 @@ open class LoadOptions(
         description = "The fetch mode"
     )
     var fetchMode = FetchMode.BROWSER
-
+    
     /**
      * Specify which browser to use, google chrome is the default.
      * TODO: session scope browser choice is not support by now
@@ -314,7 +314,7 @@ open class LoadOptions(
         description = "Specify which browser to use, google chrome is the default"
     )
     var browser = LoadOptionDefaults.browser
-
+    
     /**
      * The number of times the page should be scrolled down after it has just been opened in a browser.
      * */
@@ -323,7 +323,7 @@ open class LoadOptions(
         description = "The count to scroll down after a page being opened in a browser"
     )
     var scrollCount = InteractSettings.DEFAULT.scrollCount
-
+    
     /**
      * The interval to scroll down.
      * */
@@ -332,7 +332,7 @@ open class LoadOptions(
         description = "The interval to scroll down after a page being opened in a browser"
     )
     var scrollInterval = InteractSettings.DEFAULT.scrollInterval
-
+    
     /**
      * The maximum time to perform javascript injected into the browser.
      * */
@@ -341,7 +341,7 @@ open class LoadOptions(
         description = "The maximum time to perform javascript injected into the browser"
     )
     var scriptTimeout = InteractSettings.DEFAULT.scriptTimeout
-
+    
     /**
      * The maximum time to wait for a page to finish.
      * */
@@ -350,7 +350,7 @@ open class LoadOptions(
         description = "The maximum time to wait for a page to finish"
     )
     var pageLoadTimeout = InteractSettings.DEFAULT.pageLoadTimeout
-
+    
     /**
      * The browser used to visit the item pages.
      * TODO: session scope browser choice is not support by now
@@ -360,7 +360,7 @@ open class LoadOptions(
         description = "The browser used to visit the item pages"
     )
     var itemBrowser = LoadOptionDefaults.browser
-
+    
     /**
      * The same as expires, but only works for item pages.
      * */
@@ -370,7 +370,7 @@ open class LoadOptions(
         description = "The same as expires, but only works for item pages"
     )
     var itemExpires = ChronoUnit.DECADES.duration
-
+    
     /**
      * If an item page is expired, it should be fetched from the web again.
      * */
@@ -380,7 +380,7 @@ open class LoadOptions(
         description = "If an item page is expired, it should be fetched from the web again"
     )
     var itemExpireAt = DateTimes.doomsday
-
+    
     /**
      * The same as scrollCount, but only works for item pages.
      * */
@@ -389,7 +389,7 @@ open class LoadOptions(
         description = "The same as scrollCount, but only works for item pages"
     )
     var itemScrollCount = scrollCount
-
+    
     /**
      * The same as scrollInterval, but only works for item pages.
      * */
@@ -398,7 +398,7 @@ open class LoadOptions(
         description = "The same as scrollInterval, but only works for item pages"
     )
     var itemScrollInterval = scrollInterval
-
+    
     /**
      * The same as scriptTimeout, but only works for item pages.
      * */
@@ -407,7 +407,7 @@ open class LoadOptions(
         description = "The same as scriptTimeout, but only works for item pages"
     )
     var itemScriptTimeout = scriptTimeout
-
+    
     /**
      * The same as pageLoadTimeout, but only works for item pages.
      * */
@@ -416,7 +416,7 @@ open class LoadOptions(
         description = "The same as pageLoadTimeout, but only works for item pages"
     )
     var itemPageLoadTimeout = pageLoadTimeout
-
+    
     /**
      * Re-fetch the item pages if the required text is blank.
      * */
@@ -426,7 +426,7 @@ open class LoadOptions(
         description = "Re-fetch the item pages if the required text is blank"
     )
     var itemRequireNotBlank = ""
-
+    
     /**
      * Re-fetch item pages smaller than requireSize.
      * */
@@ -436,7 +436,7 @@ open class LoadOptions(
         description = "Re-fetch item pages smaller than requireSize"
     )
     var itemRequireSize = 0
-
+    
     /**
      * Re-fetch item pages whose images is less than requireImages.
      * */
@@ -446,7 +446,7 @@ open class LoadOptions(
         description = "Re-fetch item pages who's images is less than requireImages"
     )
     var itemRequireImages = 0
-
+    
     /**
      * Re-fetch item pages with fewer anchors than the required number specified by requireAnchors.
      * */
@@ -456,7 +456,7 @@ open class LoadOptions(
         description = "Re-fetch item pages who's anchors is less than requireAnchors"
     )
     var itemRequireAnchors = 0
-
+    
     /**
      * Persist fetched pages as soon as possible.
      * */
@@ -465,7 +465,7 @@ open class LoadOptions(
         description = "Persist fetched pages as soon as possible"
     )
     var persist = true
-
+    
     /**
      * If false, do not persist the page content which is usually very large.
      * */
@@ -474,7 +474,7 @@ open class LoadOptions(
         description = "If false, do not persist the page content which is usually very large."
     )
     var storeContent = LoadOptionDefaults.storeContent
-
+    
     /**
      * If the option is set, do not persist the page content which is usually very large.
      * If the option is true, it overrides [storeContent].
@@ -484,7 +484,7 @@ open class LoadOptions(
         description = "If the option exists, do not persist the page content which is usually very large."
     )
     var dropContent = false
-
+    
     /**
      * If false, load the page without the content which is usually very large
      * TODO: review the design
@@ -492,7 +492,7 @@ open class LoadOptions(
 //    @Parameter(names = ["-lct", "-loadContent", "--load-content"], arity = 1,
 //        description = "If false, load the page without its content which is usually very large")
 //    var loadContent = LoadOptionDefaults.loadContent
-
+    
     /**
      * Refresh the fetch state of a page, clear the retry counters.
      * If true, the page should be fetched, just like we click the refresh button on a real browser.
@@ -504,15 +504,15 @@ open class LoadOptions(
     @Parameter(
         names = ["-refresh", "--refresh"],
         description = "Refresh the fetch state of a page, clear the retry counters." +
-                " If true, the page should be fetched immediately." +
-                " The option can be explained as follows:" +
-                " -refresh = -ignoreFailure -i 0s and set page.fetchRetries = 0"
+            " If true, the page should be fetched immediately." +
+            " The option can be explained as follows:" +
+            " -refresh = -ignoreFailure -i 0s and set page.fetchRetries = 0"
     )
     var refresh = false
         set(value) {
             field = doRefresh(value)
         }
-
+    
     /**
      * Retry fetching the page even if it's failed last time.
      * */
@@ -522,7 +522,7 @@ open class LoadOptions(
         description = "Retry fetching the page even if it's failed last time"
     )
     var ignoreFailure = LoadOptionDefaults.ignoreFailure
-
+    
     /**
      * Retry to fetch at most n times, if page.fetchRetries > nMaxRetry,
      * the page is marked as gone and do not fetch it again until -refresh is set to clear page.fetchRetries
@@ -530,10 +530,10 @@ open class LoadOptions(
     @Parameter(
         names = ["-nmr", "-nMaxRetry", "--n-max-retry"],
         description = "Retry to fetch at most n times, if page.fetchRetries > nMaxRetry," +
-                " the page is marked as gone and do not fetch it again until -refresh is set to clear page.fetchRetries"
+            " the page is marked as gone and do not fetch it again until -refresh is set to clear page.fetchRetries"
     )
     var nMaxRetry = 3
-
+    
     /**
      * Retry at most n times at fetch phase immediately if RETRY(1601) code return.
      * */
@@ -542,7 +542,7 @@ open class LoadOptions(
         description = "Retry at most n times at fetch phase immediately if RETRY(1601) code return"
     )
     var nJitRetry = LoadOptionDefaults.nJitRetry
-
+    
     /**
      * If false, pages are flushed into database as soon as possible.
      * */
@@ -551,21 +551,21 @@ open class LoadOptions(
         description = "If false, pages are flushed into database as soon as possible"
     )
     var lazyFlush = LoadOptionDefaults.lazyFlush
-
+    
     /**
      * Run browser in incognito mode.
      * Not used since the browser always running in temporary contexts.
      * */
     @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
     var incognito = false
-
+    
     /**
      * Do not redirect.
      * Ignored in browser mode since the browser handles the redirection itself.
      * */
     @Parameter(names = ["-noRedirect", "--no-redirect"], description = "Do not redirect")
     var noRedirect = false
-
+    
     /**
      * If false, return the original page record but the redirect target's content,
      * otherwise, return the page record of the redirected target.
@@ -574,17 +574,17 @@ open class LoadOptions(
     @Parameter(
         names = ["-hardRedirect", "--hard-redirect"],
         description = "If false, return the original page record but the redirect target's content," +
-                " otherwise, return the page record of the redirected target." +
-                " If we use a browser, redirections are handled by the browser so the flag is ignored."
+            " otherwise, return the page record of the redirected target." +
+            " If we use a browser, redirections are handled by the browser so the flag is ignored."
     )
     var hardRedirect = false
-
+    
     /**
      * If true, parse the page when it's just be fetched.
      * */
     @Parameter(names = ["-ps", "-parse", "--parse"], description = "If true, parse the page when it's just be fetched.")
     var parse = LoadOptionDefaults.parse
-
+    
     /**
      * Reparse links if the page has been parsed before.
      * */
@@ -593,7 +593,7 @@ open class LoadOptions(
         description = "Re-parse links if the page has been parsed before."
     )
     var reparseLinks = false
-
+    
     /**
      * If true, remove the query parameters in the url.
      * */
@@ -602,7 +602,7 @@ open class LoadOptions(
         description = "Remove the query parameters in the url"
     )
     var ignoreUrlQuery = false
-
+    
     /**
      * If true, no normalizer will be applied when parse links.
      * */
@@ -611,7 +611,7 @@ open class LoadOptions(
         description = "If true, no normalizer will be applied when parse links."
     )
     var noNorm = false
-
+    
     /**
      * If true, no filter will be applied when parse links.
      * */
@@ -620,7 +620,7 @@ open class LoadOptions(
         description = "If true, no filter will be applied when parse links."
     )
     var noFilter = false
-
+    
     /**
      * Indicates the network condition.
      * */
@@ -630,7 +630,7 @@ open class LoadOptions(
         description = "Indicates the network condition"
     )
     var netCondition = Condition.GOOD
-
+    
     /**
      * The test level, 0 to disable, we will talk more in test mode.
      * */
@@ -639,19 +639,19 @@ open class LoadOptions(
         description = "The test level, 0 to disable, we will talk more in test mode"
     )
     var test = LoadOptionDefaults.test
-
+    
     /**
      * The load option version.
      * */
     @Parameter(names = ["-v", "-version", "--version"], description = "The load option version")
     var version = "20220918"
-
+    
     /**
      * Get the corrected [outLinkSelector] or null. See [outLinkSelector] for more information.
      * */
     val outLinkSelectorOrNull
         get() = outLinkSelector.takeIf { it.isNotBlank() }
-
+    
     /**
      * Enable the page event handlers and return it.
      * */
@@ -660,7 +660,7 @@ open class LoadOptions(
      * Enable the item event handlers and return it.
      * */
     val itemEvent: PageEventHandlers get() = enableItemEventHandlers()
-
+    
     /**
      * Find out the modified fields and return a [Params].
      * */
@@ -674,7 +674,7 @@ open class LoadOptions(
                 .associate { "-${it.name}" to it.get(this) }
                 .let { Params.of(it).withRowFormat(rowFormat) }
         }
-
+    
     /**
      * Find out the modified fields and return a map.
      * */
@@ -686,18 +686,18 @@ open class LoadOptions(
                 .filter { it.get(this) != null }
                 .associate { it.name to it.get(this) }
         }
-
+    
     /**
      * The constructor.
      * */
     protected constructor(args: String, conf: VolatileConfig) : this(split(args), conf)
-
+    
     /**
      * The constructor.
      * */
     protected constructor(args: String, other: LoadOptions) :
-            this(split(args), other.conf, other.rawEvent, other.rawItemEvent, other.referrer)
-
+        this(split(args), other.conf, other.rawEvent, other.rawItemEvent, other.referrer)
+    
     /**
      * Parse the arguments into [LoadOptions] with JCommander and with bug fixes.
      * */
@@ -717,22 +717,22 @@ open class LoadOptions(
         }
         return b
     }
-
+    
     /**
      * Create a new [LoadOptions] object for item pages.
      * */
     open fun createItemOptions(): LoadOptions {
         val itemOptions = clone()
         itemOptions.itemOptions2MajorOptions()
-
+        
         if (itemOptions.browser == BrowserType.NATIVE) {
             itemOptions.fetchMode = FetchMode.NATIVE
         }
         itemOptions.rawEvent = rawItemEvent
-
+        
         return itemOptions
     }
-
+    
     /**
      * Check if the page expires.
      *
@@ -749,14 +749,14 @@ open class LoadOptions(
             else -> false
         }
     }
-
+    
     /**
      * If the page is dead, drop the task as soon as possible.
      * */
     fun isDead(): Boolean {
         return deadline < Instant.now()
     }
-
+    
     /**
      * Convert the item options to major options. The system do not use item options directly,
      * we have to do the convert before we process item pages.
@@ -772,10 +772,10 @@ open class LoadOptions(
         requireImages = itemRequireImages
         requireAnchors = itemRequireAnchors
         browser = itemBrowser
-
+        
         rawEvent = rawItemEvent
     }
-
+    
     /**
      * Write option values to [conf].
      *
@@ -783,7 +783,7 @@ open class LoadOptions(
      * through a [VolatileConfig] object.
      * */
     fun overrideConfiguration() = overrideConfiguration(this.conf)
-
+    
     /**
      * Write option values to [conf].
      *
@@ -792,13 +792,13 @@ open class LoadOptions(
      * */
     fun overrideConfiguration(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
         setInteractionSettings()
-
+        
         rawEvent?.let { putBean(it) }
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         // incognito mode is never used because the browsers are always running in temporary contexts
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
     }
-
+    
     private fun setInteractionSettings() {
         val modified = listOf(
             "netCondition",
@@ -807,25 +807,25 @@ open class LoadOptions(
             "scriptTimeout",
             "pageLoadTimeout"
         ).any { !isDefault(it) }
-
+        
         if (!modified) {
             return
         }
-
+        
         val interactSettings = when (netCondition) {
             Condition.WORSE -> InteractSettings.WORSE_NET_SETTINGS
             Condition.WORST -> InteractSettings.WORST_NET_SETTINGS
             else -> InteractSettings.GOOD_NET_SETTINGS
         }.copy()
-
+        
         interactSettings.scrollCount = scrollCount
         interactSettings.scrollInterval = scrollInterval
         interactSettings.scriptTimeout = scriptTimeout
         interactSettings.pageLoadTimeout = pageLoadTimeout
-
+        
         interactSettings.overrideConfiguration(conf)
     }
-
+    
     /**
      * Check if the option value is the default.
      * */
@@ -833,7 +833,7 @@ open class LoadOptions(
         val value = optionFieldsMap[option]?.also { it.isAccessible = true }?.get(this) ?: return false
         return value == defaultParams[option]
     }
-
+    
     /**
      * Convert the [LoadOptions] to be a [Params].
      * */
@@ -845,7 +845,7 @@ open class LoadOptions(
             .filter { it.value != null }
             .let { Params.of(it).withRowFormat(rowFormat) }
     }
-
+    
     /**
      * Convert the [LoadOptions] to a string.
      * The two operations [parse] and [toString] are reversible:
@@ -865,7 +865,7 @@ open class LoadOptions(
             .withDistinctBooleanParams(arity1BooleanParams)
             .formatAsLine().replace("\\s+".toRegex(), " ")
     }
-
+    
     /**
      * The equality check, two [LoadOptions] are equal only when the normalized arguments string are equal.
      * */
@@ -873,20 +873,20 @@ open class LoadOptions(
         if (this === other) {
             return true;
         }
-
+        
         return other is LoadOptions && other.toString() == toString()
     }
-
+    
     // TODO: hashCode can not rely on any member filed because static filed defaultParams uses hashCode before
     override fun hashCode(): Int {
         return super.hashCode()
     }
-
+    
     /**
      * Create a new [LoadOptions] object with the same arguments string and event handlers.
      * */
     open fun clone() = parse(toString(), this)
-
+    
     /**
      * Correct [outLinkSelector].
      * There is a JCommand bug with quoted options.
@@ -896,20 +896,20 @@ open class LoadOptions(
             .takeIf { it.isNotBlank() }
             ?.let { appendSelectorIfMissing(it, "a") }
     }
-
+    
     private fun doRefresh(value: Boolean): Boolean {
         if (value) {
             expires = Duration.ZERO
             expireAt = Instant.now()
-
+            
             itemExpires = Duration.ZERO
             itemExpireAt = Instant.now()
-
+            
             ignoreFailure = true
         }
         return value
     }
-
+    
     /**
      * Ensure [event] is created.
      * */
@@ -918,7 +918,7 @@ open class LoadOptions(
         rawEvent = eh
         return eh
     }
-
+    
     /**
      * Ensure [rawItemEvent] is created.
      * */
@@ -927,13 +927,13 @@ open class LoadOptions(
         rawItemEvent = eh
         return eh
     }
-
+    
     companion object {
         /**
          * The default option.
          * */
         val DEFAULT = LoadOptions("", VolatileConfig.UNSAFE)
-
+        
         /**
          * A list of all option fields.
          * */
@@ -946,25 +946,25 @@ open class LoadOptions(
                 val count = it.annotations.filterIsInstance<Parameter>().count { it.names.contains("-$name") }
                 require(count > 0) {
                     "Missing -$name option for field <$name>. " +
-                            "Every option with name `optionName` has to take a [Parameter] name [-optionName]."
+                        "Every option with name `optionName` has to take a [Parameter] name [-optionName]."
                 }
             }
-
+        
         /**
          * A map of all option fields.
          * */
         val optionFieldsMap = optionFields.associateBy { it.name }
-
+        
         /**
          * A map of all default options.
          * */
         val defaultParams = optionFields.associate { it.name to it.get(DEFAULT) }
-
+        
         /**
          * A map of all default options.
          * */
         val defaultArgsMap = DEFAULT.toArgsMap()
-
+        
         /**
          * A list of the options who's arity is 0.
          * */
@@ -976,7 +976,7 @@ open class LoadOptions(
             .filter { it.arity < 1 }
             .flatMap { it.names.toList() }
             .toList()
-
+        
         /**
          * A list of the options who's arity is 1.
          * */
@@ -988,7 +988,7 @@ open class LoadOptions(
             .filter { it.arity == 1 }
             .flatMap { it.names.toList() }
             .toList()
-
+        
         /**
          * A list of all the option names.
          * */
@@ -997,7 +997,7 @@ open class LoadOptions(
             .filterIsInstance<Parameter>()
             .flatMap { it.names.toList() }
             .toList()
-
+        
         /**
          * A list of all the names of options who are allowed with REST APIs.
          * */
@@ -1007,7 +1007,7 @@ open class LoadOptions(
             .filterIsInstance<Parameter>()
             .flatMap { it.names.toList() }
             .toList()
-
+        
         /**
          * Generate the help message from the field annotations.
          * */
@@ -1023,7 +1023,7 @@ open class LoadOptions(
                             it.first.description
                         )
                     }.toList()
-
+        
         /**
          * Set the field value who has an annotation [annotationName].
          * */
@@ -1036,7 +1036,7 @@ open class LoadOptions(
                 }
             }
         }
-
+        
         /**
          * Get all the available option names for field [fieldName].
          * */
@@ -1048,28 +1048,28 @@ open class LoadOptions(
                 .flatMap { it.names.toList() }
                 .toList()
         }
-
+        
         /**
          * Create an empty [LoadOptions].
          * */
         fun create(conf: VolatileConfig) = LoadOptions(arrayOf(), conf).apply { parse() }
-
+        
         /**
          * Create an empty [LoadOptions].
          * */
         fun createUnsafe() = create(VolatileConfig.UNSAFE)
-
+        
         /**
          * Normalize [args], all option names in a normalized argument string match the field name in [LoadOptions].
          * */
         fun normalize(vararg args: String?) = parse(args.filterNotNull().joinToString(" ")).toString()
-
+        
         /**
          * Parse the [args] with other [conf].
          * */
         fun parse(args: String, conf: VolatileConfig = VolatileConfig()) =
             LoadOptions(args.trim(), conf).apply { parse() }
-
+        
         /**
          * Parse the [args] with other [options].
          * */
@@ -1077,34 +1077,34 @@ open class LoadOptions(
             referrer = options.referrer
             parse()
         }
-
+        
         /**
          * Create a new LoadOptions with [o1] and [o2]'s items, [o2] overrides [o1].
          * */
         fun merge(o1: LoadOptions, o2: LoadOptions) = parse("$o1 $o2", o2)
-
+        
         /**
          * Create a new LoadOptions with [o1] and [args], [args] overrides [o1].
          * */
         fun merge(o1: LoadOptions, args: String?) = parse("$o1 $args", o1)
-
+        
         /**
          * Create a new LoadOptions with [args] and [args2], [args2] overrides [args].
          * */
         fun merge(args: String?, args2: String?, conf: VolatileConfig) = parse("$args $args2", conf)
-
+        
         /**
          * Erase the specified option, the option name has to match the field name in LoadOptions.
          * */
         fun eraseOptions(args: String, vararg fieldNames: String): String {
             // do not forget the blanks
             var normalizedArgs = " $args "
-
+            
             val optionNames = fieldNames.flatMap { getOptionNames(it) }.map { " $it " }
             optionNames.forEach {
                 normalizedArgs = normalizedArgs.replace(it, " -erased ")
             }
-
+            
             return normalizedArgs.trim()
         }
     }
@@ -1118,27 +1118,27 @@ object LoadOptionDefaults {
      * The default expiry time, some time we may need expire all pages by default, for example, in test mode
      * */
     val EXPIRES = ChronoUnit.DECADES.duration
-
+    
     /**
      * The default time to expire
      * */
     val EXPIRE_AT = DateTimes.doomsday
-
+    
     /**
      * Lazy flush.
      * */
     const val LAZY_FLUSH = true
-
+    
     /**
      * Trigger the parse phase or not.
      *
      * Do not parse by default, since there are may ways to trigger a webpage parsing:
      * 1. use session.parse()
      * 2. add a -parse option
-     * 3. use a [ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink]
+     * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
      * */
     const val PARSE = false
-
+    
     /**
      * Store webpage content or not.
      *
@@ -1159,49 +1159,49 @@ object LoadOptionDefaults {
      * If true, still fetch the page even if it is gone.
      * */
     const val IGNORE_FAILURE = false
-
+    
     /**
      * There are several cases to enable jit retry.
      * For example, in a test environment.
      * */
     const val N_JIT_RETRY = -1
-
+    
     /**
      * The default browser is chrome with pulsar implemented web driver.
      * */
     val BROWSER = BrowserType.PULSAR_CHROME
-
+    
     /**
      * Set to be > 0 if we are doing unit test or other test.
      * We will talk more, log more and trace more in test mode.
      * */
     const val TEST = 0
-
+    
     /**
      * The default expiry time, some time we may need expire all pages by default, for example, in test mode
      * */
     var expires = EXPIRES
-
+    
     /**
      * The default time to expire
      * */
     var expireAt = EXPIRE_AT
-
+    
     /**
      * Lazy flush.
      * */
     var lazyFlush = LAZY_FLUSH
-
+    
     /**
      * Trigger the parse phase or not.
      *
      * Do not parse by default, since there are may ways to trigger a webpage parsing:
      * 1. use session.parse()
      * 2. add a -parse option
-     * 3. use a [ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink]
+     * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
      * */
     var parse = PARSE
-
+    
     /**
      * Store webpage content or not.
      *
@@ -1222,24 +1222,24 @@ object LoadOptionDefaults {
      * If true, still fetch the page even if it is gone.
      * */
     var ignoreFailure = IGNORE_FAILURE
-
+    
     /**
      * There are several cases to enable jit retry.
      * For example, in a test environment.
      * */
     var nJitRetry = N_JIT_RETRY
-
+    
     /**
      * The default browser is chrome with pulsar implemented web driver.
      * */
     var browser = BROWSER
-
+    
     /**
      * Set to be > 0 if we are doing unit test or other test.
      * We will talk more, log more and trace more in test mode.
      * */
     var test = TEST
-
+    
     /**
      * Reset all the options to default.
      * */

@@ -199,14 +199,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.13.0</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-all:1.13.0")
+implementation("ai.platon.pulsar:pulsar-all:2.0.0")
 ```
 
 You can clone the template project from github.com: [kotlin](https://github.com/platonai/pulsar-kotlin-template), [java-11](https://github.com/platonai/pulsar-java-template), [java-17](https://github.com/platonai/pulsar-java-17-template).
@@ -300,10 +300,9 @@ Typical page loading logs are shown below. Check the [log-format](docs/log-forma
 # 💻 System Requirements
 
 - Memory 4G+
-- Maven 3.2+
-- The latest version of the Java 11 JDK
+- JDK 17+
 - `java` on the PATH
-- Google Chrome 90+
+- Latest Google Chrome
 - [Optional] MongoDB started
 
 PulsarRPA is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 7, Windows 11, WSL, and any other operating system that meets the requirements should work as well.

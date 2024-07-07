@@ -1,33 +1,29 @@
 package ai.platon.pulsar.skeleton.session
 
-import ai.platon.pulsar.boilerpipe.extractors.ArticleExtractor
-import ai.platon.pulsar.boilerpipe.sax.SAXInput
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.extractor.TextDocument
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
-import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
-import ai.platon.pulsar.skeleton.crawl.PageEvent
-import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
-import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
-import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.AuthenticationException
 import ai.platon.pulsar.skeleton.common.IllegalApplicationStateException
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.common.urls.NormURL
+import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
+import ai.platon.pulsar.skeleton.crawl.PageEvent
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
+import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
+import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import dev.langchain4j.data.message.UserMessage
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
-import org.xml.sax.InputSource
-import java.io.StringReader
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.time.Instant
@@ -421,7 +417,11 @@ abstract class AbstractPulsarSession(
 
     override fun harvest(url: String, args: String, engine: String): TextDocument = harvest(load(url, args), engine)
 
-    override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
+    /**
+     * In pulsar-boilerpipe, xercesImpl conflicts with jdk.xml.dom, both module has package w3c.dom.html.
+     * So we have to remove pulsar-boilerpipe.
+     * */
+    override fun harvest(page: WebPage, engine: String): TextDocument = TODO("Not implemented, biolerpipe has been removed")
 
     override fun chat(page: WebPage, prompt: String, llm: String): TextDocument {
         val apiKey = property("ZHIPU_API_KEY") ?: throw AuthenticationException("ZHIPU_API_KEY is not set")
@@ -556,30 +556,6 @@ abstract class AbstractPulsarSession(
         }
 
         return context.parse(page) ?: nil
-    }
-
-    private fun harvest0(page: WebPage, engine: String) = harvest0(page.url, page.contentAsString, engine)
-
-    private fun harvest0(url: String, html: String, engine: String) =
-        harvest0(url, InputSource(StringReader(html)), engine)
-
-    private fun harvest0(url: String, inputSource: InputSource, engine: String): TextDocument {
-        if (engine != "boilerpipe") {
-            throw IllegalArgumentException("Unsupported engine: $engine")
-        }
-
-        val d = SAXInput().parse(url, inputSource)
-        val success = ArticleExtractor().process(d)
-        if (!success) {
-            return TextDocument(url)
-        }
-
-        return TextDocument(url,
-            pageTitle = d.pageTitle,
-            contentTitle = d.contentTitle,
-            textContent = d.textContent,
-            additionalFields = d.fields.takeIf { it.isNotEmpty() }
-        )
     }
 
     private fun chat0() {

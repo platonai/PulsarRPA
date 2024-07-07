@@ -29,7 +29,7 @@ module ai.platon.pulsar.skeleton {
     requires com.fasterxml.jackson.kotlin;
     requires spring.context;
     requires crawler.commons;
-    requires ai.platon.pulsar.boilerpipe;
+
     requires com.codahale.metrics.graphite;
     requires icu4j;
     requires org.apache.tika.core;

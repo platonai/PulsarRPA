@@ -4,6 +4,7 @@ import ai.platon.pulsar.boilerpipe.document.TextBlock;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import org.apache.xerces.parsers.AbstractSAXParser;
 import org.cyberneko.html.HTMLConfiguration;
+import org.xml.sax.ContentHandler;
 
 /**
  * A simple SAX Parser, used by {@link SAXInput}. The parser uses <a
@@ -35,7 +36,7 @@ public class HTMLParser extends AbstractSAXParser {
     super.setContentHandler(contentHandler);
   }
 
-  public void setContentHandler(org.xml.sax.ContentHandler contentHandler) {
+  public void setContentHandler(ContentHandler contentHandler) {
     this.contentHandler = null;
     super.setContentHandler(contentHandler);
   }

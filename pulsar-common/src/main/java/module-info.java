@@ -24,6 +24,8 @@ module ai.platon.pulsar.common {
     requires com.google.gson;
     requires annotations;
     requires jsr305;
+    requires spring.core;
+    requires org.apache.commons.codec;
 
     exports ai.platon.pulsar.common;
     exports ai.platon.pulsar.common.config;

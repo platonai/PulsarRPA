@@ -12,14 +12,9 @@
         <constructor-arg value="conf" />
     </bean>
 
-    <bean id="boilerpipeFilter" class="ai.platon.pulsar.parse.html.filters.BoilerpipeExtractor">
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <bean id="parseFilters" class="ai.platon.pulsar.skeleton.crawl.parse.ParseFilters">
         <constructor-arg>
             <list>
-                <ref bean="boilerpipeFilter" />
             </list>
         </constructor-arg>
         <constructor-arg ref="conf"/>

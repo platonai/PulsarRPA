@@ -9,7 +9,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-third</artifactId>
-        <version>1.13.0-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-boilerpipe</artifactId>
@@ -33,11 +33,11 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
-
         <dependency>
             <groupId>net.sourceforge.nekohtml</groupId>
             <artifactId>nekohtml</artifactId>
         </dependency>
+
         <!-- for org.apache.http.entity -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
