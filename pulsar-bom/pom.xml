@@ -17,8 +17,8 @@
         <version>2.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>pulsar-all</artifactId>
-    <name>Pulsar All-in-one</name>
+    <artifactId>pulsar-bom</artifactId>
+    <name>Pulsar Bill of Materials</name>
 
     <build>
         <plugins>

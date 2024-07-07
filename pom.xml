@@ -84,7 +84,7 @@
                 <module>pulsar-ql-common</module>
                 <module>pulsar-ql</module>
 
-                <module>pulsar-all</module>
+                <module>pulsar-bom</module>
 
                 <module>pulsar-spring-support</module>
                 <module>pulsar-rest</module>
@@ -283,7 +283,7 @@
                 <module>pulsar-ql-common</module>
                 <module>pulsar-ql</module>
 
-                <module>pulsar-all</module>
+                <module>pulsar-bom</module>
 
                 <module>pulsar-spring-support</module>
                 <module>pulsar-rest</module>
@@ -657,7 +657,7 @@
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-all</artifactId>
+                <artifactId>pulsar-bom</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

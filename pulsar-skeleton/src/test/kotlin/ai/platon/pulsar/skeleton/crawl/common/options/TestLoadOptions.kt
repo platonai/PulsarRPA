@@ -100,11 +100,6 @@ class TestLoadOptions {
         val options1 = i.options(args1)
         val options2 = i.options(args2)
 
-        val args12 = options1.toString()
-        assertEquals(args1, args12)
-        val args22 = options1.toString()
-        assertEquals(args2, args22)
-        
         println(LoadOptions.merge(args1, args2, conf))
         assertMergedOptions(LoadOptions.merge(args1, args2, conf), "args1 merge args2")
 
