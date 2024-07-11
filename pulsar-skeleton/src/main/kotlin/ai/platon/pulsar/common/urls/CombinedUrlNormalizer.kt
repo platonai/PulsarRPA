@@ -26,9 +26,9 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
         val finalOptions = createLoadOptions(url, LoadOptions.parse(args, options), toItemOption)
         val rawEvent = finalOptions.rawEvent
 
-        var normURL = if (rawEvent?.loadEvent?.onNormalize?.isNotEmpty == true) {
+        var normURL = if (rawEvent?.loadEventHandlers?.onNormalize?.isNotEmpty == true) {
             // 1. normalizer in event listener has the #1 priority
-            rawEvent.loadEvent.onNormalize(spec) ?: return NormURL.NIL
+            rawEvent.loadEventHandlers.onNormalize(spec) ?: return NormURL.NIL
         } else {
             // 2. global normalizers has the #2 priority
             val normalizers = urlNormalizers
