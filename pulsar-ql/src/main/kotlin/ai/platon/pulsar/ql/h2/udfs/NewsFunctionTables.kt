@@ -13,7 +13,7 @@ import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
-import ai.platon.pulsar.ql.h2.Queries
+import ai.platon.pulsar.ql.h2.DomToH2Queries
 import ai.platon.pulsar.ql.h2.addColumn
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.jdbc.JdbcConnection
@@ -106,7 +106,7 @@ object NewsFunctionTables {
         val (url, args) = UrlUtils.splitUrlArgs(portalUrl)
         ss.load(url, ss.options(args))
 
-        val docs = Queries.loadOutPages(ss, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
+        val docs = DomToH2Queries.loadOutPages(ss, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
             .asSequence()
             .map { ss.parse(it) }
         val doms = docs.map { ValueDom.get(it.document) }
