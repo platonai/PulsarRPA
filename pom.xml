@@ -876,7 +876,7 @@
         <!-- JAXB provides an API and tools that automate the mapping between XML documents and Java objects. -->
         <!-- This artifact was moved to: jakarta.xml.bind » jakarta.xml.bind-api -->
         <!-- deprecated -->
-        <jaxb-api.version>2.3.1</jaxb-api.version>
+<!--        <jaxb-api.version>2.3.1</jaxb-api.version>-->
 
         <langchain4j.version>0.31.0</langchain4j.version>
         <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>

@@ -88,11 +88,11 @@
         <!-- JAXB provides an API and tools that automate the mapping between XML documents and Java objects. -->
         <!-- This artifact was moved to: jakarta.xml.bind » jakarta.xml.bind-api -->
         <!-- deprecated -->
-        <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>${jaxb-api.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>javax.xml.bind</groupId>-->
+<!--            <artifactId>jaxb-api</artifactId>-->
+<!--            <version>${jaxb-api.version}</version>-->
+<!--        </dependency>-->
 
         <!-- Test -->
         <dependency>
