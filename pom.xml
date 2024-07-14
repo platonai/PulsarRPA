@@ -623,6 +623,12 @@
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-llm</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-dom</artifactId>
                 <version>${project.version}</version>
             </dependency>

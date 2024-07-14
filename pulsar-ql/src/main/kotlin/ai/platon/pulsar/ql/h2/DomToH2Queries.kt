@@ -3,11 +3,8 @@ package ai.platon.pulsar.ql.h2
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.skeleton.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureRegistry.registeredFeatures
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
@@ -19,6 +16,9 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.ql.common.ResultSets
 import ai.platon.pulsar.ql.common.types.ValueDom
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.common.urls.NormURL
+import ai.platon.pulsar.skeleton.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.apache.commons.math3.linear.RealVector
 import org.h2.api.ErrorCode
@@ -40,7 +40,7 @@ import kotlin.math.roundToInt
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
-object Queries {
+object DomToH2Queries {
     private val logger = getLogger(this::class)
 
     /**
@@ -205,11 +205,24 @@ object Queries {
     }
 
     fun <O> selectFirstOrNull(dom: ValueDom, cssQuery: String, transformer: (Element) -> O): O? {
-        return dom.element.selectFirstOrNull(cssQuery, transformer)
+        val result = dom.element.selectFirstOrNull(cssQuery, transformer)
+        if (result != null && result is Element) {
+            // feature: mark element matching query
+            // select first element matched
+            // result.attr("sf-match")
+        }
+        return result
     }
 
     fun <O> selectNthOrNull(dom: ValueDom, cssQuery: String, n: Int, transform: (Element) -> O): O? {
-        return dom.element.select(cssQuery, n, 1) { transform(it) }.firstOrNull()
+        val result = dom.element.select(cssQuery, n, 1).firstOrNull()
+        if (result != null) {
+            // feature: mark element matching query
+            // select n-th element matched
+            // result.attr("sn-match")
+            return transform(result)
+        }
+        return null
     }
 
     fun getTexts(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {

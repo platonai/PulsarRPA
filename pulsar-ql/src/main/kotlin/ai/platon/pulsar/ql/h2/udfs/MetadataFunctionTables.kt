@@ -7,7 +7,7 @@ import ai.platon.pulsar.ql.common.annotation.H2Context
 import ai.platon.pulsar.ql.common.annotation.UDFGroup
 import ai.platon.pulsar.ql.common.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
-import ai.platon.pulsar.ql.h2.Queries
+import ai.platon.pulsar.ql.h2.DomToH2Queries
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.Duration
@@ -21,7 +21,7 @@ object MetadataFunctionTables {
     @JvmStatic
     fun load(@H2Context conn: Connection, configuredUrl: String): ResultSet {
         val page = H2SessionFactory.getSession(conn).load(configuredUrl)
-        return Queries.toResultSet(page)
+        return DomToH2Queries.toResultSet(page)
     }
 
     @UDFunction(description = "Load a page specified by url from the database, " +
@@ -34,6 +34,6 @@ object MetadataFunctionTables {
         loadOptions.expires = Duration.ZERO
 
         val page = H2SessionFactory.getSession(conn).load(url, loadOptions)
-        return Queries.toResultSet(page)
+        return DomToH2Queries.toResultSet(page)
     }
 }
