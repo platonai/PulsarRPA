@@ -21,6 +21,57 @@
     <artifactId>pulsar-ql-common</artifactId>
     <name>Pulsar QL Common</name>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <minimizeJar>true</minimizeJar>
+                            <artifactSet>
+                                <includes>
+                                    <include>ai.platon.pulsar:*</include>
+                                    <include>org.apache.hadoop:*</include>
+                                    <include>org.jetbrains.kotlin:*</include>
+                                    <include>org.jetbrains:*</include>
+                                    <include>com.google:*</include>
+                                </includes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>proxy.test.web.sites.txt</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+<!--                            <relocations>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>ai.platon.pulsar</pattern>-->
+<!--                                    <shadedPattern>ai.platon.pulsar.shaded</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.apache.hadoop</pattern>-->
+<!--                                    <shadedPattern>org.apache.hadoop.shaded</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                            </relocations>-->
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <!-- Internal -->
         <dependency>
