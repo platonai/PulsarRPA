@@ -3,19 +3,18 @@ package ai.platon.pulsar.skeleton.context
 import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
-import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.skeleton.crawl.CrawlLoops
-import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
-import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.common.urls.NormURL
+import ai.platon.pulsar.skeleton.crawl.CrawlLoops
+import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
+import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import com.google.common.annotations.Beta
-import org.jsoup.nodes.Element
 import org.springframework.beans.BeansException
 import java.net.URL
 import java.nio.ByteBuffer
@@ -369,6 +368,10 @@ interface PulsarContext: AutoCloseable {
     
     /**
      * Chat with the AI model.
+     *
+     * @param prompt The prompt to chat
+     * @param model The model to chat
+     * @param apiKey The api key to chat
      */
     fun chat(prompt: String, model: String, apiKey: String): ModelResponse
     

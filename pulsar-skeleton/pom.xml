@@ -40,6 +40,10 @@
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-llm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-ql-common</artifactId>
         </dependency>
         <!-- add boilerpipe -->
