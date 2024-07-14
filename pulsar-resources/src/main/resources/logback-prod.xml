@@ -225,7 +225,7 @@
         <appender-ref ref="METRICS"/>
     </logger>
 
-    <logger name="ai.platon.pulsar.common.CounterReporter" level="WARN" additivity="false">
+    <logger name="ai.platon.pulsar.skeleton.common.CounterReporter" level="WARN" additivity="false">
         <appender-ref ref="COUNTERS"/>
     </logger>
     <logger name="ai.platon.pulsar.ql.h2.utils.Jdbc" level="WARN" additivity="false">
