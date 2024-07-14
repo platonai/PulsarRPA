@@ -1,5 +1,7 @@
 package ai.platon.pulsar.dom.nodes
 
+import ai.platon.pulsar.common.math.geometric.RectD
+import ai.platon.pulsar.common.math.geometric.RectI
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.nodes.node.ext.*
@@ -11,6 +13,7 @@ import org.jsoup.nodes.Node
 import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
 import java.awt.Rectangle
+import java.text.DecimalFormat
 import java.util.regex.Pattern
 import kotlin.math.abs
 
@@ -130,10 +133,20 @@ data class DOMRect(var left: Double = 0.0, var top: Double = 0.0, var width: Dou
     
     val isEmpty get() = left == 0.0 && top == 0.0 && width == 0.0 && height == 0.0
     
+    fun toRectangle() = Rectangle(left.toInt(), top.toInt(), width.toInt(), height.toInt())
+    
+    fun toRectI() = RectI(left.toInt(), top.toInt(), width.toInt(), height.toInt())
+    
+    fun toRectD() = RectD(left, top, width, height)
+    
+    fun toCSSString() = "${f(left)} ${f(top)} ${f(width)} ${f(height)}"
+    
     override fun equals(other: Any?): Boolean {
         return other is DOMRect && equals(this, other)
     }
     
+    private fun f(x: Double) = DecimalFormat("#.##").format(x)
+
     companion object {
         fun parseDOMRect(rect: String): DOMRect {
             if (rect.isBlank()) {

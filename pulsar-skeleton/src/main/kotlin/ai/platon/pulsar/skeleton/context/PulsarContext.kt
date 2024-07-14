@@ -10,10 +10,12 @@ import ai.platon.pulsar.skeleton.crawl.CrawlLoops
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import com.google.common.annotations.Beta
+import org.jsoup.nodes.Element
 import org.springframework.beans.BeansException
 import java.net.URL
 import java.nio.ByteBuffer
@@ -364,7 +366,12 @@ interface PulsarContext: AutoCloseable {
      * Parse the WebPage using ParseComponent
      */
     fun parse(page: WebPage): FeaturedDocument?
-
+    
+    /**
+     * Chat with the AI model.
+     */
+    fun chat(prompt: String, model: String, apiKey: String): ModelResponse
+    
     /**
      * Persist the webpage into the storage immediately.
      * By default, the backend storage is the local file system, if mongodb is detected,

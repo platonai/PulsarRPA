@@ -1258,6 +1258,53 @@ __pulsar_utils__.getFullPageMetrics = function() {
 };
 
 /**
+ * Create an info box in pure javascript to show information for the element with the selector.
+ * The info box appears in the top right corner of the element.
+ * The information includes the tag name, id, class, and the text content.
+ *
+ * @param selector {String} The selector to get the element from.
+ */
+__pulsar_utils__.showInfoBox = function(selector) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        let tagName = element.tagName
+        let id = element.id
+        let classes = element.className
+        let textContent = element.textContent
+
+        let infoBox = document.createElement("div")
+        infoBox.style.position = "absolute"
+        infoBox.style.top = (element.offsetTop - 10) + "px"
+        infoBox.style.right = (element.offsetLeft + element.offsetWidth + 10) + "px"
+        infoBox.style.backgroundColor = "rgba(255, 255, 255, 0.8)"
+        infoBox.style.padding = "10px";
+        infoBox.style.border = "1px solid #ccc";
+        infoBox.style.borderRadius = "4px";
+        infoBox.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.1)";
+        infoBox.style.zIndex = "1000";  // Ensuring it appears on top
+
+        let title = document.createElement("h2");
+        title.textContent = "Element Info";
+        title.style.margin = "0 0 10px 0";
+        title.style.fontSize = "16px";
+        infoBox.appendChild(title);
+
+        let infoBody = document.createElement("div");
+        infoBox.appendChild(infoBody);
+        infoBody.innerHTML = `
+            <p><b>Tag Name:</b> ${tagName}</p>
+            <p><b>ID:</b> ${id}</p>
+            <p><b>Classes:</b> ${classes}</p>
+            <p><b>Text Content:</b> ${textContent}</p>
+        `;
+
+        document.body.appendChild(infoBox);  // Append the infoBox to the body
+    } else {
+        console.error("Element with selector $selector not found.")
+    }
+}
+
+/**
  * Generate meta data
  * */
 __pulsar_utils__.generateMetadata = function() {
