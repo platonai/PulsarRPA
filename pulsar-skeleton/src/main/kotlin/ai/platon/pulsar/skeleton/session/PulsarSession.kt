@@ -2094,10 +2094,6 @@ interface PulsarSession : AutoCloseable {
      */
     fun chat(element: Element, prompt: String): ModelResponse
 
-    fun chat(page: WebPage, prompt: String = "", llm: String = "glm4"): TextDocument
-
-    fun chat(document: FeaturedDocument, prompt: String = "", llm: String = "glm4"): TextDocument
-
     /**
      * Export the content of a webpage.
      *
