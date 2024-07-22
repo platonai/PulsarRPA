@@ -1,7 +1,9 @@
 package ai.platon.pulsar.common
 
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.regex.Pattern
 
 /**
@@ -40,27 +42,36 @@ open class UrlExtractor {
     }
 }
 
-internal class ResourceExtractor(val resource: String): UrlExtractor() {
+internal class ResourceExtractor(
+    val resource: String,
+    val filter: (String) -> Boolean = { true }
+): UrlExtractor() {
     fun extract(): Set<String> {
         val urls = mutableSetOf<String>()
-        ResourceLoader.readAllLines(resource).forEach { extractTo(it, urls) }
+        ResourceLoader.readAllLines(resource, filter).forEach { extractTo(it, urls) }
         return urls
     }
 }
 
-internal class FileExtractor(val path: Path): UrlExtractor() {
+internal class FileExtractor(
+    val path: Path,
+    val filter: (String) -> Boolean = { true }
+): UrlExtractor() {
     fun extract(): Set<String> {
         if (!Files.exists(path)) {
             return setOf()
         }
 
         val urls = mutableSetOf<String>()
-        Files.readAllLines(path).forEach { extractTo(it, urls) }
+        Files.readAllLines(path).filter(filter).forEach { extractTo(it, urls) }
         return urls
     }
 }
 
-internal class DirectoryExtractor(val baseDir: Path): UrlExtractor() {
+internal class DirectoryExtractor(
+    val baseDir: Path,
+    val filter: (String) -> Boolean = { true }
+): UrlExtractor() {
     fun extract(): Set<String> {
         if (!Files.exists(baseDir)) {
             return setOf()
@@ -82,5 +93,9 @@ object LinkExtractors {
     @JvmStatic
     fun fromFile(path: Path) = FileExtractor(path).extract()
     @JvmStatic
+    fun fromFile(path: String) = FileExtractor(Paths.get(path)).extract()
+    @JvmStatic
     fun fromDirectory(baseDir: Path) = DirectoryExtractor(baseDir).extract()
+    @JvmStatic
+    fun fromDirectory(baseDir: String) = DirectoryExtractor(Paths.get(baseDir)).extract()
 }

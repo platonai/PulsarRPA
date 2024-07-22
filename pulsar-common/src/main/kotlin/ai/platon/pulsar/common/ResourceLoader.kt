@@ -35,10 +35,10 @@ object ResourceLoader {
     private val userClassFactories = ConcurrentLinkedDeque<ClassFactory>()
     private val classLoader = Thread.currentThread().contextClassLoader ?: ResourceLoader::class.java.classLoader
 
-    var lineFilter: (line: String) -> Boolean = { line ->
+    val LINE_FILTER: (line: String) -> Boolean = { line ->
         !line.startsWith("# ") && !line.startsWith("-- ") && line.isNotBlank()
     }
-
+    
     /**
      * Add a class factory in order to manage more than one class loader.
      *
@@ -106,11 +106,27 @@ object ResourceLoader {
     ): List<String> {
         return getMultiSourceReader(stringResource, fileResource, resourcePrefix)?.useLines { seq ->
             if (filter) {
-                seq.filter(lineFilter).toList()
+                seq.filter(LINE_FILTER).toList()
             } else {
                 seq.toList()
             }
         } ?: listOf()
+    }
+    
+    /**
+     * Read all lines from one of the following resource: string, file by file name and resource by resource name
+     * The front resource have higher priority
+     */
+    @JvmOverloads
+    fun readAllLines(
+        stringResource: String?,
+        fileResource: String,
+        resourcePrefix: String = "",
+        filter: (String) -> Boolean = { true }
+    ): List<String> {
+        return getMultiSourceReader(stringResource, fileResource, resourcePrefix)
+            ?.useLines { it.filter(filter).toList() }
+            ?: listOf()
     }
 
     fun readAllLines(fileResource: String) = readAllLines(fileResource, true)
@@ -120,9 +136,11 @@ object ResourceLoader {
             return readAllLinesNoFilter(fileResource)
         }
 
-        return getResourceAsReader(fileResource)?.useLines {
-            it.filter(lineFilter).toList()
-        } ?: listOf()
+        return getResourceAsReader(fileResource)?.useLines { it.filter(LINE_FILTER).toList() } ?: listOf()
+    }
+    
+    fun readAllLines(fileResource: String, filter: (String) -> Boolean = { true }): List<String> {
+        return getResourceAsReader(fileResource)?.useLines { it.filter(filter).toList() } ?: listOf()
     }
 
     fun readAllLinesNoFilter(fileResource: String): List<String> {
@@ -146,7 +164,7 @@ object ResourceLoader {
 
     fun readStringTo(fileResource: String, sb: StringBuilder): StringBuilder {
         getResourceAsReader(fileResource)?.forEachLine {
-            sb.appendln(it)
+            sb.appendLine(it)
         }
         return sb
     }
@@ -176,7 +194,7 @@ object ResourceLoader {
      */
     fun getResourceAsStream(name: String, vararg resourcePrefixes: String): InputStream? {
         var found = false
-        return resourcePrefixes.asIterable().filter { it.isNotBlank() }
+        return resourcePrefixes.asSequence().filter { it.isNotBlank() }
                 .mapNotNull { if (!found) getResourceAsStream("$it/$name") else null }
                 .onEach { found = true }
                 .firstOrNull() ?: getResourceAsStream(name)
