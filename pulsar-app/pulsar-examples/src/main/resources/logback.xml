@@ -206,10 +206,10 @@
     <logger name="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator.Task" level="INFO" additivity="false">
         <appender-ref ref="PAGES"/>
     </logger>
-    <logger name="ai.platon.pulsar.common.collect.HyperlinkExtractor" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.skeleton.common.collect.HyperlinkExtractor" level="INFO" additivity="false">
         <appender-ref ref="PAGES"/>
     </logger>
-    <logger name="ai.platon.pulsar.common.collect.FatLinkExtractor" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.skeleton.common.collect.FatLinkExtractor" level="INFO" additivity="false">
         <appender-ref ref="PAGES"/>
     </logger>
     <logger name="ai.platon.pulsar.browser" level="INFO" additivity="true">
@@ -223,13 +223,16 @@
         <appender-ref ref="METRICS"/>
     </logger>
 
-    <logger name="ai.platon.pulsar.common.CounterReporter" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.skeleton.common.CounterReporter" level="INFO" additivity="false">
         <appender-ref ref="COUNTERS"/>
     </logger>
     <logger name="ai.platon.pulsar.ql.h2.utils.Jdbc" level="INFO" additivity="false">
         <appender-ref ref="SQL"/>
     </logger>
     <logger name="ai.platon.pulsar.common.collect" level="INFO" additivity="false">
+        <appender-ref ref="COLLECT"/>
+    </logger>
+    <logger name="ai.platon.pulsar.skeleton.common.collect" level="INFO" additivity="false">
         <appender-ref ref="COLLECT"/>
     </logger>
 

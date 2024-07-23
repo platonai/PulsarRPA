@@ -91,6 +91,9 @@ class PriorityDataCollectorsTableFormatter<T>(
     }
 }
 
+/**
+ * TODO: avoid free function
+ * */
 fun <T> formatAsTable(collectors: Collection<PriorityDataCollector<T>>): String {
     return PriorityDataCollectorsTableFormatter(collectors).toString()
 }
