@@ -1,18 +1,8 @@
 package ai.platon.pulsar.protocol.browser.emulator.impl
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
-import ai.platon.pulsar.skeleton.common.persist.ext.browseEvent
-import ai.platon.pulsar.skeleton.common.persist.ext.options
-import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
-import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
-import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.skeleton.crawl.protocol.Response
-import ai.platon.pulsar.skeleton.crawl.protocol.http.ProtocolStatusTranslator
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
@@ -20,6 +10,16 @@ import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.protocol.browser.driver.SessionLostException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.*
+import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
+import ai.platon.pulsar.skeleton.common.persist.ext.browseEventHandlers
+import ai.platon.pulsar.skeleton.common.persist.ext.options
+import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
+import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
+import ai.platon.pulsar.skeleton.crawl.protocol.Response
+import ai.platon.pulsar.skeleton.crawl.protocol.http.ProtocolStatusTranslator
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import java.nio.charset.StandardCharsets
@@ -142,55 +142,83 @@ open class InteractiveBrowserEmulator(
     }
 
     override suspend fun onWillNavigate(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onWillNavigate?.invoke(page, driver)
+        // global preprocessors comes first
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
+        page.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
     }
 
     override suspend fun onNavigated(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onNavigated?.invoke(page, driver)
+        page.browseEventHandlers?.onNavigated?.invoke(page, driver)
+        // global preprocessors comes first
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onNavigated?.invoke(page, driver)
     }
 
     override suspend fun onWillInteract(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onWillNavigate?.invoke(page, driver)
+        // global preprocessors comes first
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
+        page.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
     }
 
     override suspend fun onWillCheckDocumentState(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onWillCheckDocumentState?.invoke(page, driver)
+        // global preprocessors comes first
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillCheckDocumentState?.invoke(page, driver)
+        page.browseEventHandlers?.onWillCheckDocumentState?.invoke(page, driver)
     }
 
     override suspend fun onDocumentActuallyReady(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onDocumentActuallyReady?.invoke(page, driver)
+        // notice the calling order, since this is neither a preprocessor nor a postprocessor,
+        // the calling order is undefined.
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDocumentActuallyReady?.invoke(page, driver)
+        page.browseEventHandlers?.onDocumentActuallyReady?.invoke(page, driver)
     }
 
     override suspend fun onWillScroll(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onWillScroll?.invoke(page, driver)
+        // global preprocessors comes first
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillScroll?.invoke(page, driver)
+        page.browseEventHandlers?.onWillScroll?.invoke(page, driver)
     }
 
     override suspend fun onDidScroll(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onDidScroll?.invoke(page, driver)
+        page.browseEventHandlers?.onDidScroll?.invoke(page, driver)
+        // global postprocessors comes later
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDidScroll?.invoke(page, driver)
     }
 
     override suspend fun onDocumentSteady(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onDocumentSteady?.invoke(page, driver)
+        // notice the calling order, since this is neither a preprocessor nor a postprocessor,
+        // the calling order is undefined.
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDocumentSteady?.invoke(page, driver)
+        page.browseEventHandlers?.onDocumentSteady?.invoke(page, driver)
     }
 
     override suspend fun onWillComputeFeature(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onWillComputeFeature?.invoke(page, driver)
+        // global preprocessors comes first
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillComputeFeature?.invoke(page, driver)
+        page.browseEventHandlers?.onWillComputeFeature?.invoke(page, driver)
     }
 
     override suspend fun onFeatureComputed(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onFeatureComputed?.invoke(page, driver)
+        page.browseEventHandlers?.onFeatureComputed?.invoke(page, driver)
+        // global postprocessors comes later
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onFeatureComputed?.invoke(page, driver)
     }
 
     override suspend fun onDidInteract(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onDidInteract?.invoke(page, driver)
+        page.browseEventHandlers?.onDidInteract?.invoke(page, driver)
+        // global postprocessors comes later
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDidInteract?.invoke(page, driver)
     }
 
     override suspend fun onWillStopTab(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onWillStopTab?.invoke(page, driver)
+        // global preprocessors comes first
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillStopTab?.invoke(page, driver)
+        page.browseEventHandlers?.onWillStopTab?.invoke(page, driver)
     }
 
     override suspend fun onTabStopped(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onTabStopped?.invoke(page, driver)
+        page.browseEventHandlers?.onTabStopped?.invoke(page, driver)
+        // global postprocessors comes later
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onTabStopped?.invoke(page, driver)
     }
 
     override fun close() {
@@ -327,7 +355,7 @@ open class InteractiveBrowserEmulator(
 
             emit1(EmulateEvents.willStopTab, page, driver)
 //            listeners.notify(EventType.willStopTab, page, driver)
-//            val event = page.browseEvent
+//            val event = page.browseEventHandlers
 //            notify("onWillStopTab") { event?.onWillStopTab?.invoke(page, driver) }
 
             /**

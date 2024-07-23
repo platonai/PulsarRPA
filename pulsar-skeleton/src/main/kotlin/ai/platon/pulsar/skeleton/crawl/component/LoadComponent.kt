@@ -1,6 +1,5 @@
 package ai.platon.pulsar.skeleton.crawl.component
 
-import ai.platon.pulsar.skeleton.common.AppStatusTracker
 import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
@@ -9,27 +8,28 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
+import ai.platon.pulsar.persist.WebDb
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.persist.model.ActiveDOMStat
+import ai.platon.pulsar.skeleton.common.AppStatusTracker
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEvent
 import ai.platon.pulsar.skeleton.common.urls.NormURL
+import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.FetchState
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.crawl.common.url.CompletableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.toCompletableListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
-import ai.platon.pulsar.persist.WebDb
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.persist.model.ActiveDOMStat
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -410,6 +410,8 @@ class LoadComponent(
         shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
 
         try {
+            // notice the calling order.
+            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onWillLoad?.invoke(page.url)
             page.loadEvent?.onWillLoad?.invoke(page.url)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke beforeLoad | ${page.configuredUrl}", e)
@@ -460,6 +462,8 @@ class LoadComponent(
             }
 
             page.loadEvent?.onLoaded?.invoke(page)
+            // notice the calling order.
+            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onLoaded?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onLoaded | ${page.configuredUrl}", e)
         }

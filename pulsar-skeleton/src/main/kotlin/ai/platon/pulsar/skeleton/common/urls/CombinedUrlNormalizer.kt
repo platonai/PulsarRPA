@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.common.urls
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 
@@ -29,8 +30,9 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
         val rawEvent = finalOptions.rawEvent
 
         var normURL = if (rawEvent?.loadEventHandlers?.onNormalize?.isNotEmpty == true) {
-            // 1. normalizer in event listener has the #1 priority
-            rawEvent.loadEventHandlers.onNormalize(spec) ?: return NormURL.NIL
+            // 1. normalizer in event listener has the #1 priority. Global normalizers comes first.
+            val spec1 = GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onNormalize?.invoke(spec) ?: spec
+            rawEvent.loadEventHandlers.onNormalize(spec1) ?: return NormURL.NIL
         } else {
             // 2. global normalizers has the #2 priority
             val normalizers = urlNormalizers
