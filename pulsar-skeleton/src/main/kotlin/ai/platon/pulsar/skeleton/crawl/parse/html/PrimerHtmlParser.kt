@@ -10,6 +10,7 @@ import ai.platon.pulsar.skeleton.crawl.parse.Parser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
+import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
 import org.slf4j.LoggerFactory
 import java.net.MalformedURLException
 import java.time.Duration
@@ -81,6 +82,8 @@ class PrimerHtmlParser(
         numHtmlParses.incrementAndGet()
 
         try {
+            // notice the calling order.
+            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onWillParseHTMLDocument?.invoke(page)
             page.loadEvent?.onWillParseHTMLDocument?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onWillParseHTMLDocument | ${page.configuredUrl}", e)
@@ -93,6 +96,8 @@ class PrimerHtmlParser(
     private fun onHTMLDocumentParsed(page: WebPage, document: FeaturedDocument) {
         try {
             page.loadEvent?.onHTMLDocumentParsed?.invoke(page, document)
+            // notice the calling order.
+            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onHTMLDocumentParsed?.invoke(page, document)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onHTMLDocumentParsed | ${page.configuredUrl}", e)
         } finally {

@@ -1,12 +1,12 @@
 package ai.platon.pulsar.skeleton.crawl.impl
 
 import ai.platon.pulsar.common.event.AbstractEventEmitter
-import ai.platon.pulsar.skeleton.common.persist.ext.event
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.skeleton.crawl.Crawler
-import ai.platon.pulsar.skeleton.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.common.persist.ext.event
+import ai.platon.pulsar.skeleton.crawl.Crawler
+import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
+import ai.platon.pulsar.skeleton.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
@@ -59,6 +59,8 @@ abstract class AbstractCrawler(
 
     override fun onWillLoad(url: UrlAware) {
         if (url is ListenableUrl) {
+            // global preprocessors comes first
+            GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onWillLoad?.invoke(url)
             url.event.crawlEventHandlers.onWillLoad(url)
         }
     }
@@ -66,6 +68,9 @@ abstract class AbstractCrawler(
     override fun onLoad(url: UrlAware) {
         if (url is ListenableUrl) {
             url.event.crawlEventHandlers.onLoad(url)
+            // notice the calling order, since this is neither a preprocessor nor a postprocessor,
+            // the calling order is undefined.
+            GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onLoad?.invoke(url)
         }
     }
 
@@ -73,8 +78,12 @@ abstract class AbstractCrawler(
         val event = page?.event?.crawlEventHandlers
         if (event != null) {
             event.onLoaded(url, page)
+            // global postprocessors comes later
+            GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onLoaded?.invoke(url, page)
         } else if (url is ListenableUrl) {
             url.event.crawlEventHandlers.onLoaded(url, page)
+            // global postprocessors comes later
+            GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onLoaded?.invoke(url, page)
         }
     }
 

@@ -423,7 +423,6 @@ abstract class AbstractPulsarSession(
     
     override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
     
-    
     override fun chat(prompt: String): ModelResponse {
         val model = sessionConfig["llm.name"] ?: throw IllegalArgumentException("No LLM model name specified.")
         val apiKey = sessionConfig["llm.apiKey"] ?: throw IllegalArgumentException("No LLM API key specified.")
@@ -462,7 +461,6 @@ abstract class AbstractPulsarSession(
         
         return response
     }
-    
     
     override fun data(name: String): Any? = let { dataCache[name] }
     

@@ -41,6 +41,7 @@ import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
+import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -148,6 +149,8 @@ class PageParser(
 
     private fun onWillParse(page: WebPage) {
         try {
+            // notice the calling order.
+            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onWillParse?.invoke(page)
             page.loadEvent?.onWillParse?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("[onWillParse]", e)
@@ -157,6 +160,8 @@ class PageParser(
     private fun onParsed(page: WebPage) {
         try {
             page.loadEvent?.onParsed?.invoke(page)
+            // notice the calling order.
+            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onParsed?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("[onParsed]", e)
         }
