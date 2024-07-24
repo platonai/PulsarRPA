@@ -113,22 +113,6 @@ object ResourceLoader {
         } ?: listOf()
     }
     
-    /**
-     * Read all lines from one of the following resource: string, file by file name and resource by resource name
-     * The front resource have higher priority
-     */
-    @JvmOverloads
-    fun readAllLines(
-        stringResource: String?,
-        fileResource: String,
-        resourcePrefix: String = "",
-        filter: (String) -> Boolean = { true }
-    ): List<String> {
-        return getMultiSourceReader(stringResource, fileResource, resourcePrefix)
-            ?.useLines { it.filter(filter).toList() }
-            ?: listOf()
-    }
-
     fun readAllLines(fileResource: String) = readAllLines(fileResource, true)
 
     fun readAllLines(fileResource: String, filter: Boolean): List<String> {
