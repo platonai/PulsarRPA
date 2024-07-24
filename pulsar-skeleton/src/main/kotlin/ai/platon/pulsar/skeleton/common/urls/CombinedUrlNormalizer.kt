@@ -30,8 +30,9 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
         val rawEvent = finalOptions.rawEvent
 
         var normURL = if (rawEvent?.loadEventHandlers?.onNormalize?.isNotEmpty == true) {
-            // 1. normalizer in event listener has the #1 priority. Global normalizers comes first.
+            // 1. normalizer in event listener has the #1 priority.
             val spec1 = GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onNormalize?.invoke(spec) ?: spec
+            // The more specific handlers has the opportunity to override the result of more general handlers.
             rawEvent.loadEventHandlers.onNormalize(spec1) ?: return NormURL.NIL
         } else {
             // 2. global normalizers has the #2 priority
