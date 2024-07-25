@@ -1,94 +1,107 @@
-package ai.platon.pulsar.common;
+package ai.platon.pulsar.common
 
-import com.google.common.collect.Lists;
-import org.junit.Test;;
-
-import java.util.List;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-import static org.junit.Assert.*;
+import com.google.common.collect.Lists
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+import java.util.*
+import java.util.function.BiConsumer
+import java.util.function.Supplier
+import java.util.stream.Collectors
+import java.util.stream.IntStream
+import java.util.stream.Stream
 
 /**
  * Created by vincent on 16-7-20.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-public class TestJavaCollections {
-
+class TestJavaCollections {
     @Test
-    public void testDistinct() {
-        List<Integer> integers = Stream.of(1, 2, 3, 4, 4, 5, 5, 5, 6, 5, 7, 3, 19).distinct().collect(Collectors.toList());
-        assertEquals(8, integers.size());
-
-        List<String> strings = Stream.of("a", "b", "c", "a", "b", "a", "abc")
-                .distinct().collect(Collectors.toList());
-        assertEquals(4, strings.size());
+    fun testDistinct() {
+        val integers = Stream.of(1, 2, 3, 4, 4, 5, 5, 5, 6, 5, 7, 3, 19).distinct().collect(Collectors.toList())
+        Assertions.assertEquals(8, integers.size)
+        
+        val strings = Stream.of("a", "b", "c", "a", "b", "a", "abc")
+            .distinct().collect(Collectors.toList())
+        Assertions.assertEquals(4, strings.size)
     }
-
+    
     @Test
-    public void testTreeSet() {
-        TreeSet<Integer> integers = IntStream.range(0, 30).boxed().collect(TreeSet::new, TreeSet::add, TreeSet::addAll);
-        assertTrue(integers.contains(0));
-        assertTrue(integers.contains(29));
-        assertFalse(integers.contains(30));
-        integers.pollLast();
-        assertFalse(integers.contains(29));
+    fun testTreeSet() {
+        val integers = IntStream.range(0, 30).boxed().collect(
+            Supplier<TreeSet<Int?>> { TreeSet() },
+            BiConsumer<TreeSet<Int?>, Int> { obj: TreeSet<Int?>, e: Int? -> obj.add(e) },
+            BiConsumer<TreeSet<Int?>, TreeSet<Int?>> { obj: TreeSet<Int?>, c: TreeSet<Int?>? ->
+                obj.addAll(
+                    c!!
+                )
+            })
+        Assertions.assertTrue(integers.contains(0))
+        Assertions.assertTrue(integers.contains(29))
+        Assertions.assertFalse(integers.contains(30))
+        integers.pollLast()
+        Assertions.assertFalse(integers.contains(29))
     }
-
+    
     @Test
-    public void testOrderedStream() {
-        int[] counter = {0, 0};
-
-        TreeSet<Integer> orderedIntegers = IntStream.range(0, 1000000).boxed().collect(TreeSet::new, TreeSet::add, TreeSet::addAll);
-        long startTime = System.currentTimeMillis();
-        int result = orderedIntegers.stream().filter(i -> {
-            counter[0]++;
-            return i < 1000;
-        }).map(i -> i * 2).reduce(0, (x, y) -> x + 2 * y);
-        long endTime = System.currentTimeMillis();
-        System.out.println("Compute over ordered integers, time elapsed : " + (endTime - startTime) / 1000.0 + "s");
-        System.out.println("Result : " + result);
-
-        startTime = System.currentTimeMillis();
-        result = 0;
-        int a = 0;
-        int b = 0;
-        for (Integer i : orderedIntegers) {
+    fun testOrderedStream() {
+        val counter = intArrayOf(0, 0)
+        
+        val orderedIntegers = IntStream.range(0, 1000000).boxed().collect(
+            Supplier<TreeSet<Int>> { TreeSet() },
+            BiConsumer<TreeSet<Int>, Int> { obj: TreeSet<Int>, e: Int -> obj.add(e) },
+            BiConsumer<TreeSet<Int>, TreeSet<Int>> { obj: TreeSet<Int>, c: TreeSet<Int>? ->
+                obj.addAll(
+                    c!!
+                )
+            })
+        var startTime = System.currentTimeMillis()
+        var result = orderedIntegers.stream().filter { i: Int ->
+            counter[0]++
+            i < 1000
+        }.map<Int> { i: Int -> i * 2 }.reduce(0) { x: Int, y: Int -> x + 2 * y }
+        var endTime = System.currentTimeMillis()
+        println("Compute over ordered integers, time elapsed : " + (endTime - startTime) / 1000.0 + "s")
+        println("Result : $result")
+        
+        startTime = System.currentTimeMillis()
+        result = 0
+        val a = 0
+        var b = 0
+        for (i in orderedIntegers) {
             if (i < 1000) {
-                b = i;
-                b *= 2;
-                result += a + 2 * b;
+                b = i
+                b *= 2
+                result += a + 2 * b
             } else {
-                break;
+                break
             }
         }
-        endTime = System.currentTimeMillis();
-        System.out.println("Compute over ordered integers, handy code, time elapsed : " + (endTime - startTime) / 1000.0 + "s");
-        System.out.println("Result : " + result);
-
-        List<Integer> unorderedIntegers = IntStream.range(0, 1000000).boxed().collect(Collectors.toList());
-        startTime = System.currentTimeMillis();
-        result = unorderedIntegers.stream().filter(i -> {
-            counter[1]++;
-            return i < 1000;
-        }).map(i -> i * 2).reduce(0, (x, y) -> x + 2 * y);
-        endTime = System.currentTimeMillis();
-        System.out.println("Compute over unordered integers, time elapsed : " + (endTime - startTime) / 1000.0 + "s");
-        System.out.println("Result : " + result);
-
-        System.out.println("Filter loops : " + counter[0] + ", " + counter[1]);
+        endTime = System.currentTimeMillis()
+        println("Compute over ordered integers, handy code, time elapsed : " + (endTime - startTime) / 1000.0 + "s")
+        println("Result : $result")
+        
+        val unorderedIntegers = IntStream.range(0, 1000000).boxed().collect(Collectors.toList())
+        startTime = System.currentTimeMillis()
+        result = unorderedIntegers.stream().filter { i: Int ->
+            counter[1]++
+            i < 1000
+        }.map<Int> { i: Int -> i * 2 }.reduce(0) { x: Int, y: Int -> x + 2 * y }
+        endTime = System.currentTimeMillis()
+        println("Compute over unordered integers, time elapsed : " + (endTime - startTime) / 1000.0 + "s")
+        println("Result : $result")
+        
+        println("Filter loops : " + counter[0] + ", " + counter[1])
     }
-
+    
     @Test
-    public void testPartitionList() {
-        final int batchSize = 3;
-        List<String> urls = IntStream.range(1, 20).mapToObj(i -> "http://example.com/" + i).collect(Collectors.toList());
-        List<List<String>> partitions = Lists.partition(urls, batchSize);
-
-        for (int i = 0; i < partitions.size() - 1; ++i) {
-            assertEquals(3, partitions.get(i).size());
+    fun testPartitionList() {
+        val batchSize = 3
+        val urls = IntStream.range(1, 20).mapToObj { i: Int -> "http://example.com/$i" }
+            .collect(Collectors.toList())
+        val partitions = Lists.partition(urls, batchSize)
+        
+        for (i in 0 until partitions.size - 1) {
+            Assertions.assertEquals(3, partitions[i].size)
         }
     }
 }

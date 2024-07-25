@@ -6,7 +6,7 @@ import kotlin.test.*
 /**
  * Created by vincent on 17-1-14.
  */
-class TestSParser {
+class SParserTest1 {
     private val parser = SParser()
 
     @Test

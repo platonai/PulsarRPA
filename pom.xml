@@ -882,6 +882,7 @@
         <langchain4j.version>0.31.0</langchain4j.version>
         <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
         <junit-bom.version>5.10.3</junit-bom.version>
+        <mockito.version>5.11.0</mockito.version>
     </properties>
 
 </project>

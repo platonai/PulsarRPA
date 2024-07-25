@@ -1,62 +1,67 @@
-package ai.platon.pulsar.common;
+package ai.platon.pulsar.common
 
-import org.junit.Test;;
-
-import java.util.Random;
-
-import static junit.framework.TestCase.*;
+import junit.framework.TestCase
+import org.junit.Test
+import java.util.*
 
 /**
  * Created by vincent on 17-1-14.
  */
-public class TestMath {
+class TestMath {
     @Test
-    public void testFloatHash() {
-        float a = 0, b = 1000, c = 200000, d = 300000;
-        Random r = new Random();
-
-        for (int i = 0; i < 1000; ++i) {
-            float x = a + r.nextInt((int) (b - a));
-            float y = MathUtils.hashFloat(x, a, b, c, d);
-            assertTrue(String.valueOf(y), y >= c && y <= d);
+    fun testFloatHash() {
+        val a = 0f
+        val b = 1000f
+        val c = 200000f
+        val d = 300000f
+        val r = Random()
+        
+        for (i in 0..999) {
+            val x = a + r.nextInt((b - a).toInt())
+            val y = MathUtils.hashFloat(x, a, b, c, d)
+            TestCase.assertTrue(y.toString(), y >= c && y <= d)
         }
-
-        for (int i = 0; i < 1000; ++i) {
-            float x = c + r.nextInt(1000);
-            float y = MathUtils.hashFloat(x, a, b, c, d);
-            assertFalse(y >= c && y <= d);
+        
+        for (i in 0..999) {
+            val x = c + r.nextInt(1000)
+            val y = MathUtils.hashFloat(x, a, b, c, d)
+            TestCase.assertFalse(y >= c && y <= d)
         }
     }
-
+    
     @Test
-    public void testIntHash() {
-        int a = 0, b = 1000, c = 200000, d = 300000;
-        Random r = new Random();
-
-        for (int i = 0; i < 1000; ++i) {
-            int x = a + r.nextInt(b - a);
-            int y = MathUtils.hashInt(x, a, b, c, d);
-            assertTrue(String.valueOf(y), y >= c && y <= d);
+    fun testIntHash() {
+        val a = 0
+        val b = 1000
+        val c = 200000
+        val d = 300000
+        val r = Random()
+        
+        for (i in 0..999) {
+            val x = a + r.nextInt(b - a)
+            val y = MathUtils.hashInt(x, a, b, c, d)
+            TestCase.assertTrue(y.toString(), y >= c && y <= d)
         }
-
-        for (int i = 0; i < 1000; ++i) {
-            int x = c + r.nextInt(1000);
-            int y = MathUtils.hashInt(x, a, b, c, d);
-            assertFalse(String.valueOf(y), y >= c && y <= d);
+        
+        for (i in 0..999) {
+            val x = c + r.nextInt(1000)
+            val y = MathUtils.hashInt(x, a, b, c, d)
+            TestCase.assertFalse(y.toString(), y >= c && y <= d)
         }
     }
-
+    
     @Test
-    public void testRound() {
-        float a = 10, b = 3;
-
-        assertEquals(3, Math.round(a / b));
-        assertEquals(3.33, Math.round(100 * a / b) / 100.0);
-
-        a = 17;
-        b = 3;
+    fun testRound() {
+        var a = 10f
+        var b = 3f
+        
+        TestCase.assertEquals(3, Math.round(a / b))
+        TestCase.assertEquals(3.33, Math.round(100 * a / b) / 100.0)
+        
+        a = 17f
+        b = 3f
         // System.out.println(17f/3f);
-        assertEquals(6, Math.round(a / b));
-        assertEquals(5.67, Math.round(100 * a / b) / 100.0);
+        TestCase.assertEquals(6, Math.round(a / b))
+        TestCase.assertEquals(5.67, Math.round(100 * a / b) / 100.0)
     }
 }
