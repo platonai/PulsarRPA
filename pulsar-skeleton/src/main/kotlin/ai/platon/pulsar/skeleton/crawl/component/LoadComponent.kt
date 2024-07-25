@@ -16,6 +16,7 @@ import ai.platon.pulsar.skeleton.common.AppStatusTracker
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEvent
+import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
@@ -410,9 +411,9 @@ class LoadComponent(
         shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
 
         try {
-            // notice the calling order.
             GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onWillLoad?.invoke(page.url)
-            page.loadEvent?.onWillLoad?.invoke(page.url)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
+            page.loadEventHandlers?.onWillLoad?.invoke(page.url)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke beforeLoad | ${page.configuredUrl}", e)
         }
@@ -456,14 +457,14 @@ class LoadComponent(
             val detail = normURL.detail
             // we might use the cached page's content in after load handler
             if (detail is CompletableHyperlink<*>) {
-                require(page.loadEvent?.onLoaded?.isNotEmpty == true) {
+                require(page.loadEventHandlers?.onLoaded?.isNotEmpty == true) {
                     "A completable link must have a onLoaded handler"
                 }
             }
-
-            page.loadEvent?.onLoaded?.invoke(page)
-            // notice the calling order.
+            
             GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onLoaded?.invoke(page)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
+            page.loadEventHandlers?.onLoaded?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onLoaded | ${page.configuredUrl}", e)
         }

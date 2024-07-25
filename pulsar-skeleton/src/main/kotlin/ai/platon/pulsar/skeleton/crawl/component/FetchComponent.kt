@@ -147,6 +147,7 @@ open class FetchComponent(
     private fun onWillFetch(page: WebPage) {
         try {
             GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onWillFetch?.invoke(page)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
             page.loadEventHandlers?.onWillFetch?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onWillFetch | ${page.configuredUrl}", e)
@@ -155,8 +156,9 @@ open class FetchComponent(
 
     private fun onFetched(page: WebPage) {
         try {
-            page.loadEventHandlers?.onFetched?.invoke(page)
             GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onFetched?.invoke(page)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
+            page.loadEventHandlers?.onFetched?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onFetched | ${page.configuredUrl}", e)
         }

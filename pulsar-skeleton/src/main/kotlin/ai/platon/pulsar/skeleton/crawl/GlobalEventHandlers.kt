@@ -7,10 +7,9 @@ object GlobalEventHandlers {
     /**
      * The page event handlers.
      *
-     * Calling rules:
-     * 1. preprocessors will be called before the page specific handlers.
-     * 2. postprocessors will be called after the page specific handlers.
-     * 3. if the event handler is neither a preprocessor nor a postprocessor, the calling order is undefined.
+     * The calling order rule:
+     *
+     * The more specific handlers has the opportunity to override the result of more general handlers.
      * */
     val pageEventHandlers: PageEventHandlers? = null
 }

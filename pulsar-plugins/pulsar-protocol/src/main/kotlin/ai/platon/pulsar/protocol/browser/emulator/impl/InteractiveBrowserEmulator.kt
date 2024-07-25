@@ -142,83 +142,81 @@ open class InteractiveBrowserEmulator(
     }
 
     override suspend fun onWillNavigate(page: WebPage, driver: WebDriver) {
-        // global preprocessors comes first
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
     }
 
     override suspend fun onNavigated(page: WebPage, driver: WebDriver) {
-        page.browseEventHandlers?.onNavigated?.invoke(page, driver)
-        // global preprocessors comes first
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onNavigated?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onNavigated?.invoke(page, driver)
     }
 
     override suspend fun onWillInteract(page: WebPage, driver: WebDriver) {
-        // global preprocessors comes first
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
     }
 
     override suspend fun onWillCheckDocumentState(page: WebPage, driver: WebDriver) {
-        // global preprocessors comes first
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillCheckDocumentState?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onWillCheckDocumentState?.invoke(page, driver)
     }
 
     override suspend fun onDocumentActuallyReady(page: WebPage, driver: WebDriver) {
-        // notice the calling order, since this is neither a preprocessor nor a postprocessor,
-        // the calling order is undefined.
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDocumentActuallyReady?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onDocumentActuallyReady?.invoke(page, driver)
     }
 
     override suspend fun onWillScroll(page: WebPage, driver: WebDriver) {
-        // global preprocessors comes first
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillScroll?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onWillScroll?.invoke(page, driver)
     }
 
     override suspend fun onDidScroll(page: WebPage, driver: WebDriver) {
-        page.browseEventHandlers?.onDidScroll?.invoke(page, driver)
-        // global postprocessors comes later
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDidScroll?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onDidScroll?.invoke(page, driver)
     }
 
     override suspend fun onDocumentSteady(page: WebPage, driver: WebDriver) {
-        // notice the calling order, since this is neither a preprocessor nor a postprocessor,
-        // the calling order is undefined.
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDocumentSteady?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onDocumentSteady?.invoke(page, driver)
     }
 
     override suspend fun onWillComputeFeature(page: WebPage, driver: WebDriver) {
-        // global preprocessors comes first
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillComputeFeature?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onWillComputeFeature?.invoke(page, driver)
     }
 
     override suspend fun onFeatureComputed(page: WebPage, driver: WebDriver) {
-        page.browseEventHandlers?.onFeatureComputed?.invoke(page, driver)
-        // global postprocessors comes later
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onFeatureComputed?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onFeatureComputed?.invoke(page, driver)
     }
 
     override suspend fun onDidInteract(page: WebPage, driver: WebDriver) {
-        page.browseEventHandlers?.onDidInteract?.invoke(page, driver)
-        // global postprocessors comes later
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDidInteract?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onDidInteract?.invoke(page, driver)
     }
 
     override suspend fun onWillStopTab(page: WebPage, driver: WebDriver) {
-        // global preprocessors comes first
+        // The more specific handlers has the opportunity to override the result of more general handlers.
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillStopTab?.invoke(page, driver)
         page.browseEventHandlers?.onWillStopTab?.invoke(page, driver)
     }
 
     override suspend fun onTabStopped(page: WebPage, driver: WebDriver) {
-        page.browseEventHandlers?.onTabStopped?.invoke(page, driver)
-        // global postprocessors comes later
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onTabStopped?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onTabStopped?.invoke(page, driver)
     }
 
     override fun close() {

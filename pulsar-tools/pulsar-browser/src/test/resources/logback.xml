@@ -4,14 +4,14 @@
     <property name="logging.dir" value="${logging.dir:-logs}" />
     <property name="logging.file" value="${logging.file:-pulsar.log}" />
 
-    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%d{HH:mm:ss.SSS} [%.10thread] %-5level %logger{36} - %msg%n</pattern>
         </layout>
     </appender>
 
     <root level="${log.level:-WARN}">
-        <appender-ref ref="Console"/>
+        <appender-ref ref="CONSOLE"/>
     </root>
 
     <logger name="ai.platon.pulsar.browser.driver.chrome" level="TRACE"/>

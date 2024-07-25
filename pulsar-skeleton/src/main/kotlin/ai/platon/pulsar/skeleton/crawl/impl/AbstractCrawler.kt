@@ -59,31 +59,29 @@ abstract class AbstractCrawler(
 
     override fun onWillLoad(url: UrlAware) {
         if (url is ListenableUrl) {
-            // global preprocessors comes first
             GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onWillLoad?.invoke(url)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
             url.event.crawlEventHandlers.onWillLoad(url)
         }
     }
 
     override fun onLoad(url: UrlAware) {
         if (url is ListenableUrl) {
-            url.event.crawlEventHandlers.onLoad(url)
-            // notice the calling order, since this is neither a preprocessor nor a postprocessor,
-            // the calling order is undefined.
             GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onLoad?.invoke(url)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
+            url.event.crawlEventHandlers.onLoad(url)
         }
     }
 
     override fun onLoaded(url: UrlAware, page: WebPage?) {
+        GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onLoaded?.invoke(url, page)
+
         val event = page?.event?.crawlEventHandlers
         if (event != null) {
+            // The more specific handlers has the opportunity to override the result of more general handlers.
             event.onLoaded(url, page)
-            // global postprocessors comes later
-            GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onLoaded?.invoke(url, page)
         } else if (url is ListenableUrl) {
             url.event.crawlEventHandlers.onLoaded(url, page)
-            // global postprocessors comes later
-            GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onLoaded?.invoke(url, page)
         }
     }
 
