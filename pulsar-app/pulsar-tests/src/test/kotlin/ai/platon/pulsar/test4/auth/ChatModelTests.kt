@@ -2,10 +2,10 @@ package ai.platon.pulsar.test4.auth
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.ai.api.ResponseState
-import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.skeleton.crawl.ai.ChatModel
 import ai.platon.pulsar.dom.Documents
+import ai.platon.pulsar.external.ResponseState
+import ai.platon.pulsar.external.impl.ZhipuChatModel
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -23,7 +23,8 @@ class ChatModelTests {
     private val productHtml = ResourceLoader.readString("pages/amazon/B0C1H26C46.original.htm")
     private val productText = ResourceLoader.readString("prompts/product.txt")
     private val conf = ImmutableConfig.UNSAFE
-    private val model = ChatModel(conf)
+    private val apiKey = conf["ZHIPU_API_KEY"]!!
+    private val model = ZhipuChatModel(apiKey)
     private val session = PulsarContexts.createSession()
 
     @Test
