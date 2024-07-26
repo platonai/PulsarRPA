@@ -120,7 +120,13 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         if (jsonNode == null) {
             throw ChromeRPCException("Failed converting null response to clazz " + clazz.name)
         }
-        return OBJECT_MAPPER.readerFor(clazz).readValue(jsonNode)
+        
+        try {
+            return OBJECT_MAPPER.readerFor(clazz).readValue(jsonNode)
+        } catch (e: IOException) {
+            // logger.warn("Failed converting response to clazz {}", clazz.name, e)
+            throw e
+        }
     }
     
     fun hasFutures() = invocationFutures.isNotEmpty()

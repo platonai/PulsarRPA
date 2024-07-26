@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang3.RandomStringUtils
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
@@ -159,11 +160,39 @@ object AppPaths {
 
     fun get(first: String, vararg more: String): Path = Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)
 
-    fun getTmp(first: String, vararg more: String): Path = Paths.get(tmpDirStr, first.removePrefix(tmpDirStr), *more)
+    fun getTmp(first: String, vararg more: String): Path = TMP_DIR.resolve(first, *more)
+    
+    fun getRandomTmp(prefix: String = "", suffix: String = ""): Path =
+        getTmp(prefix, RandomStringUtils.randomAlphabetic(18), suffix)
+    
+    fun getProcTmp(first: String, vararg more: String): Path = PROC_TMP_DIR.resolve(first, *more)
 
-    fun getProcTmp(first: String, vararg more: String): Path = Paths.get(procTmpDirStr, first.removePrefix(procTmpDirStr), *more)
+    /**
+     * Get a path of the temporary directory in the process's temporary directory.
+     *
+     * A typical process temporary directory is:
+     *
+     * ```powershell
+     * $env:TMP/pulsar-$env:USERNAME/
+     * ```
+     *
+     * And the tmp-tmp directory is:
+     *
+     * ```powershell
+     * $env:TMP/pulsar-$env:USERNAME/tmp
+     * ```
+     *
+     * * @param first the first part of the path
+     * @param more the rest parts of the path
+     *
+     * @return the path in the process's temporary directory
+     * */
+    fun getProcTmpTmp(first: String, vararg more: String): Path = PROC_TMP_DIR.resolve("tmp").resolve(first, *more)
+    
+    fun getRandomProcTmpTmp(prefix: String = "", suffix: String = ""): Path =
+        getProcTmpTmp(prefix + RandomStringUtils.randomAlphabetic(18) + suffix)
 
-    fun random(prefix: String = "", suffix: String = ""): String = "$prefix${UUID.randomUUID()}$suffix"
+    fun random(prefix: String = "", suffix: String = ""): String = "$prefix${RandomStringUtils.randomAlphabetic(18)}$suffix"
 
     fun hex(uri: String, prefix: String = "", suffix: String = ""): String {
         return DigestUtils.md5Hex(uri).let { "$prefix$it$suffix" }
