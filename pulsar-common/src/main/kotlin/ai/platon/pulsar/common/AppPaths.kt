@@ -23,7 +23,7 @@ annotation class RequiredDirectory
  * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 object AppPaths {
-
+    
     val SYS_TMP_DIR = Paths.get(AppContext.TMP_DIR)
     val SYS_USER_DIR = Paths.get(AppContext.USER_DIR)
     val SYS_USER_HOME = Paths.get(AppContext.USER_HOME)
@@ -37,11 +37,11 @@ object AppPaths {
      */
     val SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".SYSTEM_DEFAULT_DATA_DIR_PLACEHOLDER")
     val SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER = SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER
-
+    
     // Directory for symbolic links, this path should be as short as possible
     @RequiredDirectory
     val SYS_TMP_LINKS_DIR = SYS_TMP_DIR.resolve("ln")
-
+    
     @RequiredDirectory
     val DATA_DIR = AppContext.APP_DATA_DIR
     @RequiredDirectory
@@ -58,7 +58,7 @@ object AppPaths {
     val LOCAL_TEST_DATA_DIR = LOCAL_DATA_DIR.resolve( "test")
     @RequiredDirectory
     val LOCAL_TEST_WEB_PAGE_DIR = LOCAL_TEST_DATA_DIR.resolve( "web")
-
+    
     @RequiredDirectory
     val TMP_DIR = AppContext.APP_TMP_DIR
     @RequiredDirectory
@@ -85,7 +85,7 @@ object AppPaths {
     val SCRIPT_DIR = PROC_TMP_DIR.resolve( "scripts")
     @RequiredDirectory
     val TEST_DIR = PROC_TMP_DIR.resolve( "test")
-
+    
     @RequiredDirectory
     val CONTEXT_BASE_DIR = PROC_TMP_DIR.resolve( "context")
     @RequiredDirectory
@@ -96,7 +96,7 @@ object AppPaths {
     val CONTEXT_TMP_DIR = CONTEXT_BASE_DIR.resolve( "tmp")
     @RequiredFile
     val BROWSER_TMP_DIR_LOCK = CONTEXT_TMP_DIR.resolve( "browser.tmp.lock")
-
+    
     /**
      * Proxy directory
      * */
@@ -108,7 +108,7 @@ object AppPaths {
     val AVAILABLE_PROVIDER_DIR = PROXY_BASE_DIR.resolve("providers-available")
     @RequiredDirectory
     val ENABLED_PROXY_DIR = PROXY_BASE_DIR.resolve( "proxies-enabled")
-
+    
     @RequiredDirectory
     val AVAILABLE_PROXY_DIR = PROXY_BASE_DIR.resolve( "proxies-available")
     @RequiredDirectory
@@ -119,17 +119,17 @@ object AppPaths {
     val PROXY_BANNED_SEGMENTS_FILE = PROXY_BASE_DIR.resolve("proxies-banned-segments.txt")
     @RequiredFile
     val PROXY_BAN_STRATEGY = PROXY_BASE_DIR.resolve( "proxy-ban-strategy.txt")
-
+    
     @RequiredDirectory
     val ARCHIVE_DIR = DATA_DIR.resolve("archive")
     @RequiredDirectory
     val TMP_ARCHIVE_DIR = TMP_DIR.resolve("archive")
-
+    
     @RequiredFile
     val PATH_LOCAL_COMMAND = TMP_DIR.resolve("pulsar-commands")
     @RequiredFile
     val PATH_EMERGENT_SEEDS = TMP_DIR.resolve("emergent-seeds")
-
+    
     @RequiredFile
     val PATH_LAST_BATCH_ID = REPORT_DIR.resolve("last-batch-id")
     @RequiredFile
@@ -138,17 +138,17 @@ object AppPaths {
     val PATH_BANNED_URLS = REPORT_DIR.resolve("banned-urls")
     @RequiredFile
     val PATH_UNREACHABLE_HOSTS = REPORT_DIR.resolve("unreachable-hosts.txt")
-
+    
     private val tmpDirStr get() = TMP_DIR.toString()
     private val procTmpDirStr get() = PROC_TMP_DIR.toString()
     private val homeDirStr get() = DATA_DIR.toString()
-
+    
     init {
         AppPaths::class.java.declaredFields
             .filter { it.annotations.any { it is RequiredDirectory } }
             .mapNotNull { it.get(AppPaths) as? Path }
             .forEach { it.takeUnless { Files.exists(it) }?.let { Files.createDirectories(it) } }
-
+        
         AppPaths::class.java.declaredFields
             .filter { it.annotations.any { it is RequiredFile } }
             .mapNotNull { it.get(AppPaths) as? Path }
@@ -157,16 +157,28 @@ object AppPaths {
                 it.takeUnless { Files.exists(it) }?.let { Files.createFile(it) }
             }
     }
-
+    
+    /**
+     * Resolve the given path parts to a path.
+     * Copy from JDK 22 for compatibility.
+     * */
+    fun resolve(base: Path, first: String, vararg more: String): Path {
+        var result = base.resolve(first)
+        for (s in more) {
+            result = result.resolve(s)
+        }
+        return result
+    }
+    
     fun get(first: String, vararg more: String): Path = Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)
-
-    fun getTmp(first: String, vararg more: String): Path = TMP_DIR.resolve(first, *more)
+    
+    fun getTmp(first: String, vararg more: String): Path = resolve(TMP_DIR, first, *more)
     
     fun getRandomTmp(prefix: String = "", suffix: String = ""): Path =
         getTmp(prefix, RandomStringUtils.randomAlphabetic(18), suffix)
     
-    fun getProcTmp(first: String, vararg more: String): Path = PROC_TMP_DIR.resolve(first, *more)
-
+    fun getProcTmp(first: String, vararg more: String): Path = resolve(PROC_TMP_DIR, first, *more)
+    
     /**
      * Get a path of the temporary directory in the process's temporary directory.
      *
@@ -187,19 +199,19 @@ object AppPaths {
      *
      * @return the path in the process's temporary directory
      * */
-    fun getProcTmpTmp(first: String, vararg more: String): Path = PROC_TMP_DIR.resolve("tmp").resolve(first, *more)
+    fun getProcTmpTmp(first: String, vararg more: String): Path = resolve(PROC_TMP_DIR.resolve("tmp"), first, *more)
     
     fun getRandomProcTmpTmp(prefix: String = "", suffix: String = ""): Path =
         getProcTmpTmp(prefix + RandomStringUtils.randomAlphabetic(18) + suffix)
-
+    
     fun random(prefix: String = "", suffix: String = ""): String = "$prefix${RandomStringUtils.randomAlphabetic(18)}$suffix"
-
+    
     fun hex(uri: String, prefix: String = "", suffix: String = ""): String {
         return DigestUtils.md5Hex(uri).let { "$prefix$it$suffix" }
     }
-
+    
     fun fileId(uri: String) = DigestUtils.md5Hex(uri)
-
+    
     /**
      * Create a mock page path.
      * */
@@ -207,7 +219,7 @@ object AppPaths {
         val filename = fromUri(uri, "", ".htm")
         return LOCAL_TEST_WEB_PAGE_DIR.resolve(filename)
     }
-
+    
     /**
      * Create a filename compatible string from the given url.
      * */
@@ -218,10 +230,10 @@ object AppPaths {
         } else {
             runCatching { InternetDomainName.from(host).topPrivateDomain().toString() }.getOrNull() ?: "unknown"
         }
-
+        
         return host.replace('.', '-')
     }
-
+    
     /**
      * Create a filename compatible string from the given url.
      * */
@@ -229,18 +241,18 @@ object AppPaths {
         val u = UrlUtils.getURLOrNull(url) ?: return "unknown"
         return fromDomain(u)
     }
-
+    
     /**
      * Create a filename compatible string from the given uri.
      * */
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
         val u = UrlUtils.getURLOrNull(uri) ?: return "$prefix${UUID.randomUUID()}$suffix"
-
+        
         val dirForDomain = fromDomain(u)
         val fileId = fileId(uri)
         return "$prefix$dirForDomain-$fileId$suffix"
     }
-
+    
     /**
      * Create a symbolic link from the given uri.
      *
