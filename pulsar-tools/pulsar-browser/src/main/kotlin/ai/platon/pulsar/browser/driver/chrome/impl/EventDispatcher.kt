@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.databind.type.TypeFactory
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.StringUtils
@@ -123,6 +124,13 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         
         try {
             return OBJECT_MAPPER.readerFor(clazz).readValue(jsonNode)
+        } catch (e: MismatchedInputException) {
+            val message = """
+                Failed converting response to clazz ${clazz.name}
+                $jsonNode
+                """.trimIndent()
+            logger.warn(message, e)
+            throw e
         } catch (e: IOException) {
             // logger.warn("Failed converting response to clazz {}", clazz.name, e)
             throw e
