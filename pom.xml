@@ -261,6 +261,27 @@
 <!--                            </dokkaPlugins>-->
                         </configuration>
                     </plugin>
+
+                    <!-- Help maven-source-plugin works with kotlin -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.6.0</version>
+
+                        <executions>
+                            <execution>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/kotlin</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -327,6 +348,7 @@
         <defaultGoal>install</defaultGoal>
         <directory>target</directory>
         <finalName>${project.artifactId}-${project.version}</finalName>
+
         <pluginManagement>
             <plugins>
                 <!--  kotlin  -->
@@ -449,7 +471,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
-                    <version>${maven-exec-plugin.version}</version>
+                    <version>${version.maven-exec-plugin}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
@@ -475,10 +497,10 @@
                 </configuration>
             </plugin>
             <!-- NO java code by default, so do NOT include maven-compiler-plugin -->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-compiler-plugin</artifactId>-->
-<!--            </plugin>-->
+            <!--            <plugin>-->
+            <!--                <groupId>org.apache.maven.plugins</groupId>-->
+            <!--                <artifactId>maven-compiler-plugin</artifactId>-->
+            <!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -495,7 +517,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <skip>true</skip>
+                    <skip>false</skip>
                 </configuration>
             </plugin>
 
@@ -874,10 +896,11 @@
     </dependencies>
 
     <properties>
+        <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
         <!-- JAXB provides an API and tools that automate the mapping between XML documents and Java objects. -->
         <!-- This artifact was moved to: jakarta.xml.bind » jakarta.xml.bind-api -->
         <!-- deprecated -->
-<!--        <jaxb-api.version>2.3.1</jaxb-api.version>-->
+        <!--        <jaxb-api.version>2.3.1</jaxb-api.version>-->
 
         <langchain4j.version>0.31.0</langchain4j.version>
         <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
