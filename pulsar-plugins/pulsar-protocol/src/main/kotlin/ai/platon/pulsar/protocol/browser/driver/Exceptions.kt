@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 
 open class SessionException(
     message: String? = null,

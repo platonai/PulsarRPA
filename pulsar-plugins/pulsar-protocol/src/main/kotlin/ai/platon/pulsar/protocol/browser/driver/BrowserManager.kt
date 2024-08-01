@@ -4,9 +4,9 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.fetch.driver.*
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -147,11 +147,11 @@ open class BrowserManager(
             val browser1 = browserFactory.launch(browserId, launcherOptions, launchOptions)
             _browsers[browserId] = browser1
             historicalBrowsers.add(browser1)
-            
+
             return browser1
         }
     }
-    
+
     private fun registerAsClosableIfNecessary() {
         if (registered.compareAndSet(false, true)) {
             // Actually, it's safe to register multiple times, the manager will be closed only once, and the browsers

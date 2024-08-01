@@ -3,8 +3,8 @@ package ai.platon.pulsar.examples.sites.topEc.english.amazon.rpa
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.sql.SQLTemplate
-import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
@@ -45,7 +45,7 @@ class AsinRPAScraper {
     private fun createASINHyperlink(domain: String, asinUrl: String): ListenableHyperlink {
         val hyperlink = ListenableHyperlink(asinUrl, args = asinLoadArgs)
         val be = hyperlink.event.browseEventHandlers
-        
+
         be.onDocumentSteady.addLast { page, driver ->
             val district = driver.selectFirstTextOrNull(districtSelector)
             logger.info("District: {}", district)

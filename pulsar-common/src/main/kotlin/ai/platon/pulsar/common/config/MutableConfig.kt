@@ -28,7 +28,7 @@ open class MutableConfig : ImmutableConfig {
     constructor(
         profile: String,
         loadDefaults: Boolean,
-        resources: Iterable<String> = DEFAULT_RESOURCES
+        resources: Iterable<String> = mutableSetOf()
     ): super(profile, loadDefaults, resources)
 
     constructor(conf: ImmutableConfig) : super(conf.unbox()) {

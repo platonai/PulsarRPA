@@ -208,7 +208,7 @@ java -jar exotic-standalone.jar
 <dependency>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-all</artifactId>
-    <version>1.12.5</version>
+  <version>1.12.5</version>
 </dependency>
 ```
 

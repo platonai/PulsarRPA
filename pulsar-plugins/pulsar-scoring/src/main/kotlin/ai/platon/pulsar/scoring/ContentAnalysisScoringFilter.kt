@@ -18,7 +18,7 @@ package ai.platon.pulsar.scoring
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.crawl.scoring.ScoringFilter
+import ai.platon.pulsar.skeleton.crawl.scoring.ScoringFilter
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import java.time.Instant

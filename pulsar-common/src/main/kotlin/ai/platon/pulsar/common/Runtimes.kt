@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.measure.ByteUnit
-import ai.platon.pulsar.common.measure.ByteUnitConverter
 import kotlinx.coroutines.delay
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
@@ -107,7 +106,7 @@ object Runtimes {
 
         return String.format("%-8s %-6d %-6s %-25s %-10s %s", user, pid, ppid, startTime?:"", cpuDuration?:"", cmdLine)
     }
-    
+
     fun deleteBrokenSymbolicLinks(symbolicLink: Path) {
         if (SystemUtils.IS_OS_WINDOWS) {
             // TODO: use command line

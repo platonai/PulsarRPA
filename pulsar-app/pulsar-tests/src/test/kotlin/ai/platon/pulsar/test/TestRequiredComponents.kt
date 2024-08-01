@@ -1,7 +1,7 @@
 package ai.platon.pulsar.test
 
-import ai.platon.pulsar.crawl.component.FetchComponent
-import ai.platon.pulsar.crawl.component.LoadComponent
+import ai.platon.pulsar.skeleton.crawl.component.FetchComponent
+import ai.platon.pulsar.skeleton.crawl.component.LoadComponent
 import kotlin.test.*
 import org.springframework.beans.factory.annotation.Autowired
 import kotlin.test.assertNotNull

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.test.collect
 
-import ai.platon.pulsar.common.collect.FatLinkExtractor
-import ai.platon.pulsar.common.collect.HyperlinkExtractor
+import ai.platon.pulsar.skeleton.common.collect.FatLinkExtractor
+import ai.platon.pulsar.skeleton.common.collect.HyperlinkExtractor
 import ai.platon.pulsar.common.urls.sites.amazon.AmazonUrls
 import ai.platon.pulsar.common.urls.sites.amazon.AsinUrlNormalizer
 import ai.platon.pulsar.test.TestBase

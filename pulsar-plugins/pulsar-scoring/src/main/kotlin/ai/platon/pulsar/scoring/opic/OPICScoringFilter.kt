@@ -2,8 +2,8 @@ package ai.platon.pulsar.scoring.opic
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.crawl.index.IndexDocument
-import ai.platon.pulsar.crawl.scoring.ScoringFilter
+import ai.platon.pulsar.skeleton.crawl.index.IndexDocument
+import ai.platon.pulsar.skeleton.crawl.scoring.ScoringFilter
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.graph.WebEdge
 import ai.platon.pulsar.persist.graph.WebGraph

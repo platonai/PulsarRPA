@@ -8,16 +8,16 @@ import ai.platon.pulsar.dom.nodes.node.ext.getFeature
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.dom.select.selectAnchors
-import ai.platon.pulsar.ql.ResultSets
-import ai.platon.pulsar.ql.annotation.UDFGroup
-import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.ql.common.ResultSets
+import ai.platon.pulsar.ql.common.annotation.UDFGroup
+import ai.platon.pulsar.ql.common.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
-import ai.platon.pulsar.ql.h2.Queries
-import ai.platon.pulsar.ql.h2.Queries.toResultSet
 import ai.platon.pulsar.ql.h2.domValue
-import ai.platon.pulsar.ql.types.ValueDom
-import ai.platon.pulsar.ql.annotation.H2Context
-import ai.platon.pulsar.ql.h2.Queries.toDOMResultSet
+import ai.platon.pulsar.ql.common.types.ValueDom
+import ai.platon.pulsar.ql.common.annotation.H2Context
+import ai.platon.pulsar.ql.h2.DomToH2Queries
+import ai.platon.pulsar.ql.h2.DomToH2Queries.toDOMResultSet
+import ai.platon.pulsar.ql.h2.DomToH2Queries.toResultSet
 import org.h2.jdbc.JdbcConnection
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
@@ -46,7 +46,7 @@ object DomFunctionTables {
             return toResultSet("DOM", listOf<ValueDom>())
         }
 
-        val pages = Queries.loadAll(session, urls)
+        val pages = DomToH2Queries.loadAll(session, urls)
         val doms = pages.map { session.parseValueDom(it) }
 
         return toResultSet("DOM", doms)
@@ -92,7 +92,7 @@ object DomFunctionTables {
             return toResultSet("LINK", listOf<String>())
         }
 
-        val links = Queries.loadAll(session, portalUrl, restrictCss, offset, limit, Queries::getLinks)
+        val links = DomToH2Queries.loadAll(session, portalUrl, restrictCss, offset, limit, DomToH2Queries::getLinks)
         return toResultSet("LINK", links)
     }
 
@@ -106,7 +106,7 @@ object DomFunctionTables {
             return toResultSet("LINK", listOf<String>())
         }
 
-        return toResultSet("LINK", Queries.getLinks(dom.element, cssQuery, offset, limit))
+        return toResultSet("LINK", DomToH2Queries.getLinks(dom.element, cssQuery, offset, limit))
     }
 
     @JvmStatic
@@ -187,7 +187,7 @@ object DomFunctionTables {
             return toResultSet("DOM", listOf<ValueDom>())
         }
 
-        val docs = Queries.loadOutPages(session, portal, restrictCss, offset, limit, normalize, ignoreQuery)
+        val docs = DomToH2Queries.loadOutPages(session, portal, restrictCss, offset, limit, normalize, ignoreQuery)
                 .map { session.parse(it) }
 
         val elements = if (targetCss == ":root") {
@@ -239,7 +239,7 @@ object DomFunctionTables {
             return toResultSet("DOM", listOf<ValueDom>())
         }
 
-        val pages = Queries.loadOutPages(session, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
+        val pages = DomToH2Queries.loadOutPages(session, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
 
         val docs = pages.map { session.parse(it) }
 
@@ -302,7 +302,7 @@ object DomFunctionTables {
         /**
          * Notice: be careful use rs.addRow(*it) to make sure a vararg is passed into rs.addRow
          */
-        dom.element.select(cssSelector, offset, limit) { Queries.getFeatureRow(it) }
+        dom.element.select(cssSelector, offset, limit) { DomToH2Queries.getFeatureRow(it) }
                 .forEach { rs.addRow(*it) }
 
         return rs
@@ -368,7 +368,7 @@ object DomFunctionTables {
         val drop = max(offset - 1, 0)
         result.sortedByDescending { it.getFeature(SIB) }.asSequence()
                 .drop(drop).take(limit)
-                .map { Queries.getFeatureRow(it) }
+                .map { DomToH2Queries.getFeatureRow(it) }
                 .forEach { rs.addRow(it) }
 
         return rs

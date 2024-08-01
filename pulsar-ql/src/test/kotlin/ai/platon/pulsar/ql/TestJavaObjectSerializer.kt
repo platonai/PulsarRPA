@@ -4,9 +4,10 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.dom.nodes.node.ext.uniqueName
+import ai.platon.pulsar.ql.common.PulsarObjectSerializer
 import ai.platon.pulsar.ql.h2.H2Db
 import ai.platon.pulsar.ql.h2.H2DbConfig
-import ai.platon.pulsar.ql.types.ValueDom
+import ai.platon.pulsar.ql.common.types.ValueDom
 import org.apache.commons.io.FileUtils
 import org.h2.engine.SysProperties
 import org.h2.tools.Server
@@ -14,7 +15,6 @@ import org.h2.util.JdbcUtils
 import org.jsoup.Jsoup
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import java.nio.file.Files
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Types
@@ -26,7 +26,7 @@ import kotlin.test.assertTrue
 class TestJavaObjectSerializer: TestBase() {
 
     companion object {
-        
+
         private val baseDir = AppPaths.TEST_DIR.resolve("unittests/TestJavaObjectSerializer")
         val conf = H2DbConfig(baseDir = baseDir, networked = true)
         val remoteDB = H2Db(conf)
@@ -91,7 +91,7 @@ class TestJavaObjectSerializer: TestBase() {
 
     @Test
     fun testLocalSerialization() {
-        val serializer = ai.platon.pulsar.ql.PulsarObjectSerializer()
+        val serializer = PulsarObjectSerializer()
 
         val baseURI = "http://example.com/"
         val doc = Jsoup.parseBodyFragment("<div>Hello World</div>", baseURI)
@@ -207,6 +207,6 @@ class TestJavaObjectSerializer: TestBase() {
         println(value)
         assertTrue(value.length > 1)
         assertTrue(SysProperties.serializeJavaObject)
-        assertEquals("ai.platon.pulsar.ql.PulsarObjectSerializer", JdbcUtils.serializer.javaClass.name)
+        assertEquals("ai.platon.pulsar.ql.common.PulsarObjectSerializer", JdbcUtils.serializer.javaClass.name)
     }
 }

@@ -18,8 +18,8 @@ package ai.platon.pulsar.scoring.link
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.crawl.index.IndexDocument
-import ai.platon.pulsar.crawl.scoring.ScoringFilter
+import ai.platon.pulsar.skeleton.crawl.index.IndexDocument
+import ai.platon.pulsar.skeleton.crawl.scoring.ScoringFilter
 import ai.platon.pulsar.persist.WebPage
 
 class LinkAnalysisScoringFilter(conf: ImmutableConfig) : ScoringFilter {

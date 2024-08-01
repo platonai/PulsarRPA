@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.persist.WebPage
 import kotlinx.coroutines.*
 import java.util.concurrent.LinkedBlockingQueue

@@ -23,10 +23,10 @@ import ai.platon.pulsar.common.config.AppConstants.FETCH_PRIORITY_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.crawl.filter.CrawlFilter
-import ai.platon.pulsar.crawl.index.IndexDocument
-import ai.platon.pulsar.crawl.scoring.NamedScoreVector
-import ai.platon.pulsar.crawl.scoring.Name
+import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilter
+import ai.platon.pulsar.skeleton.crawl.index.IndexDocument
+import ai.platon.pulsar.skeleton.crawl.scoring.NamedScoreVector
+import ai.platon.pulsar.skeleton.crawl.scoring.Name
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt

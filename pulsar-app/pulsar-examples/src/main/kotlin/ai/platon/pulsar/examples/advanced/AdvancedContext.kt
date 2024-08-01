@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples.advanced
 
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 
 /**
  * Use custom configured components.

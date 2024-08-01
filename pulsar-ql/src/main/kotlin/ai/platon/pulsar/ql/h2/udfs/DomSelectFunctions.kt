@@ -4,15 +4,14 @@ import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.nodes.node.ext.minimalHtml
-import ai.platon.pulsar.dom.nodes.node.ext.namedRect
 import ai.platon.pulsar.dom.nodes.node.ext.slimHtml
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.dom.select.select2
-import ai.platon.pulsar.ql.annotation.UDFGroup
-import ai.platon.pulsar.ql.annotation.UDFunction
-import ai.platon.pulsar.ql.h2.Queries
-import ai.platon.pulsar.ql.types.ValueDom
+import ai.platon.pulsar.ql.common.annotation.UDFGroup
+import ai.platon.pulsar.ql.common.annotation.UDFunction
+import ai.platon.pulsar.ql.h2.DomToH2Queries
+import ai.platon.pulsar.ql.common.types.ValueDom
 import org.h2.value.ValueArray
 import org.h2.value.ValueFloat
 import org.h2.value.ValueInt
@@ -30,7 +29,7 @@ object DomSelectFunctions {
     @UDFunction(description = "Select the all the elements from a DOM by the given css query")
     @JvmStatic
     fun selectAll(dom: ValueDom, cssQuery: String): ValueArray {
-        return Queries.select(dom, cssQuery) { it }
+        return DomToH2Queries.select(dom, cssQuery) { it }
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query and return a DOM")
@@ -48,56 +47,56 @@ object DomSelectFunctions {
     @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element texts")
     @JvmStatic
     fun allTexts(dom: ValueDom, cssQuery: String): ValueArray {
-        return Queries.select(dom, cssQuery) { it.text() }
+        return DomToH2Queries.select(dom, cssQuery) { it.text() }
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query and return the element text")
     @JvmStatic
     fun firstText(dom: ValueDom, cssQuery: String): String {
-        return Queries.selectFirstOrNull(dom, cssQuery) { it.text() } ?: ""
+        return DomToH2Queries.selectFirstOrNull(dom, cssQuery) { it.text() } ?: ""
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query and return the element text")
     @JvmStatic
     fun nthText(dom: ValueDom, cssQuery: String, n: Int): String {
-        return Queries.selectNthOrNull(dom, cssQuery, n) { it.text() } ?: ""
+        return DomToH2Queries.selectNthOrNull(dom, cssQuery, n) { it.text() } ?: ""
     }
 
     @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element's own texts")
     @JvmStatic
     fun allOwnTexts(dom: ValueDom, cssQuery: String): ValueArray {
-        return Queries.select(dom, cssQuery) { it.ownText() }
+        return DomToH2Queries.select(dom, cssQuery) { it.ownText() }
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query and return the element's own text")
     @JvmStatic
     fun firstOwnText(dom: ValueDom, cssQuery: String): String {
-        return Queries.selectFirstOrNull(dom, cssQuery) { it.ownText() } ?: ""
+        return DomToH2Queries.selectFirstOrNull(dom, cssQuery) { it.ownText() } ?: ""
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query and return the element's own text")
     @JvmStatic
     fun nthOwnText(dom: ValueDom, cssQuery: String, n: Int): String {
-        return Queries.selectNthOrNull(dom, cssQuery, n) { it.ownText() } ?: ""
+        return DomToH2Queries.selectNthOrNull(dom, cssQuery, n) { it.ownText() } ?: ""
     }
 
 
     @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element whole texts")
     @JvmStatic
     fun wholeTexts(dom: ValueDom, cssQuery: String): ValueArray {
-        return Queries.select(dom, cssQuery) { it.wholeText() }
+        return DomToH2Queries.select(dom, cssQuery) { it.wholeText() }
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query and return the element whole text")
     @JvmStatic
     fun firstWholeText(dom: ValueDom, cssQuery: String): String {
-        return Queries.selectFirstOrNull(dom, cssQuery) { it.wholeText() } ?: ""
+        return DomToH2Queries.selectFirstOrNull(dom, cssQuery) { it.wholeText() } ?: ""
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query and return the element whole text")
     @JvmStatic
     fun nthWholeText(dom: ValueDom, cssQuery: String, n: Int): String {
-        return Queries.selectNthOrNull(dom, cssQuery, n) { it.wholeText() } ?: ""
+        return DomToH2Queries.selectNthOrNull(dom, cssQuery, n) { it.wholeText() } ?: ""
     }
 
 
@@ -109,38 +108,38 @@ object DomSelectFunctions {
     @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element texts")
     @JvmStatic
     fun allSlimHtmls(dom: ValueDom, cssQuery: String): ValueArray {
-        return Queries.select(dom, cssQuery) { it.slimHtml }
+        return DomToH2Queries.select(dom, cssQuery) { it.slimHtml }
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query and return the element text")
     @JvmStatic
     fun firstSlimHtml(dom: ValueDom, cssQuery: String): String {
-        return Queries.selectFirstOrNull(dom, cssQuery) { it.slimHtml } ?: ""
+        return DomToH2Queries.selectFirstOrNull(dom, cssQuery) { it.slimHtml } ?: ""
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query and return the element text")
     @JvmStatic
     fun nthSlimHtml(dom: ValueDom, cssQuery: String, n: Int): String {
-        return Queries.selectNthOrNull(dom, cssQuery, n) { it.slimHtml } ?: ""
+        return DomToH2Queries.selectNthOrNull(dom, cssQuery, n) { it.slimHtml } ?: ""
     }
 
 
     @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element texts")
     @JvmStatic
     fun allMinimalHtmls(dom: ValueDom, cssQuery: String): ValueArray {
-        return Queries.select(dom, cssQuery) { it.minimalHtml }
+        return DomToH2Queries.select(dom, cssQuery) { it.minimalHtml }
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query and return the element text")
     @JvmStatic
     fun firstMinimalHtml(dom: ValueDom, cssQuery: String): String {
-        return Queries.selectFirstOrNull(dom, cssQuery) { it.minimalHtml } ?: ""
+        return DomToH2Queries.selectFirstOrNull(dom, cssQuery) { it.minimalHtml } ?: ""
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query and return the element text")
     @JvmStatic
     fun nthMinimalHtml(dom: ValueDom, cssQuery: String, n: Int): String {
-        return Queries.selectNthOrNull(dom, cssQuery, n) { it.minimalHtml } ?: ""
+        return DomToH2Queries.selectNthOrNull(dom, cssQuery, n) { it.minimalHtml } ?: ""
     }
 
 
@@ -149,7 +148,7 @@ object DomSelectFunctions {
     @JvmStatic
     @JvmOverloads
     fun allIntegers(dom: ValueDom, cssQuery: String, defaultValue: Int = 0): ValueArray {
-        return Queries.select(dom, cssQuery) { ValueInt.get(Strings.getFirstInteger(it.text(), defaultValue)) }
+        return DomToH2Queries.select(dom, cssQuery) { ValueInt.get(Strings.getFirstInteger(it.text(), defaultValue)) }
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
@@ -174,7 +173,7 @@ object DomSelectFunctions {
     @JvmStatic
     @JvmOverloads
     fun allFloats(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): ValueArray {
-        return Queries.select(dom, cssQuery) { ValueFloat.get(Strings.getFirstFloatNumber(it.text(), defaultValue)) }
+        return DomToH2Queries.select(dom, cssQuery) { ValueFloat.get(Strings.getFirstFloatNumber(it.text(), defaultValue)) }
     }
 
     /**
@@ -203,7 +202,7 @@ object DomSelectFunctions {
     @JvmStatic
     @JvmOverloads
     fun allAttrs(dom: ValueDom, cssQuery: String = ":root", attrName: String): ValueArray {
-        return Queries.select(dom, cssQuery) { it.attr(attrName) }
+        return DomToH2Queries.select(dom, cssQuery) { it.attr(attrName) }
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
@@ -211,14 +210,14 @@ object DomSelectFunctions {
     @JvmStatic
     @JvmOverloads
     fun firstAttr(dom: ValueDom, cssQuery: String = ":root", attrName: String): String {
-        return Queries.selectFirstOrNull(dom, cssQuery) { it.attr(attrName) } ?: ""
+        return DomToH2Queries.selectFirstOrNull(dom, cssQuery) { it.attr(attrName) } ?: ""
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query " +
             "and return the attribute value associated by the attribute name")
     @JvmStatic
     fun nthAttr(dom: ValueDom, cssQuery: String, n: Int, attrName: String): String {
-        return Queries.selectNthOrNull(dom, cssQuery, n) { it.attr(attrName) } ?: ""
+        return DomToH2Queries.selectNthOrNull(dom, cssQuery, n) { it.attr(attrName) } ?: ""
     }
 
 
@@ -228,7 +227,7 @@ object DomSelectFunctions {
     @JvmStatic
     @JvmOverloads
     fun allMultiAttrs(dom: ValueDom, cssQuery: String = ":root", attrNames: Array<String>): ValueArray {
-        return Queries.select(dom, cssQuery) { ele -> attrNames.map { ele.attr(it) } }
+        return DomToH2Queries.select(dom, cssQuery) { ele -> attrNames.map { ele.attr(it) } }
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
@@ -236,7 +235,7 @@ object DomSelectFunctions {
     @JvmStatic
     @JvmOverloads
     fun firstMultiAttrs(dom: ValueDom, cssQuery: String = ":root", attrNames: Array<String>): List<String> {
-        val result = Queries.selectFirstOrNull(dom, cssQuery) { ele ->
+        val result = DomToH2Queries.selectFirstOrNull(dom, cssQuery) { ele ->
             attrNames.map { ele.attr(it) }
         } ?: listOf()
 
@@ -247,7 +246,7 @@ object DomSelectFunctions {
             "and return the attribute value associated by the attribute name")
     @JvmStatic
     fun nthMultiAttrs(dom: ValueDom, cssQuery: String, n: Int, attrNames: Array<String>): List<String> {
-        val result = Queries.selectNthOrNull(dom, cssQuery, n) { ele ->
+        val result = DomToH2Queries.selectNthOrNull(dom, cssQuery, n) { ele ->
             attrNames.map { ele.attr(it) }
         } ?: listOf()
 
@@ -261,7 +260,7 @@ object DomSelectFunctions {
     @JvmOverloads
     fun allImgs(dom: ValueDom, cssQuery: String = ":root"): ValueArray {
         val q = appendSelectorIfMissing(cssQuery, "img")
-        return Queries.select(dom, q) { it.attr("abs:src") }
+        return DomToH2Queries.select(dom, q) { it.attr("abs:src") }
     }
 
     @UDFunction(description = "Select the first image element from a DOM by the given css query " +
@@ -270,7 +269,7 @@ object DomSelectFunctions {
     @JvmOverloads
     fun firstImg(dom: ValueDom, cssQuery: String = ":root"): String {
         val q = appendSelectorIfMissing(cssQuery, "img")
-        return Queries.selectFirstOrNull(dom, q) { it.attr("abs:src") } ?: ""
+        return DomToH2Queries.selectFirstOrNull(dom, q) { it.attr("abs:src") } ?: ""
     }
 
     @UDFunction(description = "Select the nth image element from a DOM by the given css query " +
@@ -278,7 +277,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun nthImg(dom: ValueDom, cssQuery: String, n: Int): String {
         val q = appendSelectorIfMissing(cssQuery, "img")
-        return Queries.selectNthOrNull(dom, q, n) { it.attr("abs:src") } ?: ""
+        return DomToH2Queries.selectNthOrNull(dom, q, n) { it.attr("abs:src") } ?: ""
     }
 
     @UDFunction
@@ -286,7 +285,7 @@ object DomSelectFunctions {
     @JvmOverloads
     fun allHrefs(dom: ValueDom, cssQuery: String = ":root"): ValueArray {
         val q = appendSelectorIfMissing(cssQuery, "a")
-        return Queries.select(dom, q) { it.attr("abs:href") }
+        return DomToH2Queries.select(dom, q) { it.attr("abs:href") }
     }
 
     @UDFunction(description = "Select the first anchor element from a DOM by the given css query " +
@@ -295,7 +294,7 @@ object DomSelectFunctions {
     @JvmOverloads
     fun firstHref(dom: ValueDom, cssQuery: String = ":root"): String {
         val q = appendSelectorIfMissing(cssQuery, "a")
-        return Queries.selectFirstOrNull(dom, q) { it.attr("abs:href") } ?: ""
+        return DomToH2Queries.selectFirstOrNull(dom, q) { it.attr("abs:href") } ?: ""
     }
 
     @UDFunction(description = "Select the nth anchor element from a DOM by the given css query " +
@@ -303,7 +302,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun nthHref(dom: ValueDom, cssQuery: String, n: Int): String {
         val q = appendSelectorIfMissing(cssQuery, "a")
-        return Queries.selectNthOrNull(dom, q, n) { it.attr("abs:href") } ?: ""
+        return DomToH2Queries.selectNthOrNull(dom, q, n) { it.attr("abs:href") } ?: ""
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
@@ -338,7 +337,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun allRe1(dom: ValueDom, cssQuery: String, regex: String): ValueArray {
         val extractor = RegexExtractor()
-        return Queries.select(dom, cssQuery) { extractor.re1(it.text(), regex) }
+        return DomToH2Queries.select(dom, cssQuery) { extractor.re1(it.text(), regex) }
     }
 
     @UDFunction(description = "Select the first element from a DOM whose text matches the regex " +
@@ -374,7 +373,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun allRe2(dom: ValueDom, cssQuery: String, regex: String): ValueArray {
         val extractor = RegexExtractor()
-        return Queries.select(dom, cssQuery) { extractor.re2(it.text(), regex).toString() }
+        return DomToH2Queries.select(dom, cssQuery) { extractor.re2(it.text(), regex).toString() }
     }
 
     @UDFunction
@@ -399,7 +398,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun allRe2(dom: ValueDom, cssQuery: String, regex: String, keyGroup: Int, valueGroup: Int): ValueArray {
         val extractor = RegexExtractor()
-        return Queries.select(dom, cssQuery) { extractor.re2(it.text(), regex, keyGroup, valueGroup).toString() }
+        return DomToH2Queries.select(dom, cssQuery) { extractor.re2(it.text(), regex, keyGroup, valueGroup).toString() }
     }
 
     private fun text(dom: ValueDom): String {

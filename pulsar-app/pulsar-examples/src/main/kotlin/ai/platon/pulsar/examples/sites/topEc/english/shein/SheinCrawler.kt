@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites.topEc.english.shein
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 
 fun main() {
     BrowserSettings.withSystemDefaultBrowser()

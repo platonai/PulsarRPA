@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.filter
 
-import ai.platon.pulsar.crawl.filter.CrawlUrlFilters
+import ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilters
 import org.junit.Assert
 import kotlin.test.*
 import org.junit.runner.RunWith

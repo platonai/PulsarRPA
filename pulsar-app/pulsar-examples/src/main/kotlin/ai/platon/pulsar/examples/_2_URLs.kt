@@ -2,10 +2,10 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.PlainUrl
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
-import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
-import ai.platon.pulsar.crawl.common.url.ParsableHyperlink
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 import ai.platon.pulsar.persist.WebPage
 
 /**
@@ -76,7 +76,7 @@ fun main() {
     // Load a CompletableListenableHyperlink, so we can register various event handlers,
     // and we can wait for the execution to complete.
     val completableListenableHyperlink = CompletableListenableHyperlink<WebPage>(url).apply {
-        event.loadEvent.onLoaded.addLast { complete(it) }
+        event.loadEventHandlers.onLoaded.addLast { complete(it) }
     }
     session.submit(completableListenableHyperlink, "-expires 10s")
     val page4 = completableListenableHyperlink.join()

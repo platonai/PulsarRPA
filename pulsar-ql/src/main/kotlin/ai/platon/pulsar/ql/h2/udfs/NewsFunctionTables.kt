@@ -8,14 +8,14 @@ import ai.platon.pulsar.boilerpipe.utils.ProcessingException
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.nodes.node.ext.location
-import ai.platon.pulsar.ql.ResultSets
-import ai.platon.pulsar.ql.annotation.H2Context
-import ai.platon.pulsar.ql.annotation.UDFGroup
-import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.ql.common.ResultSets
+import ai.platon.pulsar.ql.common.annotation.H2Context
+import ai.platon.pulsar.ql.common.annotation.UDFGroup
+import ai.platon.pulsar.ql.common.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
-import ai.platon.pulsar.ql.h2.Queries
+import ai.platon.pulsar.ql.h2.DomToH2Queries
 import ai.platon.pulsar.ql.h2.addColumn
-import ai.platon.pulsar.ql.types.ValueDom
+import ai.platon.pulsar.ql.common.types.ValueDom
 import org.h2.jdbc.JdbcConnection
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
@@ -106,7 +106,7 @@ object NewsFunctionTables {
         val (url, args) = UrlUtils.splitUrlArgs(portalUrl)
         ss.load(url, ss.options(args))
 
-        val docs = Queries.loadOutPages(ss, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
+        val docs = DomToH2Queries.loadOutPages(ss, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
             .asSequence()
             .map { ss.parse(it) }
         val doms = docs.map { ValueDom.get(it.document) }

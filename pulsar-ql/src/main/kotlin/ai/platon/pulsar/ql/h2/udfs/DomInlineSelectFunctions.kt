@@ -1,10 +1,10 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.dom.select.select2
-import ai.platon.pulsar.ql.annotation.UDFGroup
-import ai.platon.pulsar.ql.annotation.UDFunction
-import ai.platon.pulsar.ql.h2.Queries
-import ai.platon.pulsar.ql.types.ValueDom
+import ai.platon.pulsar.ql.common.annotation.UDFGroup
+import ai.platon.pulsar.ql.common.annotation.UDFunction
+import ai.platon.pulsar.ql.h2.DomToH2Queries
+import ai.platon.pulsar.ql.common.types.ValueDom
 import org.h2.value.ValueArray
 import org.h2.value.ValueString
 
@@ -20,14 +20,14 @@ object DomInlineSelectFunctions {
     @JvmStatic
     fun inlineSelect(dom: ValueDom, cssQuery: String): ValueArray {
         val elements = dom.element.select2(cssQuery)
-        return Queries.toValueArray(elements)
+        return DomToH2Queries.toValueArray(elements)
     }
 
     @UDFunction(description = "Select all match elements by the given css query from a DOM and return the result as an array of DOMs")
     @JvmStatic
     fun inlineSelect(dom: ValueDom, cssQuery: String, offset: Int, limit: Int): ValueArray {
         val elements = dom.element.select2(cssQuery, offset, limit)
-        return Queries.toValueArray(elements)
+        return DomToH2Queries.toValueArray(elements)
     }
 
     @UDFunction(description = "Select all match elements by the given css query from a DOM and return the result as an array of DOMs")

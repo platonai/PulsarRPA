@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql.h2.udas
 
-import ai.platon.pulsar.ql.annotation.UDAggregation
-import ai.platon.pulsar.ql.annotation.UDFGroup
+import ai.platon.pulsar.ql.common.annotation.UDAggregation
+import ai.platon.pulsar.ql.common.annotation.UDFGroup
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.h2.api.Aggregate
 import org.h2.api.AggregateFunction

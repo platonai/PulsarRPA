@@ -6,7 +6,7 @@ import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
 import ai.platon.pulsar.boilerpipe.sax.SAXInput;
 import ai.platon.pulsar.common.ResourceLoader;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;

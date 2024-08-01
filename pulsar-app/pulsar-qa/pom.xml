@@ -14,7 +14,7 @@
   <parent>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-app</artifactId>
-    <version>1.12.7-SNAPSHOT</version>
+    <version>1.13.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>pulsar-qa</artifactId>
@@ -57,22 +57,11 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jetbrains.kotlin</groupId>
-      <artifactId>kotlin-test-junit</artifactId>
-      <version>${kotlin.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
 
-    <!--        <dependency>-->
-    <!--            <groupId>org.junit.jupiter</groupId>-->
-    <!--            <artifactId>junit-jupiter-engine</artifactId>-->
-    <!--            <scope>test</scope>-->
-    <!--        </dependency>-->
     <dependency>
       <groupId>com.ninja-squad</groupId>
       <artifactId>springmockk</artifactId>

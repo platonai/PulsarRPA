@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.protocol.browser.driver.BrowserManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager

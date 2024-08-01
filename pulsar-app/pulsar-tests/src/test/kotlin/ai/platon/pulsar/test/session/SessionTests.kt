@@ -1,12 +1,12 @@
 package ai.platon.pulsar.test.session
 
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.common.persist.ext.loadEvent
+import ai.platon.pulsar.skeleton.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.context.SQLContexts
-import ai.platon.pulsar.session.BasicPulsarSession
+import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import java.util.concurrent.CompletableFuture
 import kotlin.test.Test
 import kotlin.test.assertEquals

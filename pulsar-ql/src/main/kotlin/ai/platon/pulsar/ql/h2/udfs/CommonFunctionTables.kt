@@ -1,11 +1,11 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.metrics.MetricsSystem
-import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.ql.ResultSets
-import ai.platon.pulsar.ql.annotation.H2Context
-import ai.platon.pulsar.ql.annotation.UDFGroup
-import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.ql.common.ResultSets
+import ai.platon.pulsar.ql.common.annotation.H2Context
+import ai.platon.pulsar.ql.common.annotation.UDFGroup
+import ai.platon.pulsar.ql.common.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType

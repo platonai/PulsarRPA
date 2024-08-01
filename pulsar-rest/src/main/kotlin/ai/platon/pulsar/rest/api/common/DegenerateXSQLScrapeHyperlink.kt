@@ -1,10 +1,10 @@
 package ai.platon.pulsar.rest.api.common
 
 import ai.platon.pulsar.common.ResourceStatus
-import ai.platon.pulsar.session.PulsarSession
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.DegenerateUrl
-import ai.platon.pulsar.crawl.common.GlobalCacheFactory
+import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import org.slf4j.LoggerFactory
@@ -45,7 +45,7 @@ open class DegenerateXSQLScrapeHyperlink(
     }
 
     private fun registerEventHandler() {
-        event.crawlEvent.onLoaded.addLast { url, page ->
+        event.crawlEventHandlers.onLoaded.addLast { url, page ->
             try {
                 executeQuery()
             } catch (t: Throwable) {

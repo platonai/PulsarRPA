@@ -21,7 +21,7 @@ package ai.platon.pulsar.parse.html
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.crawl.parse.html.PrimerParser
+import ai.platon.pulsar.skeleton.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import org.apache.html.dom.HTMLDocumentImpl
 import org.cyberneko.html.parsers.DOMFragmentParser

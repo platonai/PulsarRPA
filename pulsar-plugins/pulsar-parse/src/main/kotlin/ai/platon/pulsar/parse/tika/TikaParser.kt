@@ -22,13 +22,13 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_TIKA_HTML_MAPPER_NAME
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.CrawlFilters
-import ai.platon.pulsar.crawl.parse.ParseFilters
-import ai.platon.pulsar.crawl.parse.ParseResult
-import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
-import ai.platon.pulsar.crawl.parse.Parser
-import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
-import ai.platon.pulsar.crawl.parse.html.PrimerParser
+import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters
+import ai.platon.pulsar.skeleton.crawl.parse.ParseFilters
+import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
+import ai.platon.pulsar.skeleton.crawl.parse.ParseResult.Companion.failed
+import ai.platon.pulsar.skeleton.crawl.parse.Parser
+import ai.platon.pulsar.skeleton.crawl.parse.html.HTMLMetaTags
+import ai.platon.pulsar.skeleton.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
@@ -136,7 +136,7 @@ class TikaParser(
             parseResult.args[ParseStatus.REFRESH_TIME] = Integer.toString(metaTags.refreshTime)
         }
 
-        parseFilters?.filter(ai.platon.pulsar.crawl.parse.html.ParseContext(page, parseResult))
+        parseFilters?.filter(ai.platon.pulsar.skeleton.crawl.parse.html.ParseContext(page, parseResult))
         if (metaTags.noCache) { // not okay to cache
             page.metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }

@@ -16,7 +16,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="parseFilters" class="ai.platon.pulsar.crawl.parse.ParseFilters">
+    <bean id="parseFilters" class="ai.platon.pulsar.skeleton.crawl.parse.ParseFilters">
         <constructor-arg>
             <list>
                 <ref bean="boilerpipeFilter" />
@@ -25,7 +25,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="htmlParser" class="ai.platon.pulsar.crawl.parse.html.PrimerHtmlParser">
+    <bean id="htmlParser" class="ai.platon.pulsar.skeleton.crawl.parse.html.PrimerHtmlParser">
         <constructor-arg ref="parseFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -36,7 +36,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="parserFactory" class="ai.platon.pulsar.crawl.parse.ParserFactory">
+    <bean id="parserFactory" class="ai.platon.pulsar.skeleton.crawl.parse.ParserFactory">
         <constructor-arg>
             <list>
                 <ref bean="htmlParser"/>
@@ -45,12 +45,12 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="pageParser" class="ai.platon.pulsar.crawl.parse.PageParser">
+    <bean id="pageParser" class="ai.platon.pulsar.skeleton.crawl.parse.PageParser">
         <constructor-arg ref="conf"/>
         <constructor-arg ref="parserFactory"/>
     </bean>
 
-    <bean id="crawlFilters" class="ai.platon.pulsar.crawl.filter.CrawlFilters">
+    <bean id="crawlFilters" class="ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters">
         <constructor-arg ref="conf"/>
     </bean>
 

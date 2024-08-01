@@ -19,8 +19,8 @@
 package ai.platon.pulsar.protocol.crowd
 
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
-import ai.platon.pulsar.crawl.protocol.Response
-import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol
+import ai.platon.pulsar.skeleton.crawl.protocol.Response
+import ai.platon.pulsar.skeleton.crawl.protocol.http.AbstractHttpProtocol
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import java.time.Duration

@@ -2,8 +2,8 @@ package ai.platon.pulsar.test3.heavy
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.common.url.ParsableHyperlink
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 
@@ -12,10 +12,10 @@ import ai.platon.pulsar.persist.WebPage
  * */
 fun main() {
     BrowserSettings.withSequentialBrowsers()
-    
+
     val topN = 10
     val topN2 = 10
-    
+
     val context = PulsarContexts.create()
 
     val parseHandler = { _: WebPage, document: FeaturedDocument ->

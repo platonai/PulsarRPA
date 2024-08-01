@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
 import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceived
 import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType

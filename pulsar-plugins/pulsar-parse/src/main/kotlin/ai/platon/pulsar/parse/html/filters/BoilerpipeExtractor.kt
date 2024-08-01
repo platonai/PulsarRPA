@@ -24,10 +24,10 @@ import ai.platon.pulsar.boilerpipe.sax.SAXInput
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.crawl.parse.AbstractParseFilter
-import ai.platon.pulsar.crawl.parse.FilterResult
-import ai.platon.pulsar.crawl.parse.html.ParseContext
-import ai.platon.pulsar.crawl.parse.html.PrimerParser
+import ai.platon.pulsar.skeleton.crawl.parse.AbstractParseFilter
+import ai.platon.pulsar.skeleton.crawl.parse.FilterResult
+import ai.platon.pulsar.skeleton.crawl.parse.html.ParseContext
+import ai.platon.pulsar.skeleton.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.metadata.PageCategory

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.context.PulsarContexts.createSession
+import ai.platon.pulsar.skeleton.context.PulsarContexts.createSession
 import ai.platon.pulsar.dom.FeaturedDocument
 import java.util.concurrent.CompletableFuture
 

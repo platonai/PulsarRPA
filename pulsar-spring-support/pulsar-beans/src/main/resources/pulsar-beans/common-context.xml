@@ -19,40 +19,40 @@
         <constructor-arg ref="conf" />
     </bean>
 
-    <bean id="metricsSystem" class="ai.platon.pulsar.common.metrics.MetricsSystem" init-method="start" destroy-method="close">
+    <bean id="metricsSystem" class="ai.platon.pulsar.skeleton.common.metrics.MetricsSystem" init-method="start" destroy-method="close">
         <constructor-arg ref="conf"/>
     </bean>
 
     <!--Misc message writer -->
-    <bean id="messageWriter" class="ai.platon.pulsar.common.message.MiscMessageWriter" destroy-method="close">
+    <bean id="messageWriter" class="ai.platon.pulsar.skeleton.common.message.MiscMessageWriter" destroy-method="close">
     </bean>
 
     <!--The core metrics -->
-    <bean id="coreMetrics" class="ai.platon.pulsar.crawl.CoreMetrics" init-method="start" destroy-method="close">
+    <bean id="coreMetrics" class="ai.platon.pulsar.skeleton.crawl.CoreMetrics" init-method="start" destroy-method="close">
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="appStatusTracker" class="ai.platon.pulsar.common.AppStatusTracker">
+    <bean id="appStatusTracker" class="ai.platon.pulsar.skeleton.common.AppStatusTracker">
         <constructor-arg ref="metricsSystem"/>
         <constructor-arg ref="coreMetrics"/>
         <constructor-arg ref="messageWriter"/>
     </bean>
 
-    <bean id="protocolFactory" class="ai.platon.pulsar.crawl.protocol.ProtocolFactory" destroy-method="close">
+    <bean id="protocolFactory" class="ai.platon.pulsar.skeleton.crawl.protocol.ProtocolFactory" destroy-method="close">
         <constructor-arg ref="conf" />
     </bean>
 
-    <bean id="globalCacheFactory" class="ai.platon.pulsar.crawl.common.GlobalCacheFactory">
+    <bean id="globalCacheFactory" class="ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory">
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="crawlLoop" class="ai.platon.pulsar.crawl.impl.StreamingCrawlLoop">
+    <bean id="crawlLoop" class="ai.platon.pulsar.skeleton.crawl.impl.StreamingCrawlLoop">
         <constructor-arg ref="conf"/>
         <constructor-arg value="StreamingCrawlLoop"/>
     </bean>
 
-    <bean id="crawlLoops" class="ai.platon.pulsar.crawl.CrawlLoops" init-method="start" destroy-method="stop">
+    <bean id="crawlLoops" class="ai.platon.pulsar.skeleton.crawl.CrawlLoops" init-method="start" destroy-method="stop">
         <constructor-arg name="loops">
             <list>
                 <ref bean="crawlLoop" />

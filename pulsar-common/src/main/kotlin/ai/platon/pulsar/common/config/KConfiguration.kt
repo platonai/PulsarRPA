@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.stringify
 import com.ctc.wstx.io.StreamBootstrapper
@@ -28,10 +29,17 @@ class KConfiguration(
 ) : Iterable<Map.Entry<String, String?>> {
 
     companion object {
-        val LOG = LoggerFactory.getLogger(KConfiguration::class.java)
+        private val logger = LoggerFactory.getLogger(KConfiguration::class.java)
+        
+        // The resources that are loaded by default. The resources are hadoop compatible.
+        const val APPLICATION_SPECIFIED_RESOURCES = "pulsar-default.xml"
+        val DEFAULT_RESOURCES = LinkedHashSet<String>()
+        private val FULL_PATH_RESOURCES = LinkedHashSet<URL>()
+        
         private val defaultResources = CopyOnWriteArrayList<String>()
     }
-
+    
+    private var rawResources = mutableSetOf<String>()
     private var resources = ArrayList<Resource>()
     private var properties: Properties? = null
     private val wstxInputFactory = com.ctc.wstx.stax.WstxInputFactory()
@@ -89,6 +97,53 @@ class KConfiguration(
     @Synchronized
     fun reloadConfiguration() {
         properties = null // trigger reload
+    }
+    
+    fun addLegacyResources(profile: String, mode: String, loadDefaults: Boolean, extraResources: Iterable<String>) {
+        synchronized(FULL_PATH_RESOURCES) {
+            findLegacyConfResources0(profile, mode, loadDefaults, extraResources)
+        }
+    }
+    
+    private fun findLegacyConfResources0(profile: String, mode: String, loadDefaults: Boolean, extraResources: Iterable<String>) {
+        extraResources.toCollection(rawResources)
+        if (!loadDefaults) {
+            return
+        }
+        if (profile.isNotEmpty()) {
+            set(CapabilityTypes.LEGACY_CONFIG_PROFILE, profile)
+        }
+        val specifiedResources =
+            System.getProperty(CapabilityTypes.SYSTEM_PROPERTY_SPECIFIED_RESOURCES,
+                APPLICATION_SPECIFIED_RESOURCES
+            )
+        specifiedResources.split(",".toRegex()).forEach { rawResources.add(it) }
+        for (name in rawResources) {
+            val realResource = findRealResource(profile, mode, name)
+            if (realResource != null) {
+                if (realResource !in FULL_PATH_RESOURCES) {
+                    logger.info("Found legacy configuration: $realResource")
+                    FULL_PATH_RESOURCES.add(realResource)
+                }
+            } else {
+                logger.info("Resource not find: $name")
+            }
+        }
+        
+        FULL_PATH_RESOURCES.forEach { addResource(it) }
+        // logger.info("legacy config profile: <$profile> | $conf")
+    }
+    
+    private fun findRealResource(profile: String, mode: String, name: String): URL? {
+        val prefix = "config/legacy"
+        val suffix = "$mode/$name"
+        val searchPaths = arrayOf(
+            "$prefix/$suffix", "$prefix/$profile/$suffix",
+            "$prefix/$name", "$prefix/$profile/$name",
+            name
+        ).map { it.replace("//", "/") }.distinct().sortedByDescending { it.length }
+
+        return searchPaths.firstNotNullOfOrNull { SParser.wrap(it).resource }
     }
 
     @Synchronized
@@ -210,7 +265,7 @@ class KConfiguration(
 
             null
         } catch (e: Exception) {
-            LOG.warn(e.stringify())
+            logger.warn(e.stringify())
             throw RuntimeException(e)
         }
     }

@@ -1,7 +1,6 @@
 package ai.platon.pulsar.persist.experimental
 
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.persist.KWebAsset
 
 val KWebAsset.isNil: Boolean get() = this is NilWebAsset
 val KWebAsset.isNotNil: Boolean get() = !isNil

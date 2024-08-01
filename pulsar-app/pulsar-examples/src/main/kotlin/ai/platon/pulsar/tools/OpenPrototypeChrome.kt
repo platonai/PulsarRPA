@@ -1,6 +1,6 @@
 package ai.platon.pulsar.tools
 
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.ql.context.SQLContexts
 import kotlinx.coroutines.runBlocking

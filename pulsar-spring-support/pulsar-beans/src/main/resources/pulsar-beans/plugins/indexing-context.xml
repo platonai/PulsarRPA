@@ -14,7 +14,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="indexingFilters" class="ai.platon.pulsar.crawl.index.IndexingFilters">
+    <bean id="indexingFilters" class="ai.platon.pulsar.skeleton.crawl.index.IndexingFilters">
         <constructor-arg>
             <list>
                 <ref bean="metadataIndexer" />
@@ -24,11 +24,11 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="indexerMapping" class="ai.platon.pulsar.crawl.index.IndexerMapping">
+    <bean id="indexerMapping" class="ai.platon.pulsar.skeleton.crawl.index.IndexerMapping">
         <constructor-arg value="indexer-mapping.xml"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="indexWriters" class="ai.platon.pulsar.crawl.index.IndexWriters">
+    <bean id="indexWriters" class="ai.platon.pulsar.skeleton.crawl.index.IndexWriters">
         <constructor-arg>
             <list>
             </list>

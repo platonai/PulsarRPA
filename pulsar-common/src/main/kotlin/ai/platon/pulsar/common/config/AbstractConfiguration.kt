@@ -19,11 +19,11 @@
 package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.SParser
+import ai.platon.pulsar.common.config.KConfiguration.Companion.DEFAULT_RESOURCES
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
 import org.springframework.core.env.get
 import java.io.InputStream
-import java.net.URL
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
@@ -37,117 +37,43 @@ import java.util.*
  */
 abstract class AbstractConfiguration {
     protected val logger = LoggerFactory.getLogger(AbstractConfiguration::class.java)
-    
-    companion object {
-        // The resources that are loaded by default. The resources are hadoop compatible.
-        const val APPLICATION_SPECIFIED_RESOURCES = "pulsar-default.xml,pulsar-site.xml"
-        val DEFAULT_RESOURCES = LinkedHashSet<String>()
-        private val FULL_PATH_RESOURCES = LinkedHashSet<URL>()
-    }
-    
+
     private val resources = LinkedHashSet<String>()
     var name = "Configuration#" + hashCode()
     var profile = ""
         private set
     val mode get() = if (isDistributedFs) "cluster" else "local"
-    
+
     /**
      * Hadoop compatible configuration
      */
     protected val conf: KConfiguration
-    
+
     /**
-     * Spring core is the first class dependency now, we will remove dependency on [KConfiguration] later
+     * Spring core is the first class dependency now
      */
     var environment: Environment? = null
     
-    /**
-     * Create a [ai.platon.pulsar.common.config.AbstractConfiguration]. This will load the standard
-     * resources, `pulsar-default.xml`, `pulsar-site.xml` and hadoop resources.
-     */
     constructor(
         profile: String = System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
         loadDefaults: Boolean = true,
         resources: Iterable<String> = DEFAULT_RESOURCES
     ) {
         conf = KConfiguration(loadDefaults)
-        loadConfResources(profile, loadDefaults, resources)
+        conf.addLegacyResources(profile, mode, loadDefaults, resources)
     }
     
-    /**
-     * Constructor for AbstractConfiguration.
-     */
     constructor(conf: KConfiguration) {
         this.conf = KConfiguration(conf)
     }
     
-    private fun loadConfResources(profile: String, loadDefaults: Boolean, extraResources: Iterable<String>) {
-        synchronized(FULL_PATH_RESOURCES) {
-            loadConfResources0(profile, loadDefaults, extraResources)
-        }
-    }
-    
-    private fun loadConfResources0(profile: String, loadDefaults: Boolean, extraResources: Iterable<String>) {
-        extraResources.toCollection(resources)
-        this.profile = profile
-        if (!loadDefaults) {
-            return
-        }
-        if (profile.isNotEmpty()) {
-            conf[CapabilityTypes.LEGACY_CONFIG_PROFILE] = profile
-        }
-        val specifiedResources =
-            System.getProperty(CapabilityTypes.SYSTEM_PROPERTY_SPECIFIED_RESOURCES, APPLICATION_SPECIFIED_RESOURCES)
-        specifiedResources.split(",".toRegex()).forEach { resources.add(it) }
-        for (name in resources) {
-            val realResource = getRealResource(profile, mode, name)
-            if (realResource != null) {
-                if (realResource !in FULL_PATH_RESOURCES) {
-                    logger.info("Found legacy configuration: $realResource")
-                    FULL_PATH_RESOURCES.add(realResource)
-                }
-            } else {
-                logger.info("Resource not find: $name")
-            }
-        }
-
-        FULL_PATH_RESOURCES.forEach { conf.addResource(it) }
-        // logger.info("legacy config profile: <$profile> | $conf")
-    }
-
-    private fun getRealResource(profile: String, mode: String, name: String): URL? {
-        val prefix = "config/legacy"
-        val suffix = "$mode/$name"
-        val searchPaths = arrayOf(
-            "$prefix/$suffix", "$prefix/$profile/$suffix",
-            "$prefix/$name", "$prefix/$profile/$name",
-            name
-        ).map { it.replace("//", "/") }.distinct().sortedByDescending { it.length }
-
-        val resource = searchPaths.firstNotNullOfOrNull { getResource(it) }
-
-        return resource
-    }
-
-    /**
-     *
-     * isDryRun.
-     *
-     * @return a boolean.
-     */
-    val isDryRun: Boolean
-        get() = getBoolean(CapabilityTypes.DRY_RUN, false)
-
     /**
      * Check if we are running on hdfs
      *
      * @return a boolean.
      */
-    val isDistributedFs: Boolean
-        get() {
-            val fsName = get("fs.defaultFS")
-            return fsName != null && fsName.startsWith("hdfs")
-        }
+    private val isDistributedFs: Boolean
+        get() = get("fs.defaultFS")?.startsWith("hdfs") == true
 
     /**
      * Return the boxed KConfiguration.

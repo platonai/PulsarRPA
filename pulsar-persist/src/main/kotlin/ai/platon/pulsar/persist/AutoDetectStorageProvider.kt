@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.config.AppConstants.*
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_DATA_STORE_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.gora.GoraStorage
@@ -50,15 +51,17 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
                 return specified
             }
 
+            val dryRun = conf.getBoolean(CapabilityTypes.DRY_RUN, false)
+            val isDistributedFs = conf["fs.defaultFS", ""].startsWith("hdfs://")
             var dataStoreClass = when {
                 SystemUtils.IS_OS_WINDOWS -> when {
-                    conf.isDryRun -> FILE_BACKEND_STORE_CLASS
+                    dryRun -> FILE_BACKEND_STORE_CLASS
                     Runtimes.checkIfProcessRunning(".*mongod.exe .+") -> MONGO_STORE_CLASS
                     else -> FILE_BACKEND_STORE_CLASS
                 }
                 SystemUtils.IS_OS_LINUX -> when {
-                    conf.isDryRun -> FILE_BACKEND_STORE_CLASS
-                    conf.isDistributedFs -> HBASE_STORE_CLASS
+                    dryRun -> FILE_BACKEND_STORE_CLASS
+                    isDistributedFs -> HBASE_STORE_CLASS
                     Runtimes.checkIfProcessRunning(".+HMaster.+") -> HBASE_STORE_CLASS
                     Runtimes.checkIfProcessRunning(".+/usr/bin/mongod .+") -> MONGO_STORE_CLASS
                     Runtimes.checkIfProcessRunning(".+/tmp/.+extractmongod .+") -> MONGO_STORE_CLASS

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese.gome
 
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 
 fun main() {
     val portalUrl = "https://list.gome.com.cn/cat10000092.html"

@@ -3,15 +3,6 @@ package ai.platon.pulsar.protocol.browser.emulator.impl
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.metrics.MetricsSystem
-import ai.platon.pulsar.common.persist.ext.browseEvent
-import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.crawl.fetch.FetchResult
-import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.*
-import ai.platon.pulsar.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.crawl.protocol.Response
-import ai.platon.pulsar.crawl.protocol.http.ProtocolStatusTranslator
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
@@ -19,6 +10,16 @@ import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.protocol.browser.driver.SessionLostException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.*
+import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
+import ai.platon.pulsar.skeleton.common.persist.ext.browseEventHandlers
+import ai.platon.pulsar.skeleton.common.persist.ext.options
+import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
+import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
+import ai.platon.pulsar.skeleton.crawl.protocol.Response
+import ai.platon.pulsar.skeleton.crawl.protocol.http.ProtocolStatusTranslator
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import java.nio.charset.StandardCharsets
@@ -141,55 +142,81 @@ open class InteractiveBrowserEmulator(
     }
 
     override suspend fun onWillNavigate(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onWillNavigate?.invoke(page, driver)
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
     }
 
     override suspend fun onNavigated(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onNavigated?.invoke(page, driver)
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onNavigated?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onNavigated?.invoke(page, driver)
     }
 
     override suspend fun onWillInteract(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onWillNavigate?.invoke(page, driver)
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
     }
 
     override suspend fun onWillCheckDocumentState(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onWillCheckDocumentState?.invoke(page, driver)
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillCheckDocumentState?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onWillCheckDocumentState?.invoke(page, driver)
     }
 
     override suspend fun onDocumentActuallyReady(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onDocumentActuallyReady?.invoke(page, driver)
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDocumentActuallyReady?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onDocumentActuallyReady?.invoke(page, driver)
     }
 
     override suspend fun onWillScroll(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onWillScroll?.invoke(page, driver)
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillScroll?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onWillScroll?.invoke(page, driver)
     }
 
     override suspend fun onDidScroll(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onDidScroll?.invoke(page, driver)
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDidScroll?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onDidScroll?.invoke(page, driver)
     }
-    
+
     override suspend fun onDocumentSteady(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onDocumentSteady?.invoke(page, driver)
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDocumentSteady?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onDocumentSteady?.invoke(page, driver)
     }
-    
+
     override suspend fun onWillComputeFeature(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onWillComputeFeature?.invoke(page, driver)
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillComputeFeature?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onWillComputeFeature?.invoke(page, driver)
     }
 
     override suspend fun onFeatureComputed(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onFeatureComputed?.invoke(page, driver)
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onFeatureComputed?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onFeatureComputed?.invoke(page, driver)
     }
 
     override suspend fun onDidInteract(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onDidInteract?.invoke(page, driver)
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDidInteract?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onDidInteract?.invoke(page, driver)
     }
 
     override suspend fun onWillStopTab(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onWillStopTab?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillStopTab?.invoke(page, driver)
+        page.browseEventHandlers?.onWillStopTab?.invoke(page, driver)
     }
 
     override suspend fun onTabStopped(page: WebPage, driver: WebDriver) {
-        page.browseEvent?.onTabStopped?.invoke(page, driver)
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onTabStopped?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onTabStopped?.invoke(page, driver)
     }
 
     override fun close() {
@@ -197,11 +224,11 @@ open class InteractiveBrowserEmulator(
             detach()
         }
     }
-    
+
     @Throws(Exception::class)
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
         require(driver is AbstractWebDriver)
-        
+
         // page.lastBrowser is used by AppFiles.export, so it has to be set before export
         // TODO: page should not be modified in browser phase, it should only be updated using PageDatum
         task.page.lastBrowser = driver.browserType
@@ -286,8 +313,8 @@ open class InteractiveBrowserEmulator(
         val resourceLoader = page.conf["resource.loader", "jsoup"]
         val response = when (resourceLoader) {
             "web.driver" -> driver.loadResource(navigateTask.url)
-            "jsoup" -> NetworkResourceResponse.from(driver.loadJsoupResource(navigateTask.url))
-            else -> NetworkResourceResponse.from(driver.loadJsoupResource(navigateTask.url))
+            "jsoup" -> NetworkResourceHelper.fromJsoup(driver.loadJsoupResource(navigateTask.url))
+            else -> NetworkResourceHelper.fromJsoup(driver.loadJsoupResource(navigateTask.url))
         }
 
         // TODO: transform protocol status in AbstractHttpProtocol
@@ -326,7 +353,7 @@ open class InteractiveBrowserEmulator(
 
             emit1(EmulateEvents.willStopTab, page, driver)
 //            listeners.notify(EventType.willStopTab, page, driver)
-//            val event = page.browseEvent
+//            val event = page.browseEventHandlers
 //            notify("onWillStopTab") { event?.onWillStopTab?.invoke(page, driver) }
 
             /**
@@ -356,7 +383,7 @@ open class InteractiveBrowserEmulator(
         val fetchTask = navigateTask.fetchTask
         checkState(navigateTask.fetchTask, driver)
         require(driver is AbstractWebDriver)
-        
+
         val interactResult = navigateAndInteract(navigateTask, driver, navigateTask.browserSettings)
 
         // TODO: separate status code of pulsar system and the status code from browser
@@ -491,7 +518,7 @@ open class InteractiveBrowserEmulator(
             // TODO: check if state.isContinue is necessary
             emit1(EmulateEvents.documentSteady, page, driver)
         }
-        
+
         // With the scrolling operation finished, the page is stable and unlikely to experience significant updates.
         // Therefore, we can now proceed to calculate the document’s features.
         // TODO: driver.pageSource() might be huge so there might be a performance issue
@@ -503,7 +530,7 @@ open class InteractiveBrowserEmulator(
 
             emit1(EmulateEvents.featureComputed, page, driver)
         }
-        
+
         return result
     }
 
@@ -514,7 +541,7 @@ open class InteractiveBrowserEmulator(
     protected open suspend fun waitForDocumentActuallyReady(interactTask: InteractTask, result: InteractResult) {
         val driver = interactTask.driver
         require(driver is AbstractWebDriver)
-        
+
         var status = ProtocolStatus.STATUS_SUCCESS
         val scriptTimeout = interactTask.interactSettings.scriptTimeout
         val fetchTask = interactTask.navigateTask.fetchTask
@@ -569,13 +596,13 @@ open class InteractiveBrowserEmulator(
     }
 
     /**
-     * Scroll on page
+     * Scroll on page to ensure all the content is loaded, including lazy content.
      * */
     open suspend fun scrollOnPage(interactTask: InteractTask, result: InteractResult) {
         val expressions = buildScrollExpressions(interactTask)
 
         val interactSettings = interactTask.interactSettings
-        // some website show lazy content only when the page is in the front.
+        // some website shows lazy content only when the page is in the front.
         val bringToFront = interactTask.interactSettings.bringToFront
         val scrollInterval = interactSettings.scrollInterval.toMillis()
         evaluate(interactTask, expressions, scrollInterval, bringToFront = bringToFront)

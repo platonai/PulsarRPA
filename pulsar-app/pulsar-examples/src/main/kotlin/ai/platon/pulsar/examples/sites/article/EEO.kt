@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites.article
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 
 class EEO {
     fun scrape() {

@@ -7,7 +7,7 @@
 
     <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig"/>
 
-    <bean id="urlFilters" class="ai.platon.pulsar.crawl.filter.CrawlUrlFilters">
+    <bean id="urlFilters" class="ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilters">
         <constructor-arg ref="conf"/>
         <constructor-arg>
             <list>
@@ -15,7 +15,7 @@
         </constructor-arg>
     </bean>
 
-    <bean id="urlNormalizers" class="ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer">
+    <bean id="urlNormalizers" class="ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer">
         <constructor-arg ref="conf"/>
         <constructor-arg value="default"/>
         <constructor-arg>
@@ -24,11 +24,11 @@
         </constructor-arg>
     </bean>
 
-    <bean id="crawlFilter" class="ai.platon.pulsar.crawl.filter.CrawlFilter">
+    <bean id="crawlFilter" class="ai.platon.pulsar.skeleton.crawl.filter.CrawlFilter">
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="crawlFilters" class="ai.platon.pulsar.crawl.filter.CrawlFilters">
+    <bean id="crawlFilters" class="ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters">
         <constructor-arg>
             <list>
                 <ref bean="crawlFilter" />

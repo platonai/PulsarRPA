@@ -2,9 +2,9 @@ package ai.platon.pulsar.examples;
 
 import ai.platon.pulsar.common.LinkExtractors;
 import ai.platon.pulsar.common.urls.Hyperlink;
-import ai.platon.pulsar.context.PulsarContext;
-import ai.platon.pulsar.context.PulsarContexts;
-import ai.platon.pulsar.crawl.common.url.ParsableHyperlink;
+import ai.platon.pulsar.skeleton.context.PulsarContext;
+import ai.platon.pulsar.skeleton.context.PulsarContexts;
+import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink;
 import ai.platon.pulsar.dom.FeaturedDocument;
 import ai.platon.pulsar.persist.WebPage;
 

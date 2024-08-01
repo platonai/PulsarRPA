@@ -1,10 +1,10 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.event.impl.DefaultPageEventHandlers
-import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEventHandlers
+import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.atomic.AtomicInteger

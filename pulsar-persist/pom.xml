@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.12.7-SNAPSHOT</version>
+        <version>1.13.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-persist</artifactId>
@@ -85,12 +85,14 @@
             <artifactId>oro</artifactId>
         </dependency>
 
-        <!-- Persistent, TODO: check if we can remove this dependency -->
-        <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>${jaxb-api.version}</version>
-        </dependency>
+        <!-- JAXB provides an API and tools that automate the mapping between XML documents and Java objects. -->
+        <!-- This artifact was moved to: jakarta.xml.bind » jakarta.xml.bind-api -->
+        <!-- deprecated -->
+<!--        <dependency>-->
+<!--            <groupId>javax.xml.bind</groupId>-->
+<!--            <artifactId>jaxb-api</artifactId>-->
+<!--            <version>${jaxb-api.version}</version>-->
+<!--        </dependency>-->
 
         <!-- Test -->
         <dependency>

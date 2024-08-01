@@ -5,11 +5,11 @@ import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
-import ai.platon.pulsar.crawl.CoreMetrics
-import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.privacy.CloseStrategy
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
+import ai.platon.pulsar.skeleton.crawl.CoreMetrics
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.CloseStrategy
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import java.util.*

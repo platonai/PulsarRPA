@@ -5,8 +5,8 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
-import ai.platon.pulsar.crawl.fetch.driver.Browser
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowser
 import ai.platon.pulsar.protocol.browser.driver.test.MockBrowser
@@ -31,7 +31,7 @@ class BrowserFactory {
 
         return browser
     }
-    
+
     private fun createMockBrowser(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): MockBrowser {

@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.filter
 
-import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
+import ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilter
 import kotlin.test.*
 import org.junit.runner.RunWith
 import org.springframework.test.context.junit4.SpringRunner

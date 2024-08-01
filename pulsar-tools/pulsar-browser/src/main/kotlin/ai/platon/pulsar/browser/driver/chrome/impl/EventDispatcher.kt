@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.databind.type.TypeFactory
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.StringUtils
@@ -82,7 +83,8 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
     
     private val closed = AtomicBoolean()
     private val invocationFutures: MutableMap<Long, InvocationFuture> = ConcurrentHashMap()
-    private val eventListeners: ConcurrentHashMap<String, ConcurrentSkipListSet<DevToolsEventListener>> = ConcurrentHashMap()
+    private val eventListeners: ConcurrentHashMap<String, ConcurrentSkipListSet<DevToolsEventListener>> =
+        ConcurrentHashMap()
     
     private val eventDispatcherScope = CoroutineScope(Dispatchers.Default) + CoroutineName("EventDispatcher")
     
@@ -120,7 +122,23 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         if (jsonNode == null) {
             throw ChromeRPCException("Failed converting null response to clazz " + clazz.name)
         }
-        return OBJECT_MAPPER.readerFor(clazz).readValue(jsonNode)
+        
+        try {
+            // Here is a typical response sequence:
+            // println(clazz)
+            // RequestWillBeSent, RequestWillBeSentExtraInfo, ResponseReceivedExtra, ResponseReceived, LoadingFinished,
+            return OBJECT_MAPPER.readerFor(clazz).readValue(jsonNode)
+        } catch (e: MismatchedInputException) {
+            val message = """
+                Failed converting response to clazz ${clazz.name}
+                $jsonNode
+                """.trimIndent()
+            logger.warn(message, e)
+            throw e
+        } catch (e: IOException) {
+            // logger.warn("Failed converting response to clazz {}", clazz.name, e)
+            throw e
+        }
     }
     
     fun hasFutures() = invocationFutures.isNotEmpty()
@@ -204,25 +222,43 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
             removeAllListeners()
         }
     }
-    
-    @Throws(ChromeRPCException::class, IOException::class)
+
     private fun handleEvent(name: String, params: JsonNode) {
         val listeners = eventListeners[name] ?: return
-        
+
         // make a copy
         val unmodifiedListeners = mutableSetOf<DevToolsEventListener>()
         synchronized(listeners) { listeners.toCollection(unmodifiedListeners) }
         if (unmodifiedListeners.isEmpty()) {
             return
         }
-        
+
         eventDispatcherScope.launch {
             handleEvent0(params, unmodifiedListeners)
         }
     }
-    
-    @Throws(ChromeRPCException::class, IOException::class)
+
+    /**
+     * Handles the event by deserializing the params and calling the event handler.
+     *
+     * Do not throw any exception, all exceptions are caught and logged.
+     *
+     * @param params the params node
+     * @param unmodifiedListeners the listeners
+     * @throws ChromeRPCException if the event could not be handled
+     * */
     private fun handleEvent0(params: JsonNode, unmodifiedListeners: Iterable<DevToolsEventListener>) {
+        try {
+            handleEvent1(params, unmodifiedListeners)
+        } catch (e: MismatchedInputException) {
+            logger.warn("Mismatched input, Chrome might have upgraded the protocol | {}", e.message)
+        } catch (t: Throwable) {
+            logger.warn("Failed to handle event", t)
+        }
+    }
+
+    @Throws(ChromeRPCException::class, IOException::class)
+    private fun handleEvent1(params: JsonNode, unmodifiedListeners: Iterable<DevToolsEventListener>) {
         var event: Any? = null
         for (listener in unmodifiedListeners) {
             if (event == null) {

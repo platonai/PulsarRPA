@@ -3,16 +3,16 @@ package ai.platon.pulsar.ql.context
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.warnForClose
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.context.support.ContextDefaults
-import ai.platon.pulsar.crawl.component.*
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.support.ContextDefaults
+import ai.platon.pulsar.skeleton.crawl.component.*
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SessionConfig
 import ai.platon.pulsar.ql.SessionDelegate
 import ai.platon.pulsar.ql.h2.H2MemoryDb
 import ai.platon.pulsar.ql.h2.H2SQLSession
 import ai.platon.pulsar.ql.h2.H2SessionDelegate
-import ai.platon.pulsar.session.BasicPulsarSession
+import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
@@ -29,7 +29,7 @@ open class H2SQLContext(
     private val db = H2MemoryDb()
 
     override val randomConnection: Connection get() = db.getRandomConnection()
-    
+
     @Throws(Exception::class)
     override fun createSession(sessionDelegate: SessionDelegate): H2SQLSession {
         require(sessionDelegate is H2SessionDelegate)
@@ -51,7 +51,7 @@ open class H2SQLContext(
     }
 }
 
-class StaticH2SQLContext(
+open class StaticH2SQLContext(
     applicationContext: StaticApplicationContext = StaticApplicationContext()
 ) : H2SQLContext(applicationContext) {
     private val defaults = ContextDefaults()
@@ -166,10 +166,10 @@ object SQLContexts {
         if (context is H2SQLContext && context.applicationContext == applicationContext) {
             return PulsarContexts.activeContext as SQLContext
         }
-        
+
         return create(H2SQLContext(applicationContext as AbstractApplicationContext))
     }
-    
+
     @Synchronized
     fun create(contextLocation: String): SQLContext = create(ClassPathXmlSQLContext(contextLocation))
 

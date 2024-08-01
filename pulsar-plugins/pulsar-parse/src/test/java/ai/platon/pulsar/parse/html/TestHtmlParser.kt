@@ -18,9 +18,9 @@
  */
 package ai.platon.pulsar.parse.html
 
-import ai.platon.pulsar.crawl.parse.PageParser
-import ai.platon.pulsar.crawl.parse.html.PrimerHtmlParser
-import ai.platon.pulsar.crawl.parse.ParseException
+import ai.platon.pulsar.skeleton.crawl.parse.PageParser
+import ai.platon.pulsar.skeleton.crawl.parse.html.PrimerHtmlParser
+import ai.platon.pulsar.skeleton.crawl.parse.ParseException
 import ai.platon.pulsar.persist.metadata.Name
 import kotlin.test.*
 import org.junit.runner.RunWith

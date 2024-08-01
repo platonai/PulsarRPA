@@ -2,9 +2,9 @@ package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.event.EventEmitter
-import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.util.ChainedHtmlIntegrityChecker
@@ -49,16 +49,16 @@ interface BrowserResponseHandler: EventEmitter<BrowserResponseEvents> {
     fun createBrowserErrorResponse(message: String): BrowserErrorResponse
 
     fun createProtocolStatusForBrokenContent(task: FetchTask, htmlIntegrity: HtmlIntegrity): ProtocolStatus
-    
+
     fun checkErrorPage(page: WebPage, status: ProtocolStatus): ProtocolStatus
-    
+
     fun onInitPageCategorySniffer(sniffer: PageCategorySniffer)
-    
+
     fun onInitHTMLIntegrityChecker(checker: HtmlIntegrityChecker)
-    
+
     fun onWillCreateResponse(task: FetchTask, driver: WebDriver)
-    
+
     fun onResponseCreated(task: FetchTask, driver: WebDriver, response: Response)
-    
+
     fun onBrowseTimeout(task: NavigateTask)
 }

@@ -49,7 +49,11 @@ public class ResponseReceivedExtraInfo {
   @Optional
   private String headersText;
 
-  @Optional private String cookiePartitionKey;
+  /**
+   * CDP upgraded and failed to serialize ResponseReceivedExtraInfo since Google Chrome 127. #74
+   * @see <a href="https://github.com/platonai/PulsarRPA/issues/74">CDP upgraded and failed to serialize ResponseReceivedExtraInfo since Google Chrome 127</a>
+   * */
+//  @Optional private String cookiePartitionKey;
 
   @Optional private Boolean cookiePartitionKeyOpaque;
 
@@ -147,17 +151,17 @@ public class ResponseReceivedExtraInfo {
    * The cookie partition key that will be used to store partitioned cookies set in this response.
    * Only sent when partitioned cookies are enabled.
    */
-  public String getCookiePartitionKey() {
-    return cookiePartitionKey;
-  }
+//  public String getCookiePartitionKey() {
+//    return cookiePartitionKey;
+//  }
 
   /**
    * The cookie partition key that will be used to store partitioned cookies set in this response.
    * Only sent when partitioned cookies are enabled.
    */
-  public void setCookiePartitionKey(String cookiePartitionKey) {
-    this.cookiePartitionKey = cookiePartitionKey;
-  }
+//  public void setCookiePartitionKey(String cookiePartitionKey) {
+//    this.cookiePartitionKey = cookiePartitionKey;
+//  }
 
   /**
    * True if partitioned cookies are enabled, but the partition key is not serializeable to string.

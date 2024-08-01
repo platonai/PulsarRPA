@@ -5,8 +5,8 @@ import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INTERACT_SETTINGS
-import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
@@ -22,7 +22,7 @@ class NavigateTask constructor(
 
     val url get() = fetchTask.url
     val page get() = fetchTask.page
-    
+
     val pageConf get() = fetchTask.page.conf
     /**
      * The page datum.
@@ -36,14 +36,14 @@ class NavigateTask constructor(
      * The page source.
      * */
     var pageSource = ""
-    
+
     /**
      * The interact settings.
      * TODO: page.getVar("InteractSettings") is deprecated, use pageConf[BROWSER_INTERACT_SETTINGS] instead
      * */
     val interactSettings get() = page.getVar("InteractSettings") as? InteractSettings
         ?: InteractSettings.fromJson(pageConf[BROWSER_INTERACT_SETTINGS], browserSettings.interactSettings)
-    
+
     init {
         pageDatum.headers[HttpHeaders.Q_REQUEST_TIME] = startTime.toEpochMilli().toString()
     }

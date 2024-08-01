@@ -735,10 +735,23 @@ public class SParser {
         }
     }
 
+
     /**
-     * <p>getDuration.</p>
+     * Retrieves the duration.
+     * <p>
+     * This method obtains the duration by invoking another overloaded getDuration method.
+     * It uses a constant named INVALID_DURATION as a default value, indicating that if a valid duration cannot be
+     * obtained, an invalid Duration object will be returned.
+     * <p>
+     * Support both ISO-8601 standard and hadoop time duration format
+     * <p>
+     * * ISO-8601 standard : PnDTnHnMn.nS
+     * * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
+     * <p>
+     * Note: for hadoop time duration format, the unit is always lowercase, and only single unit is allowed.
      *
-     * @return a {@link java.time.Duration} object.
+     * @return A Duration object representing the duration of a process. If a valid duration cannot be obtained,
+     * it returns an object representing an invalid duration.
      */
     public Duration getDuration() {
         return getDuration(INVALID_DURATION);

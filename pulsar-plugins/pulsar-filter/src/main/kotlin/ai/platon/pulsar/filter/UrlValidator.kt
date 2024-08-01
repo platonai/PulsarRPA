@@ -17,7 +17,7 @@
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
+import ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilter
 import java.util.regex.Pattern
 
 /**

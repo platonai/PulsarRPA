@@ -4,19 +4,18 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_MAX_CONTENT_LENGTH
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_MAX_EXPORT_COUNT
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_PAGE_AUTO_EXPORT_LIMIT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.event.AbstractEventEmitter
-import ai.platon.pulsar.common.files.ext.export
-import ai.platon.pulsar.common.metrics.MetricsSystem
-import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
-import ai.platon.pulsar.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.skeleton.common.files.ext.export
+import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverCancellationException
+import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
+import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
@@ -55,18 +54,18 @@ abstract class BrowserEmulatorImplBase(
      * The maximum length of the page source, 8M by default.
      * */
     protected val maxPageSourceLength = immutableConfig.getInt(FETCH_MAX_CONTENT_LENGTH, 8 * FileUtils.ONE_MB.toInt())
-    
+
     private val registry = MetricsSystem.reg
     protected val pageSourceByteHistogram by lazy { registry.histogram(this, "hPageSourceBytes") }
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
-    
+
     protected val meterNavigates by lazy { registry.meter(this, "navigates") }
     protected val counterJsEvaluates by lazy { registry.counter(this, "jsEvaluates") }
     protected val counterJsWaits by lazy { registry.counter(this, "jsWaits") }
     protected val counterCancels by lazy { registry.counter(this, "cancels") }
-    
+
     protected val closed = AtomicBoolean(false)
-    
+
     /**
      * Whether the emulator is active.
      * */
@@ -155,7 +154,7 @@ abstract class BrowserEmulatorImplBase(
                 // messageWriter?.debugRedirects(pageDatum.url, urls)
             }
         }
-        
+
         val driver = task.driver as AbstractWebDriver
         if (!driver.isMockedPageSource) {
             exportIfNecessary(task)
@@ -201,7 +200,7 @@ abstract class BrowserEmulatorImplBase(
     @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
     protected fun checkState(task: FetchTask, driver: WebDriver) {
         checkState()
-        
+
         require(driver is AbstractWebDriver)
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
@@ -250,7 +249,7 @@ abstract class BrowserEmulatorImplBase(
 
         return content
     }
-    
+
     /**
      * Export the page if one of the following condition matches:
      * 1. The page is failed to fetch
@@ -270,26 +269,27 @@ abstract class BrowserEmulatorImplBase(
      * 2. FETCH_MAX_EXPORT_COUNT > 0 and the export count is less than FETCH_MAX_EXPORT_COUNT
      * */
     private fun exportIfNecessary0(pageSource: String, status: ProtocolStatus, page: WebPage) {
-        if (pageSource.isEmpty()) {
-            return
-        }
-
         if (logger.isInfoEnabled && !status.isSuccess) {
             export0(pageSource, status, page)
             return
         }
 
-        val maxExportCount = immutableConfig.getInt(FETCH_MAX_EXPORT_COUNT, 0)
-        if (++exportCount < maxExportCount) {
-            export0(pageSource, status, page)
-        }
-    }
-
-    private fun export0(pageSource: String, status: ProtocolStatus, page: WebPage) {
         if (pageSource.isEmpty()) {
             return
         }
 
+        val maxExportCount = immutableConfig.getInt(FETCH_PAGE_AUTO_EXPORT_LIMIT, 10000)
+        if (++exportCount < maxExportCount) {
+            val path = export0(pageSource, status, page)
+            val baseDir = path.parent
+            if (exportCount % 100 == 0 && Files.list(baseDir).count() > maxExportCount) {
+                val date = DateTimes.now("yyyyMMdd")
+                Files.move(baseDir, baseDir.resolveSibling(baseDir.fileName.toString() + ".$date"))
+            }
+        }
+    }
+
+    private fun export0(pageSource: String, status: ProtocolStatus, page: WebPage): Path {
         val path = AppFiles.export(status, pageSource, page)
 
         if (SystemUtils.IS_OS_WINDOWS) {
@@ -298,6 +298,8 @@ abstract class BrowserEmulatorImplBase(
         } else {
             createSymbolicLink(path, page)
         }
+
+        return path
     }
 
     private fun createSymbolicLink(path: Path, page: WebPage) {

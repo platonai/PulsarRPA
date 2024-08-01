@@ -6,13 +6,15 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_T
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.metrics.MetricsSystem
-import ai.platon.pulsar.crawl.BrowseEventHandlers
-import ai.platon.pulsar.crawl.fetch.driver.*
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
+import ai.platon.pulsar.skeleton.crawl.BrowseEventHandlers
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
+import ai.platon.pulsar.skeleton.common.AppSystemInfo
+import ai.platon.pulsar.skeleton.common.IllegalApplicationStateException
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -264,7 +266,7 @@ class LoadingWebDriverPool constructor(
         isRetired = true
         statefulDriverPool.retire()
     }
-    
+
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             statefulDriverPool.clear()
@@ -348,7 +350,7 @@ class LoadingWebDriverPool constructor(
             if (!isActive) {
                 return
             }
-            
+
             if (!shouldCreateWebDriver()) {
                 return
             }
@@ -417,7 +419,7 @@ class LoadingWebDriverPool constructor(
         if (logger.isDebugEnabled) {
             logDriverOnline(driver)
         }
-        
+
         return driver
     }
 

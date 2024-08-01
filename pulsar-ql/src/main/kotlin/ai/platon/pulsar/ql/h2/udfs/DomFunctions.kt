@@ -2,20 +2,18 @@ package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_META_INFORMATION_SELECTOR
-import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.dom.select.selectFirstOrNull
-import ai.platon.pulsar.ql.annotation.H2Context
-import ai.platon.pulsar.ql.annotation.UDFGroup
-import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.ql.common.annotation.H2Context
+import ai.platon.pulsar.ql.common.annotation.UDFGroup
+import ai.platon.pulsar.ql.common.annotation.UDFunction
 import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.domValue
-import ai.platon.pulsar.ql.types.ValueDom
-import com.google.gson.GsonBuilder
+import ai.platon.pulsar.ql.common.types.ValueDom
 import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.h2.value.ValueString

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.filter
 
-import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
+import ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilter
 import java.io.Reader
 import kotlin.test.Test
 

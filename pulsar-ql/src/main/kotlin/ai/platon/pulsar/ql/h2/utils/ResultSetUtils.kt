@@ -2,10 +2,9 @@ package ai.platon.pulsar.ql.h2.utils
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.ql.ResultSets
+import ai.platon.pulsar.ql.common.ResultSets
 import ai.platon.pulsar.ql.h2.addColumn
-import ai.platon.pulsar.ql.types.ValueDom
-import com.google.gson.Gson
+import ai.platon.pulsar.ql.common.types.ValueDom
 import com.google.gson.GsonBuilder
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType

@@ -20,6 +20,9 @@ public interface CapabilityTypes {
 
     String LEGACY_CONFIG_PROFILE = "legacy.config.profile";
 
+    /**
+     * @deprecated legacy configurations are deprecated
+     * */
     String SYSTEM_PROPERTY_SPECIFIED_RESOURCES = "system.property.specified.resources";
 
     String DRY_RUN = "pulsar.dry.run";
@@ -72,7 +75,7 @@ public interface CapabilityTypes {
     /**
      * The class name of the page event handler.
      * <p>
-     * <code>System.setProperty(CapabilityTypes.PAGE_EVENT_CLASS, "ai.platon.pulsar.crawl.event.impl.DefaultPageEvent")</code>
+     * <code>System.setProperty(CapabilityTypes.PAGE_EVENT_CLASS, "ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEvent")</code>
      * */
     String PAGE_EVENT_CLASS = "page.event.class";
 
@@ -180,7 +183,7 @@ public interface CapabilityTypes {
     /**
      * The maximum number of pages to export in fetch phrase.
      * */
-    String FETCH_MAX_EXPORT_COUNT = "fetch.max.export.count";
+    String FETCH_PAGE_AUTO_EXPORT_LIMIT = "fetch.page.auto.export.limit";
 
     /**
      * Browser

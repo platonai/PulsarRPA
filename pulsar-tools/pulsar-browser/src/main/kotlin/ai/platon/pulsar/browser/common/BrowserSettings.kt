@@ -107,7 +107,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
+            val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
@@ -124,7 +124,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withPrototypeBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
+            val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
@@ -154,7 +154,7 @@ open class BrowserSettings(
         @JvmStatic
         fun withSequentialBrowsers(maxAgents: Int): Companion {
             System.setProperty(MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, "$maxAgents")
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
+            val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             return BrowserSettings
         }
@@ -173,7 +173,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun withTemporaryBrowser(browserType: BrowserType): Companion {
-            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.RandomPrivacyAgentGenerator"
+            val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.RandomPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
             return BrowserSettings
@@ -377,6 +377,42 @@ open class BrowserSettings(
         @JvmStatic
         fun disableProxy(): Companion {
             ProxyPoolManager.disableProxy()
+            return this
+        }
+        /**
+         * Export all pages automatically once they are fetched.
+         *
+         * The export directory is under AppPaths.WEB_CACHE_DIR.
+         * A typical export path is:
+         *
+         * * AppPaths.WEB_CACHE_DIR/default/pulsar_chrome/OK/amazon-com
+         * * C:\Users\pereg\AppData\Local\Temp\pulsar-pereg\cache\web\default\pulsar_chrome\OK\amazon-com
+         * */
+        @JvmStatic
+        fun enableOriginalPageContentAutoExporting(): Companion {
+            System.setProperty(FETCH_PAGE_AUTO_EXPORT_LIMIT, Int.MAX_VALUE.toString())
+            return this
+        }
+        /**
+         * Export at most [limit] pages once they are fetched.
+         *
+         * The export directory is under AppPaths.WEB_CACHE_DIR.
+         * A typical export path is:
+         *
+         * * AppPaths.WEB_CACHE_DIR/default/pulsar_chrome/OK/amazon-com
+         * * C:\Users\pereg\AppData\Local\Temp\pulsar-pereg\cache\web\default\pulsar_chrome\OK\amazon-com
+         * */
+        @JvmStatic
+        fun enableOriginalPageContentAutoExporting(limit: Int): Companion {
+            System.setProperty(FETCH_PAGE_AUTO_EXPORT_LIMIT, limit.toString())
+            return this
+        }
+        /**
+         * Disable original page content exporting.
+         * */
+        @JvmStatic
+        fun disableOriginalPageContentAutoExporting(): Companion {
+            System.setProperty(FETCH_PAGE_AUTO_EXPORT_LIMIT, "0")
             return this
         }
     }

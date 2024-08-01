@@ -1,7 +1,7 @@
 package ai.platon.pulsar.test.component
 
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.crawl.component.LoadComponent
+import ai.platon.pulsar.skeleton.crawl.component.LoadComponent
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.test.TestBase
 import kotlinx.coroutines.channels.Channel
@@ -88,7 +88,7 @@ class LoadComponentTests: TestBase() {
         val channel = Channel<WebPage>()
         
         val options = session.options()
-        options.event.loadEvent.onLoaded.addLast { page ->
+        options.event.loadEventHandlers.onLoaded.addLast { page ->
             launch {
                 channel.send(page)
                 MessageFormat.format("SEND ► page {0} | {1}", page.id, page.url).also { println(it) }

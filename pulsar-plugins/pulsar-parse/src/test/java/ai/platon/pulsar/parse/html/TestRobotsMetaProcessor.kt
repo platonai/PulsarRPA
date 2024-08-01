@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.parse.html
 
-import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
+import ai.platon.pulsar.skeleton.crawl.parse.html.HTMLMetaTags
 import org.apache.html.dom.HTMLDocumentImpl
 import org.cyberneko.html.parsers.DOMFragmentParser
 import org.junit.Assert

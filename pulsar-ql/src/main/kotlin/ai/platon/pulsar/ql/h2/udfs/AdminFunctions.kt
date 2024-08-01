@@ -3,9 +3,9 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.ql.context.SQLContexts
-import ai.platon.pulsar.ql.annotation.H2Context
-import ai.platon.pulsar.ql.annotation.UDFGroup
-import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.ql.common.annotation.H2Context
+import ai.platon.pulsar.ql.common.annotation.UDFGroup
+import ai.platon.pulsar.ql.common.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.slf4j.LoggerFactory
 import java.sql.Connection

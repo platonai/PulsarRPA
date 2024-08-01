@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites;
 
-import ai.platon.pulsar.context.PulsarContexts;
-import ai.platon.pulsar.session.PulsarSession;
+import ai.platon.pulsar.skeleton.context.PulsarContexts;
+import ai.platon.pulsar.skeleton.session.PulsarSession;
 
 public class BaiduCrawler {
     public static void main(String[] args) throws Exception {

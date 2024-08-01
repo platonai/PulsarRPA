@@ -18,9 +18,9 @@
  */
 package ai.platon.pulsar.protocol.browser
 
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
+import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.browser.emulator.Defaults
@@ -36,7 +36,7 @@ class BrowserEmulatorProtocol : ForwardingProtocol() {
     }
 
     private val browserEmulatorOrNull get() = if (context.isActive) browserEmulator else null
-    
+
     @Throws(Exception::class)
     override fun getResponse(page: WebPage, followRedirects: Boolean): Response? {
         require(page.isNotInternal) { "Unexpected internal page ${page.url}" }
@@ -44,7 +44,7 @@ class BrowserEmulatorProtocol : ForwardingProtocol() {
             ?: browserEmulatorOrNull?.fetchContent(page)
             ?: ForwardingResponse.canceled(page)
     }
-    
+
     @Throws(Exception::class)
     override suspend fun getResponseDeferred(page: WebPage, followRedirects: Boolean): Response? {
         require(page.isNotInternal) { "Unexpected internal page ${page.url}" }
