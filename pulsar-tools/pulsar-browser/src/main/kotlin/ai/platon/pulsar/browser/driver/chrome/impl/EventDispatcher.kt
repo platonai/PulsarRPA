@@ -124,6 +124,9 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         }
         
         try {
+            // Here is a typical response sequence:
+            // println(clazz)
+            // RequestWillBeSent, RequestWillBeSentExtraInfo, ResponseReceivedExtra, ResponseReceived, LoadingFinished,
             return OBJECT_MAPPER.readerFor(clazz).readValue(jsonNode)
         } catch (e: MismatchedInputException) {
             val message = """
