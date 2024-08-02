@@ -29,7 +29,7 @@
     <!-- Stop logback status INFO at the start -->
     <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
 
-    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
         </layout>
@@ -124,7 +124,7 @@
     </appender>
 
     <root level="INFO">
-        <appender-ref ref="Console"/>
+        <appender-ref ref="CONSOLE"/>
         <appender-ref ref="DRFA"/>
     </root>
 
@@ -167,10 +167,10 @@
     </logger>
 
     <logger name="ai.platon.scent.analysis" level="INFO" additivity="true">
-        <!--        <appender-ref ref="Console"/>-->
+        <!--        <appender-ref ref="CONSOLE"/>-->
     </logger>
     <logger name="ai.platon.scent.ml" level="INFO" additivity="true">
-<!--        <appender-ref ref="Console"/>-->
+<!--        <appender-ref ref="CONSOLE"/>-->
     </logger>
     <logger name="ai.platon.scent.analysis.corpus.AnalysablePageCorpus.Task" level="INFO" additivity="false">
         <appender-ref ref="HARVEST"/>
@@ -207,16 +207,16 @@
         <appender-ref ref="PAGES"/>
     </logger>
     <logger name="ai.platon.pulsar.skeleton.crawl.component.LoadComponent.Task" level="INFO" additivity="true">
-<!--        <appender-ref ref="Console"/>-->
+<!--        <appender-ref ref="CONSOLE"/>-->
         <appender-ref ref="PAGES"/>
     </logger>
     <logger name="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator.Task" level="INFO" additivity="false">
         <appender-ref ref="PAGES"/>
     </logger>
-    <logger name="ai.platon.pulsar.common.collect.HyperlinkExtractor" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.skeleton.common.collect.HyperlinkExtractor" level="INFO" additivity="false">
         <appender-ref ref="PAGES"/>
     </logger>
-    <logger name="ai.platon.pulsar.common.collect.FatLinkExtractor" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.skeleton.common.collect.FatLinkExtractor" level="INFO" additivity="false">
         <appender-ref ref="PAGES"/>
     </logger>
 
@@ -227,7 +227,7 @@
         <appender-ref ref="METRICS"/>
     </logger>
 
-    <logger name="ai.platon.pulsar.common.CounterReporter" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.skeleton.common.CounterReporter" level="INFO" additivity="false">
         <appender-ref ref="COUNTERS"/>
     </logger>
     <logger name="ai.platon.pulsar.ql.h2.utils.Jdbc" level="INFO" additivity="false">
@@ -238,10 +238,10 @@
     </logger>
 
     <logger name="ai.platon.exotic" level="INFO">
-<!--        <appender-ref ref="Console"/>-->
+<!--        <appender-ref ref="CONSOLE"/>-->
     </logger>
     <logger name="ai.platon.exotic.driver" level="INFO">
-<!--        <appender-ref ref="Console"/>-->
+<!--        <appender-ref ref="CONSOLE"/>-->
     </logger>
 
     <logger name="ch.qos.logback.classic" level="WARN"/>

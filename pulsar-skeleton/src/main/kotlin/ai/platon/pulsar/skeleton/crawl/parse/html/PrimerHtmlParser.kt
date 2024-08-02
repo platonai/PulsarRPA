@@ -10,6 +10,8 @@ import ai.platon.pulsar.skeleton.crawl.parse.Parser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
+import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
+import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
 import org.slf4j.LoggerFactory
 import java.net.MalformedURLException
 import java.time.Duration
@@ -81,7 +83,10 @@ class PrimerHtmlParser(
         numHtmlParses.incrementAndGet()
 
         try {
-            page.loadEvent?.onWillParseHTMLDocument?.invoke(page)
+            // notice the calling order.
+            // The more specific handlers has the opportunity to override the result of more general handlers.
+            page.loadEventHandlers?.onWillParseHTMLDocument?.invoke(page)
+            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onWillParseHTMLDocument?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onWillParseHTMLDocument | ${page.configuredUrl}", e)
         }
@@ -92,7 +97,9 @@ class PrimerHtmlParser(
      * */
     private fun onHTMLDocumentParsed(page: WebPage, document: FeaturedDocument) {
         try {
-            page.loadEvent?.onHTMLDocumentParsed?.invoke(page, document)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
+            page.loadEventHandlers?.onHTMLDocumentParsed?.invoke(page, document)
+            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onHTMLDocumentParsed?.invoke(page, document)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onHTMLDocumentParsed | ${page.configuredUrl}", e)
         } finally {

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.ql.h2.Queries
+import ai.platon.pulsar.ql.h2.DomToH2Queries
 import java.util.concurrent.Executors
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
  * Created by vincent on 17-7-29.
  * Copyright @ 2013-2023 Platon AI. All rights reserved.
  */
-class TestQueries: TestBase() {
+class TestDomToH2Queries: TestBase() {
 
     private val portalUrl = "https://www.amazon.com/Best-Sellers/zgbs"
     private val args = "-i 10d -ii 50d -ol a[href~=/dp/] -ignoreFailure"
@@ -24,7 +24,7 @@ class TestQueries: TestBase() {
 //        val restrictCss = "#content ul li a"
 
         val limit = 20
-        val pages = Queries.loadOutPages(session, url, restrictCss, 1, limit)
+        val pages = DomToH2Queries.loadOutPages(session, url, restrictCss, 1, limit)
         pages.map { it.url }.distinct().forEachIndexed { i, url -> println("$i.\t$url") }
         assertTrue("Page size: " + pages.size) { pages.size <= limit }
     }
@@ -37,7 +37,7 @@ class TestQueries: TestBase() {
         val executor = Executors.newWorkStealingPool()
         val futures = IntRange(1, parallel).map {
             executor.submit<Collection<WebPage>> {
-                val pages = Queries.loadOutPages(session, url, restrictCss, 1, limit)
+                val pages = DomToH2Queries.loadOutPages(session, url, restrictCss, 1, limit)
                 pages.map { it.url }.distinct().forEachIndexed { i, url -> println("$i.\t$url") }
                 assertTrue("Page size: " + pages.size) { pages.size <= limit }
                 pages

@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.math.geometric
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
+import kotlin.math.abs
 
 data class GeoIntPoint(var x: Int, var y: Int): Comparable<GeoIntPoint> {
     constructor(point: Point) : this(point.x, point.y)
@@ -72,7 +73,7 @@ fun Rectangle.sim(rect: Rectangle): Double {
     val overlap = this.intersection(rect)
     if (overlap.isEmpty) return 0.0
     val a = overlap.area
-    val b = Math.max(area, rect.area)
+    val b = area.coerceAtLeast(rect.area)
     return 1.0 * a / b
 }
 
@@ -103,14 +104,14 @@ enum class AlignType {
  * TODO: not fully tested
  * */
 fun Rectangle.testAlignment(r: Rectangle, bias: Double = 0.2): AlignType {
-    val b = Math.min(bias, 1.0)
+    val b = bias.coerceAtMost(1.0)
     return when {
-        Math.abs(x - r.x)               <= b * width -> AlignType.LEFT
-        Math.abs(centerX - r.centerX)   <= b * width -> AlignType.V_CENTER
-        Math.abs(x2 - r.x2)             <= b * width -> AlignType.RIGHT
-        Math.abs(y - r.y)               <= b * height -> AlignType.TOP
-        Math.abs(centerY - r.centerY)   <= b * height -> AlignType.H_CENTER
-        Math.abs(y2 - r.y2)             <= b * height -> AlignType.BOTTOM
+        abs(x - r.x)               <= b * width -> AlignType.LEFT
+        abs(centerX - r.centerX)   <= b * width -> AlignType.V_CENTER
+        abs(x2 - r.x2)             <= b * width -> AlignType.RIGHT
+        abs(y - r.y)               <= b * height -> AlignType.TOP
+        abs(centerY - r.centerY)   <= b * height -> AlignType.H_CENTER
+        abs(y2 - r.y2)             <= b * height -> AlignType.BOTTOM
         else -> AlignType.NONE
     }
 }

@@ -31,6 +31,8 @@ import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolOutput
 import ai.platon.pulsar.skeleton.crawl.protocol.http.ProtocolStatusTranslator
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.metadata.Mark
+import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
+import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -144,7 +146,9 @@ open class FetchComponent(
 
     private fun onWillFetch(page: WebPage) {
         try {
-            page.loadEvent?.onWillFetch?.invoke(page)
+            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onWillFetch?.invoke(page)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
+            page.loadEventHandlers?.onWillFetch?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onWillFetch | ${page.configuredUrl}", e)
         }
@@ -152,7 +156,9 @@ open class FetchComponent(
 
     private fun onFetched(page: WebPage) {
         try {
-            page.loadEvent?.onFetched?.invoke(page)
+            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onFetched?.invoke(page)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
+            page.loadEventHandlers?.onFetched?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onFetched | ${page.configuredUrl}", e)
         }

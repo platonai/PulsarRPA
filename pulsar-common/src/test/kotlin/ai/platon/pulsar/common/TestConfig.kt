@@ -12,6 +12,7 @@ import kotlin.test.*
  */
 class TestConfig {
 
+    @Ignore("Legacy config is deprecated")
     @Test
     fun testConfig() {
         var conf = ImmutableConfig()

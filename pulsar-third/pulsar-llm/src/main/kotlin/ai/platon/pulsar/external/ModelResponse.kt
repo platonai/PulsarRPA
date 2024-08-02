@@ -1,6 +1,6 @@
-package ai.platon.pulsar.common.ai.api
+package ai.platon.pulsar.external
 
-open class ModelResponse(
+data class ModelResponse(
     val content: String,
     val state: ResponseState,
     val tokenUsage: TokenUsage,

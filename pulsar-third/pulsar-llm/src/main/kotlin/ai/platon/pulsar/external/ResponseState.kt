@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common.ai.api
+package ai.platon.pulsar.external
 
 /**
  * The reason why a model call finished.

@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package ai.platon.pulsar.common
 
 import org.slf4j.LoggerFactory
@@ -35,10 +19,10 @@ object ResourceLoader {
     private val userClassFactories = ConcurrentLinkedDeque<ClassFactory>()
     private val classLoader = Thread.currentThread().contextClassLoader ?: ResourceLoader::class.java.classLoader
 
-    var lineFilter: (line: String) -> Boolean = { line ->
+    val LINE_FILTER: (line: String) -> Boolean = { line ->
         !line.startsWith("# ") && !line.startsWith("-- ") && line.isNotBlank()
     }
-
+    
     /**
      * Add a class factory in order to manage more than one class loader.
      *
@@ -102,31 +86,33 @@ object ResourceLoader {
      */
     @JvmOverloads
     fun readAllLines(
-        stringResource: String?, fileResource: String, resourcePrefix: String = "", filter: Boolean = true
+        stringResource: String?, resource: String, resourcePrefix: String = "", filter: Boolean = true
     ): List<String> {
-        return getMultiSourceReader(stringResource, fileResource, resourcePrefix)?.useLines { seq ->
+        return getMultiSourceReader(stringResource, resource, resourcePrefix)?.useLines { seq ->
             if (filter) {
-                seq.filter(lineFilter).toList()
+                seq.filter(LINE_FILTER).toList()
             } else {
                 seq.toList()
             }
         } ?: listOf()
     }
+    
+    fun readAllLines(resource: String) = readAllLines(resource, true)
 
-    fun readAllLines(fileResource: String) = readAllLines(fileResource, true)
-
-    fun readAllLines(fileResource: String, filter: Boolean): List<String> {
+    fun readAllLines(resource: String, filter: Boolean): List<String> {
         if (!filter) {
-            return readAllLinesNoFilter(fileResource)
+            return readAllLinesNoFilter(resource)
         }
 
-        return getResourceAsReader(fileResource)?.useLines {
-            it.filter(lineFilter).toList()
-        } ?: listOf()
+        return getResourceAsReader(resource)?.useLines { it.filter(LINE_FILTER).toList() } ?: listOf()
+    }
+    
+    fun readAllLines(resource: String, filter: (String) -> Boolean = { true }): List<String> {
+        return getResourceAsReader(resource)?.useLines { it.filter(filter).toList() } ?: listOf()
     }
 
-    fun readAllLinesNoFilter(fileResource: String): List<String> {
-        return getResourceAsReader(fileResource)?.useLines {
+    fun readAllLinesNoFilter(resource: String): List<String> {
+        return getResourceAsReader(resource)?.useLines {
             it.toList()
         } ?: listOf()
     }
@@ -140,13 +126,13 @@ object ResourceLoader {
                 ?: listOf()
     }
 
-    fun readString(fileResource: String): String {
-        return readStringTo(fileResource, StringBuilder()).toString()
+    fun readString(resource: String): String {
+        return readStringTo(resource, StringBuilder()).toString()
     }
 
-    fun readStringTo(fileResource: String, sb: StringBuilder): StringBuilder {
-        getResourceAsReader(fileResource)?.forEachLine {
-            sb.appendln(it)
+    fun readStringTo(resource: String, sb: StringBuilder): StringBuilder {
+        getResourceAsReader(resource)?.forEachLine {
+            sb.appendLine(it)
         }
         return sb
     }
@@ -174,23 +160,23 @@ object ResourceLoader {
     /**
      * Find the first resource associated by prefix/name
      */
-    fun getResourceAsStream(name: String, vararg resourcePrefixes: String): InputStream? {
+    fun getResourceAsStream(resource: String, vararg resourcePrefixes: String): InputStream? {
         var found = false
-        return resourcePrefixes.asIterable().filter { it.isNotBlank() }
-                .mapNotNull { if (!found) getResourceAsStream("$it/$name") else null }
+        return resourcePrefixes.asSequence().filter { it.isNotBlank() }
+                .mapNotNull { if (!found) getResourceAsStream("$it/$resource") else null }
                 .onEach { found = true }
-                .firstOrNull() ?: getResourceAsStream(name)
+                .firstOrNull() ?: getResourceAsStream(resource)
     }
 
     /**
      * Get a [Reader] attached to the configuration resource with the
      * given `name`.
      *
-     * @param fileResource configuration resource name.
+     * @param resource configuration resource name.
      * @return a reader attached to the resource.
      */
-    fun getResourceAsReader(fileResource: String, vararg resourcePrefixes: String): Reader? {
-        return getResourceAsStream(fileResource, *resourcePrefixes)?.let { InputStreamReader(it) }
+    fun getResourceAsReader(resource: String, vararg resourcePrefixes: String): Reader? {
+        return getResourceAsStream(resource, *resourcePrefixes)?.let { InputStreamReader(it) }
     }
 
     fun exists(name: String) = getResource(name) != null
@@ -229,8 +215,8 @@ object ResourceLoader {
     }
 
     @Throws(FileNotFoundException::class)
-    fun getMultiSourceReader(stringResource: String?, fileResource: String): Reader? {
-        return getMultiSourceReader(stringResource, fileResource, "")
+    fun getMultiSourceReader(stringResource: String?, resource: String): Reader? {
+        return getMultiSourceReader(stringResource, resource, "")
     }
 
     @Throws(FileNotFoundException::class)

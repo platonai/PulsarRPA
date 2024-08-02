@@ -51,7 +51,7 @@ open class H2SQLContext(
     }
 }
 
-class StaticH2SQLContext(
+open class StaticH2SQLContext(
     applicationContext: StaticApplicationContext = StaticApplicationContext()
 ) : H2SQLContext(applicationContext) {
     private val defaults = ContextDefaults()

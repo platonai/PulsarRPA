@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common.ai.api
+package ai.platon.pulsar.external
 
 data class TokenUsage(
     val inputTokenCount: Int = 0,

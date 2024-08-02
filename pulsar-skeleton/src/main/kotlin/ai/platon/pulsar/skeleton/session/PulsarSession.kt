@@ -14,8 +14,10 @@ import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.PageCatch
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.annotations.Beta
+import org.jsoup.nodes.Element
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
@@ -2047,10 +2049,50 @@ interface PulsarSession : AutoCloseable {
      * @see [boilerpipe-web](https://boilerpipe-web.appspot.com/)
      * */
     fun harvest(page: WebPage, engine: String = "boilerpipe"): TextDocument
-
-    fun chat(page: WebPage, prompt: String = "", llm: String = "glm4"): TextDocument
-
-    fun chat(document: FeaturedDocument, prompt: String = "", llm: String = "glm4"): TextDocument
+    
+    /**
+     * Chat with the AI model.
+     *
+     * @param prompt The prompt to chat with
+     * @return The response from the model
+     */
+    fun chat(prompt: String): ModelResponse
+    
+    /**
+     * Chat with the AI model.
+     *
+     * @param context The context to chat with
+     * @param prompt The prompt to chat with
+     * @return The response from the model
+     */
+    fun chat(context: String, prompt: String): ModelResponse
+    
+    /**
+     * Chat with the AI model.
+     *
+     * @param page The page to chat with
+     * @param prompt The prompt to chat with
+     * @return The response from the model
+     */
+    fun chat(page: WebPage, prompt: String): ModelResponse
+    
+    /**
+     * Chat with the AI model.
+     *
+     * @param document The document to chat with
+     * @param prompt The prompt to chat with
+     * @return The response from the model
+     */
+    fun chat(document: FeaturedDocument, prompt: String): ModelResponse
+    
+    /**
+     * Chat with the AI model.
+     *
+     * @param element The element to chat with
+     * @param prompt The prompt to chat with
+     * @return The response from the model
+     */
+    fun chat(element: Element, prompt: String): ModelResponse
 
     /**
      * Export the content of a webpage.

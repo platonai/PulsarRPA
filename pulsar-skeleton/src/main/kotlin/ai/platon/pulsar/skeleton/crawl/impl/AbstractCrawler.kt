@@ -1,12 +1,12 @@
 package ai.platon.pulsar.skeleton.crawl.impl
 
 import ai.platon.pulsar.common.event.AbstractEventEmitter
-import ai.platon.pulsar.skeleton.common.persist.ext.event
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.skeleton.crawl.Crawler
-import ai.platon.pulsar.skeleton.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.common.persist.ext.event
+import ai.platon.pulsar.skeleton.crawl.Crawler
+import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
+import ai.platon.pulsar.skeleton.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
@@ -59,19 +59,26 @@ abstract class AbstractCrawler(
 
     override fun onWillLoad(url: UrlAware) {
         if (url is ListenableUrl) {
+            GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onWillLoad?.invoke(url)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
             url.event.crawlEventHandlers.onWillLoad(url)
         }
     }
 
     override fun onLoad(url: UrlAware) {
         if (url is ListenableUrl) {
+            GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onLoad?.invoke(url)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
             url.event.crawlEventHandlers.onLoad(url)
         }
     }
 
     override fun onLoaded(url: UrlAware, page: WebPage?) {
+        GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onLoaded?.invoke(url, page)
+
         val event = page?.event?.crawlEventHandlers
         if (event != null) {
+            // The more specific handlers has the opportunity to override the result of more general handlers.
             event.onLoaded(url, page)
         } else if (url is ListenableUrl) {
             url.event.crawlEventHandlers.onLoaded(url, page)

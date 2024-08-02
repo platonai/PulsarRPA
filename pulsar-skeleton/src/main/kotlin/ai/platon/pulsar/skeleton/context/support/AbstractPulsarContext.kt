@@ -13,6 +13,8 @@ import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.crawl.component.*
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.external.ModelFactory
+import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -444,7 +446,14 @@ abstract class AbstractPulsarContext(
         val parser = loadComponentOrNull?.parseComponent
         return parser?.parse(page, noLinkFilter = true)?.document
     }
-
+    
+    /**
+     * Chat with the AI model.
+     */
+    override fun chat(prompt: String, model: String, apiKey: String): ModelResponse {
+        return ModelFactory.getOrCreate(model, apiKey).call(prompt)
+    }
+    
     /**
      * Persist the page into the storage
      * */
