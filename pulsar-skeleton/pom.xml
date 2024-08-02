@@ -43,6 +43,14 @@
             <artifactId>pulsar-ql-common</artifactId>
             <classifier>shaded</classifier>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-boilerpipe</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-llm</artifactId>
+        </dependency>
 
         <!-- Requires org.springframework.context.support.AbstractApplicationContext -->
         <dependency>

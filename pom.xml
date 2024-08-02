@@ -261,6 +261,55 @@
 <!--                            </dokkaPlugins>-->
                         </configuration>
                     </plugin>
+
+                    <!-- Help maven-source-plugin works with kotlin -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.6.0</version>
+
+                        <executions>
+                            <execution>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/kotlin</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>dependency-check</id>
+            <build>
+                <plugins>
+                    <!--
+                    It is important to understand that the first time this task is executed it may take 20 minutes or
+                    more as it downloads and processes the data from the National Vulnerability Database (NVD) hosted
+                    by NIST: https://nvd.nist.gov
+                     -->
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>10.0.3</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -635,6 +684,12 @@
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-llm</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-dom</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -648,8 +703,8 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-ql-common</artifactId>
-                <version>${project.version}</version>
                 <classifier>shaded</classifier>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
@@ -755,6 +810,16 @@
                 <version>${tika.version}</version>
                 <scope>provided</scope>
                 <type>pom</type>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -788,17 +853,61 @@
             </dependency>
 
             <!--
+            Simple Logging Facade for Java (SLF4J)
+            The SLF4J serves as a simple facade or abstraction for various
+            logging frameworks, such as java.util.logging, log4j 1.x, reload4j and logback.
+            SLF4J allows the end-user to plug in the desired logging framework at deployment time.
+
+
+            Note that SLF4J-enabling your library implies the addition of only a single mandatory dependency,
+            namely slf4j-api.jar. If no binding/provider is found on the class path, then SLF4J will default to
+            a no-operation implementation.
+
+
+            Log framework providers:
+            https://www.slf4j.org/manual.html#swapping
+            -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <!-- The logging provider PulsarRPA library uses -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <!-- The logging provider PulsarRPA application uses -->
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+
+            <!--
+            Fix the following error:
+            ERROR StatusLogger Log4j2 could not find a logging implementation.
+            Please add log4j-core to the classpath. Using SimpleLogger to log to the console...
+            -->
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+
+            <!--
             Unit test system.
             Unless you’re using Spring Boot which defines its own way of managing dependencies,
             it is recommended to use the JUnit Platform BOM to align the versions of all JUnit 5 artifacts.
             -->
-<!--            <dependency>-->
-<!--                <groupId>org.junit</groupId>-->
-<!--                <artifactId>junit-bom</artifactId>-->
-<!--                <version>${junit-bom.version}</version>-->
-<!--                <type>pom</type>-->
-<!--                <scope>import</scope>-->
-<!--            </dependency>-->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit-bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -827,6 +936,7 @@
     </dependencies>
 
     <properties>
+        <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
         <!-- JAXB provides an API and tools that automate the mapping between XML documents and Java objects. -->
         <!-- This artifact was moved to: jakarta.xml.bind » jakarta.xml.bind-api -->
         <!-- deprecated -->
@@ -834,6 +944,8 @@
 
         <langchain4j.version>0.31.0</langchain4j.version>
         <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
+        <junit-bom.version>5.10.3</junit-bom.version>
+        <mockito.version>5.11.0</mockito.version>
     </properties>
 
 </project>

@@ -23,6 +23,7 @@
     <name>Pulsar Third</name>
 
     <modules>
-<!--        <module>pulsar-boilerpipe</module>-->
+        <module>pulsar-boilerpipe</module>
+        <module>pulsar-llm</module>
     </modules>
 </project>
