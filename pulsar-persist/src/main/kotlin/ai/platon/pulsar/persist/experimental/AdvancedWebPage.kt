@@ -14,8 +14,8 @@ import java.time.temporal.ChronoUnit
  * The core web page structure
  */
 open class AdvancedWebPage(
-    page: GWebPage
-) : KWebPage(page) {
+    val page: GWebPage
+) : KWebPage(GoraWebAssetImpl(page)) {
     
     val isSeed get() = metadata.contains(Name.IS_SEED)
 

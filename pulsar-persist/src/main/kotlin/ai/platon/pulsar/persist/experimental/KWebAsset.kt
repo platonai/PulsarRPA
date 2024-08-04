@@ -30,9 +30,6 @@ interface KWebAsset {
     val referrer: String?
     val href: String?
     
-    val variables: Variables
-    val conf: VolatileConfig?
-    
     val zoneId: ZoneId?
     val batchId: String?
     val fetchPriority: Int
@@ -60,25 +57,24 @@ interface KWebAsset {
     val generateTime: Instant?
     val openPageCategory: OpenPageCategory
     val pageCategory: PageCategory?
-    
+
     val htmlIntegrity: HtmlIntegrity
     val activeDOMStatus: ActiveDOMStatus?
     val activeDOMStatTrace: Map<String, ActiveDOMStat>?
-    
+
     val encoding: String?
     val contentType: String?
     val contentLength: Long
-    
+    val aveContentLength: Long
+    val persistedContentLength: Long
+    val lastContentLength: Long
+
     val persistContent: ByteBuffer?
     val content: ByteBuffer?
     val contentAsBytes: ByteArray?
     val contentAsString: String?
     val contentAsSaxInputSource: InputSource?
     val contentAsInputStream: ByteArrayInputStream?
-    
-    val aveContentLength: Long
-    val persistedContentLength: Long
-    val lastContentLength: Long
     
     val parseStatus: ParseStatus?
     val crawlStatus: CrawlStatus
