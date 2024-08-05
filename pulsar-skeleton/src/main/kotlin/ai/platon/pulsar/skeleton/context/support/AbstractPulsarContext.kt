@@ -234,7 +234,8 @@ abstract class AbstractPulsarContext(
     
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormURL {
         val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
-        return normalize(PlainUrl(url0), options, toItemOption)
+        val link = Hyperlink(url0, href = url0)
+        return normalize(link, options, toItemOption)
     }
     
     override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormURL? {

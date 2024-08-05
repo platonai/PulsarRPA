@@ -785,7 +785,20 @@ open class LoadOptions(
         requireAnchors = itemRequireAnchors
         browser = itemBrowser
         
+        itemExpires = DEFAULT.itemExpires
+        itemScrollCount = DEFAULT.itemScrollCount
+        itemScriptTimeout = DEFAULT.itemScriptTimeout
+        itemScrollInterval = DEFAULT.itemScrollInterval
+        itemPageLoadTimeout = DEFAULT.itemPageLoadTimeout
+        itemWaitNonBlank = DEFAULT.itemWaitNonBlank
+        itemRequireNotBlank = DEFAULT.itemRequireNotBlank
+        itemRequireSize = DEFAULT.itemRequireSize
+        itemRequireImages = DEFAULT.itemRequireImages
+        itemRequireAnchors = DEFAULT.itemRequireAnchors
+        itemBrowser = DEFAULT.itemBrowser
+        
         rawEvent = rawItemEvent
+        rawItemEvent = null
     }
     
     /**
