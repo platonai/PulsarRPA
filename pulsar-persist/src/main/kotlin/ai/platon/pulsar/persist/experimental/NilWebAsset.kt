@@ -26,8 +26,6 @@ class NilWebAsset : KWebAsset {
     override val configuredUrl: String? = null
     override val referrer: String? = null
     override val href: String? = null
-    override val variables: Variables = Variables()
-    override val conf: VolatileConfig? = null
     override val metadata: Metadata = Metadata.box(mapOf())
     override val headers: ProtocolHeaders = ProtocolHeaders.box(mapOf())
     override val createTime: Instant = Instant.EPOCH
