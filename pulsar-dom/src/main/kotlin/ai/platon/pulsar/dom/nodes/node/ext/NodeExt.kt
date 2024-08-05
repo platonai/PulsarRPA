@@ -453,14 +453,27 @@ val Node.hasOverflowHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_OVERFLOW_HID
 
 /**
  * Whether the node is visible.
+ * TODO: there are bugs in this method and can not be used.
  * */
 val Node.isVisible: Boolean
     get() {
         return when {
-            isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image has an empty rectangle?
-            else -> !hasHiddenFlag && !hasOverflowHiddenFlag && x >= 0 && y >= 0 && !rectangle.isEmpty
+            hasHiddenFlag || hasOverflowHiddenFlag -> false
+            this is Element -> isVisibleElement(this)
+            this is TextNode -> isVisibleElement(parent())
+            else -> true
         }
     }
+
+private fun isVisibleElement(node: Node?): Boolean {
+    if (node !is Element) {
+        return false
+    }
+
+    val rect = node.rectangle
+    return rect.x >= 0 && rect.y >= 0 && !rect.isEmpty
+}
+
 /**
  * Whether the node is visible.
  * */

@@ -773,6 +773,7 @@ open class LoadOptions(
      * we have to do the convert before we process item pages.
      * */
     open fun itemOptions2MajorOptions() {
+        // Apply item options to major options
         expires = itemExpires
         scrollCount = itemScrollCount
         scriptTimeout = itemScriptTimeout
@@ -785,6 +786,10 @@ open class LoadOptions(
         requireAnchors = itemRequireAnchors
         browser = itemBrowser
         
+        // Only for portal pages
+        outLinkSelector = DEFAULT.outLinkSelector
+        
+        // No further item pages
         itemExpires = DEFAULT.itemExpires
         itemScrollCount = DEFAULT.itemScrollCount
         itemScriptTimeout = DEFAULT.itemScriptTimeout
