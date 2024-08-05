@@ -8,6 +8,9 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
+import ai.platon.pulsar.dom.nodes.node.ext.cleanText
+import ai.platon.pulsar.persist.ProtocolStatus
+import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -446,10 +449,14 @@ class LoadComponent(
         }
 
         // We might use the cached page's content in parse phase
-        if (options.parse) {
-            // TODO: do we need page.protocalStatus.isSuccess?
+        if (options.parserEngaged()) {
+            // TODO: do we need page.protocolStatus.isSuccess?
             if (!page.isCanceled) {
                 parse(page, normURL.options)
+                if (page.parseStatus.isFailed) {
+                    // re-fetch the page if failed to parse
+                    page.protocolStatus = ProtocolStatus.retry(RetryScope.CRAWL, "parse failed")
+                }
             }
         }
 

@@ -239,11 +239,10 @@ open class LoadOptions(
     /**
      * The selector specified element should have a non-blank text, the system should
      * wait until the element is filled by a non-blank text, or until it times out.
-     * TODO: not implemented yet
      * */
     @ApiPublic
     @Parameter(
-        names = ["-wnb", "-waitNonBlank"],
+        names = ["-wnb", "-waitNonBlank", "--wait-non-blank"],
         description = "The selector specified element should have a non-blank text"
     )
     var waitNonBlank: String = ""
@@ -251,7 +250,6 @@ open class LoadOptions(
     /**
      * The selector specified element should have a non-blank text, the task should
      * be retried if the element's text content is empty or blank.
-     * TODO: not implemented yet
      * */
     @ApiPublic
     @Parameter(
@@ -416,6 +414,17 @@ open class LoadOptions(
         description = "The same as pageLoadTimeout, but only works for item pages"
     )
     var itemPageLoadTimeout = pageLoadTimeout
+    
+    /**
+     * The selector specified element should have a non-blank text, the system should
+     * wait until the element is filled by a non-blank text, or until it times out.
+     * */
+    @ApiPublic
+    @Parameter(
+        names = ["-iwnb", "-itemWaitNonBlank", "--item-wait-non-blank"],
+        description = "The selector specified element should have a non-blank text"
+    )
+    var itemWaitNonBlank: String = ""
     
     /**
      * Re-fetch the item pages if the required text is blank.
@@ -698,6 +707,8 @@ open class LoadOptions(
     protected constructor(args: String, other: LoadOptions) :
         this(split(args), other.conf, other.rawEvent, other.rawItemEvent, other.referrer)
     
+    fun parserEngaged() = parse || requireNotBlank.isNotBlank()
+    
     /**
      * Parse the arguments into [LoadOptions] with JCommander and with bug fixes.
      * */
@@ -767,6 +778,7 @@ open class LoadOptions(
         scriptTimeout = itemScriptTimeout
         scrollInterval = itemScrollInterval
         pageLoadTimeout = itemPageLoadTimeout
+        waitNonBlank = itemWaitNonBlank
         requireNotBlank = itemRequireNotBlank
         requireSize = itemRequireSize
         requireImages = itemRequireImages

@@ -489,23 +489,23 @@ open class InteractiveBrowserEmulator(
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val fetchTask = task.navigateTask.fetchTask
         checkState(fetchTask, task.driver)
-
+        
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         val page = task.page
         val driver = task.driver
-
+        
         tracer?.trace("{}", task.interactSettings)
-
+        
         emit1(EmulateEvents.willCheckDocumentState, page, driver)
-
+        
         // Wait until the document is actually ready, or timeout.
         waitForDocumentActuallyReady(task, result)
-
+        
         if (result.protocolStatus.isSuccess) {
             task.driver.navigateEntry.documentReadyTime = Instant.now()
             emit1(EmulateEvents.documentActuallyReady, page, driver)
         }
-
+        
         if (result.state.isContinue) {
             emit1(EmulateEvents.willScroll, page, driver)
 
@@ -513,7 +513,14 @@ open class InteractiveBrowserEmulator(
 
             emit1(EmulateEvents.didScroll, page, driver)
         }
-
+        
+        if (result.state.isContinue) {
+            val selectors = task.page.options.waitNonBlank.split(",")
+            if (selectors.isNotEmpty()) {
+                waitForElementUntilNonBlank(task, selectors)
+            }
+        }
+        
         if (result.state.isContinue) {
             // TODO: check if state.isContinue is necessary
             emit1(EmulateEvents.documentSteady, page, driver)
@@ -634,7 +641,7 @@ open class InteractiveBrowserEmulator(
         return expressions
     }
 
-    protected open suspend fun waitForElement(
+    protected open suspend fun waitForElementUntilNonBlank(
         interactTask: InteractTask, requiredElements: List<String>,
     ) {
         if (requiredElements.isNotEmpty()) {
@@ -642,7 +649,7 @@ open class InteractiveBrowserEmulator(
         }
 
         val expressions = requiredElements.map { "!!document.querySelector('$it')" }
-        var scrollCount = 0
+        var scrollCount = 5
 
         val delayMillis = interactTask.interactSettings.scrollInterval.toMillis()
         var exists: Any? = null
