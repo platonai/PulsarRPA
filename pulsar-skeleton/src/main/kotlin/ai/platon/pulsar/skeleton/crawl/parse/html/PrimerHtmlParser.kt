@@ -1,21 +1,17 @@
 package ai.platon.pulsar.skeleton.crawl.parse.html
 
-import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_DEFAULT_ENCODING
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.skeleton.common.persist.ext.loadEvent
-import ai.platon.pulsar.skeleton.crawl.parse.ParseFilters
-import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
-import ai.platon.pulsar.skeleton.crawl.parse.Parser
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.common.persist.ext.options
 import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
-import okhttp3.internal.sse.ServerSentEventReader.Companion.options
+import ai.platon.pulsar.skeleton.crawl.parse.ParseFilters
+import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
+import ai.platon.pulsar.skeleton.crawl.parse.Parser
 import org.slf4j.LoggerFactory
 import java.net.MalformedURLException
 import java.time.Duration
@@ -105,10 +101,11 @@ class PrimerHtmlParser(
         val selector = options.requireNotBlank
         if (selector.isNotBlank()) {
             val element = document.selectFirstOrNull(selector)
-            
+
 //            println(element?.text() + " | " + page.url)
 
-            if (element == null) {
+            val text = element?.text() ?: ""
+            if (text.isBlank()) {
                 // The required condition is not matched, the page is not valid
                 val message = "Required element is not blank | $selector"
                 parseContext.parseResult = ParseResult.failed(ParseStatusCodes.FAILED_MISSING_PARTS, message)
