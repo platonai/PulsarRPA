@@ -579,6 +579,7 @@ data class InteractSettings(
         "keyUpDown" to 50..150,
         "press" to 100..400,
         "type" to 50..550,
+        "fill" to 10..50,
         "mouseWheel" to 800..1300,
         "dragAndDrop" to 800..1300,
         "waitForNavigation" to 500..1000,

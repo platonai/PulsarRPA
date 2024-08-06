@@ -541,7 +541,10 @@ class Keyboard(private val devTools: ChromeDevTools) {
             } else {
                 input.insertText("$char")
             }
-            delay(delayMillis)
+            
+            if (delayMillis > 0) {
+                delay(delayMillis)
+            }
         }
     }
     
@@ -557,6 +560,10 @@ class Keyboard(private val devTools: ChromeDevTools) {
      * For example, 'a', 'A', 'KeyA', 'Enter', 'Shift+A', and 'Control+Shift+Tab' are all valid keys.
      * */
     suspend fun press(keyString: String, delayMillis: Long) {
+        if (keyString.isEmpty()) {
+            return
+        }
+        
         val tokens = splitKeyString(keyString).ifEmpty { return@press }
         
         val key = tokens.last()
@@ -583,11 +590,19 @@ class Keyboard(private val devTools: ChromeDevTools) {
     }
 
     suspend fun down(singleKey: String) {
+        if (singleKey.isEmpty()) {
+            return
+        }
+        
         val virtualKey = createVirtualKeyForSingleKeyString(singleKey)
         down(virtualKey)
     }
 
     suspend fun up(singleKey: String) {
+        if (singleKey.isEmpty()) {
+            return
+        }
+        
         val virtualKey = createVirtualKeyForSingleKeyString(singleKey)
         up(virtualKey)
     }
@@ -632,7 +647,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
     
     private fun createVirtualKeyForSingleKeyString(singleKey: String): VirtualKey {
         var virtualKey = VirtualKeyboard.KEYBOARD_LAYOUT[singleKey] ?:
-            throw IllegalArgumentException("Unknown key: $singleKey")
+            throw IllegalArgumentException("Unknown key: >$singleKey<")
 
         val shift = isShifted(virtualKey)
         val shifted = virtualKey.shifted

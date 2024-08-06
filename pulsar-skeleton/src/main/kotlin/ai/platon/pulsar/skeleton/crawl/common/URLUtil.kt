@@ -18,11 +18,13 @@
  */
 package ai.platon.pulsar.skeleton.crawl.common
 
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.urls.UrlUtils.getURLOrNull
 import ai.platon.pulsar.skeleton.common.domain.DomainSuffix
 import ai.platon.pulsar.skeleton.common.domain.DomainSuffixes
-import ai.platon.pulsar.common.urls.UrlUtils.getURLOrNull
 import org.slf4j.LoggerFactory
 import java.net.*
+import java.nio.file.Path
 import java.util.*
 
 /**
@@ -532,6 +534,12 @@ object URLUtil {
         }
     }
 
+    fun pathToUrl(path: Path): String {
+        val base64 = Base64.getUrlEncoder().encode(path.toString().toByteArray()).toString(Charsets.UTF_8)
+        val prefix = AppConstants.LOCALHOST_PREFIX
+        return "$prefix?path=$base64"
+    }
+    
     /**
      * @see URLUtil
      */

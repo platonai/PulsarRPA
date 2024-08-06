@@ -7,6 +7,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
@@ -45,10 +46,6 @@ class ChromeDevtoolsDriver(
     private val browserSettings: BrowserSettings,
     override val browser: ChromeDevtoolsBrowser,
 ) : AbstractWebDriver(browser) {
-
-    companion object {
-        val LOCALHOST_PREFIX = "http://localfile.org"
-    }
 
     private val logger = getLogger(this)
 
@@ -421,7 +418,9 @@ class ChromeDevtoolsDriver(
             }
 
             click(nodeId, 1)
-            keyboard?.type(text, randomDelayMillis("type"))
+            // keyboard?.type(text, randomDelayMillis("fill"))
+            // For fill, there is no delay between key presses
+            keyboard?.type(text, 0)
         }
     }
 
@@ -706,7 +705,7 @@ class ChromeDevtoolsDriver(
 
         navigateUrl = url
         // TODO: This is a temporary solution to serve local file, for example, file:///tmp/example.html
-        if (LOCALHOST_PREFIX in url) {
+        if (AppConstants.LOCALHOST_PREFIX in url) {
             openLocalFile(url)
         } else {
             page.navigate(url, referrer = navigateEntry.pageReferrer)
@@ -734,7 +733,7 @@ class ChromeDevtoolsDriver(
             return
         }
 
-        val url0 = url.removePrefix(LOCALHOST_PREFIX)
+        val url0 = url.removePrefix(AppConstants.LOCALHOST_PREFIX)
         if (SystemUtils.IS_OS_WINDOWS) {
             page.navigate(url0)
         } else {

@@ -36,14 +36,11 @@ import java.util.Map;
  * fired first for the same request.
  */
 @Experimental
-public class RequestWillBeSentExtraInfo {
+public class RequestWillBeSentExtraInfoOld {
 
   private String requestId;
 
-  // Since Chrome 127.0.6533.89
-  // com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
-  // at [Source: UNKNOWN; byte offset: #UNKNOWN] (through reference chain: com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSentExtraInfo["associatedCookies"]->java.util.ArrayList[1]->com.github.kklisura.cdt.protocol.v2023.types.network.BlockedCookieWithReason["cookie"]->com.github.kklisura.cdt.protocol.v2023.types.network.Cookie["partitionKey"])
-//  private List<BlockedCookieWithReason> associatedCookies;
+  private List<BlockedCookieWithReason> associatedCookies;
 
   private Map<String, Object> headers;
 
@@ -69,18 +66,18 @@ public class RequestWillBeSentExtraInfo {
    * with the request and the ones not sent; the latter are distinguished by having blockedReason
    * field set.
    */
-//  public List<BlockedCookieWithReason> getAssociatedCookies() {
-//    return associatedCookies;
-//  }
+  public List<BlockedCookieWithReason> getAssociatedCookies() {
+    return associatedCookies;
+  }
 
   /**
    * A list of cookies potentially associated to the requested URL. This includes both cookies sent
    * with the request and the ones not sent; the latter are distinguished by having blockedReason
    * field set.
    */
-//  public void setAssociatedCookies(List<BlockedCookieWithReason> associatedCookies) {
-//    this.associatedCookies = associatedCookies;
-//  }
+  public void setAssociatedCookies(List<BlockedCookieWithReason> associatedCookies) {
+    this.associatedCookies = associatedCookies;
+  }
 
   /** Raw request headers as they will be sent over the wire. */
   public Map<String, Object> getHeaders() {
