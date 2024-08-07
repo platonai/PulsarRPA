@@ -124,6 +124,12 @@ abstract class AbstractWebDriver(
      * If a driver is not recyclable, it should be kept open and not be closed, and not be used by any other tasks.
      * */
     var isRecyclable: Boolean = true
+    /**
+     * Whether the driver should calculate the DOM features.
+     *
+     * If true, the DOM features should be calculated using __pulsar_utils__.compute().
+     * */
+    var ignoreDOMFeatures: Boolean = false
 
     open val name get() = javaClass.simpleName + "-" + id
 

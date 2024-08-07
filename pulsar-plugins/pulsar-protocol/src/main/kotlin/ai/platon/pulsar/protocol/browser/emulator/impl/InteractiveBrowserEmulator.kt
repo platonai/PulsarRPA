@@ -497,6 +497,7 @@ open class InteractiveBrowserEmulator(
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         val page = task.page
         val driver = task.driver
+        require(driver is AbstractWebDriver)
         
         tracer?.trace("{}", task.interactSettings)
         
@@ -543,7 +544,7 @@ open class InteractiveBrowserEmulator(
         if (result.state.isContinue) {
             emit1(EmulateEvents.willComputeFeature, page, driver)
             
-            if (hasScript) {
+            if (hasScript && !driver.ignoreDOMFeatures) {
                 computeDocumentFeatures(task, result)
             }
             
