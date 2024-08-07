@@ -1,6 +1,7 @@
 package ai.platon.pulsar.rest.api.common
 
 import org.apache.commons.lang3.StringUtils
+import java.util.*
 
 object APISQLUtils {
     private val forbiddenStatements = arrayOf("delete", "insert", "truncate", "drop")
@@ -10,7 +11,7 @@ object APISQLUtils {
             throw IllegalArgumentException("Sql is required")
         }
 
-        var sql0 = sql.trim().toLowerCase()
+        var sql0 = sql.trim().lowercase(Locale.getDefault())
         if (!sql0.startsWith("select")) {
             throw IllegalArgumentException("Only select statements are supported")
         }

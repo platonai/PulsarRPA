@@ -87,7 +87,7 @@ object Systems {
     }
 
     fun getProperty(name: String, defaultValue: Boolean): Boolean {
-        val value = System.getProperty(name)?.toLowerCase()?:return defaultValue
+        val value = System.getProperty(name)?.lowercase(Locale.getDefault())?:return defaultValue
         return SParser(value).getBoolean(defaultValue)
     }
 

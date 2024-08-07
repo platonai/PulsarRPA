@@ -172,7 +172,7 @@ class MiscMessageWriter: MultiSinkWriter() {
         }
 
         val prefix = if (verbose) "verbose-" else ""
-        val category = page.pageCategory.name.toLowerCase()
+        val category = page.pageCategory.name.lowercase(Locale.getDefault())
         write(report, prefix + "fetch-schedule-$category.txt")
     }
 

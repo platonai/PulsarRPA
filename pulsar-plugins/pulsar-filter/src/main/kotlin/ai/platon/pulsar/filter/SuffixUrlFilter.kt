@@ -121,7 +121,7 @@ class SuffixUrlFilter(lines: List<String>, conf: ImmutableConfig) : CrawlUrlFilt
     constructor(conf: ImmutableConfig): this(load(conf), conf)
 
     override fun filter(url: String): String? {
-        var u = if (isIgnoreCase) url.toLowerCase() else url
+        var u = if (isIgnoreCase) url.lowercase(Locale.getDefault()) else url
         if (filterFromPath) {
             try {
                 val pUrl = URL(u)
@@ -170,7 +170,7 @@ class SuffixUrlFilter(lines: List<String>, conf: ImmutableConfig) : CrawlUrlFilt
 
         if (ignore) {
             for (i in aSuffixes.indices) {
-                aSuffixes[i] = aSuffixes[i].toLowerCase()
+                aSuffixes[i] = aSuffixes[i].lowercase(Locale.getDefault())
             }
         }
 

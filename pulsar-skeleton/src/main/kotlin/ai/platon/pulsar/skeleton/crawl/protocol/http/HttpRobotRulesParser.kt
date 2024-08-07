@@ -1,13 +1,14 @@
 package ai.platon.pulsar.skeleton.crawl.protocol.http
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.crawl.protocol.Protocol
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.skeleton.crawl.protocol.RobotRulesParser
-import ai.platon.pulsar.persist.WebPage
 import crawlercommons.robots.BaseRobotRules
 import org.slf4j.LoggerFactory
 import java.net.URL
+import java.util.*
 
 
 /**
@@ -17,7 +18,7 @@ import java.net.URL
  */
 open class HttpRobotRulesParser(conf: ImmutableConfig) : RobotRulesParser(conf) {
     private val allowForbidden = conf.getBoolean("http.robots.403.allow", false)
-
+    
     /**
      * Get the rules from robots.txt which applies for the given `url`.
      * Robot rules are cached for a unique combination of host, protocol, and
@@ -39,12 +40,12 @@ open class HttpRobotRulesParser(conf: ImmutableConfig) : RobotRulesParser(conf) 
             if (LOG.isTraceEnabled) {
                 LOG.trace("cache miss $url")
             }
-
+            
             try {
-                val http = (protocol as? AbstractHttpProtocol)?:return EMPTY_RULES
+                val http = (protocol as? AbstractHttpProtocol) ?: return EMPTY_RULES
                 val page = WebPage.newWebPage(URL(url, "/robots.txt").toString(), volatileConfig)
-                var response: Response? = http.getResponse(page, true)?:return EMPTY_RULES
-
+                var response: Response? = http.getResponse(page, true) ?: return EMPTY_RULES
+                
                 // try one level of redirection ?
                 if (response != null && (response.httpCode == 301 || response.httpCode == 302)) {
                     var redirection = response.getHeader("Location")
@@ -52,19 +53,23 @@ open class HttpRobotRulesParser(conf: ImmutableConfig) : RobotRulesParser(conf) 
                         redirection = response.getHeader("location")
                     }
                     if (redirection != null) {
-                        redir = if (!redirection.startsWith("http")) { // RFC says it should be absolute, but apparently it isn't
-                            URL(url, redirection)
-                        } else {
-                            URL(redirection)
-                        }
+                        redir =
+                            if (!redirection.startsWith("http")) { // RFC says it should be absolute, but apparently it isn't
+                                URL(url, redirection)
+                            } else {
+                                URL(redirection)
+                            }
                         response = http.getResponse(WebPage.newWebPage(redir.toString(), volatileConfig), true)
                     }
                 }
-
+                
                 val content = response?.pageDatum?.content
                 if (response != null && content != null) {
                     if (response.httpCode == 200) // found rules: parse them
-                        robotRules = parseRules(url.toString(), content, response.getHeader("Content-Type")?:"", agentNames) else if (response.httpCode == 403 && !allowForbidden) robotRules = FORBID_ALL_RULES // use forbid all
+                        robotRules = parseRules(
+                            url.toString(), content, response.getHeader("Content-Type") ?: "", agentNames
+                        ) else if (response.httpCode == 403 && !allowForbidden) robotRules =
+                        FORBID_ALL_RULES // use forbid all
                     else if (response.httpCode >= 500) {
                         cacheRule = false
                         robotRules = EMPTY_RULES
@@ -87,24 +92,24 @@ open class HttpRobotRulesParser(conf: ImmutableConfig) : RobotRulesParser(conf) 
                 }
             }
         }
-
-        return robotRules?: EMPTY_RULES
+        
+        return robotRules ?: EMPTY_RULES
     }
-
+    
     companion object {
         val LOG = LoggerFactory.getLogger(HttpRobotRulesParser::class.java)
+        
         /**
          * Compose unique key to store and access robot rules in cache for given URL
          */
         protected fun getCacheKey(url: URL): String {
-            val protocol = url.protocol.toLowerCase() // normalize to lower
+            val protocol = url.protocol.lowercase(Locale.getDefault()) // normalize to lower
             // case
-            val host = url.host.toLowerCase() // normalize to lower case
+            val host = url.host.lowercase(Locale.getDefault()) // normalize to lower case
             var port = url.port
             if (port == -1) {
                 port = url.defaultPort
-            }
-            /*
+            }/*
          * Robot rules apply only to host, protocol, and port where robots.txt is
          * hosted (cf. PULSAR-1752). Consequently
          */

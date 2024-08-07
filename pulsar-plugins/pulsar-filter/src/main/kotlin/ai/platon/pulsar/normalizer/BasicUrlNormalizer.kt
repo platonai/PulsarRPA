@@ -10,6 +10,7 @@ import org.apache.oro.text.regex.*
 import org.slf4j.LoggerFactory
 import java.net.MalformedURLException
 import java.net.URL
+import java.util.*
 
 /**
  * Converts URLs to a normal form:
@@ -71,7 +72,7 @@ class BasicUrlNormalizer(override var conf: ImmutableConfig) : KConfigurable, Ab
             changed = true
         if ("http" == protocol || "https" == protocol || "ftp" == protocol) {
             if (host != null) {
-                val newHost = host.toLowerCase() // lowercase host
+                val newHost = host.lowercase(Locale.getDefault()) // lowercase host
                 if (host != newHost) {
                     host = newHost
                     changed = true

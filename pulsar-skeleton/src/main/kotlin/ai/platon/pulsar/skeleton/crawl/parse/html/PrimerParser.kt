@@ -1,26 +1,26 @@
-
 package ai.platon.pulsar.skeleton.crawl.parse.html
 
 import ai.platon.pulsar.common.DomUtil
-import ai.platon.pulsar.skeleton.common.EncodingDetector
 import ai.platon.pulsar.common.NodeWalker
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants.CACHING_FORBIDDEN_CONTENT
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlUtils.resolveURL
-import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters
-import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
-import ai.platon.pulsar.skeleton.crawl.parse.Parser
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.common.EncodingDetector
+import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters
+import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
+import ai.platon.pulsar.skeleton.crawl.parse.Parser
 import com.google.common.collect.Maps
 import org.slf4j.LoggerFactory
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 import java.net.MalformedURLException
 import java.net.URL
+import java.util.*
 
 /**
  * A very simple DOM parser
@@ -33,11 +33,11 @@ import java.net.URL
 class PrimerParser(val conf: ImmutableConfig) {
     private val logger = LoggerFactory.getLogger(Parser::class.java)
     private val tracer = logger.takeIf { it.isTraceEnabled }
-
+    
     private val cachingPolicy = conf.get(PARSE_CACHING_FORBIDDEN_POLICY, CACHING_FORBIDDEN_CONTENT)
     private var encodingDetector = EncodingDetector(conf)
     private val linkParams = HashMap<String, LinkParams>()
-
+    
     init {
         // forceTags is used to override configurable tag ignoring, later on
         val forceTags = arrayListOf<String>()
@@ -65,7 +65,7 @@ class PrimerParser(val conf: ImmutableConfig) {
             i++
         }
     }
-
+    
     fun detectEncoding(page: WebPage) {
         val encoding = encodingDetector.sniffEncoding(page)
         if (encoding != null && encoding.isNotEmpty()) {
@@ -74,39 +74,40 @@ class PrimerParser(val conf: ImmutableConfig) {
             logger.warn("Failed to detect encoding, url: " + page.url)
         }
     }
-
+    
     @Throws(Exception::class)
     fun parseHTMLDocument(page: WebPage): ParseContext {
-        tracer?.trace("{}.\tParsing page | {} | {} | {} | {}",
+        tracer?.trace(
+            "{}.\tParsing page | {} | {} | {} | {}",
             page.id, Strings.compactFormat(page.contentLength),
             page.protocolStatus, page.htmlIntegrity, page.url
         )
-
+        
         if (page.encoding == null) {
             detectEncoding(page)
         }
-
+        
         val jsoupParser = JsoupParser(page, conf)
         jsoupParser.parse()
-
+        
         return ParseContext(page, jsoupParser.document)
     }
-
+    
     private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {
         if (metaTags.noIndex) {
             return ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_NO_INDEX)
         }
-
+        
         val parseResult = ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_OK)
         if (metaTags.refresh) {
             parseResult.minorCode = ParseStatus.SUCCESS_REDIRECT
             parseResult.args[ParseStatus.REFRESH_HREF] = metaTags.refreshHref.toString()
             parseResult.args[ParseStatus.REFRESH_TIME] = metaTags.refreshTime.toString()
         }
-
+        
         return parseResult
     }
-
+    
     /**
      * This method takes a [StringBuilder] and a DOM [Node], and will
      * append all the content text found beneath the DOM node to the
@@ -121,7 +122,7 @@ class PrimerParser(val conf: ImmutableConfig) {
     fun getPageText(sb: StringBuilder, root: Node, abortOnNestedAnchors: Boolean): Boolean {
         return getTextHelper(sb, root, abortOnNestedAnchors, 0)
     }
-
+    
     /**
      * This is a convinience method, equivalent to
      * [getPageText(sb, node, false)][.getPageText].
@@ -129,19 +130,19 @@ class PrimerParser(val conf: ImmutableConfig) {
     fun getPageText(sb: StringBuilder, root: Node) {
         getPageText(sb, root, false)
     }
-
+    
     fun getPageText(root: Node): String {
         val sb = StringBuilder()
         getPageText(sb, root, false)
         return sb.toString()
     }
-
+    
     fun getPageTitle(root: Node): String {
         val sb = StringBuilder()
         getPageTitle(sb, root)
         return sb.toString()
     }
-
+    
     /**
      * This method takes a [StringBuffer] and a DOM [Node], and will
      * append the content text found beneath the first `title` node to
@@ -151,17 +152,17 @@ class PrimerParser(val conf: ImmutableConfig) {
      */
     private fun getPageTitle(sb: StringBuilder, root: Node): Boolean {
         val walker = NodeWalker(root)
-
+        
         while (walker.hasNext()) {
             val node = walker.nextNode()
             val name = node.nodeName
             val type = node.nodeType
-
+            
             // stop after HEAD
             if ("body".equals(name, ignoreCase = true)) {
                 return false
             }
-
+            
             if (type == Node.ELEMENT_NODE) {
                 if ("title".equals(name, ignoreCase = true)) {
                     getPageText(sb, node)
@@ -169,10 +170,10 @@ class PrimerParser(val conf: ImmutableConfig) {
                 }
             }
         }
-
+        
         return false
     }
-
+    
     fun getMetadata(root: Node): Map<String, String> {
         val metadata: MutableMap<String, String> = Maps.newLinkedHashMap()
         val sb = StringBuilder()
@@ -181,12 +182,12 @@ class PrimerParser(val conf: ImmutableConfig) {
             val currentNode = walker.nextNode()
             val nodeName = currentNode.nodeName
             val nodeType = currentNode.nodeType
-
+            
             // stop after HEAD
             if ("body".equals(nodeName, ignoreCase = true)) {
                 return metadata
             }
-
+            
             if (nodeType == Node.ELEMENT_NODE) {
                 if ("title".equals(nodeName, ignoreCase = true)) {
                     sb.setLength(0)
@@ -197,10 +198,10 @@ class PrimerParser(val conf: ImmutableConfig) {
                 }
             } // if nodeType ...
         }
-
+        
         return metadata
     }
-
+    
     private fun getMetadataFromMetaTag(metadata: MutableMap<String, String>, metaNode: Node) {
         var attrValue: String? = DomUtil.getAttribute(metaNode, "name") ?: return
         if ("keywords".equals(attrValue, ignoreCase = true)) {
@@ -215,7 +216,7 @@ class PrimerParser(val conf: ImmutableConfig) {
             }
         }
     }
-
+    
     /**
      * If Node contains a BASE tag then it's HREF is returned.
      */
@@ -247,10 +248,15 @@ class PrimerParser(val conf: ImmutableConfig) {
         // no.
         return null
     }
-
+    
     // returns true if abortOnNestedAnchors is true and we find nested
     // anchors
-    private fun getTextHelper(sb: StringBuilder, root: Node, abortOnNestedAnchors: Boolean, anchorDepth_: Int): Boolean {
+    private fun getTextHelper(
+        sb: StringBuilder,
+        root: Node,
+        abortOnNestedAnchors: Boolean,
+        anchorDepth_: Int
+    ): Boolean {
         var anchorDepth = anchorDepth_
         var abort = false
         val walker = NodeWalker(root)
@@ -288,34 +294,37 @@ class PrimerParser(val conf: ImmutableConfig) {
         }
         return abort
     }
-
+    
     private fun hasOnlyWhiteSpace(root: Node): Boolean {
         for (element in root.nodeValue) {
             if (!Character.isWhitespace(element)) return false
         }
         return true
     }
-
+    
     // this only covers a few cases of empty links that are symptomatic
     // of nekohtml's DOM-fixup process...
     private fun shouldThrowAwayLink(root: Node, children: NodeList, childLen: Int, params: LinkParams): Boolean {
         if (childLen == 0) { // this has no inner structure
             return params.childLen != 0
         } else if (childLen == 1
-                && children.item(0).nodeType == Node.ELEMENT_NODE
-                && params.elName.equals(children.item(0).nodeName, ignoreCase = true)) { // single nested link
+            && children.item(0).nodeType == Node.ELEMENT_NODE
+            && params.elName.equals(children.item(0).nodeName, ignoreCase = true)
+        ) { // single nested link
             return true
         } else if (childLen == 2) {
             val c0 = children.item(0)
             val c1 = children.item(1)
             if (c0.nodeType == Node.ELEMENT_NODE
-                    && params.elName.equals(c0.nodeName, ignoreCase = true)
-                    && c1.nodeType == Node.TEXT_NODE && hasOnlyWhiteSpace(c1)) { // single link followed by whitespace root
+                && params.elName.equals(c0.nodeName, ignoreCase = true)
+                && c1.nodeType == Node.TEXT_NODE && hasOnlyWhiteSpace(c1)
+            ) { // single link followed by whitespace root
                 return true
             }
             if (c1.nodeType == Node.ELEMENT_NODE
-                    && params.elName.equals(c1.nodeName, ignoreCase = true)
-                    && c0.nodeType == Node.TEXT_NODE && hasOnlyWhiteSpace(c0)) { // whitespace root followed by single link
+                && params.elName.equals(c1.nodeName, ignoreCase = true)
+                && c0.nodeType == Node.TEXT_NODE && hasOnlyWhiteSpace(c0)
+            ) { // whitespace root followed by single link
                 return true
             }
         } else if (childLen == 3) {
@@ -323,17 +332,18 @@ class PrimerParser(val conf: ImmutableConfig) {
             val c1 = children.item(1)
             val c2 = children.item(2)
             if (c1.nodeType == Node.ELEMENT_NODE
-                    && params.elName.equals(c1.nodeName, ignoreCase = true)
-                    && c0.nodeType == Node.TEXT_NODE
-                    && c2.nodeType == Node.TEXT_NODE && hasOnlyWhiteSpace(c0)
-                    && hasOnlyWhiteSpace(c2)) { // single link surrounded by whitespace nodes
+                && params.elName.equals(c1.nodeName, ignoreCase = true)
+                && c0.nodeType == Node.TEXT_NODE
+                && c2.nodeType == Node.TEXT_NODE && hasOnlyWhiteSpace(c0)
+                && hasOnlyWhiteSpace(c2)
+            ) { // single link surrounded by whitespace nodes
                 return true
             }
         }
-
+        
         return false
     }
-
+    
     /**
      * This method finds all anchors below the supplied DOM `root`, and
      * creates appropriate [HyperlinkPersistable] records for each (relative to the
@@ -347,12 +357,17 @@ class PrimerParser(val conf: ImmutableConfig) {
     fun collectLinks(base: URL, root: Node): MutableSet<HyperlinkPersistable> {
         return collectLinks(base, root, null)
     }
-
+    
     fun collectLinks(base: URL, root: Node, crawlFilters: CrawlFilters?): MutableSet<HyperlinkPersistable> {
         return collectLinks(base, mutableSetOf(), root, crawlFilters)
     }
-
-    fun collectLinks(base: URL, hyperlinks: MutableSet<HyperlinkPersistable>, root: Node, crawlFilters: CrawlFilters?): MutableSet<HyperlinkPersistable> {
+    
+    fun collectLinks(
+        base: URL,
+        hyperlinks: MutableSet<HyperlinkPersistable>,
+        root: Node,
+        crawlFilters: CrawlFilters?
+    ): MutableSet<HyperlinkPersistable> {
         val walker = NodeWalker(root)
         while (walker.hasNext()) {
             val currentNode = walker.nextNode()
@@ -363,11 +378,16 @@ class PrimerParser(val conf: ImmutableConfig) {
                 logger.debug("Block disallowed, skip : " + DomUtil.getPrettyName(currentNode))
             }
         }
-
+        
         return hyperlinks
     }
-
-    private fun getLinksStep2(base: URL, hyperlinks: MutableSet<HyperlinkPersistable>, root: Node, crawlFilters: CrawlFilters?) {
+    
+    private fun getLinksStep2(
+        base: URL,
+        hyperlinks: MutableSet<HyperlinkPersistable>,
+        root: Node,
+        crawlFilters: CrawlFilters?
+    ) {
         val walker = NodeWalker(root)
         // log.debug("Get hypeLinks for " + DomUtil.getPrettyName(root));
         while (walker.hasNext()) {
@@ -377,13 +397,13 @@ class PrimerParser(val conf: ImmutableConfig) {
                 walker.skipChildren()
                 continue
             }
-
+            
             var nodeName = currentNode.nodeName
             val nodeType = currentNode.nodeType
             val children = currentNode.childNodes
             val childLen = children?.length ?: 0
             if (nodeType == Node.ELEMENT_NODE) {
-                nodeName = nodeName.toLowerCase()
+                nodeName = nodeName.lowercase(Locale.getDefault())
                 val params = linkParams[nodeName]
                 if (params != null) {
                     if (!shouldThrowAwayLink(currentNode, children, childLen, params)) {
@@ -400,24 +420,27 @@ class PrimerParser(val conf: ImmutableConfig) {
                             if (params.attrName.equals(attrName, ignoreCase = true)) {
                                 target = attr.nodeValue
                             } else if ("rel".equals(attrName, ignoreCase = true)
-                                    && "nofollow".equals(attr.nodeValue, ignoreCase = true)) {
+                                && "nofollow".equals(attr.nodeValue, ignoreCase = true)
+                            ) {
                                 noFollow = true
                             } else if ("rel".equals(attrName, ignoreCase = true)
-                                    && "qi-nofollow".equals(attr.nodeValue, ignoreCase = true)) {
+                                && "qi-nofollow".equals(attr.nodeValue, ignoreCase = true)
+                            ) {
                                 allow = false
                             } else if ("method".equals(attrName, ignoreCase = true)
-                                    && "post".equals(attr.nodeValue, ignoreCase = true)) {
+                                && "post".equals(attr.nodeValue, ignoreCase = true)
+                            ) {
                                 post = true
                             }
                         }
-
+                        
                         if (target != null && !noFollow && !post) try {
                             val url = resolveURL(base, target)
                             hyperlinks.add(HyperlinkPersistable(url.toString(), linkText.toString().trim { it <= ' ' }))
                         } catch (ignored: MalformedURLException) {
                         }
                     } // if not should throw away
-
+                    
                     // this should not have any children, skip them
                     if (params.childLen == 0) {
                     }
@@ -425,7 +448,7 @@ class PrimerParser(val conf: ImmutableConfig) {
             }
         }
     }
-
+    
     private class LinkParams(var elName: String, var attrName: String, var childLen: Int) {
         override fun toString(): String {
             return "LP[el=$elName,attr=$attrName,len=$childLen]"
