@@ -42,12 +42,21 @@ data class PrivacyAgentId(
      * */
     val isGroup get() = this.contextDir.startsWith(AppPaths.CONTEXT_GROUP_BASE_DIR)
     /**
-     * If true, the privacy agent opens browser with a temporary data dir, the temporary data dir is created before the
-     * browser starts and will be deleted after the browser closes.
+     * Check if this browser is permanent.
+     *
+     * If a browser is temporary:
+     * - it will be closed when the browser is idle
+     * - the user data will be deleted after the browser is closed
      * */
     val isTemporary get() = this.contextDir.startsWith(AppPaths.CONTEXT_TMP_DIR)
-
-    val isPermanent get() = isSystemDefault || isPrototype
+    /**
+     * Check if this browser is permanent.
+     *
+     * If a browser is permanent:
+     * - it will not be closed when the browser is idle
+     * - the user data will be kept after the browser is closed
+     * */
+    val isPermanent get() = isSystemDefault || isDefault || isPrototype
 
     /**
      * The PrivacyAgent equality.

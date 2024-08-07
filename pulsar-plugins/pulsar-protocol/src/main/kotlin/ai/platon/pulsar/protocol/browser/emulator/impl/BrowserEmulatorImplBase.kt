@@ -21,6 +21,7 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.*
+import ai.platon.pulsar.skeleton.crawl.common.URLUtil
 import kotlinx.coroutines.delay
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
@@ -96,11 +97,14 @@ abstract class BrowserEmulatorImplBase(
             task.pageSource = ""
             return createResponseWithDatum(task, pageDatum)
         }
-
+        
+        val isLocalFile = URLUtil.isLocalFile(task.url)
         // Check whether the source code of the page is intact.
-        val integrity = responseHandler.htmlIntegrityChecker(task.pageSource, task.pageDatum)
+        val integrity = if (isLocalFile) HtmlIntegrity.OK else
+            responseHandler.htmlIntegrityChecker(task.pageSource, task.pageDatum)
+
         // Check browse timeout event, transform status to be success if the page source is good
-        if (pageDatum.protocolStatus.isTimeout) {
+        if (!isLocalFile && pageDatum.protocolStatus.isTimeout) {
             if (integrity.isOK) {
                 // fetch timeout but content is OK
                 pageDatum.protocolStatus = ProtocolStatus.STATUS_SUCCESS

@@ -43,7 +43,9 @@ abstract class AbstractBrowser(
     override val data: MutableMap<String, Any?> = mutableMapOf()
 
     override val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
-
+    
+    override val isPermanent: Boolean get() = id.privacyAgent.isPermanent
+    
     val isGUI get() = browserSettings.isGUI
     val idleTimeout = Duration.ofMinutes(10)
 

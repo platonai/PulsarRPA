@@ -32,6 +32,14 @@ interface Browser: AutoCloseable {
      * */
     val isIdle: Boolean
     /**
+     * Check if this browser is permanent.
+     *
+     * If a browser is permanent:
+     * - it will not be closed when the browser is idle
+     * - the user data will be kept after the browser is closed
+     * */
+    val isPermanent: Boolean
+    /**
      * Create a new driver.
      * */
     @Throws(WebDriverException::class)

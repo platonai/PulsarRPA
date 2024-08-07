@@ -247,5 +247,5 @@ public interface AppConstants {
     String SCENT_PSEUDO_CSS_ID_TITLE = "#scent-pseudo-id-title";
 
 
-    String LOCALHOST_PREFIX = "http://localfile.org";
+    String LOCAL_FILE_SERVE_PREFIX = "http://localfile.org";
 }

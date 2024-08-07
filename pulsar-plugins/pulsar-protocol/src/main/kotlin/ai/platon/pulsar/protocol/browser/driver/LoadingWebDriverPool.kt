@@ -135,9 +135,13 @@ class LoadingWebDriverPool constructor(
     /**
      * Check if the pool is idle. If there is no working driver and the idle time is longer than the idle timeout,
      * the pool is idle. If the pool is idle, it should be closed.
+     *
+     * TODO: consider permanent browsers
      * */
     val isIdle get() = (numWorking == 0 && idleTime > idleTimeout)
 
+    val isPermanent get() = browserId.privacyAgent.isPermanent
+    
     class Snapshot(
         val numActive: Int,
         val numStandby: Int,

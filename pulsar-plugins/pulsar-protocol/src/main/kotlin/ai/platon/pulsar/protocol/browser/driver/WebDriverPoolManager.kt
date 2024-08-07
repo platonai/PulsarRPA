@@ -316,9 +316,12 @@ open class WebDriverPoolManager(
         if (maintainCount.getAndIncrement() == 0) {
             logger.info("Maintaining service is started, minimal maintain interval: {}", minMaintainInterval)
         }
-
+        
         try {
-            doMaintain()
+            val allPermanent = browserManager.browsers.all { it.value.isPermanent }
+            if (!allPermanent) {
+                doMaintain()
+            }
         } catch (e: InterruptedException) {
             logger.warn("Interrupted | {}", e.message)
             Thread.currentThread().interrupt()
@@ -571,20 +574,31 @@ private class BrowserAccompaniedDriverPoolCloser(
         }
     }
 
+    /**
+     * Close the driver pool and the associated browser if it is not permanent and is idle.
+     * */
     @Synchronized
     fun closeIdleDriverPoolsSafely() {
         // TODO: just mark them to be retired
 //        workingDriverPools.values.filter { it.isIdle }.forEach {
 //            it.retire()
 //        }
-
-        workingDriverPools.values.filter { it.isIdle }.forEach { driverPool ->
-            logger.info("Driver pool is idle, closing it ... | {}", driverPool.browserId)
-            logger.info(driverPool.takeSnapshot().format(true))
-            runCatching { closeBrowserAccompaniedDriverPool(driverPool) }.onFailure { warnInterruptible(this, it) }
-        }
+        
+        workingDriverPools.values.asSequence()
+            .filter { !it.isPermanent }
+            .filter { it.isIdle }
+            .forEach { driverPool ->
+                logger.info("Driver pool is idle, closing it ... | {}", driverPool.browserId)
+                logger.info(driverPool.takeSnapshot().format(true))
+                runCatching { closeBrowserAccompaniedDriverPool(driverPool) }.onFailure { warnInterruptible(this, it) }
+            }
     }
 
+    /**
+     * Close unexpected active browsers.
+     *
+     * If the browser is in the closed list, it means the browser is not active, and we can close it.
+     * */
     @Synchronized
     fun closeUnexpectedActiveBrowsers() {
         driverPoolPool.closedDriverPools.forEach { browserId ->

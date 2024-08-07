@@ -705,7 +705,7 @@ class ChromeDevtoolsDriver(
 
         navigateUrl = url
         // TODO: This is a temporary solution to serve local file, for example, file:///tmp/example.html
-        if (AppConstants.LOCALHOST_PREFIX in url) {
+        if (AppConstants.LOCAL_FILE_SERVE_PREFIX in url) {
             openLocalFile(url)
         } else {
             page.navigate(url, referrer = navigateEntry.pageReferrer)
@@ -733,7 +733,7 @@ class ChromeDevtoolsDriver(
             return
         }
 
-        val url0 = url.removePrefix(AppConstants.LOCALHOST_PREFIX)
+        val url0 = url.removePrefix(AppConstants.LOCAL_FILE_SERVE_PREFIX)
         if (SystemUtils.IS_OS_WINDOWS) {
             page.navigate(url0)
         } else {
