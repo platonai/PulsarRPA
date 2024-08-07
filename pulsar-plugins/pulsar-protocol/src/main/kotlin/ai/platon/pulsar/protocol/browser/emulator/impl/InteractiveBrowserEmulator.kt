@@ -502,9 +502,13 @@ open class InteractiveBrowserEmulator(
         
         emit1(EmulateEvents.willCheckDocumentState, page, driver)
         
-        // Wait until the document is actually ready, or timeout.
-        waitForDocumentActuallyReady(task, result)
+        val hasScript = waitForJavascriptInjected(task, result)
         
+        if (hasScript) {
+            // Wait until the document is actually ready, or timeout.
+            waitForDocumentActuallyReady(task, result)
+        }
+
         if (result.protocolStatus.isSuccess) {
             task.driver.navigateEntry.documentReadyTime = Instant.now()
             emit1(EmulateEvents.documentActuallyReady, page, driver)
@@ -513,12 +517,14 @@ open class InteractiveBrowserEmulator(
         if (result.state.isContinue) {
             emit1(EmulateEvents.willScroll, page, driver)
             
-            scrollOnPage(task, result)
+            if (hasScript) {
+                scrollOnPage(task, result)
+            }
             
             emit1(EmulateEvents.didScroll, page, driver)
         }
         
-        if (result.state.isContinue) {
+        if (result.state.isContinue && hasScript) {
             val selectors = task.page.options.waitNonBlank.split(",")
             if (selectors.isNotEmpty()) {
                 waitForElementUntilNonBlank(task, selectors)
@@ -537,7 +543,9 @@ open class InteractiveBrowserEmulator(
         if (result.state.isContinue) {
             emit1(EmulateEvents.willComputeFeature, page, driver)
             
-            computeDocumentFeatures(task, result)
+            if (hasScript) {
+                computeDocumentFeatures(task, result)
+            }
             
             emit1(EmulateEvents.featureComputed, page, driver)
         }
@@ -550,18 +558,40 @@ open class InteractiveBrowserEmulator(
      * */
     @Throws(NavigateTaskCancellationException::class)
     protected open suspend fun waitForDocumentActuallyReady(interactTask: InteractTask, result: InteractResult) {
+        val page = interactTask.page
         val driver = interactTask.driver
         require(driver is AbstractWebDriver)
-
-        val utils = driver.evaluate("__pulsar_utils__")
-        println("utils: $utils")
-        
-        if (utils == null) {
-            logger.warn("The page does not have __pulsar_utils__ | {}", interactTask.url)
-            return
-        }
         
         waitForDocumentActuallyReady1(interactTask, result)
+    }
+    
+    /**
+     * Wait until javascript is injected, or timeout.
+     * The javascript can be failed to be injected, for example, the resource is an Excel, PDF, etc.
+     * */
+    protected open suspend fun waitForJavascriptInjected(interactTask: InteractTask, result: InteractResult): Boolean {
+        val page = interactTask.page
+        val driver = interactTask.driver
+
+        var n = 10
+        while (n-- > 0 && !isScriptInjected(driver)) {
+            delay(1000)
+        }
+
+        if (n <= 0) {
+            logger.warn("Javascript is not injected | {}", page.href ?: page.url)
+        }
+        
+        return n > 0
+    }
+    
+    /**
+     * Check if the script is injected.
+     * */
+    protected suspend fun isScriptInjected(driver: WebDriver): Boolean {
+        // Ensure __pulsar_utils__ is defined. For some type of pages, the script can not be injected.
+        val utils = driver.evaluate("typeof(__pulsar_utils__)")
+        return utils == "function"
     }
     
     /**
@@ -617,7 +647,7 @@ open class InteractiveBrowserEmulator(
                 if (tracer != null) {
                     val page = interactTask.page
                     val truncatedMessage = message.toString().substringBefore("urls")
-                    tracer?.trace("{}. DOM is ready after {} evaluation | {}", page.id, i, truncatedMessage)
+                    tracer.trace("{}. DOM is ready after {} evaluation | {}", page.id, i, truncatedMessage)
                 }
             }
         }

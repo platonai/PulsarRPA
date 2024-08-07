@@ -69,6 +69,15 @@ class InteractTask(
      * The interact settings.
      * */
     val interactSettings get() = navigateTask.interactSettings
+
+    fun supportDOM(): Boolean {
+        // TODO: should use driver.supportJavascript
+        // TODO: pageDatum.contentType is not set yet
+//        val contentType = interactTask.navigateTask.pageDatum.contentType
+        val contentType = navigateTask.pageDatum.headers[HttpHeaders.CONTENT_TYPE]?.lowercase()
+        val domMineTypes = listOf("text/html", "application/xhtml+xml", "text/xml", "application/xml")
+        return contentType != null && contentType in domMineTypes
+    }
 }
 
 class BrowserErrorResponse(

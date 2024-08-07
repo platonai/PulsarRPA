@@ -67,6 +67,12 @@ class ConcurrentStatefulDriverPool(
     @Synchronized
     fun offer(driver: WebDriver) {
         require(driver is AbstractWebDriver)
+        
+        if (!driver.isRecyclable) {
+            // this driver is not recyclable, it should keep open
+            return
+        }
+
         driver.free()
         _workingDrivers.remove(driver)
         _standbyDrivers.offer(driver)

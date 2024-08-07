@@ -117,6 +117,14 @@ abstract class AbstractWebDriver(
 
     var isReused: Boolean = false
 
+    /**
+     * If a driver is recyclable, it should be closed after the task is done, and add to a standby pool,
+     * so it can be reused for other tasks.
+     *
+     * If a driver is not recyclable, it should be kept open and not be closed, and not be used by any other tasks.
+     * */
+    var isRecyclable: Boolean = true
+
     open val name get() = javaClass.simpleName + "-" + id
 
     override var navigateEntry: NavigateEntry = NavigateEntry("")

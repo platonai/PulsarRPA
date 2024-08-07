@@ -76,8 +76,8 @@ class ScrapeServiceTests {
     }
 
     @Test
-    fun `When scrape jd then the base uri returns asynchronously`() {
-        val url = "https://www.jd.com/ -i 0s"
+    fun `When scrape amazon then the base uri returns asynchronously`() {
+        val url = "https://www.amazon.com/ -i 0s"
         val sql = "select dom_base_uri(dom) as uri from load_and_select('$url', ':root')"
         val request = ScrapeRequest(sql)
 
