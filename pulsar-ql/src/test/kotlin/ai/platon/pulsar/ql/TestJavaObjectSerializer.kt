@@ -5,35 +5,32 @@ import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.dom.nodes.node.ext.uniqueName
 import ai.platon.pulsar.ql.common.PulsarObjectSerializer
+import ai.platon.pulsar.ql.common.types.ValueDom
 import ai.platon.pulsar.ql.h2.H2Db
 import ai.platon.pulsar.ql.h2.H2DbConfig
-import ai.platon.pulsar.ql.common.types.ValueDom
 import org.apache.commons.io.FileUtils
 import org.h2.engine.SysProperties
 import org.h2.tools.Server
 import org.h2.util.JdbcUtils
 import org.jsoup.Jsoup
-import org.junit.AfterClass
-import org.junit.BeforeClass
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Types
-import kotlin.test.Ignore
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
-class TestJavaObjectSerializer: TestBase() {
-
+class TestJavaObjectSerializer : TestBase() {
+    
     companion object {
-
+        
         private val baseDir = AppPaths.TEST_DIR.resolve("unittests/TestJavaObjectSerializer")
         val conf = H2DbConfig(baseDir = baseDir, networked = true)
         val remoteDB = H2Db(conf)
         var server: Server? = null
-
+        
+        @BeforeAll
         @JvmStatic
-        @BeforeClass
         fun init() {
             try {
                 initializeDatabase()
@@ -41,14 +38,14 @@ class TestJavaObjectSerializer: TestBase() {
                 logger.info(e.stringify())
             }
         }
-
+        
+        @AfterAll
         @JvmStatic
-        @AfterClass
         fun destroy() {
             destroyDatabase()
             runCatching { FileUtils.deleteDirectory(baseDir.toFile()) }.onFailure { it.printStackTrace() }
         }
-
+        
         /**
          * This method is called before a complete set of tests is run. It deletes
          * old database files in the test directory and trace files. It also starts
@@ -56,15 +53,13 @@ class TestJavaObjectSerializer: TestBase() {
          */
         private fun initializeDatabase() {
             logger.info("Initializing database")
-
+            
             val config = remoteDB.conf
-            val args = if (config.ssl)
-                mutableListOf("-tcpSSL", "-tcpPort", config.port.toString())
-            else
-                mutableListOf("-tcpPort", config.port.toString())
-
+            val args = if (config.ssl) mutableListOf("-tcpSSL", "-tcpPort", config.port.toString())
+            else mutableListOf("-tcpPort", config.port.toString())
+            
             args.add("-trace")
-
+            
             server = Server.createTcpServer(*args.toTypedArray())
             try {
                 server?.start()
@@ -73,7 +68,7 @@ class TestJavaObjectSerializer: TestBase() {
                 e.printStackTrace()
             }
         }
-
+        
         /**
          * Clean test environment
          * TODO: database destroy causes the SQLContext closing, which is required by other DB connections
@@ -86,122 +81,122 @@ class TestJavaObjectSerializer: TestBase() {
 //            logger.info("Database destroyed")
         }
     }
-
+    
     private val productIndexUrl = TestResource.productIndexUrl
-
+    
     @Test
     fun testLocalSerialization() {
         val serializer = PulsarObjectSerializer()
-
+        
         val baseURI = "http://example.com/"
         val doc = Jsoup.parseBodyFragment("<div>Hello World</div>", baseURI)
         val baseDom = ValueDom.get(doc.body().selectFirst("div"))
-
+        
         val bytes = serializer.serialize(baseDom)
         val obj = serializer.deserialize(bytes)
         assertTrue(obj is ValueDom)
         val dom = obj as ValueDom
-
+        
         // println(dom.outHtml)
-
+        
         val deserializeBytes = serializer.serialize(dom)
         val deserializeObject = serializer.deserialize(deserializeBytes)
         assertTrue(deserializeObject is ValueDom)
         val dom2 = deserializeObject as ValueDom
         assertTrue { dom == dom2 }
-
+        
         assertTrue { obj !== deserializeObject }
         assertTrue { dom.element.baseUri() == dom2.element.baseUri() }
         // assertTrue { dom.element.ownerDocument.extension() != dom2.element.ownerDocument() }
     }
-
+    
     @Test
     fun testNetworkSerialization() {
         val conn = remoteDB.getConnection("testNetworkSerialization")
         val stat = conn.createStatement()
         stat.execute("create table t(id int, val other)")
-
+        
         val baseURI = "http://example.com/"
         val doc = Jsoup.parseBodyFragment("<div>Hello World</div>", baseURI)
         val baseDom = ValueDom.get(doc.body().selectFirst("div"))
-
+        
         val ins = conn.prepareStatement("insert into t(id, val) values(?, ?)")
         ins.setInt(1, 2)
         ins.setObject(2, baseDom, Types.JAVA_OBJECT)
         assertEquals(1, ins.executeUpdate())
-
+        
         val stat2 = conn.createStatement()
         // val rs = s.executeQuery("select val from t")
         val rs = stat2.executeQuery("select val, id from t")
-
+        
         assertTrue(rs.next())
         assertTrue(rs.getObject(1) is ValueDom)
         assertTrue((rs.getObject(1) as ValueDom).element.toString().contains("Hello World"))
     }
-
+    
     @Ignore("Ignored temporary")
     @Test
     fun testNetworkSerialization2() {
         val conn = remoteDB.getConnection("testNetworkSerialization2")
         val stat = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)
-
+        
         val expr = "sibling > 20 && char > 40 && char < 100 && width > 200"
         val sql = """SELECT
             DOM, DOM_FIRST_HREF(DOM), TOP, LEFT, WIDTH, HEIGHT, CHAR, IMG, A, SIBLING, DOM_TEXT(DOM)
             FROM LOAD_AND_GET_FEATURES('$productIndexUrl', '*:expr($expr)')
             ORDER BY SIBLING DESC, CHAR DESC LIMIT 500"""
         val rs = stat.executeQuery(sql)
-
+        
         assertTrue(rs.next())
         assertTrue(rs.getObject(1) is ValueDom)
         val dom = rs.getObject(1) as ValueDom
         assertTrue { dom.element.uniqueName.contains("nfItem") }
-
+        
         rs.beforeFirst()
         println(ResultSetFormatter(rs).toString())
-
+        
         println(sql)
         println(SysProperties.serializeJavaObject)
         println(JdbcUtils.serializer.javaClass.name)
-
+        
         println(dom.element.uniqueName)
     }
-
+    
     @Ignore("SlowTest")
     @Test
     fun testNetworkSerialization3() {
         val conn = remoteDB.getConnection("testNetworkSerialization3")
         val stat = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)
-
+        
         val expr = "sibling > 20 && char > 40 && char < 100 && width > 200"
         val sql = """SELECT
             DOM_FIRST_HREF(DOM), DOM_TEXT(DOM)
             FROM LOAD_OUT_PAGES('$productIndexUrl', '*:expr($expr)')
             LIMIT 30"""
         val rs = stat.executeQuery(sql)
-
+        
         println(sql)
         println(ResultSetFormatter(rs).toString())
         println("serializeJavaObject: " + SysProperties.serializeJavaObject)
         println("serializer: " + JdbcUtils.serializer.javaClass.name)
     }
-
+    
     @Ignore("Ignored temporary")
     @Test
     fun testNetworkSerialization4() {
         val sql = """SELECT DOM_DOC_TITLE(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome');"""
-
+        
         IntRange(1, 50).toList().parallelStream().forEach {
             runNetworkSerialization(sql)
         }
     }
-
+    
     private fun runNetworkSerialization(sql: String) {
         val conn = remoteDB.getRandomConnection()
         val stat = conn.createStatement()
-
+        
         val rs = stat.executeQuery(sql)
-
+        
         assertTrue(rs.next())
         val value = rs.getString(1)
         println(value)

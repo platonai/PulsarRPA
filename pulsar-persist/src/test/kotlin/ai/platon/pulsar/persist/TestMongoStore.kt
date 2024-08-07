@@ -3,7 +3,7 @@ package ai.platon.pulsar.persist
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.apache.gora.mongodb.store.MongoStore
-import org.junit.Ignore
+
 import kotlin.test.*
 
 class TestMongoStore {

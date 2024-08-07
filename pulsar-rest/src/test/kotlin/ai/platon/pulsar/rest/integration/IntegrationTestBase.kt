@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import kotlin.test.*
-import org.junit.runner.RunWith
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo
 import org.springframework.boot.test.context.SpringBootTest
@@ -16,7 +16,7 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import kotlin.test.assertTrue
 
-@RunWith(SpringRunner::class)
+
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureDataMongo

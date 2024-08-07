@@ -1,33 +1,19 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilter
-import org.junit.Assert
+
 import java.io.BufferedReader
 import java.io.Reader
 import java.util.function.Consumer
 import kotlin.streams.toList
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.test.fail
 
-// JDK imports
+
 abstract class RegexUrlFilterBaseTest(testDir: String) : UrlFilterTestBase(testDir) {
 
     protected abstract fun getURLFilter(reader: Reader): CrawlUrlFilter
@@ -38,7 +24,7 @@ abstract class RegexUrlFilterBaseTest(testDir: String) : UrlFilterTestBase(testD
             val urlReader = ResourceLoader.getResourceAsReader("$testResourcePrefix/$file.urls")!!
             bench(loops, rulesReader, urlReader)
         } catch (e: Exception) {
-            Assert.fail(e.toString())
+            fail(e.toString())
         }
     }
 
@@ -51,7 +37,7 @@ abstract class RegexUrlFilterBaseTest(testDir: String) : UrlFilterTestBase(testD
                 test(filter, expected)
             }
         } catch (e: Exception) {
-            Assert.fail(e.toString())
+            fail(e.toString())
         }
 
         LOG.info("Bench time (" + loops + ") " + (System.currentTimeMillis() - start) + "ms")
@@ -63,7 +49,7 @@ abstract class RegexUrlFilterBaseTest(testDir: String) : UrlFilterTestBase(testD
             val urlReader = ResourceLoader.getResourceAsReader("$testResourcePrefix/$file.urls")!!
             test(rulesReader, urlReader)
         } catch (e: Exception) {
-            Assert.fail(e.toString())
+            fail(e.toString())
         }
     }
 
@@ -71,7 +57,7 @@ abstract class RegexUrlFilterBaseTest(testDir: String) : UrlFilterTestBase(testD
         try {
             test(getURLFilter(reader), readURLFile(urls))
         } catch (e: Exception) {
-            Assert.fail(e.stringify())
+            fail(e.stringify())
         }
     }
 
@@ -79,9 +65,9 @@ abstract class RegexUrlFilterBaseTest(testDir: String) : UrlFilterTestBase(testD
         expected.forEach(Consumer { url: FilteredURL ->
             val result = filter.filter(url.url)
             if (result != null) {
-                Assert.assertTrue(url.url, url.sign)
+                assertTrue(url.sign, url.url)
             } else {
-                Assert.assertFalse(url.url, url.sign)
+                assertFalse(url.sign, url.url)
             }
         })
     }

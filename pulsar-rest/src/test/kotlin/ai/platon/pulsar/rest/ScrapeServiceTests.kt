@@ -9,9 +9,9 @@ import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
 import ai.platon.pulsar.rest.api.service.ScrapeService
 import org.apache.commons.lang3.RandomStringUtils
-import org.junit.Ignore
+
 import kotlin.test.*
-import org.junit.runner.RunWith
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.logging.logback.LogbackLoggingSystem
 import org.springframework.boot.test.context.SpringBootTest
@@ -21,7 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.util.ClassUtils
 import kotlin.test.*
 
-@RunWith(SpringRunner::class)
+
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class ScrapeServiceTests {

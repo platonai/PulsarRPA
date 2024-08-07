@@ -6,9 +6,10 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
 import ai.platon.pulsar.persist.WebDb
-import org.junit.*
+
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import kotlin.test.*
 
 /**
  * Created by vincent on 16-7-20.
@@ -26,11 +27,11 @@ class TestWeakIndexer {
     private val exampleUrls = IntRange(10000, 10050).map { AppConstants.EXAMPLE_URL + "/" + it }
     private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
 
-    @Before
+    @BeforeTest
     fun setup() {
     }
 
-    @After
+    @AfterTest
     fun teardown() {
         webDb.flush()
         webDb.close()
@@ -47,12 +48,12 @@ class TestWeakIndexer {
         urlTrackerIndexer.indexAll(exampleUrls)
         urlTrackerIndexer.commit()
         var page = webDb.get(indexPageUrl)
-        Assert.assertTrue(page.isNotNil)
-        Assert.assertTrue(page.isInternal)
-        Assert.assertEquals(exampleUrls.size.toLong(), page.liveLinks.size.toLong())
+        assertTrue(page.isNotNil)
+        assertTrue(page.isInternal)
+        assertEquals(exampleUrls.size.toLong(), page.liveLinks.size.toLong())
         urlTrackerIndexer.takeAll(pageNo)
         page = webDb.get(indexPageUrl)
-        Assert.assertTrue(page.isNotNil)
-        Assert.assertTrue(page.liveLinks.isEmpty())
+        assertTrue(page.isNotNil)
+        assertTrue(page.liveLinks.isEmpty())
     }
 }

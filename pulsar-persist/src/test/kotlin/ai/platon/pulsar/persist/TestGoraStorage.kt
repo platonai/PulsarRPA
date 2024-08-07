@@ -12,12 +12,12 @@ import org.apache.gora.memory.store.MemStore
 import org.apache.gora.persistency.impl.DirtyCollectionWrapper
 import org.apache.gora.persistency.impl.DirtyListWrapper
 import org.apache.gora.store.DataStore
-import org.junit.*
+import org.junit.jupiter.api.AfterAll
+
 import org.slf4j.LoggerFactory
+import org.springframework.test.context.event.annotation.BeforeTestClass
 import java.time.Instant
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Created by vincent on 16-7-20.
@@ -32,11 +32,8 @@ class TestGoraStorage {
         private var store: DataStore<String, GWebPage> = webDb.dataStore
         private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
 
-        @BeforeClass
-        fun setupClass() {
-        }
-
-        @AfterClass
+        @AfterAll
+        @JvmStatic
         fun teardownClass() {
             webDb.delete(exampleUrl)
             webDb.flush()
@@ -47,11 +44,11 @@ class TestGoraStorage {
 
     private val exampleUrls = IntRange(10000, 10050).map { AppConstants.EXAMPLE_URL + "/$it" }
 
-    @Before
+    @BeforeTest
     fun setup() {
     }
 
-    @After
+    @AfterTest
     fun tearDown() {
     }
 

@@ -17,10 +17,7 @@
 package ai.platon.pulsar.filter
 
 import kotlin.test.*
-import org.junit.runner.RunWith
-import org.springframework.test.context.junit4.SpringRunner
 
-@RunWith(SpringRunner::class)
 class TestUrlValidator : UrlFilterTestBase() {
     private var validUrl: String? = null
     private var invalidUrl: String? = null

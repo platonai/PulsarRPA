@@ -9,8 +9,8 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import org.apache.avro.util.Utf8
 import org.apache.commons.lang3.StringUtils
-import org.junit.Assert
-import org.junit.Ignore
+
+
 import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL
@@ -79,7 +79,7 @@ class TestCases {
     fun testUtf8() {
         val s = ""
         val u = Utf8(s)
-        Assert.assertEquals(0, u.length.toLong())
+        assertEquals(0, u.length.toLong())
     }
 
     @Test

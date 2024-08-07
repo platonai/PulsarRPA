@@ -66,7 +66,7 @@ class ChromeDevtoolsDriverTests: WebDriverTestBase() {
     }
 
     @Test
-    fun `Ensure js injected`() = runWebDriverTest(originUrl) { driver ->
+    fun `when open a HTML page then the js are injected`() = runWebDriverTest(originUrl) { driver ->
         val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
         assertEquals(2, r)
     }

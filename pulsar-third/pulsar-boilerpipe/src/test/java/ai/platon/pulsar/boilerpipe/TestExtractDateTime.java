@@ -7,7 +7,7 @@ import ai.platon.pulsar.boilerpipe.sax.HTMLParser;
 import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.ResourceLoader;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Instant;

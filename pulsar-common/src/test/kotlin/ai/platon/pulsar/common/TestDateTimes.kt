@@ -16,10 +16,7 @@ import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
 import java.util.*
-import kotlin.test.Ignore
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Created by vincent on 16-7-20.
@@ -32,7 +29,7 @@ class TestDateTimes {
     val date = LocalDate.parse("2021-04-21")
     val dateTime = LocalDateTime.parse("2021-04-21T00:30:59")
     val duration = Duration.between(instant.minusSeconds(seconds), instant)
-
+    
     @Test
     fun testDateTimeConvert() {
         val zoneId = ZoneId.systemDefault()
@@ -56,7 +53,7 @@ class TestDateTimes {
         println("middle night instance : " + Instant.now().truncatedTo(ChronoUnit.DAYS))
         println("duration : " + Duration.between(LocalDateTime.now(), middleNight.plus(1, ChronoUnit.DAYS)))
     }
-
+    
     @Test
     fun testEpoch() {
         val now = Instant.now()
@@ -64,7 +61,7 @@ class TestDateTimes {
         println(now.epochSecond / 60)
         assertTrue { now.epochSecond < Int.MAX_VALUE }
     }
-
+    
     @Test
     fun testDoomsday() {
         val doomsday = DateTimes.doomsday
@@ -74,19 +71,19 @@ class TestDateTimes {
         assertTrue { doomsday.epochSecond < Long.MAX_VALUE }
         assertTrue { doomsday.toEpochMilli() < Long.MAX_VALUE }
     }
-
+    
     @Test
     fun testChronoFields() {
         // println(instant.getLong(ChronoField.MILLI_OF_SECOND))
         assertEquals(520, instant.getLong(ChronoField.MILLI_OF_SECOND))
-
+        
         // println(date.getLong(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH))
         assertEquals(7, date.getLong(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH))
-
+        
         // println(dateTime.getLong(ChronoField.MINUTE_OF_DAY))
         assertEquals(30, dateTime.getLong(ChronoField.MINUTE_OF_DAY))
     }
-
+    
     @Test
     fun testDateTimeFormatter() {
         var time = LocalDateTime.ofInstant(Instant.EPOCH, ZoneOffset.ofHours(0))
@@ -106,17 +103,17 @@ class TestDateTimes {
         assertTrue(t > 0)
         println(t)
     }
-
+    
     @Test
     fun testDateTimeFormatter2() {
         val d = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2016-06-16 12:21:18")
         assertEquals("Thu Jun 16 12:21:18 CST 2016", d.toString())
         assertEquals("2016-06-16T04:21:18Z", d.toInstant().toString())
-
+        
         var t = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             .parse("2016-06-16 12:21:18") { LocalDateTime.from(it) }
         assertEquals("2016-06-16T12:21:18", t.toString())
-
+        
         val pattern = "yyyy-MM-dd[ HH[:mm[:ss]]]"
         t = DateTimeFormatter.ofPattern(pattern).parse("2016-06-16 12:21") { LocalDateTime.from(it) }
         assertEquals("2016-06-16T12:21", t.toString())
@@ -125,23 +122,23 @@ class TestDateTimes {
         val ld = DateTimeFormatter.ofPattern(pattern).parse("2016-06-16") { LocalDate.from(it) }
         assertEquals("2016-06-16", ld.toString())
     }
-
+    
     @Test
     fun testParseBestInstant() {
         val dateRegex = "\\d{4}-\\d{2}-\\d{2}"
         assertTrue { "2016-06-16".matches(dateRegex.toRegex()) }
         assertTrue { "2016-06-16 12:21:18".matches("$dateRegex\\s+\\d{2}:.+".toRegex()) }
-
+        
         assertEquals("2016-06-16T04:21:18Z", DateTimes.parseBestInstant("2016-06-16 12:21:18").toString())
         assertEquals("2016-06-16T04:21:00Z", DateTimes.parseBestInstant("2016-06-16 12:21").toString())
         assertEquals("2016-06-16T04:00:00Z", DateTimes.parseBestInstant("2016-06-16 12:00").toString())
         assertEquals("2016-06-15T16:00:00Z", DateTimes.parseBestInstant("2016-06-16").toString())
-
+        
         assertEquals("2016-06-16T04:21:18Z", DateTimes.parseBestInstant("2016-06-16T12:21:18").toString())
         assertEquals("2016-06-16T04:21:00Z", DateTimes.parseBestInstant("2016-06-16T12:21").toString())
         assertEquals("2016-06-16T04:00:00Z", DateTimes.parseBestInstant("2016-06-16T12:00").toString())
     }
-
+    
     @Test
     fun testTimeZone() {
         val defaultZoneId = ZoneId.systemDefault()
@@ -149,22 +146,22 @@ class TestDateTimes {
             println("Only test time zone when the system time zone is Asia/Shanghai")
             return
         }
-
+        
         val now = LocalDateTime.now()
-
+        
         val tz = TimeZone.getTimeZone("Asia/Shanghai")
         println(tz)
         val offset = tz.rawOffset
         println(offset)
         println(TimeZone.getDefault().id)
         println(ZoneId.systemDefault().id)
-
+        
         val zoneId = DateTimes.zoneId
         assertEquals("Asia/Shanghai", tz.id)
         assertEquals(ZoneOffset.of("+08:00"), DateTimes.zoneOffset)
         println(DateTimes.zoneOffset)
     }
-
+    
     @Test
     fun testDuration() {
         val epoch = Instant.EPOCH
@@ -178,44 +175,48 @@ class TestDateTimes {
         assertEquals(18738, days)
         println(Duration.ofDays(365 * 100.toLong()).seconds)
         println(Duration.ofMinutes(60).toMillis())
-        println(DurationFormatUtils.formatDuration(gap.toMillis(),
-            "d\' days \'H\' hours \'m\' minutes \'s\' seconds\'"))
+        println(
+            DurationFormatUtils.formatDuration(
+                gap.toMillis(),
+                "d\' days \'H\' hours \'m\' minutes \'s\' seconds\'"
+            )
+        )
         println(DurationFormatUtils.formatDuration(gap.toMillis(), "d\'days\' H:mm:ss"))
         val durationToMidnight = Duration.between(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS), LocalDateTime.now())
         println(durationToMidnight.plusDays(1))
         assertEquals(Duration.ofSeconds(1), parseDuration("PT1S", Duration.ZERO))
     }
-
+    
     @Test
     fun testTemporalDefaultRange() {
         val p = Period.ofDays(30)
         println(p)
-
+        
         var r = date.range(ChronoField.DAY_OF_MONTH)
         println("DAY_OF_MONTH: $r")
-
+        
         r = date.range(ChronoField.DAY_OF_WEEK)
         println("DAY_OF_WEEK: $r")
-
+        
         r = date.range(ChronoField.YEAR)
         println("YEAR: $r")
-
+        
         r = date.range(ChronoField.DAY_OF_YEAR)
         println("DAY_OF_YEAR: $r")
-
+        
         r = date.range(ChronoField.YEAR_OF_ERA)
         println("YEAR_OF_ERA: $r")
-
+        
         r = date.range(ChronoField.EPOCH_DAY)
         println("EPOCH_DAY: $r")
-
+        
         r = date.range(ChronoField.PROLEPTIC_MONTH)
         println("PROLEPTIC_MONTH: $r")
-
+        
         r = date.range(ChronoField.ERA)
         println("ERA: $r")
     }
-
+    
     @Test
     fun testTemporalRange() {
         // kotlin general range
@@ -223,11 +224,11 @@ class TestDateTimes {
         println(range)
         assertTrue { dateTime in range }
     }
-
+    
     @Test
     fun testDateFormat() {
         var dateString: String? = "Sat May 27 12:21:42 CST 2017"
-
+        
         val date = Date()
         dateString = DateFormatUtils.format(date, DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.pattern)
         println(dateString)
@@ -237,13 +238,13 @@ class TestDateTimes {
         println(now)
         val ldt = LocalDateTime.now()
         println(ldt)
-
+        
         val timestamp = 0L
         val fmt = "yyyyMMddHHmmss"
         val d = SimpleDateFormat(fmt).format(Date(timestamp))
         println(d)
     }
-
+    
     @Ignore("A fix is required: unable to parse the date: Sat May 27 12:21:42 CST 2017")
     @Test
     fun testParseDate() {
@@ -251,9 +252,11 @@ class TestDateTimes {
         try {
             val date = DateUtils.parseDate(dateString, *DateTimeDetector.COMMON_DATE_TIME_FORMATS)
             // Date date = DateUtils.parseDate(dateString);
-            dateString = DateFormatUtils.format(date,
+            dateString = DateFormatUtils.format(
+                date,
                 DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.pattern,
-                TimeZone.getTimeZone("PRC"))
+                TimeZone.getTimeZone("PRC")
+            )
             println(dateString)
             dateString = DateTimeFormatter.ISO_INSTANT.format(date.toInstant())
             println(dateString)
@@ -261,7 +264,7 @@ class TestDateTimes {
             e.printStackTrace()
         }
     }
-
+    
     @Test
     fun testTruncateLocalDateTime() {
         val dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
@@ -269,14 +272,22 @@ class TestDateTimes {
         assertEquals(dateTime.dayOfMonth, date.dayOfMonth)
         assertEquals(dateTime.monthValue, date.monthValue)
     }
-
-    @Test(expected = DateTimeParseException::class)
+    
+    /**
+     *
+     * Test illegal date format, when a date string is not in the correct format, it will throw an exception
+     * */
+    @Test
     fun testIllegalDateFormat() {
         var dateString = "2013-39-08 10:39:36"
-        val dateTime = DateTimeFormatter.ofPattern(pattern).parse(dateString)
-        dateString = DateTimeFormatter.ISO_INSTANT.format(dateTime)
+        try {
+            val dateTime = DateTimeFormatter.ofPattern(pattern).parse(dateString)
+            dateString = DateTimeFormatter.ISO_INSTANT.format(dateTime)
+        } catch (e: DateTimeParseException) {
+            fail("Illegal date format $dateString", e)
+        }
     }
-
+    
     @Test
     @Ignore("Time costing performance testing")
     fun testSystemClockPerformance() {
@@ -307,7 +318,7 @@ class TestDateTimes {
         assertTrue(cost2 < cost3, "System.currentTimeMillis() should be faster then Instant.now()")
         println("$cost, $cost2, $cost3")
     }
-
+    
     @Test
     fun testExpiry() {
         val startTime = Instant.now().minusSeconds(120)

@@ -1,14 +1,13 @@
 package ai.platon.pulsar.dom.select
 
 import org.jsoup.select.Evaluator
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
  * Tests for the Selector Query Parser.
- *
- * @author Jonathan Hedley
  */
 class TestQueryParser {
 
@@ -45,13 +44,17 @@ class TestQueryParser {
         assertEquals(2, andLeft.evaluators.size.toLong())
     }
 
-    @Test(expected = PowerSelectorParseException::class)
+    @Test
     fun exceptionOnUncloseAttribute() {
-        val parse = PowerQueryParser.parse("section > a[href=\"]")
+        assertThrows<PowerSelectorParseException> {
+            val parse = PowerQueryParser.parse("section > a[href=\"]")
+        }
     }
 
-    @Test(expected = PowerSelectorParseException::class)
+    @Test
     fun testParsesSingleQuoteInContains() {
-        val parse = PowerQueryParser.parse("p:contains(One \" One)")
+        assertThrows<PowerSelectorParseException> {
+            PowerQueryParser.parse("p:contains(One \" One)")
+        }
     }
 }

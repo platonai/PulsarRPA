@@ -1,26 +1,9 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 package ai.platon.pulsar.skeleton.crawl.common
 
 import ai.platon.pulsar.common.PrefixStringMatcher
-import org.junit.Assert
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 /**
  * Unit tests for PrefixStringMatcher.
@@ -53,29 +36,27 @@ class TestPrefixStringMatcher {
                 var longestMatch = -1
                 var shortestMatch = -1
                 for (j in prefixes.indices) {
-                    if (prefixes[j]!!.length > 0 && input.startsWith(prefixes[j]!!)) {
+                    val prefix = prefixes[j]
+                    if (!prefix.isNullOrEmpty() && input.startsWith(prefix)) {
                         matches = true
-                        val matchSize = prefixes[j]!!.length
+                        val matchSize = prefix.length
                         if (matchSize > longestMatch) longestMatch = matchSize
                         if (matchSize < shortestMatch || shortestMatch == -1) shortestMatch = matchSize
                     }
                 }
                 if (matches) numMatches++
                 numInputsTested++
-                Assert.assertTrue("'" + input + "' should " + (if (matches) "" else "not ")
-                        + "match!", matches == prematcher.matches(input))
+                val message = "'$input' should ${if (matches) "" else "not "}match!"
+                assertEquals(matches, prematcher.matches(input), message)
                 if (matches) {
-                    Assert.assertTrue(shortestMatch == prematcher.shortestMatch(input).length)
-                    Assert.assertTrue(input.substring(0, shortestMatch) ==
-                            prematcher.shortestMatch(input))
-                    Assert.assertTrue(longestMatch == prematcher.longestMatch(input).length)
-                    Assert.assertTrue(input.substring(0, longestMatch) ==
-                            prematcher.longestMatch(input))
+                    assertEquals(shortestMatch, prematcher.shortestMatch(input).length)
+                    assertEquals(input.substring(0, shortestMatch), prematcher.shortestMatch(input))
+                    assertEquals(longestMatch, prematcher.longestMatch(input).length)
+                    assertEquals(input.substring(0, longestMatch), prematcher.longestMatch(input))
                 }
             }
         }
-        println("got " + numMatches + " matches out of "
-                + numInputsTested + " tests")
+        println("got $numMatches matches out of $numInputsTested tests")
     }
 
     companion object {

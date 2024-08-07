@@ -49,14 +49,14 @@ open class InteractiveBrowserEmulator(
     private val logger = getLogger(this)
     private val tracer = getTracer(this)
     private val taskLogger = getLogger(this, ".Task")
-
+    
     private val numDeferredNavigates by lazy { MetricsSystem.reg.meter(this, "deferredNavigates") }
-
+    
     init {
         // Attach event handlers
         attach()
     }
-
+    
     /**
      * Fetch a page using a browser which can render the DOM and execute scripts.
      *
@@ -66,10 +66,12 @@ open class InteractiveBrowserEmulator(
      * */
     @Throws(Exception::class)
     override suspend fun visit(task: FetchTask, driver: WebDriver): FetchResult {
-        return takeIf { isActive }?.browseWithDriver(task, driver) ?:
-        FetchResult.canceled(task, "Inactive interactive browser emulator")
+        return takeIf { isActive }?.browseWithDriver(task, driver) ?: FetchResult.canceled(
+            task,
+            "Inactive interactive browser emulator"
+        )
     }
-
+    
     /**
      * Cancel a task immediately
      *
@@ -80,7 +82,7 @@ open class InteractiveBrowserEmulator(
         task.cancel()
         driverPoolManager.cancel(task.url)
     }
-
+    
     /**
      * Cancel a task
      *
@@ -91,7 +93,7 @@ open class InteractiveBrowserEmulator(
         task.cancel()
         driverPoolManager.cancel(task.url)
     }
-
+    
     /**
      * Attach event handlers
      * */
@@ -136,115 +138,115 @@ open class InteractiveBrowserEmulator(
             this.onTabStopped(page, driver)
         }
     }
-
+    
     private fun detach() {
         EmulateEvents.entries.forEach { off(it) }
     }
-
+    
     override suspend fun onWillNavigate(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
     }
-
+    
     override suspend fun onNavigated(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onNavigated?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onNavigated?.invoke(page, driver)
     }
-
+    
     override suspend fun onWillInteract(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onWillNavigate?.invoke(page, driver)
     }
-
+    
     override suspend fun onWillCheckDocumentState(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillCheckDocumentState?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onWillCheckDocumentState?.invoke(page, driver)
     }
-
+    
     override suspend fun onDocumentActuallyReady(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDocumentActuallyReady?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onDocumentActuallyReady?.invoke(page, driver)
     }
-
+    
     override suspend fun onWillScroll(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillScroll?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onWillScroll?.invoke(page, driver)
     }
-
+    
     override suspend fun onDidScroll(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDidScroll?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onDidScroll?.invoke(page, driver)
     }
-
+    
     override suspend fun onDocumentSteady(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDocumentSteady?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onDocumentSteady?.invoke(page, driver)
     }
-
+    
     override suspend fun onWillComputeFeature(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillComputeFeature?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onWillComputeFeature?.invoke(page, driver)
     }
-
+    
     override suspend fun onFeatureComputed(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onFeatureComputed?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onFeatureComputed?.invoke(page, driver)
     }
-
+    
     override suspend fun onDidInteract(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDidInteract?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onDidInteract?.invoke(page, driver)
     }
-
+    
     override suspend fun onWillStopTab(page: WebPage, driver: WebDriver) {
         // The more specific handlers has the opportunity to override the result of more general handlers.
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillStopTab?.invoke(page, driver)
         page.browseEventHandlers?.onWillStopTab?.invoke(page, driver)
     }
-
+    
     override suspend fun onTabStopped(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onTabStopped?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onTabStopped?.invoke(page, driver)
     }
-
+    
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             detach()
         }
     }
-
+    
     @Throws(Exception::class)
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
         require(driver is AbstractWebDriver)
-
+        
         // page.lastBrowser is used by AppFiles.export, so it has to be set before export
         // TODO: page should not be modified in browser phase, it should only be updated using PageDatum
         task.page.lastBrowser = driver.browserType
-
+        
         if (task.page.options.isDead()) {
             taskLogger.info("Page is dead, cancel the task | {}", task.page.configuredUrl)
             return FetchResult.canceled(task, "Page deadline exceed")
         }
-
+        
         var exception: Exception? = null
         var response: Response?
         val navigateTask = NavigateTask(task, driver, driverSettings)
-
+        
         try {
             checkState(task, driver)
-
+            
             response = if (task.page.isResource) {
                 loadResourceWithoutRendering(navigateTask, driver)
             } else browseWithCancellationHandled(navigateTask, driver)
@@ -265,7 +267,7 @@ open class InteractiveBrowserEmulator(
             } else {
                 logger.warn("[Unexpected]", e)
             }
-
+            
             driver.retire()
             exception = e
             response = ForwardingResponse.crawlRetry(task.page, e)
@@ -286,6 +288,7 @@ open class InteractiveBrowserEmulator(
                         throw e
                     }
                 }
+                
                 else -> {
                     logger.warn("[Unexpected]", e)
                 }
@@ -295,28 +298,28 @@ open class InteractiveBrowserEmulator(
             throw e
         } finally {
         }
-
+        
         return FetchResult(task, response ?: ForwardingResponse(exception, task.page), exception)
     }
-
+    
     @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
     private suspend fun loadResourceWithoutRendering(navigateTask: NavigateTask, driver: WebDriver): Response {
         checkState(navigateTask.fetchTask, driver)
-
+        
         val page = navigateTask.page
         val referrer = page.referrer
         if (referrer != null && !driver.browser.navigateHistory.contains(referrer)) {
             driver.navigateTo(referrer)
             driver.waitForSelector("body", Duration.ofSeconds(15))
         }
-
+        
         val resourceLoader = page.conf["resource.loader", "jsoup"]
         val response = when (resourceLoader) {
             "web.driver" -> driver.loadResource(navigateTask.url)
             "jsoup" -> NetworkResourceHelper.fromJsoup(driver.loadJsoupResource(navigateTask.url))
             else -> NetworkResourceHelper.fromJsoup(driver.loadJsoupResource(navigateTask.url))
         }
-
+        
         // TODO: transform protocol status in AbstractHttpProtocol
         val protocolStatus = ProtocolStatusTranslator.translateHttpCode(response.httpStatusCode)
         val headers = response.headers ?: mapOf()
@@ -324,7 +327,7 @@ open class InteractiveBrowserEmulator(
         // Note: originalContentLength is already set before willComputeFeature event, (if not removed by someone)
         navigateTask.originalContentLength = content.length
         navigateTask.pageSource = preprocessPageContent(content)
-
+        
         navigateTask.pageDatum.also {
             it.protocolStatus = protocolStatus
             headers.forEach { (t, u) -> it.headers[t] = u.toString() }
@@ -332,37 +335,37 @@ open class InteractiveBrowserEmulator(
             it.content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
             it.originalContentLength = navigateTask.originalContentLength
         }
-
+        
         responseHandler.emit(BrowserResponseEvents.willCreateResponse)
         return createResponseWithDatum(navigateTask, navigateTask.pageDatum).also {
             responseHandler.emit(BrowserResponseEvents.responseCreated)
         }
     }
-
+    
     private suspend fun browseWithCancellationHandled(navigateTask: NavigateTask, driver: WebDriver): Response? {
         checkState(navigateTask.fetchTask, driver)
-
+        
         var response: Response?
         val page = navigateTask.page
-
+        
         try {
             response = browseWithWebDriver(navigateTask, driver)
-
+            
             // Do something like a human being
 //            interactAfterFetch(task, driver)
-
+            
             emit1(EmulateEvents.willStopTab, page, driver)
 //            listeners.notify(EventType.willStopTab, page, driver)
 //            val event = page.browseEventHandlers
 //            notify("onWillStopTab") { event?.onWillStopTab?.invoke(page, driver) }
-
+            
             /**
              * Force the page stop all navigations and releases all resources.
              * If a web driver is terminated, it should not be used any more and should be quit
              * as soon as possible.
              * */
             driver.stop()
-
+            
             emit1(EmulateEvents.tabStopped, page, driver)
 //            notify("onTabStopped") { event?.onTabStopped?.invoke(page, driver) }
         } catch (e: NavigateTaskCancellationException) {
@@ -374,28 +377,29 @@ open class InteractiveBrowserEmulator(
             }
             response = ForwardingResponse.canceled(page)
         }
-
+        
         return response
     }
-
+    
     @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
     private suspend fun browseWithWebDriver(navigateTask: NavigateTask, driver: WebDriver): Response {
         val fetchTask = navigateTask.fetchTask
         checkState(navigateTask.fetchTask, driver)
         require(driver is AbstractWebDriver)
-
+        
         val interactResult = navigateAndInteract(navigateTask, driver, navigateTask.browserSettings)
-
+        
         // TODO: separate status code of pulsar system and the status code from browser
         val httpCode = driver.mainResponseStatus
-        val finalProtocolStatus = if (httpCode < 0 || interactResult.protocolStatus.minorCode >= ProtocolStatus.INCOMPATIBLE_CODE_START) {
-            // PulsarRPA status
-            interactResult.protocolStatus
-        } else {
-            // HTTP status
-            ProtocolStatusTranslator.translateHttpCode(httpCode)
-        }
-
+        val finalProtocolStatus =
+            if (httpCode < 0 || interactResult.protocolStatus.minorCode >= ProtocolStatus.INCOMPATIBLE_CODE_START) {
+                // PulsarRPA status
+                interactResult.protocolStatus
+            } else {
+                // HTTP status
+                ProtocolStatusTranslator.translateHttpCode(httpCode)
+            }
+        
         navigateTask.pageDatum.apply {
             protocolStatus = finalProtocolStatus
             activeDOMStatTrace = interactResult.activeDOMMessage?.trace
@@ -405,13 +409,13 @@ open class InteractiveBrowserEmulator(
         // Note: originalContentLength is already set before willComputeFeature event, (if not removed by someone)
         navigateTask.originalContentLength = content?.length ?: 0
         navigateTask.pageSource = preprocessPageContent(content)
-
+        
         responseHandler.onWillCreateResponse(fetchTask, driver)
         return createResponse(navigateTask).also {
             responseHandler.onResponseCreated(fetchTask, driver, it)
         }
     }
-
+    
     @Throws(NavigateTaskCancellationException::class, WebDriverException::class)
     private suspend fun navigateAndInteract(
         task: NavigateTask,
@@ -420,46 +424,46 @@ open class InteractiveBrowserEmulator(
     ): InteractResult {
         val fetchTask = task.fetchTask
         checkState(fetchTask, driver)
-
+        
         val page = task.page
-
+        
         logBeforeNavigate(fetchTask, settings)
         // TODO: not implemented yet
         driver.setTimeouts(settings)
         // TODO: handle frames
         // driver.switchTo().frame(1);
-
+        
         meterNavigates.mark()
         numDeferredNavigates.mark()
-
+        
         tracer?.trace("{}. Navigating | {}", page.id, task.url)
-
+        
         checkState(fetchTask, driver)
-
+        
         // href has the higher priority to locate a resource
         require(task.url == page.url)
         val finalUrl = fetchTask.href ?: fetchTask.url
         val navigateEntry = NavigateEntry(finalUrl, page.id, task.url, pageReferrer = page.referrer)
-
+        
         emit1(EmulateEvents.willNavigate, page, driver)
-
+        
         checkState(fetchTask, driver)
         try {
             driver.navigateTo(navigateEntry)
         } finally {
             emit1(EmulateEvents.navigated, page, driver)
         }
-
+        
         require(driver is AbstractWebDriver)
         if (!driver.supportJavascript) {
             return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         }
-
+        
         val interactTask = InteractTask(task, settings, driver)
-
+        
         val result = try {
             emit1(EmulateEvents.willInteract, page, driver)
-
+            
             if (settings.isStartupScriptEnabled) {
                 interact(interactTask)
             } else {
@@ -468,10 +472,10 @@ open class InteractiveBrowserEmulator(
         } finally {
             emit1(EmulateEvents.didInteract, page, driver)
         }
-
+        
         return result
     }
-
+    
     protected open suspend fun interactNoJsInvaded(interactTask: InteractTask): InteractResult {
         var pageSource = ""
         var i = 0
@@ -481,10 +485,10 @@ open class InteractiveBrowserEmulator(
                 delay(1000)
             }
         } while (i++ < 45 && pageSource.length < 20_000 && isActive)
-
+        
         return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
     }
-
+    
     @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val fetchTask = task.navigateTask.fetchTask
@@ -508,9 +512,9 @@ open class InteractiveBrowserEmulator(
         
         if (result.state.isContinue) {
             emit1(EmulateEvents.willScroll, page, driver)
-
+            
             scrollOnPage(task, result)
-
+            
             emit1(EmulateEvents.didScroll, page, driver)
         }
         
@@ -525,27 +529,46 @@ open class InteractiveBrowserEmulator(
             // TODO: check if state.isContinue is necessary
             emit1(EmulateEvents.documentSteady, page, driver)
         }
-
+        
         // With the scrolling operation finished, the page is stable and unlikely to experience significant updates.
         // Therefore, we can now proceed to calculate the document’s features.
         // TODO: driver.pageSource() might be huge so there might be a performance issue
         task.navigateTask.originalContentLength = driver.pageSource()?.length ?: 0
         if (result.state.isContinue) {
             emit1(EmulateEvents.willComputeFeature, page, driver)
-
+            
             computeDocumentFeatures(task, result)
-
+            
             emit1(EmulateEvents.featureComputed, page, driver)
         }
-
+        
         return result
     }
-
+    
     /**
      * Wait until the document is actually ready, or timeout.
      * */
     @Throws(NavigateTaskCancellationException::class)
     protected open suspend fun waitForDocumentActuallyReady(interactTask: InteractTask, result: InteractResult) {
+        val driver = interactTask.driver
+        require(driver is AbstractWebDriver)
+
+        val utils = driver.evaluate("__pulsar_utils__")
+        println("utils: $utils")
+        
+        if (utils == null) {
+            logger.warn("The page does not have __pulsar_utils__ | {}", interactTask.url)
+            return
+        }
+        
+        waitForDocumentActuallyReady1(interactTask, result)
+    }
+    
+    /**
+     * Wait until the document is actually ready, or timeout.
+     * */
+    @Throws(NavigateTaskCancellationException::class)
+    protected open suspend fun waitForDocumentActuallyReady1(interactTask: InteractTask, result: InteractResult) {
         val driver = interactTask.driver
         require(driver is AbstractWebDriver)
 
@@ -601,7 +624,7 @@ open class InteractiveBrowserEmulator(
 
         result.protocolStatus = status
     }
-
+    
     /**
      * Scroll on page to ensure all the content is loaded, including lazy content.
      * */
