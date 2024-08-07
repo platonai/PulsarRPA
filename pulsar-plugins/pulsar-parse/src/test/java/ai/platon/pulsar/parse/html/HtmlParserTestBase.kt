@@ -6,11 +6,13 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
 import java.nio.charset.Charset
 
+@SpringBootTest
 @ContextConfiguration(locations = ["classpath:/test-context/parse-beans.xml"])
-open class HtmlParserTestBase {
+class HtmlParserTestBase {
     @Autowired
     protected lateinit var immutableConfig: ImmutableConfig
     protected val conf get() = immutableConfig.toVolatileConfig()

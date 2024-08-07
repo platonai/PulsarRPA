@@ -7,6 +7,7 @@ import org.apache.commons.lang3.math.NumberUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.commons.lang3.time.DateUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
+import org.junit.jupiter.api.assertThrows
 import java.sql.Timestamp
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -280,11 +281,9 @@ class TestDateTimes {
     @Test
     fun testIllegalDateFormat() {
         var dateString = "2013-39-08 10:39:36"
-        try {
+        val e = assertThrows<DateTimeParseException> {
             val dateTime = DateTimeFormatter.ofPattern(pattern).parse(dateString)
             dateString = DateTimeFormatter.ISO_INSTANT.format(dateTime)
-        } catch (e: DateTimeParseException) {
-            fail("Illegal date format $dateString", e)
         }
     }
     

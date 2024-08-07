@@ -1,23 +1,17 @@
 
 package ai.platon.pulsar.parse.html
 
-import ai.platon.pulsar.skeleton.crawl.parse.PageParser
-import ai.platon.pulsar.skeleton.crawl.parse.html.PrimerHtmlParser
-import ai.platon.pulsar.skeleton.crawl.parse.ParseException
 import ai.platon.pulsar.persist.metadata.Name
-import kotlin.test.*
-
+import ai.platon.pulsar.skeleton.crawl.parse.PageParser
+import ai.platon.pulsar.skeleton.crawl.parse.ParseException
+import ai.platon.pulsar.skeleton.crawl.parse.html.PrimerHtmlParser
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.context.junit4.SpringRunner
 import java.nio.charset.Charset
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
-
+import kotlin.test.*
 
 class TestHtmlParser : HtmlParserTestBase() {
     @Autowired
-    private val pageParser: PageParser? = null
+    private lateinit var pageParser: PageParser
 
     @Test
     @Throws(ParseException::class)
@@ -27,7 +21,7 @@ class TestHtmlParser : HtmlParserTestBase() {
             val charset = Charset.forName(testPage[1])
             val success = testPage[2] == "success"
             val page = getPage(testPage[3], charset)
-            assertNotNull(pageParser)
+
             val parser = pageParser.parserFactory.getParsers(page.contentType).first()
             assertEquals(PrimerHtmlParser::class.java.name, parser::class.java.name, page.contentType)
 

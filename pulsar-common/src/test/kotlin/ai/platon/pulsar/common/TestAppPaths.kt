@@ -94,8 +94,8 @@ class TestAppPaths {
         assertTrue(path2.startsWith(AppPaths.DATA_DIR), "$path -> $path2")
 
         path = AppPaths.SCRIPT_DIR
-        path2 = AppPaths.getTmp(path.toString(), filename)
-        assertTrue(path2.startsWith(AppPaths.TMP_DIR), "$path -> $path2")
+        path2 = AppPaths.getProcTmp(path.toString(), filename)
+        assertTrue(path2.startsWith(AppPaths.PROC_TMP_DIR), "$path -> $path2")
 
         path = AppPaths.DATA_DIR.resolve("scripts")
         path2 = AppPaths.get(path.toString(), filename)
