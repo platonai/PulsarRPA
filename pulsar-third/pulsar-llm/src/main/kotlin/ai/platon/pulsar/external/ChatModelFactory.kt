@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * The factory for creating models.
  */
-object ModelFactory {
+object ChatModelFactory {
     private val models = ConcurrentHashMap<String, ChatModel>()
     
     /**

@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.external.ModelFactory
+import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
@@ -457,7 +457,7 @@ abstract class AbstractPulsarContext(
      * Chat with the AI model.
      */
     override fun chat(prompt: String, model: String, apiKey: String): ModelResponse {
-        return ModelFactory.getOrCreate(model, apiKey).call(prompt)
+        return ChatModelFactory.getOrCreate(model, apiKey).call(prompt)
     }
     
     /**

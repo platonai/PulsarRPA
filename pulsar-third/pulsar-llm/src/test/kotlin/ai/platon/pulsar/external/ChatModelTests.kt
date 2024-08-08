@@ -22,7 +22,7 @@ class ChatModelTests {
         private val conf = ImmutableConfig(loadDefaults = true)
         private val llm = conf["llm.name"]
         private val apiKey = conf["llm.apiKey"]
-        private val model = if (llm != null && apiKey != null) ModelFactory.getOrCreate(llm, apiKey) else null
+        private val model = if (llm != null && apiKey != null) ChatModelFactory.getOrCreate(llm, apiKey) else null
         
         @BeforeAll
         @JvmStatic
