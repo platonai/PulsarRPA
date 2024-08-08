@@ -2,10 +2,9 @@
 package ai.platon.pulsar.normalizer
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.KConfigurable
+import ai.platon.pulsar.common.config.Configurable
 import ai.platon.pulsar.common.urls.UrlUtils.getURLOrNull
 import ai.platon.pulsar.skeleton.crawl.filter.AbstractScopedUrlNormalizer
-import ai.platon.pulsar.skeleton.crawl.filter.UrlNormalizer
 import org.apache.oro.text.regex.*
 import org.slf4j.LoggerFactory
 import java.net.MalformedURLException
@@ -19,7 +18,7 @@ import java.util.*
  *  * remove default ports, e.g. 80 for protocol `http://`
  *
  */
-class BasicUrlNormalizer(override var conf: ImmutableConfig) : KConfigurable, AbstractScopedUrlNormalizer() {
+class BasicUrlNormalizer(override var conf: ImmutableConfig) : Configurable, AbstractScopedUrlNormalizer() {
     val LOG = LoggerFactory.getLogger(BasicUrlNormalizer::class.java)
 
     private val relativePathRule: Rule = Rule()

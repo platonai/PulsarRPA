@@ -10,13 +10,14 @@ import org.slf4j.LoggerFactory
 import java.net.URL
 import java.util.*
 
-
 /**
  * This class is used for parsing robots for urls belonging to HTTP protocol. It
  * extends the generic [RobotRulesParser] class and contains Http protocol
  * specific implementation for obtaining the robots file.
  */
-open class HttpRobotRulesParser(conf: ImmutableConfig) : RobotRulesParser(conf) {
+open class HttpRobotRulesParser(
+    conf: ImmutableConfig
+) : RobotRulesParser(conf) {
     private val allowForbidden = conf.getBoolean("http.robots.403.allow", false)
     
     /**

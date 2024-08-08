@@ -7,7 +7,7 @@ package ai.platon.pulsar.common.config
  * @author vincent
  * @version $Id: $Id
  */
-interface KConfigurable {
+interface Configurable {
     /**
      * Return the configuration used by this object.
      *

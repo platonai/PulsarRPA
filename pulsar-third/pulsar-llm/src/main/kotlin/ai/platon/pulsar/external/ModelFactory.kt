@@ -73,7 +73,8 @@ object ModelFactory {
     private fun createDeepSeekChatModel(apiKey: String): ChatModel {
         val lm = OpenAiChatModel.builder()
             .apiKey(apiKey)
-            .baseUrl("https://api.deepseek.com/v2")
+            .baseUrl("https://api.deepseek.com")
+            .modelName("deepseek-chat")
             .logRequests(true)
             .logResponses(true)
             .maxRetries(1)

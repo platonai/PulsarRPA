@@ -1,10 +1,10 @@
 package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.urls.UrlUtils
 import com.ctc.wstx.io.StreamBootstrapper
 import com.ctc.wstx.io.SystemId
 import org.codehaus.stax2.XMLStreamReader2
-import org.graalvm.nativeimage.hosted.RuntimeResourceAccess.addResource
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.IOException
@@ -30,9 +30,7 @@ class KConfiguration(
 ) : Iterable<Map.Entry<String, String?>> {
     
     companion object {
-        // The resources that are loaded by default. The resources are hadoop compatible.
-        const val APPLICATION_SPECIFIED_RESOURCES = "pulsar-default.xml"
-        val DEFAULT_RESOURCES = mutableSetOf<String>()
+        val DEFAULT_RESOURCES = mutableSetOf("pulsar-default.xml")
         val SYSTEM_DEFAULT_RESOURCES = mutableSetOf<String>()
         
         private val ID_SUPPLIER = AtomicInteger()
@@ -138,7 +136,7 @@ private class ConfigurationImpl(
     private val logger = getLogger(this)
     
     val resourceNames = mutableSetOf<String>()
-    val resourceURLs = mutableSetOf<URL>()
+    val resourceURLs = mutableSetOf<String>()
     val resources = ArrayList<Resource>()
     val properties = Properties()
     
@@ -151,7 +149,7 @@ private class ConfigurationImpl(
         resources.clear()
         
         collectResources()
-        resourceURLs.forEach { addResource(it) }
+        resourceURLs.mapNotNull { UrlUtils.getURLOrNull(it) }.forEach { addResource(it) }
     }
     
     fun addResource(name: String) = addResourceObject(Resource(name))
@@ -182,25 +180,19 @@ private class ConfigurationImpl(
             it.name.substringAfterLast("/")
         }
     }
-    
+
     private fun collectResources() {
-        extraResources.toCollection(resourceNames)
-        if (!loadDefaults) {
-            return
-        }
-        
         if (profile.isNotEmpty()) {
             set(CapabilityTypes.LEGACY_CONFIG_PROFILE, profile)
         }
-        
-        val specifiedResources =
-            System.getProperty(
-                CapabilityTypes.SYSTEM_PROPERTY_SPECIFIED_RESOURCES,
-                KConfiguration.APPLICATION_SPECIFIED_RESOURCES
-            )
-        specifiedResources.split(",".toRegex()).forEach { resourceNames.add(it) }
+
+        resourceNames.addAll(extraResources)
+        if (loadDefaults) {
+            resourceNames.addAll(KConfiguration.DEFAULT_RESOURCES)
+        }
+
         for (name in resourceNames) {
-            val realResource = findRealResource(profile, mode, name)
+            val realResource = findRealResource(profile, mode, name)?.toString()
             if (realResource != null && realResource !in resourceURLs) {
                 resourceURLs.add(realResource)
                 logger.info("Found legacy configuration: {}", realResource)
@@ -209,7 +201,7 @@ private class ConfigurationImpl(
             }
         }
     }
-    
+
     private fun findRealResource(profile: String, mode: String, name: String): URL? {
         val prefix = "config/legacy"
         val suffix = "$mode/$name"

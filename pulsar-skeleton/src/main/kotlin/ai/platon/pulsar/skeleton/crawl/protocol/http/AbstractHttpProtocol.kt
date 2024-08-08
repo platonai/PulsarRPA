@@ -5,10 +5,6 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.skeleton.crawl.protocol.Protocol
-import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolOutput
-import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
@@ -18,6 +14,11 @@ import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.skeleton.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.MimeTypeResolver
+import ai.platon.pulsar.skeleton.crawl.common.JobInitialized
+import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
+import ai.platon.pulsar.skeleton.crawl.protocol.Protocol
+import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolOutput
+import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import crawlercommons.robots.BaseRobotRules
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
@@ -28,7 +29,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 
-abstract class AbstractHttpProtocol: Protocol {
+abstract class AbstractHttpProtocol: Protocol, JobInitialized {
     private val log = LoggerFactory.getLogger(AbstractHttpProtocol::class.java)
     protected val closed = AtomicBoolean()
 
@@ -42,15 +43,13 @@ abstract class AbstractHttpProtocol: Protocol {
     /**
      * The configuration
      */
-    private lateinit var conf: ImmutableConfig
+    override lateinit var conf: ImmutableConfig
 
     private lateinit var mimeTypeResolver: MimeTypeResolver
 
     private lateinit var robots: HttpRobotRulesParser
 
-    override fun getConf(): ImmutableConfig = conf
-
-    override fun setConf(jobConf: ImmutableConfig) {
+    override fun setup(jobConf: ImmutableConfig) {
         conf = jobConf
         fetchMaxRetry = jobConf.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
         mimeTypeResolver = MimeTypeResolver(jobConf)
@@ -63,9 +62,12 @@ abstract class AbstractHttpProtocol: Protocol {
 
     override fun getResponses(pages: Collection<WebPage>, volatileConfig: VolatileConfig): Collection<Response> {
         return pages.takeIf { isActive }
-                ?.mapNotNull { it.runCatching { getResponse(it, false) }
-                        .onFailure { warnInterruptible(this, it) }.getOrNull() }
-                ?: listOf()
+            ?.mapNotNull {
+                it.runCatching { getResponse(it, false) }
+                .onFailure { warnInterruptible(this, it) }
+                .getOrNull()
+            }
+            ?: listOf()
     }
 
     override fun getProtocolOutput(page: WebPage): ProtocolOutput {
