@@ -1,18 +1,20 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.conf
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import org.apache.commons.lang3.StringUtils
 import java.time.Duration
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 17-1-14.
  */
 class TestConfig {
 
-    @Ignore("Legacy config is deprecated")
     @Test
     fun testConfig() {
         var conf = ImmutableConfig()
@@ -20,8 +22,7 @@ class TestConfig {
         assertFalse("pulsar-default.xml" in conf.toString())
         conf = ImmutableConfig(profile = "default", loadDefaults = true)
         assertTrue("pulsar-default.xml" in conf.toString())
-//        assertEquals("test", conf["pulsar.config.id"])
-//        assertEquals("pulsar_test_crawl_id", conf["storage.crawl.id"])
+        assertEquals("pulsar_test_crawl_id", conf["storage.crawl.id"])
     }
 
     @Test

@@ -886,12 +886,8 @@
 
     <properties>
         <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
-        <!-- JAXB provides an API and tools that automate the mapping between XML documents and Java objects. -->
-        <!-- This artifact was moved to: jakarta.xml.bind » jakarta.xml.bind-api -->
-        <!-- deprecated -->
-<!--        <jaxb-api.version>2.3.1</jaxb-api.version>-->
 
-        <langchain4j.version>0.31.0</langchain4j.version>
+        <langchain4j.version>0.33.0</langchain4j.version>
         <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
         <junit-bom.version>5.10.3</junit-bom.version>
         <mockito.version>5.11.0</mockito.version>

@@ -79,6 +79,7 @@ abstract class ChromeDevToolsImpl(
         try {
             return invoke0(returnProperty, clazz, null, methodInvocation)
         }  catch (e: WebSocketServiceException) {
+            // TODO: if the connection is lost, we should close the browser and restart it
             throw ChromeRPCException("Web socket connection lost", e)
         } catch (e: InterruptedException) {
             logger.warn("Interrupted while invoke ${clazz::javaClass.name}.${methodInvocation.method}")

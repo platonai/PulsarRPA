@@ -1,6 +1,8 @@
 package ai.platon.pulsar.external
 
-import ai.platon.pulsar.external.impl.ZhipuChatModel
+import ai.platon.pulsar.external.impl.ChatModelImpl
+import dev.langchain4j.model.openai.OpenAiChatModel
+import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -25,7 +27,7 @@ object ModelFactory {
      * @return The created model.
      */
     fun getOrCreate(model: String): ChatModel {
-        val apiKey = System.getenv("ZHIPU_API_KEY") ?: throw IllegalArgumentException("ZHIPU_API_KEY is not set")
+        val apiKey = System.getenv("DEEPSEEK_API_KEY") ?: throw IllegalArgumentException("DEEPSEEK_API_KEY is not set")
         return getOrCreate(model, apiKey)
     }
     
@@ -47,8 +49,35 @@ object ModelFactory {
     
     private fun doCreateModel(model: String, apiKey: String): ChatModel {
         return when (model) {
-            "glm4" -> ZhipuChatModel(apiKey)
-            else -> ZhipuChatModel(apiKey)
+            "glm4" -> createZhipuChatModel(apiKey)
+            "deepseek" -> createDeepSeekChatModel(apiKey)
+            else -> createDeepSeekChatModel(apiKey)
         }
+    }
+    
+    private fun createZhipuChatModel(apiKey: String): ChatModel {
+        val lm = ZhipuAiChatModel.builder()
+            .apiKey(apiKey)
+            .logRequests(true)
+            .logResponses(true)
+            .maxRetries(1)
+            .build()
+        return ChatModelImpl(lm)
+    }
+
+    /**
+     * DeepSeek API is compatible with OpenAI API, so it's OK to use OpenAIChatModel.
+     *
+     * @see https://github.com/deepseek-ai/DeepSeek-V2/issues/18
+     * */
+    private fun createDeepSeekChatModel(apiKey: String): ChatModel {
+        val lm = OpenAiChatModel.builder()
+            .apiKey(apiKey)
+            .baseUrl("https://api.deepseek.com/v2")
+            .logRequests(true)
+            .logResponses(true)
+            .maxRetries(1)
+            .build()
+        return ChatModelImpl(lm)
     }
 }

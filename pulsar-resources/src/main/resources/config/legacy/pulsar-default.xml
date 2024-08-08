@@ -22,4 +22,14 @@
 
 <configuration>
 
+    <property>
+        <name>LARGE_LANGUAGE_MODEL</name>
+        <value>deepseek</value>
+    </property>
+
+    <property>
+        <name>LLM_API_KEY</name>
+        <value>sk-2a9f95d73ad04238b2932c18da057139</value>
+    </property>
+
 </configuration>

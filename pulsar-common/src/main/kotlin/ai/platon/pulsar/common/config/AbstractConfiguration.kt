@@ -59,8 +59,7 @@ abstract class AbstractConfiguration {
         loadDefaults: Boolean = true,
         resources: Iterable<String> = DEFAULT_RESOURCES
     ) {
-        conf = KConfiguration(loadDefaults)
-        conf.addLegacyResources(profile, mode, loadDefaults, resources)
+        conf = KConfiguration(profile = profile, extraResources = resources, loadDefaults = loadDefaults)
     }
     
     constructor(conf: KConfiguration) {

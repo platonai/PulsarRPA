@@ -6,19 +6,13 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.external.TokenUsage
 import dev.langchain4j.data.message.UserMessage
+import dev.langchain4j.model.chat.ChatLanguageModel
 import dev.langchain4j.model.output.FinishReason
-import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import org.jsoup.nodes.Element
 
-open class ZhipuChatModel(
-    private val apiKey: String
-): ChatModel {
-    private val chatModel: ZhipuAiChatModel = ZhipuAiChatModel.builder()
-        .apiKey(apiKey)
-        .logRequests(true)
-        .logResponses(true)
-        .maxRetries(1)
-        .build()
+open class ChatModelImpl(
+    private val chatModel: ChatLanguageModel
+) : ChatModel {
     
     /**
      * Generates a response from the model based on a sequence of messages.
@@ -47,7 +41,7 @@ open class ZhipuChatModel(
         val u = response.tokenUsage()
         val tokenUsage = TokenUsage(u.inputTokenCount(), u.outputTokenCount(), u.totalTokenCount())
         val r = response.finishReason()
-        val state = when(r) {
+        val state = when (r) {
             FinishReason.STOP -> ResponseState.STOP
             FinishReason.LENGTH -> ResponseState.LENGTH
             FinishReason.TOOL_EXECUTION -> ResponseState.TOOL_EXECUTION

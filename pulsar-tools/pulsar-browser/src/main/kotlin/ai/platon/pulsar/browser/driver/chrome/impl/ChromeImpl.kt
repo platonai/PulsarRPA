@@ -20,27 +20,28 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ChromeImpl(
-        var host: String = LOCALHOST,
-        var port: Int = 0,
-        var wss: WebSocketServiceFactory
-): RemoteChrome {
+    var host: String = LOCALHOST,
+    var port: Int = 0,
+    var wss: WebSocketServiceFactory
+) : RemoteChrome {
     companion object {
         const val ABOUT_BLANK_PAGE = "about:blank"
         const val LOCALHOST = "localhost"
-
+        
         const val LIST_TABS = "json/list"
         const val CREATE_TAB = "json/new"
         const val ACTIVATE_TAB = "json/activate"
         const val CLOSE_TAB = "json/close"
         const val VERSION = "json/version"
     }
-
+    
     enum class HttpMethod {
         CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE
     }
-
+    
     private val logger = getLogger(this)
     private val objectMapper = ObjectMapper()
+    
     /**
      * DevTools map, the key is the Chrome tab id.
      * */
@@ -48,21 +49,22 @@ class ChromeImpl(
     private val closed = AtomicBoolean()
     
     override val isActive get() = !closed.get()
-
+    
     private val _version: Lazy<ChromeVersion> = lazy { refreshVersion() }
+    
     /**
      * The Chrome version.
      * */
     override val version get() = _version.value
-
-    constructor(host: String, port: Int): this(host, port, object: WebSocketServiceFactory {
+    
+    constructor(host: String, port: Int) : this(host, port, object : WebSocketServiceFactory {
         override fun createWebSocketService(wsUrl: String): Transport {
             return TransportImpl.create(URI.create(wsUrl))
         }
     })
-
-    constructor(port: Int): this(LOCALHOST, port)
-
+    
+    constructor(port: Int) : this(LOCALHOST, port)
+    
     @Throws(ChromeServiceException::class)
     override fun listTabs(): Array<ChromeTab> {
         return try {
@@ -76,23 +78,24 @@ class ChromeImpl(
             }
         }
     }
-
+    
     @Throws(ChromeServiceException::class)
     override fun createTab(): ChromeTab {
         return createTab(ABOUT_BLANK_PAGE)
     }
-
+    
     @Throws(ChromeServiceException::class)
     override fun createTab(url: String): ChromeTab {
         try {
-            val chromeTab = request(ChromeTab::class.java, HttpMethod.PUT, "http://%s:%d/%s?%s", host, port, CREATE_TAB, url)
-                ?: throw ChromeServiceException("Failed to create tab, unexpected null response | $url")
+            val chromeTab =
+                request(ChromeTab::class.java, HttpMethod.PUT, "http://%s:%d/%s?%s", host, port, CREATE_TAB, url)
+                    ?: throw ChromeServiceException("Failed to create tab, unexpected null response | $url")
             return chromeTab
         } catch (e: WebSocketServiceException) {
             throw ChromeServiceException("Failed to create tab | $url", e)
         }
     }
-
+    
     @Throws(ChromeServiceException::class)
     override fun activateTab(tab: ChromeTab) {
         try {
@@ -101,7 +104,7 @@ class ChromeImpl(
             throw ChromeServiceException("Failed to activate tab", e)
         }
     }
-
+    
     @Throws(ChromeServiceException::class)
     override fun closeTab(tab: ChromeTab) {
         try {
@@ -113,7 +116,7 @@ class ChromeImpl(
             throw ChromeServiceException("Failed to close tab", e)
         }
     }
-
+    
     @Throws(ChromeServiceException::class)
     @Synchronized
     override fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
@@ -140,7 +143,7 @@ class ChromeImpl(
             if (!canConnect()) {
                 return
             }
-
+            
             val devTools = remoteDevTools.values
             devTools.forEach { it.runCatching { close() }.onFailure { warnForClose(this, it) } }
             remoteDevTools.clear()
@@ -155,25 +158,25 @@ class ChromeImpl(
         val invocationHandler = InvocationHandler { _, method, _ ->
             commands.computeIfAbsent(method) { ProxyClasses.createProxy(method.returnType, commandHandler) }
         }
-
+        
         val browserUrl = version.webSocketDebuggerUrl
             ?: throw WebSocketServiceException("Invalid web socket url to browser")
         val browserTransport = wss.createWebSocketService(browserUrl)
-
+        
         // Connect to a tab via web socket
         val debuggerUrl = tab.webSocketDebuggerUrl
-                ?: throw WebSocketServiceException("Invalid web socket url to page")
+            ?: throw WebSocketServiceException("Invalid web socket url to page")
         val pageTransport = wss.createWebSocketService(debuggerUrl)
-
+        
         // Create concrete dev tools instance from interface
         return ProxyClasses.createProxyFromAbstract(
-                ChromeDevToolsImpl::class.java,
-                arrayOf(Transport::class.java, Transport::class.java, DevToolsConfig::class.java),
-                arrayOf(browserTransport, pageTransport, config),
-                invocationHandler
+            ChromeDevToolsImpl::class.java,
+            arrayOf(Transport::class.java, Transport::class.java, DevToolsConfig::class.java),
+            arrayOf(browserTransport, pageTransport, config),
+            invocationHandler
         ).also { commandHandler.devTools = it }
     }
-
+    
     /**
      * Sends a request and parses json response as type T.
      *
@@ -183,14 +186,14 @@ class ChromeImpl(
      * @param <T> Type of response type.
      * @return Response object.
      * @throws WebSocketServiceException If sending request fails due to any reason.
-    */
+     */
     @Throws(WebSocketServiceException::class)
     private fun <T> request(
         responseType: Class<T>, method: HttpMethod, path: String, vararg params: Any
     ): T? {
         var connection: HttpURLConnection? = null
         var inputStream: InputStream? = null
-
+        
         try {
             val uri = URL(String.format(path, *params))
             
@@ -218,17 +221,17 @@ class ChromeImpl(
                 inputStream = connection.errorStream
                 val responseBody = readString(inputStream)
                 val message = "Received error ($responseCode) - ${connection.responseMessage}\n$responseBody"
-
+                
                 throw WebSocketServiceException(message)
             }
-        } catch (ex: IOException) {
-            throw ChromeServiceException("Failed sending HTTP request", ex)
+        } catch (e: IOException) {
+            throw ChromeServiceException("Failed sending HTTP request", e)
         } finally {
             inputStream?.close()
             connection?.disconnect()
         }
     }
-
+    
     /**
      * Converts input stream to string. If input string is null, it returns empty string.
      *

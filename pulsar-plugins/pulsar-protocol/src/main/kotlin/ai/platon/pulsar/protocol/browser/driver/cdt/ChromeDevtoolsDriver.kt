@@ -384,6 +384,8 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun focus(selector: String) {
+        // TODO: handle the minor exception: 0.	[focus] (3/5) | code: -32000, Element is not focusable
+        // we can return false if the element is not focusable
         rpc.invokeDeferredSilently("focus") { page.focusOnSelector(selector) }
     }
 
