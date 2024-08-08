@@ -13,7 +13,7 @@ class ContextDefaults {
     /**
      * The default unmodified config
      * */
-    val unmodifiedConfig = ImmutableConfig()
+    val unmodifiedConfig = ImmutableConfig(loadDefaults = true)
     /**
      * Url default normalizer
      * */

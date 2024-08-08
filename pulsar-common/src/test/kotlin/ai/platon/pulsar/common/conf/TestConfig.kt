@@ -24,6 +24,30 @@ class TestConfig {
         assertTrue("pulsar-default.xml" in conf.toString())
         assertEquals("pulsar_test_crawl_id", conf["storage.crawl.id"])
     }
+    
+    @Test
+    fun testFallback() {
+        val mutableConfig = MutableConfig()
+        val n1 = "n1"
+        val v1 = "a,b,c,d"
+        mutableConfig[n1] = v1
+        val conf = VolatileConfig(mutableConfig)
+        assertEquals(v1, conf[n1])
+        println(StringUtils.join(conf.getStrings(n1), ", "))
+        assertEquals(4, conf.getStrings(n1).size)
+    }
+    
+    @Test
+    fun testFallback2() {
+        val conf1 = ImmutableConfig(profile = "default", loadDefaults = true)
+        assertEquals("pulsar_test_crawl_id", conf1["storage.crawl.id"])
+        
+        val conf2 = conf1.toMutableConfig()
+        assertEquals("pulsar_test_crawl_id", conf2["storage.crawl.id"])
+        
+        val conf3 = conf1.toVolatileConfig()
+        assertEquals("pulsar_test_crawl_id", conf3["storage.crawl.id"])
+    }
 
     @Test
     fun testDuration() {
@@ -75,18 +99,6 @@ class TestConfig {
         val v1 = "a,b,c,d"
         conf[n1] = v1
         assertEquals(v1, conf[n1])
-        assertEquals(4, conf.getStrings(n1).size)
-    }
-
-    @Test
-    fun testFallback() {
-        val mutableConfig = MutableConfig()
-        val n1 = "n1"
-        val v1 = "a,b,c,d"
-        mutableConfig[n1] = v1
-        val conf = VolatileConfig(mutableConfig)
-        assertEquals(v1, conf[n1])
-        println(StringUtils.join(conf.getStrings(n1), ", "))
         assertEquals(4, conf.getStrings(n1).size)
     }
 }

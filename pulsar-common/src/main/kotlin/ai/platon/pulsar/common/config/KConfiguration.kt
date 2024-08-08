@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.KConfiguration.Companion.EXTERNAL_RESOURCE_BASE_DIR
 import ai.platon.pulsar.common.urls.UrlUtils
 import com.ctc.wstx.io.StreamBootstrapper
 import com.ctc.wstx.io.SystemId
@@ -21,6 +22,9 @@ import javax.xml.stream.XMLStreamConstants
 import javax.xml.stream.XMLStreamException
 import javax.xml.stream.XMLStreamReader
 import kotlin.collections.ArrayList
+import kotlin.io.path.isReadable
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.listDirectoryEntries
 
 class KConfiguration(
     val profile: String = "",
@@ -28,14 +32,14 @@ class KConfiguration(
     val extraResources: Iterable<String> = listOf(),
     private val loadDefaults: Boolean = true,
 ) : Iterable<Map.Entry<String, String?>> {
-    
+
     companion object {
         val DEFAULT_RESOURCES = mutableSetOf("pulsar-default.xml")
+        val EXTERNAL_RESOURCE_BASE_DIR = AppPaths.CONF_DIR.resolve("legacy")
         val SYSTEM_DEFAULT_RESOURCES = mutableSetOf<String>()
-        
         private val ID_SUPPLIER = AtomicInteger()
     }
-    
+
     private var impl: ConfigurationImpl? = null
     private val assuredImplementation: ConfigurationImpl
         get() {
@@ -134,30 +138,42 @@ private class ConfigurationImpl(
     private val loadDefaults: Boolean,
 ) {
     private val logger = getLogger(this)
-    
+
     val resourceNames = mutableSetOf<String>()
     val resourceURLs = mutableSetOf<String>()
     val resources = ArrayList<Resource>()
     val properties = Properties()
-    
+
     private val wstxInputFactory = com.ctc.wstx.stax.WstxInputFactory()
-    
+
     @Synchronized
     fun load() {
         resourceNames.clear()
         resourceURLs.clear()
         resources.clear()
-        
-        collectResources()
+
+        collectResourcePaths()
         resourceURLs.mapNotNull { UrlUtils.getURLOrNull(it) }.forEach { addResource(it) }
+        if (loadDefaults) {
+            addExternalResource(EXTERNAL_RESOURCE_BASE_DIR)
+        }
     }
-    
+
     fun addResource(name: String) = addResourceObject(Resource(name))
-    
+
     fun addResource(url: URL) = addResourceObject(Resource(url))
-    
+
+    fun addResource(path: Path) = addResourceObject(Resource(path))
+
+    fun addExternalResource(baseDir: Path) {
+        baseDir.listDirectoryEntries("*.xml")
+            .filter { it.isRegularFile() && it.isReadable() }
+            .onEach { logger.info("Found legacy configuration: {}", it) }
+            .forEach { addResource(it) }
+    }
+
     operator fun get(name: String): Any? = properties[name]
-    
+
     /**
      * Provided for parallelism with the {@code getProperty} method. Enforces use of
      * strings for property keys and values. The value returned is the
@@ -181,7 +197,7 @@ private class ConfigurationImpl(
         }
     }
 
-    private fun collectResources() {
+    private fun collectResourcePaths() {
         if (profile.isNotEmpty()) {
             set(CapabilityTypes.LEGACY_CONFIG_PROFILE, profile)
         }
@@ -247,8 +263,6 @@ private class ConfigurationImpl(
     }
     
     private fun loadResource(wrapper: Resource): Resource? {
-        val p = properties ?: return null
-        
         return try {
             val resource = wrapper.resource
             val name = wrapper.name
@@ -256,11 +270,11 @@ private class ConfigurationImpl(
             if (resource is InputStream) {
                 returnCachedProperties = true
             } else if (resource is Properties) {
-                overlay(p, resource)
+                overlay(properties, resource)
             }
             
             val reader = getStreamReader(wrapper) ?: throw RuntimeException("$resource not found")
-            var toAddTo = p
+            var toAddTo = properties
             if (returnCachedProperties) {
                 toAddTo = Properties()
             }
@@ -272,7 +286,7 @@ private class ConfigurationImpl(
             reader.close()
             
             if (returnCachedProperties) {
-                overlay(p, toAddTo)
+                overlay(properties, toAddTo)
                 return Resource(toAddTo, name)
             }
             
@@ -328,11 +342,8 @@ private class ConfigurationImpl(
                 val url = ResourceLoader.getResource(resource) ?: return null
                 parse(url)
             }
-            
             is Path -> {
                 // a file resource
-                // Can't use FileSystem API or we get an infinite loop
-                // since FileSystem uses Configuration API.  Use java.io.File instead.
                 val file = File(resource.toUri().path).absoluteFile.takeIf { it.exists() } ?: return null
                 parse(BufferedInputStream(Files.newInputStream(file.toPath())), resource.toString())
             }
