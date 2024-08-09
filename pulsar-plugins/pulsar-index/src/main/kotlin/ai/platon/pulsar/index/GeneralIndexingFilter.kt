@@ -16,7 +16,8 @@ class GeneralIndexingFilter(
 
     /**
      */
-    override fun setup(conf: ImmutableConfig) {
+    override fun configure(conf1: ImmutableConfig) {
+        conf = conf1
     }
 
     /**

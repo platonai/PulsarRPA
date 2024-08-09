@@ -4,6 +4,7 @@ package ai.platon.pulsar.skeleton.crawl.protocol
 import ai.platon.pulsar.common.config.Configurable
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
 import crawlercommons.robots.BaseRobotRules
 import org.slf4j.LoggerFactory
 
@@ -12,7 +13,7 @@ import org.slf4j.LoggerFactory
  *
  * TODO: protocols are designed to be initialized at setConf() method, which is not good
  */
-interface Protocol : Configurable, AutoCloseable {
+interface Protocol : LazyConfigurable, AutoCloseable {
 
     val supportParallel: Boolean
 
@@ -21,7 +22,7 @@ interface Protocol : Configurable, AutoCloseable {
     fun getResponses(pages: Collection<WebPage>, volatileConfig: VolatileConfig): Collection<Response> {
         return emptyList()
     }
-
+    
     /**
      * Reset the protocol environment, so the peer host view the client as a new one
      */

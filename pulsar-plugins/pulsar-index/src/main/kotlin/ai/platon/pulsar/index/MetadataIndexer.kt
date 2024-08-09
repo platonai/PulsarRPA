@@ -18,7 +18,7 @@ class MetadataIndexer(
     override var conf: ImmutableConfig
 ) : IndexingFilter {
     
-    override fun setup(conf: ImmutableConfig) {
+    override fun configure(conf1: ImmutableConfig) {
     }
     
     @Throws(IndexingException::class)

@@ -2,7 +2,7 @@ package ai.platon.pulsar.skeleton.crawl.protocol
 
 import ai.platon.pulsar.common.config.Configurable
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.crawl.common.JobInitialized
+import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
 import com.google.common.io.Files
 import crawlercommons.robots.BaseRobotRules
 import crawlercommons.robots.SimpleRobotRules
@@ -23,11 +23,11 @@ import kotlin.system.exitProcess
  */
 abstract class RobotRulesParser(
     override var conf: ImmutableConfig
-) : Configurable, JobInitialized {
+) : LazyConfigurable {
     protected lateinit var agentNames: String
 
-    override fun setup(jobConf: ImmutableConfig) {
-        this.conf = jobConf
+    override fun configure(conf1: ImmutableConfig) {
+        this.conf = conf1
 
         // Grab the agent names we advertise to robots files.
         val ua = conf["http.agent.name", ""].trim { it <= ' ' }

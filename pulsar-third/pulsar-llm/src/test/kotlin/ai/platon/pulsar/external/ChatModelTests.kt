@@ -19,6 +19,7 @@ class ChatModelTests {
         private val args = "-requireSize 200000"
         private val productHtml = ResourceLoader.readString("pages/amazon/B0C1H26C46.original.htm")
         private val productText = ResourceLoader.readString("prompts/product.txt")
+        private val clusterAnalysisPrompt = ResourceLoader.readString("prompts/cluster.analysis.txt")
         private val conf = ImmutableConfig(loadDefaults = true)
         private val llm = conf["llm.name"]
         private val apiKey = conf["llm.apiKey"]
@@ -84,6 +85,20 @@ class ChatModelTests {
     （这里是商品评分）
         """.trimIndent()
         val response = model.call(text, prompt)
+        println(response.content)
+        
+        assertTrue { response.tokenUsage.inputTokenCount > 0 }
+        assertTrue { response.tokenUsage.outputTokenCount > 0 }
+        assertTrue { response.tokenUsage.totalTokenCount > 0 }
+        assertTrue { response.state == ResponseState.STOP }
+    }
+    
+    @Test
+    @EnabledIf("#{model != null}")
+    fun `When ask LLM to analyze cluster then it responses with json`() {
+        if (model == null) return
+        
+        val response = model.call(clusterAnalysisPrompt)
         println(response.content)
         
         assertTrue { response.tokenUsage.inputTokenCount > 0 }

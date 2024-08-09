@@ -3,14 +3,14 @@ package ai.platon.pulsar.skeleton.crawl.index
 import ai.platon.pulsar.common.config.Configurable
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.skeleton.crawl.common.JobInitialized
+import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
 
 /**
  * Extension point for indexing. Permits one to add metadata to the indexed
  * fields. All plugins found which implement this extension point are run
  * sequentially on the parse.
  */
-interface IndexingFilter : Parameterized, JobInitialized, Configurable {
+interface IndexingFilter : Parameterized, LazyConfigurable {
     /**
      * Adds fields or otherwise modifies the document that will be indexed for a
      * parse. Unwanted documents can be removed from indexing by returning a null

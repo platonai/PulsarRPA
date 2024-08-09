@@ -1,15 +1,12 @@
-
 package ai.platon.pulsar.skeleton.crawl.protocol
 
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -22,26 +19,26 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoCloseable {
     private val logger = LoggerFactory.getLogger(ProtocolFactory::class.java)
-
+    
     private val protocols: MutableMap<String, Protocol> = ConcurrentHashMap()
     private val closed = AtomicBoolean()
-
+    
     init {
         ResourceLoader.readAllLines("protocol-plugins.txt")
-                .asSequence()
-                .map { it.trim() }
-                .filterNot { it.startsWith("#") }
-                .map { it.split("\\s+".toRegex()) }
-                .filter { it.size >= 2 }
-                .map { it[0] to getInstance(it) }
-                .filter { it.second != null }
-                .associate { it.first to it.second!! }
-                .onEach { it.value.conf = immutableConfig }
-                .toMap(protocols)
+            .asSequence()
+            .map { it.trim() }
+            .filterNot { it.startsWith("#") }
+            .map { it.split("\\s+".toRegex()) }
+            .filter { it.size >= 2 }
+            .map { it[0] to getInstance(it) }
+            .filter { it.second != null }
+            .associate { it.first to it.second!! }
+            .onEach { it.value.configure(immutableConfig) }
+            .toMap(protocols)
         protocols.keys.joinToString(", ", "Supported protocols: ", "")
-                .also { logger.info(it) }
+            .also { logger.info(it) }
     }
-
+    
     /**
      * TODO: configurable, using major protocol/sub protocol is a good idea
      * Using major protocol/sub protocol is a good idea, for example:
@@ -51,13 +48,13 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
     fun getProtocol(page: WebPage): Protocol {
         val fetchMode = page.fetchMode.takeIf { it != FetchMode.UNKNOWN } ?: FetchMode.BROWSER
         page.fetchMode = fetchMode
-
+        
         return when (fetchMode) {
             FetchMode.BROWSER -> getProtocol("browser:" + page.url)
             else -> getProtocol(page.url)
-        }?:throw ProtocolNotFound(page.url)
+        } ?: throw ProtocolNotFound(page.url)
     }
-
+    
     /**
      * Returns the appropriate [Protocol] implementation for a url.
      *
@@ -70,11 +67,11 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
         // sub protocol can be supported by main:sub://example.com later
         return protocols[protocolName]
     }
-
+    
     fun getProtocol(mode: FetchMode): Protocol? {
         return getProtocol(mode.name.lowercase(Locale.getDefault()) + "://")
     }
-
+    
     private fun getInstance(config: List<String>): Protocol? {
         try {
             // config[0] is the protocol name, config[1] is the class name, and the rest are properties
@@ -89,7 +86,7 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
         }
         return null
     }
-
+    
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             protocols.values.forEach { protocol: Protocol ->

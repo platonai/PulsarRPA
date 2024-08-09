@@ -34,6 +34,9 @@ open class ChatModelImpl(
     override fun call(context: String, prompt: String): ModelResponse {
         val prompt1 = if (context.isNotBlank()) prompt + "\n\n" + context else prompt
         val message = UserMessage.userMessage(prompt1)
+        
+//        println("generating ... by $langchainModel")
+        
         val response = langchainModel.generate(message)
         
         val u = response.tokenUsage()

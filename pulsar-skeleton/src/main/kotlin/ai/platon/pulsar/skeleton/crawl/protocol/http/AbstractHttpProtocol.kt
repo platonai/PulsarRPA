@@ -14,7 +14,6 @@ import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.skeleton.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.MimeTypeResolver
-import ai.platon.pulsar.skeleton.crawl.common.JobInitialized
 import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.skeleton.crawl.protocol.Protocol
 import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolOutput
@@ -29,7 +28,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 
-abstract class AbstractHttpProtocol: Protocol, JobInitialized {
+abstract class AbstractHttpProtocol: Protocol {
     private val log = LoggerFactory.getLogger(AbstractHttpProtocol::class.java)
     protected val closed = AtomicBoolean()
 
@@ -49,11 +48,15 @@ abstract class AbstractHttpProtocol: Protocol, JobInitialized {
 
     private lateinit var robots: HttpRobotRulesParser
 
-    override fun setup(jobConf: ImmutableConfig) {
-        conf = jobConf
-        fetchMaxRetry = jobConf.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
-        mimeTypeResolver = MimeTypeResolver(jobConf)
-        robots = HttpRobotRulesParser(jobConf)
+    /**
+     * Set up the protocol.
+     * Sometimes the protocol can not to be constructed with parameters, so it need a secondary setup.
+     * */
+    override fun configure(conf1: ImmutableConfig) {
+        conf = conf1
+        fetchMaxRetry = conf1.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
+        mimeTypeResolver = MimeTypeResolver(conf1)
+        robots = HttpRobotRulesParser(conf1)
     }
 
     override fun reset() {

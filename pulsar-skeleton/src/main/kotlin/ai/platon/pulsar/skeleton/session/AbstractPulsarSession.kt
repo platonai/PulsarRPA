@@ -424,43 +424,18 @@ abstract class AbstractPulsarSession(
     override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
     
     override fun chat(prompt: String): ModelResponse {
-        val model = sessionConfig["llm.name"] ?: throw IllegalArgumentException("No LLM model name specified.")
+        val model = sessionConfig["llm.name"] ?: throw IllegalArgumentException("No LLM name specified.")
         val apiKey = sessionConfig["llm.apiKey"] ?: throw IllegalArgumentException("No LLM API key specified.")
         return context.chat(prompt, model, apiKey)
     }
     
-    override fun chat(context: String, prompt: String): ModelResponse {
-        // TODO: config the template to generate the final prompt
-        val prompt1 = prompt + "\n\n" + context
-        
-        val response = chat(prompt1)
-        
-        return response
-    }
+    override fun chat(context: String, prompt: String) = chat(prompt + "\n\n" + context)
     
-    override fun chat(page: WebPage, prompt: String): ModelResponse {
-        val prompt1 = prompt + "\n\n" + page.contentAsString
-        
-        val response = chat(prompt1)
-        
-        return response
-    }
+    override fun chat(page: WebPage, prompt: String) = chat(prompt + "\n\n" + page.contentAsString)
     
-    override fun chat(document: FeaturedDocument, prompt: String): ModelResponse {
-        val prompt1 = prompt + "\n\n" + document.text
-        
-        val response = chat(prompt1)
-        
-        return response
-    }
+    override fun chat(document: FeaturedDocument, prompt: String) = chat(prompt + "\n\n" + document.text)
     
-    override fun chat(element: Element, prompt: String): ModelResponse {
-        val prompt1 = prompt + "\n\n" + element.text()
-        
-        val response = chat(prompt1)
-        
-        return response
-    }
+    override fun chat(element: Element, prompt: String) = chat(prompt + "\n\n" + element.text())
     
     override fun data(name: String): Any? = let { dataCache[name] }
     

@@ -7,10 +7,9 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
-import ai.platon.pulsar.skeleton.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.skeleton.crawl.common.JobInitialized
+import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
 import ai.platon.pulsar.skeleton.crawl.common.URLUtil
 import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters
 import ai.platon.pulsar.skeleton.crawl.filter.SCOPE_FETCH
@@ -37,11 +36,11 @@ import kotlin.system.measureTimeMillis
 
 class PageParser(
     val parserFactory: ParserFactory,
-    val conf: ImmutableConfig,
+    override var conf: ImmutableConfig,
     val crawlFilters: CrawlFilters = CrawlFilters(conf),
     val signature: Signature = TextMD5Signature(),
     val messageWriter: MiscMessageWriter? = null
-) : Parameterized, JobInitialized, AutoCloseable {
+) : Parameterized, LazyConfigurable, AutoCloseable {
 
     enum class Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
     init { MetricsSystem.reg.register(Counter::class.java) }
@@ -67,7 +66,7 @@ class PageParser(
         params.withLogger(logger).info(true)
     }
 
-    override fun setup(jobConf: ImmutableConfig) {
+    override fun configure(conf1: ImmutableConfig) {
     }
 
     /**
