@@ -90,6 +90,9 @@
                 <module>pulsar-spring-support</module>
                 <module>pulsar-rest</module>
 
+                <module>pulsar-tests</module>
+                <module>pulsar-all</module>
+
                 <module>pulsar-client</module>
                 <module>pulsar-app</module>
             </modules>
@@ -883,6 +886,11 @@
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core-jvm</artifactId>
             <version>${kotlin.coroutine.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test-junit5</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

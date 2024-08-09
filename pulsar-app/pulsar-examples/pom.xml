@@ -27,7 +27,7 @@
   <dependencies>
     <dependency>
       <groupId>ai.platon.pulsar</groupId>
-      <artifactId>pulsar-all</artifactId>
+      <artifactId>pulsar-rest</artifactId>
       <version>${project.version}</version>
     </dependency>
 

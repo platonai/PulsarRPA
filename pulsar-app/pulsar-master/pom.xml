@@ -23,8 +23,7 @@
     <dependencies>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-all</artifactId>
-            <version>${project.version}</version>
+            <artifactId>pulsar-rest</artifactId>
         </dependency>
 
         <dependency>
