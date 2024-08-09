@@ -1,5 +1,6 @@
 package ai.platon.pulsar.external.impl
 
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ChatModel
 import ai.platon.pulsar.external.ModelResponse
@@ -13,6 +14,7 @@ import org.jsoup.nodes.Element
 open class ChatModelImpl(
     private val langchainModel: ChatLanguageModel
 ) : ChatModel {
+    private val logger = getLogger(this)
     
     /**
      * Generates a response from the model based on a sequence of messages.
@@ -34,10 +36,13 @@ open class ChatModelImpl(
     override fun call(context: String, prompt: String): ModelResponse {
         val prompt1 = if (context.isNotBlank()) prompt + "\n\n" + context else prompt
         val message = UserMessage.userMessage(prompt1)
-        
-//        println("generating ... by $langchainModel")
-        
-        val response = langchainModel.generate(message)
+
+        val response = try {
+            langchainModel.generate(message)
+        } catch (e: Exception) {
+            logger.warn("Model call interrupted. | {}", e.message)
+            return ModelResponse("", ResponseState.OTHER)
+        }
         
         val u = response.tokenUsage()
         val tokenUsage = TokenUsage(u.inputTokenCount(), u.outputTokenCount(), u.totalTokenCount())

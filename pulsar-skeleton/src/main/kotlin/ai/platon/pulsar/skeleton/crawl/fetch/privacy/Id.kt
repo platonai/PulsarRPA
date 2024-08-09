@@ -21,7 +21,7 @@ data class PrivacyAgentId(
     val ident = contextDir.last().toString()
 
     val display = when {
-        isSystemDefault -> "system default"
+        isSystemDefault -> "system.default"
         isDefault -> "default"
         isPrototype -> "prototype"
         ident.length <= 5 -> ident

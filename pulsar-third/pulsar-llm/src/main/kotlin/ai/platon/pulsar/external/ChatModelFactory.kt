@@ -85,7 +85,7 @@ object ChatModelFactory {
             .apiKey(apiKey)
             .baseUrl("https://api.deepseek.com")
             .modelName("deepseek-chat")
-            .logRequests(true)
+            .logRequests(false)
             .logResponses(true)
             .maxRetries(1)
             .build()
