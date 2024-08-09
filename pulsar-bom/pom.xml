@@ -16,12 +16,12 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>2.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-bom</artifactId>
     <name>Pulsar BOM</name>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>2.0.1-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -30,8 +30,8 @@
 
     <properties>
 <!--        <gora-shaded-mongodb.version>1.0.0</gora-shaded-mongodb.version>-->
-<!--        <pulsar-h2.version>2.0.0-SNAPSHOT</pulsar-h2.version>-->
-<!--        <pulsar-jsoup.version>2.0.0-SNAPSHOT</pulsar-jsoup.version>-->
+<!--        <pulsar-h2.version>2.0.1-SNAPSHOT</pulsar-h2.version>-->
+<!--        <pulsar-jsoup.version>2.0.1-SNAPSHOT</pulsar-jsoup.version>-->
     </properties>
 
     <dependencyManagement>
