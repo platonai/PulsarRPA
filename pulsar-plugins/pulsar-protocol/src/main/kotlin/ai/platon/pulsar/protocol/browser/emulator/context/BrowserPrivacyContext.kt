@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_NAME
+import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_DISPLAY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.skeleton.crawl.CoreMetrics
@@ -145,7 +145,7 @@ open class BrowserPrivacyContext(
     @Synchronized
     private fun initialize(task: FetchTask) {
         createProxyContextIfEnabled()
-        task.page.setVar(VAR_PRIVACY_CONTEXT_NAME, display)
+        task.page.setVar(VAR_PRIVACY_CONTEXT_DISPLAY, display)
     }
 
     private fun createProxyContextIfEnabled() {

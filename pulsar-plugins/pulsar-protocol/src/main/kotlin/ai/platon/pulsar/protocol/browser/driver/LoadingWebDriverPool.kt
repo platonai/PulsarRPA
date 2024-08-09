@@ -373,7 +373,7 @@ class LoadingWebDriverPool constructor(
             if (isActive) {
                 throw e
             } else {
-                throw IllegalApplicationStateException("The process is shutting down, do not create new drivers", e)
+                throw IllegalApplicationStateException("Process is shutting down, do not create new drivers", e)
             }
         }
     }
@@ -411,7 +411,7 @@ class LoadingWebDriverPool constructor(
         return isActive && !isCriticalResources && resourceConsumingDriversInPool < capacity
     }
 
-    @Throws(BrowserLaunchException::class)
+    @Throws(WebDriverException::class)
     private fun computeBrowserAndDriver0(conf: VolatileConfig): WebDriver {
         val browser = driverFactory.launchBrowser(browserId, conf)
         val driver = browser.newDriver()

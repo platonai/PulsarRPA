@@ -9,16 +9,13 @@ import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.common.persist.ext.event
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import com.codahale.metrics.Gauge
 import com.google.common.annotations.Beta
 import kotlinx.coroutines.*
@@ -163,6 +160,10 @@ open class WebDriverPoolManager(
             return doRun(task)
         } catch (e: InterruptedException) {
             warnInterruptible(this, e)
+            return null
+        } catch (e: IllegalWebDriverStateException) {
+            logger.warn("Illegal state of web driver | {} | {}", e.message, task.page.url)
+            close()
             return null
         } catch (e: WebDriverException) {
             logger.warn("Failed to run the task | {} | {}", task.page.url, e.message)

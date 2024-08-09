@@ -70,7 +70,10 @@ open class WebDriverContext(
             return isActive && isDriverPoolReady
         }
 
-    @Throws(Exception::class)
+    /**
+     * Run a web driver task.
+     * This method should not throw any WebDriverException.
+     * */
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         globalTasks.mark()
         return checkAbnormalResult(task) ?: try {
@@ -80,8 +83,7 @@ open class WebDriverContext(
                 browseFun(task, it)
             } ?: FetchResult.crawlRetry(task, "Null response from driver pool manager, it might be closed")
         } catch (e: IllegalWebDriverStateException) {
-            logger.warn("{}. Browser connection failure, closing driver pool manager and browser. " +
-                "Task will retry {} in crawl scope | {}", task.page.id, task.id, e.message)
+            logger.warn("Illegal state of web driver | {} | {}", e.message, task.page.url)
             driverPoolManager.close()
             FetchResult.crawlRetry(task, e)
         } catch (e: WebDriverPoolExhaustedException) {

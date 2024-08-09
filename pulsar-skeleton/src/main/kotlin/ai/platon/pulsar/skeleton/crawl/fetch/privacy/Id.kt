@@ -20,7 +20,13 @@ data class PrivacyAgentId(
 
     val ident = contextDir.last().toString()
 
-    val display = ident.substringAfter(PrivacyContext.CONTEXT_DIR_PREFIX)
+    val display = when {
+        isSystemDefault -> "system default"
+        isDefault -> "default"
+        isPrototype -> "prototype"
+        ident.length <= 5 -> ident
+        else -> ident.substringAfter(PrivacyContext.CONTEXT_DIR_PREFIX)
+    }
     /**
      * If true, the privacy agent opens browser just like a real user does every day.
      * */

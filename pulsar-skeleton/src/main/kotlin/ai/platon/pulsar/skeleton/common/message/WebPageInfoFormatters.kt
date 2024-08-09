@@ -74,7 +74,7 @@ class PageLoadStatusFormatter(
         private val withReferer: Boolean = false,
         private val withSymbolicLink: Boolean = false
 ) {
-    private val verboseCount = 200
+    var verboseCount = 200
     private val url get() = page.url
     private val href get() = page.href
     private val location get() = page.location
@@ -151,7 +151,7 @@ class PageLoadStatusFormatter(
         protocolStatus.isFailed -> String.format(" %s", page.protocolStatus.toString())
         else -> ""
     }
-    private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
+    private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_DISPLAY]?.let { " | $it" } ?: ""
     private val additionalStatus: String get() = page.getVar(VAR_ADD_LOAD_STATUS)?.toString()?.let { " | $it" } ?: ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
 
@@ -241,7 +241,7 @@ class PageLoadStatusFormatter(
         var readableLocation = if (normalized) "[N] $readableLocation0" else readableLocation0
         if (withNormUrl) readableLocation = "$readableLocation <- $url"
         if (withReferer) readableLocation = "$readableLocation <- ${page.referrer}"
-        val doWithSymbolicLink = page.isFetched && (page.id < verboseCount || withSymbolicLink)
+        val doWithSymbolicLink = page.isFetched && page.id < verboseCount && withSymbolicLink
         return if (doWithSymbolicLink) "file://$symbolicLink | $readableLocation" else readableLocation
     }
 }
