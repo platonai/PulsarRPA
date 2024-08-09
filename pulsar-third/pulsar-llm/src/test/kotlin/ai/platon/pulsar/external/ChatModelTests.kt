@@ -19,16 +19,15 @@ class ChatModelTests {
         private val args = "-requireSize 200000"
         private val productHtml = ResourceLoader.readString("pages/amazon/B0C1H26C46.original.htm")
         private val productText = ResourceLoader.readString("prompts/product.txt")
-        private val clusterAnalysisPrompt = ResourceLoader.readString("prompts/cluster.analysis.txt")
+        private val clusterAnalysisPrompt = ResourceLoader.readString("prompts/data-expert/template/cluster.analyzer.txt")
         private val conf = ImmutableConfig(loadDefaults = true)
-        private val llm = conf["llm.name"]
-        private val apiKey = conf["llm.apiKey"]
-        private val model = if (llm != null && apiKey != null) ChatModelFactory.getOrCreate(llm, apiKey) else null
+        private val isModelConfigured get() = ChatModelFactory.isModelConfigured(conf)
+        private val model = ChatModelFactory.getOrCreateOrNull(conf)
         
         @BeforeAll
         @JvmStatic
         fun checkConfiguration() {
-            if (llm == null || apiKey == null) {
+            if (!isModelConfigured) {
                 println("=========================== LLM NOT CONFIGURED ==========================================")
                 println("> Skip the tests because the API key is not set")
                 println("> Please set the API key in the configuration file or environment variable")

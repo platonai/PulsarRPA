@@ -22,44 +22,19 @@
 
   <build>
     <defaultGoal>package</defaultGoal>
-
-    <plugins>
-      <!--
-      Command line to execute:
-
-      java -Xmx10g -Xms2G -cp pulsar-examples*.jar \
-      -D"loader.main=ai.platon.pulsar.examples.sites.food.dianping.RestaurantCrawlerKt" \
-      org.springframework.boot.loader.PropertiesLauncher
-      -->
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <version>${spring-boot.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <skip>true</skip>
-          <mainClass>ai.platon.pulsar.examples.sites.food.dianping.RestaurantCrawlerKt</mainClass>
-          <addResources>true</addResources>
-          <executable>true</executable>
-        </configuration>
-      </plugin>
-    </plugins>
   </build>
 
   <dependencies>
     <dependency>
       <groupId>ai.platon.pulsar</groupId>
-      <artifactId>pulsar-bom</artifactId>
+      <artifactId>pulsar-all</artifactId>
+      <version>${project.version}</version>
     </dependency>
+
     <dependency>
       <groupId>ai.platon.pulsar</groupId>
       <artifactId>pulsar-tests</artifactId>
+      <version>${project.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

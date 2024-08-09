@@ -2,6 +2,8 @@ package ai.platon.pulsar.browser.driver.chrome.impl
 
 import ai.platon.pulsar.browser.driver.chrome.MethodInvocation
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.EventName
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.ReturnTypeParameter
@@ -25,7 +27,7 @@ class DevToolsInvocationHandler: InvocationHandler {
     /**
      * Notice: args must be nullable, since methods can have no arguments
      * */
-    @Throws(InterruptedException::class)
+    @Throws(ChromeIOException::class, ChromeRPCException::class)
     override fun invoke(unused: Any, method: Method, args: Array<Any>?): Any? {
         if (isEventSubscription(method)) {
             val domainName = method.declaringClass.simpleName

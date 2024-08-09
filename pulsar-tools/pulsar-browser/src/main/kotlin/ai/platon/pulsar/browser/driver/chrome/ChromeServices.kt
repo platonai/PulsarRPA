@@ -1,7 +1,8 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
-import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
 import com.github.kklisura.cdt.protocol.v2023.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.v2023.support.types.EventListener
@@ -12,13 +13,13 @@ import java.util.function.Consumer
 interface Transport: AutoCloseable {
     val isOpen: Boolean
     
-    @Throws(WebSocketServiceException::class)
+    @Throws(ChromeIOException::class)
     fun connect(uri: URI)
     
-    @Throws(WebSocketServiceException::class)
+    @Throws(ChromeIOException::class)
     fun send(message: String)
     
-    @Throws(WebSocketServiceException::class)
+    @Throws(ChromeIOException::class)
     fun sendAsync(message: String): Future<Void>
     
     fun addMessageHandler(consumer: Consumer<String>)
@@ -61,7 +62,7 @@ interface RemoteDevTools: ChromeDevTools, AutoCloseable {
 
     val isOpen: Boolean
     
-    @Throws(InterruptedException::class)
+    @Throws(ChromeIOException::class, ChromeRPCException::class)
     operator fun <T> invoke(
             returnProperty: String?,
             clazz: Class<T>,

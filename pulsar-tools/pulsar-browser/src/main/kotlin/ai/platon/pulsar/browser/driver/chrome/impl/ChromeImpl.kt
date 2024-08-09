@@ -3,7 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome.impl
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.browser.driver.chrome.util.ProxyClasses
-import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnForClose
@@ -13,6 +13,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
+import java.net.ConnectException
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
@@ -70,9 +71,9 @@ class ChromeImpl(
         return try {
             request(Array<ChromeTab>::class.java, HttpMethod.GET, "http://%s:%d/%s", host, port, LIST_TABS)
                 ?: throw ChromeServiceException("Failed to list tabs, unexpected null response")
-        } catch (e: WebSocketServiceException) {
+        } catch (e: ChromeIOException) {
             if (isActive) {
-                throw ChromeServiceException("Failed to list tabs", e)
+                throw e
             } else {
                 arrayOf()
             }
@@ -84,47 +85,31 @@ class ChromeImpl(
         return createTab(ABOUT_BLANK_PAGE)
     }
     
-    @Throws(ChromeServiceException::class)
+    @Throws(ChromeIOException::class)
     override fun createTab(url: String): ChromeTab {
-        try {
-            val chromeTab =
-                request(ChromeTab::class.java, HttpMethod.PUT, "http://%s:%d/%s?%s", host, port, CREATE_TAB, url)
-                    ?: throw ChromeServiceException("Failed to create tab, unexpected null response | $url")
-            return chromeTab
-        } catch (e: WebSocketServiceException) {
-            throw ChromeServiceException("Failed to create tab | $url", e)
-        }
+        val chromeTab =
+            request(ChromeTab::class.java, HttpMethod.PUT, "http://%s:%d/%s?%s", host, port, CREATE_TAB, url)
+                ?: throw ChromeServiceException("Failed to create tab, unexpected null response | $url")
+        return chromeTab
     }
     
-    @Throws(ChromeServiceException::class)
+    @Throws(ChromeIOException::class)
     override fun activateTab(tab: ChromeTab) {
-        try {
-            request(Void::class.java, HttpMethod.PUT, "http://%s:%d/%s/%s", host, port, ACTIVATE_TAB, tab.id)
-        } catch (e: WebSocketServiceException) {
-            throw ChromeServiceException("Failed to activate tab", e)
-        }
+        request(Void::class.java, HttpMethod.PUT, "http://%s:%d/%s/%s", host, port, ACTIVATE_TAB, tab.id)
     }
     
-    @Throws(ChromeServiceException::class)
+    @Throws(ChromeIOException::class)
     override fun closeTab(tab: ChromeTab) {
-        try {
-            if (!isActive || !canConnect()) {
-                return
-            }
-            request(Void::class.java, HttpMethod.PUT, "http://%s:%d/%s/%s", host, port, CLOSE_TAB, tab.id)
-        } catch (e: WebSocketServiceException) {
-            throw ChromeServiceException("Failed to close tab", e)
+        if (!isActive || !canConnect()) {
+            return
         }
+        request(Void::class.java, HttpMethod.PUT, "http://%s:%d/%s/%s", host, port, CLOSE_TAB, tab.id)
     }
     
     @Throws(ChromeServiceException::class)
     @Synchronized
     override fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
-        return try {
-            remoteDevTools.computeIfAbsent(tab.id) { createDevTools0(version, tab, config) }
-        } catch (e: WebSocketServiceException) {
-            throw ChromeServiceException("Failed connecting to tab web socket.", e)
-        }
+        return remoteDevTools.computeIfAbsent(tab.id) { createDevTools0(version, tab, config) }
     }
     
     override fun canConnect(): Boolean {
@@ -150,7 +135,7 @@ class ChromeImpl(
         }
     }
     
-    @Throws(WebSocketServiceException::class)
+    @Throws(ChromeIOException::class)
     private fun createDevTools0(version: ChromeVersion, tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
         // Create invocation handler
         val commandHandler = DevToolsInvocationHandler()
@@ -160,12 +145,12 @@ class ChromeImpl(
         }
         
         val browserUrl = version.webSocketDebuggerUrl
-            ?: throw WebSocketServiceException("Invalid web socket url to browser")
+            ?: throw ChromeIOException("Invalid web socket url to browser")
         val browserTransport = wss.createWebSocketService(browserUrl)
         
         // Connect to a tab via web socket
         val debuggerUrl = tab.webSocketDebuggerUrl
-            ?: throw WebSocketServiceException("Invalid web socket url to page")
+            ?: throw ChromeIOException("Invalid web socket url to page")
         val pageTransport = wss.createWebSocketService(debuggerUrl)
         
         // Create concrete dev tools instance from interface
@@ -185,9 +170,9 @@ class ChromeImpl(
      * @param params Path params.
      * @param <T> Type of response type.
      * @return Response object.
-     * @throws WebSocketServiceException If sending request fails due to any reason.
+     * @throws ChromeIOException If sending request fails due to any reason.
      */
-    @Throws(WebSocketServiceException::class)
+    @Throws(ChromeIOException::class)
     private fun <T> request(
         responseType: Class<T>, method: HttpMethod, path: String, vararg params: Any
     ): T? {
@@ -222,10 +207,12 @@ class ChromeImpl(
                 val responseBody = readString(inputStream)
                 val message = "Received error ($responseCode) - ${connection.responseMessage}\n$responseBody"
                 
-                throw WebSocketServiceException(message)
+                throw ChromeIOException(message)
             }
+        } catch (e: ConnectException) {
+            throw ChromeIOException("Failed connecting to Chrome", e)
         } catch (e: IOException) {
-            throw ChromeServiceException("Failed sending HTTP request", e)
+            throw ChromeIOException("Failed sending HTTP request", e)
         } finally {
             inputStream?.close()
             connection?.disconnect()

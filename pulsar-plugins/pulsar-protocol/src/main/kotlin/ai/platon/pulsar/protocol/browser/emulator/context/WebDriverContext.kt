@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
@@ -77,6 +78,9 @@ open class WebDriverContext(
             driverPoolManager.run(browserId, task) {
                 browseFun(task, it)
             } ?: FetchResult.crawlRetry(task, "Null response from driver pool manager")
+        } catch (e: ChromeIOException) {
+            logger.warn("{}. Retry task {} in crawl scope | {}", task.page.id, task.id, e.message)
+            FetchResult.crawlRetry(task, "Web driver connection lost")
         } catch (e: WebDriverPoolExhaustedException) {
             val message = String.format("%s. Retry task %s in crawl scope | cause by: %s",
                 task.page.id, task.id, e.message)

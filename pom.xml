@@ -12,6 +12,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- TODO: is it better to use platon-parent? How does apache uses org.apache:apache? -->
     <parent>
         <groupId>ai.platon</groupId>
         <artifactId>platon-bom</artifactId>
@@ -620,6 +621,7 @@
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>gora-shaded-mongodb</artifactId>
                 <version>${gora-shaded-mongodb.version}</version>
+<!--                <classifier>shaded</classifier>-->
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
@@ -732,12 +734,6 @@
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-bom</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-resources</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
@@ -760,6 +756,27 @@
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-tests</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-tests</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <classifier>tests</classifier>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-all</artifactId>
+                <version>${project.version}</version>
+                <!-- Fix the following bug:  -->
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
@@ -829,42 +846,22 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
                 <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-properties</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jsr310</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.module</groupId>
-                <artifactId>jackson-module-kotlin</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
+
             <!-- The logging provider PulsarRPA application uses -->
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -890,6 +887,7 @@
             <artifactId>kotlinx-coroutines-core-jvm</artifactId>
             <version>${kotlin.coroutine.version}</version>
         </dependency>
+
     </dependencies>
 
     <properties>

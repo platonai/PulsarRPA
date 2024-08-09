@@ -26,6 +26,7 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>gora-shaded-mongodb</artifactId>
+<!--            <classifier>shaded</classifier>-->
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>

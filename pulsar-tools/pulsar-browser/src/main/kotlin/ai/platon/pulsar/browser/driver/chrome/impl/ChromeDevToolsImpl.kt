@@ -78,7 +78,7 @@ abstract class ChromeDevToolsImpl(
     ): T? {
         try {
             return invoke0(returnProperty, clazz, null, methodInvocation)
-        }  catch (e: WebSocketServiceException) {
+        }  catch (e: ChromeIOException) {
             // TODO: if the connection is lost, we should close the browser and restart it
             throw ChromeRPCException("Web socket connection lost", e)
         } catch (e: InterruptedException) {
@@ -103,6 +103,7 @@ abstract class ChromeDevToolsImpl(
      * @param <T> The return type.
      * @return The result of the invocation.
      * */
+    @Throws(ChromeIOException::class, ChromeRPCException::class)
     override operator fun <T> invoke(
         returnProperty: String?,
         clazz: Class<T>,
@@ -111,18 +112,14 @@ abstract class ChromeDevToolsImpl(
     ): T? {
         try {
             return invoke0(returnProperty, clazz, returnTypeClasses, method)
-        }  catch (e: WebSocketServiceException) {
-            throw ChromeRPCException("Web socket connection lost", e)
         } catch (e: InterruptedException) {
             logger.warn("Interrupted while invoke ${method.method}")
             Thread.currentThread().interrupt()
             return null
-        } catch (e: IOException) {
-            throw ChromeRPCException("Failed reading response message", e)
         }
     }
     
-    @Throws(InterruptedException::class, ChromeServiceException::class, IOException::class)
+    @Throws(ChromeIOException::class, InterruptedException::class, ChromeRPCException::class)
     private fun <T> invoke0(
         returnProperty: String?,
         clazz: Class<T>,
@@ -150,7 +147,7 @@ abstract class ChromeDevToolsImpl(
         }
     }
     
-    @Throws(InterruptedException::class)
+    @Throws(ChromeIOException::class, InterruptedException::class)
     private fun invoke1(
         returnProperty: String?,
         method: MethodInvocation

@@ -10,7 +10,7 @@ open class ChromeProtocolException: ChromeDriverException {
     constructor(message: String, cause: Throwable): super(message, cause)
 }
 
-open class ChromeProcessException: ChromeProtocolException {
+open class ChromeProcessException: ChromeDriverException {
     constructor(message: String): super(message)
     constructor(message: String, cause: Throwable): super(message, cause)
 }
@@ -20,22 +20,16 @@ open class ChromeProcessTimeoutException : ChromeProcessException {
     constructor(message: String, cause: Throwable): super(message, cause)
 }
 
-open class ChromeLaunchException : ChromeDriverException {
-    constructor(message: String) : super(message)
-    constructor(message: String, cause: Throwable): super(message, cause)
-}
-
-open class WebSocketServiceException : ChromeProtocolException {
+/**
+ * Thrown when the connection to Chrome fails.
+ * This is a fatal exception and the driver should be closed.
+ * */
+open class ChromeIOException : ChromeProtocolException {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable): super(message, cause)
 }
 
 open class ChromeServiceException : ChromeProtocolException {
-    constructor(message: String) : super(message)
-    constructor(message: String, cause: Throwable): super(message, cause)
-}
-
-open class ScreenshotException : ChromeServiceException {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable): super(message, cause)
 }

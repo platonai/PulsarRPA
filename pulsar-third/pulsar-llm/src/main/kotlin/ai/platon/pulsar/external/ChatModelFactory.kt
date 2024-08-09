@@ -1,5 +1,6 @@
 package ai.platon.pulsar.external
 
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.impl.ChatModelImpl
 import dev.langchain4j.model.openai.OpenAiChatModel
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel
@@ -11,24 +12,22 @@ import java.util.concurrent.ConcurrentHashMap
 object ChatModelFactory {
     private val models = ConcurrentHashMap<String, ChatModel>()
     
+    fun isModelConfigured(conf: ImmutableConfig): Boolean {
+        val llm = conf["llm.name"]
+        val apiKey = conf["llm.apiKey"]
+        
+        return llm != null && apiKey != null
+    }
+    
     /**
      * Create a default model.
      *
      * @return The created model.
      */
-    fun getOrCreate(): ChatModel {
-        return getOrCreate("glm4")
-    }
-    
-    /**
-     * Create a model.
-     *
-     * @param model The name of model to create.
-     * @return The created model.
-     */
-    fun getOrCreate(model: String): ChatModel {
-        val apiKey = System.getenv("DEEPSEEK_API_KEY") ?: throw IllegalArgumentException("DEEPSEEK_API_KEY is not set")
-        return getOrCreate(model, apiKey)
+    fun getOrCreate(conf: ImmutableConfig): ChatModel {
+        val llm = conf["llm.name"] ?: throw IllegalArgumentException("llm.name is not set")
+        val apiKey = conf["llm.apiKey"] ?: throw IllegalArgumentException("llm.apiKey is not set")
+        return getOrCreate(llm, apiKey)
     }
     
     /**
@@ -42,6 +41,17 @@ object ChatModelFactory {
         return getOrCreateModel0(model, apiKey)
     }
     
+    /**
+     * Create a default model.
+     *
+     * @return The created model.
+     */
+    fun getOrCreateOrNull(conf: ImmutableConfig): ChatModel? {
+        val llm = conf["llm.name"] ?: return null
+        val apiKey = conf["llm.apiKey"] ?: return null
+        return getOrCreate(llm, apiKey)
+    }
+
     private fun getOrCreateModel0(model: String, apiKey: String): ChatModel {
         val key = "$model:$apiKey"
         return models.computeIfAbsent(key) { doCreateModel(model, apiKey) }

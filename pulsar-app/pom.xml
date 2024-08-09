@@ -28,4 +28,16 @@
         <module>pulsar-master</module>
         <module>pulsar-examples</module>
     </modules>
+
+<!--    <dependencyManagement>-->
+<!--        <dependencies>-->
+<!--            <dependency>-->
+<!--                <groupId>ai.platon.pulsar</groupId>-->
+<!--                <artifactId>pulsar-bom</artifactId>-->
+<!--                <type>pom</type>-->
+<!--                <scope>import</scope>-->
+<!--                <version>${project.version}</version>-->
+<!--            </dependency>-->
+<!--        </dependencies>-->
+<!--    </dependencyManagement>-->
 </project>

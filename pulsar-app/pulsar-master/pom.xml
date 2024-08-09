@@ -23,18 +23,8 @@
     <dependencies>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-bom</artifactId>
-            <!-- Fix the following bug:  -->
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-rest</artifactId>
+            <artifactId>pulsar-all</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
