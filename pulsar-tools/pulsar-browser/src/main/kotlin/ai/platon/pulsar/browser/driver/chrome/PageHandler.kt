@@ -1,6 +1,8 @@
 package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.browser.common.ScriptConfuser
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeProtocolException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
@@ -33,10 +35,12 @@ class PageHandler(
     val mouse = Mouse(devTools)
     val keyboard = Keyboard(devTools)
     
+    @Throws(ChromeDriverException::class)
     fun navigate(@ParamName("url") url: String): Navigate? {
         return pageAPI?.navigate(url)
     }
     
+    @Throws(ChromeDriverException::class)
     fun navigate(
         @ParamName("url") url: String,
         @Optional @ParamName("referrer") referrer: String? = null,
@@ -50,29 +54,35 @@ class PageHandler(
     /**
      * TODO: make sure the meaning of 0 node id
      * */
+    @Throws(ChromeDriverException::class)
     fun querySelector(selector: String): Int? {
         return querySelectorOrNull(selector)
     }
     
+    @Throws(ChromeDriverException::class)
     fun querySelectorAll(selector: String): List<Int> {
         return invokeOnElement(selector) { nodeId ->
             domAPI?.querySelectorAll(nodeId, selector)
         } ?: listOf()
     }
     
+    @Throws(ChromeDriverException::class)
     fun getAttributes(selector: String): Map<String, String> {
         return invokeOnElement(selector) { nodeId ->
             domAPI?.getAttributes(nodeId)?.zipWithNext()?.toMap()
         } ?: emptyMap()
     }
     
+    @Throws(ChromeDriverException::class)
     fun getAttribute(selector: String, attrName: String) = invokeOnElement(selector) { getAttribute(it, attrName) }
     
+    @Throws(ChromeDriverException::class)
     fun getAttribute(nodeId: Int, attrName: String): String? {
         val attributes = domAPI?.getAttributes(nodeId)
         return attributes?.getOrNull(attributes.indexOf(attrName) + 1)
     }
     
+    @Throws(ChromeDriverException::class)
     fun setAttribute(nodeId: Int, attrName: String, attrValue: String) {
         domAPI?.setAttributeValue(nodeId, attrName, attrValue)
     }
@@ -81,14 +91,17 @@ class PageHandler(
      * TODO: too many requests, need to optimize
      * RobustRPC - Too many RPC failures: selectAttributeAll (6/5) | DOM Error while querying
      * */
+    @Throws(ChromeDriverException::class)
     fun getAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
         return querySelectorAll(selector).asSequence().drop(start).take(limit)
             .mapNotNull { getAttribute(it, attrName) }
             .toList()
     }
     
+    @Throws(ChromeDriverException::class)
     fun visible(selector: String) = predicateOnElement(selector) { visible(it) }
-
+    
+    @Throws(ChromeDriverException::class)
     fun visible(nodeId: Int): Boolean {
         if (nodeId <= 0) {
             return false
@@ -124,6 +137,7 @@ class PageHandler(
      * successfully focused. returns 0 if there is no element
      * matching selector.
      */
+    @Throws(ChromeDriverException::class)
     fun focusOnSelector(selector: String): Int {
         val rootId = domAPI?.document?.nodeId ?: return 0
         
@@ -136,7 +150,8 @@ class PageHandler(
         
         return nodeId ?: 0
     }
-
+    
+    @Throws(ChromeDriverException::class)
     fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Int? {
         val nodeId = querySelector(selector)
         if (nodeId == null || nodeId == 0) {
@@ -146,7 +161,8 @@ class PageHandler(
 
         return scrollIntoViewIfNeeded(nodeId, selector, rect)
     }
-
+    
+    @Throws(ChromeDriverException::class)
     fun scrollIntoViewIfNeeded(nodeId: Int, selector: String? = null, rect: Rect? = null): Int? {
         try {
             val node = domAPI?.describeNode(nodeId, null, null, null, false)
@@ -172,6 +188,7 @@ class PageHandler(
      * @param expression Javascript expression to evaluate
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
+    @Throws(ChromeDriverException::class)
     fun evaluateDetail(expression: String): Evaluate? {
         return runtime?.evaluate(confuser.confuse(expression))
     }
@@ -182,6 +199,7 @@ class PageHandler(
      * @param expression Javascript expression to evaluate
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
+    @Throws(ChromeDriverException::class)
     fun evaluate(expression: String): Any? {
         val evaluate = evaluateDetail(expression)
 
@@ -196,6 +214,7 @@ class PageHandler(
         return result?.value
     }
     
+    @Throws(ChromeDriverException::class)
     private fun querySelectorOrNull(selector: String): Int? {
         val rootId = domAPI?.document?.nodeId
         return if (rootId != null && rootId > 0) {
@@ -203,6 +222,7 @@ class PageHandler(
         } else null
     }
     
+    @Throws(ChromeDriverException::class)
     private fun <T> invokeOnElement(selector: String, action: (Int) -> T): T? {
         val nodeId = querySelectorOrNull(selector)
         if (nodeId != null && nodeId > 0) {
@@ -212,6 +232,7 @@ class PageHandler(
         return null
     }
     
+    @Throws(ChromeDriverException::class)
     private fun predicateOnElement(selector: String, action: (Int) -> Boolean): Boolean {
         val nodeId = querySelectorOrNull(selector)
         if (nodeId != null && nodeId > 0) {

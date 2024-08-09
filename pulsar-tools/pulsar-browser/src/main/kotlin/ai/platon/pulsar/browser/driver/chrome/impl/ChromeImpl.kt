@@ -66,7 +66,7 @@ class ChromeImpl(
     
     constructor(port: Int) : this(LOCALHOST, port)
     
-    @Throws(ChromeServiceException::class)
+    @Throws(ChromeIOException::class)
     override fun listTabs(): Array<ChromeTab> {
         return try {
             request(Array<ChromeTab>::class.java, HttpMethod.GET, "http://%s:%d/%s", host, port, LIST_TABS)
@@ -80,7 +80,7 @@ class ChromeImpl(
         }
     }
     
-    @Throws(ChromeServiceException::class)
+    @Throws(ChromeIOException::class)
     override fun createTab(): ChromeTab {
         return createTab(ABOUT_BLANK_PAGE)
     }
@@ -89,7 +89,7 @@ class ChromeImpl(
     override fun createTab(url: String): ChromeTab {
         val chromeTab =
             request(ChromeTab::class.java, HttpMethod.PUT, "http://%s:%d/%s?%s", host, port, CREATE_TAB, url)
-                ?: throw ChromeServiceException("Failed to create tab, unexpected null response | $url")
+                ?: throw ChromeIOException("Failed to create tab, unexpected null response | $url")
         return chromeTab
     }
     
@@ -106,7 +106,7 @@ class ChromeImpl(
         request(Void::class.java, HttpMethod.PUT, "http://%s:%d/%s/%s", host, port, CLOSE_TAB, tab.id)
     }
     
-    @Throws(ChromeServiceException::class)
+    @Throws(ChromeIOException::class)
     @Synchronized
     override fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
         return remoteDevTools.computeIfAbsent(tab.id) { createDevTools0(version, tab, config) }
@@ -117,10 +117,10 @@ class ChromeImpl(
         return NetUtil.testHttpNetwork(url)
     }
     
-    @Throws(ChromeServiceException::class)
+    @Throws(ChromeIOException::class)
     private fun refreshVersion(): ChromeVersion {
         return request(ChromeVersion::class.java, HttpMethod.GET, "http://%s:%d/%s", host, port, VERSION)
-            ?: throw ChromeServiceException("Failed to get version")
+            ?: throw ChromeIOException("Failed to get version")
     }
     
     override fun close() {

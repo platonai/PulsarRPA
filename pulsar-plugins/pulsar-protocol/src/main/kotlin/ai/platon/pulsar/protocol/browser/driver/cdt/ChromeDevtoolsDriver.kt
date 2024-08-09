@@ -4,7 +4,6 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
@@ -139,8 +138,8 @@ class ChromeDevtoolsDriver(
             rpc.invokeDeferred("navigateTo") {
                 if (enableStartupScript) navigateInvaded(entry) else navigateNonInvaded(entry)
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "navigateTo", entry.url)
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "navigateTo", entry.url)
         }
     }
 
@@ -219,8 +218,8 @@ class ChromeDevtoolsDriver(
             }
 
             channel.receive()
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "waitForNavigation $timeout")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "waitForNavigation $timeout")
         }
 
         return timeout - DateTimes.elapsedTime(startTime)
@@ -274,8 +273,8 @@ class ChromeDevtoolsDriver(
                     mouse?.wheel(deltaX, deltaY)
                 }
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "mouseWheelDown")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "mouseWheelDown")
         }
     }
 
@@ -291,8 +290,8 @@ class ChromeDevtoolsDriver(
                     mouse?.wheel(deltaX, deltaY)
                 }
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "mouseWheelUp")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "mouseWheelUp")
         }
     }
 
@@ -324,8 +323,8 @@ class ChromeDevtoolsDriver(
                     gap()
                 }
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "moveMouseTo")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "moveMouseTo")
         }
     }
 
@@ -400,8 +399,8 @@ class ChromeDevtoolsDriver(
                     gap("type")
                 }
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "type")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "type")
         }
     }
 
@@ -458,8 +457,8 @@ class ChromeDevtoolsDriver(
                     gap()
                 }
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "dragAndDrop")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "dragAndDrop")
         }
     }
 
@@ -486,8 +485,8 @@ class ChromeDevtoolsDriver(
                 val nodeId = page.scrollIntoViewIfNeeded(selector)
                 ClickableDOM.create(pageAPI, domAPI, nodeId)?.clickablePoint()?.value
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "clickablePoint")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "clickablePoint")
         }
 
         return null
@@ -500,8 +499,8 @@ class ChromeDevtoolsDriver(
                 val nodeId = page.scrollIntoViewIfNeeded(selector)
                 ClickableDOM.create(pageAPI, domAPI, nodeId)?.boundingBox()
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "boundingBox")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "boundingBox")
         }
 
         return null
@@ -517,8 +516,8 @@ class ChromeDevtoolsDriver(
         return try {
             rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
             rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot() }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "captureScreenshot")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "captureScreenshot")
             null
         }
     }
@@ -535,8 +534,8 @@ class ChromeDevtoolsDriver(
             // Force the page stop all navigations and pending resource fetches.
             rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
             rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(selector) }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "captureScreenshot")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "captureScreenshot")
             null
         }
     }
@@ -547,8 +546,8 @@ class ChromeDevtoolsDriver(
             // Force the page stop all navigations and pending resource fetches.
             rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
             rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(rect) }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "captureScreenshot")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "captureScreenshot")
             null
         }
     }
@@ -645,8 +644,8 @@ class ChromeDevtoolsDriver(
                 // go to about:blank, so the browser stops the previous page and releases all resources
                 navigateTo(ChromeImpl.ABOUT_BLANK_PAGE)
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "terminate")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "terminate")
         } catch (e: ChromeDriverException) {
             logger.info("Terminate exception: {}", e.message)
         }
@@ -973,8 +972,8 @@ class ChromeDevtoolsDriver(
             return rpc.invokeDeferred(name) {
                 action()
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, name, message)
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, name, message)
         }
 
         return null
@@ -1000,8 +999,8 @@ class ChromeDevtoolsDriver(
                     null
                 }
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, name, "selector: [$selector], focus: $focus, scrollIntoView: $scrollIntoView")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, name, "selector: [$selector], focus: $focus, scrollIntoView: $scrollIntoView")
         }
 
         return null

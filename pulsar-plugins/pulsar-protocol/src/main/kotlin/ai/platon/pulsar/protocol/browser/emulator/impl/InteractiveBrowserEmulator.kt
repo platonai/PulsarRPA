@@ -260,14 +260,14 @@ open class InteractiveBrowserEmulator(
             logger.warn("Web driver session #{} is lost | {}", e.driver?.id, e.brief())
             driver.retire()
             exception = e
-            response = ForwardingResponse.privacyRetry(task.page, "Browser session lost")
+            response = ForwardingResponse.privacyRetry(task.page, "Web driver session lost")
         } catch (e: WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 logger.warn("Web driver is disconnected - {}", e.brief())
             } else {
-                logger.warn("[Unexpected]", e)
+                logger.warn("[Unexpected] WebDriverException", e)
             }
-            
+
             driver.retire()
             exception = e
             response = ForwardingResponse.crawlRetry(task.page, e)
@@ -275,31 +275,34 @@ open class InteractiveBrowserEmulator(
             logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout] | {}", e.stringify())
             response = ForwardingResponse.crawlRetry(task.page, e)
         } catch (e: Exception) {
-            when {
-                e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
-                    if (isActive) {
-                        // The system is not closing.
-                        // The coroutine is canceled, it's not a normal case
-                        val message = e.message ?: "Coroutine was cancelled"
-                        logger.warn("{}. {} | {}", task.page.id, message, task.url)
-                    } else {
-                        // The system is closing.
-                        // Let the higher level to handle it, usually it's handled by the main loop
-                        throw e
-                    }
-                }
-                
-                else -> {
-                    logger.warn("[Unexpected]", e)
-                }
-            }
-            // TODO: return a retrying response or re-throw the exception?
-            // response = ForwardingResponse.crawlRetry(task.page, e)
+            // handleException(e, task, driver)
+            // Let the higher level to handle it
             throw e
         } finally {
         }
-        
+
         return FetchResult(task, response ?: ForwardingResponse(exception, task.page), exception)
+    }
+    
+    private fun handleException(e: Exception, task: FetchTask, driver: WebDriver) {
+        when {
+            e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
+                if (isActive) {
+                    // The system is not closing.
+                    // The coroutine is canceled, it's not a normal case
+                    val message = e.message ?: "Coroutine was cancelled"
+                    logger.warn("{}. {} | {}", task.page.id, message, task.url)
+                } else {
+                    // The system is closing.
+                    // Let the higher level to handle it, usually it's handled by the main loop
+                    throw e
+                }
+            }
+            
+            else -> {
+                logger.warn("[Unexpected]", e)
+            }
+        }
     }
     
     @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)

@@ -1,13 +1,13 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsClosedException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.protocol.browser.driver.SessionLostException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -65,23 +65,37 @@ internal class RobustRPC(
         return try {
             invoke(action, block)
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, action, message)
+            handleChromeException(e, action, message)
             null
         }
     }
     
     suspend fun <T> invokeDeferredSilently(
-        action: String, message: String? = null, maxRetry: Int = 2, block: suspend CoroutineScope.() -> T): T? {
+        action: String, message: String? = null, maxRetry: Int = 2, block: suspend CoroutineScope.() -> T
+    ): T? {
         return try {
             invokeDeferred(action, maxRetry, block)
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, action, message)
+            handleChromeException(e, action, message)
             null
         }
     }
     
+    @Throws(IllegalWebDriverStateException::class, SessionLostException::class, Exception::class)
+    fun handleChromeException(e: ChromeDriverException, action: String? = null, message: String? = null) {
+        when (e) {
+            is ChromeIOException -> {
+                throw IllegalWebDriverStateException("Chrome DevTools is closed", e)
+            }
+            is ChromeRPCException -> {
+                handleChromeRPCException(e, action, message)
+            }
+            else -> throw e
+        }
+    }
+    
     @Throws(SessionLostException::class)
-    fun handleRPCException(e: ChromeRPCException, action: String? = null, message: String? = null) {
+    fun handleChromeRPCException(e: ChromeRPCException, action: String? = null, message: String? = null) {
         if (rpcFailures.get() > maxRPCFailures) {
             logger.warn("Too many RPC failures: {} ({}/{}) | {}", action, rpcFailures, maxRPCFailures, e.message)
             throw SessionLostException("Too many RPC failures", driver)

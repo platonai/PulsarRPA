@@ -22,7 +22,7 @@ open class ChromeProcessTimeoutException : ChromeProcessException {
 
 /**
  * Thrown when the connection to Chrome fails.
- * This is a fatal exception and the driver should be closed.
+ * This is a fatal exception and the browser should be closed.
  * */
 open class ChromeIOException : ChromeProtocolException {
     constructor(message: String) : super(message)

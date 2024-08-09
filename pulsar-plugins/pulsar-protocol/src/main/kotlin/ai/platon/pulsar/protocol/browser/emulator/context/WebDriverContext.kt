@@ -15,6 +15,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.D
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -77,21 +78,23 @@ open class WebDriverContext(
             numGlobalRunningTasks.incrementAndGet()
             driverPoolManager.run(browserId, task) {
                 browseFun(task, it)
-            } ?: FetchResult.crawlRetry(task, "Null response from driver pool manager")
-        } catch (e: ChromeIOException) {
-            logger.warn("{}. Retry task {} in crawl scope | {}", task.page.id, task.id, e.message)
-            FetchResult.crawlRetry(task, "Web driver connection lost")
+            } ?: FetchResult.crawlRetry(task, "Null response from driver pool manager, it might be closed")
+        } catch (e: IllegalWebDriverStateException) {
+            logger.warn("{}. Browser connection failure, closing driver pool manager and browser. " +
+                "Task will retry {} in crawl scope | {}", task.page.id, task.id, e.message)
+            driverPoolManager.close()
+            FetchResult.crawlRetry(task, e)
         } catch (e: WebDriverPoolExhaustedException) {
             val message = String.format("%s. Retry task %s in crawl scope | cause by: %s",
                 task.page.id, task.id, e.message)
             logger.warn(message)
-            FetchResult.crawlRetry(task, WebDriverUnavailableException(message, e))
+            FetchResult.crawlRetry(task, e)
         } catch (e: WebDriverPoolException) {
             logger.warn("{}. Retry task {} in crawl scope", task.page.id, task.id)
             FetchResult.crawlRetry(task, "Driver pool exception")
         } catch (e: WebDriverException) {
             logger.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
-            FetchResult.crawlRetry(task, "Driver exception")
+            FetchResult.crawlRetry(task, e)
         } finally {
             runningTasks.remove(task)
             numGlobalRunningTasks.decrementAndGet()

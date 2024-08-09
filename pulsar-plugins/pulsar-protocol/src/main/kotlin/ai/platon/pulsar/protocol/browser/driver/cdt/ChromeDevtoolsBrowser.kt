@@ -3,16 +3,14 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl.Companion.ABOUT_BLANK_PAGE
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_REUSE_RECOVERED_DRIVERS
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractBrowser
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -52,7 +50,9 @@ class ChromeDevtoolsBrowser(
     fun createTab(url: String): ChromeTab {
         lastActiveTime = Instant.now()
         try {
-            return chrome.runCatching { createTab(url) }.getOrElse { throw WebDriverException("createTab", it) }
+            return chrome.createTab(url)
+        } catch (e: ChromeIOException) {
+            throw IllegalWebDriverStateException("createTab", e)
         } catch (e: ChromeServiceException) {
             throw WebDriverException("createTab", e)
         }
@@ -63,6 +63,8 @@ class ChromeDevtoolsBrowser(
     fun listTabs(): Array<ChromeTab> {
         try {
             return chrome.listTabs()
+        } catch (e: ChromeIOException) {
+            throw IllegalWebDriverStateException("listTabs", e)
         } catch (e: ChromeServiceException) {
             if (!isActive) {
                 return arrayOf()
@@ -81,6 +83,8 @@ class ChromeDevtoolsBrowser(
             }
 
             chrome.closeTab(tab)
+        } catch (e: ChromeIOException) {
+            throw IllegalWebDriverStateException("closeTab", e)
         } catch (e: ChromeServiceException) {
             throw WebDriverException("closeTab", e)
         }
@@ -97,6 +101,8 @@ class ChromeDevtoolsBrowser(
             // In chrome every tab is a separate process
             val chromeTab = createTab(url)
             return newDriverIfAbsent(chromeTab, false)
+        } catch (e: ChromeIOException) {
+            throw IllegalWebDriverStateException("newDriver", e)
         } catch (e: ChromeDriverException) {
             logger.warn(e.stringify())
             throw WebDriverException("Failed to create chrome devtools driver | " + e.message)
