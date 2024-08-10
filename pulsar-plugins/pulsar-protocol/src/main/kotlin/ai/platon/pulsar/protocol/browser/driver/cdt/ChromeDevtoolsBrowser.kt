@@ -52,7 +52,7 @@ class ChromeDevtoolsBrowser(
         try {
             return chrome.createTab(url)
         } catch (e: ChromeIOException) {
-            throw IllegalWebDriverStateException("createTab", e)
+            throw BrowserUnavailableException("createTab", e)
         } catch (e: ChromeServiceException) {
             throw WebDriverException("createTab", e)
         }
@@ -64,7 +64,7 @@ class ChromeDevtoolsBrowser(
         try {
             return chrome.listTabs()
         } catch (e: ChromeIOException) {
-            throw IllegalWebDriverStateException("listTabs", e)
+            throw BrowserUnavailableException("listTabs", e)
         } catch (e: ChromeServiceException) {
             if (!isActive) {
                 return arrayOf()
@@ -84,7 +84,7 @@ class ChromeDevtoolsBrowser(
 
             chrome.closeTab(tab)
         } catch (e: ChromeIOException) {
-            throw IllegalWebDriverStateException("closeTab", e)
+            throw BrowserUnavailableException("closeTab", e)
         } catch (e: ChromeServiceException) {
             throw WebDriverException("closeTab", e)
         }
@@ -102,7 +102,7 @@ class ChromeDevtoolsBrowser(
             val chromeTab = createTab(url)
             return newDriverIfAbsent(chromeTab, false)
         } catch (e: ChromeIOException) {
-            throw IllegalWebDriverStateException("newDriver", e)
+            throw BrowserUnavailableException("newDriver", e)
         } catch (e: ChromeDriverException) {
             logger.warn(e.stringify())
             throw WebDriverException("Failed to create chrome devtools driver | " + e.message)

@@ -13,6 +13,16 @@ open class WebDriverException(
     constructor(cause: Throwable?) : this(null, null, cause)
 }
 
+open class WebDriverCancellationException(
+    message: String? = null,
+    driver: WebDriver? = null,
+    cause: Throwable? = null
+): WebDriverException(message, driver, cause) {
+    constructor(message: String?, cause: Throwable) : this(message, null, cause)
+    
+    constructor(cause: Throwable?) : this(null, null, cause)
+}
+
 open class IllegalWebDriverStateException(
     message: String? = null,
     driver: WebDriver? = null,
@@ -23,21 +33,16 @@ open class IllegalWebDriverStateException(
     constructor(cause: Throwable?) : this(null, null, cause)
 }
 
-open class WebDriverCancellationException(
-    message: String? = null,
-    driver: WebDriver? = null,
-    cause: Throwable? = null
-): IllegalWebDriverStateException(message, driver, cause) {
-    constructor(message: String?, cause: Throwable) : this(message, null, cause)
-
-    constructor(cause: Throwable?) : this(null, null, cause)
-}
-
-open class WebDriverUnavailableException(
+open class BrowserUnavailableException(
     message: String? = null,
     cause: Throwable? = null
 ): IllegalWebDriverStateException(message, null, cause) {
     constructor(cause: Throwable?) : this(null, cause)
+}
+
+class BrowserLaunchException : BrowserUnavailableException {
+    constructor(message: String) : super(message)
+    constructor(message: String, cause: Throwable): super(message, cause)
 }
 
 open class BrowserErrorPageException(

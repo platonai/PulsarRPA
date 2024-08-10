@@ -7,13 +7,12 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.protocol.browser.driver.SessionLostException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserUnavailableException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.jvm.Throws
 
 internal class RobustRPC(
     private val driver: ChromeDevtoolsDriver
@@ -81,11 +80,11 @@ internal class RobustRPC(
         }
     }
     
-    @Throws(IllegalWebDriverStateException::class, SessionLostException::class, Exception::class)
+    @Throws(BrowserUnavailableException::class, SessionLostException::class, Exception::class)
     fun handleChromeException(e: ChromeDriverException, action: String? = null, message: String? = null) {
         when (e) {
             is ChromeIOException -> {
-                throw IllegalWebDriverStateException("Chrome DevTools is closed", e)
+                throw BrowserUnavailableException("Chrome DevTools is closed", e)
             }
             is ChromeRPCException -> {
                 handleChromeRPCException(e, action, message)

@@ -19,7 +19,7 @@ class ChatModelTests {
         private val args = "-requireSize 200000"
         private val productHtml = ResourceLoader.readString("pages/amazon/B0C1H26C46.original.htm")
         private val productText = ResourceLoader.readString("prompts/product.txt")
-        private val clusterAnalysisPrompt = ResourceLoader.readString("prompts/data-expert/template/cluster.analyzer.txt")
+        private val clusterAnalysisPrompt = ResourceLoader.readString("prompts/data-expert/template/data-expert.v2.md")
         private val conf = ImmutableConfig(loadDefaults = true)
         private val isModelConfigured get() = ChatModelFactory.isModelConfigured(conf)
         private val model = ChatModelFactory.getOrCreateOrNull(conf)

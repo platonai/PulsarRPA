@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.emulator.impl
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
@@ -51,6 +52,10 @@ open class InteractiveBrowserEmulator(
     private val taskLogger = getLogger(this, ".Task")
     
     private val numDeferredNavigates by lazy { MetricsSystem.reg.meter(this, "deferredNavigates") }
+
+    override var eventExceptionHandler: (Throwable) -> Unit = {
+        warnInterruptible(AbstractEventEmitter::class, it)
+    }
     
     init {
         // Attach event handlers

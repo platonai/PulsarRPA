@@ -552,7 +552,6 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    @Throws(IllegalWebDriverStateException::class)
     internal fun checkState(action: String = ""): Boolean {
         if (!isActive) {
             return false
@@ -748,6 +747,7 @@ class ChromeDevtoolsDriver(
         println(message)
 //        logger.info("Window opened | {}", event.url)
 
+        // TODO: handle BrowserUnavailableException
         val driver = browser.runCatching { newDriver(event.url) }.onFailure { warnInterruptible(this, it) }.getOrNull()
         if (driver != null) {
             driver.opener = this
@@ -927,7 +927,6 @@ class ChromeDevtoolsDriver(
      * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
      * this suspending function is waiting, this function immediately resumes with CancellationException.
      * */
-    @Throws(IllegalWebDriverStateException::class)
     private suspend fun gap() {
         if (!isActive) {
             // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
@@ -943,7 +942,6 @@ class ChromeDevtoolsDriver(
      * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
      * this suspending function is waiting, this function immediately resumes with CancellationException.
      * */
-    @Throws(IllegalWebDriverStateException::class)
     private suspend fun gap(type: String) {
         if (!isActive) {
             // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
@@ -958,7 +956,6 @@ class ChromeDevtoolsDriver(
      * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
      * this suspending function is waiting, this function immediately resumes with CancellationException.
      * */
-    @Throws(IllegalWebDriverStateException::class)
     private suspend fun gap(millis: Long) {
         if (!isActive) {
             // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
