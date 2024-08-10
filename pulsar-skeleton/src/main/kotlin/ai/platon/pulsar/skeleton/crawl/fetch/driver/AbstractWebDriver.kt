@@ -130,28 +130,42 @@ abstract class AbstractWebDriver(
      * If true, the DOM features should be calculated using __pulsar_utils__.compute().
      * */
     var ignoreDOMFeatures: Boolean = false
-
+    /**
+     * The name of the driver.
+     * */
     open val name get() = javaClass.simpleName + "-" + id
-
+    /**
+     * The navigate entry of the current page.
+     * */
     override var navigateEntry: NavigateEntry = NavigateEntry("")
-
+    /**
+     * The navigate history of this driver.
+     * */
     override val navigateHistory = NavigateHistory()
-
+    /**
+     * The delay policy of the driver.
+     * */
     override val delayPolicy by lazy { browser.browserSettings.interactSettings.generateRestrictedDelayPolicy() }
-
+    /**
+     * The timeout policy of the driver.
+     * */
     override val timeoutPolicy by lazy { browser.browserSettings.interactSettings.generateRestrictedTimeoutPolicy() }
-
+    /**
+     * The frames of the current page.
+     * */
     override val frames: MutableList<WebDriver> = mutableListOf()
-
+    /**
+     * The opener of the current page.
+     * */
     override var opener: WebDriver? = null
-
+    /**
+     * The outgoing opened pages from the current page.
+     * */
     override val outgoingPages: MutableSet<WebDriver> = mutableSetOf()
-
     /**
      * The associated data.
      * */
     override val data: MutableMap<String, Any?> = mutableMapOf()
-
     /**
      * Mark the driver as free, so it can be used to fetch a new page.
      * */
@@ -166,7 +180,7 @@ abstract class AbstractWebDriver(
     }
 
     /**
-     * Mark the driver as working, so it can not be used to fetch another page.
+     * Mark the driver as working, so it can not be used to do any another tasks.
      * */
     fun startWork() {
         canceled.set(false)
