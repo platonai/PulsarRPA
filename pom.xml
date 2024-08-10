@@ -15,7 +15,7 @@
     <!-- TODO: is it better to use platon-parent? How does apache uses org.apache:apache? -->
     <parent>
         <groupId>ai.platon</groupId>
-        <artifactId>platon-bom</artifactId>
+        <artifactId>platon</artifactId>
         <version>4.0.1-SNAPSHOT</version>
     </parent>
 
