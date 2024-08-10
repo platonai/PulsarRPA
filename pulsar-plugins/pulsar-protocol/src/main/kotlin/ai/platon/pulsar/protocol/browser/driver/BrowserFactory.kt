@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.getLogger
@@ -34,7 +35,8 @@ class BrowserFactory {
 
         return browser
     }
-
+    
+    @Throws(BrowserLaunchException::class)
     private fun createMockBrowser(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): MockBrowser {
@@ -56,7 +58,7 @@ class BrowserFactory {
         try {
             val chrome = launcher.launch(launchOptions)
             return ChromeDevtoolsBrowser(browserId, chrome, launcher)
-        } catch (e: WebDriverException) {
+        } catch (e: ChromeProcessException) {
             logger.warn("Failed to launch browser", e)
             throw BrowserLaunchException("Failed to launch browser | $browserId")
         }

@@ -17,6 +17,7 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
             .addArgument("window-size", formatViewPort())
             .also { it.headless = headless }
     val launcher = ChromeLauncher()
+    
     val chrome = launcher.launch(launchOptions)
     val tab = chrome.createTab()
     val devTools = chrome.createDevTools(tab, DevToolsConfig())
