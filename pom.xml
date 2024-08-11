@@ -599,275 +599,26 @@
     <dependencyManagement>
         <dependencies>
 
-            <!-- Internal Dependencies -->
+            <!-- pulsar-bom -->
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-common</artifactId>
+                <artifactId>pulsar-bom</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-boilerpipe</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-plugins</artifactId>
                 <type>pom</type>
-                <version>${project.version}</version>
+                <scope>import</scope>
             </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>gora-shaded-mongodb</artifactId>
                 <version>${gora-shaded-mongodb.version}</version>
-<!--                <classifier>shaded</classifier>-->
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-persist</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-skeleton</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-resources</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-resources</artifactId>
-                <type>test-jar</type>
-                <classifier>tests</classifier>
-                <scope>test</scope>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-protocol</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-filter</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-parse</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-scoring</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-schedule</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-index</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-browser</artifactId>
-                <version>${project.version}</version>
-                <exclusions>
-                    <!-- exclude javassist, which is replaced by org.javassist:javassist:2.0.4-SNAPSHOT -->
-                    <!-- remove the exclusion below when javassist is upgraded to 3.24.0-GA -->
-                    <exclusion>
-                        <groupId>javassist</groupId>
-                        <artifactId>javassist</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-llm</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-dom</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-beans</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-ql-common</artifactId>
-                <classifier>shaded</classifier>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-ql</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-rest</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-boot</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-resources</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-qa</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-qa</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <classifier>tests</classifier>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-tests</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-tests</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <classifier>tests</classifier>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-all</artifactId>
-                <version>${project.version}</version>
-                <!-- Fix the following bug:  -->
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.logging.log4j</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>com.microsoft.playwright</groupId>
-                <artifactId>playwright</artifactId>
-                <version>${playwright.version}</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-text -->
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-text</artifactId>
-                <version>${commons-text.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${guava.version}</version>
+                <!--                <classifier>shaded</classifier>-->
             </dependency>
 
             <dependency>
                 <groupId>org.nibor.autolink</groupId>
                 <artifactId>autolink</artifactId>
                 <version>${autolink.version}</version>
-            </dependency>
-            <!-- TODO: This artifact was moved to: jakarta.servlet » jakarta.servlet-api -->
-            <dependency>
-                <groupId>javax.servlet</groupId>
-                <artifactId>javax.servlet-api</artifactId>
-                <version>${javax.servlet-api.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <!-- For parsers.
-              The core library, tika-core, contains the key interfaces and classes of Tika and can be used by itself
-              if you don't need the full set of parsers from the tika-parsers component.
-             -->
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-core</artifactId>
-                <version>${tika.version}</version>
-            </dependency>
-            <!-- Provide only the html parser, required by ai.platon.pulsar.parse.tika.TikaParser at compile scope -->
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-parser-html-module</artifactId>
-                <version>${tika.version}</version>
-            </dependency>
-            <!-- The tika parsers are provided, so parsing by tika is disabled by default.
-                If you want to use Tika to parse documents (instead of simply detecting document types, etc.),
-                you'll want to add a dependency on at least tika-parsers-standard-package
-            -->
-            <dependency>
-                <groupId>org.apache.tika</groupId>
-                <artifactId>tika-parsers-standard-package</artifactId>
-                <version>${tika.version}</version>
-                <scope>provided</scope>
-                <type>pom</type>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.logging.log4j</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>com.fasterxml.jackson</groupId>
-                <artifactId>jackson-bom</artifactId>
-                <version>${jackson.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-bom</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
-
-            <!-- The logging provider PulsarRPA application uses -->
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>${logback.version}</version>
             </dependency>
 
         </dependencies>
@@ -898,7 +649,6 @@
         <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
 
         <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
-        <mockito.version>5.11.0</mockito.version>
     </properties>
 
 </project>
