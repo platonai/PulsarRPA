@@ -45,7 +45,7 @@ abstract class AbstractHttpProtocol: Protocol {
     override lateinit var conf: ImmutableConfig
 
     private lateinit var mimeTypeResolver: MimeTypeResolver
-
+    
     private lateinit var robots: HttpRobotRulesParser
 
     /**

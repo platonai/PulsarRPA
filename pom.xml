@@ -612,7 +612,13 @@
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>gora-shaded-mongodb</artifactId>
                 <version>${gora-shaded-mongodb.version}</version>
-                <!--                <classifier>shaded</classifier>-->
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>gora-shaded-mongodb</artifactId>
+                <version>${gora-shaded-mongodb.version}</version>
+                <classifier>shaded</classifier>
             </dependency>
 
             <dependency>
@@ -648,7 +654,7 @@
     <properties>
         <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
 
-        <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
+        <gora-shaded-mongodb.version>0.9.1-SNAPSHOT</gora-shaded-mongodb.version>
     </properties>
 
 </project>

@@ -1,8 +1,8 @@
 package ai.platon.pulsar.persist.gora
 
 import ai.platon.pulsar.common.ResourceLoader
-import org.apache.gora.compiler.GoraCompiler
-import org.apache.gora.compiler.utils.LicenseHeaders
+//import org.apache.gora.compiler.GoraCompiler
+//import org.apache.gora.compiler.utils.LicenseHeaders
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.io.path.isDirectory
@@ -24,6 +24,6 @@ fun main() {
     println("Output dir: $outputPath")
     
     // Setting the default license header to ASLv2
-    val licenseHeader = LicenseHeaders("ASLv2")
-    GoraCompiler.compileSchema(arrayOf(inputPath.toFile()), outputPath.toFile(), licenseHeader)
+//    val licenseHeader = LicenseHeaders("ASLv2")
+//    GoraCompiler.compileSchema(arrayOf(inputPath.toFile()), outputPath.toFile(), licenseHeader)
 }

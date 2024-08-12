@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.ResourceLoader.getURLOrNull
 import org.slf4j.LoggerFactory
 import java.io.*
 import java.net.URL
@@ -13,8 +12,12 @@ import java.util.concurrent.ConcurrentLinkedDeque
 import kotlin.io.path.toPath
 
 /**
- * Load resources
- */
+ * The ResourceLoader class is a utility class to load resources from the classpath.
+ *
+ * @see Class.getResource
+ * @see ClassLoader.getResource
+ * @see org.springframework.core.io.ResourceLoader
+ * */
 object ResourceLoader {
     private val logger = LoggerFactory.getLogger(ResourceLoader::class.java)
     private val lastModifiedTimes = ConcurrentHashMap<Path, Instant>()

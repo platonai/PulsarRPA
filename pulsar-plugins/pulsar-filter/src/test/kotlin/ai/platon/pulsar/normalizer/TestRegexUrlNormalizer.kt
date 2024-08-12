@@ -5,8 +5,9 @@ import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.skeleton.crawl.filter.SCOPE_DEFAULT
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
-import java.io.File
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
 import java.io.FileReader
 import java.io.IOException
 import java.net.URISyntaxException
@@ -14,30 +15,32 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
 import java.util.stream.Collectors
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
 import kotlin.test.*
 
+@SpringJUnitConfig
 @ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
 class TestRegexUrlNormalizer {
     @Autowired
-    private val normalizer: RegexUrlNormalizer? = null
+    private lateinit var normalizer: RegexUrlNormalizer
     private val testData = HashMap<String, List<NormalizedURL>>()
     
     @BeforeTest
     @Throws(IOException::class, URISyntaxException::class)
     fun setUp() {
-        val SAMPLE_DIR = ResourceLoader.getPath("normregex/sample")
-        val configs = SAMPLE_DIR.toFile()
-            .listFiles { f: File -> f.name.endsWith(".xml") && f.name.startsWith("regex-normalize-") }!!
-        for (config in configs) {
+        val sampleDir = ResourceLoader.getPath("normregex/sample")
+        val configFiles = sampleDir.listDirectoryEntries("regex-normalize-*.xml")
+        for (file in configFiles) {
             try {
-                val reader = FileReader(config)
-                var cname = config.name
-                cname = cname.substring(16, cname.indexOf(".xml"))
-                normalizer!!.setConfiguration(reader, cname)
-                val urls = readTestFile(cname)
-                testData[cname] = urls
+                val reader = FileReader(file.toFile())
+                var name = file.name
+                name = name.substring(16, name.indexOf(".xml"))
+                normalizer.setConfiguration(reader, name)
+                val urls = readTestFile(name)
+                testData[name] = urls
             } catch (e: Exception) {
-                LOG.warn("Could load config from '$config': $e")
+                LOG.warn("Could load config from '$file': $e")
             }
         }
     }
@@ -59,7 +62,7 @@ class TestRegexUrlNormalizer {
     private fun normalizeTest(urls: List<NormalizedURL>, scope: String) {
         for (url1 in urls) {
             val url = url1.url
-            val normalized = normalizer!!.normalize(url1.url, scope)
+            val normalized = normalizer.normalize(url1.url, scope)
             val expected = url1.expectedURL
             LOG.info("scope: $scope url: $url | normalized: $normalized | expected: $expected")
             assertEquals(url1.expectedURL, normalized)

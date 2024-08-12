@@ -24,9 +24,32 @@
     <dependencies>
         <!-- Internal Dependencies -->
         <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro.version}</version>
+        </dependency>
+        <!-- Required by gora, org.apache.hadoop.conf.Configuration -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hadoop-2.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gora</groupId>
+            <artifactId>gora-core</artifactId>
+            <version>0.9</version>
+        </dependency>
+
+        <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>gora-shaded-mongodb</artifactId>
-<!--            <classifier>shaded</classifier>-->
+            <classifier>shaded</classifier>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
@@ -73,11 +96,10 @@
             <artifactId>jackson-module-kotlin</artifactId>
         </dependency>
 
-
-        <!-- TODO: check if we can remove this dependency, and choose a best version -->
+        <!-- Required by hadoop-common -->
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
         </dependency>
 
         <!-- Perl5Pattern, text process, required by ProtocolHeaders, TODO: try to remove this dependency -->
@@ -85,15 +107,10 @@
             <groupId>oro</groupId>
             <artifactId>oro</artifactId>
         </dependency>
-
-        <!-- JAXB provides an API and tools that automate the mapping between XML documents and Java objects. -->
-        <!-- This artifact was moved to: jakarta.xml.bind » jakarta.xml.bind-api -->
-        <!-- deprecated -->
-<!--        <dependency>-->
-<!--            <groupId>javax.xml.bind</groupId>-->
-<!--            <artifactId>jaxb-api</artifactId>-->
-<!--            <version>${jaxb-api.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+        </dependency>
 
         <!-- Test -->
         <dependency>
@@ -104,7 +121,8 @@
     </dependencies>
 
     <properties>
-
+        <!-- gora-0.9 use 2.5.2 by default, but 2.7.2 is a correct version -->
+        <hadoop-2.version>2.7.2</hadoop-2.version>
     </properties>
 
 </project>
