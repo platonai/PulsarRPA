@@ -1,7 +1,7 @@
 
 package ai.platon.pulsar.normalizer
 
-import ai.platon.pulsar.common.ResourceLoader.getResource
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.skeleton.crawl.filter.SCOPE_DEFAULT
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,7 +25,7 @@ class TestRegexUrlNormalizer {
     @BeforeTest
     @Throws(IOException::class, URISyntaxException::class)
     fun setUp() {
-        val SAMPLE_DIR = Paths.get(getResource("normregex/sample")!!.toURI())
+        val SAMPLE_DIR = ResourceLoader.getPath("normregex/sample")
         val configs = SAMPLE_DIR.toFile()
             .listFiles { f: File -> f.name.endsWith(".xml") && f.name.startsWith("regex-normalize-") }!!
         for (config in configs) {
@@ -68,7 +68,7 @@ class TestRegexUrlNormalizer {
     
     @Throws(IOException::class, URISyntaxException::class)
     private fun readTestFile(scope: String): List<NormalizedURL> {
-        val SAMPLE_DIR = Paths.get(getResource("normregex/sample")!!.toURI())
+        val SAMPLE_DIR = ResourceLoader.getPathOrNull("normregex/sample")
         val testFile = Paths.get(SAMPLE_DIR.toString(), "regex-normalize-$scope.test")
         return Files.readAllLines(testFile).stream().map { obj: String -> obj.trim { it <= ' ' } }
             .filter { l: String -> l.isNotEmpty() }.filter { l: String -> !l.startsWith("#") }

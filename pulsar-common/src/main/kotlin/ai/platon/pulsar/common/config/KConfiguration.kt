@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.ResourceLoader.getURLOrNull
 import ai.platon.pulsar.common.config.KConfiguration.Companion.EXTERNAL_RESOURCE_BASE_DIR
 import ai.platon.pulsar.common.urls.UrlUtils
 import com.ctc.wstx.io.StreamBootstrapper
@@ -339,7 +340,7 @@ private class ConfigurationImpl(
             is URL -> parse(resource) as XMLStreamReader2?
             is String -> {
                 // a CLASSPATH resource
-                val url = ResourceLoader.getResource(resource) ?: return null
+                val url = getURLOrNull(resource) ?: return null
                 parse(url)
             }
             is Path -> {
@@ -466,7 +467,7 @@ private class ConfigurationImpl(
             // Determine if the included resource is a classpath resource
             // otherwise fallback to a file resource
             // xi:include are treated as inline and retain current source
-            val include: URL? = ResourceLoader.getResource(confInclude2)
+            val include: URL? = getURLOrNull(confInclude2)
             if (include != null) {
                 val classpathResource = Resource(include, name)
                 // This is only called recursively while the lock is already held

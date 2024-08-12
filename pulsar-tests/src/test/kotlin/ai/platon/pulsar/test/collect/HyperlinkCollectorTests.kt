@@ -43,8 +43,7 @@ class HyperlinkCollectorTests {
     fun testPeriodicalHyperlinkCollector() {
         val resource = "categories.txt"
 
-        val uri = ResourceLoader.getResource(resource)?.toURI() ?: throw IllegalArgumentException(resource)
-        val path = Paths.get(uri)
+        val path = ResourceLoader.getPath(resource)
         val options = session.options("-i 1s")
         val collector = PeriodicalLocalFileHyperlinkCollector(path, options)
 

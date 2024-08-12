@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.ResourceLoader.getURLOrNull
 import java.nio.file.*
 
 class ResourceWalker(
@@ -13,13 +14,13 @@ class ResourceWalker(
     private val logger = getLogger(this)
 
     // When the jar is packed using spring-boot, the resources are put into directory BOOT-INF/classes
-    val baseURI = ResourceLoader.getResource(baseDir)?.toURI()
+    val baseURI = getURLOrNull(baseDir)?.toURI()
 
     private var fileSystem: FileSystem? = null
 
     fun getPath(resourceName: String): Path? {
         val resource0 = "$baseDir$resourceName"
-        val uri = ResourceLoader.getResource(resource0)?.toURI() ?: return null
+        val uri = getURLOrNull(resource0)?.toURI() ?: return null
 
         try {
             return if (uri.scheme == "jar") {

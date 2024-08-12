@@ -8,7 +8,7 @@ import java.nio.file.Paths
 import kotlin.io.path.isDirectory
 
 fun main() {
-    val resource = ResourceLoader.getResource("avro/webpage.avsc")!!
+    val resource = ResourceLoader.getURLOrNull("avro/webpage.avsc")!!
     
     // Remove prefix to correct malformed path on Windows:
     // Illegal char <:> at index 2: /D:/workspace/PulsarRPA/pulsar-persist/target/classes/avro/webpage.avsc
@@ -22,7 +22,7 @@ fun main() {
         .filter { it.toString().contains("pulsar-persist[/\\\\]src[/\\\\]main[/\\\\]java".toRegex()) }
         .findFirst().get()
     println("Output dir: $outputPath")
-
+    
     // Setting the default license header to ASLv2
     val licenseHeader = LicenseHeaders("ASLv2")
     GoraCompiler.compileSchema(arrayOf(inputPath.toFile()), outputPath.toFile(), licenseHeader)
