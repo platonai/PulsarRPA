@@ -27,9 +27,19 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
 
 class KConfiguration(
+    /**
+     * The profile of the configuration.
+     * */
     val profile: String = "",
+    @Deprecated("Use profile instead")
     val mode: String = "",
+    /**
+     * The extra resources to load.
+     * */
     val extraResources: Iterable<String> = listOf(),
+    /**
+     * Whether to load the default resources.
+     * */
     private val loadDefaults: Boolean = true,
 ) : Iterable<Map.Entry<String, String?>> {
 
@@ -154,7 +164,7 @@ private class ConfigurationImpl(
 
         collectResourcePaths()
         resourceURLs.mapNotNull { UrlUtils.getURLOrNull(it) }.forEach { addResource(it) }
-        if (loadDefaults) {
+        if (loadDefaults && Files.isDirectory(EXTERNAL_RESOURCE_BASE_DIR)) {
             addExternalResource(EXTERNAL_RESOURCE_BASE_DIR)
         }
     }

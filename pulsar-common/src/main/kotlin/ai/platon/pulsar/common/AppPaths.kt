@@ -45,7 +45,7 @@ object AppPaths {
     @RequiredDirectory
     val DATA_DIR = AppContext.APP_DATA_DIR
     @RequiredDirectory
-    val CONF_DIR = AppContext.APP_DATA_DIR.resolve( "conf")
+    val CONF_DIR = AppContext.APP_DATA_DIR.resolve( "config")
     @RequiredDirectory
     val BROWSER_DATA_DIR = DATA_DIR.resolve( "browser")
     @RequiredDirectory
