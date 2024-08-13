@@ -12,6 +12,7 @@ import kotlin.test.*
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
 import org.springframework.test.context.junit4.SpringRunner
 import org.w3c.dom.DocumentFragment
 import org.xml.sax.InputSource
@@ -21,11 +22,8 @@ import java.net.URL
 import java.util.*
 import java.util.stream.Collectors
 
-/**
- * Unit tests for PrimerParser.
- */
+@SpringJUnitConfig
 @ContextConfiguration(locations = ["classpath:/test-context/parse-beans.xml"])
-
 class TestPrimerParser {
     companion object {
         private val testPages = arrayOf(

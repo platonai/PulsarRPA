@@ -22,40 +22,32 @@
     <name>Pulsar Persist</name>
 
     <dependencies>
-        <!-- Internal Dependencies -->
+        <!-- We have removed our own gora-shaded-mongodb since gora-0.9 has only the minimal requirement -->
         <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-            <version>${avro.version}</version>
-        </dependency>
-        <!-- Required by gora, org.apache.hadoop.conf.Configuration -->
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-            <version>${hadoop-2.version}</version>
+            <groupId>org.apache.gora</groupId>
+            <artifactId>gora-mongodb</artifactId>
+            <version>${gora.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>*</groupId>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- Requires org.apache.hadoop.conf.Configuration only, required by GoraStorage -->
         <dependency>
-            <groupId>org.apache.gora</groupId>
-            <artifactId>gora-core</artifactId>
-            <version>0.9</version>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
         </dependency>
 
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>gora-shaded-mongodb</artifactId>
-            <classifier>shaded</classifier>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
-        <!-- TODO: try to remove this dependency -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
@@ -113,16 +105,17 @@
         </dependency>
 
         <!-- Test -->
+        <!-- pulsar-resources -->
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-resources</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <properties>
-        <!-- gora-0.9 use 2.5.2 by default, but 2.7.2 is a correct version -->
-        <hadoop-2.version>2.7.2</hadoop-2.version>
-    </properties>
 
 </project>
