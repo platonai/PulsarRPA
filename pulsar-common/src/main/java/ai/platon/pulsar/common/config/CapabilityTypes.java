@@ -18,7 +18,7 @@ public interface CapabilityTypes {
 
     String APP_TMP_DIR_KEY = "app.tmp.dir";
 
-    String LEGACY_CONFIG_PROFILE = "legacy.config.profile";
+    String PROFILE_KEY = "profile";
 
     String DRY_RUN = "pulsar.dry.run";
 

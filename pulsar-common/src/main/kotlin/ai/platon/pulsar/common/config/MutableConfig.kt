@@ -21,7 +21,7 @@ open class MutableConfig : ImmutableConfig {
     constructor(profile: String): this(profile, true, listOf())
 
     constructor(loadDefaults: Boolean): this(
-        System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
+        System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
         loadDefaults, listOf()
     )
 

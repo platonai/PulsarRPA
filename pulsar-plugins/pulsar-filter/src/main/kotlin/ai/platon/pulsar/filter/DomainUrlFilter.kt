@@ -58,7 +58,7 @@ class DomainUrlFilter(conf: ImmutableConfig) : CrawlUrlFilter {
 
     init {
         val stringResource = conf[PARAM_URLFILTER_DOMAIN_RULES]
-        val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
+        val resourcePrefix = conf[CapabilityTypes.PROFILE_KEY, ""]
         val fileResource = conf[PARAM_URLFILTER_DOMAIN_FILE, "domain-urlfilter.txt"]
         ResourceLoader.readAllLines(stringResource, fileResource, resourcePrefix).toCollection(domainSet)
         LOG.info(domainSet.joinToString(", ", "Allowed domains: "))

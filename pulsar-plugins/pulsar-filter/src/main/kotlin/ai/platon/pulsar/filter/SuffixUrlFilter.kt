@@ -191,7 +191,7 @@ class SuffixUrlFilter(lines: List<String>, conf: ImmutableConfig) : CrawlUrlFilt
         private fun load(conf: ImmutableConfig): List<String> {
             val stringResource = conf[PARAM_URLFILTER_SUFFIX_RULES]
             val fileResource = conf[PARAM_URLFILTER_SUFFIX_FILE, "suffix-urlfilter.txt"]
-            val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
+            val resourcePrefix = conf[CapabilityTypes.PROFILE_KEY, ""]
             return ResourceLoader.readAllLines(stringResource, fileResource, resourcePrefix)
         }
 

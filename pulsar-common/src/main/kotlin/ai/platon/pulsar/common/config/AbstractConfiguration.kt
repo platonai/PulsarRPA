@@ -55,7 +55,7 @@ abstract class AbstractConfiguration {
     var environment: Environment? = null
     
     constructor(
-        profile: String = System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
+        profile: String = System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
         loadDefaults: Boolean = true,
         resources: Iterable<String> = DEFAULT_RESOURCES
     ) {

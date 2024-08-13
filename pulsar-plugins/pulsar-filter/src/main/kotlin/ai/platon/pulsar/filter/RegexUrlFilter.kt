@@ -30,7 +30,7 @@ class RegexUrlFilter(
     override fun getRulesReader(conf: ImmutableConfig): Reader {
         val stringResource = conf[URLFILTER_REGEX_RULES]
         val fileResource = conf[URLFILTER_REGEX_FILE, "regex-urlfilter.txt"]
-        val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
+        val resourcePrefix = conf[CapabilityTypes.PROFILE_KEY, ""]
         return ResourceLoader.getMultiSourceReader(stringResource, fileResource, resourcePrefix)
                 ?:throw FileNotFoundException("Resource not found $stringResource/$fileResource, prefix: $resourcePrefix")
     }

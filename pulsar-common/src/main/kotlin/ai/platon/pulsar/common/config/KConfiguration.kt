@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.xml.stream.XMLStreamConstants
 import javax.xml.stream.XMLStreamException
 import javax.xml.stream.XMLStreamReader
-import kotlin.collections.ArrayList
 import kotlin.io.path.isReadable
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
@@ -36,7 +35,7 @@ class KConfiguration(
 
     companion object {
         val DEFAULT_RESOURCES = mutableSetOf("pulsar-default.xml")
-        val EXTERNAL_RESOURCE_BASE_DIR = AppPaths.CONF_DIR.resolve("legacy")
+        val EXTERNAL_RESOURCE_BASE_DIR = AppPaths.CONF_DIR.resolve("conf-enabled")
         val SYSTEM_DEFAULT_RESOURCES = mutableSetOf<String>()
         private val ID_SUPPLIER = AtomicInteger()
     }
@@ -167,10 +166,12 @@ private class ConfigurationImpl(
     fun addResource(path: Path) = addResourceObject(Resource(path))
 
     fun addExternalResource(baseDir: Path) {
-        baseDir.listDirectoryEntries("*.xml")
-            .filter { it.isRegularFile() && it.isReadable() }
-            .onEach { logger.info("Found legacy configuration: {}", it) }
-            .forEach { addResource(it) }
+        val externalResources = baseDir.listDirectoryEntries("*.xml").filter { it.isRegularFile() && it.isReadable() }
+        if (externalResources.isEmpty()) {
+            logger.info("You can add extra configuration files to the directory: {}", baseDir)
+        } else {
+            externalResources.onEach { logger.info("Found configuration: {}", it) }.forEach { addResource(it) }
+        }
     }
 
     operator fun get(name: String): Any? = properties[name]
@@ -200,7 +201,7 @@ private class ConfigurationImpl(
 
     private fun collectResourcePaths() {
         if (profile.isNotEmpty()) {
-            set(CapabilityTypes.LEGACY_CONFIG_PROFILE, profile)
+            set(CapabilityTypes.PROFILE_KEY, profile)
         }
 
         resourceNames.addAll(extraResources)
@@ -212,7 +213,7 @@ private class ConfigurationImpl(
             val realResource = findRealResource(profile, mode, name)?.toString()
             if (realResource != null && realResource !in resourceURLs) {
                 resourceURLs.add(realResource)
-                logger.info("Found legacy configuration: {}", realResource)
+                logger.info("Found configuration: {}", realResource)
             } else {
                 logger.info("Resource not find: $name")
             }
@@ -220,6 +221,10 @@ private class ConfigurationImpl(
     }
 
     private fun findRealResource(profile: String, mode: String, name: String): URL? {
+        return findNewStyleRealResource(profile, name) ?: findLegacyStyleRealResource(profile, mode, name)
+    }
+
+    private fun findLegacyStyleRealResource(profile: String, mode: String, name: String): URL? {
         val prefix = "config/legacy"
         val suffix = "$mode/$name"
         val searchPaths = arrayOf(
@@ -227,7 +232,22 @@ private class ConfigurationImpl(
             "$prefix/$name", "$prefix/$profile/$name",
             name
         ).map { it.replace("/+".toRegex(), "/") }.distinct().sortedByDescending { it.length }
-        
+
+        return searchPaths.firstNotNullOfOrNull { SParser.wrap(it).resource }
+    }
+
+    private fun findNewStyleRealResource(profile: String, name: String): URL? {
+        val prefix = "config"
+        val extension = name.substringAfterLast(".")
+        val nameWithoutExtension = name.substringBeforeLast(".")
+
+        val searchPaths = arrayOf(
+            "$prefix/$nameWithoutExtension-$profile.$extension"
+        )
+            .map { it.replace("/+".toRegex(), "/") }   // replace "//" with "/"
+            .map { it.replace("-\\.".toRegex(), ".") } // replace "-." with ".", when profile is empty
+            .distinct().sortedByDescending { it.length }
+
         return searchPaths.firstNotNullOfOrNull { SParser.wrap(it).resource }
     }
     

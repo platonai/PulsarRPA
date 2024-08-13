@@ -65,7 +65,7 @@ class PrefixUrlFilter(conf: ImmutableConfig) : CrawlUrlFilter {
     protected fun getRulesReader(conf: ImmutableConfig): Reader {
         val stringResource = conf[URLFILTER_PREFIX_RULES]
         val fileResource = conf[URLFILTER_PREFIX_FILE, "prefix-urlfilter.txt"]
-        val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
+        val resourcePrefix = conf[CapabilityTypes.PROFILE_KEY, ""]
         return ResourceLoader.getMultiSourceReader(stringResource, fileResource, resourcePrefix)
                 ?:throw FileNotFoundException("Resource not found $stringResource/$fileResource, prefix: $resourcePrefix")
     }

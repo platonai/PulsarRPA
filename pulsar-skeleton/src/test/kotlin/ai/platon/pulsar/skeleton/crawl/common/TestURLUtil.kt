@@ -25,7 +25,7 @@ class TestURLUtil {
     @BeforeTest
     fun setup() {
         conf = ImmutableConfig()
-        val resourcePrefix = conf!![CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
+        val resourcePrefix = conf!![CapabilityTypes.PROFILE_KEY, ""]
         // tlds = DomainSuffixes.getInstance(resourcePrefix);
     }
 

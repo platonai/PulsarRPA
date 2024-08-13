@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.skeleton.crawl.filter.AbstractScopedUrlNormalizer
-import ai.platon.pulsar.skeleton.crawl.filter.UrlNormalizer
 import org.slf4j.LoggerFactory
 import org.w3c.dom.Element
 import org.w3c.dom.Text
@@ -47,7 +46,7 @@ class RegexUrlNormalizer(private val conf: ImmutableConfig) : AbstractScopedUrlN
     protected fun getRulesReader(conf: ImmutableConfig): Reader {
         val stringResource = conf[URLNORMALIZER_REGEX_RULES]
         val fileResource = conf[URLNORMALIZER_REGEX_FILE, "regex-normalize.xml"]
-        val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
+        val resourcePrefix = conf[CapabilityTypes.PROFILE_KEY, ""]
         return ResourceLoader.getMultiSourceReader(stringResource, fileResource, resourcePrefix)
                 ?:throw FileNotFoundException("Resource not found $stringResource/$fileResource, prefix: $resourcePrefix")
     }
@@ -69,7 +68,7 @@ class RegexUrlNormalizer(private val conf: ImmutableConfig) : AbstractScopedUrlN
         if (curRules == null) { // try to populate
             val fileResource = conf["$URLNORMALIZER_REGEX_FILE.$scope"]
             if (fileResource != null) {
-                val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
+                val resourcePrefix = conf[CapabilityTypes.PROFILE_KEY, ""]
                 LOG.debug("resource for scope '$scope': $fileResource")
                 ResourceLoader.getResourceAsReader(fileResource, resourcePrefix).use {
                     reader -> curRules = readConfiguration(reader!!)

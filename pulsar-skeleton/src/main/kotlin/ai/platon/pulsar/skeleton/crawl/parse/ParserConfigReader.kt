@@ -31,7 +31,7 @@ class ParserConfigReader {
      */
     fun parse(conf: ImmutableConfig): ParserConfig {
         val parserConfig = ParserConfig()
-        val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
+        val resourcePrefix = conf[CapabilityTypes.PROFILE_KEY, ""]
         val fileResource = conf[PARSE_PLUGINS_FILE, "parse-plugins.xml"]
         var document: Document? = null
         try {
