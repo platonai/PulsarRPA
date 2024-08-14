@@ -49,6 +49,7 @@
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-persist</artifactId>
                 <version>${project.version}</version>
+                <classifier>shaded</classifier>
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>

@@ -38,7 +38,6 @@
                             <artifactSet>
                                 <includes>
                                     <include>ai.platon.pulsar:*</include>
-                                    <include>org.apache.hadoop:*</include>
                                     <include>org.jetbrains.kotlin:*</include>
                                     <include>org.jetbrains:*</include>
                                     <include>com.google:*</include>

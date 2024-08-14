@@ -35,6 +35,7 @@ class TestMongoStore {
         try {
             mongoClient.getDatabase("test").listCollectionNames().first()
         } catch (e: Exception) {
+            e.printStackTrace()
             assumeTrue(false, "MongoDB is not available: skip tests")
         }
     }

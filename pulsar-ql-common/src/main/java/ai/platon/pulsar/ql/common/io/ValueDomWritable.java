@@ -1,10 +1,10 @@
 package ai.platon.pulsar.ql.common.io;
 
 import ai.platon.pulsar.common.concurrent.ConcurrentLRUCache;
+import ai.platon.pulsar.common.io.Writable;
 import ai.platon.pulsar.dom.Documents;
 import ai.platon.pulsar.dom.FeaturedDocument;
 import ai.platon.pulsar.ql.common.types.ValueDom;
-import org.apache.hadoop.io.Writable;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -33,7 +33,8 @@ public class ValueDomWritable implements Writable {
 
     private ValueDom dom;
 
-    public ValueDomWritable() {}
+    public ValueDomWritable() {
+    }
 
     public ValueDomWritable(ValueDom dom) {
         this.dom = dom;
@@ -71,7 +72,7 @@ public class ValueDomWritable implements Writable {
 
     /**
      * TODO: The local cache might not sync with the server side which lead to no data in client side, we need a better solution
-     * */
+     */
     @Override
     public void readFields(DataInput in) throws IOException {
         String baseUri = in.readLine();

@@ -72,6 +72,8 @@ object AppPaths {
     @RequiredDirectory
     val DOC_EXPORT_DIR = WEB_CACHE_DIR.resolve("export")
     @RequiredDirectory
+    val WEB_SCREENSHOT_DIR = WEB_CACHE_DIR.resolve("screenshot")
+    @RequiredDirectory
     val FILE_CACHE_DIR = CACHE_DIR.resolve("files")
     @RequiredDirectory
     val TMP_CONF_DIR = PROC_TMP_DIR.resolve("conf")

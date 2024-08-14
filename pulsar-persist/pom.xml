@@ -21,8 +21,54 @@
     <artifactId>pulsar-persist</artifactId>
     <name>Pulsar Persist</name>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>true</createDependencyReducedPom>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>shaded</shadedClassifierName>
+                            <artifactSet>
+                                <includes>
+                                    <include>org.apache.gora:*</include>
+                                    <include>org.apache.hadoop:*</include>
+                                    <include>org.mongodb:*</include>
+                                    <include>com.mongodb:*</include>
+                                    <include>commons-collections:*</include>
+                                    <include>org.codehaus.woodstox:*</include>
+                                    <include>org.apache.avro:*</include>
+                                </includes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>org.apache.gora:gora-mongodb</artifact>
+                                    <excludes>
+                                        <exclude>org.slf4j:*</exclude>
+                                        <exclude>log4j:*</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
-        <!-- We have removed our own gora-shaded-mongodb since gora-0.9 has only the minimal requirement -->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>${mongo.driver.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-mongodb</artifactId>
@@ -42,6 +88,11 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
+        </dependency>
+        <!-- Required by hadoop-common -->
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
         </dependency>
 
         <dependency>
@@ -88,12 +139,6 @@
             <artifactId>jackson-module-kotlin</artifactId>
         </dependency>
 
-        <!-- Required by hadoop-common -->
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-        </dependency>
-
         <!-- Perl5Pattern, text process, required by ProtocolHeaders, TODO: try to remove this dependency -->
         <dependency>
             <groupId>oro</groupId>
@@ -118,4 +163,8 @@
         </dependency>
     </dependencies>
 
+    <properties>
+        <!-- Use the latest 3.12.x to fix bugs -->
+        <mongo.driver.version>3.12.8</mongo.driver.version>
+    </properties>
 </project>
