@@ -56,6 +56,12 @@
                                     </excludes>
                                 </filter>
                             </filters>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.mongodb</pattern>
+                                    <shadedPattern>com.shaded.mongodb</shadedPattern>
+                                </relocation>
+                            </relocations>
                         </configuration>
                     </execution>
                 </executions>
@@ -64,6 +70,10 @@
     </build>
 
     <dependencies>
+        <!--
+        Upgrade mongo-java-driver to the latest version to fix the following exception:
+        Caused by: org.apache.gora.util.GoraException: com.mongodb.MongoQueryException: Query failed with error code 352 and error message 'Unsupported OP_QUERY command: find. The client driver may require an upgrade.
+         -->
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
