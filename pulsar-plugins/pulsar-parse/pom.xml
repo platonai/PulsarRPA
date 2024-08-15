@@ -33,7 +33,6 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-persist</artifactId>
-            <classifier>shaded</classifier>
         </dependency>
 
         <dependency>

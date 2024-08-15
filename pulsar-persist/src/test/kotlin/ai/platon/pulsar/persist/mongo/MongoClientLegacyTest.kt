@@ -1,34 +1,46 @@
-package ai.platon.pulsar.persist
+package ai.platon.pulsar.persist.mongo
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
+import ai.platon.pulsar.persist.AutoDetectStorageProvider
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import com.mongodb.MongoClient
+import shaded.com.mongodb.MongoClient
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.gora.mongodb.store.MongoStore
-import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.*
 
-class TestMongoStore {
+/**
+ * The driver com.mongodb.MongoClient is a Legacy Driver.
+ * Introduced In: MongoDB Java driver 3.x and earlier.
+ *
+ * The driver com.mongodb.client.MongoClient is a New Driver.
+ * Introduced in: MongoDB Java Driver 3.7 and later.
+ * */
+class MongoClientLegacyTest {
     companion object {
         private val crawlId = RandomStringUtils.randomAlphanumeric(18)
         private val conf = MutableConfig()
         
         private lateinit var mongoClient: MongoClient
-
+        
         @BeforeAll
         @JvmStatic
         fun setupClass() {
             conf.set(CapabilityTypes.STORAGE_DATA_STORE_CLASS, AppConstants.MONGO_STORE_CLASS)
             conf.set(CapabilityTypes.STORAGE_CRAWL_ID, crawlId)
-            // mongoClient = MongoClients.create("mongodb://localhost:27017");
             mongoClient = MongoClient("localhost", 27017)
         }
     }
-
+    
+    val database get() = mongoClient.getDatabase(MongoTestBase.databaseName)
+    
+    val collection get() = database.getCollection(MongoTestBase.collectionName)
+    
     @BeforeEach
     fun checkMongoDBConnection() {
         // test if MongoDB is available, if not, skip the test
@@ -36,8 +48,19 @@ class TestMongoStore {
             mongoClient.getDatabase("test").listCollectionNames().first()
         } catch (e: Exception) {
             e.printStackTrace()
-            assumeTrue(false, "MongoDB is not available: skip tests")
+            Assumptions.assumeTrue(false, "MongoDB is not available: skip tests")
         }
+    }
+    
+    @BeforeEach
+    fun ensureCollectionDoesNotExist() {
+        val collections = database.listCollectionNames()
+        assertFalse { collections.contains(MongoTestBase.collectionName) }
+    }
+    
+    @AfterEach
+    fun dropCollection() {
+        collection.drop()
     }
     
     @Test
