@@ -25,46 +25,60 @@ object ChatModelFactory {
      * @return The created model.
      */
     fun getOrCreate(conf: ImmutableConfig): ChatModel {
-        val llm = conf["llm.name"] ?: throw IllegalArgumentException("llm.name is not set")
+        val provider = conf["llm.provider"] ?: throw IllegalArgumentException("llm.provider is not set")
+        val modelName = conf["llm.name"] ?: throw IllegalArgumentException("llm.name is not set")
         val apiKey = conf["llm.apiKey"] ?: throw IllegalArgumentException("llm.apiKey is not set")
-        return getOrCreate(llm, apiKey)
+        return getOrCreate(provider, modelName, apiKey)
     }
     
     /**
      * Create a model.
      *
-     * @param model The name of model to create.
+     * @param provider The provider of the model.
+     * @param modelName The name of model to create.
      * @param apiKey The API key to use.
      * @return The created model.
      */
-    fun getOrCreate(model: String, apiKey: String): ChatModel {
-        return getOrCreateModel0(model, apiKey)
-    }
+    fun getOrCreate(provider: String, modelName: String, apiKey: String) = getOrCreateModel0(provider, modelName, apiKey)
     
     /**
      * Create a default model.
      *
      * @return The created model.
      */
-    fun getOrCreateOrNull(conf: ImmutableConfig): ChatModel? {
-        val llm = conf["llm.name"] ?: return null
-        val apiKey = conf["llm.apiKey"] ?: return null
-        return getOrCreate(llm, apiKey)
+    fun getOrCreateOrNull(conf: ImmutableConfig) = getOrCreate(conf)
+
+    private fun getOrCreateModel0(provider: String, modelName: String, apiKey: String): ChatModel {
+        val key = "$modelName:$apiKey"
+        return models.computeIfAbsent(key) { doCreateModel(provider, modelName, apiKey) }
     }
 
-    private fun getOrCreateModel0(model: String, apiKey: String): ChatModel {
-        val key = "$model:$apiKey"
-        return models.computeIfAbsent(key) { doCreateModel(model, apiKey) }
-    }
-    
-    private fun doCreateModel(model: String, apiKey: String): ChatModel {
-        return when (model) {
-            "glm4" -> createZhipuChatModel(apiKey)
-            "deepseek" -> createDeepSeekChatModel(apiKey)
-            else -> createDeepSeekChatModel(apiKey)
+    private fun doCreateModel(provider: String, modelName: String, apiKey: String): ChatModel {
+        return when (provider) {
+            "zhipu" -> createZhipuChatModel(apiKey)
+            "bailian" -> createBaiLianChatModel(modelName, apiKey)
+            "deepseek" -> createDeepSeekChatModel(modelName, apiKey)
+            else -> createDeepSeekChatModel(modelName, apiKey)
         }
     }
-    
+
+    /**
+     * QianWen API is compatible with OpenAI API, so it's OK to use OpenAIChatModel.
+     * @see <a href='https://help.aliyun.com/zh/model-studio/getting-started/what-is-model-studio'>What is Model Studio</a>
+     * */
+    private fun createBaiLianChatModel(modelName: String, apiKey: String): ChatModel {
+        val baseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        val lm = OpenAiChatModel.builder()
+            .apiKey(apiKey)
+            .baseUrl(baseUrl)
+            .modelName(modelName)
+            .logRequests(false)
+            .logResponses(true)
+            .maxRetries(1)
+            .build()
+        return ChatModelImpl(lm)
+    }
+
     private fun createZhipuChatModel(apiKey: String): ChatModel {
         val lm = ZhipuAiChatModel.builder()
             .apiKey(apiKey)
@@ -78,13 +92,30 @@ object ChatModelFactory {
     /**
      * DeepSeek API is compatible with OpenAI API, so it's OK to use OpenAIChatModel.
      *
-     * @see https://github.com/deepseek-ai/DeepSeek-V2/issues/18
+     * @see <a href='https://github.com/deepseek-ai/DeepSeek-V2/issues/18'>DeepSeek-V2 Issue 18</a>
      * */
-    private fun createDeepSeekChatModel(apiKey: String): ChatModel {
+    private fun createDeepSeekChatModel(modelName: String, apiKey: String): ChatModel {
         val lm = OpenAiChatModel.builder()
             .apiKey(apiKey)
             .baseUrl("https://api.deepseek.com")
-            .modelName("deepseek-chat")
+            .modelName(modelName)
+            .logRequests(false)
+            .logResponses(true)
+            .maxRetries(1)
+            .build()
+        return ChatModelImpl(lm)
+    }
+    
+    /**
+     * DeepSeek API is compatible with OpenAI API, so it's OK to use OpenAIChatModel.
+     *
+     * @see https://github.com/deepseek-ai/DeepSeek-V2/issues/18
+     * */
+    private fun createOpenAICompatibleChatModel(modelName: String, apiKey: String, baseUrl: String): ChatModel {
+        val lm = OpenAiChatModel.builder()
+            .apiKey(apiKey)
+            .baseUrl(baseUrl)
+            .modelName(modelName)
             .logRequests(false)
             .logResponses(true)
             .maxRetries(1)

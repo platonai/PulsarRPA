@@ -11,19 +11,18 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-@EnabledIfEnvironmentVariable(named = "llm.name", matches = ".+")
 class ChatModelTests {
-    
+
     companion object {
         private val url = "https://www.amazon.com/dp/B0C1H26C46"
         private val args = "-requireSize 200000"
         private val productHtml = ResourceLoader.readString("pages/amazon/B0C1H26C46.original.htm")
         private val productText = ResourceLoader.readString("prompts/product.txt")
-        private val clusterAnalysisPrompt = ResourceLoader.readString("prompts/data-expert/template/data-expert.v2.md")
+        private val clusterAnalysisPrompt = ResourceLoader.readString("prompts/data-expert/fulltext/prompt.p1723107189.6.remarkable.txt")
         private val conf = ImmutableConfig(loadDefaults = true)
         private val isModelConfigured get() = ChatModelFactory.isModelConfigured(conf)
         private val model = ChatModelFactory.getOrCreateOrNull(conf)
-        
+
         @BeforeAll
         @JvmStatic
         fun checkConfiguration() {
@@ -36,20 +35,16 @@ class ChatModelTests {
             }
         }
     }
-    
+
     @BeforeTest
     fun checkResource() {
         assertTrue { productHtml.isNotBlank() }
         assertTrue { productText.isNotBlank() }
     }
-    
-    /**
-     * TODO: @EnabledIf is not working
-     * */
+
     @Test
-    @EnabledIf("#{model != null}")
     fun `should generate answer and return token usage and finish reason stop`() {
-        if (model == null) return
+        if (!isModelConfigured) return
         
         val document = Documents.parse(productHtml, url)
         
@@ -64,9 +59,8 @@ class ChatModelTests {
     }
     
     @Test
-    @EnabledIf("#{model != null}")
     fun `should generate answer from the partial content of a webpage`() {
-        if (model == null) return
+        if (!isModelConfigured) return
         
         val text = productText
         val prompt = """
@@ -93,9 +87,8 @@ class ChatModelTests {
     }
     
     @Test
-    @EnabledIf("#{model != null}")
     fun `When ask LLM to analyze cluster then it responses with json`() {
-        if (model == null) return
+        if (!isModelConfigured) return
         
         val response = model.call(clusterAnalysisPrompt)
         println(response.content)

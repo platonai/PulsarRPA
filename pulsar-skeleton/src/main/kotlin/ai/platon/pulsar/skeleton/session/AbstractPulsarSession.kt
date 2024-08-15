@@ -24,6 +24,7 @@ import ai.platon.pulsar.skeleton.crawl.PageEvent
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import com.alibaba.dashscope.utils.Constants.apiKey
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import org.xml.sax.InputSource
@@ -423,11 +424,7 @@ abstract class AbstractPulsarSession(
     
     override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
     
-    override fun chat(prompt: String): ModelResponse {
-        val model = sessionConfig["llm.name"] ?: throw IllegalArgumentException("No LLM name specified.")
-        val apiKey = sessionConfig["llm.apiKey"] ?: throw IllegalArgumentException("No LLM API key specified.")
-        return context.chat(prompt, model, apiKey)
-    }
+    override fun chat(prompt: String) = context.chat(prompt, sessionConfig)
     
     override fun chat(context: String, prompt: String) = chat(prompt + "\n\n" + context)
     

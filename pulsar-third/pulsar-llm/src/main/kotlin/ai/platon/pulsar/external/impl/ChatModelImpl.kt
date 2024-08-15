@@ -1,6 +1,7 @@
 package ai.platon.pulsar.external.impl
 
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ChatModel
 import ai.platon.pulsar.external.ModelResponse

@@ -272,10 +272,10 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Inject an url
+     * Inject an url.
      *
-     * @param url The url which can be followed by arguments
-     * @return The web page created
+     * @param url The url which can be followed by arguments.
+     * @return The web page created.
      */
     @Throws(WebDBException::class)
     override fun inject(url: NormURL): WebPage {
@@ -283,7 +283,7 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Get a webpage from the storage
+     * Get a webpage from the storage.
      * */
     @Throws(WebDBException::class)
     override fun get(url: String): WebPage {
@@ -296,7 +296,7 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Get a webpage from the storage
+     * Get a webpage from the storage.
      * */
     @Throws(WebDBException::class)
     override fun getOrNull(url: String): WebPage? {
@@ -304,7 +304,7 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Get a webpage from the storage
+     * Get a webpage from the storage.
      * */
     @Throws(WebDBException::class)
     override fun getOrNull(url: String, vararg fields: String): WebPage? {
@@ -318,19 +318,19 @@ abstract class AbstractPulsarContext(
     override fun getContentAsString(url: String): String? = webDbOrNull?.getContentAsString(url)
     
     /**
-     * Check if a page exists in the storage
+     * Check if a page exists in the storage.
      * */
     @Throws(WebDBException::class)
     override fun exists(url: String) = webDbOrNull?.exists(url) == true
     
     /**
-     * Check the fetch state of a page
+     * Check the fetch state of a page.
      * */
     override fun fetchState(page: WebPage, options: LoadOptions) =
         loadComponentOrNull?.fetchState(page, options) ?: CheckState(FetchState.DO_NOT_FETCH, "closed")
     
     /**
-     * Scan pages in the storage
+     * Scan pages in the storage.
      * */
     @Throws(WebDBException::class)
     override fun scan(urlPrefix: String): Iterator<WebPage> {
@@ -338,7 +338,7 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Scan pages in the storage
+     * Scan pages in the storage.
      * */
     @Throws(WebDBException::class)
     override fun scan(urlPrefix: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
@@ -346,7 +346,7 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Scan pages in the storage
+     * Scan pages in the storage.
      * */
     @Throws(WebDBException::class)
     override fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
@@ -354,11 +354,11 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Load an page with specified options, see [LoadOptions] for all options
+     * Load an page with specified options, see [LoadOptions] for all options.
      *
-     * @param url     The url which can be followed by arguments
-     * @param options The load options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     * @param url     The url which can be followed by arguments.
+     * @param options The load options.
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned.
      */
     @Throws(WebDBException::class)
     override fun load(url: String, options: LoadOptions): WebPage {
@@ -367,11 +367,11 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Load a url with specified options, see [LoadOptions] for all options
+     * Load a url with specified options, see [LoadOptions] for all options.
      *
-     * @param url     The url which can be followed by arguments
-     * @param options The load options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     * @param url     The url which can be followed by arguments.
+     * @param options The load options.
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned.
      */
     @Throws(WebDBException::class)
     override fun load(url: URL, options: LoadOptions): WebPage {
@@ -379,10 +379,10 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Load a url, options can be specified following the url, see [LoadOptions] for all options
+     * Load a url, options can be specified following the url, see [LoadOptions] for all options.
      *
-     * @param url The url which can be followed by arguments
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     * @param url The url which can be followed by arguments.
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned.
      */
     @Throws(WebDBException::class)
     override fun load(url: NormURL): WebPage {
@@ -446,7 +446,7 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Parse the WebPage content using parseComponent
+     * Parse the WebPage content using parseComponent.
      */
     override fun parse(page: WebPage): FeaturedDocument? {
         val parser = loadComponentOrNull?.parseComponent
@@ -456,12 +456,10 @@ abstract class AbstractPulsarContext(
     /**
      * Chat with the AI model.
      */
-    override fun chat(prompt: String, model: String, apiKey: String): ModelResponse {
-        return ChatModelFactory.getOrCreate(model, apiKey).call(prompt)
-    }
+    override fun chat(prompt: String, conf: ImmutableConfig) = ChatModelFactory.getOrCreate(conf).call(prompt)
     
     /**
-     * Persist the page into the storage
+     * Persist the page into the storage.
      * */
     @Throws(WebDBException::class)
     override fun persist(page: WebPage) {
@@ -469,7 +467,7 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Delete the page from the storage
+     * Delete the page from the storage.
      * */
     @Throws(WebDBException::class)
     override fun delete(url: String) {
@@ -477,7 +475,7 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Delete the page from the storage
+     * Delete the page from the storage.
      * */
     @Throws(WebDBException::class)
     override fun delete(page: WebPage) {
@@ -485,7 +483,7 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Flush the storage
+     * Flush the storage.
      * */
     @Throws(WebDBException::class)
     override fun flush() {
@@ -493,7 +491,7 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Wait until there is no tasks in the main loop
+     * Wait until there is no tasks in the main loop.
      * */
     @Throws(InterruptedException::class)
     override fun await() {
@@ -503,8 +501,8 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Register a shutdown hook with the JVM runtime, closing this context
-     * on JVM shutdown unless it has already been closed at that time.
+     * Register a shutdown hook with the JVM runtime, closing this context on JVM shutdown unless it has already been
+     * closed at that time.
      *
      * Delegates to `doClose()` for the actual closing procedure.
      * @see Runtime.addShutdownHook
@@ -521,7 +519,7 @@ abstract class AbstractPulsarContext(
     }
     
     /**
-     * Close this pulsar context
+     * Close this pulsar context.
      *
      * Delegates to `doClose()` for the actual closing procedure.
      * Also removes a JVM shutdown hook, if registered, as it's not needed anymore.
