@@ -14,7 +14,6 @@ import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
-import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
@@ -24,7 +23,6 @@ import ai.platon.pulsar.skeleton.crawl.PageEvent
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
-import com.alibaba.dashscope.utils.Constants.apiKey
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import org.xml.sax.InputSource
@@ -426,7 +424,7 @@ abstract class AbstractPulsarSession(
     
     override fun chat(prompt: String) = context.chat(prompt, sessionConfig)
     
-    override fun chat(context: String, prompt: String) = chat(prompt + "\n\n" + context)
+    override fun chat(userMessage: String, systemMessage: String) = context.chat(userMessage, systemMessage, sessionConfig)
     
     override fun chat(page: WebPage, prompt: String) = chat(prompt + "\n\n" + page.contentAsString)
     

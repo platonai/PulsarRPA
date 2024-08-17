@@ -375,6 +375,8 @@ interface PulsarContext: AutoCloseable {
      */
     fun chat(prompt: String, conf: ImmutableConfig): ModelResponse
     
+    fun chat(userMessage: String, systemMessage: String, conf: ImmutableConfig): ModelResponse
+    
     /**
      * Persist the webpage into the storage immediately.
      * By default, the backend storage is the local file system, if mongodb is detected,

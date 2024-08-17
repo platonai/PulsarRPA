@@ -79,7 +79,9 @@ class WalmartCrawler(private val session: PulsarSession = PulsarContexts.createS
 }
 
 fun main() {
-    BrowserSettings.withSystemDefaultBrowser()
+    BrowserSettings
+        .withSPA()
+        .withSystemDefaultBrowser()
     
     val portalUrl = ResourceLoader.readAllLines("seeds.walmart.txt")
         .filter { UrlUtils.isStandard(it) }

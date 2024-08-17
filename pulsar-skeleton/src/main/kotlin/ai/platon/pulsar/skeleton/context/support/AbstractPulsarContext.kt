@@ -458,6 +458,9 @@ abstract class AbstractPulsarContext(
      */
     override fun chat(prompt: String, conf: ImmutableConfig) = ChatModelFactory.getOrCreate(conf).call(prompt)
     
+    override fun chat(userMessage: String, systemMessage: String, conf: ImmutableConfig) =
+        ChatModelFactory.getOrCreate(conf).call(userMessage, systemMessage)
+    
     /**
      * Persist the page into the storage.
      * */
