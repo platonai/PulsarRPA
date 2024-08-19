@@ -5,22 +5,23 @@ import org.apache.commons.lang3.SystemUtils
 import java.awt.GraphicsEnvironment
 import java.net.InetAddress
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
 
 object AppContext {
-
+    
     private val logger = getLogger(AppContext::class)
-
+    
     enum class State {
         NEW, RUNNING, TERMINATING, TERMINATED
     }
-
+    
     /**
      * The number of processors available to the Java virtual machine
      */
     val NCPU get() = Runtime.getRuntime().availableProcessors()
-
+    
     /**
      * Gets the host name for this IP address.
      * If this InetAddress was created with a host name, this host name will be remembered and returned;
@@ -28,136 +29,177 @@ object AppContext {
      * system configured name lookup service.
      * */
     val HOST_NAME get() = InetAddress.getLocalHost().hostName
-
+    
     /**
      * The name of the current user
      * */
     val USER get() = SystemUtils.USER_NAME
-
+    
     /**
      * The java.io.tmpdir System Property. Default temp file path.
      * Defaults to null if the runtime does not have security access to read this property or the property does not exist.
      * This value is initialized when the class is loaded.
      */
     val TMP_DIR get() = SystemUtils.JAVA_IO_TMPDIR
-
+    
     // User's current working directory
     val USER_DIR get() = SystemUtils.USER_DIR
-
+    
     // User's home directory
     val USER_HOME get() = SystemUtils.USER_HOME
-
+    
     /**
      * Check if the operating system is a Windows subsystem for linux
      * */
     val OS_IS_WSL by lazy { checkIsWSL() }
+    
     /**
      * Check if the operating system is running on a virtual environment, e.g., virtualbox, vmware, etc
      * */
     val OS_IS_VIRT by lazy { checkVirtualEnv() }
+    
     /**
      * Check if the operating system is a linux and desktop is available
      * @see https://www.freedesktop.org/software/systemd/man/pam_systemd.html
      * */
     val OS_IS_LINUX_DESKTOP by lazy { checkIsLinuxDesktop() }
+    
     /**
      * Check if GUI is available, so we can run pulsar in GUI mode and supervised mode.
      * */
-    val isGUIAvailable: Boolean get() {
-        return when {
-            OS_IS_LINUX_DESKTOP -> true
-            OS_IS_WSL -> false
-            else -> !GraphicsEnvironment.isHeadless()
+    val isGUIAvailable: Boolean
+        get() {
+            return when {
+                OS_IS_LINUX_DESKTOP -> true
+                OS_IS_WSL -> false
+                else -> !GraphicsEnvironment.isHeadless()
+            }
         }
-    }
+    
     /**
      * The application version
      * */
     val APP_VERSION by lazy { sniffVersion() }
+    
     /**
      * The real time application name, can be specified by system environment variable or system property.
      * The real time version is used for test only.
      * */
     val APP_NAME_RT get() = System.getenv(APP_NAME_KEY) ?: System.getProperty(APP_NAME_KEY, "pulsar")
+    
     /**
      * The application name, can be specified by system environment variable or system property.
      * */
     val APP_NAME = APP_NAME_RT
+    
     /**
      * The real time application identity string, can be specified by system environment variable or system property.
      * The real time version is used for test only.
      * */
     val APP_IDENT_RT get() = System.getenv(APP_ID_KEY) ?: System.getProperty(APP_ID_KEY, USER)
+    
     /**
      * The application identity string, can be specified by system environment variable or system property.
      * */
     val APP_IDENT = APP_IDENT_RT
+    
     /**
      * The real time user specified temp dir used by the application, can be specified by system environment
      * variable or system property.
      * The real time version is used for test only.
      * */
     val APP_TMP_SPECIFIED_RT get() = System.getenv(APP_TMP_DIR_KEY) ?: System.getProperty(APP_TMP_DIR_KEY)
+    
     /**
      * The user specified temp dir used by the application, can be specified by system environment
      * variable or system property.
      * */
     val APP_TMP_SPECIFIED = APP_TMP_SPECIFIED_RT
+    
     /**
      * The real time temp directory used by all processes.
      * The real time version is used for test only.
      * */
-    val APP_TMP_DIR_RT get() = when {
-        APP_TMP_SPECIFIED_RT != null -> Paths.get(APP_TMP_SPECIFIED_RT).resolve(APP_NAME_RT)
-        else -> Paths.get(TMP_DIR).resolve(APP_NAME_RT)
-    }
+    val APP_TMP_DIR_RT
+        get() = when {
+            APP_TMP_SPECIFIED_RT != null -> Paths.get(APP_TMP_SPECIFIED_RT).resolve(APP_NAME_RT)
+            else -> Paths.get(TMP_DIR).resolve(APP_NAME_RT)
+        }
+    
     /**
      * The temp directory used by all processes
      * */
     val APP_TMP_DIR = APP_TMP_DIR_RT
+    
     /**
      * The real time temp directory used by processes with APP_IDENT
      * The real time version is used for test only.
      * */
-    val APP_PROC_TMP_DIR_RT get() =
-        APP_TMP_DIR_RT.resolveSibling("$APP_NAME_RT-$APP_IDENT_RT")
+    val APP_PROC_TMP_DIR_RT
+        get() =
+            APP_TMP_DIR_RT.resolveSibling("$APP_NAME_RT-$APP_IDENT_RT")
+    
     /**
      * The temp directory used by processes with APP_IDENT
      * */
     val APP_PROC_TMP_DIR = APP_PROC_TMP_DIR_RT
+    
     /**
      * The data directory used by the application, the default data dir is $HOME/.pulsar.
      * Special users such as tomcat do not have its own home, $TMP_DIR/.$APP_NAME is used in such case.
      * */
-    val APP_DATA_DIR_RT get() = listOf(USER_HOME, TMP_DIR).map { Paths.get(it) }
-        .first { Files.isWritable(it) }.resolve(".$APP_NAME_RT")
+    val APP_DATA_DIR_RT get() = getAppDataDir()
     val APP_DATA_DIR = APP_DATA_DIR_RT
+    
     /**
      * The application's runtime state
      * */
     val state = AtomicReference(State.NEW)
+    
     /**
      * The application is active.
      * TODO: avoid this global state, use a more flexible way to manage the state.
      * */
     val isActive get() = state.get().ordinal < State.TERMINATING.ordinal
-
+    
     fun start() = state.set(State.RUNNING)
-
+    
     fun shouldTerminate() {
         if (state.get() != State.TERMINATED) {
             state.set(State.TERMINATING)
         }
     }
-
+    
     fun terminate() {
         if (state.get() == State.TERMINATED) {
             return
         }
         state.set(State.TERMINATING)
     }
-
+    
     fun endTermination() = state.set(State.TERMINATED)
+    
+    /**
+     * Get the application data directory.
+     *
+     * The application data directory is determined by the following rules:
+     * 1. If the system environment variable APP_DATA_DIR is set and the directory is writable, return it.
+     * 2. Otherwise, if the system property APP_DATA_DIR is set and the directory is writable, return it.
+     * 3. Otherwise, if the user home directory is writable, return $HOME/.pulsar.
+     * 4. Otherwise, if the system temp directory is writable, return $TMP_DIR/.pulsar.
+     * */
+    private fun getAppDataDir(): Path {
+        val appDataDir = System.getenv(APP_DATA_DIR_KEY) ?: System.getProperty(APP_DATA_DIR_KEY)
+        if (appDataDir != null) {
+            val path = Paths.get(appDataDir)
+            if (Files.isWritable(path)) {
+                return path
+            }
+        }
+
+        return listOf(USER_HOME, TMP_DIR).map { Paths.get(it) }
+            .first { Files.isWritable(it) }.resolve(".$APP_NAME_RT")
+    }
 
     private fun sniffVersion(): String {
         var version = System.getProperty("app.version")
@@ -167,28 +209,28 @@ object AppContext {
         }
         return version ?: "unknown"
     }
-
+    
     private fun checkIsLinuxDesktop(): Boolean {
         if (SystemUtils.IS_OS_WINDOWS) {
             return false
         }
-
+        
         val env = System.getenv("XDG_SESSION_TYPE")
-
+        
         return env == "x11" || env == "wayland"
     }
-
+    
     private fun checkIsWSL(): Boolean {
         if (SystemUtils.IS_OS_WINDOWS) {
             return false
         }
-
+        
         try {
             val path = Paths.get("/proc/version")
             if (Files.isReadable(path)) {
                 val version = Files.readString(path)
                 logger.info("Version: $version")
-
+                
                 if (version.contains("microsoft-*-WSL".toRegex())) {
                     return true
                 }
@@ -196,10 +238,10 @@ object AppContext {
         } catch (t: Throwable) {
             logger.warn("Unexpected exception", t)
         }
-
+        
         return false
     }
-
+    
     private fun checkVirtualEnv(): Boolean {
         if (SystemUtils.IS_OS_WINDOWS) {
             logger.info("Not supported to check if a Windows OS running on a virtual machine")
@@ -213,7 +255,7 @@ object AppContext {
         } catch (t: Throwable) {
             logger.warn("Unexpected exception", t)
         }
-
+        
         return false
     }
 }

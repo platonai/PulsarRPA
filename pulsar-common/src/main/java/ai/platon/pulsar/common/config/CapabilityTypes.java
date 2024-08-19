@@ -52,6 +52,8 @@ public interface CapabilityTypes {
 
     String RECENT_DAYS_WINDOW = "recent.days.window";
 
+    String APP_DATA_DIR_KEY = "application.data.dir";
+
     /**
      * Application metrics
      * */
