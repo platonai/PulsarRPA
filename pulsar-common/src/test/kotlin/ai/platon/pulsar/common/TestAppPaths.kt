@@ -38,6 +38,7 @@ class TestAppPaths {
     @BeforeTest
     fun setup() {
         System.clearProperty(CapabilityTypes.APP_TMP_DIR_KEY)
+        System.clearProperty(CapabilityTypes.APP_TMP_BASE_DIR_KEY)
         System.clearProperty(CapabilityTypes.APP_NAME_KEY)
         System.clearProperty(CapabilityTypes.APP_ID_KEY)
     }
@@ -45,6 +46,11 @@ class TestAppPaths {
     @AfterTest
     fun tearDown() {
         Files.deleteIfExists(Paths.get("$home/prometheus"))
+        
+        System.clearProperty(CapabilityTypes.APP_TMP_DIR_KEY)
+        System.clearProperty(CapabilityTypes.APP_TMP_BASE_DIR_KEY)
+        System.clearProperty(CapabilityTypes.APP_NAME_KEY)
+        System.clearProperty(CapabilityTypes.APP_ID_KEY)
     }
 
     @Test
@@ -55,15 +61,20 @@ class TestAppPaths {
             assertEquals(AppContext.APP_TMP_DIR.toString(), "$tmp$appName")
             assertEquals(AppContext.APP_PROC_TMP_DIR.toString(), "$tmp$appName-$ident")
         }
-        
+
         if (SystemUtils.IS_OS_LINUX) {
             assertEquals(AppContext.APP_TMP_DIR.toString(), "$tmp$sep$appName")
             assertEquals(AppContext.APP_PROC_TMP_DIR.toString(), "$tmp$sep$appName-$ident")
         }
+
+        val tmpBaseDir = Paths.get(tmp, "prometheus").toString()
+        System.setProperty(CapabilityTypes.APP_TMP_BASE_DIR_KEY, tmpBaseDir)
+        assertEquals("$tmpBaseDir$sep$appName", AppContext.APP_TMP_DIR_RT.toString())
+        assertEquals("$tmpBaseDir$sep$appName-$ident", AppContext.APP_PROC_TMP_DIR_RT.toString())
         
-        System.setProperty(CapabilityTypes.APP_TMP_DIR_KEY, "$home${sep}prometheus")
-        assertEquals("$home${sep}prometheus$sep$appName", AppContext.APP_TMP_DIR_RT.toString())
-        assertEquals("$home${sep}prometheus$sep$appName-$ident", AppContext.APP_PROC_TMP_DIR_RT.toString())
+        val expectedDataDir = Paths.get(home, "prometheus", ".pulsar").toString()
+        System.setProperty(CapabilityTypes.APP_DATA_DIR_KEY, expectedDataDir)
+        assertEquals(expectedDataDir, AppContext.APP_DATA_DIR_RT.toString())
     }
 
     @Test

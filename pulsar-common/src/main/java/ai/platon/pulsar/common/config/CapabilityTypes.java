@@ -16,7 +16,14 @@ public interface CapabilityTypes {
     String APP_ID_KEY = "app.ident";
     String APP_NAME_KEY = "app.name";
 
+    String APP_DATA_DIR_KEY = "app.data.dir";
+
+    /**
+     * @deprecated use {@link #APP_TMP_BASE_DIR_KEY} instead
+     * */
     String APP_TMP_DIR_KEY = "app.tmp.dir";
+
+    String APP_TMP_BASE_DIR_KEY = "app.tmp.base.dir";
 
     String LEGACY_CONFIG_PROFILE = "legacy.config.profile";
 

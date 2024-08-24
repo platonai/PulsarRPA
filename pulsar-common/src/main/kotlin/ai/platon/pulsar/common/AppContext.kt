@@ -96,18 +96,23 @@ object AppContext {
      * The real time user specified temp dir used by the application, can be specified by system environment
      * variable or system property.
      * The real time version is used for test only.
+     * TODO: deprecated, use APP_TMP_BASE_SPECIFIED_RT instead
      * */
     val APP_TMP_SPECIFIED_RT get() = System.getenv(APP_TMP_DIR_KEY) ?: System.getProperty(APP_TMP_DIR_KEY)
+    val APP_TMP_BASE_SPECIFIED_RT get() = System.getenv(APP_TMP_BASE_DIR_KEY) ?: System.getProperty(APP_TMP_BASE_DIR_KEY)
     /**
      * The user specified temp dir used by the application, can be specified by system environment
      * variable or system property.
+     * TODO: deprecated, use APP_TMP_BASE_SPECIFIED instead
      * */
     val APP_TMP_SPECIFIED = APP_TMP_SPECIFIED_RT
+    val APP_TMP_BASE_SPECIFIED = APP_TMP_BASE_SPECIFIED_RT
     /**
      * The real time temp directory used by all processes.
      * The real time version is used for test only.
      * */
     val APP_TMP_DIR_RT get() = when {
+        APP_TMP_BASE_SPECIFIED_RT != null -> Paths.get(APP_TMP_BASE_SPECIFIED_RT).resolve(APP_NAME_RT)
         APP_TMP_SPECIFIED_RT != null -> Paths.get(APP_TMP_SPECIFIED_RT).resolve(APP_NAME_RT)
         else -> Paths.get(TMP_DIR).resolve(APP_NAME_RT)
     }
@@ -126,11 +131,22 @@ object AppContext {
      * */
     val APP_PROC_TMP_DIR = APP_PROC_TMP_DIR_RT
     /**
+     * The real time user specified data dir used by the application, can be specified by system environment
+     * */
+    val APP_DATA_DIR_SPECIFIED_RT get() = System.getenv(APP_DATA_DIR_KEY) ?: System.getProperty(APP_DATA_DIR_KEY)
+    /**
+     * The user specified data dir used by the application, can be specified by system environment
+     * */
+    val APP_DATA_DIR_SPECIFIED = APP_DATA_DIR_SPECIFIED_RT
+    /**
      * The data directory used by the application, the default data dir is $HOME/.pulsar.
      * Special users such as tomcat do not have its own home, $TMP_DIR/.$APP_NAME is used in such case.
      * */
-    val APP_DATA_DIR_RT get() = listOf(USER_HOME, TMP_DIR).map { Paths.get(it) }
-        .first { Files.isWritable(it) }.resolve(".$APP_NAME_RT")
+    val APP_DATA_DIR_RT get() = when {
+        APP_DATA_DIR_SPECIFIED_RT != null -> Paths.get(APP_DATA_DIR_SPECIFIED_RT)
+        else -> listOf(USER_HOME, TMP_DIR).map { Paths.get(it) }
+            .first { Files.isWritable(it) }.resolve(".$APP_NAME_RT")
+    }
     val APP_DATA_DIR = APP_DATA_DIR_RT
     /**
      * The application's runtime state
