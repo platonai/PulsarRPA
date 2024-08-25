@@ -162,7 +162,7 @@ object AppPaths {
     
     /**
      * Resolve the given path parts to a path.
-     * Copy from JDK 22 for compatibility.
+     * Copy from JDK 22 for backward compatibility.
      * */
     fun resolve(base: Path, first: String, vararg more: String): Path {
         var result = base.resolve(first)
@@ -174,6 +174,23 @@ object AppPaths {
     
     fun get(first: String, vararg more: String): Path = Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)
     
+    /**
+     * Get a path of the application's temporary directory.
+     *
+     * A typical application temporary directory is:
+     *
+     * ```powershell
+     * $env:Temp/pulsar-$env:USERNAME/
+     * ```
+     *
+     * TODO: fix me: assertTrue(path2.startsWith(AppPaths.TMP_DIR))
+     * ```kotlin
+     * assertTrue(path2.startsWith(AppPaths.TMP_DIR), "$path -> $path2")
+     * ```
+     *
+     * @param first the first part of the path
+     * @param more the rest parts of the path
+     */
     fun getTmp(first: String, vararg more: String): Path = resolve(TMP_DIR, first, *more)
     
     fun getRandomTmp(prefix: String = "", suffix: String = ""): Path =

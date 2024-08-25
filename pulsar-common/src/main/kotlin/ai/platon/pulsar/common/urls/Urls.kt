@@ -91,7 +91,17 @@ interface UrlAware {
      * Not all urls are persistable, for example, a ListenableHyperlink with events is not persistable.
      * */
     val isPersistable: Boolean
-
+    
+    /**
+     * The text of the url, it can be the text of the hyperlink.
+     * */
+    var text: String
+    
+    /**
+     * The order of the url.
+     * */
+    var order: Int
+    
     /**
      * The url label, it should be a shortcut for `-label` option in load options
      * */
@@ -121,6 +131,11 @@ interface UrlAware {
      * The maximum retry times
      * */
     val nMaxRetry: Int
+    
+    /**
+     * The depth of the url
+     * */
+    val depth: Int
 }
 
 /**

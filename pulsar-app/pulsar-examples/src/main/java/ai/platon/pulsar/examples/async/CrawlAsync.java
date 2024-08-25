@@ -1,15 +1,12 @@
 package ai.platon.pulsar.examples.async;
 
 import ai.platon.pulsar.common.LinkExtractors;
-import ai.platon.pulsar.common.urls.Hyperlink;
-import ai.platon.pulsar.skeleton.common.urls.NormURL;
 import ai.platon.pulsar.skeleton.context.PulsarContexts;
 import ai.platon.pulsar.dom.FeaturedDocument;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.skeleton.session.PulsarSession;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 class CrawlAsync {
 

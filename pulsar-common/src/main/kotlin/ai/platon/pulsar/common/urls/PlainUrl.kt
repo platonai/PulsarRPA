@@ -4,4 +4,4 @@ open class PlainUrl(
     url: String,
     args: String? = null,
     referrer: String? = null
-) : AbstractUrl(url, args, referrer)
+) : AbstractUrl(url, args = args, referrer = referrer)
