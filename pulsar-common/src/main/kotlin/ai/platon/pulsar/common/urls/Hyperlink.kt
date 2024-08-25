@@ -74,35 +74,43 @@ open class Hyperlink(
         priority = url.priority, lang = url.lang, country = url.country, district = url.district,
         nMaxRetry = url.nMaxRetry, depth = url.depth
     )
-    constructor(url: Hyperlink) : this(
-        url.url, url.text, url.order, url.referrer, url.args, href = url.href,
-        priority = url.priority, lang = url.lang, country = url.country, district = url.district, nMaxRetry = url.nMaxRetry, depth = url.depth
+    constructor(link: Hyperlink) : this(
+        link.url, link.text, link.order, link.referrer, link.args, href = link.href,
+        priority = link.priority, lang = link.lang, country = link.country, district = link.district, nMaxRetry = link.nMaxRetry, depth = link.depth
     )
-    constructor(url: HyperlinkDatum) : this(
-        url.url, url.text, url.order, url.referrer, url.args, href = url.href,
-        priority = url.priority, lang = url.lang, country = url.country, district = url.district, nMaxRetry = url.nMaxRetry, depth = url.depth
+    constructor(datum: HyperlinkDatum) : this(
+        datum.url, datum.text, datum.order, datum.referrer, datum.args, href = datum.href,
+        priority = datum.priority, lang = datum.lang, country = datum.country, district = datum.district, nMaxRetry = datum.nMaxRetry, depth = datum.depth
     )
     
-    fun data() = HyperlinkDatum(
+    fun data() = toDatum()
+    
+    fun toDatum() = HyperlinkDatum(
         url = url, text = text, order = order, referrer = referrer, args = args, href = href,
         priority = priority, lang = lang, country = country, district = district, nMaxRetry = nMaxRetry, depth = depth
     )
     
+    /**
+     * Serialize the hyperlink to a string in command line style.
+     *
+     * TODO: can handle only simple string values, need to be fixed
+     *
+     * @return the serialized string
+     * */
     override fun serializeTo(sb: StringBuilder): StringBuilder {
         sb.append(url)
         
-        args?.takeIf { it.isNotBlank() }?.replace("\"", "\\\"")
-            ?.let { sb.append(" -args ").append(it) }
-        text.takeUnless { it.isEmpty() }?.let { sb.append(" -text ").append(it) }
-        order.takeUnless { it == 0 }?.let { sb.append(" -order ").append(it) }
-        href?.let { sb.append(" -href ").append(it) }
-        referrer?.let { sb.append(" -referrer ").append(it) }
-        priority.takeIf { it != 0 }?.let { sb.append(" -priority ").append(it) }
-        lang.takeIf { it != "*" }?.let { sb.append(" -lang ").append(it) }
-        country.takeIf { it != "*" }?.let { sb.append(" -country ").append(it) }
-        district.takeIf { it != "*" }?.let { sb.append(" -district ").append(it) }
-        nMaxRetry.takeIf { it != 3 }?.let { sb.append(" -nMaxRetry ").append(it) }
-        depth.takeUnless { it == 0 }?.let { sb.append(" -depth ").append(it) }
+        if (!isDefault("text")) sb.append(" -text $text")
+        if (!isDefault("order")) sb.append(" -order $order")
+        if (!isDefault("referrer")) sb.append(" -referrer $referrer")
+        if (!isDefault("args")) sb.append(" -args $args")
+        if (!isDefault("href")) sb.append(" -href $href")
+        if (!isDefault("priority")) sb.append(" -priority $priority")
+        if (!isDefault("lang")) sb.append(" -lang $lang")
+        if (!isDefault("country")) sb.append(" -country $country")
+        if (!isDefault("district")) sb.append(" -district $district")
+        if (!isDefault("nMaxRetry")) sb.append(" -nMaxRetry $nMaxRetry")
+        if (!isDefault("depth")) sb.append(" -depth $depth")
         
         return sb
     }
@@ -136,6 +144,14 @@ open class Hyperlink(
         
         val EXAMPLE = Hyperlink(AppConstants.EXAMPLE_URL)
         
+        /**
+         * Parse a hyperlink from a string in command line style.
+         *
+         * TODO: can handle only simple string values, need to be fixed
+         *
+         * * @param linkText the string to parse
+         * @return the parsed hyperlink
+         * */
         fun parse(linkText: String): Hyperlink {
             var url = ""
             var text = EXAMPLE.text
@@ -149,7 +165,7 @@ open class Hyperlink(
             var district = EXAMPLE.district
             var nMaxRetry = EXAMPLE.nMaxRetry
             var depth = EXAMPLE.depth
-
+            
             val parts = linkText.split("\\s+".toRegex())
             url = parts[0]
 

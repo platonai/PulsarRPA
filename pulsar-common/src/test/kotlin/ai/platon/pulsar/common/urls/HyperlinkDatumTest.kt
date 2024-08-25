@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.urls
 
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -102,5 +103,15 @@ class HyperlinkDatumTest {
     fun testHyperlinkDatum_ToString() {
         val expectedString = "HyperlinkDatum(url=http://example.com, text=Example Link, order=1, referrer=http://referrer.com, args=arg1=1&arg2=2, href=http://target.com, isPersistable=true, priority=1, lang=en, country=US, district=CA, nMaxRetry=5, depth=2)"
         assertEquals(expectedString, hyperlink.toString())
+    }
+    
+    /**
+     * Test to json and from json
+     * */
+    @Test
+    fun testHyperlinkDatum_Json() {
+        val json = prettyPulsarObjectMapper().writeValueAsString(hyperlink)
+        val fromJson = prettyPulsarObjectMapper().readValue(json, HyperlinkDatum::class.java)
+        assertEquals(hyperlink, fromJson)
     }
 }
