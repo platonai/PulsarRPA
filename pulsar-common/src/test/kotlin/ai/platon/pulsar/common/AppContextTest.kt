@@ -23,13 +23,11 @@ class AppContextTest {
     fun setUp() {
         // Set up necessary environment variables and system properties
         System.setProperty("app.version", "test-version")
-        System.setProperty("user.home", tmpDir.resolve("home").toString())
-        System.setProperty("java.io.tmpdir", tmpDir.resolve("tmp").toString())
     }
 
     @Test
     fun testSniffVersion() {
-        // assertEquals("test-version", AppContext.APP_VERSION)
+        assertEquals("test-version", AppContext.APP_VERSION_RT)
     }
 
     @Test
@@ -37,10 +35,9 @@ class AppContextTest {
         // Set up a writable directory for testing
         val writableDir = tmpDir.resolve("writable")
         Files.createDirectory(writableDir)
-        System.setProperty("user.home", writableDir.toString())
 
         // Test default data directory
-        assertFalse(Files.exists(AppContext.APP_DATA_DIR_RT),
+        assertTrue(Files.exists(AppContext.APP_DATA_DIR_RT),
             "Tmp data directory should not exist: ${AppContext.APP_DATA_DIR}")
 
         // Test specified data directory

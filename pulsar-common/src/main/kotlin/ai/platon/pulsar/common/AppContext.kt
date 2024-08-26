@@ -70,6 +70,11 @@ object AppContext {
             else -> !GraphicsEnvironment.isHeadless()
         }
     }
+    
+    /**
+     * The application version
+     * */
+    val APP_VERSION_RT get() = sniffVersion()
     /**
      * The application version
      * */
