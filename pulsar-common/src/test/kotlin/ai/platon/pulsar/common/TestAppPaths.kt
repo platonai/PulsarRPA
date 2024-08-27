@@ -33,12 +33,14 @@ class TestAppPaths {
     val home = SystemUtils.USER_HOME
     val tmp = SystemUtils.JAVA_IO_TMPDIR
     val appName = AppContext.APP_NAME
+    /**
+     * The application identifier, default is the current username.
+     * */
     val ident = AppContext.APP_IDENT
     val sep = File.separatorChar
     
     @BeforeTest
     fun setup() {
-        System.clearProperty(CapabilityTypes.APP_TMP_DIR_KEY)
         System.clearProperty(CapabilityTypes.APP_TMP_BASE_DIR_KEY)
         System.clearProperty(CapabilityTypes.APP_NAME_KEY)
         System.clearProperty(CapabilityTypes.APP_ID_KEY)
@@ -48,7 +50,6 @@ class TestAppPaths {
     fun tearDown() {
         Files.deleteIfExists(Paths.get("$home/prometheus"))
         
-        System.clearProperty(CapabilityTypes.APP_TMP_DIR_KEY)
         System.clearProperty(CapabilityTypes.APP_TMP_BASE_DIR_KEY)
         System.clearProperty(CapabilityTypes.APP_NAME_KEY)
         System.clearProperty(CapabilityTypes.APP_ID_KEY)
@@ -80,7 +81,7 @@ class TestAppPaths {
     
     @Test
     fun testCustomAppContextDirs() {
-        System.setProperty(CapabilityTypes.APP_TMP_DIR_KEY, "$home${sep}prometheus")
+        System.setProperty(CapabilityTypes.APP_TMP_BASE_DIR_KEY, "$home${sep}prometheus")
         System.setProperty(CapabilityTypes.APP_NAME_KEY, "amazon")
         System.setProperty(CapabilityTypes.APP_ID_KEY, "bs")
         

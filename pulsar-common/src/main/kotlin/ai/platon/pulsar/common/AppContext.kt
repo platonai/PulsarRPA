@@ -91,6 +91,8 @@ object AppContext {
     /**
      * The real time application identity string, can be specified by system environment variable or system property.
      * The real time version is used for test only.
+     *
+     * The default value is the current username.
      * */
     val APP_IDENT_RT get() = System.getenv(APP_ID_KEY) ?: System.getProperty(APP_ID_KEY, USER)
     /**
@@ -103,7 +105,7 @@ object AppContext {
      * The real time version is used for test only.
      * TODO: deprecated, use APP_TMP_BASE_SPECIFIED_RT instead
      * */
-    val APP_TMP_SPECIFIED_RT get() = System.getenv(APP_TMP_DIR_KEY) ?: System.getProperty(APP_TMP_DIR_KEY)
+    val APP_TMP_SPECIFIED_RT get() = System.getenv(APP_TMP_BASE_DIR_KEY) ?: System.getProperty(APP_TMP_BASE_DIR_KEY)
     val APP_TMP_BASE_SPECIFIED_RT get() = System.getenv(APP_TMP_BASE_DIR_KEY) ?: System.getProperty(APP_TMP_BASE_DIR_KEY)
     /**
      * The user specified temp dir used by the application, can be specified by system environment
