@@ -70,7 +70,7 @@ object BrowserFiles {
     @Synchronized
     fun computeNextSequentialContextDir(
         group: String = "default", fingerprint: Fingerprint = Fingerprint.DEFAULT, maxAgents: Int = 10): Path {
-        val lockFile = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve("contex.dir.lock")
+        val lockFile = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve("contex.group.lock")
         if (!Files.exists(lockFile)) {
             Files.createFile(lockFile)
         }
