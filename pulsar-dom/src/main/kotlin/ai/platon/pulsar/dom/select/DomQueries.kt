@@ -290,7 +290,7 @@ fun Node.selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_V
     return select(cssQuery, offset, limit).asSequence()
         .map { it to it.absUrl("href") }
         .filter { UrlUtils.isStandard(it.second) }
-        .map { Hyperlink(it.second, it.first.cleanText, referrer = it.first.baseUri()) }
+        .map { Hyperlink(it.second, it.first.cleanText, href = it.second, referrer = it.first.baseUri()) }
         .toList()
 }
 
