@@ -83,7 +83,8 @@ object BrowserFiles {
     @Synchronized
     fun computeRandomTmpContextDir(group: String = "default"): Path {
         val lockFile = AppPaths.BROWSER_TMP_DIR_LOCK
-        return runWithFileLock(lockFile) { channel -> computeRandomContextDir0(group, channel = channel) }
+        return computeRandomContextDir0(group)
+        // return runWithFileLock(lockFile) { channel -> computeRandomContextDir0(group, channel = channel) }
     }
 
     @Throws(IOException::class)
@@ -199,8 +200,10 @@ object BrowserFiles {
      * A typical context directory is like: /tmp/pulsar-vincent/context/tmp/01/cx.0109aNcTxq5
      * */
     @Throws(IOException::class)
-    private fun computeRandomContextDir0(group: String, channel: FileChannel): Path {
-        require(channel.isOpen) { "The lock file channel is closed" }
+    private fun computeRandomContextDir0(group: String, channel: FileChannel? = null): Path {
+        if (channel != null) {
+            require(channel.isOpen) { "The lock file channel is closed" }
+        }
         
         val prefix = CONTEXT_DIR_PREFIX
         val monthDay = MonthDay.now()
@@ -216,8 +219,10 @@ object BrowserFiles {
         return path
     }
     
-    private fun computeContextCount(baseDir: Path, prefix: String, channel: FileChannel): Long {
-        require(channel.isOpen) { "The lock file channel is closed" }
+    private fun computeContextCount(baseDir: Path, prefix: String, channel: FileChannel? = null): Long {
+        if (channel != null) {
+            require(channel.isOpen) { "The lock file channel is closed" }
+        }
 
         return 1 + Files.list(baseDir)
             .filter { Files.isDirectory(it) }
