@@ -38,7 +38,7 @@ import java.util.Stack;
  */
 public class NodeWalker {
 
-    // the root node the the stack holding the nodes
+    // the root node the stack holding the nodes
     private Node currentNode;
     private NodeList currentChildren;
     private Stack<Node> nodes;

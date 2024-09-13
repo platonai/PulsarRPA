@@ -39,7 +39,7 @@ public abstract class TrieStringMatcher {
 
     /**
      * Returns the next {@link ai.platon.pulsar.common.TrieStringMatcher.TrieNode} visited, given that you are at
-     * <code>node</code>, and the the next character in the input is the
+     * <code>node</code>, and the next character in the input is the
      * <code>idx</code>'th character of <code>s</code>.
      *
      * @param node a {@link ai.platon.pulsar.common.TrieStringMatcher.TrieNode} object.
