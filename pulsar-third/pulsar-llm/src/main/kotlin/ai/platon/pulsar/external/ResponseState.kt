@@ -25,6 +25,11 @@ enum class ResponseState {
     CONTENT_FILTER,
     
     /**
+     * The call finished signalling a need for content filtering.
+     */
+    LOCAL_CACHE,
+    
+    /**
      * The call finished for some other reason.
      */
     OTHER
