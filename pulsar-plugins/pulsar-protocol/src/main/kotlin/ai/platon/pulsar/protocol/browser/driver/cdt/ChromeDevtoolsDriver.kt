@@ -633,6 +633,10 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun stop() {
         navigateEntry.stopped = true
+        if (!isActive) {
+            return
+        }
+
         try {
             handleRedirect()
 
@@ -645,8 +649,6 @@ class ChromeDevtoolsDriver(
             }
         } catch (e: ChromeDriverException) {
             rpc.handleChromeException(e, "terminate")
-        } catch (e: ChromeDriverException) {
-            logger.info("Terminate exception: {}", e.message)
         }
     }
 

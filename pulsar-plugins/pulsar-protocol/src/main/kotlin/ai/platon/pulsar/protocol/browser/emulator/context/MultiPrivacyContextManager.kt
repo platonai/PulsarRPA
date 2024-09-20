@@ -424,7 +424,7 @@ class MultiPrivacyContextManager(
             val promisedDrivers = temporaryContexts.values.joinToString { it.promisedWebDriverCount().toString() }
             val states = temporaryContexts.values.joinToString { it.readableState }
             val idleTimes = temporaryContexts.values.joinToString { it.idelTime.readable() }
-            logger.warn("Too many driver absence errors, promised drivers: {} | {} | {} | {}",
+            logger.warn("Too many driver absence, promised drivers: {} | {} | {} | {}",
                 promisedDrivers, errorMessage, states, idleTimes)
         }
 
