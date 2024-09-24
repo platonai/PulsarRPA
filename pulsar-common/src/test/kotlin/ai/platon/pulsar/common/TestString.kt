@@ -2,9 +2,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
-import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
@@ -193,7 +191,7 @@ class TestString {
             "天王表 正品热卖 \uE004主要职责：  OK"
         )
         for (text in texts) {
-            println(Strings.stripNonCJKChar(text, Strings.DEFAULT_KEEP_CHARS))
+            println(Strings.removeNonCJKChar(text, Strings.DEFAULT_KEEP_CHARS))
         }
     }
 

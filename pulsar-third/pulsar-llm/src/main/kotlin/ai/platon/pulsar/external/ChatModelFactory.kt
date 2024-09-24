@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.impl.ChatModelImpl
 import dev.langchain4j.model.openai.OpenAiChatModel
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel
+import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -74,7 +75,8 @@ object ChatModelFactory {
             .modelName(modelName)
             .logRequests(false)
             .logResponses(true)
-            .maxRetries(1)
+            .maxRetries(2)
+            .timeout(Duration.ofSeconds(60))
             .build()
         return ChatModelImpl(lm)
     }
@@ -84,7 +86,7 @@ object ChatModelFactory {
             .apiKey(apiKey)
             .logRequests(true)
             .logResponses(true)
-            .maxRetries(1)
+            .maxRetries(2)
             .build()
         return ChatModelImpl(lm)
     }
@@ -101,7 +103,8 @@ object ChatModelFactory {
             .modelName(modelName)
             .logRequests(false)
             .logResponses(true)
-            .maxRetries(1)
+            .maxRetries(2)
+            .timeout(Duration.ofSeconds(60))
             .build()
         return ChatModelImpl(lm)
     }

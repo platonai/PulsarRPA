@@ -388,9 +388,6 @@ class MultiPrivacyContextManager(
         }
 
         val errorMessage = when {
-            !privacyContext.hasWebDriverPromise() -> {
-                "PRIVACY CX NO DRIVER"
-            }
             privacyContext.isIdle -> {
                 logger.warn("[Unexpected] Privacy is idle and can not perform tasks, closing it now")
                 close(privacyContext)
@@ -404,19 +401,26 @@ class MultiPrivacyContextManager(
             else -> null
         }
 
-        return if (errorMessage != null) {
+        if (errorMessage != null) {
             metrics.illegalDrivers.mark()
             // rate_unit=events/second
-            if (metrics.illegalDrivers.oneMinuteRate > 2) {
-                handleTooManyDriverAbsence(errorMessage)
+            if (metrics.illegalDrivers.oneMinuteRate > 5) {
+                handleTooManyDriverAbsence(errorMessage, task)
             }
-            FetchResult.canceled(task, errorMessage)
-        } else {
-            runAndUpdate(privacyContext, task, fetchFun)
+            // Use default delay strategy.
+            return FetchResult.crawlRetry(task, errorMessage)
         }
+
+        // No driver available currently, retry later
+        if (!privacyContext.hasWebDriverPromise()) {
+            // The schedule will check the driver again, so it's OK to retry in a short period
+            return FetchResult.crawlRetry(task, delay = Duration.ofSeconds(10), "No driver available")
+        }
+
+        return runAndUpdate(privacyContext, task, fetchFun)
     }
 
-    private suspend fun handleTooManyDriverAbsence(errorMessage: String) {
+    private fun handleTooManyDriverAbsence(errorMessage: String, task: FetchTask) {
         val now = Instant.now()
         if (Duration.between(driverAbsenceReportTime, now).seconds > 10) {
             driverAbsenceReportTime = now
@@ -424,11 +428,9 @@ class MultiPrivacyContextManager(
             val promisedDrivers = temporaryContexts.values.joinToString { it.promisedWebDriverCount().toString() }
             val states = temporaryContexts.values.joinToString { it.readableState }
             val idleTimes = temporaryContexts.values.joinToString { it.idelTime.readable() }
-            logger.warn("Too many driver absence, promised drivers: {} | {} | {} | {}",
-                promisedDrivers, errorMessage, states, idleTimes)
+            logger.warn("Too many driver absence, promised drivers: {} | {} | {} | {} | {}",
+                promisedDrivers, errorMessage, states, idleTimes, task.url)
         }
-
-        delay(2_000)
     }
 
     @Throws(ProxyException::class, Exception::class)

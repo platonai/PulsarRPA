@@ -369,19 +369,19 @@ public final class Strings {
     return Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS;
   }
 
-  // 对整个字符串：
-  // 1. 仅保留英文字符、数字、汉字字符和keeps中的字符
-  // 2. 去除网页空白：&nbsp;
-  //
-  // String attrName = "配 送 至：京 东 价：当&nbsp;当&nbsp;价";
-  // attrName = StringUtils.strip(attrName).replaceAll("[\\s+:：(&nbsp;)]", "");
-  // the "blank" characters in the above phrase can not be stripped
-
-  public static String stripNonCJKChar(String text) {
-    return stripNonCJKChar(text, null);
+  /**
+   * 对整个字符串：
+   * 1. 仅保留英文字符、数字、汉字字符和 keeps 中的字符
+   * 2. 去除网页空白：&nbsp;
+   * String attrName = "配 送 至：京 东 价：当&nbsp;当&nbsp;价";
+   * attrName = StringUtils.strip(attrName).replaceAll("[\\s+:：(&nbsp;)]", "");
+   * the "blank" characters in the above phrase can not be removed
+   */
+  public static String removeNonCJKChar(String text) {
+    return removeNonCJKChar(text, null);
   }
 
-  public static String stripNonCJKChar(String text, String keeps) {
+  public static String removeNonCJKChar(String text, String keeps) {
     StringBuilder builder = new StringBuilder();
 
     if (keeps == null) {
@@ -392,7 +392,7 @@ public final class Strings {
       char ch = text.charAt(i);
       if (Character.isLetterOrDigit(ch) || isCJK(ch)) {
         builder.append(ch);
-      } else if (!keeps.equals("") && keeps.indexOf(ch) != -1) {
+      } else if (!keeps.isEmpty() && keeps.indexOf(ch) != -1) {
         builder.append(ch);
       }
     }
@@ -404,10 +404,12 @@ public final class Strings {
     return trimNonCJKChar(text, null);
   }
 
-  // 对字符串的头部和尾部：
-  // 1. 仅保留英文字符、数字、汉字字符和keeps中的字符
-  // 2. 去除网页空白：&nbsp;
 
+  /**
+   * 对字符串的头部和尾部：
+   * 1. 仅保留英文字符、数字、汉字字符和keeps中的字符
+   * 2. 去除网页空白：&nbsp;
+   */
   public static String trimNonCJKChar(String text, String keeps) {
     int start = 0;
     int end = text.length();
@@ -433,22 +435,28 @@ public final class Strings {
     return text.substring(start, end);
   }
 
-  public static String stripNonPrintableChar(String text) {
-    if (text == null) {
+  /**
+   * Strip non-printable characters from a string.
+   *
+   * @param s the string to strip.
+   * @return a new string with non-printable characters removed.
+   */
+  public static String removeNonPrintableChar(String s) {
+    if (s == null) {
       return null;
     }
 
     StringBuilder builder = new StringBuilder();
 
-    int len = text.length();
+    int len = s.length();
     for (int i = 0; i < len; ++i) {
-      char ch = text.charAt(i);
+      char ch = s.charAt(i);
       if (isActuallyWhitespace(ch)) {
         if (i > 0 && i < len - 1) {
           builder.append(' ');
         }
         int j = i + 1;
-        while (j < len && isActuallyWhitespace(text.charAt(j))) {
+        while (j < len && isActuallyWhitespace(s.charAt(j))) {
           ++j;
         }
         i = j - 1;
@@ -460,15 +468,33 @@ public final class Strings {
     return builder.toString();
   }
 
+  /**
+   * @deprecated use {@link #removeNonPrintableChar(String)} instead.
+   */
+  public static String stripNonPrintableChar1(String s) {
+    return removeNonPrintableChar(s);
+  }
+
   public static boolean isPrintableUnicodeChar(char ch) {
     Character.UnicodeBlock block = Character.UnicodeBlock.of(ch);
     return (!Character.isISOControl(ch)) && ch != KeyEvent.CHAR_UNDEFINED
             && block != null && block != Character.UnicodeBlock.SPECIALS;
   }
 
-  public static String cleanField(String value) {
-    value = value.replaceAll("�", "");
-    return value;
+  public static String removeControlChars(String input) {
+    return clearControlChars(input, "");
+  }
+
+  public static String clearControlChars(String input) {
+    return clearControlChars(input, " ");
+  }
+
+  public static String clearControlChars(String input, String replacement) {
+    if (input == null) {
+      return null;
+    }
+
+    return input.replaceAll("\\p{Cntrl}", replacement);
   }
 
   public static String getLongestPart(final String text, final Pattern pattern) {
@@ -485,7 +511,7 @@ public final class Strings {
       }
     }
 
-    if (longestPart.length() == 0) {
+    if (longestPart.isEmpty()) {
       return "";
     } else {
       return longestPart.trim();
@@ -498,7 +524,7 @@ public final class Strings {
 
   /**
    * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
-   * */
+   */
   public static String csslize(String text) {
     text = StringUtils.uncapitalize(text).trim();
     text = StringUtils.join(text.split("(?=\\p{Upper})"), "-").toLowerCase();
@@ -510,7 +536,7 @@ public final class Strings {
 
   /**
    * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
-   * */
+   */
   public static String humanize(String text) {
     text = StringUtils.join(text.split("(?=\\p{Upper})"), " ");
     text = text.replaceAll("[-_]", " ").toLowerCase().trim();
@@ -520,7 +546,7 @@ public final class Strings {
 
   /**
    * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
-   * */
+   */
   public static String humanize(String text, String seperator) {
     text = StringUtils.join(text.split("(?=\\p{Upper})"), seperator);
     text = text.replaceAll("[-_]", seperator).toLowerCase().trim();
@@ -530,7 +556,7 @@ public final class Strings {
 
   /**
    * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
-   * */
+   */
   public static String humanize(String text, String suffix, String seperator) {
     text = StringUtils.join(text.split("(?=\\p{Upper})"), seperator);
     text = text.replaceAll("[-_]", seperator).toLowerCase().trim();
@@ -540,7 +566,7 @@ public final class Strings {
 
   /**
    * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
-   * */
+   */
   public static String humanize(Class clazz, String suffix, String seperator) {
     String text = StringUtils.join(clazz.getSimpleName().split("(?=\\p{Upper})"), seperator);
     text = text.replaceAll("[-_]", seperator).toLowerCase().trim();
@@ -564,14 +590,35 @@ public final class Strings {
     return NumberUtils.toInt(s.substring(numberStart), defaultValue);
   }
 
+
   public static int getFirstInteger(String s, int defaultValue) {
+    var number = getFirstInteger(s);
+    return number == null ? defaultValue : number;
+  }
+
+  /**
+   * @deprecated use {@link #findFirstInteger(String)} instead
+   * */
+  public static Integer getFirstInteger(String s) {
+    return findFirstInteger(s);
+  }
+
+  /**
+   * Find the first integer in the string.
+   *
+   * @return the first integer in the string, or null if not found
+   * */
+  public static Integer findFirstInteger(String s) {
+    if (s == null) {
+      return null;
+    }
+
     int numberStart = StringUtils.indexOfAny(s, "123456789");
     if (numberStart == StringUtils.INDEX_NOT_FOUND) {
-      return defaultValue;
+      return null;
     }
 
     StringBuilder sb = new StringBuilder(s.length() - numberStart);
-    int j = 0;
     for (int i = numberStart; i < s.length(); ++i) {
       char c = s.charAt(i);
       if (Character.isDigit(c)) {
@@ -584,10 +631,30 @@ public final class Strings {
       }
     }
 
-    return NumberUtils.toInt(sb.toString(), defaultValue);
+    return Integer.parseInt(sb.toString());
   }
 
+  public static int findFirstInteger(String s, int defaultValue) {
+    return getFirstInteger(s, defaultValue);
+  }
+
+  /**
+   * @deprecated use {@link #findLastInteger(String)} instead
+   * */
   public static int getLastInteger(String s, int defaultValue) {
+    return findLastInteger(s, defaultValue);
+  }
+
+  /**
+   * Find the last integer in the string.
+   *
+   * @return the last integer in the string, or null if not found
+   * */
+  public static Integer findLastInteger(String s) {
+    if (s == null) {
+      return null;
+    }
+
     s = s.replaceAll("[,_]", "");
     s = StringUtils.reverse(s);
     Pattern pattern = Pattern.compile("[0-9]+");
@@ -597,7 +664,11 @@ public final class Strings {
       return NumberUtils.toInt(StringUtils.reverse(m.group()));
     }
 
-    return defaultValue;
+    return null;
+  }
+
+  public static int findLastInteger(String s, int defaultValue) {
+    return getLastInteger(s, defaultValue);
   }
 
   public static float getFirstFloatNumber(String s, float defaultValue) {
@@ -612,7 +683,7 @@ public final class Strings {
     return defaultValue;
   }
 
-  public static float getLastFloatNumber(String s, float defaultValue) {
+  public static float findLastFloatNumber(String s, float defaultValue) {
     s = s.replaceAll("[,_]", "");
     Pattern pattern = Pattern.compile("[+-]?[0-9]*\\.?,?[0-9]+");
 

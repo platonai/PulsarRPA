@@ -144,6 +144,14 @@ open class Hyperlink(
         
         val EXAMPLE = Hyperlink(AppConstants.EXAMPLE_URL)
         
+        fun create(url: String?): Hyperlink? {
+            return when {
+                url == null -> null
+                !UrlUtils.isStandard(url) -> null
+                else -> Hyperlink(url)
+            }
+        }
+        
         /**
          * Parse a hyperlink from a string in command line style.
          *

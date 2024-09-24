@@ -431,7 +431,7 @@ open class WebDriverPoolManager(
     @Throws(WebDriverException::class, WebDriverPoolException::class, InterruptedException::class)
     private suspend fun doRun(task: WebDriverTask): FetchResult? {
         maintain()
-        
+
         val result = runWithDriverPool(task)
         return result
     }

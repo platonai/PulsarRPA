@@ -159,3 +159,59 @@ data class OffsetD(
     var x: Double,
     var y: Double,
 )
+
+object GeometricUtils {
+    
+    fun findMaxRectangle(rectangles: List<Rectangle>): Rectangle? {
+        // 提取所有 x 和 y 坐标边界
+        val xCoords = mutableSetOf<Int>()
+        val yCoords = mutableSetOf<Int>()
+        
+        // 遍历矩形，收集 x 和 y 的边界
+        for (rect in rectangles) {
+            xCoords.add(rect.x)
+            xCoords.add(rect.x2)
+            yCoords.add(rect.y)
+            yCoords.add(rect.y2)
+        }
+        
+        // 排序 x 和 y 的边界
+        val xSorted = xCoords.sorted()
+        val ySorted = yCoords.sorted()
+        
+        var maxArea = 0
+        var maxRect: Rectangle? = null
+        
+        // 检查每个由 (x1, x2) 和 (y1, y2) 构成的网格区域
+        for (i in 0 until xSorted.size - 1) {
+            for (j in 0 until ySorted.size - 1) {
+                val x1 = xSorted[i]
+                val x2 = xSorted[i + 1]
+                val y1 = ySorted[j]
+                val y2 = ySorted[j + 1]
+                
+                // 如果该区域没有与任何矩形相交，计算其面积
+                if (isEmpty(x1, x2, y1, y2, rectangles)) {
+                    val area = (x2 - x1) * (y2 - y1)
+                    if (area > maxArea) {
+                        maxArea = area
+                        maxRect = Rectangle(x1, x2, y1, y2)
+                    }
+                }
+            }
+        }
+        
+        return maxRect
+    }
+    
+    // 检查区域 (x1, x2, y1, y2) 是否与任何矩形相交
+    fun isEmpty(x1: Int, x2: Int, y1: Int, y2: Int, rectangles: List<Rectangle>): Boolean {
+        for (rect in rectangles) {
+            // 如果有相交的矩形，返回 false
+            if (!(x2 <= rect.x || x1 >= rect.x2 || y2 <= rect.y || y1 >= rect.y2)) {
+                return false
+            }
+        }
+        return true
+    }
+}

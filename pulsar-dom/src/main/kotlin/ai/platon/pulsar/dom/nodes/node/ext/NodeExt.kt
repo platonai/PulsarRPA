@@ -1050,7 +1050,7 @@ fun Node.clearMlLabels() {
 }
 
 fun Node.addCaptionWord(word: String) {
-    addTupleItem(A_CAPTION, Strings.stripNonCJKChar(word))
+    addTupleItem(A_CAPTION, Strings.removeNonCJKChar(word))
 }
 
 fun Node.removeCaptionWord(word: String): Boolean {
@@ -1127,6 +1127,17 @@ fun Node.formatNamedFeatures(): String {
     return sb.toString()
 }
 
+fun Node.ancestors(): List<Element> {
+    val ancestors = mutableListOf<Element>()
+    var p = this.parent()
+    while (p is Element) {
+        ancestors.add(p)
+        p = p.parent()
+    }
+    
+    return ancestors
+}
+
 fun Node.hasAncestor(predicate: (Element) -> Boolean): Boolean {
     return findFirstAncestor(predicate) != null
 }
@@ -1141,17 +1152,6 @@ fun Node.isAncestorOf(other: Node): Boolean {
 
 fun Node.isAncestorOf(other: Node, stop: (Node) -> Boolean): Boolean {
     return other.findFirstAncestor(stop) { it == this } != null
-}
-
-fun Node.ancestors(): List<Element> {
-    val ancestors = mutableListOf<Element>()
-    var p = this.parent()
-    while (p is Element) {
-        ancestors.add(p)
-        p = p.parent()
-    }
-
-    return ancestors
 }
 
 private fun accumulateText(root: Element, seperator: String = " "): String {

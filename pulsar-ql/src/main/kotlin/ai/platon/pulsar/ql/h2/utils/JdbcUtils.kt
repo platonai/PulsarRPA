@@ -38,7 +38,7 @@ object JdbcUtils {
                             Types.BOOLEAN -> stmt.setBoolean(k, sourceRs.getBoolean(k))
                             Types.FLOAT -> stmt.setFloat(k, sourceRs.getFloat(k))
                             Types.INTEGER -> stmt.setInt(k, sourceRs.getInt(k))
-                            else -> stmt.setString(k, Strings.stripNonPrintableChar(sourceRs.getString(k)))
+                            else -> stmt.setString(k, Strings.removeNonPrintableChar(sourceRs.getString(k)))
                         }
                     }
                 } catch (e: SQLException) {
@@ -91,7 +91,7 @@ object JdbcUtils {
                                 Types.BOOLEAN -> stmt.setBoolean(k, rs.getBoolean(k))
                                 Types.FLOAT -> stmt.setFloat(k, rs.getFloat(k))
                                 Types.INTEGER -> stmt.setInt(k, rs.getInt(k))
-                                else -> stmt.setString(k, Strings.stripNonPrintableChar(rs.getString(k)))
+                                else -> stmt.setString(k, Strings.removeNonPrintableChar(rs.getString(k)))
                             }
                         }
 

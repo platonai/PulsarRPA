@@ -76,6 +76,8 @@ object AppPaths {
     @RequiredDirectory
     val FILE_CACHE_DIR = CACHE_DIR.resolve("files")
     @RequiredDirectory
+    val PROMPT_CACHE_DIR = CACHE_DIR.resolve("prompts")
+    @RequiredDirectory
     val TMP_CONF_DIR = PROC_TMP_DIR.resolve("conf")
     @RequiredDirectory
     val REPORT_DIR = PROC_TMP_DIR.resolve( "report")

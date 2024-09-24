@@ -369,7 +369,7 @@ abstract class BrowserEmulatorImplBase(
         logger.takeIf { verbose }?.info("Evaluate expression >>>$expression<<<")
         val value = evaluate(interactTask, expression)
         if (value is String) {
-            val s = Strings.stripNonPrintableChar(value)
+            val s = Strings.removeNonPrintableChar(value)
             logger.takeIf { verbose }?.info("Result >>>$s<<<")
         } else if (value is Int || value is Long) {
             logger.takeIf { verbose }?.info("Result >>>$value<<<")
