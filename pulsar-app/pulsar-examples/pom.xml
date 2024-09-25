@@ -14,7 +14,7 @@
   <parent>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-app</artifactId>
-    <version>2.0.2-SNAPSHOT</version>
+    <version>2.0.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>pulsar-examples</artifactId>
