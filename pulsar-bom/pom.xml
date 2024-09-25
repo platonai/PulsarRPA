@@ -23,6 +23,51 @@
     <description>Bill of Materials POM for getting full, complete set of compatible versions of PulsarRPA modules
     </description>
 
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Vincent Zhang</name>
+            <email>ivincent.zhang@gmail.com</email>
+            <organization>platon.ai</organization>
+            <timezone>+8</timezone>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
+        <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
+        <url>https://github.com/platonai/pulsar</url>
+        <tag>v2.0.2</tag>
+    </scm>
+
+    <repositories>
+        <repository>
+            <id>Central</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+    <build>
+        <defaultGoal>package</defaultGoal>
+    </build>
+
     <dependencyManagement>
         <dependencies>
             <!-- Internal Dependencies -->
