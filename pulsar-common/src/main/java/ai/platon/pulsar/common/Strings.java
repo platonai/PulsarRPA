@@ -272,13 +272,11 @@ public final class Strings {
   }
 
   // 只能判断部分CJK字符（CJK统一汉字）
-
   public static boolean isChineseCharByREG(char ch) {
     return ch >= '\u4E00' && ch <= '\u9FBF';
   }
 
   // 只能判断部分CJK字符（CJK统一汉字）
-
   public static boolean isChineseByName(String str) {
     if (str == null) {
       return false;
@@ -299,12 +297,25 @@ public final class Strings {
   // attrName = StringUtils.strip(attrName).replaceAll("[\\s+:：(&nbsp;)]",
   // "");
   // the "blank" characters in the above phrase can not be stripped
-
-  public static String stripNonChar(String text) {
-    return stripNonChar(text, null);
+  public static String removeNonChar(String text) {
+    return removeNonChar(text, null);
   }
 
+  /**
+   * @deprecated Use {@link #removeNonChar(String)} instead
+   * */
+  public static String stripNonChar(String text) {
+    return removeNonChar(text);
+  }
+
+  /**
+   * @deprecated Use {@link #removeNonChar(String, String)} instead
+   * */
   public static String stripNonChar(String text, String keeps) {
+    return removeNonChar(text, keeps);
+  }
+
+  public static String removeNonChar(String text, String keeps) {
     StringBuilder builder = new StringBuilder();
 
     if (keeps == null) {
@@ -327,16 +338,10 @@ public final class Strings {
     return trimNonChar(text, null);
   }
 
-  // 对字符串的头部和尾部：
-  // 1. 仅保留英文字符、数字、汉字字符和keeps中的字符
-  // 2. 去除网页空白：&nbsp;
-
   /**
-   * <p>trimNonChar.</p>
-   *
-   * @param text  a {@link java.lang.String} object.
-   * @param keeps a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
+   // 对字符串的头部和尾部：
+   // 1. 仅保留英文字符、数字、汉字字符和keeps中的字符
+   // 2. 去除网页空白：&nbsp;
    */
   public static String trimNonChar(String text, String keeps) {
     int start = 0;
