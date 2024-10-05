@@ -71,7 +71,7 @@ class JsoupParser(
 
         val head = document.head()
         hrefs.forEach { (rel, href) ->
-            head.appendElement("<link rel='$rel' href='$href' />")
+            head.append("<link rel='$rel' href='$href' />")
             metadata.attr(rel, href)
         }
 
