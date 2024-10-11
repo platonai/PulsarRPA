@@ -267,7 +267,7 @@ object AppPaths {
      * Create a filename compatible string from the given uri.
      * */
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
-        val u = UrlUtils.getURLOrNull(uri) ?: return "$prefix${UUID.randomUUID()}$suffix"
+        val u = UrlUtils.getURLOrNull(uri) ?: return "${prefix}unknown$suffix"
         
         val dirForDomain = fromDomain(u)
         val fileId = fileId(uri)
