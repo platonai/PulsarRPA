@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator.impl
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -541,6 +542,7 @@ open class InteractiveBrowserEmulator(
         }
         
         if (result.state.isContinue) {
+            updateMetaInfos(page, driver)
             // TODO: check if state.isContinue is necessary
             emit1(EmulateEvents.documentSteady, page, driver)
         }
@@ -675,6 +677,23 @@ open class InteractiveBrowserEmulator(
         val bringToFront = interactTask.interactSettings.bringToFront
         val scrollInterval = interactSettings.scrollInterval.toMillis()
         evaluate(interactTask, expressions, scrollInterval, bringToFront = bringToFront)
+    }
+    
+    private suspend fun updateMetaInfos(page: WebPage, driver: WebDriver) {
+        // the node is created by injected javascript
+        val urls = mutableMapOf(AppConstants.PULSAR_DOCUMENT_NORMALIZED_URI to page.url)
+        urls.forEach { (rel, href) ->
+            val js = """
+                const link = document.createElement('link');
+                link.rel = '$rel';
+                link.href = '$href';
+                document.head.appendChild(link);
+            """.trimIndent().replace("\n", ";")
+            val result = driver.evaluateDetail(js)
+            if (result?.exception != null) {
+                logger.warn("Failed to update meta info | $rel: $href | ${result.exception}")
+            }
+        }
     }
 
     /**
