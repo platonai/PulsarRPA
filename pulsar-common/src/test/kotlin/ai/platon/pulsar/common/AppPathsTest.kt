@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.AppPaths.fromDomain
+import ai.platon.pulsar.common.AppPaths.fromHost
 import ai.platon.pulsar.common.AppPaths.fromUri
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -9,33 +9,33 @@ import java.net.URL
 class AppPathsTest {
     
     @Test
-    fun `test fromDomain with URL`() {
+    fun `test fromHost with URL`() {
         // 正常情况
-        assertEquals("baidu-com", fromDomain(URL("http://www.baidu.com")))
-        assertEquals("taobao-com", fromDomain(URL("https://www.taobao.com")))
+        assertEquals("baidu-com", fromHost(URL("http://www.baidu.com")))
+        assertEquals("taobao-com", fromHost(URL("https://www.taobao.com")))
         
         // IP 地址
-        assertEquals("127-0-0-1", fromDomain(URL("http://127.0.0.1")))
+        assertEquals("127-0-0-1", fromHost(URL("http://127.0.0.1")))
         
         // IP 地址带端口
-        assertEquals("192-168-1-1", fromDomain(URL("http://192.168.1.1:8080")))
+        assertEquals("192-168-1-1", fromHost(URL("http://192.168.1.1:8080")))
         
         // 本地主机
-        assertEquals("localhost", fromDomain(URL("http://localhost")))
+        assertEquals("localhost", fromHost(URL("http://localhost")))
         
         // 无效 URL
-        assertEquals("unknown", fromDomain(URL("http://invalid.url")))
+        assertEquals("unknown", fromHost(URL("http://invalid.url")))
     }
     
     @Test
-    fun `test fromDomain with String`() {
+    fun `test fromHost with String`() {
         // 正常情况
-        assertEquals("baidu-com", fromDomain("http://www.baidu.com"))
-        assertEquals("taobao-com", fromDomain("https://www.taobao.com"))
-        assertEquals("ebay-com", fromDomain("https://www.ebay.com"))
+        assertEquals("baidu-com", fromHost("http://www.baidu.com"))
+        assertEquals("taobao-com", fromHost("https://www.taobao.com"))
+        assertEquals("ebay-com", fromHost("https://www.ebay.com"))
         
         // 无效 URL
-        assertEquals("unknown", fromDomain("invalid-url"))
+        assertEquals("unknown", fromHost("invalid-url"))
     }
     
     @Test
