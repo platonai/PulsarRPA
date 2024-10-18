@@ -15,6 +15,7 @@ import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import java.io.*
 import java.nio.channels.FileChannel
+import java.nio.charset.Charset
 import java.nio.file.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
@@ -211,7 +212,8 @@ class ChromeLauncher(
         val readLineThread = Thread {
             BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
                 // Wait for DevTools listening line and extract port number.
-                var line: String? = reader.readLine()
+//                var line: String? = reader.readLine()
+                var line: String? = String(reader.readLine().toByteArray(Charset.defaultCharset()))
                 while (line != null) {
                     if (line.isNotBlank()) {
                         logger.info("[output] - $line")
