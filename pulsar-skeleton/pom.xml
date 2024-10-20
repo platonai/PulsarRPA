@@ -51,6 +51,11 @@
             <artifactId>pulsar-llm</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-open-ai</artifactId>
+        </dependency>
+
         <!-- Requires org.springframework.context.support.AbstractApplicationContext -->
         <dependency>
             <groupId>org.springframework</groupId>
