@@ -31,9 +31,14 @@ class ScrapeService(
      * for test purpose only, no customer should access this api
      * */
     fun executeQuery(request: ScrapeRequest): ScrapeResponse {
-        val hyperlink = createScrapeHyperlink(request)
-        urlPool.higher3Cache.reentrantQueue.add(hyperlink)
-        return hyperlink.get(2, TimeUnit.MINUTES)
+        try {
+            val hyperlink = createScrapeHyperlink(request)
+            urlPool.higher3Cache.reentrantQueue.add(hyperlink)
+            return hyperlink.get(2, TimeUnit.MINUTES)
+        } catch (e: Throwable) {
+            logger.error("Error executing query: >>>${request.sql}<<<", e)
+            return ScrapeResponse("", ResourceStatus.SC_INTERNAL_SERVER_ERROR, ProtocolStatusCodes.EXCEPTION)
+        }
     }
 
     /**
@@ -59,9 +64,9 @@ class ScrapeService(
         val sql = request.sql
         return if (ScrapeAPIUtils.isScrapeUDF(sql)) {
             val xSQL = ScrapeAPIUtils.normalize(sql)
-            XSQLScrapeHyperlink(request, xSQL, session, globalCacheFactory)
+            XSQLScrapeHyperlink(request, xSQL, session)
         } else {
-            DegenerateXSQLScrapeHyperlink(request, session, globalCacheFactory)
+            DegenerateXSQLScrapeHyperlink(request, session)
         }
     }
 }

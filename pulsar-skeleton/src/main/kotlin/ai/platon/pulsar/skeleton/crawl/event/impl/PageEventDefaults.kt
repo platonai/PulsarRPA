@@ -3,7 +3,10 @@ package ai.platon.pulsar.skeleton.crawl.event.impl
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.crawl.*
+import ai.platon.pulsar.skeleton.crawl.BrowseEventHandlers
+import ai.platon.pulsar.skeleton.crawl.CrawlEventHandlers
+import ai.platon.pulsar.skeleton.crawl.LoadEventHandlers
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.rpa.BrowseRPA
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.rpa.DefaultBrowseRPA
@@ -82,6 +85,18 @@ typealias DefaultPageEvent = DefaultPageEventHandlers
  */
 class PageEventHandlersFactory(val conf: ImmutableConfig = ImmutableConfig()) {
     private val logger = LoggerFactory.getLogger(PageEventHandlersFactory::class.java)
+
+    companion object {
+        fun create() = PageEventHandlersFactory().create()
+
+        fun create(className: String) = PageEventHandlersFactory().create(className)
+
+        fun create(
+            loadEventHandlers: LoadEventHandlers = DefaultLoadEventHandlers(),
+            browseEventHandlers: BrowseEventHandlers = DefaultBrowseEventHandlers(),
+            crawlEventHandlers: CrawlEventHandlers = DefaultCrawlEventHandlers()
+        ) = PageEventHandlersFactory().create(loadEventHandlers, browseEventHandlers, crawlEventHandlers)
+    }
 
     /**
      * Create a page event handler.

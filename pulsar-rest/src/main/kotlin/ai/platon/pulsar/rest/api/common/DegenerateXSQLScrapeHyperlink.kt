@@ -16,9 +16,8 @@ import java.util.*
 open class DegenerateXSQLScrapeHyperlink(
     request: ScrapeRequest,
     session: PulsarSession,
-    globalCacheFactory: GlobalCacheFactory,
     uuid: String = UUID.randomUUID().toString(),
-) : XSQLScrapeHyperlink(request, DegenerateXSQL(uuid, sql = request.sql), session, globalCacheFactory, uuid), DegenerateUrl {
+) : XSQLScrapeHyperlink(request, DegenerateXSQL(uuid, sql = request.sql), session, uuid), DegenerateUrl {
     private val logger = LoggerFactory.getLogger(DegenerateXSQLScrapeHyperlink::class.java)
     override var args: String? = "-taskId $uuid ${sql.args}"
 
@@ -40,8 +39,8 @@ open class DegenerateXSQLScrapeHyperlink(
             logger.warn("Unexpected exception", t)
             throw t
         } finally {
-            super.complete(page)
             response.isDone = true
+            super.complete(page)
         }
     }
 

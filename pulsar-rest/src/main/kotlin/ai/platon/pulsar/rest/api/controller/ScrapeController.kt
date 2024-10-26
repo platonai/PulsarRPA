@@ -24,7 +24,7 @@ class ScrapeController(
      * @param sql The sql to execute
      * @return The response
      * */
-    @PostMapping("e")
+    @PostMapping("/e")
     fun execute(@RequestBody sql: String): ScrapeResponse {
         return scrapeService.executeQuery(ScrapeRequest(sql))
     }

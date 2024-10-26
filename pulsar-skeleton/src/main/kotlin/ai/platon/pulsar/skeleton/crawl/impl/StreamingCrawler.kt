@@ -678,7 +678,6 @@ open class StreamingCrawler(
 //        if (url.deadline <= Instant.now()) {
 //            return null
 //        }
-
         return kotlin.runCatching { session.loadDeferred(url, options) }
             .onSuccess { flowState.set(handleLoadSuccess(url, it)) }
             .onFailure { flowState.set(handleLoadException(url, it)) }

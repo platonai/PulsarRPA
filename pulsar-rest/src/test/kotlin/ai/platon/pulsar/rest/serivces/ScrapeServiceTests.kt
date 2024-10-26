@@ -1,24 +1,20 @@
-package ai.platon.pulsar.rest
+package ai.platon.pulsar.rest.serivces
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
 import ai.platon.pulsar.rest.api.service.ScrapeService
-import ai.platon.pulsar.skeleton.crawl.CrawlLoop
-import ai.platon.pulsar.skeleton.session.PulsarSession
-import org.apache.commons.lang3.RandomStringUtils
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
+import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-
 
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
@@ -36,6 +32,7 @@ class ScrapeServiceTests {
 
         val response = service.executeQuery(request)
         val records = response.resultSet
+        println(records)
         assertNotNull(records)
 
         assertTrue { records.isNotEmpty() }
@@ -44,8 +41,10 @@ class ScrapeServiceTests {
 
     @Test
     fun `When scraping with load_and_select then the result returns synchronously`() {
+        val startTime = Instant.now()
+        
         val url = "https://www.amazon.com/"
-        val sql = "select dom_base_uri(dom) as uri from load_and_select('$url -i 10s', ':root')"
+        val sql = "select dom_base_uri(dom) as uri from load_and_select('$url -i 10d', ':root')"
         val request = ScrapeRequest(sql)
 
         val response = service.executeQuery(request)
@@ -55,6 +54,8 @@ class ScrapeServiceTests {
         assertTrue { records.isNotEmpty() }
         val actualUrl = records[0]["uri"].toString()
         assertTrue { actualUrl == url }
+        
+        println("Done scraping with load_and_select, used " + DateTimes.elapsedTime(startTime))
     }
 
     @Test
