@@ -1,12 +1,13 @@
 package ai.platon.pulsar.rest.api.common
 
-import ai.platon.pulsar.common.ResourceStatus
-import ai.platon.pulsar.skeleton.session.PulsarSession
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.DegenerateUrl
-import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
+import ai.platon.pulsar.common.warnUnexpected
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
+import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEventHandlers
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -17,9 +18,10 @@ open class DegenerateXSQLScrapeHyperlink(
     request: ScrapeRequest,
     session: PulsarSession,
     uuid: String = UUID.randomUUID().toString(),
-) : XSQLScrapeHyperlink(request, DegenerateXSQL(uuid, sql = request.sql), session, uuid), DegenerateUrl {
+) : AbstractScrapeHyperlink(request, DegenerateXSQL(uuid, sql = request.sql), session, uuid), DegenerateUrl {
     private val logger = LoggerFactory.getLogger(DegenerateXSQLScrapeHyperlink::class.java)
     override var args: String? = "-taskId $uuid ${sql.args}"
+    override var event: PageEventHandlers = DefaultPageEventHandlers()
 
     init {
         registerEventHandler()
@@ -27,14 +29,9 @@ open class DegenerateXSQLScrapeHyperlink(
 
     override fun complete(page: WebPage) {
         try {
-            // TODO: properly retrieve the following value
-            if (page.isNil) {
-                response.pageContentBytes = 0
-                response.pageStatusCode = ResourceStatus.SC_EXPECTATION_FAILED
-            } else {
-                response.pageContentBytes = 1
-                response.pageStatusCode = 200
-            }
+            require(page.isNil)
+            response.pageContentBytes = 1
+            response.pageStatusCode = 200
         } catch (t: Throwable) {
             logger.warn("Unexpected exception", t)
             throw t
@@ -47,13 +44,14 @@ open class DegenerateXSQLScrapeHyperlink(
     private fun registerEventHandler() {
         event.crawlEventHandlers.onLoaded.addLast { url, page ->
             try {
-                executeQuery()
+                val rs = executeQuery()
+                response.resultSet = ResultSetUtils.getEntitiesFromResultSet(rs)
             } catch (t: Throwable) {
                 // Log the exception and throw it
-                getLogger(this).warn("Unexpected exception", t)
+                warnUnexpected(this, t, "Failed to execute query")
                 throw t
             } finally {
-                complete(page ?: WebPage.NIL)
+                this.complete(page ?: WebPage.NIL)
             }
         }
     }
