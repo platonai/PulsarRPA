@@ -21,11 +21,7 @@ open class DegenerateXSQLScrapeHyperlink(
 ) : AbstractScrapeHyperlink(request, DegenerateXSQL(uuid, sql = request.sql), session, uuid), DegenerateUrl {
     private val logger = LoggerFactory.getLogger(DegenerateXSQLScrapeHyperlink::class.java)
     override var args: String? = "-taskId $uuid ${sql.args}"
-    override var event: PageEventHandlers = DefaultPageEventHandlers()
-
-    init {
-        registerEventHandler()
-    }
+    override var event: PageEventHandlers = createPageEventHandlers()
 
     override fun complete(page: WebPage) {
         try {
@@ -41,18 +37,24 @@ open class DegenerateXSQLScrapeHyperlink(
         }
     }
 
-    private fun registerEventHandler() {
-        event.crawlEventHandlers.onLoaded.addLast { url, page ->
-            try {
-                val rs = executeQuery()
-                response.resultSet = ResultSetUtils.getEntitiesFromResultSet(rs)
-            } catch (t: Throwable) {
-                // Log the exception and throw it
-                warnUnexpected(this, t, "Failed to execute query")
-                throw t
-            } finally {
-                this.complete(page ?: WebPage.NIL)
+    private fun createPageEventHandlers(): PageEventHandlers {
+        return DefaultPageEventHandlers().also {
+            it.crawlEventHandlers.onLoaded.addLast { url, page ->
+                executeQueryAndComplete(page)
             }
+        }
+    }
+
+    private fun executeQueryAndComplete(page: WebPage?) {
+        try {
+            val rs = executeQuery()
+            response.resultSet = ResultSetUtils.getEntitiesFromResultSet(rs)
+        } catch (t: Throwable) {
+            // Log the exception and throw it
+            warnUnexpected(this, t, "Failed to execute query")
+            throw t
+        } finally {
+            this.complete(page ?: WebPage.NIL)
         }
     }
 }
