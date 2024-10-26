@@ -8,16 +8,16 @@ class SelectFunctionTests: TestBase() {
 
     @Test
     fun testAllHrefs() {
-        val page = session.load(productUrl)
+        val page = session.load(productDetailUrl)
         if (!page.protocolStatus.isSuccess) {
-            logger.warn("Failed to load page | {}", productUrl)
+            logger.warn("Failed to load page | {}", productDetailUrl)
             return
         }
 
         val sql = """
 select
     dom_all_hrefs(dom, '#averageCustomerReviews a') as links
-from load_and_select('$productUrl', ':root');
+from load_and_select('$productDetailUrl', ':root');
         """.trimIndent()
         val rs = query(sql)
         assertTrue(rs.next())

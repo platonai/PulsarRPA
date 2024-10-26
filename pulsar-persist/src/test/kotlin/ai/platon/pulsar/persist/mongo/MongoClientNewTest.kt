@@ -2,10 +2,7 @@ package ai.platon.pulsar.persist.mongo
 
 import shaded.com.mongodb.client.model.Filters
 import shaded.org.bson.Document
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * The driver com.mongodb.MongoClient is a Legacy Driver.
@@ -14,6 +11,7 @@ import kotlin.test.assertTrue
  * The driver com.mongodb.client.MongoClient is a New Driver.
  * Introduced in: MongoDB Java Driver 3.7 and later.
  * */
+@Ignore("Only test when MongoDB is started")
 class MongoClientNewTest : MongoTestBase() {
     
     @Test

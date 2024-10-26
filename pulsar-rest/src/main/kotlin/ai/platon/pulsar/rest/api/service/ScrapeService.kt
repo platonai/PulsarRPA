@@ -10,6 +10,8 @@ import ai.platon.pulsar.rest.api.common.XSQLScrapeHyperlink
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentSkipListMap
@@ -31,7 +33,7 @@ class ScrapeService(
     fun executeQuery(request: ScrapeRequest): ScrapeResponse {
         val hyperlink = createScrapeHyperlink(request)
         urlPool.higher3Cache.reentrantQueue.add(hyperlink)
-        return hyperlink.get(3, TimeUnit.MINUTES)
+        return hyperlink.get(2, TimeUnit.MINUTES)
     }
 
     /**

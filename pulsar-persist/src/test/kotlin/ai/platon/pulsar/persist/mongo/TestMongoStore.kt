@@ -9,6 +9,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.apache.gora.mongodb.store.MongoStore
 import kotlin.test.*
 
+@Ignore("Only test when MongoDB is started")
 class TestMongoStore : MongoTestBase() {
     companion object {
         private val crawlId = "test_" + RandomStringUtils.randomAlphanumeric(5)

@@ -40,6 +40,7 @@ open class DegenerateXSQLScrapeHyperlink(
             logger.warn("Unexpected exception", t)
             throw t
         } finally {
+            super.complete(page)
             response.isDone = true
         }
     }

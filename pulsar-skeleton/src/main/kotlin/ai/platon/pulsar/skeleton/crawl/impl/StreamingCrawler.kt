@@ -360,7 +360,7 @@ open class StreamingCrawler(
                     globalState.globalMetrics.drops.mark()
                     return@runCrawlLoopWhileActive
                 }
-
+                
                 tracer?.trace(
                     "{}. {}/{} running tasks, processing {}",
                     globalState.globalTasks, globalState.globalLoadingUrls.size, globalState.globalRunningTasks, url.configuredUrl

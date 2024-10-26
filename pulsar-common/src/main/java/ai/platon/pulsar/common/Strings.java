@@ -673,15 +673,22 @@ public final class Strings {
   }
 
   public static int findLastInteger(String s, int defaultValue) {
-    return getLastInteger(s, defaultValue);
+    Integer number = findLastInteger(s);
+    return number == null ? defaultValue : number;
   }
 
   public static float getFirstFloatNumber(String s, float defaultValue) {
+    System.out.println(s);
+
+    // number separators
     s = s.replaceAll("[,_]", "");
     Pattern pattern = Pattern.compile("[+-]?[0-9]*\\.?,?[0-9]+");
 
     Matcher m = pattern.matcher(s);
     if (m.find()) {
+
+      System.out.println(m.group());
+
       return NumberUtils.toFloat(m.group());
     }
 

@@ -1,49 +1,31 @@
 package ai.platon.pulsar.rest
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.skeleton.crawl.CrawlLoop
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
 import ai.platon.pulsar.rest.api.service.ScrapeService
+import ai.platon.pulsar.skeleton.crawl.CrawlLoop
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.apache.commons.lang3.RandomStringUtils
-
-import kotlin.test.*
-
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.logging.logback.LogbackLoggingSystem
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.ImportResource
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringRunner
-import org.springframework.util.ClassUtils
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class ScrapeServiceTests {
-    final val username = RandomStringUtils.randomAlphanumeric(8)
-
     @Autowired
     private lateinit var service: ScrapeService
 
-    @Autowired
-    private lateinit var crawlLoop: CrawlLoop
-
-    @Test
-    fun testLogging() {
-        val PRESENT = ClassUtils.isPresent(
-            "ch.qos.logback.classic.LoggerContext",
-            LogbackLoggingSystem.Factory::class.java.classLoader
-        )
-        println(PRESENT)
-        
-        getLogger(this).info("Logging system works correctly")
-    }
-    
     /**
      * Execute a normal sql
      * */

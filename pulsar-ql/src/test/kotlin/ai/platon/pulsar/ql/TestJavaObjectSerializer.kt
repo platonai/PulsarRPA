@@ -13,8 +13,8 @@ import org.h2.engine.SysProperties
 import org.h2.tools.Server
 import org.h2.util.JdbcUtils
 import org.jsoup.Jsoup
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Types
@@ -29,60 +29,58 @@ class TestJavaObjectSerializer : TestBase() {
         val remoteDB = H2Db(conf)
         var server: Server? = null
         
-        @BeforeAll
-        @JvmStatic
-        fun init() {
-            try {
-                initializeDatabase()
-            } catch (e: Throwable) {
-                logger.info(e.stringify())
-            }
-        }
-        
-        @AfterAll
-        @JvmStatic
-        fun destroy() {
-            destroyDatabase()
-            runCatching { FileUtils.deleteDirectory(baseDir.toFile()) }.onFailure { it.printStackTrace() }
-        }
-        
-        /**
-         * This method is called before a complete set of tests is run. It deletes
-         * old database files in the test directory and trace files. It also starts
-         * a TCP server if the test uses remote connections.
-         */
-        private fun initializeDatabase() {
-            logger.info("Initializing database")
-            
-            val config = remoteDB.conf
-            val args = if (config.ssl) mutableListOf("-tcpSSL", "-tcpPort", config.port.toString())
-            else mutableListOf("-tcpPort", config.port.toString())
-            
-            args.add("-trace")
-            
-            server = Server.createTcpServer(*args.toTypedArray())
-            try {
-                server?.start()
-                server?.let { logger.info("H2 Server status: {}", it.status) }
-            } catch (e: SQLException) {
-                e.printStackTrace()
-            }
-        }
-        
-        /**
-         * Clean test environment
-         * TODO: database destroy causes the SQLContext closing, which is required by other DB connections
-         */
-        private fun destroyDatabase() {
-//            server?.stop()
-//            server?.let { logger.info("[Destroy database] H2 Server status: {}", it.status) }
-//            FileUtils.deleteRecursive(remoteDB.conf.baseDir.toString(), true)
-//
-//            logger.info("Database destroyed")
+    }
+    
+    @BeforeEach
+    fun init() {
+        try {
+            initializeDatabase()
+        } catch (e: Throwable) {
+            TestBase.logger.info(e.stringify())
         }
     }
     
-    private val productIndexUrl = TestResource.productIndexUrl
+    @AfterEach
+    fun destroy() {
+        destroyDatabase()
+        runCatching { FileUtils.deleteDirectory(baseDir.toFile()) }.onFailure { it.printStackTrace() }
+    }
+    
+    /**
+     * This method is called before a complete set of tests is run. It deletes
+     * old database files in the test directory and trace files. It also starts
+     * a TCP server if the test uses remote connections.
+     */
+    private fun initializeDatabase() {
+        TestBase.logger.info("Initializing database")
+        
+        val config = remoteDB.conf
+        val args = if (config.ssl) mutableListOf("-tcpSSL", "-tcpPort", config.port.toString())
+        else mutableListOf("-tcpPort", config.port.toString())
+        
+        args.add("-trace")
+        
+        server = Server.createTcpServer(*args.toTypedArray())
+        try {
+            server?.start()
+            server?.let { TestBase.logger.info("H2 Server status: {}", it.status) }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        }
+    }
+    
+    /**
+     * Clean test environment
+     * TODO: database destroy causes the SQLContext closing, which is required by other DB connections
+     */
+    private fun destroyDatabase() {
+        server?.stop()
+        server?.let { logger.info("[Destroy database] H2 Server status: {}", it.status) }
+
+        FileUtils.deleteDirectory(remoteDB.conf.baseDir.toFile())
+        
+        logger.info("Database destroyed")
+    }
     
     @Test
     fun testLocalSerialization() {
@@ -114,6 +112,7 @@ class TestJavaObjectSerializer : TestBase() {
     fun testNetworkSerialization() {
         val conn = remoteDB.getConnection("testNetworkSerialization")
         val stat = conn.createStatement()
+        stat.execute("drop table t if exists")
         stat.execute("create table t(id int, val other)")
         
         val baseURI = "http://example.com/"

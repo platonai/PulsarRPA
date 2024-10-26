@@ -8,9 +8,11 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.condition.EnabledIf
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import kotlin.test.BeforeTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
+@Ignore("Test only when authorized to LLM provider")
 class ChatModelTests {
 
     companion object {

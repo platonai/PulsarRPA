@@ -66,6 +66,8 @@ if ($SkipTests) {
   & $MvnCmd deploy -Pplaton-release -Pplaton-deploy
 }
 
+# TODO: handle pulsar-bom
+
 $exitCode =$LastExitCode
 if ($exitCode -eq 0) {
   Write-Host "Build successfully"

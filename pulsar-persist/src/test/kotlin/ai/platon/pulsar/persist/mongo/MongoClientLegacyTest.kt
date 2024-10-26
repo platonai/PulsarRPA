@@ -21,6 +21,7 @@ import kotlin.test.*
  * The driver com.mongodb.client.MongoClient is a New Driver.
  * Introduced in: MongoDB Java Driver 3.7 and later.
  * */
+@Ignore("Only test when MongoDB is started")
 class MongoClientLegacyTest {
     companion object {
         private val crawlId = RandomStringUtils.randomAlphanumeric(18)
