@@ -9,7 +9,8 @@
 	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
 	OF ANY KIND, either express or implied. See the License for the specific
 	language governing permissions and limitations under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -24,7 +25,8 @@
     <version>2.0.4-SNAPSHOT</version>
 
     <name>Pulsar RPA</name>
-    <description>Scrape Web data at scale completely and accurately with high performance, distributed AI-RPA.</description>
+    <description>Scrape Web data at scale completely and accurately with high performance, distributed AI-RPA.
+    </description>
 
     <licenses>
         <license>
@@ -84,8 +86,6 @@
                 <module>pulsar-ql-common</module>
                 <module>pulsar-ql</module>
 
-                <module>pulsar-bom</module>
-
                 <module>pulsar-spring-support</module>
                 <module>pulsar-rest</module>
 
@@ -94,6 +94,8 @@
 
                 <module>pulsar-client</module>
                 <module>pulsar-app</module>
+
+                <module>pulsar-bom</module>
             </modules>
         </profile>
 
@@ -171,11 +173,10 @@
                             <skip>false</skip>
 
                             <!-- Default: ${project.artifactId} -->
-<!--                            <moduleName>data</moduleName>-->
+                            <!--                            <moduleName>data</moduleName>-->
 
                             <!-- Default: ${project.basedir}/target/dokka -->
-<!--                            <outputDir>${project.basedir}/target/dokka</outputDir>-->
-
+                            <!--                            <outputDir>${project.basedir}/target/dokka</outputDir>-->
 
 
                             <!-- Use default or set to custom path to cache directory to enable package-list caching. -->
@@ -184,15 +185,15 @@
 
                             <!-- List of '.md' files with package and module docs -->
                             <!-- https://kotlinlang.org/docs/reference/kotlin-doc.html#module-and-package-documentation -->
-<!--                            <includes>-->
-<!--                                <include>README.md</include>-->
-<!--                                <include>README.md</include>-->
-<!--                            </includes>-->
+                            <!--                            <includes>-->
+                            <!--                                <include>README.md</include>-->
+                            <!--                                <include>README.md</include>-->
+                            <!--                            </includes>-->
 
                             <!-- List of sample roots -->
-<!--                            <samples>-->
-<!--                                <dir>src/test/samples</dir>-->
-<!--                            </samples>-->
+                            <!--                            <samples>-->
+                            <!--                                <dir>src/test/samples</dir>-->
+                            <!--                            </samples>-->
 
                             <!-- Used for linking to JDK, default: 11 -->
                             <jdkVersion>11</jdkVersion>
@@ -213,16 +214,16 @@
 
                             <!-- Specifies the location of the project source code on the Web. If provided, Dokka generates "source" links
                                  for each declaration. -->
-<!--                            <sourceLinks>-->
-<!--                                <link>-->
-<!--                                    &lt;!&ndash; Source directory &ndash;&gt;-->
-<!--                                    <path>${project.basedir}/src/main/kotlin</path>-->
-<!--                                    &lt;!&ndash; URL showing where the source code can be accessed through the web browser &ndash;&gt;-->
-<!--                                    <url>https://github.com/cy6erGn0m/vertx3-lang-kotlin/blob/master/src/main/kotlin</url> &lt;!&ndash; //remove src/main/kotlin if you use "./" above &ndash;&gt;-->
-<!--                                    &lt;!&ndash;Suffix which is used to append the line number to the URL. Use #L for GitHub &ndash;&gt;-->
-<!--                                    <lineSuffix>#L</lineSuffix>-->
-<!--                                </link>-->
-<!--                            </sourceLinks>-->
+                            <!--                            <sourceLinks>-->
+                            <!--                                <link>-->
+                            <!--                                    &lt;!&ndash; Source directory &ndash;&gt;-->
+                            <!--                                    <path>${project.basedir}/src/main/kotlin</path>-->
+                            <!--                                    &lt;!&ndash; URL showing where the source code can be accessed through the web browser &ndash;&gt;-->
+                            <!--                                    <url>https://github.com/cy6erGn0m/vertx3-lang-kotlin/blob/master/src/main/kotlin</url> &lt;!&ndash; //remove src/main/kotlin if you use "./" above &ndash;&gt;-->
+                            <!--                                    &lt;!&ndash;Suffix which is used to append the line number to the URL. Use #L for GitHub &ndash;&gt;-->
+                            <!--                                    <lineSuffix>#L</lineSuffix>-->
+                            <!--                                </link>-->
+                            <!--                            </sourceLinks>-->
 
                             <!-- Disable linking to online kotlin-stdlib documentation  -->
                             <noStdlibLink>false</noStdlibLink>
@@ -231,20 +232,20 @@
                             <noJdkLink>false</noJdkLink>
 
                             <!-- Allows linking to documentation of the project's dependencies (generated with Javadoc or Dokka) -->
-<!--                            <externalDocumentationLinks>-->
-<!--                                <link>-->
-<!--                                    &lt;!&ndash; Root URL of the generated documentation to link with. The trailing slash is required! &ndash;&gt;-->
-<!--                                    <url>https://example.com/docs/</url>-->
-<!--                                    &lt;!&ndash; If package-list file located in non-standard location &ndash;&gt;-->
-<!--                                    &lt;!&ndash; <packageListUrl>file:///home/user/localdocs/package-list</packageListUrl> &ndash;&gt;-->
-<!--                                </link>-->
-<!--                            </externalDocumentationLinks>-->
+                            <!--                            <externalDocumentationLinks>-->
+                            <!--                                <link>-->
+                            <!--                                    &lt;!&ndash; Root URL of the generated documentation to link with. The trailing slash is required! &ndash;&gt;-->
+                            <!--                                    <url>https://example.com/docs/</url>-->
+                            <!--                                    &lt;!&ndash; If package-list file located in non-standard location &ndash;&gt;-->
+                            <!--                                    &lt;!&ndash; <packageListUrl>file:///home/user/localdocs/package-list</packageListUrl> &ndash;&gt;-->
+                            <!--                                </link>-->
+                            <!--                            </externalDocumentationLinks>-->
 
                             <!-- Allows to customize documentation generation options on a per-package basis -->
                             <perPackageOptions>
                                 <packageOptions>
                                     <!-- Will match kotlin and all sub-packages of it -->
-<!--                                    <prefix>kotlin</prefix>-->
+                                    <!--                                    <prefix>kotlin</prefix>-->
 
                                     <!-- All options are optional, default values are below: -->
                                     <skipDeprecated>false</skipDeprecated>
@@ -255,13 +256,13 @@
                             </perPackageOptions>
 
                             <!-- Allows to use any dokka plugin, eg. GFM format   -->
-<!--                            <dokkaPlugins>-->
-<!--                                <plugin>-->
-<!--                                    <groupId>org.jetbrains.dokka</groupId>-->
-<!--                                    <artifactId>gfm-plugin</artifactId>-->
-<!--                                    <version>${dokka.version}</version>-->
-<!--                                </plugin>-->
-<!--                            </dokkaPlugins>-->
+                            <!--                            <dokkaPlugins>-->
+                            <!--                                <plugin>-->
+                            <!--                                    <groupId>org.jetbrains.dokka</groupId>-->
+                            <!--                                    <artifactId>gfm-plugin</artifactId>-->
+                            <!--                                    <version>${dokka.version}</version>-->
+                            <!--                                </plugin>-->
+                            <!--                            </dokkaPlugins>-->
                         </configuration>
                     </plugin>
 
@@ -527,10 +528,10 @@
                 </configuration>
             </plugin>
             <!-- NO java code by default, so do NOT include maven-compiler-plugin -->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-compiler-plugin</artifactId>-->
-<!--            </plugin>-->
+            <!--            <plugin>-->
+            <!--                <groupId>org.apache.maven.plugins</groupId>-->
+            <!--                <artifactId>maven-compiler-plugin</artifactId>-->
+            <!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -597,15 +598,167 @@
     </build>
 
     <dependencyManagement>
-        <dependencies>
+        <!-- pulsar-bom -->
+        <!--            <dependency>-->
+        <!--                <groupId>ai.platon.pulsar</groupId>-->
+        <!--                <artifactId>pulsar-bom</artifactId>-->
+        <!--                <version>${project.version}</version>-->
+        <!--                <type>pom</type>-->
+        <!--                <scope>import</scope>-->
+        <!--            </dependency>-->
 
-            <!-- pulsar-bom -->
+        <dependencies>
+            <!-- Internal Dependencies -->
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-bom</artifactId>
+                <artifactId>pulsar-common</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-boilerpipe</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-plugins</artifactId>
                 <type>pom</type>
-                <scope>import</scope>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-persist</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-skeleton</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-resources</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-resources</artifactId>
+                <type>test-jar</type>
+                <classifier>tests</classifier>
+                <scope>test</scope>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-protocol</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-filter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-parse</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-scoring</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-schedule</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-index</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-browser</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-llm</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-dom</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-beans</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-ql-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-ql-common</artifactId>
+                <classifier>shaded</classifier>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-ql</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-rest</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-boot</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-qa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-qa</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <classifier>tests</classifier>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-tests</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-tests</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <classifier>tests</classifier>
+                <scope>test</scope>
             </dependency>
 
             <dependency>
