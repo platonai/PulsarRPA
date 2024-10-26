@@ -9,12 +9,14 @@ import ai.platon.pulsar.rest.api.common.XSQLScrapeHyperlink
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 @Service
 class ScrapeService(
@@ -23,7 +25,9 @@ class ScrapeService(
 ) {
     private val logger = LoggerFactory.getLogger(ScrapeService::class.java)
     private val responseCache = ConcurrentSkipListMap<String, ScrapeResponse>()
-    private val urlPool get() = globalCacheFactory.globalCache.urlPool
+    // NOTE: Get the latest crawl pool associated with the latest context.
+    // this is very important since the context, global cache and crawl pool might change.
+    private val urlPool get() = PulsarContexts.create().crawlPool
 
     /**
      * Execute a scrape task and wait until the execution is done,
@@ -34,7 +38,7 @@ class ScrapeService(
             val hyperlink = createScrapeHyperlink(request)
             urlPool.higher3Cache.reentrantQueue.add(hyperlink)
             return hyperlink.get(2, TimeUnit.MINUTES)
-        } catch (e: Throwable) {
+        } catch (e: TimeoutException) {
             logger.error("Error executing query: >>>${request.sql}<<<", e)
             return ScrapeResponse("", ResourceStatus.SC_INTERNAL_SERVER_ERROR, ProtocolStatusCodes.EXCEPTION)
         }

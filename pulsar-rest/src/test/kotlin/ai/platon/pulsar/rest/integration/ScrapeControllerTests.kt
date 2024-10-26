@@ -1,10 +1,12 @@
 package ai.platon.pulsar.rest.integration
 
+import ai.platon.pulsar.common.StartStopRunnable
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.rest.api.controller.ScrapeController
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
+import ai.platon.pulsar.skeleton.crawl.CrawlLoop
 import org.apache.http.HttpStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -12,6 +14,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.client.ResourceAccessException
 import java.net.SocketTimeoutException
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.test.Ignore
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -21,13 +26,13 @@ class ScrapeControllerTests : IntegrationTestBase() {
     private lateinit var controller: ScrapeController
     
     val urls = mapOf(
-        "amazon" to "https://www.amazon.com/s?k=Boys%27+Novelty+Belt+Buckles&rh=n:9057119011&page=1",
-        "jd" to "https://list.jd.com/list.html?cat=9987,653,655"
+        "amazon" to "https://www.amazon.com/s?k=Boys%27+Novelty+Belt+Buckles&rh=n:9057119011&page=1 -i 1s -ignoreFailure",
+        "jd" to "https://list.jd.com/list.html?cat=9987,653,655 -i 1s -ignoreFailure"
     )
     
     val sqlTemplates = mapOf(
         "amazon" to """
-        select 
+        select
             dom_base_uri(dom) as `url`,
             str_substring_after(dom_base_uri(dom), '&rh=') as `nodeID`,
             dom_first_text(dom, 'a span.a-price:first-child span.a-offscreen') as `price`,
@@ -40,16 +45,28 @@ class ScrapeControllerTests : IntegrationTestBase() {
         "jd" to "select dom_base_uri(dom) as url from load_and_select(@url, ':root')"
     ).entries.associate { it.key to SQLTemplate(it.value) }
     
+    private val resourceLoaded = AtomicBoolean()
+    
     @BeforeEach
-    fun `Ensure resources are loaded`() {
-        val url = urls["amazon"]!!
-        val page = session.load(url, "-refresh")
-        assertTrue { page.protocolStatus.isSuccess }
-        assertTrue { page.contentLength > 0 }
-        assertTrue { page.persistedContentLength > 0 }
-        println("Loaded | $url")
+    fun setUp() {
     }
     
+    @BeforeEach
+    fun `Ensure resources are loaded`() {
+        if (!resourceLoaded.getAndSet(true)) {
+            return
+        }
+
+        val url = urls["amazon"]!!
+        val page = session.load(url, "-i 60s")
+        assertTrue { page.protocolStatus.isSuccess }
+        assertTrue { page.contentLength > 0 }
+        if (page.isFetched) {
+            assertTrue { page.persistedContentLength > 0 }
+        }
+        println("Ensure loaded | $url")
+    }
+
     @Test
     fun `Assert controller is injected`() {
         assertThat(controller).isNotNull();

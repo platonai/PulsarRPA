@@ -29,10 +29,12 @@ open class XSQLScrapeHyperlink(
     ) : DefaultCrawlEventHandlers() {
         init {
             onWillLoad.addLast {
+                // println("crawl-onWillLoad")
                 response.pageStatusCode = ResourceStatus.SC_PROCESSING
                 it
             }
             onLoaded.addLast { url, page ->
+                // println("crawl-onLoaded")
                 hyperlink.complete(page ?: WebPage.NIL)
             }
         }
@@ -44,25 +46,25 @@ open class XSQLScrapeHyperlink(
     ) : DefaultLoadEventHandlers() {
         init {
             onWillLoad.addLast {
-//                println("onWillLoad")
+                // println("onWillLoad")
                 response.pageStatusCode = ResourceStatus.SC_PROCESSING
                 null
             }
             onWillParseHTMLDocument.addLast { page ->
-//                println("onWillParseHTMLDocument")
+                // println("onWillParseHTMLDocument")
                 page.variables[VAR_IS_SCRAPE] = true
                 null
             }
             onWillParseHTMLDocument.addLast { page ->
-//                println("onWillParseHTMLDocument")
+                // println("onWillParseHTMLDocument")
             }
             onHTMLDocumentParsed.addLast { page, document ->
-//                println("onHTMLDocumentParsed")
+                // println("onHTMLDocumentParsed")
                 require(page.hasVar(VAR_IS_SCRAPE))
                 hyperlink.extract(page, document)
             }
             onLoaded.addLast { page ->
-//                println("onLoaded")
+                // println("onLoaded")
                 // should complete in crawlEvent.onLoaded()
                 // hyperlink.complete(page)
             }

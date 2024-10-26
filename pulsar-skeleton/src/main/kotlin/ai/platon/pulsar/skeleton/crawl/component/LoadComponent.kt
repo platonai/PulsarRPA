@@ -348,6 +348,7 @@ class LoadComponent(
             // if a page is loaded from cache, the content remains unchanged and should not persist to database
             // TODO: clone the underlying data or not?
             page.unsafeCloneGPage(cachedPage)
+            // if the underlying data is not copied, the persist content will be null
             page.clearPersistContent()
 
             page.tmpContent = cachedPage.content

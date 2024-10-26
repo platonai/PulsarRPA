@@ -1249,6 +1249,9 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         page.setAveContentLength(aveBytes);
     }
 
+    /**
+     * TODO: if the page is loaded from cache, the persisted content length is zero, check this logic
+     * */
     public long getPersistedContentLength() {
         return page.getPersistedContentLength() != null ? page.getPersistedContentLength() : 0;
     }
