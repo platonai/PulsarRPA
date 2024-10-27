@@ -5,23 +5,21 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jsonMapper
-import com.fasterxml.jackson.module.kotlin.kotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
 /**
  * jacksonObjectMapper with support:
  * 1. kotlin
  * 2. java 8 data time
  * */
-fun pulsarObjectMapper(): ObjectMapper = jsonMapper {
-    addModule(JavaTimeModule())
-    addModule(kotlinModule())
-}.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+fun pulsarObjectMapper(): ObjectMapper = jacksonObjectMapper()
+    .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
     .configure(JsonParser.Feature.ALLOW_TRAILING_COMMA, true)
     .configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true)
     .configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
+    .registerModule(JavaTimeModule())
 
 /**
  * jacksonObjectMapper with support:

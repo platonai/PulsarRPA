@@ -1,4 +1,6 @@
 *.html linguist-detectable=false
 *.htm linguist-detectable=false
 *.xml linguist-detectable=false
+*.js linguist-detectable=false
 docs/* linguist-detectable=false
+static/* linguist-detectable=false

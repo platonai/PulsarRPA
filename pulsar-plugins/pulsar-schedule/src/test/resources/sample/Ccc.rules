@@ -1,3 +1,0 @@
-+^http://item.jd.com/(.+)
-+^http://list.jd.com/(.+)page=\d
--.

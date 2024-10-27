@@ -1,12 +1,14 @@
 package ai.platon.pulsar.common
 
 import com.google.common.collect.Lists
-import org.junit.Assert
-import org.junit.Test
+import kotlin.test.Test
 import java.util.*
 import java.util.stream.Collectors
 import java.util.stream.IntStream
 import javax.annotation.Nonnull
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 17-1-14.
@@ -34,9 +36,9 @@ class TestJavaFeatures {
         
         // System.out.println(counter);
         val obj: Any = counter
-        Assert.assertTrue(obj.javaClass.isAssignableFrom(TreeMap::class.java))
-        Assert.assertTrue(obj is Map<*, *>)
-        Assert.assertFalse(obj.javaClass.isAssignableFrom(MutableMap::class.java))
+        assertTrue(obj.javaClass.isAssignableFrom(TreeMap::class.java))
+        assertTrue(obj is Map<*, *>)
+        assertFalse(obj.javaClass.isAssignableFrom(MutableMap::class.java))
         
         if (obj.javaClass.isAssignableFrom(MutableMap::class.java)) {
             println(obj.javaClass.toString() + " isAssignableFrom " + counter.javaClass)
@@ -52,9 +54,9 @@ class TestJavaFeatures {
     
     @Test
     fun testEnum() {
-        Assert.assertEquals(10, E.a.value.toLong())
-        Assert.assertEquals("a", E.a.toString())
-        Assert.assertEquals(E.a.name, E.a.toString())
+        assertEquals(10, E.a.value.toLong())
+        assertEquals("a", E.a.toString())
+        assertEquals(E.a.name, E.a.toString())
     }
     
     @Test

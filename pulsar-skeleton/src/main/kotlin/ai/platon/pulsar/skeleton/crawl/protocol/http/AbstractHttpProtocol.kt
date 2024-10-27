@@ -1,31 +1,10 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 package ai.platon.pulsar.skeleton.crawl.protocol.http
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.skeleton.crawl.protocol.Protocol
-import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolOutput
-import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
@@ -35,6 +14,10 @@ import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.skeleton.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.MimeTypeResolver
+import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
+import ai.platon.pulsar.skeleton.crawl.protocol.Protocol
+import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolOutput
+import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import crawlercommons.robots.BaseRobotRules
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
@@ -59,19 +42,21 @@ abstract class AbstractHttpProtocol: Protocol {
     /**
      * The configuration
      */
-    private lateinit var conf: ImmutableConfig
+    override lateinit var conf: ImmutableConfig
 
     private lateinit var mimeTypeResolver: MimeTypeResolver
-
+    
     private lateinit var robots: HttpRobotRulesParser
 
-    override fun getConf(): ImmutableConfig = conf
-
-    override fun setConf(jobConf: ImmutableConfig) {
-        conf = jobConf
-        fetchMaxRetry = jobConf.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
-        mimeTypeResolver = MimeTypeResolver(jobConf)
-        robots = HttpRobotRulesParser(jobConf)
+    /**
+     * Set up the protocol.
+     * Sometimes the protocol can not to be constructed with parameters, so it need a secondary setup.
+     * */
+    override fun configure(conf1: ImmutableConfig) {
+        conf = conf1
+        fetchMaxRetry = conf1.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
+        mimeTypeResolver = MimeTypeResolver(conf1)
+        robots = HttpRobotRulesParser(conf1)
     }
 
     override fun reset() {
@@ -80,9 +65,12 @@ abstract class AbstractHttpProtocol: Protocol {
 
     override fun getResponses(pages: Collection<WebPage>, volatileConfig: VolatileConfig): Collection<Response> {
         return pages.takeIf { isActive }
-                ?.mapNotNull { it.runCatching { getResponse(it, false) }
-                        .onFailure { warnInterruptible(this, it) }.getOrNull() }
-                ?: listOf()
+            ?.mapNotNull {
+                it.runCatching { getResponse(it, false) }
+                .onFailure { warnInterruptible(this, it) }
+                .getOrNull()
+            }
+            ?: listOf()
     }
 
     override fun getProtocolOutput(page: WebPage): ProtocolOutput {

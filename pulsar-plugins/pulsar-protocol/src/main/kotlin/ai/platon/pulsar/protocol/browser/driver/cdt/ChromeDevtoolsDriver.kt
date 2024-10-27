@@ -4,9 +4,9 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
@@ -45,10 +45,6 @@ class ChromeDevtoolsDriver(
     private val browserSettings: BrowserSettings,
     override val browser: ChromeDevtoolsBrowser,
 ) : AbstractWebDriver(browser) {
-
-    companion object {
-        val LOCALHOST_PREFIX = "http://localfile.org"
-    }
 
     private val logger = getLogger(this)
 
@@ -142,8 +138,8 @@ class ChromeDevtoolsDriver(
             rpc.invokeDeferred("navigateTo") {
                 if (enableStartupScript) navigateInvaded(entry) else navigateNonInvaded(entry)
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "navigateTo", entry.url)
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "navigateTo", entry.url)
         }
     }
 
@@ -222,8 +218,8 @@ class ChromeDevtoolsDriver(
             }
 
             channel.receive()
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "waitForNavigation $timeout")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "waitForNavigation $timeout")
         }
 
         return timeout - DateTimes.elapsedTime(startTime)
@@ -277,8 +273,8 @@ class ChromeDevtoolsDriver(
                     mouse?.wheel(deltaX, deltaY)
                 }
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "mouseWheelDown")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "mouseWheelDown")
         }
     }
 
@@ -294,8 +290,8 @@ class ChromeDevtoolsDriver(
                     mouse?.wheel(deltaX, deltaY)
                 }
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "mouseWheelUp")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "mouseWheelUp")
         }
     }
 
@@ -327,8 +323,8 @@ class ChromeDevtoolsDriver(
                     gap()
                 }
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "moveMouseTo")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "moveMouseTo")
         }
     }
 
@@ -387,6 +383,8 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun focus(selector: String) {
+        // TODO: handle the minor exception: 0.	[focus] (3/5) | code: -32000, Element is not focusable
+        // we can return false if the element is not focusable
         rpc.invokeDeferredSilently("focus") { page.focusOnSelector(selector) }
     }
 
@@ -401,8 +399,8 @@ class ChromeDevtoolsDriver(
                     gap("type")
                 }
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "type")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "type")
         }
     }
 
@@ -421,7 +419,9 @@ class ChromeDevtoolsDriver(
             }
 
             click(nodeId, 1)
-            keyboard?.type(text, randomDelayMillis("type"))
+            // keyboard?.type(text, randomDelayMillis("fill"))
+            // For fill, there is no delay between key presses
+            keyboard?.type(text, 0)
         }
     }
 
@@ -457,8 +457,8 @@ class ChromeDevtoolsDriver(
                     gap()
                 }
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "dragAndDrop")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "dragAndDrop")
         }
     }
 
@@ -485,8 +485,8 @@ class ChromeDevtoolsDriver(
                 val nodeId = page.scrollIntoViewIfNeeded(selector)
                 ClickableDOM.create(pageAPI, domAPI, nodeId)?.clickablePoint()?.value
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "clickablePoint")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "clickablePoint")
         }
 
         return null
@@ -499,8 +499,8 @@ class ChromeDevtoolsDriver(
                 val nodeId = page.scrollIntoViewIfNeeded(selector)
                 ClickableDOM.create(pageAPI, domAPI, nodeId)?.boundingBox()
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "boundingBox")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "boundingBox")
         }
 
         return null
@@ -516,8 +516,8 @@ class ChromeDevtoolsDriver(
         return try {
             rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
             rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot() }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "captureScreenshot")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "captureScreenshot")
             null
         }
     }
@@ -534,8 +534,8 @@ class ChromeDevtoolsDriver(
             // Force the page stop all navigations and pending resource fetches.
             rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
             rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(selector) }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "captureScreenshot")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "captureScreenshot")
             null
         }
     }
@@ -546,13 +546,12 @@ class ChromeDevtoolsDriver(
             // Force the page stop all navigations and pending resource fetches.
             rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
             rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(rect) }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "captureScreenshot")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "captureScreenshot")
             null
         }
     }
 
-    @Throws(IllegalWebDriverStateException::class)
     internal fun checkState(action: String = ""): Boolean {
         if (!isActive) {
             return false
@@ -634,6 +633,10 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun stop() {
         navigateEntry.stopped = true
+        if (!isActive) {
+            return
+        }
+
         try {
             handleRedirect()
 
@@ -644,10 +647,8 @@ class ChromeDevtoolsDriver(
                 // go to about:blank, so the browser stops the previous page and releases all resources
                 navigateTo(ChromeImpl.ABOUT_BLANK_PAGE)
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "terminate")
         } catch (e: ChromeDriverException) {
-            logger.info("Terminate exception: {}", e.message)
+            rpc.handleChromeException(e, "terminate")
         }
     }
 
@@ -706,7 +707,7 @@ class ChromeDevtoolsDriver(
 
         navigateUrl = url
         // TODO: This is a temporary solution to serve local file, for example, file:///tmp/example.html
-        if (LOCALHOST_PREFIX in url) {
+        if (AppConstants.LOCAL_FILE_SERVE_PREFIX in url) {
             openLocalFile(url)
         } else {
             page.navigate(url, referrer = navigateEntry.pageReferrer)
@@ -734,7 +735,7 @@ class ChromeDevtoolsDriver(
             return
         }
 
-        val url0 = url.removePrefix(LOCALHOST_PREFIX)
+        val url0 = url.removePrefix(AppConstants.LOCAL_FILE_SERVE_PREFIX)
         if (SystemUtils.IS_OS_WINDOWS) {
             page.navigate(url0)
         } else {
@@ -748,6 +749,7 @@ class ChromeDevtoolsDriver(
         println(message)
 //        logger.info("Window opened | {}", event.url)
 
+        // TODO: handle BrowserUnavailableException
         val driver = browser.runCatching { newDriver(event.url) }.onFailure { warnInterruptible(this, it) }.getOrNull()
         if (driver != null) {
             driver.opener = this
@@ -927,7 +929,6 @@ class ChromeDevtoolsDriver(
      * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
      * this suspending function is waiting, this function immediately resumes with CancellationException.
      * */
-    @Throws(IllegalWebDriverStateException::class)
     private suspend fun gap() {
         if (!isActive) {
             // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
@@ -943,7 +944,6 @@ class ChromeDevtoolsDriver(
      * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
      * this suspending function is waiting, this function immediately resumes with CancellationException.
      * */
-    @Throws(IllegalWebDriverStateException::class)
     private suspend fun gap(type: String) {
         if (!isActive) {
             // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
@@ -958,7 +958,6 @@ class ChromeDevtoolsDriver(
      * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
      * this suspending function is waiting, this function immediately resumes with CancellationException.
      * */
-    @Throws(IllegalWebDriverStateException::class)
     private suspend fun gap(millis: Long) {
         if (!isActive) {
             // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
@@ -972,8 +971,8 @@ class ChromeDevtoolsDriver(
             return rpc.invokeDeferred(name) {
                 action()
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, name, message)
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, name, message)
         }
 
         return null
@@ -999,8 +998,8 @@ class ChromeDevtoolsDriver(
                     null
                 }
             }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, name, "selector: [$selector], focus: $focus, scrollIntoView: $scrollIntoView")
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, name, "selector: [$selector], focus: $focus, scrollIntoView: $scrollIntoView")
         }
 
         return null

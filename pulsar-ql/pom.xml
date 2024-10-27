@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.13.3-SNAPSHOT</version>
+        <version>2.0.4-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-ql</artifactId>
@@ -24,19 +24,17 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-ql-common</artifactId>
-            <classifier>shaded</classifier>
         </dependency>
 
         <!-- Pulsar dependencies -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-boilerpipe</artifactId>
+            <artifactId>pulsar-jsoup</artifactId>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-jsoup</artifactId>
+            <artifactId>pulsar-dom</artifactId>
         </dependency>
-
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
@@ -111,6 +109,11 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.udojava</groupId>
+            <artifactId>EvalEx</artifactId>
         </dependency>
 
         <!-- NLP -->

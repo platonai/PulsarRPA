@@ -2,14 +2,14 @@ package ai.platon.pulsar.skeleton.crawl.index
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.skeleton.crawl.common.JobInitialized
+import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
 import org.slf4j.LoggerFactory
 import java.io.IOException
 
 /**
  * Created by vincent on 16-8-1.
  */
-interface IndexWriter : Parameterized, JobInitialized, AutoCloseable {
+interface IndexWriter : Parameterized, LazyConfigurable, AutoCloseable {
     val name: String get() = javaClass.simpleName
     val isActive: Boolean
         get() = true

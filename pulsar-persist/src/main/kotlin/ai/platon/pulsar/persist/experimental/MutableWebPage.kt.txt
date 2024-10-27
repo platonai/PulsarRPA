@@ -58,7 +58,9 @@ import java.util.stream.Collectors
 /**
  * The core web page structure
  */
-class MutableWebPage: ImmutableWebPage() {
+class MutableWebPage(
+    page: GWebPage
+): KWebPage(page) {
 
     /**
      * Web page scope configuration

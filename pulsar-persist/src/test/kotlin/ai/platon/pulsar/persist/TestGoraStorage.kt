@@ -12,31 +12,26 @@ import org.apache.gora.memory.store.MemStore
 import org.apache.gora.persistency.impl.DirtyCollectionWrapper
 import org.apache.gora.persistency.impl.DirtyListWrapper
 import org.apache.gora.store.DataStore
-import org.junit.*
+import org.junit.jupiter.api.AfterAll
 import org.slf4j.LoggerFactory
 import java.time.Instant
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Created by vincent on 16-7-20.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class TestGoraStorage {
-
+    
     companion object {
         private val LOG = LoggerFactory.getLogger(TestGoraStorage::class.java)
         private val conf = VolatileConfig().also { it[CapabilityTypes.STORAGE_CRAWL_ID] = "test" }
         private val webDb = WebDb(conf)
         private var store: DataStore<String, GWebPage> = webDb.dataStore
         private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
-
-        @BeforeClass
-        fun setupClass() {
-        }
-
-        @AfterClass
+        
+        @AfterAll
+        @JvmStatic
         fun teardownClass() {
             webDb.delete(exampleUrl)
             webDb.flush()
@@ -44,32 +39,32 @@ class TestGoraStorage {
             LOG.debug("In shell: \nget '{}', '{}'", store.schemaName, reverseUrlOrEmpty(exampleUrl))
         }
     }
-
+    
     private val exampleUrls = IntRange(10000, 10050).map { AppConstants.EXAMPLE_URL + "/$it" }
-
-    @Before
+    
+    @BeforeTest
     fun setup() {
     }
-
-    @After
+    
+    @AfterTest
     fun tearDown() {
     }
-
+    
     @Test
     fun testWebDb() {
         if (store is MemStore) {
             return
         }
-
+        
         println("Test with store " + store::class)
-
+        
         val url = AppConstants.EXAMPLE_URL + "/" + Instant.now().toEpochMilli()
         var page = WebPageExt.newTestWebPage(url)
         assertEquals(url, page.url)
         // webDb.put(page.getUrl(), page, true);
         webDb.put(page)
         webDb.flush()
-
+        
         page = webDb.get(url)
         val pageExt = WebPageExt(page)
         val page2 = webDb.get(url)
@@ -79,29 +74,29 @@ class TestGoraStorage {
         pageExt.addLinks(exampleUrls)
         webDb.put(page)
         webDb.flush()
-
+        
         val page3 = webDb.get(url)
         assertEquals(exampleUrls.size.toLong(), page3.links.size.toLong())
         pageExt.addLinks(exampleUrls)
         webDb.put(page)
         webDb.flush()
-
+        
         val page4 = webDb.get(url)
         assertEquals(exampleUrls.size.toLong(), page4.links.size.toLong())
         webDb.delete(url)
         webDb.flush()
-
+        
         page = webDb.get(url)
         assertTrue(page.isNil)
         webDb.delete(url)
     }
-
+    
     @Test
     fun testModifyNestedSimpleArray() {
         if (store is MemStore) {
             return
         }
-
+        
         createExamplePage()
         val key = reverseUrlOrEmpty(exampleUrl)
         var page = store[key]
@@ -112,7 +107,7 @@ class TestGoraStorage {
         page.links[i] = modifiedLink
         store.put(key, page)
         store.flush()
-
+        
         page = store[key]
         assertNotNull(page)
         assertEquals(modifiedLink, page.links[i].toString())
@@ -120,7 +115,7 @@ class TestGoraStorage {
         page.links[i] = Utf8()
         store.put(key, page)
         store.flush()
-
+        
         page = store[key]
         assertNotNull(page)
         assertEquals("", page.links[i].toString())
@@ -128,20 +123,20 @@ class TestGoraStorage {
         page.links[i] = ""
         store.put(key, page)
         store.flush()
-
+        
         page = store[key]
         assertNotNull(page)
         assertEquals("", page.links[i].toString())
         i = 3
-        page.links[i] = Utf8("")
+        page.links[i] = org.apache.avro.util.Utf8("")
         store.put(key, page)
         store.flush()
-
+        
         page = store[key]
         assertNotNull(page)
         assertEquals("", page.links[i].toString())
     }
-
+    
     /**
      * TODO: We can not clear an array, HBase keeps unchanged
      */
@@ -150,7 +145,7 @@ class TestGoraStorage {
         if (store is MemStore) {
             return
         }
-
+        
         createExamplePage()
         val key = reverseUrlOrEmpty(exampleUrl)
         var page = store[key]
@@ -177,7 +172,7 @@ class TestGoraStorage {
         assertNotNull(page)
         assertEquals(3, page.links.size.toLong())
     }
-
+    
     /**
      * TODO: We can not clear an array, HBase keeps unchanged
      */
@@ -186,34 +181,34 @@ class TestGoraStorage {
         if (store is MemStore) {
             return
         }
-
+        
         createExamplePage()
-
+        
         val key = reverseUrlOrEmpty(exampleUrl)
         var page = store[key]
         assertNotNull(page)
-
+        
         assertTrue(page.liveLinks.isNotEmpty())
         println(page.liveLinks.values.first().anchor.javaClass)
         assertTrue(page.liveLinks.values.first().anchor is Utf8)
-
+        
         page.liveLinks.clear()
         assertTrue(page.liveLinks.isEmpty())
-
+        
         store.put(key, page)
         store.flush()
-
+        
         page = store[key]
         assertNotNull(page)
         assertTrue(page.liveLinks.isEmpty())
     }
-
+    
     @Test
     fun testUpdateNestedArray2() {
         if (store is MemStore) {
             return
         }
-
+        
         createExamplePage()
         var page = webDb.get(exampleUrl)
         page.links = ArrayList()
@@ -228,13 +223,13 @@ class TestGoraStorage {
         assertTrue(page.isNotNil)
         assertEquals(2, page.links.size.toLong())
     }
-
+    
     @Test
     fun testUpdateNestedMap() {
         if (store is MemStore) {
             return
         }
-
+        
         createExamplePage()
         var page = webDb.get(exampleUrl)
         page.inlinks.clear()
@@ -245,26 +240,26 @@ class TestGoraStorage {
         assertTrue(page.isNotNil)
         assertTrue(page.inlinks.isEmpty())
     }
-
+    
     fun createExamplePage() {
         webDb.delete(exampleUrl)
         webDb.flush()
-
+        
         LOG.debug("Random url: $exampleUrl")
         val page = WebPage.newWebPage(exampleUrl, conf)
-
+        
         for (i in 1..19) {
             val url = AppConstants.EXAMPLE_URL + "/" + i
             val url2 = AppConstants.EXAMPLE_URL + "/" + (i - 1)
             val link = HyperlinkPersistable.parse(url2).unbox()
             link.anchor = "test anchor ord:1"
-
+            
             page.liveLinks[link.url] = link
             page.liveLinks = page.liveLinks
             page.links.add(url2)
             page.inlinks[url] = url2
         }
-
+        
         webDb.put(page)
         webDb.flush()
     }

@@ -373,7 +373,9 @@ interface PulsarContext: AutoCloseable {
      * @param model The model to chat
      * @param apiKey The api key to chat
      */
-    fun chat(prompt: String, model: String, apiKey: String): ModelResponse
+    fun chat(prompt: String, conf: ImmutableConfig): ModelResponse
+    
+    fun chat(userMessage: String, systemMessage: String, conf: ImmutableConfig): ModelResponse
     
     /**
      * Persist the webpage into the storage immediately.

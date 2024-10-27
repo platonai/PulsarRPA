@@ -8,7 +8,6 @@ import ai.platon.pulsar.skeleton.common.options.PulsarOptions
 import ai.platon.pulsar.skeleton.common.options.deprecated.CrawlOptions
 import com.google.common.collect.Lists
 import org.apache.commons.collections4.CollectionUtils
-import org.junit.Assert.assertEquals
 import kotlin.test.*
 import java.util.*
 import kotlin.test.assertTrue

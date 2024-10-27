@@ -1,21 +1,3 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a getConf of the License at
- *
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.SParser
@@ -31,7 +13,7 @@ import java.util.*
 
 /**
  * Created by vincent on 17-1-17.
- * Copyright @ 2013-2023 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved.
  *
  * @author vincent
  */
@@ -45,22 +27,21 @@ abstract class AbstractConfiguration {
     val mode get() = if (isDistributedFs) "cluster" else "local"
 
     /**
-     * Hadoop compatible configuration
+     * Hadoop compatible configuration.
      */
     protected val conf: KConfiguration
 
     /**
-     * Spring core is the first class dependency now
+     * Spring core is the first class dependency now.
      */
     var environment: Environment? = null
     
     constructor(
-        profile: String = System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
+        profile: String = System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
         loadDefaults: Boolean = true,
         resources: Iterable<String> = DEFAULT_RESOURCES
     ) {
-        conf = KConfiguration(loadDefaults)
-        conf.addLegacyResources(profile, mode, loadDefaults, resources)
+        conf = KConfiguration(profile = profile, extraResources = resources, loadDefaults = loadDefaults)
     }
     
     constructor(conf: KConfiguration) {
@@ -68,7 +49,7 @@ abstract class AbstractConfiguration {
     }
     
     /**
-     * Check if we are running on hdfs
+     * Check if we are running on hdfs.
      *
      * @return a boolean.
      */
@@ -86,8 +67,7 @@ abstract class AbstractConfiguration {
     fun size() = conf.size()
 
     /**
-     * Get the value of the `name` property, `null` if
-     * no such property exists.
+     * Get the value of the `name` property, `null` if no such property exists.
      *
      * @param name the property name, will be trimmed before get value.
      * @return the value of the `name`, or null if no such property exists.
@@ -98,10 +78,8 @@ abstract class AbstractConfiguration {
 
     /**
      * Get the value of the `name`. If the key is deprecated,
-     * it returns the value of the first key which replaces the deprecated key
-     * and is not null.
-     * If no such property exists,
-     * then `defaultValue` is returned.
+     * it returns the value of the first key which replaces the deprecated key and is not null.
+     * If no such property exists, then `defaultValue` is returned.
      *
      * @param name         property name, will be trimmed before get value.
      * @param defaultValue default value.
@@ -112,9 +90,7 @@ abstract class AbstractConfiguration {
     /**
      * Get the value of the `name` property as an `int`.
      *
-     *
-     * If no such property exists, the provided default value is returned,
-     * or if the specified value is not a valid `int`,
+     * If no such property exists, the provided default value is returned, or if the specified value is not a valid `int`,
      * then an error is thrown.
      *
      * @param name         property name.
@@ -125,15 +101,12 @@ abstract class AbstractConfiguration {
     fun getInt(name: String, defaultValue: Int) = p(name).getInt(defaultValue)
 
     /**
-     * Get the value of the `name` property as a set of comma-delimited
-     * `int` values.
-     *
+     * Get the value of the `name` property as a set of comma-delimited `int` values.
      *
      * If no such property exists, an empty array is returned.
      *
      * @param name property name
-     * @return property value interpreted as an array of comma-delimited
-     * `int` values
+     * @return property value interpreted as an array of comma-delimited `int` values
      */
     fun getInts(name: String) = p(name).ints
 
@@ -145,8 +118,7 @@ abstract class AbstractConfiguration {
      *
      * @param name         property name.
      * @param defaultValue default value.
-     * @return property value as a `long`,
-     * or `defaultValue`.
+     * @return property value as a `long`, or `defaultValue`.
      * @throws java.lang.NumberFormatException when the value is invalid
      */
     fun getLong(name: String, defaultValue: Long) = p(name).getLong(defaultValue)
@@ -159,8 +131,7 @@ abstract class AbstractConfiguration {
      *
      * @param name         property name.
      * @param defaultValue default value.
-     * @return property value as a `float`,
-     * or `defaultValue`.
+     * @return property value as a `float`, or `defaultValue`.
      * @throws java.lang.NumberFormatException when the value is invalid
      */
     fun getFloat(name: String, defaultValue: Float) = p(name).getFloat(defaultValue)

@@ -218,7 +218,7 @@ object ResultSetUtils {
             val columnType = metaData.getColumnType(i)
             // remove ValueDom from the result
             if (columnType != ValueDom.type && columnName !in arrayOf("DOC", "DOM")) {
-                record[columnName.toLowerCase()] = resultSet.getObject(i)
+                record[columnName.lowercase(Locale.getDefault())] = resultSet.getObject(i)
             }
         }
         return record
@@ -244,7 +244,7 @@ object ResultSetUtils {
             val columnType = metaData.getColumnType(i)
             // remove ValueDom from the result
             if (columnType != ValueDom.type && columnName !in arrayOf("DOC", "DOM")) {
-                record[columnName.toLowerCase()] = resultSet.getString(i)
+                record[columnName.lowercase(Locale.getDefault())] = resultSet.getString(i)
             }
         }
         return record

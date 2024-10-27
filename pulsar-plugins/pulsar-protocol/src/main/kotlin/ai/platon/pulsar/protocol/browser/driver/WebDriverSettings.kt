@@ -94,9 +94,12 @@ open class WebDriverSettings(conf: ImmutableConfig): BrowserSettings(conf) {
         chromeOptions.headless = isHeadless
         chromeOptions.noSandbox = noSandbox
 
-        chromeOptions.addArgument("window-size", formatViewPort())
+        chromeOptions
+            .addArgument("window-position", "0,0")
+            .addArgument("window-size", formatViewPort())
             .addArgument("pageLoadStrategy", pageLoadStrategy)
             .addArgument("throwExceptionOnScriptError", "true")
+//            .addArgument("start-maximized")
 
         return chromeOptions
     }

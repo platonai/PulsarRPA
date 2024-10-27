@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrl
 import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters
 import kotlin.test.*
-import org.junit.runner.RunWith
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
@@ -17,7 +17,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 @Ignore
-@RunWith(SpringRunner::class)
+
 @ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
 class TestCrawlFilter {
     private val detailUrls = arrayOf(

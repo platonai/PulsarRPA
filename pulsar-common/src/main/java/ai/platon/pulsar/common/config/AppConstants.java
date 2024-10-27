@@ -245,4 +245,7 @@ public interface AppConstants {
 
     String SCENT_PSEUDO_CSS_ID_MENU = "#scent-pseudo-id-menu";
     String SCENT_PSEUDO_CSS_ID_TITLE = "#scent-pseudo-id-title";
+
+
+    String LOCAL_FILE_SERVE_PREFIX = "http://localfile.org";
 }

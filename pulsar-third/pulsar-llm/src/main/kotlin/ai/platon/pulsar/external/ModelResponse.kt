@@ -1,7 +1,11 @@
 package ai.platon.pulsar.external
 
 data class ModelResponse(
-    val content: String,
-    val state: ResponseState,
-    val tokenUsage: TokenUsage,
-)
+    var content: String,
+    var state: ResponseState = ResponseState.STOP,
+    var tokenUsage: TokenUsage = TokenUsage(),
+) {
+    fun isLocalCached(): Boolean {
+        return state == ResponseState.LOCAL_CACHE
+    }
+}

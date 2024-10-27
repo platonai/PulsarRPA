@@ -1,21 +1,4 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 package ai.platon.pulsar.skeleton.crawl.component
 
 import ai.platon.pulsar.common.AppPaths.PATH_BANNED_URLS
@@ -27,7 +10,7 @@ import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.common.metrics.EnumCounterRegistry
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
-import ai.platon.pulsar.skeleton.crawl.common.JobInitialized
+import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
 import ai.platon.pulsar.skeleton.crawl.common.URLUtil
 import ai.platon.pulsar.skeleton.crawl.common.URLUtil.GroupMode
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
@@ -53,8 +36,8 @@ class GenerateComponent(
     val urlNormalizers: ChainedUrlNormalizer,
     val fetchSchedule: FetchSchedule,
     val messageWriter: MiscMessageWriter,
-    val conf: ImmutableConfig
-) : Parameterized, JobInitialized {
+    override var conf: ImmutableConfig
+) : Parameterized, LazyConfigurable {
 
     companion object {
         enum class Counter {
@@ -99,20 +82,20 @@ class GenerateComponent(
         unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(PATH_UNREACHABLE_HOSTS))
     }
 
-    override fun setup(jobConf: ImmutableConfig) {
-        crawlId = jobConf.get(CapabilityTypes.STORAGE_CRAWL_ID, "")
-        batchId = jobConf.get(CapabilityTypes.BATCH_ID, AppConstants.ALL_BATCHES)
-        fetchMode = jobConf.getEnum(CapabilityTypes.FETCH_MODE, FetchMode.BROWSER)
+    override fun configure(conf1: ImmutableConfig) {
+        crawlId = conf1.get(CapabilityTypes.STORAGE_CRAWL_ID, "")
+        batchId = conf1.get(CapabilityTypes.BATCH_ID, AppConstants.ALL_BATCHES)
+        fetchMode = conf1.getEnum(CapabilityTypes.FETCH_MODE, FetchMode.BROWSER)
 
-        groupMode = jobConf.getEnum(CapabilityTypes.FETCH_QUEUE_MODE, GroupMode.BY_HOST)
-        reGenerate = jobConf.getBoolean(CapabilityTypes.GENERATE_REGENERATE, false)
-        reGenerateSeeds = jobConf.getBoolean(CapabilityTypes.GENERATE_REGENERATE_SEEDS, false)
-        filter = jobConf.getBoolean(CapabilityTypes.GENERATE_FILTER, true)
-        normalise = jobConf.getBoolean(CapabilityTypes.GENERATE_NORMALISE, true)
-        maxDistance = jobConf.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, AppConstants.DISTANCE_INFINITE)
-        pseudoCurrTime = jobConf.getInstant(CapabilityTypes.GENERATE_CUR_TIME, startTime)
-        topN = jobConf.getInt(CapabilityTypes.GENERATE_TOP_N, -1)
-        lastGeneratedRows = jobConf.getInt(CapabilityTypes.GENERATE_LAST_GENERATED_ROWS, -1)
+        groupMode = conf1.getEnum(CapabilityTypes.FETCH_QUEUE_MODE, GroupMode.BY_HOST)
+        reGenerate = conf1.getBoolean(CapabilityTypes.GENERATE_REGENERATE, false)
+        reGenerateSeeds = conf1.getBoolean(CapabilityTypes.GENERATE_REGENERATE_SEEDS, false)
+        filter = conf1.getBoolean(CapabilityTypes.GENERATE_FILTER, true)
+        normalise = conf1.getBoolean(CapabilityTypes.GENERATE_NORMALISE, true)
+        maxDistance = conf1.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, AppConstants.DISTANCE_INFINITE)
+        pseudoCurrTime = conf1.getInstant(CapabilityTypes.GENERATE_CUR_TIME, startTime)
+        topN = conf1.getInt(CapabilityTypes.GENERATE_TOP_N, -1)
+        lastGeneratedRows = conf1.getInt(CapabilityTypes.GENERATE_LAST_GENERATED_ROWS, -1)
         lowGeneratedRowsRate = 0.8f
         lowGeneratedRows = (lowGeneratedRowsRate * topN).toInt()
     }

@@ -12,11 +12,54 @@ import java.time.Instant
  * An abstract url is a url with some common properties and methods.
  * */
 abstract class AbstractUrl(
+    /**
+     * The url specification of the hyperlink, it is usually normalized, and can contain load arguments.
+     * */
     override var url: String,
-    override var args: String? = null,
+    /**
+     * The anchor text
+     * */
+    override var text: String = "",
+    /**
+     * The order of this hyperlink in it referrer page
+     * */
+    override var order: Int = 0,
+    /**
+     * The url of the referrer page
+     * */
     override var referrer: String? = null,
+    /**
+     * The additional url arguments
+     * */
+    override var args: String? = null,
+    /**
+     * The hypertext reference, It defines the address of the document, which this time is linked from
+     * */
     override var href: String? = null,
+    /**
+     * The priority of this hyperlink
+     * */
     override var priority: Int = 0,
+    /**
+     * The language of this hyperlink
+     * */
+    override var lang: String = "*",
+    /**
+     * The country of this hyperlink
+     * */
+    override var country: String = "*",
+    /**
+     * The district of this hyperlink
+     * */
+    override var district: String = "*",
+    /**
+     * The maximum number of retries
+     * */
+    override var nMaxRetry: Int = 3,
+    /**
+     * The depth of this hyperlink
+     * */
+    override var depth: Int = 0
 ) : ComparableUrlAware {
 
     override val configuredUrl get() = UrlUtils.mergeUrlArgs(url, args)
@@ -39,15 +82,7 @@ abstract class AbstractUrl(
             val deadTime = OptionUtils.findOption(args, listOf("-deadline", "-deadTime", "--dead-time")) ?: ""
             return DateTimes.parseBestInstantOrNull(deadTime) ?: DateTimes.doomsday
         }
-
-    override var lang: String = "*"
-
-    override var country: String = "*"
-
-    override var district: String = "*"
-
-    override var nMaxRetry: Int = 3
-
+    
     /**
      * An abstract url can compare to one of the following types:
      * 1. a [String]
@@ -85,11 +120,13 @@ abstract class AbstractUrl(
     /**
      * Serialize the url to a string builder
      * */
-    protected open fun serializeTo(sb: StringBuilder): StringBuilder {
+    open fun serializeTo(sb: StringBuilder): StringBuilder {
         sb.append(url)
-
+        
         args?.takeIf { it.isNotBlank() }?.replace("\"", "\\\"")
             ?.let { sb.append(" -args ").append(it) }
+        text.takeUnless { it.isEmpty() }?.let { sb.append(" -text ").append(it) }
+        order.takeUnless { it == 0 }?.let { sb.append(" -order ").append(it) }
         href?.let { sb.append(" -href ").append(it) }
         referrer?.let { sb.append(" -referrer ").append(it) }
         priority.takeIf { it != 0 }?.let { sb.append(" -priority ").append(it) }
@@ -97,33 +134,8 @@ abstract class AbstractUrl(
         country.takeIf { it != "*" }?.let { sb.append(" -country ").append(it) }
         district.takeIf { it != "*" }?.let { sb.append(" -district ").append(it) }
         nMaxRetry.takeIf { it != 3 }?.let { sb.append(" -nMaxRetry ").append(it) }
-
-        return sb
-    }
-}
-
-/**
- * An abstract stateful url is a [StatefulUrl] with some common properties and methods.
- * */
-abstract class AbstractStatefulUrl(
-    url: String,
-    args: String? = null,
-    referrer: String? = null,
-) : AbstractUrl(url, args, referrer), StatefulUrl {
-    override var status: Int = ResourceStatus.SC_CREATED
-    override var modifiedAt: Instant = Instant.now()
-    override val createdAt: Instant = Instant.now()
-
-    override fun serializeTo(sb: StringBuilder): StringBuilder {
-        super.serializeTo(sb)
-
-        status.takeUnless { it == ResourceStatus.SC_CREATED }
-            ?.let { sb.append(" -status ").append(it) }
-        authToken?.let { sb.append(" -authToken ").append(it) }
-        remoteAddr?.let { sb.append(" -remoteAddr ").append(it) }
-        createdAt.let { sb.append(" -createdAt ").append(it) }
-        modifiedAt.let { sb.append(" -modifiedAt ").append(it) }
-
+        depth.takeUnless { it == 0 }?.let { sb.append(" -depth ").append(it) }
+        
         return sb
     }
 }

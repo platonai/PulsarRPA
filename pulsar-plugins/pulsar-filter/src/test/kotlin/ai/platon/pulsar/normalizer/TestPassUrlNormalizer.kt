@@ -16,23 +16,24 @@
  */
 package ai.platon.pulsar.normalizer
 
-import org.junit.Assert
-import org.junit.runner.RunWith
-import org.springframework.beans.factory.annotation.Autowired
 import ai.platon.pulsar.skeleton.crawl.filter.SCOPE_DEFAULT
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringRunner
-import kotlin.test.*
 
-@RunWith(SpringRunner::class)
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+@SpringJUnitConfig
 @ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
 class TestPassUrlNormalizer {
     @Autowired
-    private val normalizer: PassUrlNormalizer? = null
+    private lateinit var normalizer: PassUrlNormalizer
+    
     @Test
     fun testPassURLNormalizer() {
         val url = "http://www.example.com/test/..//"
-        val result = normalizer!!.normalize(url, SCOPE_DEFAULT)
-        Assert.assertEquals(url, result)
+        val result = normalizer.normalize(url, SCOPE_DEFAULT)
+        assertEquals(url, result)
     }
 }

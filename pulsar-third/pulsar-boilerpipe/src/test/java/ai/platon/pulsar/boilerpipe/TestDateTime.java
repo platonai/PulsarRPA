@@ -7,7 +7,7 @@ import ai.platon.pulsar.boilerpipe.utils.ScentUtils;
 import ai.platon.pulsar.common.DateTimeDetector;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Created by vincent on 16-11-9.
@@ -108,12 +108,12 @@ public class TestDateTime {
         DateTimeDetector detector = new DateTimeDetector();
         for (String dateString : dateStrings) {
             OffsetDateTime parsedDate = detector.detectDate(dateString);
-            assertNotNull(dateString, parsedDate);
+            assertNotNull(parsedDate, dateString);
         }
 
         for (String dateString : dateTimeStrings) {
             OffsetDateTime parsedDate = detector.detectDateTime(dateString);
-            assertNotNull(dateString, parsedDate);
+            assertNotNull(parsedDate, dateString);
         }
     }
 
@@ -129,7 +129,7 @@ public class TestDateTime {
         for (String dateString : dateTimeStrings) {
             OffsetDateTime parsedDate = detector.detectDateTimeLeniently(dateString);
             System.out.println(parsedDate);
-            assertNotNull(dateString, parsedDate);
+            assertNotNull(parsedDate, dateString);
         }
     }
 

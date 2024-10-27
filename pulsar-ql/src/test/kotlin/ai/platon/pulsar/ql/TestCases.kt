@@ -4,7 +4,6 @@ import kotlin.test.Ignore
 import kotlin.test.Test
 
 class TestCases: TestBase() {
-    private val productIndexUrl = TestResource.productIndexUrl
 
     @Test
     fun testXSqlHelp() {

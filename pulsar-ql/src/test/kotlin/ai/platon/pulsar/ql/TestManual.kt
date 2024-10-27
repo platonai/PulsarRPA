@@ -4,8 +4,6 @@ import kotlin.test.Ignore
 import kotlin.test.Test
 
 class TestManual : TestBase() {
-    private val productIndexUrl = TestResource.productIndexUrl
-    private val productDetailUrl = TestResource.productDetailUrl
 
     @Test
     fun load() {
@@ -134,9 +132,9 @@ class TestManual : TestBase() {
     }
 
     /**
-     * Extracting by box is the most simple method to extract text from Web pages
+     * Extracting by box is the simplest method to extract text from Web pages
      * */
-    @Ignore("SlowTest")
+    @Ignore("Disable box feature, it's never be used")
     @Test
     fun extractByBox() {
         val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>30)"
@@ -157,8 +155,9 @@ WHERE DOM_CH(DOM) > 100;
     }
 
     /**
-     * Extracting by box is the most simple method to extract text from Web pages
+     * Extracting by box is the simplest method to extract text from Web pages
      * */
+    @Ignore("Disable box feature, it's never be used")
     @Test
     fun extractByBox2() {
         val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>=40)"
@@ -175,7 +174,8 @@ WHERE DOM_CH(DOM) > 100
 """
         execute(sql)
     }
-
+    
+    @Ignore("Mia.com is closed")
     @Test
     fun testSqlVariables() {
         val sql = """

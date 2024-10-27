@@ -191,7 +191,7 @@ public class PulsarParams extends Params {
     public static final String VAR_GENERATE_FORCE_FIRST = "generate_force_first";
     public static final String VAR_FETCH_STATE = "fetch_state";
     public static final String VAR_PREV_FETCH_TIME_BEFORE_UPDATE = "prev_fetch_time_before_update";
-    public static final String VAR_PRIVACY_CONTEXT_NAME = "privacy_context_name";
+    public static final String VAR_PRIVACY_CONTEXT_DISPLAY = "privacy_context_name";
     public static final String VAR_PRIVACY_AGENT = "VAR_PRIVACY_AGENT";
     /**
      * Additional load status to report by PageLoadStatusFormatter.

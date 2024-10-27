@@ -8,6 +8,9 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
+import ai.platon.pulsar.dom.nodes.node.ext.cleanText
+import ai.platon.pulsar.persist.ProtocolStatus
+import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -98,7 +101,7 @@ class LoadComponent(
     private var numWrite = 0
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
-    private var reportCount = 0
+    private var reportCount = AtomicInteger()
     private val batchTaskCount = AtomicInteger()
 
     /**
@@ -345,6 +348,7 @@ class LoadComponent(
             // if a page is loaded from cache, the content remains unchanged and should not persist to database
             // TODO: clone the underlying data or not?
             page.unsafeCloneGPage(cachedPage)
+            // if the underlying data is not copied, the persist content will be null
             page.clearPersistContent()
 
             page.tmpContent = cachedPage.content
@@ -440,16 +444,20 @@ class LoadComponent(
             pageCache.putDatum(page.url, page)
         }
 
-        // TODO: Too many cancels in 1.10.x, so do not report canceled pages, it will be improved in the further version
+        // Too many cancels in 1.10.x, so do not report canceled pages, it will be improved in the further version
         if (!page.isCached && !page.isCanceled) {
             report(page)
         }
 
         // We might use the cached page's content in parse phase
-        if (options.parse) {
-            // TODO: do we need page.protocalStatus.isSuccess?
+        if (options.parserEngaged()) {
+            // TODO: do we need page.protocolStatus.isSuccess?
             if (!page.isCanceled) {
                 parse(page, normURL.options)
+                if (page.parseStatus.isFailed) {
+                    // re-fetch the page if failed to parse
+                    page.protocolStatus = ProtocolStatus.retry(RetryScope.CRAWL, "parse failed")
+                }
             }
         }
 
@@ -461,7 +469,7 @@ class LoadComponent(
                     "A completable link must have a onLoaded handler"
                 }
             }
-            
+
             GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onLoaded?.invoke(page)
             // The more specific handlers has the opportunity to override the result of more general handlers.
             page.loadEventHandlers?.onLoaded?.invoke(page)
@@ -512,12 +520,10 @@ class LoadComponent(
 
             taskLogger.info(report)
 
-            if (reportCount == 0) {
+            if (reportCount.getAndIncrement() == 0) {
                 val logExplainUrl = "https://github.com/platonai/PulsarRPA/blob/master/docs/log-format.md"
                 taskLogger.info("Log explanation: $logExplainUrl")
             }
-
-            ++reportCount
         }
     }
 

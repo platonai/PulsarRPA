@@ -1,9 +1,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.urls.UrlTree
-import com.google.common.collect.Multiset
 import com.google.common.collect.TreeMultimap
-import com.google.common.collect.TreeMultiset
 import com.google.common.net.InetAddresses
 import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.math3.distribution.NormalDistribution
@@ -244,22 +242,22 @@ class TestCases {
 
         // text.forEachIndexed { i, it -> println("$i.\t$it -> ${StringUtil.isActuallyWhitespace(it.toInt())}") }
 
-        assertEquals("helloworld", Strings.stripNonCJKChar(text))
+        assertEquals("helloworld", Strings.removeNonCJKChar(text))
 
-        assertEquals("hell\uE60Do\uDF21world", Strings.stripNonPrintableChar(text))
-        assertEquals("", Strings.stripNonPrintableChar("              "))
-        assertEquals("a b c d e f g", Strings.stripNonPrintableChar(" a b c d e f g "))
+        assertEquals("hell\uE60Do\uDF21world", Strings.removeNonPrintableChar(text))
+        assertEquals("", Strings.removeNonPrintableChar("              "))
+        assertEquals("a b c d e f g", Strings.removeNonPrintableChar(" a b c d e f g "))
 
         val unicodeChars = arrayOf('', 'Ɑ', 'ⰿ', '', '?', 'И', ' ')
         unicodeChars.forEach {
-            print(Strings.stripNonPrintableChar("<$it>"))
+            print(Strings.removeNonPrintableChar("<$it>"))
             print('\t')
-            print(Strings.stripNonCJKChar("<$it>", Strings.DEFAULT_KEEP_CHARS))
+            print(Strings.removeNonCJKChar("<$it>", Strings.DEFAULT_KEEP_CHARS))
             println()
         }
 
         arrayOf("hello world", " hello      world ", " hello world ", "                 hello world").forEach {
-            assertEquals("hello world", Strings.stripNonPrintableChar(it))
+            assertEquals("hello world", Strings.removeNonPrintableChar(it))
         }
     }
 

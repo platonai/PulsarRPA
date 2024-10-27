@@ -14,7 +14,7 @@
   <parent>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-app</artifactId>
-    <version>1.13.3-SNAPSHOT</version>
+    <version>2.0.4-SNAPSHOT</version>
   </parent>
 
   <artifactId>pulsar-examples</artifactId>
@@ -22,44 +22,19 @@
 
   <build>
     <defaultGoal>package</defaultGoal>
-
-    <plugins>
-      <!--
-      Command line to execute:
-
-      java -Xmx10g -Xms2G -cp pulsar-examples*.jar \
-      -D"loader.main=ai.platon.pulsar.examples.sites.food.dianping.RestaurantCrawlerKt" \
-      org.springframework.boot.loader.PropertiesLauncher
-      -->
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <version>${spring-boot.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <skip>true</skip>
-          <mainClass>ai.platon.pulsar.examples.sites.food.dianping.RestaurantCrawlerKt</mainClass>
-          <addResources>true</addResources>
-          <executable>true</executable>
-        </configuration>
-      </plugin>
-    </plugins>
   </build>
 
   <dependencies>
     <dependency>
       <groupId>ai.platon.pulsar</groupId>
-      <artifactId>pulsar-all</artifactId>
+      <artifactId>pulsar-rest</artifactId>
+      <version>${project.version}</version>
     </dependency>
+
     <dependency>
       <groupId>ai.platon.pulsar</groupId>
       <artifactId>pulsar-tests</artifactId>
+      <version>${project.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

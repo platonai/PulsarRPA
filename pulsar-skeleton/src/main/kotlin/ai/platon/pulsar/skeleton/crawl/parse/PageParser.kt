@@ -1,21 +1,4 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 package ai.platon.pulsar.skeleton.crawl.parse
 
 import ai.platon.pulsar.common.FlowState
@@ -24,10 +7,9 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
-import ai.platon.pulsar.skeleton.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.skeleton.crawl.common.JobInitialized
+import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
 import ai.platon.pulsar.skeleton.crawl.common.URLUtil
 import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters
 import ai.platon.pulsar.skeleton.crawl.filter.SCOPE_FETCH
@@ -54,11 +36,11 @@ import kotlin.system.measureTimeMillis
 
 class PageParser(
     val parserFactory: ParserFactory,
-    val conf: ImmutableConfig,
+    override var conf: ImmutableConfig,
     val crawlFilters: CrawlFilters = CrawlFilters(conf),
     val signature: Signature = TextMD5Signature(),
     val messageWriter: MiscMessageWriter? = null
-) : Parameterized, JobInitialized, AutoCloseable {
+) : Parameterized, LazyConfigurable, AutoCloseable {
 
     enum class Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
     init { MetricsSystem.reg.register(Counter::class.java) }
@@ -84,7 +66,7 @@ class PageParser(
         params.withLogger(logger).info(true)
     }
 
-    override fun setup(jobConf: ImmutableConfig) {
+    override fun configure(conf1: ImmutableConfig) {
     }
 
     /**

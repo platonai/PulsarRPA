@@ -1,26 +1,11 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 package ai.platon.pulsar.common
 
-import org.junit.Assert
-import org.junit.Test
 import java.io.IOException
+import kotlin.test.DefaultAsserter.assertTrue
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.fail
 
 /** Unit tests for GZIPUtils methods.  */
 class TestGZIPUtils {
@@ -156,35 +141,35 @@ project progresses.<br>
     fun testZipUnzip(origBytes: ByteArray) {
         val compressedBytes = GZIPUtils.zip(origBytes)!!
         
-        Assert.assertTrue("compressed array is not smaller!", compressedBytes.size < origBytes.size)
+        assertTrue("compressed array is not smaller!", compressedBytes.size < origBytes.size)
         
         var uncompressedBytes: ByteArray? = null
         try {
             uncompressedBytes = GZIPUtils.unzip(compressedBytes)
         } catch (e: IOException) {
-            Assert.fail("caught exception '$e' during unzip()")
+            fail("caught exception '$e' during unzip()")
         }
-        Assert.assertEquals(
-            "uncompressedBytes is wrong size",
+        assertEquals(
             uncompressedBytes!!.size.toLong(),
-            origBytes.size.toLong()
+            origBytes.size.toLong(),
+            "uncompressedBytes is wrong size",
         )
         
-        for (i in origBytes.indices) if (origBytes[i] != uncompressedBytes[i]) Assert.fail("uncompressedBytes does not match origBytes")
+        for (i in origBytes.indices) if (origBytes[i] != uncompressedBytes[i]) fail("uncompressedBytes does not match origBytes")
     }
     
     fun testZipUnzipBestEffort(origBytes: ByteArray) {
         val compressedBytes = GZIPUtils.zip(origBytes)!!
         
-        Assert.assertTrue(
+        assertTrue(
             "compressed array is not smaller!",
             compressedBytes.size < origBytes.size
         )
         
         val uncompressedBytes = GZIPUtils.unzipBestEffort(compressedBytes)
-        Assert.assertEquals("uncompressedBytes is wrong size", uncompressedBytes.size.toLong(), origBytes.size.toLong())
+        assertEquals(uncompressedBytes.size.toLong(), origBytes.size.toLong(), "uncompressedBytes is wrong size")
         
-        for (i in origBytes.indices) if (origBytes[i] != uncompressedBytes[i]) Assert.fail("uncompressedBytes does not match origBytes")
+        for (i in origBytes.indices) if (origBytes[i] != uncompressedBytes[i]) fail("uncompressedBytes does not match origBytes")
     }
     
     fun testTruncation(origBytes: ByteArray) {
@@ -207,7 +192,7 @@ project progresses.<br>
 //                System.out.println("truncated to len " + i + ", trunc.length=  "
 //                        + trunc.length);
                 
-                for (j in trunc.indices) if (trunc[j] != origBytes[j]) Assert.fail(
+                for (j in trunc.indices) if (trunc[j] != origBytes[j]) fail(
                     "truncated/uncompressed array differs at pos " + j
                         + " (compressed data had been truncated to len " + i + ")"
                 )
@@ -218,13 +203,13 @@ project progresses.<br>
     fun testLimit(origBytes: ByteArray) {
         val compressedBytes = GZIPUtils.zip(origBytes)
         
-        Assert.assertTrue("compressed array is not smaller!", compressedBytes.size < origBytes.size)
+        assertTrue("compressed array is not smaller!", compressedBytes.size < origBytes.size)
         
         for (i in origBytes.indices) {
             val uncompressedBytes = GZIPUtils.unzipBestEffort(compressedBytes, i)
-            Assert.assertEquals("uncompressedBytes is wrong size", uncompressedBytes.size.toLong(), i.toLong())
+            assertEquals(uncompressedBytes.size, i, "uncompressedBytes is wrong size")
             for (j in 0 until i) if (origBytes[j] != uncompressedBytes[j]) {
-                Assert.fail("uncompressedBytes does not match origBytes")
+                fail("uncompressedBytes does not match origBytes")
             }
         }
     }

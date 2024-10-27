@@ -81,8 +81,6 @@ public interface ParseStatusCodes {
     /**
      * Parsing failed. Other related parts of the content are needed to halt
      * parsing. The list of URLs to missing parts may be provided in arguments.
-     * The SimpleFetcher may decide to fetch these parts at once, then put them into
-     * Content.metadata, and supply them for re-parsing.
      */
     int FAILED_MISSING_PARTS = 204;
     /**

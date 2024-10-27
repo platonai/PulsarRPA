@@ -2,7 +2,8 @@ package ai.platon.pulsar.browser.driver.chrome.impl
 
 import ai.platon.pulsar.browser.driver.chrome.DefaultWebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.Transport
-import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.warnForClose
@@ -40,13 +41,13 @@ class TransportImpl : Transport {
      * Connect the supplied annotated endpoint instance to its server. The supplied
      * object must be a class decorated with the class level.
      *
-     * @throws WebSocketServiceException if the annotated endpoint instance is not valid,
+     * @throws ChromeIOException if the annotated endpoint instance is not valid,
      * or if there was a network or protocol problem that prevented the client endpoint
      * being connected to its server.
      * @throws IllegalStateException if called during the deployment phase of the containing
      * application.
      * */
-    @Throws(WebSocketServiceException::class, IllegalStateException::class)
+    @Throws(ChromeIOException::class, IllegalStateException::class)
     override fun connect(uri: URI) {
         val webSocketService = this
         
@@ -72,54 +73,45 @@ class TransportImpl : Transport {
             WEB_SOCKET_CONTAINER.connectToServer(endpoint, uri)
         } catch (e: DeploymentException) {
             logger.warn("Failed to connect to ws server | $uri", e)
-            throw WebSocketServiceException("Failed connecting to ws server | $uri", e)
+            throw ChromeIOException("Failed connecting to ws server | $uri", e)
         } catch (e: IOException) {
             logger.warn("Failed to connect to ws server | $uri", e)
-            throw WebSocketServiceException("Failed connecting to ws server | $uri", e)
+            throw ChromeIOException("Failed connecting to ws server | $uri", e)
         }
     }
     
-    @Throws(WebSocketServiceException::class)
+    @Throws(ChromeIOException::class)
     override fun send(message: String) {
         meterRequests.mark()
         
         try {
             tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.basicRemote.sendText(message)
+        } catch (e: IllegalStateException) {
+            throw ChromeIOException("IllegalStateException, connection has been closed", e)
         } catch (e: IOException) {
-            throw WebSocketServiceException("Connection is closed", e)
-        } catch (e: IllegalArgumentException) {
-            throw WebSocketServiceException("Connection is closed", e)
-        } catch (e: java.lang.IllegalStateException) {
-            throw WebSocketServiceException("Connection is closed", e)
-        } catch (e: Exception) {
-            logger.error("[Unexpected] | ${session.requestURI}", e)
+            throw ChromeIOException("There is a problem delivering the message", e)
         }
     }
     
-    @Throws(WebSocketServiceException::class)
+    @Throws(ChromeIOException::class)
     override fun sendAsync(message: String): Future<Void> {
         meterRequests.mark()
-        
+
         return try {
             tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.asyncRemote.sendText(message)
+        } catch (e: IllegalStateException) {
+            throw ChromeIOException("The connection has been closed", e)
         } catch (e: IOException) {
-            throw WebSocketServiceException("Connection is closed", e)
-        } catch (e: IllegalArgumentException) {
-            throw WebSocketServiceException("Connection is closed", e)
-        } catch (e: java.lang.IllegalStateException) {
-            throw WebSocketServiceException("Connection is closed", e)
-        } catch (e: Exception) {
-            logger.error("Unexpected exception | ${session.requestURI}", e)
-            throw e
+            throw ChromeIOException("There is a problem delivering the message", e)
         }
     }
-    
-    @Throws(WebSocketServiceException::class)
+
+    @Throws(ChromeDriverException::class)
     override fun addMessageHandler(consumer: Consumer<String>) {
         if (session.messageHandlers.isNotEmpty()) {
-            throw WebSocketServiceException("You are already subscribed to this web socket service.")
+            throw ChromeDriverException("You are already subscribed to this web socket service.")
         }
         
         session.addMessageHandler(DevToolsMessageHandler(consumer))
@@ -173,9 +165,9 @@ class TransportImpl : Transport {
          *
          * @param uri URI to connect to.
          * @return WebSocketService implementation.
-         * @throws WebSocketServiceException If it fails to connect.
+         * @throws ChromeIOException If it fails to connect.
          */
-        @Throws(WebSocketServiceException::class)
+        @Throws(ChromeIOException::class)
         fun create(uri: URI): Transport {
             return TransportImpl().also { it.connect(uri) }
         }

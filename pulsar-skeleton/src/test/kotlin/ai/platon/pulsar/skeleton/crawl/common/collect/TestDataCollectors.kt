@@ -104,7 +104,7 @@ class TestDataCollectors : TestBase() {
     @Test
     fun `When iterate through fetch iterable then items are correct`() {
         val fetchIterable = UrlFeeder(urlPool, lowerCacheSize)
-        val resourceURI = ResourceLoader.getResource("seeds/head100/best-sellers.txt")!!.toURI()
+        val resourceURI = ResourceLoader.getURL("seeds/head100/best-sellers.txt").toURI()
         val collector = LocalFileHyperlinkCollector(Paths.get(resourceURI), Priority13.NORMAL)
         fetchIterable.addDefaultCollectors()
         fetchIterable.addCollector(collector)

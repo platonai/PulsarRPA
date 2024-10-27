@@ -14,7 +14,6 @@ import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
-import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
@@ -423,44 +422,15 @@ abstract class AbstractPulsarSession(
     
     override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
     
-    override fun chat(prompt: String): ModelResponse {
-        val model = sessionConfig["llm.name"] ?: throw IllegalArgumentException("No LLM model name specified.")
-        val apiKey = sessionConfig["llm.apiKey"] ?: throw IllegalArgumentException("No LLM API key specified.")
-        return context.chat(prompt, model, apiKey)
-    }
+    override fun chat(prompt: String) = context.chat(prompt, sessionConfig)
     
-    override fun chat(context: String, prompt: String): ModelResponse {
-        // TODO: config the template to generate the final prompt
-        val prompt1 = prompt + "\n\n" + context
-        
-        val response = chat(prompt1)
-        
-        return response
-    }
+    override fun chat(userMessage: String, systemMessage: String) = context.chat(userMessage, systemMessage, sessionConfig)
     
-    override fun chat(page: WebPage, prompt: String): ModelResponse {
-        val prompt1 = prompt + "\n\n" + page.contentAsString
-        
-        val response = chat(prompt1)
-        
-        return response
-    }
+    override fun chat(page: WebPage, prompt: String) = chat(prompt + "\n\n" + page.contentAsString)
     
-    override fun chat(document: FeaturedDocument, prompt: String): ModelResponse {
-        val prompt1 = prompt + "\n\n" + document.text
-        
-        val response = chat(prompt1)
-        
-        return response
-    }
+    override fun chat(document: FeaturedDocument, prompt: String) = chat(prompt + "\n\n" + document.text)
     
-    override fun chat(element: Element, prompt: String): ModelResponse {
-        val prompt1 = prompt + "\n\n" + element.text()
-        
-        val response = chat(prompt1)
-        
-        return response
-    }
+    override fun chat(element: Element, prompt: String) = chat(prompt + "\n\n" + element.text())
     
     override fun data(name: String): Any? = let { dataCache[name] }
     

@@ -63,7 +63,8 @@ Function Invoke-MavenBuild
   {
     Push-Location $Directory -ErrorAction Stop
 
-    & $MvnCmd @MvnOptions
+    # . $MvnCmd @MvnOptions
+    .\mvnw @MvnOptions
 
     if ($LASTEXITCODE -ne 0)
     {

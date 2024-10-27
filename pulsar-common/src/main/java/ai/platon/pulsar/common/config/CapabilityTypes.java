@@ -9,21 +9,32 @@ package ai.platon.pulsar.common.config;
  */
 public interface CapabilityTypes {
 
-    /**
-     * Common Parameters
-     */
-
-    String APP_ID_KEY = "app.ident";
-    String APP_NAME_KEY = "app.name";
-
-    String APP_TMP_DIR_KEY = "app.tmp.dir";
-
-    String LEGACY_CONFIG_PROFILE = "legacy.config.profile";
+    ///////////////////////////////////////////////////
+    // Common Parameters
 
     /**
-     * @deprecated legacy configurations are deprecated
+     * The key to retrieve the application identity string, can be specified by system environment variable or system property.
+     *
+     * The default value is the current username.
      * */
-    String SYSTEM_PROPERTY_SPECIFIED_RESOURCES = "system.property.specified.resources";
+    String APP_ID_KEY = "app.ident";
+    /**
+     * The key to retrieve the application name, can be specified by system environment variable or system property.
+     * */
+    String APP_NAME_KEY = "app.name";
+    /**
+     * The key to retrieve the profile, can be specified by system environment variable or system property.
+     * */
+    String PROFILE_KEY = "profile";
+    /**
+     * The key to retrieve the data directory, can be specified by system environment variable or system property.
+     * */
+    String APP_DATA_DIR_KEY = "app.data.dir";
+
+    /**
+     * The key to retrieve the base directory of the temporary files.
+     * */
+    String APP_TMP_BASE_DIR_KEY = "app.tmp.base.dir";
 
     String DRY_RUN = "pulsar.dry.run";
 
@@ -32,26 +43,15 @@ public interface CapabilityTypes {
      * */
     String MAIN_LOOP_CONCURRENCY_OVERRIDE = "main.loop.concurrency.override";
 
-    /**
-     * Args
-     */
-    String TENANT_ID = "tenantId";
-
-    String START_KEY = "startKey";
-
-    String END_KEY = "endKey";
-
     String START = "start";
 
     String LIMIT = "limit";
 
     String CRAWL_MAX_DISTANCE = "crawl.max.distance";
 
-    String BATCH_ID = "pulsar.batch.name";
+    String BATCH_ID = "batch.name";
 
-    String PARAM_JOB_NAME = "pulsar.job.name";
-
-    String MAPREDUCE_JOB_REDUCES = "mapreduce.job.reduces";
+    String PARAM_JOB_NAME = "job.name";
 
     String FORCE = "force";
 

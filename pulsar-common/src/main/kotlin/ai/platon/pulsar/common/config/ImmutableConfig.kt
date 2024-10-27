@@ -12,12 +12,12 @@ open class ImmutableConfig : AbstractConfiguration {
     constructor(): this(false)
 
     constructor(loadDefaults: Boolean): this(
-        System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
+        System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
         loadDefaults
     )
 
     constructor(
-        profile: String = System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
+        profile: String = System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
         loadDefaults: Boolean = true,
         resources: Iterable<String> = mutableSetOf()
     ): super(profile, loadDefaults, resources)

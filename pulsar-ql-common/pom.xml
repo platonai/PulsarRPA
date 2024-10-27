@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.13.3-SNAPSHOT</version>
+        <version>2.0.4-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-ql-common</artifactId>
@@ -38,7 +38,6 @@
                             <artifactSet>
                                 <includes>
                                     <include>ai.platon.pulsar:*</include>
-                                    <include>org.apache.hadoop:*</include>
                                     <include>org.jetbrains.kotlin:*</include>
                                     <include>org.jetbrains:*</include>
                                     <include>com.google:*</include>
@@ -46,7 +45,7 @@
                             </artifactSet>
                             <filters>
                                 <filter>
-                                    <artifact>*:*</artifact>
+                                    <artifact>ai.platon.pulsar:*</artifact>
                                     <excludes>
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
@@ -55,16 +54,6 @@
                                     </excludes>
                                 </filter>
                             </filters>
-<!--                            <relocations>-->
-<!--                                <relocation>-->
-<!--                                    <pattern>ai.platon.pulsar</pattern>-->
-<!--                                    <shadedPattern>ai.platon.pulsar.shaded</shadedPattern>-->
-<!--                                </relocation>-->
-<!--                                <relocation>-->
-<!--                                    <pattern>org.apache.hadoop</pattern>-->
-<!--                                    <shadedPattern>org.apache.hadoop.shaded</shadedPattern>-->
-<!--                                </relocation>-->
-<!--                            </relocations>-->
                         </configuration>
                     </execution>
                 </executions>
@@ -77,12 +66,12 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-h2</artifactId>
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>*</groupId>-->
-<!--                    <artifactId>*</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
+            <!--            <exclusions>-->
+            <!--                <exclusion>-->
+            <!--                    <groupId>*</groupId>-->
+            <!--                    <artifactId>*</artifactId>-->
+            <!--                </exclusion>-->
+            <!--            </exclusions>-->
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>

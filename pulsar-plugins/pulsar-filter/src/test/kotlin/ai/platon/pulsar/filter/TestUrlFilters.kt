@@ -17,20 +17,17 @@
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilters
-import org.junit.Assert
-import kotlin.test.*
-import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.context.junit4.SpringRunner
+import kotlin.test.Test
+import kotlin.test.assertNull
 
-@RunWith(SpringRunner::class)
 class TestUrlFilters : UrlFilterTestBase() {
     @Autowired
     private val urlFilters: CrawlUrlFilters? = null
-
+    
     @Test
     fun testUrlFilter() {
         val url = urlFilters!!.filter("http://someurl/")
-        Assert.assertNull(url)
+        assertNull(url)
     }
 }

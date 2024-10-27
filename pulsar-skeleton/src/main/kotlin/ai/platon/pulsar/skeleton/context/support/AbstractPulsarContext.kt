@@ -3,8 +3,17 @@ package ai.platon.pulsar.skeleton.context.support
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.*
+import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.external.ChatModelFactory
+import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.persist.WebDBException
+import ai.platon.pulsar.persist.WebDb
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.common.urls.CombinedUrlNormalizer
+import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.PulsarContext
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops
 import ai.platon.pulsar.skeleton.crawl.common.FetchState
@@ -12,15 +21,6 @@ import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.crawl.component.*
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
-import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.external.ModelFactory
-import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.persist.WebDBException
-import ai.platon.pulsar.persist.WebDb
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.skeleton.common.urls.CombinedUrlNormalizer
-import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarEnvironment
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -39,140 +39,145 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 abstract class AbstractPulsarContext(
-        val applicationContext: AbstractApplicationContext,
-        val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
-): PulsarContext, AutoCloseable {
-
+    val applicationContext: AbstractApplicationContext,
+    val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
+) : PulsarContext, AutoCloseable {
+    
     companion object {
         val instanceSequencer = AtomicInteger()
     }
-
+    
     private val logger = LoggerFactory.getLogger(AbstractPulsarContext::class.java)
-
+    
     /**
      * Registered closable objects, will be closed by Pulsar object
      * */
     private val closableObjects = ConcurrentSkipListSet<PrioriClosable>()
-
+    
     /** Flag that indicates whether this context has been closed already. */
     private val closed = AtomicBoolean()
-
+    
     /** Synchronization monitor for the "refresh" and "destroy" */
     private val startupShutdownMonitor = Any()
-
+    
     /** Reference to the JVM shutdown hook, if registered */
     private var shutdownHook: Thread? = null
-
+    
     private val beanCreationFailures = AtomicInteger()
-
-    private val webDbOrNull: WebDb? get() = when {
-        isActive -> webDb
-        else -> null
-    }
-
-    private val loadComponentOrNull: LoadComponent? get() = when {
-        beanCreationFailures.get() > 0 -> null
-        isActive -> {
-            try {
-                loadComponent
-            } catch (e: BeanCreationException) {
-                if (beanCreationFailures.compareAndSet(0, 1)) {
-                    logger.error("Failed to create LoadComponent bean", e)
-                } else {
-                    beanCreationFailures.incrementAndGet()
-                }
-                null
-            }
+    
+    private val webDbOrNull: WebDb?
+        get() = when {
+            isActive -> webDb
+            else -> null
         }
-        else -> null
-    }
-
+    
+    private val loadComponentOrNull: LoadComponent?
+        get() = when {
+            beanCreationFailures.get() > 0 -> null
+            isActive -> {
+                try {
+                    loadComponent
+                } catch (e: BeanCreationException) {
+                    if (beanCreationFailures.compareAndSet(0, 1)) {
+                        logger.error("Failed to create LoadComponent bean", e)
+                    } else {
+                        beanCreationFailures.incrementAndGet()
+                    }
+                    null
+                }
+            }
+            
+            else -> null
+        }
+    
     /**
      * Return null if everything is OK, or return NIL if something wrong
      * */
-    private val abnormalPage get() = when {
-        loadComponentOrNull != null -> null // everything is OK
-        else -> WebPage.NIL
-    }
-
+    private val abnormalPage
+        get() = when {
+            loadComponentOrNull != null -> null // everything is OK
+            else -> WebPage.NIL
+        }
+    
     /**
      * Return null if everything is OK, or return a empty list if something wrong
      * */
-    private val abnormalPages: List<WebPage>? get() = when {
-        loadComponentOrNull != null -> null // everything is OK
-        else -> listOf()
-    }
-
+    private val abnormalPages: List<WebPage>?
+        get() = when {
+            loadComponentOrNull != null -> null // everything is OK
+            else -> listOf()
+        }
+    
     /**
      * Flag that indicates whether this context is currently active.
      * */
     override val isActive get() = !closed.get() && applicationContext.isActive
-
+    
     /**
      * The context id
      * */
     override val id = instanceSequencer.incrementAndGet()
-
+    
     init {
         AppContext.start()
     }
-
+    
     /**
      * An immutable config is which loaded from the config file at process startup, and never changes
      * */
     override val unmodifiedConfig: ImmutableConfig get() = getBean()
-
+    
     /**
      * Url normalizers
      * */
     @Deprecated("Inappropriate name", ReplaceWith("urlNormalizer"))
     open val urlNormalizers: ChainedUrlNormalizer get() = getBean()
-
+    
     /**
      * Url normalizer
      * */
     override val urlNormalizer: ChainedUrlNormalizer get() = getBean()
-
+    
     /**
      * Url normalizer
      * */
     open val urlNormalizerOrNull: ChainedUrlNormalizer? get() = runCatching { urlNormalizer }.getOrNull()
-
+    
     /**
      * The web db
      * */
     open val webDb: WebDb get() = getBean()
-
+    
     open val globalCacheFactory: GlobalCacheFactory get() = getBean()
-
+    
     open val injectComponent: InjectComponent get() = getBean()
-
+    
     open val fetchComponent: BatchFetchComponent get() = getBean()
-
+    
     open val parseComponent: ParseComponent get() = getBean()
-
+    
     open val updateComponent: UpdateComponent get() = getBean()
-
+    
     open val loadComponent: LoadComponent get() = getBean()
-
+    
     override val globalCache: GlobalCache get() = globalCacheFactory.globalCache
-
+    
     override val crawlPool: UrlPool get() = globalCache.urlPool
-
+    
     override val crawlLoops: CrawlLoops get() = getBean()
-
+    
     /**
      * The start time
      * */
     val startTime = System.currentTimeMillis()
-
+    
     /**
      * All open sessions
      * */
     val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
-
+    
     private val crawlPoolOrNull: UrlPool? get() = runCatching { crawlPool }.getOrNull()
-
+    
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
      * */
@@ -180,7 +185,7 @@ abstract class AbstractPulsarContext(
     override fun <T : Any> getBean(requiredType: KClass<T>): T {
         return applicationContext.getBean(requiredType.java)
     }
-
+    
     /**
      * Get a bean with the specified class, returns null if the bean doesn't exist
      * */
@@ -190,24 +195,24 @@ abstract class AbstractPulsarContext(
         }
         return applicationContext.runCatching { getBean(requiredType.java) }.getOrNull()
     }
-
+    
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
      * */
     @Throws(BeansException::class)
     inline fun <reified T : Any> getBean(): T = getBean(T::class)
-
+    
     /**
      * Get a bean with the specified class, returns null if the bean doesn't exist
      * */
     inline fun <reified T : Any> getBeanOrNull(): T? = getBeanOrNull(T::class)
-
+    
     /**
      * Create a session
      * */
     @Throws(Exception::class)
     abstract override fun createSession(): AbstractPulsarSession
-
+    
     /**
      * Close the given session
      * */
@@ -216,7 +221,7 @@ abstract class AbstractPulsarContext(
         logger.info("Removing PulsarSession #{}", session.id)
         sessions.remove(session.id)
     }
-
+    
     /**
      * Register close objects, the objects will be closed when the context closes
      * */
@@ -226,34 +231,35 @@ abstract class AbstractPulsarContext(
         }
         closableObjects.add(PrioriClosable(priority, closable))
     }
-
+    
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormURL {
         val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
-        return normalize(PlainUrl(url0), options, toItemOption)
+        val link = Hyperlink(url0, href = url0)
+        return normalize(link, options, toItemOption)
     }
-
+    
     override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormURL? {
         if (url == null) return null
         return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
     }
-
+    
     override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormURL> {
         return urls.mapNotNull { normalizeOrNull(it, options, toItemOption) }
     }
-
+    
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormURL {
         return CombinedUrlNormalizer(urlNormalizerOrNull).normalize(url, options, toItemOption)
     }
-
+    
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormURL? {
         if (url == null) return null
         return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
     }
-
+    
     override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean): List<NormURL> {
         return urls.mapNotNull { normalizeOrNull(it, options, toItemOption) }
     }
-
+    
     /**
      * Inject an url
      *
@@ -264,130 +270,130 @@ abstract class AbstractPulsarContext(
     override fun inject(url: String): WebPage {
         return abnormalPage ?: injectComponent.inject(UrlUtils.splitUrlArgs(url))
     }
-
+    
     /**
-     * Inject an url
+     * Inject an url.
      *
-     * @param url The url which can be followed by arguments
-     * @return The web page created
+     * @param url The url which can be followed by arguments.
+     * @return The web page created.
      */
     @Throws(WebDBException::class)
     override fun inject(url: NormURL): WebPage {
         return abnormalPage ?: injectComponent.inject(url.spec, url.args)
     }
-
+    
     /**
-     * Get a webpage from the storage
+     * Get a webpage from the storage.
      * */
     @Throws(WebDBException::class)
     override fun get(url: String): WebPage {
         return webDbOrNull?.get(url, false) ?: WebPage.NIL
     }
-
+    
     @Throws(WebDBException::class)
     override fun get(url: String, vararg fields: String): WebPage {
         return webDbOrNull?.get(url, false, arrayOf(*fields)) ?: WebPage.NIL
     }
-
+    
     /**
-     * Get a webpage from the storage
+     * Get a webpage from the storage.
      * */
     @Throws(WebDBException::class)
     override fun getOrNull(url: String): WebPage? {
         return webDbOrNull?.getOrNull(url, false)
     }
-
+    
     /**
-     * Get a webpage from the storage
+     * Get a webpage from the storage.
      * */
     @Throws(WebDBException::class)
     override fun getOrNull(url: String, vararg fields: String): WebPage? {
         return webDbOrNull?.getOrNull(url, false, arrayOf(*fields))
     }
-
+    
     @Throws(WebDBException::class)
     override fun getContent(url: String): ByteBuffer? = webDbOrNull?.getContent(url)
-
+    
     @Throws(WebDBException::class)
     override fun getContentAsString(url: String): String? = webDbOrNull?.getContentAsString(url)
-
+    
     /**
-     * Check if a page exists in the storage
+     * Check if a page exists in the storage.
      * */
     @Throws(WebDBException::class)
     override fun exists(url: String) = webDbOrNull?.exists(url) == true
-
+    
     /**
-     * Check the fetch state of a page
+     * Check the fetch state of a page.
      * */
     override fun fetchState(page: WebPage, options: LoadOptions) =
         loadComponentOrNull?.fetchState(page, options) ?: CheckState(FetchState.DO_NOT_FETCH, "closed")
-
+    
     /**
-     * Scan pages in the storage
+     * Scan pages in the storage.
      * */
     @Throws(WebDBException::class)
     override fun scan(urlPrefix: String): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix) ?: listOf<WebPage>().iterator()
     }
-
+    
     /**
-     * Scan pages in the storage
+     * Scan pages in the storage.
      * */
     @Throws(WebDBException::class)
     override fun scan(urlPrefix: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
-
+    
     /**
-     * Scan pages in the storage
+     * Scan pages in the storage.
      * */
     @Throws(WebDBException::class)
     override fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
-
+    
     /**
-     * Load an page with specified options, see [LoadOptions] for all options
+     * Load an page with specified options, see [LoadOptions] for all options.
      *
-     * @param url     The url which can be followed by arguments
-     * @param options The load options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     * @param url     The url which can be followed by arguments.
+     * @param options The load options.
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned.
      */
     @Throws(WebDBException::class)
     override fun load(url: String, options: LoadOptions): WebPage {
         val normURL = normalize(url, options)
         return abnormalPage ?: loadComponent.load(normURL)
     }
-
+    
     /**
-     * Load a url with specified options, see [LoadOptions] for all options
+     * Load a url with specified options, see [LoadOptions] for all options.
      *
-     * @param url     The url which can be followed by arguments
-     * @param options The load options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     * @param url     The url which can be followed by arguments.
+     * @param options The load options.
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned.
      */
     @Throws(WebDBException::class)
     override fun load(url: URL, options: LoadOptions): WebPage {
         return abnormalPage ?: loadComponent.load(url, options)
     }
-
+    
     /**
-     * Load a url, options can be specified following the url, see [LoadOptions] for all options
+     * Load a url, options can be specified following the url, see [LoadOptions] for all options.
      *
-     * @param url The url which can be followed by arguments
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     * @param url The url which can be followed by arguments.
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned.
      */
     @Throws(WebDBException::class)
     override fun load(url: NormURL): WebPage {
         return abnormalPage ?: loadComponent.load(url)
     }
-
+    
     @Throws(WebDBException::class)
     override suspend fun loadDeferred(url: NormURL): WebPage {
         return abnormalPage ?: loadComponent.loadDeferred(url)
     }
-
+    
     /**
      * Load a batch of urls with the specified options.
      *
@@ -406,25 +412,25 @@ abstract class AbstractPulsarContext(
         startLoopIfNecessary()
         return abnormalPages ?: loadComponent.loadAll(normalize(urls, options))
     }
-
+    
     @Throws(WebDBException::class)
     override fun loadAll(urls: Iterable<NormURL>): List<WebPage> {
         startLoopIfNecessary()
         return abnormalPages ?: loadComponent.loadAll(urls)
     }
-
+    
     @Throws(WebDBException::class)
     override fun loadAsync(url: NormURL): CompletableFuture<WebPage> {
         startLoopIfNecessary()
         return loadComponentOrNull?.loadAsync(url) ?: CompletableFuture.completedFuture(WebPage.NIL)
     }
-
+    
     @Throws(WebDBException::class)
     override fun loadAllAsync(urls: Iterable<NormURL>): List<CompletableFuture<WebPage>> {
         startLoopIfNecessary()
         return loadComponentOrNull?.loadAllAsync(urls) ?: listOf()
     }
-
+    
     override fun submit(url: UrlAware): AbstractPulsarContext {
         startLoopIfNecessary()
         if (url.isStandard || url is DegenerateUrl) {
@@ -432,15 +438,15 @@ abstract class AbstractPulsarContext(
         }
         return this
     }
-
+    
     override fun submitAll(urls: Iterable<UrlAware>): AbstractPulsarContext {
         startLoopIfNecessary()
         crawlPoolOrNull?.addAll(urls.filter { it.isStandard || it is DegenerateUrl })
         return this
     }
-
+    
     /**
-     * Parse the WebPage content using parseComponent
+     * Parse the WebPage content using parseComponent.
      */
     override fun parse(page: WebPage): FeaturedDocument? {
         val parser = loadComponentOrNull?.parseComponent
@@ -450,44 +456,45 @@ abstract class AbstractPulsarContext(
     /**
      * Chat with the AI model.
      */
-    override fun chat(prompt: String, model: String, apiKey: String): ModelResponse {
-        return ModelFactory.getOrCreate(model, apiKey).call(prompt)
-    }
+    override fun chat(prompt: String, conf: ImmutableConfig) = ChatModelFactory.getOrCreate(conf).call(prompt)
+    
+    override fun chat(userMessage: String, systemMessage: String, conf: ImmutableConfig) =
+        ChatModelFactory.getOrCreate(conf).call(userMessage, systemMessage)
     
     /**
-     * Persist the page into the storage
+     * Persist the page into the storage.
      * */
     @Throws(WebDBException::class)
     override fun persist(page: WebPage) {
         webDbOrNull?.put(page, false)
     }
-
+    
     /**
-     * Delete the page from the storage
+     * Delete the page from the storage.
      * */
     @Throws(WebDBException::class)
     override fun delete(url: String) {
         webDbOrNull?.delete(url)
     }
-
+    
     /**
-     * Delete the page from the storage
+     * Delete the page from the storage.
      * */
     @Throws(WebDBException::class)
     override fun delete(page: WebPage) {
         webDbOrNull?.delete(page.url)
     }
-
+    
     /**
-     * Flush the storage
+     * Flush the storage.
      * */
     @Throws(WebDBException::class)
     override fun flush() {
         webDbOrNull?.flush()
     }
-
+    
     /**
-     * Wait until there is no tasks in the main loop
+     * Wait until there is no tasks in the main loop.
      * */
     @Throws(InterruptedException::class)
     override fun await() {
@@ -495,10 +502,10 @@ abstract class AbstractPulsarContext(
             crawlLoops.await()
         }
     }
-
+    
     /**
-     * Register a shutdown hook with the JVM runtime, closing this context
-     * on JVM shutdown unless it has already been closed at that time.
+     * Register a shutdown hook with the JVM runtime, closing this context on JVM shutdown unless it has already been
+     * closed at that time.
      *
      * Delegates to `doClose()` for the actual closing procedure.
      * @see Runtime.addShutdownHook
@@ -513,9 +520,9 @@ abstract class AbstractPulsarContext(
             Runtime.getRuntime().addShutdownHook(this.shutdownHook)
         }
     }
-
+    
     /**
-     * Close this pulsar context
+     * Close this pulsar context.
      *
      * Delegates to `doClose()` for the actual closing procedure.
      * Also removes a JVM shutdown hook, if registered, as it's not needed anymore.
@@ -536,10 +543,10 @@ abstract class AbstractPulsarContext(
             }
         }
     }
-
+    
     protected open fun doClose() {
         AppContext.terminate()
-
+        
         if (closed.compareAndSet(false, true)) {
             try {
                 doClose0()
@@ -557,27 +564,27 @@ abstract class AbstractPulsarContext(
                 logger.error("[Unexpected] Failed to close context | $this", t)
             }
         }
-
+        
         AppContext.endTermination()
     }
-
+    
     protected open fun doClose0() {
         logger.info("Closing context #{} with {} sessions | {}", id, sessions.size, this::class.java.simpleName)
-
+        
         val sessions1 = sessions.values.toList()
         sessions.clear()
         val closableObjects1 = closableObjects.toList()
         closableObjects.clear()
-
+        
         sessions1.forEach { session ->
             runCatching { session.close() }.onFailure { warnForClose(this, it) }
         }
-
+        
         closableObjects1.sortedByDescending { it.priority }.forEach { closable ->
             runCatching { closable.closeable.close() }.onFailure { warnForClose(this, it) }
         }
     }
-
+    
     private fun startLoopIfNecessary() {
         if (isActive && !crawlLoops.isStarted) {
             crawlLoops.start()

@@ -1,21 +1,3 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package ai.platon.pulsar.skeleton.crawl.parse.html
 
 import ai.platon.pulsar.persist.metadata.MultiMetadata
@@ -32,10 +14,12 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
      * A convenience method. Returns the current value of `noIndex`.
      */
     var noIndex = false
+    
     /**
      * A convenience method. Returns the current value of `noFollow`.
      */
     var noFollow = false
+    
     /**
      * A convenience method. Returns the current value of `noCache`.
      */
@@ -73,21 +57,23 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
      * Sets the `refreshHref`.
      */
     var refreshHref: URL? = null
+    
     /**
      * Returns all collected values of the general meta tags. Property names are
      * tag names, property values are "content" values.
      */
     val generalTags = MultiMetadata()
+    
     /**
      * Returns all collected values of the "http-equiv" meta tags. Property names
      * are tag names, property values are "content" values.
      */
     val httpEquivTags = Properties()
-
+    
     init {
         walk(root)
     }
-
+    
     /**
      * Sets all boolean values to `false`. Clears all other tags.
      */
@@ -102,7 +88,7 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
         generalTags.clear()
         httpEquivTags.clear()
     }
-
+    
     /**
      * Utility class with indicators for the robots directives "noindex" and
      * "nofollow", and HTTP-EQUIV/no-cache
@@ -112,7 +98,7 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
             if ("body".equals(node.nodeName, ignoreCase = true)) { // META tags should not be under body
                 return
             }
-
+            
             if ("meta".equals(node.nodeName, ignoreCase = true)) {
                 val attrs = node.attributes
                 var nameNode: Node? = null
@@ -121,7 +107,7 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                 // Retrieves name, http-equiv and content attribues
                 for (i in 0 until attrs.length) {
                     val attr = attrs.item(i)
-                    val attrName = attr.nodeName.toLowerCase()
+                    val attrName = attr.nodeName.lowercase(Locale.getDefault())
                     if (attrName == "name") {
                         nameNode = attr
                     } else if (attrName == "http-equiv") {
@@ -132,11 +118,11 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                 }
                 if (nameNode != null) {
                     if (contentNode != null) {
-                        val name = nameNode.nodeValue.toLowerCase()
+                        val name = nameNode.nodeValue.lowercase(Locale.getDefault())
                         generalTags.put(name, contentNode.nodeValue)
                         if ("robots" == name) {
                             if (contentNode != null) {
-                                val directives = contentNode.nodeValue.toLowerCase()
+                                val directives = contentNode.nodeValue.lowercase(Locale.getDefault())
                                 var index = directives.indexOf("none")
                                 if (index >= 0) {
                                     noIndex = true
@@ -163,11 +149,11 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                 }
                 if (equivNode != null) {
                     if (contentNode != null) {
-                        val name = equivNode.nodeValue.toLowerCase()
+                        val name = equivNode.nodeValue.lowercase(Locale.getDefault())
                         var content = contentNode.nodeValue
                         httpEquivTags.setProperty(name, content)
                         if ("pragma" == name) {
-                            content = content.toLowerCase()
+                            content = content.lowercase(Locale.getDefault())
                             val index = content.indexOf("no-cache")
                             if (index >= 0) noCache = true
                         } else if ("refresh" == name) {
@@ -175,17 +161,17 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                             val time = if (idx == -1) { // just the refresh time
                                 content
                             } else content.substring(0, idx)
-
+                            
                             try {
                                 refreshTime = time.toInt()
                                 // skip this if we couldn't parse the time
                                 refresh = true
                             } catch (e: Exception) {
                             }
-
+                            
                             var refreshUrl: URL? = null
                             if (refresh && idx != -1) { // set the URL
-                                idx = content.toLowerCase().indexOf("url=")
+                                idx = content.lowercase(Locale.getDefault()).indexOf("url=")
                                 if (idx == -1) {
                                     // assume a mis-formatted entry with just the url
                                     idx = content.indexOf(';') + 1
@@ -242,7 +228,7 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
             }
         }
     }
-
+    
     override fun toString(): String {
         val sb = StringBuffer()
         sb.append("base=$baseHref, noCache=$noCache, noFollow=$noFollow, noIndex=$noIndex, refresh=$refresh, refreshHref=$refreshHref")

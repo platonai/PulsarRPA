@@ -8,8 +8,6 @@ import kotlin.test.Ignore
 import kotlin.test.Test
 
 class TestExtractCases : TestBase() {
-    private val productIndexUrl = TestResource.productIndexUrl
-    private val productDetailUrl = TestResource.productDetailUrl
     private val newsIndexUrl = TestResource.newsIndexUrl
     private val newsDetailUrl = TestResource.newsDetailUrl
     private val urlGroups = TestResource.urlGroups

@@ -9,7 +9,7 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
 
     val listeners: Map<EventType, List<Function<Any>>> get() = listenerMap
 
-    var eventExceptionHandler: (Throwable) -> Unit = {
+    open var eventExceptionHandler: (Throwable) -> Unit = {
         warnInterruptible(AbstractEventEmitter::class, it)
     }
 

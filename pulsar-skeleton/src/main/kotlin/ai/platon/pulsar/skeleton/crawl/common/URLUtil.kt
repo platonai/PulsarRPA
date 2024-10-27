@@ -1,28 +1,14 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 package ai.platon.pulsar.skeleton.crawl.common
 
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.urls.UrlUtils.getURLOrNull
 import ai.platon.pulsar.skeleton.common.domain.DomainSuffix
 import ai.platon.pulsar.skeleton.common.domain.DomainSuffixes
-import ai.platon.pulsar.common.urls.UrlUtils.getURLOrNull
+import com.google.common.net.InternetDomainName
 import org.slf4j.LoggerFactory
 import java.net.*
+import java.nio.file.Path
 import java.util.*
 
 /**
@@ -50,27 +36,27 @@ import java.util.*
 object URLUtil {
     private val logger = LoggerFactory.getLogger(URLUtil::class.java)
     private val IP_REGEX = Regex("(\\d{1,3}\\.){3}(\\d{1,3})")
-
+    
     fun getHost(url: String): String? {
         val u = getURLOrNull(url) ?: return null
         return getHost(u, GroupMode.BY_HOST)
     }
-
+    
     fun getHost(url: String, groupMode: GroupMode): String? {
         val u = getURLOrNull(url) ?: return null
         return getHost(u, groupMode)
     }
-
+    
     fun getHost(url: String, defaultHost: String, groupMode: GroupMode): String {
         val host = getHost(url, groupMode) ?: return defaultHost
         return host.ifEmpty { defaultHost }
     }
-
+    
     fun getHost(url: URL, defaultHost: String, groupMode: GroupMode): String {
         val host = getHost(url, groupMode) ?: return defaultHost
         return host.ifEmpty { defaultHost }
     }
-
+    
     fun getHost(url: URL, groupMode: GroupMode): String? {
         var host: String?
         if (groupMode == GroupMode.BY_IP) {
@@ -96,18 +82,66 @@ object URLUtil {
         }
         return host
     }
-
+    
+    /**
+     * Get the host's public suffix. For example, co.uk, com, etc.
+     *
+     * @since 6.0
+     */
+    fun getPublicSuffix(url: URL): String? {
+        return InternetDomainName.from(url.host).publicSuffix()?.toString()
+    }
+    
+    /**
+     * Returns the portion of this domain name that is one level beneath the {@linkplain
+     * #isPublicSuffix() public suffix}. For example, for {@code x.adwords.google.co.uk} it returns
+     * {@code google.co.uk}, since {@code co.uk} is a public suffix. Similarly, for {@code
+     * myblog.blogspot.com} it returns the same domain, {@code myblog.blogspot.com}, since {@code
+     * blogspot.com} is a public suffix.
+     *
+     * <p>If {@link #isTopPrivateDomain()} is true, the current domain name instance is returned.
+     *
+     * <p>This method can be used to determine the probable highest level parent domain for which
+     * cookies may be set, though even that depends on individual browsers' implementations of cookie
+     * controls.
+     *
+     * @throws IllegalStateException if this domain does not end with a public suffix
+     * @since 6.0
+     */
+    fun getTopPrivateDomain(url: URL): String {
+        return InternetDomainName.from(url.host).topPrivateDomain().toString()
+    }
+    
     /**
      * Returns the domain name of the url. The domain name of a url is the
      * substring of the url's hostname, w/o subdomain names. As an example <br></br>
      * `
-     * getDomainName(conf, new URL(http://lucene.apache.org/))
+     * getDomainName(conf, new http://lucene.apache.org/)
     ` * <br></br>
      * will return <br></br>
      * ` apache.org`
      *
      * @see com.google.common.net.InternetDomainName.topPrivateDomain
+     *
+     * @throws MalformedURLException
      */
+    @Throws(MalformedURLException::class)
+    fun getDomainName(url: String): String? {
+        return getDomainName(URI.create(url).toURL())
+    }
+    
+    /**
+     * Returns the domain name of the url. The domain name of a url is the
+     * substring of the url's hostname, w/o subdomain names. As an example
+     * <br></br>
+     * `getDomainName(conf, new URL(http://lucene.apache.org/))`
+     * <br></br>
+     * will return <br></br>
+     * ` apache.org`
+     *
+     * @see com.google.common.net.InternetDomainName.topPrivateDomain
+     */
+    @Deprecated("Use getTopPrivateDomain(url) instead", ReplaceWith("getTopPrivateDomain(url)"))
     fun getDomainName(url: URL): String {
         val tlds = DomainSuffixes.getInstance()
         var host = url.host
@@ -126,29 +160,12 @@ object URLUtil {
         }
         return candidate
     }
-
-    /**
-     * Returns the domain name of the url. The domain name of a url is the
-     * substring of the url's hostname, w/o subdomain names. As an example <br></br>
-     * `
-     * getDomainName(conf, new http://lucene.apache.org/)
-    ` * <br></br>
-     * will return <br></br>
-     * ` apache.org`
-     *
-     * @see com.google.common.net.InternetDomainName.topPrivateDomain
-     *
-     * @throws MalformedURLException
-     */
-    @Throws(MalformedURLException::class)
-    fun getDomainName(url: String): String? {
-        return getDomainName(URL(url))
-    }
-
+    
+    @Deprecated("Use getTopPrivateDomain(url) instead", ReplaceWith("getTopPrivateDomain(url)"))
     fun getDomainName(url: String, defaultDomain: String): String {
-        return kotlin.runCatching { getDomainName(url) }.getOrNull()?:defaultDomain
+        return kotlin.runCatching { getDomainName(url) }.getOrNull() ?: defaultDomain
     }
-
+    
     /**
      * Returns whether the given urls have the same domain name. As an example, <br></br>
      * ` isSameDomain(new URL("http://lucene.apache.org")
@@ -160,7 +177,7 @@ object URLUtil {
     fun isSameDomainName(url1: URL, url2: URL): Boolean {
         return getDomainName(url1).equals(getDomainName(url2), ignoreCase = true)
     }
-
+    
     /**
      * Returns whether the given urls have the same domain name. As an example, <br></br>
      * ` isSameDomain("http://lucene.apache.org"
@@ -174,7 +191,7 @@ object URLUtil {
     fun isSameDomainName(url1: String?, url2: String?): Boolean {
         return isSameDomainName(URL(url1), URL(url2))
     }
-
+    
     /**
      * Returns the [DomainSuffix] corresponding to the last public part of
      * the hostname
@@ -185,18 +202,21 @@ object URLUtil {
         val u = getURLOrNull(url) ?: return null
         return getDomainSuffix(u)
     }
-
+    
     /**
      * Returns the [DomainSuffix] corresponding to the last public part of
      * the hostname
      *
      * @see com.google.common.net.InternetDomainName.publicSuffix
      */
+    @Deprecated("Use getPublicSuffix(url) instead", ReplaceWith("getPublicSuffix(url)"))
     fun getDomainSuffix(url: URL): DomainSuffix? {
         return getDomainSuffix(DomainSuffixes.getInstance(), url)
     }
-
-    fun getDomainSuffix(tlds: DomainSuffixes, url: URL): DomainSuffix? { // DomainSuffixes tlds = DomainSuffixes.getInstance();
+    
+    @Deprecated("Use getPublicSuffix(url) instead", ReplaceWith("getPublicSuffix(url)"))
+    fun getDomainSuffix(tlds: DomainSuffixes, url: URL): DomainSuffix? {
+        // DomainSuffixes tlds = DomainSuffixes.getInstance();
         val host = url.host
         if (IP_REGEX.matches(host)) {
             return null
@@ -220,8 +240,12 @@ object URLUtil {
      * the hostname
      */
     @Throws(MalformedURLException::class)
+    @Deprecated("Use getPublicSuffix(url) instead", ReplaceWith("getPublicSuffix(url)"))
     fun getDomainSuffix(tlds: DomainSuffixes, url: String?): DomainSuffix? {
-        return getDomainSuffix(tlds, URL(url))
+        if (url == null) {
+            return null
+        }
+        return getDomainSuffix(tlds, URI.create(url).toURL())
     }
 
     /** Partitions of the hostname of the url by "."  */
@@ -239,7 +263,7 @@ object URLUtil {
      */
     @Throws(MalformedURLException::class)
     fun getHostBatches(url: String): List<String> {
-        return getHostBatches(URL(url))
+        return getHostBatches(URI.create(url).toURL())
     }
 
     /**
@@ -403,7 +427,7 @@ object URLUtil {
      */
     @Throws(MalformedURLException::class)
     fun getOrigin(url: String): String {
-        val u = URL(url)
+        val u = URI.create(url).toURL()
         return u.protocol + "://" + u.host
     }
 
@@ -419,7 +443,7 @@ object URLUtil {
         }
 
         return try {
-            val u = URL(url)
+            val u = URI.create(url).toURL()
             u.protocol + "://" + u.host
         } catch (t: Throwable) {
             null
@@ -433,7 +457,7 @@ object URLUtil {
      * @return String The hostname for the url.
      */
     @Throws(MalformedURLException::class)
-    fun getHostName(url: String) = URL(url).host.lowercase(Locale.getDefault())
+    fun getHostName(url: String) = URI.create(url).host.lowercase(Locale.getDefault())
 
     /**
      * Returns the lowercase hostname for the url or null if the url is not well-formed.
@@ -447,15 +471,19 @@ object URLUtil {
         }
 
         return try {
-            URL(url).host.lowercase(Locale.getDefault())
+            URI.create(url).host.lowercase(Locale.getDefault())
         } catch (e: MalformedURLException) {
             null
         }
     }
 
     fun getHostName(url: String?, defaultValue: String): String {
+        if (url == null) {
+            return defaultValue
+        }
+        
         return try {
-            URL(url).host.lowercase(Locale.getDefault())
+            URI.create(url).host.lowercase(Locale.getDefault())
         } catch (e: MalformedURLException) {
             defaultValue
         }
@@ -474,7 +502,7 @@ object URLUtil {
         var url = url
         return try { // get the full url, and replace the query string with and empty string
             url = url.lowercase(Locale.getDefault())
-            val queryStr = URL(url).query
+            val queryStr = URI.create(url).query
             if (queryStr != null) url.replace("?$queryStr", "") else url
         } catch (e: MalformedURLException) {
             null
@@ -483,8 +511,12 @@ object URLUtil {
 
     @JvmStatic
     fun toASCII(url: String?): String? {
+        if (url == null) {
+            return null
+        }
+        
         return try {
-            val u = URL(url)
+            val u = URI.create(url).toURL()
             val host = u.host
             if (host == null || host.isEmpty()) {
                 // no host name => no punycoded domain name
@@ -501,8 +533,12 @@ object URLUtil {
 
     @JvmStatic
     fun toUNICODE(url: String?): String? {
+        if (url == null) {
+            return null
+        }
+        
         return try {
-            val u = URL(url)
+            val u = URI.create(url).toURL()
             val host = u.host
             if (host == null || host.isEmpty()) {
                 // no host name => no punycoded domain name
@@ -532,6 +568,16 @@ object URLUtil {
         }
     }
 
+    fun pathToUrl(path: Path): String {
+        val base64 = Base64.getUrlEncoder().encode(path.toString().toByteArray()).toString(Charsets.UTF_8)
+        val prefix = AppConstants.LOCAL_FILE_SERVE_PREFIX
+        return "$prefix?path=$base64"
+    }
+    
+    fun isLocalFile(url: String): Boolean {
+        return url.startsWith(AppConstants.LOCAL_FILE_SERVE_PREFIX)
+    }
+    
     /**
      * @see URLUtil
      */

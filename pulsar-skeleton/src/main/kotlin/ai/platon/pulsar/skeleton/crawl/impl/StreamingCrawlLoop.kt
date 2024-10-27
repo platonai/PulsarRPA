@@ -31,10 +31,11 @@ open class StreamingCrawlLoop(
 
     val isRunning get() = running.get()
 
-    override val urlFeeder by lazy { createUrlFeeder() }
-
     private lateinit var _crawler: StreamingCrawler
     override val crawler: Crawler get() = _crawler
+    
+    private lateinit var _urlFeeder: UrlFeeder
+    override val urlFeeder: UrlFeeder get() = _urlFeeder
 
     // TODO: better initialization, may use spring bean
     private val context get() = PulsarContexts.create()
@@ -42,7 +43,17 @@ open class StreamingCrawlLoop(
     init {
         // logger.info("Crawl loop is created | #{} | {}@{}", id, this::class.simpleName, hashCode())
     }
-
+    
+    override val abstract: String get() {
+        val status = if (isRunning) "isRunning" else "isStopped"
+        return "[$status] crawler: ${crawler.name}#${crawler.id}, urlPool: ${urlFeeder.urlPool} \n${urlFeeder.abstract}"
+    }
+    
+    override val report: String get() {
+        val status = if (isRunning) "isRunning" else "isStopped"
+        return "[$status] crawler: ${crawler.name}#${crawler.id}, urlPool: ${urlFeeder.urlPool} \n${urlFeeder.report}"
+    }
+    
     @Synchronized
     override fun start() {
         if (isRunning) {
@@ -59,6 +70,7 @@ open class StreamingCrawlLoop(
     override fun stop() {
         if (running.compareAndSet(true, false)) {
             _crawler.close()
+            _urlFeeder.clear()
 
             runBlocking { crawlJob?.cancelAndJoin() }
 
@@ -77,9 +89,6 @@ open class StreamingCrawlLoop(
     }
 
     private fun start0() {
-        logger.info("Crawl loop is started with {} link collectors | #{} | {}@{}",
-            urlFeeder.collectors.size, id, this, hashCode())
-
         val cx = context
         require(cx is AbstractPulsarContext) { "Expect context is AbstractPulsarContext, actual ${cx::class}#${cx.id}" }
         val applicationContext = cx.applicationContext
@@ -92,6 +101,7 @@ open class StreamingCrawlLoop(
         // clear the global illegal states, so the newly created crawler can work properly
         StreamingCrawler.clearIllegalState()
 
+        _urlFeeder = createUrlFeeder()
         val urls = urlFeeder.asSequence()
         _crawler = StreamingCrawler(urls, session, autoClose = false)
 
@@ -101,6 +111,9 @@ open class StreamingCrawlLoop(
                 _crawler.run(this)
             }
         }
+        
+        logger.info("Crawl loop is started with {} link collectors | #{} | {}@{}",
+            urlFeeder.collectors.size, id, this, hashCode())
     }
 
     private fun createUrlFeeder(): UrlFeeder {

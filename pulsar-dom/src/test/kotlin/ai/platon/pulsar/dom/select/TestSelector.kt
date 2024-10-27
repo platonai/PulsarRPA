@@ -363,7 +363,7 @@ class TestSelector {
 
     @Test
     fun caseInsensitive() {
-        val h = "<dIv tItle=bAr><div>" // mixed case so a simple toLowerCase() on value doesn't catch
+        val h = "<dIv tItle=bAr><div>" // mixed case so a simple lowercase(Locale.getDefault()) on value doesn't catch
         val doc = Jsoup.parse(h)
 
         assertEquals(2, doc.select("DiV").size.toLong())

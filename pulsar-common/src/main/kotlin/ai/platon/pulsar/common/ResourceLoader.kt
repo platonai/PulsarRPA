@@ -9,17 +9,22 @@ import java.nio.file.Paths
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
+import kotlin.io.path.toPath
 
 /**
- * Load resources
- */
+ * The ResourceLoader class is a utility class to load resources from the classpath.
+ *
+ * @see Class.getResource
+ * @see ClassLoader.getResource
+ * @see org.springframework.core.io.ResourceLoader
+ * */
 object ResourceLoader {
     private val logger = LoggerFactory.getLogger(ResourceLoader::class.java)
     private val lastModifiedTimes = ConcurrentHashMap<Path, Instant>()
     private val userClassFactories = ConcurrentLinkedDeque<ClassFactory>()
     private val classLoader = Thread.currentThread().contextClassLoader ?: ResourceLoader::class.java.classLoader
-
-    val LINE_FILTER: (line: String) -> Boolean = { line ->
+    
+    private val DEFAULT_LINE_FILTER: (line: String) -> Boolean = { line ->
         !line.startsWith("# ") && !line.startsWith("-- ") && line.isNotBlank()
     }
     
@@ -31,7 +36,7 @@ object ResourceLoader {
     fun addClassFactory(classFactory: ClassFactory) {
         userClassFactories.add(classFactory)
     }
-
+    
     /**
      * Remove a class factory
      *
@@ -40,7 +45,7 @@ object ResourceLoader {
     fun removeClassFactory(classFactory: ClassFactory) {
         userClassFactories.remove(classFactory)
     }
-
+    
     /**
      * Load a class, but check if it is allowed to load this class first. To
      * perform access rights checking, the system property h2.allowedClasses
@@ -59,13 +64,14 @@ object ResourceLoader {
                     if (userClass != null) {
                         return userClass as Class<Z>
                     }
-                } catch (e: ClassNotFoundException) { // ignore, try other class loaders
+                } catch (ignored: ClassNotFoundException) {
+                    // ignore, try other class loaders
                 } catch (e: Exception) {
                     throw e
                 }
             }
         }
-
+        
         // Use local ClassLoader
         return try {
             Class.forName(className) as Class<Z>
@@ -79,7 +85,7 @@ object ResourceLoader {
             throw e
         }
     }
-
+    
     /**
      * Read all lines from one of the following resource: string, file by file name and resource by resource name
      * The front resource have higher priority
@@ -90,7 +96,7 @@ object ResourceLoader {
     ): List<String> {
         return getMultiSourceReader(stringResource, resource, resourcePrefix)?.useLines { seq ->
             if (filter) {
-                seq.filter(LINE_FILTER).toList()
+                seq.filter(DEFAULT_LINE_FILTER).toList()
             } else {
                 seq.toList()
             }
@@ -98,45 +104,45 @@ object ResourceLoader {
     }
     
     fun readAllLines(resource: String) = readAllLines(resource, true)
-
+    
     fun readAllLines(resource: String, filter: Boolean): List<String> {
         if (!filter) {
             return readAllLinesNoFilter(resource)
         }
-
-        return getResourceAsReader(resource)?.useLines { it.filter(LINE_FILTER).toList() } ?: listOf()
+        
+        return getResourceAsReader(resource)?.useLines { it.filter(DEFAULT_LINE_FILTER).toList() } ?: listOf()
     }
     
     fun readAllLines(resource: String, filter: (String) -> Boolean = { true }): List<String> {
         return getResourceAsReader(resource)?.useLines { it.filter(filter).toList() } ?: listOf()
     }
-
+    
     fun readAllLinesNoFilter(resource: String): List<String> {
         return getResourceAsReader(resource)?.useLines {
             it.toList()
         } ?: listOf()
     }
-
+    
     fun readAllLinesIfModified(path: Path): List<String> {
         val lastModified = lastModifiedTimes.getOrDefault(path, Instant.EPOCH)
         val modified = Files.getLastModifiedTime(path).toInstant()
-
+        
         return takeIf { modified > lastModified }
-                ?.let { Files.readAllLines(path).also { lastModifiedTimes[path] = modified } }
-                ?: listOf()
+            ?.let { Files.readAllLines(path).also { lastModifiedTimes[path] = modified } }
+            ?: listOf()
     }
-
+    
     fun readString(resource: String): String {
         return readStringTo(resource, StringBuilder()).toString()
     }
-
+    
     fun readStringTo(resource: String, sb: StringBuilder): StringBuilder {
         getResourceAsReader(resource)?.forEachLine {
             sb.appendLine(it)
         }
         return sb
     }
-
+    
     /**
      * Get a [Reader] attached to the configuration resource with the
      * given `name`.
@@ -146,7 +152,7 @@ object ResourceLoader {
      */
     fun getResourceAsStream(name: String): InputStream? {
         return try {
-            val url = getResource(name) ?: return null
+            val url = getURLOrNull(name) ?: return null
             if (logger.isDebugEnabled) {
                 logger.debug("Find resource $name | $url")
             }
@@ -156,18 +162,18 @@ object ResourceLoader {
             null
         }
     }
-
+    
     /**
      * Find the first resource associated by prefix/name
      */
     fun getResourceAsStream(resource: String, vararg resourcePrefixes: String): InputStream? {
         var found = false
         return resourcePrefixes.asSequence().filter { it.isNotBlank() }
-                .mapNotNull { if (!found) getResourceAsStream("$it/$resource") else null }
-                .onEach { found = true }
-                .firstOrNull() ?: getResourceAsStream(resource)
+            .mapNotNull { if (!found) getResourceAsStream("$it/$resource") else null }
+            .onEach { found = true }
+            .firstOrNull() ?: getResourceAsStream(resource)
     }
-
+    
     /**
      * Get a [Reader] attached to the configuration resource with the
      * given `name`.
@@ -178,42 +184,108 @@ object ResourceLoader {
     fun getResourceAsReader(resource: String, vararg resourcePrefixes: String): Reader? {
         return getResourceAsStream(resource, *resourcePrefixes)?.let { InputStreamReader(it) }
     }
-
-    fun exists(name: String) = getResource(name) != null
-
+    
     /**
-     * Get the [URL] for the named resource.
-     *
+     * Check if a resource exists
+     */
+    fun exists(name: String) = getURLOrNull(name) != null
+    
+    /**
      * Finds a resource with a given name.
+     *
      * Find resources first by each registered class loader and then by the default class loader.
      *
-     * @see Class.getResource
      * @param  name name of the desired resource
-     * @return      A  [java.net.URL] object or `null` if no
-     * resource with this name is found
+     * @return URL object for reading the resource; null if the resource could not be found
+     * @see Class.getResource
+     * @see ClassLoader.getResource
      */
-    fun getResource(name: String): URL? {
+    fun getURLOrNull(name: String): URL? {
         var url: URL? = null
         // User provided class loader first
         val it: Iterator<ClassFactory> = userClassFactories.iterator()
         while (url == null && it.hasNext()) {
             url = it.next().javaClass.getResource(name)
         }
+        
+        // classLoader.getResource: URL object for reading the resource; null if the resource could not be found
         return url ?: classLoader.getResource(name)
+    }
+    
+    /**
+     * Finds a resource with a given name.
+     *
+     * @param name resource name.
+     * @return the url for the named resource.
+     */
+    @Throws(FileNotFoundException::class)
+    fun getURL(name: String): URL {
+        return getURLOrNull(name) ?: throw FileNotFoundException("Cannot be resolved to URL | $name");
+    }
+    
+    /**
+     * Finds a resource with a given name.
+     *
+     * @param name resource name.
+     * @return the url for the named resource.
+     */
+    @Deprecated("Use getURLOrNull instead", ReplaceWith("getURLOrNull(name)"))
+    fun getResource(name: String): URL? = getURLOrNull(name)
+    
+    /**
+     * Finds a resource with a given name.
+     *
+     * @param name resource name.
+     * @param preferredClassLoader preferred class loader, this class loader is used first, fallback to other
+     *      class loaders if the resource not found by preferred class loader.
+     * @return URL object for reading the resource; null if the resource could not be found
+     * @see Class.getResource
+     * @see ClassLoader.getResource
+     */
+    fun <T> getURLOrNull(name: String, preferredClassLoader: Class<T>): URL? {
+        return preferredClassLoader.getResource(name) ?: getURLOrNull(name)
     }
 
     /**
-     * Get the [URL] for the named resource.
+     * Finds a resource with a given name.
      *
      * @param name resource name.
-     * @param preferredClassLoader preferred class loader, this class loader is used first,
-     * fallback to other class loaders if the resource not found by preferred class loader.
+     * @param preferredClassLoader preferred class loader, this class loader is used first, fallback to other
+     *      class loaders if the resource not found by preferred class loader.
      * @return the url for the named resource.
+     * @see Class.getResource
+     * @see ClassLoader.getResource
      */
-    fun <T> getResource(name: String, preferredClassLoader: Class<T>): URL? {
-        return preferredClassLoader.getResource(name) ?: getResource(name)
+    @Throws(FileNotFoundException::class)
+    fun <T> getURL(name: String, preferredClassLoader: Class<T>): URL {
+        return getURLOrNull(name, preferredClassLoader) ?: throw FileNotFoundException("Cannot be resolved to URL | $name");
     }
 
+    /**
+     * Finds a resource with a given name.
+     *
+     * @param resource resource name.
+     * @return the path for the named resource.
+     * @see Class.getResource
+     * @see ClassLoader.getResource
+     */
+    @Throws(FileNotFoundException::class)
+    fun getPath(resource: String): Path {
+        return getURL(resource).toURI().toPath()
+    }
+    
+    /**
+     * Finds a resource with a given name.
+     *
+     * @param resource resource name.
+     * @return the path for the named resource.
+     * @see Class.getResource
+     * @see ClassLoader.getResource
+     */
+    fun getPathOrNull(resource: String): Path? {
+        return getURLOrNull(resource)?.toURI()?.toPath()
+    }
+    
     @Throws(FileNotFoundException::class)
     fun getMultiSourceReader(stringResource: String?, resource: String): Reader? {
         return getMultiSourceReader(stringResource, resource, "")

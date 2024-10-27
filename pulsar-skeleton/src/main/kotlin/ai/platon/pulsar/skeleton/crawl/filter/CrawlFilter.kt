@@ -25,6 +25,7 @@ import com.google.gson.GsonBuilder
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.w3c.dom.Node
+import java.util.*
 import java.util.regex.Pattern
 
 /**
@@ -198,7 +199,7 @@ class CrawlFilter(val conf: ImmutableConfig) {
 
             var pageCategory = PageCategory.UNKNOWN
 
-            val u = url.toLowerCase()
+            val u = url.lowercase(Locale.getDefault())
             // Notice : ***DO KEEP*** the right order
             when {
                 u.endsWith("/") -> {

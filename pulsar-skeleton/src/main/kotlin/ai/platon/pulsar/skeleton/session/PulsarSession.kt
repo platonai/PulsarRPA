@@ -2057,15 +2057,16 @@ interface PulsarSession : AutoCloseable {
      * @return The response from the model
      */
     fun chat(prompt: String): ModelResponse
-    
+
     /**
      * Chat with the AI model.
      *
-     * @param context The context to chat with
-     * @param prompt The prompt to chat with
-     * @return The response from the model
+     * @param userMessage Represents a message from a user, typically an end user of the application.
+     * @param systemMessage Represents a system message, typically defined by a developer. This type of message usually
+     *  provides instructions regarding the AI's actions, such as its behavior or response style.
+     * @return The response from the model.
      */
-    fun chat(context: String, prompt: String): ModelResponse
+    fun chat(userMessage: String, systemMessage: String): ModelResponse
     
     /**
      * Chat with the AI model.

@@ -44,7 +44,7 @@ object DomSelectFunctions {
         return dom.takeIf { it.isNil }?:ValueDom.getOrNil(nthElement(dom.element, cssQuery, n))
     }
 
-    @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element texts")
+    @UDFunction(description = "Select all elements from a DOM by the given css query and return the element texts")
     @JvmStatic
     fun allTexts(dom: ValueDom, cssQuery: String): ValueArray {
         return DomToH2Queries.select(dom, cssQuery) { it.text() }
@@ -62,7 +62,7 @@ object DomSelectFunctions {
         return DomToH2Queries.selectNthOrNull(dom, cssQuery, n) { it.text() } ?: ""
     }
 
-    @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element's own texts")
+    @UDFunction(description = "Select all elements from a DOM by the given css query and return the element's own texts")
     @JvmStatic
     fun allOwnTexts(dom: ValueDom, cssQuery: String): ValueArray {
         return DomToH2Queries.select(dom, cssQuery) { it.ownText() }
@@ -81,7 +81,7 @@ object DomSelectFunctions {
     }
 
 
-    @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element whole texts")
+    @UDFunction(description = "Select all elements from a DOM by the given css query and return the element whole texts")
     @JvmStatic
     fun wholeTexts(dom: ValueDom, cssQuery: String): ValueArray {
         return DomToH2Queries.select(dom, cssQuery) { it.wholeText() }
@@ -105,7 +105,7 @@ object DomSelectFunctions {
 
 
 
-    @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element texts")
+    @UDFunction(description = "Select all elements from a DOM by the given css query and return the element texts")
     @JvmStatic
     fun allSlimHtmls(dom: ValueDom, cssQuery: String): ValueArray {
         return DomToH2Queries.select(dom, cssQuery) { it.slimHtml }
@@ -124,7 +124,7 @@ object DomSelectFunctions {
     }
 
 
-    @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element texts")
+    @UDFunction(description = "Select all elements from a DOM by the given css query and return the element texts")
     @JvmStatic
     fun allMinimalHtmls(dom: ValueDom, cssQuery: String): ValueArray {
         return DomToH2Queries.select(dom, cssQuery) { it.minimalHtml }

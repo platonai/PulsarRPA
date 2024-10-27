@@ -2,12 +2,12 @@ package ai.platon.pulsar.skeleton.crawl.protocol
 
 import ai.platon.pulsar.common.config.Configurable
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
 import com.google.common.io.Files
 import crawlercommons.robots.BaseRobotRules
 import crawlercommons.robots.SimpleRobotRules
 import crawlercommons.robots.SimpleRobotRules.RobotRulesMode
 import crawlercommons.robots.SimpleRobotRulesParser
-import org.apache.hadoop.conf.Configuration
 import org.jetbrains.annotations.NotNull
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -18,21 +18,18 @@ import java.util.*
 import kotlin.system.exitProcess
 
 /**
- * This class uses crawler-commons for handling the parsing of
- * `robots.txt` files. It emits SimpleRobotRules objects, which describe
- * the download permissions as described in SimpleRobotRulesParser.
+ * This class uses crawler-commons for handling the parsing of `robots.txt` files. It emits SimpleRobotRules objects,
+ * which describe the download permissions as described in SimpleRobotRulesParser.
  */
-abstract class RobotRulesParser : Configurable {
+abstract class RobotRulesParser(
+    override var conf: ImmutableConfig
+) : LazyConfigurable {
     protected lateinit var agentNames: String
-    private lateinit var conf: ImmutableConfig
 
-    constructor()
+    override fun configure(conf1: ImmutableConfig) {
+        this.conf = conf1
 
-    constructor(conf: ImmutableConfig) {
-        setConf(conf)
-    }
-
-    private fun setup() { // Grab the agent names we advertise to robots files.
+        // Grab the agent names we advertise to robots files.
         val ua = conf["http.agent.name", ""].trim { it <= ' ' }
         if (ua.isEmpty()) {
             // LOG.warn("Agent name not configured!")
@@ -41,7 +38,7 @@ abstract class RobotRulesParser : Configurable {
         agentNames = ua
         // If there are any other agents specified, append those to the list of agents
         val otherAgents = conf["http.robots.agents"]
-        if (otherAgents != null && !otherAgents.trim { it <= ' ' }.isEmpty()) {
+        if (otherAgents != null && otherAgents.trim { it <= ' ' }.isNotEmpty()) {
             val tok = StringTokenizer(otherAgents, ",")
             val sb = StringBuilder(agentNames)
             while (tok.hasMoreTokens()) {
@@ -52,24 +49,9 @@ abstract class RobotRulesParser : Configurable {
                     sb.append(",").append(str)
                 }
             }
+
             agentNames = sb.toString()
         }
-    }
-
-    /**
-     * Get the [Configuration] object
-     */
-    @NotNull
-    override fun getConf(): ImmutableConfig {
-        return conf
-    }
-
-    /**
-     * Set the [Configuration] object
-     */
-    override fun setConf(jobConf: ImmutableConfig) {
-        conf = jobConf
-        setup()
     }
 
     /**

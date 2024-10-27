@@ -42,7 +42,8 @@ abstract class TestBase {
     val context = SQLContexts.create()
     val session = context.createSession()
 
-    val productUrl = "https://www.amazon.com/dp/B0C1H26C46"
+    val productIndexUrl = TestResource.productIndexUrl
+    val productDetailUrl = TestResource.productDetailUrl
 
     fun execute(sql: String, printResult: Boolean = true) {
         context.run { connection ->

@@ -60,18 +60,18 @@ class JsoupParser(
         val selector = PULSAR_META_INFORMATION_SELECTOR
         val metadata = document.selectFirstOrNull(selector) ?: return
 
-        val hrefs = mutableMapOf(PULSAR_DOCUMENT_NORMALIZED_URI to page.url)
+        val urls = mutableMapOf(PULSAR_DOCUMENT_NORMALIZED_URI to page.url)
 
         page.href?.takeIf { UrlUtils.isStandard(it) }?.let {
-            hrefs.put("href", it)
+            urls.put("href", it)
         }
         page.referrer.takeIf { UrlUtils.isStandard(it) }?.let {
-            hrefs.put("referrer", it)
+            urls.put("referrer", it)
         }
 
         val head = document.head()
-        hrefs.forEach { (rel, href) ->
-            head.appendElement("<link rel='$rel' href='$href' />")
+        urls.forEach { (rel, href) ->
+            head.append("<link rel='$rel' href='$href' />")
             metadata.attr(rel, href)
         }
 

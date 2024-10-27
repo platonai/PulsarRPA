@@ -51,6 +51,9 @@ interface UrlPool {
     companion object {
         val REAL_TIME_PRIORITY = Priority13.HIGHEST.value
     }
+    
+    val id: String
+    
     /**
      * The real time url cache in which urls have the highest priority of all.
      * */
@@ -169,6 +172,9 @@ interface UrlPool {
  * */
 abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     protected val initialized = AtomicBoolean()
+    
+    override val id: String = UUID.randomUUID().toString()
+    
     override val totalCount get() = ensureInitialized().orderedCaches.values.sumOf { it.size }
 
     override val lowestCache: UrlCache get() = ensureInitialized().orderedCaches[Priority13.LOWEST.value]!!
@@ -186,7 +192,7 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     override val highestCache: UrlCache get() = ensureInitialized().orderedCaches[Priority13.HIGHEST.value]!!
 
     override fun add(url: String, priority: Priority13): Boolean {
-        val link = Hyperlink(url).also { it.priority = priority.value }
+        val link = Hyperlink(url, priority = priority.value)
         return add(link)
     }
 
@@ -203,7 +209,8 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     override fun addAll(urls: Iterable<UrlAware>): Boolean {
         var count = 0
         urls.forEach {
-            val added = orderedCaches[it.priority]?.reentrantQueue?.add(it)
+            val priority = Priority13.lowerPriority(it.priority).value
+            val added = orderedCaches[priority]?.reentrantQueue?.add(it)
             if (added == true) {
                 ++count
             }

@@ -3,15 +3,15 @@ package ai.platon.pulsar.skeleton.crawl.parse.html
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_DEFAULT_ENCODING
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.skeleton.common.persist.ext.loadEvent
-import ai.platon.pulsar.skeleton.crawl.parse.ParseFilters
-import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
-import ai.platon.pulsar.skeleton.crawl.parse.Parser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
+import ai.platon.pulsar.skeleton.common.persist.ext.options
 import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
+import ai.platon.pulsar.skeleton.crawl.parse.ParseFilters
+import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
+import ai.platon.pulsar.skeleton.crawl.parse.Parser
 import org.slf4j.LoggerFactory
 import java.net.MalformedURLException
 import java.time.Duration
@@ -63,9 +63,11 @@ class PrimerHtmlParser(
             onWillParseHTMLDocument(page)
 
             val parseContext = primerParser.parseHTMLDocument(page)
-
+            
             parseFilters?.filter(parseContext)
-
+            
+            checkHTMLRequirement(parseContext)
+            
             parseContext.document?.let { onHTMLDocumentParsed(page, it) }
 
             parseContext.parseResult
@@ -90,6 +92,27 @@ class PrimerHtmlParser(
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onWillParseHTMLDocument | ${page.configuredUrl}", e)
         }
+    }
+
+    private fun checkHTMLRequirement(parseContext: ParseContext): ParseContext {
+        val page = parseContext.page
+        val document = parseContext.document ?: return parseContext
+        val options = page.options
+        val selector = options.requireNotBlank
+        if (selector.isNotBlank()) {
+            val element = document.selectFirstOrNull(selector)
+
+//            println(element?.text() + " | " + page.url)
+
+            val text = element?.text() ?: ""
+            if (text.isBlank()) {
+                // The required condition is not matched, the page is not valid
+                val message = "Required element is not blank | $selector"
+                parseContext.parseResult = ParseResult.failed(ParseStatusCodes.FAILED_MISSING_PARTS, message)
+            }
+        }
+        
+        return parseContext
     }
 
     /**

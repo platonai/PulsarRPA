@@ -395,7 +395,7 @@ internal class NetworkManager(
                 networkAPI?.setCacheDisabled(this.userCacheDisabled)
             }
         } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "setCacheDisabled")
+            rpc.handleChromeException(e, "setCacheDisabled")
         }
     }
     

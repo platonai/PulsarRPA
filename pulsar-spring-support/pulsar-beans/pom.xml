@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-spring-support</artifactId>
-        <version>1.13.3-SNAPSHOT</version>
+        <version>2.0.4-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-beans</artifactId>
@@ -24,33 +24,31 @@
     <dependencies>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-skeleton</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-protocol</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-filter</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-scoring</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-parse</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-index</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-schedule</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
         <dependency>
@@ -60,6 +58,7 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-resources</artifactId>
+            <classifier>tests</classifier>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

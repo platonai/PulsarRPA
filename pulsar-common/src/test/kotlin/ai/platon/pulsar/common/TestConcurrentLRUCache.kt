@@ -1,13 +1,13 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.concurrent.ConcurrentLRUCache
-import org.junit.*
 import java.util.concurrent.TimeUnit
+import kotlin.test.*
 
 class TestConcurrentLRUCache {
     private var cache: ConcurrentLRUCache<Int, String>? = null
     
-    @Before
+    @BeforeTest
     fun setup() {
         cache = ConcurrentLRUCache(20, 10)
         for (i in 0..99) {
@@ -21,36 +21,36 @@ class TestConcurrentLRUCache {
         }
     }
     
-    @After
+    @AfterTest
     fun teardown() {
         cache = null
     }
     
     @Test
     fun testSmallLRUCache() {
-        Assert.assertNotNull(cache!![1])
-        Assert.assertNotNull(cache!![2])
-        Assert.assertNotNull(cache!![3])
-        Assert.assertNotNull(cache!![4])
-        Assert.assertNull(cache!![5])
-        Assert.assertNull(cache!![6])
+        assertNotNull(cache!![1])
+        assertNotNull(cache!![2])
+        assertNotNull(cache!![3])
+        assertNotNull(cache!![4])
+        assertNull(cache!![5])
+        assertNull(cache!![6])
     }
     
     @Ignore("Time consuming task, should be run separately")
     @Test
     @Throws(InterruptedException::class)
     fun testSmallLRUCacheExpires() {
-        Assert.assertNotNull(cache!![1])
-        Assert.assertNotNull(cache!![2])
-        Assert.assertNotNull(cache!![3])
-        Assert.assertNotNull(cache!![4])
-        Assert.assertNull(cache!![5])
-        Assert.assertNull(cache!![6])
+        assertNotNull(cache!![1])
+        assertNotNull(cache!![2])
+        assertNotNull(cache!![3])
+        assertNotNull(cache!![4])
+        assertNull(cache!![5])
+        assertNull(cache!![6])
         
         TimeUnit.SECONDS.sleep(20)
-        Assert.assertNull(cache!![1])
-        Assert.assertNull(cache!![2])
-        Assert.assertNull(cache!![3])
-        Assert.assertNull(cache!![4])
+        assertNull(cache!![1])
+        assertNull(cache!![2])
+        assertNull(cache!![3])
+        assertNull(cache!![4])
     }
 }

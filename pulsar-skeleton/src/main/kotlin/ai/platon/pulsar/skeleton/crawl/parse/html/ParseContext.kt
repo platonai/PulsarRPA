@@ -10,7 +10,7 @@ import ai.platon.pulsar.persist.WebPage
  */
 class ParseContext(
     val page: WebPage,
-    val parseResult: ParseResult = ParseResult(),
+    var parseResult: ParseResult = ParseResult(),
 ) {
     val document get() = parseResult.document
 

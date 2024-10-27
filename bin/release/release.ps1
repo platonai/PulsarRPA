@@ -7,9 +7,6 @@ cd $AppHome
 
 $gitExe = "git" # Assuming git is in the system PATH
 
-# Switching remote URLs from HTTPS to SSH
-& $gitExe remote set-url origin git@github.com:platonai/PulsarRPA.git
-
 # Get version information
 $SNAPSHOT_VERSION = Get-Content "$AppHome\VERSION" -TotalCount 1
 $VERSION =$SNAPSHOT_VERSION -replace "-SNAPSHOT", ""

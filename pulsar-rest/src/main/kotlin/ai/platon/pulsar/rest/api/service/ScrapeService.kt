@@ -1,19 +1,22 @@
 package ai.platon.pulsar.rest.api.service
 
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.common.ResourceStatus
-import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.rest.api.common.DegenerateXSQLScrapeHyperlink
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
+import ai.platon.pulsar.rest.api.common.ScrapeHyperlink
 import ai.platon.pulsar.rest.api.common.XSQLScrapeHyperlink
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 @Service
 class ScrapeService(
@@ -22,16 +25,23 @@ class ScrapeService(
 ) {
     private val logger = LoggerFactory.getLogger(ScrapeService::class.java)
     private val responseCache = ConcurrentSkipListMap<String, ScrapeResponse>()
-    private val urlPool get() = globalCacheFactory.globalCache.urlPool
+    // NOTE: Get the latest crawl pool associated with the latest context.
+    // this is very important since the context, global cache and crawl pool might change.
+    private val urlPool get() = PulsarContexts.create().crawlPool
 
     /**
      * Execute a scrape task and wait until the execution is done,
      * for test purpose only, no customer should access this api
      * */
     fun executeQuery(request: ScrapeRequest): ScrapeResponse {
-        val hyperlink = createScrapeHyperlink(request)
-        urlPool.higher3Cache.reentrantQueue.add(hyperlink)
-        return hyperlink.get(3, TimeUnit.MINUTES)
+        try {
+            val hyperlink = createScrapeHyperlink(request)
+            urlPool.higher3Cache.reentrantQueue.add(hyperlink)
+            return hyperlink.get(2, TimeUnit.MINUTES)
+        } catch (e: TimeoutException) {
+            logger.error("Error executing query: >>>${request.sql}<<<", e)
+            return ScrapeResponse("", ResourceStatus.SC_INTERNAL_SERVER_ERROR, ProtocolStatusCodes.EXCEPTION)
+        }
     }
 
     /**
@@ -53,13 +63,13 @@ class ScrapeService(
         }
     }
 
-    private fun createScrapeHyperlink(request: ScrapeRequest): XSQLScrapeHyperlink {
+    private fun createScrapeHyperlink(request: ScrapeRequest): ScrapeHyperlink {
         val sql = request.sql
         return if (ScrapeAPIUtils.isScrapeUDF(sql)) {
             val xSQL = ScrapeAPIUtils.normalize(sql)
-            XSQLScrapeHyperlink(request, xSQL, session, globalCacheFactory)
+            XSQLScrapeHyperlink(request, xSQL, session)
         } else {
-            DegenerateXSQLScrapeHyperlink(request, session, globalCacheFactory)
+            DegenerateXSQLScrapeHyperlink(request, session)
         }
     }
 }

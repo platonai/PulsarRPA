@@ -7,15 +7,15 @@ import ai.platon.pulsar.common.browser.BrowserFiles.computeRandomTmpContextDir
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.persist.RetryScope
+import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.persist.RetryScope
 import com.google.common.annotations.Beta
 import org.slf4j.LoggerFactory
 import java.nio.file.Path

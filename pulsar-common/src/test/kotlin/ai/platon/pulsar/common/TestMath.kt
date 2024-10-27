@@ -1,8 +1,10 @@
 package ai.platon.pulsar.common
 
-import junit.framework.TestCase
-import org.junit.Test
 import java.util.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 17-1-14.
@@ -19,13 +21,13 @@ class TestMath {
         for (i in 0..999) {
             val x = a + r.nextInt((b - a).toInt())
             val y = MathUtils.hashFloat(x, a, b, c, d)
-            TestCase.assertTrue(y.toString(), y >= c && y <= d)
+            assertTrue(y >= c && y <= d, y.toString())
         }
         
         for (i in 0..999) {
             val x = c + r.nextInt(1000)
             val y = MathUtils.hashFloat(x, a, b, c, d)
-            TestCase.assertFalse(y >= c && y <= d)
+            assertFalse(y >= c && y <= d)
         }
     }
     
@@ -40,13 +42,13 @@ class TestMath {
         for (i in 0..999) {
             val x = a + r.nextInt(b - a)
             val y = MathUtils.hashInt(x, a, b, c, d)
-            TestCase.assertTrue(y.toString(), y >= c && y <= d)
+            assertTrue(y >= c && y <= d, y.toString())
         }
         
         for (i in 0..999) {
             val x = c + r.nextInt(1000)
             val y = MathUtils.hashInt(x, a, b, c, d)
-            TestCase.assertFalse(y.toString(), y >= c && y <= d)
+            assertFalse(y >= c && y <= d, y.toString())
         }
     }
     
@@ -55,13 +57,13 @@ class TestMath {
         var a = 10f
         var b = 3f
         
-        TestCase.assertEquals(3, Math.round(a / b))
-        TestCase.assertEquals(3.33, Math.round(100 * a / b) / 100.0)
+        assertEquals(3, Math.round(a / b))
+        assertEquals(3.33, Math.round(100 * a / b) / 100.0)
         
         a = 17f
         b = 3f
         // System.out.println(17f/3f);
-        TestCase.assertEquals(6, Math.round(a / b))
-        TestCase.assertEquals(5.67, Math.round(100 * a / b) / 100.0)
+        assertEquals(6, Math.round(a / b))
+        assertEquals(5.67, Math.round(100 * a / b) / 100.0)
     }
 }

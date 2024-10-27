@@ -15,23 +15,35 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.13.3-SNAPSHOT</version>
+        <version>2.0.4-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-persist</artifactId>
     <name>Pulsar Persist</name>
 
     <dependencies>
-        <!-- Internal Dependencies -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>gora-shaded-mongodb</artifactId>
+            <!-- gora-shaded-mongodb:0.9 has no classifier -->
+<!--            <classifier>shaded</classifier>-->
+            <version>${gora-shaded-mongodb.version}</version>
         </dependency>
+        <!-- Requires org.apache.hadoop.conf.Configuration only, required by GoraStorage -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+        </dependency>
+        <!-- Required by hadoop-common -->
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
-        <!-- TODO: try to remove this dependency -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
@@ -72,7 +84,6 @@
             <artifactId>jackson-module-kotlin</artifactId>
         </dependency>
 
-
         <!-- TODO: check if we can remove this dependency, and choose a best version -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -85,15 +96,6 @@
             <artifactId>oro</artifactId>
         </dependency>
 
-        <!-- JAXB provides an API and tools that automate the mapping between XML documents and Java objects. -->
-        <!-- This artifact was moved to: jakarta.xml.bind » jakarta.xml.bind-api -->
-        <!-- deprecated -->
-<!--        <dependency>-->
-<!--            <groupId>javax.xml.bind</groupId>-->
-<!--            <artifactId>jaxb-api</artifactId>-->
-<!--            <version>${jaxb-api.version}</version>-->
-<!--        </dependency>-->
-
         <!-- Test -->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -103,7 +105,8 @@
     </dependencies>
 
     <properties>
-
+<!--        <gora-shaded-mongodb.version>0.9.1-SNAPSHOT</gora-shaded-mongodb.version>-->
+        <gora-shaded-mongodb.version>0.9</gora-shaded-mongodb.version>
     </properties>
 
 </project>

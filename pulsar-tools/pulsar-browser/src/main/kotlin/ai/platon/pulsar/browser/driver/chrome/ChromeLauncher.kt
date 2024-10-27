@@ -15,6 +15,7 @@ import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import java.io.*
 import java.nio.channels.FileChannel
+import java.nio.charset.Charset
 import java.nio.file.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
@@ -54,6 +55,7 @@ class ChromeLauncher(
     /**
      * Launch the chrome
      * */
+    @Throws(ChromeProcessException::class)
     fun launch(chromeBinaryPath: Path, options: ChromeOptions): RemoteChrome {
         kotlin.runCatching { prepareUserDataDir() }.onFailure {
             warnInterruptible(this, it, "Failed to prepare user data dir | {} | {}", userDataDir, it.stringify())
@@ -66,16 +68,19 @@ class ChromeLauncher(
     /**
      * Launch the chrome
      * */
+    @Throws(ChromeProcessException::class)
     fun launch(options: ChromeOptions) = launch(Browsers.searchChromeBinary(), options)
 
     /**
      * Launch the chrome
      * */
+    @Throws(ChromeProcessException::class)
     fun launch(headless: Boolean) = launch(Browsers.searchChromeBinary(), ChromeOptions().also { it.headless = headless })
 
     /**
      * Launch the chrome
      * */
+    @Throws(ChromeProcessException::class)
     fun launch() = launch(true)
 
     fun destroyForcibly() {
@@ -138,11 +143,9 @@ class ChromeLauncher(
      * @param userDataDir Chrome user data dir.
      * @param chromeOptions Chrome arguments.
      * @return Port on which devtools is listening.
-     * @throws IllegalStateException If chrome process has already been started.
      * @throws ChromeProcessException If an I/O error occurs during chrome process start.
-     * @throws ChromeProcessTimeoutException If timeout expired while waiting for chrome to start.
      */
-    @Throws(ChromeProcessException::class, IllegalStateException::class, ChromeProcessTimeoutException::class)
+    @Throws(ChromeProcessException::class)
     @Synchronized
     private fun launchChromeProcess(chromeBinary: Path, userDataDir: Path, chromeOptions: ChromeOptions): Int {
         if (!isActive) {
@@ -209,7 +212,8 @@ class ChromeLauncher(
         val readLineThread = Thread {
             BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
                 // Wait for DevTools listening line and extract port number.
-                var line: String? = reader.readLine()
+//                var line: String? = reader.readLine()
+                var line: String? = String(reader.readLine().toByteArray(Charset.defaultCharset()))
                 while (line != null) {
                     if (line.isNotBlank()) {
                         logger.info("[output] - $line")

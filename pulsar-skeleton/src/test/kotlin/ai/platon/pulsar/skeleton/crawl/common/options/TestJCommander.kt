@@ -6,7 +6,6 @@ import ai.platon.pulsar.skeleton.common.options.WeightedKeywordsConverter
 import com.beust.jcommander.DynamicParameter
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
-import kotlin.test.*
 import java.util.*
 import kotlin.test.*
 

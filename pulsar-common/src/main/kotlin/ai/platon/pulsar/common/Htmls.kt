@@ -1,6 +1,10 @@
 package ai.platon.pulsar.common
 
+import java.io.IOException
 import java.nio.charset.Charset
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 import java.util.*
 import java.util.regex.Pattern
 
@@ -121,62 +125,104 @@ enum class HtmlIntegrity {
 }
 
 object HtmlUtils {
-
+    
     /**
      * Replace the charset to the target charset
      * */
-    fun replaceHTMLCharset(htmlContent: String, charsetPattern: Pattern, targetCharset: String = "UTF-8"): StringBuilder {
+    fun replaceHTMLCharset(
+        htmlContent: String,
+        charsetPattern: Pattern,
+        targetCharset: String = "UTF-8"
+    ): StringBuilder {
         val pos = htmlContent.indexOf("</head>")
         if (pos < 0) {
             return StringBuilder()
         }
-
+        
         var head = htmlContent.take(pos)
         // Some parsers use html directive to decide the content's encoding, correct it to be UTF-8
         head = charsetPattern.matcher(head).replaceAll(targetCharset)
-
+        
         // append the new head
         val sb = StringBuilder(head)
         // append all the rest
         sb.append(htmlContent, pos, htmlContent.length)
-
+        
         return sb
     }
-
+    
     fun hasHtmlTags(htmlContent: String): Boolean {
         return htmlContent.indexOf("<html") != -1 && htmlContent.lastIndexOf("</html>") != -1
     }
-
+    
     fun hasHeadTags(htmlContent: String): Boolean {
         return htmlContent.indexOf("<head") != -1 && htmlContent.lastIndexOf("</head>") != -1
     }
-
+    
     fun hasBodyTags(htmlContent: String): Boolean {
         return htmlContent.indexOf("<body") != -1 && htmlContent.lastIndexOf("</body>") != -1
     }
-
+    
     fun isBlankBody(htmlContent: String): Boolean {
         val tagStart = "<body"
         val tagEnd = "</body>"
-
+        
         val h = htmlContent
         var p = h.indexOf(tagStart) // pos of <body ...>
         p = h.indexOf(">", p) + 1
-
+        
         while (p < h.length && h[p].isWhitespace()) {
             ++p
         }
-
+        
         if (p + tagEnd.length > h.length) {
             return false
         }
-
+        
         tagEnd.forEachIndexed { i, c ->
             if (c != h[p + i]) {
                 return false
             }
         }
-
+        
         return true
+    }
+    
+    /**
+     * Scan the directory, list all the files and create an index.html for all the files
+     *
+     * @param directory the directory to scan
+     * @return the content of the index.html
+     * */
+    fun createIndexHtml(directory: Path): String {
+        val files = directory.toFile().listFiles()
+        if (files == null || files.isEmpty()) {
+            return ""
+        }
+        
+        val sb = StringBuilder()
+        sb.append("<html><head><title>Index of ${directory.fileName}</title></head><body>")
+        sb.append("<h1>Index of ${directory.fileName}</h1>")
+        sb.append("<hr>")
+        sb.append(directory.toAbsolutePath())
+        sb.append("<hr><ul>")
+        
+        files.forEach {
+            sb.appendLine("<li><a href=\"${it.toPath().toAbsolutePath()}\">${it.name}</a></li>")
+        }
+        
+        sb.append("</ul><hr></body></html>")
+        return sb.toString()
+    }
+    
+    @Throws(IOException::class)
+    fun createIndexFile(directory: Path): Path {
+        val index = createIndexHtml(directory)
+        val indexPath = directory.resolve("index.html")
+        
+        Files.deleteIfExists(indexPath)
+        Files.writeString(indexPath, index, Charsets.UTF_8, StandardOpenOption.CREATE)
+        
+        return indexPath
     }
 }

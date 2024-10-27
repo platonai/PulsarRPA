@@ -15,6 +15,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import java.awt.Color
 import java.awt.Rectangle
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -158,7 +159,7 @@ data class NodeFeature(
         val incKey: Int get() = keyGen.getAndIncrement()
 
         fun getKey(name: String): Int {
-            return FeatureRegistry.featureNamesToKeys[name.toLowerCase()]?:
+            return FeatureRegistry.featureNamesToKeys[name.lowercase(Locale.getDefault())]?:
             throw IllegalArgumentException("Unknown feature name $name")
         }
 

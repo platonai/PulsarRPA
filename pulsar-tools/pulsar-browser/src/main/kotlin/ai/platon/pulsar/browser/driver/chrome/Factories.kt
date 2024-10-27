@@ -1,6 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome
 
-import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.common.Systems
 import org.apache.commons.io.FileUtils
 import org.glassfish.tyrus.client.ClientManager
@@ -9,7 +9,7 @@ import javax.websocket.WebSocketContainer
 
 @FunctionalInterface
 interface WebSocketServiceFactory {
-    @Throws(WebSocketServiceException::class)
+    @Throws(ChromeIOException::class)
     fun createWebSocketService(wsUrl: String): Transport
 }
 

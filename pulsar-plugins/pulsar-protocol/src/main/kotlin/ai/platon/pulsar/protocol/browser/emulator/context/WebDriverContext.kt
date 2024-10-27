@@ -2,18 +2,19 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
-import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
-import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverUnavailableException
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_FAST_CLOSE_TIME_OUT
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_SAFE_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
+import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserUnavailableException
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -68,7 +69,10 @@ open class WebDriverContext(
             return isActive && isDriverPoolReady
         }
 
-    @Throws(Exception::class)
+    /**
+     * Run a web driver task.
+     * This method should not throw any WebDriverException.
+     * */
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         globalTasks.mark()
         return checkAbnormalResult(task) ?: try {
@@ -76,18 +80,23 @@ open class WebDriverContext(
             numGlobalRunningTasks.incrementAndGet()
             driverPoolManager.run(browserId, task) {
                 browseFun(task, it)
-            } ?: FetchResult.crawlRetry(task, "Null response from driver pool manager")
+            } ?: FetchResult.crawlRetry(task, "Null response from driver pool manager, it might be closed")
+        } catch (e: BrowserUnavailableException) {
+            logger.warn("Browser unavailable, close it and retry task ${task.page.id} in crawl scope | {} | {} | {}",
+                browserId, e.message, task.page.url)
+            driverPoolManager.closeBrowserAccompaniedDriverPoolGracefully(browserId, DRIVER_FAST_CLOSE_TIME_OUT)
+            FetchResult.crawlRetry(task, e)
         } catch (e: WebDriverPoolExhaustedException) {
             val message = String.format("%s. Retry task %s in crawl scope | cause by: %s",
                 task.page.id, task.id, e.message)
             logger.warn(message)
-            FetchResult.crawlRetry(task, WebDriverUnavailableException(message, e))
+            FetchResult.crawlRetry(task, e)
         } catch (e: WebDriverPoolException) {
             logger.warn("{}. Retry task {} in crawl scope", task.page.id, task.id)
             FetchResult.crawlRetry(task, "Driver pool exception")
         } catch (e: WebDriverException) {
             logger.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
-            FetchResult.crawlRetry(task, "Driver exception")
+            FetchResult.crawlRetry(task, e)
         } finally {
             runningTasks.remove(task)
             numGlobalRunningTasks.decrementAndGet()
@@ -160,7 +169,7 @@ open class WebDriverContext(
         // Cancel the browser, and all online drivers, and the worker coroutines with the drivers
         driverPoolManager.cancelAll(browserId)
 
-        driverPoolManager.closeDriverPoolGracefully(browserId, DRIVER_CLOSE_TIME_OUT)
+        driverPoolManager.closeBrowserAccompaniedDriverPoolGracefully(browserId, DRIVER_SAFE_CLOSE_TIME_OUT)
     }
 
     private fun shutdownUnderlyingLayerImmediately() {
