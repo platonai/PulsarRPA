@@ -13,7 +13,7 @@ import java.time.Duration
 import java.time.MonthDay
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
-import kotlin.io.path.isDirectory
+import kotlin.io.path.exists
 
 internal class ContextGroup(val group: String) {
     
@@ -86,15 +86,47 @@ object BrowserFiles {
         return computeRandomContextDir0(group)
         // return runWithFileLock(lockFile) { channel -> computeRandomContextDir0(group, channel = channel) }
     }
+    
+    @Throws(IOException::class)
+    fun cleanOldestContextTmpDirs(recentNToKeep: Int = 20) {
+        // Remove directories that have too many context directories
+        Files.walk(AppPaths.CONTEXT_TMP_DIR, 3)
+            .filter { it !in cleanedUserDataDirs } // not processed
+            .filter { it.toString().contains("cx.") } // context dir
+            .toList()
+            .toSet()
+            .sortedByDescending { Files.getLastModifiedTime(it) }  // newest first
+            .drop(recentNToKeep)  // drop the latest 20 context dirs
+            .forEach { cleanUpContextDir(it, Duration.ofSeconds(30)) } // clean the rest
+    }
 
     @Throws(IOException::class)
     fun cleanUpContextTmpDir(expiry: Duration) {
-        val hasSiblingPidFile: (Path) -> Boolean = { path -> Files.exists(path.resolveSibling(PID_FILE_NAME)) }
         Files.walk(AppPaths.CONTEXT_TMP_DIR, 3)
             .filter { it !in cleanedUserDataDirs }
-            .filter { it.isDirectory() && hasSiblingPidFile(it) }.forEach { path ->
-                deleteTemporaryUserDataDirWithLock(path, expiry)
-            }
+            .filter { it.fileName.toString().startsWith("cx.") }
+            .forEach { path -> cleanUpContextDir(path, expiry) }
+        
+        cleanOldestContextTmpDirs()
+    }
+    
+    /**
+     * Clear the browser's user data dir inside the given context path.
+     * @param path The context path
+     * @param expiry The expiry duration
+     * */
+    @Throws(IOException::class)
+    fun cleanUpContextDir(path: Path, expiry: Duration) {
+        if (!path.fileName.toString().startsWith("cx.")) {
+            logger.info("Not a context directory | {}", path)
+            return
+        }
+        if (path.resolve(PID_FILE_NAME).exists()) {
+            // The directory is already cleaned
+            return
+        }
+        
+        deleteTemporaryUserDataDirWithLock(path.resolve("pulsar_chrome"), expiry)
     }
     
     @Throws(IOException::class)
