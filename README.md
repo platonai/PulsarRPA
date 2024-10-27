@@ -186,7 +186,7 @@ We have released a standalone executable jar based on PulsarRPA, which includes:
 Download [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro#download) and explore its capabilities with a single command line:
 
 ```shell
-java -jar exotic-standalone.jar
+java -jar PulsarRPAPro.jar
 ```
 
 ## 🎁 PulsarRPA as a java library

@@ -2,11 +2,14 @@ package ai.platon.pulsar.test
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.alwaysTrue
+import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.gora.FileBackendPageStore
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops
 import ai.platon.pulsar.skeleton.session.PulsarSession
+import org.junit.jupiter.api.AfterAll
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration

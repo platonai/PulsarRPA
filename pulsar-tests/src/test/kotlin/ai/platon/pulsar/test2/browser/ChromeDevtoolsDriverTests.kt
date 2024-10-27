@@ -226,8 +226,8 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
         var links = driver.selectAttributeAll(selector, "href")
         assertTrue { links.isNotEmpty() }
         
-        println("Href: ")
-        links.forEach { println(it) }
+        println("Top 10 href: ")
+        links.take(10).forEach { println(it) }
         
         links = driver.selectAttributeAll(selector, "abs:href")
         println("NOTE: abs:href not supported by WebDriver.selectAttributeXXX()")
@@ -251,7 +251,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
         println(currentUrl)
         
         assertNotEquals(url, currentUrl)
-        assertContains(currentUrl, "stores")
+        assertContains(currentUrl, "Huawei")
     }
     
     @Test

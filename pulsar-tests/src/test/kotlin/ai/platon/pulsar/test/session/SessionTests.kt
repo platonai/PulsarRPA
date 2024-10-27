@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 class SessionTests {
     private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     private val urls = LinkExtractors.fromResource("categories.txt")
-    private val args = "-i 5s -ignoreFailure"
+    private val args = "-i 0s -ignoreFailure"
 
     private val context = SQLContexts.create()
     private val session = context.createSession()
