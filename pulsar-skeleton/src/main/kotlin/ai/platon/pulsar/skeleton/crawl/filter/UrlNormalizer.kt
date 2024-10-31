@@ -1,4 +1,3 @@
-
 package ai.platon.pulsar.skeleton.crawl.filter
 
 typealias NaiveUrlNormalizer = ai.platon.pulsar.common.urls.preprocess.UrlNormalizer
@@ -36,4 +35,24 @@ abstract class AbstractScopedUrlNormalizer : ScopedUrlNormalizer {
     override fun invoke(url: String?) = url?.let { normalize(it) }
 
     abstract override fun normalize(url: String, scope: String): String?
+}
+
+class RegexUrlNormalizer(
+    private val pattern: String,
+    private val replacement: String
+) : AbstractScopedUrlNormalizer() {
+    private val regex = Regex(pattern)
+    override fun normalize(url: String, scope: String): String? {
+        // find each group in url that matches pattern, and replace the placeholder in replacement with it
+        // for example, "^(http://www.baidu.com).*" will replace "$1" with "http://www.baidu.com"
+        regex.matchEntire(url)?.groups?.let { groups ->
+            return if (groups.size > 1) {
+                replacement.replace(Regex("\\$\\d+"), groups[1]?.value ?: "")
+            } else {
+                null
+            }
+        }
+        
+        return null
+    }
 }

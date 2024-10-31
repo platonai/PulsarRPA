@@ -32,7 +32,7 @@ Build from source code:
 
 ```bash
 git clone https://github.com/platonai/PulsarRPAPro.git
-cd PulsarRPAPro
+cd PulsarRPARPAPro
 mvn clean && mvn
 cd exotic-standalone/target/
 ```

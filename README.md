@@ -8,6 +8,16 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 PulsarRPA is a high-performance, distributed, open-source Robotic Process Automation (RPA) framework. It is designed to handle large-scale RPA tasks with ease, providing a comprehensive solution for browser automation, web content understanding, and data extraction. It addresses the inherent challenges of browser automation and extracting accurate, comprehensive web data amidst rapidly evolving and increasingly intricate websites.
 
+https://www.youtube.com/watch?v=rF4wXbFlPXk&t=23s
+
+## Videos
+
+YouTube:
+[![Watch the video](https://img.youtube.com/vi/rF4wXbFlPXk/0.jpg)](https://www.youtube.com/watch?v=rF4wXbFlPXk)
+
+Bilibili:
+[https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
+
 ### *Automated extraction techniques* can be utilized for data extraction from large number of sites:
 
 ```kotlin
@@ -222,8 +232,8 @@ When PulsarRPA runs as a REST service, X-SQL can be used to scrape webpages or t
 ## Build from Source
 
 ```
-git clone https://github.com/platonai/pulsar.git
-cd pulsar && bin/build-run.sh
+git clone https://github.com/platonai/PulsarRPA.git
+cd PulsarRPA && bin/build-run.sh
 ```
 
 For Chinese developers, we strongly suggest you to follow [this](/bin/tools/maven/maven-settings.md) instruction to accelerate the building process.

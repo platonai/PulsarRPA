@@ -231,8 +231,8 @@ implementation("ai.platon.pulsar:pulsar-bom:1.12.5")
 ## 从源代码构建
 
 ```shell
-git clone https://github.com/platonai/pulsar.git 
-cd pulsar && bin/build-run.sh
+git clone https://github.com/platonai/PulsarRPA.git 
+cd PulsarRPA && bin/build-run.sh
 ```
 
 对于国内开发者，我们强烈建议您按照 [这个](https://github.com/platonai/pulsar/blob/master/bin/tools/maven/maven-settings.md) 指导来加速构建。

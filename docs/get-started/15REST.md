@@ -8,8 +8,8 @@ When PulsarRPA runs as a REST service, X-SQL can be used to scrape webpages or t
 ## Build from Source
 
 ```
-git clone https://github.com/platonai/pulsar.git
-cd pulsar && bin/build-run.sh
+git clone https://github.com/platonai/PulsarRPA.git
+cd PulsarRPA && bin/build-run.sh
 ```
 For Chinese developers, we strongly suggest you to follow [this](/bin/tools/maven/maven-settings.md) instruction to accelerate the building process.
 

@@ -45,9 +45,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
-        <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
-        <url>https://github.com/platonai/pulsar</url>
+        <connection>scm:git:https://github.com/platonai/PulsarRPA.git</connection>
+        <developerConnection>scm:git:https://github.com/platonai/PulsarRPA.git</developerConnection>
+        <url>https://github.com/platonai/PulsarRPA</url>
         <tag>v2.0.5-SNAPSHOT</tag>
     </scm>
 
