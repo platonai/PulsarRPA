@@ -8,8 +8,6 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 PulsarRPA is a high-performance, distributed, open-source Robotic Process Automation (RPA) framework. It is designed to handle large-scale RPA tasks with ease, providing a comprehensive solution for browser automation, web content understanding, and data extraction. It addresses the inherent challenges of browser automation and extracting accurate, comprehensive web data amidst rapidly evolving and increasingly intricate websites.
 
-https://www.youtube.com/watch?v=rF4wXbFlPXk&t=23s
-
 ## Videos
 
 YouTube:
@@ -135,7 +133,6 @@ We have released complete solutions for site-wide Web scraping for some of the l
 
 * [Exotic Amazon](https://github.com/platonai/exotic-amazon)
 * [Exotic Walmart](https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart)
-* [Exotic Dianping](https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/food/dianping)
 
 🕷 PulsarRPA supports high-quality, large-scale Web data collection and processing. We have developed a range of infrastructure and cutting-edge technologies to ensure the highest standards of performance, quality, and TCO (total cost of ownership), even in very large-scale data collection scenarios.
 

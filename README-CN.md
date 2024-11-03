@@ -8,6 +8,14 @@
 
 PulsarRPA 是一款高性能、分布式、开源的机器人流程自动化（RPA）框架，专为轻松应对大规模 RPA 任务而设计，为浏览器自动化、网络内容理解和数据提取提供了全面解决方案。PulsarRPA 结合了高性能分布式 RPA 的优势，旨在解决在快速演变且日益复杂的网站环境中进行浏览器自动化以及抽取准确、全面网络数据所固有的挑战。
 
+## 视频
+
+YouTube:
+[![Watch the video](https://img.youtube.com/vi/rF4wXbFlPXk/0.jpg)](https://www.youtube.com/watch?v=rF4wXbFlPXk)
+
+Bilibili:
+[https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
+
 ### *大批量*站点的数据提取可以使用自动化提取技术:
 
 ```kotlin
@@ -136,7 +144,6 @@ PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎�
 我们发布了一些最大型电商网站的全站数据采集的完整解决方案，这些解决方案满足最高标准的性能、质量和成本要求，他们将永久免费并开放源代码，例如：
 - [Exotic Amazon](https://github.com/platonai/exotic-amazon)
 - [Exotic Walmart](https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart)
-- [Exotic Dianping](https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/food/dianping)
 
 
 
