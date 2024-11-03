@@ -16,20 +16,6 @@ YouTube:
 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
-### *Automated extraction techniques* can be utilized for data extraction from large number of sites:
-
-```kotlin
-val session = PulsarContexts.createSession()
-val document = session.harvest("https://www.eeo.com.cn/2024/0330/648712.shtml")
-
-println(document.contentTitle)
-println(document.textContent)
-```
-
-Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/article/EEO.kt).
-
-In this scenario, we employed the popular boilerpipe technology to automatically extract content from news webpages. However, PulsarRPAPro offers more advanced data extraction techniques that can automatically handle a wider variety of webpages, including product detail pages.
-
 ### Most scraping attempts can start with (almost) a single line of code:
 
 ```kotlin

@@ -16,19 +16,6 @@ YouTube:
 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
-### *大批量*站点的数据提取可以使用自动化提取技术:
-
-```kotlin
-val document = session.harvest("https://www.eeo.com.cn/2024/0330/648712.shtml")
-
-println(document.contentTitle)
-println(document.textContent)
-```
-
-示例代码: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/article/EEO.kt).
-
-在这个案例中，我们使用流行的 biolerpipe 技术来自动提取新闻网页。在 PulsarRPAPro 中，我们支持更加智能的数据提取技术，来自动提取各种各样的网页，譬如商品详情页。
-
 ### 大多数抓取尝试可以从几乎一行代码开始：
 
 *Kotlin:*
