@@ -14,10 +14,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>ai.platon</groupId>
-        <artifactId>platon</artifactId>
-        <version>4.0.1</version>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>9</version>
+        <relativePath />
     </parent>
+
+    <!-- Do not include platon dependencies -->
+<!--    <parent>-->
+<!--        <groupId>ai.platon</groupId>-->
+<!--        <artifactId>platon</artifactId>-->
+<!--        <version>4.0.1</version>-->
+<!--    </parent>-->
 
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
@@ -71,110 +79,14 @@
     </distributionManagement>
 
     <build>
-        <defaultGoal>package</defaultGoal>
-        <directory>target</directory>
-        <finalName>${project.artifactId}-${project.version}</finalName>
-
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <groupId>com.commsen.maven</groupId>
+                <artifactId>bom-helper-maven-plugin</artifactId>
+                <version>0.4.0</version>
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>platon-release</id>
-            <properties>
-                <platon-release-active>true</platon-release-active>
-            </properties>
-
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <configuration>
-                            <tagNameFormat>v${project.parent.version}</tagNameFormat>
-                            <updateBranchVersions>false</updateBranchVersions>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.1.0</version>
-                        <configuration>
-                            <gpgArguments>
-                                <arg>--digest-algo=SHA512</arg>
-                            </gpgArguments>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!-- calculate checksums of source release for Apache dist area -->
-                    <plugin>
-                        <groupId>net.nicoulaj.maven.plugins</groupId>
-                        <artifactId>checksum-maven-plugin</artifactId>
-                        <version>1.11</version>
-                        <executions>
-                            <execution>
-                                <id>source-release-checksum</id>
-                                <goals>
-                                    <goal>artifacts</goal>
-                                </goals>
-                                <!-- execute prior to maven-gpg-plugin:sign due to https://github.com/nicoulaj/checksum-maven-plugin/issues/112 -->
-                                <phase>post-integration-test</phase>
-                                <configuration>
-                                    <algorithms>
-                                        <algorithm>SHA-512</algorithm>
-                                    </algorithms>
-                                    <!-- https://maven.apache.org/apache-resource-bundles/#source-release-assembly-descriptor -->
-                                    <includeClassifiers>source-release</includeClassifiers>
-                                    <excludeMainArtifact>true</excludeMainArtifact>
-                                    <csvSummary>false</csvSummary>
-                                    <!-- attach SHA-512 checksum as well to upload to Maven Staging Repo,
-                                         as this eases uploading from stage to dist and doesn't do harm in Maven Central -->
-                                    <attachChecksums>true</attachChecksums>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>platon-deploy</id>
-            <properties>
-                <platon-deploy-active>true</platon-deploy-active>
-            </properties>
-
-            <build>
-                <plugins>
-                    <!-- We want to sign the artifact, the POM, and all attached artifacts -->
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.7.0</version>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                        </configuration>
-                        <extensions>true</extensions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <dependencyManagement>
         <dependencies>
