@@ -113,6 +113,23 @@ open class BrowserSettings(
             return BrowserSettings
         }
         /**
+         * Use the default Chrome browser. Any change to the browser will be kept.
+         * */
+        @JvmStatic
+        fun withDefaultBrowser() = withDefaultBrowser(BrowserType.PULSAR_CHROME)
+        /**
+         * Use the default Chrome browser. Any change to the browser will be kept.
+         *
+         * NOTICE: PULSAR_CHROME is the only supported browser currently.
+         * */
+        @JvmStatic
+        fun withDefaultBrowser(browserType: BrowserType): Companion {
+            val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.DefaultPrivacyAgentGenerator"
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            withBrowser(browserType)
+            return BrowserSettings
+        }
+        /**
          * Use google-chrome with the prototype environment, any change to the browser will be kept.
          * */
         @JvmStatic

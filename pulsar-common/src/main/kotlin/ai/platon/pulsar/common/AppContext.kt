@@ -103,24 +103,14 @@ object AppContext {
      * The real time user specified temp dir used by the application, can be specified by system environment
      * variable or system property.
      * The real time version is used for test only.
-     * TODO: deprecated, use APP_TMP_BASE_SPECIFIED_RT instead
      * */
-    val APP_TMP_SPECIFIED_RT get() = System.getenv(APP_TMP_BASE_DIR_KEY) ?: System.getProperty(APP_TMP_BASE_DIR_KEY)
     val APP_TMP_BASE_SPECIFIED_RT get() = System.getenv(APP_TMP_BASE_DIR_KEY) ?: System.getProperty(APP_TMP_BASE_DIR_KEY)
-    /**
-     * The user specified temp dir used by the application, can be specified by system environment
-     * variable or system property.
-     * TODO: deprecated, use APP_TMP_BASE_SPECIFIED instead
-     * */
-    val APP_TMP_SPECIFIED = APP_TMP_SPECIFIED_RT
-    val APP_TMP_BASE_SPECIFIED = APP_TMP_BASE_SPECIFIED_RT
     /**
      * The real time temp directory used by all processes.
      * The real time version is used for test only.
      * */
     val APP_TMP_DIR_RT get() = when {
         APP_TMP_BASE_SPECIFIED_RT != null -> Paths.get(APP_TMP_BASE_SPECIFIED_RT).resolve(APP_NAME_RT)
-        APP_TMP_SPECIFIED_RT != null -> Paths.get(APP_TMP_SPECIFIED_RT).resolve(APP_NAME_RT)
         else -> Paths.get(TMP_DIR).resolve(APP_NAME_RT)
     }
     /**
