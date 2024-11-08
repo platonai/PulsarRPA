@@ -13,13 +13,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>9</version>
-        <relativePath />
-    </parent>
-
     <!-- Do not include platon dependencies -->
 <!--    <parent>-->
 <!--        <groupId>ai.platon</groupId>-->
@@ -30,7 +23,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
     <name>Pulsar BOM</name>
-    <version>2.0.5-SNAPSHOT</version>
+    <version>2.0.5</version>
 
     <packaging>pom</packaging>
 
@@ -57,7 +50,7 @@
         <connection>scm:git:https://github.com/platonai/PulsarRPA.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/PulsarRPA.git</developerConnection>
         <url>https://github.com/platonai/PulsarRPA</url>
-        <tag>v2.0.5-SNAPSHOT</tag>
+        <tag>v2.0.5</tag>
     </scm>
 
     <repositories>
@@ -78,15 +71,59 @@
         </repository>
     </distributionManagement>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.commsen.maven</groupId>
-                <artifactId>bom-helper-maven-plugin</artifactId>
-                <version>0.4.0</version>
-            </plugin>
-        </plugins>
-    </build>
+    <profiles>
+        <profile>
+            <id>platon-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${version.maven-gpg-plugin}</version>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--digest-algo=SHA512</arg>
+                            </gpgArguments>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.commsen.maven</groupId>
+                        <artifactId>bom-helper-maven-plugin</artifactId>
+                        <version>0.4.0</version>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>platon-deploy</id>
+
+            <build>
+                <plugins>
+                    <!-- We want to sign the artifact, the POM, and all attached artifacts -->
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.7.0</version>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                        <extensions>true</extensions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencyManagement>
         <dependencies>
@@ -244,4 +281,8 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <properties>
+        <version.maven-gpg-plugin>3.1.0</version.maven-gpg-plugin>
+    </properties>
 </project>
