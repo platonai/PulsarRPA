@@ -40,6 +40,7 @@ $VERSION_AWARE_FILES = @(
 # Replace version numbers in files
 foreach ($F in $VERSION_AWARE_FILES) {
   if (Test-Path $F) {
+    ((Get-Content $F) -replace $SNAPSHOT_VERSION, $NEXT_SNAPSHOT_VERSION) | Set-Content $F
     ((Get-Content $F) -replace "\b$PREFIX\.[0-9]+\b", $NEXT_VERSION) | Set-Content $F
   }
 }
