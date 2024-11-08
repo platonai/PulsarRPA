@@ -56,6 +56,9 @@ object AppPaths {
     val CHROME_DATA_DIR_PROTOTYPE = BROWSER_DATA_DIR.resolve("chrome/prototype/google-chrome")
     
     @RequiredDirectory
+    val CONTEXT_DEFAULT_DIR = BROWSER_DATA_DIR.resolve("chrome/default")
+    
+    @RequiredDirectory
     val LOCAL_DATA_DIR = DATA_DIR.resolve("data")
     
     @RequiredDirectory
@@ -117,9 +120,6 @@ object AppPaths {
     
     @RequiredDirectory
     val CONTEXT_GROUP_BASE_DIR = CONTEXT_BASE_DIR.resolve("groups")
-    
-    @RequiredDirectory
-    val CONTEXT_DEFAULT_DIR = CONTEXT_BASE_DIR.resolve("default")
     
     @RequiredDirectory
     val CONTEXT_TMP_DIR = CONTEXT_BASE_DIR.resolve("tmp")
