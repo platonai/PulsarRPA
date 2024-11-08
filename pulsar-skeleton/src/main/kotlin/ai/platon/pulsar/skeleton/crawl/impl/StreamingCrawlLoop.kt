@@ -45,13 +45,19 @@ open class StreamingCrawlLoop(
     }
     
     override val abstract: String get() {
-        val status = if (isRunning) "isRunning" else "isStopped"
-        return "[$status] crawler: ${crawler.name}#${crawler.id}, urlPool: ${urlFeeder.urlPool} \n${urlFeeder.abstract}"
+        return if (!isRunning) {
+            "[stopped] crawler: ${crawler.name}#${crawler.id}, urlPool: ${urlFeeder.urlPool} \n${urlFeeder.abstract}"
+        } else {
+            urlFeeder.abstract
+        }
     }
     
     override val report: String get() {
-        val status = if (isRunning) "isRunning" else "isStopped"
-        return "[$status] crawler: ${crawler.name}#${crawler.id}, urlPool: ${urlFeeder.urlPool} \n${urlFeeder.report}"
+        return if (!isRunning) {
+            return "[stopped] crawler: ${crawler.name}#${crawler.id}, urlPool: ${urlFeeder.urlPool} \n${urlFeeder.report}"
+        } else {
+            urlFeeder.report
+        }
     }
     
     @Synchronized
