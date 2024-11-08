@@ -29,6 +29,7 @@
 
     <description>Bill of Materials POM for getting full, complete set of compatible versions of PulsarRPA modules
     </description>
+    <url>http://platon.ai</url>
 
     <licenses>
         <license>
@@ -36,6 +37,12 @@
             <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
+    <inceptionYear>2024</inceptionYear>
+
+    <organization>
+        <name>platon.ai</name>
+        <url>http://platon.ai</url>
+    </organization>
 
     <developers>
         <developer>
