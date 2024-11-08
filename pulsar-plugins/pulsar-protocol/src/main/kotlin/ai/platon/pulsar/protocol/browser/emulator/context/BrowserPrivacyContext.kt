@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.*
