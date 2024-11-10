@@ -17,13 +17,11 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -35,8 +33,7 @@ import kotlin.random.Random
 open class ProxyContext(
     var proxyEntry: ProxyEntry? = null,
     private val proxyPoolManager: ProxyPoolManager,
-    private val driverContext: WebDriverContext,
-    private val conf: ImmutableConfig
+    private val driverContext: WebDriverContext
 ): AutoCloseable {
 
     companion object {
@@ -51,27 +48,21 @@ open class ProxyContext(
                 "runningTasks" to Gauge { numRunningTasks.get() }
             ).forEach { MetricsSystem.reg.register(this, it.key, it.value) }
         }
-
+        
         @Throws(ProxyException::class)
-        fun create(
-            id: PrivacyAgent,
-            driverContext: WebDriverContext,
-            proxyPoolManager: ProxyPoolManager,
-            conf: ImmutableConfig
-        ): ProxyContext {
-            val proxyPool = proxyPoolManager.proxyPool
-            val proxy = proxyPool.take()
-
-            if (proxy != null) {
+        fun create(driverContext: WebDriverContext, proxyPoolManager: ProxyPoolManager): ProxyContext {
+            try {
+                val id = driverContext.browserId
+                val proxy = proxyPoolManager.getProxy(id.contextDir, id.fingerprint)
+                id.fingerprint.setProxy(proxy)
+                
                 numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
 
-                val proxyEntry0 = proxyPoolManager.activeProxyEntries.computeIfAbsent(id.contextDir) { proxy }
-                proxyEntry0.startWork()
-                return ProxyContext(proxyEntry0, proxyPoolManager, driverContext, conf)
-            } else {
+                return ProxyContext(proxy, proxyPoolManager, driverContext)
+            } catch (e: NoProxyException) {
                 numProxyAbsence.incrementAndGet()
                 checkProxyAbsence()
-                throw NoProxyException("No proxy found in pool ${proxyPool.javaClass.simpleName} | $proxyPool")
+                throw e
             }
         }
 
@@ -93,6 +84,8 @@ open class ProxyContext(
     }
 
     private val logger = LoggerFactory.getLogger(ProxyContext::class.java)!!
+    
+    private val conf get() = proxyPoolManager.conf
     /**
      * If the number of success exceeds [maxFetchSuccess], emit a PrivacyRetry result
      * */
@@ -186,7 +179,7 @@ open class ProxyContext(
         }
     }
 
-    private fun beforeTaskStart(task: FetchTask) {
+    internal fun beforeTaskStart(task: FetchTask) {
         numRunningTasks.incrementAndGet()
 
         // If the proxy is idle, and here comes a new task, reset the context
@@ -215,8 +208,8 @@ open class ProxyContext(
             }
         }
     }
-
-    private fun afterTaskFinished(task: FetchTask, success: Boolean) {
+    
+    internal fun afterTaskFinished(task: FetchTask, success: Boolean) {
         numRunningTasks.decrementAndGet()
         proxyEntry?.apply {
             if (success) {

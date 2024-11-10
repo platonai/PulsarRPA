@@ -28,7 +28,6 @@ import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.annotations.Beta
-import org.jetbrains.kotlin.ir.types.IdSignatureValues.sequence
 import org.slf4j.LoggerFactory
 
 open class BrowserPrivacyContext(
@@ -39,10 +38,11 @@ open class BrowserPrivacyContext(
     privacyAgent: PrivacyAgent
 ): PrivacyContext(privacyAgent, conf) {
     private val logger = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
-    private var proxyEntry: ProxyEntry? = null
-    private val browserId = BrowserId(privacyAgent.contextDir, privacyAgent.fingerprint)
-    private val driverContext = WebDriverContext(browserId, driverPoolManager, conf)
-    private var proxyContext: ProxyContext? = null
+    val browserId = BrowserId(privacyAgent.contextDir, privacyAgent.fingerprint)
+    val driverContext = WebDriverContext(browserId, driverPoolManager, conf)
+    var proxyContext: ProxyContext? = null
+        private set
+    val proxyEntry get() = proxyContext?.proxyEntry
     /**
      * The privacy context is retired but not closed yet.
      * */
@@ -74,7 +74,7 @@ open class BrowserPrivacyContext(
     
     @Throws(ProxyException::class, Exception::class)
     override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
-        initialize(task)
+        createProxyContextIfNecessary(task)
 
         return checkAbnormalResult(task) ?:
             proxyContext?.run(task, fetchFun) ?:
@@ -118,7 +118,7 @@ open class BrowserPrivacyContext(
         
         // 0 to disable
         if (meterSuccesses.meanRate < 0) {
-            report += String.format("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", sequence)
+            report += String.format("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", seq)
             // check the zombie context list, if the context keeps go bad, the proxy provider is bad
             report += "\n"
         }
@@ -158,26 +158,40 @@ open class BrowserPrivacyContext(
 
     @Throws(ProxyException::class)
     @Synchronized
-    private fun initialize(task: FetchTask) {
+    private fun createProxyContextIfNecessary(task: FetchTask) {
+        if (proxyEntry != null) {
+            // logger.info("Proxy context is already created, skip creating proxy context")
+            return
+        }
+        
         createProxyContextIfEnabled()
         task.page.setVar(VAR_PRIVACY_CONTEXT_DISPLAY, display)
     }
-
+    
+    @Throws(ProxyException::class)
     private fun createProxyContextIfEnabled() {
-        if (proxyEntry == null && proxyPoolManager != null && proxyPoolManager.isEnabled) {
-            createProxyContext(proxyPoolManager)
+        if (proxyPoolManager == null) {
+            // logger.info("Proxy pool manager is null, skip creating proxy context")
+            return
+        }
+        
+        if (proxyPoolManager.isEnabled) {
+            createProxyContext()
+        } else {
+            logger.info("Proxy pool is disabled, skip creating proxy context")
         }
     }
 
-    private fun createProxyContext(proxyPoolManager: ProxyPoolManager) {
+    @Throws(ProxyException::class)
+    private fun createProxyContext() {
         if (!isActive) {
-            logger.info("Do not create proxy context, system is down")
+            logger.warn("Privacy context is inactive, skip creating proxy context")
             return
         }
 
         try {
-            proxyContext = ProxyContext.create(privacyAgent, driverContext, proxyPoolManager, conf)
-            proxyEntry = proxyContext?.proxyEntry?.also { browserId.setProxy(it) }
+            val proxyPoolManager0 = proxyPoolManager ?: throw ProxyException("Proxy pool manager is null")
+            proxyContext = ProxyContext.create(driverContext, proxyPoolManager0)
             coreMetrics?.proxies?.mark()
         } catch (e: ProxyException) {
             logger.warn(e.brief("Failed to create proxy context - "))

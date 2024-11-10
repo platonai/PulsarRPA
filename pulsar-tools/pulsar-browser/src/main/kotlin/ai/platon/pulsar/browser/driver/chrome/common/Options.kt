@@ -33,11 +33,37 @@ annotation class ChromeParameter(val value: String)
 /**
  * The options to open chrome devtools, list of chrome command-line switches can be found in the below link:
  * http://peter.sh/experiments/chromium-command-line-switches/
+ *
+ * @property proxyServer The proxy server to use for the connection.
  * */
 class ChromeOptions(
     // user data dir is set as a constructor parameter of ChromeLauncher
 //        @ChromeParameter("user-data-dir")
 //        var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
+    /**
+     * The proxy server to use for the connection.
+     *
+     * You can specify a custom proxy configuration in three ways:
+     * By providing a semi-colon-separated mapping of list scheme to url/port pairs.
+     * For example, you can specify:
+     *
+     * --proxy-server="http=foopy:80;ftp=foopy2"
+     *
+     * to use HTTP proxy "foopy:80" for http URLs and HTTP proxy "foopy2:80" for ftp URLs.
+     *
+     * By providing a single uri with optional port to use for all URLs.
+     * For example:
+     *
+     * --proxy-server="foopy:8080"
+     *
+     * will use the proxy at foopy:8080 for all traffic.
+     *
+     * By using the special "direct://" value.
+     * --proxy-server="direct://" will cause all connections to not use a proxy.
+     *
+     * @see <a href='https://www.chromium.org/developers/design-documents/network-settings/#command-line-options-for-proxy-settings'>
+     *     Command-line options for proxy settings</a>
+     * */
     @ChromeParameter("proxy-server")
     var proxyServer: String? = null,
     @ChromeParameter("headless")

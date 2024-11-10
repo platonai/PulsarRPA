@@ -76,24 +76,6 @@ object AppFiles {
         return path
     }
 
-    fun appendLog(message: String, path: Path) {
-        try {
-            // TODO: cached
-            FileUtils.writeStringToFile(path.toFile(), DateTimes.now() + SPACE + message, true)
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
-
-    fun appendLog(message: String, file: String) {
-        try {
-            // TODO: cached
-            FileUtils.writeStringToFile(File(file), DateTimes.now() + SPACE + message, true)
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
-
     /**
      * list all files in a jar file
      * TODO : use spring.ResourceUtil instead

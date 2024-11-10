@@ -21,9 +21,14 @@ import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.PopularEmoji
-import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import ai.platon.pulsar.persist.RetryScope
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
+import ai.platon.pulsar.skeleton.common.AppSystemInfo
+import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.CoreMetrics
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
@@ -31,19 +36,14 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyManager
-import ai.platon.pulsar.persist.RetryScope
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import com.google.common.collect.Iterables
-import kotlinx.coroutines.delay
 import java.io.IOException
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
 
-class MultiPrivacyContextManager(
+open class MultiPrivacyContextManager(
     val driverPoolManager: WebDriverPoolManager,
     val proxyPoolManager: ProxyPoolManager? = null,
     val coreMetrics: CoreMetrics? = null,
@@ -89,6 +89,10 @@ class MultiPrivacyContextManager(
     private val iterator = Iterables.cycle(temporaryContexts.values).iterator()
 
     val metrics = Metrics()
+    
+    constructor(
+        driverPoolManager: WebDriverPoolManager
+    ) : this(driverPoolManager, null, null, driverPoolManager.immutableConfig)
 
     constructor(
         driverPoolManager: WebDriverPoolManager,
@@ -316,8 +320,7 @@ class MultiPrivacyContextManager(
             return specifiedPrivacyAgent
         }
 
-        val privacyAgentGenerator = privacyAgentGeneratorFactory.generator
-        return privacyAgentGenerator.invoke(fingerprint)
+        return privacyAgentGeneratorFactory.generator.invoke(fingerprint)
     }
 
     /**
@@ -583,3 +586,4 @@ class MultiPrivacyContextManager(
         }
     }
 }
+

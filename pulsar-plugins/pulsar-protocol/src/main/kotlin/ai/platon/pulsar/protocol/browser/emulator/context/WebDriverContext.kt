@@ -46,8 +46,8 @@ import kotlin.concurrent.withLock
  * */
 open class WebDriverContext(
     val browserId: BrowserId,
-    private val driverPoolManager: WebDriverPoolManager,
-    private val unmodifiedConfig: ImmutableConfig
+    val driverPoolManager: WebDriverPoolManager,
+    val conf: ImmutableConfig
 ): AutoCloseable {
     companion object {
         private val numGlobalRunningTasks = AtomicInteger()

@@ -176,6 +176,7 @@ class FetchResult(
     }
 
     companion object {
+        fun mockSuccess(task: FetchTask) = FetchResult(task, ForwardingResponse.mockSuccess(task.page))
         fun unchanged(task: FetchTask) = FetchResult(task, ForwardingResponse.unchanged(task.page))
         fun unfetched(task: FetchTask) = FetchResult(task, ForwardingResponse.unfetched(task.page))
         fun canceled(task: FetchTask) = FetchResult(task, ForwardingResponse.canceled(task.page))

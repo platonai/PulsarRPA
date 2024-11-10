@@ -12,6 +12,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import org.slf4j.LoggerFactory
+import java.net.URI
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -76,7 +77,7 @@ open class WebDriverFactory(
         
         val browserType = browserId.browserType
         val capabilities = driverSettings.createGeneralOptions()
-        setProxy(capabilities, browserId.fingerprint.proxyServer)
+        setProxy(capabilities, browserId.fingerprint.proxyURI)
         
         try {
             val browser = when (browserType) {
@@ -142,8 +143,8 @@ open class WebDriverFactory(
         return browserManager.launch(browserId, driverSettings, capabilities) as MockBrowser
     }
     
-    private fun setProxy(capabilities: MutableMap<String, Any>, proxyServer: String?) {
-        if (proxyServer == null) {
+    private fun setProxy(capabilities: MutableMap<String, Any>, proxyURI: URI?) {
+        if (proxyURI == null) {
             return
         }
 
@@ -153,6 +154,6 @@ open class WebDriverFactory(
 //            ftpProxy = proxyServer
 //        }
         
-        capabilities["proxy"] = proxyServer
+        capabilities["proxy"] = proxyURI
     }
 }

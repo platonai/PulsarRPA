@@ -14,7 +14,7 @@ class PulsarEnvironment {
              * If the prototype data directory exists, it copies and inherits the prototype Chrome browser's
              * user data directory.
              * */
-            PRIVACY_AGENT_GENERATOR_CLASS to "ai.platon.pulsar.skeleton.crawl.fetch.privacy.RandomPrivacyAgentGenerator"
+            PRIVACY_AGENT_GENERATOR_CLASS to "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
         )
     }
 

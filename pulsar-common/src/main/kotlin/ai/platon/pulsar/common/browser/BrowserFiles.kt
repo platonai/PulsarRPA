@@ -212,7 +212,7 @@ object BrowserFiles {
             .filter { Files.isDirectory(it) && it.fileName.toString().startsWith(prefix) }
             .forEach { contextGroup.add(it) }
         
-        // println("contextGroup.size: ${contextGroup.size} maxContexts: $maxContexts")
+        // logger.info("contextGroup.size: ${contextGroup.size} maxContexts: $maxContexts")
         
         if (contextGroup.size >= maxContexts) {
             return contextGroup.iterator.next()
@@ -223,6 +223,8 @@ object BrowserFiles {
         val fileName = String.format("%s%s", prefix, contextCount)
         val path = groupBaseDir.resolve(fileName)
         Files.createDirectories(path)
+        
+        logger.info("New privacy context dir: $fileName maxContexts: $maxContexts")
         
         return path
     }

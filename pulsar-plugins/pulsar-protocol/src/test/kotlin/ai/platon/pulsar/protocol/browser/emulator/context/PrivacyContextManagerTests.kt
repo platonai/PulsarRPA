@@ -4,19 +4,18 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.UserAgent
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.persist.WebPageExt
+import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.SequentialPrivacyAgentGenerator
-import ai.platon.pulsar.persist.WebPageExt
-import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.RandomStringUtils
+import java.net.URI
 import java.nio.file.Files
 import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -127,7 +126,7 @@ class PrivacyContextManagerTests {
         closer.scheduleWithFixedDelay({
             volatileContexts.forEach { pc ->
                 // proxy server can be changed, which will be improved in the further
-                pc.privacyAgent.fingerprint.proxyServer = "127.0.0." + Random.nextInt(200)
+                pc.privacyAgent.fingerprint.proxyURI = URI("127.0.0." + Random.nextInt(200))
                 
                 privacyManager.close(pc)
                 assertTrue { !pc.isActive }

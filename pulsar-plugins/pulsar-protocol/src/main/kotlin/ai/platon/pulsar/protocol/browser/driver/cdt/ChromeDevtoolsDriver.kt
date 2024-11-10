@@ -30,7 +30,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import org.apache.commons.lang3.SystemUtils
 import org.apache.http.client.utils.URIBuilder
-import org.jetbrains.kotlin.utils.addToStdlib.ifFalse
 import java.nio.file.Files
 import java.text.MessageFormat
 import java.time.Duration
@@ -195,7 +194,13 @@ class ChromeDevtoolsDriver(
      * */
     @Throws(WebDriverException::class)
     override suspend fun waitForSelector(selector: String, timeout: Duration, action: suspend () -> Unit): Duration {
-        return waitUntil("waitForSelector", timeout) { exists(selector).apply { ifFalse { action() } } }
+        return waitUntil("waitForSelector", timeout) {
+            val elementExists = exists(selector)
+            if (!elementExists) {
+                action()
+            }
+            elementExists
+        }
     }
 
     @Throws(WebDriverException::class)
@@ -665,7 +670,7 @@ class ChromeDevtoolsDriver(
             fetchAPI?.enable()
         }
 
-        val proxyUsername = browser.id.fingerprint.proxyUsername
+        val proxyUsername = browser.id.fingerprint.proxyEntry?.username
         if (!proxyUsername.isNullOrBlank()) {
             // allow all url patterns
             val patterns = listOf(RequestPattern())
@@ -698,10 +703,10 @@ class ChromeDevtoolsDriver(
         pageAPI?.onWindowOpen { onWindowOpen(it) }
         // pageAPI?.onFrameAttached {  }
 //        pageAPI?.onDomContentEventFired {  }
-
-        val proxyUsername = browser.id.fingerprint.proxyUsername
-        if (!proxyUsername.isNullOrBlank()) {
-            credentials = Credentials(proxyUsername, browser.id.fingerprint.proxyPassword)
+        
+        val proxyEntry = browser.id.fingerprint.proxyEntry
+        if (proxyEntry?.username != null) {
+            credentials = Credentials(proxyEntry.username!!, proxyEntry.password)
             credentials?.let { networkManager.authenticate(it) }
         }
 

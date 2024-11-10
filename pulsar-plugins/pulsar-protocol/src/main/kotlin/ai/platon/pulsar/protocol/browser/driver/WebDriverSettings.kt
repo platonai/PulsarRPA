@@ -20,6 +20,8 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_TASK_TIMEOUT
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.ProxyEntry
+import java.net.URI
 import java.time.Duration
 
 /**
@@ -89,7 +91,11 @@ open class WebDriverSettings(conf: ImmutableConfig): BrowserSettings(conf) {
 
         // rewrite proxy argument
         chromeOptions.removeArgument("proxy")
-        chromeOptions.proxyServer = generalOptions["proxy"]?.toString()
+        when (val proxy = generalOptions["proxy"]) {
+            is String -> chromeOptions.proxyServer = proxy
+            is URI -> chromeOptions.proxyServer = proxy.host + ":" + proxy.port
+            is ProxyEntry -> chromeOptions.proxyServer = proxy.hostPort
+        }
 
         chromeOptions.headless = isHeadless
         chromeOptions.noSandbox = noSandbox

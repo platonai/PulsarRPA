@@ -1,8 +1,9 @@
 package ai.platon.pulsar.test2.browser
 
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
@@ -72,6 +73,16 @@ class WebDriverTestBase : TestBase() {
     protected fun runWebDriverTest(block: suspend (driver: WebDriver) -> Unit) {
         runBlocking {
             driverFactory.launchTempBrowser().use {
+                it.newDriver().use { driver ->
+                    block(driver)
+                }
+            }
+        }
+    }
+
+    protected fun runWebDriverTest(browserId: BrowserId, block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            driverFactory.launchBrowser(browserId).use {
                 it.newDriver().use { driver ->
                     block(driver)
                 }

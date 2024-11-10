@@ -47,6 +47,9 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
     var testIpRate = 0.3
 
     val isActive get() = !closed.get()
+    
+    @Throws(ProxyException::class)
+    fun updateProxies() = updateProxies(Duration.ZERO)
 
     @Throws(ProxyException::class)
     abstract fun updateProxies(reloadInterval: Duration): List<ProxyEntry>

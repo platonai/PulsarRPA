@@ -8,9 +8,9 @@ import java.util.*
 enum class BrowserType {
     NATIVE, PULSAR_CHROME, MOCK_CHROME, PLAYWRIGHT_CHROME;
 
-    override fun toString(): String {
-        return name.lowercase(Locale.getDefault())
-    }
+//    override fun toString(): String {
+//        return name.lowercase(Locale.getDefault())
+//    }
 
     companion object {
         /**

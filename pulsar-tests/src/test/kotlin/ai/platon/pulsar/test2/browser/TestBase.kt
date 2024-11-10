@@ -39,7 +39,7 @@ class TestBase {
 
     val globalCache get() = session.globalCache
 
-    @Test
+//    @Test
     fun smoke() {
         assertTrue { alwaysTrue() }
     }

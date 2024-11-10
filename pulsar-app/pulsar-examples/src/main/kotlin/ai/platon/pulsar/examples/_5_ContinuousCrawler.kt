@@ -21,7 +21,7 @@ fun main() {
     }
 
     // change to seeds100.txt to crawl more
-    val urls = LinkExtractors.fromResource("seeds10.txt")
+    val urls = LinkExtractors.fromResource("seeds100.txt")
         .map { ParsableHyperlink("$it -refresh", parseHandler) }
     context.submitAll(urls).await()
 }

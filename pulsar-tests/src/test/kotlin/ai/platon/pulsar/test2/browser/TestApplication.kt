@@ -9,5 +9,5 @@ import org.springframework.context.annotation.ImportResource
         "ai.platon.pulsar.test.rest"
     ]
 )
-@ImportResource("test-beans/app-context.xml")
+@ImportResource("classpath:test-beans/app-context.xml")
 class TestApplication

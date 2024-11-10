@@ -29,6 +29,8 @@ open class ForwardingResponse(
     }
 
     companion object {
+        
+        fun mockSuccess(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_SUCCESS, page)
         fun unfetched(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_NOTFETCHED, page)
         fun unchanged(page: WebPage) = ForwardingResponse(page.protocolStatus, page)
 
