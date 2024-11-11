@@ -17,8 +17,7 @@ package ai.platon.pulsar.skeleton.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.HtmlIntegrity
-import ai.platon.pulsar.common.browser.BrowserFiles.computeNextSequentialContextDir
-import ai.platon.pulsar.common.browser.BrowserFiles.computeRandomTmpContextDir
+import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -26,11 +25,15 @@ import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.persist.RetryScope
+import ai.platon.pulsar.skeleton.common.AppSystemInfo.Companion.elapsedTime
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.Fetcher
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext.Companion.globalMetrics
+import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import com.google.common.annotations.Beta
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -65,9 +68,9 @@ abstract class PrivacyContext(
         // NOTE: the user-default context is not a default context.
         val DEFAULT_CONTEXT_DIR: Path = AppPaths.CONTEXT_DEFAULT_DIR
         // A random context directory, if you need a random temporary context, use this one
-        val NEXT_SEQUENTIAL_CONTEXT_DIR get() = computeNextSequentialContextDir()
+        val NEXT_SEQUENTIAL_CONTEXT_DIR get() = BrowserFiles.computeNextSequentialContextDir()
         // A random context directory, if you need a random temporary context, use this one
-        val RANDOM_CONTEXT_DIR get() = computeRandomTmpContextDir()
+        val RANDOM_CONTEXT_DIR get() = BrowserFiles.computeRandomTmpContextDir()
         // The prototype context directory, all privacy contexts copies browser data from the prototype.
         // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
         val PROTOTYPE_DATA_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE
@@ -81,7 +84,9 @@ abstract class PrivacyContext(
     }
 
     private val logger = LoggerFactory.getLogger(PrivacyContext::class.java)
-
+    
+    var fetcher: Fetcher? = null
+    
     val id get() = privacyAgent.id
     val seq = SEQUENCER.incrementAndGet()
     val display get() = privacyAgent.display
@@ -296,7 +301,14 @@ abstract class PrivacyContext(
             privacyLeakWarnings.addAndGet(maximumWarnings)
         }
     }
-
+    
+    abstract suspend fun open(url: String): FetchResult
+    
+    open suspend fun open(url: String, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
+        val task = FetchTask.create(url, conf.toVolatileConfig())
+        return run(task, fetchFun)
+    }
+    
     /**
      * Run a task in the privacy context and record the status.
      *

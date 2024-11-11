@@ -27,6 +27,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import ai.platon.pulsar.skeleton.crawl.fetch.Fetcher
 import com.google.common.annotations.Beta
 import org.slf4j.LoggerFactory
 
@@ -38,6 +39,7 @@ open class BrowserPrivacyContext(
     privacyAgent: PrivacyAgent
 ): PrivacyContext(privacyAgent, conf) {
     private val logger = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
+    
     val browserId = BrowserId(privacyAgent.contextDir, privacyAgent.fingerprint)
     val driverContext = WebDriverContext(browserId, driverPoolManager, conf)
     var proxyContext: ProxyContext? = null
@@ -71,6 +73,12 @@ open class BrowserPrivacyContext(
     }
 
     override val isFullCapacity: Boolean get() = driverPoolManager.isFullCapacity(browserId)
+    
+    override suspend fun open(url: String): FetchResult {
+        val task = FetchTask.create(url, conf.toVolatileConfig())
+        val f = fetcher ?: throw IllegalStateException("Fetcher is null")
+        return doRun(task) { _, driver -> f.fetchDeferred(task, driver) }
+    }
     
     @Throws(ProxyException::class, Exception::class)
     override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {

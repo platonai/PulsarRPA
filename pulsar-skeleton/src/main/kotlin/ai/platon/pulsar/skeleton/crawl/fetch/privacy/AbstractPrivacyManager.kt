@@ -9,6 +9,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
+import ai.platon.pulsar.skeleton.crawl.fetch.Fetcher
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -16,11 +17,33 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
+interface PrivacyManager : AutoCloseable {
+    val isActive: Boolean
+    val isClosed: Boolean
+    val conf: ImmutableConfig
+    
+    fun takeSnapshot(): String
+    fun maintain(force: Boolean = false)
+    fun reset(reason: String = "")
+    
+    suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
+    fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
+    fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
+    fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext?
+    fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
+    fun computeIfAbsent(privacyAgent: PrivacyAgent): PrivacyContext
+    fun createUnmanagedContext(privacyAgent: PrivacyAgent): PrivacyContext
+    fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: Fetcher): PrivacyContext
+    fun close(privacyContext: PrivacyContext)
+}
+
 /**
  * Manage the privacy contexts.
  * */
-abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
-    private val logger = LoggerFactory.getLogger(PrivacyManager::class.java)
+abstract class AbstractPrivacyManager(
+    override val conf: ImmutableConfig
+): PrivacyManager {
+    private val logger = LoggerFactory.getLogger(AbstractPrivacyManager::class.java)
     private val closed = AtomicBoolean()
 
     /**
@@ -58,9 +81,9 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     open val privacyAgentGenerator get() = privacyAgentGeneratorFactory.generator
 
-    val isClosed get() = closed.get()
-
-    val isActive get() = !isClosed && AppContext.isActive
+    override val isClosed get() = closed.get()
+    
+    override val isActive get() = !isClosed && AppContext.isActive
 
     /**
      * Run a task in a privacy context.
@@ -76,40 +99,46 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * @return the fetch result
      * */
     @Throws(Exception::class)
-    abstract suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
+    abstract override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
     /**
      * Create a new context or return an existing one.
      * */
-    abstract fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
+    abstract override fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
     /**
      * Create a new context or return an existing one.
      * */
-    abstract fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
+    abstract override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
     /**
      * Create a new context or return an existing one
      * */
-    abstract fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext?
+    abstract override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext?
     /**
      * Create a new context or return an existing one
      * */
-    abstract fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
+    abstract override fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
 
     /**
      * Create a context with [privacyAgent] and add it to active context list if not absent
      * */
-    abstract fun computeIfAbsent(privacyAgent: PrivacyAgent): PrivacyContext
+    abstract override fun computeIfAbsent(privacyAgent: PrivacyAgent): PrivacyContext
 
     /**
      * Create a context and do not add to active context list
      * */
-    abstract fun createUnmanagedContext(privacyAgent: PrivacyAgent): PrivacyContext
+    abstract override fun createUnmanagedContext(privacyAgent: PrivacyAgent): PrivacyContext
+    
+    /**
+     * Create a context and do not add to active context list
+     * */
+    override fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: Fetcher) =
+        createUnmanagedContext(privacyAgent).also { it.fetcher = fetcher }
 
-    open fun takeSnapshot(): String {
+    override fun takeSnapshot(): String {
         val snapshot = activeContexts.values.joinToString("\n") { it.display + ": " + it.takeSnapshot() }
         return snapshot
     }
-
-    open fun maintain(force: Boolean = false) {
+    
+    override fun maintain(force: Boolean) {
         // do nothing by default
     }
 
@@ -117,14 +146,14 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * Close a given privacy context, remove it from the active list and add it to the zombie list.
      * No exception.
      * */
-    open fun close(privacyContext: PrivacyContext) {
+    override fun close(privacyContext: PrivacyContext) {
         kotlin.runCatching { doClose(privacyContext) }.onFailure { warnForClose(this, it) }
     }
 
     /**
      * Reset the privacy environment, close all privacy contexts, so all fetch tasks are handled by new browser contexts.
      * */
-    open fun reset(reason: String = "") {
+    override fun reset(reason: String) {
         logger.info("Reset all privacy contexts, closing all ... | {}", reason.ifEmpty { "no reason" })
 
         activeContexts.values.toCollection(zombieContexts)

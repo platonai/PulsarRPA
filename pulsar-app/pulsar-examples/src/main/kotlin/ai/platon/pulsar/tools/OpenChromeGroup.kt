@@ -1,19 +1,36 @@
 package ai.platon.pulsar.tools
 
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
-import ai.platon.pulsar.ql.context.SQLContexts
-import kotlinx.coroutines.runBlocking
+import ai.platon.pulsar.protocol.browser.emulator.Defaults
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 
-fun main() {
-    val driver = SQLContexts.create().getBean(WebDriverFactory::class).launchBrowser(BrowserId.PROTOTYPE).newDriver()
-
-    runBlocking {
-        driver.navigateTo("about:blank")
-        driver.navigateTo("https://www.amazon.in")
+class OpenChromeGroup {
+    private val defaults = Defaults()
+    private val fetcher = defaults.managedBrowserFetcher
+    private val privacyManager = defaults.privacyManager
+    
+    val url = "https://www.taobao.com/"
+    
+    suspend fun open() {
+        repeat(10) {
+            val privacyContext = privacyManager.createUnmanagedContext(PrivacyAgent.NEXT_SEQUENTIAL, fetcher)
+            privacyContext.open(url)
+        }
     }
     
-    
+    suspend fun open2() {
+        repeat(10) {
+            val privacyContext = privacyManager.createUnmanagedContext(PrivacyAgent.NEXT_SEQUENTIAL)
+            
+            val task = FetchTask.create(url, defaults.conf.toVolatileConfig())
+            privacyContext.run(task) { _, driver ->
+                fetcher.fetchDeferred(task, driver)
+            }
+        }
+    }
+}
 
+suspend fun main() {
+    OpenChromeGroup().open()
     readlnOrNull()
 }

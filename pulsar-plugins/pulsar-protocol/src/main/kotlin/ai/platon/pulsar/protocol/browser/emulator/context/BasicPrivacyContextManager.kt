@@ -19,24 +19,23 @@ import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.skeleton.crawl.CoreMetrics
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyManager
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
 
 class BasicPrivacyContextManager(
-    val driverPoolManager: WebDriverPoolManager,
-    val proxyPoolManager: ProxyPoolManager? = null,
+    driverPoolManager: WebDriverPoolManager,
+    proxyPoolManager: ProxyPoolManager? = null,
     val coreMetrics: CoreMetrics? = null,
-    config: ImmutableConfig
-): PrivacyManager(config) {
+    conf: ImmutableConfig
+): AbstractBrowserPrivacyManager(driverPoolManager, proxyPoolManager, conf) {
     private val logger = LoggerFactory.getLogger(BasicPrivacyContextManager::class.java)
     private val numPrivacyContexts: Int get() = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
 

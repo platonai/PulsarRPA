@@ -38,14 +38,22 @@ open class SequentialPrivacyAgentGenerator(
     private val logger = LoggerFactory.getLogger(SequentialPrivacyAgentGenerator::class.java)
     override var conf: ImmutableConfig = ImmutableConfig()
     
-    override fun invoke(fingerprint: Fingerprint): PrivacyAgent {
+    fun computeMaxAgentCount(): Int {
         // The number of allowed active privacy contexts
         val privacyContextNumber = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
+        
         // The minimum number of sequential privacy agents, the active privacy contexts is chosen from them
         val minAgents = conf.getInt(MIN_SEQUENTIAL_PRIVACY_AGENT_NUMBER, 10)
         // The maximum number of sequential privacy agents, the active privacy contexts is chosen from them
         var maxAgents = conf.getInt(CapabilityTypes.MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, minAgents)
         maxAgents = maxAgents.coerceAtLeast(privacyContextNumber).coerceAtLeast(minAgents)
+        
+        return maxAgents
+    }
+    
+    override fun invoke(fingerprint: Fingerprint): PrivacyAgent {
+        // The number of allowed active privacy contexts
+        val maxAgents = computeMaxAgentCount()
         
         val contextDir = BrowserFiles.computeNextSequentialContextDir(group, fingerprint, maxAgents)
         // logger.info("Use sequential privacy agent | $contextDir")

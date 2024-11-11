@@ -200,7 +200,7 @@ object BrowserFiles {
      * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/cx.1
      * */
     @Throws(IOException::class)
-    private fun computeNextSequentialContextDir0(group: String, fingerprint: Fingerprint, maxContexts: Int, channel: FileChannel): Path {
+    private fun computeNextSequentialContextDir0(group: String, fingerprint: Fingerprint, maxAgents: Int, channel: FileChannel): Path {
         require(channel.isOpen) { "The lock file channel is closed" }
         
         val prefix = CONTEXT_DIR_PREFIX
@@ -214,7 +214,7 @@ object BrowserFiles {
         
         // logger.info("contextGroup.size: ${contextGroup.size} maxContexts: $maxContexts")
         
-        if (contextGroup.size >= maxContexts) {
+        if (contextGroup.size >= maxAgents) {
             return contextGroup.iterator.next()
         }
         
@@ -224,7 +224,7 @@ object BrowserFiles {
         val path = groupBaseDir.resolve(fileName)
         Files.createDirectories(path)
         
-        logger.info("New privacy context dir: $fileName maxContexts: $maxContexts")
+        logger.info("New privacy context dir: $fileName maxAgents: $maxAgents")
         
         return path
     }

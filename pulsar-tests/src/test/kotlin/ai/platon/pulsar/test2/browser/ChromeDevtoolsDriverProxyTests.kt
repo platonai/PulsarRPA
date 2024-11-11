@@ -36,7 +36,7 @@ class ChromeDevtoolsDriverProxyTests : WebDriverTestBase() {
         val expires = parts[4]
         ProxyEntry(ip, port, username, password)
     }
-    val proxyEntry = proxies[3]
+    val proxyEntry = proxies[2]
     
 //    val proxyEntry = ProxyEntry("113.219.171.252", 2018)
     val ipTestUrl = "https://ip.tool.chinaz.com/"

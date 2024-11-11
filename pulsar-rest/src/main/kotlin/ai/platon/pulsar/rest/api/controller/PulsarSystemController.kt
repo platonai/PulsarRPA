@@ -1,9 +1,7 @@
 package ai.platon.pulsar.rest.api.controller
 
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyManager
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import ai.platon.pulsar.protocol.browser.emulator.context.MultiPrivacyContextManager
-import ai.platon.pulsar.rest.api.service.LoadService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 
@@ -19,7 +17,7 @@ class PulsarSystemController {
     lateinit var driverPoolManager: WebDriverPoolManager
 
     @Autowired
-    lateinit var privacyManager: PrivacyManager
+    lateinit var privacyManager: AbstractPrivacyManager
 
     @GetMapping("hello")
     fun hello(): String {

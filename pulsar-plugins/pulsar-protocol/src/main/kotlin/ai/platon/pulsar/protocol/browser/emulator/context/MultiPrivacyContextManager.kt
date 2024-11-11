@@ -35,7 +35,6 @@ import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyManager
 import com.google.common.collect.Iterables
 import java.io.IOException
 import java.time.Duration
@@ -44,11 +43,11 @@ import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
 
 open class MultiPrivacyContextManager(
-    val driverPoolManager: WebDriverPoolManager,
-    val proxyPoolManager: ProxyPoolManager? = null,
+    driverPoolManager: WebDriverPoolManager,
+    proxyPoolManager: ProxyPoolManager? = null,
     val coreMetrics: CoreMetrics? = null,
-    immutableConfig: ImmutableConfig
-) : PrivacyManager(immutableConfig) {
+    conf: ImmutableConfig
+) : AbstractBrowserPrivacyManager(driverPoolManager, proxyPoolManager, conf) {
     class Metrics {
         private val registry = MetricsSystem.reg
 
@@ -96,8 +95,12 @@ open class MultiPrivacyContextManager(
 
     constructor(
         driverPoolManager: WebDriverPoolManager,
-        immutableConfig: ImmutableConfig
-    ) : this(driverPoolManager, null, null, immutableConfig)
+        conf: ImmutableConfig
+    ) : this(driverPoolManager, null, null, conf)
+    
+    constructor(
+        conf: ImmutableConfig
+    ) : this(DefaultWebDriverPoolManager(conf), conf)
 
     /**
      * Run a task in a privacy context.

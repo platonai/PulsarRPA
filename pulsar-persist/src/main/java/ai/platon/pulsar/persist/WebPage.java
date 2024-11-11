@@ -397,6 +397,17 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
+     * Returns the page scope temporary variable to which the specified name is mapped,
+     * or {@code null} if the local variable map contains no mapping for the name.
+     *
+     * @param clazz the class of the variable
+     */
+    @Nullable
+    public Object getVar(Class<?> clazz) {
+        return variables.get(clazz.getName());
+    }
+
+    /**
      * Retrieves and removes the local variable with the given name.
      */
     public Object removeVar(@NotNull String name) {
@@ -411,6 +422,10 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      */
     public void setVar(@NotNull String name, @NotNull Object value) {
         variables.set(name, value);
+    }
+
+    public <T> void setVar(@NotNull T value) {
+        variables.set(value.getClass().getName(), value);
     }
 
     /**

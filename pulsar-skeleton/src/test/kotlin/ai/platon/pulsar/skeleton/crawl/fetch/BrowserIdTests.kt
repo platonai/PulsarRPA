@@ -1,6 +1,7 @@
 package ai.platon.pulsar.skeleton.crawl.fetch
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId.Companion.SYSTEM_DEFAULT
@@ -52,5 +53,20 @@ class BrowserIdTests {
         assertEquals(id.contextDir, AppPaths.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER)
         assertTrue { id.userDataDir.startsWith(AppPaths.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER) }
         assertEquals(id.userDataDir, AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER)
+    }
+    
+    @Test
+    fun testNextSequentialBrowserId() {
+        IntRange(1, 20).forEach { i ->
+            val id = BrowserId.NEXT_SEQUENTIAL
+            val expectedContextBaseDir = AppPaths.CONTEXT_GROUP_BASE_DIR
+            println("\nRound $i")
+            println("Browser Id: $id")
+            println("contextDir: " + id.contextDir)
+            println("userDataDir: " + id.userDataDir)
+            assertTrue { id.userDataDir.toString().contains("pulsar_chrome") }
+            assertTrue("$expectedContextBaseDir <- ${id.userDataDir}") {
+                id.userDataDir.startsWith(expectedContextBaseDir) }
+        }
     }
 }
