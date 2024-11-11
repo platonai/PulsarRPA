@@ -1,9 +1,10 @@
 package ai.platon.pulsar.skeleton.crawl.common
 
 import ai.platon.pulsar.common.PulsarParams
+import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
-import ai.platon.pulsar.persist.WebPage
 
 class FetchEntry(val page: WebPage, val options: LoadOptions) {
 
@@ -15,6 +16,12 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
         fun createPageShell(normURL: NormURL): WebPage {
             return createPageShell(normURL.spec, normURL.options, normURL.hrefSpec, normURL.referrer)
         }
+        
+        fun createPageShell(url: String, conf: VolatileConfig, href: String? = null, referrer: String? = null): WebPage {
+            val page = WebPage.newWebPage(url, conf, href)
+            initWebPage(page, null, href, referrer)
+            return page
+        }
 
         fun createPageShell(url: String, options: LoadOptions, href: String? = null, referrer: String? = null): WebPage {
             val page = WebPage.newWebPage(url, options.conf, href)
@@ -22,18 +29,20 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
             return page
         }
 
-        fun initWebPage(page: WebPage, options: LoadOptions, href: String? = null, referrer: String? = null) {
-            page.also {
-                it.href = href
-                referrer?.let { r -> it.referrer = r }
-                it.args = options.toString()
-                it.fetchMode = options.fetchMode
-                it.conf = options.conf
-                it.maxRetries = options.nMaxRetry
-                it.isResource = options.isResource
+        fun initWebPage(page: WebPage, options: LoadOptions?, href: String? = null, referrer: String? = null) {
+            page.href = href
+            if (referrer != null) {
+                page.referrer = referrer
+            }
+            if (options != null) {
+                page.args = options.toString()
+                page.fetchMode = options.fetchMode
+                page.conf = options.conf
+                page.maxRetries = options.nMaxRetry
+                page.isResource = options.isResource
 
                 // since LoadOptions is not visible by WebPage, we use an unsafe method to pass the load options
-                it.setVar(PulsarParams.VAR_LOAD_OPTIONS, options)
+                page.setVar(PulsarParams.VAR_LOAD_OPTIONS, options)
             }
         }
     }

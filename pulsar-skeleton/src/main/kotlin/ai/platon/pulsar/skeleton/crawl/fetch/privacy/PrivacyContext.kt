@@ -24,9 +24,13 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.persist.RetryScope
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.AppSystemInfo.Companion.elapsedTime
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.Fetcher
@@ -301,8 +305,10 @@ abstract class PrivacyContext(
             privacyLeakWarnings.addAndGet(maximumWarnings)
         }
     }
-    
+
     abstract suspend fun open(url: String): FetchResult
+    
+    abstract suspend fun open(url: String, options: LoadOptions): FetchResult
     
     open suspend fun open(url: String, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         val task = FetchTask.create(url, conf.toVolatileConfig())
