@@ -21,15 +21,16 @@ import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.BrowserFetcher
 import ai.platon.pulsar.protocol.browser.emulator.DefaultFetchComponents
+import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
 
 class BrowserEmulatorProtocol : ForwardingProtocol() {
+    private val defaults by lazy { DefaultFetchComponents(conf) }
     private val context get() = PulsarContexts.create()
 
-    private val browserEmulator by lazy {
+    private val browserEmulator: IncognitoBrowserFetcher by lazy {
         // require(conf === context.unmodifiedConfig)
-        context.getBeanOrNull(BrowserFetcher::class)
-            ?: DefaultFetchComponents(conf).incognitoBrowserFetcher.also { PulsarContexts.registerClosable(it) }
+        context.getBeanOrNull(IncognitoBrowserFetcher::class) ?: defaults.incognitoBrowserFetcher
     }
 
     private val browserEmulatorOrNull get() = if (context.isActive) browserEmulator else null

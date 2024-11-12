@@ -15,12 +15,14 @@
  */
 package ai.platon.pulsar.skeleton.crawl.fetch.privacy
 
-import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.common.proxy.ProxyException
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import java.nio.file.Path
+import java.time.Duration
 
 /**
  * A privacy context is a unique context of a privacy agent to the target website,
@@ -34,6 +36,12 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
  * and Pulsar will visit the page in another privacy context.
  * */
 interface PrivacyContext {
+    val failureRate: Float
+    val isHighFailureRate: Boolean
+    val idleTime: Duration
+    val elapsedTime: Duration
+    val isFullCapacity: Boolean
+    val isUnderLoaded: Boolean
     val id: PrivacyAgentId
     val isIdle: Boolean
     val isRetired: Boolean
@@ -42,15 +50,38 @@ interface PrivacyContext {
     val isActive: Boolean
     val isClosed: Boolean
     val isReady: Boolean
+    val display: String
+    val readableState: String
+    val privacyAgent: PrivacyAgent
+    fun takeSnapshot(): String
     fun promisedWebDriverCount(): Int
     fun hasWebDriverPromise(): Boolean
     suspend fun open(url: String): FetchResult
     suspend fun open(url: String, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
     suspend fun open(url: String, options: LoadOptions): FetchResult
-    @Throws(ProxyException::class, Exception::class)
     suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
-    @Throws(ProxyException::class)
     suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
     fun dismiss()
     fun maintain()
+    fun buildReport(): String
+    
+    companion object {
+        // The prefix for all temporary privacy contexts. System context, prototype context and default context are not
+        // required to start with the prefix.
+        const val CONTEXT_DIR_PREFIX = "cx."
+        
+        // The default context directory, if you need a permanent and isolate context, use this one.
+        // NOTE: the user-default context is not a default context.
+        val DEFAULT_CONTEXT_DIR: Path = AppPaths.CONTEXT_DEFAULT_DIR
+        // A random context directory, if you need a random temporary context, use this one
+        val NEXT_SEQUENTIAL_CONTEXT_DIR get() = BrowserFiles.computeNextSequentialContextDir()
+        // A random context directory, if you need a random temporary context, use this one
+        val RANDOM_CONTEXT_DIR get() = BrowserFiles.computeRandomTmpContextDir()
+        // The prototype context directory, all privacy contexts copies browser data from the prototype.
+        // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
+        val PROTOTYPE_DATA_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE
+        // A context dir is the dir which contains the browser data dir, and supports different browsers.
+        // For example: ~/.pulsar/browser/chrome/prototype/
+        val PROTOTYPE_CONTEXT_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE.parent
+    }
 }

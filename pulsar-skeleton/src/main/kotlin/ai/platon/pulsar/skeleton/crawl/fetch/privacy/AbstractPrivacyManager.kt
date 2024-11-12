@@ -4,39 +4,18 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_CLOSE_LAZY
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
-import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
-import ai.platon.pulsar.skeleton.crawl.fetch.Fetcher
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
+import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.WebDriverFetcher
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-
-interface PrivacyManager : AutoCloseable {
-    val isActive: Boolean
-    val isClosed: Boolean
-    val conf: ImmutableConfig
-    
-    fun takeSnapshot(): String
-    fun maintain(force: Boolean = false)
-    fun reset(reason: String = "")
-    
-    suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
-    fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
-    fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
-    fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext?
-    fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
-    fun computeIfAbsent(privacyAgent: PrivacyAgent): PrivacyContext
-    fun createUnmanagedContext(privacyAgent: PrivacyAgent): PrivacyContext
-    fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: WebDriverFetcher): PrivacyContext
-    fun close(privacyContext: PrivacyContext)
-}
 
 /**
  * Manage the privacy contexts.
@@ -132,7 +111,7 @@ abstract class AbstractPrivacyManager(
      * Create a context and do not add to active context list
      * */
     override fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: WebDriverFetcher) =
-        createUnmanagedContext(privacyAgent).also { it.webdriverFetcher = fetcher }
+        createUnmanagedContext(privacyAgent).also { (it as? AbstractPrivacyContext)?.webdriverFetcher = fetcher }
 
     override fun takeSnapshot(): String {
         val snapshot = activeContexts.values.joinToString("\n") { it.display + ": " + it.takeSnapshot() }
@@ -261,6 +240,7 @@ abstract class AbstractPrivacyManager(
             val postfix = " (success/min)"
             // zombieContexts is a deque, so here we take the latest n contexts.
             historicalContexts.take(maximumRecords)
+                .filterIsInstance<AbstractPrivacyContext>()
                 .joinToString(", ", prefix, postfix) { String.format("%.2f", 60 * it.meterSuccesses.meanRate) }
                 .let { logger.info(it) }
         }

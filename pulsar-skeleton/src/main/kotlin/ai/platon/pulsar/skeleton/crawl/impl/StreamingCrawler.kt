@@ -20,6 +20,7 @@ import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableUrl
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyContext
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import com.codahale.metrics.Gauge
@@ -462,7 +463,7 @@ open class StreamingCrawler(
          * If the privacy context leaks too fast, there is a good chance that there is a bug,
          * or the quality of this batch of proxy IPs is poor.
          * */
-        val contextLeaksRate = PrivacyContext.globalMetrics.contextLeaks.meter.fifteenMinuteRate
+        val contextLeaksRate = AbstractPrivacyContext.globalMetrics.contextLeaks.meter.fifteenMinuteRate
         if (isActive && contextLeaksRate >= 5 / 60f) {
             globalState.criticalWarning = CriticalWarning.FAST_CONTEXT_LEAK
             handleContextLeaks()
@@ -867,7 +868,7 @@ open class StreamingCrawler(
      * 5 / 60f ~= 0.083
      * */
     private suspend fun handleContextLeaks() {
-        val contextLeaks = PrivacyContext.globalMetrics.contextLeaks
+        val contextLeaks = AbstractPrivacyContext.globalMetrics.contextLeaks
         val contextLeaksRate = contextLeaks.meter.fifteenMinuteRate
         var k = 0
         val threshold = 5 / 60f // 5 / 60f ~= 0.083

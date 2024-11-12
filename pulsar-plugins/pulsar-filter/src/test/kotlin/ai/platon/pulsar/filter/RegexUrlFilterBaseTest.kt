@@ -1,4 +1,3 @@
-
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader
@@ -12,7 +11,6 @@ import kotlin.streams.toList
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.test.fail
-
 
 abstract class RegexUrlFilterBaseTest(testDir: String) : UrlFilterTestBase(testDir) {
 

@@ -60,7 +60,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserEmulatedFetcher" class="ai.platon.pulsar.protocol.browser.emulator.impl.PrivacyManagedBrowserFetcher" destroy-method="close">
+    <bean id="browserFetcher" class="ai.platon.pulsar.protocol.browser.emulator.impl.PrivacyManagedBrowserFetcher" destroy-method="close">
         <constructor-arg ref="privacyManager"/>
         <constructor-arg ref="browserEmulator"/>
         <constructor-arg ref="conf"/>

@@ -4,7 +4,7 @@ import ai.platon.pulsar.protocol.browser.emulator.DefaultFetchComponents
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 
-class OpenChromeGroup {
+class ChromeGroup {
     private val defaults = DefaultFetchComponents()
     private val fetcher = defaults.webdriverFetcher
     private val privacyManager = defaults.privacyManager
@@ -31,6 +31,6 @@ class OpenChromeGroup {
 }
 
 suspend fun main() {
-    OpenChromeGroup().open()
+    ChromeGroup().open()
     readlnOrNull()
 }

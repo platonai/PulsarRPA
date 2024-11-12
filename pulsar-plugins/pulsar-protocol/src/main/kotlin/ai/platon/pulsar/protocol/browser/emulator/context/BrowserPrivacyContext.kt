@@ -105,7 +105,7 @@ open class BrowserPrivacyContext(
     @Beta
     override fun subscribeWebDriver() = driverPoolManager.subscribeDriver(browserId)
     
-    override fun getReport(): String {
+    override fun buildReport(): String {
         var report = String.format("Privacy context has lived for %s | %s | %s" +
             " | success: %s(%s pages/s) | small: %s(%s) | traffic: %s(%s/s) | tasks: %s total run: %s | %s",
             // Privacy context has lived for {} | {} | {}
@@ -141,7 +141,7 @@ open class BrowserPrivacyContext(
     }
 
     override fun report() {
-        logger.info(getReport())
+        logger.info(buildReport())
     }
     /**
      * Closing call stack:

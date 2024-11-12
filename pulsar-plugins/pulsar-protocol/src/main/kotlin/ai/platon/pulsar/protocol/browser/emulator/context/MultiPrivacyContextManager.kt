@@ -33,6 +33,7 @@ import ai.platon.pulsar.skeleton.crawl.CoreMetrics
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyContext
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import com.google.common.collect.Iterables
@@ -380,14 +381,14 @@ open class MultiPrivacyContextManager(
         temporaryContexts.filterValues { it.isIdle }.values.forEach {
             temporaryContexts.remove(it.privacyAgent)
             logger.warn("Privacy context hangs unexpectedly, closing it | {}/{} | {} | {}",
-                it.idelTime.readable(), it.elapsedTime.readable(), it.display, it.readableState)
+                it.idleTime.readable(), it.elapsedTime.readable(), it.display, it.readableState)
             close(it)
         }
 
         permanentContexts.filterValues { it.isIdle }.values.forEach {
             permanentContexts.remove(it.privacyAgent)
             logger.warn("Permanent privacy context is idle, closing it | {}/{} | {} | {}",
-                it.idelTime.readable(), it.elapsedTime.readable(), it.display, it.readableState)
+                it.idleTime.readable(), it.elapsedTime.readable(), it.display, it.readableState)
             close(it)
         }
 
@@ -453,7 +454,7 @@ open class MultiPrivacyContextManager(
 
             val promisedDrivers = temporaryContexts.values.joinToString { it.promisedWebDriverCount().toString() }
             val states = temporaryContexts.values.joinToString { it.readableState }
-            val idleTimes = temporaryContexts.values.joinToString { it.idelTime.readable() }
+            val idleTimes = temporaryContexts.values.joinToString { it.idleTime.readable() }
             logger.warn("Too many driver absence, promised drivers: {} | {} | {} | {} | {}",
                 promisedDrivers, errorMessage, states, idleTimes, task.url)
         }
@@ -465,7 +466,7 @@ open class MultiPrivacyContextManager(
     ): FetchResult {
         val result = doRun(privacyContext, task, fetchFun)
 
-        updatePrivacyContext(privacyContext, result)
+        updatePrivacyContext(privacyContext as AbstractPrivacyContext, result)
         // All retries are forced to do in crawl scope
         if (result.isPrivacyRetry) {
             result.status.upgradeRetry(RetryScope.CRAWL)
@@ -491,20 +492,20 @@ open class MultiPrivacyContextManager(
             }
         } finally {
             task.done()
-            task.page.variables[VAR_CONTEXT_INFO] = formatPrivacyContext(privacyContext)
+            task.page.variables[VAR_CONTEXT_INFO] = formatPrivacyContext(privacyContext as AbstractPrivacyContext)
         }
 
         return result
     }
 
-    private fun formatPrivacyContext(privacyContext: PrivacyContext): String {
+    private fun formatPrivacyContext(privacyContext: AbstractPrivacyContext): String {
         return String.format("%s(%.2f)", privacyContext.privacyAgent.display, privacyContext.meterSuccesses.meanRate)
     }
 
     /**
      * Handle after run
      * */
-    private fun updatePrivacyContext(privacyContext: PrivacyContext, result: FetchResult) {
+    private fun updatePrivacyContext(privacyContext: AbstractPrivacyContext, result: FetchResult) {
         if (!privacyContext.isActive) {
             tracePrivacyContextInactive(privacyContext, result)
             return
@@ -525,7 +526,7 @@ open class MultiPrivacyContextManager(
         }
     }
 
-    private fun logPrivacyLeakWarning(privacyContext: PrivacyContext, result: FetchResult) {
+    private fun logPrivacyLeakWarning(privacyContext: AbstractPrivacyContext, result: FetchResult) {
         val warnings = privacyContext.privacyLeakWarnings.get()
         val status = result.status
         if (warnings > 0) {
@@ -550,7 +551,7 @@ open class MultiPrivacyContextManager(
         }
     }
 
-    private fun tracePrivacyContextInactive(privacyContext: PrivacyContext, result: FetchResult) {
+    private fun tracePrivacyContextInactive(privacyContext: AbstractPrivacyContext, result: FetchResult) {
         tracer?.trace(
             "{}. Context {}/#{} is not active | {} | {}",
             result.task.id, privacyContext.seq, privacyContext.privacyLeakWarnings,
@@ -583,7 +584,7 @@ open class MultiPrivacyContextManager(
             sb.append("\n", takeSnapshot())
             sb.append("\n")
             sb.append("\n")
-            activeContexts.values.forEach { sb.append(it.getReport()) }
+            activeContexts.values.forEach { sb.append(it.buildReport()) }
             sb.append("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
             // Files.writeString(SNAPSHOT_PATH, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND)

@@ -26,30 +26,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 abstract class AbstractPrivacyContext(
-    val privacyAgent: PrivacyAgent,
+    override val privacyAgent: PrivacyAgent,
     val conf: ImmutableConfig
 ) : PrivacyContext, Comparable<PrivacyContext>, AutoCloseable {
     companion object {
         private val SEQUENCER = AtomicInteger()
-
-        // The prefix for all temporary privacy contexts. System context, prototype context and default context are not
-        // required to start with the prefix.
-        const val CONTEXT_DIR_PREFIX = "cx."
-
-        // The default context directory, if you need a permanent and isolate context, use this one.
-        // NOTE: the user-default context is not a default context.
-        val DEFAULT_CONTEXT_DIR: Path = AppPaths.CONTEXT_DEFAULT_DIR
-        // A random context directory, if you need a random temporary context, use this one
-        val NEXT_SEQUENTIAL_CONTEXT_DIR get() = BrowserFiles.computeNextSequentialContextDir()
-        // A random context directory, if you need a random temporary context, use this one
-        val RANDOM_CONTEXT_DIR get() = BrowserFiles.computeRandomTmpContextDir()
-        // The prototype context directory, all privacy contexts copies browser data from the prototype.
-        // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
-        val PROTOTYPE_DATA_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE
-        // A context dir is the dir which contains the browser data dir, and supports different browsers.
-        // For example: ~/.pulsar/browser/chrome/prototype/
-        val PROTOTYPE_CONTEXT_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE.parent
-
+        
         val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT: Duration = Duration.ofMinutes(30)
 
         val globalMetrics by lazy { PrivacyContextMetrics() }
@@ -61,7 +43,7 @@ abstract class AbstractPrivacyContext(
     
     override val id get() = privacyAgent.id
     val seq = SEQUENCER.incrementAndGet()
-    val display get() = privacyAgent.display
+    override val display get() = privacyAgent.display
     val baseDir get() = privacyAgent.contextDir
 
     protected val numRunningTasks = AtomicInteger()
@@ -82,13 +64,13 @@ abstract class AbstractPrivacyContext(
     /**
      * The rate of failures. Failure rate is meaningless when there are few tasks.
      * */
-    val failureRate get() = 1 - successRate
+    override val failureRate get() = 1 - successRate
     val failureRateThreshold = conf.getFloat(CapabilityTypes.PRIVACY_CONTEXT_FAILURE_RATE_THRESHOLD, 0.6f)
     /**
      * Check if failure rate is too high.
      * High failure rate make sense only when there are many tasks.
      * */
-    val isHighFailureRate get() = meterTasks.count > 100 && failureRate > failureRateThreshold
+    override val isHighFailureRate get() = meterTasks.count > 100 && failureRate > failureRateThreshold
     /**
      * The start time of the privacy context.
      * */
@@ -101,7 +83,7 @@ abstract class AbstractPrivacyContext(
     /**
      * The elapsed time of the privacy context since it's started.
      * */
-    val elapsedTime get() = Duration.between(startTime, Instant.now())
+    override val elapsedTime get() = Duration.between(startTime, Instant.now())
 
     private val fetchTaskTimeout
         get() = conf.getDuration(CapabilityTypes.FETCH_TASK_TIMEOUT, AppConstants.FETCH_TASK_TIMEOUT_DEFAULT)
@@ -115,11 +97,11 @@ abstract class AbstractPrivacyContext(
     /**
      * The idle time of the privacy context.
      * */
-    val idelTime get() = Duration.between(lastActiveTime, Instant.now())
+    override val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     /**
      * Whether the privacy context is idle.
      * */
-    override val isIdle get() = idelTime > idleTimeout
+    override val isIdle get() = idleTime > idleTimeout
 
 //    val historyUrls = PassiveExpiringMap<String, String>()
     /**
@@ -181,17 +163,17 @@ abstract class AbstractPrivacyContext(
      *
      * @return True if the privacy context is running at full capacity, false otherwise.
      * */
-    open val isFullCapacity = false
+    override val isFullCapacity = false
 
     /**
      * Check if the privacy context is running under loaded.
      * */
-    open val isUnderLoaded get() = !isFullCapacity
+    override val isUnderLoaded get() = !isFullCapacity
 
     /**
      * Get the readable privacy context state.
      * */
-    open val readableState: String get() {
+    override val readableState: String get() {
         return listOf(
             "closed" to isClosed, "leaked" to isLeaked, "active" to isActive,
             "highFailure" to isHighFailureRate, "idle" to isIdle, "good" to isGood,
@@ -317,7 +299,7 @@ abstract class AbstractPrivacyContext(
     @Throws(ProxyException::class)
     abstract override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
-    fun takeSnapshot(): String {
+    override fun takeSnapshot(): String {
         return "$readableState | promised drivers: ${promisedWebDriverCount()}"
     }
     /**
@@ -382,7 +364,7 @@ abstract class AbstractPrivacyContext(
         }
     }
 
-    open fun getReport(): String {
+    override fun buildReport(): String {
         return String.format("Privacy context #%s has lived for %s", SEQUENCER, elapsedTime.readable())
     }
 
