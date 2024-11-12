@@ -16,15 +16,20 @@
 package ai.platon.pulsar.protocol.browser.emulator.impl
 
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.AbstractBrowserFetcher
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator
-import ai.platon.pulsar.protocol.browser.emulator.ManagedBrowserFetcher
+import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
 import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
+import ai.platon.pulsar.skeleton.common.persist.ext.browseEventHandlers
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.WebDriverFetcher
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverCancellationException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
@@ -35,34 +40,15 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
-open class UnmanagedBrowserFetcher(
-    override val browserEmulator: BrowserEmulator,
-    override val conf: ImmutableConfig
-): AbstractBrowserFetcher() {
-    private val logger = LoggerFactory.getLogger(PrivacyManagedBrowserFetcher::class.java)!!
+open class BrowserWebDriverFetcher(
+    val browserEmulator: BrowserEmulator,
+    val conf: ImmutableConfig
+): WebDriverFetcher {
+    private val logger = LoggerFactory.getLogger(BrowserWebDriverFetcher::class.java)!!
     
-    private val closed = AtomicBoolean()
-    private val illegalState = AtomicBoolean()
-    override val isActive get() = !illegalState.get() && !closed.get() && AppContext.isActive
-    
-    /**
-     * Fetch page content
-     * */
-    @Throws(Exception::class)
-    override suspend fun fetchContentDeferred(page: WebPage): Response {
-        if (!isActive) {
-            return ForwardingResponse.canceled(page)
-        }
-        
-        if (page.isInternal) {
-            logger.warn("Unexpected internal page | {}", page.url)
-            return ForwardingResponse.canceled(page)
-        }
-        
-        val driver = page.getVar("WEB_DRIVER") as? WebDriver ?: throw WebDriverException("No web driver found in WebPage")
-        
-        val task = FetchTask.create(page)
-        return fetchDeferred(task, driver).response
+    enum class EventType {
+        willFetch,
+        fetched
     }
     
     @Throws(Exception::class)
@@ -70,20 +56,40 @@ open class UnmanagedBrowserFetcher(
         return fetchDeferred(FetchTask.create(url, conf.toVolatileConfig()), driver)
     }
     
-    override fun reset() {
-        TODO("Not implemented")
+    @Throws(Exception::class)
+    override suspend fun fetchDeferred(task: FetchTask, driver: WebDriver): FetchResult {
+        emit(EventType.willFetch, task.page, driver)
+
+        val result = browserEmulator.visit(task, driver)
+        
+        emit(EventType.fetched, task.page, driver)
+        
+        return result
     }
     
-    override fun cancel(page: WebPage) {
-        TODO("Not implemented")
+    private suspend fun emit(type: EventType, page: WebPage, driver: WebDriver) {
+        val event = page.browseEventHandlers ?: return
+        when(type) {
+            EventType.willFetch -> notify(type.name) { event.onWillFetch(page, driver) }
+            EventType.fetched -> notify(type.name) { event.onFetched(page, driver) }
+            else -> {}
+        }
     }
     
-    override fun cancelAll() {
-        TODO("Not implemented")
+    private suspend fun notify(name: String, action: suspend () -> Unit) {
+        val e = kotlin.runCatching { action() }.exceptionOrNull()
+        
+        if (e != null) {
+            handleEventException(name, e)
+        }
     }
     
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
+    private fun handleEventException(name: String, e: Throwable) {
+        when (e) {
+            is WebDriverCancellationException -> logger.info("Web driver is cancelled")
+            is WebDriverException -> logger.warn(e.brief("[Ignored][$name] "))
+            is Exception -> logger.warn(e.brief("[Ignored][$name] "))
+            else -> logger.error(e.stringify("[Unexpected][$name] "))
         }
     }
 }
@@ -97,8 +103,10 @@ open class PrivacyManagedBrowserFetcher(
     override val browserEmulator: BrowserEmulator,
     override val conf: ImmutableConfig,
     private val closeCascaded: Boolean = false
-): AbstractBrowserFetcher(), ManagedBrowserFetcher {
+): AbstractBrowserFetcher(), IncognitoBrowserFetcher {
     private val logger = LoggerFactory.getLogger(PrivacyManagedBrowserFetcher::class.java)!!
+    
+    override val webdriverFetcher by lazy { BrowserWebDriverFetcher(browserEmulator, conf) }
     
     private val closed = AtomicBoolean()
     private val illegalState = AtomicBoolean()
@@ -127,19 +135,19 @@ open class PrivacyManagedBrowserFetcher(
      * */
     @Throws(Exception::class)
     suspend fun fetchDeferred(task: FetchTask): Response {
-        // TODO: it's a temporary solution to specify the web driver to fetch the page
-        val driver = task.page.getVar("WEB_DRIVER") as? WebDriver
-        if (driver != null) {
-            return fetchDeferred(task, driver).response
+        var driver = task.page.getVar(WebDriver::class.java)
+        if (driver is WebDriver) {
+            return webdriverFetcher.fetchDeferred(task, driver).response
         }
         
-        // @Throws(ProxyException::class, Exception::class)
-        return privacyManager.run(task) { _, driver2 -> fetchDeferred(task, driver2) }.response
-    }
+        // Old style to retrieve the driver, will be removed in the future
+        driver = task.page.getVar("WEB_DRIVER")
+        if (driver is WebDriver) {
+            return webdriverFetcher.fetchDeferred(task, driver).response
+        }
 
-    @Throws(Exception::class)
-    override suspend fun fetchDeferred(url: String, driver: WebDriver): FetchResult {
-        return fetchDeferred(FetchTask.create(url, conf.toVolatileConfig()), driver)
+        // @Throws(ProxyException::class, Exception::class)
+        return privacyManager.run(task) { _, driver2 -> webdriverFetcher.fetchDeferred(task, driver2) }.response
     }
 
     override fun reset() {

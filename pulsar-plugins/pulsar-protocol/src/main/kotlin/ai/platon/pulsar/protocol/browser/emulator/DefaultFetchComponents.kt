@@ -22,9 +22,10 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.context.BasicPrivacyContextManager
 import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
-import ai.platon.pulsar.protocol.browser.emulator.impl.PrivacyManagedBrowserFetcher
-import ai.platon.pulsar.protocol.browser.emulator.impl.InteractiveBrowserEmulator
 import ai.platon.pulsar.protocol.browser.emulator.impl.BrowserResponseHandlerImpl
+import ai.platon.pulsar.protocol.browser.emulator.impl.InteractiveBrowserEmulator
+import ai.platon.pulsar.protocol.browser.emulator.impl.PrivacyManagedBrowserFetcher
+import ai.platon.pulsar.skeleton.crawl.fetch.WebDriverFetcher
 
 class DefaultWebDriverSettings(conf: ImmutableConfig): WebDriverSettings(conf)
 
@@ -48,25 +49,6 @@ class DefaultBrowserEmulator(
         BrowserResponseHandlerImpl(conf),
         conf
 )
-
-//class DefaultBrowserEmulatedFetcher(
-//        conf: ImmutableConfig,
-//        driverPoolManager: WebDriverPoolManager = DefaultWebDriverPoolManager(conf)
-//): BrowserEmulatedFetcherImpl(
-//        BasicPrivacyContextManager(driverPoolManager, conf),
-//        driverPoolManager,
-//        DefaultBrowserEmulator(driverPoolManager, conf),
-//        conf,
-//        closeCascaded = true
-//) {
-//    constructor(conf: ImmutableConfig, privacyManager: PrivacyManager, driverPoolManager: WebDriverPoolManager) : this(
-//        privacyManager,
-//        driverPoolManager,
-//        DefaultBrowserEmulator(driverPoolManager, conf),
-//        conf,
-//        closeCascaded = true
-//    )
-//}
 
 class DefaultPrivacyManagedBrowserFetcher(
     privacyManager: BrowserPrivacyManager,
@@ -94,20 +76,23 @@ class DefaultPrivacyManagedBrowserFetcher(
     )
 }
 
-class Defaults(val conf: ImmutableConfig = ImmutableConfig()) {
+class DefaultFetchComponents(val conf: ImmutableConfig = ImmutableConfig()) {
     companion object {
         // TODO: should create one fetcher for each conf object, ObjectCache can be used.
-        private var fetcher: ManagedBrowserFetcher? = null
+        private var fetcher: IncognitoBrowserFetcher? = null
     }
 
-    val managedBrowserFetcher: ManagedBrowserFetcher
+    val incognitoBrowserFetcher: IncognitoBrowserFetcher
         get() = getOrCreateBrowserEmulatedFetcher()
 
     val browserEmulator: BrowserEmulator
-        get() = managedBrowserFetcher.browserEmulator
+        get() = incognitoBrowserFetcher.browserEmulator
+    
+    val webdriverFetcher: WebDriverFetcher
+        get() = incognitoBrowserFetcher.webdriverFetcher
 
     val privacyManager: BrowserPrivacyManager
-        get() = managedBrowserFetcher.privacyManager
+        get() = incognitoBrowserFetcher.privacyManager
 
     val driverPoolManager: WebDriverPoolManager
         get() = privacyManager.driverPoolManager
@@ -118,7 +103,7 @@ class Defaults(val conf: ImmutableConfig = ImmutableConfig()) {
     val browserManager: BrowserManager
         get() = driverFactory.browserManager
 
-    private fun getOrCreateBrowserEmulatedFetcher(): ManagedBrowserFetcher {
+    private fun getOrCreateBrowserEmulatedFetcher(): IncognitoBrowserFetcher {
         synchronized(this) {
             if (fetcher == null) {
                 fetcher = DefaultPrivacyManagedBrowserFetcher(conf)

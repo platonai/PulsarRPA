@@ -19,18 +19,15 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_DISPLAY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
-import ai.platon.pulsar.common.urls.UrlAware
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.CoreMetrics
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyContext
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
-import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
-import ai.platon.pulsar.skeleton.common.urls.NormURL
-import ai.platon.pulsar.skeleton.crawl.fetch.Fetcher
 import com.google.common.annotations.Beta
 import org.slf4j.LoggerFactory
 
@@ -40,7 +37,7 @@ open class BrowserPrivacyContext(
     val coreMetrics: CoreMetrics? = null,
     conf: ImmutableConfig,
     privacyAgent: PrivacyAgent
-): PrivacyContext(privacyAgent, conf) {
+): AbstractPrivacyContext(privacyAgent, conf) {
     private val logger = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
     
     val browserId = BrowserId(privacyAgent.contextDir, privacyAgent.fingerprint)
@@ -79,13 +76,13 @@ open class BrowserPrivacyContext(
     
     override suspend fun open(url: String): FetchResult {
         val task = FetchTask.create(url, conf.toVolatileConfig())
-        val f = fetcher ?: throw IllegalStateException("Fetcher is null")
+        val f = webdriverFetcher ?: throw IllegalStateException("Fetcher is null")
         return doRun(task) { _, driver -> f.fetchDeferred(task, driver) }
     }
     
     override suspend fun open(url: String, options: LoadOptions): FetchResult {
         val task = FetchTask.create(url, options)
-        val f = fetcher ?: throw IllegalStateException("Fetcher is null")
+        val f = webdriverFetcher ?: throw IllegalStateException("Fetcher is null")
         return doRun(task) { _, driver -> f.fetchDeferred(task, driver) }
     }
     

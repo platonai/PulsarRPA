@@ -1,12 +1,12 @@
 package ai.platon.pulsar.tools
 
-import ai.platon.pulsar.protocol.browser.emulator.Defaults
+import ai.platon.pulsar.protocol.browser.emulator.DefaultFetchComponents
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 
 class OpenChromeGroup {
-    private val defaults = Defaults()
-    private val fetcher = defaults.managedBrowserFetcher
+    private val defaults = DefaultFetchComponents()
+    private val fetcher = defaults.webdriverFetcher
     private val privacyManager = defaults.privacyManager
     
     val url = "https://www.taobao.com/"

@@ -10,6 +10,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.crawl.fetch.Fetcher
+import ai.platon.pulsar.skeleton.crawl.fetch.WebDriverFetcher
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -33,7 +34,7 @@ interface PrivacyManager : AutoCloseable {
     fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
     fun computeIfAbsent(privacyAgent: PrivacyAgent): PrivacyContext
     fun createUnmanagedContext(privacyAgent: PrivacyAgent): PrivacyContext
-    fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: Fetcher): PrivacyContext
+    fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: WebDriverFetcher): PrivacyContext
     fun close(privacyContext: PrivacyContext)
 }
 
@@ -130,8 +131,8 @@ abstract class AbstractPrivacyManager(
     /**
      * Create a context and do not add to active context list
      * */
-    override fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: Fetcher) =
-        createUnmanagedContext(privacyAgent).also { it.fetcher = fetcher }
+    override fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: WebDriverFetcher) =
+        createUnmanagedContext(privacyAgent).also { it.webdriverFetcher = fetcher }
 
     override fun takeSnapshot(): String {
         val snapshot = activeContexts.values.joinToString("\n") { it.display + ": " + it.takeSnapshot() }

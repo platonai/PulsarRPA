@@ -19,15 +19,17 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
 import ai.platon.pulsar.skeleton.crawl.fetch.Fetcher
+import ai.platon.pulsar.skeleton.crawl.fetch.WebDriverFetcher
 
 /**
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
-interface BrowserEmulatedFetcher: Fetcher, AutoCloseable {
+interface BrowserFetcher: AutoCloseable {
+    
+    val conf: ImmutableConfig
     
     val browserEmulator: BrowserEmulator
-    val conf: ImmutableConfig
     
     fun reset()
 
@@ -36,6 +38,7 @@ interface BrowserEmulatedFetcher: Fetcher, AutoCloseable {
     fun cancelAll()
 }
 
-interface ManagedBrowserFetcher: BrowserEmulatedFetcher {
+interface IncognitoBrowserFetcher: Fetcher, BrowserFetcher {
     val privacyManager: BrowserPrivacyManager
+    val webdriverFetcher: WebDriverFetcher
 }

@@ -5,6 +5,13 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
 
+interface WebDriverFetcher {
+    @Throws(Exception::class)
+    suspend fun fetchDeferred(task: FetchTask, driver: WebDriver): FetchResult
+    @Throws(Exception::class)
+    suspend fun fetchDeferred(url: String, driver: WebDriver): FetchResult
+}
+
 interface Fetcher {
     
     @Throws(Exception::class)
@@ -48,8 +55,4 @@ interface Fetcher {
      * */
     @Throws(Exception::class)
     suspend fun fetchContentDeferred(page: WebPage): Response
-    @Throws(Exception::class)
-    suspend fun fetchDeferred(task: FetchTask, driver: WebDriver): FetchResult
-    @Throws(Exception::class)
-    suspend fun fetchDeferred(url: String, driver: WebDriver): FetchResult
 }
