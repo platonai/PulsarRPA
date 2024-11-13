@@ -10,7 +10,7 @@ fun main() {
     val url = "https://www.taobao.com"
 
     repeat(6) {
-        val browserId = BrowserId.createNextSequential()
+        val browserId = BrowserId.NEXT_SEQUENTIAL
         val fingerprintFile = browserId.contextDir.resolve("fingerprint.json")
         val fingerprint = browserId.fingerprint
         val browser = driverFactory.launchBrowser(BrowserId.NEXT_SEQUENTIAL)

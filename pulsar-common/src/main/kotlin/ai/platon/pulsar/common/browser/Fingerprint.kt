@@ -6,18 +6,50 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import org.apache.commons.collections4.ComparatorUtils
 import org.apache.http.client.utils.URIBuilder
 import java.net.URI
-import java.nio.file.Path
 
 /**
- * The browser fingerprint
+ * The website account.
+ *
+ * @property domain the domain of the website.
+ * @property username the username of the account.
+ * @property password the password of the account.
+ * @property loginURL the login URL of the website.
+ * @property redirectURL the redirect URL after login.
+ * @property email the email of the account.
+ * @property phone the phone number of the account.
+ * @property data the additional data of the account.
+ * */
+data class WebsiteAccount(
+    val domain: String,
+    val username: String,
+    val password: String,
+    val loginURL: String,
+    val redirectURL: String? = null,
+    val email: String? = null,
+    val phone: String? = null,
+    val data: MutableMap<String, String> = mutableMapOf(),
+)
+
+/**
+ * The browser fingerprint.
+ *
+ * @property browserType the browser type.
+ * @property proxyURI the proxy server URI.
+ * @property username the username of the target website.
+ * @property password the password of the target website.
+ * @property userAgent the user agent of the browser.
+ * @property source the full path of the source file of the fingerprint.
  * */
 data class Fingerprint(
     val browserType: BrowserType,
     var proxyURI: URI? = null,
+    @Deprecated("Use websiteAccounts instead")
     var username: String? = null,
+    @Deprecated("Use websiteAccounts instead")
     var password: String? = null,
     var userAgent: String? = null,
-    var source: Path? = null,
+    val websiteAccounts: MutableMap<String, WebsiteAccount> = mutableMapOf(),
+    var source: String? = null,
 ) : Comparable<Fingerprint> {
     private val comp = ComparatorUtils.nullLowComparator { o1: String, o2: String ->
         o1.compareTo(o2)
@@ -35,8 +67,7 @@ data class Fingerprint(
         username: String? = null,
         password: String? = null,
         userAgent: String? = null
-    ) :
-        this(browserType, URI(proxyURI), username, password, userAgent)
+    ) : this(browserType, URI(proxyURI), username, password, userAgent)
     
     constructor(
         browserType: BrowserType,
@@ -44,8 +75,7 @@ data class Fingerprint(
         username: String? = null,
         password: String? = null,
         userAgent: String? = null
-    ) :
-        this(browserType, proxy.toURI(), username, password, userAgent)
+    ) : this(browserType, proxy.toURI(), username, password, userAgent)
     
     /**
      * Set the proxy server.
