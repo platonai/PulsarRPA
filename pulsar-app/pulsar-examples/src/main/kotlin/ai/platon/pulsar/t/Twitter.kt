@@ -6,7 +6,7 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import ai.platon.pulsar.protocol.browser.emulator.DefaultFetchComponents
+import ai.platon.pulsar.protocol.browser.DefaultBrowserComponents
 import com.google.common.collect.Iterators
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -39,7 +39,7 @@ class Twitter {
     private suspend fun checkPreference() {
         val conf = ImmutableConfig()
         val driverPoolManager = session.context.getBeanOrNull(WebDriverPoolManager::class)
-            ?: DefaultFetchComponents(conf).driverPoolManager
+            ?: DefaultBrowserComponents(conf).driverPoolManager
         val fetchTaskTimeout = driverPoolManager.driverSettings.fetchTaskTimeout
         println(fetchTaskTimeout)
     }

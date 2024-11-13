@@ -19,13 +19,11 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.protocol.browser.emulator.BrowserFetcher
-import ai.platon.pulsar.protocol.browser.emulator.DefaultFetchComponents
 import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
 
 class BrowserEmulatorProtocol : ForwardingProtocol() {
-    private val defaults by lazy { DefaultFetchComponents(conf) }
+    private val defaults by lazy { DefaultBrowserComponents(conf) }
     private val context get() = PulsarContexts.create()
 
     private val browserEmulator: IncognitoBrowserFetcher by lazy {

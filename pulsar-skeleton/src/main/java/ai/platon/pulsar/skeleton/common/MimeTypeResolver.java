@@ -74,7 +74,7 @@ public final class MimeTypeResolver {
                 throw new RuntimeException(e);
             }
 
-            objectCache.put(mimeTypes);
+            objectCache.putBean(mimeTypes);
         }
 
         this.mimeTypes = mimeTypes;

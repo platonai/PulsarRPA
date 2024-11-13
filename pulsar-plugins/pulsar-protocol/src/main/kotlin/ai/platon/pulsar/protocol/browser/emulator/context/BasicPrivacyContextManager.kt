@@ -25,6 +25,7 @@ import ai.platon.pulsar.skeleton.crawl.CoreMetrics
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyContext
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import com.google.common.collect.Iterables
@@ -105,7 +106,7 @@ class BasicPrivacyContextManager(
         }
     }
 
-    private fun formatPrivacyContext(privacyContext: PrivacyContext): String {
+    private fun formatPrivacyContext(privacyContext: AbstractPrivacyContext): String {
         return String.format("%s(%.2f)", privacyContext.privacyAgent.display, privacyContext.meterSuccesses.fiveMinuteRate)
     }
 }

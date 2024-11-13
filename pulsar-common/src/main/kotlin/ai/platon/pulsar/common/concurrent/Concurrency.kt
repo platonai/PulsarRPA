@@ -6,12 +6,19 @@ import java.util.concurrent.TimeUnit
 
 interface ShutdownHookRegistry {
     fun register(thread: Thread) {
-        Runtime.getRuntime().addShutdownHook(thread)
+        try {
+            Runtime.getRuntime().addShutdownHook(thread)
+        } catch (e: IllegalStateException) {
+            // ignore if the JVM is already shutting down
+        }
     }
-
+    
     fun remove(thread: Thread) {
-        // TODO: java.lang.IllegalStateException: Shutdown in progress
-        // Runtime.getRuntime().removeShutdownHook(thread)
+        try {
+            Runtime.getRuntime().removeShutdownHook(thread)
+        } catch (e: IllegalStateException) {
+            // ignore if the JVM is already shutting down
+        }
     }
 }
 
@@ -50,3 +57,4 @@ fun stopExecution(name: String, executor: ExecutorService, future: Future<*>?, s
         }
     }
 }
+

@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.protocol.browser.emulator
+package ai.platon.pulsar.protocol.browser
 
+import ai.platon.pulsar.common.ObjectCache
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.protocol.browser.driver.BrowserManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
+import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator
+import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
 import ai.platon.pulsar.protocol.browser.emulator.context.BasicPrivacyContextManager
 import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
 import ai.platon.pulsar.protocol.browser.emulator.impl.BrowserResponseHandlerImpl
@@ -76,18 +79,14 @@ class DefaultPrivacyManagedBrowserFetcher(
     )
 }
 
-class DefaultFetchComponents(val conf: ImmutableConfig = ImmutableConfig()) {
-    companion object {
-        // TODO: should create one fetcher for each conf object, ObjectCache can be used.
-        private var fetcher: IncognitoBrowserFetcher? = null
+class DefaultBrowserComponents(val conf: ImmutableConfig = ImmutableConfig.DEFAULT) {
+
+    private val cache = ObjectCache.get(conf)
+    
+    val incognitoBrowserFetcher: IncognitoBrowserFetcher = cache.computeIfAbsent<IncognitoBrowserFetcher> {
+        DefaultPrivacyManagedBrowserFetcher(conf)
     }
 
-    val incognitoBrowserFetcher: IncognitoBrowserFetcher
-        get() = getOrCreateBrowserEmulatedFetcher()
-
-    val browserEmulator: BrowserEmulator
-        get() = incognitoBrowserFetcher.browserEmulator
-    
     val webdriverFetcher: WebDriverFetcher
         get() = incognitoBrowserFetcher.webdriverFetcher
 
@@ -102,13 +101,4 @@ class DefaultFetchComponents(val conf: ImmutableConfig = ImmutableConfig()) {
 
     val browserManager: BrowserManager
         get() = driverFactory.browserManager
-
-    private fun getOrCreateBrowserEmulatedFetcher(): IncognitoBrowserFetcher {
-        synchronized(this) {
-            if (fetcher == null) {
-                fetcher = DefaultPrivacyManagedBrowserFetcher(conf)
-            }
-            return fetcher!!
-        }
-    }
 }

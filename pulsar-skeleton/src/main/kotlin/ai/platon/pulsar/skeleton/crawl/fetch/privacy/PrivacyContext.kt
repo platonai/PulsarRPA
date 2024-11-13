@@ -35,7 +35,7 @@ import java.time.Duration
  * which we call a privacy leak, the privacy context has to be dropped,
  * and Pulsar will visit the page in another privacy context.
  * */
-interface PrivacyContext {
+interface PrivacyContext: AutoCloseable {
     val failureRate: Float
     val isHighFailureRate: Boolean
     val idleTime: Duration

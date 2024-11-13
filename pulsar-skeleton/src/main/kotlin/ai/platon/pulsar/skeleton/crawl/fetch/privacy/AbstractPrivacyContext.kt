@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger
 abstract class AbstractPrivacyContext(
     override val privacyAgent: PrivacyAgent,
     val conf: ImmutableConfig
-) : PrivacyContext, Comparable<PrivacyContext>, AutoCloseable {
+) : PrivacyContext, Comparable<PrivacyContext> {
     companion object {
         private val SEQUENCER = AtomicInteger()
         

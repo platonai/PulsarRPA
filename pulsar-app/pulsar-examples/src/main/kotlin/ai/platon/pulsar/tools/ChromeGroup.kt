@@ -1,36 +1,41 @@
 package ai.platon.pulsar.tools
 
-import ai.platon.pulsar.protocol.browser.emulator.DefaultFetchComponents
+import ai.platon.pulsar.protocol.browser.DefaultBrowserComponents
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
+import kotlinx.coroutines.runBlocking
 
 class ChromeGroup {
-    private val defaults = DefaultFetchComponents()
-    private val fetcher = defaults.webdriverFetcher
-    private val privacyManager = defaults.privacyManager
+    private val components = DefaultBrowserComponents()
+    private val fetcher = components.webdriverFetcher
+    private val privacyManager = components.privacyManager
     
     val url = "https://www.taobao.com/"
     
-    suspend fun open() {
-        repeat(10) {
-            val privacyContext = privacyManager.createUnmanagedContext(PrivacyAgent.NEXT_SEQUENTIAL, fetcher)
-            privacyContext.open(url)
+    fun open() {
+        runBlocking {
+            repeat(10) {
+                val privacyContext = privacyManager.createUnmanagedContext(PrivacyAgent.NEXT_SEQUENTIAL, fetcher)
+                privacyContext.open(url)
+            }
         }
     }
     
-    suspend fun open2() {
-        repeat(10) {
-            val privacyContext = privacyManager.createUnmanagedContext(PrivacyAgent.NEXT_SEQUENTIAL)
-            
-            val task = FetchTask.create(url, defaults.conf.toVolatileConfig())
-            privacyContext.run(task) { _, driver ->
-                fetcher.fetchDeferred(task, driver)
+    fun open2() {
+        runBlocking {
+            repeat(10) {
+                val privacyContext = privacyManager.createUnmanagedContext(PrivacyAgent.NEXT_SEQUENTIAL)
+                
+                val task = FetchTask.create(url, components.conf.toVolatileConfig())
+                privacyContext.run(task) { _, driver ->
+                    fetcher.fetchDeferred(task, driver)
+                }
             }
         }
     }
 }
 
-suspend fun main() {
+fun main() {
     ChromeGroup().open()
     readlnOrNull()
 }
