@@ -30,7 +30,9 @@ class ChromeGroup2 {
         browser.newDriver().navigateTo(fingerprint.source!!)
 
         val driver3 = browser.newDriver()
-        driver3.navigateTo(account.loginURL)
+        driver3.navigateTo(account.homeURL)
+        driver3.waitForSelector(account.loginLinkSelector)
+        driver3.click(account.loginLinkSelector)
         driver3.waitForNavigation()
         driver3.waitForSelector(account.passwordInputSelector)
         driver3.type(account.usernameInputSelector, account.username)

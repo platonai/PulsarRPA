@@ -24,7 +24,8 @@ import java.net.URI
  * */
 data class WebsiteAccount(
     val domain: String,
-    val loginURL: String,
+    val homeURL: String,
+    val loginLinkSelector: String,
     val username: String,
     val password: String,
     val usernameInputSelector: String,
