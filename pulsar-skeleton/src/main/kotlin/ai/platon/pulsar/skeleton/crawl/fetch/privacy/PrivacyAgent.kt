@@ -5,8 +5,10 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.Gson
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
 
 /**
@@ -17,7 +19,7 @@ import java.nio.file.Path
  * */
 data class PrivacyAgent(
     val contextDir: Path,
-    var fingerprint: Fingerprint
+    val fingerprint: Fingerprint
 ): Comparable<PrivacyAgent> {
 
     val id = PrivacyAgentId(contextDir, fingerprint.browserType)
@@ -73,5 +75,16 @@ data class PrivacyAgent(
          * */
         val RANDOM get() = PrivacyAgent(PrivacyContext.RANDOM_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
         
+        fun create(contextDir: Path): PrivacyAgent {
+            val fingerprintFile = contextDir.resolve("fingerprint.json")
+            val fingerprint: Fingerprint = if (Files.exists(fingerprintFile)) {
+                pulsarObjectMapper().readValue(fingerprintFile.toFile())
+            } else {
+                Fingerprint(BrowserType.PULSAR_CHROME)
+            }
+            return PrivacyAgent(contextDir, fingerprint)
+        }
+        
+        fun createNextSequential() = create(PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
     }
 }

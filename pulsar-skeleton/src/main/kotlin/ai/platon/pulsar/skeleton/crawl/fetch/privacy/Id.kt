@@ -139,8 +139,6 @@ data class BrowserId(
          * Represent the real user's default browser.
          * */
         val SYSTEM_DEFAULT = BrowserId(PrivacyAgent.SYSTEM_DEFAULT)
-        @Deprecated("Use SYSTEM_DEFAULT instead", ReplaceWith("SYSTEM_DEFAULT"))
-        val USER_DEFAULT = SYSTEM_DEFAULT
         /**
          * Represent the default browser.
          * */
@@ -157,5 +155,9 @@ data class BrowserId(
          * Create a browser with random context dir.
          * */
         val RANDOM get() = BrowserId(PrivacyAgent.RANDOM)
+
+        fun create(contextDir: Path) = BrowserId(PrivacyAgent.create(contextDir))
+
+        fun createNextSequential() = BrowserId(PrivacyAgent.createNextSequential())
     }
 }

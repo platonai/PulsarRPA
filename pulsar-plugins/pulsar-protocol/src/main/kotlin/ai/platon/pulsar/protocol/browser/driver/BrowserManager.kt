@@ -21,6 +21,7 @@ open class BrowserManager(
     private val _browsers = ConcurrentHashMap<BrowserId, Browser>()
     private val historicalBrowsers = ConcurrentLinkedDeque<Browser>()
     private val closedBrowsers = ConcurrentLinkedDeque<Browser>()
+    
     /**
      * The active browsers
      * */
