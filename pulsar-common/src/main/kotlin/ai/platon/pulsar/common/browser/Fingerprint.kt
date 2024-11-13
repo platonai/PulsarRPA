@@ -11,19 +11,25 @@ import java.net.URI
  * The website account.
  *
  * @property domain the domain of the website.
+ * @property loginURL the login URL of the website.
  * @property username the username of the account.
  * @property password the password of the account.
- * @property loginURL the login URL of the website.
  * @property redirectURL the redirect URL after login.
  * @property email the email of the account.
  * @property phone the phone number of the account.
  * @property data the additional data of the account.
+ * @property usernameInputSelector the selector of the username input element.
+ * @property passwordInputSelector the selector of the password input element.
+ * @property submitButtonSelector the selector of the submit button.
  * */
 data class WebsiteAccount(
     val domain: String,
+    val loginURL: String,
     val username: String,
     val password: String,
-    val loginURL: String,
+    val usernameInputSelector: String,
+    val passwordInputSelector: String,
+    val submitButtonSelector: String,
     val redirectURL: String? = null,
     val email: String? = null,
     val phone: String? = null,
