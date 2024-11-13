@@ -9,27 +9,24 @@ fun main() {
     val driverFactory = components.driverFactory
     val url = "https://www.taobao.com"
 
-    repeat(6) {
-        val browserId = BrowserId.NEXT_SEQUENTIAL
-        val fingerprintFile = browserId.contextDir.resolve("fingerprint.json")
-        val fingerprint = browserId.fingerprint
-        val browser = driverFactory.launchBrowser(BrowserId.NEXT_SEQUENTIAL)
+    val browserIds = IntRange(0, 5).map { BrowserId.NEXT_SEQUENTIAL }.shuffled()
+    browserIds.forEach { browserId ->
+        val browser = driverFactory.launchBrowser(browserId)
+        val fingerprint = browser.id.fingerprint
 
         runBlocking {
-            val driver = browser.newDriver()
-            driver.navigateTo("chrome://version")
-
-            val driver2 = browser.newDriver()
-            driver2.navigateTo(fingerprintFile.toString())
+            browser.newDriver().navigateTo("chrome://version")
+            browser.newDriver().navigateTo(fingerprint.source!!)
 
             val driver3 = browser.newDriver()
             driver3.navigateTo(url)
             driver3.waitForNavigation()
-            driver3.waitForSelector("body")
+            driver3.waitForSelector("a[href*=login]")
             driver3.click("a[href*=login]")
             driver3.waitForNavigation()
-            driver3.type("input[name=fm-login-id]", fingerprint.username ?: "")
-            driver3.type("input[name=fm-login-password]", fingerprint.password ?: "")
+            driver3.waitForSelector("input[name=fm-login-password]")
+            driver3.type("input[name=fm-login-id]", fingerprint.username ?: "unspecified")
+            driver3.type("input[name=fm-login-password]", fingerprint.password ?: "unspecified")
         }
     }
 

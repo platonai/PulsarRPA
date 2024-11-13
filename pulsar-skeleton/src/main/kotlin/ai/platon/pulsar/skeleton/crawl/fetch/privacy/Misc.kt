@@ -7,4 +7,3 @@ enum class CloseStrategy {
 }
 
 open class PrivacyContextException(message: String) : Exception(message)
-
