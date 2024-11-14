@@ -15,20 +15,3 @@
  */
 package ai.platon.pulsar.protocol.browser.emulator.context
 
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.NoProxyException
-import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyPoolManager
-import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
-import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
-import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import java.nio.file.Paths

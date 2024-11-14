@@ -30,7 +30,7 @@ data class WebsiteAccount(
     val password: String,
     val usernameInputSelector: String,
     val passwordInputSelector: String,
-    val submitButtonSelector: String,
+    val submitButtonSelector: String? = null,
     val redirectURL: String? = null,
     val email: String? = null,
     val phone: String? = null,
@@ -42,18 +42,12 @@ data class WebsiteAccount(
  *
  * @property browserType the browser type.
  * @property proxyURI the proxy server URI.
- * @property username the username of the target website.
- * @property password the password of the target website.
  * @property userAgent the user agent of the browser.
  * @property source the full path of the source file of the fingerprint.
  * */
 data class Fingerprint(
     val browserType: BrowserType,
     var proxyURI: URI? = null,
-    @Deprecated("Use websiteAccounts instead")
-    var username: String? = null,
-    @Deprecated("Use websiteAccounts instead")
-    var password: String? = null,
     var userAgent: String? = null,
     val websiteAccounts: MutableMap<String, WebsiteAccount> = mutableMapOf(),
     var source: String? = null,
@@ -71,18 +65,14 @@ data class Fingerprint(
     constructor(
         browserType: BrowserType,
         proxyURI: String,
-        username: String? = null,
-        password: String? = null,
         userAgent: String? = null
-    ) : this(browserType, URI(proxyURI), username, password, userAgent)
+    ) : this(browserType, URI(proxyURI), userAgent)
     
     constructor(
         browserType: BrowserType,
         proxy: ProxyEntry,
-        username: String? = null,
-        password: String? = null,
         userAgent: String? = null
-    ) : this(browserType, proxy.toURI(), username, password, userAgent)
+    ) : this(browserType, proxy.toURI(), userAgent)
     
     /**
      * Set the proxy server.
@@ -106,7 +96,6 @@ data class Fingerprint(
         listOfNotNull(
             browserType.name to other.browserType.name,
             proxyURI?.toString() to other.proxyURI?.toString(),
-            username to other.username,
             userAgent to other.userAgent,
         ).forEach {
             r = comp.compare(it.first, it.second)
@@ -128,12 +117,11 @@ data class Fingerprint(
         return other is Fingerprint && listOf(
             browserType to other.browserType,
             proxyURI?.toString() to other.proxyURI?.toString(),
-            username to other.username,
         ).all { it.first == it.second }
     }
     
     override fun toString(): String = listOfNotNull(
-        browserType, proxyURI, username
+        browserType, proxyURI
     ).joinToString()
     
     companion object {
@@ -141,7 +129,7 @@ data class Fingerprint(
         val EXAMPLE_USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
         val EXAMPLE =
-            Fingerprint(BrowserType.PULSAR_CHROME, URI("http://localhost:8080"), "John", "abc", EXAMPLE_USER_AGENT)
+            Fingerprint(BrowserType.PULSAR_CHROME, URI("http://localhost:8080"), EXAMPLE_USER_AGENT)
         
         fun fromJson(json: String): Fingerprint {
             return pulsarObjectMapper().readValue(json, Fingerprint::class.java)

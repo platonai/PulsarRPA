@@ -16,7 +16,7 @@ import java.nio.file.Path
  * */
 data class PrivacyAgent(
     val contextDir: Path,
-    val fingerprint: Fingerprint
+    var fingerprint: Fingerprint
 ): Comparable<PrivacyAgent> {
 
     val id = PrivacyAgentId(contextDir, fingerprint.browserType)

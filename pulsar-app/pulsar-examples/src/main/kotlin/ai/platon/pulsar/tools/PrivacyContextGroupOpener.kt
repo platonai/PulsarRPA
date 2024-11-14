@@ -5,7 +5,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 import kotlinx.coroutines.runBlocking
 
-class ChromeGroup {
+class PrivacyContextGroupOpener {
     private val components = DefaultBrowserComponents()
     private val fetcher = components.webdriverFetcher
     private val privacyManager = components.privacyManager
@@ -36,6 +36,6 @@ class ChromeGroup {
 }
 
 fun main() {
-    ChromeGroup().open()
+    PrivacyContextGroupOpener().open()
     readlnOrNull()
 }
