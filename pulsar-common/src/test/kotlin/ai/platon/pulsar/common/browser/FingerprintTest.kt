@@ -18,8 +18,8 @@ class FingerprintTest {
         Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1", "sa"),
         Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1", "sb"),
         
-        Fingerprint(BrowserType.PULSAR_CHROME, username = "sa"),
-        Fingerprint(BrowserType.PULSAR_CHROME, username = "sb"),
+        Fingerprint(BrowserType.PULSAR_CHROME),
+        Fingerprint(BrowserType.PULSAR_CHROME),
     )
     
     val ua =
@@ -72,13 +72,12 @@ class FingerprintTest {
     @Test
     fun testToJSON() {
         val fingerprint = Fingerprint(
-            BrowserType.PULSAR_CHROME, URI("http://sa:sa@localhost:8080"), "John", "abc", ua
+            BrowserType.PULSAR_CHROME, URI("http://sa:sa@localhost:8080"), ua
         )
         val json = prettyPulsarObjectMapper().writeValueAsString(fingerprint)
         val obj = prettyPulsarObjectMapper().readValue(json, Fingerprint::class.java)
         assertEquals(fingerprint, obj)
     }
-    
     
     @Test
     fun testEquality() {
@@ -94,8 +93,8 @@ class FingerprintTest {
         f2 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1", "sa")
         kotlin.test.assertEquals(f1, f2)
         
-        f1 = Fingerprint(BrowserType.PULSAR_CHROME, username = "sa")
-        f2 = Fingerprint(BrowserType.PULSAR_CHROME, username = "sa")
+        f1 = Fingerprint(BrowserType.PULSAR_CHROME)
+        f2 = Fingerprint(BrowserType.PULSAR_CHROME)
         kotlin.test.assertEquals(f1, f2)
     }
     
@@ -120,8 +119,8 @@ class FingerprintTest {
         f2 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1", "sb")
         kotlin.test.assertTrue { f1 < f2 }
         
-        f1 = Fingerprint(BrowserType.PULSAR_CHROME, username = "sa")
-        f2 = Fingerprint(BrowserType.PULSAR_CHROME, username = "sb")
+        f1 = Fingerprint(BrowserType.PULSAR_CHROME)
+        f2 = Fingerprint(BrowserType.PULSAR_CHROME)
         kotlin.test.assertTrue { f1 < f2 }
         
         f1 = Fingerprint(BrowserType.PULSAR_CHROME)
@@ -132,7 +131,7 @@ class FingerprintTest {
         f2 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1", "sb")
         kotlin.test.assertTrue { f1 < f2 }
         
-        f1 = Fingerprint(BrowserType.PULSAR_CHROME, username = "sb")
+        f1 = Fingerprint(BrowserType.PULSAR_CHROME)
         f2 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1")
         kotlin.test.assertTrue { f1 < f2 }
     }

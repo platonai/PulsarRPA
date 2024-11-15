@@ -56,9 +56,12 @@ public class Cookie {
 
   @Experimental private Integer sourcePort;
 
-  @Experimental @Optional private String partitionKey;
-
-  @Experimental @Optional private Boolean partitionKeyOpaque;
+  // vincent: not supported in 2024/11/23
+  // Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)
+  // (through reference chain: java.util.ArrayList[13]->com.github.kklisura.cdt.protocol.v2023.types.network.Cookie["partitionKey"])
+//  @Experimental @Optional private String partitionKey;
+//
+//  @Experimental @Optional private Boolean partitionKeyOpaque;
 
   /** Cookie name. */
   public String getName() {
@@ -208,29 +211,29 @@ public class Cookie {
     this.sourcePort = sourcePort;
   }
 
-  /**
-   * Cookie partition key. The site of the top-level URL the browser was visiting at the start of
-   * the request to the endpoint that set the cookie.
-   */
-  public String getPartitionKey() {
-    return partitionKey;
-  }
-
-  /**
-   * Cookie partition key. The site of the top-level URL the browser was visiting at the start of
-   * the request to the endpoint that set the cookie.
-   */
-  public void setPartitionKey(String partitionKey) {
-    this.partitionKey = partitionKey;
-  }
-
-  /** True if cookie partition key is opaque. */
-  public Boolean getPartitionKeyOpaque() {
-    return partitionKeyOpaque;
-  }
-
-  /** True if cookie partition key is opaque. */
-  public void setPartitionKeyOpaque(Boolean partitionKeyOpaque) {
-    this.partitionKeyOpaque = partitionKeyOpaque;
-  }
+//  /**
+//   * Cookie partition key. The site of the top-level URL the browser was visiting at the start of
+//   * the request to the endpoint that set the cookie.
+//   */
+//  public String getPartitionKey() {
+//    return partitionKey;
+//  }
+//
+//  /**
+//   * Cookie partition key. The site of the top-level URL the browser was visiting at the start of
+//   * the request to the endpoint that set the cookie.
+//   */
+//  public void setPartitionKey(String partitionKey) {
+//    this.partitionKey = partitionKey;
+//  }
+//
+//  /** True if cookie partition key is opaque. */
+//  public Boolean getPartitionKeyOpaque() {
+//    return partitionKeyOpaque;
+//  }
+//
+//  /** True if cookie partition key is opaque. */
+//  public void setPartitionKeyOpaque(Boolean partitionKeyOpaque) {
+//    this.partitionKeyOpaque = partitionKeyOpaque;
+//  }
 }
