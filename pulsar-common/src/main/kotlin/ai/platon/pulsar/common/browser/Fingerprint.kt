@@ -74,6 +74,8 @@ data class Fingerprint(
         userAgent: String? = null
     ) : this(browserType, proxy.toURI(), userAgent)
     
+    fun hasProxy() = proxyURI != null
+    
     /**
      * Set the proxy server.
      * @param protocol the protocol of the proxy server, e.g. http, https, socks5.
@@ -90,6 +92,10 @@ data class Fingerprint(
     }
     
     fun setProxy(proxy: ProxyEntry) = setProxy(proxy.protocol, proxy.hostPort, proxy.username, proxy.password)
+    
+    fun unsetProxy() {
+        proxyURI = null
+    }
     
     override fun compareTo(other: Fingerprint): Int {
         var r = 0

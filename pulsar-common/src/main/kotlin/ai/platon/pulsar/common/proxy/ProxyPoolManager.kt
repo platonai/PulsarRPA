@@ -132,13 +132,8 @@ open class ProxyPoolManager(
                 "yes", "true" -> return true
                 "no", "false" -> return false
             }
-            
-            if (conf.getBoolean(CapabilityTypes.PROXY_ENABLE_DEFAULT_PROVIDERS, false)) {
-                enableDefaultProviders()
-            }
-            
-            // if no one set the proxy availability explicitly, but we have providers, use it
-            return hasEnabledProvider()
+
+            return false
         }
         
         @Synchronized

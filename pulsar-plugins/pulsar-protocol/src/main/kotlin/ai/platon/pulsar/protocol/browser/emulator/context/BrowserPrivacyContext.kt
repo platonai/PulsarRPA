@@ -88,7 +88,7 @@ open class BrowserPrivacyContext(
     
     @Throws(ProxyException::class, Exception::class)
     override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
-        createProxyContextIfNecessary(task)
+        initProxyContextIfNecessary(task)
 
         return checkAbnormalResult(task) ?:
             proxyContext?.run(task, fetchFun) ?:
@@ -172,7 +172,13 @@ open class BrowserPrivacyContext(
 
     @Throws(ProxyException::class)
     @Synchronized
-    private fun createProxyContextIfNecessary(task: FetchTask) {
+    private fun initProxyContextIfNecessary(task: FetchTask) {
+        if (!ProxyPoolManager.isProxyEnabled(conf)) {
+            driverContext.browserId.unsetProxy()
+            proxyContext = null
+            return
+        }
+
         if (proxyEntry != null) {
             // logger.info("Proxy context is already created, skip creating proxy context")
             return
@@ -200,6 +206,10 @@ open class BrowserPrivacyContext(
     private fun createProxyContext() {
         if (!isActive) {
             logger.warn("Privacy context is inactive, skip creating proxy context")
+            return
+        }
+
+        if (!ProxyPoolManager.isProxyEnabled(conf)) {
             return
         }
 

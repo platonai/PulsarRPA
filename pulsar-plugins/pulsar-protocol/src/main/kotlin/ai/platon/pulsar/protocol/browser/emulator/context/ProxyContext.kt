@@ -49,13 +49,25 @@ open class ProxyContext(
             ).forEach { MetricsSystem.reg.register(this, it.key, it.value) }
         }
         
+        /**
+         * Create a proxy context for the given driver context.
+         *
+         * Proxy order:
+         * 1. the proxy in the config file under context directory
+         * 2. the proxy in AppPaths.ENABLED_PROXY_DIR
+         * 3. the proxy loaded from the provider, the provider is configured in AppPaths.AVAILABLE_PROXY_DIR
+         * */
         @Throws(ProxyException::class)
         fun create(driverContext: WebDriverContext, proxyPoolManager: ProxyPoolManager): ProxyContext {
             try {
                 val id = driverContext.browserId
-                val proxy = proxyPoolManager.getProxy(id.contextDir, id.fingerprint)
-                id.fingerprint.setProxy(proxy)
-                
+
+                if (!id.hasProxy()) {
+                    val proxy = proxyPoolManager.getProxy(id.contextDir, id.fingerprint)
+                    id.setProxy(proxy)
+                }
+                val proxy = id.fingerprint.proxyEntry!!
+
                 numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
 
                 return ProxyContext(proxy, proxyPoolManager, driverContext)

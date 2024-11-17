@@ -50,6 +50,8 @@ data class BrowserId(
      * @param privacyAgent The privacy agent of the browser.
      * */
     constructor(privacyAgent: PrivacyAgent): this(privacyAgent.contextDir, privacyAgent.fingerprint)
+    
+    fun hasProxy() = fingerprint.hasProxy()
     /**
      * The constructor of the browser id.
      *
@@ -61,6 +63,8 @@ data class BrowserId(
         fingerprint.setProxy(schema, hostPort, username, password)
     }
     fun setProxy(proxy: ProxyEntry) = fingerprint.setProxy(proxy)
+    
+    fun unsetProxy() = fingerprint.unsetProxy()
     
     override fun equals(other: Any?): Boolean {
         return other is BrowserId && other.privacyAgent == privacyAgent
