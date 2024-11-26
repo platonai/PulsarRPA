@@ -11,7 +11,7 @@ PulsarRPA is a high-performance, distributed, open-source Robotic Process Automa
 ## Videos
 
 YouTube:
-[![Watch the video](https://img.youtube.com/vi/rF4wXbFlPXk/0.jpg)](https://www.youtube.com/watch?v=rF4wXbFlPXk)
+[![Watch the video](https://img.youtube.com/vi/lQXSSQSNQ7I/0.jpg)](https://www.youtube.com/watch?v=lQXSSQSNQ7I)
 
 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
