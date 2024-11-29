@@ -8,39 +8,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import java.time.Duration
 
-/**
- * The [BrowserSettings] class defines a convenient interface to control the behavior of browsers.
- * The [BrowserSettings] class provides a set of static methods to configure the browser settings.
- *
- * For example, to run multiple temporary browsers in headless mode, which is usually used in the spider scenario,
- * you can use the following code:
- *
- * ```kotlin
- * BrowserSettings
- *    .headless()
- *    .privacy(4)
- *    .maxTabs(12)
- *    .enableUrlBlocking()
- * ```
- *
- * The above code will:
- * 1. Run the browser in headless mode
- * 2. Set the number of privacy contexts to 4
- * 3. Set the max number of open tabs in each browser context to 12
- * 4. Enable url blocking
- *
- * If you want to run your system's default browser in GUI mode, and interact with the webpage, you can use the
- * following code:
- *
- * ```kotlin
- * BrowserSettings.withSystemDefaultBrowser().withGUI().withSPA()
- * ```
- *
- * The above code will:
- * 1. Use the system's default browser
- * 2. Run the browser in GUI mode
- * 3. Set the system to work with single page application
- * */
 open class BrowserSettings(
     /**
      * The configuration.
