@@ -371,7 +371,7 @@ open class WebDriverPoolManager(
         if (FileCommand.check("takeDriverPoolSnapshot")) {
             logger.info("\nDriver pool manager: \n")
             logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            logger.info("\n{}", takeSnapshot())
+            logger.info("\n{}", buildStatusString())
             logger.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         }
     }
@@ -379,14 +379,14 @@ open class WebDriverPoolManager(
     /**
      * Take a snapshot about the state of the driver pools.
      * */
-    fun takeSnapshot(browserId: BrowserId, verbose: Boolean = false): String {
+    fun buildStatusString(browserId: BrowserId, verbose: Boolean = false): String {
         return workingDriverPools[browserId]?.takeSnapshot()?.format(verbose) ?: ""
     }
     
     /**
      * Take a snapshot about the state of the driver pools.
      * */
-    fun takeSnapshot(verbose: Boolean = false): String {
+    fun buildStatusString(verbose: Boolean = false): String {
         val sb = StringBuilder()
         if (workingDriverPools.isNotEmpty()) {
             workingDriverPools.entries.joinTo(sb, "\n") { it.value.takeSnapshot().format(verbose) + " | " + it.key }
@@ -426,7 +426,7 @@ open class WebDriverPoolManager(
     /**
      * Return a string to represent the snapshot of the status.
      * */
-    override fun toString(): String = takeSnapshot(false)
+    override fun toString(): String = buildStatusString(false)
     
     @Throws(WebDriverException::class, WebDriverPoolException::class, InterruptedException::class)
     private suspend fun doRun(task: WebDriverTask): FetchResult? {
@@ -519,7 +519,7 @@ open class WebDriverPoolManager(
             val browserId = driver.browser.id
             logger.warn(
                 "Coroutine canceled({}) (by [withTimeout]) | {} | {}",
-                fetchTaskTimeout.readable(), takeSnapshot(browserId), browserId
+                fetchTaskTimeout.readable(), buildStatusString(browserId), browserId
             )
             null
         } finally {

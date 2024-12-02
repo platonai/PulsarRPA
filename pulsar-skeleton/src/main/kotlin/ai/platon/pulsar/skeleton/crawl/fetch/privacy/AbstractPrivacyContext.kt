@@ -299,7 +299,7 @@ abstract class AbstractPrivacyContext(
     @Throws(ProxyException::class)
     abstract override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
-    override fun takeSnapshot(): String {
+    override fun buildStatusString(): String {
         return "$readableState | promised drivers: ${promisedWebDriverCount()}"
     }
     /**

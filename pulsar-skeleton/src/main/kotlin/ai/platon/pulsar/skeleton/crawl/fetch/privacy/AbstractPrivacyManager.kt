@@ -113,8 +113,8 @@ abstract class AbstractPrivacyManager(
     override fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: WebDriverFetcher) =
         createUnmanagedContext(privacyAgent).also { (it as? AbstractPrivacyContext)?.webdriverFetcher = fetcher }
 
-    override fun takeSnapshot(): String {
-        val snapshot = activeContexts.values.joinToString("\n") { it.display + ": " + it.takeSnapshot() }
+    override fun buildStatusString(): String {
+        val snapshot = activeContexts.values.joinToString("\n") { it.display + ": " + it.buildStatusString() }
         return snapshot
     }
     

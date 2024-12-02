@@ -581,7 +581,7 @@ open class MultiPrivacyContextManager(
             sb.append("\n\n\n$count. Privacy contexts snapshot \n")
             sb.appendLine(LocalDateTime.now())
             sb.append("------------------------------")
-            sb.append("\n", takeSnapshot())
+            sb.append("\n", buildStatusString())
             sb.append("\n")
             sb.append("\n")
             activeContexts.values.forEach { sb.append(it.buildReport()) }
