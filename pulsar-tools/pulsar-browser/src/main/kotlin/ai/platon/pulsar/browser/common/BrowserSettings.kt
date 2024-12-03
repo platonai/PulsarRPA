@@ -19,21 +19,25 @@ open class BrowserSettings(
          * The viewport size for browser to rendering all webpages.
          * */
         var SCREEN_VIEWPORT = AppConstants.DEFAULT_VIEW_PORT
+        
         /**
          * The screenshot quality.
          * Compression quality from range [0..100] (jpeg only) to capture screenshots.
          * */
         var SCREENSHOT_QUALITY = 50
+        
         /**
          * The interaction settings. Interaction settings define how the system
          * interacts with webpages to mimic the behavior of real people.
          * */
         var INTERACT_SETTINGS = InteractSettings.DEFAULT
+        
         /**
          * Check if the current environment supports only headless mode.
          * TODO: AppContext.isGUIAvailable doesn't work on some platform
          * */
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
+        
         /**
          * Specify the browser type to fetch webpages.
          *
@@ -44,6 +48,7 @@ open class BrowserSettings(
             System.setProperty(BROWSER_TYPE, browserType)
             return BrowserSettings
         }
+        
         /**
          * Specify the browser type to fetch webpages.
          *
@@ -54,12 +59,14 @@ open class BrowserSettings(
             System.setProperty(BROWSER_TYPE, browserType.name)
             return BrowserSettings
         }
+        
         /**
          * Use the system's default Chrome browser, so PulsarRPA visits websites just like you do.
          * Any change to the browser will be kept.
          * */
         @JvmStatic
         fun withSystemDefaultBrowser() = withSystemDefaultBrowser(BrowserType.PULSAR_CHROME)
+        
         /**
          * Use the system's default browser with the given type, so PulsarRPA visits websites just like you do.
          * Any change to the browser will be kept.
@@ -73,11 +80,13 @@ open class BrowserSettings(
             withBrowser(browserType)
             return BrowserSettings
         }
+        
         /**
          * Use the default Chrome browser. Any change to the browser will be kept.
          * */
         @JvmStatic
         fun withDefaultBrowser() = withDefaultBrowser(BrowserType.PULSAR_CHROME)
+        
         /**
          * Use the default Chrome browser. Any change to the browser will be kept.
          *
@@ -90,11 +99,13 @@ open class BrowserSettings(
             withBrowser(browserType)
             return BrowserSettings
         }
+        
         /**
          * Use google-chrome with the prototype environment, any change to the browser will be kept.
          * */
         @JvmStatic
         fun withPrototypeBrowser() = withPrototypeBrowser(BrowserType.PULSAR_CHROME)
+        
         /**
          * Use the specified browser with the prototype environment, any change to the browser will be kept.
          *
@@ -107,6 +118,7 @@ open class BrowserSettings(
             withBrowser(browserType)
             return BrowserSettings
         }
+        
         /**
          * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
          * permanent unless the context directories are deleted manually.
@@ -120,6 +132,7 @@ open class BrowserSettings(
         fun withSequentialBrowsers(): Companion {
             return withSequentialBrowsers(10)
         }
+        
         /**
          * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
          * permanent unless the context directories are deleted manually.
@@ -136,6 +149,7 @@ open class BrowserSettings(
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             return BrowserSettings
         }
+        
         /**
          * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
          * will not be used again after it is shut down.* */
@@ -143,6 +157,7 @@ open class BrowserSettings(
         fun withTemporaryBrowser(): Companion {
             return withTemporaryBrowser(BrowserType.PULSAR_CHROME)
         }
+        
         /**
          * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
          * will not be used again after it is shut down.
@@ -156,6 +171,7 @@ open class BrowserSettings(
             withBrowser(browserType)
             return BrowserSettings
         }
+        
         /**
          * Indicate the network condition.
          *
@@ -167,6 +183,7 @@ open class BrowserSettings(
             InteractSettings.GOOD_NET_SETTINGS.overrideSystemProperties()
             return BrowserSettings
         }
+        
         /**
          * Indicate the network condition.
          *
@@ -178,6 +195,7 @@ open class BrowserSettings(
             InteractSettings.WORSE_NET_SETTINGS.overrideSystemProperties()
             return BrowserSettings
         }
+        
         /**
          * Indicate the network condition.
          *
@@ -189,6 +207,7 @@ open class BrowserSettings(
             InteractSettings.WORST_NET_SETTINGS.overrideSystemProperties()
             return BrowserSettings
         }
+        
         /**
          * Launch the browser in GUI mode.
          * */
@@ -198,21 +217,23 @@ open class BrowserSettings(
                 System.err.println("GUI is not available")
                 return BrowserSettings
             }
-
+            
             listOf(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
             ).forEach { System.clearProperty(it) }
-
+            
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.GUI.name)
-
+            
             return BrowserSettings
         }
+        
         /**
          * Launch the browser in GUI mode.
          * */
         @JvmStatic
         fun headed() = withGUI()
+        
         /**
          * Launch the browser in headless mode.
          * */
@@ -222,11 +243,12 @@ open class BrowserSettings(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
             ).forEach { System.clearProperty(it) }
-
+            
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS.name)
-
+            
             return BrowserSettings
         }
+        
         /**
          * Launch the browser in supervised mode.
          * */
@@ -235,36 +257,42 @@ open class BrowserSettings(
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
             return BrowserSettings
         }
+        
         /**
          * Set the number of privacy contexts
          * */
-        @Deprecated("Verbose name", ReplaceWith("privacy(n)"))
+        @Deprecated("Inappropriate name", ReplaceWith("maxBrowsers(n)"))
         @JvmStatic
-        fun privacyContext(n: Int): Companion = privacy(n)
+        fun privacyContext(n: Int): Companion = maxBrowsers(n)
+        @Deprecated("Inappropriate name", ReplaceWith("maxBrowsers(n)"))
+        @JvmStatic
+        fun privacy(n: Int): Companion = maxBrowsers(n)
         /**
-         * Set the number of privacy contexts
+         * Set the max number of browsers
          * */
         @JvmStatic
-        fun privacy(n: Int): Companion {
+        fun maxBrowsers(n: Int): Companion {
             if (n <= 0) {
                 throw IllegalArgumentException("The number of privacy context has to be > 0")
             }
-
+            
             System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
             return BrowserSettings
         }
         /**
          * Set the max number to open tabs in each browser context
          * */
-        @JvmStatic
-        fun maxTabs(n: Int): Companion {
+        fun maxOpenTabs(n: Int): Companion {
             if (n <= 0) {
                 throw IllegalArgumentException("The number of open tabs has to be > 0")
             }
-
+            
             System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")
             return BrowserSettings
         }
+        @Deprecated("Inappropriate name", ReplaceWith("maxOpenTabs(n)"))
+        @JvmStatic
+        fun maxTabs(n: Int) = maxOpenTabs(n)
         /**
          * Tell the system to work with single page application.
          * To collect SPA data, the execution needs to have no timeout limit.

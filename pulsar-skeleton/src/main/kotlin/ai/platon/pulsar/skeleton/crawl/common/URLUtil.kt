@@ -31,7 +31,7 @@ import java.util.*
  * origin - protocol://hostname:port
  * host - hostname:port
  *
- * TODO: merge with ai.platon.pulsar.common.url.Urls
+ * TODO: merge with ai.platon.pulsar.common.urls.UrlUtils
  */
 object URLUtil {
     private val logger = LoggerFactory.getLogger(URLUtil::class.java)
@@ -108,9 +108,15 @@ object URLUtil {
      * @throws IllegalStateException if this domain does not end with a public suffix
      * @since 6.0
      */
+    @Throws(IllegalStateException::class)
     fun getTopPrivateDomain(url: URL): String {
         return InternetDomainName.from(url.host).topPrivateDomain().toString()
     }
+    
+    @Throws(IllegalStateException::class, MalformedURLException::class)
+    fun getTopPrivateDomain(url: String) = getTopPrivateDomain(URI.create(url).toURL())
+    
+    fun getTopPrivateDomainOrNull(url: String) = kotlin.runCatching { getTopPrivateDomain(url) }.getOrNull()
     
     /**
      * Returns the domain name of the url. The domain name of a url is the
@@ -126,10 +132,14 @@ object URLUtil {
      * @throws MalformedURLException
      */
     @Throws(MalformedURLException::class)
-    fun getDomainName(url: String): String? {
-        return getDomainName(URI.create(url).toURL())
+    fun getDomainName(url: String): String {
+        return getTopPrivateDomain(URI.create(url).toURL())
     }
-    
+
+    fun getDomainNameOrNull(url: String): String? {
+        return kotlin.runCatching { getDomainName(url) }.getOrNull()
+    }
+
     /**
      * Returns the domain name of the url. The domain name of a url is the
      * substring of the url's hostname, w/o subdomain names. As an example

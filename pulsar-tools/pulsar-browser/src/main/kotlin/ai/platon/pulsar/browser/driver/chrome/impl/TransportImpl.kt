@@ -88,9 +88,9 @@ class TransportImpl : Transport {
             tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.basicRemote.sendText(message)
         } catch (e: IllegalStateException) {
-            throw ChromeIOException("IllegalStateException, connection has been closed", e)
+            throw ChromeIOException("Failed to send message", e)
         } catch (e: IOException) {
-            throw ChromeIOException("There is a problem delivering the message", e)
+            throw ChromeIOException("Failed to send message", e)
         }
     }
     
@@ -102,9 +102,9 @@ class TransportImpl : Transport {
             tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.asyncRemote.sendText(message)
         } catch (e: IllegalStateException) {
-            throw ChromeIOException("The connection has been closed", e)
+            throw ChromeIOException("Failed to send message", e)
         } catch (e: IOException) {
-            throw ChromeIOException("There is a problem delivering the message", e)
+            throw ChromeIOException("Failed to send message", e)
         }
     }
 

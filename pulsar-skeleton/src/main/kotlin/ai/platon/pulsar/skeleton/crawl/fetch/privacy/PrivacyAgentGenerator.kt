@@ -35,9 +35,9 @@ open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
 open class SequentialPrivacyAgentGenerator(
     var group: String = "default"
 ) : PrivacyAgentGenerator {
-    private val logger = LoggerFactory.getLogger(SequentialPrivacyAgentGenerator::class.java)
+    // should be late initialized
     override var conf: ImmutableConfig = ImmutableConfig()
-    
+
     fun computeMaxAgentCount(): Int {
         // The number of allowed active privacy contexts
         val privacyContextNumber = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
@@ -59,16 +59,8 @@ open class SequentialPrivacyAgentGenerator(
         // logger.info("Use sequential privacy agent | $contextDir")
         
         require(Files.exists(contextDir)) { "The context dir does not exist: $contextDir" }
-        
-        var finalFingerprint = fingerprint
-        val fingerprintConfigFile = contextDir.resolve("fingerprint.json")
-        if (Files.exists(fingerprintConfigFile)) {
-            finalFingerprint = pulsarObjectMapper().readValue(fingerprintConfigFile.toFile(), Fingerprint::class.java)
-        } else {
-            pulsarObjectMapper().writeValue(fingerprintConfigFile.toFile(), fingerprint)
-        }
-        
-        val agent = PrivacyAgent(contextDir, finalFingerprint)
+
+        val agent = PrivacyAgent(contextDir)
         
         return agent
     }

@@ -223,7 +223,7 @@ class AsinSellerScraper {
 }
 
 fun main() {
-    BrowserSettings.privacy(2).maxTabs(4)
+    BrowserSettings.privacy(2).maxOpenTabs(4)
 
     val crawler = AsinSellerScraper()
     crawler.crawl()

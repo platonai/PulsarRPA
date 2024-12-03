@@ -11,7 +11,7 @@
 BrowserSettings
   .headless()
   .privacy(4)
-  .maxTabs(12)
+  .maxOpenTabs(12)
   .enableUrlBlocking()
 ```
 

@@ -13,7 +13,7 @@ For instance, to launch several ephemeral browsers in headless mode—common in 
 BrowserSettings
   .headless()
   .privacy(4)
-  .maxTabs(12)
+  .maxOpenTabs(12)
   .enableUrlBlocking()
 ```
 

@@ -5,7 +5,7 @@ import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.browser.BrowserType
 
 /**
- * The [PulsarSettings] object defines a convenient interface to control the behavior of PulsarRPA.
+ * The [PulsarSettings] class defines a convenient interface to control the behavior of PulsarRPA.
  *
  * For example, to run multiple temporary browsers in headless mode, which is usually used in the spider scenario,
  * you can use the following code:
@@ -14,7 +14,7 @@ import ai.platon.pulsar.common.browser.BrowserType
  * PulsarSettings
  *    .headless()
  *    .privacy(4)
- *    .maxTabs(12)
+ *    .maxOpenTabs(12)
  *    .enableUrlBlocking()
  * ```
  *
@@ -36,12 +36,11 @@ import ai.platon.pulsar.common.browser.BrowserType
  * 2. Run the browser in GUI mode
  * 3. Set the system to work with single page application
  * */
-object PulsarSettings {
+open class PulsarSettings {
     /**
      * Use the system's default Chrome browser, so PulsarRPA visits websites just like you do.
      * Any change to the browser will be kept.
      * */
-    @JvmStatic
     fun withSystemDefaultBrowser() = withSystemDefaultBrowser(BrowserType.PULSAR_CHROME)
     /**
      * Use the system's default browser with the given type, so PulsarRPA visits websites just like you do.
@@ -49,7 +48,6 @@ object PulsarSettings {
      *
      * NOTICE: PULSAR_CHROME is the only supported browser currently.
      * */
-    @JvmStatic
     fun withSystemDefaultBrowser(browserType: BrowserType): PulsarSettings {
         BrowserSettings.withSystemDefaultBrowser(browserType)
         return this
@@ -57,14 +55,12 @@ object PulsarSettings {
     /**
      * Use the default Chrome browser. Any change to the browser will be kept.
      * */
-    @JvmStatic
     fun withDefaultBrowser() = withDefaultBrowser(BrowserType.PULSAR_CHROME)
     /**
      * Use the default Chrome browser. Any change to the browser will be kept.
      *
      * NOTICE: PULSAR_CHROME is the only supported browser currently.
      * */
-    @JvmStatic
     fun withDefaultBrowser(browserType: BrowserType): PulsarSettings {
         BrowserSettings.withDefaultBrowser(browserType)
         return this
@@ -72,14 +68,12 @@ object PulsarSettings {
     /**
      * Use google-chrome with the prototype environment, any change to the browser will be kept.
      * */
-    @JvmStatic
     fun withPrototypeBrowser() = withPrototypeBrowser(BrowserType.PULSAR_CHROME)
     /**
      * Use the specified browser with the prototype environment, any change to the browser will be kept.
      *
      * PULSAR_CHROME is the only supported browser currently.
      * */
-    @JvmStatic
     fun withPrototypeBrowser(browserType: BrowserType): PulsarSettings {
         BrowserSettings.withPrototypeBrowser(browserType)
         return this
@@ -92,7 +86,6 @@ object PulsarSettings {
      *
      * @return the PulsarSettings itself
      * */
-    @JvmStatic
     fun withSequentialBrowsers(): PulsarSettings {
         return withSequentialBrowsers(10)
     }
@@ -105,15 +98,14 @@ object PulsarSettings {
      * @param maxAgents The maximum number of sequential privacy agents, the active privacy contexts is chosen from them.
      * @return the PulsarSettings itself
      * */
-    @JvmStatic
     fun withSequentialBrowsers(maxAgents: Int): PulsarSettings {
         BrowserSettings.withSequentialBrowsers(maxAgents)
         return this
     }
     /**
      * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
-     * will not be used again after it is shut down.* */
-    @JvmStatic
+     * will not be used again after it is shut down.
+     * */
     fun withTemporaryBrowser(): PulsarSettings {
         return withTemporaryBrowser(BrowserType.PULSAR_CHROME)
     }
@@ -123,7 +115,6 @@ object PulsarSettings {
      *
      * PULSAR_CHROME is the only supported browser currently.
      * */
-    @JvmStatic
     fun withTemporaryBrowser(browserType: BrowserType): PulsarSettings {
         BrowserSettings.withTemporaryBrowser(browserType)
         return this
@@ -131,7 +122,6 @@ object PulsarSettings {
     /**
      * Launch the browser in GUI mode.
      * */
-    @JvmStatic
     fun withGUI(): PulsarSettings {
         BrowserSettings.withGUI()
         return this
@@ -139,12 +129,10 @@ object PulsarSettings {
     /**
      * Launch the browser in GUI mode.
      * */
-    @JvmStatic
     fun headed() = withGUI()
     /**
      * Launch the browser in headless mode.
      * */
-    @JvmStatic
     fun headless(): PulsarSettings {
         BrowserSettings.headless()
         return this
@@ -152,32 +140,28 @@ object PulsarSettings {
     /**
      * Launch the browser in supervised mode.
      * */
-    @JvmStatic
     fun supervised(): PulsarSettings {
         BrowserSettings.supervised()
         return this
     }
     /**
-     * Set the number of privacy contexts
+     * Set the max number of agents
      * */
-    @JvmStatic
-    fun privacy(n: Int): PulsarSettings {
-        BrowserSettings.privacy(n)
+    fun maxBrowsers(n: Int): PulsarSettings {
+        BrowserSettings.maxBrowsers(n)
         return this
     }
     /**
      * Set the max number to open tabs in each browser context
      * */
-    @JvmStatic
-    fun maxTabs(n: Int): PulsarSettings {
-        BrowserSettings.maxTabs(n)
+    fun maxOpenTabs(n: Int): PulsarSettings {
+        BrowserSettings.maxOpenTabs(n)
         return this
     }
     /**
      * Tell the system to work with single page application.
      * To collect SPA data, the execution needs to have no timeout limit.
      * */
-    @JvmStatic
     fun withSPA(): PulsarSettings {
         BrowserSettings.withSPA()
         return this
@@ -193,7 +177,6 @@ object PulsarSettings {
      * Enable url blocking. If url blocking is enabled and the blocking rules are set,
      * resources matching the rules will be blocked by the browser.
      * */
-    @JvmStatic
     fun enableUrlBlocking(): PulsarSettings {
         BrowserSettings.enableUrlBlocking()
         return this
@@ -202,7 +185,6 @@ object PulsarSettings {
      * Enable url blocking with the given probability.
      * The probability must be in [0, 1].
      * */
-    @JvmStatic
     fun enableUrlBlocking(probability: Float): PulsarSettings {
         BrowserSettings.enableUrlBlocking(probability)
         return this
@@ -210,7 +192,6 @@ object PulsarSettings {
     /**
      * Disable url blocking. If url blocking is disabled, blocking rules are ignored.
      * */
-    @JvmStatic
     fun disableUrlBlocking(): PulsarSettings {
         BrowserSettings.disableUrlBlocking()
         return this
@@ -218,7 +199,6 @@ object PulsarSettings {
     /**
      * Block all images.
      * */
-    @JvmStatic
     fun blockImages(): PulsarSettings {
         BrowserSettings.blockImages()
         return this
@@ -226,7 +206,6 @@ object PulsarSettings {
     /**
      * Enable proxy if available.
      * */
-    @JvmStatic
     fun enableProxy(): PulsarSettings {
         BrowserSettings.enableProxy()
         return this
@@ -234,7 +213,6 @@ object PulsarSettings {
     /**
      * Disable proxy.
      * */
-    @JvmStatic
     fun disableProxy(): PulsarSettings {
         BrowserSettings.disableProxy()
         return this
@@ -248,7 +226,6 @@ object PulsarSettings {
      * * AppPaths.WEB_CACHE_DIR/default/pulsar_chrome/OK/amazon-com
      * * C:\Users\pereg\AppData\Local\Temp\pulsar-pereg\cache\web\default\pulsar_chrome\OK\amazon-com
      * */
-    @JvmStatic
     fun enableOriginalPageContentAutoExporting(): PulsarSettings {
         BrowserSettings.enableOriginalPageContentAutoExporting()
         return this
@@ -262,7 +239,6 @@ object PulsarSettings {
      * * AppPaths.WEB_CACHE_DIR/default/pulsar_chrome/OK/amazon-com
      * * C:\Users\pereg\AppData\Local\Temp\pulsar-pereg\cache\web\default\pulsar_chrome\OK\amazon-com
      * */
-    @JvmStatic
     fun enableOriginalPageContentAutoExporting(limit: Int): PulsarSettings {
         BrowserSettings.enableOriginalPageContentAutoExporting(limit)
         return this
@@ -270,7 +246,6 @@ object PulsarSettings {
     /**
      * Disable original page content exporting.
      * */
-    @JvmStatic
     fun disableOriginalPageContentAutoExporting(): PulsarSettings {
         BrowserSettings.disableOriginalPageContentAutoExporting()
         return this

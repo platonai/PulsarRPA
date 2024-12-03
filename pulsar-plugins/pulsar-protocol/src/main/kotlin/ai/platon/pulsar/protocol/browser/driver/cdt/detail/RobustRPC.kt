@@ -84,7 +84,7 @@ internal class RobustRPC(
     fun handleChromeException(e: ChromeDriverException, action: String? = null, message: String? = null) {
         when (e) {
             is ChromeIOException -> {
-                throw BrowserUnavailableException("Chrome DevTools is closed", e)
+                throw BrowserUnavailableException("Chrome IO error", e)
             }
             is ChromeRPCException -> {
                 handleChromeRPCException(e, action, message)
