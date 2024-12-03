@@ -15,7 +15,7 @@ PulsarRPA 设计了一组数据结构来处理 URL 池的问题。这使得 Puls
 在大规模采集场景下，硬件资源需要被极致利用。为此需要调整默认设置，并行启动更多的隐私实体，每个浏览器需要打开更多标签页，这两个设置决定了系统能够并行采集多少网页，它通常受限于机器的硬件配置，尤其是内存大小，我们建议在大规模采集场景下，内存至少要 32 G。
 
 ```kotlin
-BrowserSettings.privacy(5).maxOpenTabs(15).headless()
+BrowserSettings.maxBrowsers(5).maxOpenTabs(15).headless()
 ```
 
 本文演示如何通过不同的 URLCache 来满足不同的采集要求。

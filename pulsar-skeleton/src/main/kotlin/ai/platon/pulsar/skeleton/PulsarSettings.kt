@@ -13,7 +13,7 @@ import ai.platon.pulsar.common.browser.BrowserType
  * ```kotlin
  * PulsarSettings
  *    .headless()
- *    .privacy(4)
+ *    .maxBrowsers(4)
  *    .maxOpenTabs(12)
  *    .enableUrlBlocking()
  * ```

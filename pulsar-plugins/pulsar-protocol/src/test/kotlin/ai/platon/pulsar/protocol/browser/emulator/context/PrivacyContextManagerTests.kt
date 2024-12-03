@@ -33,7 +33,7 @@ class PrivacyContextManagerTests {
     
     @BeforeTest
     fun setup() {
-        BrowserSettings.privacy(6).maxOpenTabs(10).withSequentialBrowsers(15)
+        BrowserSettings.maxBrowsers(6).maxOpenTabs(10).withSequentialBrowsers(15)
     }
     
     @Test
