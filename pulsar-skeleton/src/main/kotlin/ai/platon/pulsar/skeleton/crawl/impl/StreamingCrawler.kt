@@ -13,7 +13,7 @@ import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
-import ai.platon.pulsar.skeleton.common.IllegalApplicationStateException
+import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.common.options.LoadOptions

@@ -15,7 +15,7 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.skeleton.common.IllegalApplicationStateException
+import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext

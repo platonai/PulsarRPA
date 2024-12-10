@@ -28,6 +28,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
+import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.CoreMetrics
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
@@ -217,7 +218,7 @@ open class MultiPrivacyContextManager(
     override fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             if (!isActive) {
-                throw IllegalStateException("Inactive privacy context manager")
+                throw IllegalApplicationStateException("Inactive privacy context manager")
             }
 
             val privacyAgent = createPrivacyAgent(page, fingerprint)
@@ -239,7 +240,7 @@ open class MultiPrivacyContextManager(
     override fun computeIfAbsent(privacyAgent: PrivacyAgent): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             if (!isActive) {
-                throw IllegalStateException("Inactive privacy context manager")
+                throw IllegalApplicationStateException("Inactive privacy context manager")
             }
 
             return if (privacyAgent.isPermanent) {
@@ -267,7 +268,7 @@ open class MultiPrivacyContextManager(
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             if (!isActive) {
-                throw IllegalStateException("Inactive privacy context manager")
+                throw IllegalApplicationStateException("Inactive privacy context manager")
             }
 
             if (temporaryContexts.size < allowedPrivacyContextCount) {

@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
-import ai.platon.pulsar.skeleton.common.IllegalApplicationStateException
+import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.BrowseEventHandlers
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*

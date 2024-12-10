@@ -22,9 +22,17 @@ open class NotSupportedException : RuntimeException {
     constructor(cause: Throwable) : super(cause) {}
 }
 
-fun Throwable.stringify(prefix: String = "", postfix: String = "") = stringifyException(this, prefix, postfix)
+open class IllegalApplicationStateException: IllegalStateException {
+    constructor() : super() {}
+    
+    constructor(message: String) : super(message) {
+    }
+    
+    constructor(message: String, cause: Throwable) : super(message, cause) {}
+    
+    constructor(cause: Throwable) : super(cause) {}
+}
 
-@Deprecated("Inappropriate name.", ReplaceWith("brief()"))
-fun Throwable.simplify(prefix: String = "", postfix: String = "") = simplifyException(this, prefix, postfix)
+fun Throwable.stringify(prefix: String = "", postfix: String = "") = stringifyException(this, prefix, postfix)
 
 fun Throwable.brief(prefix: String = "", postfix: String = "") = simplifyException(this, prefix, postfix)

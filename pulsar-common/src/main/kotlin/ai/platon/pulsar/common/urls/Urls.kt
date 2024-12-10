@@ -133,7 +133,7 @@ interface UrlAware {
     val nMaxRetry: Int
     
     /**
-     * The depth of the url
+     * The depth of the url from the root url.
      * */
     val depth: Int
 }

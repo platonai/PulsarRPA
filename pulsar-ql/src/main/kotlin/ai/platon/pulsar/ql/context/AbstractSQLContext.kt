@@ -1,13 +1,10 @@
 package ai.platon.pulsar.ql.context
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.Systems
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.SQLUtils
 import ai.platon.pulsar.skeleton.common.urls.NormURL
-import ai.platon.pulsar.common.warnForClose
-import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SessionDelegate
@@ -181,7 +178,7 @@ abstract class AbstractSQLContext constructor(
     
     private fun ensureRunning() {
         if (!isActive) {
-            throw IllegalStateException("SQLContext is closed | #$id")
+            throw IllegalApplicationStateException("SQLContext is closed | #$id")
         }
     }
 }

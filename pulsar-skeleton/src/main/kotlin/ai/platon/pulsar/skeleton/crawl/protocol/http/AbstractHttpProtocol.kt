@@ -12,7 +12,7 @@ import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
-import ai.platon.pulsar.skeleton.common.IllegalApplicationStateException
+import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.MimeTypeResolver
 import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.skeleton.crawl.protocol.Protocol
