@@ -14,7 +14,12 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
     companion object {
 
         fun createPageShell(normURL: NormURL): WebPage {
-            return createPageShell(normURL.spec, normURL.options, normURL.hrefSpec, normURL.referrer)
+            val page = createPageShell(normURL.spec, normURL.options, normURL.hrefSpec, normURL.referrer)
+            val depth = normURL.detail?.depth ?: 0
+            if (depth > 0) {
+                page.distance = depth
+            }
+            return page
         }
         
         fun createPageShell(url: String, conf: VolatileConfig, href: String? = null, referrer: String? = null): WebPage {
