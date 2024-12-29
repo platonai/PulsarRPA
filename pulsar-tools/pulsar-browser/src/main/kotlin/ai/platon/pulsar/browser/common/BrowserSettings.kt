@@ -33,6 +33,10 @@ open class BrowserSettings(
         var INTERACT_SETTINGS = InteractSettings.DEFAULT
         
         /**
+         * The script confuser.
+         * */
+        var confuser = SimpleScriptConfuser()
+        /**
          * Check if the current environment supports only headless mode.
          * TODO: AppContext.isGUIAvailable doesn't work on some platform
          * */
@@ -515,11 +519,11 @@ open class BrowserSettings(
     /**
      * The script confuser.
      * */
-    val confuser = ScriptConfuser()
+    val confuser get() = BrowserSettings.confuser
     /**
      * The script loader.
      * */
-    val scriptLoader = ScriptLoader(confuser, conf)
+    val scriptLoader get() = ScriptLoader(confuser, conf)
 }
 
 /**

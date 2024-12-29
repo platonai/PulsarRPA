@@ -1,6 +1,8 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl.Companion.ABOUT_BLANK_PAGE
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
@@ -18,8 +20,11 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ChromeDevtoolsBrowser(
-    id: BrowserId, val chrome: RemoteChrome, private val launcher: ChromeLauncher
-) : AbstractBrowser(id, launcher.options.browserSettings) {
+    id: BrowserId,
+    val chrome: RemoteChrome,
+    browserSettings: BrowserSettings,
+    private val launcher: ChromeLauncher?
+) : AbstractBrowser(id, browserSettings) {
 
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsBrowser::class.java)
 
@@ -36,10 +41,13 @@ class ChromeDevtoolsBrowser(
     override val userAgent get() = chrome.version.userAgent ?: DEFAULT_USER_AGENT
 
     init {
-        // Actually, it's safe to register multiple times, the manager will be closed only once, and the browsers
+        // It's safe to register multiple times, the manager will be closed only once, and the browsers
         // will be closed in the manager's close function.
-        PulsarContexts.registerClosable(launcher, Int.MIN_VALUE)
+        launcher?.let { PulsarContexts.registerClosable(it, Int.MIN_VALUE) }
     }
+
+    constructor(port: Int, browserSettings: BrowserSettings = BrowserSettings()) :
+        this(BrowserId.RANDOM, ChromeImpl(port = port), browserSettings, null)
 
     @Synchronized
     @Throws(WebDriverException::class)
@@ -125,10 +133,15 @@ class ChromeDevtoolsBrowser(
         recoverUnmanagedPages()
         return drivers.values.filterIsInstance<ChromeDevtoolsDriver>().firstOrNull { currentUrl(it) == url }
     }
-
-    override suspend fun findDrivers(urlRegex: Regex): WebDriver? {
+    
+    override suspend fun findDriver(urlRegex: Regex): WebDriver? {
         recoverUnmanagedPages()
         return drivers.values.filterIsInstance<ChromeDevtoolsDriver>().firstOrNull { currentUrl(it).matches(urlRegex) }
+    }
+
+    override suspend fun findDrivers(urlRegex: Regex): List<WebDriver> {
+        recoverUnmanagedPages()
+        return drivers.values.filterIsInstance<ChromeDevtoolsDriver>().filter { currentUrl(it).matches(urlRegex) }
     }
 
     override fun destroyDriver(driver: WebDriver) {
@@ -163,7 +176,7 @@ class ChromeDevtoolsBrowser(
     override fun destroyForcibly() {
         runCatching {
             close()
-            launcher.destroyForcibly()
+            launcher?.destroyForcibly()
         }.onFailure { warnForClose(this, it) }
     }
 
@@ -319,7 +332,7 @@ class ChromeDevtoolsBrowser(
 
         // if the browser is closed, it means the launcher is also closed.
         // it's safe to close the browser multiple times and even if the remote browser is already closed.
-        launcher.close()
+        launcher?.close()
 
         logger.info("Browser is closed successfully | #{}", id.display)
     }

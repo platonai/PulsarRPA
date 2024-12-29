@@ -578,16 +578,6 @@ object URLUtil {
         }
     }
 
-    fun pathToUrl(path: Path): String {
-        val base64 = Base64.getUrlEncoder().encode(path.toString().toByteArray()).toString(Charsets.UTF_8)
-        val prefix = AppConstants.LOCAL_FILE_SERVE_PREFIX
-        return "$prefix?path=$base64"
-    }
-    
-    fun isLocalFile(url: String): Boolean {
-        return url.startsWith(AppConstants.LOCAL_FILE_SERVE_PREFIX)
-    }
-    
     /**
      * @see URLUtil
      */

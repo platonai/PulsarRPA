@@ -55,15 +55,20 @@ interface Browser: AutoCloseable {
     @Throws(WebDriverException::class)
     suspend fun listDrivers(): List<WebDriver>
     /**
-     * Find a driver by url.
+     * Find the first driver by url.
      * */
     @Throws(WebDriverException::class)
     suspend fun findDriver(url: String): WebDriver?
     /**
+     * Find the first driver by url regex.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun findDriver(urlRegex: Regex): WebDriver?
+    /**
      * Find drivers by url regex.
      * */
     @Throws(WebDriverException::class)
-    suspend fun findDrivers(urlRegex: Regex): WebDriver?
+    suspend fun findDrivers(urlRegex: Regex): List<WebDriver>
     /**
      * Destroy the web driver, close the associated browser tabs.
      * */

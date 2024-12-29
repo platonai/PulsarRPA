@@ -64,7 +64,7 @@ class PriorityDataCollectorsTableFormatter<T>(
     fun abstract(): String {
         val firstCollectTime = collectors.filter { it.firstCollectTime > Instant.EPOCH }
             .minOfOrNull { it.firstCollectTime }
-        val lastCollectedTime = collectors.maxOf { it.lastCollectedTime }
+        val lastCollectedTime = collectors.filter { it.firstCollectTime > Instant.EPOCH }.maxOf { it.lastCollectedTime }
         val collectedCount = collectors.sumOf { it.collectedCount }
         val collectCount = collectors.sumOf { it.collectCount }
         val size = collectors.sumOf { it.size }

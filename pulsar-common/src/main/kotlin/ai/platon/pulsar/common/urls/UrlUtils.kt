@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.urls
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.client.utils.URIBuilder
@@ -7,6 +8,8 @@ import java.net.MalformedURLException
 import java.net.URI
 import java.net.URISyntaxException
 import java.net.URL
+import java.nio.file.Path
+import java.util.*
 
 object UrlUtils {
 
@@ -29,7 +32,35 @@ object UrlUtils {
      * */
     @JvmStatic
     fun isNotInternal(url: String) = !isInternal(url)
-
+    
+    /**
+     * Check if the given url is a local file url, which is a url that starts with {@link AppConstants#LOCAL_FILE_SERVE_PREFIX}
+     * */
+    @JvmStatic
+    fun isLocalFile(url: String): Boolean {
+        return url.startsWith(AppConstants.LOCAL_FILE_SERVE_PREFIX)
+    }
+    
+    /**
+     * Convert a path to a URL, the path will be encoded to base64 and appended to the {@link AppConstants#LOCAL_FILE_SERVE_PREFIX}
+     * */
+    @JvmStatic
+    fun pathToLocalURL(path: Path): String {
+        val base64 = Base64.getUrlEncoder().encode(path.toString().toByteArray()).toString(Charsets.UTF_8)
+        val prefix = AppConstants.LOCAL_FILE_SERVE_PREFIX
+        return "$prefix?path=$base64"
+    }
+    
+    /**
+     * Convert a URL to a path, the path is decoded from base64 and the prefix {@link AppConstants#LOCAL_FILE_SERVE_PREFIX} is removed
+     * */
+    @JvmStatic
+    fun localURLToPath(url: String): Path {
+        val path = url.substringAfter("?path=")
+        val base64 = Base64.getUrlDecoder().decode(path).toString(Charsets.UTF_8)
+        return Path.of(base64)
+    }
+    
     /**
      * Creates a {@code URL} object from the {@code String}
      * representation.

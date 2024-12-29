@@ -14,7 +14,7 @@ import kotlin.io.path.isReadable
 import kotlin.io.path.listDirectoryEntries
 
 class ScriptLoader(
-    val confuser: ScriptConfuser = ScriptConfuser(),
+    val confuser: ScriptConfuser = SimpleScriptConfuser(),
     val conf: ImmutableConfig
 ) {
     private val logger = getLogger(this)
@@ -90,7 +90,7 @@ class ScriptLoader(
         val configs = GsonBuilder().create().toJson(jsInitParameters.toMap())
 
         // set predefined variables shared between javascript and jvm program
-        val configVar = confuser.confuse( "${ScriptConfuser.SCRIPT_NAME_PREFIX}CONFIGS")
+        val configVar = confuser.confuse( "${SimpleScriptConfuser.SCRIPT_NAME_PREFIX}CONFIGS")
         return """
             ;
             let $configVar = $configs;
