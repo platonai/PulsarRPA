@@ -90,7 +90,7 @@ class ScriptLoader(
         val configs = GsonBuilder().create().toJson(jsInitParameters.toMap())
 
         // set predefined variables shared between javascript and jvm program
-        val configVar = confuser.confuse( "${SimpleScriptConfuser.SCRIPT_NAME_PREFIX}CONFIGS")
+        val configVar = confuser.confuse( "__pulsar_CONFIGS")
         return """
             ;
             let $configVar = $configs;

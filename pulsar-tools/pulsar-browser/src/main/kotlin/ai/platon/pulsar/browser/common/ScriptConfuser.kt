@@ -4,4 +4,3 @@ interface ScriptConfuser {
     fun confuse(script: String): String
     fun reset()
 }
-
