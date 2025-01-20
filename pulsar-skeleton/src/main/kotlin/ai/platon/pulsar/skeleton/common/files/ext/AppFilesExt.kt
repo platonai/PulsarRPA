@@ -61,7 +61,7 @@ fun AppFiles.export(
     return path
 }
 
-fun AppFiles.export(page: WebPage, prefix: String = "", suffix: String = ".htm"): Path {
+fun AppFiles.export(page: WebPage, prefix: String = "", suffix: String = ".html"): Path {
     val filename = page.headers.decodedDispositionFilename ?: AppPaths.fromUri(page.location, prefix, suffix)
     val path = WEB_CACHE_DIR.resolve(filename)
     Files.deleteIfExists(path)
@@ -70,7 +70,7 @@ fun AppFiles.export(page: WebPage, prefix: String = "", suffix: String = ".htm")
 }
 
 fun AppFiles.export(doc: Document, ident: String = ""): Path {
-    val filename = AppPaths.fromUri(doc.baseUri(), "", ".htm")
+    val filename = AppPaths.fromUri(doc.baseUri(), "", ".html")
     val path = WEB_CACHE_DIR.resolve(ident).resolve(filename)
     return saveTo(doc.outerHtml(), path)
 }
