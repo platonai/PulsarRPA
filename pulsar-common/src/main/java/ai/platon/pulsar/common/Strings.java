@@ -678,17 +678,12 @@ public final class Strings {
   }
 
   public static float getFirstFloatNumber(String s, float defaultValue) {
-    System.out.println(s);
-
     // number separators
     s = s.replaceAll("[,_]", "");
     Pattern pattern = Pattern.compile("[+-]?[0-9]*\\.?,?[0-9]+");
 
     Matcher m = pattern.matcher(s);
     if (m.find()) {
-
-      System.out.println(m.group());
-
       return NumberUtils.toFloat(m.group());
     }
 
@@ -737,13 +732,12 @@ public final class Strings {
     return true;
   }
 
+  /**
+   * @deprecated use {@link org.apache.commons.lang3.StringUtils#reverse(String)} instead
+   * */
+  @Deprecated
   public static String reverse(String s) {
-    if (s == null || s.isEmpty()) {
-      return s;
-    }
-
-    StringBuilder sb = new StringBuilder(s);
-    return sb.reverse().toString();
+    return StringUtils.reverse(s);
   }
 
   public static String doubleQuoteIfContainsWhitespace(String s) {
@@ -856,7 +850,7 @@ public final class Strings {
   /**
    * All lines separated by backslashes are merged together
    *
-   * @param allLines All lines separated by "\n", some of them are separated by  back slash
+   * @param allLines All lines separated by "\n", some of them are separated by  backslash
    * @return All lines separated by backslashes are merged
    */
   public static List<String> getUnslashedLines(String allLines) {
@@ -890,10 +884,10 @@ public final class Strings {
   }
 
   /**
-   * All lines separated by back slashes are merged together
+   * All lines separated by backslashes are merged together
    *
-   * @param linesWithSlash Lines with back slash
-   * @return All lines separated by back slashes are merged
+   * @param linesWithSlash Lines with backslash
+   * @return All lines separated by backslashes are merged
    */
   public static List<String> mergeSlashedLines(Iterable<String> linesWithSlash) {
     List<String> lines = new ArrayList<>();
@@ -915,7 +909,7 @@ public final class Strings {
       }
 
       if (!merging) {
-        if (mergedLine.length() > 0) {
+        if (!mergedLine.isEmpty()) {
           lines.add(mergedLine.toString());
           mergedLine = new StringBuilder();
         }
@@ -925,6 +919,7 @@ public final class Strings {
     return lines;
   }
 
+  @Deprecated(forRemoval = true)
   public static int getLongestCommonSubstring(String a, String b) {
     int m = a.length();
     int n = b.length();
@@ -963,7 +958,7 @@ public final class Strings {
 
   public static String[] getStrings(String str) {
     Collection<String> values = getStringCollection(str);
-    if (values.size() == 0) {
+    if (values.isEmpty()) {
       return null;
     }
     return values.toArray(new String[0]);

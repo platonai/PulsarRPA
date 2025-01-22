@@ -13,6 +13,7 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -177,10 +178,10 @@ public class Metadata {
         data.clear();
     }
 
-    public void clear(String prefix) {
+    public void clear(Predicate<String> filter) {
         data.keySet().stream()
-                .filter(key -> key.toString().startsWith(prefix))
                 .map(Object::toString)
+                .filter(filter)
                 .forEach(this::remove);
     }
 
