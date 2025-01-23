@@ -1,7 +1,7 @@
 package ai.platon.pulsar.boilerpipe.filters.simple;
 
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 import com.google.common.collect.ListMultimap;
@@ -18,7 +18,7 @@ public final class LabeledFieldExtractorFilter implements TextBlockFilter {
     this.labeledRules = labeledRules;
   }
 
-  public boolean process(final TextDocument doc) throws ProcessingException {
+  public boolean process(final BoiTextDocument doc) throws ProcessingException {
     boolean[] changes = {false};
 
     doc.getTextBlocks().stream().filter(TextBlock::isContent).forEach(tb -> labeledRules.entries().stream()

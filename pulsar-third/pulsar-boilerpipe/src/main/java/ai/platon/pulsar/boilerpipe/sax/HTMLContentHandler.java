@@ -2,7 +2,7 @@ package ai.platon.pulsar.boilerpipe.sax;
 
 import ai.platon.pulsar.boilerpipe.document.LabelAction;
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.utils.PageCategory;
 import ai.platon.pulsar.boilerpipe.utils.UnicodeTokenizer;
 import org.xml.sax.Attributes;
@@ -375,16 +375,16 @@ public class HTMLContentHandler implements ContentHandler {
   public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
 
   /**
-   * Returns a {@link TextDocument} containing the extracted {@link TextBlock} s. NOTE: Only call
+   * Returns a {@link BoiTextDocument} containing the extracted {@link TextBlock} s. NOTE: Only call
    * this after parsing.
    *
-   * @return The {@link TextDocument}
+   * @return The {@link BoiTextDocument}
    */
-  public TextDocument toTextDocument() {
+  public BoiTextDocument toTextDocument() {
     // just to be sure
     flushBlock();
 
-    TextDocument doc = new TextDocument(baseUrl, pageTitle, getTextBlocks());
+    BoiTextDocument doc = new BoiTextDocument(baseUrl, pageTitle, getTextBlocks());
     doc.getStat()._char = _char;
     doc.getStat()._a = _a;
     doc.setPageCategory(PageCategory.sniff(baseUrl, _char, _a));

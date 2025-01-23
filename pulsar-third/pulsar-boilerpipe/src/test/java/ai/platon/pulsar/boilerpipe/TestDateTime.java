@@ -1,7 +1,7 @@
 package ai.platon.pulsar.boilerpipe;
 
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.utils.BoiConstants;
 import ai.platon.pulsar.boilerpipe.utils.ScentUtils;
 import ai.platon.pulsar.common.DateTimeDetector;
@@ -38,7 +38,7 @@ public class TestDateTime {
 
     public static Pattern MEDIA_PAGE_URL_PATTERN = Pattern.compile(".+(pic|picture|video).+");
 
-    public void extractMetadataLikeTextBlock(TextDocument doc) {
+    public void extractMetadataLikeTextBlock(BoiTextDocument doc) {
         for (TextBlock tb : doc.getTextBlocks()) {
             if (tb.getText().length() < 100) {
                 if (tb.getText().contains("记者") || tb.getText().contains("作者") || tb.getText().contains("来源") || tb.getText().contains("编辑")) {

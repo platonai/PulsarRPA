@@ -1,6 +1,6 @@
 package ai.platon.pulsar.boilerpipe.extractors;
 
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.heuristics.*;
 import ai.platon.pulsar.boilerpipe.filters.simple.BoilerplateBlockFilter;
 import ai.platon.pulsar.boilerpipe.filters.statistics.NumWordsRulesClassifier;
@@ -20,7 +20,7 @@ public final class ArticleExtractor implements TextExtractor {
     return INSTANCE;
   }
 
-  public boolean process(TextDocument doc) throws ProcessingException {
+  public boolean process(BoiTextDocument doc) throws ProcessingException {
     return
 
         TerminatingBlocksFinder.INSTANCE.process(doc)

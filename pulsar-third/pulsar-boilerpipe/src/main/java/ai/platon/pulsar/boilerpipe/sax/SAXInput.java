@@ -1,6 +1,6 @@
 package ai.platon.pulsar.boilerpipe.sax;
 
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -11,14 +11,14 @@ import java.io.StringReader;
 import java.net.URL;
 
 /**
- * Parses an {@link InputSource} using SAX and returns a {@link TextDocument}.
+ * Parses an {@link InputSource} using SAX and returns a {@link BoiTextDocument}.
  */
 public final class SAXInput {
 
   /**
-   * Retrieves the {@link TextDocument} using a default HTML parser.
+   * Retrieves the {@link BoiTextDocument} using a default HTML parser.
    */
-  public TextDocument parse(String baseUrl, InputSource is) throws ProcessingException {
+  public BoiTextDocument parse(String baseUrl, InputSource is) throws ProcessingException {
     HTMLParser parser = new HTMLParser(baseUrl);
 
     try {
@@ -37,20 +37,20 @@ public final class SAXInput {
    * @return The extracted text.
    * @throws ProcessingException
    */
-  public TextDocument parse(String baseUrl, String html) throws ProcessingException {
+  public BoiTextDocument parse(String baseUrl, String html) throws ProcessingException {
     return parse(baseUrl, new InputSource(new StringReader(html)));
   }
 
   /**
    * Extracts text from the HTML code available from the given {@link URL}. NOTE: This method is
-   * mainly to be used for show case purposes. If you are going to crawl the Web, consider using
+   * mainly to be used for showcase purposes. If you are going to crawl the Web, consider using
    * {@link #parse(String, InputSource)} instead.
    *
    * @param url The URL pointing to the HTML code.
    * @return The extracted text.
    * @throws ProcessingException
    */
-  public TextDocument parse(URL url) throws ProcessingException {
+  public BoiTextDocument parse(URL url) throws ProcessingException {
     try {
       return parse(url.toString(), HTMLDownloader.fetch(url));
     } catch (IOException e) {
@@ -58,7 +58,7 @@ public final class SAXInput {
     }
   }
 
-  public TextDocument parse(String url) throws ProcessingException {
+  public BoiTextDocument parse(String url) throws ProcessingException {
     try {
       String html = HTMLDownloader.fetch(url);
       // System.out.println(html);
@@ -76,7 +76,7 @@ public final class SAXInput {
    * @return The extracted text.
    * @throws ProcessingException
    */
-  public TextDocument parse(String baseUrl, Reader reader) throws ProcessingException {
+  public BoiTextDocument parse(String baseUrl, Reader reader) throws ProcessingException {
     return parse(baseUrl, new InputSource(reader));
   }
 }

@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TextDocument implements Cloneable {
+public class BoiTextDocument implements Cloneable {
 
   /** Scent Stat */
   public class Stat {
@@ -32,7 +32,7 @@ public class TextDocument implements Cloneable {
   private PageCategory pageCategory = PageCategory.UNKNOWN;
   private Map<String, String> fields = new LinkedHashMap<>();
 
-  public TextDocument(String baseUrl, String pageTitle, List<TextBlock> textBlocks) {
+  public BoiTextDocument(String baseUrl, String pageTitle, List<TextBlock> textBlocks) {
     this.baseUrl = baseUrl;
     this.pageTitle = pageTitle;
     this.textBlocks = textBlocks;
@@ -160,11 +160,11 @@ public class TextDocument implements Cloneable {
   }
 
   @Override
-  public TextDocument clone() {
+  public BoiTextDocument clone() {
     final List<TextBlock> list = new ArrayList<>(textBlocks.size());
     for (TextBlock tb : textBlocks) {
       list.add(tb.clone());
     }
-    return new TextDocument(baseUrl, pageTitle, list);
+    return new BoiTextDocument(baseUrl, pageTitle, list);
   }
 }

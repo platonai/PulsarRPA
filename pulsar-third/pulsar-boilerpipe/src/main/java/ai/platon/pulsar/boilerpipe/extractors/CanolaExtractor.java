@@ -1,7 +1,7 @@
 package ai.platon.pulsar.boilerpipe.extractors;
 
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 
@@ -22,7 +22,7 @@ public class CanolaExtractor implements TextExtractor {
     return INSTANCE;
   }
 
-  public boolean process(TextDocument doc) throws ProcessingException {
+  public boolean process(BoiTextDocument doc) throws ProcessingException {
 
     return CLASSIFIER.process(doc);
   }
@@ -32,7 +32,7 @@ public class CanolaExtractor implements TextExtractor {
    */
   public static final TextBlockFilter CLASSIFIER = new TextBlockFilter() {
 
-    public boolean process(TextDocument doc) throws ProcessingException {
+    public boolean process(BoiTextDocument doc) throws ProcessingException {
       List<TextBlock> textBlocks = doc.getTextBlocks();
       boolean hasChanges = false;
 

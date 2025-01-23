@@ -2,7 +2,7 @@ package ai.platon.pulsar.boilerpipe.filters.heuristics;
 
 import ai.platon.pulsar.boilerpipe.document.BlockLabels;
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 
@@ -22,7 +22,7 @@ public final class ExpandTitleToContentFilter implements TextBlockFilter {
     return INSTANCE;
   }
 
-  public boolean process(TextDocument doc) throws ProcessingException {
+  public boolean process(BoiTextDocument doc) throws ProcessingException {
     int i = 0;
     int title = -1;
     int contentStart = -1;

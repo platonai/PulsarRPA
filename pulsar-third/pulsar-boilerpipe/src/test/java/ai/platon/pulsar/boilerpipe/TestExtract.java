@@ -1,15 +1,17 @@
 package ai.platon.pulsar.boilerpipe;
 
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
 import ai.platon.pulsar.boilerpipe.extractors.DefaultExtractor;
 import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
 import ai.platon.pulsar.boilerpipe.sax.SAXInput;
+import ai.platon.pulsar.common.AppPaths;
 import ai.platon.pulsar.common.ResourceLoader;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 /**
@@ -53,7 +55,7 @@ public class TestExtract {
             return;
         }
 
-        TextDocument doc = new SAXInput().parse(url, html);
+        BoiTextDocument doc = new SAXInput().parse(url, html);
 
         ChineseNewsExtractor.INSTANCE.process(doc);
 
@@ -67,43 +69,34 @@ public class TestExtract {
     }
 
     public void extractContent(String url, String html) throws Exception {
-        if (html == null) {
-            System.out.println("Failed to fetch url " + url);
-            return;
-        }
+        BoiTextDocument doc = new SAXInput().parse(url, html);
 
-        TextDocument doc = new SAXInput().parse(url, html);
+        var extractor = DefaultExtractor.getInstance();
+//        var extractor = ChineseNewsExtractor.getInstance();
+//        var extractor = ArticleExtractor.getInstance();
 
-        ChineseNewsExtractor.INSTANCE.process(doc);
+        extractor.process(doc);
 
-        System.out.println(doc.getPageTitle());
-        System.out.println(doc.getTextContent(true, true));
-        System.out.println(doc.getHtmlContent());
         System.out.println("--------------");
-        System.out.println("Fields : ");
-        System.out.println(doc.getFields());
+        System.out.println("Page Title : ");
+        System.out.println(doc.getPageTitle());
+        System.out.println("Content Title : ");
+        System.out.println(doc.getContentTitle());
+
+        System.out.println("TextContent length : ");
+        System.out.println(doc.getTextContent().length());
+        var path = AppPaths.INSTANCE.getProcTmpTmp("extract-test." + extractor.getClass().getSimpleName() + ".txt");
+        Files.writeString(path, doc.getTextContent());
+        System.out.println("TextContent path : " + path);
+
         System.out.println("--------------");
         System.out.println("DebugString : ");
-
         if (!doc.getTextContent().isEmpty()) {
             CharSequence author = doc.getField("author");
             CharSequence director = doc.getField("director");
             CharSequence reference = doc.getField("reference");
             System.out.println("Author : " + author + ", Director : " + director + ", Reference : " + reference);
-            System.out.println(doc.getHtmlContent());
         }
-
-        System.out.println(doc.getTextContent().length());
-
-        System.out.println(StringUtils.substring(doc.getTextContent(), 0, 100));
-        System.out.println("\n\n-----------------\n\n");
-        System.out.println(StringUtils.substring(doc.getTextContent(), 0, 100));
-        System.out.println(url);
-        System.out.println(doc.getTextContent());
-
-        System.out.println(doc.getTextContent(true, true));
-        System.out.println(doc.getTextBlocks());
-        System.out.println(doc.debugString());
 
         // Also try other extractors!
 //        System.out.println(DefaultExtractor.INSTANCE.getTextContent(url));

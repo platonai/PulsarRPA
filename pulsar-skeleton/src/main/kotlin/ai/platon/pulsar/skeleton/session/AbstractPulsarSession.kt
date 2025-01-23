@@ -1,10 +1,11 @@
 package ai.platon.pulsar.skeleton.session
 
-import ai.platon.pulsar.boilerpipe.extractors.ArticleExtractor
+import ai.platon.pulsar.boilerpipe.extractors.DefaultExtractor
 import ai.platon.pulsar.boilerpipe.sax.SAXInput
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
+import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.urls.PlainUrl
@@ -15,7 +16,6 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
@@ -424,7 +424,8 @@ abstract class AbstractPulsarSession(
     
     override fun chat(prompt: String) = context.chat(prompt, sessionConfig)
     
-    override fun chat(userMessage: String, systemMessage: String) = context.chat(userMessage, systemMessage, sessionConfig)
+    override fun chat(userMessage: String, systemMessage: String) =
+        context.chat(userMessage, systemMessage, sessionConfig)
     
     override fun chat(page: WebPage, prompt: String) = chat(prompt + "\n\n" + page.contentAsString)
     
@@ -513,7 +514,7 @@ abstract class AbstractPulsarSession(
         }
         
         val d = SAXInput().parse(url, inputSource)
-        val success = ArticleExtractor().process(d)
+        val success = DefaultExtractor().process(d)
         if (!success) {
             return TextDocument(url)
         }

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.boilerpipe.extractors;
 
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.heuristics.BlockProximityFusion;
 import ai.platon.pulsar.boilerpipe.filters.heuristics.SimpleBlockFusionProcessor;
 import ai.platon.pulsar.boilerpipe.filters.statistics.DensityRulesClassifier;
@@ -19,7 +19,7 @@ public class DefaultExtractor implements TextExtractor {
     return INSTANCE;
   }
 
-  public boolean process(TextDocument doc) throws ProcessingException {
+  public boolean process(BoiTextDocument doc) throws ProcessingException {
 
     return
         SimpleBlockFusionProcessor.INSTANCE.process(doc)

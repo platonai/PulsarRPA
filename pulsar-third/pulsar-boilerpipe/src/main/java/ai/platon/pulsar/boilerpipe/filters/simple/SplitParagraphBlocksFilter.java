@@ -1,7 +1,7 @@
 package ai.platon.pulsar.boilerpipe.filters.simple;
 
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 
@@ -27,7 +27,7 @@ public final class SplitParagraphBlocksFilter implements TextBlockFilter {
     return INSTANCE;
   }
 
-  public boolean process(TextDocument doc) throws ProcessingException {
+  public boolean process(BoiTextDocument doc) throws ProcessingException {
     boolean changes = false;
 
     final List<TextBlock> blocks = doc.getTextBlocks();
