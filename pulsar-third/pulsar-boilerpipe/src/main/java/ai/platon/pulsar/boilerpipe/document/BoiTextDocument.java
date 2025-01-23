@@ -15,7 +15,7 @@ import java.util.Map;
 public class BoiTextDocument implements Cloneable {
 
   /** Scent Stat */
-  public class Stat {
+  public static class Stat {
     public int _char = 0;
     public int _a = 0;
     public int _img = 0;
@@ -30,7 +30,7 @@ public class BoiTextDocument implements Cloneable {
   private int dateTimeCount = 0;
   private Stat stat = new Stat();
   private PageCategory pageCategory = PageCategory.UNKNOWN;
-  private Map<String, String> fields = new LinkedHashMap<>();
+  private final Map<String, String> fields = new LinkedHashMap<>();
 
   public BoiTextDocument(String baseUrl, String pageTitle, List<TextBlock> textBlocks) {
     this.baseUrl = baseUrl;
