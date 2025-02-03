@@ -20,7 +20,6 @@ public class DefaultExtractor implements TextExtractor {
   }
 
   public boolean process(BoiTextDocument doc) throws ProcessingException {
-
     return
         SimpleBlockFusionProcessor.INSTANCE.process(doc)
             | BlockProximityFusion.MAX_DISTANCE_1.process(doc)
