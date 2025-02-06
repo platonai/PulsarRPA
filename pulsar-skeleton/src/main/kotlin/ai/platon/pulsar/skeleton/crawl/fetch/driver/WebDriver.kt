@@ -238,14 +238,14 @@ interface WebDriver : Closeable {
     suspend fun setTimeouts(browserSettings: BrowserSettings)
     
     /**
-     * Navigates current page to the given URL.
+     * Open the given URL.
      *
      * ```kotlin
      * driver.navigateTo("https://www.example.com")
      * driver.waitForNavigation()
      * ```
      *
-     * @param url URL to navigate page to.
+     * @param url The URL to open.
      */
     @Throws(WebDriverException::class)
     suspend fun open(url: String) {
