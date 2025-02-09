@@ -883,6 +883,13 @@
             <artifactId>kotlin-test-junit5</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>${mockito-junit-jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <properties>
@@ -890,6 +897,7 @@
         <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
         <spring-boot.version>3.3.5</spring-boot.version>
         <spring.version>6.1.14</spring.version>
+        <mockito-junit-jupiter.version>5.11.0</mockito-junit-jupiter.version>
     </properties>
 
 </project>
