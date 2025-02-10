@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.urls
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
+import com.google.common.net.InternetDomainName
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.client.utils.URIBuilder
 import java.net.MalformedURLException
@@ -706,7 +707,148 @@ object UrlUtils {
     fun unreverseHost(reversedHostName: String): String {
         return reverseHost(reversedHostName) // Reversible
     }
-    
+
+
+    /**
+     * Get the host's public suffix. For example, co.uk, com, etc.
+     *
+     * @since 6.0
+     */
+    fun getPublicSuffix(url: URL): String? {
+        return InternetDomainName.from(url.host).publicSuffix()?.toString()
+    }
+
+    /**
+     * Returns the portion of this domain name that is one level beneath the {@linkplain
+     * #isPublicSuffix() public suffix}. For example, for {@code x.adwords.google.co.uk} it returns
+     * {@code google.co.uk}, since {@code co.uk} is a public suffix. Similarly, for {@code
+     * myblog.blogspot.com} it returns the same domain, {@code myblog.blogspot.com}, since {@code
+     * blogspot.com} is a public suffix.
+     *
+     * <p>If {@link #isTopPrivateDomain()} is true, the current domain name instance is returned.
+     *
+     * <p>This method can be used to determine the probable highest level parent domain for which
+     * cookies may be set, though even that depends on individual browsers' implementations of cookie
+     * controls.
+     *
+     * @throws IllegalStateException if this domain does not end with a public suffix
+     * @since 6.0
+     */
+    @Throws(IllegalStateException::class)
+    fun getTopPrivateDomain(url: URL): String {
+        return InternetDomainName.from(url.host).topPrivateDomain().toString()
+    }
+
+    @Throws(IllegalStateException::class, MalformedURLException::class)
+    fun getTopPrivateDomain(url: String) = getTopPrivateDomain(URI.create(url).toURL())
+
+    fun getTopPrivateDomainOrNull(url: String) = kotlin.runCatching { getTopPrivateDomain(url) }.getOrNull()
+
+    /**
+     * Returns the domain name of the url. The domain name of a url is the
+     * substring of the url's hostname, w/o subdomain names. As an example <br></br>
+     * `
+     * getDomainName(conf, new http://lucene.apache.org/)
+    ` * <br></br>
+     * will return <br></br>
+     * ` apache.org`
+     *
+     * @see com.google.common.net.InternetDomainName.topPrivateDomain
+     *
+     * @throws MalformedURLException
+     */
+    @Throws(MalformedURLException::class)
+    fun getDomainName(url: String): String {
+        return getTopPrivateDomain(URI.create(url).toURL())
+    }
+
+    fun getDomainNameOrNull(url: String): String? {
+        return kotlin.runCatching { getDomainName(url) }.getOrNull()
+    }
+
+
+
+
+
+
+
+    /**
+     * Returns the lowercase origin for the url.
+     *
+     * @param url The url to check.
+     * @return String The hostname for the url.
+     */
+    @Throws(MalformedURLException::class)
+    fun getOrigin(url: String): String {
+        val u = URI.create(url).toURL()
+        return u.protocol + "://" + u.host
+    }
+
+    /**
+     * Returns the lowercase origin for the url or null if the url is not well-formed.
+     *
+     * @param url The url to check.
+     * @return String The hostname for the url.
+     */
+    fun getOriginOrNull(url: String?): String? {
+        if (url == null) {
+            return null
+        }
+
+        return try {
+            val u = URI.create(url).toURL()
+            u.protocol + "://" + u.host
+        } catch (t: Throwable) {
+            null
+        }
+    }
+
+    /**
+     * Returns the lowercase hostname for the url.
+     *
+     * @param url The url to check.
+     * @return String The hostname for the url.
+     */
+    @Throws(MalformedURLException::class)
+    fun getHostName(url: String) = URI.create(url).host.lowercase(Locale.getDefault())
+
+    /**
+     * Returns the lowercase hostname for the url or null if the url is not well-formed.
+     *
+     * @param url The url to check.
+     * @return String The hostname for the url.
+     */
+    fun getHostNameOrNull(url: String?): String? {
+        if (url == null) {
+            return null
+        }
+
+        return try {
+            URI.create(url).host.lowercase(Locale.getDefault())
+        } catch (e: MalformedURLException) {
+            null
+        }
+    }
+
+    fun getHostName(url: String?, defaultValue: String): String {
+        if (url == null) {
+            return defaultValue
+        }
+
+        return try {
+            URI.create(url).host.lowercase(Locale.getDefault())
+        } catch (e: MalformedURLException) {
+            defaultValue
+        }
+    }
+
+
+
+
+
+
+
+
     private fun reverseAppendSplits(string: String, buf: StringBuilder) {
         val splits = StringUtils.split(string, '.')
         if (splits.isNotEmpty()) {
