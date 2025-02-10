@@ -452,18 +452,12 @@ abstract class AbstractPulsarContext(
         val parser = loadComponentOrNull?.parseComponent
         return parser?.parse(page, noLinkFilter = true)?.document
     }
-    
-    /**
-     * Chat with the AI model.
-     */
-    override fun chat(prompt: String, conf: ImmutableConfig) = ChatModelFactory.getOrCreate(conf).call(prompt)
-    
-    override fun chat(userMessage: String, systemMessage: String, conf: ImmutableConfig) =
-        ChatModelFactory.getOrCreate(conf).call(userMessage, systemMessage)
-    
-    /**
-     * Persist the page into the storage.
-     * */
+
+    override fun chat(prompt: String) = ChatModelFactory.getOrCreate(unmodifiedConfig).call(prompt)
+
+    override fun chat(userMessage: String, systemMessage: String) =
+        ChatModelFactory.getOrCreate(unmodifiedConfig).call(userMessage, systemMessage)
+
     @Throws(WebDBException::class)
     override fun persist(page: WebPage) {
         webDbOrNull?.put(page, false)

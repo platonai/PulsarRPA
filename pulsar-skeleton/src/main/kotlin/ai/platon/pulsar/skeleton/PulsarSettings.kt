@@ -250,4 +250,28 @@ open class PulsarSettings {
         BrowserSettings.disableOriginalPageContentAutoExporting()
         return this
     }
+
+    /**
+     * LLM provider
+     * */
+    fun withLLMProvider(provider: String): PulsarSettings {
+        System.setProperty("llm.provider", provider)
+        return this
+    }
+
+    /**
+     * LLM name
+     * */
+    fun withLLMName(name: String): PulsarSettings {
+        System.setProperty("llm.name", name)
+        return this
+    }
+
+    /**
+     * LLM API key
+     * */
+    fun withLLMAPIKey(key: String): PulsarSettings {
+        System.setProperty("llm.apiKey", key)
+        return this
+    }
 }

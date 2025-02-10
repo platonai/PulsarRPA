@@ -76,11 +76,11 @@ $webDriverSourceCode
         val userMessage = """
 生成一个挂起函数，实现如下功能：打开一个网页，然后滚动到页面30%位置，然后滚动到页面顶部，最后截取页面快照。仅返回该挂起函数，不需要其他代码，也不需要注释和解释。
         """.trimIndent()
-        
+
         val response = session.chat(userMessage, systemMessage)
         lastResponse = response
         println(response.content)
-        
+
         assertTrue { response.content.contains(".navigateTo") }
         assertTrue { response.content.contains(".scrollToMiddle") }
         assertTrue { response.content.contains(".scrollToTop") }

@@ -32,7 +32,7 @@ class KConfiguration(
      * */
     val profile: String = "",
     @Deprecated("Use profile instead")
-    val mode: String = "",
+    val mode: String = profile,
     /**
      * The extra resources to load.
      * */
@@ -54,7 +54,7 @@ class KConfiguration(
     private val assuredImplementation: ConfigurationImpl
         get() {
             if (impl == null) {
-                impl = ConfigurationImpl(profile, mode, extraResources, loadDefaults)
+                impl = ConfigurationImpl(profile, profile, extraResources, loadDefaults)
                 impl?.load()
             }
             
@@ -64,7 +64,7 @@ class KConfiguration(
     val id = ID_SUPPLIER.incrementAndGet()
     val loadedResources: List<String> get() = impl?.resources?.map { it.name } ?: listOf()
     
-    constructor(conf: KConfiguration) : this(conf.profile, conf.mode, conf.extraResources, conf.loadDefaults)
+    constructor(conf: KConfiguration) : this(conf.profile, conf.profile, conf.extraResources, conf.loadDefaults)
     
     /**
      * Set the `value` of the `name` property. If
