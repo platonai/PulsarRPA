@@ -11,7 +11,7 @@ import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
-import ai.platon.pulsar.skeleton.crawl.common.URLUtil
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.component.LoadComponent
 import ai.platon.pulsar.skeleton.crawl.component.ParseComponent
 import ai.platon.pulsar.skeleton.crawl.fetch.UrlStat
@@ -76,7 +76,7 @@ class CoreMetrics(
     }
 
     private val logger = LoggerFactory.getLogger(CoreMetrics::class.java)!!
-    val groupMode = conf.getEnum(PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
+    val groupMode = conf.getEnum(PARTITION_MODE_KEY, InternalURLUtil.GroupMode.BY_HOST)
     val maxHostFailureEvents = conf.getInt(FETCH_MAX_HOST_FAILURES, 20)
 
     /**
@@ -207,7 +207,7 @@ class CoreMetrics(
     fun isReachable(url: String) = !isUnreachable(url)
 
     fun isUnreachable(url: String): Boolean {
-        val host = URLUtil.getHost(url, groupMode) ?: return true
+        val host = InternalURLUtil.getHost(url, groupMode) ?: return true
         return unreachableHosts.contains(host)
     }
 
@@ -239,7 +239,7 @@ class CoreMetrics(
      */
     fun trackSuccess(page: WebPage) {
         val url = page.url
-        val host = URLUtil.getHost(url, groupMode) ?: throw MalformedURLException(url)
+        val host = InternalURLUtil.getHost(url, groupMode) ?: throw MalformedURLException(url)
 
         // The host is reachable
         unreachableHosts.remove(host)
@@ -313,7 +313,7 @@ class CoreMetrics(
      * @return true if the host is unreachable
      */
     fun trackHostUnreachable(url: String, occurrences: Int = 1): Boolean {
-        val host = URLUtil.getHost(url, groupMode)
+        val host = InternalURLUtil.getHost(url, groupMode)
         if (host == null || host.isEmpty()) {
             logger.warn("Malformed url identified as gone | <{}>", url)
             return false

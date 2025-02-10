@@ -31,7 +31,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.*
 import ai.platon.pulsar.skeleton.common.files.ext.export
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
-import ai.platon.pulsar.skeleton.crawl.common.URLUtil
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver

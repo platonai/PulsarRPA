@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.skeleton.crawl.common.URLUtil
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -47,7 +47,7 @@ class AsinSellerScraper {
      * After clicking `New seller` button, the seller url will be displayed.
      * */
     fun crawl() {
-        val groupedUrls = asinUrls.groupBy { URLUtil.getDomainName(it)!! }
+        val groupedUrls = asinUrls.groupBy { InternalURLUtil.getDomainName(it)!! }
         val groupedUrls0 = mutableMapOf<String, List<String>>()
         groupedUrls.forEach { (group, urls0) ->
             logger.info(group + "\t" + urls0.size)

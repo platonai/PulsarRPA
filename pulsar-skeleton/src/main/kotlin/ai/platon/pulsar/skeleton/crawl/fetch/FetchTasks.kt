@@ -11,7 +11,7 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
-import ai.platon.pulsar.skeleton.crawl.common.URLUtil
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import java.time.Duration
@@ -82,7 +82,7 @@ class FetchTask constructor(
     val url get() = page.url
     val href get() = page.href
     val pageConf get() = page.conf
-    val domain get() = URLUtil.getDomainName(url)
+    val domain get() = InternalURLUtil.getDomainName(url)
     val isCanceled get() = state.get() == State.CANCELED
     val isWorking get() = state.get() == State.WORKING
     

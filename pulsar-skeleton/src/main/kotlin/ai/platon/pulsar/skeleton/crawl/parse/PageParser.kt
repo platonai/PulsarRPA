@@ -10,7 +10,7 @@ import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
-import ai.platon.pulsar.skeleton.crawl.common.URLUtil
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters
 import ai.platon.pulsar.skeleton.crawl.filter.SCOPE_FETCH
 import ai.platon.pulsar.skeleton.signature.Signature
@@ -224,7 +224,7 @@ class PageParser(
         page.metadata[Name.REDIRECT_DISCOVERED] = AppConstants.YES_STRING
         if (newUrl == page.url) {
             val refreshTime = parseStatus.getArgOrElse(ParseStatus.REFRESH_TIME, "0").toInt()
-            val reprUrl = URLUtil.chooseRepr(page.url, newUrl, refreshTime < AppConstants.PERM_REFRESH_TIME)
+            val reprUrl = InternalURLUtil.chooseRepr(page.url, newUrl, refreshTime < AppConstants.PERM_REFRESH_TIME)
             page.reprUrl = reprUrl
         }
     }

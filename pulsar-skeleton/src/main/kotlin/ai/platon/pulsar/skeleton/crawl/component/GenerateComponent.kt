@@ -11,8 +11,8 @@ import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.common.metrics.EnumCounterRegistry
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
-import ai.platon.pulsar.skeleton.crawl.common.URLUtil
-import ai.platon.pulsar.skeleton.crawl.common.URLUtil.GroupMode
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.GroupMode
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters
 import ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilters
@@ -169,7 +169,7 @@ class GenerateComponent(
 
     // Check Host
     private fun checkHost(url: String): Boolean {
-        val host = URLUtil.getHost(url, groupMode)
+        val host = InternalURLUtil.getHost(url, groupMode)
         if (host == null || host.isEmpty()) {
             enumCounters.inc(Counter.mUrlMalformed)
             return false

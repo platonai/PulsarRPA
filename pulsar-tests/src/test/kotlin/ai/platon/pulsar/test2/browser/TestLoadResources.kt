@@ -1,7 +1,7 @@
 package ai.platon.pulsar.test2.browser
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.skeleton.crawl.common.URLUtil
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
 
@@ -25,7 +25,7 @@ class TestLoadResources: WebDriverTestBase() {
     @Test
     fun testLoadResource() {
         resourceUrls.forEachIndexed { i, resourceUrl ->
-            val referrer = URLUtil.getOrigin(resourceUrl)
+            val referrer = InternalURLUtil.getOrigin(resourceUrl)
             val page = session.loadResource(resourceUrl, referrer, "-refresh")
 
             val content = page.contentAsString.asSequence()
@@ -42,7 +42,7 @@ class TestLoadResources: WebDriverTestBase() {
     @Test
     fun testLoadResource2() = runWebDriverTest { driver ->
         val resourceUrl = "https://www.amazon.com/robots.txt"
-        val referrer = URLUtil.getOrigin(resourceUrl)
+        val referrer = InternalURLUtil.getOrigin(resourceUrl)
         driver.navigateTo(referrer)
         driver.waitForNavigation()
         val response = driver.loadResource(resourceUrl)
