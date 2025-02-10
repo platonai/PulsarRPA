@@ -422,10 +422,10 @@ abstract class AbstractPulsarSession(
     
     override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
     
-    override fun chat(prompt: String) = context.chat(prompt, sessionConfig)
+    override fun chat(prompt: String) = context.chat(prompt)
     
     override fun chat(userMessage: String, systemMessage: String) =
-        context.chat(userMessage, systemMessage, sessionConfig)
+        context.chat(userMessage, systemMessage)
     
     override fun chat(page: WebPage, prompt: String) = chat(prompt + "\n\n" + page.contentAsString)
     
