@@ -35,7 +35,7 @@ open class BrowserSettings(
         /**
          * The script confuser.
          * */
-        var confuser = SimpleScriptConfuser()
+        var confuser: ScriptConfuser = SimpleScriptConfuser()
         /**
          * Check if the current environment supports only headless mode.
          * TODO: AppContext.isGUIAvailable doesn't work on some platform

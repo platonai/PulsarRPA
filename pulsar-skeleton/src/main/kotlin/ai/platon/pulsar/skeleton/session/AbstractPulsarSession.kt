@@ -182,12 +182,12 @@ abstract class AbstractPulsarSession(
     
     override fun load(url: UrlAware, options: LoadOptions): WebPage = load(normalize(url, options))
     
-    override fun load(normURL: NormURL): WebPage {
+    override fun load(url: NormURL): WebPage {
         if (!enablePDCache) {
-            return context.load(normURL)
+            return context.load(url)
         }
         
-        return createPageWithCachedCoreOrNull(normURL) ?: loadAndCache(normURL)
+        return createPageWithCachedCoreOrNull(url) ?: loadAndCache(url)
     }
     
     override suspend fun loadDeferred(url: String, args: String) = loadDeferred(normalize(url, options(args)))
