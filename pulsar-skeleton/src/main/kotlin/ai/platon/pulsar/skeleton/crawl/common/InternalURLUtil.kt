@@ -157,6 +157,7 @@ object InternalURLUtil {
      *
      * @see com.google.common.net.InternetDomainName.publicSuffix
      */
+    @Deprecated("Use getPublicSuffix(url) instead", ReplaceWith("UrlUtils.getPublicSuffix(url)"))
     fun getDomainSuffix(url: String): DomainSuffix? {
         val u = getURLOrNull(url) ?: return null
         return getDomainSuffix(u)
@@ -168,12 +169,12 @@ object InternalURLUtil {
      *
      * @see com.google.common.net.InternetDomainName.publicSuffix
      */
-    @Deprecated("Use getPublicSuffix(url) instead", ReplaceWith("getPublicSuffix(url)"))
+    @Deprecated("Use getPublicSuffix(url) instead", ReplaceWith("UrlUtils.getPublicSuffix(url)"))
     fun getDomainSuffix(url: URL): DomainSuffix? {
         return getDomainSuffix(DomainSuffixes.getInstance(), url)
     }
 
-    @Deprecated("Use getPublicSuffix(url) instead", ReplaceWith("getPublicSuffix(url)"))
+    @Deprecated("Use getPublicSuffix(url) instead", ReplaceWith("UrlUtils.getPublicSuffix(url)"))
     fun getDomainSuffix(tlds: DomainSuffixes, url: URL): DomainSuffix? {
         // DomainSuffixes tlds = DomainSuffixes.getInstance();
         val host = url.host
@@ -199,7 +200,7 @@ object InternalURLUtil {
      * the hostname
      */
     @Throws(MalformedURLException::class)
-    @Deprecated("Use getPublicSuffix(url) instead", ReplaceWith("getPublicSuffix(url)"))
+    @Deprecated("Use getPublicSuffix(url) instead", ReplaceWith("UrlUtils.getPublicSuffix(url)"))
     fun getDomainSuffix(tlds: DomainSuffixes, url: String?): DomainSuffix? {
         if (url == null) {
             return null
