@@ -13,15 +13,14 @@ import java.nio.file.Files
 import kotlin.io.path.isReadable
 import kotlin.io.path.listDirectoryEntries
 
-class ScriptLoader(
-    val confuser: ScriptConfuser = SimpleScriptConfuser(),
+open class ScriptLoader(
+    val confuser: ScriptConfuser,
     val conf: ImmutableConfig
 ) {
-    private val logger = getLogger(this)
+    companion object {
+        private val logger = getLogger(this)
 
-    private val jsInitParameters: MutableMap<String, Any> = mutableMapOf()
-
-    private val resources = """
+        val RESOURCES = """
             stealth.js
             __pulsar_utils__.js
             configs.js
@@ -29,6 +28,9 @@ class ScriptLoader(
             node_traversor.js
             feature_calculator.js
         """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
+    }
+
+    private val jsInitParameters: MutableMap<String, Any> = mutableMapOf()
 
     /**
      * The javascript to execute by Web browsers.
@@ -98,7 +100,7 @@ class ScriptLoader(
     }
 
     private fun loadDefaultResource() {
-        resources.associateWithTo(jsCache) {
+        RESOURCES.distinct().associateWithTo(jsCache) {
             ResourceLoader.readAllLines(it).joinToString("\n") { confuser.confuse(it) }
         }
     }

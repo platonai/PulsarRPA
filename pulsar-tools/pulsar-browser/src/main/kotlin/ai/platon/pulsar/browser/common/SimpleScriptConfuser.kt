@@ -15,7 +15,7 @@ open class SimpleScriptConfuser: ScriptConfuser {
         /**
          * The default name mangler replaces all `__pulsar_` to a random string
          * */
-        val DEFAULT_NAME_MANGLER: (String) -> String = { script ->
+        val SIMPLE_NAME_MANGLER: (String) -> String = { script ->
             script.replace(SCRIPT_NAME_PREFIX, CIPHER)
         }
 
@@ -25,13 +25,17 @@ open class SimpleScriptConfuser: ScriptConfuser {
         val IDENTITY_NAME_MANGLER: (String) -> String = { script -> script }
     }
 
-    var nameMangler: (String) -> String = DEFAULT_NAME_MANGLER
+    var nameMangler: (String) -> String = SIMPLE_NAME_MANGLER
 
     override fun confuse(script: String): String {
         return nameMangler(script)
     }
 
     override fun reset() {
-        nameMangler = DEFAULT_NAME_MANGLER
+        nameMangler = SIMPLE_NAME_MANGLER
+    }
+
+    override fun clear() {
+        nameMangler = IDENTITY_NAME_MANGLER
     }
 }

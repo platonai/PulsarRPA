@@ -1,5 +1,6 @@
 package ai.platon.pulsar.test2.browser
 
+import ai.platon.pulsar.browser.common.SimpleScriptConfuser
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -21,7 +22,7 @@ class WebDriverTestBase : TestBase() {
     protected val asin get() = url.substringAfterLast("/dp/")
     protected val driverFactory get() = session.context.getBean(WebDriverFactory::class)
     protected val settings get() = driverFactory.driverSettings
-    protected val confuser get() = settings.confuser
+    protected val confuser get() = settings.confuser as SimpleScriptConfuser
     
     protected val expressions = """
             typeof(window)

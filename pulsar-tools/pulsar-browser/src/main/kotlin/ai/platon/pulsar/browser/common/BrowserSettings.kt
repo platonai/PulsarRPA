@@ -525,4 +525,3 @@ open class BrowserSettings(
      * */
     val scriptLoader get() = ScriptLoader(confuser, conf)
 }
-
