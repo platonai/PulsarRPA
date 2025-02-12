@@ -23,7 +23,8 @@
     <dependencies>
         <!-- Internal Dependencies -->
         <dependency>
-            <groupId>ai.platon.pulsar</groupId>            <artifactId>pulsar-persist</artifactId>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-persist</artifactId>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>

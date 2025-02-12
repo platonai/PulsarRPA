@@ -852,9 +852,16 @@
                 <version>${spring-boot.version}</version>
                 <scope>test</scope>
             </dependency>
-
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
 
             <!-- MockBean and SpyBean, but for MockK instead of Mockito -->
+            <!-- Be careful to keep consistent with spring-boot -->
             <dependency>
                 <groupId>com.ninja-squad</groupId>
                 <artifactId>springmockk</artifactId>
@@ -895,8 +902,6 @@
     <properties>
         <springmockk.version>4.0.2</springmockk.version>
         <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
-        <spring-boot.version>3.3.5</spring-boot.version>
-        <spring.version>6.1.14</spring.version>
         <mockito-junit-jupiter.version>5.11.0</mockito-junit-jupiter.version>
     </properties>
 
