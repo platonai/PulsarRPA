@@ -2,7 +2,7 @@ package ai.platon.pulsar.boilerpipe.filters.heuristics;
 
 import ai.platon.pulsar.boilerpipe.document.BlockLabels;
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 
@@ -23,7 +23,7 @@ public final class ContentFusion implements TextBlockFilter {
   public ContentFusion() {
   }
 
-  public boolean process(TextDocument doc) throws ProcessingException {
+  public boolean process(BoiTextDocument doc) throws ProcessingException {
     List<TextBlock> textBlocks = doc.getTextBlocks();
     if (textBlocks.size() < 2) {
       return false;

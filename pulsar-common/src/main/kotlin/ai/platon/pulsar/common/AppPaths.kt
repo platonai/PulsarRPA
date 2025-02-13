@@ -157,23 +157,8 @@ object AppPaths {
     @RequiredFile
     val PROXY_BAN_STRATEGY = PROXY_BASE_DIR.resolve("proxy-ban-strategy.txt")
     
-    @RequiredDirectory
-    val ARCHIVE_DIR = DATA_DIR.resolve("archive")
-    
-    @RequiredDirectory
-    val TMP_ARCHIVE_DIR = TMP_DIR.resolve("archive")
-    
     @RequiredFile
     val PATH_LOCAL_COMMAND = TMP_DIR.resolve("pulsar-commands")
-    
-    @RequiredFile
-    val PATH_EMERGENT_SEEDS = TMP_DIR.resolve("emergent-seeds")
-    
-    @RequiredFile
-    val PATH_LAST_BATCH_ID = REPORT_DIR.resolve("last-batch-id")
-    
-    @RequiredFile
-    val PATH_LAST_GENERATED_ROWS = REPORT_DIR.resolve("last-generated-rows")
     
     @RequiredFile
     val PATH_BANNED_URLS = REPORT_DIR.resolve("banned-urls")

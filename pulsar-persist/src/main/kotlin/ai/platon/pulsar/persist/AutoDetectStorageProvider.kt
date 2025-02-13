@@ -1,6 +1,7 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.config.AppConstants.*
@@ -24,7 +25,7 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
 
     fun createPageStore(): DataStore<String, GWebPage> {
         if (!AppContext.isActive) {
-            throw IllegalStateException("Inactive application context")
+            throw IllegalApplicationStateException("Inactive application context")
         }
 
         val pageStore = GoraStorage.createDataStore(conf, String::class.java, GWebPage::class.java, pageStoreClass)
@@ -43,7 +44,7 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
          */
         fun detectDataStoreClassName(conf: ImmutableConfig): String {
             if (!AppContext.isActive) {
-                throw IllegalStateException("Inactive application context")
+                throw IllegalApplicationStateException("Inactive application context")
             }
 
             val specified = conf.get(STORAGE_DATA_STORE_CLASS)

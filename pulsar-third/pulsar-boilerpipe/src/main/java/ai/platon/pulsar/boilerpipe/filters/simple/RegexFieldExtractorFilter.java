@@ -1,7 +1,7 @@
 package ai.platon.pulsar.boilerpipe.filters.simple;
 
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 import ai.platon.pulsar.boilerpipe.utils.ScentUtils;
@@ -29,7 +29,7 @@ public final class RegexFieldExtractorFilter implements TextBlockFilter {
     this.maxTextLength = maxTextLength;
   }
 
-  public boolean process(TextDocument doc) throws ProcessingException {
+  public boolean process(BoiTextDocument doc) throws ProcessingException {
     boolean changes = false;
 
     for (final TextBlock tb : doc.getTextBlocks()) {
@@ -51,7 +51,7 @@ public final class RegexFieldExtractorFilter implements TextBlockFilter {
     return changes;
   }
 
-  private boolean tryExtractText(TextDocument doc, String text) {
+  private boolean tryExtractText(BoiTextDocument doc, String text) {
     Map<String, String> results = ScentUtils.extract(text, regexFieldRules, keyGroup, valueGroup);
     results.forEach(doc::setField);
 

@@ -370,13 +370,17 @@ interface PulsarContext: AutoCloseable {
      * Chat with the AI model.
      *
      * @param prompt The prompt to chat
-     * @param model The model to chat
-     * @param apiKey The api key to chat
      */
-    fun chat(prompt: String, conf: ImmutableConfig): ModelResponse
-    
-    fun chat(userMessage: String, systemMessage: String, conf: ImmutableConfig): ModelResponse
-    
+    fun chat(prompt: String): ModelResponse
+
+    /**
+     * Chat with the AI model.
+     *
+     * @param userMessage The user message to chat
+     * @param systemMessage The system message to chat
+     * */
+    fun chat(userMessage: String, systemMessage: String): ModelResponse
+
     /**
      * Persist the webpage into the storage immediately.
      * By default, the backend storage is the local file system, if mongodb is detected,

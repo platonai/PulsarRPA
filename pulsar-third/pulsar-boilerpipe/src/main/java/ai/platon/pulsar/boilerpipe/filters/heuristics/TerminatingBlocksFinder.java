@@ -2,7 +2,7 @@ package ai.platon.pulsar.boilerpipe.filters.heuristics;
 
 import ai.platon.pulsar.boilerpipe.document.BlockLabels;
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 import com.google.common.collect.Sets;
@@ -41,7 +41,7 @@ public class TerminatingBlocksFinder implements TextBlockFilter {
 
   // public static long timeSpent = 0;
 
-  public boolean process(TextDocument doc) throws ProcessingException {
+  public boolean process(BoiTextDocument doc) throws ProcessingException {
     boolean changes = false;
 
     // long t = System.currentTimeMillis();

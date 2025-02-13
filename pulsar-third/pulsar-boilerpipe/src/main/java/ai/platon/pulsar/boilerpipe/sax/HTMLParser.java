@@ -1,7 +1,7 @@
 package ai.platon.pulsar.boilerpipe.sax;
 
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import org.apache.xerces.parsers.AbstractSAXParser;
 import org.cyberneko.html.HTMLConfiguration;
 import org.xml.sax.ContentHandler;
@@ -42,12 +42,12 @@ public class HTMLParser extends AbstractSAXParser {
   }
 
   /**
-   * Returns a {@link TextDocument} containing the extracted {@link TextBlock} s. NOTE: Only call
+   * Returns a {@link BoiTextDocument} containing the extracted {@link TextBlock} s. NOTE: Only call
    * this after {@link #parse(org.xml.sax.InputSource)}.
    *
-   * @return The {@link TextDocument}
+   * @return The {@link BoiTextDocument}
    */
-  public TextDocument getTextDocument() {
+  public BoiTextDocument getTextDocument() {
     return contentHandler.toTextDocument();
   }
 }

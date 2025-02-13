@@ -6,7 +6,20 @@ import java.util.*
  * The supported browser types
  */
 enum class BrowserType {
-    NATIVE, PULSAR_CHROME, MOCK_CHROME, PLAYWRIGHT_CHROME;
+    /**
+     * Every request will be sent via raw http client.
+     * */
+    NATIVE,
+    /**
+     * The main browser type available.
+     * */
+    PULSAR_CHROME,
+    @Deprecated("No mock chrome available")
+    MOCK_CHROME,
+    /**
+     * Not implemented yet.
+     * */
+    PLAYWRIGHT_CHROME;
 
 //    override fun toString(): String {
 //        return name.lowercase(Locale.getDefault())

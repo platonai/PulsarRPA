@@ -1,12 +1,16 @@
 package ai.platon.pulsar.common.urls
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
+import com.google.common.net.InternetDomainName
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.client.utils.URIBuilder
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URISyntaxException
 import java.net.URL
+import java.nio.file.Path
+import java.util.*
 
 object UrlUtils {
 
@@ -29,6 +33,34 @@ object UrlUtils {
      * */
     @JvmStatic
     fun isNotInternal(url: String) = !isInternal(url)
+
+    /**
+     * Check if the given url is a local file url, which is a url that starts with {@link AppConstants#LOCAL_FILE_SERVE_PREFIX}
+     * */
+    @JvmStatic
+    fun isLocalFile(url: String): Boolean {
+        return url.startsWith(AppConstants.LOCAL_FILE_SERVE_PREFIX)
+    }
+
+    /**
+     * Convert a path to a URL, the path will be encoded to base64 and appended to the {@link AppConstants#LOCAL_FILE_SERVE_PREFIX}
+     * */
+    @JvmStatic
+    fun pathToLocalURL(path: Path): String {
+        val base64 = Base64.getUrlEncoder().encode(path.toString().toByteArray()).toString(Charsets.UTF_8)
+        val prefix = AppConstants.LOCAL_FILE_SERVE_PREFIX
+        return "$prefix?path=$base64"
+    }
+
+    /**
+     * Convert a URL to a path, the path is decoded from base64 and the prefix {@link AppConstants#LOCAL_FILE_SERVE_PREFIX} is removed
+     * */
+    @JvmStatic
+    fun localURLToPath(url: String): Path {
+        val path = url.substringAfter("?path=")
+        val base64 = Base64.getUrlDecoder().decode(path).toString(Charsets.UTF_8)
+        return Path.of(base64)
+    }
 
     /**
      * Creates a {@code URL} object from the {@code String}
@@ -326,18 +358,20 @@ object UrlUtils {
     fun getUrlWithoutParameters(url: String): String {
         try {
             var uri = URI(url)
-            uri = URI(uri.scheme,
-                    uri.authority,
-                    uri.path,
-                    null, // Ignore the query part of the input url
-                    uri.fragment)
+            uri = URI(
+                uri.scheme,
+                uri.authority,
+                uri.path,
+                null, // Ignore the query part of the input url
+                uri.fragment
+            )
             return uri.toString()
         } catch (ignored: Throwable) {
         }
 
         return ""
     }
-    
+
     /**
      * Returns the normalized url and key
      *
@@ -367,7 +401,7 @@ object UrlUtils {
     fun reverseUrl(url: String): String {
         return reverseUrl(URL(url))
     }
-    
+
     /**
      * Reverses a url's domain. This form is better for storing in hbase. Because
      * scans within the same domain are faster.
@@ -460,7 +494,7 @@ object UrlUtils {
         val tenantedUrl = TenantedUrl.split(unreversedUrl)
         return TenantedUrl.combine(tenantId, reverseUrl(tenantedUrl.url))
     }
-    
+
     /**
      * Get the unreversed url of a reversed url.
      *
@@ -611,11 +645,11 @@ object UrlUtils {
      */
     @JvmStatic
     fun decodeKeyLowerBound(startKey: String): String {
-        var startKey = startKey
-        startKey = startKey.replace("\\\\u0001".toRegex(), "\u0001")
-        startKey = startKey.replace("\\u0001".toRegex(), "\u0001")
+        var startKey1 = startKey
+        startKey1 = startKey1.replace("\\\\u0001".toRegex(), "\u0001")
+        startKey1 = startKey1.replace("\\u0001".toRegex(), "\u0001")
 
-        return startKey
+        return startKey1
     }
 
     /**
@@ -632,12 +666,12 @@ object UrlUtils {
      */
     @JvmStatic
     fun decodeKeyUpperBound(endKey: String): String {
-        var endKey = endKey
+        var endKey1 = endKey
         // Character lastChar = Character.MAX_VALUE;
-        endKey = endKey.replace("\\\\uFFFF".toRegex(), "\uFFFF")
-        endKey = endKey.replace("\\uFFFF".toRegex(), "\uFFFF")
+        endKey1 = endKey1.replace("\\\\uFFFF".toRegex(), "\uFFFF")
+        endKey1 = endKey1.replace("\\uFFFF".toRegex(), "\uFFFF")
 
-        return endKey
+        return endKey1
     }
 
     /**
@@ -675,7 +709,150 @@ object UrlUtils {
     fun unreverseHost(reversedHostName: String): String {
         return reverseHost(reversedHostName) // Reversible
     }
-    
+
+
+    /**
+     * Get the host's public suffix. For example, co.uk, com, etc.
+     *
+     * @since 6.0
+     */
+    fun getPublicSuffix(url: String): String? {
+        val domain = getTopPrivateDomainOrNull(url) ?: return null
+        return InternetDomainName.from(domain).publicSuffix()?.toString()
+    }
+
+    /**
+     * Get the host's public suffix. For example, co.uk, com, etc.
+     */
+    fun getPublicSuffix(url: URL): String? {
+        return InternetDomainName.from(url.host).publicSuffix()?.toString()
+    }
+
+    /**
+     * Returns the portion of this domain name that is one level beneath the [isPublicSuffix] public suffix.
+     * For example, for `x.adwords.google.co.uk` it returns `google.co.uk`, since `co.uk` is a public suffix.
+     * Similarly, for `myblog.blogspot.com` it returns the same domain, `myblog.blogspot.com`, since `blogspot.com` is a public suffix.
+     *
+     * If [isTopPrivateDomain] is true, the current domain name instance is returned.
+     *
+     * This method can be used to determine the probable highest level parent domain for which cookies may be set,
+     * though even that depends on individual browsers' implementations of cookie controls.
+     *
+     * @throws IllegalStateException if this domain does not end with a public suffix
+     */
+    @Throws(IllegalStateException::class)
+    fun getTopPrivateDomain(url: URL): String {
+        return InternetDomainName.from(url.host).topPrivateDomain().toString()
+    }
+
+    /**
+     * Returns the portion of this domain name that is one level beneath the [isPublicSuffix] public suffix.
+     * For example, for `x.adwords.google.co.uk` it returns `google.co.uk`, since `co.uk` is a public suffix.
+     * Similarly, for `myblog.blogspot.com` it returns the same domain, `myblog.blogspot.com`, since `blogspot.com` is a public suffix.
+     *
+     * If [isTopPrivateDomain] is true, the current domain name instance is returned.
+     *
+     * This method can be used to determine the probable highest level parent domain for which cookies may be set,
+     * though even that depends on individual browsers' implementations of cookie controls.
+     *
+     * @throws IllegalStateException if this domain does not end with a public suffix
+     */
+    @Throws(IllegalStateException::class, MalformedURLException::class)
+    fun getTopPrivateDomain(url: String) = getTopPrivateDomain(URI.create(url).toURL())
+
+    /**
+     * Returns the portion of this domain name that is one level beneath the [isPublicSuffix] public suffix.
+     * For example, for `x.adwords.google.co.uk` it returns `google.co.uk`, since `co.uk` is a public suffix.
+     * Similarly, for `myblog.blogspot.com` it returns the same domain, `myblog.blogspot.com`, since `blogspot.com` is a public suffix.
+     *
+     * If [isTopPrivateDomain] is true, the current domain name instance is returned.
+     *
+     * This method can be used to determine the probable highest level parent domain for which cookies may be set,
+     * though even that depends on individual browsers' implementations of cookie controls.
+     *
+     * @throws IllegalStateException if this domain does not end with a public suffix
+     */
+    fun getTopPrivateDomainOrNull(url: String) = kotlin.runCatching { getTopPrivateDomain(url) }.getOrNull()
+
+    @Deprecated("Use getTopPrivateDomain instead", ReplaceWith("UrlUtils.getTopPrivateDomain(url)"))
+    @Throws(MalformedURLException::class)
+    fun getDomainName(url: String) = getTopPrivateDomain(url)
+
+    @Deprecated("Use getTopPrivateDomainOrNull instead", ReplaceWith("UrlUtils.getTopPrivateDomainOrNull(url)"))
+    fun getDomainNameOrNull(url: String) = getTopPrivateDomainOrNull(url)
+
+
+    /**
+     * Returns the lowercase origin for the url.
+     *
+     * @param url The url to check.
+     * @return String The hostname for the url.
+     */
+    @Throws(MalformedURLException::class)
+    fun getOrigin(url: String): String {
+        val u = URI.create(url).toURL()
+        return u.protocol + "://" + u.host
+    }
+
+    /**
+     * Returns the lowercase origin for the url or null if the url is not well-formed.
+     *
+     * @param url The url to check.
+     * @return String The hostname for the url.
+     */
+    fun getOriginOrNull(url: String?): String? {
+        if (url == null) {
+            return null
+        }
+
+        return try {
+            val u = URI.create(url).toURL()
+            u.protocol + "://" + u.host
+        } catch (t: Throwable) {
+            null
+        }
+    }
+
+    /**
+     * Returns the lowercase hostname for the url.
+     *
+     * @param url The url to check.
+     * @return String The hostname for the url.
+     */
+    @Throws(MalformedURLException::class)
+    fun getHostName(url: String) = URI.create(url).host.lowercase(Locale.getDefault())
+
+    /**
+     * Returns the lowercase hostname for the url or null if the url is not well-formed.
+     *
+     * @param url The url to check.
+     * @return String The hostname for the url.
+     */
+    fun getHostNameOrNull(url: String?): String? {
+        if (url == null) {
+            return null
+        }
+
+        return try {
+            URI.create(url).host.lowercase(Locale.getDefault())
+        } catch (e: MalformedURLException) {
+            null
+        }
+    }
+
+    fun getHostName(url: String?, defaultValue: String): String {
+        if (url == null) {
+            return defaultValue
+        }
+
+        return try {
+            URI.create(url).host.lowercase(Locale.getDefault())
+        } catch (e: MalformedURLException) {
+            defaultValue
+        }
+    }
+
+
     private fun reverseAppendSplits(string: String, buf: StringBuilder) {
         val splits = StringUtils.split(string, '.')
         if (splits.isNotEmpty()) {

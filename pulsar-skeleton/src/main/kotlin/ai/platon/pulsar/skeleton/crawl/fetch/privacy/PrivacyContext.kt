@@ -53,7 +53,9 @@ interface PrivacyContext: AutoCloseable {
     val display: String
     val readableState: String
     val privacyAgent: PrivacyAgent
-    fun takeSnapshot(): String
+    fun buildStatusString(): String
+    @Deprecated("Use buildStatusString instead", ReplaceWith("buildStatusString()"))
+    fun takeSnapshot(): String = buildStatusString()
     fun promisedWebDriverCount(): Int
     fun hasWebDriverPromise(): Boolean
     suspend fun open(url: String): FetchResult

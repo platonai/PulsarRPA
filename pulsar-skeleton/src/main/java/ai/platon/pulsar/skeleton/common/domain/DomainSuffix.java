@@ -42,6 +42,7 @@ public class DomainSuffix {
     private String domain;
     private Status status;
     private float boost;
+
     public DomainSuffix(String domain, Status status, float boost) {
         this.domain = domain;
         this.status = status;

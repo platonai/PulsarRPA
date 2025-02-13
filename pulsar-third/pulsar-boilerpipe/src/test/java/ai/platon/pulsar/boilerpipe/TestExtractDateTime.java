@@ -1,6 +1,6 @@
 package ai.platon.pulsar.boilerpipe;
 
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
 import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
 import ai.platon.pulsar.boilerpipe.sax.HTMLParser;
@@ -54,7 +54,7 @@ public class TestExtractDateTime {
             System.out.println(StringUtils.substring(e.toString(), 0, 100));
             return;
         }
-        TextDocument doc = parser.getTextDocument();
+        BoiTextDocument doc = parser.getTextDocument();
 
         ChineseNewsExtractor.INSTANCE.process(doc);
 

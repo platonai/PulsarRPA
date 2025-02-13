@@ -10,8 +10,8 @@
 ```kotlin
 BrowserSettings
   .headless()
-  .privacy(4)
-  .maxTabs(12)
+  .maxBrowsers(4)
+  .maxOpenTabs(12)
   .enableUrlBlocking()
 ```
 

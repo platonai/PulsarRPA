@@ -1,6 +1,6 @@
 package ai.platon.pulsar.boilerpipe.filters.simple;
 
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 
@@ -8,7 +8,7 @@ import java.io.PrintWriter;
 
 /**
  * Prints debug information about the current state of the TextDocument. (= calls
- * {@link TextDocument#debugString()}.
+ * {@link BoiTextDocument#debugString()}.
  */
 public final class PrintDebugFilter implements TextBlockFilter {
   /**
@@ -41,7 +41,7 @@ public final class PrintDebugFilter implements TextBlockFilter {
   }
 
   @Override
-  public boolean process(TextDocument doc) throws ProcessingException {
+  public boolean process(BoiTextDocument doc) throws ProcessingException {
     out.println(doc.debugString());
 
     return false;

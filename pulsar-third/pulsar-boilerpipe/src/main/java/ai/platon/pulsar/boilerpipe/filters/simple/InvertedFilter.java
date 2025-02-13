@@ -1,7 +1,7 @@
 package ai.platon.pulsar.boilerpipe.filters.simple;
 
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 
@@ -16,7 +16,7 @@ public final class InvertedFilter implements TextBlockFilter {
   private InvertedFilter() {
   }
 
-  public boolean process(TextDocument doc) throws ProcessingException {
+  public boolean process(BoiTextDocument doc) throws ProcessingException {
 
     List<TextBlock> tbs = doc.getTextBlocks();
     if (tbs.isEmpty()) {

@@ -4,6 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * Predefined page category enumeration
+ *
+ * TODO: distinguish with ai.platon.pulsar.boilerpipe.utils.PageCategory
  */
 public enum PageCategory {
     INDEX, DETAIL, OFFER_LIST, SELLER, REVIEW, PROFILE, SEARCH, MEDIA, BBS, TIEBA, BLOG, UNKNOWN;

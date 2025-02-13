@@ -23,6 +23,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_PAGE_AUTO_EXPORT_LIM
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.event.AbstractEventEmitter
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
@@ -30,7 +31,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.*
 import ai.platon.pulsar.skeleton.common.files.ext.export
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
-import ai.platon.pulsar.skeleton.crawl.common.URLUtil
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -113,7 +114,7 @@ abstract class BrowserEmulatorImplBase(
             return createResponseWithDatum(task, pageDatum)
         }
         
-        val isLocalFile = URLUtil.isLocalFile(task.url)
+        val isLocalFile = UrlUtils.isLocalFile(task.url)
         val ignoreDOMFeatures = isLocalFile || (task.driver as AbstractWebDriver).ignoreDOMFeatures
         // Check whether the source code of the page is intact.
         val integrity = if (ignoreDOMFeatures) HtmlIntegrity.OK else

@@ -60,9 +60,13 @@ abstract class AbstractBrowser(
     override suspend fun findDriver(url: String): WebDriver? {
         return _drivers.values.firstOrNull { it.currentUrl() == url }
     }
-
-    override suspend fun findDrivers(urlRegex: Regex): WebDriver? {
+    
+    override suspend fun findDriver(urlRegex: Regex): WebDriver? {
         return _drivers.values.firstOrNull { urlRegex.matches(it.currentUrl()) }
+    }
+
+    override suspend fun findDrivers(urlRegex: Regex): List<WebDriver> {
+        return _drivers.values.filter { urlRegex.matches(it.currentUrl()) }
     }
 
     override fun destroyDriver(driver: WebDriver) {

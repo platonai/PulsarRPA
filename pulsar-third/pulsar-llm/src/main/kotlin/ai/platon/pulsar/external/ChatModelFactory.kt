@@ -1,6 +1,7 @@
 package ai.platon.pulsar.external
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.warn
 import ai.platon.pulsar.external.impl.ChatModelImpl
 import dev.langchain4j.model.openai.OpenAiChatModel
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel
@@ -47,7 +48,8 @@ object ChatModelFactory {
      *
      * @return The created model.
      */
-    fun getOrCreateOrNull(conf: ImmutableConfig) = getOrCreate(conf)
+    fun getOrCreateOrNull(conf: ImmutableConfig) = kotlin.runCatching { getOrCreate(conf) }
+        .onFailure { warn(this, it.message ?: "Failed to create chat model") }.getOrNull()
 
     private fun getOrCreateModel0(provider: String, modelName: String, apiKey: String): ChatModel {
         val key = "$modelName:$apiKey"
@@ -99,7 +101,7 @@ object ChatModelFactory {
     private fun createDeepSeekChatModel(modelName: String, apiKey: String): ChatModel {
         val lm = OpenAiChatModel.builder()
             .apiKey(apiKey)
-            .baseUrl("https://api.deepseek.com")
+            .baseUrl("https://api.deepseek.com/")
             .modelName(modelName)
             .logRequests(false)
             .logResponses(true)

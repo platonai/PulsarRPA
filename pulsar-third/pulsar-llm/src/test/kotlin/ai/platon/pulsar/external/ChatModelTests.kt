@@ -4,15 +4,14 @@ import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.KConfiguration
 import ai.platon.pulsar.dom.Documents
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.condition.EnabledIf
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
+import org.junit.jupiter.api.Tag
 import kotlin.test.BeforeTest
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-@Ignore("Test only when authorized to LLM provider")
+@Tag("ExternalServiceTest")
 class ChatModelTests {
 
     companion object {
@@ -23,18 +22,24 @@ class ChatModelTests {
         private val clusterAnalysisPrompt = ResourceLoader.readString("prompts/data-expert/fulltext/prompt.p1723107189.6.remarkable.txt")
         private val conf = ImmutableConfig(loadDefaults = true)
         private val isModelConfigured get() = ChatModelFactory.isModelConfigured(conf)
-        private val model = ChatModelFactory.getOrCreateOrNull(conf)
+        private lateinit var model: ChatModel
 
         @BeforeAll
         @JvmStatic
         fun checkConfiguration() {
-            if (!isModelConfigured) {
+            if (isModelConfigured) {
+                model = ChatModelFactory.getOrCreate(conf)
+            } else {
                 println("=========================== LLM NOT CONFIGURED ==========================================")
                 println("> Skip the tests because the API key is not set")
                 println("> Please set the API key in the configuration file or environment variable")
                 println("> The configuration file can be found in: " + KConfiguration.EXTERNAL_RESOURCE_BASE_DIR)
                 println("> All xml files in the directory will be loaded as the configuration file")
             }
+            
+            Assumptions.assumeTrue(isModelConfigured)
+            val response = model.call("这是一个测试，来测试你是否工作正常。计算11的平方，仅返回数字。")
+            Assumptions.assumeTrue("121" == response.content)
         }
     }
 
@@ -46,8 +51,6 @@ class ChatModelTests {
 
     @Test
     fun `should generate answer and return token usage and finish reason stop`() {
-        if (!isModelConfigured) return
-        
         val document = Documents.parse(productHtml, url)
         
         val prompt = "以下是一个电商网站的网页内容，找出商品标题、商品价格："

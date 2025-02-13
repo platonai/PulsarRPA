@@ -28,9 +28,9 @@ class PulsarSystemController {
     fun report(): String {
         val sb = StringBuilder()
         sb.appendLine("Pulsar system reporting")
-        sb.appendLine(driverPoolManager.takeSnapshot(true))
+        sb.appendLine(driverPoolManager.buildStatusString(true))
         sb.appendLine().appendLine()
-        sb.appendLine(privacyManager.takeSnapshot())
+        sb.appendLine(privacyManager.buildStatusString())
         return sb.toString()
     }
 }

@@ -2,7 +2,7 @@ package ai.platon.pulsar.boilerpipe.filters.heuristics;
 
 import ai.platon.pulsar.boilerpipe.document.BlockLabels;
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ManualRules;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
@@ -79,7 +79,7 @@ public final class DocumentTitleMatchClassifier implements TextBlockFilter {
     }
   }
 
-  public boolean process(TextDocument doc) throws ProcessingException {
+  public boolean process(BoiTextDocument doc) throws ProcessingException {
     String contentTitle = extractContentTitleByRule(doc);
     if (contentTitle != null) {
       return true;
@@ -88,7 +88,7 @@ public final class DocumentTitleMatchClassifier implements TextBlockFilter {
     return extractContentTitleByPageTitle(doc);
   }
 
-  public String extractContentTitleByRule(TextDocument doc) {
+  public String extractContentTitleByRule(BoiTextDocument doc) {
     String selector = null;
     for (Map.Entry<String, String> entry : ManualRules.TITLE_RULES.entrySet()) {
       if (doc.getBaseUrl().matches(entry.getKey())) {
@@ -115,7 +115,7 @@ public final class DocumentTitleMatchClassifier implements TextBlockFilter {
     return contentTitle;
   }
 
-  public boolean extractContentTitleByPageTitle(TextDocument doc) {
+  public boolean extractContentTitleByPageTitle(BoiTextDocument doc) {
     if (potentialTitles == null) {
       return false;
     }

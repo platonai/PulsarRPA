@@ -1,14 +1,15 @@
 package ai.platon.pulsar.boilerpipe;
 
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
-import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
+import ai.platon.pulsar.boilerpipe.extractors.DefaultExtractor;
 import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
 import ai.platon.pulsar.boilerpipe.sax.SAXInput;
+import ai.platon.pulsar.common.AppPaths;
 import ai.platon.pulsar.common.ResourceLoader;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 /**
@@ -21,28 +22,52 @@ public class TestExtract {
     public void extract() throws IOException {
         List<String> urls = ResourceLoader.INSTANCE.readAllLines("urls-detail-FetchJob-1022.100818.txt.sorted");
 
-        for (String url : urls) {
+        urls.stream().filter(url -> url.startsWith("http")).forEach(url -> {
             try {
-                if (url.contains("house")) {
-                    continue;
-                }
-                if (url.startsWith("http")) {
-                    extractOne(url);
-                }
+                fetchAndExtract(url);
             } catch (Exception e) {
                 System.out.println("Failed to extract " + url);
-                e.printStackTrace();
             }
+        });
+    }
+
+    public void extractContent(String url, String html) throws Exception {
+        var doc = new SAXInput().parse(url, html);
+
+        var extractor = DefaultExtractor.getInstance();
+//        var extractor = ChineseNewsExtractor.getInstance();
+//        var extractor = ArticleExtractor.getInstance();
+
+        extractor.process(doc);
+
+        System.out.println("--------------");
+        System.out.println("Page Title : ");
+        System.out.println(doc.getPageTitle());
+        System.out.println("Content Title : ");
+        System.out.println(doc.getContentTitle());
+
+        System.out.println("TextContent length : ");
+        System.out.println(doc.getTextContent().length());
+        var path = AppPaths.INSTANCE.getProcTmpTmp("extract-test." + extractor.getClass().getSimpleName() + ".txt");
+        Files.writeString(path, doc.getTextContent());
+        System.out.println("TextContent path : " + path);
+
+        System.out.println("--------------");
+        System.out.println("DebugString : ");
+        if (!doc.getTextContent().isEmpty()) {
+            var author = doc.getField("author");
+            var director = doc.getField("director");
+            var reference = doc.getField("reference");
+            System.out.println("Author : " + author + ", Director : " + director + ", Reference : " + reference);
         }
     }
 
-    public void extractOne(String url) throws Exception {
+    private void fetchAndExtract(String url) throws Exception {
         String html;
         try {
             html = HTMLDownloader.fetch(url);
         } catch (Exception e) {
             System.out.println("Failed to fetch url " + StringUtils.substring(url, 0, 100));
-            e.printStackTrace();
             return;
         }
 
@@ -51,54 +76,23 @@ public class TestExtract {
             return;
         }
 
-        // InputStream is = new ByteArrayInputStream(html.getBytes());
-        TextDocument doc = new SAXInput().parse(url, html);
-//    HTMLParser parser = new HTMLParser(url);
-//
-//    parser.parse(html);
+        var doc = new SAXInput().parse(url, html);
 
-//    TextDocument doc = parser.getTextDocument();
-
-//    System.out.println("\n\n\n\n");
-//    System.out.println(doc.getTextBlocks());
-//
-
-        ChineseNewsExtractor.INSTANCE.process(doc);
-        // new ChineseNewsExtractor().process(doc);
-
-//    download(url);
-
-//    System.out.println(doc.getPageTitle());
-//    System.out.println(doc.getTextContent(true, true));
-//    System.out.println(doc.getHtmlContent());
-//    System.out.println("--------------");
-//    System.out.println("Fields : ");
-//    System.out.println(doc.getFields());
-//    System.out.println("--------------");
-//    System.out.println("DebugString : ");
+        DefaultExtractor.INSTANCE.process(doc);
 
         if (!doc.getTextContent().isEmpty()) {
-            CharSequence author = doc.getField("author");
-            CharSequence director = doc.getField("director");
-            CharSequence reference = doc.getField("reference");
+            var author = doc.getField("author");
+            var director = doc.getField("director");
+            var reference = doc.getField("reference");
             System.out.println("Author : " + author + ", Director : " + director + ", Reference : " + reference);
-            // System.out.println(doc.getHtmlContent());
         }
+    }
 
-//    System.out.println(doc.getTextContent().length());
+    public static void main(String[] args) throws Exception {
+        var extractor = new TestExtract();
 
-        // System.out.println(StringUtils.substring(doc.getTextContent(), 0, 100));
-//    System.out.println("\n\n-----------------\n\n");
-////    System.out.println(StringUtils.substring(doc.getTextContent(), 0, 100));
-//    System.out.println(url);
-//    System.out.println(doc.getTextContent());
-
-        // System.out.println(doc.getTextContent(true, true));
-        // System.out.println(doc.getTextBlocks());
-        // System.out.println(doc.debugString());
-
-        // Also try other extractors!
-        // System.out.println(DefaultExtractor.INSTANCE.getTextContent(url));
-        // System.out.println(CommonExtractors.CANOLA_EXTRACTOR.getTextContent(url));
+        var url = "https://codeblue.galencentre.org/2024/11/upholding-professionalism-honesty-and-integrity-in-medical-education-a-foundation-for-trustworthy-health-care-dr-aida-bustam/";
+        var html = ResourceLoader.INSTANCE.readString("pages/galencentre-org-6be616220e993bb8074084bf71a9cb49.html");
+        extractor.extractContent(url, html);
     }
 }

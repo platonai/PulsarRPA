@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+
+    <property>
+        <name>llm.provider</name>
+        <value>bailian</value>
+    </property>
+
+    <property>
+        <name>llm.name</name>
+        <value>qwen-plus-0806</value>
+    </property>
+
+    <property>
+        <name>llm.apiKey</name>
+        <value>sk-9c68ec4f197e47b7be30132e3ae2fd9e</value>
+    </property>
+
+</configuration>

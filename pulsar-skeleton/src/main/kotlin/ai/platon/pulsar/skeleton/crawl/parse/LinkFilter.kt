@@ -6,8 +6,8 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.skeleton.common.options.LinkOptions
 import ai.platon.pulsar.skeleton.common.options.LinkOptions.Companion.parse
-import ai.platon.pulsar.skeleton.crawl.common.URLUtil
-import ai.platon.pulsar.skeleton.crawl.common.URLUtil.GroupMode
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.GroupMode
 import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebPage
@@ -47,7 +47,7 @@ class LinkFilter(private val crawlFilters: CrawlFilters, val conf: ImmutableConf
     fun reset(page: WebPage) {
         // TODO: LinkOptions.parse() should be very fast and highly optimized, JCommand is not a good way
         linkOptions = parse(page.args.toString(), conf)
-        sourceHost = if (ignoreExternalLinks) URLUtil.getHost(page.url, groupMode) else ""
+        sourceHost = if (ignoreExternalLinks) InternalURLUtil.getHost(page.url, groupMode) else ""
         reparseLinks = page.variables.contains(Name.REPARSE_LINKS)
         noFilter = page.variables.contains(Name.PARSE_NO_LINK_FILTER)
         debugLevel = page.variables.get(Name.PARSE_LINK_FILTER_DEBUG_LEVEL, 0)
@@ -78,7 +78,7 @@ class LinkFilter(private val crawlFilters: CrawlFilters, val conf: ImmutableConf
         if (link.url.length > maxUrlLength) {
             return 112
         }
-        val destHost = URLUtil.getHost(url, groupMode)
+        val destHost = InternalURLUtil.getHost(url, groupMode)
         if (destHost.isNullOrEmpty()) {
             return 104
         }

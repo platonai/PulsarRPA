@@ -132,12 +132,6 @@ object TestResource {
             "http://shop.mogujie.com/detail/1kcnxeu",
             "http://shop.mogujie.com/detail/1lrjy2c"
         )
-        urlGroups["meilishuo"] = arrayOf(
-            "http://www.meilishuo.com/search/catalog/10057053",
-            "http://www.meilishuo.com/search/catalog/10057051",
-            "http://item.meilishuo.com/detail/1lvld0y",
-            "http://item.meilishuo.com/detail/1lwebsw"
-        )
         urlGroups["vip"] = arrayOf(
             "http://category.vip.com/search-1-0-1.html?q=3|29736",
             "https://category.vip.com/search-5-0-1.html?q=3|182725",

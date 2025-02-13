@@ -1,6 +1,6 @@
 package ai.platon.pulsar.boilerpipe.extractors;
 
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
 import ai.platon.pulsar.boilerpipe.sax.SAXInput;
@@ -68,13 +68,13 @@ public interface TextExtractor extends TextBlockFilter {
   }
 
   /**
-   * Extracts text from the given {@link TextDocument} object.
+   * Extracts text from the given {@link BoiTextDocument} object.
    *
-   * @param doc The {@link TextDocument}.
+   * @param doc The {@link BoiTextDocument}.
    * @return The extracted text.
    * @throws ProcessingException
    */
-  default String getText(TextDocument doc) throws ProcessingException {
+  default String getText(BoiTextDocument doc) throws ProcessingException {
     process(doc);
     return doc.getTextContent();
   }

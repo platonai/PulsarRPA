@@ -2,7 +2,7 @@ package ai.platon.pulsar.boilerpipe.filters.heuristics;
 
 import ai.platon.pulsar.boilerpipe.document.BlockLabels;
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 
@@ -21,7 +21,7 @@ public final class LargeBlockSameTagLevelToContentFilter implements TextBlockFil
   private LargeBlockSameTagLevelToContentFilter() {
   }
 
-  public boolean process(final TextDocument doc) throws ProcessingException {
+  public boolean process(final BoiTextDocument doc) throws ProcessingException {
 
     boolean changes = false;
 

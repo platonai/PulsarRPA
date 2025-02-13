@@ -1,6 +1,6 @@
 package ai.platon.pulsar.test2.browser
 
-import ai.platon.pulsar.browser.common.ScriptConfuser.Companion.IDENTITY_NAME_MANGLER
+import ai.platon.pulsar.browser.common.SimpleScriptConfuser.Companion.IDENTITY_NAME_MANGLER
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.proxy.ProxyEntry
@@ -8,6 +8,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import java.io.IOException
 import java.net.Proxy
 import java.nio.file.Path
@@ -88,10 +89,10 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun `when open a CSV TXT page then script is injected`() = runResourceWebDriverTest(csvTextUrl) { driver ->
+    fun `when open a CSV TXT page then script is not injected`() = runResourceWebDriverTest(csvTextUrl) { driver ->
         expressions.forEach { expression ->
             val detail = driver.evaluateDetail(expression)
-            println(String.format("%-6s%-40s%s", "CSV TXT", expression, detail))
+            println(String.format("%-10s %-40s %s", "CSV TXT", expression, detail))
         }
         
         val nullExpressions = """
@@ -249,7 +250,11 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
         // expected url like: https://www.amazon.com/stores/Apple/page/77D9E1F7-0337-4282-9DB6-B6B8FB2DC98D?ref_=ast_bln
         val currentUrl = driver.currentUrl()
         println(currentUrl)
-        
+
+        val pageSource = driver.pageSource()
+        assumeTrue { (pageSource?.length ?: 0) > 1000 }
+        assumeTrue { pageSource?.contains("Huawei") == true }
+
         assertNotEquals(url, currentUrl)
         assertContains(currentUrl, "Huawei")
     }

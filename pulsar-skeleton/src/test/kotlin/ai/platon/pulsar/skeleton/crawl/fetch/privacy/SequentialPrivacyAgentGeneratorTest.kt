@@ -2,11 +2,9 @@ package ai.platon.pulsar.skeleton.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.brief
-import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import org.apache.commons.io.FileUtils
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -14,7 +12,6 @@ import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class SequentialPrivacyAgentGeneratorTest {
     

@@ -70,4 +70,7 @@
         </dependency>
     </dependencies>
 
+    <properties>
+        <langchain4j.version>0.36.2</langchain4j.version>
+    </properties>
 </project>

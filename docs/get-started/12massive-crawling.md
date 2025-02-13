@@ -17,7 +17,7 @@ By combining URLCache and LoadOptions, we can meet the most complex collection r
 In massive crawling scenarios, hardware resources need to be utilized to the extreme. This requires adjusting default settings, parallelizing more privacy entities, and having each browser open more tabs. These two settings determine how many web pages the system can crawl in parallel and are usually limited by the hardware configuration of the machine, especially the amount of memory. We recommend at least 32 GB of memory for massive crawling scenarios.
 
 ```kotlin
-BrowserSettings.privacy(5).maxTabs(15).headless()
+BrowserSettings.maxBrowsers(5).maxOpenTabs(15).headless()
 ```
 
 This article demonstrates how to meet different crawling requirements through different URLCache.

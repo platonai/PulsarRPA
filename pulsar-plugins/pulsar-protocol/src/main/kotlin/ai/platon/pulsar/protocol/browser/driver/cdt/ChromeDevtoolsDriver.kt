@@ -12,7 +12,7 @@ import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.skeleton.crawl.common.URLUtil
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -840,7 +840,7 @@ class ChromeDevtoolsDriver(
         // page url is normalized
         val pageUrl = entry.pageUrl
         val resourceUrl = event.response.url
-        val host = URLUtil.getHost(pageUrl) ?: "unknown"
+        val host = InternalURLUtil.getHost(pageUrl) ?: "unknown"
         val reportDir = messageWriter.reportDir.resolve("trace").resolve(host)
 
         if (!Files.exists(reportDir)) {

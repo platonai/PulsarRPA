@@ -20,6 +20,7 @@ class TestEvents : TestBase() {
     fun setup() {
         val metrics = fetchComponent.coreMetrics
         assertNotNull(metrics)
+
         metrics.fetchTasks.mark(-metrics.fetchTasks.count)
         metrics.successFetchTasks.mark(-metrics.successFetchTasks.count)
         metrics.persists.reset()

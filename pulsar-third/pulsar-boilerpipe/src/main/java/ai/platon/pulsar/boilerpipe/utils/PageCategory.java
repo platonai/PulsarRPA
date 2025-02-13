@@ -7,6 +7,8 @@ import java.util.stream.Stream;
 
 /**
  * Created by vincent on 17-2-13.
+ *
+ * TODO: distinguish with ai.platon.pulsar.persist.metadata.PageCategory
  */
 public enum PageCategory {
   INDEX, DETAIL, SEARCH, MEDIA, BBS, TIEBA, BLOG, UNKNOWN;

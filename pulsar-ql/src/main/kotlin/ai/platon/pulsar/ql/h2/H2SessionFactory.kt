@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2
 
+import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.ql.*
@@ -52,7 +53,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
             // Note: it's proven that we can not just return a h2session, never do this !!!
             // log.info("Context is closed, can not create a Scent SQL session, fallback to H2database to handle this")
             // return h2session
-            throw IllegalStateException("[H2SessionFactory] SQL context is closed, will not create SQL session")
+            throw IllegalApplicationStateException("[H2SessionFactory] SQL context is closed, will not create SQL session")
         }
 
         log.debug("Creating SQL session for h2 connection | {}", ci.url)
