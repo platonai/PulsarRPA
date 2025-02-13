@@ -22,7 +22,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>2.1.1-SNAPSHOT</version>
+    <version>2.1.2-SNAPSHOT</version>
 
     <name>Pulsar RPA</name>
     <description>Engage and automate web interactions at scale.</description>
@@ -47,7 +47,7 @@
         <connection>scm:git:https://github.com/platonai/PulsarRPA.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/PulsarRPA.git</developerConnection>
         <url>https://github.com/platonai/PulsarRPA</url>
-        <tag>v2.1.1-SNAPSHOT</tag>
+        <tag>v2.1.2-SNAPSHOT</tag>
     </scm>
 
     <repositories>
