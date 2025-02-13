@@ -18,25 +18,7 @@ object ChatFunctions {
 
     @UDFunction(description = "Chat with the AI model")
     @JvmStatic
-    fun chat(prompt: String): String {
-        return sqlContext.chat(prompt).content
-    }
-
-    @UDFunction(description = "Chat with the AI model")
-    @JvmStatic
-    fun chat(userMessage: String, systemMessage: String, dom: ValueDom): String {
+    fun chat(userMessage: String, systemMessage: String): String {
         return sqlContext.chat(userMessage, systemMessage).content
-    }
-
-    @UDFunction(description = "Chat with the AI model")
-    @JvmStatic
-    fun chat(dom: ValueDom): String {
-        return sqlContext.chat(dom.element.text()).content
-    }
-
-    @UDFunction(description = "Chat with the AI model")
-    @JvmStatic
-    fun chat(dom: ValueDom, systemMessage: String): String {
-        return sqlContext.chat(dom.element.text(), systemMessage).content
     }
 }

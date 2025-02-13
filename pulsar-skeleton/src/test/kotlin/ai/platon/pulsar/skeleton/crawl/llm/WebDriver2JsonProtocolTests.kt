@@ -3,11 +3,13 @@ package ai.platon.pulsar.skeleton.crawl.llm
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
+@Tag("ExternalServiceTest")
 class WebDriver2JsonProtocolTests {
     
     companion object {

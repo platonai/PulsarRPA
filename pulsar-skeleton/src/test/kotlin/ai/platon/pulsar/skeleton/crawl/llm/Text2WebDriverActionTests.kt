@@ -3,13 +3,12 @@ package ai.platon.pulsar.skeleton.crawl.llm
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import java.nio.file.Files
 import java.nio.file.Paths
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertTrue
+import kotlin.test.*
 
+@Tag("ExternalServiceTest")
 class Text2WebDriverActionTests {
 
     companion object {

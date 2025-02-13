@@ -6,10 +6,12 @@ import ai.platon.pulsar.common.config.KConfiguration
 import ai.platon.pulsar.dom.Documents
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
+@Tag("ExternalServiceTest")
 class ChatModelTests {
 
     companion object {

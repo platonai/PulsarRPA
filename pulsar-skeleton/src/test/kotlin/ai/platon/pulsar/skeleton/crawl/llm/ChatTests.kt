@@ -7,11 +7,13 @@ import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.context.support.ContextDefaults
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.AfterTest
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+@Tag("ExternalServiceTest")
 class ChatTests {
     
     companion object {

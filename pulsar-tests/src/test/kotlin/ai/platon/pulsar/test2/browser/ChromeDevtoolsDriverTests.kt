@@ -8,6 +8,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import java.io.IOException
 import java.net.Proxy
 import java.nio.file.Path
@@ -249,7 +250,11 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
         // expected url like: https://www.amazon.com/stores/Apple/page/77D9E1F7-0337-4282-9DB6-B6B8FB2DC98D?ref_=ast_bln
         val currentUrl = driver.currentUrl()
         println(currentUrl)
-        
+
+        val pageSource = driver.pageSource()
+        assumeTrue { (pageSource?.length ?: 0) > 1000 }
+        assumeTrue { pageSource?.contains("Huawei") == true }
+
         assertNotEquals(url, currentUrl)
         assertContains(currentUrl, "Huawei")
     }
