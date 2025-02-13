@@ -29,4 +29,25 @@ a,b,c,d,e,f,g
     fun json(): String {
         return """{"message": "Hello, World! This is a json."}"""
     }
+
+    @GetMapping("robots.txt", produces = ["application/text"])
+    fun robots(): String {
+        return """
+            User-agent: *
+            Disallow: /exec/obidos/account-access-login
+            Disallow: /exec/obidos/change-style
+            Disallow: /exec/obidos/flex-sign-in
+            Disallow: /exec/obidos/handle-buy-box
+            Disallow: /exec/obidos/tg/cm/member/
+            Disallow: /gp/aw/help/id=sss
+            Disallow: /gp/cart
+            Disallow: /gp/flex
+            Disallow: /gp/product/e-mail-friend
+            Disallow: /gp/product/product-availability
+            Disallow: /gp/product/rate-this-item
+            Disallow: /gp/sign-in
+            Disallow: /gp/reader
+            Disallow: /gp/sitbv3/reader
+        """.trimIndent()
+    }
 }
