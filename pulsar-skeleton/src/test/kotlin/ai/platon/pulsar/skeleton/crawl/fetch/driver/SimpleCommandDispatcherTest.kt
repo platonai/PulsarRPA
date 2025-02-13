@@ -1,4 +1,5 @@
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.SimpleCommandDispatcher
+package ai.platon.pulsar.skeleton.crawl.fetch.driver
+
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.test.Ignore

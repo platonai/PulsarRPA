@@ -297,9 +297,12 @@ class SimpleCommandDispatcher {
 
     companion object {
         /**
-         * Parses a kotlin function call from the input string.
+         * Parses a kotlin function call from the input string, only functions calls with simple arguments
+         * are supported.
          *
-         * This helper function extracts the function name and its arguments from a command string.
+         * This function parses a Kotlin function call string to extract the object name, function name,
+         * and argument list.
+         *
          * Arguments are trimmed and split by commas, and each argument is parsed into a string.
          * The resulting list of strings represents the arguments, regardless of their actual types.
          *
@@ -314,7 +317,7 @@ class SimpleCommandDispatcher {
          * driver.mouseWheelUp(2, 200, 200, 100)
          * ```
          *
-         * For simplification, the following malform cases are also supported:
+         * For simplification, the following malformed function call cases are also supported:
          *
          * ```kotlin
          * driver.open(https://t.tt)
