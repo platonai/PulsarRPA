@@ -277,9 +277,12 @@ open class BrowserSettings(
         @JvmStatic
         fun maxBrowsers(n: Int): Companion {
             if (n <= 0) {
-                throw IllegalArgumentException("The number of privacy context has to be > 0")
+                throw IllegalArgumentException("The number of browser contexts has to be greater than 0")
             }
-            
+            if (n > 20) {
+                System.err.println("The number of browser contexts is too large, it may cause out of disk space")
+            }
+
             System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
             return BrowserSettings
         }
@@ -290,7 +293,10 @@ open class BrowserSettings(
             if (n <= 0) {
                 throw IllegalArgumentException("The number of open tabs has to be > 0")
             }
-            
+            if (n > 20) {
+                System.err.println("The number of open tabs is too large, it may cause out of memory")
+            }
+
             System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")
             return BrowserSettings
         }
