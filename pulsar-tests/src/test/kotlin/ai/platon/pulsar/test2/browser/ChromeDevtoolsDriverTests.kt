@@ -92,7 +92,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     fun `when open a CSV TXT page then script is not injected`() = runResourceWebDriverTest(csvTextUrl) { driver ->
         expressions.forEach { expression ->
             val detail = driver.evaluateDetail(expression)
-            println(String.format("%-6s%-40s%s", "CSV TXT", expression, detail))
+            println(String.format("%-10s %-40s %s", "CSV TXT", expression, detail))
         }
         
         val nullExpressions = """
