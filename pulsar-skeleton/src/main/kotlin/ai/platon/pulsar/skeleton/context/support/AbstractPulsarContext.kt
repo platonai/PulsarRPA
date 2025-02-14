@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -14,11 +13,8 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.CombinedUrlNormalizer
 import ai.platon.pulsar.skeleton.common.urls.NormURL
-import ai.platon.pulsar.skeleton.common.urls.NormUrl
 import ai.platon.pulsar.skeleton.context.PulsarContext
-import ai.platon.pulsar.skeleton.crawl.BrowseEventHandlers
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops
-import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchState
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
@@ -28,7 +24,6 @@ import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarEnvironment
 import ai.platon.pulsar.skeleton.session.PulsarSession
-import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import org.springframework.beans.factory.BeanCreationException
@@ -359,11 +354,29 @@ abstract class AbstractPulsarContext(
     }
 
     /**
+     * Open a web page with a web driver.
+     * */
+    override suspend fun open(url: String, driver: WebDriver, options: LoadOptions): WebPage {
+        require(options.refresh)
+        val normURL = normalize(url, options)
+        require(normURL.options.refresh)
+        return abnormalPage ?: loadComponent.open(normURL, driver)
+    }
+
+    /**
      * Connect to a web page with a web driver.
      * */
     override suspend fun connect(driver: WebDriver, options: LoadOptions): WebPage {
+        // NOTE: the url can be non-standard
         val url = driver.currentUrl()
-        return abnormalPage ?: loadComponent.connect(normalize(url, options), driver)
+
+        val url1 = if (UrlUtils.isBrowserURL(url)) {
+            UrlUtils.browserURLToStandardURL(url)
+        } else {
+            url
+        }
+
+        return abnormalPage ?: loadComponent.connect(normalize(url1, options), driver)
     }
 
     /**

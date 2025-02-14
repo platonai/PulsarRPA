@@ -271,6 +271,25 @@ interface PulsarContext: AutoCloseable {
     fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage>
 
     /**
+     * Open a webpage with options and a web driver
+     *
+     * @param url The url to open
+     * @param options The options
+     * @param driver The web driver
+     * @return The web page
+     * */
+    suspend fun open(url: String, driver: WebDriver, options: LoadOptions): WebPage
+
+    /**
+     * Connect a webpage to a web driver
+     *
+     * @param options The options
+     * @param driver The web driver
+     * @return The web page
+     * */
+    suspend fun connect(driver: WebDriver, options: LoadOptions): WebPage
+
+    /**
      * Load a url with specified options, see [LoadOptions] for all options
      *
      * @param url     The url followed by options
@@ -342,11 +361,6 @@ interface PulsarContext: AutoCloseable {
      * Load a batch of urls asynchronously, the urls are added to the task queue, and will be executed asynchronously
      * */
     fun loadAllAsync(urls: Iterable<NormURL>): List<CompletableFuture<WebPage>>
-
-    /**
-     * Connect to a web driver
-     * */
-    suspend fun connect(driver: WebDriver, options: LoadOptions): WebPage
 
     /**
      * Submit a url, the url will be added to the task queue, and will be executed asynchronously.

@@ -2,6 +2,7 @@ package ai.platon.pulsar.persist;
 
 import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HtmlIntegrity;
+import ai.platon.pulsar.common.ObjectCache;
 import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.browser.BrowserType;
 import ai.platon.pulsar.common.config.VolatileConfig;
@@ -10,6 +11,7 @@ import ai.platon.pulsar.persist.experimental.WebAsset;
 import ai.platon.pulsar.persist.gora.generated.*;
 import ai.platon.pulsar.persist.metadata.*;
 import ai.platon.pulsar.persist.model.*;
+import kotlin.reflect.KClass;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -69,6 +71,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      */
     @NotNull
     private VolatileConfig conf;
+
     /**
      * Web page scope variables
      */
@@ -448,7 +451,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      * @param clazz the class of the variable
      * */
     @Nullable
-    public Object getBeanOrNull(Class<?> clazz) {
+    public Object getBeanOrNull(@NotNull Class<?> clazz) {
         return variables.get(clazz.getName());
     }
     /**

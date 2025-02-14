@@ -19,7 +19,6 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
-import ai.platon.pulsar.skeleton.crawl.PageEvent
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
@@ -167,13 +166,16 @@ abstract class AbstractPulsarSession(
     
     override fun fetchState(page: WebPage, options: LoadOptions) = context.fetchState(page, options)
 
-    override suspend fun connect(driver: WebDriver): WebPage = context.connect(driver, options())
-
-    override suspend fun connect(driver: WebDriver, event: PageEventHandlers): WebPage = context.connect(driver, options("-refresh", event))
-
     override fun open(url: String): WebPage = load(url, "-refresh")
     
-    override fun open(url: String, event: PageEventHandlers): WebPage = load(url, options("-refresh", event))
+    override fun open(url: String, eventHandlers: PageEventHandlers): WebPage = load(url, options("-refresh", eventHandlers))
+
+    override suspend fun open(url: String, driver: WebDriver): WebPage = context.open(url, driver, options("-refresh"))
+
+    override suspend fun open(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage =
+        context.open(url, driver, options("-refresh", eventHandlers))
+
+    override suspend fun connect(driver: WebDriver): WebPage = context.connect(driver, options())
 
     override fun load(url: String): WebPage = load(url, options())
     
