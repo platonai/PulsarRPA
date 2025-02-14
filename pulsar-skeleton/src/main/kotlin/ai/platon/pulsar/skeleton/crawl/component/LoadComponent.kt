@@ -22,11 +22,13 @@ import ai.platon.pulsar.skeleton.common.persist.ext.loadEvent
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.FetchState
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.crawl.common.url.CompletableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.toCompletableListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
@@ -122,6 +124,15 @@ class LoadComponent(
             protocolStatus.isTempMoved -> CheckState(FetchState.TEMP_MOVED, "temp moved")
             else -> getFetchStateForExistPage(page, options)
         }
+    }
+
+    /**
+     * Connect a page to a web driver.
+     * */
+    fun connect(normURL: NormURL, driver: WebDriver): WebPage {
+        val page = createPageShell(normURL)
+        page.putBean(driver)
+        return page
     }
 
     /**

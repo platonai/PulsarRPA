@@ -1,7 +1,5 @@
-
 package ai.platon.pulsar.skeleton.crawl.protocol
 
-import ai.platon.pulsar.common.config.Configurable
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable

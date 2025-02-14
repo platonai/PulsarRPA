@@ -172,8 +172,9 @@ open class PrivacyManagedBrowserFetcher(
      * */
     private fun getSpecifiedWebDriver(page: WebPage): WebDriver? {
         // Specified driver is always used
-        val driver = page.getVar(WebDriver::class.java)
+        val driver = page.getBeanOrNull(WebDriver::class.java)
             ?: page.getVar("WEB_DRIVER") // Old style to retrieve the driver, will be removed in the future
+            ?: page.conf.getBeanOrNull(WebDriver::class)
         return driver as? WebDriver
     }
 }

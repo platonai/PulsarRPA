@@ -16,6 +16,8 @@ import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 

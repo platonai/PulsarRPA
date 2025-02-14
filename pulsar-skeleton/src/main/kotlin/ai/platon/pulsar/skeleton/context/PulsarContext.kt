@@ -11,7 +11,9 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import com.google.common.annotations.Beta
@@ -340,6 +342,11 @@ interface PulsarContext: AutoCloseable {
      * Load a batch of urls asynchronously, the urls are added to the task queue, and will be executed asynchronously
      * */
     fun loadAllAsync(urls: Iterable<NormURL>): List<CompletableFuture<WebPage>>
+
+    /**
+     * Connect to a web driver
+     * */
+    suspend fun connect(driver: WebDriver, options: LoadOptions): WebPage
 
     /**
      * Submit a url, the url will be added to the task queue, and will be executed asynchronously.

@@ -14,16 +14,21 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.CombinedUrlNormalizer
 import ai.platon.pulsar.skeleton.common.urls.NormURL
+import ai.platon.pulsar.skeleton.common.urls.NormUrl
 import ai.platon.pulsar.skeleton.context.PulsarContext
+import ai.platon.pulsar.skeleton.crawl.BrowseEventHandlers
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchState
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.crawl.component.*
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarEnvironment
 import ai.platon.pulsar.skeleton.session.PulsarSession
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import org.springframework.beans.factory.BeanCreationException
@@ -316,7 +321,7 @@ abstract class AbstractPulsarContext(
     
     @Throws(WebDBException::class)
     override fun getContentAsString(url: String): String? = webDbOrNull?.getContentAsString(url)
-    
+
     /**
      * Check if a page exists in the storage.
      * */
@@ -352,9 +357,17 @@ abstract class AbstractPulsarContext(
     override fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
-    
+
     /**
-     * Load an page with specified options, see [LoadOptions] for all options.
+     * Connect to a web page with a web driver.
+     * */
+    override suspend fun connect(driver: WebDriver, options: LoadOptions): WebPage {
+        val url = driver.currentUrl()
+        return abnormalPage ?: loadComponent.connect(normalize(url, options), driver)
+    }
+
+    /**
+     * Load a page with specified options, see [LoadOptions] for all options.
      *
      * @param url     The url which can be followed by arguments.
      * @param options The load options.
@@ -430,7 +443,7 @@ abstract class AbstractPulsarContext(
         startLoopIfNecessary()
         return loadComponentOrNull?.loadAllAsync(urls) ?: listOf()
     }
-    
+
     override fun submit(url: UrlAware): AbstractPulsarContext {
         startLoopIfNecessary()
         if (url.isStandard || url is DegenerateUrl) {
@@ -444,7 +457,7 @@ abstract class AbstractPulsarContext(
         crawlPoolOrNull?.addAll(urls.filter { it.isStandard || it is DegenerateUrl })
         return this
     }
-    
+
     /**
      * Parse the WebPage content using parseComponent.
      */

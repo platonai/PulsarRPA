@@ -23,6 +23,7 @@ import ai.platon.pulsar.skeleton.crawl.PageEvent
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import org.xml.sax.InputSource
@@ -165,11 +166,15 @@ abstract class AbstractPulsarSession(
     override fun exists(url: String): Boolean = ensureActive { context.exists(url) }
     
     override fun fetchState(page: WebPage, options: LoadOptions) = context.fetchState(page, options)
-    
+
+    override suspend fun connect(driver: WebDriver): WebPage = context.connect(driver, options())
+
+    override suspend fun connect(driver: WebDriver, event: PageEventHandlers): WebPage = context.connect(driver, options("-refresh", event))
+
     override fun open(url: String): WebPage = load(url, "-refresh")
     
-    override fun open(url: String, event: PageEvent): WebPage = load(url, options("-refresh", event))
-    
+    override fun open(url: String, event: PageEventHandlers): WebPage = load(url, options("-refresh", event))
+
     override fun load(url: String): WebPage = load(url, options())
     
     override fun load(url: String, args: String): WebPage = load(url, options(args))

@@ -429,6 +429,36 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
+     * Returns the bean to which the specified class is mapped,
+     * or {@code null} if the local bean map contains no mapping for the class.
+     *
+     * @param clazz the class of the variable
+     */
+    public Object getBean(Class<?> clazz) {
+        var bean = getBeanOrNull(clazz);
+        if (bean == null) {
+            throw new NoSuchElementException("No bean found for class " + clazz + " in WebPage");
+        }
+        return bean;
+    }
+    /**
+     * Returns the data to which the specified class is mapped,
+     * or {@code null} if the local bean map contains no mapping for the class.
+     *
+     * @param clazz the class of the variable
+     * */
+    @Nullable
+    public Object getBeanOrNull(Class<?> clazz) {
+        return variables.get(clazz.getName());
+    }
+    /**
+     * Set a page scope temporary java bean.
+     * */
+    public <T> void putBean(@NotNull T bean) {
+        variables.set(bean.getClass().getName(), bean);
+    }
+
+    /**
      * Returns the data to which the specified name is mapped,
      * or {@code null} if the data map contains no mapping for the name.
      *

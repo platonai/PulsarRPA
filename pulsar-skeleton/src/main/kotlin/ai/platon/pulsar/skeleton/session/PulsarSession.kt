@@ -491,6 +491,10 @@ interface PulsarSession : AutoCloseable {
      */
     fun open(url: String, event: PageEventHandlers): WebPage
 
+    suspend fun connect(driver: WebDriver): WebPage
+
+    suspend fun connect(driver: WebDriver, event: PageEventHandlers): WebPage
+
     /**
      * Load a url.
      *
