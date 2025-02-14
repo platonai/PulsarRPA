@@ -135,17 +135,13 @@ open class PrivacyManagedBrowserFetcher(
      * */
     @Throws(Exception::class)
     suspend fun fetchDeferred(task: FetchTask): Response {
-        var driver = task.page.getVar(WebDriver::class.java)
-        if (driver is WebDriver) {
-            return webdriverFetcher.fetchDeferred(task, driver).response
-        }
-        
-        // Old style to retrieve the driver, will be removed in the future
-        driver = task.page.getVar("WEB_DRIVER")
-        if (driver is WebDriver) {
+        // Specified driver is always used and ignore the privacy context
+        val driver = getSpecifiedWebDriver(task.page)
+        if (driver != null) {
             return webdriverFetcher.fetchDeferred(task, driver).response
         }
 
+        // If the driver is not specified, use privacy manager to get a driver
         // @Throws(ProxyException::class, Exception::class)
         return privacyManager.run(task) { _, driver2 -> webdriverFetcher.fetchDeferred(task, driver2) }.response
     }
@@ -169,5 +165,15 @@ open class PrivacyManagedBrowserFetcher(
                 privacyManager.close()
             }
         }
+    }
+
+    /**
+     * Get specified web driver
+     * */
+    private fun getSpecifiedWebDriver(page: WebPage): WebDriver? {
+        // Specified driver is always used
+        val driver = page.getVar(WebDriver::class.java)
+            ?: page.getVar("WEB_DRIVER") // Old style to retrieve the driver, will be removed in the future
+        return driver as? WebDriver
     }
 }
