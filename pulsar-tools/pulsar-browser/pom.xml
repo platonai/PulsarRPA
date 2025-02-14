@@ -33,8 +33,7 @@
             <version>${tyrus.version}</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/javassist/javassist -->
-        <!-- deprecated, use org.javassist:javassist instead -->
+        <!-- https://mvnrepository.com/artifact/org.javassist/javassist -->
         <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
@@ -43,7 +42,9 @@
     </dependencies>
 
     <properties>
-        <javassist.version>3.30.2-GA</javassist.version>
+        <!-- required by org.glassfish.tyrus.client.ClientManager -->
         <tyrus.version>1.13.1</tyrus.version>
+        <!-- Reflect, org.javassist:javassist, required by ProxyClasses -->
+        <javassist.version>3.30.2-GA</javassist.version>
     </properties>
 </project>
