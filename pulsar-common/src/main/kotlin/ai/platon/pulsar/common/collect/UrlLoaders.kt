@@ -7,10 +7,10 @@ import ai.platon.pulsar.common.urls.HyperlinkDatum
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.warnInterruptible
 import com.google.gson.GsonBuilder
+import org.apache.commons.lang3.RandomStringUtils
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
-import kotlin.random.Random
 
 open class LocalFileUrlLoader(val path: Path): OneLoadExternalUrlLoader() {
     private val delimiter = "\t"
@@ -72,5 +72,5 @@ open class TemporaryLocalFileUrlLoader: LocalFileUrlLoader(
     AppPaths.PROC_TMP_TMP_DIR
         .resolve("urls")
         .resolve("TemporaryLocalFileUrlLoader")
-        .resolve("hyperlink-${Random.nextLong()}.txt")
+        .resolve("hyperlink-${RandomStringUtils.randomAlphanumeric(8)}.txt")
 )
