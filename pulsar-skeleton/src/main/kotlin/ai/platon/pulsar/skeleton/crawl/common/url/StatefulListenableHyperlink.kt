@@ -15,7 +15,9 @@ open class StatefulListenableHyperlink(
      * */
     url: String,
     /**
-     * The anchor text
+     * The anchor text is not always available and is not a required field.
+     * It can easily be filled by args by mistake, so we require you to fill this field in the current version.
+     * We plan to move this field to a later position in future versions.
      * */
     text: String = "",
     /**

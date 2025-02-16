@@ -28,11 +28,13 @@ import ai.platon.pulsar.skeleton.common.persist.ext.browseEventHandlers
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.WebDriverFetcher
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverCancellationException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -60,8 +62,13 @@ open class BrowserWebDriverFetcher(
     override suspend fun fetchDeferred(task: FetchTask, driver: WebDriver): FetchResult {
         emit(EventType.willFetch, task.page, driver)
 
-        val result = browserEmulator.visit(task, driver)
-        
+        val result = try {
+            browserEmulator.visit(task, driver)
+        } catch (e: IllegalWebDriverStateException) {
+            logger.warn("Illegal webdriver, cancel the task | {}", e.message)
+            FetchResult.canceled(task)
+        }
+
         emit(EventType.fetched, task.page, driver)
         
         return result

@@ -1,0 +1,207 @@
+{
+  "description": "This is an experimental json protocol for WebDriver",
+  "methods": [
+    {
+      "method": "WebDriver.navigateTo",
+      "params": {
+        "url": "https://example.com"
+      }
+    },
+    {
+      "method": "WebDriver.currentUrl"
+    },
+    {
+      "method": "WebDriver.pageSource"
+    },
+    {
+      "method": "WebDriver.addInitScript",
+      "params": {
+        "script": "console.log('Script injected!');"
+      }
+    },
+    {
+      "method": "WebDriver.evaluate",
+      "params": {
+        "expression": "document.title"
+      }
+    },
+    {
+      "method": "WebDriver.click",
+      "params": {
+        "selector": "button",
+        "count": 1
+      }
+    },
+    {
+      "method": "WebDriver.scrollDown",
+      "params": {
+        "count": 1
+      }
+    },
+    {
+      "method": "WebDriver.captureScreenshot"
+    },
+    {
+      "method": "WebDriver.getCookies"
+    },
+    {
+      "method": "WebDriver.deleteCookies",
+      "params": {
+        "name": "sessionId"
+      }
+    },
+    {
+      "method": "WebDriver.waitForNavigation",
+      "params": {
+        "oldUrl": "https://example.com",
+        "timeout": "PT30S"
+      }
+    },
+    {
+      "method": "WebDriver.setAttribute",
+      "params": {
+        "selector": "button",
+        "attrName": "class",
+        "attrValue": "active"
+      }
+    },
+    {
+      "method": "WebDriver.pause"
+    },
+    {
+      "method": "WebDriver.stop"
+    },
+    {
+      "method": "WebDriver.fill",
+      "params": {
+        "selector": "input[name='q']",
+        "text": "Hello, World!"
+      }
+    },
+    {
+      "method": "WebDriver.press",
+      "params": {
+        "selector": "input[name='q']",
+        "key": "Enter"
+      }
+    },
+    {
+      "method": "WebDriver.waitForSelector",
+      "params": {
+        "selector": "h2.title",
+        "timeout": "PT30S"
+      }
+    },
+    {
+      "method": "WebDriver.exists",
+      "params": {
+        "selector": "h2.title"
+      }
+    },
+    {
+      "method": "WebDriver.isVisible",
+      "params": {
+        "selector": "h2.title"
+      }
+    },
+    {
+      "method": "WebDriver.scrollTo",
+      "params": {
+        "selector": "h2.title"
+      }
+    },
+    {
+      "method": "WebDriver.selectFirstTextOrNull",
+      "params": {
+        "selector": "h2.title"
+      }
+    },
+    {
+      "method": "WebDriver.selectTextAll",
+      "params": {
+        "selector": "h2"
+      }
+    },
+    {
+      "method": "WebDriver.selectFirstAttributeOrNull",
+      "params": {
+        "selector": "h2.title",
+        "attrName": "class"
+      }
+    },
+    {
+      "method": "WebDriver.selectAttributes",
+      "params": {
+        "selector": "h2.title"
+      }
+    },
+    {
+      "method": "WebDriver.selectAttributeAll",
+      "params": {
+        "selector": "h2.title",
+        "attrName": "class",
+        "start": 0,
+        "limit": 1000
+      }
+    },
+    {
+      "method": "WebDriver.setAttributeAll",
+      "params": {
+        "selector": "h2.title",
+        "attrName": "class",
+        "attrValue": "header"
+      }
+    },
+    {
+      "method": "WebDriver.selectHyperlinks",
+      "params": {
+        "selector": "a.product-link",
+        "offset": 1,
+        "limit": 10
+      }
+    },
+    {
+      "method": "WebDriver.selectAnchors",
+      "params": {
+        "selector": "a.product-link",
+        "offset": 1,
+        "limit": 10
+      }
+    },
+    {
+      "method": "WebDriver.selectImages",
+      "params": {
+        "selector": "img.product-image",
+        "offset": 1,
+        "limit": 10
+      }
+    },
+    {
+      "method": "WebDriver.boundingBox",
+      "params": {
+        "selector": "h2.title"
+      }
+    },
+    {
+      "method": "WebDriver.clickablePoint",
+      "params": {
+        "selector": "h2.title"
+      }
+    },
+    {
+      "method": "WebDriver.loadJsoupResource",
+      "params": {
+        "url": "https://example.com"
+      }
+    },
+    {
+      "method": "WebDriver.loadResource",
+      "params": {
+        "url": "https://example.com"
+      }
+    },
+    {
+      "method": "WebDriver.newJsoupSession"
+    }
+  ]
+}

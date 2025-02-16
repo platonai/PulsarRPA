@@ -161,9 +161,9 @@ open class WebDriverPoolManager(
         } catch (e: InterruptedException) {
             warnInterruptible(this, e)
             return null
-        } catch (e: BrowserUnavailableException) {
+        } catch (e: IllegalWebDriverStateException) {
             logger.warn(
-                "Browser unavailable, close the browser | {} | {} | {}",
+                "Web driver unavailable, close the browser | {} | {} | {}",
                 task.browserId, e.message, task.page.url
             )
             closeBrowserAccompaniedDriverPoolGracefully(task.browserId, Duration.ofSeconds(10))

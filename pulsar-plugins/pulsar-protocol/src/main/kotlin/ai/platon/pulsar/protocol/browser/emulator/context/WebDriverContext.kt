@@ -26,7 +26,7 @@ import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserUnavailableException
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
@@ -96,7 +96,7 @@ open class WebDriverContext(
             driverPoolManager.run(browserId, task) {
                 browseFun(task, it)
             } ?: FetchResult.crawlRetry(task, "Null response from driver pool manager, it might be closed")
-        } catch (e: BrowserUnavailableException) {
+        } catch (e: IllegalWebDriverStateException) {
             logger.warn("Browser unavailable, close it and retry task ${task.page.id} in crawl scope | {} | {} | {}",
                 browserId, e.message, task.page.url)
             driverPoolManager.closeBrowserAccompaniedDriverPoolGracefully(browserId, DRIVER_FAST_CLOSE_TIME_OUT)

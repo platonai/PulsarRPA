@@ -32,7 +32,7 @@ class TestEvents : TestBase() {
         assertNotNull(metrics)
 
         val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
-        val hyperlink = StatefulListenableHyperlink(url, args = "-i 0s")
+        val hyperlink = StatefulListenableHyperlink(url, "", args = "-i 0s")
 
         val firedEvents = mutableListOf<String>()
         val eventHandler = hyperlink.event.loadEventHandlers

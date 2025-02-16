@@ -63,9 +63,9 @@ open class InteractiveBrowserEmulator(
     immutableConfig: ImmutableConfig,
 ) : BrowserEmulator,
     BrowserEmulatorImplBase(driverPoolManager.driverSettings, responseHandler, immutableConfig) {
-    private val logger = getLogger(this)
-    private val tracer = getTracer(this)
-    private val taskLogger = getLogger(this, ".Task")
+    private val logger = getLogger(InteractiveBrowserEmulator::class)
+    private val tracer = getTracerOrNull(InteractiveBrowserEmulator::class)
+    private val taskLogger = getLogger(InteractiveBrowserEmulator::class, ".Task")
     
     private val numDeferredNavigates by lazy { MetricsSystem.reg.meter(this, "deferredNavigates") }
 
@@ -85,12 +85,10 @@ open class InteractiveBrowserEmulator(
      * @param driver The web driver
      * @return The result of this fetch
      * */
-    @Throws(Exception::class)
+    @Throws(WebDriverException::class)
     override suspend fun visit(task: FetchTask, driver: WebDriver): FetchResult {
-        return takeIf { isActive }?.browseWithDriver(task, driver) ?: FetchResult.canceled(
-            task,
-            "Inactive interactive browser emulator"
-        )
+        return takeIf { isActive }?.browseWithDriver(task, driver)
+            ?: FetchResult.canceled(task, "Inactive browser emulator")
     }
     
     /**
@@ -277,11 +275,11 @@ open class InteractiveBrowserEmulator(
         } catch (e: WebDriverCancellationException) {
             // The web driver is canceled
             response = ForwardingResponse.canceled(task.page)
-        } catch (e: SessionLostException) {
-            logger.warn("Web driver session #{} is lost | {}", e.driver?.id, e.brief())
+        } catch (e: IllegalWebDriverStateException) {
+            logger.warn("Web driver #{} is lost | {}", e.driver?.id, e.brief())
             driver.retire()
             exception = e
-            response = ForwardingResponse.privacyRetry(task.page, "Web driver session lost")
+            response = ForwardingResponse.privacyRetry(task.page, "Web driver lost")
         } catch (e: WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 logger.warn("Web driver is disconnected - {}", e.brief())

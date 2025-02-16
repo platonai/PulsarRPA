@@ -17,7 +17,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-open class MockListenableHyperlink(url: String): ListenableHyperlink(url) {
+open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
     val sequencer = AtomicInteger()
     val triggeredEvents = mutableListOf<String>()
     val expectedEvents = listOf(
@@ -125,7 +125,7 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url) {
     fun await() = isDone.await()
 }
 
-open class MockDegeneratedListenableHyperlink : ListenableHyperlink(""), DegenerateUrl {
+open class MockDegeneratedListenableHyperlink : ListenableHyperlink("", ""), DegenerateUrl {
     val sequencer = AtomicInteger()
     val triggeredEvents = mutableListOf<String>()
     val expectedEvents = listOf(

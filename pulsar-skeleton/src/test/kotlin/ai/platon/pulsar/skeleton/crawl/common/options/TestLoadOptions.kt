@@ -284,7 +284,7 @@ class TestLoadOptions {
     @Test
     fun testNormalizeHyperlinkOptions() {
         val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
-        val hyperlink = StatefulListenableHyperlink(url, args = "-i 0s")
+        val hyperlink = StatefulListenableHyperlink(url, "", args = "-i 0s")
 
         val normURL = i.normalize(hyperlink)
         assertEquals(0, normURL.options.expires.seconds)

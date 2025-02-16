@@ -169,7 +169,7 @@ class BatchFetchComponent(
 
         if (lazyTasks.isNotEmpty()) {
             val mode = options.fetchMode
-            val links = lazyTasks.map { NormURL(it, options) }.map { Hyperlink(it.spec, args = it.args) }
+            val links = lazyTasks.map { NormURL(it, options) }.map { Hyperlink(it.spec, "", args = it.args) }
             globalCache.urlPool.normalCache.nReentrantQueue.addAll(links)
             if (logger.isDebugEnabled) {
                 logger.debug("Committed {} lazy tasks in mode {}", lazyTasks.size, mode)
