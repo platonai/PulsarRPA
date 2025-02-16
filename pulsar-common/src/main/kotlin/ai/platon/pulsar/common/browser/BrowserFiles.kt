@@ -57,7 +57,15 @@ object BrowserFiles {
     private val contextGroups = ConcurrentHashMap<String, ContextGroup>()
     
     private val cleanedUserDataDirs = ConcurrentSkipListSet<Path>()
-    
+
+    /**
+     * Compute the next sequential test context directory.
+     * A typical context directory is like: /tmp/pulsar-vincent/context/group/test/cx.1
+     *
+     * @param fingerprint The fingerprint
+     * @param maxAgents The maximum number of available agents, every agent has its own context directory
+     * @return The next sequential context directory
+     * */
     @Throws(IOException::class)
     @Synchronized
     fun computeTestContextDir(fingerprint: Fingerprint = Fingerprint.DEFAULT, maxAgents: Int = 10): Path {
@@ -67,6 +75,15 @@ object BrowserFiles {
         }
     }
 
+    /**
+     * Compute the next sequential context directory.
+     * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/cx.1
+     *
+     * @param group The group name, default is "default"
+     * @param fingerprint The fingerprint
+     * @param maxAgents The maximum number of available agents, every agent has its own context directory
+     * @return The next sequential context directory
+     * */
     @Throws(IOException::class)
     @Synchronized
     fun computeNextSequentialContextDir(
@@ -220,40 +237,6 @@ object BrowserFiles {
             .forEach { contextGroup.add(it) }
 
         return contextGroup.iterator.next()
-    }
-
-    /**
-     * Compute the next sequential context directory.
-     * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/cx.1
-     * */
-    @Throws(IOException::class)
-    private fun computeNextSequentialContextDir0Old(group: String, fingerprint: Fingerprint, maxAgents: Int, channel: FileChannel): Path {
-        require(channel.isOpen) { "The lock file channel is closed" }
-        
-        val prefix = CONTEXT_DIR_PREFIX
-        val groupBaseDir = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve(group).resolve(fingerprint.browserType.name)
-        Files.createDirectories(groupBaseDir)
-        val contextGroup = contextGroups.computeIfAbsent(group) { ContextGroup(group) }
-        
-        Files.list(groupBaseDir)
-            .filter { Files.isDirectory(it) && it.fileName.toString().startsWith(prefix) }
-            .forEach { contextGroup.add(it) }
-        
-        // logger.info("contextGroup.size: ${contextGroup.size} maxContexts: $maxContexts")
-        
-        if (contextGroup.size >= maxAgents) {
-            return contextGroup.iterator.next()
-        }
-        
-        val contextCount = computeContextCount(groupBaseDir, prefix, channel)
-        
-        val fileName = String.format("%s%s", prefix, contextCount)
-        val path = groupBaseDir.resolve(fileName)
-        Files.createDirectories(path)
-        
-        logger.info("New privacy context dir: $fileName contextGroup.size: ${contextGroup.size} maxAgents: $maxAgents")
-        
-        return path
     }
 
     /**
