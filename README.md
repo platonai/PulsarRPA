@@ -192,14 +192,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-bom</artifactId>
-  <version>2.1.2-SNAPSHOT</version>
+  <version>2.2.0-SNAPSHOT</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-bom:2.1.2-SNAPSHOT")
+implementation("ai.platon.pulsar:pulsar-bom:2.2.0-SNAPSHOT")
 ```
 
 You can clone the template project from github.com: [kotlin](https://github.com/platonai/pulsar-kotlin-template), [java-11](https://github.com/platonai/pulsar-java-template), [java-17](https://github.com/platonai/pulsar-java-17-template).
