@@ -14,6 +14,7 @@ import java.time.MonthDay
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.io.path.exists
+import kotlin.io.path.notExists
 
 internal class ContextGroup(val group: String) {
     
@@ -194,13 +195,39 @@ object BrowserFiles {
             cleanedUserDataDirs.add(dirToDelete)
         }
     }
-    
+
     /**
      * Compute the next sequential context directory.
      * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/cx.1
      * */
     @Throws(IOException::class)
     private fun computeNextSequentialContextDir0(group: String, fingerprint: Fingerprint, maxAgents: Int, channel: FileChannel): Path {
+        require(channel.isOpen) { "The lock file channel is closed" }
+
+        val prefix = CONTEXT_DIR_PREFIX
+        val groupBaseDir = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve(group).resolve(fingerprint.browserType.name)
+
+        val expectedContextPaths = IntRange(1, maxAgents)
+            .map { String.format("%s%s", prefix, it) }
+            .map { groupBaseDir.resolve(it) }
+        expectedContextPaths.filter { it.notExists() }.forEach {
+            Files.createDirectories(it)
+        }
+
+        val contextGroup = contextGroups.computeIfAbsent(group) { ContextGroup(group) }
+        Files.list(groupBaseDir)
+            .filter { Files.isDirectory(it) && it.fileName.toString().startsWith(prefix) }
+            .forEach { contextGroup.add(it) }
+
+        return contextGroup.iterator.next()
+    }
+
+    /**
+     * Compute the next sequential context directory.
+     * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/cx.1
+     * */
+    @Throws(IOException::class)
+    private fun computeNextSequentialContextDir0Old(group: String, fingerprint: Fingerprint, maxAgents: Int, channel: FileChannel): Path {
         require(channel.isOpen) { "The lock file channel is closed" }
         
         val prefix = CONTEXT_DIR_PREFIX

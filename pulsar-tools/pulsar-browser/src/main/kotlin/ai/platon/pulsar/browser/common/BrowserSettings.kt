@@ -129,7 +129,6 @@ open class BrowserSettings(
          *
          * PULSAR_CHROME is the only supported browser currently.
          *
-         * @param maxAgents The maximum number of sequential privacy agents, the active privacy contexts is chosen from them.
          * @return the BrowserSettings itself
          * */
         @JvmStatic
@@ -143,7 +142,7 @@ open class BrowserSettings(
          *
          * PULSAR_CHROME is the only supported browser currently.
          *
-         * @param maxAgents The maximum number of sequential privacy agents, the active privacy contexts are chosen from them.
+         * @param maxAgents The maximum number of sequential agents, the active agents are chosen from them.
          * @return the BrowserSettings itself
          * */
         @JvmStatic

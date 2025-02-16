@@ -13,16 +13,26 @@ class BrowserFilesTests {
     private val testDir = AppPaths.CONTEXT_TMP_DIR.resolve("test")
     private val testSuiteDir = testDir.resolve("BrowserFilesTests")
 
+    private val group = "BrowserFilesTests2"
+    private val groupBaseDir = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve("BrowserFilesTests2")
+    private val contextBaseDir = groupBaseDir.resolve(BrowserType.PULSAR_CHROME.name)
+
     @BeforeTest
     fun setup() {
         Files.createDirectories(testDir)
         assertTrue { Files.exists(testDir) }
+
+        Files.createDirectories(contextBaseDir)
+        assertTrue { Files.exists(contextBaseDir) }
     }
     
     @AfterTest
     fun tearDown() {
         FileUtils.deleteDirectory(testDir.toFile())
         assertTrue { !Files.exists(testDir) }
+
+        FileUtils.deleteDirectory(groupBaseDir.toFile())
+        assertTrue { !Files.exists(groupBaseDir) }
     }
     
     @Test
@@ -41,44 +51,33 @@ class BrowserFilesTests {
     
     @Test
     fun `when computeNextSequentialContextDir then next sequential context dir is created`() {
-        val group = "BrowserFilesTests2"
-        val groupBaseDir = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve("BrowserFilesTests2")
-        val contextBaseDir = groupBaseDir.resolve(BrowserType.PULSAR_CHROME.name)
-        Files.createDirectories(contextBaseDir)
-        assertTrue { Files.exists(contextBaseDir) }
-        
         val path = BrowserFiles.computeNextSequentialContextDir(group)
         assertTrue("directory should exists: $contextBaseDir") { Files.exists(contextBaseDir) }
         assertTrue("directory should exists: $path") { Files.exists(path) }
-        
-        FileUtils.deleteDirectory(groupBaseDir.toFile())
-        assertTrue { !Files.exists(groupBaseDir) }
     }
-    
+
+    @Test
+    fun `when computeNextSequentialContextDir twice then they are not the same `() {
+        val numAgents = 13
+        val path1 = BrowserFiles.computeNextSequentialContextDir(group, maxAgents = numAgents)
+        val path2 = BrowserFiles.computeNextSequentialContextDir(group, maxAgents = numAgents)
+        assertTrue { path1 != path2 }
+    }
+
     @Test
     fun `when parallel computeNextSequentialContextDir then multiple context dirs are created`() {
-        val group = "BrowserFilesTests2"
-        val groupBaseDir = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve("BrowserFilesTests2")
-        val contextBaseDir = groupBaseDir.resolve(BrowserType.PULSAR_CHROME.name)
-        
-        Files.createDirectories(contextBaseDir)
-        assertTrue { Files.exists(contextBaseDir) }
-        
         val numAgents = 13
         IntRange(1, 100).toList().parallelStream().forEach {
             val path = BrowserFiles.computeNextSequentialContextDir(group, maxAgents = numAgents)
             assertTrue { Files.exists(path) }
         }
-        
+
         assertTrue { Files.exists(contextBaseDir.resolve("cx.1")) }
         assertTrue { Files.exists(contextBaseDir.resolve("cx.13")) }
-        
+
         IntRange(14, 110).forEach {
             assertFalse { Files.exists(contextBaseDir.resolve("cx.$it")) }
         }
-        
-        FileUtils.deleteDirectory(groupBaseDir.toFile())
-        assertTrue { !Files.exists(groupBaseDir) }
     }
     
     private fun deleteTemporaryUserDataDirWithLock(userDataDir: Path) {
