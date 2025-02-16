@@ -787,6 +787,29 @@ object UrlUtils {
 
 
     /**
+     * Indicates whether this domain name represents a *public suffix*, as defined by the Mozilla
+     * Foundation's [Public Suffix List](http://publicsuffix.org/) (PSL). A public suffix
+     * is one under which Internet users can directly register names, such as `com`, `co.uk` or `pvt.k12.wy.us`. Examples of domain names that are *not* public suffixes
+     * include `google.com`, `foo.co.uk`, and `myblog.blogspot.com`.
+     *
+     *
+     * Public suffixes are a proper superset of [registry suffixes][.isRegistrySuffix].
+     * The list of public suffixes additionally contains privately owned domain names under which
+     * Internet users can register subdomains. An example of a public suffix that is not a registry
+     * suffix is `blogspot.com`. Note that it is true that all public suffixes *have*
+     * registry suffixes, since domain name registries collectively control all internet domain names.
+     *
+     *
+     * For considerations on whether the public suffix or registry suffix designation is more
+     * suitable for your application, see [this article](https://github.com/google/guava/wiki/InternetDomainNameExplained).
+     *
+     * @return `true` if this domain name appears exactly on the public suffix list
+     */
+    fun isPublicSuffix(domain: String): Boolean {
+        return InternetDomainName.from(domain).isPublicSuffix
+    }
+
+    /**
      * Get the host's public suffix. For example, co.uk, com, etc.
      *
      * @since 6.0
@@ -801,6 +824,19 @@ object UrlUtils {
      */
     fun getPublicSuffix(url: URL): String? {
         return InternetDomainName.from(url.host).publicSuffix()?.toString()
+    }
+    /**
+     * Indicates whether this domain name is composed of exactly one subdomain component followed by a
+     * {@linkplain #isPublicSuffix() public suffix}. For example, returns {@code true} for {@code
+     * google.com} {@code foo.co.uk}, and {@code myblog.blogspot.com}, but not for {@code
+     * www.google.com}, {@code co.uk}, or {@code blogspot.com}.
+     *
+     * <p>This method can be used to determine whether a domain is probably the highest level for
+     * which cookies may be set, though even that depends on individual browsers' implementations of
+     * cookie controls. See <a href="http://www.ietf.org/rfc/rfc2109.txt">RFC 2109</a> for details.
+     */
+    fun isTopPrivateDomain(url: URL): Boolean {
+        return InternetDomainName.from(url.host).isTopPrivateDomain
     }
 
     /**
