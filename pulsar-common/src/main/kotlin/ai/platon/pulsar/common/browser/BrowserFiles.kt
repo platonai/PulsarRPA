@@ -233,7 +233,9 @@ object BrowserFiles {
 
         val contextGroup = contextGroups.computeIfAbsent(group) { ContextGroup(group) }
         Files.list(groupBaseDir)
-            .filter { Files.isDirectory(it) && it.fileName.toString().startsWith(prefix) }
+            .filter { Files.isDirectory(it) }
+            .filter { it.fileName.toString().startsWith(prefix) }
+            .filter { it in expectedContextPaths }
             .forEach { contextGroup.add(it) }
 
         return contextGroup.iterator.next()
