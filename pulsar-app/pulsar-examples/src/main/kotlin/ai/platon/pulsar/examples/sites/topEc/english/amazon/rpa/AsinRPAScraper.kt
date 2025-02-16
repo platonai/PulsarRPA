@@ -43,7 +43,7 @@ class AsinRPAScraper {
     }
 
     private fun createASINHyperlink(domain: String, asinUrl: String): ListenableHyperlink {
-        val hyperlink = ListenableHyperlink(asinUrl, args = asinLoadArgs)
+        val hyperlink = ListenableHyperlink(asinUrl, "", args = asinLoadArgs)
         val be = hyperlink.event.browseEventHandlers
 
         be.onDocumentSteady.addLast { page, driver ->

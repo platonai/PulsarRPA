@@ -20,7 +20,7 @@ class PulsarCrawler(
     @PostConstruct
     fun generate() {
         val resource = "seeds/amazon/best-sellers/leaf-categories.txt"
-        LinkExtractors.fromResource(resource).mapTo(urlCache.nReentrantQueue) { Hyperlink(it, args = "-i 1s") }
+        LinkExtractors.fromResource(resource).mapTo(urlCache.nReentrantQueue) { Hyperlink(it, "", args = "-i 1s") }
     }
 }
 

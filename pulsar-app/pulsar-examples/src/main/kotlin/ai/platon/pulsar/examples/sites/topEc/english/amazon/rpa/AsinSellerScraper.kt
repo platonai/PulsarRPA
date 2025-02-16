@@ -65,7 +65,7 @@ class AsinSellerScraper {
     }
 
     fun createASINHyperlink(domain: String, asinUrl: String): ListenableHyperlink {
-        val hyperlink = ListenableHyperlink(asinUrl, args = "-i 5s -parse -requireSize 800000")
+        val hyperlink = ListenableHyperlink(asinUrl, "", args = "-i 5s -parse -requireSize 800000")
         val be = hyperlink.event.browseEventHandlers
 
         be.onWillComputeFeature.addLast { page, driver ->
@@ -156,7 +156,7 @@ class AsinSellerScraper {
         val extractedSellerUrls = rs.getArray("buy_box_seller_id").array as Array<Object>
         val sellerLinks = extractedSellerUrls.map { it.toString() }.filter { UrlUtils.isStandard(it) }
             .mapNotNull { href ->
-                AmazonUrls.normalizeSellerUrl(href)?.let { Hyperlink(it, href = href, referrer = asinUrl) }
+                AmazonUrls.normalizeSellerUrl(href)?.let { Hyperlink(it, "", href = href, referrer = asinUrl) }
             }
         sellerLinks.mapTo(collectedSellerUrls) { it.url }
 

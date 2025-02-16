@@ -22,8 +22,8 @@ class TestUrlNormalizer {
     val options1 = LoadOptions.parse(args1, conf)
     val options2 = LoadOptions.parse(args2, conf)
 
-    val url1 = Hyperlink(EXAMPLE_URL, args = args1)
-    val url2 = Hyperlink(EXAMPLE_URL, args = args2)
+    val url1 = Hyperlink(EXAMPLE_URL, "", args = args1)
+    val url2 = Hyperlink(EXAMPLE_URL, "", args = args2)
 
     @Test
     fun testMerge() {

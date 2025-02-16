@@ -59,10 +59,10 @@ object BrowserFiles {
     
     @Throws(IOException::class)
     @Synchronized
-    fun computeTestContextDir(fingerprint: Fingerprint = Fingerprint.DEFAULT): Path {
+    fun computeTestContextDir(fingerprint: Fingerprint = Fingerprint.DEFAULT, maxAgents: Int = 10): Path {
         val lockFile = AppPaths.BROWSER_TMP_DIR_LOCK
         return runWithFileLock(lockFile) { channel ->
-            computeNextSequentialContextDir0("test", fingerprint, 5, channel = channel)
+            computeNextSequentialContextDir0("test", fingerprint, maxAgents, channel = channel)
         }
     }
 
@@ -224,7 +224,7 @@ object BrowserFiles {
         val path = groupBaseDir.resolve(fileName)
         Files.createDirectories(path)
         
-        logger.info("New privacy context dir: $fileName maxAgents: $maxAgents")
+        logger.info("New privacy context dir: $fileName contextGroup.size: ${contextGroup.size} maxAgents: $maxAgents")
         
         return path
     }

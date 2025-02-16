@@ -36,14 +36,14 @@ fun main() {
     // Load the portal page and then load all links specified by `-outLink`.
     // Option `-outLink` specifies the cssSelector to select links in the portal page to load.
     // Option `-topLinks` specifies the maximal number of links selected by `-outLink`.
-    val hyperlink = Hyperlink(url, args = "-expires 10s -itemExpires 10s")
+    val hyperlink = Hyperlink(url, "", args = "-expires 10s -itemExpires 10s")
     val pages = session.loadOutPages(hyperlink, "-outLink a[href~=/dp/] -topLinks 5")
     println("Hyperlink's out pages are loaded | " + pages.size)
 
     // Load the portal page and submit the out links specified by `-outLink` to the URL pool.
     // Option `-outLink` specifies the cssSelector to select links in the portal page to submit.
     // Option `-topLinks` specifies the maximal number of links selected by `-outLink`.
-    val hyperlink2 = Hyperlink(url, args = "-expires 1d -itemExpires 7d")
+    val hyperlink2 = Hyperlink(url, "", args = "-expires 1d -itemExpires 7d")
     session.submitForOutPages(hyperlink2, "-outLink a[href~=/dp/] -topLinks 5")
 
     //
@@ -62,7 +62,7 @@ fun main() {
     //
 
     // Load a ListenableHyperlink so we can register various event handlers
-    val listenableLink = ListenableHyperlink(url)
+    val listenableLink = ListenableHyperlink(url, "")
     listenableLink.event.browseEventHandlers.onDidInteract.addLast { pg, driver ->
         println("Interaction finished " + page.url)
     }
