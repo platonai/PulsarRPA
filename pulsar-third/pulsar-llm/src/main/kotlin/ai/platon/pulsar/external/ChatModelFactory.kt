@@ -41,7 +41,8 @@ object ChatModelFactory {
      * @param apiKey The API key to use.
      * @return The created model.
      */
-    fun getOrCreate(provider: String, modelName: String, apiKey: String) = getOrCreateModel0(provider, modelName, apiKey)
+    fun getOrCreate(provider: String, modelName: String, apiKey: String) =
+        getOrCreateModel0(provider, modelName, apiKey)
 
     /**
      * Create a default model.
@@ -50,6 +51,12 @@ object ChatModelFactory {
      */
     fun getOrCreateOrNull(conf: ImmutableConfig) = kotlin.runCatching { getOrCreate(conf) }
         .onFailure { warn(this, it.message ?: "Failed to create chat model") }.getOrNull()
+
+    fun getOrCreateOpenAICompatibleModel(modelName: String, apiKey: String, baseUrl: String): ChatModel? {
+        val key = "$modelName:$apiKey:$baseUrl"
+        return kotlin.runCatching { createOpenAICompatibleModel0(modelName, apiKey, baseUrl) }
+            .onFailure { warn(this, it.message ?: "Failed to create chat model") }.getOrNull()
+    }
 
     private fun getOrCreateModel0(provider: String, modelName: String, apiKey: String): ChatModel {
         val key = "$modelName:$apiKey"
@@ -107,7 +114,7 @@ object ChatModelFactory {
             .logRequests(false)
             .logResponses(true)
             .maxRetries(2)
-            .timeout(Duration.ofSeconds(60))
+            .timeout(Duration.ofSeconds(90))
             .build()
         return ChatModelImpl(lm)
     }
@@ -125,7 +132,7 @@ object ChatModelFactory {
             .logRequests(false)
             .logResponses(true)
             .maxRetries(2)
-            .timeout(Duration.ofSeconds(60))
+            .timeout(Duration.ofSeconds(90))
             .build()
         return ChatModelImpl(lm)
     }
@@ -135,7 +142,7 @@ object ChatModelFactory {
      *
      * @see https://github.com/deepseek-ai/DeepSeek-V2/issues/18
      * */
-    private fun createOpenAICompatibleChatModel(modelName: String, apiKey: String, baseUrl: String): ChatModel {
+    private fun createOpenAICompatibleModel0(modelName: String, apiKey: String, baseUrl: String): ChatModel {
         val lm = OpenAiChatModel.builder()
             .apiKey(apiKey)
             .baseUrl(baseUrl)
