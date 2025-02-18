@@ -13,14 +13,14 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object ChatModelFactory {
     private val models = ConcurrentHashMap<String, ChatModel>()
-    
+
     fun isModelConfigured(conf: ImmutableConfig): Boolean {
         val llm = conf["llm.name"]
         val apiKey = conf["llm.apiKey"]
-        
+
         return llm != null && apiKey != null
     }
-    
+
     /**
      * Create a default model.
      *
@@ -32,7 +32,7 @@ object ChatModelFactory {
         val apiKey = conf["llm.apiKey"] ?: throw IllegalArgumentException("llm.apiKey is not set")
         return getOrCreate(provider, modelName, apiKey)
     }
-    
+
     /**
      * Create a model.
      *
@@ -42,7 +42,7 @@ object ChatModelFactory {
      * @return The created model.
      */
     fun getOrCreate(provider: String, modelName: String, apiKey: String) = getOrCreateModel0(provider, modelName, apiKey)
-    
+
     /**
      * Create a default model.
      *
@@ -61,6 +61,7 @@ object ChatModelFactory {
             "zhipu" -> createZhipuChatModel(apiKey)
             "bailian" -> createBaiLianChatModel(modelName, apiKey)
             "deepseek" -> createDeepSeekChatModel(modelName, apiKey)
+            "volcengine" -> createVolcengineChatModel(modelName, apiKey)
             else -> createDeepSeekChatModel(modelName, apiKey)
         }
     }
@@ -110,7 +111,25 @@ object ChatModelFactory {
             .build()
         return ChatModelImpl(lm)
     }
-    
+
+    /**
+     * Volcengine API is compatible with OpenAI API, so it's OK to use OpenAIChatModel.
+     *
+     * @see <a href='https://www.volcengine.com/docs/82379/1399008'>快速入门-调用模型服务</a>
+     * */
+    private fun createVolcengineChatModel(modelName: String, apiKey: String): ChatModel {
+        val lm = OpenAiChatModel.builder()
+            .apiKey(apiKey)
+            .baseUrl("https://ark.cn-beijing.volces.com/api/v3")
+            .modelName(modelName)
+            .logRequests(false)
+            .logResponses(true)
+            .maxRetries(2)
+            .timeout(Duration.ofSeconds(60))
+            .build()
+        return ChatModelImpl(lm)
+    }
+
     /**
      * DeepSeek API is compatible with OpenAI API, so it's OK to use OpenAIChatModel.
      *

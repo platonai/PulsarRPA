@@ -51,7 +51,7 @@ open class ChatModelImpl(
                 langchainModel.generate(um, sm)
             }
         } catch (e: Exception) {
-            logger.warn("Model call interrupted. | {}", e.message)
+            logger.warn("Model call failure | {} | {}", langchainModel.javaClass.simpleName, e.message)
             return ModelResponse("", ResponseState.OTHER)
         }
         
@@ -65,7 +65,8 @@ open class ChatModelImpl(
             FinishReason.CONTENT_FILTER -> ResponseState.CONTENT_FILTER
             else -> ResponseState.OTHER
         }
-        return ModelResponse(response.content().text(), state, tokenUsage)
+
+        return ModelResponse(response.content().text().trim(), state, tokenUsage)
     }
     
     /**
