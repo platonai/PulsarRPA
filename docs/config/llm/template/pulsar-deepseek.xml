@@ -15,7 +15,7 @@
 
     <property>
         <name>llm.apiKey</name>
-        <value>sk-2a9f95d73ad04238b2932c18da057139</value>
+        <value>YOUR-API-KEY-LIKE-THIS-sk-2a9f95d73ad04438b2232c18da051139</value>
     </property>
 
 </configuration>

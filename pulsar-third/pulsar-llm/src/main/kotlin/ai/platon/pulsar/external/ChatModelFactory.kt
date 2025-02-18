@@ -61,6 +61,7 @@ object ChatModelFactory {
             "zhipu" -> createZhipuChatModel(apiKey)
             "bailian" -> createBaiLianChatModel(modelName, apiKey)
             "deepseek" -> createDeepSeekChatModel(modelName, apiKey)
+            "volcengine" -> createVolcengineChatModel(modelName, apiKey)
             else -> createDeepSeekChatModel(modelName, apiKey)
         }
     }
@@ -110,7 +111,25 @@ object ChatModelFactory {
             .build()
         return ChatModelImpl(lm)
     }
-    
+
+    /**
+     * Volcengine API is compatible with OpenAI API, so it's OK to use OpenAIChatModel.
+     *
+     * @see <a href='https://www.volcengine.com/docs/82379/1399008'>快速入门-调用模型服务</a>
+     * */
+    private fun createVolcengineChatModel(modelName: String, apiKey: String): ChatModel {
+        val lm = OpenAiChatModel.builder()
+            .apiKey(apiKey)
+            .baseUrl("https://ark.cn-beijing.volces.com/api/v3")
+            .modelName(modelName)
+            .logRequests(false)
+            .logResponses(true)
+            .maxRetries(2)
+            .timeout(Duration.ofSeconds(60))
+            .build()
+        return ChatModelImpl(lm)
+    }
+
     /**
      * DeepSeek API is compatible with OpenAI API, so it's OK to use OpenAIChatModel.
      *
