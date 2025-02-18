@@ -36,10 +36,10 @@ class ChatModelTests {
                 println("> The configuration file can be found in: " + KConfiguration.EXTERNAL_RESOURCE_BASE_DIR)
                 println("> All xml files in the directory will be loaded as the configuration file")
             }
-            
+
             Assumptions.assumeTrue(isModelConfigured)
             val response = model.call("这是一个测试，来测试你是否工作正常。计算11的平方，仅返回数字。")
-            Assumptions.assumeTrue("121" == response.content)
+            Assumptions.assumeTrue(response.content.contains("121"))
         }
     }
 
