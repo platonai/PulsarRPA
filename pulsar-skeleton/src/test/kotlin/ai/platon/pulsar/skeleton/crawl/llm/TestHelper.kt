@@ -22,7 +22,7 @@ object TestHelper {
             println("> All xml files in the directory will be loaded as the configuration file")
         } else {
             var response = session.chat("这是一个测试，来测试你是否工作正常。计算11的平方，仅返回数字。")
-            Assumptions.assumeTrue("121" == response.content)
+            Assumptions.assumeTrue(response.content.contains("121"))
             
             response = session.chat("Who are you?")
             println("##########\n" + response.content + "\n##########")
