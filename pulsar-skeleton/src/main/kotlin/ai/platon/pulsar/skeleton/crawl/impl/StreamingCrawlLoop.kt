@@ -33,8 +33,8 @@ open class StreamingCrawlLoop(
 
     private lateinit var _crawler: StreamingCrawler
     override val crawler: Crawler get() = _crawler
-    
-    private lateinit var _urlFeeder: UrlFeeder
+
+    private val _urlFeeder by lazy { createUrlFeeder() }
     override val urlFeeder: UrlFeeder get() = _urlFeeder
 
     // TODO: better initialization, may use spring bean
@@ -76,12 +76,14 @@ open class StreamingCrawlLoop(
     override fun stop() {
         if (running.compareAndSet(true, false)) {
             _crawler.close()
-            _urlFeeder.clear()
+
+            // url feeder should be shared by all crawlers, so we should not clear it
+            // _urlFeeder.clear()
 
             runBlocking { crawlJob?.cancelAndJoin() }
 
             crawlJob = null
-            logger.info("Crawl loop is stopped | #{} | {}@{}", id, this::class.simpleName, hashCode())
+            logger.info("Crawl loop is stopped | #{} | {}", id, this)
         }
     }
 
@@ -107,7 +109,6 @@ open class StreamingCrawlLoop(
         // clear the global illegal states, so the newly created crawler can work properly
         StreamingCrawler.clearIllegalState()
 
-        _urlFeeder = createUrlFeeder()
         val urls = urlFeeder.asSequence()
         _crawler = StreamingCrawler(urls, session, autoClose = false)
 
@@ -117,9 +118,8 @@ open class StreamingCrawlLoop(
                 _crawler.run(this)
             }
         }
-        
-        logger.info("Crawl loop is started with {} link collectors | #{} | {}@{}",
-            urlFeeder.collectors.size, id, this, hashCode())
+
+        logger.info("Crawl loop is started with {} link collectors | #{} | {}", urlFeeder.collectors.size, id, this)
     }
 
     private fun createUrlFeeder(): UrlFeeder {

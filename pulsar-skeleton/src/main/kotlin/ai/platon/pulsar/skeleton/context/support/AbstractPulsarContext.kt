@@ -606,7 +606,7 @@ abstract class AbstractPulsarContext(
     }
     
     private fun startLoopIfNecessary() {
-        if (isActive && !crawlLoops.isStarted) {
+        if (isActive) {
             crawlLoops.start()
         }
     }
