@@ -133,6 +133,7 @@ enum class Priority21(val value: Int) {
 }
 
 interface StartStopRunnable {
+    val isRunning: Boolean
     fun start()
     fun stop()
 

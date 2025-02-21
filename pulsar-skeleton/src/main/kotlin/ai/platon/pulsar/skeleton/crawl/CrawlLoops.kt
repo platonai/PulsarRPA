@@ -8,6 +8,9 @@ class CrawlLoops(val loops: MutableList<CrawlLoop>) : StartStopRunnable {
         val filters = mutableListOf<Predicate<CrawlLoop>>()
     }
 
+    override val isRunning: Boolean
+        get() = loops.any { it.isRunning }
+
     constructor(loop: CrawlLoop): this(mutableListOf(loop))
 
     fun first() = loops.first()
@@ -23,6 +26,7 @@ class CrawlLoops(val loops: MutableList<CrawlLoop>) : StartStopRunnable {
      * */
     override fun start() {
         loops.filter { loop -> filters.isEmpty() || filters.all { it.test(loop) } }
+            .filter { !it.isRunning }
             .forEach { it.start() }
     }
 
@@ -31,6 +35,7 @@ class CrawlLoops(val loops: MutableList<CrawlLoop>) : StartStopRunnable {
      * */
     override fun stop() {
         loops.filter { loop -> filters.isEmpty() || filters.all { it.test(loop) } }
+            .filter { it.isRunning }
             .forEach { it.stop() }
     }
 

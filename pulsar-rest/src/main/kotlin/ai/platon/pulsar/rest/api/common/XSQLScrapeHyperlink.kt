@@ -35,7 +35,9 @@ open class XSQLScrapeHyperlink(
             }
             onLoaded.addLast { url, page ->
                 // println("crawl-onLoaded")
-                hyperlink.complete(page ?: WebPage.NIL)
+                if (!hyperlink.isDone) {
+                    hyperlink.complete(page ?: WebPage.NIL)
+                }
             }
         }
     }

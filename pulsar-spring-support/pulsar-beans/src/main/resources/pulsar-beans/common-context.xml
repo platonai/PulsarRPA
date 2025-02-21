@@ -43,7 +43,12 @@
         <constructor-arg ref="conf" />
     </bean>
 
+    <bean id="globalCache" class="ai.platon.pulsar.skeleton.crawl.common.GlobalCache">
+        <constructor-arg ref="conf"/>
+    </bean>
+
     <bean id="globalCacheFactory" class="ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory">
+        <constructor-arg ref="globalCache"/>
         <constructor-arg ref="conf"/>
     </bean>
 
