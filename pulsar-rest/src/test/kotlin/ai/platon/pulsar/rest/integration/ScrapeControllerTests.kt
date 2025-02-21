@@ -64,22 +64,6 @@ class ScrapeControllerTests : IntegrationTestBase() {
     }
 
     @Test
-    fun `When extract with x-sql then the result returns`() {
-        val site = "amazon"
-        val url = urls[site] + " -i 1s -ignoreFailure"
-        val sql = sqlTemplates[site]!!.createSQL(url)
-
-        println(">>>\n$sql\n<<<")
-        val response = restTemplate.postForObject("$baseUri/x/e", sql, String::class.java)
-        // might be IO timeout
-        println(response)
-        assertNotNull(response)
-//            println(pulsarObjectMapper().writeValueAsString(response))
-//            assertTrue { response.uuid?.isNotBlank() == true }
-//            assertNotNull(response.resultSet)
-    }
-
-    @Test
     fun `When extract with x-sql then the result can be received asynchronously`() {
         val site = "amazon"
         val url = urls[site]!! + " -refresh"
