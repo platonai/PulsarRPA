@@ -252,7 +252,11 @@ object UrlUtils {
      *         or null if the given string violates RFC&nbsp;2396
      * */
     @JvmStatic
-    fun normalizeOrNull(url: String, ignoreQuery: Boolean = false): String? {
+    fun normalizeOrNull(url: String?, ignoreQuery: Boolean = false): String? {
+        if (url == null) {
+            return null
+        }
+
         return try {
             normalize(url, ignoreQuery).toString()
         } catch (e: Exception) {

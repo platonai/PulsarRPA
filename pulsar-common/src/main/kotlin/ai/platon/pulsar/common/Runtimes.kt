@@ -47,14 +47,14 @@ object Runtimes {
             .toList()
     }
 
-    fun countSystemProcess(pattern: String): Int {
+    fun countSystemProcess(namePattern: String): Int {
         val command = when {
             SystemUtils.IS_OS_WINDOWS -> "tasklist /NH"
             SystemUtils.IS_OS_LINUX -> "ps -ef"
             // TODO: more OS support
             else -> "ps -ef"
         }
-        return exec(command).count { it.contains(pattern.toRegex()) }
+        return exec(command).count { it.contains(namePattern.toRegex()) }
     }
 
     fun checkIfProcessRunning(pattern: String): Boolean {
@@ -92,6 +92,32 @@ object Runtimes {
         } else {
             // TODO: more OS support
             exec("kill -9 $pid")
+        }
+    }
+
+    fun destroyProcessForcibly(namePattern: String) {
+        try {
+            val command = if (SystemUtils.IS_OS_WINDOWS) {
+                // Windows
+                "taskkill /F /IM $namePattern"
+            } else if (SystemUtils.IS_OS_LINUX || SystemUtils.IS_OS_MAC) {
+                // macOS or Linux
+                "pkill -f $namePattern"
+            } else {
+                logger.info("Unsupported operating system")
+                return
+            }
+
+            // Execute the command
+            val process = Runtime.getRuntime().exec(command)
+            process.waitFor()
+
+            // Check if the command executed successfully
+            if (process.exitValue() == 0) {
+                logger.info("All Chrome processes have been terminated")
+            }
+        } catch (e: Exception) {
+            logger.info("Failed to terminate Chrome processes", e)
         }
     }
 

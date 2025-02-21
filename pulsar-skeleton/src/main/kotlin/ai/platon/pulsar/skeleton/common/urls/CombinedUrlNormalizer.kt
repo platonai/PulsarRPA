@@ -29,27 +29,28 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
         val finalOptions = createLoadOptions(url, LoadOptions.parse(args, options), toItemOption)
         val rawEvent = finalOptions.rawEvent
 
-        var normURL = if (rawEvent?.loadEventHandlers?.onNormalize?.isNotEmpty == true) {
+        var normURL: String? = if (rawEvent?.loadEventHandlers?.onNormalize?.isNotEmpty == true) {
             // 1. normalizer in event listener has the #1 priority.
             val spec1 = GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onNormalize?.invoke(spec) ?: spec
             // The more specific handlers has the opportunity to override the result of more general handlers.
-            rawEvent.loadEventHandlers.onNormalize(spec1) ?: return NormURL.NIL
+            rawEvent.loadEventHandlers.onNormalize(spec1) ?: return NormURL.createNil(url)
         } else {
             // 2. global normalizers has the #2 priority
             val normalizers = urlNormalizers
             if (!options.noNorm && normalizers != null) {
-                normalizers.normalize(spec) ?: return NormURL.NIL
+                normalizers.normalize(spec) ?: return NormURL.createNil(url)
             } else spec
         }
 
-        // 3. UrlUtils.normalize comes at last to remove fragment, and query string if required
-        normURL = UrlUtils.normalizeOrNull(normURL, options.ignoreUrlQuery) ?: return NormURL.NIL
-
-        // already done
-//        finalOptions.overrideConfiguration()
-
         val href = url.href?.let { UrlUtils.splitUrlArgs(it).first }?.takeIf { UrlUtils.isStandard(it) }
-        return NormURL(normURL, finalOptions, href, url)
+
+        // 3. UrlUtils.normalize comes at last to remove fragment, and query string if required
+        normURL = UrlUtils.normalizeOrNull(normURL, options.ignoreUrlQuery)
+        return if (normURL == null) {
+            NormURL.createNil(url)
+        } else {
+            NormURL(normURL, finalOptions, href, detail = url)
+        }
     }
 
     private fun createLoadOptions(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
@@ -74,7 +75,7 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
         clone.nMaxRetry = url.nMaxRetry
 
         if (url is ListenableUrl) {
-            clone.event.chain(url.event)
+            clone.eventHandlers.chain(url.eventHandlers)
         }
 
         return clone

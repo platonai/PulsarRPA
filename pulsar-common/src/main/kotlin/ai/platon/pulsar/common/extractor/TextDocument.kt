@@ -3,11 +3,11 @@ package ai.platon.pulsar.common.extractor
 /**
  * Represents a text document extracted from a text page, such as a news article.
  * */
-open class TextDocument(
+data class TextDocument(
     /**
      * The url of the document.
      * */
-    val url: String,
+    val url: String = "",
     /**
      * The title of the document, which is in <title> tag.
      * */

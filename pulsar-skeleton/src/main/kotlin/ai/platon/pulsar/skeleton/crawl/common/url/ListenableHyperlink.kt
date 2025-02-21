@@ -61,7 +61,7 @@ open class ListenableHyperlink(
     /**
      * The event handler
      * */
-    override var event: PageEventHandlers = PageEventHandlersFactory().create(),
+    override var eventHandlers: PageEventHandlers = PageEventHandlersFactory().create(),
 ): Hyperlink(url, text, order, referrer, args, href, priority, lang, country, district, nMaxRetry, depth),
     ListenableUrl {
     /**

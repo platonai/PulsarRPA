@@ -571,7 +571,7 @@ open class StreamingCrawler(
     
     private suspend fun loadWithEventHandlers(url: UrlAware) {
         emit(CrawlEvents.willLoad, url)
-        
+
         val page = loadWithTimeout(url)
         
         // A continuous crawl system should enable smart retry, while a simple demo can disable it
@@ -681,6 +681,15 @@ open class StreamingCrawler(
 //        if (url.deadline <= Instant.now()) {
 //            return null
 //        }
+
+        tracer?.trace(
+            "{}. {}/{} global running tasks, loading with session.loadDeferred | {}",
+            globalState.globalTasks,
+            globalState.globalLoadingUrls.size,
+            globalState.globalRunningTasks,
+            url.configuredUrl
+        )
+
         return kotlin.runCatching { session.loadDeferred(url, options) }
             .onSuccess { flowState.set(handleLoadSuccess(url, it)) }
             .onFailure { flowState.set(handleLoadException(url, it)) }

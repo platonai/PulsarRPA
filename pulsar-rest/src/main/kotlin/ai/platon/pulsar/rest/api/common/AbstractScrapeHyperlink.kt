@@ -42,7 +42,7 @@ abstract class AbstractScrapeHyperlink(
     protected val randomConnection get() = sqlContext.randomConnection
     private val isCompleted = AtomicBoolean()
     
-    abstract override var event: PageEventHandlers
+    abstract override var eventHandlers: PageEventHandlers
     
     open fun executeQuery(): ResultSet = executeQuery(request, response)
     

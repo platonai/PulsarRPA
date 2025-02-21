@@ -248,12 +248,19 @@ abstract class AbstractPulsarContext(
     }
     
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormURL {
-        return CombinedUrlNormalizer(urlNormalizerOrNull).normalize(url, options, toItemOption)
+        val normURL = CombinedUrlNormalizer(urlNormalizerOrNull).normalize(url, options, toItemOption)
+        if (normURL.isNil) {
+            logger.info("URL is normalized to NIL | {}", url)
+        }
+        return normURL
     }
     
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormURL? {
-        if (url == null) return null
-        return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
+        if (url == null) {
+            return null
+        }
+
+        return kotlin.runCatching { normalize(url, options, toItemOption).takeIf { it.isNotNil } }.getOrNull()
     }
     
     override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean): List<NormURL> {

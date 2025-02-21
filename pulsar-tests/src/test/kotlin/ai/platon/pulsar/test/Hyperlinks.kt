@@ -1,16 +1,15 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
-import ai.platon.pulsar.skeleton.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.skeleton.crawl.PageEvent
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.event.AbstractCrawlEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.AbstractLoadEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEventHandlers
-import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertNotNull
@@ -79,7 +78,7 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
             onWillParseHTMLDocument.addFirst { page ->
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onWillParseHTMLDocument")
                 println("............onWillParseHTMLDocument " + page.id)
-                println("$this " + page.loadEvent)
+                println("$this " + page.loadEventHandlers)
                 page.variables[VAR_IS_SCRAPE] = true
                 null
             }
@@ -97,7 +96,7 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
             onParsed.addFirst { page ->
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onParsed")
                 println("............onParsed " + page.id)
-                println("$thisHandler " + page.loadEvent)
+                println("$thisHandler " + page.loadEventHandlers)
 //                assertSame(thisHandler, page.loadEvent)
             }
             onLoaded.addFirst { page ->
@@ -113,7 +112,7 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
     }
 
     override var args: String? = "-cacheContent true -storeContent false -parse -refresh"
-    override var event: PageEventHandlers = DefaultPageEventHandlers(
+    override var eventHandlers: PageEventHandlers = DefaultPageEventHandlers(
         loadEventHandlers = MockLoadEventHandlers(this),
         crawlEventHandlers = MockCrawlEventHandlers(this)
     )
@@ -155,7 +154,7 @@ open class MockDegeneratedListenableHyperlink : ListenableHyperlink("", ""), Deg
         }
     }
 
-    override var event: PageEventHandlers = DefaultPageEventHandlers(
+    override var eventHandlers: PageEventHandlers = DefaultPageEventHandlers(
         crawlEventHandlers = MockCrawlEventHandlers(this)
     )
 

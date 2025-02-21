@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebDb
@@ -17,19 +18,20 @@ import ai.platon.pulsar.persist.model.ActiveDOMStat
 import ai.platon.pulsar.skeleton.common.AppStatusTracker
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
-import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
+import ai.platon.pulsar.skeleton.common.persist.ext.*
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.FetchState
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.crawl.common.url.CompletableHyperlink
+import ai.platon.pulsar.skeleton.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.skeleton.crawl.common.url.toCompletableListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
-import org.tukaani.xz.check.Check
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
@@ -135,7 +137,7 @@ class LoadComponent(
         require(state is CheckState)
 
         page.putBean(driver)
-        loadDeferred1(normURL, page)
+        loadNormalURLWithEventHandlersDeferred(normURL, page)
         return page
     }
 
@@ -149,7 +151,7 @@ class LoadComponent(
         page.putBean(driver)
         page.setVar("WEB_DRIVER", driver)
 
-        loadDeferred1(normURL, page)
+        loadNormalURLWithEventHandlersDeferred(normURL, page)
 
         return page
     }
@@ -222,28 +224,30 @@ class LoadComponent(
 
     @Throws(Exception::class)
     fun loadWithRetry(normURL: NormURL): WebPage {
-        if (normURL.isNil) {
-            return WebPage.NIL
+        var page = loadWithEventHandlers(normURL)
+
+        if (UrlUtils.isInternal(normURL.spec)) {
+            normURL.options.nJitRetry = 1
         }
 
-        var page = load0(normURL)
         var n = normURL.options.nJitRetry
         while (page.protocolStatus.isRetry && n-- > 0) {
-            page = load0(normURL)
+            page = loadWithEventHandlers(normURL)
         }
         return page
     }
 
     @Throws(Exception::class)
     suspend fun loadWithRetryDeferred(normURL: NormURL): WebPage {
-        if (normURL.isNil) {
-            return WebPage.NIL
+        var page = loadWithEventHandlersDeferred(normURL)
+
+        if (UrlUtils.isInternal(normURL.spec)) {
+            normURL.options.nJitRetry = 1
         }
 
-        var page = loadDeferred0(normURL)
         var n = normURL.options.nJitRetry
         while (page.protocolStatus.isRetry && n-- > 0) {
-            page = loadDeferred0(normURL)
+            page = loadWithEventHandlersDeferred(normURL)
         }
         return page
     }
@@ -303,18 +307,32 @@ class LoadComponent(
      * fetch it from the Internet, unless the fetch component is disabled.
      * */
     @Throws(Exception::class)
-    private fun load0(normURL: NormURL): WebPage {
+    private fun loadWithEventHandlers(normURL: NormURL): WebPage {
+        if (normURL.isNil) {
+            doHandleOnWillLoadEvent(normURL)
+            doHandleOnLoadedEvent(normURL)
+            return WebPage.NIL
+        }
+
+        tracer?.trace("Loading normURL, creating page shell ... | {}", normURL.configuredUrl)
+
         val page = createPageShell(normURL)
 
         if (deactivateFetchComponent && shouldFetch(page)) {
             return WebPage.NIL
         }
 
-        return load1(normURL, page)
+        return loadNormalURLWithEventHandlers(normURL, page)
     }
 
     @Throws(Exception::class)
-    private fun load1(normURL: NormURL, page: WebPage): WebPage {
+    private fun loadNormalURLWithEventHandlers(normURL: NormURL, page: WebPage): WebPage {
+        require(page.isNotNil) { "Page should not be nil | ${page.configuredUrl}" }
+
+        if (page.isInternal) {
+            return page
+        }
+
         onWillLoad(normURL, page)
 
         fetchContentIfNecessary(normURL, page)
@@ -325,18 +343,26 @@ class LoadComponent(
     }
 
     @Throws(Exception::class)
-    private suspend fun loadDeferred0(normURL: NormURL): WebPage {
+    private suspend fun loadWithEventHandlersDeferred(normURL: NormURL): WebPage {
+        if (normURL.isNil) {
+            doHandleOnWillLoadEvent(normURL)
+            doHandleOnLoadedEvent(normURL)
+            return WebPage.NIL
+        }
+
+        tracer?.trace("Loading normURL, creating page shell ... | {}", normURL.configuredUrl)
+
         val page = createPageShell(normURL)
 
         if (deactivateFetchComponent && shouldFetch(page)) {
             return WebPage.NIL
         }
 
-        return loadDeferred1(normURL, page)
+        return loadNormalURLWithEventHandlersDeferred(normURL, page)
     }
 
     @Throws(Exception::class)
-    private suspend fun loadDeferred1(normURL: NormURL, page: WebPage): WebPage {
+    private suspend fun loadNormalURLWithEventHandlersDeferred(normURL: NormURL, page: WebPage): WebPage {
         onWillLoad(normURL, page)
 
         fetchContentIfNecessaryDeferred(normURL, page)
@@ -367,8 +393,20 @@ class LoadComponent(
 
     /**
      * Create a page shell, the page shell is the process unit for most tasks.
+     *
+     * If the page is in the cache, return the cached page, otherwise create a new page shell.
+     *
+     * @param normURL The normalized url
+     * @return The page shell
+     *
+     * @throws IllegalArgumentException If the url is nil
      * */
+    @Throws(IllegalArgumentException::class)
     private fun createPageShell(normURL: NormURL): WebPage {
+        if (normURL.isNil) {
+            throw IllegalArgumentException("Nil url is not allowed")
+        }
+
         val cachedPage = getCachedPageOrNull(normURL)
         var page = FetchEntry.createPageShell(normURL)
 
@@ -387,8 +425,8 @@ class LoadComponent(
             // TODO: test the dirty flag
             // do not persist this copy
             page.unbox().clearDirty()
-            assert(!page.isFetched)
-            assert(page.isNotInternal)
+            require(!page.isFetched)
+            require(page.isNotInternal)
         } else {
             // get the metadata of the page from the database, this is very fast for a crawler
             // load page content and page model lazily, if we load page content and page model every time,
@@ -445,18 +483,13 @@ class LoadComponent(
 
         shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
 
-        try {
-            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onWillLoad?.invoke(page.url)
-            // The more specific handlers has the opportunity to override the result of more general handlers.
-            page.loadEventHandlers?.onWillLoad?.invoke(page.url)
-        } catch (e: Throwable) {
-            logger.warn("Failed to invoke beforeLoad | ${page.configuredUrl}", e)
-        }
+        doHandleOnWillLoadEvent(normURL, page)
     }
 
     private fun onLoaded(page: WebPage, normURL: NormURL) {
         if (page.isInternal) {
-            return
+            // A NIL url might have event handlers, so we must invoke the event handlers
+            // return
         }
 
         val options = normURL.options
@@ -492,25 +525,68 @@ class LoadComponent(
             }
         }
 
-        try {
-            val detail = normURL.detail
-            // we might use the cached page's content in after load handler
-            if (detail is CompletableHyperlink<*>) {
-                require(page.loadEventHandlers?.onLoaded?.isNotEmpty == true) {
-                    "A completable link must have a onLoaded handler"
-                }
-            }
-
-            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onLoaded?.invoke(page)
-            // The more specific handlers has the opportunity to override the result of more general handlers.
-            page.loadEventHandlers?.onLoaded?.invoke(page)
-        } catch (e: Throwable) {
-            logger.warn("Failed to invoke onLoaded | ${page.configuredUrl}", e)
-        }
+        doHandleOnLoadedEvent(normURL, page)
 
         if (options.persist && !page.isCanceled && !options.readonly) {
             persist(page, options)
         }
+    }
+
+    private fun doHandleOnWillLoadEvent(normURL: NormURL, page: WebPage? = null) {
+        val url = normURL.spec
+        try {
+            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onWillLoad?.invoke(url)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
+            getPageEventHandlersOrNull(normURL, page)?.loadEventHandlers?.onWillLoad?.invoke(url)
+        } catch (e: Throwable) {
+            val configuredUrl = page?.configuredUrl ?: normURL.configuredUrl
+            logger.warn("Failed to invoke beforeLoad | $configuredUrl", e)
+        }
+    }
+
+    private fun doHandleOnLoadedEvent(normURL: NormURL, page: WebPage? = null) {
+        val url = normURL.spec
+        val detail = normURL.detail
+        val page0 = page ?: WebPage.NIL
+
+        try {
+            // we might use the cached page's content in after load handler
+            if (detail is CompletableHyperlink<*>) {
+                require(detail is ListenableUrl) { "The detail url should be a ListenableUrl" }
+                require(detail.eventHandlers.loadEventHandlers.onLoaded.isNotEmpty) {
+                    "A completable link must have a onLoaded handler"
+                }
+
+                if (page0.isNotInternal) {
+                    require(page0.loadEventHandlers?.onLoaded?.isNotEmpty == true) {
+                        "A page with a completable link must have a onLoaded handler"
+                    }
+                }
+            }
+
+            GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onLoaded?.invoke(page0)
+            // The more specific handlers has the opportunity to override the result of more general handlers.
+            getPageEventHandlersOrNull(normURL, page)?.loadEventHandlers?.onLoaded?.invoke(page0)
+        } catch (e: Throwable) {
+            val configuredUrl = page?.configuredUrl ?: normURL.configuredUrl
+            logger.warn("Failed to invoke doHandleOnLoadedEvent | $configuredUrl", e)
+        }
+    }
+
+    /**
+     * Get the event handlers for the page, if the page has no event handlers, use the event handlers
+     *
+     * [WebPage.eventHandlers] is a shortcut of [LoadOptions.eventHandlers], and [LoadOptions.eventHandlers] can come from a [ListenableUrl].
+     * */
+    private fun getPageEventHandlersOrNull(normURL: NormURL, page: WebPage?): PageEventHandlers? {
+        val detail = normURL.detail
+        var eventHandlers = page?.eventHandlers
+
+        if (eventHandlers == null && detail is ListenableUrl) {
+            eventHandlers = detail.eventHandlers
+        }
+
+        return eventHandlers
     }
 
     private fun parse(page: WebPage, options: LoadOptions): ParseResult? {
@@ -558,6 +634,12 @@ class LoadComponent(
         }
     }
 
+    /**
+     * Get a page from the memory cache, if the page is not in the cache, or it's expired, return null.
+     *
+     * @param normURL The normalized url
+     * @return The page, or null
+     * */
     private fun getCachedPageOrNull(normURL: NormURL): WebPage? {
         val (url, options) = normURL
         if (options.refresh) {
@@ -595,12 +677,20 @@ class LoadComponent(
 
     @Throws(Exception::class)
     private fun fetchContent(page: WebPage, normURL: NormURL) {
+        if (page.isInternal) {
+            // No need to fetch internal pages
+            // No event handlers should be handled: no fet
+            return
+        }
+
         try {
             beforeFetch(page, normURL.options)
 
             require(page.conf == normURL.options.conf)
 //            require(normURL.options.eventHandler != null)
 //            require(page.conf.getBeanOrNull(PulsarEventHandler::class) != null)
+
+            tracer?.trace("Fetching with fetch component ... | {}", page.configuredUrl)
 
             fetchComponent.fetchContent(page)
         } finally {
@@ -610,8 +700,18 @@ class LoadComponent(
 
     @Throws(Exception::class)
     private suspend fun fetchContentDeferred(page: WebPage, normURL: NormURL) {
+        if (page.isInternal) {
+            // No need to fetch internal pages, and no event handlers should be handled
+            return
+        }
+
         try {
             beforeFetch(page, normURL.options)
+
+            require(page.conf == normURL.options.conf)
+//            require(normURL.options.eventHandler != null)
+//            require(page.conf.getBeanOrNull(PulsarEventHandler::class) != null)
+
             fetchComponent.fetchContentDeferred(page)
         } finally {
             afterFetch(page, normURL.options)

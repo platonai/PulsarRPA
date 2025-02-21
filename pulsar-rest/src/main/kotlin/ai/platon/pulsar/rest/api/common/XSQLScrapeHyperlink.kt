@@ -74,7 +74,7 @@ open class XSQLScrapeHyperlink(
     private val logger = getLogger(XSQLScrapeHyperlink::class)
 
     override var args: String? = "-parse ${sql.args}"
-    override var event = PageEventHandlersFactory.create(
+    override var eventHandlers = PageEventHandlersFactory.create(
         loadEventHandlers = LoadEventHandlers(this, response),
         crawlEventHandlers = CrawlEventHandlers(this, response),
     )

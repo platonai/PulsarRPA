@@ -2,8 +2,6 @@ package ai.platon.pulsar.examples.sites.topEc.english.amazon.rpa
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
@@ -15,7 +13,6 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.examples.sites.topEc.english.amazon.AmazonUrls
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
-import java.nio.file.Files
 import java.sql.ResultSet
 
 class AsinSellerScraper {
@@ -66,7 +63,7 @@ class AsinSellerScraper {
 
     fun createASINHyperlink(domain: String, asinUrl: String): ListenableHyperlink {
         val hyperlink = ListenableHyperlink(asinUrl, "", args = "-i 5s -parse -requireSize 800000")
-        val be = hyperlink.event.browseEventHandlers
+        val be = hyperlink.eventHandlers.browseEventHandlers
 
         be.onWillComputeFeature.addLast { page, driver ->
             val district = driver.selectFirstTextOrNull("#glow-ingress-block, .nav-global-location-slot") ?: ""
@@ -78,7 +75,7 @@ class AsinSellerScraper {
             }
         }
 
-        val le = hyperlink.event.loadEventHandlers
+        val le = hyperlink.eventHandlers.loadEventHandlers
         le.onHTMLDocumentParsed.addLast { page, document ->
             scrapeAsin(page, document)
         }
@@ -179,11 +176,11 @@ class AsinSellerScraper {
                     href = link.href
                 }
                 .apply {
-                    event.browseEventHandlers.onWillNavigate.addLast { page, _ ->
+                    eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, _ ->
                         page.referrer = null
                         null
                     }
-                    event.loadEventHandlers.onFetched.addLast { page ->
+                    eventHandlers.loadEventHandlers.onFetched.addLast { page ->
                         link.referrer?.let { page.referrer = it }
                     }
                 }

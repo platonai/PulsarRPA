@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Primary
 import org.springframework.test.context.ContextConfiguration
 import java.time.Duration
 
-@SpringBootApplication
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 @ComponentScan(basePackages = ["ai.platon.pulsar.rest.api"])
 @EntityScan("ai.platon.pulsar.rest.api.entities")
@@ -24,6 +23,8 @@ class Application(
 ) {
     @Bean
     fun restTemplate(): TestRestTemplate {
-        return TestRestTemplate(RestTemplateBuilder().setReadTimeout(Duration.ofMinutes(2)))
+        val builder = RestTemplateBuilder()
+            .setReadTimeout(Duration.ofSeconds(125))
+        return TestRestTemplate(builder)
     }
 }
