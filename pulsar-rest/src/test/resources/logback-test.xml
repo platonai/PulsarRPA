@@ -54,16 +54,16 @@
         </encoder>
     </appender>
 
-    <root level="${log.level:-DEBUG}">
+    <root level="${log.level:-INFO}">
         <appender-ref ref="DRFA"/>
         <appender-ref ref="stdout"/>
     </root>
 
-    <logger name="ai.platon.pulsar" level="TRACE"/>
-    <logger name="ai.platon.pulsar.common.collect.collector" level="DEBUG" additivity="false">
+    <logger name="ai.platon.pulsar" level="INFO"/>
+    <logger name="ai.platon.pulsar.common.collect.collector" level="INFO" additivity="false">
         <appender-ref ref="DC"/>
     </logger>
-    <logger name="ai.platon.pulsar.skeleton.crawl.fetch.privacy" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.skeleton.crawl.fetch.privacy" level="INFO"/>
     <logger name="ai.platon.pulsar.protocol.browser.driver" level="DEBUG"/>
 
     <logger name="ai.platon.pulsar.skeleton.common.metrics.MetricsSystem" level="INFO" additivity="false">

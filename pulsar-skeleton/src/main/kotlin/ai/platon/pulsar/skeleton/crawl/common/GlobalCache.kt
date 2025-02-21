@@ -141,6 +141,7 @@ class GlobalCacheFactory(
     /**
      * Get the global cache.
      * */
+    @get:Synchronized
     val globalCache get() = _globalCache ?: createDefaultGlobalCache()
 
     constructor(globalCache: GlobalCache, immutableConfig: ImmutableConfig): this(immutableConfig) {

@@ -30,7 +30,7 @@ class ScrapeControllerTests : IntegrationTestBase() {
             dom_first_text(dom, 'a span.a-price[data-a-strike] span.a-offscreen') as `listprice`,
             dom_first_text(dom, 'h2 a') as `title`,
             dom_height(dom_select_first(dom, 'a img[srcset]')) as `pic_height`
-        from load_and_select(@url, 'div.s-main-slot.s-result-list.s-search-results > div:expr(img>0)');
+        from load_and_select(@url, 'div[class*=search-result]');
     """.trimIndent()
     ).entries.associate { it.key to SQLTemplate(it.value) }
 
