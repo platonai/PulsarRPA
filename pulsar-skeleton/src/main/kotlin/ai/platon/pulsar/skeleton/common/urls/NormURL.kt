@@ -71,7 +71,7 @@ open class NormURL constructor(
     /**
      * Whether the url is nil.
      */
-    val isNil get() = this == NIL
+    val isNil get() = this.spec == AppConstants.NIL_PAGE_URL
     /**
      * Whether the url is not nil.
      */
@@ -121,10 +121,9 @@ open class NormURL constructor(
 
     companion object {
         /**
-         * The nil url.
+         * Create a nil NormURL object.
          */
-        @JvmField
-        val NIL = NormURL(AppConstants.NIL_PAGE_URL, LoadOptions.DEFAULT)
+        fun createNil(detail: UrlAware? = null) = NormURL(AppConstants.NIL_PAGE_URL, LoadOptions.DEFAULT, detail = detail)
         /**
          * Parse a configured url to a NormURL object.
          *

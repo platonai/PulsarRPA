@@ -49,8 +49,11 @@ $SNAPSHOT_VERSION = Get-Content "$AppHome\VERSION" -TotalCount 1
 $VERSION =$SNAPSHOT_VERSION -replace "-SNAPSHOT", ""
 $VERSION | Set-Content "$AppHome\VERSION"
 
-Get-ChildItem -Path "$AppHome" -Depth 2 -Filter 'pom.xml' -Recurse | ForEach-Object {
-  (Get-Content $_.FullName) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content $_.FullName
+# Replace SNAPSHOT version with the release version
+@('README.md', 'README-CN.md', 'pom.xml') | ForEach-Object {
+  Get-ChildItem -Path "$AppHome" -Depth 2 -Filter $_ -Recurse | ForEach-Object {
+    (Get-Content $_.FullName) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content $_.FullName
+  }
 }
 
 if ($PerformClean) {

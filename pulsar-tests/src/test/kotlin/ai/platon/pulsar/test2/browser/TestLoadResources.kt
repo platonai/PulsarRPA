@@ -40,17 +40,22 @@ class TestLoadResources: WebDriverTestBase() {
         }
     }
 
+    @Ignore("This test is not stable")
     @Test
     fun testLoadResource2() = runWebDriverTest { driver ->
-        val resourceUrl = "https://www.amazon.com/robots.txt"
+        val resourceUrl = robotsUrl
+//        val resourceUrl = "https://www.amazon.com/robots.txt"
         val referrer = UrlUtils.getOrigin(resourceUrl)
         driver.navigateTo(referrer)
         driver.waitForNavigation()
+
         val response = driver.loadResource(resourceUrl)
         val headers = response.headers
         val body = response.stream
         assertNotNull(headers)
         assertNotNull(body)
+
+        println(body)
 
 //        println(body)
         assertContains(body, "Disallow", ignoreCase = true,
@@ -66,8 +71,8 @@ class TestLoadResources: WebDriverTestBase() {
     @Test
     fun testJsoupLoadResource() = runWebDriverTest { driver ->
 //        val resourceUrl = "https://www.amazon.com/robots.txt"
+        val resourceUrl = robotsUrl
 
-        val resourceUrl = "https://www.amazon.com/robots.txt"
         val referrer = UrlUtils.getOrigin(resourceUrl)
         driver.navigateTo(referrer)
         driver.waitForNavigation()

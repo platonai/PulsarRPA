@@ -85,7 +85,7 @@ class TestCases: TestBase() {
         execute(sql)
     }
 
-    @Ignore("SlowTest")
+    @Ignore("TimeConsumingTest")
     @Test
     fun loadInlineSelectNeeq() {
         val cssQuery = "tbody:not(:first-child) > tr td:nth-child(7) > a:nth-child(2)"
@@ -100,7 +100,7 @@ class TestCases: TestBase() {
         execute(sql)
     }
 
-    @Ignore("SlowTest")
+    @Ignore("TimeConsumingTest")
     @Test
     fun loadOutPagesAndSelectNeeq() {
         val cssQuery = "tbody:not(:first-child) > tr td:nth-child(7) > a:nth-child(2)"
@@ -127,7 +127,7 @@ from load_and_get_links('https://www.cityflower.net/attribute/21.html -i 1d', '.
         execute(sql)
     }
 
-    @Ignore("SlowTest")
+    @Ignore("TimeConsumingTest")
     @Test
     fun loadOutPagesAndSelectCityFlower() {
         val sql = """

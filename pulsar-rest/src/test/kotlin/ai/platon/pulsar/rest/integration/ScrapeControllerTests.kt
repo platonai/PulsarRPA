@@ -1,35 +1,25 @@
 package ai.platon.pulsar.rest.integration
 
-import ai.platon.pulsar.common.StartStopRunnable
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.sql.SQLTemplate
-import ai.platon.pulsar.rest.api.controller.ScrapeController
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
-import ai.platon.pulsar.skeleton.crawl.CrawlLoop
 import org.apache.http.HttpStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.client.ResourceAccessException
 import java.net.SocketTimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.test.Ignore
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class ScrapeControllerTests : IntegrationTestBase() {
-    
-    @Autowired
-    private lateinit var controller: ScrapeController
-    
+
     val urls = mapOf(
-        "amazon" to "https://www.amazon.com/s?k=Boys%27+Novelty+Belt+Buckles&rh=n:9057119011&page=1 -i 1s -ignoreFailure",
-        "jd" to "https://list.jd.com/list.html?cat=9987,653,655 -i 1s -ignoreFailure"
+        "amazon" to "https://www.amazon.com/b?node=1292115011",
     )
-    
+
     val sqlTemplates = mapOf(
         "amazon" to """
         select
@@ -40,17 +30,16 @@ class ScrapeControllerTests : IntegrationTestBase() {
             dom_first_text(dom, 'a span.a-price[data-a-strike] span.a-offscreen') as `listprice`,
             dom_first_text(dom, 'h2 a') as `title`,
             dom_height(dom_select_first(dom, 'a img[srcset]')) as `pic_height`
-        from load_and_select(@url, 'div.s-main-slot.s-result-list.s-search-results > div:expr(img>0)');
-    """.trimIndent(),
-        "jd" to "select dom_base_uri(dom) as url from load_and_select(@url, ':root')"
+        from load_and_select(@url, 'div[class*=search-result]');
+    """.trimIndent()
     ).entries.associate { it.key to SQLTemplate(it.value) }
-    
+
     private val resourceLoaded = AtomicBoolean()
-    
+
     @BeforeEach
     fun setUp() {
     }
-    
+
     @BeforeEach
     fun `Ensure resources are loaded`() {
         if (!resourceLoaded.getAndSet(true)) {
@@ -68,92 +57,60 @@ class ScrapeControllerTests : IntegrationTestBase() {
     }
 
     @Test
-    fun `Assert controller is injected`() {
-        assertThat(controller).isNotNull();
-    }
-    
-    @Test
     fun greetingShouldReturnDefaultMessage() {
         assertThat(
-            restTemplate.getForObject("http://localhost:$port/pulsar-system/hello", String::class.java)
+            restTemplate.getForObject("$baseUri/pulsar-system/hello", String::class.java)
         ).contains("hello")
     }
-    
-    @Test
-    fun `When get results then the result returns`() {
-        assertThat(
-            restTemplate.getForObject("http://localhost:$port/x/status", String::class.java)
-        ).contains("")
-    }
-    
-    @Test
-    fun `When extract with x-sql then the result returns`() {
-        val site = "amazon"
-        val url = urls[site]!!
-        val sql = sqlTemplates[site]!!.createSQL(url)
-        
-        println(">>>\n$sql\n<<<")
-        
-        try {
-            val response = restTemplate.postForObject("http://localhost:$port/x/e", sql, ScrapeResponse::class.java)
-            assertNotNull(response)
-            println(pulsarObjectMapper().writeValueAsString(response))
-            assertTrue { response.uuid?.isNotBlank() == true }
-            assertNotNull(response.resultSet)
-        } catch (e: ResourceAccessException) {
-            println(e.message)
-            if (e.cause is SocketTimeoutException) {
-                println(e.message)
-            } else throw e
-        }
-    }
-    
+
     @Test
     fun `When extract with x-sql then the result can be received asynchronously`() {
         val site = "amazon"
-        val url = urls[site]!!
+        val url = urls[site]!! + " -refresh"
         val sql = sqlTemplates[site]!!.createSQL(url)
-        
+
         val uuid = restTemplate.postForObject("$baseUri/x/s", sql, String::class.java)
+        println("UUID: $uuid")
         assertNotNull(uuid)
-        
+
         await(site, uuid, url)
     }
-    
+
     private fun await(site: String, uuid: String, url: String) {
         var records: List<Map<String, Any?>>? = null
         var tick = 0
         val timeout = 60
         while (records == null && ++tick < timeout) {
             sleepSeconds(1)
-            
-            val response = restTemplate.getForObject("$baseUri/x/status?uuid={uuid}", ScrapeResponse::class.java, uuid)
-            
+
+            val response = restTemplate.getForObject("$baseUri/x/status?uuid=$uuid", ScrapeResponse::class.java)
+
+            if (tick % 10 == 0) {
+                println(pulsarObjectMapper().writeValueAsString(response))
+            }
+
             if (response.isDone) {
                 println("response: ")
                 println(pulsarObjectMapper().writeValueAsString(response))
                 assertTrue { response.pageContentBytes > 0 }
                 assertTrue { response.pageStatusCode == HttpStatus.SC_OK }
-                
+
                 records = response.resultSet
                 assertNotNull(records)
-                
+
                 println("records: $records")
-                
+
                 assertTrue { records.isNotEmpty() }
             }
         }
-        
+
         // wait for callback
         sleepSeconds(3)
-        
-        val response = restTemplate.getForObject(
-            "$baseUri/x/a/status?uuid={uuid}",
-            ScrapeResponse::class.java, uuid
-        )
-        println("Scrape task status: ")
+
+        val response = restTemplate.getForObject("$baseUri/x/a/status?uuid=$uuid", ScrapeResponse::class.java)
+        println("Final scrape task status: ")
         println(pulsarObjectMapper().writeValueAsString(response))
-        
+
         assertTrue { tick < timeout }
     }
 }

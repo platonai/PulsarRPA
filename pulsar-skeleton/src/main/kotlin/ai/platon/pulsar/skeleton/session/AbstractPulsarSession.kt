@@ -262,7 +262,7 @@ abstract class AbstractPulsarSession(
     override fun submit(url: String, args: String) = submit(PlainUrl(url, args))
     
     override fun submit(url: String, options: LoadOptions) =
-        submit(ListenableHyperlink(url, "", args = options.toString(), event = options.event))
+        submit(ListenableHyperlink(url, "", args = options.toString(), eventHandlers = options.event))
     
     override fun submit(url: UrlAware) = submit(url, "")
     
@@ -274,7 +274,7 @@ abstract class AbstractPulsarSession(
     override fun submitAll(urls: Iterable<String>, args: String) = submitAll(urls.map { PlainUrl(it, args) })
     
     override fun submitAll(urls: Iterable<String>, options: LoadOptions) =
-        submitAll(urls.map { ListenableHyperlink(it, "", args = options.toString(), event = options.event) })
+        submitAll(urls.map { ListenableHyperlink(it, "", args = options.toString(), eventHandlers = options.event) })
     
     override fun submitAll(urls: Collection<UrlAware>) = also { context.submitAll(urls) }
     
@@ -642,7 +642,7 @@ abstract class AbstractPulsarSession(
             .mapNotNullTo(mutableSetOf()) { it }
             .take(opts.topLinks)
             .map { ListenableHyperlink("$it $itemOpts", "") }
-            .onEach { link -> itemOpts.rawEvent?.let { link.event = it } }
+            .onEach { link -> itemOpts.rawEvent?.let { link.eventHandlers = it } }
         
         submitAll(outLinks)
         

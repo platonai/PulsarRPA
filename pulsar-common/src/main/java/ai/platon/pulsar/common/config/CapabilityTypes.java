@@ -105,8 +105,6 @@ public interface CapabilityTypes {
      */
     String INJECT_SCORE = "inject.score";
 
-    String GLOBAL_CACHE_CLASS = "global.cache.class";
-
 
     ///////////////////////////////////////////////////////////////////////////
     // Load phrase

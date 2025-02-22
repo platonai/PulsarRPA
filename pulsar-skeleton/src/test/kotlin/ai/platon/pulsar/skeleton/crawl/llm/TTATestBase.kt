@@ -1,25 +1,28 @@
 package ai.platon.pulsar.skeleton.crawl.llm
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
-import java.nio.file.Files
-import java.nio.file.Paths
+import java.net.URL
+import java.nio.file.*
+import kotlin.io.path.exists
+import kotlin.io.path.notExists
+import kotlin.io.path.walk
+import kotlin.jvm.optionals.getOrNull
+import kotlin.test.assertTrue
 
 open class TTATestBase {
 
     companion object {
-        val projectRoot = Paths.get(System.getProperty("user.dir"))
-        val sourceFile =
-            projectRoot.resolve("src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/WebDriver.kt")
-        val webDriverSourceCode = Files.readString(sourceFile)
+        val dataBaseDir = AppPaths.getProcTmpTmp("test").resolve("llm")
+        val webDriverSourceFile = dataBaseDir.resolve("WebDriver.kt")
 
-        val systemMessage = """
-以下是操作网页的 API 接口及其注释，你可以使用这些接口来操作网页，比如打开网页、点击按钮、输入文本等等。
+        val systemMessageFile = dataBaseDir.resolve("system-message.txt")
 
-$webDriverSourceCode
-        """.trimIndent()
+        lateinit var systemMessage: String
 
         val session = PulsarContexts.createSession()
         var lastResponse: ModelResponse? = null
@@ -28,8 +31,17 @@ $webDriverSourceCode
         @JvmStatic
         fun checkConfiguration() {
             TestHelper.checkConfiguration(session)
-            Assumptions.assumeTrue(webDriverSourceCode.isNotBlank(), "WebDriver.kt should be found")
+            Files.createDirectories(dataBaseDir)
+
+            LLMUtils.copyWebDriverFile(webDriverSourceFile)
+
+            val webDriverSourceCode = Files.readString(webDriverSourceFile)
+            assertTrue("WebDriver.kt should be found") { webDriverSourceCode.isNotBlank() }
+
+            systemMessage = LLMUtils.webDriverMessageTemplate.replace("{{webDriverSourceCode}}", webDriverSourceCode)
+            Files.writeString(systemMessageFile, systemMessage)
+
+            systemMessage = Files.readString(systemMessageFile)
         }
     }
-
 }

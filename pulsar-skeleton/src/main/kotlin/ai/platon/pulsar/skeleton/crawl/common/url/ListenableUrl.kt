@@ -7,5 +7,7 @@ import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
  * A url that contains a [PageEventHandlers] to handle page events.
  * */
 interface ListenableUrl: UrlAware {
-    val event: PageEventHandlers
+    val eventHandlers: PageEventHandlers
+    @Deprecated("Use eventHandlers instead", ReplaceWith("eventHandlers"))
+    val event: PageEventHandlers get() = eventHandlers
 }

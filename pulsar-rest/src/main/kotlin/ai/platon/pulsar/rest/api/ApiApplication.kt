@@ -1,6 +1,8 @@
 package ai.platon.pulsar.rest.api
 
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops
+import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
+import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.domain.EntityScan
 import org.springframework.context.annotation.ComponentScan
@@ -14,8 +16,7 @@ import org.springframework.context.annotation.ImportResource
     "ai.platon.pulsar.rest.api"
 )
 class ApiApplication(
-    /**
-     * Activate crawl loops
-     * */
+    val globalCache: GlobalCache,
+    val globalCacheFactory: GlobalCacheFactory,
     val crawlLoops: CrawlLoops
 )

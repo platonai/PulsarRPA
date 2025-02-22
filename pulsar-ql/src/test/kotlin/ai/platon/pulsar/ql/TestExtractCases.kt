@@ -89,7 +89,7 @@ from
         execute(sql)
     }
 
-    @Ignore("SlowTest")
+    @Ignore("TimeConsumingTest")
     @Test
     fun testLoadOutPagesForMogujie() {
         val url = urlGroups["mogujie"]!![0]
@@ -132,7 +132,7 @@ FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 5)
         execute(sql)
     }
 
-    @Ignore("SlowTest")
+    @Ignore("TimeConsumingTest")
     @Test
     fun testLoadOutPagesForJd() {
         val url = urlGroups["jd"]!![0]

@@ -1,8 +1,6 @@
 package ai.platon.pulsar.skeleton.crawl
 
 import ai.platon.pulsar.common.StartStopRunnable
-import java.time.Duration
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Predicate
 
 class CrawlLoops(val loops: MutableList<CrawlLoop>) : StartStopRunnable {
@@ -10,9 +8,8 @@ class CrawlLoops(val loops: MutableList<CrawlLoop>) : StartStopRunnable {
         val filters = mutableListOf<Predicate<CrawlLoop>>()
     }
 
-    private val started = AtomicBoolean()
-
-    val isStarted get() = started.get()
+    override val isRunning: Boolean
+        get() = loops.any { it.isRunning }
 
     constructor(loop: CrawlLoop): this(mutableListOf(loop))
 
@@ -28,20 +25,18 @@ class CrawlLoops(val loops: MutableList<CrawlLoop>) : StartStopRunnable {
      * Start all loops matching the filter if not started.
      * */
     override fun start() {
-        if (started.compareAndSet(false, true)) {
-            loops.filter { loop -> filters.isEmpty() || filters.all { it.test(loop) } }
-                .forEach { it.start() }
-        }
+        loops.filter { loop -> filters.isEmpty() || filters.all { it.test(loop) } }
+            .filter { !it.isRunning }
+            .forEach { it.start() }
     }
 
     /**
      * Stop all loops matching the filter if started.
      * */
     override fun stop() {
-        if (started.compareAndSet(true, false)) {
-            loops.filter { loop -> filters.isEmpty() || filters.all { it.test(loop) } }
-                .forEach { it.stop() }
-        }
+        loops.filter { loop -> filters.isEmpty() || filters.all { it.test(loop) } }
+            .filter { it.isRunning }
+            .forEach { it.stop() }
     }
 
     @Throws(InterruptedException::class)

@@ -252,7 +252,11 @@ object UrlUtils {
      *         or null if the given string violates RFC&nbsp;2396
      * */
     @JvmStatic
-    fun normalizeOrNull(url: String, ignoreQuery: Boolean = false): String? {
+    fun normalizeOrNull(url: String?, ignoreQuery: Boolean = false): String? {
+        if (url == null) {
+            return null
+        }
+
         return try {
             normalize(url, ignoreQuery).toString()
         } catch (e: Exception) {
@@ -902,7 +906,11 @@ object UrlUtils {
     @Throws(MalformedURLException::class)
     fun getOrigin(url: String): String {
         val u = URI.create(url).toURL()
-        return u.protocol + "://" + u.host
+        return if (u.port == 80) {
+            u.protocol + "://" + u.host
+        } else {
+            u.protocol + "://" + u.host + ":" + u.port
+        }
     }
 
     /**
@@ -917,8 +925,7 @@ object UrlUtils {
         }
 
         return try {
-            val u = URI.create(url).toURL()
-            u.protocol + "://" + u.host
+            return getOrigin(url)
         } catch (t: Throwable) {
             null
         }

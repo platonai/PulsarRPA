@@ -9,34 +9,51 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.StringUtils
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.web.client.TestRestTemplate
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class WebDriverTestBase : TestBase() {
 
     companion object {
         protected const val PAGE_SOURCE_MIN_LENGTH = 100
     }
 
+    @Value("\${server.port}")
+    val port: Int = 0
+
+//    @Value("\${server.servlet.context-path}")
+//    val contextPath: String = "/api"
+
+    @Autowired
+    lateinit var restTemplate: TestRestTemplate
+
     protected val logger = getLogger(this)
     protected val warnUpUrl = "https://www.amazon.com/"
     protected val originUrl = "https://www.amazon.com/"
     protected val url = "https://www.amazon.com/dp/B0C1H26C46"
     protected val resourceUrl2 = "https://www.amazon.com/robots.txt"
+
+    protected val baseURL get() = "http://127.0.0.1:$port"
+
     /**
      * @see [ai.platon.pulsar.test.rest.MockSiteController.text]
      * */
-    protected val plainTextUrl get() = "http://127.0.0.1:$port/text"
+    protected val plainTextUrl get() = "$baseURL/text"
     /**
      * @see [ai.platon.pulsar.test.rest.MockSiteController.csv]
      * */
-    protected val csvTextUrl get() = "http://127.0.0.1:$port/csv"
+    protected val csvTextUrl get() = "$baseURL/csv"
     /**
      * @see [ai.platon.pulsar.test.rest.MockSiteController.json]
      * */
-    protected val jsonUrl get() = "http://127.0.0.1:$port/json"
+    protected val jsonUrl get() = "$baseURL/json"
     /**
      * @see [ai.platon.pulsar.test.rest.MockSiteController.robots]
      * */
-    protected val robotsUrl get() = "http://127.0.0.1:$port/robots.txt"
+    protected val robotsUrl get() = "$baseURL/robots.txt"
     protected val walmartUrl = "https://www.walmart.com/ip/584284401"
     protected val asin get() = url.substringAfterLast("/dp/")
     protected val driverFactory get() = session.context.getBean(WebDriverFactory::class)
@@ -60,67 +77,6 @@ class WebDriverTestBase : TestBase() {
             typeof(__pulsar_utils__)
             __pulsar_utils__.add(1, 1)
         """.trimIndent().split("\n").map { it.trim() }.filter { it.isNotBlank() }
-
-//    protected lateinit var server: HttpServer
-
-//    @BeforeTest
-//    fun createHTTPServer() {
-//        server = HttpServer.create(InetSocketAddress(port), 0)
-//        // raise a simple HTTP server to serve plain text, csv, json, etc.
-//        server.createContext("/text") {
-//            val response = """
-//User-agent: *
-//Disallow: /exec/obidos/account-access-login
-//Disallow: /exec/obidos/change-style
-//Disallow: /exec/obidos/flex-sign-in
-//Disallow: /exec/obidos/handle-buy-box
-//Disallow: /exec/obidos/tg/cm/member/
-//Disallow: /gp/aw/help/id=sss
-//Disallow: /gp/cart
-//Disallow: /gp/flex
-//Disallow: /gp/product/e-mail-friend
-//Disallow: /gp/product/product-availability
-//Disallow: /gp/product/rate-this-item
-//Disallow: /gp/sign-in
-//Disallow: /gp/reader
-//            """.trimIndent()
-//            it.sendResponseHeaders(200, response.length.toLong())
-//            it.responseBody.use {
-//                it.write(response.toByteArray())
-//            }
-//        }
-//
-//        server.createContext("/csv") {
-//            val response = """
-//                id,name,price
-//                1,Apple,1.99
-//                2,Banana,2.99
-//                3,Cherry,3.99
-//            """.trimIndent()
-//            it.sendResponseHeaders(200, response.length.toLong())
-//
-//            it.responseBody.use { it.write(response.toByteArray()) }
-//        }
-//
-//        server.createContext("/json") {
-//            val response = """
-//                {
-//                    "id": 1,
-//                    "name": "Apple",
-//                    "price": 1.99
-//                }
-//            """.trimIndent()
-//            it.sendResponseHeaders(200, response.length.toLong())
-//            it.responseBody.use { it.write(response.toByteArray()) }
-//        }
-//
-//        server.start()
-//    }
-//
-//    @AfterTest
-//    fun shutdownHTTPServer() {
-//        server.stop(0)
-//    }
 
     suspend fun evaluateExpressions(driver: WebDriver, type: String) {
         expressions.forEach { expression ->

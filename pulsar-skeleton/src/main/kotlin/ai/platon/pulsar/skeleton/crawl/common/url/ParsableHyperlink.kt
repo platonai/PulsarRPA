@@ -31,7 +31,7 @@ open class ParsableHyperlink(
     /**
      * The PageEvent handlers of this hyperlink.
      * */
-    override var event: PageEventHandlers = DefaultPageEventHandlers().also {
+    override var eventHandlers: PageEventHandlers = DefaultPageEventHandlers().also {
         it.loadEventHandlers.onHTMLDocumentParsed.addLast { page, document ->
             onParse(page, document)
         }

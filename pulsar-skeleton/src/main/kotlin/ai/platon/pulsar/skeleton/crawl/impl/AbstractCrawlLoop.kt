@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.skeleton.crawl.CrawlLoop
 import ai.platon.pulsar.skeleton.crawl.Crawler
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 abstract class AbstractCrawlLoop(
@@ -16,7 +17,12 @@ abstract class AbstractCrawlLoop(
         private val ID_SUPPLIER = AtomicInteger()
     }
 
+    protected val running = AtomicBoolean()
+
     override val id: Int = ID_SUPPLIER.incrementAndGet()
+
+    override val isRunning: Boolean
+        get() = running.get()
 
     /**
      * The url feeder is used by the crawl loop to feed urls to the crawler.

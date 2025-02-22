@@ -69,7 +69,7 @@ class WalmartCrawler(private val session: PulsarSession = PulsarContexts.createS
             .map { ParsableHyperlink("$it $itemArgs", parseHandler) }
             .onEach {
                 it.referrer = portalUrl
-                it.event.chain(options.itemEvent)
+                it.eventHandlers.chain(options.itemEvent)
             }
             .toList()
             .shuffled()

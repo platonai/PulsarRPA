@@ -1,11 +1,10 @@
 package ai.platon.pulsar.test.session
 
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.skeleton.common.persist.ext.loadEvent
-import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.context.SQLContexts
+import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import java.util.concurrent.CompletableFuture
 import kotlin.test.Test
@@ -52,7 +51,7 @@ class SessionTests {
         println("All pages are loaded")
 
         pages.forEach { assertTrue { it.isFetched } }
-        pages2.forEach { assertTrue { it.loadEvent != null } }
+        pages2.forEach { assertTrue { it.loadEventHandlers != null } }
         assertEquals(pages.size, pages2.size)
     }
 
@@ -82,7 +81,7 @@ class SessionTests {
 
         pages.forEach { assertTrue { it.isFetched } }
         pages2.forEach { assertTrue { it.isCached } }
-        pages2.forEach { assertTrue { it.loadEvent != null } }
+        pages2.forEach { assertTrue { it.loadEventHandlers != null } }
         assertEquals(pages.size, pages2.size)
     }
 

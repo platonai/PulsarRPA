@@ -346,7 +346,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     public boolean isInternal() {
-        return hasMark(Mark.INTERNAL);
+        return hasMark(Mark.INTERNAL) || UrlUtils.isInternal(url);
     }
 
     public boolean isNotInternal() {
