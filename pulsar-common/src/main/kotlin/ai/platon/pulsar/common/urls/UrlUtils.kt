@@ -906,7 +906,11 @@ object UrlUtils {
     @Throws(MalformedURLException::class)
     fun getOrigin(url: String): String {
         val u = URI.create(url).toURL()
-        return u.protocol + "://" + u.host
+        return if (u.port == 80) {
+            u.protocol + "://" + u.host
+        } else {
+            u.protocol + "://" + u.host + ":" + u.port
+        }
     }
 
     /**
@@ -921,8 +925,7 @@ object UrlUtils {
         }
 
         return try {
-            val u = URI.create(url).toURL()
-            u.protocol + "://" + u.host
+            return getOrigin(url)
         } catch (t: Throwable) {
             null
         }
