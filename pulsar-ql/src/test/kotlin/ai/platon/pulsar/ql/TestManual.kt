@@ -82,7 +82,7 @@ class TestManual : TestBase() {
     }
 
     @Test
-    @Ignore("SlowTest")
+    @Ignore("TimeConsumingTest")
     fun loadOutPagesUsingPreDefinedFunction() {
         val expr = "width > 240 && width < 250 && height > 360 && height < 370"
         execute("CALL SET_PAGE_EXPIRES('1s', 1)")
@@ -254,7 +254,7 @@ FROM LOAD_OUT_PAGES('$portal', '.news_list_box', 1, 10)
      * A simple Web page monitor, monitoring products
      * */
     @Test
-    @Ignore("SlowTest")
+    @Ignore("TimeConsumingTest")
     fun monitorProductColumn() {
         val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>30)"
         val titleExpr =
@@ -275,7 +275,7 @@ WHERE DOM_CH(DOM) > 100
      * A simple Web page monitor, monitoring products
      * */
     @Test
-    @Ignore("SlowTest")
+    @Ignore("TimeConsumingTest")
     fun monitorProductColumn2() {
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
                 "FROM LOAD_AND_GET_FEATURES('$productIndexUrl') " +

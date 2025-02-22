@@ -549,7 +549,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.version}</version>
                 <configuration>
-                    <excludedGroups>SlowTest,ExternalServiceTest</excludedGroups>
+                    <excludedGroups>TimeConsumingTest,ExternalServiceTest</excludedGroups>
                 </configuration>
 
                 <dependencies>

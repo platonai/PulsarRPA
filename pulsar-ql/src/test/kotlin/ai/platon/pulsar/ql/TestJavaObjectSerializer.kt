@@ -161,7 +161,7 @@ class TestJavaObjectSerializer : TestBase() {
         println(dom.element.uniqueName)
     }
     
-    @Ignore("SlowTest")
+    @Ignore("TimeConsumingTest")
     @Test
     fun testNetworkSerialization3() {
         val conn = remoteDB.getConnection("testNetworkSerialization3")
