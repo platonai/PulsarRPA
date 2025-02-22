@@ -202,14 +202,14 @@ java -jar exotic-standalone.jar
 <dependency>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
-  <version>2.1.1</version>
+  <version>2.1.3</version>
 </dependency>
 ```
 
 使用 Gradle 时，可以在 `build.gradle` 文件中添加以下依赖：
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-bom:2.1.1")
+implementation("ai.platon.pulsar:pulsar-bom:2.1.3")
 ```
 
 也可以从 Github 克隆模板项目，包括 [kotlin](https://github.com/platonai/pulsar-kotlin-template), [java-11](https://github.com/platonai/pulsar-java-template), [java-17](https://github.com/platonai/pulsar-java-17-template)。

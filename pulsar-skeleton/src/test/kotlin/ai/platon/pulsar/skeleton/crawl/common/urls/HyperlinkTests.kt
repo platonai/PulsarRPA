@@ -18,7 +18,7 @@ class HyperlinkTests {
         assertEquals(u1, u2)
 
         u1 = Hyperlink(UrlCommon.urlString1)
-        u2 = Hyperlink(UrlCommon.urlString1, args = "-i 0s")
+        u2 = Hyperlink(UrlCommon.urlString1, "", args = "-i 0s")
         assertEquals(u1, u2)
 
         u1 = Hyperlink(UrlCommon.urlString1)
@@ -33,7 +33,7 @@ class HyperlinkTests {
         u2 = Hyperlink(UrlCommon.urlString2)
         assertNotEquals(u1, u2)
 
-        assertEquals(Hyperlink(UrlCommon.urlString1), Hyperlink(UrlCommon.urlString1, args = "-i 0s"))
+        assertEquals(Hyperlink(UrlCommon.urlString1), Hyperlink(UrlCommon.urlString1, "", args = "-i 0s"))
     }
 
     @Test

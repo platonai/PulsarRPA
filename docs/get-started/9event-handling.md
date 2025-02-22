@@ -124,7 +124,7 @@ fun main() {
     
     val url = "https://www.amazon.com/dp/B0C1H26C46"
     val session = PulsarContexts.createSession()
-    val link = ListenableHyperlink(url, args = "-refresh -parse", event = PrintFlowEventHandlers())
+    val link = ListenableHyperlink(url, "", args = "-refresh -parse", event = PrintFlowEventHandlers())
     
     // submit the link to the fetch pool.
     session.submit(link)

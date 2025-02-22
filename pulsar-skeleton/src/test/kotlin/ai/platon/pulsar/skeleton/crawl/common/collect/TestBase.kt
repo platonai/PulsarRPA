@@ -21,7 +21,7 @@ open class TestBase {
     fun setUp() {
         urlLoader = TemporaryLocalFileUrlLoader()
         val hyperlinks = IntRange(1, queueSize).map { AppConstants.EXAMPLE_URL + "/$it" }
-                .mapIndexed { i, url -> Hyperlink(url, order = 1 + i) }
+                .mapIndexed { i, url -> Hyperlink(url, "", order = 1 + i) }
         urlLoader.saveAll(hyperlinks, group)
     }
 }

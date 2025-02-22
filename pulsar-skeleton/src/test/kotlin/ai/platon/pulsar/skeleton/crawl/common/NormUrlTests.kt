@@ -37,7 +37,7 @@ class NormUrlTests {
         val url = AppConstants.NIL_PAGE_URL
         val args = ""
         val configuredUrl = url
-        assertNormUrl(url, args, configuredUrl, NormURL.NIL)
+        assertNormUrl(url, args, configuredUrl, NormURL.createNil())
     }
 
     private fun assertNormUrl(url: String, args: String, configuredUrl: String, normURL: NormURL) {

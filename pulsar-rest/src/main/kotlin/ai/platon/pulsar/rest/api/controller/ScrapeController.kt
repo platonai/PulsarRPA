@@ -44,7 +44,7 @@ class ScrapeController(
      * */
     @GetMapping("status", consumes = [MediaType.ALL_VALUE])
     fun status(
-        @RequestParam uuid: String,
+        @RequestParam(value = "uuid") uuid: String,
         httpRequest: HttpServletRequest,
     ): ScrapeResponse {
         val request = ScrapeStatusRequest(uuid)

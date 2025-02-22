@@ -14,6 +14,7 @@ import java.time.MonthDay
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.io.path.exists
+import kotlin.io.path.notExists
 
 internal class ContextGroup(val group: String) {
     
@@ -56,16 +57,33 @@ object BrowserFiles {
     private val contextGroups = ConcurrentHashMap<String, ContextGroup>()
     
     private val cleanedUserDataDirs = ConcurrentSkipListSet<Path>()
-    
+
+    /**
+     * Compute the next sequential test context directory.
+     * A typical context directory is like: /tmp/pulsar-vincent/context/group/test/cx.1
+     *
+     * @param fingerprint The fingerprint
+     * @param maxAgents The maximum number of available agents, every agent has its own context directory
+     * @return The next sequential context directory
+     * */
     @Throws(IOException::class)
     @Synchronized
-    fun computeTestContextDir(fingerprint: Fingerprint = Fingerprint.DEFAULT): Path {
+    fun computeTestContextDir(fingerprint: Fingerprint = Fingerprint.DEFAULT, maxAgents: Int = 10): Path {
         val lockFile = AppPaths.BROWSER_TMP_DIR_LOCK
         return runWithFileLock(lockFile) { channel ->
-            computeNextSequentialContextDir0("test", fingerprint, 5, channel = channel)
+            computeNextSequentialContextDir0("test", fingerprint, maxAgents, channel = channel)
         }
     }
 
+    /**
+     * Compute the next sequential context directory.
+     * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/cx.1
+     *
+     * @param group The group name, default is "default"
+     * @param fingerprint The fingerprint
+     * @param maxAgents The maximum number of available agents, every agent has its own context directory
+     * @return The next sequential context directory
+     * */
     @Throws(IOException::class)
     @Synchronized
     fun computeNextSequentialContextDir(
@@ -194,7 +212,7 @@ object BrowserFiles {
             cleanedUserDataDirs.add(dirToDelete)
         }
     }
-    
+
     /**
      * Compute the next sequential context directory.
      * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/cx.1
@@ -202,31 +220,25 @@ object BrowserFiles {
     @Throws(IOException::class)
     private fun computeNextSequentialContextDir0(group: String, fingerprint: Fingerprint, maxAgents: Int, channel: FileChannel): Path {
         require(channel.isOpen) { "The lock file channel is closed" }
-        
+
         val prefix = CONTEXT_DIR_PREFIX
         val groupBaseDir = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve(group).resolve(fingerprint.browserType.name)
-        Files.createDirectories(groupBaseDir)
-        val contextGroup = contextGroups.computeIfAbsent(group) { ContextGroup(group) }
-        
-        Files.list(groupBaseDir)
-            .filter { Files.isDirectory(it) && it.fileName.toString().startsWith(prefix) }
-            .forEach { contextGroup.add(it) }
-        
-        // logger.info("contextGroup.size: ${contextGroup.size} maxContexts: $maxContexts")
-        
-        if (contextGroup.size >= maxAgents) {
-            return contextGroup.iterator.next()
+
+        val expectedContextPaths = IntRange(1, maxAgents)
+            .map { String.format("%s%s", prefix, it) }
+            .map { groupBaseDir.resolve(it) }
+        expectedContextPaths.filter { it.notExists() }.forEach {
+            Files.createDirectories(it)
         }
-        
-        val contextCount = computeContextCount(groupBaseDir, prefix, channel)
-        
-        val fileName = String.format("%s%s", prefix, contextCount)
-        val path = groupBaseDir.resolve(fileName)
-        Files.createDirectories(path)
-        
-        logger.info("New privacy context dir: $fileName maxAgents: $maxAgents")
-        
-        return path
+
+        val contextGroup = contextGroups.computeIfAbsent(group) { ContextGroup(group) }
+        Files.list(groupBaseDir)
+            .filter { Files.isDirectory(it) }
+            .filter { it.fileName.toString().startsWith(prefix) }
+            .filter { it in expectedContextPaths }
+            .forEach { contextGroup.add(it) }
+
+        return contextGroup.iterator.next()
     }
 
     /**

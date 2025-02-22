@@ -20,7 +20,7 @@ open class ParsableHyperlink(
      * A event handler that will be called when the page is parsed.
      * */
     val onParse: (WebPage, FeaturedDocument) -> Any?
-): Hyperlink(url, args = "-parse"), ListenableUrl {
+): Hyperlink(url, "", args = "-parse"), ListenableUrl {
 
     /**
      * Java compatible constructor
@@ -31,7 +31,7 @@ open class ParsableHyperlink(
     /**
      * The PageEvent handlers of this hyperlink.
      * */
-    override var event: PageEventHandlers = DefaultPageEventHandlers().also {
+    override var eventHandlers: PageEventHandlers = DefaultPageEventHandlers().also {
         it.loadEventHandlers.onHTMLDocumentParsed.addLast { page, document ->
             onParse(page, document)
         }

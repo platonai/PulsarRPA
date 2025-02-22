@@ -36,14 +36,14 @@ fun main() {
     // Load the portal page and then load all links specified by `-outLink`.
     // Option `-outLink` specifies the cssSelector to select links in the portal page to load.
     // Option `-topLinks` specifies the maximal number of links selected by `-outLink`.
-    val hyperlink = Hyperlink(url, args = "-expires 10s -itemExpires 10s")
+    val hyperlink = Hyperlink(url, "", args = "-expires 10s -itemExpires 10s")
     val pages = session.loadOutPages(hyperlink, "-outLink a[href~=/dp/] -topLinks 5")
     println("Hyperlink's out pages are loaded | " + pages.size)
 
     // Load the portal page and submit the out links specified by `-outLink` to the URL pool.
     // Option `-outLink` specifies the cssSelector to select links in the portal page to submit.
     // Option `-topLinks` specifies the maximal number of links selected by `-outLink`.
-    val hyperlink2 = Hyperlink(url, args = "-expires 1d -itemExpires 7d")
+    val hyperlink2 = Hyperlink(url, "", args = "-expires 1d -itemExpires 7d")
     session.submitForOutPages(hyperlink2, "-outLink a[href~=/dp/] -topLinks 5")
 
     //
@@ -62,8 +62,8 @@ fun main() {
     //
 
     // Load a ListenableHyperlink so we can register various event handlers
-    val listenableLink = ListenableHyperlink(url)
-    listenableLink.event.browseEventHandlers.onDidInteract.addLast { pg, driver ->
+    val listenableLink = ListenableHyperlink(url, "")
+    listenableLink.eventHandlers.browseEventHandlers.onDidInteract.addLast { pg, driver ->
         println("Interaction finished " + page.url)
     }
     val page3 = session.load(listenableLink, "-expires 10s")
@@ -76,7 +76,7 @@ fun main() {
     // Load a CompletableListenableHyperlink, so we can register various event handlers,
     // and we can wait for the execution to complete.
     val completableListenableHyperlink = CompletableListenableHyperlink<WebPage>(url).apply {
-        event.loadEventHandlers.onLoaded.addLast { complete(it) }
+        eventHandlers.loadEventHandlers.onLoaded.addLast { complete(it) }
     }
     session.submit(completableListenableHyperlink, "-expires 10s")
     val page4 = completableListenableHyperlink.join()

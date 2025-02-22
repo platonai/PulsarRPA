@@ -56,6 +56,6 @@ open class CompletableListenableHyperlink<T>(
     /**
      * The event handler
      * */
-    override var event: PageEventHandlers = PageEventHandlersFactory().create(),
+    override var eventHandlers: PageEventHandlers = PageEventHandlersFactory().create(),
 ): UrlAware, Comparable<UrlAware>, ListenableUrl,
     CompletableHyperlink<T>(url, text, order, referrer, args, href, priority, lang, country, district, nMaxRetry, depth)

@@ -5,6 +5,11 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class MockSiteController {
+    @GetMapping("/")
+    fun home(): String {
+        return "Welcome! This site is used for internal test."
+    }
+
     @GetMapping("hello")
     fun hello(): String {
         return "Hello, World!"

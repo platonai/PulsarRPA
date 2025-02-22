@@ -2,8 +2,8 @@ package ai.platon.pulsar.browser.driver.chrome.impl
 
 import ai.platon.pulsar.browser.driver.chrome.DefaultWebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.Transport
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.warnForClose
@@ -102,9 +102,9 @@ class TransportImpl : Transport {
             tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.asyncRemote.sendText(message)
         } catch (e: IllegalStateException) {
-            throw ChromeIOException("Failed to send message", e)
+            throw ChromeIOException("Failed to send message, caused by ${e.message}", e)
         } catch (e: IOException) {
-            throw ChromeIOException("Failed to send message", e)
+            throw ChromeIOException("Failed to send message, caused by ${e.message}", e)
         }
     }
 

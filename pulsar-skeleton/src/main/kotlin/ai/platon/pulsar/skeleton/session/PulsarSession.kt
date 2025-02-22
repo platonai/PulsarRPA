@@ -489,10 +489,49 @@ interface PulsarSession : AutoCloseable {
      * @param url The url to open
      * @return The webpage loaded or NIL
      */
-    fun open(url: String, event: PageEventHandlers): WebPage
+    fun open(url: String, eventHandlers: PageEventHandlers): WebPage
+    /**
+     * Open a url with webdriver.
+     *
+     * This method opens the url immediately, regardless of the previous state of the page.
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val page = session.open(url, driver)
+     * ```
+     *
+     * @param url The url to open
+     * @return The webpage loaded or NIL
+     */
+    suspend fun open(url: String, driver: WebDriver): WebPage
+    /**
+     * Open a url with page events and webdriver.
+     *
+     * This method opens the url immediately, regardless of the previous state of the page.
+     *
+     * ```kotlin
+     * val url = "http://example.com"
+     * val event = PrintFlowEvent()
+     * val page = session.open(url, event)
+     * ```
+     *
+     * @param url The url to open
+     * @return The webpage loaded or NIL
+     */
+    suspend fun open(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage
+    /**
+     * Connect a webpage to a webdriver.
+     *
+     * ```kotlin
+     * val page = session.connect(driver)
+     * ```
+     *
+     * @return The webpage connected to the webdriver or NIL
+     */
+    suspend fun connect(driver: WebDriver): WebPage
 
     /**
-     * Load a url.
+     * Load an url.
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.

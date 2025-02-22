@@ -13,9 +13,11 @@ open class ListenableHyperlink(
      * */
     url: String,
     /**
-     * The anchor text
+     * The anchor text is not always available and is not a required field.
+     * It can easily be filled by args by mistake, so we require you to fill this field in the current version.
+     * We plan to move this field to a later position in future versions.
      * */
-    text: String = "",
+    text: String,
     /**
      * The order of this hyperlink in it referrer page
      * */
@@ -59,7 +61,7 @@ open class ListenableHyperlink(
     /**
      * The event handler
      * */
-    override var event: PageEventHandlers = PageEventHandlersFactory().create(),
+    override var eventHandlers: PageEventHandlers = PageEventHandlersFactory().create(),
 ): Hyperlink(url, text, order, referrer, args, href, priority, lang, country, district, nMaxRetry, depth),
     ListenableUrl {
     /**

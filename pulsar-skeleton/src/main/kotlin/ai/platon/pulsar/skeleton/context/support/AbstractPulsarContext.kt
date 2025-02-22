@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -20,6 +19,7 @@ import ai.platon.pulsar.skeleton.crawl.common.FetchState
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.crawl.component.*
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarEnvironment
@@ -234,7 +234,7 @@ abstract class AbstractPulsarContext(
     
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormURL {
         val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
-        val link = Hyperlink(url0, href = url0)
+        val link = Hyperlink(url0, "", href = url0)
         return normalize(link, options, toItemOption)
     }
     
@@ -248,12 +248,19 @@ abstract class AbstractPulsarContext(
     }
     
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormURL {
-        return CombinedUrlNormalizer(urlNormalizerOrNull).normalize(url, options, toItemOption)
+        val normURL = CombinedUrlNormalizer(urlNormalizerOrNull).normalize(url, options, toItemOption)
+        if (normURL.isNil) {
+            logger.info("URL is normalized to NIL | {}", url)
+        }
+        return normURL
     }
     
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormURL? {
-        if (url == null) return null
-        return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
+        if (url == null) {
+            return null
+        }
+
+        return kotlin.runCatching { normalize(url, options, toItemOption).takeIf { it.isNotNil } }.getOrNull()
     }
     
     override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean): List<NormURL> {
@@ -316,7 +323,7 @@ abstract class AbstractPulsarContext(
     
     @Throws(WebDBException::class)
     override fun getContentAsString(url: String): String? = webDbOrNull?.getContentAsString(url)
-    
+
     /**
      * Check if a page exists in the storage.
      * */
@@ -352,9 +359,35 @@ abstract class AbstractPulsarContext(
     override fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
-    
+
     /**
-     * Load an page with specified options, see [LoadOptions] for all options.
+     * Open a web page with a web driver.
+     * */
+    override suspend fun open(url: String, driver: WebDriver, options: LoadOptions): WebPage {
+        require(options.refresh)
+        val normURL = normalize(url, options)
+        require(normURL.options.refresh)
+        return abnormalPage ?: loadComponent.open(normURL, driver)
+    }
+
+    /**
+     * Connect to a web page with a web driver.
+     * */
+    override suspend fun connect(driver: WebDriver, options: LoadOptions): WebPage {
+        // NOTE: the url can be non-standard
+        val url = driver.currentUrl()
+
+        val url1 = if (UrlUtils.isBrowserURL(url)) {
+            UrlUtils.browserURLToStandardURL(url)
+        } else {
+            url
+        }
+
+        return abnormalPage ?: loadComponent.connect(normalize(url1, options), driver)
+    }
+
+    /**
+     * Load a page with specified options, see [LoadOptions] for all options.
      *
      * @param url     The url which can be followed by arguments.
      * @param options The load options.
@@ -430,7 +463,7 @@ abstract class AbstractPulsarContext(
         startLoopIfNecessary()
         return loadComponentOrNull?.loadAllAsync(urls) ?: listOf()
     }
-    
+
     override fun submit(url: UrlAware): AbstractPulsarContext {
         startLoopIfNecessary()
         if (url.isStandard || url is DegenerateUrl) {
@@ -444,7 +477,7 @@ abstract class AbstractPulsarContext(
         crawlPoolOrNull?.addAll(urls.filter { it.isStandard || it is DegenerateUrl })
         return this
     }
-    
+
     /**
      * Parse the WebPage content using parseComponent.
      */
@@ -580,7 +613,7 @@ abstract class AbstractPulsarContext(
     }
     
     private fun startLoopIfNecessary() {
-        if (isActive && !crawlLoops.isStarted) {
+        if (isActive) {
             crawlLoops.start()
         }
     }

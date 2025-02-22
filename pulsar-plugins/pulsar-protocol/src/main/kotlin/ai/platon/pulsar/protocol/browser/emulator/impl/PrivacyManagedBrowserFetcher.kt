@@ -28,11 +28,13 @@ import ai.platon.pulsar.skeleton.common.persist.ext.browseEventHandlers
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.WebDriverFetcher
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverCancellationException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -60,8 +62,13 @@ open class BrowserWebDriverFetcher(
     override suspend fun fetchDeferred(task: FetchTask, driver: WebDriver): FetchResult {
         emit(EventType.willFetch, task.page, driver)
 
-        val result = browserEmulator.visit(task, driver)
-        
+        val result = try {
+            browserEmulator.visit(task, driver)
+        } catch (e: IllegalWebDriverStateException) {
+            logger.warn("Illegal webdriver, cancel the task | {}", e.message)
+            FetchResult.canceled(task)
+        }
+
         emit(EventType.fetched, task.page, driver)
         
         return result
@@ -135,17 +142,13 @@ open class PrivacyManagedBrowserFetcher(
      * */
     @Throws(Exception::class)
     suspend fun fetchDeferred(task: FetchTask): Response {
-        var driver = task.page.getVar(WebDriver::class.java)
-        if (driver is WebDriver) {
-            return webdriverFetcher.fetchDeferred(task, driver).response
-        }
-        
-        // Old style to retrieve the driver, will be removed in the future
-        driver = task.page.getVar("WEB_DRIVER")
-        if (driver is WebDriver) {
+        // Specified driver is always used and ignore the privacy context
+        val driver = getSpecifiedWebDriver(task.page)
+        if (driver != null) {
             return webdriverFetcher.fetchDeferred(task, driver).response
         }
 
+        // If the driver is not specified, use privacy manager to get a driver
         // @Throws(ProxyException::class, Exception::class)
         return privacyManager.run(task) { _, driver2 -> webdriverFetcher.fetchDeferred(task, driver2) }.response
     }
@@ -169,5 +172,17 @@ open class PrivacyManagedBrowserFetcher(
                 privacyManager.close()
             }
         }
+    }
+
+    /**
+     * Get specified web driver
+     * */
+    private fun getSpecifiedWebDriver(page: WebPage): WebDriver? {
+        // Specified driver is always used
+        val driver = page.getBeanOrNull(WebDriver::class.java)
+            ?: page.getVar("WEB_DRIVER") // Old style to retrieve the driver, will be removed in the future
+            ?: page.conf.getBeanOrNull(WebDriver::class)
+            ?: page.conf.getBeanOrNull(WebDriver::class.java)
+        return driver as? WebDriver
     }
 }

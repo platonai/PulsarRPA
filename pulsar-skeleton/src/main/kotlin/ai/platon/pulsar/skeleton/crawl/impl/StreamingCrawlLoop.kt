@@ -9,7 +9,6 @@ import ai.platon.pulsar.skeleton.crawl.Crawler
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicBoolean
 
 open class StreamingCrawlLoop(
     /**
@@ -24,20 +23,19 @@ open class StreamingCrawlLoop(
 ) : AbstractCrawlLoop(name, unmodifiedConfig) {
     private val logger = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
-    private val running = AtomicBoolean()
     private val scope = CoroutineScope(Dispatchers.Default) + CoroutineName("sc")
     private var crawlJob: Job? = null
     private val started = CountDownLatch(1)
 
-    val isRunning get() = running.get()
-
     private lateinit var _crawler: StreamingCrawler
     override val crawler: Crawler get() = _crawler
-    
-    private lateinit var _urlFeeder: UrlFeeder
+
+    private val _urlFeeder: UrlFeeder by lazy { createUrlFeeder() }
+    /**
+     * A UrlFeeder is a wrapper to globalCache.urlPool
+     * */
     override val urlFeeder: UrlFeeder get() = _urlFeeder
 
-    // TODO: better initialization, may use spring bean
     private val context get() = PulsarContexts.create()
 
     init {
@@ -69,6 +67,7 @@ open class StreamingCrawlLoop(
 
         if (running.compareAndSet(false, true)) {
             start0()
+            logger.info("Crawl loop is started with {} link collectors | #{} | {}", urlFeeder.collectors.size, id, this)
         }
     }
 
@@ -76,12 +75,14 @@ open class StreamingCrawlLoop(
     override fun stop() {
         if (running.compareAndSet(true, false)) {
             _crawler.close()
-            _urlFeeder.clear()
+
+            // url feeder should be shared by all crawlers, so we should not clear it
+            // _urlFeeder.clear()
 
             runBlocking { crawlJob?.cancelAndJoin() }
 
             crawlJob = null
-            logger.info("Crawl loop is stopped | #{} | {}@{}", id, this::class.simpleName, hashCode())
+            logger.info("Crawl loop is stopped | #{} | {}", id, this)
         }
     }
 
@@ -107,7 +108,6 @@ open class StreamingCrawlLoop(
         // clear the global illegal states, so the newly created crawler can work properly
         StreamingCrawler.clearIllegalState()
 
-        _urlFeeder = createUrlFeeder()
         val urls = urlFeeder.asSequence()
         _crawler = StreamingCrawler(urls, session, autoClose = false)
 
@@ -117,9 +117,6 @@ open class StreamingCrawlLoop(
                 _crawler.run(this)
             }
         }
-        
-        logger.info("Crawl loop is started with {} link collectors | #{} | {}@{}",
-            urlFeeder.collectors.size, id, this, hashCode())
     }
 
     private fun createUrlFeeder(): UrlFeeder {

@@ -21,7 +21,7 @@ open class DegenerateXSQLScrapeHyperlink(
 ) : AbstractScrapeHyperlink(request, DegenerateXSQL(uuid, sql = request.sql), session, uuid), DegenerateUrl {
     private val logger = LoggerFactory.getLogger(DegenerateXSQLScrapeHyperlink::class.java)
     override var args: String? = "-taskId $uuid ${sql.args}"
-    override var event: PageEventHandlers = createPageEventHandlers()
+    override var eventHandlers: PageEventHandlers = createPageEventHandlers()
 
     override fun complete(page: WebPage) {
         try {

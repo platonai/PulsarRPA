@@ -288,6 +288,12 @@ interface WebDriver : Closeable {
      * If the browser failed to return a proper url, returns the passed in url to navigate, just like a real user enter
      * a url in the address bar but the browser failed to load the page.
      *
+     * NOTE: the url can be non-standard, for example:
+     *
+     * about:blank
+     * chrome://newtab
+     * chrome://settings
+     *
      * @return A string containing the URL of the document, or the passed in url to navigate.
      */
     @Throws(WebDriverException::class)

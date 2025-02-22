@@ -58,9 +58,8 @@ public interface AppConstants {
 
     /**
      * An example of the shortest url
-     * TODO: consider ws://t.tt
      * */
-    String SHORTEST_VALID_URL = "ftp://t.tt";
+    String SHORTEST_VALID_URL = "http://t.tt";
     /**
      * The length of the shortest example url
      * */
@@ -74,7 +73,7 @@ public interface AppConstants {
      * */
     String PSEUDO_URL_BASE = "http://www.pseudo.com";
     /**
-     * The prefix of all internal url
+     * The prefix of all pulsar specified urls
      * */
     String INTERNAL_URL_PREFIX = "http://internal.pulsar.platon.ai";
     /**
@@ -248,4 +247,6 @@ public interface AppConstants {
 
 
     String LOCAL_FILE_SERVE_PREFIX = "http://localfile.org";
+
+    String BROWSER_SPECIFIC_URL_PREFIX = "http://browser-specific.org";
 }

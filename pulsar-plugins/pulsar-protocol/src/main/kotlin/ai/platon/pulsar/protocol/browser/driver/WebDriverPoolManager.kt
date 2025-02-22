@@ -10,7 +10,7 @@ import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
-import ai.platon.pulsar.skeleton.common.persist.ext.event
+import ai.platon.pulsar.skeleton.common.persist.ext.eventHandlers
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
@@ -161,9 +161,9 @@ open class WebDriverPoolManager(
         } catch (e: InterruptedException) {
             warnInterruptible(this, e)
             return null
-        } catch (e: BrowserUnavailableException) {
+        } catch (e: IllegalWebDriverStateException) {
             logger.warn(
-                "Browser unavailable, close the browser | {} | {} | {}",
+                "Web driver unavailable, close the browser | {} | {} | {}",
                 task.browserId, e.message, task.page.url
             )
             closeBrowserAccompaniedDriverPoolGracefully(task.browserId, Duration.ofSeconds(10))
@@ -497,7 +497,7 @@ open class WebDriverPoolManager(
         var driver: WebDriver? = null
         try {
             driver =
-                driverPool.poll(task.priority, task.volatileConfig, task.page.event?.browseEventHandlers, task.page)
+                driverPool.poll(task.priority, task.volatileConfig, task.page.eventHandlers?.browseEventHandlers, task.page)
             
             return runWithDriver(task, driver)
         } finally {

@@ -5,12 +5,12 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.protocol.browser.driver.SessionLostException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserUnavailableException
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.text.MessageFormat
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -80,11 +80,13 @@ internal class RobustRPC(
         }
     }
     
-    @Throws(BrowserUnavailableException::class, SessionLostException::class, Exception::class)
+    @Throws(IllegalWebDriverStateException::class, Exception::class)
     fun handleChromeException(e: ChromeDriverException, action: String? = null, message: String? = null) {
         when (e) {
             is ChromeIOException -> {
-                throw BrowserUnavailableException("Chrome IO error", e)
+                val message2 = MessageFormat.format("Browser unavailable: {0} ({1}/{2}) | {3}",
+                    action, rpcFailures, maxRPCFailures, e.message)
+                throw IllegalWebDriverStateException("Chrome IO error | $message2", e)
             }
             is ChromeRPCException -> {
                 handleChromeRPCException(e, action, message)
@@ -93,11 +95,11 @@ internal class RobustRPC(
         }
     }
     
-    @Throws(SessionLostException::class)
+    @Throws(IllegalWebDriverStateException::class)
     fun handleChromeRPCException(e: ChromeRPCException, action: String? = null, message: String? = null) {
         if (rpcFailures.get() > maxRPCFailures) {
             logger.warn("Too many RPC failures: {} ({}/{}) | {}", action, rpcFailures, maxRPCFailures, e.message)
-            throw SessionLostException("Too many RPC failures", driver)
+            throw IllegalWebDriverStateException("Too many RPC failures", driver)
         }
         
         val count = exceptionCounts.computeIfAbsent(e.code) { AtomicInteger() }.get()

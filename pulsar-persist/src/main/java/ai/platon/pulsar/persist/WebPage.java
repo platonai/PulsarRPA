@@ -2,6 +2,7 @@ package ai.platon.pulsar.persist;
 
 import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HtmlIntegrity;
+import ai.platon.pulsar.common.ObjectCache;
 import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.browser.BrowserType;
 import ai.platon.pulsar.common.config.VolatileConfig;
@@ -10,6 +11,7 @@ import ai.platon.pulsar.persist.experimental.WebAsset;
 import ai.platon.pulsar.persist.gora.generated.*;
 import ai.platon.pulsar.persist.metadata.*;
 import ai.platon.pulsar.persist.model.*;
+import kotlin.reflect.KClass;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -69,6 +71,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      */
     @NotNull
     private VolatileConfig conf;
+
     /**
      * Web page scope variables
      */
@@ -343,7 +346,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     public boolean isInternal() {
-        return hasMark(Mark.INTERNAL);
+        return hasMark(Mark.INTERNAL) || UrlUtils.isInternal(url);
     }
 
     public boolean isNotInternal() {
@@ -426,6 +429,36 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     public <T> void setVar(@NotNull T value) {
         variables.set(value.getClass().getName(), value);
+    }
+
+    /**
+     * Returns the bean to which the specified class is mapped,
+     * or {@code null} if the local bean map contains no mapping for the class.
+     *
+     * @param clazz the class of the variable
+     */
+    public Object getBean(Class<?> clazz) {
+        var bean = getBeanOrNull(clazz);
+        if (bean == null) {
+            throw new NoSuchElementException("No bean found for class " + clazz + " in WebPage");
+        }
+        return bean;
+    }
+    /**
+     * Returns the data to which the specified class is mapped,
+     * or {@code null} if the local bean map contains no mapping for the class.
+     *
+     * @param clazz the class of the variable
+     * */
+    @Nullable
+    public Object getBeanOrNull(@NotNull Class<?> clazz) {
+        return variables.get(clazz.getName());
+    }
+    /**
+     * Set a page scope temporary java bean.
+     * */
+    public <T> void putBean(@NotNull T bean) {
+        variables.set(bean.getClass().getName(), bean);
     }
 
     /**

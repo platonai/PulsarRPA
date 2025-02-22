@@ -35,7 +35,9 @@ open class XSQLScrapeHyperlink(
             }
             onLoaded.addLast { url, page ->
                 // println("crawl-onLoaded")
-                hyperlink.complete(page ?: WebPage.NIL)
+                if (!hyperlink.isDone) {
+                    hyperlink.complete(page ?: WebPage.NIL)
+                }
             }
         }
     }
@@ -74,7 +76,7 @@ open class XSQLScrapeHyperlink(
     private val logger = getLogger(XSQLScrapeHyperlink::class)
 
     override var args: String? = "-parse ${sql.args}"
-    override var event = PageEventHandlersFactory.create(
+    override var eventHandlers = PageEventHandlersFactory.create(
         loadEventHandlers = LoadEventHandlers(this, response),
         crawlEventHandlers = CrawlEventHandlers(this, response),
     )

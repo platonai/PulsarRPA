@@ -9,9 +9,10 @@ object FetchState {
     const val EXPIRED = 2
     const val SCHEDULED = 5
     const val REFRESH = 6
-    const val NO_CONTENT = 7
-    const val SMALL_CONTENT = 10
-    const val MISS_FIELD = 11
+    const val CONNECT = 7
+    const val NO_CONTENT = 20
+    const val SMALL_CONTENT = 21
+    const val MISS_FIELD = 30
     const val TEMP_MOVED = 300
     const val RETRY = 301
 

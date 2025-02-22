@@ -12,15 +12,17 @@ import ai.platon.pulsar.common.config.AppConstants
  * The [anchor text](https://en.wikipedia.org/wiki/Anchor_text), link label or link text is the visible,
  * clickable text in an HTML hyperlink.
  * */
-open class Hyperlink(
+open class Hyperlink constructor(
     /**
      * The url specification of the hyperlink, it is usually normalized, and can contain load arguments.
      * */
     url: String,
     /**
-     * The anchor text
+     * The anchor text is not always available and is not a required field.
+     * It can easily be filled by args by mistake, so we require you to fill this field in the current version.
+     * We plan to move this field to a later position in future versions.
      * */
-    text: String = "",
+    text: String,
     /**
      * The order of this hyperlink in it referrer page
      * */

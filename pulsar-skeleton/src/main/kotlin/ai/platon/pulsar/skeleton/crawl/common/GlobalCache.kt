@@ -125,16 +125,26 @@ open class GlobalCache(val conf: ImmutableConfig) {
 /**
  * The global cache factory.
  * */
-class GlobalCacheFactory(val immutableConfig: ImmutableConfig) {
-    val reflectedGlobalCache: GlobalCache by lazy {
-        val clazz = immutableConfig.getClass(CapabilityTypes.GLOBAL_CACHE_CLASS, GlobalCache::class.java)
-        clazz.constructors.first { it.parameters.size == 1 }.newInstance(immutableConfig) as GlobalCache
+class GlobalCacheFactory(
+    val immutableConfig: ImmutableConfig
+) {
+    companion object {
+        private var _globalCache: GlobalCache? = null
     }
 
-    var specifiedGlobalCache: GlobalCache? = null
+    private fun createDefaultGlobalCache(): GlobalCache {
+        val cache = GlobalCache(immutableConfig)
+        _globalCache = cache
+        return cache
+    }
 
     /**
      * Get the global cache.
      * */
-    val globalCache get() = specifiedGlobalCache ?: reflectedGlobalCache
+    @get:Synchronized
+    val globalCache get() = _globalCache ?: createDefaultGlobalCache()
+
+    constructor(globalCache: GlobalCache, immutableConfig: ImmutableConfig): this(immutableConfig) {
+        _globalCache = globalCache
+    }
 }

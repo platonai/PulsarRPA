@@ -3,19 +3,18 @@ package ai.platon.pulsar.skeleton.crawl.component
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.persist.*
+import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
-import ai.platon.pulsar.skeleton.common.persist.ext.loadEvent
+import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.common.persist.ext.options
 import ai.platon.pulsar.skeleton.crawl.CoreMetrics
+import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolNotFound
 import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolOutput
 import ai.platon.pulsar.skeleton.crawl.protocol.http.ProtocolStatusTranslator
-import ai.platon.pulsar.persist.*
-import ai.platon.pulsar.persist.metadata.Mark
-import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
-import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 

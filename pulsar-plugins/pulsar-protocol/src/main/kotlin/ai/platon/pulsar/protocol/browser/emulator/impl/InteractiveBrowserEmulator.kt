@@ -63,9 +63,9 @@ open class InteractiveBrowserEmulator(
     immutableConfig: ImmutableConfig,
 ) : BrowserEmulator,
     BrowserEmulatorImplBase(driverPoolManager.driverSettings, responseHandler, immutableConfig) {
-    private val logger = getLogger(this)
-    private val tracer = getTracer(this)
-    private val taskLogger = getLogger(this, ".Task")
+    private val logger = getLogger(InteractiveBrowserEmulator::class)
+    private val tracer = getTracerOrNull(InteractiveBrowserEmulator::class)
+    private val taskLogger = getLogger(InteractiveBrowserEmulator::class, ".Task")
     
     private val numDeferredNavigates by lazy { MetricsSystem.reg.meter(this, "deferredNavigates") }
 
@@ -85,12 +85,10 @@ open class InteractiveBrowserEmulator(
      * @param driver The web driver
      * @return The result of this fetch
      * */
-    @Throws(Exception::class)
+    @Throws(WebDriverException::class)
     override suspend fun visit(task: FetchTask, driver: WebDriver): FetchResult {
-        return takeIf { isActive }?.browseWithDriver(task, driver) ?: FetchResult.canceled(
-            task,
-            "Inactive interactive browser emulator"
-        )
+        return takeIf { isActive }?.browseWithDriver(task, driver)
+            ?: FetchResult.canceled(task, "Inactive browser emulator")
     }
     
     /**
@@ -277,11 +275,11 @@ open class InteractiveBrowserEmulator(
         } catch (e: WebDriverCancellationException) {
             // The web driver is canceled
             response = ForwardingResponse.canceled(task.page)
-        } catch (e: SessionLostException) {
-            logger.warn("Web driver session #{} is lost | {}", e.driver?.id, e.brief())
+        } catch (e: IllegalWebDriverStateException) {
+            logger.warn("Web driver #{} is lost | {}", e.driver?.id, e.brief())
             driver.retire()
             exception = e
-            response = ForwardingResponse.privacyRetry(task.page, "Web driver session lost")
+            response = ForwardingResponse.privacyRetry(task.page, "Web driver lost")
         } catch (e: WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 logger.warn("Web driver is disconnected - {}", e.brief())
@@ -410,9 +408,16 @@ open class InteractiveBrowserEmulator(
         val fetchTask = navigateTask.fetchTask
         checkState(navigateTask.fetchTask, driver)
         require(driver is AbstractWebDriver)
-        
-        val interactResult = navigateAndInteract(navigateTask, driver, navigateTask.browserSettings)
-        
+
+        // TODO: a better flag to specify whether to connect or navigate
+        val connect = fetchTask.page.hasVar("connect")
+        val interactResult = if (connect) {
+            driver.ignoreDOMFeatures = true
+            connect(navigateTask, driver, navigateTask.browserSettings)
+        } else {
+            navigateAndInteract(navigateTask, driver, navigateTask.browserSettings)
+        }
+
         // TODO: separate status code of pulsar system and the status code from browser
         val httpCode = driver.mainResponseStatus
         val finalProtocolStatus =
@@ -468,7 +473,7 @@ open class InteractiveBrowserEmulator(
         require(task.url == page.url)
         val finalUrl = fetchTask.href ?: fetchTask.url
         val navigateEntry = NavigateEntry(finalUrl, page.id, task.url, pageReferrer = page.referrer)
-        
+
         emit1(EmulateEvents.willNavigate, page, driver)
         
         checkState(fetchTask, driver)
@@ -482,7 +487,9 @@ open class InteractiveBrowserEmulator(
         if (!driver.supportJavascript) {
             return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         }
-        
+
+        // if the webpage is connected to the webdriver, do not interact
+
         val interactTask = InteractTask(task, settings, driver)
         
         val result = try {
@@ -499,7 +506,41 @@ open class InteractiveBrowserEmulator(
         
         return result
     }
-    
+
+    @Throws(NavigateTaskCancellationException::class, WebDriverException::class)
+    private suspend fun connect(
+        task: NavigateTask,
+        driver: WebDriver,
+        settings: BrowserSettings,
+    ): InteractResult {
+        val fetchTask = task.fetchTask
+
+        checkState(fetchTask, task.driver)
+
+        val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
+        val page = task.page
+        require(driver is AbstractWebDriver)
+
+        tracer?.trace("{}", task.interactSettings)
+
+        if (result.state.isContinue) {
+            updateMetaInfos(page, driver)
+        }
+
+        // With the scrolling operation finished, the page is stable and unlikely to experience significant updates.
+        // Therefore, we can now proceed to calculate the document’s features.
+        // TODO: driver.pageSource() might be huge so there might be a performance issue
+        task.originalContentLength = driver.pageSource()?.length ?: 0
+
+        // js might not injected
+//        if (result.state.isContinue) {
+//            emit1(EmulateEvents.willComputeFeature, page, driver)
+//            emit1(EmulateEvents.featureComputed, page, driver)
+//        }
+
+        return result
+    }
+
     protected open suspend fun interactNoJsInvaded(interactTask: InteractTask): InteractResult {
         var pageSource = ""
         var i = 0

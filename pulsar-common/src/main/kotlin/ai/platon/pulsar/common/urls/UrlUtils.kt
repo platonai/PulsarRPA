@@ -5,14 +5,20 @@ import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
 import com.google.common.net.InternetDomainName
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.client.utils.URIBuilder
-import java.net.MalformedURLException
-import java.net.URI
-import java.net.URISyntaxException
-import java.net.URL
+import java.net.*
 import java.nio.file.Path
 import java.util.*
 
 object UrlUtils {
+    /**
+     * The prefix of allowed urls
+     */
+    val INTERNAL_URL_PREFIXES = listOf("chrome://", "edge://", "brave://")
+
+    /**
+     * The urls of all allowed internal urls
+     */
+    val INTERNAL_URLS = listOf("about:blank")
 
     /**
      * Test if the url is an internal URL. Internal URLs are URLs that are used to identify internal resources and
@@ -22,7 +28,9 @@ object UrlUtils {
      * @return true if the given str is an internal URL, false otherwise
      * */
     @JvmStatic
-    fun isInternal(url: String) = url.startsWith(INTERNAL_URL_PREFIX)
+    fun isInternal(url: String): Boolean {
+        return url.startsWith(INTERNAL_URL_PREFIX)
+    }
 
     /**
      * Test if the url is not an internal URL. Internal URLs are URLs that are used to identify internal resources and
@@ -61,6 +69,61 @@ object UrlUtils {
         val base64 = Base64.getUrlDecoder().decode(path).toString(Charsets.UTF_8)
         return Path.of(base64)
     }
+    /**
+     * Checks if the given string is a browser-specific url.
+     *
+     * This function determines whether the string is a browser-specific url
+     * by checking if it exists in the internal URL list (INTERNAL_URLS),
+     * or if it starts with any of the internal URL prefixes (INTERNAL_URL_PREFIXES).
+     *
+     * @param str The string to be checked.
+     * @return Returns true if the string is a browser-specific url; otherwise, returns false.
+     */
+    @JvmStatic
+    fun isBrowserURL(str: String): Boolean {
+        return INTERNAL_URLS.contains(str) || INTERNAL_URL_PREFIXES.any { str.startsWith(it) }
+    }
+    /**
+     * Checks if the given URL is a browser-specific URL by verifying if it starts with a predefined prefix.
+     *
+     * @param url The URL to check.
+     * @return Returns true if the URL starts with the browser-specific url prefix, otherwise false.
+     */
+    @JvmStatic
+    fun isMappedBrowserURL(url: String): Boolean {
+        return url.startsWith(AppConstants.BROWSER_SPECIFIC_URL_PREFIX)
+    }
+
+    /**
+     * Converts a browser url string into a complete URL.
+     * The function URL-encodes the url string and appends it to a predefined prefix to form the final URL.
+     *
+     * @param url The browser url string to be converted. This string will be URL-encoded.
+     * @return Returns the complete URL string containing the prefix and the encoded url parameter.
+     */
+    @JvmStatic
+    fun browserURLToStandardURL(url: String): String {
+        val encoded = URLEncoder.encode(url, Charsets.UTF_8)
+        val prefix = AppConstants.BROWSER_SPECIFIC_URL_PREFIX
+        return "$prefix?url=$encoded"
+    }
+
+    /**
+     * Extracts the browser url from a given URL and re-encodes it.
+     * The function retrieves the url parameter from the URL, re-encodes it, and reconstructs the URL.
+     *
+     * @param url The URL containing the browser url.
+     * @return Returns the reconstructed URL with the re-encoded url parameter.
+     */
+    @JvmStatic
+    fun standardURLToBrowserURL(url: String): String? {
+        val str = url.substringAfter("?url=")
+        if (str.isBlank() || str == url) {
+            return null
+        }
+
+        return URLDecoder.decode(str, Charsets.UTF_8)
+    }
 
     /**
      * Creates a {@code URL} object from the {@code String}
@@ -87,11 +150,22 @@ object UrlUtils {
      * Test if the str is a standard URL.
      *
      * @param  str   The string to test
-     * @return true if the given str is a a standard URL, false otherwise
+     * @return true if the given str is a standard URL, false otherwise
      * */
     @JvmStatic
     fun isStandard(str: String?): Boolean {
         return getURLOrNull(str) != null
+    }
+
+    /**
+     * Test if the str is an allowed URL.
+     *
+     * @param  str   The string to test
+     * @return true if the given str is a standard URL, false otherwise
+     * */
+    @JvmStatic
+    fun isAllowed(str: String?): Boolean {
+        return str != null && (isInternal(str) || isStandard(str))
     }
 
     /**
@@ -126,6 +200,7 @@ object UrlUtils {
         if (ignoreQuery) {
             uriBuilder.removeQuery()
         }
+
         return uriBuilder.build().toURL()
     }
 
@@ -177,7 +252,11 @@ object UrlUtils {
      *         or null if the given string violates RFC&nbsp;2396
      * */
     @JvmStatic
-    fun normalizeOrNull(url: String, ignoreQuery: Boolean = false): String? {
+    fun normalizeOrNull(url: String?, ignoreQuery: Boolean = false): String? {
+        if (url == null) {
+            return null
+        }
+
         return try {
             normalize(url, ignoreQuery).toString()
         } catch (e: Exception) {
@@ -712,6 +791,29 @@ object UrlUtils {
 
 
     /**
+     * Indicates whether this domain name represents a *public suffix*, as defined by the Mozilla
+     * Foundation's [Public Suffix List](http://publicsuffix.org/) (PSL). A public suffix
+     * is one under which Internet users can directly register names, such as `com`, `co.uk` or `pvt.k12.wy.us`. Examples of domain names that are *not* public suffixes
+     * include `google.com`, `foo.co.uk`, and `myblog.blogspot.com`.
+     *
+     *
+     * Public suffixes are a proper superset of [registry suffixes][.isRegistrySuffix].
+     * The list of public suffixes additionally contains privately owned domain names under which
+     * Internet users can register subdomains. An example of a public suffix that is not a registry
+     * suffix is `blogspot.com`. Note that it is true that all public suffixes *have*
+     * registry suffixes, since domain name registries collectively control all internet domain names.
+     *
+     *
+     * For considerations on whether the public suffix or registry suffix designation is more
+     * suitable for your application, see [this article](https://github.com/google/guava/wiki/InternetDomainNameExplained).
+     *
+     * @return `true` if this domain name appears exactly on the public suffix list
+     */
+    fun isPublicSuffix(domain: String): Boolean {
+        return InternetDomainName.from(domain).isPublicSuffix
+    }
+
+    /**
      * Get the host's public suffix. For example, co.uk, com, etc.
      *
      * @since 6.0
@@ -726,6 +828,19 @@ object UrlUtils {
      */
     fun getPublicSuffix(url: URL): String? {
         return InternetDomainName.from(url.host).publicSuffix()?.toString()
+    }
+    /**
+     * Indicates whether this domain name is composed of exactly one subdomain component followed by a
+     * {@linkplain #isPublicSuffix() public suffix}. For example, returns {@code true} for {@code
+     * google.com} {@code foo.co.uk}, and {@code myblog.blogspot.com}, but not for {@code
+     * www.google.com}, {@code co.uk}, or {@code blogspot.com}.
+     *
+     * <p>This method can be used to determine whether a domain is probably the highest level for
+     * which cookies may be set, though even that depends on individual browsers' implementations of
+     * cookie controls. See <a href="http://www.ietf.org/rfc/rfc2109.txt">RFC 2109</a> for details.
+     */
+    fun isTopPrivateDomain(url: URL): Boolean {
+        return InternetDomainName.from(url.host).isTopPrivateDomain
     }
 
     /**
@@ -791,7 +906,11 @@ object UrlUtils {
     @Throws(MalformedURLException::class)
     fun getOrigin(url: String): String {
         val u = URI.create(url).toURL()
-        return u.protocol + "://" + u.host
+        return if (u.port == 80) {
+            u.protocol + "://" + u.host
+        } else {
+            u.protocol + "://" + u.host + ":" + u.port
+        }
     }
 
     /**
@@ -806,8 +925,7 @@ object UrlUtils {
         }
 
         return try {
-            val u = URI.create(url).toURL()
-            u.protocol + "://" + u.host
+            return getOrigin(url)
         } catch (t: Throwable) {
             null
         }

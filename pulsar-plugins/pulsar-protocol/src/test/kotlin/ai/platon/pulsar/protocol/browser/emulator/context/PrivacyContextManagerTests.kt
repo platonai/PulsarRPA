@@ -68,7 +68,7 @@ class PrivacyContextManagerTests {
     @Test
     fun testPrivacyContextComparison() {
         val privacyManager = MultiPrivacyContextManager(driverPoolManager, conf)
-        val fingerprint = Fingerprint(BrowserType.MOCK_CHROME)
+        val fingerprint = Fingerprint(BrowserType.PULSAR_CHROME)
         
         val pc = privacyManager.computeNextContext(fingerprint)
         assertTrue { pc.isActive }
@@ -79,6 +79,8 @@ class PrivacyContextManagerTests {
         
         val pc2 = privacyManager.computeNextContext(fingerprint)
         assertTrue { pc2.isActive }
+        println(pc.privacyAgent.contextDir)
+        println(pc2.privacyAgent.contextDir)
         assertNotEquals(pc.privacyAgent, pc2.privacyAgent)
         assertNotEquals(pc, pc2)
         assertTrue { privacyManager.temporaryContexts.containsKey(pc2.privacyAgent) }

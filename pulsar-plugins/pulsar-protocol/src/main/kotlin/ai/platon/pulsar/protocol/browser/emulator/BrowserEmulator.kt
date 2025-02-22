@@ -20,6 +20,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 
 enum class EmulateEvents {
     willNavigate,
@@ -55,7 +56,7 @@ interface BrowserEmulator: EventEmitter<EmulateEvents>, AutoCloseable {
      * @param task The task to fetch
      * @return The result of this fetch
      * */
-    @Throws(Exception::class)
+    @Throws(WebDriverException::class)
     suspend fun visit(task: FetchTask, driver: WebDriver): FetchResult
 
     fun cancelNow(task: FetchTask)

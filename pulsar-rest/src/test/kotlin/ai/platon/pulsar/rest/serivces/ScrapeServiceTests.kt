@@ -19,6 +19,9 @@ import kotlin.test.assertTrue
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class ScrapeServiceTests {
+
+    private val url = "https://www.amazon.com/b?node=1292115011"
+
     @Autowired
     private lateinit var service: ScrapeService
 
@@ -42,8 +45,7 @@ class ScrapeServiceTests {
     @Test
     fun `When scraping with load_and_select then the result returns synchronously`() {
         val startTime = Instant.now()
-        
-        val url = "https://www.amazon.com/"
+
         val sql = "select dom_base_uri(dom) as uri from load_and_select('$url -i 10d', ':root')"
         val request = ScrapeRequest(sql)
 
@@ -60,7 +62,6 @@ class ScrapeServiceTests {
 
     @Test
     fun `When scrape amazon then the base uri returns asynchronously`() {
-        val url = "https://www.amazon.com/ -i 0s"
         val sql = "select dom_base_uri(dom) as uri from load_and_select('$url', ':root')"
         val request = ScrapeRequest(sql)
 
