@@ -79,9 +79,6 @@ object InternalURLUtil {
         return host
     }
 
-    @Deprecated("Moved to UrlUtils", ReplaceWith("UrlUtils.getTopPrivateDomainOrNull(url)"))
-    fun getTopPrivateDomainOrNull(url: String) = UrlUtils.getTopPrivateDomainOrNull(url)
-
     @Deprecated("Moved to UrlUtils", ReplaceWith("UrlUtils.getTopPrivateDomain(url)"))
     @Throws(MalformedURLException::class)
     fun getDomainName(url: String): String = UrlUtils.getTopPrivateDomain(url)

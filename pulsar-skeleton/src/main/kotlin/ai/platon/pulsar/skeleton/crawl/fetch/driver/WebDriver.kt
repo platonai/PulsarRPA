@@ -919,21 +919,6 @@ interface WebDriver : Closeable {
      * The current page frame scrolls to the middle.
      *
      * ```kotlin
-     * driver.scrollToMiddle(0.2f)
-     * driver.scrollToMiddle(0.5f)
-     * driver.scrollToMiddle(0.8f)
-     * ```
-     *
-     * @param ratio The ratio of the page to scroll to, 0.0 means the top, 1.0 means the bottom.
-     */
-    @Deprecated("Use scrollToMiddle(Double) instead", ReplaceWith("scrollToMiddle(ratio.toDouble())"))
-    @Throws(WebDriverException::class)
-    suspend fun scrollToMiddle(ratio: Float)
-
-    /**
-     * The current page frame scrolls to the middle.
-     *
-     * ```kotlin
      * driver.scrollToMiddle(0.2)
      * driver.scrollToMiddle(0.5)
      * driver.scrollToMiddle(0.8)
