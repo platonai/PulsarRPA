@@ -19,6 +19,7 @@ import java.util.*
  * Created by vincent on 17-3-18.
  * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
+@Deprecated("For removal")
 class CrawlOptions(argv: Array<String>) : CommonOptions(argv) {
 
     @Parameter(names = ["-verbose"], description = "Log level for this crawl task")

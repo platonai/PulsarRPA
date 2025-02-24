@@ -2,10 +2,13 @@ package ai.platon.pulsar.skeleton.common.options
 
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
@@ -76,7 +79,8 @@ open class LoadOptions(
         description = "The taskId is optional and serves to differentiate tasks if needed."
     )
     var taskId = ""
-    
+
+
     /**
      * Task time is usually used to denote the name of a batch of tasks.
      *
@@ -132,7 +136,79 @@ open class LoadOptions(
         description = "If true, fetch the url as a resource without browser rendering."
     )
     var isResource = false
-    
+
+    /**
+     * Represents the priority of a task, determining the order of execution.
+     *
+     * The priority value is an integer where a smaller value indicates a higher priority.
+     * This is consistent with [java.util.concurrent.PriorityBlockingQueue].
+     *
+     * If the priority value is not within the range defined by [Priority13], it will be adjusted to the nearest valid value.
+     * For example, a priority of -2001 will be adjusted to [Priority13.HIGHER2].
+     *
+     * Note: The priority specified in args or LoadOptions takes precedence over the priority in [UrlAware], [Hyperlink], etc.
+     *
+     * Priority can be set in the following ways:
+     * 1. In the url, for example, `http://example.com -priority -2000`
+     * 2. In the args, for example, `Hyperlink("http://example.com", "", args = "-priority -2000")`
+     * 3. Int the [LoadOptions] object, for example, `session.load("http://example.com", options.apply { priority = -2000 })`
+     * 4. In the [UrlAware] object, for example, `Hyperlink("http://example.com", "", priority = -2000)`
+     *
+     * If a url is normalized like this:
+     * ```kotlin
+     * session.normalize(url: UrlAware, options: LoadOptions)
+     * ```
+     * The priority will be set in the following order:
+     *
+     * 1. The priority in the url
+     * 2. The priority in the args
+     * 3. The priority in the options
+     *
+     * Note: Consider use url args to set priority only.
+     *
+     * @see Priority13
+     * @see Priority13.NORMAL
+     */
+    @ApiPublic
+    @Parameter(
+        names = ["-p", "-priority"],
+        description = """
+/**
+ * Represents the priority of a task, determining the order of execution.
+ *
+ * The priority value is an integer where a smaller value indicates a higher priority.
+ * This is consistent with [java.util.concurrent.PriorityBlockingQueue].
+ *
+ * If the priority value is not within the range defined by [Priority13], it will be adjusted to the nearest valid value.
+ * For example, a priority of -2001 will be adjusted to [Priority13.HIGHER2].
+ *
+ * Note: The priority specified in args or LoadOptions takes precedence over the priority in [UrlAware], [Hyperlink], etc.
+ *
+ * Priority can be set in the following ways:
+ * 1. In the url, for example, `http://example.com -priority -2000`
+ * 2. In the args, for example, `Hyperlink("http://example.com", "", args = "-priority -2000")`
+ * 3. Int the [LoadOptions] object, for example, `session.load("http://example.com", options.apply { priority = -2000 })`
+ * 4. In the [UrlAware] object, for example, `Hyperlink("http://example.com", "", priority = -2000)`
+ *
+ * If a url is normalized like this:
+ * ```kotlin
+ * session.normalize(url: UrlAware, options: LoadOptions)
+ * ```
+ * The priority will be set in the following order:
+ *
+ * 1. The priority in the url
+ * 2. The priority in the args
+ * 3. The priority in the options
+ *
+ * Note: Consider use url args to set priority only.
+ *
+ * @see Priority13
+ * @see Priority13.NORMAL
+ */
+        """
+    )
+    var priority = 0
+
     /**
      * The expiry duration. If the expiry time is exceeded, the page should be fetched from the Internet.
      *
@@ -858,10 +934,12 @@ open class LoadOptions(
     
     /**
      * Check if the option value is the default.
+     *
+     * @param optionName the option name, without the leading `-`
      * */
-    open fun isDefault(option: String): Boolean {
-        val value = optionFieldsMap[option]?.also { it.isAccessible = true }?.get(this) ?: return false
-        return value == defaultParams[option]
+    open fun isDefault(optionName: String): Boolean {
+         val value = optionFieldsMap[optionName]?.also { it.isAccessible = true }?.get(this) ?: return false
+        return value == defaultParams[optionName]
     }
     
     /**
