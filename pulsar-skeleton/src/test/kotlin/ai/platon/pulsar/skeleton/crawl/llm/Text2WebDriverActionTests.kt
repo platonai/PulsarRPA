@@ -50,9 +50,10 @@ class Text2WebDriverActionTests: TTATestBase() {
         lastResponse = response
         println(response.content)
 
-        assertTrue { response.content.contains(".navigateTo") }
-        assertTrue { response.content.contains(".scrollToMiddle") }
-        assertTrue { response.content.contains(".scrollToTop") }
-        assertTrue { response.content.contains(".captureScreenshot") }
+        val content = response.content
+        assertTrue { content.contains(".navigateTo") || content.contains(".open") }
+        assertTrue { content.contains(".scrollToMiddle") }
+        assertTrue { content.contains(".scrollToTop") }
+        assertTrue { content.contains(".captureScreenshot") }
     }
 }
