@@ -130,7 +130,7 @@ println("ParsableHyperlink loaded | " + page2.url)
 
 // Load a ListenableHyperlink so we can register various event handlers
 val listenableLink = ListenableHyperlink(url)
-listenableLink.event.browseEventHandlers.onDidInteract.addLast { pg, driver ->
+listenableLink.eventHandlers.browseEventHandlers.onDidInteract.addLast { pg, driver ->
     println("Interaction finished " + page.url)
 }
 val page3 = session.load(listenableLink, "-expires 10s")

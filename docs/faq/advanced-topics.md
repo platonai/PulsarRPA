@@ -38,7 +38,7 @@ It's fair simple to sign in a website before scraping in PulsarRPA:
 ```kotlin
 val options = session.options(args)
 val loginHandler = TaobaoLoginHandler(username, password, warnUpUrl = portalUrl)
-options.event.loadEvent.onAfterBrowserLaunch.addLast(loginHandler)
+options.eventHandlers.loadEvent.onAfterBrowserLaunch.addLast(loginHandler)
 
 session.loadOutPages(portalUrl, options)
 ```
