@@ -56,7 +56,7 @@ class WebDriverDemo(private val session: PulsarSession) {
             driver.click(selector)
 
             println("select first text by $selector ...")
-            var text = driver.firstText(selector) ?: "no-text"
+            var text = driver.selectFirstTextOrNull(selector) ?: "no-text"
             text = text.substring(1, 4)
 
             println("type $text in $searchBoxSelector ...")
@@ -81,7 +81,7 @@ class WebDriverDemo(private val session: PulsarSession) {
         driver.click(selector)
 
         println("query text of $selector ...")
-        var text = driver.firstText(selector) ?: "no-text"
+        var text = driver.selectFirstTextOrNull(selector) ?: "no-text"
         text = text.substring(1, 4)
         println("type `$text` in $searchBoxSelector")
         driver.type(searchBoxSelector, text)

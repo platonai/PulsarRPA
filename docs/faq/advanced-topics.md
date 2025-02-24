@@ -76,7 +76,7 @@ class RPAPaginateHandler(val initPageNumber: Int) : WebPageWebDriverEventHandler
     override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         // ...
         // extract the text
-        val text = driver.firstText(selector)
+        val text = driver.selectFirstTextOrNull(selector)
         // click the next page link
         driver.click(nextPageSelector)
         return null
