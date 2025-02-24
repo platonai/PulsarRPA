@@ -23,7 +23,7 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
         val args2 = url.args ?: ""
         val args3 = options.toString()
         // args1 has the #1 priority, and then args2, and at last args3.
-        // the later args overwrites the earlier ones.
+        // the later args overwrite the earlier ones.
         val finalArgs = "$args3 $args2 $args1".trim()
         val finalOptions = createLoadOptions(url, LoadOptions.parse(finalArgs, options), toItemOption)
 

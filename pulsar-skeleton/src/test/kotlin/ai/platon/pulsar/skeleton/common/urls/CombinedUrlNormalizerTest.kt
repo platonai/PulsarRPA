@@ -94,4 +94,60 @@ class CombinedUrlNormalizerTest {
 
         assertNotNull(result)
     }
+
+    @Test
+    fun `test normalize with empty url`() {
+        val urlAware = mock(UrlAware::class.java)
+        `when`(urlAware.url).thenReturn("")
+
+        val options = LoadOptions.parse("")
+
+        val normalizer = CombinedUrlNormalizer()
+        val result = normalizer.normalize(urlAware, options, false)
+
+        assertTrue(result.isNil)
+    }
+
+    @Test
+    fun `test normalize with special characters in url not supported`() {
+        val urlAware = mock(UrlAware::class.java)
+        `when`(urlAware.url).thenReturn("http://example.com/!@#$%^&*()")
+
+        val options = LoadOptions.parse("")
+
+        val normalizer = CombinedUrlNormalizer()
+        val result = normalizer.normalize(urlAware, options, false)
+
+        assertNotNull(result)
+        assertTrue { result.isNil }
+    }
+
+    @Test
+    fun `test normalize with very long url`() {
+        val longUrl = "http://example.com/" + "a".repeat(5000)
+        val urlAware = mock(UrlAware::class.java)
+        `when`(urlAware.url).thenReturn(longUrl)
+
+        val options = LoadOptions.parse("")
+
+        val normalizer = CombinedUrlNormalizer()
+        val result = normalizer.normalize(urlAware, options, false)
+
+        assertNotNull(result)
+        assertEquals(longUrl, result.url.toString())
+    }
+
+    @Test
+    fun `test normalize with url containing spaces not supported`() {
+        val urlAware = mock(UrlAware::class.java)
+        `when`(urlAware.url).thenReturn("http://example.com/with spaces-not-supported")
+
+        val options = LoadOptions.parse("")
+
+        val normalizer = CombinedUrlNormalizer()
+        val result = normalizer.normalize(urlAware, options, false)
+
+        assertNotNull(result)
+        assertEquals("http://example.com/with", result.url.toString())
+    }
 }
