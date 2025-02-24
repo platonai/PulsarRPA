@@ -149,7 +149,7 @@ class FileBackendPageStore(
     }
 
     private fun getPersistDirectory(url: String): Path {
-        val dirForDomain = AppPaths.fromDomain(url)
+        val dirForDomain = AppPaths.fromHost(url)
         val path = persistDirectory.resolve(dirForDomain)
         Files.createDirectories(path)
         return path

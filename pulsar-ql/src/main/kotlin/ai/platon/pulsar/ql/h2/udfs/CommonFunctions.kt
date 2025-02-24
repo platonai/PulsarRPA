@@ -385,7 +385,7 @@ object CommonFunctions {
     @UDFunction(description = "Get the domain of a url")
     @JvmStatic
     fun getDomain(url: String): String {
-        return InternalURLUtil.getDomainName(url, "")
+        return UrlUtils.getTopPrivateDomain(url, "")
     }
 
     @UDFunction(description = "Extract the first group of the result of java.util.regex.matcher()")

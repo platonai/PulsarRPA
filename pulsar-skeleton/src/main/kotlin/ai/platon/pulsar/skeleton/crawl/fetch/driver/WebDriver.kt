@@ -90,7 +90,7 @@ import java.time.Duration
  *      val args = "-refresh"
  *      val options = session.options(args)
  *
- *      options.event.browseEventHandlers.onDocumentSteady.addLast { page, driver ->
+ *      options.eventHandlers.browseEventHandlers.onDocumentSteady.addLast { page, driver ->
  *          interact(page, driver)
  *      }
  *

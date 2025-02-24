@@ -136,7 +136,7 @@ import java.util.concurrent.CompletableFuture
  *
  * ```kotlin
  * val options = session.options(args)
- * options.event.browseEventHandlers.onDocumentSteady.addLast { page, driver ->
+ * options.eventHandlers.browseEventHandlers.onDocumentSteady.addLast { page, driver ->
  *   driver.fill("input[name='search']", "geek")
  *   driver.click("button[type='submit']")
  * }
@@ -1138,7 +1138,7 @@ interface PulsarSession : AutoCloseable {
      *
      * ```kotlin
      * val options = session.options("-expire 1d")
-     * options.event.loadEvent.onLoaded.addLast { println(it.url) }
+     * options.eventHandlers.loadEvent.onLoaded.addLast { println(it.url) }
      * session.submit("http://example.com", options)
      * PulsarContexts.await()
      * ```
@@ -1181,7 +1181,7 @@ interface PulsarSession : AutoCloseable {
      *
      * ```kotlin
      * val hyperlink = ListenableHyperlink("http://example.com")
-     * hyperlink.event.loadEvent.onLoaded.addLast { page -> println(page.url) }
+     * hyperlink.eventHandlers.loadEvent.onLoaded.addLast { page -> println(page.url) }
      * session.submit(hyperlink)
      * PulsarContexts.await()
      * ```
@@ -1191,7 +1191,7 @@ interface PulsarSession : AutoCloseable {
      *
      * ```kotlin
      * val hyperlink = ListenableHyperlink("http://example.com", args = "-parse", event = PrintFlowEvent())
-     * hyperlink.event.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
+     * hyperlink.eventHandlers.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
      *      val title = document.selectFirstOrNull(".title")?.text() ?: "Not found"
      *      println(title)
      * }

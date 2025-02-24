@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.AppPaths.fromHost
 import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
@@ -278,10 +279,7 @@ object AppPaths {
         
         return host.replace('.', '-')
     }
-    
-    @Deprecated("Use fromHost instead", replaceWith = ReplaceWith("fromHost(url)"))
-    fun fromDomain(url: URL) = fromHost(url)
-    
+
     /**
      * Create a filename compatible string from the given url.
      * */
@@ -290,7 +288,7 @@ object AppPaths {
         return fromHost(u)
     }
     
-    @Deprecated("Use fromHost instead", replaceWith = ReplaceWith("fromHost(url)"))
+    @Deprecated("Use AppPaths.fromHost instead", replaceWith = ReplaceWith("AppPaths.fromHost(url)"))
     fun fromDomain(url: String) = fromHost(url)
     
     /**
@@ -299,7 +297,7 @@ object AppPaths {
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
         val u = UrlUtils.getURLOrNull(uri) ?: return "${prefix}unknown$suffix"
         
-        val dirForDomain = fromDomain(u)
+        val dirForDomain = fromHost(u)
         val fileId = fileId(uri)
         return "$prefix$dirForDomain-$fileId$suffix"
     }

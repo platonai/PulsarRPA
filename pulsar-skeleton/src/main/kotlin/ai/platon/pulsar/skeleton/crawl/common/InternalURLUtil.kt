@@ -82,9 +82,9 @@ object InternalURLUtil {
     @Deprecated("Moved to UrlUtils", ReplaceWith("UrlUtils.getTopPrivateDomainOrNull(url)"))
     fun getTopPrivateDomainOrNull(url: String) = UrlUtils.getTopPrivateDomainOrNull(url)
 
-    @Deprecated("Moved to UrlUtils", ReplaceWith("UrlUtils.getDomainName(url)"))
+    @Deprecated("Moved to UrlUtils", ReplaceWith("UrlUtils.getTopPrivateDomain(url)"))
     @Throws(MalformedURLException::class)
-    fun getDomainName(url: String): String = UrlUtils.getDomainName(url)
+    fun getDomainName(url: String): String = UrlUtils.getTopPrivateDomain(url)
 
     @Deprecated("Use getTopPrivateDomain(url) instead", ReplaceWith("getTopPrivateDomain(url)"))
     fun getDomainName(url: URL): String {
@@ -106,11 +106,6 @@ object InternalURLUtil {
         return candidate
     }
 
-    @Deprecated("Use getTopPrivateDomain(url) instead", ReplaceWith("getTopPrivateDomain(url)"))
-    fun getDomainName(url: String, defaultDomain: String): String {
-        return kotlin.runCatching { getDomainName(url) }.getOrNull() ?: defaultDomain
-    }
-
     /**
      * Returns whether the given urls have the same domain name. As an example, <br></br>
      * ` isSameDomain(new URL("http://lucene.apache.org")
@@ -120,7 +115,7 @@ object InternalURLUtil {
      * @return true if the domain names are equal
      */
     fun isSameDomainName(url1: URL, url2: URL): Boolean {
-        return getDomainName(url1).equals(getDomainName(url2), ignoreCase = true)
+        return UrlUtils.getTopPrivateDomain(url1).equals(UrlUtils.getTopPrivateDomain(url2), ignoreCase = true)
     }
 
     /**
@@ -155,7 +150,7 @@ object InternalURLUtil {
      *
      * @see com.google.common.net.InternetDomainName.publicSuffix
      */
-    @Deprecated("Use getPublicSuffix(url) instead", ReplaceWith("UrlUtils.getPublicSuffix(url)"))
+    @Deprecated("Use UrlUtils.getPublicSuffix(url) instead", ReplaceWith("UrlUtils.getPublicSuffix(url)"))
     fun getDomainSuffix(url: URL): DomainSuffix? {
         return getDomainSuffix(DomainSuffixes.getInstance(), url)
     }

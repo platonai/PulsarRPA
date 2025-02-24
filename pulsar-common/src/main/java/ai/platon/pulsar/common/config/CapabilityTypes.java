@@ -77,7 +77,7 @@ public interface CapabilityTypes {
      * <p>
      * <code>System.setProperty(CapabilityTypes.PAGE_EVENT_CLASS, "ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEvent")</code>
      * */
-    String PAGE_EVENT_CLASS = "page.event.class";
+    String PAGE_EVENT_CLASS = "page.eventHandlers.class";
 
     ///////////////////////////////////////////////////////////////////////////
     // Storage

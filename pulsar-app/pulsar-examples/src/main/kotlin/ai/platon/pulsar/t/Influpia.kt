@@ -9,7 +9,7 @@ class Influpia {
     fun automate() {
         var url = "https://chromewebstore.google.com/detail/unisat-wallet/ppbibelpcjmhbdihakflkdcoccbgbkpo?hl=zh-CN&utm_source=ext_sidebar"
         var options = session.options()
-        val be = options.event.browseEventHandlers
+        val be = options.eventHandlers.browseEventHandlers
         be.onDocumentSteady.addLast { page, driver ->
             driver.clickTextMatches("button", "添加至 Chrome")
             val oldUrl = driver.documentURI()

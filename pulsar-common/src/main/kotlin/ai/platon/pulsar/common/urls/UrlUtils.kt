@@ -889,14 +889,6 @@ object UrlUtils {
      */
     fun getTopPrivateDomainOrNull(url: String) = kotlin.runCatching { getTopPrivateDomain(url) }.getOrNull()
 
-    @Deprecated("Use getTopPrivateDomain instead", ReplaceWith("UrlUtils.getTopPrivateDomain(url)"))
-    @Throws(MalformedURLException::class)
-    fun getDomainName(url: String) = getTopPrivateDomain(url)
-
-    @Deprecated("Use getTopPrivateDomainOrNull instead", ReplaceWith("UrlUtils.getTopPrivateDomainOrNull(url)"))
-    fun getDomainNameOrNull(url: String) = getTopPrivateDomainOrNull(url)
-
-
     /**
      * Returns the lowercase origin for the url.
      *
