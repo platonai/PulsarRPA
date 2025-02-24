@@ -832,9 +832,24 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
 
+    /**
+     * Clicks the nth anchor element in the DOM.
+     *
+     * This function searches for all anchor (`<a>`) elements within the specified root element,
+     * and clicks the nth anchor element (0-based index). If the anchor element exists, it returns
+     * the `href` attribute of the clicked anchor element. If the element does not exist, it returns null.
+     *
+     * ```kotlin
+     * driver.clickNthAnchor(100, "body")
+     * ```
+     *
+     * @param n The index of the anchor element to click (0-based).
+     * @param rootSelector The CSS selector of the root element to search within (default is "body").
+     * @return The href attribute of the clicked anchor element, or null if the element does not exist.
+     * @throws WebDriverException If an error occurs while interacting with the WebDriver.
+     */
     @Throws(WebDriverException::class)
     suspend fun clickNthAnchor(n: Int, rootSelector: String = "body"): String?
-
     /**
      * This method check an element with [selector]. If there's no element matching [selector], nothing to do.
      *
