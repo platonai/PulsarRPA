@@ -21,10 +21,6 @@ val WebPage.options: LoadOptions
         } as LoadOptions
     }
 
-@Deprecated("Use eventHandlers instead", ReplaceWith("eventHandlers"))
-val WebPage.event: PageEventHandlers?
-    get() = eventHandlers
-
 val WebPage.eventHandlers: PageEventHandlers?
     get() = this.options.rawEvent
 

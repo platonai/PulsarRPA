@@ -122,8 +122,6 @@ class OpenMapTable(
     }
 
     companion object {
-        @Deprecated("Use EMPTY instead", ReplaceWith("EMPTY"))
-        val empty = OpenMapTable(0)
         val EMPTY = OpenMapTable(0)
     }
 }

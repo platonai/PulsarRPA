@@ -191,16 +191,6 @@ interface PulsarSession : AutoCloseable {
      * Disable page cache and document cache
      * */
     fun disablePDCache()
-    /**
-     * deprecated.
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("data(name)"))
-    fun getVariable(name: String): Any? = data(name)
-    /**
-     * deprecated
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("data(name, value)"))
-    fun setVariable(name: String, value: Any) = data(name, value)
 
     /**
      * Get a variable which is stored in this session

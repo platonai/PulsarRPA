@@ -66,11 +66,11 @@ abstract class AbstractCrawler(
     }
 
     override fun onLoad(url: UrlAware) {
-        if (url is ListenableUrl) {
-            GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onLoad?.invoke(url)
-            // The more specific handlers has the opportunity to override the result of more general handlers.
-            url.eventHandlers.crawlEventHandlers.onLoad(url)
-        }
+//        if (url is ListenableUrl) {
+//            GlobalEventHandlers.pageEventHandlers?.crawlEventHandlers?.onLoad?.invoke(url)
+//            // The more specific handlers has the opportunity to override the result of more general handlers.
+//            url.eventHandlers.crawlEventHandlers.onLoad(url)
+//        }
     }
 
     override fun onLoaded(url: UrlAware, page: WebPage?) {

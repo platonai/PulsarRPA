@@ -11,11 +11,7 @@ class StaticPulsarContext(
      * The unmodified config
      * */
     override val unmodifiedConfig get() = getBeanOrNull() ?: defaults.unmodifiedConfig
-    /**
-     * Url normalizers
-     * */
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("urlNormalizer"))
-    override val urlNormalizers get() = getBeanOrNull() ?: defaults.urlNormalizer
+
     /**
      * Url normalizer
      * */

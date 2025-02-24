@@ -27,7 +27,7 @@ public class TimelineEventAdded {
 
   private TimelineEvent event;
 
-  public TimelineEvent getEvent() {
+  public TimelineEvent getEventHandlers() {
     return event;
   }
 

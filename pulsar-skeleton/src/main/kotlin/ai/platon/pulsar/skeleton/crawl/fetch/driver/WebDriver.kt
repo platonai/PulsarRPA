@@ -1039,16 +1039,6 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun outerHTML(selector: String): String?
 
-    /** Returns the node's text content. */
-    @Deprecated("Inappropriate name", ReplaceWith("selectFirstTextOrNull(selector)"))
-    @Throws(WebDriverException::class)
-    suspend fun firstText(selector: String): String? = selectFirstTextOrNull(selector)
-
-    /** Returns the nodes' text contents. */
-    @Deprecated("Inappropriate name", ReplaceWith("selectTextAll(selector)"))
-    @Throws(WebDriverException::class)
-    suspend fun allTexts(selector: String): List<String> = selectTextAll(selector)
-
     /**
      * Returns the node's text content, the node is located by [selector].
      *
@@ -1063,10 +1053,6 @@ interface WebDriver : Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun selectFirstTextOrNull(selector: String): String?
-
-    @Deprecated("Inappropriate name", ReplaceWith("selectTextAll(selector)"))
-    @Throws(WebDriverException::class)
-    suspend fun selectTexts(selector: String): List<String> = selectTextAll(selector)
 
     /**
      * Returns a list of text contents of all the elements matching the specified selector within the page.

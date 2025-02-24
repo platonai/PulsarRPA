@@ -120,11 +120,6 @@ public interface CapabilityTypes {
      * If a page is not found in the local storage, return WebPage.NIL.
      * */
     String LOAD_DEACTIVATE_FETCH_COMPONENT = "load.deactivate.fetch.component";
-    /**
-     * @deprecated use {@link #LOAD_DEACTIVATE_FETCH_COMPONENT} instead
-     * */
-    @Deprecated
-    String LOAD_DISABLE_FETCH = "load.disable.fetch";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fetch phrase

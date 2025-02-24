@@ -267,10 +267,6 @@ abstract class AbstractWebDriver(
         evaluate("__pulsar_utils__.scrollToBottom()")
     }
 
-    @Deprecated("Use scrollToMiddle(Double) instead", replaceWith = ReplaceWith("scrollToMiddle(ratio.toDouble())"))
-    @Throws(WebDriverException::class)
-    override suspend fun scrollToMiddle(ratio: Float) = scrollToMiddle(ratio.toDouble())
-
     @Throws(WebDriverException::class)
     override suspend fun scrollToMiddle(ratio: Double) {
         evaluate("__pulsar_utils__.scrollToMiddle($ratio)")

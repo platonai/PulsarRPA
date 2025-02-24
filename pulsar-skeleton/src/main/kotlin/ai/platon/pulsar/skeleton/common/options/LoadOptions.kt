@@ -670,11 +670,6 @@ open class LoadOptions(
      * */
     val itemEventHandlers: PageEventHandlers get() = enableItemEventHandlers()
 
-    @Deprecated("Use eventHandlers instead", ReplaceWith("eventHandlers"))
-    val event: PageEventHandlers get() = eventHandlers
-    @Deprecated("Use itemEventHandlers instead", ReplaceWith("itemEventHandlers"))
-    val itemEvent: PageEventHandlers get() = itemEventHandlers
-
     /**
      * Find out the modified fields and return a [Params].
      * */

@@ -260,16 +260,7 @@ open class BrowserSettings(
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
             return BrowserSettings
         }
-        
-        /**
-         * Set the number of privacy contexts
-         * */
-        @Deprecated("Inappropriate name", ReplaceWith("maxBrowsers(n)"))
-        @JvmStatic
-        fun privacyContext(n: Int): Companion = maxBrowsers(n)
-        @Deprecated("Inappropriate name", ReplaceWith("maxBrowsers(n)"))
-        @JvmStatic
-        fun privacy(n: Int): Companion = maxBrowsers(n)
+
         /**
          * Set the max number of browsers
          * */
@@ -299,9 +290,6 @@ open class BrowserSettings(
             System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")
             return BrowserSettings
         }
-        @Deprecated("Inappropriate name", ReplaceWith("maxOpenTabs(n)"))
-        @JvmStatic
-        fun maxTabs(n: Int) = maxOpenTabs(n)
         /**
          * Tell the system to work with single page application.
          * To collect SPA data, the execution needs to have no timeout limit.

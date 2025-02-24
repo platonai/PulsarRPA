@@ -108,11 +108,6 @@ open class StreamingCrawler(
      * */
     session: PulsarSession = PulsarContexts.createSession(),
     /**
-     * Do not use proxy
-     * */
-    @Deprecated("use ProxyPoolManager.isProxyEnabled instead")
-    val noProxy: Boolean = false,
-    /**
      * Auto close or not
      * */
     autoClose: Boolean = true,
