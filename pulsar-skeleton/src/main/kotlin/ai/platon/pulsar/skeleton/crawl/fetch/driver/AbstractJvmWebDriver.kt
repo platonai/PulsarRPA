@@ -47,7 +47,6 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     override fun scrollUpAsync(count: Int) = interopScope.future { scrollUp(count) }
     override fun scrollToTopAsync() = interopScope.future { scrollToTop() }
     override fun scrollToBottomAsync() = interopScope.future { scrollToBottom() }
-    override fun scrollToMiddleAsync(ratio: Float) = interopScope.future { scrollToMiddle(ratio) }
     override fun mouseWheelDownAsync(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) =
         interopScope.future { mouseWheelDown(count, deltaX, deltaY, delayMillis) }
     override fun mouseWheelUpAsync(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) =
