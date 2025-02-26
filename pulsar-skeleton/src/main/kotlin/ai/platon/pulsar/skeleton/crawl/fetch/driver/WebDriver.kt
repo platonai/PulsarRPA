@@ -236,20 +236,26 @@ interface WebDriver : Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun setTimeouts(browserSettings: BrowserSettings)
-    
+
     /**
-     * Open the given URL.
+     * Opens the specified URL in the web driver.
      *
+     * This function navigates the web driver to the provided URL and waits for the navigation to complete.
+     * It is a suspend function, meaning it can be used within coroutines for asynchronous execution.
+     *
+     * Example usage:
      * ```kotlin
-     * driver.navigateTo("https://www.example.com")
-     * driver.waitForNavigation()
+     * driver.open("https://www.example.com")
      * ```
      *
-     * @param url The URL to open.
+     * @param url The URL to which the web driver should navigate. Must be a valid URL string.
+     * @throws WebDriverException If an error occurs during navigation or waiting for the navigation to complete.
      */
     @Throws(WebDriverException::class)
     suspend fun open(url: String) {
+        // Navigates the web driver to the specified URL.
         navigateTo(url)
+        // Waits for the navigation to complete before proceeding.
         waitForNavigation()
     }
 
