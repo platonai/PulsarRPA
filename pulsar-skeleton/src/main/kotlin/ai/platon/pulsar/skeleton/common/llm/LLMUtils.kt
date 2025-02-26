@@ -1,12 +1,11 @@
 package ai.platon.pulsar.skeleton.common.llm
 
+import ai.platon.pulsar.common.code.ProjectUtils
+import java.net.URI
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
-import kotlin.io.path.exists
-import kotlin.jvm.optionals.getOrNull
 
 object LLMUtils {
 
@@ -25,15 +24,15 @@ suspend fun llmGeneratedFunction(driver: WebDriver) {
     // 你的代码
 }
 ```
+
+
         """.trimIndent()
 
     fun copyWebDriverFile(dest: Path) {
-        val workingDir = Paths.get("").toAbsolutePath()
-        if (workingDir.resolve("VERSION").exists()) {
-            Files.walk(workingDir).filter { it.fileName.toString() == "WebDriver.kt" }.findFirst().getOrNull()?.let {
-                Files.copy(it, dest, StandardCopyOption.REPLACE_EXISTING)
-                return
-            }
+        val file = ProjectUtils.findFile("WebDriver.kt")
+        if (file != null) {
+            Files.copy(file, dest, StandardCopyOption.REPLACE_EXISTING)
+            return
         }
 
         // If we can not find WebDriver.kt, copy it from github.com or gitee.com
@@ -42,7 +41,7 @@ suspend fun llmGeneratedFunction(driver: WebDriver) {
         val webDriverURL2 = "https://gitee.com/platonai_galaxyeye/PulsarRPA/tree/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/WebDriver.kt"
         listOf(webDriverURL, webDriverURL2).forEach { url ->
             if (Files.size(dest) < 100) {
-                URL(url).openStream().use { Files.copy(it, dest, StandardCopyOption.REPLACE_EXISTING) }
+                Files.writeString(dest, URI(url).toURL().readText())
             }
         }
     }
