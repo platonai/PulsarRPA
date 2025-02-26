@@ -90,9 +90,12 @@ class ChromeLauncher(
                 logger.warn("Destroy chrome launcher forcibly, pid: {} | {}", pid, userDataDir)
                 Runtimes.destroyProcessForcibly(pid)
             }
+        } catch (e: NoSuchFileException) {
+            logger.warn("NoSuchFileException | {}", e.message)
+        } catch (e: IOException) {
+          logger.warn("IOException | {}", e.message)
         } catch (t: Throwable) {
-            t.printStackTrace()
-            logger.warn(t.stringify())
+            warnInterruptible(this, t, "Failed to destroy chrome launcher forcibly | {}", userDataDir)
         }
     }
 

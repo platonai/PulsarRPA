@@ -192,13 +192,13 @@ open class MultiPrivacyContextManager(
     override fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
         val context = computeIfNecessary(page, fingerprint, task)
 
-        // An active privacy context can be used to serve tasks, and an inactive one should be closed.
+        // A ready privacy context can be used to serve tasks, and an inactive one should be closed.
         if (context.isReady) {
             return context
         }
 
         assert(!context.isReady)
-        // The context is inactive, close it and create a new one
+        // The context is active and has driver promise, close it and create a new one
         close(context)
 
         return computeIfAbsent(createPrivacyAgent(task.page, fingerprint))

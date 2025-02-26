@@ -8,12 +8,15 @@ import java.io.IOException
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.time.MonthDay
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
+import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
+import kotlin.io.path.moveTo
 import kotlin.io.path.notExists
 
 internal class ContextGroup(val group: String) {
@@ -114,7 +117,7 @@ object BrowserFiles {
             .toList()
             .toSet()
             .sortedByDescending { Files.getLastModifiedTime(it) }  // newest first
-            .drop(recentNToKeep)  // drop the latest 20 context dirs
+            .drop(recentNToKeep)  // drop the newest 20 context dirs, so them are not cleaned
             .forEach { cleanUpContextDir(it, Duration.ofSeconds(30)) } // clean the rest
     }
 
@@ -139,14 +142,19 @@ object BrowserFiles {
             logger.info("Not a context directory | {}", path)
             return
         }
-        if (path.resolve(PID_FILE_NAME).exists()) {
+
+        if (path.resolve(PID_FILE_NAME).notExists()) {
             // The directory is already cleaned
             return
         }
-        
+
+        // remove the pid file
+        val pidFile = path.resolve(PID_FILE_NAME)
+        pidFile.moveTo(path.resolve("$PID_FILE_NAME.old"), StandardCopyOption.REPLACE_EXISTING)
+
         deleteTemporaryUserDataDirWithLock(path.resolve("pulsar_chrome"), expiry)
     }
-    
+
     @Throws(IOException::class)
     @Synchronized
     fun deleteTemporaryUserDataDirWithLock(userDataDir: Path, expiry: Duration) {
@@ -169,7 +177,6 @@ object BrowserFiles {
         }
     }
 
-    @Throws(IOException::class)
     private fun deleteTemporaryUserDataDir0(userDataDir: Path, expiry: Duration, channel: FileChannel) {
         require(channel.isOpen) { "The lock file channel is closed" }
         
@@ -189,6 +196,7 @@ object BrowserFiles {
         // If it's in the context tmp dir, the user data dir can be deleted safely
         val isTemporary = dirToDelete.startsWith(AppPaths.CONTEXT_TMP_DIR)
         if (!isTemporary) {
+            logger.warn("Not a temporary user data dir | {}", dirToDelete)
             return
         }
         
@@ -204,7 +212,11 @@ object BrowserFiles {
             return
         }
 
-        FileUtils.deleteQuietly(dirToDelete.toFile())
+        try {
+            FileUtils.deleteQuietly(dirToDelete.toFile())
+        } catch (e: IOException) {
+            logger.warn("Failed to delete directory | {} | {}", e.message, dirToDelete)
+        }
 
         if (Files.exists(dirToDelete)) {
             logger.error("Browser data dir not deleted | {}", dirToDelete)

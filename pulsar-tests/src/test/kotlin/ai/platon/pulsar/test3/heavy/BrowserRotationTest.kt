@@ -10,7 +10,7 @@ import ai.platon.pulsar.skeleton.crawl.CrawlLoop
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import kotlinx.coroutines.delay
-import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
 import kotlin.io.path.ExperimentalPathApi
@@ -30,26 +30,36 @@ import kotlin.time.toJavaDuration
 class BrowserRotationTest : MassiveTestBase() {
 
     companion object {
-
         @JvmStatic
         @BeforeAll
         fun initPulsarSettings() {
-            PulsarSettings().maxBrowsers(4).maxOpenTabs(8).withTemporaryBrowser()
-        }
-
-        @OptIn(ExperimentalPathApi::class)
-        @JvmStatic
-        @AfterAll
-        fun deleteTemporaryContexts() {
-            kotlin.runCatching { AppPaths.CONTEXT_TMP_DIR.deleteRecursively() }
-            kotlin.runCatching { AppPaths.LOCAL_STORAGE_DIR.resolve("localfile-org").deleteRecursively() }
+            PulsarSettings().maxBrowsers(4).maxOpenTabs(8)
+            // PulsarSettings().withTemporaryBrowser()
         }
     }
 
-    override val testFileCount = 300
+    override val testFileCount = 30000
+
+    @OptIn(ExperimentalPathApi::class)
+    @AfterEach
+    fun deleteTemporaryContexts() {
+        kotlin.runCatching { AppPaths.CONTEXT_TMP_DIR.deleteRecursively() }
+        kotlin.runCatching { AppPaths.LOCAL_STORAGE_DIR.resolve("localfile-org").deleteRecursively() }
+    }
 
     @Test
-    fun test() {
+    fun testWithSequentialBrowser() {
+        PulsarSettings().withSequentialBrowsers()
+        runAndAwait()
+    }
+
+    @Test
+    fun testWithTemporaryBrowser() {
+        PulsarSettings().withTemporaryBrowser()
+        runAndAwait()
+    }
+
+    private fun runAndAwait() {
         val links = testPaths.asSequence().map { UrlUtils.pathToLocalURL(it) }.map { createHyperlink(it) }.toList()
 
         links.forEach {
