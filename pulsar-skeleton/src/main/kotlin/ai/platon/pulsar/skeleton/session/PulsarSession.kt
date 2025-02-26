@@ -167,10 +167,13 @@ interface PulsarSession : AutoCloseable {
      * Once the process has started, this configuration remains unchangeable.
      * */
     val unmodifiedConfig: ImmutableConfig
+
     /**
-     * The session scope volatile config, every setting is supposed to be changed at any time and any place.
+     * The session-specific volatile configuration, which allows dynamic adjustments to settings at any point during the session.
+     * Unlike the immutable configuration loaded at startup, this configuration is designed to be modified on-the-fly to adapt to runtime requirements.
      * */
     val sessionConfig: VolatileConfig
+
     /**
      * A short descriptive display text.
      * */

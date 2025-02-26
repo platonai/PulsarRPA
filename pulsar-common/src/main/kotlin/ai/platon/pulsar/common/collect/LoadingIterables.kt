@@ -16,9 +16,31 @@ open class ConcurrentLoadingIterable<E>(
     private val cache = Collections.synchronizedList(LinkedList<E>())
 
     /**
-     * Total number of loaded items
+     * Total number of loaded items in the cache.
      * */
     val cacheSize get() = cache.size
+
+    /**
+     * Total number of loaded items
+     * */
+    val size: Int get() {
+        return regularCollector.size +
+                (realTimeCollector?.size ?: 0) +
+                (delayCollector?.size ?: 0) +
+                cacheSize
+    }
+
+    /**
+     * The estimated size of the fetch queue, which is the sum of the size of all collectors.
+     * When the collector loads urls from external sources, retrieving exact size of the fetch queue
+     * is not possible. So we have to estimate the size.
+     * */
+    val estimatedSize: Int get() {
+        return regularCollector.estimatedSize +
+                (realTimeCollector?.estimatedSize ?: 0) +
+                (delayCollector?.estimatedSize ?: 0) +
+                cacheSize
+    }
 
     override fun iterator() = LoadingIterator(this)
 

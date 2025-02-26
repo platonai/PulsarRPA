@@ -42,6 +42,18 @@ class ScrapeController(
      * @param uuid The uuid of the task last submitted
      * @return The execution result
      * */
+    @GetMapping("c", consumes = [MediaType.ALL_VALUE])
+    fun count(
+        status: Int,
+        httpRequest: HttpServletRequest,
+    ): Int {
+        return scrapeService.count(status)
+    }
+
+    /**
+     * @param uuid The uuid of the task last submitted
+     * @return The execution result
+     * */
     @GetMapping("status", consumes = [MediaType.ALL_VALUE])
     fun status(
         @RequestParam(value = "uuid") uuid: String,

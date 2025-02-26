@@ -39,10 +39,10 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
                 hyperlink.triggeredEvents.add("$seq. CrawlEvent.onWillLoad")
                 it
             }
-            onLoad.addFirst {
-                hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoad")
-                it
-            }
+//            onLoad.addFirst {
+//                hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoad")
+//                it
+//            }
             onLoaded.addFirst { url: UrlAware, page: WebPage? ->
                 hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoaded")
 
@@ -141,11 +141,11 @@ open class MockDegeneratedListenableHyperlink : ListenableHyperlink("", ""), Deg
                 hyperlink.triggeredEvents.add("$seq. CrawlEvent.onWillLoad")
                 it
             }
-            onLoad.addFirst {
-                hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoad")
-                println("Hello! I'm here!")
-                it
-            }
+//            onLoad.addFirst {
+//                hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoad")
+//                println("Hello! I'm here!")
+//                it
+//            }
             onLoaded.addFirst { url: UrlAware, page: WebPage? ->
                 assertNull(page)
                 hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoaded")

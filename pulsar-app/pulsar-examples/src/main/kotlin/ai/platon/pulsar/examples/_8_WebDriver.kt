@@ -64,7 +64,7 @@ internal class WebDriverDemo(private val session: PulsarSession = createSession(
         println("bounding box of body: " + driver.boundingBox("body"))
 
         println("scroll to the middle of the page ...")
-        driver.scrollToMiddle(0.5f)
+        driver.scrollToMiddle(0.5)
 
         println("click $selector ...")
         driver.click(selector)

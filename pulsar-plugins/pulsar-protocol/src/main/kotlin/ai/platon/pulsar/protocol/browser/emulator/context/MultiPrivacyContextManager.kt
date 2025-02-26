@@ -33,6 +33,7 @@ import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.CoreMetrics
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserUnavailableException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyContext
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
@@ -192,11 +193,11 @@ open class MultiPrivacyContextManager(
         val context = computeIfNecessary(page, fingerprint, task)
 
         // An active privacy context can be used to serve tasks, and an inactive one should be closed.
-        if (context.isActive) {
+        if (context.isReady) {
             return context
         }
 
-        assert(!context.isActive)
+        assert(!context.isReady)
         // The context is inactive, close it and create a new one
         close(context)
 

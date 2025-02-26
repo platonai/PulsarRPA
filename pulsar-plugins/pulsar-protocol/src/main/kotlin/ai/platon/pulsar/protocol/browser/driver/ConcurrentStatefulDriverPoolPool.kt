@@ -72,6 +72,9 @@ class ConcurrentStatefulDriverPoolPool {
     @Synchronized
     fun isRetiredPool(browserId: BrowserId) = retiredDriverPools.contains(browserId)
 
+    @Synchronized
+    fun isActivePool(browserId: BrowserId) = _workingDriverPools[browserId]?.isActive == true
+
     @Beta
     @Synchronized
     fun subscribeDriver(browserId: BrowserId): WebDriver? {

@@ -28,6 +28,10 @@ interface Browser: AutoCloseable {
      * */
     val data: MutableMap<String, Any?>
     /**
+     * Check if this browser is open.
+     * */
+    val canConnect: Boolean
+    /**
      * Check if this browser is idle.
      * */
     val isIdle: Boolean

@@ -67,6 +67,13 @@ class ScrapeService(
         }
     }
 
+    /**
+     * Get the response
+     * */
+    fun count(status: Int): Int {
+        return responseCache.count { it.value.statusCode == status }
+    }
+
     private fun createScrapeHyperlink(request: ScrapeRequest): ScrapeHyperlink {
         val sql = request.sql
         val link = if (ScrapeAPIUtils.isScrapeUDF(sql)) {

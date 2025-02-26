@@ -565,7 +565,7 @@ open class LoadOptions(
      * If the option is true, it overrides [storeContent].
      * */
     @Parameter(
-        names = ["-dct", "-dropContent", "--drop-content"], arity = 1,
+        names = ["-dct", "-dropContent", "--drop-content"],
         description = "If the option exists, do not persist the page content which is usually very large."
     )
     var dropContent = false

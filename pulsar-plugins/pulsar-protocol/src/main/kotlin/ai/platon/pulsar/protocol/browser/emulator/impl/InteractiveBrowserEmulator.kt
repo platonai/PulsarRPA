@@ -276,7 +276,7 @@ open class InteractiveBrowserEmulator(
             // The web driver is canceled
             response = ForwardingResponse.canceled(task.page)
         } catch (e: IllegalWebDriverStateException) {
-            logger.warn("Web driver #{} is lost | {}", e.driver?.id, e.brief())
+            logger.warn("Web driver is lost | #{} | {}", driver.id, e.brief())
             driver.retire()
             exception = e
             response = ForwardingResponse.privacyRetry(task.page, "Web driver lost")

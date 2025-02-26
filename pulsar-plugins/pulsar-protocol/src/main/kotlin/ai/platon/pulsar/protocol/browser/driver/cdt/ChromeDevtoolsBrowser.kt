@@ -36,6 +36,8 @@ class ChromeDevtoolsBrowser(
 
     private val reuseRecoveredDriver get() = conf.getBoolean(BROWSER_REUSE_RECOVERED_DRIVERS, false)
 
+    override val canConnect: Boolean get() = isActive && chrome.canConnect()
+
     override val isActive get() = super.isActive && chrome.isActive
 
     override val userAgent get() = chrome.version.userAgent ?: DEFAULT_USER_AGENT
@@ -60,7 +62,7 @@ class ChromeDevtoolsBrowser(
         try {
             return chrome.createTab(url)
         } catch (e: ChromeIOException) {
-            throw IllegalWebDriverStateException("createTab", e)
+            throw BrowserUnavailableException("createTab", e)
         } catch (e: ChromeServiceException) {
             throw WebDriverException("createTab", e)
         }
@@ -72,7 +74,7 @@ class ChromeDevtoolsBrowser(
         try {
             return chrome.listTabs()
         } catch (e: ChromeIOException) {
-            throw IllegalWebDriverStateException("listTabs", e)
+            throw BrowserUnavailableException("listTabs", e)
         } catch (e: ChromeServiceException) {
             if (!isActive) {
                 return arrayOf()
@@ -110,13 +112,10 @@ class ChromeDevtoolsBrowser(
             val chromeTab = createTab(url)
             return newDriverIfAbsent(chromeTab, false)
         } catch (e: ChromeIOException) {
-            throw IllegalWebDriverStateException("newDriver", e)
+            throw BrowserUnavailableException("newDriver", e)
         } catch (e: ChromeDriverException) {
-            logger.warn(e.stringify())
+            logger.warn("Failed to create new driver, rethrow | {}", e.message)
             throw WebDriverException("Failed to create chrome devtools driver | " + e.message)
-        } catch (e: Exception) {
-            logger.warn(e.stringify())
-            throw WebDriverException("[Unexpected] Failed to create chrome devtools driver", e)
         }
     }
 

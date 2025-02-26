@@ -653,7 +653,13 @@ class ChromeDevtoolsDriver(
                 navigateTo(ChromeImpl.ABOUT_BLANK_PAGE)
             }
         } catch (e: ChromeDriverException) {
-            rpc.handleChromeException(e, "terminate")
+            if (devTools.isOpen) {
+                try {
+                    rpc.handleChromeException(e, "terminate")
+                } catch (e: Exception) {
+                    logger.error("[Unexpected]", e)
+                }
+            }
         }
     }
 
