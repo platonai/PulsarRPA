@@ -77,9 +77,11 @@ open class WebDriverPoolManager(
     val numDyingDrivers get() = retiredDriverPools.values.sumOf { it.numCreated }
     
     val numClosedDrivers get() = closedDriverPools.size
-    
-    // Maximum allowed number of retired drives, if it's exceeded, the oldest driver pool should be closed.
-    val maxAllowedDyingDrivers = 10
+    /**
+     * Maximum allowed number of dying drives, if it's exceeded, the oldest driver pool should be closed.
+     * Dying drivers are kept for diagnosis.
+     * */
+    val maxAllowedDyingDrivers = 0
     
     val numReset by lazy { MetricsSystem.reg.meter(this, "numReset") }
     val numTimeout by lazy { MetricsSystem.reg.meter(this, "numTimeout") }
@@ -757,9 +759,6 @@ private class BrowserAccompaniedDriverPoolCloser(
         if (browser != null) {
             closeBrowserAccompaniedDriverPool(browser, driverPool)
         } else {
-            // The browser can be closed by user now.
-            // logger.warn("Browser should exist when driver pool exists | {}", driverPool.browserId)
-
             kotlin.runCatching { driverPoolPool.close(driverPool) }.onFailure { warnInterruptible(this, it) }
         }
     }
@@ -788,12 +787,13 @@ private class BrowserAccompaniedDriverPoolCloser(
                 totalDyingDrivers, driverPoolManager.retiredDriverPools.size
             )
         }
-        
+
+        val maxAllowedDyingDrivers = driverPoolManager.maxAllowedDyingDrivers
         return when {
             // low memory
             AppSystemInfo.isCriticalResources -> oldestRetiredDriverPool
             // The drivers are in GUI mode and there are many open drivers.
-            totalDyingDrivers > driverPoolManager.maxAllowedDyingDrivers -> oldestRetiredDriverPool
+            totalDyingDrivers > maxAllowedDyingDrivers -> oldestRetiredDriverPool
             else -> null
         }
     }
