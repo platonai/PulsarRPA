@@ -73,10 +73,10 @@ class TransportImpl : Transport {
             WEB_SOCKET_CONTAINER.connectToServer(endpoint, uri)
         } catch (e: DeploymentException) {
             logger.warn("Failed to connect to ws server | DeploymentException | $uri", e)
-            throw ChromeIOException("Failed connecting to ws server | $uri", e)
+            throw ChromeIOException("Failed connecting to ws server | $uri", e, isOpen)
         } catch (e: IOException) {
             logger.warn("Failed to connect to ws server | IOException | $uri", e)
-            throw ChromeIOException("Failed connecting to ws server | $uri", e)
+            throw ChromeIOException("Failed connecting to ws server | $uri", e, isOpen)
         }
     }
     
@@ -88,9 +88,9 @@ class TransportImpl : Transport {
             tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.basicRemote.sendText(message)
         } catch (e: IllegalStateException) {
-            throw ChromeIOException("Failed to send message", e)
+            throw ChromeIOException("Failed to send message", e, isOpen)
         } catch (e: IOException) {
-            throw ChromeIOException("Failed to send message", e)
+            throw ChromeIOException("Failed to send message", e, isOpen)
         }
     }
     
@@ -102,9 +102,9 @@ class TransportImpl : Transport {
             tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.asyncRemote.sendText(message)
         } catch (e: IllegalStateException) {
-            throw ChromeIOException("Failed to send message, caused by ${e.message}", e)
+            throw ChromeIOException("Failed to send message, caused by ${e.message}", e, isOpen)
         } catch (e: IOException) {
-            throw ChromeIOException("Failed to send message, caused by ${e.message}", e)
+            throw ChromeIOException("Failed to send message, caused by ${e.message}", e, isOpen)
         }
     }
 

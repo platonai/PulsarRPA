@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
@@ -61,6 +62,7 @@ class ChromeDevtoolsDriver(
     private val _probabilityBlockedURLs = mutableListOf<String>()
     val blockedURLs: List<String> get() = _blockedURLs
     val probabilisticBlockedURLs: List<String> get() = _probabilityBlockedURLs
+    val canConnect get() = browser.canConnect
 
     /**
      * TODO: distinguish the navigateUrl, currentUrl, chromeTab.url, mainFrameAPI.url, dom.document.documentURL, dom.document.baseURL
@@ -94,7 +96,7 @@ class ChromeDevtoolsDriver(
     private val initScriptCache = mutableListOf<String>()
     private val closed = AtomicBoolean()
 
-    val isGone get() = closed.get() || isQuit || !AppContext.isActive || !devTools.isOpen
+    private val isGone get() = closed.get() || isQuit || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone
 
     /**
@@ -651,6 +653,10 @@ class ChromeDevtoolsDriver(
             } else {
                 // go to about:blank, so the browser stops the previous page and releases all resources
                 navigateTo(ChromeImpl.ABOUT_BLANK_PAGE)
+            }
+        } catch (e: ChromeIOException) {
+            if (!e.isOpen || !devTools.isOpen) {
+                // ignored, since the chrome is closed
             }
         } catch (e: ChromeDriverException) {
             if (devTools.isOpen) {

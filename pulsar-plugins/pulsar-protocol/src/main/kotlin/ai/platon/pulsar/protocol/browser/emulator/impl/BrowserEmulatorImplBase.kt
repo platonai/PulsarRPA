@@ -211,7 +211,7 @@ abstract class BrowserEmulatorImplBase(
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should be redo
-            throw WebDriverCancellationException("Web driver is canceled #${driver.id}", driver)
+            throw WebDriverCancellationException("Web driver is canceled #${driver.id}", driver = driver)
         }
     }
     
@@ -226,7 +226,7 @@ abstract class BrowserEmulatorImplBase(
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should run again.
-            throw WebDriverCancellationException("Web driver is canceled #${driver.id}", driver)
+            throw WebDriverCancellationException("Web driver is canceled #${driver.id}", driver = driver)
         }
         
         if (task.isCanceled) {
