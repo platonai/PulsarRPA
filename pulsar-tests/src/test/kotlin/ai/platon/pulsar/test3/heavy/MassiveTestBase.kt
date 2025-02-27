@@ -16,12 +16,12 @@ import kotlin.test.assertTrue
 open class MassiveTestBase {
     protected val session = SQLContexts.createSession()
 
-    protected val group = "MassiveTest"
-    protected val groupBaseDir = AppPaths.getContextGroupDir(group)
-    protected val contextBaseDir = AppPaths.getContextBaseDir(group, BrowserType.PULSAR_CHROME)
-
-    protected val tempContextGroupDir = AppPaths.getTmpContextGroupDir(group)
-    protected val tempContextBaseDir = AppPaths.getTmpContextBaseDir(group, BrowserType.PULSAR_CHROME)
+//    protected val group = "MassiveTest"
+//    protected val groupBaseDir = AppPaths.getContextGroupDir(group)
+//    protected val contextBaseDir = AppPaths.getContextBaseDir(group, BrowserType.PULSAR_CHROME)
+//
+//    protected val tempContextGroupDir = AppPaths.getTmpContextGroupDir(group)
+//    protected val tempContextBaseDir = AppPaths.getTmpContextBaseDir(group, BrowserType.PULSAR_CHROME)
 
     protected open val testFileCount = 10000
 
@@ -39,11 +39,11 @@ open class MassiveTestBase {
 
     @BeforeTest
     fun prepareContextDirs() {
-        Files.createDirectories(contextBaseDir)
-        assertTrue { Files.exists(contextBaseDir) }
-
-        Files.createDirectories(tempContextBaseDir)
-        assertTrue { Files.exists(tempContextBaseDir) }
+//        Files.createDirectories(contextBaseDir)
+//        assertTrue { Files.exists(contextBaseDir) }
+//
+//        Files.createDirectories(tempContextBaseDir)
+//        assertTrue { Files.exists(tempContextBaseDir) }
     }
 
     @AfterTest

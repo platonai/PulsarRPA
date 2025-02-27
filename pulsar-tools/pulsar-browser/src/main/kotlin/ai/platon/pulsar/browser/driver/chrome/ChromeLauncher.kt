@@ -21,6 +21,9 @@ import java.nio.file.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
 import kotlin.io.path.deleteIfExists
+import kotlin.io.path.exists
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 /**
  * The chrome launcher
@@ -33,7 +36,7 @@ class ChromeLauncher(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
-        
+
         private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws://.+:(\\d+)/")
     }
 
@@ -55,34 +58,48 @@ class ChromeLauncher(
             this.close()
         }
     }
-    
+
     /**
-     * Launch the chrome
-     * */
+     * Launches a Chrome process using the specified Chrome binary and options.
+     *
+     * This function prepares the user data directory and then launches the Chrome process with the given binary path and options.
+     * If the preparation of the user data directory fails, a warning is logged but the process continues.
+     * The function returns a [RemoteChrome] instance that represents the launched Chrome process.
+     *
+     * @param chromeBinaryPath The path to the Chrome binary executable.
+     * @param options The Chrome options to be used when launching the Chrome process.
+     * @return A [RemoteChrome] instance representing the launched Chrome process.
+     * @throws ChromeProcessException If an error occurs during the Chrome process launch.
+     */
     @Throws(ChromeProcessException::class)
     fun launch(chromeBinaryPath: Path, options: ChromeOptions): RemoteChrome {
+        // Attempt to prepare the user data directory. If it fails, log a warning but continue.
         kotlin.runCatching { prepareUserDataDir() }.onFailure {
             warnInterruptible(this, it, "Failed to prepare user data dir | {} | {}", userDataDir, it.stringify())
         }
 
+        // Launch the Chrome process with the specified binary path, user data directory, and options.
         val port = launchChromeProcess(chromeBinaryPath, userDataDir, options)
+
+        // Return a new instance of ChromeImpl initialized with port
         return ChromeImpl(port)
     }
 
     /**
-     * Launch the chrome
+     * Launch a chrome
      * */
     @Throws(ChromeProcessException::class)
     fun launch(options: ChromeOptions) = launch(Browsers.searchChromeBinary(), options)
 
     /**
-     * Launch the chrome
+     * Launch a chrome
      * */
     @Throws(ChromeProcessException::class)
-    fun launch(headless: Boolean) = launch(Browsers.searchChromeBinary(), ChromeOptions().also { it.headless = headless })
+    fun launch(headless: Boolean) =
+        launch(Browsers.searchChromeBinary(), ChromeOptions().also { it.headless = headless })
 
     /**
-     * Launch the chrome
+     * Launch a chrome
      * */
     @Throws(ChromeProcessException::class)
     fun launch() = launch(true)
@@ -101,7 +118,7 @@ class ChromeLauncher(
         } catch (e: NoSuchFileException) {
             logger.warn("NoSuchFileException | {}", e.message)
         } catch (e: IOException) {
-          logger.warn("IOException | {}", e.message)
+            logger.warn("IOException | {}", e.message)
         } catch (t: Throwable) {
             warnInterruptible(this, t, "Failed to destroy chrome launcher forcibly | {}", userDataDir)
         }
@@ -124,8 +141,10 @@ class ChromeLauncher(
 
             BrowserFiles.runCatching {
                 cleanUpContextTmpDir(temporaryUddExpiry)
-                cleanOldestContextTmpDirs(recentNToKeep)
+                cleanOldestContextTmpDirs(120.seconds.toJavaDuration(), recentNToKeep)
             }.onFailure { warnForClose(this, it) }
+
+            portPath.deleteIfExists()
         }
     }
 
@@ -147,6 +166,8 @@ class ChromeLauncher(
      * @throws IllegalThreadStateException if the subprocess has not yet terminated.
      */
     val isAlive: Boolean get() = process?.isAlive == true
+
+    val isDirInUse: Boolean get() = portPath.exists()
 
     /**
      * Launches a chrome process given a chrome binary and its arguments.
@@ -175,11 +196,11 @@ class ChromeLauncher(
             supervisorProcess = null
         }
 
-        val executable = supervisorProcess?:"$chromeBinary"
+        val executable = supervisorProcess ?: "$chromeBinary"
         var arguments = if (supervisorProcess == null) chromeOptions.toList() else {
             options.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
         }.toMutableList()
-        
+
         if (userDataDir.startsWith(AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER)) {
             // Open the default browser just like a real user daily do,
             // open a blank page not to choose the profile
@@ -190,18 +211,20 @@ class ChromeLauncher(
         }
 
         return try {
+            Files.createDirectories(portPath.parent)
+            portPath.deleteIfExists()
+            Files.writeString(portPath, "0", StandardOpenOption.CREATE)
+
             shutdownHookRegistry.register(shutdownHookThread)
             process = ProcessLauncher.launch(executable, arguments)
 
             val p = process ?: throw ChromeProcessException("Failed to start chrome process")
 
-            Files.createDirectories(userDataDir)
             Files.writeString(pidPath, p.pid().toString(), StandardOpenOption.CREATE)
 
             val port = waitForDevToolsServer(p)
 
-            portPath.deleteIfExists()
-            Files.writeString(portPath, port.toString(), StandardOpenOption.CREATE)
+            Files.writeString(portPath, port.toString(), StandardOpenOption.TRUNCATE_EXISTING)
 
             port
         } catch (e: IllegalStateException) {
@@ -245,7 +268,7 @@ class ChromeLauncher(
                         break
                     }
                     processOutput.appendLine(line)
-                    
+
                     line = reader.readLine()
                 }
             }
@@ -258,9 +281,9 @@ class ChromeLauncher(
             if (port == 0) {
                 close(readLineThread)
                 logger.info("Process output:>>>\n$processOutput\n<<<")
-                
+
                 handleChromeFailedToStart()
-                
+
                 throw ChromeProcessTimeoutException("Timeout to waiting for chrome to start")
             }
         } catch (e: InterruptedException) {
@@ -271,7 +294,7 @@ class ChromeLauncher(
 
         return port
     }
-    
+
     private fun close(thread: Thread) {
         try {
             thread.join(options.threadWaitTime.toMillis())
@@ -286,9 +309,9 @@ class ChromeLauncher(
             logger.warn("Failed to start Chrome, no chrome process running in the system")
             return
         }
-        
+
         // val isSystemDefaultBrowser = userDataDir == AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER
-        
+
         val message = """
 
 ===============================================================================
@@ -302,11 +325,16 @@ Kill all Chrome processes and run the program again.
 ===============================================================================
 
                     """.trimIndent()
-        
+
         logger.warn(message)
         return
     }
-    
+
+    /**
+     * Prepare user data dir.
+     *
+     * @throws IOException If failed to create user data dir.
+     * */
     @Throws(IOException::class)
     private fun prepareUserDataDir() {
         val prototypeUserDataDir = AppPaths.CHROME_DATA_DIR_PROTOTYPE
@@ -315,7 +343,8 @@ Kill all Chrome processes and run the program again.
             return
         }
 
-        val lock = AppPaths.BROWSER_TMP_DIR_LOCK
+        // Lock the group so that only one instance can run at the same time
+        val lock = BrowserFiles.getContextGroupLockFileFromUserDataDir(userDataDir)
         if (isActive && Files.exists(prototypeUserDataDir.resolve("Default"))) {
             FileChannel.open(lock, StandardOpenOption.APPEND).use {
                 it.lock()
@@ -325,7 +354,11 @@ Kill all Chrome processes and run the program again.
                 }
 
                 if (!Files.exists(userDataDir.resolve("Default"))) {
-                    logger.info("User data dir does not exist, copy from prototype | {} <- {}", userDataDir, prototypeUserDataDir)
+                    logger.info(
+                        "User data dir does not exist, copy from prototype | {} <- {}",
+                        userDataDir,
+                        prototypeUserDataDir
+                    )
                     // remove dead symbolic links
                     Files.list(prototypeUserDataDir)
                         .filter { Files.isSymbolicLink(it) && !Files.exists(it) }
@@ -346,7 +379,7 @@ Kill all Chrome processes and run the program again.
             }
         }
     }
-    
+
     private fun handleExistUserDataDir(prototypeUserDataDir: Path) {
         // the user data dir exists
         Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
@@ -355,7 +388,7 @@ Kill all Chrome processes and run the program again.
             // might have permission issue on Windows
             // FileUtils.deleteDirectory(leveldb.toFile())
         }
-        
+
         arrayOf("Default/Cookies", "Default/Local Storage/leveldb").forEach {
             val target = userDataDir.resolve(it)
             Files.createDirectories(target.parent)

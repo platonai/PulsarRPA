@@ -600,7 +600,7 @@ open class StreamingCrawler(
                 // one of the reason is the concrete exception is not public.
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
                     if (globalState.illegalApplicationState.compareAndSet(false, true)) {
-                        logger.warn("Coroutine was cancelled, quit the crawler | JobCancellationException")
+                        logger.info("Coroutine was cancelled, quit the crawler | JobCancellationException")
                     }
                     flowState.set(FlowState.BREAK)
                 }

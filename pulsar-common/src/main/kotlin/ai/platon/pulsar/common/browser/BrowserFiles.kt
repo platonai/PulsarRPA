@@ -111,16 +111,17 @@ object BrowserFiles {
     }
 
     @Throws(IOException::class)
-    fun cleanOldestContextTmpDirs(recentNToKeep: Int = 20) {
+    fun cleanOldestContextTmpDirs(expiry: Duration, recentNToKeep: Int = 20) {
         // Remove directories that have too many context directories
         Files.walk(AppPaths.CONTEXT_TMP_DIR, 3)
             .filter { it !in cleanedUserDataDirs } // not processed
             .filter { it.toString().contains("cx.") } // context dir
+            .filter { it.resolve("port").notExists() } // already closed
             .toList()
             .toSet()
             .sortedByDescending { Files.getLastModifiedTime(it) }  // newest first
             .drop(recentNToKeep)  // drop the newest 20 context dirs, so them are not cleaned
-            .forEach { cleanUpContextDir(it, Duration.ofSeconds(30)) } // clean the rest
+            .forEach { cleanUpContextDir(it, expiry) } // clean the rest
     }
 
     /**
@@ -133,6 +134,7 @@ object BrowserFiles {
         Files.walk(AppPaths.CONTEXT_TMP_DIR, 3)
             .filter { it !in cleanedUserDataDirs }
             .filter { it.fileName.toString().startsWith("cx.") }
+            .filter { it.resolve("port").notExists() }
             .forEach { path -> cleanUpContextDir(path, expiry) }
     }
 
@@ -141,22 +143,24 @@ object BrowserFiles {
      *
      * Only clean the context directory which starts with "cx."
      *
-     * @param path The context path
+     * @param contextDir The path to the context directory
      * @param expiry The expiry duration
      * */
     @Throws(IOException::class)
-    fun cleanUpContextDir(path: Path, expiry: Duration) {
+    fun cleanUpContextDir(contextDir: Path, expiry: Duration) {
         // only clean the context directory which starts with "cx."
-        if (!path.fileName.toString().startsWith("cx.")) {
-            logger.info("Not a context directory | {}", path)
+        if (!contextDir.fileName.toString().startsWith("cx.")) {
+            logger.info("Not a context directory | {}", contextDir)
             return
         }
 
-        val group = path.parent.fileName.toString()
-        Files.list(path)
-            .filter { it.fileName.toString().uppercase() == "PULSAR_CHROME" }
+        // a typical path is:
+        // %USERPROFILE%\context\groups\default\PULSAR_CHROME\cx.2\pulsar_chrome
+        val groupName = contextDir.parent.fileName.toString()
+        Files.list(contextDir)
+            .filter { it.fileName.toString().lowercase() == "pulsar_chrome" }
             .forEach { dirToDelete ->
-                deleteTemporaryUserDataDirWithLock(group, dirToDelete, expiry)
+                deleteTemporaryUserDataDirWithLock(groupName, dirToDelete, expiry)
             }
     }
 
@@ -285,7 +289,7 @@ object BrowserFiles {
 
     /**
      * Compute the next sequential context directory.
-     * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/cx.1
+     * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/PULSAR_CHROME/cx.1
      * */
     @Throws(IOException::class)
     private fun computeNextSequentialContextDir0(
@@ -340,7 +344,17 @@ object BrowserFiles {
         return path
     }
 
-    private fun getContextGroupDirLockFile(group: String): Path {
+    /**
+     * Get the lock file of the context group.
+     * The lock file is used to ensure that only one process can access the context group directory at a time.
+     *
+     * A typical lock file is like: /tmp/pulsar-vincent/context/group/default/context.lock
+     * The lock file is created in the context group directory.
+     *
+     * @param group The context group name.
+     * @return The lock file of the context group.
+     * */
+    fun getContextGroupDirLockFile(group: String): Path {
         val lockFile = AppPaths.getContextGroupDir(group).resolve(CONTEXT_LOCK_NAME)
         if (lockFile.notExists()) {
             Files.createDirectories(lockFile.parent)
@@ -349,8 +363,39 @@ object BrowserFiles {
         return lockFile
     }
 
-    private fun getTempContextGroupDirLockFile(group: String): Path {
+    /**
+     * Get the lock file of the context group.
+     * The lock file is used to ensure that only one process can access the context group directory at a time.
+     *
+     * A typical lock file is like: /tmp/pulsar-vincent/context/tmp/groups/default/context.lock
+     * The lock file is created in the context group directory.
+     *
+     * @param group The context group name.
+     * @return The lock file of the context group.
+     * */
+    fun getTempContextGroupDirLockFile(group: String): Path {
         val lockFile = AppPaths.getTmpContextGroupDir(group).resolve(CONTEXT_LOCK_NAME)
+        if (lockFile.notExists()) {
+            Files.createDirectories(lockFile.parent)
+            Files.createFile(lockFile)
+        }
+        return lockFile
+    }
+
+    /**
+     * Get the lock file of the context group from the user data directory.
+     * The lock file is used to ensure that only one process can access the context group directory at a time.
+     *
+     * A typical lock file is like: /tmp/pulsar-vincent/context/group/default/context.lock
+     * The lock file is created in the context group directory.
+     *
+     * @param userDataDir The user data directory of the context group.
+     * @return The lock file of the context group.
+     * */
+    fun getContextGroupLockFileFromUserDataDir(userDataDir: Path): Path {
+        val contextBaseDir = userDataDir.parent
+        val groupDir = contextBaseDir.parent
+        val lockFile = groupDir.resolveSibling(CONTEXT_LOCK_NAME)
         if (lockFile.notExists()) {
             Files.createDirectories(lockFile.parent)
             Files.createFile(lockFile)

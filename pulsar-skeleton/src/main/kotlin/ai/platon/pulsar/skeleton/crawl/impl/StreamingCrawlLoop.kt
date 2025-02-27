@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.crawl.impl
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.collect.UrlFeeder
 import ai.platon.pulsar.common.config.CapabilityTypes.CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -81,7 +82,17 @@ open class StreamingCrawlLoop(
             // _urlFeeder.clear()
 
             kotlin.runCatching { runBlocking { crawlJob?.cancelAndJoin() } }
-                .onFailure { warnForClose(this, it, "Stopping crawl loop #${id}") }
+                .onFailure {
+                    if (AppContext.isActive) {
+                        warnForClose(it, it, "Crawl loop #${id} is stopped with exception")
+                    } else {
+                        // it's expected that there are some uncaught exceptions if the system is shutting down,
+                        // ignore them.
+                        if (logger.isDebugEnabled) {
+                            logger.debug("Crawl loop #${id} is stopped with exception", it)
+                        }
+                    }
+                }
 
             crawlJob = null
             logger.info("Crawl loop is stopped | #{} | {}", id, this)
