@@ -45,6 +45,7 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorImplBase(
@@ -305,7 +306,8 @@ abstract class BrowserEmulatorImplBase(
             val baseDir = path.parent
             if (exportCount % 100 == 0 && Files.list(baseDir).count() > maxExportCount) {
                 val date = DateTimes.now("yyyyMMdd")
-                Files.move(baseDir, baseDir.resolveSibling(baseDir.fileName.toString() + ".$date"))
+                val dest = baseDir.resolveSibling(baseDir.fileName.toString() + ".$date")
+                Files.move(baseDir, dest, StandardCopyOption.REPLACE_EXISTING)
             }
         }
     }
