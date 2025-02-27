@@ -221,7 +221,10 @@ class LoadingWebDriverPool constructor(
         if (driver == null) {
             val snapshot = takeSnapshot()
             val message = String.format("%s", snapshot.format(true))
-            logger.warn("Driver pool is exhausted, rethrow WebDriverPoolExhaustedException | $message")
+            if (AppContext.isActive) {
+                // log only when the application is active
+                logger.warn("Driver pool is exhausted, rethrow WebDriverPoolExhaustedException | $message")
+            }
             throw WebDriverPoolExhaustedException(browserId.toString(), "Driver pool is exhausted ($snapshot)")
         }
         

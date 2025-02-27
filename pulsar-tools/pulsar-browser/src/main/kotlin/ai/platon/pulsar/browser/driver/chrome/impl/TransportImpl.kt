@@ -72,10 +72,14 @@ class TransportImpl : Transport {
         session = try {
             WEB_SOCKET_CONTAINER.connectToServer(endpoint, uri)
         } catch (e: DeploymentException) {
-            logger.warn("Failed to connect to ws server | DeploymentException | $uri", e)
+            if (isOpen) {
+                logger.warn("Websocket deployment exception, rethrow a ChromeIOException | {}", uri, e)
+            }
             throw ChromeIOException("Failed connecting to ws server | $uri", e, isOpen)
         } catch (e: IOException) {
-            logger.warn("Failed to connect to ws server | IOException | $uri", e)
+            if (isOpen) {
+                logger.warn("IOException when connect to websocket, rethrow a ChromeIOException | $uri", e)
+            }
             throw ChromeIOException("Failed connecting to ws server | $uri", e, isOpen)
         }
     }

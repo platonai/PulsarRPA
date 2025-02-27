@@ -146,15 +146,21 @@ object AppContext {
     }
     val APP_DATA_DIR = APP_DATA_DIR_RT
     /**
-     * The application's runtime state
+     * The application's runtime state.
      * */
     val state = AtomicReference(State.NEW)
     /**
-     * The application is active.
-     * TODO: avoid this global state, use a more flexible way to manage the state.
+     * The application is active, it can serve and can be terminated.
+     * TODO: consider a more flexible way to manage the state.
      * */
     val isActive get() = state.get().ordinal < State.TERMINATING.ordinal
-    
+    /**
+     * The application is inactive, it can not serve, it's terminating, or terminated.
+     * */
+    val isInactive get() = !isActive
+    /**
+     * Start the application.
+     * */
     fun start() = state.set(State.RUNNING)
     
     fun shouldTerminate() {
