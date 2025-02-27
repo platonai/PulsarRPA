@@ -3,12 +3,13 @@ package ai.platon.pulsar.browser.common
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.CLIENT_JS_PROPERTY_NAMES
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import java.time.Duration
 
-open class BrowserSettings(
+open class BrowserSettings constructor(
     /**
      * The configuration.
      * */
@@ -35,7 +36,8 @@ open class BrowserSettings(
         /**
          * The script confuser.
          * */
-        var confuser: ScriptConfuser = SimpleScriptConfuser()
+        var SCRIPT_CONFUSER: ScriptConfuser = SimpleScriptConfuser()
+
         /**
          * Check if the current environment supports only headless mode.
          * TODO: AppContext.isGUIAvailable doesn't work on some platform
@@ -419,6 +421,11 @@ open class BrowserSettings(
             return this
         }
     }
+    /**
+     * The javascript to execute by Web browsers.
+     * */
+    private val jsPropertyNames: Array<String>
+        get() = conf.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, CLIENT_JS_PROPERTY_NAMES)
 
     /**
      * The supervisor process
@@ -512,9 +519,9 @@ open class BrowserSettings(
     /**
      * The script confuser.
      * */
-    val confuser get() = BrowserSettings.confuser
+    val confuser = BrowserSettings.SCRIPT_CONFUSER
     /**
      * The script loader.
      * */
-    val scriptLoader get() = ScriptLoader(confuser, conf)
+    val scriptLoader = ScriptLoader(confuser, jsPropertyNames)
 }

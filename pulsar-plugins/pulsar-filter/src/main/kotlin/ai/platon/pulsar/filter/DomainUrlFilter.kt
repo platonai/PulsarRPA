@@ -81,7 +81,7 @@ class DomainUrlFilter(conf: ImmutableConfig) : CrawlUrlFilter {
                 return url
             }
         } catch (e: Exception) {
-            LOG.error("Could not apply filter on url: " + url + "\n" + e.stringify())
+            LOG.error("Could not apply filter on url: $url", e)
         }
         return null
     }

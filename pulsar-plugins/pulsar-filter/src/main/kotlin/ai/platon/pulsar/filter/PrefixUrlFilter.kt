@@ -29,7 +29,7 @@ class PrefixUrlFilter(conf: ImmutableConfig) : CrawlUrlFilter {
         try {
             getRulesReader(conf).use { reader -> trie = readConfiguration(reader) }
         } catch (e: IOException) {
-            LOG.error(e.stringify())
+            LOG.error("IOException", e)
             throw RuntimeException(e.message, e)
         }
     }
