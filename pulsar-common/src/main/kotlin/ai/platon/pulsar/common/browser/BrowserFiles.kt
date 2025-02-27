@@ -76,7 +76,7 @@ object BrowserFiles {
         val group = "test"
 
         val lockFile = getContextGroupDirLockFile(group)
-        return runWithFileLock(lockFile) { channel ->
+        return runWithFileLockWithRetry(lockFile) { channel ->
             computeNextSequentialContextDir0(group, fingerprint, maxAgents, channel = channel)
         }
     }
@@ -96,7 +96,7 @@ object BrowserFiles {
         group: String = "default", fingerprint: Fingerprint = Fingerprint.DEFAULT, maxAgents: Int = 10
     ): Path {
         val lockFile = getContextGroupDirLockFile(group)
-        return runWithFileLock(lockFile) { channel ->
+        return runWithFileLockWithRetry(lockFile) { channel ->
             computeNextSequentialContextDir0(group, fingerprint, maxAgents, channel = channel)
         }
     }
@@ -107,7 +107,7 @@ object BrowserFiles {
         // val lockFile = AppPaths.BROWSER_TMP_DIR_LOCK
         // return computeRandomContextDir0(group)
         val lockFile = getTempContextGroupDirLockFile(group)
-        return runWithFileLock(lockFile) { channel -> computeRandomContextDir0(group, channel = channel) }
+        return runWithFileLockWithRetry(lockFile) { channel -> computeRandomContextDir0(group, channel = channel) }
     }
 
     @Throws(IOException::class)
@@ -182,7 +182,38 @@ object BrowserFiles {
     @Synchronized
     fun deleteTemporaryUserDataDirWithLock(group: String, userDataDir: Path, expiry: Duration) {
         val lockFile = getTempContextGroupDirLockFile(group)
-        runWithFileLock(lockFile) { channel -> deleteTemporaryUserDataDir0(userDataDir, expiry, channel) }
+        runWithFileLockWithRetry(lockFile) { channel -> deleteTemporaryUserDataDir0(userDataDir, expiry, channel) }
+    }
+
+    /**
+     * Locks the specified file and executes the given supplier function.
+     *
+     * This function attempts to acquire a lock on the specified file and executes the supplier function while the file is locked.
+     * The lock is released after the supplier function completes, regardless of whether an exception is thrown.
+     *
+     * @param lockFile The path to the file to be locked, of type [Path].
+     * @param supplier A function that takes a [FileChannel] as an argument and returns a value of type [T]. This function will be executed while the file is locked.
+     * @return The result of the supplier function, of type [T].
+     * @throws IOException If some other I/O error occurs.
+     */
+    @Throws(OverlappingFileLockException::class, IOException::class)
+    @Synchronized
+    private fun <T> runWithFileLockWithRetry(lockFile: Path, supplier: (FileChannel) -> T): T {
+        var retryCount = 0
+        var result: Result<T> = kotlin.runCatching { runWithFileLock0(lockFile, supplier) }
+        while (result.isFailure && ++retryCount <= 3) {
+            sleepSeconds(1)
+            result = kotlin.runCatching { runWithFileLock0(lockFile, supplier) }
+        }
+
+        return if (result.isFailure) {
+            when (val e = result.exceptionOrNull()!!) {
+                is IOException -> throw e
+                else -> throw IOException("runWithFileLockWithRetry", result.exceptionOrNull()!!)
+            }
+        } else {
+            result.getOrThrow()
+        }
     }
 
     /**
@@ -200,10 +231,12 @@ object BrowserFiles {
      * @throws OverlappingFileLockException If a lock that overlaps the requested region is already held by this Java virtual machine, or if another thread is already blocked in this method and is attempting to lock an overlapping region of the same file.
      * @throws NonWritableChannelException If this channel was not opened for writing.
      * @throws IOException If some other I/O error occurs.
+     *
+     * TODO: handle all the exceptions properly
      */
     @Throws(OverlappingFileLockException::class, IOException::class)
     @Synchronized
-    private fun <T> runWithFileLock(lockFile: Path, supplier: (FileChannel) -> T): T {
+    private fun <T> runWithFileLock0(lockFile: Path, supplier: (FileChannel) -> T): T {
         // Opens or creates a file and returns a file channel to access the file.
         val channel = FileChannel.open(lockFile, StandardOpenOption.APPEND)
         channel.use {

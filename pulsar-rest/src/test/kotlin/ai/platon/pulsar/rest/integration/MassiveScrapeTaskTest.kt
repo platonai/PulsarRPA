@@ -1,10 +1,12 @@
 package ai.platon.pulsar.rest.integration
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.sql.SQLInstance
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.skeleton.PulsarSettings
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
@@ -63,6 +65,7 @@ from load_and_select(@url, ':root');
 
     @BeforeTest
     fun setUp() {
+        PulsarSettings().maxBrowsers(10).maxOpenTabs(20)
         startTime = LocalDateTime.now()
     }
 
@@ -74,7 +77,7 @@ from load_and_select(@url, ':root');
     }
 
     @Test
-    fun test() {
+    fun whenIssueMassiveScrapeTask_thenShouldFinishAllTasks() {
         val sqls = testPaths.asSequence().map { UrlUtils.pathToLocalURL(it) }
             .map { sqlTemplate.createInstance("$it -refresh") }
             .toList()
@@ -85,14 +88,16 @@ from load_and_select(@url, ':root');
             tasks[uuid] = sql
         }
 
-        var seconds = 120.minutes.inWholeSeconds
-        while (seconds-- > 0) {
-            val count = restTemplate.getForObject("$baseUri/x/c", Int::class.java, ResourceStatus.SC_OK)
+        var round = 0
+        while (++round < 100 && AppContext.isActive && !Thread.interrupted()) {
+            val count = restTemplate.getForObject("$baseUri/x/c?status={status}", Int::class.java, ResourceStatus.SC_OK)
+            println("Total $count finished tasks")
+
             if (count == TEST_FILE_COUNT) {
                 break
             }
 
-            sleepSeconds(3)
+            sleepSeconds(4)
         }
     }
 }

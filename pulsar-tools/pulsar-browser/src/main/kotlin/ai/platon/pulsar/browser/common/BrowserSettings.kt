@@ -26,15 +26,21 @@ open class BrowserSettings constructor(
          * Compression quality from range [0..100] (jpeg only) to capture screenshots.
          * */
         var SCREENSHOT_QUALITY = 50
-        
+
         /**
-         * The interaction settings. Interaction settings define how the system
+         * The default interaction settings. Interaction settings define how the system
          * interacts with webpages to mimic the behavior of real people.
+         *
+         * If you want to use a custom script confuser, you need to set the field before the BrowserSettings object is created.
+         * If you are using spring boot, you should set the field in a ApplicationContextInitializer.
          * */
         var INTERACT_SETTINGS = InteractSettings.DEFAULT
-        
+
         /**
-         * The script confuser.
+         * The default script confuser, which is used to confuse the javascript that will be injected to the webpage.
+         *
+         * If you want to use a custom script confuser, you need to set the field before the BrowserSettings object is created.
+         * If you are using spring boot, you should set the field in a ApplicationContextInitializer.
          * */
         var SCRIPT_CONFUSER: ScriptConfuser = SimpleScriptConfuser()
 
@@ -511,7 +517,6 @@ open class BrowserSettings constructor(
      *     Page Loading Strategy</a>
      * */
     var pageLoadStrategy = "none"
-
     /**
      * The user agent to use.
      * */

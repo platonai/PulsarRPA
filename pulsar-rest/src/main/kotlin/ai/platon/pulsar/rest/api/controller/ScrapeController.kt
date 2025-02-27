@@ -35,9 +35,6 @@ class ScrapeController(
      * */
     @PostMapping("s")
     fun submitJob(@RequestBody sql: String): String {
-//println("\n\n\n")
-//println(sql)
-
         return scrapeService.submitJob(ScrapeRequest(sql))
     }
 
@@ -47,7 +44,7 @@ class ScrapeController(
      * */
     @GetMapping("c", consumes = [MediaType.ALL_VALUE])
     fun count(
-        status: Int = 0,
+        @RequestParam(value = "status", required = false) status: Int = 0,
         httpRequest: HttpServletRequest,
     ): Int {
         return scrapeService.count(status)
