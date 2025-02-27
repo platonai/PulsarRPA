@@ -43,7 +43,6 @@ class BrowserRotationTest : MassiveTestBase() {
     @OptIn(ExperimentalPathApi::class)
     @AfterEach
     fun deleteTemporaryContexts() {
-        kotlin.runCatching { AppPaths.CONTEXT_TMP_DIR.deleteRecursively() }
         kotlin.runCatching { AppPaths.LOCAL_STORAGE_DIR.resolve("localfile-org").deleteRecursively() }
     }
 
@@ -105,8 +104,8 @@ class BrowserRotationTest : MassiveTestBase() {
         be.onDidInteract.addLast { page, driver ->
             require(driver is AbstractWebDriver)
             val browser = driver.browser
-            if (browser.navigateHistory.size > 30) {
-                println("Close browser $browser since it has served ${browser.navigateHistory.size} pages")
+            if (browser.navigateHistory.size >= 30) {
+                println("Closing browser, served ${browser.navigateHistory.size} pages | ${browser.id.display}")
                 browser.close()
             }
         }

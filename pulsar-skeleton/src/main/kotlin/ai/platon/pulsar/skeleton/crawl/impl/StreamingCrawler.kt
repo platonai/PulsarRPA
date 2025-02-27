@@ -600,13 +600,13 @@ open class StreamingCrawler(
                 // one of the reason is the concrete exception is not public.
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
                     if (globalState.illegalApplicationState.compareAndSet(false, true)) {
-                        logger.warn("Coroutine was cancelled, quit... (JobCancellationException)")
+                        logger.warn("Coroutine was cancelled, quit the crawler | JobCancellationException")
                     }
                     flowState.set(FlowState.BREAK)
                 }
                 
                 e.javaClass.name.contains("DriverLaunchException") -> {
-                    logger.warn(e.message)
+                    logger.warn("[Unexpected] DriverLaunchException | {}", e.message)
                 }
                 
                 else -> {
@@ -658,7 +658,7 @@ open class StreamingCrawler(
             page.crawlStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isGone -> {
                 globalState.globalMetrics.gone.mark()
-                taskLogger.info("{}", PageLoadStatusFormatter(page, prefix = "Gone"))
+                taskLogger.info("{}, no retry", PageLoadStatusFormatter(page, prefix = "Gone"))
             }
         }
     }
@@ -740,7 +740,7 @@ open class StreamingCrawler(
             
             is ProxyInsufficientBalanceException -> {
                 proxyOutOfService++
-                logger.warn("{}. {}", proxyOutOfService, e.message)
+                logger.warn("ProxyInsufficientBalance, {}. {}", proxyOutOfService, e.message)
             }
             
             is ProxyVendorUntrustedException -> {
@@ -823,7 +823,10 @@ open class StreamingCrawler(
         if (page != null && nextRetryNumber > page.maxRetries) {
             // should not go here, because the page should be marked as GONE
             globalState.globalMetrics.gone.mark()
-            taskLogger.info("{}", PageLoadStatusFormatter(page, prefix = "Gone (unexpected)"))
+            if (taskLogger.isInfoEnabled) {
+                val message = PageLoadStatusFormatter(page, prefix = "Gone (unexpected)")
+                taskLogger.info("{}, gone unexpected, no retry", message)
+            }
             return
         }
         
@@ -835,10 +838,10 @@ open class StreamingCrawler(
         fetchDelayed(url, delay)
         
         globalState.globalMetrics.retries.mark()
-        if (page != null) {
+        if (page != null && taskLogger.isInfoEnabled) {
             val symbol = PopularEmoji.FENCER
             val prefix = "$symbol Trying ${nextRetryNumber}th ${delay.readable()} later | "
-            taskLogger.info("{}", PageLoadStatusFormatter(page, prefix = prefix))
+            taskLogger.info("{}, retrying", PageLoadStatusFormatter(page, prefix = prefix))
         }
     }
     
@@ -954,7 +957,7 @@ open class StreamingCrawler(
         var k = 0
         while (globalState.wrongProfile.hourlyCounter.count > 60) {
             globalState.criticalWarning = CriticalWarning.WRONG_PROFILE
-            logger.takeIf { k++ % 20 == 0 }?.warn("{}", globalState.criticalWarning?.message ?: "")
+            logger.takeIf { k++ % 20 == 0 }?.warn("{}, wrong profile", globalState.criticalWarning?.message ?: "")
             delay(1000)
         }
     }

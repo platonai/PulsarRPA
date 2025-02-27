@@ -171,6 +171,9 @@ class ChromeDevtoolsBrowser(
         closeRecoveredIdleDrivers()
     }
 
+    /**
+     * Destroy the browser and its associated resources.
+     * */
     @Synchronized
     override fun destroyForcibly() {
         runCatching {

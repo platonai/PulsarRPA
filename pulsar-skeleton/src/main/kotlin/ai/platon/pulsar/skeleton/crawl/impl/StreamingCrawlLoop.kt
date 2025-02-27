@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.impl
 import ai.platon.pulsar.common.collect.UrlFeeder
 import ai.platon.pulsar.common.config.CapabilityTypes.CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.Crawler
@@ -79,7 +80,8 @@ open class StreamingCrawlLoop(
             // url feeder should be shared by all crawlers, so we should not clear it
             // _urlFeeder.clear()
 
-            runBlocking { crawlJob?.cancelAndJoin() }
+            kotlin.runCatching { runBlocking { crawlJob?.cancelAndJoin() } }
+                .onFailure { warnForClose(this, it, "Stopping crawl loop #${id}") }
 
             crawlJob = null
             logger.info("Crawl loop is stopped | #{} | {}", id, this)

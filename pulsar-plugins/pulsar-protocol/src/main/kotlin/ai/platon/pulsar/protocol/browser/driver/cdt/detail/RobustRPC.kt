@@ -5,6 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserUnavailableException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
@@ -54,8 +55,14 @@ internal class RobustRPC(
         
         var i = maxRetry
         var result = kotlin.runCatching { invokeDeferred0(action, block) }
+            .onFailure {
+                // no handler here
+            }
         while (result.isFailure && i-- > 0 && driver.checkState()) {
             result = kotlin.runCatching { invokeDeferred0(action, block) }
+                .onFailure {
+                    // no handler here
+                }
         }
         
         return result.getOrElse { throw it }

@@ -520,7 +520,7 @@ open class InteractiveBrowserEmulator(
         val page = task.page
         require(driver is AbstractWebDriver)
 
-        tracer?.trace("{}", task.interactSettings)
+        tracer?.trace("InteractSettings: {}", task.interactSettings)
 
         if (result.state.isContinue) {
             updateMetaInfos(page, driver)
@@ -563,7 +563,7 @@ open class InteractiveBrowserEmulator(
         val driver = task.driver
         require(driver is AbstractWebDriver)
         
-        tracer?.trace("{}", task.interactSettings)
+        tracer?.trace("InteractSettings: {}", task.interactSettings)
         
         emit1(EmulateEvents.willCheckDocumentState, page, driver)
         

@@ -8,6 +8,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.browser.BrowserFiles.PID_FILE_NAME
+import ai.platon.pulsar.common.browser.BrowserFiles.PORT_FILE_NAME
 import ai.platon.pulsar.common.browser.Browsers
 import ai.platon.pulsar.common.concurrent.RuntimeShutdownHookRegistry
 import ai.platon.pulsar.common.concurrent.ShutdownHookRegistry
@@ -19,6 +20,7 @@ import java.nio.charset.Charset
 import java.nio.file.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
+import kotlin.io.path.deleteIfExists
 
 /**
  * The chrome launcher
@@ -37,9 +39,11 @@ class ChromeLauncher(
 
     private val closed = AtomicBoolean()
     private val pidPath get() = userDataDir.resolveSibling(PID_FILE_NAME)
+    private val portPath get() = userDataDir.resolveSibling(PORT_FILE_NAME)
     private val temporaryUddExpiry = BrowserFiles.TEMPORARY_UDD_EXPIRY
+    private val recentNToKeep = 20
     private var process: Process? = null
-    
+
     private val isClosed get() = closed.get()
     private val isActive get() = AppContext.isActive && !Thread.currentThread().isInterrupted
     private val shutdownHookThread = Thread {
@@ -83,8 +87,12 @@ class ChromeLauncher(
     @Throws(ChromeProcessException::class)
     fun launch() = launch(true)
 
+    /**
+     * Destroy the chrome process forcibly.
+     * */
     fun destroyForcibly() {
         try {
+            Files.deleteIfExists(portPath)
             val pid = Files.readAllLines(pidPath).firstOrNull { it.isNotBlank() }?.toIntOrNull() ?: 0
             if (pid > 0) {
                 logger.warn("Destroy chrome launcher forcibly, pid: {} | {}", pid, userDataDir)
@@ -114,7 +122,10 @@ class ChromeLauncher(
 //                        .onFailure { logger.warn("Unexpected exception", it) }
             }
 
-            BrowserFiles.runCatching { cleanUpContextTmpDir(temporaryUddExpiry) }.onFailure { warnForClose(this, it) }
+            BrowserFiles.runCatching {
+                cleanUpContextTmpDir(temporaryUddExpiry)
+                cleanOldestContextTmpDirs(recentNToKeep)
+            }.onFailure { warnForClose(this, it) }
         }
     }
 
@@ -182,18 +193,24 @@ class ChromeLauncher(
             shutdownHookRegistry.register(shutdownHookThread)
             process = ProcessLauncher.launch(executable, arguments)
 
-            process?.also {
-                Files.createDirectories(userDataDir)
-                Files.writeString(pidPath, it.pid().toString(), StandardOpenOption.CREATE)
-            }
-            waitForDevToolsServer(process!!)
+            val p = process ?: throw ChromeProcessException("Failed to start chrome process")
+
+            Files.createDirectories(userDataDir)
+            Files.writeString(pidPath, p.pid().toString(), StandardOpenOption.CREATE)
+
+            val port = waitForDevToolsServer(p)
+
+            portPath.deleteIfExists()
+            Files.writeString(portPath, port.toString(), StandardOpenOption.CREATE)
+
+            port
         } catch (e: IllegalStateException) {
             shutdownHookRegistry.remove(shutdownHookThread)
-            throw ChromeProcessException("Can not launch chrome", e)
+            throw ChromeProcessException("IllegalStateException while trying to launch chrome", e)
         } catch (e: IOException) {
             // Unsubscribe from registry on exceptions.
             shutdownHookRegistry.remove(shutdownHookThread)
-            throw ChromeProcessException("Failed to start chrome", e)
+            throw ChromeProcessException("IOException while trying to start chrome", e)
         } catch (e: Exception) {
             // Close the process if failed to start, it throws nothing by design.
             close()

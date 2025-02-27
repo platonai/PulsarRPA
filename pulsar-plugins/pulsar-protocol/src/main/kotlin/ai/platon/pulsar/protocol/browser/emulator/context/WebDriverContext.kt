@@ -105,9 +105,31 @@ open class WebDriverContext(
         return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
             numGlobalRunningTasks.incrementAndGet()
-            driverPoolManager.run(browserId, task) {
-                browseFun(task, it)
-            } ?: FetchResult.crawlRetry(task, "Null response from driver pool manager, it might be closed")
+
+            doRunAndHandleWebDriverException(task) {
+                driverPoolManager.run(browserId, task) { browseFun(task, it) }
+                    ?: FetchResult.crawlRetry(task, "Driver pool manager exception")
+            }
+        } finally {
+            runningTasks.remove(task)
+            numGlobalRunningTasks.decrementAndGet()
+            globalFinishedTasks.mark()
+
+            if (runningTasks.isEmpty()) {
+                lock.withLock { notBusy.signalAll() }
+            }
+
+            if (numGlobalRunningTasks.get() == 0 && globalFinishedTasks.fiveMinuteRate > 0.1) {
+                logger.debug("No running task now | ${globalFinishedTasks.count}/${globalTasks.count} (finished/all)")
+            }
+        }
+    }
+
+    private suspend fun doRunAndHandleWebDriverException(
+        task: FetchTask, browseFun: suspend () -> FetchResult
+    ): FetchResult {
+        return try {
+            browseFun()
         } catch (e: IllegalWebDriverStateException) {
             if (AppContext.isActive) {
                 // log only when the application is active
@@ -133,18 +155,6 @@ open class WebDriverContext(
         } catch (e: WebDriverException) {
             logger.warn("{}. [WebDriverException] Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task, e)
-        } finally {
-            runningTasks.remove(task)
-            numGlobalRunningTasks.decrementAndGet()
-            globalFinishedTasks.mark()
-
-            if (runningTasks.isEmpty()) {
-                lock.withLock { notBusy.signalAll() }
-            }
-
-            if (numGlobalRunningTasks.get() == 0 && globalFinishedTasks.fiveMinuteRate > 0.1) {
-                logger.debug("No running task now | ${globalFinishedTasks.count}/${globalTasks.count} (finished/all)")
-            }
         }
     }
 

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.AppPaths.fromHost
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
@@ -9,7 +9,6 @@ import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)
@@ -121,10 +120,19 @@ object AppPaths {
     
     @RequiredDirectory
     val CONTEXT_GROUP_BASE_DIR = CONTEXT_BASE_DIR.resolve("groups")
-    
+
+    @RequiredDirectory
+    val CONTEXT_DEFAULT_GROUP_DIR = CONTEXT_GROUP_BASE_DIR.resolve("default")
+
     @RequiredDirectory
     val CONTEXT_TMP_DIR = CONTEXT_BASE_DIR.resolve("tmp")
-    
+
+    @RequiredDirectory
+    val CONTEXT_TMP_GROUP_BASE_DIR = CONTEXT_TMP_DIR.resolve("groups")
+
+    @RequiredDirectory
+    val CONTEXT_TMP_DEFAULT_GROUP_DIR = CONTEXT_TMP_GROUP_BASE_DIR.resolve("default")
+
     @RequiredFile
     val BROWSER_TMP_DIR_LOCK = CONTEXT_TMP_DIR.resolve("browser.tmp.lock")
     
@@ -248,7 +256,15 @@ object AppPaths {
     
     fun getRandomProcTmpTmp(prefix: String = "", suffix: String = ""): Path =
         getProcTmpTmp(prefix + RandomStringUtils.randomAlphabetic(18) + suffix)
-    
+
+    fun getContextGroupDir(group: String) = CONTEXT_GROUP_BASE_DIR.resolve(group)
+
+    fun getContextBaseDir(group: String, browserType: BrowserType) = getContextGroupDir(group).resolve(browserType.name)
+
+    fun getTmpContextGroupDir(group: String) = CONTEXT_TMP_GROUP_BASE_DIR.resolve(group)
+
+    fun getTmpContextBaseDir(group: String, browserType: BrowserType) = getTmpContextGroupDir(group).resolve(browserType.name)
+
     fun random(prefix: String = "", suffix: String = ""): String =
         "$prefix${RandomStringUtils.randomAlphabetic(18)}$suffix"
     
