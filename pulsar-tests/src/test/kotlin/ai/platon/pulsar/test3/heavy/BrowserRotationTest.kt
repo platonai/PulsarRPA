@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -26,6 +27,7 @@ import kotlin.time.toJavaDuration
  *
  * Notice: before we load the local files using PulsarRPA, we have to transform the paths using [UrlUtils.pathToLocalURL].
  * */
+@Ignore("TimeConsumingTest, you should run the tests separately")
 @Tag("TimeConsumingTest")
 class BrowserRotationTest : MassiveTestBase() {
 
