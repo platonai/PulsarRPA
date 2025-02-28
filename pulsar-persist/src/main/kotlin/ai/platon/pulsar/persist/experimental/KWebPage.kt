@@ -50,8 +50,7 @@ open class KWebPage(
     val variables: Variables = Variables()
     
     var conf: VolatileConfig? = null
-    
-    
+
     /**
      * Check if the page scope temporary variable with name {@name} exist
      *

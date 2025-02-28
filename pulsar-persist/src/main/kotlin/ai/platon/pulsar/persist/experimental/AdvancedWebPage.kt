@@ -6,9 +6,7 @@ import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Name
-import java.time.Duration
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 
 /**
  * The core web page structure
@@ -24,30 +22,32 @@ open class AdvancedWebPage(
      */
     val fetchMode get() = FetchMode.fromString(metadata[Name.FETCH_MODE])
 
-    override val lastBrowser get() = BrowserType.fromString(page.browser?.toString())
+    override var lastBrowser: BrowserType?
+        get() = BrowserType.fromString(page.browser?.toString())
+        set(value) = run { page.browser = value?.name }
 
-    override val fetchPriority get() = page.fetchPriority ?: AppConstants.FETCH_PRIORITY_DEFAULT
+    override var fetchPriority
+        get() = page.fetchPriority ?: AppConstants.FETCH_PRIORITY_DEFAULT
+        set(value) = run { page.fetchPriority = value }
 
-    override val generateTime get() = Instant.parse(metadata[Name.GENERATE_TIME] ?: "0")
+    override var generateTime
+        get() = Instant.parse(metadata[Name.GENERATE_TIME] ?: "0")
+        set(value) = run { metadata[Name.GENERATE_TIME] = value.toString() }
 
     /**
      * The previous crawl time, used for fat link crawl, which means both the page itself and out pages are fetched
      */
-    override val prevCrawlTime1 get() = Instant.ofEpochMilli(page.prevCrawlTime1)
+    override var prevCrawlTime1
+        get() = Instant.ofEpochMilli(page.prevCrawlTime1)
+        set(value) = run { page.prevCrawlTime1 = value.toEpochMilli() }
 
-    /**
-     * Get fetch interval
-     */
-    override val fetchInterval: Duration
-        get() = if (page.fetchInterval > 0) {
-            Duration.ofSeconds(page.fetchInterval.toLong())
-        } else ChronoUnit.CENTURIES.duration
+    override var modifiedTime
+        get() = Instant.ofEpochMilli(page.modifiedTime)
+        set(value) = run { page.modifiedTime = value.toEpochMilli() }
 
-    val reprUrl get() = if (page.reprUrl == null) "" else page.reprUrl.toString()
-
-    override val modifiedTime get() = Instant.ofEpochMilli(page.modifiedTime)
-
-    override val prevModifiedTime get() = Instant.ofEpochMilli(page.prevModifiedTime)
+    override var prevModifiedTime
+        get() = Instant.ofEpochMilli(page.prevModifiedTime)
+        set(value) = run { page.prevModifiedTime = value.toEpochMilli() }
 
     open fun getFetchTimeHistory(defaultValue: String) = metadata[Name.FETCH_TIME_HISTORY] ?: defaultValue
     
