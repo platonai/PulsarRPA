@@ -103,7 +103,7 @@ object BrowserFiles {
 
     @Throws(IOException::class)
     @Synchronized
-    fun computeRandomTmpContextDir(group: String = "default"): Path {
+    fun computeRandomTmpContextDir(group: String = "rand"): Path {
         // val lockFile = AppPaths.BROWSER_TMP_DIR_LOCK
         // return computeRandomContextDir0(group)
         val lockFile = getTempContextGroupDirLockFile(group)
@@ -355,7 +355,7 @@ object BrowserFiles {
 
     /**
      * Compute a random context directory.
-     * A typical context directory is like: /tmp/pulsar-vincent/context/tmp/01/cx.0109aNcTxq5
+     * A typical context directory is like: /tmp/pulsar-vincent/context/tmp/groups/{group}/cx.0109aNcTxq5
      * */
     @Throws(IOException::class)
     private fun computeRandomContextDir0(group: String, channel: FileChannel? = null): Path {
@@ -367,7 +367,8 @@ object BrowserFiles {
         val monthDay = MonthDay.now()
         val monthValue = monthDay.monthValue
         val dayOfMonth = monthDay.dayOfMonth
-        val baseDir = AppPaths.CONTEXT_TMP_DIR.resolve("$monthValue")
+        // val baseDir = AppPaths.CONTEXT_TMP_DIR.resolve("$monthValue")
+        val baseDir = AppPaths.getTmpContextGroupDir(group)
         Files.createDirectories(baseDir)
         val rand = RandomStringUtils.randomAlphanumeric(5)
         val contextCount = computeContextCount(baseDir, prefix, channel)
