@@ -6,51 +6,33 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.metadata.Mark
-import ai.platon.pulsar.persist.metadata.Name
-import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
-import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
-import ai.platon.pulsar.skeleton.signature.Signature
-import ai.platon.pulsar.skeleton.signature.TextMD5Signature
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ConcurrentSkipListSet
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.measureTimeMillis
 
 class PageParser(
     val parserFactory: ParserFactory,
     override var conf: ImmutableConfig,
-    val signature: Signature = TextMD5Signature(),
     val messageWriter: MiscMessageWriter? = null
 ) : Parameterized, LazyConfigurable, AutoCloseable {
     private val logger = LoggerFactory.getLogger(PageParser::class.java)
-
-    enum class Counter { parseFailed }
-
-    init {
-        MetricsSystem.reg.register(Counter::class.java)
-    }
-
-    private val parseCount = AtomicInteger()
 
     val unparsableTypes = ConcurrentSkipListSet<CharSequence>()
 
     constructor(parserFactory: ParserFactory, conf: ImmutableConfig) : this(
         parserFactory,
         conf,
-        TextMD5Signature(),
         MiscMessageWriter()
     )
 
@@ -58,10 +40,6 @@ class PageParser(
      * @param conf The configuration
      */
     constructor(conf: ImmutableConfig) : this(ParserFactory(conf), conf)
-
-    init {
-        params.withLogger(logger).info(true)
-    }
 
     override fun configure(conf1: ImmutableConfig) {
     }
@@ -74,7 +52,14 @@ class PageParser(
      * A non-null ParseResult contains the main result and status of this parse
      */
     fun parse(page: WebPage): ParseResult {
-        return parse0(page)
+        try {
+            return parse0(page)
+        } catch (e: Throwable) {
+            // Log any exceptions that occur during the parsing process.
+            logger.error("Failed to parse | ${page.url}", e)
+        }
+
+        return ParseResult.failed(ParseStatus.FAILED_EXCEPTION, "Unknown")
     }
 
     override fun close() {
@@ -82,47 +67,43 @@ class PageParser(
     }
 
     /**
-     * Parses given web page and stores parsed content within page. Puts a meta-redirect to outlinks.
+     * Parses the given webpage and returns the parsing result.
      *
-     * @param page The web page
-     * @return ParseResult
-     * A non-null ParseResult contains the main result and status of this parse
+     * This function attempts to parse the provided [page] using the [doParse] function.
+     * If the parsing is successful, it updates the [page]'s parse status and marks accordingly.
+     * In case of any exceptions during the parsing process, the error is logged, and a default [ParseResult] is returned.
+     *
+     * @param page The [WebPage] object to be parsed.
+     * @return [ParseResult] A non-null [ParseResult] object that contains the main result and status of the parsing operation.
+     *                        If an exception occurs, a default [ParseResult] is returned.
      */
     private fun parse0(page: WebPage): ParseResult {
-        parseCount.incrementAndGet()
+        // Attempt to parse the webpage using the doParse function.
+        val parseResult = doParse(page)
 
-        try {
-            val parseResult = doParse(page)
+        // If the parsing was successful, update the page's parse status and marks.
+        if (parseResult.isParsed) {
+            page.parseStatus = parseResult
 
-            if (parseResult.isParsed) {
-                page.parseStatus = parseResult
-
-                if (parseResult.isRedirect) {
-                    processRedirect(page, parseResult)
-                } else if (parseResult.isSuccess) {
-                    processSuccess(page, parseResult)
-                }
-                updateCounters(parseResult)
-
-                if (parseResult.isSuccess) {
-                    page.marks.putIfNotNull(Mark.PARSE, page.marks[Mark.FETCH])
-                }
+            // If the parsing result indicates success, perform additional actions.
+            if (parseResult.isSuccess) {
+                // do something
             }
 
-            return parseResult
-        } catch (e: Throwable) {
-            logger.error(e.stringify())
+            // Update the page's marks if the parsing was successful.
+            if (parseResult.isSuccess) {
+                page.marks.putIfNotNull(Mark.PARSE, page.marks[Mark.FETCH])
+            }
         }
 
-        return ParseResult()
+        // Return the parsing result.
+        return parseResult
     }
 
     private fun doParse(page: WebPage): ParseResult {
         if (page.isInternal) {
             return ParseResult().apply { flowStatus = FlowState.BREAK }
         }
-
-        val url = page.url
 
         return try {
             onWillParse(page)
@@ -195,70 +176,12 @@ class PageParser(
         return parseResult
     }
 
-    /**
-     * TODO: might be optimized
-     * */
     private fun runParser(p: Parser, page: WebPage): ParseResult {
         return runBlocking {
             withTimeout(p.timeout.toMillis()) {
                 val deferred = async { p.parse(page) }
                 deferred.await()
             }
-        }
-    }
-
-    /**
-     * Note: signature is not useful for pages change rapidly
-     * */
-    private fun processSuccess(page: WebPage, parseResult: ParseResult) {
-        val prevSig = page.signature
-        if (prevSig != null) {
-            page.prevSignature = prevSig
-        }
-        signature.calculate(page)?.let { page.setSignature(it) }
-
-        if (parseResult.hypeLinks.isNotEmpty()) {
-            processLinks(page, parseResult.hypeLinks)
-        }
-    }
-
-    /**
-     * Process redirect when the page is fetched with native http protocol rather than a browser
-     * */
-    private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
-        // should processed by browser
-    }
-
-    private fun processLinks(page: WebPage, unfilteredLinks: MutableSet<HyperlinkPersistable>) {
-        // Collect links
-        // TODO : check the no-follow html tag directive
-        val follow = (!page.metadata.contains(Name.NO_FOLLOW)
-                || page.isSeed
-                || page.hasMark(Mark.INJECT)
-                || page.metadata.contains(Name.FORCE_FOLLOW)
-                || page.variables.contains(Name.FORCE_FOLLOW.name))
-        if (follow) {
-            val pageExt = WebPageExt(page)
-            // val hypeLinks = filterLinks(page, unfilteredLinks)
-            // TODO: too many filters, hard to debug, move all filters to a single filter, or just do it in ParserFilter
-            val hypeLinks = unfilteredLinks
-            logger.takeIf { it.isTraceEnabled }?.trace("Find {}/{} live links", hypeLinks.size, unfilteredLinks.size)
-            page.setLiveLinks(hypeLinks)
-            pageExt.addHyperlinks(hypeLinks)
-        }
-    }
-
-    // 0 : "notparsed", 1 : "success", 2 : "failed"
-    private fun updateCounters(parseStatus: ParseStatus) {
-        var counter: Counter? = null
-        when (parseStatus.majorCode) {
-            ParseStatusCodes.FAILED -> counter = Counter.parseFailed
-            else -> {
-            }
-        }
-
-        if (counter != null) {
-            MetricsSystem.reg.enumCounterRegistry.inc(counter)
         }
     }
 }

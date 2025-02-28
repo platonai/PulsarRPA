@@ -160,7 +160,7 @@ class FatLinkExtractor(
         // update vivid links
         if (document != null) {
             val hyperlinks = vividLinks.map { HyperlinkPersistable(it.url, it.text, it.order) }
-            page.vividLinks = hyperlinks.associate { it.url to "${it.text} createdAt: $now" }
+            // page.vividLinks = hyperlinks.associate { it.url to "${it.text} createdAt: $now" }
         }
 
         val fatLink = CrawlableFatLink(normalizedFatLink, href = fatLinkSpec, args = args, tailLinks = vividLinks)

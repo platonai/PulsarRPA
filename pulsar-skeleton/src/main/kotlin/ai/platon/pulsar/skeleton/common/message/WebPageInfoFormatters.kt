@@ -25,14 +25,7 @@ class FetchStatusFormatter(val page: WebPage) {
     private val fetchInterval get() = page.fetchInterval
     private val distance get() = page.distance
     private val fetchCount get() = page.fetchCount
-    private val contentPublishTime get() = page.contentPublishTime
-    private val refContentPublishTime get() = page.refContentPublishTime
     private val pageCategory get() = page.pageCategory
-    private val refItems get() = page.pageCounters.get(PageCounters.Ref.item)
-    private val refChars get() = page.pageCounters.get(PageCounters.Ref.ch)
-    private val contentScore get() = page.contentScore.toDouble()
-    private val score get() = page.score.toDouble()
-    private val cash get() = page.cash.toDouble()
     private val url get() = page.url
 
     override fun toString(): String {
@@ -43,9 +36,6 @@ class FetchStatusFormatter(val page: WebPage) {
         val params = Params.of(
                 "T", fetchTimeString,
                 "DC", "$distance,$fetchCount",
-                "PT", DateTimes.isoInstantFormat(contentPublishTime) + "," + DateTimes.isoInstantFormat(refContentPublishTime),
-                "C", "$refItems,$refChars",
-                "S", df.format(contentScore) + "," + df.format(score) + "," + df.format(cash),
                 pageCategory.symbol(), StringUtils.substring(url, 0, 80)
         ).withKVDelimiter(":")
 

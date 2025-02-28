@@ -253,9 +253,7 @@ class TestGoraStorage {
             val url2 = AppConstants.EXAMPLE_URL + "/" + (i - 1)
             val link = HyperlinkPersistable.parse(url2).unbox()
             link.anchor = "test anchor ord:1"
-            
-            page.liveLinks[link.url] = link
-            page.liveLinks = page.liveLinks
+
             page.links.add(url2)
             page.inlinks[url] = url2
         }

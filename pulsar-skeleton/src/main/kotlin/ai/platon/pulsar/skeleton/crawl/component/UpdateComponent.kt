@@ -5,8 +5,10 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.persist.*
-import ai.platon.pulsar.persist.PageCounters.Self
+import ai.platon.pulsar.persist.CrawlStatus
+import ai.platon.pulsar.persist.WebDb
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
@@ -48,85 +50,6 @@ class UpdateComponent(
             "className", this.javaClass.simpleName,
             "fetchSchedule", fetchSchedule.javaClass.simpleName
         )
-    }
-
-    fun updateByOutgoingPage(page: WebPage, outgoingPage: WebPage) {
-        val pageExt = WebPageExt(page)
-        val pageCounters = page.pageCounters
-        pageCounters.increase(PageCounters.Ref.page)
-        pageExt.updateRefContentPublishTime(outgoingPage.contentPublishTime)
-
-        if (outgoingPage.pageCategory.isDetail) {
-            pageCounters.increase(PageCounters.Ref.ch, outgoingPage.contentTextLen)
-            pageCounters.increase(PageCounters.Ref.item)
-        }
-
-        val outgoingPageCounters = outgoingPage.pageCounters
-        val missingFields = outgoingPageCounters.get(Self.missingFields)
-        val brokenSubEntity = outgoingPageCounters.get(Self.brokenSubEntity)
-
-        pageCounters.increase(PageCounters.Ref.missingFields, missingFields)
-        pageCounters.increase(PageCounters.Ref.brokenEntity, if (missingFields > 0) 1 else 0)
-        pageCounters.increase(PageCounters.Ref.brokenSubEntity, brokenSubEntity)
-
-        if (outgoingPage.protocolStatus.isFailed) {
-            page.deadLinks.add(outgoingPage.url)
-            messageWriter?.debugDeadOutgoingPage(outgoingPage.url, page)
-        }
-
-        scoringFilters?.updateContentScore(page)
-    }
-
-    fun updateByOutgoingPages(page: WebPage, outgoingPages: Collection<WebPage>) {
-        val lastPageCounters = page.pageCounters.clone()
-        outgoingPages.forEach { updateByOutgoingPage(page, it) }
-        updatePageCounters(lastPageCounters, page.pageCounters, page)
-    }
-
-    fun updatePageCounters(lastPageCounters: PageCounters, pageCounters: PageCounters, page: WebPage) {
-        val lastMissingFields = lastPageCounters.get(PageCounters.Ref.missingFields)
-        val lastBrokenEntity = lastPageCounters.get(PageCounters.Ref.brokenEntity)
-        val lastBrokenSubEntity = lastPageCounters.get(PageCounters.Ref.brokenSubEntity)
-        val missingFieldsLastRound = pageCounters.get(PageCounters.Ref.missingFields) - lastMissingFields
-        val brokenEntityLastRound = pageCounters.get(PageCounters.Ref.brokenEntity) - lastBrokenEntity
-        val brokenSubEntityLastRound = pageCounters.get(PageCounters.Ref.brokenSubEntity) - lastBrokenSubEntity
-
-        pageCounters.set(PageCounters.Ref.missingFieldsLastRound, missingFieldsLastRound)
-        pageCounters.set(PageCounters.Ref.brokenEntityLastRound, brokenEntityLastRound)
-        pageCounters.set(PageCounters.Ref.brokenSubEntityLastRound, brokenSubEntityLastRound)
-
-        if (missingFieldsLastRound != 0 || brokenEntityLastRound != 0 || brokenSubEntityLastRound != 0) {
-            val message = Params.of(
-                "missingFields", missingFieldsLastRound,
-                "brokenEntity", brokenEntityLastRound,
-                "brokenSubEntity", brokenSubEntityLastRound
-            ).formatAsLine()
-
-            messageWriter?.reportBrokenEntity(page.url, message)
-            LOG.warn(message)
-        }
-    }
-
-    /**
-     * A simple update procedure
-     */
-    fun updateByIncomingPages(incomingPages: Collection<WebPage>, page: WebPage) {
-        var smallestDepth = page.distance
-        var shallowestPage: WebPage? = null
-
-        for (incomingPage in incomingPages) { // log.debug(incomingPage.url() + " -> " + page.url());
-            if (incomingPage.distance + 1 < smallestDepth) {
-                smallestDepth = incomingPage.distance + 1
-                shallowestPage = incomingPage
-            }
-        }
-
-        if (shallowestPage != null) {
-            page.referrer = shallowestPage.url
-            // TODO: Not the best options
-            page.args = shallowestPage.args
-            page.distance = shallowestPage.distance + 1
-        }
     }
 
     fun updateFetchSchedule(page: WebPage) {

@@ -2,7 +2,6 @@ package ai.platon.pulsar.persist;
 
 import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HtmlIntegrity;
-import ai.platon.pulsar.common.ObjectCache;
 import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.browser.BrowserType;
 import ai.platon.pulsar.common.config.VolatileConfig;
@@ -11,10 +10,7 @@ import ai.platon.pulsar.persist.experimental.WebAsset;
 import ai.platon.pulsar.persist.gora.generated.*;
 import ai.platon.pulsar.persist.metadata.*;
 import ai.platon.pulsar.persist.model.*;
-import kotlin.reflect.KClass;
 import org.apache.avro.util.Utf8;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.gora.util.ByteUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -178,7 +174,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
         page.setCreateTime(Instant.now());
         page.setModifiedTime(Instant.now());
-        page.setScore(0);
         page.setFetchCount(0);
 
         return page;
@@ -754,17 +749,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     public void setFetchPriority(int priority) {
         page.setFetchPriority(priority);
-    }
-
-    public int sniffFetchPriority() {
-        int priority = getFetchPriority();
-
-        int depth = getDistance();
-        if (depth < FETCH_PRIORITY_DEPTH_BASE) {
-            priority = Math.max(priority, FETCH_PRIORITY_DEPTH_BASE - depth);
-        }
-
-        return priority;
     }
 
     @NotNull
@@ -1459,17 +1443,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return page.getContentText() == null ? "" : page.getContentText().toString();
     }
 
-    public void setContentText(String textContent) {
-        if (textContent != null && !textContent.isEmpty()) {
-            page.setContentText(textContent);
-            page.setContentTextLen(textContent.length());
-        }
-    }
-
-    public int getContentTextLen() {
-        return page.getContentTextLen();
-    }
-
     @NotNull
     public ParseStatus getParseStatus() {
         GParseStatus parseStatus = page.getParseStatus();
@@ -1480,46 +1453,13 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         page.setParseStatus(parseStatus.unbox());
     }
 
+    @Deprecated
     public Map<CharSequence, GHypeLink> getLiveLinks() {
         return page.getLiveLinks();
     }
 
-    public Collection<String> getSimpleLiveLinks() {
-        return CollectionUtils.collect(page.getLiveLinks().keySet(), CharSequence::toString);
-    }
-
-    public void setLiveLinks(Iterable<HyperlinkPersistable> liveLinks) {
-        page.getLiveLinks().clear();
-        Map<CharSequence, GHypeLink> links = page.getLiveLinks();
-        liveLinks.forEach(l -> links.put(l.getUrl(), l.unbox()));
-    }
-
-    public void setLiveLinks(Map<CharSequence, GHypeLink> links) {
-        page.setLiveLinks(links);
-    }
-
-    public void addLiveLink(HyperlinkPersistable hyperLink) {
-        page.getLiveLinks().put(hyperLink.getUrl(), hyperLink.unbox());
-    }
-
     public Map<CharSequence, CharSequence> getVividLinks() {
         return page.getVividLinks();
-    }
-
-    public Collection<String> getSimpleVividLinks() {
-        return CollectionUtils.collect(page.getVividLinks().keySet(), CharSequence::toString);
-    }
-
-    public void setVividLinks(Map<CharSequence, CharSequence> links) {
-        page.setVividLinks(links);
-    }
-
-    public List<CharSequence> getDeadLinks() {
-        return page.getDeadLinks();
-    }
-
-    public void setDeadLinks(List<CharSequence> deadLinks) {
-        page.setDeadLinks(deadLinks);
     }
 
     public List<CharSequence> getLinks() {
@@ -1528,14 +1468,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     public void setLinks(List<CharSequence> links) {
         page.setLinks(links);
-    }
-
-    public int getImpreciseLinkCount() {
-        return getMetadata().getInt(Name.TOTAL_OUT_LINKS, 0);
-    }
-
-    public void setImpreciseLinkCount(int count) {
-        getMetadata().set(Name.TOTAL_OUT_LINKS, String.valueOf(count));
     }
 
     public Map<CharSequence, CharSequence> getInlinks() {
@@ -1551,72 +1483,8 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         page.setAnchor(anchor);
     }
 
-    public String[] getInlinkAnchors() {
-        return StringUtils.split(getMetadata().getOrDefault(Name.ANCHOR_COUNT, ""), "\n");
-    }
-
-    public void setInlinkAnchors(Collection<CharSequence> anchors) {
-        getMetadata().set(Name.ANCHOR_COUNT, StringUtils.join(anchors, "\n"));
-    }
-
-    public int getAnchorOrder() {
-        return page.getAnchorOrder() < 0 ? MAX_LIVE_LINK_PER_PAGE : page.getAnchorOrder();
-    }
-
-    public void setAnchorOrder(int order) {
-        page.setAnchorOrder(order);
-    }
-
-    public Instant getContentPublishTime() {
-        return Instant.ofEpochMilli(page.getContentPublishTime());
-    }
-
-    public void setContentPublishTime(Instant publishTime) {
-        page.setContentPublishTime(publishTime.toEpochMilli());
-    }
-
     public boolean isValidContentModifyTime(Instant publishTime) {
         return publishTime.isAfter(MIN_ARTICLE_PUBLISH_TIME);
-    }
-
-    public Instant getPrevContentPublishTime() {
-        return Instant.ofEpochMilli(page.getPrevContentPublishTime());
-    }
-
-    public void setPrevContentPublishTime(Instant publishTime) {
-        page.setPrevContentPublishTime(publishTime.toEpochMilli());
-    }
-
-    public Instant getRefContentPublishTime() {
-        return Instant.ofEpochMilli(page.getRefContentPublishTime());
-    }
-
-    public void setRefContentPublishTime(Instant publishTime) {
-        page.setRefContentPublishTime(publishTime.toEpochMilli());
-    }
-
-    public Instant getContentModifiedTime() {
-        return Instant.ofEpochMilli(page.getContentModifiedTime());
-    }
-
-    public void setContentModifiedTime(Instant modifiedTime) {
-        page.setContentModifiedTime(modifiedTime.toEpochMilli());
-    }
-
-    public Instant getPrevContentModifiedTime() {
-        return Instant.ofEpochMilli(page.getPrevContentModifiedTime());
-    }
-
-    public void setPrevContentModifiedTime(Instant modifiedTime) {
-        page.setPrevContentModifiedTime(modifiedTime.toEpochMilli());
-    }
-
-    public Instant getPrevRefContentPublishTime() {
-        return Instant.ofEpochMilli(page.getPrevRefContentPublishTime());
-    }
-
-    public void setPrevRefContentPublishTime(Instant publishTime) {
-        page.setPrevRefContentPublishTime(publishTime.toEpochMilli());
     }
 
     @Nullable
@@ -1630,11 +1498,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         }
     }
 
-    /**
-     * *****************************************************************************
-     * Page Model
-     * ******************************************************************************
-     */
     @Nullable
     public Instant getPageModelUpdateTime() {
         return Instant.ofEpochMilli(page.getPageModelUpdateTime());
@@ -1669,55 +1532,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
             return Objects.requireNonNull(getPageModel());
         }
     }
-
-    /**
-     * *****************************************************************************
-     * Scoring
-     * ******************************************************************************
-     */
-    public float getScore() {
-        return page.getScore();
-    }
-
-    public void setScore(float value) {
-        page.setScore(value);
-    }
-
-    public float getContentScore() {
-        return page.getContentScore() == null ? 0.0f : page.getContentScore();
-    }
-
-    public void setContentScore(float score) {
-        page.setContentScore(score);
-    }
-
-    @NotNull
-    public String getSortScore() {
-        return page.getSortScore() == null ? "" : page.getSortScore().toString();
-    }
-
-    public void setSortScore(String score) {
-        page.setSortScore(score);
-    }
-
-    public float getCash() {
-        return getMetadata().getFloat(Name.CASH_KEY, 0.0f);
-    }
-
-    public void setCash(float cash) {
-        getMetadata().set(Name.CASH_KEY, String.valueOf(cash));
-    }
-
-    @NotNull
-    public PageCounters getPageCounters() {
-        return PageCounters.box(page.getPageCounters());
-    }
-
-    /**
-     * *****************************************************************************
-     * Index
-     * ******************************************************************************
-     */
 
     @Override
     public int hashCode() {

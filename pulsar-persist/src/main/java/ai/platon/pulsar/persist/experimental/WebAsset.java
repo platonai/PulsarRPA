@@ -46,16 +46,12 @@ public interface WebAsset {
   ProtocolHeaders getHeaders();
 
   Instant getCreateTime();
-  ZoneId getZoneId();
-  String getBatchId();
   int getDistance();
-  int getFetchPriority();
   int getFetchCount();
   CrawlStatus getCrawlStatus();
 
   Instant getFetchTime();
   Instant getPrevFetchTime();
-  Instant getPrevCrawlTime1();
   Duration getFetchInterval();
   ProtocolStatus getProtocolStatus();
 
@@ -63,42 +59,28 @@ public interface WebAsset {
   Instant getModifiedTime();
   Instant getPrevModifiedTime();
   PageCategory getPageCategory();
+  OpenPageCategory getOpenPageCategory();
   ByteBuffer getPrevSignature();
   String getProxy();
   ActiveDOMStatus getActiveDOMStatus();
   Map<String, ActiveDOMStat> getActiveDOMStatTrace();
 
-  Instant getContentPublishTime();
-  Instant getPrevContentPublishTime();
-  Instant getRefContentPublishTime();
-  Instant getContentModifiedTime();
-  Instant getPrevContentModifiedTime();
-  Instant getPrevRefContentPublishTime();
-
-  PageCounters getPageCounters();
   Duration getRetryDelay();
   int getMaxRetries();
 
-  int getFetchedLinkCount();
   FetchMode getFetchMode();
   BrowserType getLastBrowser();
-  Instant getGenerateTime();
-  OpenPageCategory getOpenPageCategory();
 
   String getEncoding();
 
   HtmlIntegrity getHtmlIntegrity();
 
   String getPageTitle();
-  String getContentTitle();
   String getPageText();
-  String getContentText();
-  int getContentTextLen();
 
   String getContentType();
   long getContentLength();
 
-  long getAveContentLength();
   long getPersistedContentLength();
   long getLastContentLength();
 
@@ -107,7 +89,6 @@ public interface WebAsset {
   ByteBuffer getPersistContent();
   byte[] getContentAsBytes();
   String getContentAsString();
-  InputSource getContentAsSaxInputSource();
   ByteArrayInputStream getContentAsInputStream();
 
   ByteBuffer getSignature();
@@ -115,22 +96,6 @@ public interface WebAsset {
   String getSignatureAsString();
 
   ParseStatus getParseStatus();
-  Map<CharSequence, GHypeLink> getLiveLinks();
-  Map<CharSequence, CharSequence> getVividLinks();
-  List<CharSequence> getDeadLinks();
-  List<CharSequence> getLinks();
-  int getImpreciseLinkCount();
-  Map<CharSequence, CharSequence> getInlinks();
-  CharSequence getAnchor();
-  int getAnchorOrder();
-
-  Collection<String> getSimpleLiveLinks();
-  String[] getInlinkAnchors();
-
-  float getCash();
-  float getScore();
-  float getContentScore();
-  String getSortScore();
 
   Instant getPageModelUpdateTime();
   PageModel getPageModel();

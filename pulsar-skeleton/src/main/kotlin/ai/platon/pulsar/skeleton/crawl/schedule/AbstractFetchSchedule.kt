@@ -26,7 +26,6 @@ abstract class AbstractFetchSchedule(
     val messageWriter: MiscMessageWriter? = null,
 ) : FetchSchedule {
     protected var defaultInterval = conf.getDuration(CapabilityTypes.FETCH_DEFAULT_INTERVAL, Duration.ofDays(30))
-    protected val impreciseNow = Instant.now()
     override val maxFetchInterval: Duration =
         conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, ChronoUnit.DECADES.duration)
 

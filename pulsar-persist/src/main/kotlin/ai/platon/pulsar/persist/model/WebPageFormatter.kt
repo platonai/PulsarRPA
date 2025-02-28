@@ -122,41 +122,23 @@ class WebPageFormatter(val page: WebPage) {
         fields["prevSignature"] = page.prevSignatureAsString
         fields["signature"] = page.signatureAsString
         fields["pageCategory"] = page.pageCategory.name
-        fields["prevContentPublishTime"] = format(page.prevContentPublishTime)
-        fields["contentPublishTime"] = format(page.contentPublishTime)
-        fields["prevContentModifiedTime"] = format(page.prevContentModifiedTime)
-        fields["contentModifiedTime"] = format(page.contentModifiedTime)
-        fields["prevRefContentPublishTime"] = format(page.prevRefContentPublishTime)
-        fields["refContentPublishTime"] = format(page.refContentPublishTime)
         // May be too long
-// fields.put("inlinkAnchors", page.getInlinkAnchors());
         fields["pageTitle"] = page.pageTitle
         fields["contentTitle"] = page.contentTitle
         fields["inlinkAnchor"] = page.anchor
         fields["title"] = pageExt.sniffTitle()
-        /* Score */fields["contentScore"] = page.contentScore.toString()
-        fields["score"] = page.score.toString()
-        fields["cash"] = page.cash.toString()
         fields["marks"] = page.marks.asStringMap()
-        fields["pageCounters"] = page.pageCounters.asStringMap()
         fields["metadata"] = page.metadata.asStringMap()
         fields["headers"] = page.headers.asStringMap()
         fields["linkCount"] = page.links.size
-        fields["vividLinkCount"] = page.vividLinks.size
-        fields["liveLinkCount"] = page.liveLinks.size
-        fields["deadLinkCount"] = page.deadLinks.size
         fields["inlinkCount"] = page.inlinks.size
         fields["linksMessage"] = ("Total "
                 + page.links.size + " links, "
                 + page.vividLinks.size + " vivid links, "
                 + page.liveLinks.size + " live links, "
-                + page.deadLinks.size + " dead links, "
                 + page.inlinks.size + " inlinks")
         if (withLinks) {
             fields["links"] = page.links.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
-            fields["vividLinks"] = page.vividLinks.values.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
-            fields["liveLinks"] = page.liveLinks.values.stream().map { l: GHypeLink? -> HyperlinkPersistable.box(l!!).toString() }.collect(Collectors.toList())
-            fields["deadLinks"] = page.deadLinks.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
             fields["inlinks"] = page.inlinks.entries.stream()
                     .map { il: Map.Entry<CharSequence, CharSequence> -> il.key.toString() + "\t" + il.value }.collect(Collectors.joining("\n"))
         }
@@ -202,13 +184,7 @@ class WebPageFormatter(val page: WebPage) {
                 .append("fetchTime:\t" + format(page.fetchTime) + "\n")
                 .append("prevModifiedTime:\t" + format(page.prevModifiedTime) + "\n")
                 .append("modifiedTime:\t" + format(page.modifiedTime) + "\n")
-                .append("prevContentModifiedTime:\t" + format(page.prevContentModifiedTime) + "\n")
-                .append("contentModifiedTime:\t" + format(page.contentModifiedTime) + "\n")
-                .append("prevContentPublishTime:\t" + format(page.prevContentPublishTime) + "\n")
-                .append("contentPublishTime:\t" + format(page.contentPublishTime) + "\n")
-        sb.append("\n")
-                .append("prevRefContentPublishTime:\t" + format(page.prevRefContentPublishTime) + "\n")
-                .append("refContentPublishTime:\t" + format(page.refContentPublishTime) + "\n")
+
         sb.append("\n")
                 .append("pageTitle:\t" + page.pageTitle + "\n")
                 .append("contentTitle:\t" + page.contentTitle + "\n")
@@ -218,26 +194,19 @@ class WebPageFormatter(val page: WebPage) {
                 .append("parseStatus:\t" + page.parseStatus.toString() + "\n")
                 .append("prevSignature:\t" + page.prevSignatureAsString + "\n")
                 .append("signature:\t" + page.signatureAsString + "\n")
-                .append("contentScore:\t" + page.contentScore + "\n")
-                .append("score:\t" + page.score + "\n")
-                .append("cash:\t" + page.cash + "\n")
 
         val crawlMarks = page.marks
         if (crawlMarks.unbox().isNotEmpty()) {
             sb.append("\n")
             crawlMarks.unbox().forEach { (key, value) -> sb.append("mark $key:\t$value\n") }
         }
-        if (page.pageCounters.unbox().isNotEmpty()) {
-            sb.append("\n")
-            page.pageCounters.unbox().forEach { (key, value) -> sb.append("counter $key : $value\n") }
-        }
         val metadata = page.metadata.asStringMap()
         if (metadata.isNotEmpty()) {
             sb.append("\n")
             metadata.entries.stream().filter { it.value.startsWith("meta_") }
-                    .forEach { (key, value) -> sb.append("metadata " + key + ":\t" + value + "\n") }
+                    .forEach { (key, value) -> sb.append("metadata $key:\t$value\n") }
             metadata.entries.stream().filter { e -> e.value.startsWith("meta_") }
-                    .forEach { (key, value) -> sb.append("metadata " + key + ":\t" + value + "\n") }
+                    .forEach { (key, value) -> sb.append("metadata $key:\t$value\n") }
         }
         val headers = page.headers.unbox()
         if (headers != null && headers.isNotEmpty()) {
@@ -249,7 +218,6 @@ class WebPageFormatter(val page: WebPage) {
         sb.append("Total " + page.links.size + " links, ")
                 .append(page.vividLinks.size.toString() + " vivid links, ")
                 .append(page.liveLinks.size.toString() + " live links, ")
-                .append(page.deadLinks.size.toString() + " dead links, ")
                 .append(page.inlinks.size.toString() + " inlinks\n")
 
         if (withLinks) {
@@ -260,8 +228,6 @@ class WebPageFormatter(val page: WebPage) {
             page.vividLinks.forEach { (k, v) -> sb.append("liveLinks:\t$k\t$v\n") }
             sb.append("liveLinks:\n")
             page.liveLinks.values.forEach(Consumer { e: GHypeLink -> sb.append("liveLinks:\t" + e.url + "\t" + e.anchor + "\n") })
-            sb.append("deadLinks:\n")
-            page.deadLinks.forEach(Consumer { l: CharSequence -> sb.append("deadLinks:\t$l\n") })
             sb.append("inlinks:\n")
             page.inlinks.forEach { (key, value) -> sb.append("inlink:\t$key\t$value\n") }
         }
