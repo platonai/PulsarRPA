@@ -38,8 +38,8 @@ open class BrowserSettings(
         var confuser: ScriptConfuser = SimpleScriptConfuser()
         /**
          * Check if the current environment supports only headless mode.
-         * TODO: AppContext.isGUIAvailable doesn't work on some platform
          * */
+        @Deprecated("Not reliable, not used anymore")
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
         
         /**
@@ -217,10 +217,10 @@ open class BrowserSettings(
         @JvmStatic
         fun withGUI(): Companion {
             if (isHeadlessOnly) {
-                System.err.println("GUI is not available")
-                return BrowserSettings
+                // System.err.println("GUI is not available")
+                // return BrowserSettings
             }
-            
+
             listOf(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
@@ -461,7 +461,7 @@ open class BrowserSettings(
     val displayMode
         get() = when {
             conf[BROWSER_DISPLAY_MODE] != null -> conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS)
-            isHeadlessOnly -> DisplayMode.HEADLESS
+            // isHeadlessOnly -> DisplayMode.HEADLESS
             else -> DisplayMode.GUI
         }
 

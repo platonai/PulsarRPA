@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes
+import org.apache.commons.lang3.SystemUtils
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnOs
@@ -48,11 +49,13 @@ class AppContextTest {
         assertEquals(specifiedDir, AppContext.APP_DATA_DIR_RT)
     }
 
+    @Ignore("Not reliable, do not support any more")
     @Test
     @EnabledOnOs(OS.LINUX)
     fun testIsLinuxDesktop() {
         // Mock XDG_SESSION_TYPE environment variable
         System.setProperty("XDG_SESSION_TYPE", "x11")
+
         assertTrue(AppContext.OS_IS_LINUX_DESKTOP)
 
         System.setProperty("XDG_SESSION_TYPE", "wayland")
@@ -62,6 +65,7 @@ class AppContextTest {
         assertFalse(AppContext.OS_IS_LINUX_DESKTOP)
     }
 
+    @Ignore("Not reliable, do not support any more")
     @Test
     @EnabledOnOs(OS.LINUX)
     fun testCheckIsWSL() {
@@ -76,7 +80,7 @@ class AppContextTest {
         assertFalse(AppContext.OS_IS_WSL)
     }
 
-    @Ignore("Do not support virtual environment anymore")
+    @Ignore("Not reliable, do not support any more")
     @Test
     @EnabledOnOs(OS.LINUX)
     fun testCheckVirtualEnv() {
