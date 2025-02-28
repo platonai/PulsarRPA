@@ -62,6 +62,14 @@ class TestEvents : TestBase() {
 
                 assertEquals(1, metrics.fetchTasks.count)
                 assertEquals(1, metrics.successFetchTasks.count)
+                // TODO:
+                // 17:23:15.813 [main] WARN  a.p.p.c.l.AbstractChainedFunction1$addLast$1 - The exception is unexpected, it's best managed within custom code, such as event handlers.
+                //org.opentest4j.AssertionFailedError: expected: <1> but was: <0>
+                //	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+                //	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+                //	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+                //	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+                //	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
                 assertEquals(1, metrics.persists.counter.count)
                 assertEquals(0, metrics.persistContentMBytes.counter.count)
             }
