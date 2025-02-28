@@ -16,6 +16,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.minutes
 
@@ -26,6 +27,7 @@ import kotlin.time.Duration.Companion.minutes
  *
  * Notice: before we load the local files using PulsarRPA, we have to transform the paths using [UrlUtils.pathToLocalURL].
  * */
+@Ignore("TimeConsumingTest, you should run the tests separately")
 @Tag("TimeConsumingTest")
 class MassiveScrapeTaskTest: IntegrationTestBase() {
 
