@@ -26,16 +26,6 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-skeleton</artifactId>
         </dependency>
-        <dependency>
-            <groupId>dk.brics.automaton</groupId>
-            <artifactId>automaton</artifactId>
-            <version>1.11-8</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-test</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
 </project>

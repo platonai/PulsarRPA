@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
  * Created by vincent on 16-7-20.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-class TestUrlNormalizer {
+class TestScopedUrlNormalizer {
     private val conf = VolatileConfig()
 
     val args1 = "-parse -incognito -expires 1s -retry -storeContent false -cacheContent false"

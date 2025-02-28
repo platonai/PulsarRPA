@@ -2,19 +2,10 @@
 package ai.platon.pulsar.skeleton.crawl.parse
 
 import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
-import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
-import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
-import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters
-import ai.platon.pulsar.skeleton.crawl.filter.SCOPE_FETCH
-import ai.platon.pulsar.skeleton.signature.Signature
-import ai.platon.pulsar.skeleton.signature.TextMD5Signature
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
@@ -23,8 +14,13 @@ import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
+import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
+import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
+import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
+import ai.platon.pulsar.skeleton.signature.Signature
+import ai.platon.pulsar.skeleton.signature.TextMD5Signature
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -37,12 +33,11 @@ import kotlin.system.measureTimeMillis
 class PageParser(
     val parserFactory: ParserFactory,
     override var conf: ImmutableConfig,
-    val crawlFilters: CrawlFilters = CrawlFilters(conf),
     val signature: Signature = TextMD5Signature(),
     val messageWriter: MiscMessageWriter? = null
 ) : Parameterized, LazyConfigurable, AutoCloseable {
 
-    enum class Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
+    enum class Counter { parseFailed }
     init { MetricsSystem.reg.register(Counter::class.java) }
 
     private val parseCount = AtomicInteger()
@@ -52,7 +47,6 @@ class PageParser(
     constructor(parserFactory: ParserFactory, conf: ImmutableConfig) : this(
         parserFactory,
         conf,
-        CrawlFilters(conf),
         TextMD5Signature(),
         MiscMessageWriter()
     )
@@ -217,16 +211,7 @@ class PageParser(
      * Process redirect when the page is fetched with native http protocol rather than a browser
      * */
     private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
-        val refreshHref = parseStatus.getArgOrElse(ParseStatus.REFRESH_HREF, "")
-        val newUrl = crawlFilters.normalizeToNull(refreshHref, SCOPE_FETCH) ?: return
-
-        page.addLiveLink(HyperlinkPersistable(newUrl))
-        page.metadata[Name.REDIRECT_DISCOVERED] = AppConstants.YES_STRING
-        if (newUrl == page.url) {
-            val refreshTime = parseStatus.getArgOrElse(ParseStatus.REFRESH_TIME, "0").toInt()
-            val reprUrl = InternalURLUtil.chooseRepr(page.url, newUrl, refreshTime < AppConstants.PERM_REFRESH_TIME)
-            page.reprUrl = reprUrl
-        }
+        // should processed by browser
     }
 
     private fun processLinks(page: WebPage, unfilteredLinks: MutableSet<HyperlinkPersistable>) {

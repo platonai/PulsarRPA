@@ -14,25 +14,6 @@
 
     <import resource="plugins/monitor-context.xml"/>
 
-    <bean id="seedBuilder" class="ai.platon.pulsar.skeleton.crawl.inject.SeedBuilder">
-        <constructor-arg ref="scoringFilters"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-    <bean id="injectComponent" class="ai.platon.pulsar.skeleton.crawl.component.InjectComponent" destroy-method="close">
-        <constructor-arg ref="seedBuilder"/>
-        <constructor-arg ref="webDb"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-    <bean id="generateComponent" class="ai.platon.pulsar.skeleton.crawl.component.GenerateComponent">
-        <constructor-arg ref="crawlFilters"/>
-        <constructor-arg ref="webDb"/>
-        <constructor-arg ref="urlFilters"/>
-        <constructor-arg ref="urlNormalizers"/>
-        <constructor-arg ref="fetchSchedule"/>
-        <constructor-arg ref="messageWriter"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <bean id="fetchComponent" class="ai.platon.pulsar.skeleton.crawl.component.BatchFetchComponent" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="globalCacheFactory"/>
@@ -42,14 +23,8 @@
     </bean>
 
     <bean id="parseComponent" class="ai.platon.pulsar.skeleton.crawl.component.ParseComponent">
-        <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="pageParser"/>
         <constructor-arg ref="globalCacheFactory"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-    <bean id="indexComponent" class="ai.platon.pulsar.skeleton.crawl.component.IndexComponent">
-        <constructor-arg ref="indexWriters"/>
-        <constructor-arg ref="indexingFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="updateComponent" class="ai.platon.pulsar.skeleton.crawl.component.UpdateComponent">

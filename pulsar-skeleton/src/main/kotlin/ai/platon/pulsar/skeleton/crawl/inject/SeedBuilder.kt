@@ -1,16 +1,12 @@
 package ai.platon.pulsar.skeleton.crawl.inject
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.skeleton.common.options.deprecated.CrawlOptions
-import ai.platon.pulsar.skeleton.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.Mark
+import ai.platon.pulsar.skeleton.crawl.scoring.ScoringFilters
 import org.apache.commons.lang3.tuple.Pair
-import org.slf4j.LoggerFactory
 import java.time.Instant
 
 /**
@@ -18,11 +14,11 @@ import java.time.Instant
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class SeedBuilder(
-        private val scoreFilters: ScoringFilters,
-        private val conf: ImmutableConfig
+    private val scoreFilters: ScoringFilters,
+    private val conf: ImmutableConfig
 ) : Parameterized {
 
-    constructor(conf: ImmutableConfig): this(ScoringFilters(conf), conf)
+    constructor(conf: ImmutableConfig) : this(ScoringFilters(conf), conf)
 
     override fun getParams(): Params {
         return Params.of("injectTime", DateTimes.format(Instant.now()))
@@ -52,31 +48,14 @@ class SeedBuilder(
     }
 
     private fun makeSeed(url: String, args: String, page: WebPage): Boolean {
-//        if (page.isSeed) {
-//            return false
-//        }
-
         if (page.isInternal) {
             return false
         }
 
-        val options = CrawlOptions.parse(args, conf)
         val now = Instant.now()
         page.distance = 0
-        if (page.createTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-            page.createTime = now
-        }
-        page.markSeed()
-        page.score = options.score.toFloat()
-        scoreFilters.injectedScore(page)
         page.fetchTime = now
-        page.fetchInterval = options.fetchInterval
-        page.fetchPriority = options.fetchPriority
-        page.marks.put(Mark.INJECT, AppConstants.YES_STRING)
+        page.markSeed()
         return true
-    }
-
-    companion object {
-        val LOG = LoggerFactory.getLogger(SeedBuilder::class.java)
     }
 }

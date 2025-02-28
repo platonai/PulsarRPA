@@ -5,17 +5,16 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.persist.*
+import ai.platon.pulsar.persist.PageCounters.Self
+import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
-import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilter
 import ai.platon.pulsar.skeleton.crawl.schedule.DefaultFetchSchedule
 import ai.platon.pulsar.skeleton.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.skeleton.crawl.schedule.ModifyInfo
 import ai.platon.pulsar.skeleton.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.skeleton.signature.SignatureComparator
-import ai.platon.pulsar.persist.*
-import ai.platon.pulsar.persist.PageCounters.Self
-import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -30,7 +29,7 @@ class UpdateComponent(
     val messageWriter: MiscMessageWriter? = null,
     val conf: ImmutableConfig,
 ) : Parameterized {
-    val LOG = LoggerFactory.getLogger(UpdateComponent::class.java)
+    private val LOG = LoggerFactory.getLogger(UpdateComponent::class.java)
 
     companion object {
         enum class Counter { rCreated, rNewDetail, rPassed, rLoaded, rNotExist, rDepthUp, rUpdated, rTotalUpdates, rBadModTime }
@@ -57,7 +56,7 @@ class UpdateComponent(
         pageCounters.increase(PageCounters.Ref.page)
         pageExt.updateRefContentPublishTime(outgoingPage.contentPublishTime)
 
-        if (outgoingPage.pageCategory.isDetail || CrawlFilter.guessPageCategory(outgoingPage.url).isDetail) {
+        if (outgoingPage.pageCategory.isDetail) {
             pageCounters.increase(PageCounters.Ref.ch, outgoingPage.contentTextLen)
             pageCounters.increase(PageCounters.Ref.item)
         }

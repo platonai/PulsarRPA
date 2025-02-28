@@ -411,12 +411,6 @@ public interface CapabilityTypes {
      * */
     String GLOBAL_DOCUMENT_CACHE_SIZE = "global.document.cache.size";
 
-    /**
-     * Sites may request that search engines don't provide access to cached
-     * documents.
-     */
-    String CACHING_FORBIDDEN_KEY = "caching.forbidden";
-
     String PULSAR_DOMAIN = "pulsar.domain";
 
     // H2

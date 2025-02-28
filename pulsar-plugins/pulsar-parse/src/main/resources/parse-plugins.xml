@@ -87,11 +87,6 @@
 	<aliases>
         <alias name="parse-html" class="ai.platon.pulsar.skeleton.crawl.parse.html.PrimerHtmlParser"/>
         <alias name="parse-tika" class="ai.platon.pulsar.parse.tika.TikaParser"/>
-		<!--<alias name="parse-ext" extension-id="ExtParser" />-->
-        <alias name="parse-js" class="ai.platon.pulsar.parse.js.JSParseFilter"/>
-        <!--<alias name="feed" extension-id="ai.platon.pulsar.parse.feed.FeedParser" />-->
-        <!--<alias name="parse-swf" extension-id="ai.platon.pulsar.parse.swf.SWFParser" />-->
-        <!--<alias name="parse-zip" class="ai.platon.pulsar.parse.zip.ZipParser" />-->
 	</aliases>
 
 </parse-plugins>

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
 
-class CombinedUrlNormalizerTest {
+class CombinedScopedUrlNormalizerTest {
 
     @Test
     fun `test normalize with valid url and options`() {

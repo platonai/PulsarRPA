@@ -22,17 +22,16 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_TIKA_HTML_MAPPER_NAME
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters
+import ai.platon.pulsar.persist.HyperlinkPersistable
+import ai.platon.pulsar.persist.ParseStatus
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import ai.platon.pulsar.skeleton.crawl.parse.ParseFilters
 import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
 import ai.platon.pulsar.skeleton.crawl.parse.ParseResult.Companion.failed
 import ai.platon.pulsar.skeleton.crawl.parse.Parser
 import ai.platon.pulsar.skeleton.crawl.parse.html.HTMLMetaTags
 import ai.platon.pulsar.skeleton.crawl.parse.html.PrimerParser
-import ai.platon.pulsar.persist.HyperlinkPersistable
-import ai.platon.pulsar.persist.ParseStatus
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import org.apache.html.dom.HTMLDocumentImpl
 import org.apache.tika.config.TikaConfig
 import org.apache.tika.metadata.Metadata
@@ -49,7 +48,6 @@ import java.net.URL
  * representation returned by Tika as SAX events
  */
 class TikaParser(
-        val crawlFilters: CrawlFilters? = null,
         val parseFilters: ParseFilters? = null,
         val conf: ImmutableConfig
 ) : Parser {
@@ -57,12 +55,11 @@ class TikaParser(
     private val primerParser = PrimerParser(conf)
 
     private val tikaConfig = TikaConfig.getDefaultConfig()
-    private val cachingPolicy = conf.get(PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT)
     private var htmlMapper = conf.get(PARSE_TIKA_HTML_MAPPER_NAME)?.let { ReflectionUtils.forNameOrNull<HtmlMapper>(it) }
 
     override val timeout = conf.getDuration(CapabilityTypes.PARSE_TIMEOUT, AppConstants.DEFAULT_MAX_PARSE_TIME)!!
 
-    constructor(conf: ImmutableConfig): this(null, null, conf)
+    constructor(conf: ImmutableConfig): this(null, conf)
 
     override fun parse(page: WebPage): ParseResult {
         val baseUrl = page.location
@@ -104,13 +101,13 @@ class TikaParser(
         // check meta directives
         if (!metaTags.noIndex) {
             // okay to index
-            pageText = primerParser.getPageText(root) // extract text
-            pageTitle = primerParser.getPageTitle(root) // extract title
+//            pageText = primerParser.getPageText(root) // extract text
+//            pageTitle = primerParser.getPageTitle(root) // extract title
         }
 
         if (!metaTags.noFollow) {// okay to follow links
-            val baseTag = primerParser.getBaseURLFromTag(root)
-            primerParser.collectLinks(baseTag ?: base, hypeLinks, root, null)
+//            val baseTag = primerParser.getBaseURLFromTag(root)
+//            primerParser.collectLinks(baseTag ?: base, hypeLinks, root, null)
         }
 
         page.setPageTitle(pageTitle)
@@ -132,7 +129,7 @@ class TikaParser(
         parseFilters?.filter(ai.platon.pulsar.skeleton.crawl.parse.html.ParseContext(page, parseResult))
         if (metaTags.noCache) {
             // not okay to cache
-            page.metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
+            // page.metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }
 
         return parseResult

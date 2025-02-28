@@ -1,13 +1,13 @@
 package ai.platon.pulsar.skeleton.crawl.protocol.http
 
-import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.ProtocolStatus.ARG_HTTP_CODE
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes.REQUEST_TIMEOUT
+import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import org.apache.http.HttpStatus
 
 object ProtocolStatusTranslator {
@@ -92,13 +92,13 @@ object ProtocolStatusTranslator {
         }
 
         val newUrl = protocolStatus.getArgOrElse(ProtocolStatus.ARG_REDIRECT_TO_URL, "")
-        if (newUrl.isNotEmpty()) {
-            // handleRedirect(url, newUrl, temp, PROTOCOL_REDIR, fetchTask.getPage());
+        if (UrlUtils.isStandard(newUrl)) {
             val reprUrl = InternalURLUtil.chooseRepr(url, newUrl, temp)
-            if (reprUrl.length >= AppConstants.SHORTEST_VALID_URL_LENGTH) {
+            if (UrlUtils.isStandard(reprUrl)) {
                 page.reprUrl = reprUrl
             }
         }
+
         return crawlStatus
     }
 }

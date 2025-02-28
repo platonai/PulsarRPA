@@ -5,35 +5,4 @@
        xsi:schemaLocation = "http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" default-lazy-init="true">
 
-    <import resource="../common-context.xml"/>
-
-    <bean id="metadataIndexer" class="ai.platon.pulsar.index.MetadataIndexer">
-        <constructor-arg ref="conf"/>
-    </bean>
-    <bean id="generalIndexingFilter" class="ai.platon.pulsar.index.GeneralIndexingFilter">
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="indexingFilters" class="ai.platon.pulsar.skeleton.crawl.index.IndexingFilters">
-        <constructor-arg>
-            <list>
-                <ref bean="metadataIndexer" />
-                <ref bean="generalIndexingFilter" />
-            </list>
-        </constructor-arg>
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="indexerMapping" class="ai.platon.pulsar.skeleton.crawl.index.IndexerMapping">
-        <constructor-arg value="indexer-mapping.xml"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-    <bean id="indexWriters" class="ai.platon.pulsar.skeleton.crawl.index.IndexWriters">
-        <constructor-arg>
-            <list>
-            </list>
-        </constructor-arg>
-        <constructor-arg ref="conf"/>
-    </bean>
-
 </beans>
