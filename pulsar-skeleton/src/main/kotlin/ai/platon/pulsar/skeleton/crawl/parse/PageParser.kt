@@ -10,7 +10,6 @@ import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt
-import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
@@ -36,9 +35,13 @@ class PageParser(
     val signature: Signature = TextMD5Signature(),
     val messageWriter: MiscMessageWriter? = null
 ) : Parameterized, LazyConfigurable, AutoCloseable {
+    private val logger = LoggerFactory.getLogger(PageParser::class.java)
 
     enum class Counter { parseFailed }
-    init { MetricsSystem.reg.register(Counter::class.java) }
+
+    init {
+        MetricsSystem.reg.register(Counter::class.java)
+    }
 
     private val parseCount = AtomicInteger()
 
@@ -71,6 +74,21 @@ class PageParser(
      * A non-null ParseResult contains the main result and status of this parse
      */
     fun parse(page: WebPage): ParseResult {
+        return parse0(page)
+    }
+
+    override fun close() {
+
+    }
+
+    /**
+     * Parses given web page and stores parsed content within page. Puts a meta-redirect to outlinks.
+     *
+     * @param page The web page
+     * @return ParseResult
+     * A non-null ParseResult contains the main result and status of this parse
+     */
+    private fun parse0(page: WebPage): ParseResult {
         parseCount.incrementAndGet()
 
         try {
@@ -105,9 +123,6 @@ class PageParser(
         }
 
         val url = page.url
-        if (isTruncated(page)) {
-            return ParseResult.failed(ParseStatus.FAILED_TRUNCATED, url)
-        }
 
         return try {
             onWillParse(page)
@@ -244,51 +259,6 @@ class PageParser(
 
         if (counter != null) {
             MetricsSystem.reg.enumCounterRegistry.inc(counter)
-        }
-    }
-
-    override fun close() {
-    }
-
-    companion object {
-        val logger = LoggerFactory.getLogger(PageParser::class.java)
-
-        /**
-         * Checks if the page's content is truncated.
-         *
-         * @param page The web page
-         * @return If the page is truncated `true`. When it is not, or when
-         * it could be determined, `false`.
-         */
-        fun isTruncated(page: WebPage): Boolean {
-            if (page.fetchMode == FetchMode.BROWSER) {
-                val hi = page.htmlIntegrity
-                return when {
-                    hi.isOK -> false
-                    hi.isOther -> page.contentLength < 20_000
-                    else -> true
-                }
-            }
-
-            if (page.fetchMode != FetchMode.NATIVE) {
-                return false
-            }
-
-            val url = page.url
-            val inHeaderSize = page.headers.contentLength
-            if (inHeaderSize < 0) {
-                logger.trace("HttpHeaders.CONTENT_LENGTH is not available | $url")
-                return false
-            }
-
-            val content = page.content
-            if (content == null) {
-                logger.debug("Page content is null, url: $url")
-                return false
-            }
-
-            val actualSize = content.limit()
-            return inHeaderSize > actualSize
         }
     }
 }

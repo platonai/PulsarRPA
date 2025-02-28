@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.EncodingDetector
 import ai.platon.pulsar.skeleton.crawl.parse.Parser
+import org.apache.tika.Tika
 import org.slf4j.LoggerFactory
 import java.util.*
 

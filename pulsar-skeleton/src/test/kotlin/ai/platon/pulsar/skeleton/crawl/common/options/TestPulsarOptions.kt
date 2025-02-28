@@ -1,15 +1,13 @@
 package ai.platon.pulsar.skeleton.crawl.common.options
 
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.options.*
+import ai.platon.pulsar.common.options.OptionUtils
 import ai.platon.pulsar.skeleton.common.options.LinkOptions
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.options.PulsarOptions
-import ai.platon.pulsar.skeleton.common.options.deprecated.CrawlOptions
 import com.google.common.collect.Lists
-import org.apache.commons.collections4.CollectionUtils
-import kotlin.test.*
-import java.util.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
@@ -40,14 +38,6 @@ class TestPulsarOptions {
 
     @Test
     fun testRebuildOptions() {
-        val options = CrawlOptions.parse(args2, conf)
-        val options2 = CrawlOptions.parse(options.toString(), conf)
-        CollectionUtils.containsAll(options.params.asStringMap().values, options2.params.asStringMap().values)
-
-        println(args2)
-        println(options.params.asStringMap())
-        println(options2.params.asStringMap())
-
         val args = "-ps -rpl -nlf -notSupport"
         val loadOptions = LoadOptions.parse(args, conf)
         val finalArgs = loadOptions.toString()
@@ -77,18 +67,12 @@ class TestPulsarOptions {
 
     @Test
     fun testEmptyOptions() {
-        assertEquals(CrawlOptions.DEFAULT, CrawlOptions(""))
-        assertEquals(CrawlOptions.DEFAULT, CrawlOptions())
-        assertEquals(CrawlOptions.DEFAULT, CrawlOptions(arrayOf()))
-        assertEquals(CrawlOptions.DEFAULT, CrawlOptions(arrayOf("")))
-
         assertEquals(LinkOptions.DEFAULT, LinkOptions(""))
         assertEquals(LinkOptions.DEFAULT, LinkOptions())
         assertEquals(LinkOptions.DEFAULT, LinkOptions(arrayOf()))
         assertEquals(LinkOptions.DEFAULT, LinkOptions(arrayOf("")))
         assertEquals(LinkOptions.DEFAULT, LinkOptions(HashMap()))
 
-        println(CrawlOptions.DEFAULT)
         println(LinkOptions.DEFAULT)
     }
 

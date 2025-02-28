@@ -38,17 +38,18 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
         protocols.keys.joinToString(", ", "Supported protocols: ", "")
             .also { logger.info(it) }
     }
-    
+
     /**
-     * TODO: configurable, using major protocol/sub protocol is a good idea
+     * Get the protocol for a page.
+     *
      * Using major protocol/sub protocol is a good idea, for example:
      * selenium:http://www.baidu.com/
      * jdbc:h2:tcp://localhost/~/test
      */
     fun getProtocol(page: WebPage): Protocol {
-        val fetchMode = page.fetchMode.takeIf { it != FetchMode.UNKNOWN } ?: FetchMode.BROWSER
+        val fetchMode = FetchMode.BROWSER
         page.fetchMode = fetchMode
-        
+
         return when (fetchMode) {
             FetchMode.BROWSER -> getProtocol("browser:" + page.url)
             else -> getProtocol(page.url)

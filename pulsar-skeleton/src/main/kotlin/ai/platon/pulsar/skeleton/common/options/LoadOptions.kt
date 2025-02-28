@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
+import ai.platon.pulsar.skeleton.common.ApiPublic
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import com.beust.jcommander.Parameter
@@ -811,10 +812,7 @@ open class LoadOptions(
     open fun createItemOptions(): LoadOptions {
         val itemOptions = clone()
         itemOptions.itemOptions2MajorOptions()
-        
-        if (itemOptions.browser == BrowserType.NATIVE) {
-            itemOptions.fetchMode = FetchMode.NATIVE
-        }
+
         itemOptions.rawEvent = rawItemEvent
         
         return itemOptions
