@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.dom.nodes.GeoAnchor
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.Dispatchers

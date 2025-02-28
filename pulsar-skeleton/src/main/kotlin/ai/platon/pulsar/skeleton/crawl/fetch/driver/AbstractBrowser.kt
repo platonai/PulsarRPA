@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -17,6 +18,11 @@ abstract class AbstractBrowser(
     companion object {
         val DEFAULT_USER_AGENT = "PulsarRobot/1.0"
     }
+
+    /**
+     * Temporary added in 2.1.x for test only
+     * */
+    var tmpContext: PrivacyContext? = null
 
     /**
      * All drivers, including the recovered drivers and the reused drivers.
