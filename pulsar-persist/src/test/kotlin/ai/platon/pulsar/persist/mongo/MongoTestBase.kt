@@ -31,6 +31,7 @@ open class MongoTestBase {
         @AfterAll
         @JvmStatic
         fun tearDown() {
+            Assumptions.assumeTrue { NetUtil.testNetwork("localhost", 27017) }
             val database = mongoClient.getDatabase(collectionName)
             database.drop()
             mongoClient.close()
