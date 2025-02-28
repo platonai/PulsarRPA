@@ -1,5 +1,6 @@
 package ai.platon.pulsar.persist.mongo
 
+import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
@@ -32,6 +33,8 @@ class MongoClientLegacyTest {
         @BeforeAll
         @JvmStatic
         fun setupClass() {
+            Assumptions.assumeTrue { NetUtil.testNetwork("localhost", 27017) }
+
             conf.set(CapabilityTypes.STORAGE_DATA_STORE_CLASS, AppConstants.MONGO_STORE_CLASS)
             conf.set(CapabilityTypes.STORAGE_CRAWL_ID, crawlId)
             mongoClient = MongoClient("localhost", 27017)

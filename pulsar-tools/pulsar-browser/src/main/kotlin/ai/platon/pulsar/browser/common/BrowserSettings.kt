@@ -46,8 +46,8 @@ open class BrowserSettings constructor(
 
         /**
          * Check if the current environment supports only headless mode.
-         * TODO: AppContext.isGUIAvailable doesn't work on some platform
          * */
+        @Deprecated("Not reliable, not used anymore")
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
         
         /**
@@ -225,10 +225,10 @@ open class BrowserSettings constructor(
         @JvmStatic
         fun withGUI(): Companion {
             if (isHeadlessOnly) {
-                System.err.println("GUI is not available")
-                return BrowserSettings
+                // System.err.println("GUI is not available")
+                // return BrowserSettings
             }
-            
+
             listOf(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS

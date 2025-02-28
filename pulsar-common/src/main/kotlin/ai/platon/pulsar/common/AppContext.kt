@@ -50,19 +50,23 @@ object AppContext {
     /**
      * Check if the operating system is a Windows subsystem for linux
      * */
+    @Deprecated("Not reliable, not used anymore")
     val OS_IS_WSL by lazy { checkIsWSL() }
     /**
      * Check if the operating system is running on a virtual environment, e.g., virtualbox, vmware, etc
      * */
+    @Deprecated("Not reliable, not used anymore")
     val OS_IS_VIRT by lazy { checkVirtualEnv() }
     /**
      * Check if the operating system is a linux and desktop is available
      * @see https://www.freedesktop.org/software/systemd/man/pam_systemd.html
      * */
+    @Deprecated("Not reliable, not used anymore")
     val OS_IS_LINUX_DESKTOP by lazy { checkIsLinuxDesktop() }
     /**
      * Check if GUI is available, so we can run pulsar in GUI mode and supervised mode.
      * */
+    @Deprecated("Not used anymore")
     val isGUIAvailable: Boolean get() {
         return when {
             OS_IS_LINUX_DESKTOP -> true

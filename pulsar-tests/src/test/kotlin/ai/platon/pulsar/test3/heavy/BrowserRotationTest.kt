@@ -68,7 +68,7 @@ class BrowserRotationTest : MassiveTestBase() {
 
         session.context.await()
         val feeder = session.context.getBean(CrawlLoop::class).urlFeeder as UrlFeeder
-        while (feeder.isNotEmpty()) {
+        while (!Thread.interrupted() && feeder.isNotEmpty()) {
             sleepSeconds(1)
         }
         session.context.await()
