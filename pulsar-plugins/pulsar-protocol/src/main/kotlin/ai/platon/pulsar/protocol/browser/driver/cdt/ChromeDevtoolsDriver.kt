@@ -528,7 +528,7 @@ class ChromeDevtoolsDriver(
             null
         }
     }
-    
+
     /**
      * This method scrolls element into view if needed, and then uses
      * {@link page.captureScreenshot} to take a screenshot of the element.
@@ -715,7 +715,7 @@ class ChromeDevtoolsDriver(
         pageAPI?.onWindowOpen { onWindowOpen(it) }
         // pageAPI?.onFrameAttached {  }
 //        pageAPI?.onDomContentEventFired {  }
-        
+
         val proxyEntry = browser.id.fingerprint.proxyEntry
         if (proxyEntry?.username != null) {
             credentials = Credentials(proxyEntry.username!!, proxyEntry.password)
@@ -723,8 +723,12 @@ class ChromeDevtoolsDriver(
         }
 
         navigateUrl = url
-        // TODO: This is a temporary solution to serve local file, for example, file:///tmp/example.html
-        if (AppConstants.LOCAL_FILE_SERVE_PREFIX in url) {
+        if (UrlUtils.isLocalFile(url)) {
+            // serve local file, for example:
+            // local file path:
+            // C:\Users\pereg\AppData\Local\Temp\pulsar\test.txt
+            // converted to:
+            // http://localfile.org?path=QzpcVXNlcnNccGVyZWdcQXBwRGF0YVxMb2NhbFxUZW1wXHB1bHNhclx0ZXN0LnR4dA==
             openLocalFile(url)
         } else {
             page.navigate(url, referrer = navigateEntry.pageReferrer)
@@ -742,6 +746,12 @@ class ChromeDevtoolsDriver(
     }
 
     private fun openLocalFile(url: String) {
+        val path = UrlUtils.localURLToPath(url)
+        val uri = path.toUri()
+        page.navigate(uri.toString())
+    }
+
+    private fun openLocalFileDeprecated(url: String) {
         if (url.contains("?path=")) {
             val queryParams = URIBuilder(url).queryParams
             val path = queryParams.firstOrNull { it.name == "path" }?.value
@@ -752,7 +762,7 @@ class ChromeDevtoolsDriver(
             return
         }
 
-        val url0 = url.removePrefix(AppConstants.LOCAL_FILE_SERVE_PREFIX)
+        val url0 = url.removePrefix(AppConstants.LOCAL_FILE_BASE_URL)
         if (SystemUtils.IS_OS_WINDOWS) {
             page.navigate(url0)
         } else {

@@ -1,5 +1,7 @@
 package ai.platon.pulsar.common.urls
 
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_SPECIFIC_URL_PREFIX
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -7,8 +9,20 @@ import java.net.MalformedURLException
 import java.net.URISyntaxException
 import java.net.URL
 import java.net.URLEncoder
+import java.util.*
 
 class UrlUtilsTest {
+
+    @Test
+    fun testURIBasics() {
+        // 准备测试数据
+        val path = AppPaths.getTmp("test.txt")
+        val uri = path.toUri()
+        val url = uri.toURL()
+        assertEquals("file", uri.scheme)
+        assertEquals("file", url.protocol)
+    }
+
     @Test
     fun testNormalizer() {
         var url = "https://www.amazon.com/s?k=\"Boys%27+Novelty+Belt+Buckles\"&rh=n:9057119011&page=1"
@@ -126,5 +140,25 @@ class UrlUtilsTest {
 
         // Test with a URL that does not contain a browser protocol
         assertNull(UrlUtils.standardURLToBrowserURL("http://example.com"))
+    }
+
+    @Test
+    fun testPathToLocalURL() {
+        // 准备测试数据
+        val path = AppPaths.getTmp("test.txt")
+        assertEquals("file", path.toUri().scheme)
+
+        // 调用待测试的方法
+        val result = UrlUtils.pathToLocalURL(path)
+
+        // 验证结果是否符合预期
+        val expectedPrefix = AppConstants.LOCAL_FILE_BASE_URL
+        val base64 = Base64.getUrlEncoder().encode(path.toString().toByteArray()).toString(Charsets.UTF_8)
+        val expectedURL = "$expectedPrefix?path=$base64"
+
+        println(path)
+        println(result)
+
+        assertEquals(expectedURL, result)
     }
 }

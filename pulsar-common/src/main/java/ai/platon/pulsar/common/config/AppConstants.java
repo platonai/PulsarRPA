@@ -245,8 +245,16 @@ public interface AppConstants {
     String SCENT_PSEUDO_CSS_ID_MENU = "#scent-pseudo-id-menu";
     String SCENT_PSEUDO_CSS_ID_TITLE = "#scent-pseudo-id-title";
 
+    /**
+     * Local file base url, the host is a fake host.
+     * */
+    String LOCAL_FILE_BASE_URL = "http://localfile.org";
 
-    String LOCAL_FILE_SERVE_PREFIX = "http://localfile.org";
+    /**
+     * @deprecated Use LOCAL_FILE_BASE_URL instead
+     * */
+    @Deprecated
+    String LOCAL_FILE_SERVE_PREFIX = LOCAL_FILE_BASE_URL;
 
     String BROWSER_SPECIFIC_URL_PREFIX = "http://browser-specific.org";
 }
