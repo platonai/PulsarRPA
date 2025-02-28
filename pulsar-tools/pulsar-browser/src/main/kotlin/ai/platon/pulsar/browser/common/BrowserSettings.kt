@@ -524,9 +524,9 @@ open class BrowserSettings(
     /**
      * The script confuser.
      * */
-    val confuser get() = BrowserSettings.confuser
+    val confuser = BrowserSettings.confuser
     /**
      * The script loader.
      * */
-    val scriptLoader get() = ScriptLoader(confuser, conf)
+    val scriptLoader = ScriptLoader(confuser, conf)
 }
