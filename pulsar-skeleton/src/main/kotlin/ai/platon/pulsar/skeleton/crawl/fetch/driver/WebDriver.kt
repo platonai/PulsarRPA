@@ -236,20 +236,26 @@ interface WebDriver : Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun setTimeouts(browserSettings: BrowserSettings)
-    
+
     /**
-     * Open the given URL.
+     * Opens the specified URL in the web driver.
      *
+     * This function navigates the web driver to the provided URL and waits for the navigation to complete.
+     * It is a suspend function, meaning it can be used within coroutines for asynchronous execution.
+     *
+     * Example usage:
      * ```kotlin
-     * driver.navigateTo("https://www.example.com")
-     * driver.waitForNavigation()
+     * driver.open("https://www.example.com")
      * ```
      *
-     * @param url The URL to open.
+     * @param url The URL to which the web driver should navigate. Must be a valid URL string.
+     * @throws WebDriverException If an error occurs during navigation or waiting for the navigation to complete.
      */
     @Throws(WebDriverException::class)
     suspend fun open(url: String) {
+        // Navigates the web driver to the specified URL.
         navigateTo(url)
+        // Waits for the navigation to complete before proceeding.
         waitForNavigation()
     }
 
@@ -832,9 +838,24 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
 
+    /**
+     * Clicks the nth anchor element in the DOM.
+     *
+     * This function searches for all anchor (`<a>`) elements within the specified root element,
+     * and clicks the nth anchor element (0-based index). If the anchor element exists, it returns
+     * the `href` attribute of the clicked anchor element. If the element does not exist, it returns null.
+     *
+     * ```kotlin
+     * driver.clickNthAnchor(100, "body")
+     * ```
+     *
+     * @param n The index of the anchor element to click (0-based).
+     * @param rootSelector The CSS selector of the root element to search within (default is "body").
+     * @return The href attribute of the clicked anchor element, or null if the element does not exist.
+     * @throws WebDriverException If an error occurs while interacting with the WebDriver.
+     */
     @Throws(WebDriverException::class)
     suspend fun clickNthAnchor(n: Int, rootSelector: String = "body"): String?
-
     /**
      * This method check an element with [selector]. If there's no element matching [selector], nothing to do.
      *
