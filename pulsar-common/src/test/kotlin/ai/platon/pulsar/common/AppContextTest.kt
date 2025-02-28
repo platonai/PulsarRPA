@@ -10,6 +10,7 @@ import java.math.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+import kotlin.test.Ignore
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -75,6 +76,7 @@ class AppContextTest {
         assertFalse(AppContext.OS_IS_WSL)
     }
 
+    @Ignore("Do not support virtual environment anymore")
     @Test
     @EnabledOnOs(OS.LINUX)
     fun testCheckVirtualEnv() {

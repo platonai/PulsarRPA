@@ -54,6 +54,7 @@ object AppContext {
     /**
      * Check if the operating system is running on a virtual environment, e.g., virtualbox, vmware, etc
      * */
+    @Deprecated("Do not support virtual environment anymore")
     val OS_IS_VIRT by lazy { checkVirtualEnv() }
     /**
      * Check if the operating system is a linux and desktop is available
