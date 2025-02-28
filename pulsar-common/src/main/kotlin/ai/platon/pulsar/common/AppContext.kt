@@ -50,19 +50,23 @@ object AppContext {
     /**
      * Check if the operating system is a Windows subsystem for linux
      * */
+    @Deprecated("Not reliable, not used anymore")
     val OS_IS_WSL by lazy { checkIsWSL() }
     /**
      * Check if the operating system is running on a virtual environment, e.g., virtualbox, vmware, etc
      * */
+    @Deprecated("Not reliable, not used anymore")
     val OS_IS_VIRT by lazy { checkVirtualEnv() }
     /**
      * Check if the operating system is a linux and desktop is available
      * @see https://www.freedesktop.org/software/systemd/man/pam_systemd.html
      * */
+    @Deprecated("Not reliable, not used anymore")
     val OS_IS_LINUX_DESKTOP by lazy { checkIsLinuxDesktop() }
     /**
      * Check if GUI is available, so we can run pulsar in GUI mode and supervised mode.
      * */
+    @Deprecated("Not used anymore")
     val isGUIAvailable: Boolean get() {
         return when {
             OS_IS_LINUX_DESKTOP -> true
@@ -146,15 +150,21 @@ object AppContext {
     }
     val APP_DATA_DIR = APP_DATA_DIR_RT
     /**
-     * The application's runtime state
+     * The application's runtime state.
      * */
     val state = AtomicReference(State.NEW)
     /**
-     * The application is active.
-     * TODO: avoid this global state, use a more flexible way to manage the state.
+     * The application is active, it can serve and can be terminated.
+     * TODO: consider a more flexible way to manage the state.
      * */
     val isActive get() = state.get().ordinal < State.TERMINATING.ordinal
-    
+    /**
+     * The application is inactive, it can not serve, it's terminating, or terminated.
+     * */
+    val isInactive get() = !isActive
+    /**
+     * Start the application.
+     * */
     fun start() = state.set(State.RUNNING)
     
     fun shouldTerminate() {

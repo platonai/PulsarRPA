@@ -28,7 +28,7 @@ private class APICrawler {
     suspend fun crawl() {
         val initBrowserHandler = InitBrowserHandler(mainUrl)
         val options = session.options("-refresh")
-        options.event.browseEventHandlers.onBrowserLaunched.addLast(initBrowserHandler)
+        options.eventHandlers.browseEventHandlers.onBrowserLaunched.addLast(initBrowserHandler)
 
         IntRange(1, 100).forEach { pageNo ->
             val url = "$apiTemplate?page=$pageNo&pageSize=20"

@@ -47,16 +47,26 @@ object UrlUtils {
      * */
     @JvmStatic
     fun isLocalFile(url: String): Boolean {
-        return url.startsWith(AppConstants.LOCAL_FILE_SERVE_PREFIX)
+        return url.startsWith(AppConstants.LOCAL_FILE_BASE_URL)
     }
 
     /**
-     * Convert a path to a URL, the path will be encoded to base64 and appended to the {@link AppConstants#LOCAL_FILE_SERVE_PREFIX}
+     * Convert a path to a URL, the path will be encoded to base64 and appended to the {@link AppConstants#LOCAL_FILE_FAKE_SERVER_HOME}
+     *
+     * For example:
+     *
+     * `C:\Users\pereg\AppData\Local\Temp\pulsar\test.txt`
+     * will be converted to:
+     * `http://localfile.org?path=QzpcVXNlcnNccGVyZWdcQXBwRGF0YVxMb2NhbFxUZW1wXHB1bHNhclx0ZXN0LnR4dA==`
+     *
+     * @param path The path to convert
+     *
+     * TODO: consider just use path.toUri() in the system
      * */
     @JvmStatic
     fun pathToLocalURL(path: Path): String {
         val base64 = Base64.getUrlEncoder().encode(path.toString().toByteArray()).toString(Charsets.UTF_8)
-        val prefix = AppConstants.LOCAL_FILE_SERVE_PREFIX
+        val prefix = AppConstants.LOCAL_FILE_BASE_URL
         return "$prefix?path=$base64"
     }
 
@@ -888,14 +898,6 @@ object UrlUtils {
      * @throws IllegalStateException if this domain does not end with a public suffix
      */
     fun getTopPrivateDomainOrNull(url: String) = kotlin.runCatching { getTopPrivateDomain(url) }.getOrNull()
-
-    @Deprecated("Use getTopPrivateDomain instead", ReplaceWith("UrlUtils.getTopPrivateDomain(url)"))
-    @Throws(MalformedURLException::class)
-    fun getDomainName(url: String) = getTopPrivateDomain(url)
-
-    @Deprecated("Use getTopPrivateDomainOrNull instead", ReplaceWith("UrlUtils.getTopPrivateDomainOrNull(url)"))
-    fun getDomainNameOrNull(url: String) = getTopPrivateDomainOrNull(url)
-
 
     /**
      * Returns the lowercase origin for the url.

@@ -42,6 +42,8 @@ abstract class AbstractBrowser(
      * */
     override val data: MutableMap<String, Any?> = mutableMapOf()
 
+    override val canConnect: Boolean get() = AppContext.isActive && !closed.get() && initialized.get()
+
     override val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
     
     override val isPermanent: Boolean get() = id.privacyAgent.isPermanent
@@ -94,6 +96,12 @@ abstract class AbstractBrowser(
         if (closed.compareAndSet(false, true)) {
             detach()
             _recoveredDrivers.clear()
+            _drivers.values.filterIsInstance<AbstractWebDriver>().forEach {
+                // tasks are return as soon as possible and should be cancelled
+                it.cancel()
+                // the driver should be retired
+                it.retire()
+            }
             _drivers.values.forEach { runCatching { it.close() }.onFailure { warnForClose(this, it) } }
             _drivers.clear()
         }

@@ -21,12 +21,12 @@ class WalmartRPA(
     fun options(args: String): LoadOptions {
         val options = session.options(args)
 
-        val le = options.event.loadEventHandlers
+        val le = options.eventHandlers.loadEventHandlers
         le.onHTMLDocumentParsed.addLast { _, _ ->
             // use the document
         }
 
-        val be = options.itemEvent.browseEventHandlers
+        val be = options.itemEventHandlers.browseEventHandlers
         be.onBrowserLaunched.addLast { page, driver ->
             warnUpBrowser(page, driver)
         }
@@ -69,7 +69,7 @@ class WalmartCrawler(private val session: PulsarSession = PulsarContexts.createS
             .map { ParsableHyperlink("$it $itemArgs", parseHandler) }
             .onEach {
                 it.referrer = portalUrl
-                it.eventHandlers.chain(options.itemEvent)
+                it.eventHandlers.chain(options.itemEventHandlers)
             }
             .toList()
             .shuffled()

@@ -269,6 +269,8 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
                 try {
                     listener.handler.onEvent(event)
                 } catch (e: Exception) {
+                    logger.warn("Failed to handle event, rethrow ChromeRPCException. Enable debug logging to see the stack trace | {}", e.message)
+                    logger.debug("Failed to handle event", e)
                     // Let the exception throw again, they might be caught by RobustRPC, or somewhere else
                     throw ChromeRPCException("Failed to handle event | ${listener.key}, ${listener.paramType}", e)
                 }

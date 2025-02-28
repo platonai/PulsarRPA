@@ -155,8 +155,6 @@ interface JvmWebDriver {
     @Throws(WebDriverException::class)
     fun scrollToBottomAsync(): CompletableFuture<Unit>
     @Throws(WebDriverException::class)
-    fun scrollToMiddleAsync(ratio: Float): CompletableFuture<Unit>
-    @Throws(WebDriverException::class)
     fun mouseWheelDownAsync(count: Int = 1, deltaX: Double = 0.0, deltaY: Double = 150.0, delayMillis: Long = 0): CompletableFuture<Unit>
     @Throws(WebDriverException::class)
     fun mouseWheelUpAsync(count: Int = 1, deltaX: Double = 0.0, deltaY: Double = -150.0, delayMillis: Long = 0): CompletableFuture<Unit>

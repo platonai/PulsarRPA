@@ -77,7 +77,7 @@ public interface CapabilityTypes {
      * <p>
      * <code>System.setProperty(CapabilityTypes.PAGE_EVENT_CLASS, "ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEvent")</code>
      * */
-    String PAGE_EVENT_CLASS = "page.event.class";
+    String PAGE_EVENT_CLASS = "page.eventHandlers.class";
 
     ///////////////////////////////////////////////////////////////////////////
     // Storage
@@ -120,11 +120,6 @@ public interface CapabilityTypes {
      * If a page is not found in the local storage, return WebPage.NIL.
      * */
     String LOAD_DEACTIVATE_FETCH_COMPONENT = "load.deactivate.fetch.component";
-    /**
-     * @deprecated use {@link #LOAD_DEACTIVATE_FETCH_COMPONENT} instead
-     * */
-    @Deprecated
-    String LOAD_DISABLE_FETCH = "load.disable.fetch";
 
     ///////////////////////////////////////////////////////////////////////////
     // Fetch phrase

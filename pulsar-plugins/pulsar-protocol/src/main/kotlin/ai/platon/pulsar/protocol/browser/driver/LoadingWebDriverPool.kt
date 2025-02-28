@@ -220,9 +220,12 @@ class LoadingWebDriverPool constructor(
         val driver = pollWebDriver(priority, conf, timeout, unit)
         if (driver == null) {
             val snapshot = takeSnapshot()
-            val message = String.format("Driver pool is exhausted | %s", snapshot.format(true))
-            logger.warn(message)
-            throw WebDriverPoolExhaustedException("Driver pool is exhausted ($snapshot)")
+            val message = String.format("%s", snapshot.format(true))
+            if (AppContext.isActive) {
+                // log only when the application is active
+                logger.warn("Driver pool is exhausted, rethrow WebDriverPoolExhaustedException | $message")
+            }
+            throw WebDriverPoolExhaustedException(browserId.toString(), "Driver pool is exhausted ($snapshot)")
         }
         
         return driver
@@ -257,9 +260,9 @@ class LoadingWebDriverPool constructor(
             meterOffer.mark()
         } else {
             if (isActive) {
-                logger.warn("The driver is not working unexpectedly, mark it as retired and close it")
+                logger.warn("Driver is not working, closing it | driver#{}", driver.id)
             }
-            
+
             statefulDriverPool.close(driver)
             meterClosed.mark()
         }
@@ -368,17 +371,10 @@ class LoadingWebDriverPool constructor(
     
     @Throws(BrowserLaunchException::class)
     private fun computeBrowserAndDriver(priority: Int, conf: VolatileConfig): WebDriver {
-        try {
-            return computeBrowserAndDriver0(conf)
-        } catch (e: IllegalWebDriverStateException) {
-            logger.debug("[Unexpected]", e)
-            
-            if (isActive) {
-                throw BrowserLaunchException("Failed launch browser", e)
-            } else {
-                throw IllegalApplicationStateException("Process is shutting down, do not create new drivers", e)
-            }
-        }
+        return computeBrowserAndDriver0(conf)
+//        logger.warn("Failed to launch browser, rethrow BrowserLaunchException. " +
+//                "Enable debug to see the stack trace | {}", e.message)
+//        logger.debug("Failed to launch browser", e)
     }
     
     /**
@@ -421,6 +417,8 @@ class LoadingWebDriverPool constructor(
     
     @Throws(WebDriverException::class)
     private fun computeBrowserAndDriver0(conf: VolatileConfig): WebDriver {
+        logger.debug("Launch browser and new driver | {}", browserId)
+
         val browser = driverFactory.launchBrowser(browserId, conf)
         val driver = browser.newDriver()
         

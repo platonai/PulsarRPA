@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import java.nio.file.Path
+import java.time.Instant
 
 /**
  * The unique browser id.
@@ -18,7 +19,7 @@ import java.nio.file.Path
  * */
 data class BrowserId(
     val contextDir: Path,
-    val fingerprint: Fingerprint,
+    val fingerprint: Fingerprint
 ): Comparable<BrowserId> {
     /**
      * The browser type of the browser.
@@ -28,6 +29,10 @@ data class BrowserId(
      * The privacy agent of the browser.
      * */
     val privacyAgent = PrivacyAgent(contextDir, fingerprint)
+    /**
+     * The creation time of the browser.
+     * */
+    val createTime = System.currentTimeMillis()
     /**
      * The user data directory of the browser.
      * */

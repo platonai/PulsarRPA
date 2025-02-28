@@ -222,16 +222,7 @@ object ResourceLoader {
     fun getURL(name: String): URL {
         return getURLOrNull(name) ?: throw FileNotFoundException("Cannot be resolved to URL | $name");
     }
-    
-    /**
-     * Finds a resource with a given name.
-     *
-     * @param name resource name.
-     * @return the url for the named resource.
-     */
-    @Deprecated("Use getURLOrNull instead", ReplaceWith("getURLOrNull(name)"))
-    fun getResource(name: String): URL? = getURLOrNull(name)
-    
+
     /**
      * Finds a resource with a given name.
      *

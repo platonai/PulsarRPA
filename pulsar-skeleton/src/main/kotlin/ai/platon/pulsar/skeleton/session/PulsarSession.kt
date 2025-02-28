@@ -136,7 +136,7 @@ import java.util.concurrent.CompletableFuture
  *
  * ```kotlin
  * val options = session.options(args)
- * options.event.browseEventHandlers.onDocumentSteady.addLast { page, driver ->
+ * options.eventHandlers.browseEventHandlers.onDocumentSteady.addLast { page, driver ->
  *   driver.fill("input[name='search']", "geek")
  *   driver.click("button[type='submit']")
  * }
@@ -167,10 +167,13 @@ interface PulsarSession : AutoCloseable {
      * Once the process has started, this configuration remains unchangeable.
      * */
     val unmodifiedConfig: ImmutableConfig
+
     /**
-     * The session scope volatile config, every setting is supposed to be changed at any time and any place.
+     * The session-specific volatile configuration, which allows dynamic adjustments to settings at any point during the session.
+     * Unlike the immutable configuration loaded at startup, this configuration is designed to be modified on-the-fly to adapt to runtime requirements.
      * */
     val sessionConfig: VolatileConfig
+
     /**
      * A short descriptive display text.
      * */
@@ -191,16 +194,6 @@ interface PulsarSession : AutoCloseable {
      * Disable page cache and document cache
      * */
     fun disablePDCache()
-    /**
-     * deprecated.
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("data(name)"))
-    fun getVariable(name: String): Any? = data(name)
-    /**
-     * deprecated
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("data(name, value)"))
-    fun setVariable(name: String, value: Any) = data(name, value)
 
     /**
      * Get a variable which is stored in this session
@@ -1148,7 +1141,7 @@ interface PulsarSession : AutoCloseable {
      *
      * ```kotlin
      * val options = session.options("-expire 1d")
-     * options.event.loadEvent.onLoaded.addLast { println(it.url) }
+     * options.eventHandlers.loadEvent.onLoaded.addLast { println(it.url) }
      * session.submit("http://example.com", options)
      * PulsarContexts.await()
      * ```
@@ -1191,7 +1184,7 @@ interface PulsarSession : AutoCloseable {
      *
      * ```kotlin
      * val hyperlink = ListenableHyperlink("http://example.com")
-     * hyperlink.event.loadEvent.onLoaded.addLast { page -> println(page.url) }
+     * hyperlink.eventHandlers.loadEvent.onLoaded.addLast { page -> println(page.url) }
      * session.submit(hyperlink)
      * PulsarContexts.await()
      * ```
@@ -1201,7 +1194,7 @@ interface PulsarSession : AutoCloseable {
      *
      * ```kotlin
      * val hyperlink = ListenableHyperlink("http://example.com", args = "-parse", event = PrintFlowEvent())
-     * hyperlink.event.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
+     * hyperlink.eventHandlers.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
      *      val title = document.selectFirstOrNull(".title")?.text() ?: "Not found"
      *      println(title)
      * }

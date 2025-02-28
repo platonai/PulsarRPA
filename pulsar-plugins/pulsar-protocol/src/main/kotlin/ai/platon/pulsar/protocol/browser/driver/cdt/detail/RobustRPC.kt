@@ -5,7 +5,9 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserUnavailableException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,8 +55,14 @@ internal class RobustRPC(
         
         var i = maxRetry
         var result = kotlin.runCatching { invokeDeferred0(action, block) }
+            .onFailure {
+                // no handler here
+            }
         while (result.isFailure && i-- > 0 && driver.checkState()) {
             result = kotlin.runCatching { invokeDeferred0(action, block) }
+                .onFailure {
+                    // no handler here
+                }
         }
         
         return result.getOrElse { throw it }
@@ -79,14 +87,12 @@ internal class RobustRPC(
             null
         }
     }
-    
-    @Throws(IllegalWebDriverStateException::class, Exception::class)
+
+    @Throws(IllegalWebDriverStateException::class, ChromeDriverException::class)
     fun handleChromeException(e: ChromeDriverException, action: String? = null, message: String? = null) {
         when (e) {
             is ChromeIOException -> {
-                val message2 = MessageFormat.format("Browser unavailable: {0} ({1}/{2}) | {3}",
-                    action, rpcFailures, maxRPCFailures, e.message)
-                throw IllegalWebDriverStateException("Chrome IO error | $message2", e)
+                handleChromeIOException(e, action, message)
             }
             is ChromeRPCException -> {
                 handleChromeRPCException(e, action, message)
@@ -94,12 +100,26 @@ internal class RobustRPC(
             else -> throw e
         }
     }
-    
+
+    @Throws(BrowserUnavailableException::class, IllegalWebDriverStateException::class)
+    fun handleChromeIOException(e: ChromeIOException, action: String? = null, message: String? = null) {
+        val message2 = MessageFormat.format("Browser unavailable: {0} ({1}/{2}) | {3}",
+            action, rpcFailures, maxRPCFailures, e.message)
+
+        if (!e.isOpen) {
+            throw BrowserUnavailableException("Browser connection closed | $message2", e)
+        } else if (!driver.canConnect) {
+            throw BrowserUnavailableException("Browser connection lost | $message2", e)
+        } else {
+            throw IllegalWebDriverStateException("Unknown chrome IO error | $message2", e)
+        }
+    }
+
     @Throws(IllegalWebDriverStateException::class)
     fun handleChromeRPCException(e: ChromeRPCException, action: String? = null, message: String? = null) {
         if (rpcFailures.get() > maxRPCFailures) {
             logger.warn("Too many RPC failures: {} ({}/{}) | {}", action, rpcFailures, maxRPCFailures, e.message)
-            throw IllegalWebDriverStateException("Too many RPC failures", driver)
+            throw IllegalWebDriverStateException("Too many RPC failures", driver = driver)
         }
         
         val count = exceptionCounts.computeIfAbsent(e.code) { AtomicInteger() }.get()

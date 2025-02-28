@@ -38,7 +38,7 @@ It's fair simple to sign in a website before scraping in PulsarRPA:
 ```kotlin
 val options = session.options(args)
 val loginHandler = TaobaoLoginHandler(username, password, warnUpUrl = portalUrl)
-options.event.loadEvent.onAfterBrowserLaunch.addLast(loginHandler)
+options.eventHandlers.loadEvent.onAfterBrowserLaunch.addLast(loginHandler)
 
 session.loadOutPages(portalUrl, options)
 ```
@@ -76,7 +76,7 @@ class RPAPaginateHandler(val initPageNumber: Int) : WebPageWebDriverEventHandler
     override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         // ...
         // extract the text
-        val text = driver.firstText(selector)
+        val text = driver.selectFirstTextOrNull(selector)
         // click the next page link
         driver.click(nextPageSelector)
         return null

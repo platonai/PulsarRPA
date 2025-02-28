@@ -3,12 +3,13 @@ package ai.platon.pulsar.browser.common
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.CLIENT_JS_PROPERTY_NAMES
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import java.time.Duration
 
-open class BrowserSettings(
+open class BrowserSettings constructor(
     /**
      * The configuration.
      * */
@@ -25,21 +26,28 @@ open class BrowserSettings(
          * Compression quality from range [0..100] (jpeg only) to capture screenshots.
          * */
         var SCREENSHOT_QUALITY = 50
-        
+
         /**
-         * The interaction settings. Interaction settings define how the system
+         * The default interaction settings. Interaction settings define how the system
          * interacts with webpages to mimic the behavior of real people.
+         *
+         * If you want to use a custom script confuser, you need to set the field before the BrowserSettings object is created.
+         * If you are using spring boot, you should set the field in a ApplicationContextInitializer.
          * */
         var INTERACT_SETTINGS = InteractSettings.DEFAULT
-        
+
         /**
-         * The script confuser.
+         * The default script confuser, which is used to confuse the javascript that will be injected to the webpage.
+         *
+         * If you want to use a custom script confuser, you need to set the field before the BrowserSettings object is created.
+         * If you are using spring boot, you should set the field in a ApplicationContextInitializer.
          * */
-        var confuser: ScriptConfuser = SimpleScriptConfuser()
+        var SCRIPT_CONFUSER: ScriptConfuser = SimpleScriptConfuser()
+
         /**
          * Check if the current environment supports only headless mode.
-         * TODO: AppContext.isGUIAvailable doesn't work on some platform
          * */
+        @Deprecated("Not reliable, not used anymore")
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
         
         /**
@@ -217,10 +225,10 @@ open class BrowserSettings(
         @JvmStatic
         fun withGUI(): Companion {
             if (isHeadlessOnly) {
-                System.err.println("GUI is not available")
-                return BrowserSettings
+                // System.err.println("GUI is not available")
+                // return BrowserSettings
             }
-            
+
             listOf(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
@@ -260,16 +268,7 @@ open class BrowserSettings(
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
             return BrowserSettings
         }
-        
-        /**
-         * Set the number of privacy contexts
-         * */
-        @Deprecated("Inappropriate name", ReplaceWith("maxBrowsers(n)"))
-        @JvmStatic
-        fun privacyContext(n: Int): Companion = maxBrowsers(n)
-        @Deprecated("Inappropriate name", ReplaceWith("maxBrowsers(n)"))
-        @JvmStatic
-        fun privacy(n: Int): Companion = maxBrowsers(n)
+
         /**
          * Set the max number of browsers
          * */
@@ -299,9 +298,6 @@ open class BrowserSettings(
             System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")
             return BrowserSettings
         }
-        @Deprecated("Inappropriate name", ReplaceWith("maxOpenTabs(n)"))
-        @JvmStatic
-        fun maxTabs(n: Int) = maxOpenTabs(n)
         /**
          * Tell the system to work with single page application.
          * To collect SPA data, the execution needs to have no timeout limit.
@@ -431,6 +427,11 @@ open class BrowserSettings(
             return this
         }
     }
+    /**
+     * The javascript to execute by Web browsers.
+     * */
+    private val jsPropertyNames: Array<String>
+        get() = conf.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, CLIENT_JS_PROPERTY_NAMES)
 
     /**
      * The supervisor process
@@ -516,7 +517,6 @@ open class BrowserSettings(
      *     Page Loading Strategy</a>
      * */
     var pageLoadStrategy = "none"
-
     /**
      * The user agent to use.
      * */
@@ -524,9 +524,9 @@ open class BrowserSettings(
     /**
      * The script confuser.
      * */
-    val confuser get() = BrowserSettings.confuser
+    val confuser = BrowserSettings.SCRIPT_CONFUSER
     /**
      * The script loader.
      * */
-    val scriptLoader get() = ScriptLoader(confuser, conf)
+    val scriptLoader = ScriptLoader(confuser, jsPropertyNames)
 }

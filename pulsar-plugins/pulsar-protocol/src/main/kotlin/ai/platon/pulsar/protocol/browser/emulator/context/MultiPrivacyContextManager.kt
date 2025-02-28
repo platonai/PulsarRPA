@@ -33,6 +33,7 @@ import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.CoreMetrics
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserUnavailableException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyContext
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
@@ -191,13 +192,13 @@ open class MultiPrivacyContextManager(
     override fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
         val context = computeIfNecessary(page, fingerprint, task)
 
-        // An active privacy context can be used to serve tasks, and an inactive one should be closed.
-        if (context.isActive) {
+        // A ready privacy context can be used to serve tasks, and an inactive one should be closed.
+        if (context.isReady) {
             return context
         }
 
-        assert(!context.isActive)
-        // The context is inactive, close it and create a new one
+        assert(!context.isReady)
+        // The context is active and has driver promise, close it and create a new one
         close(context)
 
         return computeIfAbsent(createPrivacyAgent(task.page, fingerprint))
@@ -592,7 +593,7 @@ open class MultiPrivacyContextManager(
             // use message writer to write the snapshot, so if the file becomes too large, it will be rotated
             messageWriter.writeTo(sb.toString(), SNAPSHOT_PATH)
         } catch (e: IOException) {
-            logger.warn(e.stringify())
+            logger.warn("IOException", e)
         }
     }
 }

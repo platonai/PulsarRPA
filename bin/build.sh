@@ -1,40 +1,77 @@
 #!/bin/bash
 
-BIN=$(dirname "$0")
-APP_HOME=$(realpath "$BIN/..")
+# Find the first parent directory containing the VERSION file
+AppHome=$(dirname "$(readlink -f "$0")")
+while [[ "$AppHome" != "/" && ! -f "$AppHome/VERSION" ]]; do
+  AppHome=$(dirname "$AppHome")
+done
+cd "$AppHome" || exit
 
-CLEAN=false
-SKIP_TEST=true
+function printUsage {
+  echo "Usage: deploy.sh [-clean|-test]"
+  exit 1
+}
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    -c|--clean)
-      CLEAN="clean"
-      shift # past argument
+# Maven command and options
+MvnCmd="./mvnw"
+
+# Initialize flags and additional arguments
+PerformClean=false
+SkipTests=true
+
+MvnOptions=()
+AdditionalMvnArgs=()
+
+# Parse command-line arguments
+for Arg in "$@"; do
+  case $Arg in
+    -clean)
+      PerformClean=true
       ;;
-    -t|--test)
-      SKIP_TEST=false
-      shift # past argument
+    -t|-test)
+      SkipTests=false
+      ;;
+    -h|-help|--help)
+      printUsage
       ;;
     -*|--*)
-      echo "Unknown option $1"
-      exit 1
+      printUsage
+      ;;
+    *)
+      AdditionalMvnArgs+=("$Arg")
       ;;
   esac
 done
 
-MVNW="$APP_HOME/mvnw"
-MVN_CALL=()
-
-if [ "$CLEAN" = true ]; then
-  MVN_CALL+=("clean")
+# Conditionally add Maven options based on flags
+if $PerformClean; then
+  MvnOptions+=("clean")
 fi
 
-if [ "$SKIP_TEST" = true ]; then
-  MVN_CALL+=("-DskipTests=true")
+if $SkipTests; then
+  AdditionalMvnArgs+=("-DskipTests")
 fi
-MVN_CALL+=("-Pall-modules")
 
-cd "$APP_HOME" || exit
+# Function to execute Maven command in a given directory
+function invokeMavenBuild {
+  local Directory=$1
+  shift
+  local MvnOptions=("$@")
 
-"$MVNW" "${MVN_CALL[@]}"
+  pushd "$Directory" > /dev/null || return
+
+  $MvnCmd "${MvnOptions[@]}"
+
+  if [[ $? -ne 0 ]]; then
+    echo "Warning: Maven command failed in $Directory"
+  fi
+
+  popd > /dev/null || return
+}
+
+# Execute Maven package in the application home directory
+MvnOptions+=("install")
+AdditionalMvnArgs+=("-Pall-modules")
+
+MvnOptions+=("${AdditionalMvnArgs[@]}")
+invokeMavenBuild "$AppHome" "${MvnOptions[@]}"

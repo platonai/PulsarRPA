@@ -83,7 +83,7 @@ val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name 
 
 ```kotlin
 val options = session.options(args)
-options.event.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
+options.eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
     driver.scrollDown()
 }
 session.load(url, options)

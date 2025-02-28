@@ -1,5 +1,6 @@
 package ai.platon.pulsar.persist.mongo
 
+import ai.platon.pulsar.common.NetUtil
 import shaded.org.bson.Document
 import org.junit.jupiter.api.*
 import shaded.com.mongodb.client.MongoClient
@@ -23,12 +24,14 @@ open class MongoTestBase {
         @BeforeAll
         @JvmStatic
         fun setupClass() {
+            Assumptions.assumeTrue { NetUtil.testNetwork("localhost", 27017) }
             mongoClient = MongoClients.create("mongodb://localhost:27017")
         }
         
         @AfterAll
         @JvmStatic
         fun tearDown() {
+            Assumptions.assumeTrue { NetUtil.testNetwork("localhost", 27017) }
             val database = mongoClient.getDatabase(collectionName)
             database.drop()
             mongoClient.close()

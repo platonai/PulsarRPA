@@ -11,7 +11,7 @@ PulsarRPA 包含一个 RPA 子系统，来实现网页交互：滚动、打字�
 
 ```kotlin
 val options = session.options(args)
-val event = options.event.browseEventHandlers
+val event = options.eventHandlers.browseEventHandlers
 event.onBrowserLaunched.addLast { page, driver ->
     // warp up the browser to avoid being blocked by the website,
     // or choose the global settings, such as your location.

@@ -30,15 +30,17 @@ class UrlFeeder(
     private val delayCollector = DelayCacheCollector(urlPool.delayCache, Priority13.HIGHER5)
         .apply { name = "DelayCC#Delay" }
 
-    val loadingIterable =
-        ConcurrentLoadingIterable(ChainedDataCollector(), realTimeCollector, delayCollector, lowerCacheSize)
-    val cacheSize get() = loadingIterable.cacheSize
-
     private val chainedDataCollector get() = loadingIterable.regularCollector as ChainedDataCollector
 
+    /**
+     * Open collectors
+     * */
     val openCollectors: Collection<PriorityDataCollector<UrlAware>>
         get() = chainedDataCollector.collectors
 
+    /**
+     * A copy of all collectors, including the real-time collector, delay collector and open collectors.
+     * */
     val collectors: List<PriorityDataCollector<UrlAware>>
         get() = mutableListOf<PriorityDataCollector<UrlAware>>().also {
             it += realTimeCollector
@@ -46,17 +48,41 @@ class UrlFeeder(
             it += openCollectors
         }.sortedBy { it.priority }
 
-    init {
-        if (enableDefaults && openCollectors.isEmpty()) {
-            addDefaultCollectors()
-        }
-    }
+    /**
+     * The loading iterable is a concurrent loading iterable, which loads urls from the url pool
+     * and feeds them to the crawlers.
+     * */
+    val loadingIterable =
+        ConcurrentLoadingIterable(ChainedDataCollector(), realTimeCollector, delayCollector, lowerCacheSize)
+
+    val cacheSize get() = loadingIterable.cacheSize
+
+    val size get() = loadingIterable.size
+
+    /**
+     * The estimated size of the fetch queue, which is the sum of the size of all collectors.
+     * When the collector loads urls from external sources, retrieving exact size of the fetch queue
+     * is not possible. So we have to estimate the size.
+     * */
+    val estimatedSize get() = loadingIterable.estimatedSize
 
     val abstract: String
         get() = PriorityDataCollectorsFormatter(collectors).abstract()
 
     val report: String
         get() = PriorityDataCollectorsFormatter(collectors).toString()
+
+    init {
+        if (enableDefaults && openCollectors.isEmpty()) {
+            addDefaultCollectors()
+        }
+    }
+
+    fun isEmpty(): Boolean {
+        return size == 0
+    }
+
+    fun isNotEmpty() = !isEmpty()
 
     /**
      * Add a hyperlink to the very beginning of the fetch queue, so it will be served first

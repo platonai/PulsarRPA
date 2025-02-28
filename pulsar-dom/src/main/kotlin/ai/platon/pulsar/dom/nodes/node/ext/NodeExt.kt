@@ -105,15 +105,6 @@ val NILElement: Element = NILDocument.body()
 
 val NILNode: Node = NILElement
 
-@Deprecated("Inappropriate name", ReplaceWith("NILDocument"))
-val nilDocument = NILDocument
-
-@Deprecated("Inappropriate name", ReplaceWith("NILElement"))
-val nilElement = NILElement
-
-@Deprecated("Inappropriate name", ReplaceWith("NILNode"))
-val nilNode = NILNode
-
 val Document.isNil get() = this === NILDocument
 
 /**
@@ -239,8 +230,6 @@ fun Element.valuableClassNames(): Set<String> {
     return getValuableClassNames(classNames)
 }
 
-@Deprecated("Use Element.valuableClassNames() instead", ReplaceWith("valuableClassNames()"))
-fun Element.qualifiedClassNames(): Set<String> = valuableClassNames()
 /**
  * Set an attribute to the element, if the attribute is already in the element, it will be replaced.
  * */

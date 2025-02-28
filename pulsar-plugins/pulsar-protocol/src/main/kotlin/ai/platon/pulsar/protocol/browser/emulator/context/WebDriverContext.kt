@@ -65,12 +65,23 @@ open class WebDriverContext(
     private val notBusy = lock.newCondition()
 
     private val closed = AtomicBoolean()
+
+    private val browserManager = driverPoolManager.browserManager
+
+    private val browser get() = browserManager.findBrowser(browserId)
+
     /**
      * The driver context is active if the following conditions meet:
      * 1. the context is not closed
      * 2. the application is active
      * */
-    open val isActive get() = !closed.get() && AppContext.isActive
+    open val isActive: Boolean get() {
+        return when {
+            closed.get() -> false
+            AppContext.isActive -> true
+            else -> false
+        }
+    }
     /**
      * Check if the driver context is retired.
      * */
@@ -90,28 +101,15 @@ open class WebDriverContext(
      * */
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         globalTasks.mark()
+
         return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
             numGlobalRunningTasks.incrementAndGet()
-            driverPoolManager.run(browserId, task) {
-                browseFun(task, it)
-            } ?: FetchResult.crawlRetry(task, "Null response from driver pool manager, it might be closed")
-        } catch (e: IllegalWebDriverStateException) {
-            logger.warn("Browser unavailable, close it and retry task ${task.page.id} in crawl scope | {} | {} | {}",
-                browserId, e.message, task.page.url)
-            driverPoolManager.closeBrowserAccompaniedDriverPoolGracefully(browserId, DRIVER_FAST_CLOSE_TIME_OUT)
-            FetchResult.crawlRetry(task, e)
-        } catch (e: WebDriverPoolExhaustedException) {
-            val message = String.format("%s. Retry task %s in crawl scope | cause by: %s",
-                task.page.id, task.id, e.message)
-            logger.warn(message)
-            FetchResult.crawlRetry(task, e)
-        } catch (e: WebDriverPoolException) {
-            logger.warn("{}. Retry task {} in crawl scope", task.page.id, task.id)
-            FetchResult.crawlRetry(task, "Driver pool exception")
-        } catch (e: WebDriverException) {
-            logger.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
-            FetchResult.crawlRetry(task, e)
+
+            doRunAndHandleWebDriverException(task) {
+                driverPoolManager.run(browserId, task) { browseFun(task, it) }
+                    ?: FetchResult.crawlRetry(task, "Driver pool manager exception")
+            }
         } finally {
             runningTasks.remove(task)
             numGlobalRunningTasks.decrementAndGet()
@@ -124,6 +122,39 @@ open class WebDriverContext(
             if (numGlobalRunningTasks.get() == 0 && globalFinishedTasks.fiveMinuteRate > 0.1) {
                 logger.debug("No running task now | ${globalFinishedTasks.count}/${globalTasks.count} (finished/all)")
             }
+        }
+    }
+
+    private suspend fun doRunAndHandleWebDriverException(
+        task: FetchTask, browseFun: suspend () -> FetchResult
+    ): FetchResult {
+        return try {
+            browseFun()
+        } catch (e: IllegalWebDriverStateException) {
+            if (AppContext.isActive) {
+                // log only when the application is active
+                logger.warn("Illegal web driver status, close it and retry task ${task.page.id} in crawl scope | {} | {} | {}",
+                    browserId, e.message, task.page.url)
+                driverPoolManager.closeBrowserAccompaniedDriverPoolGracefully(browserId, DRIVER_FAST_CLOSE_TIME_OUT)
+            }
+            FetchResult.crawlRetry(task, "Illegal web driver status")
+        } catch (e: WebDriverPoolExhaustedException) {
+            if (AppContext.isActive) {
+                // log only when the application is active
+                val message = String.format("%s. [Exhausted] Retry task %s in crawl scope | cause by: %s", task.page.id, task.id, e.message)
+                logger.warn(message)
+            }
+            FetchResult.crawlRetry(task, "Driver pool exhausted")
+        } catch (e: WebDriverPoolException) {
+            if (AppContext.isActive) {
+                // log only when the application is active
+                logger.warn("WebDriverPoolException | {} | {}", e.browserId, e.message)
+                logger.warn("{}. [WebDriverPoolException] Retry task {} in crawl scope", task.page.id, task.id)
+            }
+            FetchResult.crawlRetry(task, "Driver pool exception")
+        } catch (e: WebDriverException) {
+            logger.warn("{}. [WebDriverException] Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
+            FetchResult.crawlRetry(task, e)
         }
     }
 

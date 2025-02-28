@@ -323,7 +323,7 @@ private class ConfigurationImpl(
             
             null
         } catch (e: Exception) {
-            logger.warn(e.stringify())
+            logger.warn("Exception", e)
             throw RuntimeException(e)
         }
     }

@@ -1,11 +1,12 @@
 package ai.platon.pulsar.test.session
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.config.AppConstants.LOCAL_FILE_BASE_URL
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.test.TestBase
 import com.google.gson.Gson
 import java.nio.file.Files
-import java.util.*
 import kotlin.test.*
 
 /**
@@ -82,10 +83,9 @@ class PulsarSessionTests: TestBase() {
             </html>
         """.trimIndent()
         Files.writeString(path, html)
-        val base64 = Base64.getUrlEncoder().encode(path.toString().toByteArray()).toString(Charsets.UTF_8)
-        val url = "http://localfile.org?path=$base64"
+        val url = UrlUtils.pathToLocalURL(path)
+        assertTrue { url.startsWith(LOCAL_FILE_BASE_URL) }
         val document = session.loadDocument(url, "-refresh")
         assertEquals("Hello", document.selectFirstTextOrNull("h1"))
     }
-
 }

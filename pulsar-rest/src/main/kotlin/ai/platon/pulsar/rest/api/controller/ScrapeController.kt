@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*
 @CrossOrigin
 @RequestMapping(
     "x",
-    consumes = [MediaType.TEXT_PLAIN_VALUE],
+    consumes = [MediaType.ALL_VALUE],
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class ScrapeController(
@@ -39,10 +39,22 @@ class ScrapeController(
     }
 
     /**
+     * @param status The status of the scrape task to be counted
+     * @return The execution result
+     * */
+    @GetMapping("c", consumes = [MediaType.ALL_VALUE])
+    fun count(
+        @RequestParam(value = "status", required = false) status: Int = 0,
+        httpRequest: HttpServletRequest,
+    ): Int {
+        return scrapeService.count(status)
+    }
+
+    /**
      * @param uuid The uuid of the task last submitted
      * @return The execution result
      * */
-    @GetMapping("status", consumes = [MediaType.ALL_VALUE])
+    @GetMapping("status", consumes = [MediaType.ALL_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
     fun status(
         @RequestParam(value = "uuid") uuid: String,
         httpRequest: HttpServletRequest,

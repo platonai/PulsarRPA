@@ -56,8 +56,8 @@ class SearchAgent {
         val url = URIBuilder("$bingBaseUrl/search").addParameter("q", keyword).build().toURL()
 
         val options = session.options(args)
-        val be = options.event.browseEventHandlers
-        val le = options.event.loadEventHandlers
+        val be = options.eventHandlers.browseEventHandlers
+        val le = options.eventHandlers.loadEventHandlers
 
         be.onDocumentActuallyReady.addLast { page, driver ->
             driver.scrollTo("ol#b_results li:nth-child(3) h2")
@@ -92,8 +92,8 @@ class SearchAgent {
         builder.addParameter("q", keyword)
         val url = builder.build().toURL().toString()
         val options = session.options(args)
-        val be = options.event.browseEventHandlers
-        val le = options.event.loadEventHandlers
+        val be = options.eventHandlers.browseEventHandlers
+        val le = options.eventHandlers.loadEventHandlers
         
         be.onDocumentActuallyReady.addLast { page, driver ->
             driver.scrollTo("h3:nth-child(3)")

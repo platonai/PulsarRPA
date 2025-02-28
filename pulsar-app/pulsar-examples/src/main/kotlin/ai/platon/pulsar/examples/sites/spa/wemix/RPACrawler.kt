@@ -66,7 +66,7 @@ private class RPACrawler {
 
         val paginateHandler = RPAPaginateHandler(1)
         val options = session.options("-refresh")
-        options.event.browseEventHandlers.onDocumentActuallyReady.addLast(paginateHandler)
+        options.eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast(paginateHandler)
         try {
             session.load(url, options)
         } catch (e: Exception) {

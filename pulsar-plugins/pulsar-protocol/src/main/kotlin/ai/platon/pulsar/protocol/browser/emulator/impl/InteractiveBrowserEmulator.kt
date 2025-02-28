@@ -24,7 +24,6 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
-import ai.platon.pulsar.protocol.browser.driver.SessionLostException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.*
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
@@ -276,7 +275,7 @@ open class InteractiveBrowserEmulator(
             // The web driver is canceled
             response = ForwardingResponse.canceled(task.page)
         } catch (e: IllegalWebDriverStateException) {
-            logger.warn("Web driver #{} is lost | {}", e.driver?.id, e.brief())
+            logger.warn("Web driver is lost | #{} | {}", driver.id, e.brief())
             driver.retire()
             exception = e
             response = ForwardingResponse.privacyRetry(task.page, "Web driver lost")
@@ -521,7 +520,7 @@ open class InteractiveBrowserEmulator(
         val page = task.page
         require(driver is AbstractWebDriver)
 
-        tracer?.trace("{}", task.interactSettings)
+        tracer?.trace("InteractSettings: {}", task.interactSettings)
 
         if (result.state.isContinue) {
             updateMetaInfos(page, driver)
@@ -564,7 +563,7 @@ open class InteractiveBrowserEmulator(
         val driver = task.driver
         require(driver is AbstractWebDriver)
         
-        tracer?.trace("{}", task.interactSettings)
+        tracer?.trace("InteractSettings: {}", task.interactSettings)
         
         emit1(EmulateEvents.willCheckDocumentState, page, driver)
         

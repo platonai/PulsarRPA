@@ -40,12 +40,15 @@ import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import kotlinx.coroutines.delay
 import org.apache.commons.io.FileUtils
+import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.max
 
 abstract class BrowserEmulatorImplBase(
     /**
@@ -211,7 +214,7 @@ abstract class BrowserEmulatorImplBase(
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should be redo
-            throw WebDriverCancellationException("Web driver is canceled #${driver.id}", driver)
+            throw WebDriverCancellationException("Web driver is canceled #${driver.id}", driver = driver)
         }
     }
     
@@ -226,7 +229,7 @@ abstract class BrowserEmulatorImplBase(
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should run again.
-            throw WebDriverCancellationException("Web driver is canceled #${driver.id}", driver)
+            throw WebDriverCancellationException("Web driver is canceled #${driver.id}", driver = driver)
         }
         
         if (task.isCanceled) {
@@ -298,14 +301,22 @@ abstract class BrowserEmulatorImplBase(
         if (pageSource.isEmpty()) {
             return
         }
-        
-        val maxExportCount = immutableConfig.getInt(FETCH_PAGE_AUTO_EXPORT_LIMIT, 10000)
-        if (++exportCount < maxExportCount) {
+
+        val maxExportCountPerRun = immutableConfig.getInt(FETCH_PAGE_AUTO_EXPORT_LIMIT, 2000)
+        if (++exportCount < maxExportCountPerRun) {
             val path = export0(pageSource, status, page)
             val baseDir = path.parent
-            if (exportCount % 100 == 0 && Files.list(baseDir).count() > maxExportCount) {
-                val date = DateTimes.now("yyyyMMdd")
-                Files.move(baseDir, baseDir.resolveSibling(baseDir.fileName.toString() + ".$date"))
+
+            if (exportCount % 100 == 0) {
+                // check every 100 pages, so do not cost too much time
+                val count = Files.list(baseDir).count()
+                if (count > maxExportCountPerRun) {
+                    // if there are too many files, move them to a new directory
+                    val date = DateTimes.now("yyyyMMdd")
+                    val ident = RandomStringUtils.randomAlphanumeric(4)
+                    val dest = baseDir.resolveSibling(baseDir.fileName.toString() + ".$date.$ident")
+                    Files.move(baseDir, dest, StandardCopyOption.ATOMIC_MOVE)
+                }
             }
         }
     }
