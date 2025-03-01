@@ -15,13 +15,17 @@ import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
+import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
+import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.SimpleCommandDispatcher
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
@@ -429,7 +433,7 @@ abstract class AbstractPulsarSession(
     
     override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
     
-    override fun chat(prompt: String) = context.chat(prompt)
+    override fun chat(prompt: String): ModelResponse = context.chat(prompt)
     
     override fun chat(userMessage: String, systemMessage: String) = context.chat(userMessage, systemMessage)
 
@@ -444,6 +448,26 @@ abstract class AbstractPulsarSession(
     override fun chat(element: Element, prompt: String) = chat(prompt + "\n\n" + element.text())
 
     override fun chat(prompt: String, element: Element) = chat(prompt + "\n\n" + element.text())
+    /**
+     * Instructs the webdriver to perform a series of actions based on the given prompt.
+     * This function converts the prompt into a sequence of webdriver actions, which are then executed.
+     *
+     * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
+     * @param driver The webdriver instance that will execute the actions.
+     * @return The response from the model, though in this implementation, the return value is not explicitly used.
+     */
+    override suspend fun instruct(prompt: String, driver: WebDriver): InstructionResult {
+        // Converts the prompt into a sequence of webdriver actions using TextToAction.
+        val tta = TextToAction(this)
+        val actions = tta.generateWebDriverActions(prompt)
+
+        // Dispatches and executes each action using a SimpleCommandDispatcher.
+        val dispatcher = SimpleCommandDispatcher()
+        val functionResults = actions.functionCalls.map { action ->
+            dispatcher.execute(action, driver)
+        }
+        return InstructionResult(actions.functionCalls, functionResults, actions.modelResponse)
+    }
 
     override fun data(name: String): Any? = let { dataCache[name] }
     

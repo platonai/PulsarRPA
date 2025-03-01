@@ -20,7 +20,7 @@ class SimpleCommandDispatcher {
      * @param command The command in text format.
      * @param driver The WebDriver instance to execute the command on.
      */
-    suspend fun dispatch(command: String, driver: WebDriver): Any? {
+    suspend fun execute(command: String, driver: WebDriver): Any? {
         // Use regex to extract the function name and argument list from the command string
         val (objectName, functionName, args) = parseSimpleFunctionCall(command) ?: return null
 

@@ -6,7 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 @Tag("ExternalServiceTest")
-class Text2WebDriverActionTests: TTATestBase() {
+class Text2WebDriverActionDescriptionTests: TTATestBase() {
 
     @AfterTest
     fun checkTokenUsage() {
