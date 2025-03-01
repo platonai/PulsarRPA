@@ -11,7 +11,7 @@ class TestCrawlLoop : TestBase() {
 
     @Test
     fun `When load a listenable link then events are triggered`() {
-        val url = MockListenableHyperlink("https://www.jd.com")
+        val url = MockListenableHyperlink("https://www.amazon.com")
         context.submit(url).await()
         url.await()
         assertTrue(url.isDone())

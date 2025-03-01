@@ -129,8 +129,7 @@ open class MockDegeneratedListenableHyperlink : ListenableHyperlink("", ""), Deg
     val triggeredEvents = mutableListOf<String>()
     val expectedEvents = listOf(
         "1. CrawlEvent.onWillLoad",
-        "2. CrawlEvent.onLoad",
-        "3. CrawlEvent.onLoaded"
+        "2. CrawlEvent.onLoaded"
     )
 
     class MockCrawlEventHandlers(val hyperlink: MockDegeneratedListenableHyperlink): AbstractCrawlEventHandlers() {
