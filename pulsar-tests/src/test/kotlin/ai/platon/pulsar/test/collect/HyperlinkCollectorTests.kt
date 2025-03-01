@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.sleep
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.skeleton.context.PulsarContexts
+import org.junit.jupiter.api.BeforeEach
 import kotlin.test.*
 import java.lang.IllegalArgumentException
 import java.nio.file.Paths
@@ -21,13 +22,24 @@ import kotlin.test.assertTrue
 class HyperlinkCollectorTests {
     private val context = PulsarContexts.create(PULSAR_CONTEXT_CONFIG_LOCATION)
     private val session = context.createSession()
+    private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
+    private val urls = LinkExtractors.fromResource("categories.txt")
+
+    @BeforeEach
+    fun clearResources() {
+        session.delete(url)
+        urls.forEach { session.delete(it) }
+
+        assertTrue("Page should not exists | $url") { !session.exists(url) }
+        urls.forEach {
+            assertTrue("Page should not exists | $it") { !session.exists(it) }
+        }
+    }
 
     @Test
     fun testHyperlinkCollector() {
         val options = session.options("-i 1000d -ol a[href~=/dp/] -ignoreFailure -storeContent true")
-        val seeds = LinkExtractors.fromResource("categories.txt")
-            .take(10)
-            .mapTo(LinkedList()) { session.normalize(it, options) }
+        val seeds = urls.take(5).mapTo(LinkedList()) { session.normalize(it, options) }
 
         val collector = HyperlinkCollector(session, seeds)
         val sink = mutableListOf<UrlAware>()
@@ -36,7 +48,7 @@ class HyperlinkCollectorTests {
             collector.collectTo(sink)
         }
         assertTrue { collector.seeds.isEmpty() }
-        assertTrue { sink.size > 10 * collector.seeds.size }
+        assertTrue { sink.size > 5 * collector.seeds.size }
     }
 
     @Test

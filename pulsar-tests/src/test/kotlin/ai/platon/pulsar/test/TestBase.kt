@@ -37,9 +37,4 @@ class TestBase {
     val globalCache get() = session.globalCache
     
     val isFileBackendPageStore get() = webDB.dataStore is FileBackendPageStore
-    
-    @Test
-    fun smoke() {
-        assertTrue { alwaysTrue() }
-    }
 }

@@ -32,7 +32,7 @@ class FileBackendPageStore(
 ) : MemStore<String, GWebPage>() {
 
     private val logger = LoggerFactory.getLogger(FileBackendPageStore::class.java)
-    private val unsafeConf = VolatileConfig.UNSAFE
+    private val unsafeConf = VolatileConfig()
 
     @Synchronized
     override fun get(reversedUrl: String, vararg fields: String): GWebPage? {
@@ -52,6 +52,20 @@ class FileBackendPageStore(
             writeAvro(p)
             writeHtml(p)
         }
+    }
+
+    @Synchronized
+    override fun delete(reversedUrl: String): Boolean {
+        var success = super.delete(reversedUrl)
+        val url = UrlUtils.unreverseUrlOrNull(reversedUrl)
+        if (url != null) {
+            var path = getPersistPath(url, ".avro")
+            success = Files.deleteIfExists(path)
+            path = getPersistPath(url, ".html")
+            success = Files.deleteIfExists(path)
+        }
+
+        return success
     }
 
     override fun getSchemaName() = "FileBackendPageStore"

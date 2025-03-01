@@ -143,6 +143,9 @@ class WebDb(
 
     @Throws(WebDBException::class)
     fun exists(originalUrl: String, norm: Boolean = false): Boolean {
+//        val key = reverseUrlOrNull(originalUrl)
+//        return dataStore.exists(key)
+
         val requiredField = GWebPage.Field.CREATE_TIME.toString()
         return getOrNull(originalUrl, norm, arrayOf(requiredField)) != null
     }
