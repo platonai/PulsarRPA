@@ -6,19 +6,30 @@ import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
+import org.junit.jupiter.api.BeforeEach
 import java.util.concurrent.CompletableFuture
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class SessionTests {
+class SessionLoadTests {
     private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     private val urls = LinkExtractors.fromResource("categories.txt")
-    private val args = "-i 0s -ignoreFailure"
 
     private val context = SQLContexts.create()
     private val session = context.createSession()
+
+    @BeforeEach
+    fun clearResources() {
+        session.delete(url)
+        urls.forEach { session.delete(it) }
+
+        assertTrue("Page should not exists | $url") { !session.exists(url) }
+        urls.forEach {
+            assertTrue("Page should not exists | $it") { !session.exists(it) }
+        }
+    }
 
     @Test
     fun ensureSessionCreatedBySQLContextIsNotSQLSession() {
@@ -27,21 +38,21 @@ class SessionTests {
     }
 
     @Test
-    fun testLoadAll() {
-        val normUrls = urls.take(5).map { session.normalize(it, args) }
+    fun whenLoadAllAsyncTwiceWithRefresh_thenPagesAreFetchedInBothTime() {
+        val normUrls = urls.take(5).map { session.normalize(it, "-refresh") }
         val futures = session.loadAllAsync(normUrls)
 
         val future1 = CompletableFuture.allOf(*futures.toTypedArray())
         future1.join()
 
-        println("The first round is finished")
+        println("Twice Fetch - 1 - all ${futures.size} futures are done, should be fetched from the internet")
 
-        val normUrls2 = urls.take(5).map { session.normalize(it, args) }
+        val normUrls2 = urls.take(5).map { session.normalize(it, "-refresh") }
         val futures2 = session.loadAllAsync(normUrls2)
         val future2 = CompletableFuture.allOf(*futures2.toTypedArray())
         future2.join()
 
-        println("The second round is finished")
+        println("Twice Fetch - 2 - all ${futures2.size} futures are done, should be fetched from the internet")
 
         assertEquals(futures.size, futures2.size)
 
@@ -51,36 +62,35 @@ class SessionTests {
         println("All pages are loaded")
 
         pages.forEach { assertTrue { it.isFetched } }
+        pages2.forEach { assertTrue { it.isFetched } }
         pages2.forEach { assertTrue { it.loadEventHandlers != null } }
         assertEquals(pages.size, pages2.size)
     }
 
     @Test
-    fun testLoadAllCached() {
-        val normUrls = urls.take(5).map { session.normalize(it, args) }
+    fun whenLoadAllAsyncSecondlyWithoutExpiry_thenPagesAreLoadedFromCache() {
+        val normUrls = urls.take(5).map { session.normalize(it, "-i 0s -ignoreFailure") }
         val futures = session.loadAllAsync(normUrls)
 
         val future1 = CompletableFuture.allOf(*futures.toTypedArray())
         future1.join()
 
-        println("The first round is finished")
+        println("Caching - 1 - all ${futures.size} futures are promised, they should be fetched from the internet")
 
         val normUrls2 = urls.take(5).map { session.normalize(it) }
         val futures2 = session.loadAllAsync(normUrls2)
         val future2 = CompletableFuture.allOf(*futures2.toTypedArray())
         future2.join()
 
-        println("The second round is finished")
+        println("Cached - 2 - all ${futures2.size} futures are promised, they should be loaded from PDCache")
 
         assertEquals(futures.size, futures2.size)
 
         val pages = futures.map { it.get() }
         val pages2 = futures2.map { it.get() }
 
-        println("All pages are loaded")
-
-        pages.forEach { assertTrue { it.isFetched } }
-        pages2.forEach { assertTrue { it.isCached } }
+        pages.forEach { assertTrue("Should be fetched from internet | $it") { it.isFetched } }
+        pages2.forEach { assertTrue("Should be loaded from PDCache | $it") { it.isCached } }
         pages2.forEach { assertTrue { it.loadEventHandlers != null } }
         assertEquals(pages.size, pages2.size)
     }

@@ -3,6 +3,7 @@ package ai.platon.pulsar.persist.gora
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -16,7 +17,6 @@ import org.apache.avro.io.DatumWriter
 import org.apache.avro.specific.SpecificDatumReader
 import org.apache.avro.specific.SpecificDatumWriter
 import org.apache.gora.memory.store.MemStore
-import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.file.Files
@@ -31,9 +31,13 @@ class FileBackendPageStore(
     private val persistDirectory: Path = AppPaths.LOCAL_STORAGE_DIR
 ) : MemStore<String, GWebPage>() {
 
-    private val logger = LoggerFactory.getLogger(FileBackendPageStore::class.java)
-    private val unsafeConf = VolatileConfig.UNSAFE
+    private val logger = getLogger(this)
+    private val tracer get() = logger.takeIf { it.isTraceEnabled }
+    private val unsafeConf = VolatileConfig()
 
+    /**
+     * Get a page from the store.
+     * */
     @Synchronized
     override fun get(reversedUrl: String, vararg fields: String): GWebPage? {
         var page = map[reversedUrl] as? GWebPage
@@ -43,6 +47,9 @@ class FileBackendPageStore(
         return page
     }
 
+    /**
+     * Put a page into the store.
+     * */
     @Synchronized
     override fun put(reversedUrl: String, page: GWebPage) {
         super.put(reversedUrl, page)
@@ -52,6 +59,42 @@ class FileBackendPageStore(
             writeAvro(p)
             writeHtml(p)
         }
+    }
+    /**
+     * Delete a page from the store.
+     *
+     * This function deletes a page identified by its reversed URL from the store. It first attempts to delete the page
+     * using the superclass's delete method. If the URL can be successfully unreversed, it also deletes the associated
+     * `.avro` and `.html` files from the file system.
+     *
+     * @param reversedUrl The reversed URL of the page to be deleted.
+     * @return `true` if the page and its associated files were successfully deleted, `false` otherwise.
+     */
+    @Synchronized
+    override fun delete(reversedUrl: String): Boolean {
+        // Attempt to delete the page using the superclass's delete method.
+        var success = super.delete(reversedUrl)
+
+        // Unreverse the URL to get the original URL.
+        val url = UrlUtils.unreverseUrlOrNull(reversedUrl)
+        if (url != null) {
+            // Get the paths for the associated `.avro` and `.html` files.
+            val path1 = getPersistPath(url, ".avro")
+            val path2 = getPersistPath(url, ".html")
+
+            // Delete the `.avro` and `.html` files if they exist.
+            try {
+                val filesDeleted = Files.deleteIfExists(path1) && Files.deleteIfExists(path2)
+                success = success && filesDeleted
+            } catch (e: IOException) {
+                // Log the exception or handle it appropriately
+                logger.warn("Failed to delete files for $reversedUrl", e)
+                success = false
+            }
+        }
+
+        // Return the overall success status of the deletion operation.
+        return success
     }
 
     override fun getSchemaName() = "FileBackendPageStore"
@@ -63,7 +106,7 @@ class FileBackendPageStore(
         val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
         val path = getPersistPath(url, ".html")
 
-        logger.takeIf { it.isTraceEnabled }?.trace("Getting $reversedUrl " + Files.exists(path) + " | $path")
+        tracer?.trace("Getting {} {} | {}", reversedUrl, Files.exists(path), path)
 
         if (Files.exists(path)) {
             val content = Files.readAllBytes(path)
@@ -86,7 +129,7 @@ class FileBackendPageStore(
             return null
         }
 
-        logger.takeIf { it.isTraceEnabled }?.trace("Getting $reversedUrl " + Files.exists(path) + " | $path")
+        tracer?.trace("Getting {} {} | {}", reversedUrl, Files.exists(path), path)
         return try {
             readAvro(path)
         } catch (e: AvroRuntimeException) {
@@ -122,7 +165,7 @@ class FileBackendPageStore(
         val content = page.content ?: return
         val path = getPersistPath(page.url, ".htm")
 
-        logger.takeIf { it.isTraceEnabled }?.trace("Putting ${page.content?.array()?.size} | $path")
+        logger.takeIf { it.isTraceEnabled }?.trace("Putting {} | {}", page.content?.array()?.size, path)
         Files.write(path, content.array())
     }
 

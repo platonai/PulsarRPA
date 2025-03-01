@@ -9,6 +9,8 @@ while [[ "$APP_HOME" != "/" ]]; do
   APP_HOME=$(dirname "$APP_HOME")
 done
 
+cd "$APP_HOME" || exit
+
 printUsage() {
   echo "Usage: deploy [-clean|-test]"
 }
@@ -18,7 +20,7 @@ if [[ $# -gt 0 ]]; then
   exit 0
 fi
 
-TEST=false
+ENABLE_TEST=false
 CLEAN=false
 
 while [[ $# -gt 0 ]]; do
@@ -28,7 +30,7 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       ;;
     -test)
-      TEST=true
+      ENABLE_TEST=true
       shift # past argument
       ;;
     -h|-help|--help)
@@ -55,13 +57,13 @@ echo "$VERSION" > "$APP_HOME"/VERSION
 find "$APP_HOME" -name 'pom.xml' -exec sed -i "s/$SNAPSHOT_VERSION/$VERSION/" {} \;
 
 if $CLEAN; then
-  mvn clean
+  ./mvnw clean
 fi
 
-if $TEST; then
-  mvn deploy -Pplaton-release -Pplaton-deploy
+if $ENABLE_TEST; then
+  ./mvnw deploy -Pplaton-release -Pplaton-deploy
 else
-  mvn deploy -Pplaton-release -Pplaton-deploy -DskipTests=true
+  ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests=true
 fi
 
 exitCode=$?
