@@ -31,15 +31,15 @@ class Text2WebDriverActionTests: TTATestBase() {
         val userMessage = """
 生成一个挂起函数，实现如下功能：打开一个网页，然后滚动到页面30%位置。
         """.trimIndent()
-        
+
         val response = session.chat(userMessage, systemMessage)
         lastResponse = response
         println(response.content)
-        
+
         assertTrue { response.content.contains(".navigateTo") }
         assertTrue { response.content.contains(".scrollToMiddle") }
     }
-    
+
     @Test
     fun `When ask to open a web page, scroll and take snapshot then generate correct kotlin code`() {
         val userMessage = """

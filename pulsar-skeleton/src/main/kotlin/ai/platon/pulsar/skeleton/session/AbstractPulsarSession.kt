@@ -431,15 +431,20 @@ abstract class AbstractPulsarSession(
     
     override fun chat(prompt: String) = context.chat(prompt)
     
-    override fun chat(userMessage: String, systemMessage: String) =
-        context.chat(userMessage, systemMessage)
-    
+    override fun chat(userMessage: String, systemMessage: String) = context.chat(userMessage, systemMessage)
+
     override fun chat(page: WebPage, prompt: String) = chat(prompt + "\n\n" + page.contentAsString)
-    
+
+    override fun chat(prompt: String, page: WebPage) = chat(prompt + "\n\n" + page.contentAsString)
+
     override fun chat(document: FeaturedDocument, prompt: String) = chat(prompt + "\n\n" + document.text)
-    
+
+    override fun chat(prompt: String, document: FeaturedDocument) = chat(prompt + "\n\n" + document.text)
+
     override fun chat(element: Element, prompt: String) = chat(prompt + "\n\n" + element.text())
-    
+
+    override fun chat(prompt: String, element: Element) = chat(prompt + "\n\n" + element.text())
+
     override fun data(name: String): Any? = let { dataCache[name] }
     
     override fun data(name: String, value: Any) = run { dataCache[name] = value }

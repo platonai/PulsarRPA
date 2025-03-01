@@ -8,4 +8,6 @@ data class ModelResponse(
     fun isLocalCached(): Boolean {
         return state == ResponseState.LOCAL_CACHE
     }
+
+    override fun toString() = content
 }

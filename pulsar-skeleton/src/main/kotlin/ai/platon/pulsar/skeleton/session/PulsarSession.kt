@@ -2099,16 +2099,25 @@ interface PulsarSession : AutoCloseable {
      * @return The response from the model.
      */
     fun chat(userMessage: String, systemMessage: String): ModelResponse
-    
+
     /**
      * Chat with the AI model.
      *
-     * @param page The page to chat with
      * @param prompt The prompt to chat with
+     * @param page The page to chat with
      * @return The response from the model
      */
     fun chat(page: WebPage, prompt: String): ModelResponse
-    
+
+    /**
+     * Chat with the AI model.
+     *
+     * @param prompt The prompt to chat with
+     * @param page The page to chat with
+     * @return The response from the model
+     */
+    fun chat(prompt: String, page: WebPage): ModelResponse
+
     /**
      * Chat with the AI model.
      *
@@ -2117,7 +2126,16 @@ interface PulsarSession : AutoCloseable {
      * @return The response from the model
      */
     fun chat(document: FeaturedDocument, prompt: String): ModelResponse
-    
+
+    /**
+     * Chat with the AI model.
+     *
+     * @param document The document to chat with
+     * @param prompt The prompt to chat with
+     * @return The response from the model
+     */
+    fun chat(prompt: String, document: FeaturedDocument): ModelResponse
+
     /**
      * Chat with the AI model.
      *
@@ -2126,6 +2144,15 @@ interface PulsarSession : AutoCloseable {
      * @return The response from the model
      */
     fun chat(element: Element, prompt: String): ModelResponse
+
+    /**
+     * Chat with the AI model.
+     *
+     * @param element The element to chat with
+     * @param prompt The prompt to chat with
+     * @return The response from the model
+     */
+    fun chat(prompt: String, element: Element): ModelResponse
 
     /**
      * Export the content of a webpage.
