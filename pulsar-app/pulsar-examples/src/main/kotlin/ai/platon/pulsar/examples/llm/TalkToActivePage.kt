@@ -8,26 +8,26 @@ import org.joda.time.LocalDateTime
 import java.time.OffsetDateTime
 
 /**
- * Demonstrates talk to the active webpage.
+ * Demonstrates talking to the active webpage.
  * */
 fun main() {
-    // Change to your own LLM name and api key
+    // !!! IMPORTANT !!!
+    // CHANGE TO YOUR OWN LLM NAME AND API KEY
+    //
     // see https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint
     val apiKey = System.getProperty("llm.apiKey")
     PulsarSettings()
-        .withSPA()
-        .withLLMProvider("volcengine")
-        .withLLMName("ep-20250218132011-2scs8")
-        .withLLMAPIKey(apiKey)
+        .withSPA() // enable Single Page Application mode, so the execution will not be timeout
+        .withLLMProvider("volcengine") // use volcengine as the LLM provider
+        .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
+        .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
 
     // Or
     // use config file under $PULSAR_HOME/config/conf-enabled
     // You can find the template config files here:
     // https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/template
 
-    // Create a pulsar session
     val session = PulsarContexts.createSession()
-    // The main url we are playing with
     val url = "https://www.amazon.com/dp/B0C1H26C46"
 
     val eventHandlers = DefaultPageEventHandlers()

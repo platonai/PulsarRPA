@@ -749,11 +749,16 @@
             </dependency>
 
             <dependency>
+                <groupId>org.ehcache</groupId>
+                <artifactId>ehcache</artifactId>
+                <version>${ehcache.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.nibor.autolink</groupId>
                 <artifactId>autolink</artifactId>
                 <version>${autolink.version}</version>
             </dependency>
-
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -806,6 +811,7 @@
         <springmockk.version>4.0.2</springmockk.version>
         <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
         <mockito-junit-jupiter.version>5.11.0</mockito-junit-jupiter.version>
+        <ehcache.version>3.10.8</ehcache.version>
     </properties>
 
 </project>
