@@ -14,6 +14,9 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 
+/**
+ * A factory implementation for creating browser instances.
+ * */
 class BrowserFactoryImpl {
     private val logger = getLogger(this)
 

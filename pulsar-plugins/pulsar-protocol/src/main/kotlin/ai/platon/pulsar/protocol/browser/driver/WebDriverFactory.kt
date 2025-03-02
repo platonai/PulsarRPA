@@ -52,8 +52,7 @@ open class WebDriverFactory(
         priority: Int = 0,
         conf: VolatileConfig = VolatileConfig.UNSAFE,
         start: Boolean = true
-    ) =
-        launchBrowserAndDriver(browserId, priority, conf, start).second
+    ) = launchBrowserAndDriver(browserId, priority, conf, start).second
     
     /**
      * Launch a browser with the default fingerprint.

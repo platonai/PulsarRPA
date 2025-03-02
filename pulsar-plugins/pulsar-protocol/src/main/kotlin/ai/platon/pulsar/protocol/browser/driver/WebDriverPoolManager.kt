@@ -518,8 +518,8 @@ open class WebDriverPoolManager(
         val browserId = task.browserId
         var result: FetchResult? = null
         /**
-         * There are two kind of tasks, normal tasks and monitor tasks.
-         * Normal tasks are executed concurrently; however, they cannot be executed simultaneously with monitor tasks.
+         * There are two kind of tasks, normal tasks and supervisor tasks.
+         * Normal tasks are executed concurrently; however, they cannot be executed simultaneously with supervisor tasks.
          *
          * [PreemptChannelSupport] is developed for such mechanism.
          * */
@@ -573,8 +573,8 @@ open class WebDriverPoolManager(
     private suspend fun runWithDriverPool(task: WebDriverTask, driverPool: LoadingWebDriverPool): FetchResult? {
         var driver: WebDriver? = null
         try {
-            driver =
-                driverPool.poll(task.priority, task.volatileConfig, task.page.eventHandlers?.browseEventHandlers, task.page)
+            driver = driverPool.poll(task.priority,
+                    task.volatileConfig, task.page.eventHandlers?.browseEventHandlers, task.page)
             
             return runWithDriver(task, driver)
         } finally {
