@@ -7,7 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertTrue
 
-class TestCrawlLoop : TestBase() {
+class TestEventHandlers : TestBase() {
 
     @Test
     fun `When load a listenable link then events are triggered`() {
