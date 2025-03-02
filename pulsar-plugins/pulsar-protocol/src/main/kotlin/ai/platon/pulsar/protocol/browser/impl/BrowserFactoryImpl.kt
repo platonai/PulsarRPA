@@ -17,7 +17,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 /**
  * A factory implementation for creating browser instances.
  * */
-class BrowserFactoryImpl {
+open class BrowserFactoryImpl {
     private val logger = getLogger(this)
 
     fun connect(port: Int, browserSettings: BrowserSettings = BrowserSettings()): Browser {

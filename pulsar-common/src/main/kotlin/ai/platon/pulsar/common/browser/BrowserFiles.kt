@@ -373,7 +373,7 @@ object BrowserFiles {
         val rand = RandomStringUtils.randomAlphanumeric(5)
         val contextCount = computeContextCount(baseDir, prefix, channel)
         val fileName = String.format("%s%02d%02d%s%s", prefix, monthValue, dayOfMonth, rand, contextCount)
-        val path = baseDir.resolve(group).resolve(fileName)
+        val path = baseDir.resolve(fileName)
         Files.createDirectories(baseDir)
         return path
     }
