@@ -26,7 +26,7 @@ class BrowserFactory {
     fun launchPrototypeBrowser(): Browser = impl.launch(BrowserId.PROTOTYPE, LauncherOptions(), ChromeOptions())
 
     @Throws(BrowserLaunchException::class)
-    fun launchNextSequentialTempBrowser(): Browser =
+    fun launchNextSequentialBrowser(): Browser =
         impl.launch(BrowserId.NEXT_SEQUENTIAL, LauncherOptions(), ChromeOptions())
 
     @Throws(BrowserLaunchException::class)

@@ -1,6 +1,8 @@
 package ai.platon.pulsar.protocol.browser
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.config.CapabilityTypes.MIN_SEQUENTIAL_PRIVACY_AGENT_NUMBER
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import org.junit.After
@@ -54,25 +56,44 @@ class BrowserFactoryTest {
     }
 
     @Test
-    fun testLaunchNextSequentialTempBrowser() {
-        val browser1 = browserFactory.launchNextSequentialTempBrowser()
+    fun testLaunchNextSequentialBrowser() {
+        val browser1 = browserFactory.launchNextSequentialBrowser()
         browsers.add(browser1)
 
-        val browser2 = browserFactory.launchNextSequentialTempBrowser()
+        val browser2 = browserFactory.launchNextSequentialBrowser()
         browsers.add(browser2)
 
         assertTrue { browser1.id.contextDir.toString().replace("\\", "/").contains("context/groups/default") }
-        assertTrue("Context dir should be start with AppPaths.CONTEXT_GROUP_BASE_DIR\n" +
-                "${browser1.id.contextDir}\n${AppPaths.CONTEXT_GROUP_BASE_DIR}")
+        assertTrue(
+            "Context dir should be start with AppPaths.CONTEXT_GROUP_BASE_DIR\n" +
+                    "${browser1.id.contextDir}\n${AppPaths.CONTEXT_GROUP_BASE_DIR}"
+        )
         {
             browser1.id.contextDir.startsWith(AppPaths.CONTEXT_GROUP_BASE_DIR)
         }
-        assertTrue("Context dir should be start with AppPaths.getContextGroupDir(\"default\")\n" +
-                "${browser1.id.contextDir}\n" +
-                "${AppPaths.getContextGroupDir("default")}")
+        assertTrue(
+            "Context dir should be start with AppPaths.getContextGroupDir(\"default\")\n" +
+                    "${browser1.id.contextDir}\n" +
+                    "${AppPaths.getContextGroupDir("default")}"
+        )
         {
             browser1.id.contextDir.startsWith(AppPaths.getContextGroupDir("default"))
         }
+    }
+
+    @Test
+    fun testLaunchNextSequentialBrowserManyTimes() {
+        val conf = ImmutableConfig()
+        val maxAgents = conf.getInt(MIN_SEQUENTIAL_PRIVACY_AGENT_NUMBER, 10)
+
+        for (i in 1..(maxAgents + 2)) {
+            val browser = browserFactory.launchNextSequentialBrowser()
+            browsers.add(browser)
+            browser.close()
+        }
+
+        val contextDirs = browsers.map { it.id.contextDir }.toSet()
+        assertTrue("Context dirs should used cyclically\n${contextDirs.joinToString("\n")}") { contextDirs.size <= maxAgents }
     }
 
     @Test
