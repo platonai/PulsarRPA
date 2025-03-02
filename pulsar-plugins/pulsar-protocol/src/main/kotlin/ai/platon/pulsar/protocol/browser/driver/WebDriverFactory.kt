@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.protocol.browser.UnsupportedWebDriverException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowser
 import ai.platon.pulsar.protocol.browser.driver.test.MockBrowser
+import ai.platon.pulsar.protocol.browser.impl.BrowserManager
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException

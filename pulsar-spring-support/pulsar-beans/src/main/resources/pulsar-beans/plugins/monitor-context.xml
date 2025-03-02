@@ -22,7 +22,7 @@
         <constructor-arg value="30"/>
     </bean>
 
-    <bean id="browserMonitor" class="ai.platon.pulsar.protocol.browser.driver.BrowserMonitor"
+    <bean id="browserMonitor" class="ai.platon.pulsar.protocol.browser.impl.BrowserMonitor"
           init-method="start" destroy-method="close">
         <constructor-arg ref="browserManager"/>
         <constructor-arg value="30"/>

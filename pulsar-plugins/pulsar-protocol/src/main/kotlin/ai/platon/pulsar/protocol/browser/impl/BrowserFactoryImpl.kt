@@ -1,4 +1,4 @@
-package ai.platon.pulsar.protocol.browser.driver
+package ai.platon.pulsar.protocol.browser.impl
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
@@ -14,15 +14,20 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 
-class BrowserFactory {
+class BrowserFactoryImpl {
     private val logger = getLogger(this)
-    
+
     fun connect(port: Int, browserSettings: BrowserSettings = BrowserSettings()): Browser {
         return ChromeDevtoolsBrowser(port, browserSettings = browserSettings)
     }
-    
+
     @Throws(BrowserLaunchException::class)
     fun launch(
+        browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
+    ): Browser = launch0(browserId, launcherOptions, launchOptions)
+
+    @Throws(BrowserLaunchException::class)
+    private fun launch0(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): Browser {
         val browserSettings = launcherOptions.browserSettings
