@@ -53,7 +53,7 @@ class SessionLoadTests: TestBase() {
      * Environment:
      * Ubuntu 13.3.0-6ubuntu2~24.04
      * openjdk version "21.0.6" 2025-01-21     */
-    @Tag("LinuxBatchTestFailed")
+    @Tag("BatchTestFailed")
     @Test
     fun whenLoadAllAsyncTwiceWithRefresh_thenPagesAreFetchedInBothTime() {
         logger.info("Testing - whenLoadAllAsyncTwiceWithRefresh_thenPagesAreFetchedInBothTime")
@@ -104,7 +104,7 @@ class SessionLoadTests: TestBase() {
      * Environment:
      * Ubuntu 13.3.0-6ubuntu2~24.04
      * openjdk version "21.0.6" 2025-01-21     */
-    @Tag("LinuxBatchTestFailed")
+    @Tag("BatchTestFailed")
     @Test
     fun whenLoadAllAsyncSecondlyWithoutExpiry_thenPagesAreLoadedFromCache() {
         logger.info("Testing - whenLoadAllAsyncSecondlyWithoutExpiry_thenPagesAreLoadedFromCache")

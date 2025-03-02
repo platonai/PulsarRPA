@@ -33,7 +33,7 @@ import kotlin.test.assertTrue
  * Ubuntu 13.3.0-6ubuntu2~24.04
  * openjdk version "21.0.6" 2025-01-21
  * */
-@Tag("LinuxBatchTestFailed")
+@Tag("BatchTestFailed")
 class HyperlinkCollectorTests: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     private val urls = LinkExtractors.fromResource("categories.txt")

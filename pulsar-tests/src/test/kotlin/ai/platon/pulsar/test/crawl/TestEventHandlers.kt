@@ -21,7 +21,7 @@ import kotlin.test.assertTrue
  * It seems that await() never returns, and the test cases are blocked.
  * TODO: Investigate the root cause of the issue.
  */
-@Tag("LinuxBatchTestFailed")
+@Tag("BatchTestFailed")
 class TestEventHandlers : TestBase() {
 
     @Test

@@ -31,7 +31,7 @@ import kotlin.test.*
  * It seems that await() never returns, and the test cases are blocked.
  * TODO: Investigate the root cause of the issue.
  */
-@Tag("LinuxBatchTestFailed")
+@Tag("BatchTestFailed")
 class LoadComponentTests: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     private val urls = LinkExtractors.fromResource("categories.txt")
