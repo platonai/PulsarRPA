@@ -1,14 +1,15 @@
 #bin
 
-THIS=$(dirname "$0")
-THIS=$(cd "$THIS">/dev/null || exit; pwd)
+# Find the first parent directory that contains a pom.xml file
+APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
+while [[ "$APP_HOME" != "/" ]]; do
+  if [[ -f "$APP_HOME/pom.xml" ]]; then
+    break
+  fi
+  APP_HOME=$(dirname "$APP_HOME")
+done
 
- . "$THIS"/../include/config.sh
-
-cd "$APP_HOME"
-if [ -e "$APP_HOME/../pom.xml" ]; then
-  cd "$APP_HOME/.."
-fi
+cd "$APP_HOME" || exit
 
 echo "Count lines of code in directory: $(pwd)"
 

@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 class TestEventHandlers : TestBase() {
 
     @Test
-    fun `When load a listenable link then events are triggered`() {
+    fun whenLoadAListenableLink_ThenEventsAreTriggered() {
         val url = MockListenableHyperlink("https://www.amazon.com")
         context.submit(url).await()
         url.await()
