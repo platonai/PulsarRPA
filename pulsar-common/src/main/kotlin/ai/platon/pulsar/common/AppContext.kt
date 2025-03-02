@@ -150,7 +150,7 @@ object AppContext {
     }
     val APP_DATA_DIR = APP_DATA_DIR_RT
     /**
-     * The application's runtime state.
+     * The application's runtime state
      * */
     val state = AtomicReference(State.NEW)
     /**
