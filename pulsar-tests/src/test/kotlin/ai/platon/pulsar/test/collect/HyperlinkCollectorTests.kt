@@ -2,13 +2,13 @@ package ai.platon.pulsar.test.collect
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.config.AppConstants.PULSAR_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.sleep
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.skeleton.common.collect.HyperlinkCollector
 import ai.platon.pulsar.skeleton.common.collect.PeriodicalLocalFileHyperlinkCollector
-import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.test.TestBase
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -16,14 +16,32 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class HyperlinkCollectorTests {
-    private val context = PulsarContexts.create(PULSAR_CONTEXT_CONFIG_LOCATION)
-    private val session = context.createSession()
+/**
+ * Test event handlers.
+ *
+ * The test cases are passed when run separately, but are failed when running in batch mode in linux
+ * using the following command:
+ *
+ * ```kotlin
+ * mvn -X -pl pulsar-tests
+ * ```
+ *
+ * It seems that await() never returns, and the test cases are blocked.
+ * TODO: Investigate the root cause of the issue.
+ *
+ * Environment:
+ * Ubuntu 13.3.0-6ubuntu2~24.04
+ * openjdk version "21.0.6" 2025-01-21
+ * */
+@Tag("LinuxBatchTestFailed")
+class HyperlinkCollectorTests: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     private val urls = LinkExtractors.fromResource("categories.txt")
 
     @BeforeEach
     fun clearResources() {
+        session.globalCache.resetCaches()
+
         session.delete(url)
         urls.forEach { session.delete(it) }
 

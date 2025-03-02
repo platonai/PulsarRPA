@@ -12,11 +12,26 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import java.text.MessageFormat
 import java.util.concurrent.CompletableFuture
 import kotlin.test.*
 
+/**
+ * Test event handlers.
+ *
+ * The test cases are passed when run separately, but are failed when running in batch mode in linux
+ * using the following command:
+ *
+ * ```kotlin
+ * mvn -X -pl pulsar-tests
+ * ```
+ *
+ * It seems that await() never returns, and the test cases are blocked.
+ * TODO: Investigate the root cause of the issue.
+ */
+@Tag("LinuxBatchTestFailed")
 class LoadComponentTests: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     private val urls = LinkExtractors.fromResource("categories.txt")
@@ -26,6 +41,9 @@ class LoadComponentTests: TestBase() {
 
     @BeforeEach
     fun clearResources() {
+        session.globalCache.resetCaches()
+        session.context.crawlLoops.restart()
+
         session.delete(url)
         urls.forEach { session.delete(it) }
 

@@ -3,25 +3,25 @@ package ai.platon.pulsar.test.session
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import ai.platon.pulsar.ql.SQLSession
-import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
+import ai.platon.pulsar.test.TestBase
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import java.util.concurrent.CompletableFuture
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class SessionLoadTests {
+class SessionLoadTests: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     private val urls = LinkExtractors.fromResource("categories.txt")
 
-    private val context = SQLContexts.create()
-    private val session = context.createSession()
-
     @BeforeEach
     fun clearResources() {
+        session.globalCache.resetCaches()
+
         session.delete(url)
         urls.forEach { session.delete(it) }
 
@@ -37,52 +37,92 @@ class SessionLoadTests {
         assertTrue { session is BasicPulsarSession }
     }
 
+    /**
+     * Test event handlers.
+     *
+     * The test cases are passed when run separately, but are failed when running in batch mode in linux
+     * using the following command:
+     *
+     * ```kotlin
+     * mvn -X -pl pulsar-tests
+     * ```
+     *
+     * It seems that await() never returns, and the test cases are blocked.
+     * TODO: Investigate the root cause of the issue.
+     *
+     * Environment:
+     * Ubuntu 13.3.0-6ubuntu2~24.04
+     * openjdk version "21.0.6" 2025-01-21     */
+    @Tag("LinuxBatchTestFailed")
     @Test
     fun whenLoadAllAsyncTwiceWithRefresh_thenPagesAreFetchedInBothTime() {
+        logger.info("Testing - whenLoadAllAsyncTwiceWithRefresh_thenPagesAreFetchedInBothTime")
+
         val normUrls = urls.take(5).map { session.normalize(it, "-refresh") }
         val futures = session.loadAllAsync(normUrls)
 
         val future1 = CompletableFuture.allOf(*futures.toTypedArray())
         future1.join()
 
-        println("Twice Fetch - 1 - all ${futures.size} futures are done, should be fetched from the internet")
+        logger.info("Twice Fetch - 1 - all ${futures.size} futures are done, should be fetched from the internet")
 
         val normUrls2 = urls.take(5).map { session.normalize(it, "-refresh") }
         val futures2 = session.loadAllAsync(normUrls2)
         val future2 = CompletableFuture.allOf(*futures2.toTypedArray())
         future2.join()
 
-        println("Twice Fetch - 2 - all ${futures2.size} futures are done, should be fetched from the internet")
+        logger.info("Twice Fetch - 2 - all ${futures2.size} futures are done, should be fetched from the internet")
 
         assertEquals(futures.size, futures2.size)
 
         val pages = futures.map { it.get() }
         val pages2 = futures2.map { it.get() }
 
-        println("All pages are loaded")
+        logger.info("All pages are loaded")
 
         pages.forEach { assertTrue { it.isFetched } }
         pages2.forEach { assertTrue { it.isFetched } }
         pages2.forEach { assertTrue { it.loadEventHandlers != null } }
         assertEquals(pages.size, pages2.size)
+
+        logger.info("Tested - whenLoadAllAsyncTwiceWithRefresh_thenPagesAreFetchedInBothTime")
     }
 
+    /**
+     * Test event handlers.
+     *
+     * The test cases are passed when run separately, but are failed when running in batch mode in linux
+     * using the following command:
+     *
+     * ```kotlin
+     * mvn -X -pl pulsar-tests
+     * ```
+     *
+     * It seems that await() never returns, and the test cases are blocked.
+     * TODO: Investigate the root cause of the issue.
+     *
+     * Environment:
+     * Ubuntu 13.3.0-6ubuntu2~24.04
+     * openjdk version "21.0.6" 2025-01-21     */
+    @Tag("LinuxBatchTestFailed")
     @Test
     fun whenLoadAllAsyncSecondlyWithoutExpiry_thenPagesAreLoadedFromCache() {
-        val normUrls = urls.take(5).map { session.normalize(it, "-i 0s -ignoreFailure") }
+        logger.info("Testing - whenLoadAllAsyncSecondlyWithoutExpiry_thenPagesAreLoadedFromCache")
+
+        val normUrls = urls.take(5).map { session.normalize(it, "-refresh") }
         val futures = session.loadAllAsync(normUrls)
 
         val future1 = CompletableFuture.allOf(*futures.toTypedArray())
         future1.join()
 
-        println("Caching - 1 - all ${futures.size} futures are promised, they should be fetched from the internet")
+        logger.info("Caching - 1 - all ${futures.size} futures are promised, they should be fetched from the internet")
 
         val normUrls2 = urls.take(5).map { session.normalize(it) }
         val futures2 = session.loadAllAsync(normUrls2)
         val future2 = CompletableFuture.allOf(*futures2.toTypedArray())
         future2.join()
 
-        println("Cached - 2 - all ${futures2.size} futures are promised, they should be loaded from PDCache")
+        logger.info("Cached - 2 - all ${futures2.size} futures are promised, they should be loaded from PDCache")
 
         assertEquals(futures.size, futures2.size)
 
@@ -93,10 +133,14 @@ class SessionLoadTests {
         pages2.forEach { assertTrue("Should be loaded from PDCache | $it") { it.isCached } }
         pages2.forEach { assertTrue { it.loadEventHandlers != null } }
         assertEquals(pages.size, pages2.size)
+
+        logger.info("Tested - whenLoadAllAsyncSecondlyWithoutExpiry_thenPagesAreLoadedFromCache")
     }
 
     @Test
     fun `When loaded a HTML page then the navigate state are correct`() {
+        logger.info("Testing - When loaded a HTML page then the navigate state are correct")
+
         val options = session.options("-refresh")
         options.eventHandlers.browseEventHandlers.onDidScroll.addLast { page, driver ->
             require(driver is ChromeDevtoolsDriver)
@@ -113,5 +157,7 @@ class SessionLoadTests {
             assertTrue { navigateEntry.mainResponseHeaders.isNotEmpty() }
         }
         session.load(url, options)
+
+        logger.info("Tested - When loaded a HTML page then the navigate state are correct")
     }
 }
