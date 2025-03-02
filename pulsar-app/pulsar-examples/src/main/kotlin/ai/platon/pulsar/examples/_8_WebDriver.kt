@@ -22,7 +22,7 @@ internal class WebDriverDemo(private val session: PulsarSession = createSession(
     fun options(args: String): LoadOptions {
         val options = session.options(args)
 
-        val be = options.event.browseEventHandlers
+        val be = options.eventHandlers.browseEventHandlers
 
         be.onDocumentActuallyReady.addLast { page, driver ->
             fieldSelectors.values.forEach { interact1(it, driver) }
@@ -64,7 +64,7 @@ internal class WebDriverDemo(private val session: PulsarSession = createSession(
         println("bounding box of body: " + driver.boundingBox("body"))
 
         println("scroll to the middle of the page ...")
-        driver.scrollToMiddle(0.5f)
+        driver.scrollToMiddle(0.5)
 
         println("click $selector ...")
         driver.click(selector)

@@ -8,7 +8,7 @@ done
 cd "$AppHome" || exit
 
 function printUsage {
-  echo "Usage: deploy.sh [-clean|-test]"
+  echo "Usage: build.sh [-clean|-test]"
   exit 1
 }
 

@@ -21,6 +21,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.common.domain.DomainSuffixes
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.filter.CrawlUrlFilter
 import org.slf4j.LoggerFactory
@@ -68,9 +69,9 @@ class DomainUrlFilter(conf: ImmutableConfig) : CrawlUrlFilter {
         try {
             // match for suffix, domain, and host in that order. more general will
             // override more specific
-            var domain = InternalURLUtil.getDomainName(url) ?: return null
+            var domain = UrlUtils.getTopPrivateDomain(url) ?: return null
             domain = domain.lowercase(Locale.getDefault()).trim { it <= ' ' }
-            val host = InternalURLUtil.getHostName(url)
+            val host = UrlUtils.getHostName(url)
             var suffix: String? = null
             val domainSuffix = InternalURLUtil.getDomainSuffix(tlds, url)
             if (domainSuffix != null) {
@@ -80,7 +81,7 @@ class DomainUrlFilter(conf: ImmutableConfig) : CrawlUrlFilter {
                 return url
             }
         } catch (e: Exception) {
-            LOG.error("Could not apply filter on url: " + url + "\n" + e.stringify())
+            LOG.error("Could not apply filter on url: $url", e)
         }
         return null
     }

@@ -254,7 +254,9 @@ open class PulsarSettings {
     /**
      * LLM provider
      * */
-    fun withLLMProvider(provider: String): PulsarSettings {
+    fun withLLMProvider(provider: String?): PulsarSettings {
+        if (provider == null) throw IllegalArgumentException("LLM provider cannot be null")
+
         System.setProperty("llm.provider", provider)
         return this
     }
@@ -262,7 +264,9 @@ open class PulsarSettings {
     /**
      * LLM name
      * */
-    fun withLLMName(name: String): PulsarSettings {
+    fun withLLMName(name: String?): PulsarSettings {
+        if (name == null) throw IllegalArgumentException("LLM name cannot be null")
+
         System.setProperty("llm.name", name)
         return this
     }
@@ -270,7 +274,9 @@ open class PulsarSettings {
     /**
      * LLM API key
      * */
-    fun withLLMAPIKey(key: String): PulsarSettings {
+    fun withLLMAPIKey(key: String?): PulsarSettings {
+        if (key == null) throw IllegalArgumentException("LLM API key cannot be null")
+
         System.setProperty("llm.apiKey", key)
         return this
     }

@@ -77,9 +77,11 @@ open class WebDriverPoolManager(
     val numDyingDrivers get() = retiredDriverPools.values.sumOf { it.numCreated }
     
     val numClosedDrivers get() = closedDriverPools.size
-    
-    // Maximum allowed number of retired drives, if it's exceeded, the oldest driver pool should be closed.
-    val maxAllowedDyingDrivers = 10
+    /**
+     * Maximum allowed number of dying drives, if it's exceeded, the oldest driver pool should be closed.
+     * Dying drivers are kept for diagnosis.
+     * */
+    val maxAllowedDyingDrivers = 0
     
     val numReset by lazy { MetricsSystem.reg.meter(this, "numReset") }
     val numTimeout by lazy { MetricsSystem.reg.meter(this, "numTimeout") }
@@ -149,11 +151,17 @@ open class WebDriverPoolManager(
         // subscribe a driver first, and then use it to run a task
         TODO("NOT_IMPLEMENTED")
     }
-    
+
     /**
      * Run the task.
      * */
-    @Throws(WebDriverException::class, WebDriverPoolException::class)
+    @Throws(
+        BrowserUnavailableException::class,
+        BrowserLaunchException::class,
+        WebDriverPoolException::class,
+        WebDriverPoolExhaustedException::class,
+        WebDriverException::class,
+    )
     suspend fun run(task: WebDriverTask): FetchResult? {
         lastActiveTime = Instant.now()
         try {
@@ -161,11 +169,49 @@ open class WebDriverPoolManager(
         } catch (e: InterruptedException) {
             warnInterruptible(this, e)
             return null
-        } catch (e: IllegalWebDriverStateException) {
+        } finally {
+            lastActiveTime = Instant.now()
+        }
+    }
+
+    /**
+     * Run the task.
+     * */
+    suspend fun run1(task: WebDriverTask): FetchResult? {
+        lastActiveTime = Instant.now()
+        try {
+            return doRun(task)
+        } catch (e: InterruptedException) {
+            warnInterruptible(this, e)
+            return null
+        } catch (e: BrowserLaunchException) {
             logger.warn(
-                "Web driver unavailable, close the browser | {} | {} | {}",
+                "Failed to launch browser, close the driver pool gracefully | {} | {} | {}",
                 task.browserId, e.message, task.page.url
             )
+            logger.debug("Failed to launch browser", e)
+            closeBrowserAccompaniedDriverPoolGracefully(task.browserId, Duration.ofSeconds(10))
+            return null
+        } catch (e: BrowserUnavailableException) {
+            logger.warn(
+                "Browser unavailable, try to clean the browser and the driver pool | {} | {} | {}",
+                task.browserId, e.message, task.page.url
+            )
+            logger.debug("Browser unavailable - ", e)
+            closeBrowserAccompaniedDriverPoolGracefully(task.browserId, Duration.ofSeconds(10))
+            return null
+        } catch (e: IllegalWebDriverStateException) {
+            logger.warn("Web driver unavailable, clean the browser and the driver pool | {} | {} | {}",
+                task.browserId, e.message, task.page.url
+            )
+            logger.debug("Web driver unavailable - ", e)
+            closeBrowserAccompaniedDriverPoolGracefully(task.browserId, Duration.ofSeconds(10))
+            return null
+        } catch (e: WebDriverPoolException) {
+            logger.warn("Web driver pool exception, close the driver pool gracefully | {} | {} | {}",
+                task.browserId, e.message, task.page.url
+            )
+            // logger.info("Web driver pool exception - ", e)
             closeBrowserAccompaniedDriverPoolGracefully(task.browserId, Duration.ofSeconds(10))
             return null
         } catch (e: WebDriverException) {
@@ -241,7 +287,12 @@ open class WebDriverPoolManager(
      * Check if a pool is retired.
      * */
     fun isRetiredPool(browserId: BrowserId) = driverPoolPool.isRetiredPool(browserId)
-    
+
+    /**
+     * Check if a pool is retired.
+     * */
+    fun isActivePool(browserId: BrowserId) = driverPoolPool.isActivePool(browserId)
+
     /**
      * Cancel the fetch task specified by [url] remotely.
      * NOTE: A cancel request should run immediately not waiting for any browser task return.
@@ -297,11 +348,15 @@ open class WebDriverPoolManager(
         // Wait until there is no normal tasks, and if there is at least one preemptive task
         // in the critical section, all normal tasks have to wait.
         preempt {
-            driverPoolCloser.closeGracefully(browserId)
+            try {
+                driverPoolCloser.closeGracefully(browserId)
+            } catch (e: Exception) {
+                logger.warn("Failed to close the browser | {} | {}", browserId, e.message)
+                logger.error("Failed to close the browser", e)
+            }
         }
-//        driverPoolCloser.closeGracefully(browserId)
     }
-    
+
     /**
      * Maintain all the driver pools, check and report inconsistency, illness, idleness, etc.,
      * close bad pools if necessary.
@@ -369,10 +424,12 @@ open class WebDriverPoolManager(
          * echo takeDriverPoolSnapshot >> /tmp/pulsar/pulsar-commands
          * */
         if (FileCommand.check("takeDriverPoolSnapshot")) {
-            logger.info("\nDriver pool manager: \n")
-            logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            logger.info("\n{}", buildStatusString())
-            logger.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+            logger.info("""
+                Driver pool manager: 
+                >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                ${buildStatusString()}
+                <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+            """.trimIndent())
         }
     }
     
@@ -427,8 +484,15 @@ open class WebDriverPoolManager(
      * Return a string to represent the snapshot of the status.
      * */
     override fun toString(): String = buildStatusString(false)
-    
-    @Throws(WebDriverException::class, WebDriverPoolException::class, InterruptedException::class)
+
+    @Throws(
+        BrowserUnavailableException::class,
+        BrowserLaunchException::class,
+        WebDriverPoolException::class,
+        WebDriverPoolExhaustedException::class,
+        WebDriverException::class,
+        InterruptedException::class
+    )
     private suspend fun doRun(task: WebDriverTask): FetchResult? {
         maintain()
 
@@ -440,8 +504,15 @@ open class WebDriverPoolManager(
     private suspend fun runWithDriver(task: WebDriverTask, driver: WebDriver): FetchResult? {
         return runCancelableWithTimeout(task, driver)
     }
-    
-    @Throws(WebDriverException::class, WebDriverPoolException::class, InterruptedException::class)
+
+    @Throws(
+        BrowserUnavailableException::class,
+        BrowserLaunchException::class,
+        WebDriverPoolException::class,
+        WebDriverPoolExhaustedException::class,
+        WebDriverException::class,
+        InterruptedException::class
+    )
     private suspend fun runWithDriverPool(task: WebDriverTask): FetchResult? {
         val browserId = task.browserId
         var result: FetchResult? = null
@@ -472,11 +543,10 @@ open class WebDriverPoolManager(
     @Throws(WebDriverPoolException::class)
     private fun getOrCreateDriverPool(browserId: BrowserId, priority: Int): LoadingWebDriverPool {
         if (isRetiredPool(browserId)) {
-            val message = "Web driver pool is retired | $browserId"
-            logger.warn(message)
-            throw WebDriverPoolException(message)
+            logger.warn("Web driver pool is retired, throw WebDriverPoolException | $browserId")
+            throw WebDriverPoolException(browserId.toString(), "Web driver pool is retired")
         }
-        
+
         // The browser id is specified by the caller, a typical strategy is
         // taking a browser id in a list in sequence, in which case, driver pools are return
         // one by one in sequence.
@@ -484,15 +554,21 @@ open class WebDriverPoolManager(
         val driverPool = driverPoolPool.computeIfAbsent(browserId) { createUnmanagedDriverPool(browserId, priority) }
         
         if (!driverPool.isActive) {
-            val message = "Driver pool is inactive | $driverPool | $browserId"
-            logger.warn("{}\n{}", message, driverPool.takeSnapshot())
-            throw WebDriverPoolException(message)
+            val message = "$driverPool | $browserId"
+            logger.warn("Driver pool is inactive | {}\n{}", message, driverPool.takeSnapshot())
+            throw WebDriverPoolException(browserId.toString(), "Driver pool is inactive | $message")
         }
         
         return driverPool
     }
     
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
+    @Throws(
+        BrowserUnavailableException::class,
+        BrowserLaunchException::class,
+        WebDriverPoolExhaustedException::class,
+        WebDriverException::class,
+        InterruptedException::class
+    )
     private suspend fun runWithDriverPool(task: WebDriverTask, driverPool: LoadingWebDriverPool): FetchResult? {
         var driver: WebDriver? = null
         try {
@@ -684,7 +760,6 @@ private class BrowserAccompaniedDriverPoolCloser(
             closeBrowserAccompaniedDriverPool(browser, driverPool)
         } else {
             kotlin.runCatching { driverPoolPool.close(driverPool) }.onFailure { warnInterruptible(this, it) }
-            logger.warn("Browser should exists when driver pool exists | {}", driverPool.browserId)
         }
     }
     
@@ -712,12 +787,13 @@ private class BrowserAccompaniedDriverPoolCloser(
                 totalDyingDrivers, driverPoolManager.retiredDriverPools.size
             )
         }
-        
+
+        val maxAllowedDyingDrivers = driverPoolManager.maxAllowedDyingDrivers
         return when {
             // low memory
             AppSystemInfo.isCriticalResources -> oldestRetiredDriverPool
             // The drivers are in GUI mode and there are many open drivers.
-            totalDyingDrivers > driverPoolManager.maxAllowedDyingDrivers -> oldestRetiredDriverPool
+            totalDyingDrivers > maxAllowedDyingDrivers -> oldestRetiredDriverPool
             else -> null
         }
     }

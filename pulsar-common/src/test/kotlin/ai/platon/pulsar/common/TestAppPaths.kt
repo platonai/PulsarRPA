@@ -158,9 +158,9 @@ class TestAppPaths {
     fun testFromDomain() {
         assertTrue { Strings.isIpLike("8.8.8.8") }
         assertTrue { Strings.isIpLike("127.0.0.1") }
-        assertEquals("127-0-0-1", AppPaths.fromDomain("https://127.0.0.1/a/b/c?t=1&k=2"))
-        assertEquals("localhost", AppPaths.fromDomain("https://localhost/a/b/c?t=1&k=2#domain"))
-        assertEquals("baidu-com", AppPaths.fromDomain("https://baidu.com/a/b/c?t=1&k=2#domain"))
+        assertEquals("127-0-0-1", AppPaths.fromHost("https://127.0.0.1/a/b/c?t=1&k=2"))
+        assertEquals("localhost", AppPaths.fromHost("https://localhost/a/b/c?t=1&k=2#domain"))
+        assertEquals("baidu-com", AppPaths.fromHost("https://baidu.com/a/b/c?t=1&k=2#domain"))
     }
     
     
@@ -246,7 +246,7 @@ class TestAppPaths {
     
     @Test
     fun testFromDomain_String() {
-        val domain = AppPaths.fromDomain("http://example.com/test")
+        val domain = AppPaths.fromHost("http://example.com/test")
         assertEquals("example-com", domain)
     }
     

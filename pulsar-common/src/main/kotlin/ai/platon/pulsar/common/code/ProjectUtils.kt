@@ -6,15 +6,26 @@ import java.nio.file.Paths
 import kotlin.io.path.notExists
 import kotlin.jvm.optionals.getOrNull
 
+/**
+ * A utility class for project-related operations, such as locating the project root directory
+ * or finding specific files within the project structure.
+ */
 object ProjectUtils {
     /**
-     * Find project root directory. It must contain a file named `VERSION`.
-     * */
+     * Finds the project root directory by searching for a file named `VERSION` in the current directory
+     * and its parent directories.
+     *
+     * @return The project root directory if found, otherwise null.
+     */
     fun findProjectRootDir(): Path? = findProjectRootDir(Paths.get(".").toAbsolutePath().normalize())
 
     /**
-     * Find project root directory. It must contain a file named `VERSION`.
-     * */
+     * Finds the project root directory by searching for a file named `VERSION` starting from the specified directory
+     * and traversing up its parent directories.
+     *
+     * @param startDir The directory to start the search from.
+     * @return The project root directory if found, otherwise null.
+     */
     fun findProjectRootDir(startDir: Path): Path? {
         var projectRootDir: Path? = startDir
 
@@ -26,12 +37,12 @@ object ProjectUtils {
     }
 
     /**
-     * Walk from the base directory to find a file.
+     * Walks through the directory tree starting from the specified base directory to find a file with the given name.
      *
-     * @param fileName The file name to find.
-     * @param baseDir The base directory to start from.
-     * @return The file path if found, otherwise null.
-     * */
+     * @param fileName The name of the file to find.
+     * @param baseDir The directory to start the search from.
+     * @return The path to the file if found, otherwise null.
+     */
     fun walkToFindFile(fileName: String, baseDir: Path): Path? {
         return Files.walk(baseDir)
             .filter { it.fileName.toString() == fileName }
@@ -39,11 +50,11 @@ object ProjectUtils {
     }
 
     /**
-     * Find the project root directory, and then walk to find a file.
+     * Finds the project root directory and then searches for a file with the specified name within the project structure.
      *
-     * @param fileName The file name to find.
-     * @return The file path if found, otherwise null.
-     * */
+     * @param fileName The name of the file to find.
+     * @return The path to the file if found, otherwise null.
+     */
     fun findFile(fileName: String): Path? {
         val projectRootDir = findProjectRootDir()
         return if (projectRootDir != null) {

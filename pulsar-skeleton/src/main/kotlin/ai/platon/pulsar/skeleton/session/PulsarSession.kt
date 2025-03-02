@@ -1,21 +1,22 @@
 package ai.platon.pulsar.skeleton.session
 
 import ai.platon.pulsar.common.CheckState
-import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.extractor.TextDocument
+import ai.platon.pulsar.common.urls.UrlAware
+import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
-import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.skeleton.context.PulsarContext
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.DocumentCatch
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.PageCatch
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.persist.WebPage
 import com.google.common.annotations.Beta
 import org.jsoup.nodes.Element
 import java.nio.ByteBuffer
@@ -136,7 +137,7 @@ import java.util.concurrent.CompletableFuture
  *
  * ```kotlin
  * val options = session.options(args)
- * options.event.browseEventHandlers.onDocumentSteady.addLast { page, driver ->
+ * options.eventHandlers.browseEventHandlers.onDocumentSteady.addLast { page, driver ->
  *   driver.fill("input[name='search']", "geek")
  *   driver.click("button[type='submit']")
  * }
@@ -167,10 +168,13 @@ interface PulsarSession : AutoCloseable {
      * Once the process has started, this configuration remains unchangeable.
      * */
     val unmodifiedConfig: ImmutableConfig
+
     /**
-     * The session scope volatile config, every setting is supposed to be changed at any time and any place.
+     * The session-specific volatile configuration, which allows dynamic adjustments to settings at any point during the session.
+     * Unlike the immutable configuration loaded at startup, this configuration is designed to be modified on-the-fly to adapt to runtime requirements.
      * */
     val sessionConfig: VolatileConfig
+
     /**
      * A short descriptive display text.
      * */
@@ -191,16 +195,6 @@ interface PulsarSession : AutoCloseable {
      * Disable page cache and document cache
      * */
     fun disablePDCache()
-    /**
-     * deprecated.
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("data(name)"))
-    fun getVariable(name: String): Any? = data(name)
-    /**
-     * deprecated
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("data(name, value)"))
-    fun setVariable(name: String, value: Any) = data(name, value)
 
     /**
      * Get a variable which is stored in this session
@@ -1148,7 +1142,7 @@ interface PulsarSession : AutoCloseable {
      *
      * ```kotlin
      * val options = session.options("-expire 1d")
-     * options.event.loadEvent.onLoaded.addLast { println(it.url) }
+     * options.eventHandlers.loadEvent.onLoaded.addLast { println(it.url) }
      * session.submit("http://example.com", options)
      * PulsarContexts.await()
      * ```
@@ -1191,7 +1185,7 @@ interface PulsarSession : AutoCloseable {
      *
      * ```kotlin
      * val hyperlink = ListenableHyperlink("http://example.com")
-     * hyperlink.event.loadEvent.onLoaded.addLast { page -> println(page.url) }
+     * hyperlink.eventHandlers.loadEvent.onLoaded.addLast { page -> println(page.url) }
      * session.submit(hyperlink)
      * PulsarContexts.await()
      * ```
@@ -1201,7 +1195,7 @@ interface PulsarSession : AutoCloseable {
      *
      * ```kotlin
      * val hyperlink = ListenableHyperlink("http://example.com", args = "-parse", event = PrintFlowEvent())
-     * hyperlink.event.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
+     * hyperlink.eventHandlers.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
      *      val title = document.selectFirstOrNull(".title")?.text() ?: "Not found"
      *      println(title)
      * }
@@ -2106,33 +2100,69 @@ interface PulsarSession : AutoCloseable {
      * @return The response from the model.
      */
     fun chat(userMessage: String, systemMessage: String): ModelResponse
-    
+
     /**
-     * Chat with the AI model.
+     * Chat with the AI model about the specified webpage.
      *
-     * @param page The page to chat with
      * @param prompt The prompt to chat with
+     * @param page The page to chat with
      * @return The response from the model
      */
     fun chat(page: WebPage, prompt: String): ModelResponse
-    
+
     /**
-     * Chat with the AI model.
+     * Chat with the AI model about the specified webpage.
+     *
+     * @param prompt The prompt to chat with
+     * @param page The page to chat with
+     * @return The response from the model
+     */
+    fun chat(prompt: String, page: WebPage): ModelResponse
+
+    /**
+     * Chat with the AI model about the specified document.
      *
      * @param document The document to chat with
      * @param prompt The prompt to chat with
      * @return The response from the model
      */
     fun chat(document: FeaturedDocument, prompt: String): ModelResponse
-    
+
     /**
-     * Chat with the AI model.
+     * Chat with the AI model about the specified document.
+     *
+     * @param document The document to chat with
+     * @param prompt The prompt to chat with
+     * @return The response from the model
+     */
+    fun chat(prompt: String, document: FeaturedDocument): ModelResponse
+
+    /**
+     * Chat with the AI model about the specified element.
      *
      * @param element The element to chat with
      * @param prompt The prompt to chat with
      * @return The response from the model
      */
     fun chat(element: Element, prompt: String): ModelResponse
+
+    /**
+     * Chat with the AI model about the specified element.
+     *
+     * @param prompt The prompt to chat with
+     * @param element The element to chat with
+     * @return The response from the model
+     */
+    fun chat(prompt: String, element: Element): ModelResponse
+    /**
+     * Instructs the webdriver to perform a series of actions based on the given prompt.
+     * This function converts the prompt into a sequence of webdriver actions, which are then executed.
+     *
+     * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
+     * @param driver The webdriver instance that will execute the actions.
+     * @return The response from the model, though in this implementation, the return value is not explicitly used.
+     */
+    suspend fun instruct(prompt: String, driver: WebDriver): InstructionResult
 
     /**
      * Export the content of a webpage.

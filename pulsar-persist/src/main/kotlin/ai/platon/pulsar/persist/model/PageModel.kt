@@ -21,13 +21,6 @@ class PageModel(
         }
     }
 
-    /**
-     * TODO: Find out a way to partially update nested fields.
-     * */
-    @Deprecated("Use unboxedFieldGroups instead", ReplaceWith("unboxedFieldGroups"))
-    @get:Synchronized
-    val fieldGroups get() = pageModel.fieldGroups
-    
     @get:Synchronized
     val unboxedFieldGroups get() = pageModel.fieldGroups
     

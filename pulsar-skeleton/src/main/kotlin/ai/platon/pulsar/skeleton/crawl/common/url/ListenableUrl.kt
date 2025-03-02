@@ -8,6 +8,4 @@ import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
  * */
 interface ListenableUrl: UrlAware {
     val eventHandlers: PageEventHandlers
-    @Deprecated("Use eventHandlers instead", ReplaceWith("eventHandlers"))
-    val event: PageEventHandlers get() = eventHandlers
 }

@@ -23,8 +23,8 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator
 import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
-import ai.platon.pulsar.protocol.browser.emulator.context.BasicPrivacyContextManager
 import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
+import ai.platon.pulsar.protocol.browser.emulator.context.MultiPrivacyContextManager
 import ai.platon.pulsar.protocol.browser.emulator.impl.BrowserResponseHandlerImpl
 import ai.platon.pulsar.protocol.browser.emulator.impl.InteractiveBrowserEmulator
 import ai.platon.pulsar.protocol.browser.emulator.impl.PrivacyManagedBrowserFetcher
@@ -65,7 +65,7 @@ class DefaultPrivacyManagedBrowserFetcher(
     closeCascaded
 ) {
     constructor(conf: ImmutableConfig, driverPoolManager: WebDriverPoolManager = DefaultWebDriverPoolManager(conf)): this(
-        BasicPrivacyContextManager(driverPoolManager, conf),
+        MultiPrivacyContextManager(driverPoolManager, conf),
         DefaultBrowserEmulator(driverPoolManager, conf),
         conf,
         closeCascaded = true

@@ -9,8 +9,7 @@ while [[ "$APP_HOME" != "/" ]]; do
   APP_HOME=$(dirname "$APP_HOME")
 done
 
-# Switching remote URLs from HTTPS to SSH
-git remote set-url origin git@github.com:platonai/PulsarRPA.git
+cd "$APP_HOME" || exit
 
 SNAPSHOT_VERSION=$(head -n 1 "$APP_HOME/VERSION")
 VERSION=${SNAPSHOT_VERSION//"-SNAPSHOT"/""}

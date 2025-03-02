@@ -13,12 +13,6 @@ interface CrawlEventHandlers {
     val onWillLoad: UrlAwareEventHandler
 
     /**
-     * Fire to load the url.
-     * */
-    @Deprecated("No such event handler required", level = DeprecationLevel.WARNING)
-    val onLoad: UrlAwareEventHandler
-
-    /**
      * Fire when the url is loaded.
      * */
     val onLoaded: UrlAwareWebPageEventHandler
@@ -233,23 +227,4 @@ interface PageEventHandlers {
      * Chain the other page event handlers to the tail of this one.
      * */
     fun chain(other: PageEventHandlers): PageEventHandlers
-
-    @Deprecated("Use loadEventHandlers instead", ReplaceWith("loadEventHandlers"))
-    var loadEvent: LoadEvent
-    @Deprecated("Use browseEventHandlers instead", ReplaceWith("browseEventHandlers"))
-    var browseEvent: BrowseEvent
-    @Deprecated("Use crawlEventHandlers instead", ReplaceWith("crawlEventHandlers"))
-    var crawlEvent: CrawlEvent
 }
-
-@Deprecated("Use LoadEventHandlers instead", ReplaceWith("LoadEventHandlers"))
-typealias LoadEvent = LoadEventHandlers
-
-@Deprecated("Use BrowseEventHandlers instead", ReplaceWith("BrowseEventHandlers"))
-typealias BrowseEvent = BrowseEventHandlers
-
-@Deprecated("Use CrawlEventHandlers instead", ReplaceWith("CrawlEventHandlers"))
-typealias CrawlEvent = CrawlEventHandlers
-
-@Deprecated("Use PageEventHandlers instead", ReplaceWith("PageEventHandlers"))
-typealias PageEvent = PageEventHandlers

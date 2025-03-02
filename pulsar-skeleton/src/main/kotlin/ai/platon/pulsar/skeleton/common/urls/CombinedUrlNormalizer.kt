@@ -16,19 +16,18 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
      * @param url the url to be normalized
      * @param options the options to be used
      * @param toItemOption whether to create item options
-     * @return the normalized url, or [NormURL.NIL] if the url is invalid
+     * @return the normalized url, or a NIL NormURL if the url is invalid
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormURL {
         val (spec, args1) = UrlUtils.splitUrlArgs(url.url)
         val args2 = url.args ?: ""
         val args3 = options.toString()
         // args1 has the #1 priority, and then args2, and at last args3.
-        // the later args overwrites the earlier ones.
-        val args = "$args3 $args2 $args1".trim()
+        // the later args overwrite the earlier ones.
+        val finalArgs = "$args3 $args2 $args1".trim()
+        val finalOptions = createLoadOptions(url, LoadOptions.parse(finalArgs, options), toItemOption)
 
-        val finalOptions = createLoadOptions(url, LoadOptions.parse(args, options), toItemOption)
         val rawEvent = finalOptions.rawEvent
-
         var normURL: String? = if (rawEvent?.loadEventHandlers?.onNormalize?.isNotEmpty == true) {
             // 1. normalizer in event listener has the #1 priority.
             val spec1 = GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onNormalize?.invoke(spec) ?: spec
@@ -42,10 +41,14 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
             } else spec
         }
 
+        if (!finalOptions.isDefault("priority")) {
+            url.priority = finalOptions.priority
+        }
         val href = url.href?.let { UrlUtils.splitUrlArgs(it).first }?.takeIf { UrlUtils.isStandard(it) }
 
         // 3. UrlUtils.normalize comes at last to remove fragment, and query string if required
         normURL = UrlUtils.normalizeOrNull(normURL, options.ignoreUrlQuery)
+
         return if (normURL == null) {
             NormURL.createNil(url)
         } else {
@@ -53,7 +56,7 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
         }
     }
 
-    private fun createLoadOptions(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
+    internal fun createLoadOptions(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
         val options2 = if (toItemOption) options.createItemOptions() else options
         val options3 = createLoadOptions0(url, options2)
 
@@ -62,7 +65,7 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
         return options3
     }
 
-    private fun createLoadOptions0(url: UrlAware, options: LoadOptions): LoadOptions {
+    internal fun createLoadOptions0(url: UrlAware, options: LoadOptions): LoadOptions {
         val clone = options.clone()
 
         // TODO: disable in product environment for performance issue

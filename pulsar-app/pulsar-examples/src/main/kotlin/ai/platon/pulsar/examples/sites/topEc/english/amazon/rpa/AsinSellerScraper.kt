@@ -44,7 +44,7 @@ class AsinSellerScraper {
      * After clicking `New seller` button, the seller url will be displayed.
      * */
     fun crawl() {
-        val groupedUrls = asinUrls.groupBy { InternalURLUtil.getDomainName(it)!! }
+        val groupedUrls = asinUrls.groupBy { UrlUtils.getTopPrivateDomain(it)!! }
         val groupedUrls0 = mutableMapOf<String, List<String>>()
         groupedUrls.forEach { (group, urls0) ->
             logger.info(group + "\t" + urls0.size)

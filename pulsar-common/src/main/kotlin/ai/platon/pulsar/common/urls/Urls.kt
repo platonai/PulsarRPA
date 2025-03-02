@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.urls
 
+import ai.platon.pulsar.common.Priority13
 import java.net.MalformedURLException
 import java.net.URL
 import java.time.Instant
@@ -55,9 +56,37 @@ interface UrlAware {
     var referrer: String?
 
     /**
-     * The priority of the url, the higher the priority, the earlier the url will be loaded.
-     * Priority is a numerical value, where smaller numbers indicate higher priority.
-     * */
+     * Represents the priority of a task, determining the order of execution.
+     *
+     * The priority value is an integer where a smaller value indicates a higher priority.
+     * This is consistent with [java.util.concurrent.PriorityBlockingQueue].
+     *
+     * If the priority value is not within the range defined by [Priority13], it will be adjusted to the nearest valid value.
+     * For example, a priority of -2001 will be adjusted to [Priority13.HIGHER2].
+     *
+     * Note: The priority specified in args or LoadOptions takes precedence over the priority in [UrlAware], [Hyperlink], etc.
+     *
+     * Priority can be set in the following ways:
+     * 1. In the url, for example, `http://example.com -priority -2000`
+     * 2. In the args, for example, `Hyperlink("http://example.com", "", args = "-priority -2000")`
+     * 3. Int the [ai.platon.pulsar.skeleton.common.options.LoadOptions] object, for example, `session.load("http://example.com", options.apply { priority = -2000 })`
+     * 4. In the [UrlAware] object, for example, `Hyperlink("http://example.com", "", priority = -2000)`
+     *
+     * If a url is normalized like this:
+     * ```kotlin
+     * session.normalize(url: UrlAware, options: LoadOptions)
+     * ```
+     * The priority will be set in the following order:
+     *
+     * 1. The priority in the url
+     * 2. The priority in the args
+     * 3. The priority in the options
+     *
+     * Note: Consider use url args to set priority only.
+     *
+     * @see Priority13
+     * @see Priority13.NORMAL
+     */
     var priority: Int
 
     /**

@@ -72,16 +72,16 @@ open class Hyperlink constructor(
     constructor(url: String) : this(url, "", 0)
     
     constructor(url: UrlAware) : this(
-        url.url, "", 0, url.referrer, url.args, href = url.href,
+        url.url, text = "", order = 0, referrer = url.referrer, args = url.args, href = url.href,
         priority = url.priority, lang = url.lang, country = url.country, district = url.district,
         nMaxRetry = url.nMaxRetry, depth = url.depth
     )
     constructor(link: Hyperlink) : this(
-        link.url, link.text, link.order, link.referrer, link.args, href = link.href,
+        link.url, text = link.text, order = link.order, referrer = link.referrer, args = link.args, href = link.href,
         priority = link.priority, lang = link.lang, country = link.country, district = link.district, nMaxRetry = link.nMaxRetry, depth = link.depth
     )
     constructor(datum: HyperlinkDatum) : this(
-        datum.url, datum.text, datum.order, datum.referrer, datum.args, href = datum.href,
+        datum.url, text = datum.text, order = datum.order, referrer = datum.referrer, args = datum.args, href = datum.href,
         priority = datum.priority, lang = datum.lang, country = datum.country, district = datum.district, nMaxRetry = datum.nMaxRetry, depth = datum.depth
     )
     
@@ -123,18 +123,18 @@ open class Hyperlink constructor(
     open fun isDefault(fieldName: String): Boolean {
         // get value by field name
         return when (fieldName) {
-            "url" -> url == EXAMPLE.url
-            "text" -> text == EXAMPLE.text
-            "order" -> order == EXAMPLE.order
-            "referrer" -> referrer == EXAMPLE.referrer
-            "args" -> args == EXAMPLE.args
-            "href" -> href == EXAMPLE.href
-            "priority" -> priority == EXAMPLE.priority
-            "lang" -> lang == EXAMPLE.lang
-            "country" -> country == EXAMPLE.country
-            "district" -> district == EXAMPLE.district
-            "nMaxRetry" -> nMaxRetry == EXAMPLE.nMaxRetry
-            "depth" -> depth == EXAMPLE.depth
+            "url" -> url == DEFAULT.url
+            "text" -> text == DEFAULT.text
+            "order" -> order == DEFAULT.order
+            "referrer" -> referrer == DEFAULT.referrer
+            "args" -> args == DEFAULT.args
+            "href" -> href == DEFAULT.href
+            "priority" -> priority == DEFAULT.priority
+            "lang" -> lang == DEFAULT.lang
+            "country" -> country == DEFAULT.country
+            "district" -> district == DEFAULT.district
+            "nMaxRetry" -> nMaxRetry == DEFAULT.nMaxRetry
+            "depth" -> depth == DEFAULT.depth
             else -> throw IllegalArgumentException("Unknown field name: $fieldName")
         }
     }
@@ -143,7 +143,9 @@ open class Hyperlink constructor(
         val EXPECTED_FIELDS = listOf(
             "url", "text", "order", "referrer", "args", "href", "priority", "lang", "country", "district", "nMaxRetry", "depth"
         )
-        
+
+        val DEFAULT = Hyperlink("")
+
         val EXAMPLE = Hyperlink(AppConstants.EXAMPLE_URL)
         
         fun create(url: String?): Hyperlink? {

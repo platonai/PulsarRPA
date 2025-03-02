@@ -69,7 +69,8 @@ class BrowserRotationTest : MassiveTestBase() {
         }
 
         session.context.await()
-        while (!Thread.interrupted()) {
+        val feeder = session.context.getBean(CrawlLoop::class).urlFeeder as UrlFeeder
+        while (!Thread.interrupted() && feeder.isNotEmpty()) {
             sleepSeconds(1)
         }
         session.context.await()
@@ -106,8 +107,8 @@ class BrowserRotationTest : MassiveTestBase() {
             require(driver is AbstractWebDriver)
             val browser = driver.browser
             if (browser.navigateHistory.size >= 30) {
-                println("Closing driver, served ${browser.navigateHistory.size} pages | ${browser.id.contextDir}")
-                browser.tmpContext?.dismiss()
+                println("Closing browser, served ${browser.navigateHistory.size} pages | ${browser.id.display}")
+                browser.close()
             }
         }
 

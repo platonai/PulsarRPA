@@ -23,7 +23,7 @@ fun AppFiles.export(
     page: WebPage,
     suffix: String = ".htm",
 ): Path {
-    val domain = AppPaths.fromDomain(page.url)
+    val dirName = AppPaths.fromHost(page.url)
 
     val document = Documents.parse(content, page.baseUrl)
     document.absoluteLinks()
@@ -31,7 +31,7 @@ fun AppFiles.export(
     val length = prettyHtml.length
 
     sb.setLength(0)
-    sb.append(status.minorName).append('/').append(domain)
+    sb.append(status.minorName).append('/').append(dirName)
     if (length < 2000) {
         sb.append("/a").append(length / 500 * 500)
     } else {

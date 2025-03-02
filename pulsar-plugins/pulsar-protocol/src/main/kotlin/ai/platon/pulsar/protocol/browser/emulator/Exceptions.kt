@@ -30,15 +30,12 @@ class NavigateTaskCancellationException: IllegalStateException {
     }
 }
 
-open class WebDriverPoolException: WebDriverException {
-    constructor() : super() {}
+open class WebDriverPoolException(
+    val browserId: String,
+    override val message: String,
+): WebDriverException()
 
-    constructor(message: String) : super(message) {
-    }
-
-    constructor(message: String, cause: Throwable) : super(message, cause) {}
-
-    constructor(cause: Throwable) : super(cause) {}
-}
-
-class WebDriverPoolExhaustedException(message: String) : WebDriverPoolException(message)
+open class WebDriverPoolExhaustedException(
+    browserId: String,
+    message: String,
+): WebDriverPoolException(browserId, message)

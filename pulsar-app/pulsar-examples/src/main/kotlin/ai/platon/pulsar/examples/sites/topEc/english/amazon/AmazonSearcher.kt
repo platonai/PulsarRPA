@@ -43,7 +43,7 @@ fun main() {
     val cx = PulsarContexts.create()
     val i = cx.createSession()
     val opts = i.options("-i 0s")
-    opts.event.browseEventHandlers.onFeatureComputed.addLast(AmazonSearcherJsEventHandler())
+    opts.eventHandlers.browseEventHandlers.onFeatureComputed.addLast(AmazonSearcherJsEventHandler())
     i.load(portalUrl, opts)
 
     readLine()

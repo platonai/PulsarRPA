@@ -139,6 +139,3 @@ open class NormURL constructor(
         }
     }
 }
-
-@Deprecated("Use NormURL instead", ReplaceWith("NormURL"))
-typealias NormUrl = NormURL

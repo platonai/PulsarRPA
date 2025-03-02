@@ -51,7 +51,7 @@ Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pul
 
 ```kotlin
 val options = session.options(args)
-val event = options.event.browseEventHandlers
+val event = options.eventHandlers.browseEventHandlers
 event.onBrowserLaunched.addLast { page, driver ->
     // warp up the browser to avoid being blocked by the website,
     // or choose the global settings, such as your location.
@@ -192,14 +192,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-bom</artifactId>
-  <version>2.1.4-SNAPSHOT</version>
+  <version>2.2.0-SNAPSHOT</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-bom:2.1.4-SNAPSHOT")
+implementation("ai.platon.pulsar:pulsar-bom:2.2.0-SNAPSHOT")
 ```
 
 You can clone the template project from github.com: [kotlin](https://github.com/platonai/pulsar-kotlin-template), [java-11](https://github.com/platonai/pulsar-java-template), [java-17](https://github.com/platonai/pulsar-java-17-template).

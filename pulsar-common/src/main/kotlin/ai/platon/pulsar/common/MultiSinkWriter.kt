@@ -85,7 +85,7 @@ open class MultiSinkWriter : AutoCloseable {
                 runCatching { it.value.close() }.onFailure { warnForClose(this, it) }
             }
         } catch (e: Exception) {
-            logger.warn(e.stringify())
+            logger.warn("Exception", e)
         }
     }
 }

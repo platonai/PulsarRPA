@@ -179,7 +179,7 @@ class FingerprintTest {
 
         proxies.forEachIndexed { i, proxy ->
             val json = prettyPulsarObjectMapper().writeValueAsString(proxy)
-            val path = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve("default").resolve("PULSAR_CHROME")
+            val path = AppPaths.getContextBaseDir("default", BrowserType.PULSAR_CHROME)
                 .resolve("cx.${i.inc()}")
                 .resolve("fingerprint.json")
             // path.toFile().writeText(json)

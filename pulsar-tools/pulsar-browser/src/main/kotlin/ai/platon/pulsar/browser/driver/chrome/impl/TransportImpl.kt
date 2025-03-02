@@ -72,11 +72,15 @@ class TransportImpl : Transport {
         session = try {
             WEB_SOCKET_CONTAINER.connectToServer(endpoint, uri)
         } catch (e: DeploymentException) {
-            logger.warn("Failed to connect to ws server | $uri", e)
-            throw ChromeIOException("Failed connecting to ws server | $uri", e)
+            if (isOpen) {
+                logger.warn("Websocket deployment exception, rethrow a ChromeIOException | {}", uri, e)
+            }
+            throw ChromeIOException("Failed connecting to ws server | $uri", e, isOpen)
         } catch (e: IOException) {
-            logger.warn("Failed to connect to ws server | $uri", e)
-            throw ChromeIOException("Failed connecting to ws server | $uri", e)
+            if (isOpen) {
+                logger.warn("IOException when connect to websocket, rethrow a ChromeIOException | $uri", e)
+            }
+            throw ChromeIOException("Failed connecting to ws server | $uri", e, isOpen)
         }
     }
     
@@ -88,9 +92,9 @@ class TransportImpl : Transport {
             tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.basicRemote.sendText(message)
         } catch (e: IllegalStateException) {
-            throw ChromeIOException("Failed to send message", e)
+            throw ChromeIOException("Failed to send message", e, isOpen)
         } catch (e: IOException) {
-            throw ChromeIOException("Failed to send message", e)
+            throw ChromeIOException("Failed to send message", e, isOpen)
         }
     }
     
@@ -102,9 +106,9 @@ class TransportImpl : Transport {
             tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.asyncRemote.sendText(message)
         } catch (e: IllegalStateException) {
-            throw ChromeIOException("Failed to send message, caused by ${e.message}", e)
+            throw ChromeIOException("Failed to send message, caused by ${e.message}", e, isOpen)
         } catch (e: IOException) {
-            throw ChromeIOException("Failed to send message, caused by ${e.message}", e)
+            throw ChromeIOException("Failed to send message, caused by ${e.message}", e, isOpen)
         }
     }
 

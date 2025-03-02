@@ -34,8 +34,8 @@ open class SiMuCrawler {
     val loginHandler = SiMuLoginHandler(portalUrl, username, password)
     val closeMaskLayerHandler = CloseMaskLayerHandler(closeMaskLayerSelector)
     val options = session.options(args).also {
-        it.event.browseEventHandlers.onBrowserLaunched.addLast(loginHandler)
-        it.event.browseEventHandlers.onDocumentActuallyReady.addLast(closeMaskLayerHandler)
+        it.eventHandlers.browseEventHandlers.onBrowserLaunched.addLast(loginHandler)
+        it.eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast(closeMaskLayerHandler)
     }
 
     open fun crawl() {

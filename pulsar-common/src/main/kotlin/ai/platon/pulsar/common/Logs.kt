@@ -19,14 +19,11 @@ fun getLogger(target: Any, postfix: String): Logger = when (target) {
     else -> LoggerFactory.getLogger(target::class.java.name + postfix)
 }
 
-@Deprecated("Use getTracerOrNull(target) instead", ReplaceWith("getTracerOrNull(target)"))
-fun getTracer(target: Any): Logger? = if (target is Logger) {
+fun getTracerOrNull(target: Any): Logger? = if (target is Logger) {
     target.takeIf { it.isTraceEnabled }
 } else {
     getLogger(target).takeIf { it.isTraceEnabled }
 }
-
-fun getTracerOrNull(target: Any) = getTracer(target)
 
 fun getRandomLogger(): Logger = LoggerFactory.getLogger(RandomStringUtils.randomAlphabetic(8))
 

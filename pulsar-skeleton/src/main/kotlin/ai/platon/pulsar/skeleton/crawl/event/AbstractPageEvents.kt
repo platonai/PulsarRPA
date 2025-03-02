@@ -31,13 +31,10 @@ abstract class AbstractLoadEventHandlers(
 
 abstract class AbstractCrawlEventHandlers(
     override val onWillLoad: UrlAwareEventHandler = UrlAwareEventHandler(),
-    @Deprecated("No such event handler required", level = DeprecationLevel.WARNING)
-    override val onLoad: UrlAwareEventHandler = UrlAwareEventHandler(),
     override val onLoaded: UrlAwareWebPageEventHandler = UrlAwareWebPageEventHandler()
 ): CrawlEventHandlers {
     override fun chain(other: CrawlEventHandlers): CrawlEventHandlers {
         onWillLoad.addLast(other.onWillLoad)
-        onLoad.addLast(other.onLoad)
         onLoaded.addLast(other.onLoaded)
         return this
     }
@@ -108,19 +105,6 @@ abstract class AbstractPageEventHandlers(
     override var crawlEventHandlers: CrawlEventHandlers
 ): PageEventHandlers {
 
-    @Deprecated("Use loadEventHandlers instead", ReplaceWith("loadEventHandlers"))
-    override var loadEvent: LoadEventHandlers
-        get() = loadEventHandlers
-        set(value) { loadEventHandlers = value }
-    @Deprecated("Use browseEventHandlers instead", ReplaceWith("browseEventHandlers"))
-    override var browseEvent: BrowseEventHandlers
-        get() = browseEventHandlers
-        set(value) { browseEventHandlers = value }
-    @Deprecated("Use crawlEventHandlers instead", ReplaceWith("crawlEventHandlers"))
-    override var crawlEvent: CrawlEventHandlers
-        get() = crawlEventHandlers
-        set(value) { crawlEventHandlers = value }
-
     override fun chain(other: PageEventHandlers): PageEventHandlers {
         loadEventHandlers.chain(other.loadEventHandlers)
         browseEventHandlers.chain(other.browseEventHandlers)
@@ -128,12 +112,3 @@ abstract class AbstractPageEventHandlers(
         return this
     }
 }
-
-@Deprecated("Use AbstractLoadEventHandlers instead", ReplaceWith("AbstractLoadEventHandlers"))
-typealias AbstractLoadEvent = AbstractLoadEventHandlers
-
-@Deprecated("Use AbstractBrowseEventHandlers instead", ReplaceWith("AbstractBrowseEventHandlers"))
-typealias AbstractBrowseEvent = AbstractBrowseEventHandlers
-
-@Deprecated("Use AbstractCrawlEventHandlers instead", ReplaceWith("AbstractCrawlEventHandlers"))
-typealias AbstractCrawlEvent = AbstractCrawlEventHandlers

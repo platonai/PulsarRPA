@@ -41,20 +41,20 @@ class DescriptiveResult<T>(
 }
 
 /**
- * Smaller value, higher priority, keep consistent with PriorityQueue
+ * Smaller value indicates higher priority, keep consistent with PriorityQueue
  *
  * Notice: can not use Int.MIN_VALUE as the highest priority value nor Int.MAX_VALUE as the lowest, choose another one
  * */
 enum class Priority5(val value: Int) {
     HIGHEST(Int.MIN_VALUE / 10),
     HIGHER(-1000),
-    NORMAL(0),
+    NORMAL(0),      // NORMAL is the default priority, make sure it is 0
     LOWER(1000),
     LOWEST(Int.MAX_VALUE / 10)
 }
 
 /**
- * Smaller value, higher priority, keep consistent with PriorityQueue
+ * Smaller value indicates higher priority, keep consistent with PriorityQueue
  *
  * Notice: can not use Int.MIN_VALUE as the highest priority value nor Int.MAX_VALUE as the lowest, choose another one
  * */
@@ -65,7 +65,7 @@ enum class Priority13(val value: Int) {
     HIGHER3(-3000),
     HIGHER2(-2000),
     HIGHER(-1000),
-    NORMAL(0),
+    NORMAL(0),      // NORMAL is the default priority, make sure it is 0
     LOWER(1000),
     LOWER2(2000),
     LOWER3(3000),
@@ -104,7 +104,7 @@ enum class Priority13(val value: Int) {
 }
 
 /**
- * Smaller value, higher priority, keep consistent with PriorityQueue
+ * Smaller value indicates higher priority, keep consistent with PriorityQueue
  *
  * Notice: can not use Int.MIN_VALUE as the highest priority value nor Int.MAX_VALUE as the lowest, choose another one
  * */
@@ -119,7 +119,7 @@ enum class Priority21(val value: Int) {
     HIGHER3(-3000),
     HIGHER2(-2000),
     HIGHER(-1000),
-    NORMAL(0),
+    NORMAL(0),      // NORMAL is the default priority, make sure it is 0
     LOWER(1000),
     LOWER2(2000),
     LOWER3(3000),

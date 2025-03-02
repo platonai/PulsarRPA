@@ -175,7 +175,11 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     
     override val id: String = UUID.randomUUID().toString()
     
-    override val totalCount get() = ensureInitialized().orderedCaches.values.sumOf { it.size }
+    override val totalCount: Int get() {
+        val a = ensureInitialized().orderedCaches.values.sumOf { it.size }
+
+        return a + realTimeCache.size + delayCache.size + unorderedCaches.sumOf { it.size }
+    }
 
     override val lowestCache: UrlCache get() = ensureInitialized().orderedCaches[Priority13.LOWEST.value]!!
     override val lower5Cache: UrlCache get() = ensureInitialized().orderedCaches[Priority13.LOWER5.value]!!

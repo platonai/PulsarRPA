@@ -7,7 +7,6 @@ import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.test.TestBase
 import com.google.gson.Gson
 import java.nio.file.Files
-import java.util.*
 import kotlin.test.*
 
 /**

@@ -56,7 +56,7 @@ fun main() {
 
 ```kotlin
 val options = session.options(args)
-val event = options.event.browseEventHandlers
+val event = options.eventHandlers.browseEventHandlers
 event.onBrowserLaunched.addLast { page, driver ->
     // warp up the browser to avoid being blocked by the website,
     // or choose the global settings, such as your location.

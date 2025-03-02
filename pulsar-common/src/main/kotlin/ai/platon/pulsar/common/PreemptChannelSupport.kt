@@ -51,15 +51,19 @@ abstract class PreemptChannelSupport(val name: String = "") {
      * If there is at least one preemptive task in the critical section, all normal tasks must wait.
      * */
     @Throws(InterruptedException::class)
-    fun <T> preempt(preemptiveTask: () -> T) = beforePreempt().runCatching { preemptiveTask() }
-            .also { afterPreempt() }.getOrThrow()
+    fun <T> preempt(preemptiveTask: () -> T) {
+        beforePreempt().runCatching { preemptiveTask() }.also { afterPreempt() }.getOrThrow()
+    }
     
     @Throws(InterruptedException::class)
-    fun <T> whenNormal(task: () -> T) = beforeTask().runCatching { task() }.also { afterTask() }.getOrThrow()
+    fun <T> whenNormal(task: () -> T) {
+        beforeTask().runCatching { task() }.also { afterTask() }.getOrThrow()
+    }
     
     @Throws(InterruptedException::class)
-    suspend fun <T> whenNormalDeferred(task: suspend () -> T) =
-            beforeTask().runCatching { task() }.also { afterTask() }.getOrThrow()
+    suspend fun <T> whenNormalDeferred(task: suspend () -> T) {
+        beforeTask().runCatching { task() }.also { afterTask() }.getOrThrow()
+    }
 
     fun releaseLocks() {
         if (numRunningNormalTasks.get() == 0) {

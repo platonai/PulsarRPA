@@ -314,12 +314,6 @@ fun Node.selectImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE
         .filterNotNull()
 }
 
-@Deprecated("Inappropriate name", ReplaceWith("selectAnchors(query, offset, limit)"))
-fun Element.getAnchors(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) = selectAnchors(query, offset, limit)
-
-@Deprecated("Inappropriate name", ReplaceWith("selectImages(query, offset, limit)"))
-fun Element.getImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) = selectImages(query, offset, limit)
-
 fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
     var q = cssQuery.replace("\\s+".toRegex(), " ").trim()
     val ap = appendix.trim()

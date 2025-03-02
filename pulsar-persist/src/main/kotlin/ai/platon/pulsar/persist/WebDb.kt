@@ -170,11 +170,6 @@ class WebDb(
     @JvmOverloads
     fun put(page: WebPage, replaceIfExists: Boolean = false) = putInternal(page, replaceIfExists)
 
-    /**
-     * Notice:
-     * There are comments in gora-hbase-0.6.1, HBaseStore.java, line 259:
-     * "HBase sometimes does not delete arbitrarily"
-     */
     @Throws(WebDBException::class)
     private fun putInternal(page: WebPage, replaceIfExists: Boolean): Boolean {
         // Never update NIL page

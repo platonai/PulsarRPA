@@ -15,7 +15,7 @@ import kotlin.io.path.listDirectoryEntries
 
 open class ScriptLoader(
     val confuser: ScriptConfuser,
-    val conf: ImmutableConfig
+    val jsPropertyNames: Array<String>
 ) {
     companion object {
         private val logger = getLogger(this)
@@ -31,12 +31,6 @@ open class ScriptLoader(
     }
 
     private val jsInitParameters: MutableMap<String, Any> = mutableMapOf()
-
-    /**
-     * The javascript to execute by Web browsers.
-     * */
-    private val propertyNames
-        get() = conf.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, CLIENT_JS_PROPERTY_NAMES)
 
     private val jsCache: MutableMap<String, String> = LinkedHashMap()
     /**
@@ -124,7 +118,7 @@ open class ScriptLoader(
 
     private fun initDefaultJsParameters() {
         mapOf(
-            "propertyNames" to propertyNames,
+            "propertyNames" to jsPropertyNames,
             "viewPortWidth" to BrowserSettings.SCREEN_VIEWPORT.width,
             "viewPortHeight" to BrowserSettings.SCREEN_VIEWPORT.height,
 

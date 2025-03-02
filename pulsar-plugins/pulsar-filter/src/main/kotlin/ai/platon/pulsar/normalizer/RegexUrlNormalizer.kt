@@ -170,7 +170,7 @@ class RegexUrlNormalizer(private val conf: ImmutableConfig) : AbstractScopedUrlN
         try {
             getRulesReader(conf).use { reader -> rules = readConfiguration(reader) }
         } catch (e: IOException) {
-            LOG.error(e.stringify())
+            LOG.error("IOException", e)
         }
         defaultRules = rules
     }

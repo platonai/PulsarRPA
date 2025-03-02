@@ -11,7 +11,7 @@ internal class CompleteWebPageHyperlinkHandler(val link: CompletableListenableHy
         link.eventHandlers.loadEventHandlers.onLoaded.remove(this)
 
         // TODO: the following code might be better
-//        if (link.event.loadEvent.onLoaded.remove(this)) {
+//        if (link.eventHandlers.loadEvent.onLoaded.remove(this)) {
 //            link.complete(page)
 //        }
     }

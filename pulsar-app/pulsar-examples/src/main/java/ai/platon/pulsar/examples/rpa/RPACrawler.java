@@ -39,7 +39,7 @@ public class RPACrawler {
 
     public LoadOptions options(String args) {
         var options = session.options(args, null);
-        var be = options.getEvent().getBrowseEventHandlers();
+        var be = options.getEventHandlers().getBrowseEventHandlers();
 
         be.getOnWillComputeFeature().addLast(new JvmWebPageWebDriverEventHandler() {
             @Override

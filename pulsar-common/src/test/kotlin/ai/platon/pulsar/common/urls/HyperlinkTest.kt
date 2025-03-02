@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common.urls
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotEquals
@@ -153,7 +152,7 @@ class HyperlinkTest {
     
     @Test
     fun testHyperlink_IsDefault_ExpectedBehavior() {
-        assertEquals(true, hyperlink.isDefault("url"))
+        assertEquals(false, hyperlink.isDefault("url"))
         assertEquals(true, hyperlink.isDefault("text"))
         assertEquals(true, hyperlink.isDefault("order"))
         assertEquals(true, hyperlink.isDefault("referrer"))
@@ -222,5 +221,87 @@ class HyperlinkTest {
         assertTrue(hyperlink1 <= hyperlink2)
         assertTrue(hyperlink2 > hyperlink1)
         assertTrue(hyperlink2 >= hyperlink1)
+    }
+
+
+
+    @Test
+    fun `test constructor with url`() {
+        val url = "http://example.com"
+        val hyperlink = Hyperlink(url)
+
+        assertEquals(url, hyperlink.url)
+        assertEquals("", hyperlink.text)
+        assertEquals(0, hyperlink.order)
+    }
+
+    @Test
+    fun `test constructor with UrlAware`() {
+        val urlAware = Hyperlink(
+            url = "http://example.com",
+            text = "Example",
+            order = 1,
+            referrer = "http://referrer.com",
+            args = "arg1=val1",
+            href = "http://example.com/href",
+            priority = 5,
+            lang = "en",
+            country = "US",
+            district = "CA",
+            nMaxRetry = 2,
+            depth = 3,
+        )
+
+        val hyperlink = Hyperlink(urlAware)
+
+        assertEquals(urlAware.url, hyperlink.url)
+        assertEquals(urlAware.text, hyperlink.text)
+        assertEquals(urlAware.order, hyperlink.order)
+        assertEquals(urlAware.referrer, hyperlink.referrer)
+        assertEquals(urlAware.args, hyperlink.args)
+        assertEquals(urlAware.href, hyperlink.href)
+        assertEquals(urlAware.priority, hyperlink.priority)
+        assertEquals(urlAware.lang, hyperlink.lang)
+        assertEquals(urlAware.country, hyperlink.country)
+        assertEquals(urlAware.district, hyperlink.district)
+        assertEquals(urlAware.nMaxRetry, hyperlink.nMaxRetry)
+        assertEquals(urlAware.depth, hyperlink.depth)
+    }
+
+    @Test
+    fun `test serializeTo`() {
+        val url = "http://example.com"
+        val hyperlink = Hyperlink(url, "Example", 1, "http://referrer.com", "arg1=val1", "http://example.com/href", 5, "en", "US", "CA", 2, 3)
+        val sb = StringBuilder()
+        hyperlink.serializeTo(sb)
+
+        val expected = "http://example.com -text Example -order 1 -referrer http://referrer.com -args arg1=val1 -href http://example.com/href -priority 5 -lang en -country US -district CA -nMaxRetry 2 -depth 3"
+        assertEquals(expected, sb.toString())
+    }
+
+    @Test
+    fun `test parse`() {
+        val linkText = "http://example.com -text Example -order 1 -referrer http://referrer.com -args arg1=val1 -href http://example.com/href -priority 5 -lang en -country US -district CA -nMaxRetry 2 -depth 3"
+        val hyperlink = Hyperlink.parse(linkText)
+
+        assertEquals("http://example.com", hyperlink.url)
+        assertEquals("Example", hyperlink.text)
+        assertEquals(1, hyperlink.order)
+        assertEquals("http://referrer.com", hyperlink.referrer)
+        assertEquals("arg1=val1", hyperlink.args)
+        assertEquals("http://example.com/href", hyperlink.href)
+        assertEquals(5, hyperlink.priority)
+        assertEquals("en", hyperlink.lang)
+        assertEquals("US", hyperlink.country)
+        assertEquals("CA", hyperlink.district)
+        assertEquals(2, hyperlink.nMaxRetry)
+        assertEquals(3, hyperlink.depth)
+    }
+
+    @Test
+    fun `test isDefault`() {
+        val hyperlink = Hyperlink("http://example.com")
+        assertTrue(hyperlink.isDefault("text"))
+        assertFalse(hyperlink.isDefault("url"))
     }
 }

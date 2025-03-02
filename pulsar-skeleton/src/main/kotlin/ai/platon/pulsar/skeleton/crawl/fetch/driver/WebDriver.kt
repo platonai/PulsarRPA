@@ -90,7 +90,7 @@ import java.time.Duration
  *      val args = "-refresh"
  *      val options = session.options(args)
  *
- *      options.event.browseEventHandlers.onDocumentSteady.addLast { page, driver ->
+ *      options.eventHandlers.browseEventHandlers.onDocumentSteady.addLast { page, driver ->
  *          interact(page, driver)
  *      }
  *
@@ -940,21 +940,6 @@ interface WebDriver : Closeable {
      * The current page frame scrolls to the middle.
      *
      * ```kotlin
-     * driver.scrollToMiddle(0.2f)
-     * driver.scrollToMiddle(0.5f)
-     * driver.scrollToMiddle(0.8f)
-     * ```
-     *
-     * @param ratio The ratio of the page to scroll to, 0.0 means the top, 1.0 means the bottom.
-     */
-    @Deprecated("Use scrollToMiddle(Double) instead", ReplaceWith("scrollToMiddle(ratio.toDouble())"))
-    @Throws(WebDriverException::class)
-    suspend fun scrollToMiddle(ratio: Float)
-
-    /**
-     * The current page frame scrolls to the middle.
-     *
-     * ```kotlin
      * driver.scrollToMiddle(0.2)
      * driver.scrollToMiddle(0.5)
      * driver.scrollToMiddle(0.8)
@@ -1060,16 +1045,6 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun outerHTML(selector: String): String?
 
-    /** Returns the node's text content. */
-    @Deprecated("Inappropriate name", ReplaceWith("selectFirstTextOrNull(selector)"))
-    @Throws(WebDriverException::class)
-    suspend fun firstText(selector: String): String? = selectFirstTextOrNull(selector)
-
-    /** Returns the nodes' text contents. */
-    @Deprecated("Inappropriate name", ReplaceWith("selectTextAll(selector)"))
-    @Throws(WebDriverException::class)
-    suspend fun allTexts(selector: String): List<String> = selectTextAll(selector)
-
     /**
      * Returns the node's text content, the node is located by [selector].
      *
@@ -1084,10 +1059,6 @@ interface WebDriver : Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun selectFirstTextOrNull(selector: String): String?
-
-    @Deprecated("Inappropriate name", ReplaceWith("selectTextAll(selector)"))
-    @Throws(WebDriverException::class)
-    suspend fun selectTexts(selector: String): List<String> = selectTextAll(selector)
 
     /**
      * Returns a list of text contents of all the elements matching the specified selector within the page.

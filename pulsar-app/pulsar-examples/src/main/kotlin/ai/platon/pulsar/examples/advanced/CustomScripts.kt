@@ -9,7 +9,7 @@ fun main() {
     val session = PulsarContexts.createSession()
     val options = session.options("-refresh")
 
-    val be = options.event.browseEventHandlers
+    val be = options.eventHandlers.browseEventHandlers
     be.onWillNavigate.addFirst { _, driver ->
         println("onWillNavigate " + driver.navigateHistory.history.joinToString { it.url })
         scripts.forEach { driver.addInitScript(it) }

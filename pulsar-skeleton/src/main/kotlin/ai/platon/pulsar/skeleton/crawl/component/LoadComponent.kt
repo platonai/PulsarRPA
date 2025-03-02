@@ -81,15 +81,13 @@ class LoadComponent(
     private val loadStrategy = immutableConfig.get(LOAD_STRATEGY, "SIMPLE")
 
     private val deactivateFetchComponent1 = immutableConfig.getBoolean(LOAD_DEACTIVATE_FETCH_COMPONENT, false)
-    @Deprecated("Use LOAD_DEACTIVATE_FETCH_COMPONENT instead")
-    private val deactivateFetchComponent2 = immutableConfig.getBoolean(LOAD_DISABLE_FETCH, false)
     /**
      * Deactivate the fetch component, ensuring that all pages are loaded exclusively from storage
      * and never fetched from the Internet.
      *
      * If a page is not found in the local storage, return WebPage.NIL.
      * */
-    private val deactivateFetchComponent = deactivateFetchComponent1 || deactivateFetchComponent2
+    private val deactivateFetchComponent = deactivateFetchComponent1
 
     val globalCache get() = globalCacheFactory.globalCache
     val pageCache get() = globalCache.pageCache

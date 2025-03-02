@@ -6,10 +6,12 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ChatModelFactory
+import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.CombinedUrlNormalizer
 import ai.platon.pulsar.skeleton.common.urls.NormURL
@@ -24,6 +26,8 @@ import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarEnvironment
 import ai.platon.pulsar.skeleton.session.PulsarSession
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import org.springframework.beans.factory.BeanCreationException
@@ -126,13 +130,7 @@ abstract class AbstractPulsarContext(
      * An immutable config is which loaded from the config file at process startup, and never changes
      * */
     override val unmodifiedConfig: ImmutableConfig get() = getBean()
-    
-    /**
-     * Url normalizers
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("urlNormalizer"))
-    open val urlNormalizers: ChainedUrlNormalizer get() = getBean()
-    
+
     /**
      * Url normalizer
      * */
@@ -486,10 +484,13 @@ abstract class AbstractPulsarContext(
         return parser?.parse(page, noLinkFilter = true)?.document
     }
 
-    override fun chat(prompt: String) = ChatModelFactory.getOrCreate(unmodifiedConfig).call(prompt)
+    override fun chat(prompt: String): ModelResponse {
+        return ChatModelFactory.getOrCreate(unmodifiedConfig).call(prompt)
+    }
 
-    override fun chat(userMessage: String, systemMessage: String) =
-        ChatModelFactory.getOrCreate(unmodifiedConfig).call(userMessage, systemMessage)
+    override fun chat(userMessage: String, systemMessage: String): ModelResponse {
+        return ChatModelFactory.getOrCreate(unmodifiedConfig).call(userMessage, systemMessage)
+    }
 
     @Throws(WebDBException::class)
     override fun persist(page: WebPage) {

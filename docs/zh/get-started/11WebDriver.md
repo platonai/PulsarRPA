@@ -31,7 +31,7 @@ class WebDriverDemo(private val session: PulsarSession) {
     fun options(args: String): LoadOptions {
         val options = session.options(args)
 
-        val be = options.event.browseEventHandlers
+        val be = options.eventHandlers.browseEventHandlers
 
         be.onDocumentActuallyReady.addLast { page, driver ->
             fieldSelectors.values.forEach { interact1(it, driver) }
@@ -54,7 +54,7 @@ class WebDriverDemo(private val session: PulsarSession) {
             driver.click(selector)
 
             println("select first text by $selector ...")
-            var text = driver.firstText(selector) ?: "no-text"
+            var text = driver.selectFirstTextOrNull(selector) ?: "no-text"
             text = text.substring(1, 4)
 
             println("type $text in $searchBoxSelector ...")
@@ -79,7 +79,7 @@ class WebDriverDemo(private val session: PulsarSession) {
         driver.click(selector)
 
         println("query text of $selector ...")
-        var text = driver.firstText(selector) ?: "no-text"
+        var text = driver.selectFirstTextOrNull(selector) ?: "no-text"
         text = text.substring(1, 4)
         println("type `$text` in $searchBoxSelector")
         driver.type(searchBoxSelector, text)

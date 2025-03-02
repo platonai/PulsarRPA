@@ -9,6 +9,8 @@ while [[ "$APP_HOME" != "/" ]]; do
   APP_HOME=$(dirname "$APP_HOME")
 done
 
+cd "$APP_HOME" || exit
+
 SNAPSHOT_VERSION=$(head -n 1 "$APP_HOME/VERSION")
 VERSION=${SNAPSHOT_VERSION//"-SNAPSHOT"/""}
 PREFIX=$(echo "$VERSION" | cut -d'.' -f1,2)

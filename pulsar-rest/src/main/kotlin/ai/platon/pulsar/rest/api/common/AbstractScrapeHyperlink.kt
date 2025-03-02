@@ -1,9 +1,6 @@
 package ai.platon.pulsar.rest.api.common
 
-import ai.platon.pulsar.common.ResourceStatus
-import ai.platon.pulsar.common.brief
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.common.ResultSets
 import ai.platon.pulsar.ql.context.AbstractSQLContext
@@ -95,7 +92,9 @@ abstract class AbstractScrapeHyperlink(
                         logger.warn("Syntax error in SQL statement #${response.uuid}>>>\n{}\n<<<", e.sql)
                     } else {
                         response.statusCode = ResourceStatus.SC_EXPECTATION_FAILED
-                        logger.warn("Failed to execute scrape task #${response.uuid}\n{}", e.stringify())
+                        if (AppContext.isActive) {
+                            logger.warn("Failed to execute scrape task #${response.uuid}", e)
+                        }
                     }
                 }
             }

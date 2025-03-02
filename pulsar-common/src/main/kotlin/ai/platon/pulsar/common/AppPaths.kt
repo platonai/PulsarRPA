@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
@@ -8,7 +9,6 @@ import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)
@@ -120,13 +120,19 @@ object AppPaths {
     
     @RequiredDirectory
     val CONTEXT_GROUP_BASE_DIR = CONTEXT_BASE_DIR.resolve("groups")
-    
+
+    @RequiredDirectory
+    val CONTEXT_DEFAULT_GROUP_DIR = CONTEXT_GROUP_BASE_DIR.resolve("default")
+
     @RequiredDirectory
     val CONTEXT_TMP_DIR = CONTEXT_BASE_DIR.resolve("tmp")
-    
-    @RequiredFile
-    val BROWSER_TMP_DIR_LOCK = CONTEXT_TMP_DIR.resolve("browser.tmp.lock")
-    
+
+    @RequiredDirectory
+    val CONTEXT_TMP_GROUP_BASE_DIR = CONTEXT_TMP_DIR.resolve("groups")
+
+    @RequiredDirectory
+    val CONTEXT_TMP_DEFAULT_GROUP_DIR = CONTEXT_TMP_GROUP_BASE_DIR.resolve("default")
+
     /**
      * Proxy directory
      * */
@@ -247,7 +253,15 @@ object AppPaths {
     
     fun getRandomProcTmpTmp(prefix: String = "", suffix: String = ""): Path =
         getProcTmpTmp(prefix + RandomStringUtils.randomAlphabetic(18) + suffix)
-    
+
+    fun getContextGroupDir(group: String) = CONTEXT_GROUP_BASE_DIR.resolve(group)
+
+    fun getContextBaseDir(group: String, browserType: BrowserType) = getContextGroupDir(group).resolve(browserType.name)
+
+    fun getTmpContextGroupDir(group: String) = CONTEXT_TMP_GROUP_BASE_DIR.resolve(group)
+
+    fun getTmpContextBaseDir(group: String, browserType: BrowserType) = getTmpContextGroupDir(group).resolve(browserType.name)
+
     fun random(prefix: String = "", suffix: String = ""): String =
         "$prefix${RandomStringUtils.randomAlphabetic(18)}$suffix"
     
@@ -278,10 +292,7 @@ object AppPaths {
         
         return host.replace('.', '-')
     }
-    
-    @Deprecated("Use fromHost instead", replaceWith = ReplaceWith("fromHost(url)"))
-    fun fromDomain(url: URL) = fromHost(url)
-    
+
     /**
      * Create a filename compatible string from the given url.
      * */
@@ -290,7 +301,7 @@ object AppPaths {
         return fromHost(u)
     }
     
-    @Deprecated("Use fromHost instead", replaceWith = ReplaceWith("fromHost(url)"))
+    @Deprecated("Use AppPaths.fromHost instead", replaceWith = ReplaceWith("AppPaths.fromHost(url)"))
     fun fromDomain(url: String) = fromHost(url)
     
     /**
@@ -299,7 +310,7 @@ object AppPaths {
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
         val u = UrlUtils.getURLOrNull(uri) ?: return "${prefix}unknown$suffix"
         
-        val dirForDomain = fromDomain(u)
+        val dirForDomain = fromHost(u)
         val fileId = fileId(uri)
         return "$prefix$dirForDomain-$fileId$suffix"
     }

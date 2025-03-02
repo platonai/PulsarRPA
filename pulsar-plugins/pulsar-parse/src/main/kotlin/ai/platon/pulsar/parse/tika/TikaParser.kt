@@ -83,8 +83,7 @@ class TikaParser(
         if (htmlMapper != null) {
             context.set(HtmlMapper::class.java, htmlMapper)
         }
-        // to add once available in Tika
-        // context.set(HtmlMapper.class, IdentityHtmlMapper.INSTANCE);
+
         tikamd[Metadata.CONTENT_TYPE] = mimeType
         try {
             val raw = page.content
@@ -123,13 +122,7 @@ class TikaParser(
             page.metadata[name] = tikamd[name]
         }
 
-        // no hypeLinks? try OutlinkExtractor e.g works for mime types where no
-        // explicit markup for anchors
         val parseResult = ParseResult(ParseStatusCodes.SUCCESS, ParseStatusCodes.SUCCESS_OK)
-        //    if (hypeLinks.isEmpty()) {
-        //      hypeLinks = OutlinkExtractor.getLiveLinks(pageText, getConf());
-        //      parseResult.getLiveLinks().addAll(hypeLinks);
-        //    }
         if (metaTags.refresh) {
             parseResult.minorCode = ParseStatusCodes.SUCCESS_REDIRECT
             parseResult.args[ParseStatus.REFRESH_HREF] = metaTags.refreshHref.toString()
@@ -137,7 +130,8 @@ class TikaParser(
         }
 
         parseFilters?.filter(ai.platon.pulsar.skeleton.crawl.parse.html.ParseContext(page, parseResult))
-        if (metaTags.noCache) { // not okay to cache
+        if (metaTags.noCache) {
+            // not okay to cache
             page.metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }
 

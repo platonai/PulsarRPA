@@ -82,7 +82,7 @@ class FetchTask constructor(
     val url get() = page.url
     val href get() = page.href
     val pageConf get() = page.conf
-    val domain get() = InternalURLUtil.getDomainName(url)
+    val domain get() = UrlUtils.getTopPrivateDomain(url)
     val isCanceled get() = state.get() == State.CANCELED
     val isWorking get() = state.get() == State.WORKING
     

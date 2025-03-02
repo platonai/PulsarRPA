@@ -2,7 +2,6 @@ package ai.platon.pulsar.common.browser
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.sleepMillis
-import org.apache.commons.io.FileUtils
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -11,35 +10,44 @@ import kotlin.test.*
 class BrowserFilesTests {
 
     private val group = "BrowserFilesTests"
-    private val groupBaseDir = AppPaths.CONTEXT_GROUP_BASE_DIR.resolve(group)
-    private val contextBaseDir = groupBaseDir.resolve(BrowserType.PULSAR_CHROME.name)
+    private val groupBaseDir = AppPaths.getContextGroupDir(group)
+    private val contextBaseDir = AppPaths.getContextBaseDir(group, BrowserType.PULSAR_CHROME)
+
+    private val tempContextGroupDir = AppPaths.getTmpContextGroupDir(group)
+    private val tempContextBaseDir = AppPaths.getTmpContextBaseDir(group, BrowserType.PULSAR_CHROME)
 
     @BeforeTest
     fun setup() {
         Files.createDirectories(contextBaseDir)
         assertTrue { Files.exists(contextBaseDir) }
+
+        Files.createDirectories(tempContextBaseDir)
+        assertTrue { Files.exists(tempContextBaseDir) }
     }
     
     @AfterTest
     fun tearDown() {
 //        FileUtils.deleteDirectory(groupBaseDir.toFile())
 //        assertTrue { !Files.exists(groupBaseDir) }
+//
+//        FileUtils.deleteDirectory(tempGroupBaseDir.toFile())
+//        assertTrue { !Files.exists(tempGroupBaseDir) }
     }
     
-//    @Test
-//    fun `when deleteTemporaryUserDataDirWithLock then userDataDir is deleted`() {
-//        val userDataDir = groupBaseDir.resolve("user_data_dir")
-//        Files.createDirectories(userDataDir)
-//        deleteTemporaryUserDataDirWithLock(userDataDir)
-//    }
-//
-//    @Test
-//    fun `when parallel deleteTemporaryUserDataDirWithLock then userDataDirs are deleted`() {
-//        val userDataDirs = IntRange(0, 200).map { groupBaseDir.resolve("user_data_dir.$it") }
-//        userDataDirs.forEach { Files.createDirectories(it) }
-//        userDataDirs.parallelStream().forEach { deleteTemporaryUserDataDirWithLock(it) }
-//    }
-//
+    @Test
+    fun `when deleteTemporaryUserDataDirWithLock then userDataDir is deleted`() {
+        val userDataDir = tempContextGroupDir.resolve("user_data_dir")
+        Files.createDirectories(userDataDir)
+        deleteTemporaryUserDataDirWithLock(userDataDir)
+    }
+
+    @Test
+    fun `when parallel deleteTemporaryUserDataDirWithLock then userDataDirs are deleted`() {
+        val userDataDirs = IntRange(0, 200).map { tempContextGroupDir.resolve("user_data_dir.$it") }
+        userDataDirs.forEach { Files.createDirectories(it) }
+        userDataDirs.parallelStream().forEach { deleteTemporaryUserDataDirWithLock(it) }
+    }
+
     @Test
     fun `when computeNextSequentialContextDir twice then they are not the same `() {
         val numAgents = 13
@@ -81,7 +89,12 @@ class BrowserFilesTests {
         }
         sleepMillis(10)
         // Act
-        BrowserFiles.deleteTemporaryUserDataDirWithLock(userDataDir, expiry)
+
+        // The parent of a user data dir is the context dir
+        val contextDir = userDataDir.parent
+        // The parent of a context dir is the group dir
+        val group = contextDir.parent.fileName.toString()
+        BrowserFiles.deleteTemporaryUserDataDirWithLock(group, userDataDir, expiry)
         
         // Assert
         assertTrue { Files.exists(pidFile) } // PID file is not deleted

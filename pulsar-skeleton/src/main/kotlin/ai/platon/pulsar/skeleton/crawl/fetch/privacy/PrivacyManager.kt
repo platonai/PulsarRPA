@@ -14,8 +14,6 @@ interface PrivacyManager : AutoCloseable {
     val conf: ImmutableConfig
     
     fun buildStatusString(): String
-    @Deprecated("Use buildStatusString instead", ReplaceWith("buildStatusString()"))
-    fun takeSnapshot(): String = buildStatusString()
     fun maintain(force: Boolean = false)
     fun reset(reason: String = "")
     
