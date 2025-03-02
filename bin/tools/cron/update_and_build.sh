@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # cron
-# */10 * * * * ~/workspace/PulsarRPA/update_and_run.sh >> ~/workspace/PulsarRPA/cron.log 2>&1
+# */10 * * * * ~/workspace/PulsarRPA/update_and_build.sh >> ~/workspace/PulsarRPA/cron.log 2>&1
 
 # 获取当前脚本所在的目录
 AppHome="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -25,7 +25,6 @@ git pull
 if git status | grep -q 'Your branch is up to date'; then
     echo "No updates found."
 else
-    echo "Updates found. Running tests..."
-    ./mvnw install
+    echo "Updates found. Building & Testing ..."
+    "$AppHome"/bin/build.sh -clean -test
 fi
-
