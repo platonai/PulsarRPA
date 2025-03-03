@@ -233,7 +233,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 "
 ```
 
-示例代码可以在 [这里](https://github.com/platonai/pulsar/blob/master/bin/scrape.sh) 找到。
+示例代码: [bash](bin/scrape.sh), [PowerShell](bin/scrape.ps1), [batch](bin/scrape.bat), [java](/pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java), [kotlin](/pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt), [php](/pulsar-client/src/main/php/Scraper.php).
 
 点击 [X-SQL](docs/x-sql.md) 查看有关X-SQL的详细介绍和功能描述。
 
