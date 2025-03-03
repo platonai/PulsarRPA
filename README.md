@@ -4,12 +4,12 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 ## 🥁 Introduce
 
-💖 **PulsarRPA is All You Need!** 💖
+💖 **PulsarRPA: Your Ultimate RPA Solution!** 💖
 
-PulsarRPA is a high-performance, distributed, open-source Robotic Process Automation (RPA) framework. It is designed to 
-handle large-scale RPA tasks with ease, providing a comprehensive solution for browser automation, web content understanding, 
-and data extraction. It addresses the inherent challenges of browser automation and extracting accurate, comprehensive 
-web data amidst rapidly evolving and increasingly intricate websites.
+**PulsarRPA** is a **high-performance**, **distributed**, and **open-source** Robotic Process Automation (RPA) framework.
+Designed for **large-scale automation**, it excels in **browser automation**, **web content understanding**,
+and **data extraction**. PulsarRPA tackles the challenges of modern web automation,
+ensuring **accurate** and **comprehensive** data extraction even from the most **complex** and **dynamic** websites.
 
 ## Videos
 
@@ -25,10 +25,10 @@ Bilibili:
 
 ```kotlin
 fun main() = PulsarContexts.createSession().scrapeOutPages(
-  "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
+    "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ```
 
-### Chat with AI about a webpage:
+### Chat about a webpage:
 
 ```kotlin
 PulsarSettings().withLLMProvider("volcengine").withLLMName("ep-20250218132011-2scs8").withLLMAPIKey(apiKey)
@@ -38,25 +38,20 @@ response = session.chat("Tell me something about this webpage", document)
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/ChatAboutPage.kt).
 
-### Talk to the active webpage in a browser to get the job done:
+### Tell the browser to get to work:
 
 ```kotlin
-PulsarSettings().withLLMProvider("volcengine").withLLMName("ep-20250218132011-2scs8").withLLMAPIKey(apiKey)
-val session = PulsarContexts.createSession()
-val url = "https://www.amazon.com/dp/B0C1H26C46"
-
-val prompts = listOf(
-    "move cursor to the element with id 'title' and click it",
-    "scroll to middle",
-    "scroll to top",
-    "get the text of the element with id 'title'",
-)
+val prompts = """
+move cursor to the element with id 'title' and click it
+scroll to middle
+scroll to top
+get the text of the element with id 'title'
+"""
 
 val eventHandlers = DefaultPageEventHandlers()
 eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
-    prompts.forEach { prompt ->
+    prompts.split("\n").forEach { prompt ->
         val result = session.instruct(prompt, driver)
-        delay(1000)
     }
 }
 session.open(url, eventHandlers)
@@ -175,9 +170,9 @@ Maven:
 
 ```xml
 <dependency>
-  <groupId>ai.platon.pulsar</groupId>
-  <artifactId>pulsar-bom</artifactId>
-  <version>2.2.1</version>
+    <groupId>ai.platon.pulsar</groupId>
+    <artifactId>pulsar-bom</artifactId>
+    <version>2.2.1</version>
 </dependency>
 ```
 
@@ -187,8 +182,8 @@ Gradle:
 implementation("ai.platon.pulsar:pulsar-bom:2.2.1")
 ```
 
-Clone the template project from github.com: 
-[kotlin](https://github.com/platonai/pulsar-kotlin-template), 
+Clone the template project from github.com:
+[kotlin](https://github.com/platonai/pulsar-kotlin-template),
 [java-17](https://github.com/platonai/pulsar-java-17-template).
 
 Start your own large-scale web crawling projects based on our commercial-grade open source projects: [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro), [Exotic-amazon](https://github.com/platonai/exotic-amazon).
