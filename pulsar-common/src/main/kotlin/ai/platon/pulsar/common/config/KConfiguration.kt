@@ -45,7 +45,7 @@ class KConfiguration(
 
     companion object {
         val DEFAULT_RESOURCES = mutableSetOf("pulsar-default.xml")
-        val EXTERNAL_RESOURCE_BASE_DIR = AppPaths.CONF_DIR.resolve("conf-enabled")
+        val EXTERNAL_RESOURCE_BASE_DIR = AppPaths.CONFIG_DIR.resolve("conf-enabled")
         val SYSTEM_DEFAULT_RESOURCES = mutableSetOf<String>()
         private val ID_SUPPLIER = AtomicInteger()
     }

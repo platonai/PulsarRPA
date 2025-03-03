@@ -25,7 +25,9 @@ object ChatModelFactory {
      * Create a default model.
      *
      * @return The created model.
+     * @throws IllegalArgumentException If the configuration is not configured.
      */
+    @Throws(IllegalArgumentException::class)
     fun getOrCreate(conf: ImmutableConfig): ChatModel {
         val provider = conf["llm.provider"] ?: throw IllegalArgumentException("llm.provider is not set")
         val modelName = conf["llm.name"] ?: throw IllegalArgumentException("llm.name is not set")
@@ -40,7 +42,9 @@ object ChatModelFactory {
      * @param modelName The name of model to create.
      * @param apiKey The API key to use.
      * @return The created model.
+     * @throws IllegalArgumentException If the configuration is not configured.
      */
+    @Throws(IllegalArgumentException::class)
     fun getOrCreate(provider: String, modelName: String, apiKey: String) =
         getOrCreateModel0(provider, modelName, apiKey)
 
@@ -49,8 +53,15 @@ object ChatModelFactory {
      *
      * @return The created model.
      */
-    fun getOrCreateOrNull(conf: ImmutableConfig) = kotlin.runCatching { getOrCreate(conf) }
-        .onFailure { warn(this, it.message ?: "Failed to create chat model") }.getOrNull()
+    fun getOrCreateOrNull(conf: ImmutableConfig): ChatModel? {
+        if (!isModelConfigured(conf)) {
+            return null
+        }
+
+        return kotlin.runCatching { getOrCreate(conf) }
+            .onFailure { warn(this, it.message ?: "Failed to create chat model") }
+            .getOrNull()
+    }
 
     fun getOrCreateOpenAICompatibleModel(modelName: String, apiKey: String, baseUrl: String): ChatModel? {
         val key = "$modelName:$apiKey:$baseUrl"

@@ -25,7 +25,8 @@
     <version>2.2.1-SNAPSHOT</version>
 
     <name>Pulsar RPA</name>
-    <description>Engage and automate web interactions at scale.</description>
+    <description>Automate webpages at scale, scrape web data completely and accurately
+        with high performance, distributed AI-RPA.</description>
 
     <licenses>
         <license>

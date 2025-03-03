@@ -29,9 +29,8 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
 ### 谈论一个网页
 
 ```kotlin
-PulsarSettings().withLLMProvider("volcengine").withLLMName("ep-20250218132011-2scs8").withLLMAPIKey(apiKey)
 val document = session.loadDocument(url)
-response = session.chat("Tell me something about this webpage", document)
+val response = session.chat("Tell me something about this webpage", document)
 ```
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/ChatAboutPage.kt).
@@ -48,9 +47,7 @@ get the text of the element with id 'title'
 
 val eventHandlers = DefaultPageEventHandlers()
 eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
-    prompts.split("\n").forEach { prompt ->
-        val result = session.instruct(prompt, driver)
-    }
+    val result = session.instruct(prompts, driver)
 }
 session.open(url, eventHandlers)
 ```

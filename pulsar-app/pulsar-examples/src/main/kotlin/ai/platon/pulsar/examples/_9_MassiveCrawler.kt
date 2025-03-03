@@ -1,20 +1,20 @@
 package ai.platon.pulsar.examples
 
-import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.DelayUrl
-import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.PulsarSettings
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 import java.time.Duration
 
 /**
  * Demonstrates how to crawl a massive collection of urls with various requirements.
  * */
 fun main() {
-    BrowserSettings.maxBrowsers(10).maxOpenTabs(4).headless()
+    PulsarSettings().withSequentialBrowsers().maxBrowsers(10).maxOpenTabs(4).headless()
 
     val session = PulsarContexts.createSession()
     val crawlPool = session.context.crawlPool
@@ -46,5 +46,5 @@ fun main() {
     crawlPool.delayCache.add(DelayUrl(url5, Duration.ofHours(2)))
 
     // wait for all tasks to be finished.
-    session.context.await()
+    PulsarContexts.await()
 }

@@ -1,8 +1,9 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.skeleton.context.PulsarContexts.createSession
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.skeleton.PulsarSettings
+import ai.platon.pulsar.skeleton.context.PulsarContexts.createSession
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -48,6 +49,10 @@ internal object JvmAsync {
 }
 
 fun main() {
+    // Use the default browser, the browser is isolated from the system browsers.
+    // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
+    PulsarSettings().withDefaultBrowser()
+
     JvmAsync.loadAll()
     JvmAsync.loadAllAsync2()
     JvmAsync.loadAllAsync3()

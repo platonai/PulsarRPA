@@ -3,6 +3,7 @@ package ai.platon.pulsar.examples
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 
@@ -10,6 +11,9 @@ import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
  * Demonstrates continuous crawls.
  * */
 fun main() {
+    // For continuous crawls, you'd better use sequential browsers or temporary browsers
+    PulsarSettings().withSequentialBrowsers()
+
     val context = PulsarContexts.create()
 
     val parseHandler = { _: WebPage, document: FeaturedDocument ->

@@ -1,12 +1,16 @@
 package ai.platon.pulsar.examples
 
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 
 /**
  * Demonstrates the usage of load options.
  * */
 fun main() {
+    // Use the default browser, the browser is isolated from the system browsers.
+    // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
+    PulsarSettings().withDefaultBrowser()
+
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with

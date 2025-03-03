@@ -47,7 +47,7 @@ object AppPaths {
     val DATA_DIR = AppContext.APP_DATA_DIR
     
     @RequiredDirectory
-    val CONF_DIR = AppContext.APP_DATA_DIR.resolve("config")
+    val CONFIG_DIR = AppContext.APP_DATA_DIR.resolve("config")
     
     @RequiredDirectory
     val BROWSER_DATA_DIR = DATA_DIR.resolve("browser")
@@ -96,16 +96,10 @@ object AppPaths {
     
     @RequiredDirectory
     val PROMPT_CACHE_DIR = CACHE_DIR.resolve("prompts")
-    
-    @RequiredDirectory
-    val TMP_CONF_DIR = PROC_TMP_DIR.resolve("conf")
-    
+
     @RequiredDirectory
     val REPORT_DIR = PROC_TMP_DIR.resolve("report")
-    
-    @RequiredDirectory
-    val PROC_DIR = PROC_TMP_DIR.resolve("proc")
-    
+
     @RequiredDirectory
     val METRICS_DIR = REPORT_DIR.resolve("metrics")
     

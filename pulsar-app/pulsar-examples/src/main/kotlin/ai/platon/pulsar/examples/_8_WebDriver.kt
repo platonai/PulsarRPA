@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples
 
-import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.context.PulsarContexts.createSession
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -43,6 +43,10 @@ internal class WebDriverDemo(private val session: PulsarSession = createSession(
         if (driver.exists(selector)) {
             println("click $selector ...")
             driver.click(selector)
+
+            println("Using spoken language, tell the browser to click $selector ...")
+            // Only works when LLM is configured
+            session.instruct("scroll to middle", driver)
 
             println("select first text by $selector ...")
             var text = driver.selectFirstTextOrNull(selector) ?: "no-text"
@@ -105,7 +109,7 @@ internal class WebDriverDemo(private val session: PulsarSession = createSession(
  * */
 fun main() {
     // Set the system to work with single page applications (SPA)
-    BrowserSettings.withSPA()
+    PulsarSettings().withDefaultBrowser().withSPA()
 
     val url = "https://www.amazon.com/dp/B0C1H26C46"
     val args = "-refresh -parse"
