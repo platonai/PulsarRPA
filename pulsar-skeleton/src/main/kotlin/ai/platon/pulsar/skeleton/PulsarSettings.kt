@@ -53,11 +53,13 @@ open class PulsarSettings {
         return this
     }
     /**
-     * Use the default Chrome browser. Any change to the browser will be kept.
+     * Use the default browser which has an isolated profile and user data directory.
+     * Any modifications made to the browser will be preserved, including the cookies, history, etc.
      * */
     fun withDefaultBrowser() = withDefaultBrowser(BrowserType.PULSAR_CHROME)
     /**
-     * Use the default Chrome browser. Any change to the browser will be kept.
+     * Use the default browser which has an isolated profile and user data directory.
+     * Any modifications made to the browser will be preserved, including the cookies, history, etc.
      *
      * NOTICE: PULSAR_CHROME is the only supported browser currently.
      * */
@@ -66,11 +68,15 @@ open class PulsarSettings {
         return this
     }
     /**
-     * Use google-chrome with the prototype environment, any change to the browser will be kept.
-     * */
+     * Use Google Chrome with the prototype environment.
+     * Any modifications made to the browser will be preserved.
+     * Sequential and temporary browsers will inherit the environment from the prototype browser.
+     */
     fun withPrototypeBrowser() = withPrototypeBrowser(BrowserType.PULSAR_CHROME)
     /**
-     * Use the specified browser with the prototype environment, any change to the browser will be kept.
+     * Use the specified browser with the prototype environment.
+     * Any modifications made to the browser will be preserved.
+     * Sequential and temporary browsers will inherit the environment from the prototype browser.
      *
      * PULSAR_CHROME is the only supported browser currently.
      * */
@@ -79,8 +85,8 @@ open class PulsarSettings {
         return this
     }
     /**
-     * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
-     * permanent unless the context directories are deleted manually.
+     * Use sequential browsers that inherits the prototype browser’s environment.
+     * The sequential browsers are permanent unless the context directories are deleted manually.
      *
      * PULSAR_CHROME is the only supported browser currently.
      *

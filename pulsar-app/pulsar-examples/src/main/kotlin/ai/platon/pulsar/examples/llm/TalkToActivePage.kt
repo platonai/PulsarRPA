@@ -26,6 +26,9 @@ fun main() {
     // You can find the template config files here:
     // https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/template
 
+    // Use the default browser which has an isolated user data directory
+    PulsarSettings().withDefaultBrowser()
+
     val session = PulsarContexts.createSession()
     val url = "https://www.amazon.com/dp/B0C1H26C46"
 

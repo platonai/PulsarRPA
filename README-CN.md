@@ -54,26 +54,6 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
   "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ```
 
-### 连续采集
-
-```kotlin
-fun main() {
-    val context = PulsarContexts.create()
-
-    val parseHandler = { _: WebPage, document: FeaturedDocument ->
-        // use the document
-        // ...
-        // and then extract further hyperlinks
-        context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
-    }
-    val urls = LinkExtractors.fromResource("seeds10.txt")
-        .map { ParsableHyperlink("$it -refresh", parseHandler) }
-    context.submitAll(urls).await()
-}
-```
-
-Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
-
 ### 结合机器人流程自动化 (RPA) 进行网页抓取
 
 ```kotlin
@@ -118,6 +98,39 @@ Example code:
 
 * [X-SQL to scrape 100+ fields from an Amazon's product page](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [X-SQLs to scrape all types of Amazon webpages](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+
+
+
+### 连续采集
+
+```kotlin
+fun main() {
+    val context = PulsarContexts.create()
+
+    val parseHandler = { _: WebPage, document: FeaturedDocument ->
+        // use the document
+        // ...
+        // and then extract further hyperlinks
+        context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
+    }
+    val urls = LinkExtractors.fromResource("seeds10.txt")
+        .map { ParsableHyperlink("$it -refresh", parseHandler) }
+    context.submitAll(urls).await()
+}
+```
+
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
+
+
+
+
+
+
+
+
+
+
+
 
 
 # 🚄 核心功能
