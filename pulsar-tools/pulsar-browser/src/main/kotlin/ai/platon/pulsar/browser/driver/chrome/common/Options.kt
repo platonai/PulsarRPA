@@ -18,8 +18,10 @@ class LauncherOptions(
     companion object {
         /** Default startup wait time in seconds. */
         val DEFAULT_STARTUP_WAIT_TIME = Duration.ofSeconds(60)
+
         /** Default shutdown wait time in seconds. */
         val DEFAULT_SHUTDOWN_WAIT_TIME = Duration.ofSeconds(60)
+
         /** 5 seconds wait time for threads to stop. */
         val THREAD_JOIN_WAIT_TIME = Duration.ofSeconds(5)
     }

@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.protocol.browser
+package ai.platon.pulsar.protocol.browser.impl
 
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.protocol.browser.DefaultBrowserComponents
+import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
+import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
-import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
 
 class BrowserEmulatorProtocol : ForwardingProtocol() {
     private val defaults by lazy { DefaultBrowserComponents(conf) }

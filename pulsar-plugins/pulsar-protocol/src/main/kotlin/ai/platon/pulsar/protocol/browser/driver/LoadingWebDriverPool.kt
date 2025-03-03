@@ -9,7 +9,6 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
-import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.BrowseEventHandlers
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
@@ -419,6 +418,12 @@ class LoadingWebDriverPool constructor(
     private fun computeBrowserAndDriver0(conf: VolatileConfig): WebDriver {
         logger.debug("Launch browser and new driver | {}", browserId)
 
+        // TODO: if the browser exists, we should not create a new one
+        if (_browser != null) {
+            // logger.warn("Browser already exists | {}", browserId.contextDir)
+        }
+
+        //  Launch a browser. If the browser with the id is already launched, return the existing one.
         val browser = driverFactory.launchBrowser(browserId, conf)
         val driver = browser.newDriver()
         

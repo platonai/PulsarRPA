@@ -1,9 +1,11 @@
-package ai.platon.pulsar.protocol.browser.driver
+package ai.platon.pulsar.protocol.browser.impl
 
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.protocol.browser.BrowserFactory
+import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId

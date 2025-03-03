@@ -2,10 +2,10 @@
 package ai.platon.pulsar.protocol.browser
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolFactory
+import ai.platon.pulsar.protocol.browser.impl.BrowserEmulatorProtocol
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
+import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolFactory
 import kotlin.test.*
-import kotlin.test.assertEquals
 
 /**
  * Unit test for new protocol plugin.
@@ -30,7 +30,8 @@ class TestProtocolFactory {
 //                protocolFactory.getProtocol("https://example.com").getClass().getName());
         assertEquals(ForwardingProtocol::class.java.name,
                 protocolFactory.getProtocol("crowd:http://example.com")?.javaClass?.name)
-        assertEquals(BrowserEmulatorProtocol::class.java.name,
+        assertEquals(
+            BrowserEmulatorProtocol::class.java.name,
                 protocolFactory.getProtocol("browser:http://example.com")?.javaClass?.name)
     }
 }
