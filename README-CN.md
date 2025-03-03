@@ -26,7 +26,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
   "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ```
 
-### 同网页对话
+### 谈论一个网页
 
 ```kotlin
 PulsarSettings().withLLMProvider("volcengine").withLLMName("ep-20250218132011-2scs8").withLLMAPIKey(apiKey)
@@ -36,25 +36,20 @@ response = session.chat("Tell me something about this webpage", document)
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/ChatAboutPage.kt).
 
-### 吩咐网页干活
+### 吩咐浏览器干活
 
 ```kotlin
-PulsarSettings().withLLMProvider("volcengine").withLLMName("ep-20250218132011-2scs8").withLLMAPIKey(apiKey)
-val session = PulsarContexts.createSession()
-val url = "https://www.amazon.com/dp/B0C1H26C46"
-
-val prompts = listOf(
-    "move cursor to the element with id 'title' and click it",
-    "scroll to middle",
-    "scroll to top",
-    "get the text of the element with id 'title'",
-)
+val prompts = """
+move cursor to the element with id 'title' and click it
+scroll to middle
+scroll to top
+get the text of the element with id 'title'
+"""
 
 val eventHandlers = DefaultPageEventHandlers()
 eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
-    prompts.forEach { prompt ->
+    prompts.split("\n").forEach { prompt ->
         val result = session.instruct(prompt, driver)
-        delay(1000)
     }
 }
 session.open(url, eventHandlers)
