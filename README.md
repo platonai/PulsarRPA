@@ -25,12 +25,12 @@ Bilibili:
 
 ```kotlin
 val document = session.loadDocument(url)
-response = session.chat("Tell me something about this webpage", document)
+val response = session.chat("Tell me something about this webpage", document)
 ```
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/ChatAboutPage.kt).
 
-### Tell the browser to do jobs:
+### Tell the browser to get jobs done:
 
 ```kotlin
 val prompts = """
@@ -41,9 +41,7 @@ get the text of the element with id 'title'
 """
 
 eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
-    prompts.split("\n").forEach { prompt ->
-        val result = session.instruct(prompt, driver)
-    }
+    val result = session.instruct(prompts, driver)
 }
 session.open(url, eventHandlers)
 ```
