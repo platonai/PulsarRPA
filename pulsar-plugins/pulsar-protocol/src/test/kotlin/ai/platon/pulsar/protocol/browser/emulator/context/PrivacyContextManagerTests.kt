@@ -70,15 +70,17 @@ class PrivacyContextManagerTests {
         val privacyManager = MultiPrivacyContextManager(driverPoolManager, conf)
         val fingerprint = Fingerprint(BrowserType.PULSAR_CHROME)
         
-        val pc = privacyManager.computeNextContext(fingerprint)
+        val pc = privacyManager.tryGetNextReadyPrivacyContext(fingerprint)
         assertTrue { pc.isActive }
+        assertTrue { pc.isReady }
         privacyManager.close(pc)
         assertTrue { !pc.isActive }
         assertFalse { privacyManager.temporaryContexts.containsKey(pc.privacyAgent) }
         assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
         
-        val pc2 = privacyManager.computeNextContext(fingerprint)
+        val pc2 = privacyManager.tryGetNextReadyPrivacyContext(fingerprint)
         assertTrue { pc2.isActive }
+        assertTrue { pc2.isReady }
         println(pc.privacyAgent.contextDir)
         println(pc2.privacyAgent.contextDir)
         assertNotEquals(pc.privacyAgent, pc2.privacyAgent)
@@ -96,7 +98,7 @@ class PrivacyContextManagerTests {
             val proxyServer = "127.0.0." + Random.nextInt(200)
             val userAgent = userAgents.getRandomUserAgent()
             val fingerprint = Fingerprint(BrowserType.PULSAR_CHROME, proxyServer, userAgent = userAgent)
-            val pc = privacyManager.computeNextContext(fingerprint)
+            val pc = privacyManager.tryGetNextReadyPrivacyContext(fingerprint)
             
             assertTrue { pc.isActive }
             privacyManager.close(pc)
@@ -119,7 +121,7 @@ class PrivacyContextManagerTests {
             val proxyServer = "127.0.0." + Random.nextInt(200)
             val userAgent = userAgents.getRandomUserAgent()
             val fingerprint = Fingerprint(BrowserType.MOCK_CHROME, proxyServer, userAgent = userAgent)
-            val pc = privacyManager.computeNextContext(fingerprint)
+            val pc = privacyManager.tryGetNextReadyPrivacyContext(fingerprint)
             
             volatileContexts.add(pc)
             assertTrue { pc.isActive }
@@ -148,7 +150,7 @@ class PrivacyContextManagerTests {
         val manager = MultiPrivacyContextManager(driverPoolManager, conf)
         
         val agent = PrivacyAgent(contextPath, BrowserType.MOCK_CHROME)
-        val privacyContext = manager.computeIfAbsent(agent)
+        val privacyContext = manager.getOrCreate(agent)
         
         assertTrue { manager.temporaryContexts.containsKey(agent) }
         manager.close(privacyContext)

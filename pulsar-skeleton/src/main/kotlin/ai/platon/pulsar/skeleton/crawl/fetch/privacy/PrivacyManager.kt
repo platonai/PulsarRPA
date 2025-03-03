@@ -18,11 +18,11 @@ interface PrivacyManager : AutoCloseable {
     fun reset(reason: String = "")
     
     suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
-    fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
-    fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
-    fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext?
-    fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
-    fun computeIfAbsent(privacyAgent: PrivacyAgent): PrivacyContext
+    fun tryGetNextReadyPrivacyContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
+    fun tryGetNextReadyPrivacyContext(fingerprint: Fingerprint): PrivacyContext
+    fun tryGetNextUnderLoadedPrivacyContext(fingerprint: Fingerprint): PrivacyContext?
+    fun tryGetNextUnderLoadedPrivacyContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
+    fun getOrCreate(privacyAgent: PrivacyAgent): PrivacyContext
     fun createUnmanagedContext(privacyAgent: PrivacyAgent): PrivacyContext
     fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: WebDriverFetcher): PrivacyContext
     fun close(privacyContext: PrivacyContext)

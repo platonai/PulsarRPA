@@ -46,25 +46,10 @@ open class BrowserPrivacyContext(
         private set
     val proxyEntry get() = proxyContext?.proxyEntry
 
-    /**
-     * The privacy context is retired but not closed yet.
-     * */
     override val isRetired: Boolean get() {
         return retired || proxyContext?.isRetired == true || driverContext.isRetired
     }
-    /**
-     * A ready privacy context has to meet the following requirements:
-     *
-     * 1. not closed
-     * 2. not leaked
-     * 3. not idle
-     * 4. if there is a proxy, the proxy has to be ready
-     * 5. the associated driver pool promises to provide an available driver, ether one of the following:
-     *    1. it has slots to create new drivers
-     *    2. it has standby drivers
-     *
-     * Note: this flag does not guarantee consistency, and can change immediately after it's read
-     * */
+
     override val isReady: Boolean get() {
         // NOTICE:
         // too complex state checking, which is very easy to lead to bugs

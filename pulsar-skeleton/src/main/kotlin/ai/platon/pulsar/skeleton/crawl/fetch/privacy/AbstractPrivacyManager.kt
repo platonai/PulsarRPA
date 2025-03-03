@@ -83,24 +83,24 @@ abstract class AbstractPrivacyManager(
     /**
      * Create a new context or return an existing one.
      * */
-    abstract override fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
+    abstract override fun tryGetNextReadyPrivacyContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
     /**
      * Create a new context or return an existing one.
      * */
-    abstract override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
+    abstract override fun tryGetNextReadyPrivacyContext(fingerprint: Fingerprint): PrivacyContext
     /**
      * Create a new context or return an existing one
      * */
-    abstract override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext?
+    abstract override fun tryGetNextUnderLoadedPrivacyContext(fingerprint: Fingerprint): PrivacyContext?
     /**
      * Create a new context or return an existing one
      * */
-    abstract override fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
+    abstract override fun tryGetNextUnderLoadedPrivacyContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
 
     /**
      * Create a context with [privacyAgent] and add it to active context list if not absent
      * */
-    abstract override fun computeIfAbsent(privacyAgent: PrivacyAgent): PrivacyContext
+    abstract override fun getOrCreate(privacyAgent: PrivacyAgent): PrivacyContext
 
     /**
      * Create a context and do not add to active context list
@@ -179,7 +179,7 @@ abstract class AbstractPrivacyManager(
 
         /**
          * Operations on contexts are synchronized, so it's guaranteed that new contexts are allocated
-         * after dead contexts release their resources.
+         * after dead contexts releasing their resources.
          * */
         synchronized(contextLifeCycleMonitor) {
             permanentContexts.remove(privacyAgent)
@@ -191,6 +191,7 @@ abstract class AbstractPrivacyManager(
                 zombieContexts.addFirst(privacyContext)
             }
 
+            // Lazy closing is experimental.
             // it is a bad idea to close lazily:
             // 1. hard to control the hardware resources, especially the memory
             // 2. the zombie contexts should be closed before new contexts are created
