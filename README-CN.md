@@ -19,13 +19,6 @@ Bilibili:
 
 ## 🚀 开始
 
-### 一行代码抓取
-
-```kotlin
-fun main() = PulsarContexts.createSession().scrapeOutPages(
-  "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
-```
-
 ### 谈论一个网页
 
 ```kotlin
@@ -53,6 +46,13 @@ session.open(url, eventHandlers)
 ```
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/TalkToActivePage.kt).
+
+### 一行代码抓取
+
+```kotlin
+fun main() = PulsarContexts.createSession().scrapeOutPages(
+  "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
+```
 
 ### 连续采集
 
