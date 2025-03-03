@@ -21,24 +21,16 @@ Bilibili:
 
 ## 🚀 Quick start
 
-### One line of code to scrape:
+### Chat about an online page:
 
 ```kotlin
-fun main() = PulsarContexts.createSession().scrapeOutPages(
-    "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
-```
-
-### Chat about a webpage:
-
-```kotlin
-PulsarSettings().withLLMProvider("volcengine").withLLMName("ep-20250218132011-2scs8").withLLMAPIKey(apiKey)
 val document = session.loadDocument(url)
 response = session.chat("Tell me something about this webpage", document)
 ```
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/ChatAboutPage.kt).
 
-### Tell the browser to get to work:
+### Tell the browser to do jobs:
 
 ```kotlin
 val prompts = """
@@ -58,6 +50,13 @@ session.open(url, eventHandlers)
 ```
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/TalkToActivePage.kt).
+
+### One line of code to scrape:
+
+```kotlin
+fun main() = PulsarContexts.createSession().scrapeOutPages(
+    "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
+```
 
 ### Continuous web crawling:
 
