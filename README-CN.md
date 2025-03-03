@@ -158,13 +158,13 @@ Example code:
 - 基于自监督机器学习自动进行信息提取的小程序，AI 算法可以识别详情页的所有字段，字段精确度达到 99% 以上。
 - 基于自监督机器学习自动学习并输出所有采集规则的小程序。
 - 可以直接从命令行执行网页数据采集任务，无需编写代码。
-- PulsarRPA 服务器，可以向服务器发送 SQL 语句来采集 Web 数据。
+- 升级的 PulsarRPA 服务器，可以向服务器发送 SQL 语句来采集 Web 数据。
 - 一个 Web UI，可以编写 SQL 语句并通过它发送到服务器。
 
 下载 [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro#download) 并使用以下命令行探索其能力：
 
 ```shell
-java -jar exotic-standalone.jar
+java -jar PulsarRPAPro.jar
 ```
 
 # 🎁 将 PulsarRPA 用作软件库

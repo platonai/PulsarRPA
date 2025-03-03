@@ -152,6 +152,15 @@ Example code:
 
 ## 🧮 PulsarRPA as an executable jar
 
+We have released a standalone executable JAR based on PulsarRPA, which includes:
+
+- Data collection examples from top-tier websites.
+- A mini-program for automatic information extraction based on self-supervised machine learning. The AI algorithm can identify all fields on detail pages with field accuracy exceeding 99%.
+- A mini-program that automatically learns and outputs all collection rules based on self-supervised machine learning.
+- The ability to execute web data collection tasks directly from the command line without writing any code.
+- An upgraded PulsarRPA server that allows you to send SQL statements to collect web data.
+- A Web UI where you can write SQL statements and send them to the server.
+
 Download [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro#download) and explore its capabilities with a single command line:
 
 ```shell
