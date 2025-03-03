@@ -177,14 +177,14 @@ java -jar PulsarRPAPro.jar
 <dependency>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
-    <version>2.2.1</version>
+    <version>2.2.1-SNAPSHOT</version>
 </dependency>
 ```
 
 使用 Gradle 时，可以在 `build.gradle` 文件中添加以下依赖：
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-bom:2.2.1")
+implementation("ai.platon.pulsar:pulsar-bom:2.2.1-SNAPSHOT")
 ```
 
 也可以从 Github 克隆模板项目，包括 [kotlin](https://github.com/platonai/pulsar-kotlin-template),
