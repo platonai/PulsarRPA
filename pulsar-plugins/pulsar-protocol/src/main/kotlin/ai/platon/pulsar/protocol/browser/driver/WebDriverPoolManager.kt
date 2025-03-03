@@ -119,147 +119,16 @@ open class WebDriverPoolManager(
     init {
         gauges?.let { MetricsSystem.reg.registerAll(this, it) }
     }
-    
+
     /**
-     * Run the task using the default browser.
-     * */
-    @Throws(WebDriverException::class, WebDriverPoolException::class)
-    suspend fun run(task: FetchTask, browseFun: suspend (driver: WebDriver) -> FetchResult?) =
-        run(WebDriverTask(BrowserId.DEFAULT, task.page, task.priority, browseFun))
-    
-    /**
-     * TODO: consider pro-actor model instead
+     * Check if the browser has possibility to serve tasks.
      *
-     * reactor: tell me if you can do this job
-     * pro-actor: here is a job, tell me if you finished it
+     * 1. the browser is not in any pool
+     * 2. the browser is in the working pool
      *
-     * @return The result of action, or null if timeout
+     * @param browserId the browser id
      * */
-    @Throws(WebDriverException::class, WebDriverPoolException::class)
-    suspend fun run(
-        browserId: BrowserId, task: FetchTask,
-        browseFun: suspend (driver: WebDriver) -> FetchResult?,
-    ) = run(WebDriverTask(browserId, task.page, task.priority, browseFun))
-    
-    /**
-     * Run the task with the driver specified.
-     * */
-    @Throws(WebDriverException::class, WebDriverPoolException::class)
-    suspend fun run(
-        driverId: Int, task: FetchTask,
-        browseFun: suspend (driver: WebDriver) -> FetchResult?,
-    ) {
-        // subscribe a driver first, and then use it to run a task
-        TODO("NOT_IMPLEMENTED")
-    }
-
-    /**
-     * Run the task.
-     * */
-    @Throws(
-        BrowserUnavailableException::class,
-        BrowserLaunchException::class,
-        WebDriverPoolException::class,
-        WebDriverPoolExhaustedException::class,
-        WebDriverException::class,
-    )
-    suspend fun run(task: WebDriverTask): FetchResult? {
-        lastActiveTime = Instant.now()
-        try {
-            return doRun(task)
-        } catch (e: InterruptedException) {
-            warnInterruptible(this, e)
-            return null
-        } finally {
-            lastActiveTime = Instant.now()
-        }
-    }
-
-    /**
-     * Run the task.
-     * */
-    suspend fun run1(task: WebDriverTask): FetchResult? {
-        lastActiveTime = Instant.now()
-        try {
-            return doRun(task)
-        } catch (e: InterruptedException) {
-            warnInterruptible(this, e)
-            return null
-        } catch (e: BrowserLaunchException) {
-            logger.warn(
-                "Failed to launch browser, close the driver pool gracefully | {} | {} | {}",
-                task.browserId, e.message, task.page.url
-            )
-            logger.debug("Failed to launch browser", e)
-            closeBrowserAccompaniedDriverPoolGracefully(task.browserId, Duration.ofSeconds(10))
-            return null
-        } catch (e: BrowserUnavailableException) {
-            logger.warn(
-                "Browser unavailable, try to clean the browser and the driver pool | {} | {} | {}",
-                task.browserId, e.message, task.page.url
-            )
-            logger.debug("Browser unavailable - ", e)
-            closeBrowserAccompaniedDriverPoolGracefully(task.browserId, Duration.ofSeconds(10))
-            return null
-        } catch (e: IllegalWebDriverStateException) {
-            logger.warn("Web driver unavailable, clean the browser and the driver pool | {} | {} | {}",
-                task.browserId, e.message, task.page.url
-            )
-            logger.debug("Web driver unavailable - ", e)
-            closeBrowserAccompaniedDriverPoolGracefully(task.browserId, Duration.ofSeconds(10))
-            return null
-        } catch (e: WebDriverPoolException) {
-            logger.warn("Web driver pool exception, close the driver pool gracefully | {} | {} | {}",
-                task.browserId, e.message, task.page.url
-            )
-            // logger.info("Web driver pool exception - ", e)
-            closeBrowserAccompaniedDriverPoolGracefully(task.browserId, Duration.ofSeconds(10))
-            return null
-        } catch (e: WebDriverException) {
-            logger.warn("Failed to run the task | {} | {}", task.page.url, e.message)
-            return null
-        } finally {
-            lastActiveTime = Instant.now()
-        }
-    }
-    
-    /**
-     * Run the task and save the execution state, so it can be canceled by [cancel] and [cancelAll].
-     * */
-    private suspend fun runCancelable(task: WebDriverTask, driver: WebDriver): FetchResult? {
-        val deferred = supervisorScope {
-            // Creates a coroutine and returns its future result
-            // The running coroutine is cancelled when the resulting deferred is cancelled
-            async { task.driverFun(driver) }
-        }
-        
-        _deferredTasks[task.id] = deferred
-        // Awaits for completion of this value without blocking a thread and resumes
-        // when deferred computation is complete, returning the resulting value or throwing
-        // the corresponding exception if the deferred was cancelled.
-        return try {
-            deferred.await()
-        } catch (e: CancellationException) {
-            logger.info("Coroutine cancelled, return null result | {}", e.message)
-            null
-        } finally {
-            _deferredTasks.remove(task.id)
-        }
-    }
-    
-    /**
-     * Create a driver pool, but the driver pool is not added to [workingDriverPools].
-     * */
-    fun createUnmanagedDriverPool(
-        browserId: BrowserId = BrowserId.DEFAULT, priority: Int = 0,
-    ): LoadingWebDriverPool {
-        return LoadingWebDriverPool(browserId, priority, this, driverFactory, immutableConfig)
-    }
-
-    /**
-     * Check if the pool is active.
-     * */
-    fun isActive(browserId: BrowserId) = isActive && driverPoolPool.isActive(browserId)
+    fun hasPossibility(browserId: BrowserId) = isActive && driverPoolPool.hasPossibility(browserId)
 
     /**
      * Get the number of drivers which can serve tasks in the pool.
@@ -293,6 +162,49 @@ open class WebDriverPoolManager(
      * Check if a pool is retired.
      * */
     fun isRetiredPool(browserId: BrowserId) = driverPoolPool.isRetiredPool(browserId)
+
+    /**
+     * Run the task using the default browser.
+     * */
+    @Throws(WebDriverException::class, WebDriverPoolException::class)
+    suspend fun run(task: FetchTask, browseFun: suspend (driver: WebDriver) -> FetchResult?) =
+        run(WebDriverTask(BrowserId.DEFAULT, task.page, task.priority, browseFun))
+
+    /**
+     * TODO: consider pro-actor model instead
+     *
+     * reactor: tell me if you can do this job
+     * pro-actor: here is a job, tell me if you finished it
+     *
+     * @return The result of action, or null if timeout
+     * */
+    @Throws(WebDriverException::class, WebDriverPoolException::class)
+    suspend fun run(
+        browserId: BrowserId, task: FetchTask,
+        browseFun: suspend (driver: WebDriver) -> FetchResult?,
+    ) = run(WebDriverTask(browserId, task.page, task.priority, browseFun))
+
+    /**
+     * Run the task.
+     * */
+    @Throws(
+        BrowserUnavailableException::class,
+        BrowserLaunchException::class,
+        WebDriverPoolException::class,
+        WebDriverPoolExhaustedException::class,
+        WebDriverException::class,
+    )
+    suspend fun run(task: WebDriverTask): FetchResult? {
+        lastActiveTime = Instant.now()
+        try {
+            return doRun(task)
+        } catch (e: InterruptedException) {
+            warnInterruptible(this, e)
+            return null
+        } finally {
+            lastActiveTime = Instant.now()
+        }
+    }
 
     /**
      * Check if a pool is retired.
@@ -338,7 +250,16 @@ open class WebDriverPoolManager(
         val driverPool = workingDriverPools[browserId] ?: return
         driverPool.cancelAll()
     }
-    
+
+    /**
+     * Create a driver pool, but the driver pool is not added to [workingDriverPools].
+     * */
+    fun createUnmanagedDriverPool(
+        browserId: BrowserId = BrowserId.DEFAULT, priority: Int = 0,
+    ): LoadingWebDriverPool {
+        return LoadingWebDriverPool(browserId, priority, this, driverFactory, immutableConfig)
+    }
+
     /**
      * Find the driver pool with [browserId], cancel all running tasks in it, and close all drivers in it.
      * When we close a driver pool, all threads that are trying to get a driver should wait.
@@ -586,11 +507,11 @@ open class WebDriverPoolManager(
             driver?.let { driverPool.put(it) }
         }
     }
-    
+
     private suspend fun runCancelableWithTimeout(task: WebDriverTask, driver: WebDriver): FetchResult? {
         // do not take up too much time on this driver
         val fetchTaskTimeout = driverSettings.fetchTaskTimeout
-        
+
         return try {
             // The code that is executing inside the [block] is cancelled on timeout.
             withTimeout(fetchTaskTimeout.toMillis()) {
@@ -603,6 +524,30 @@ open class WebDriverPoolManager(
                 "Coroutine canceled({}) (by [withTimeout]) | {} | {}",
                 fetchTaskTimeout.readable(), buildStatusString(browserId), browserId
             )
+            null
+        } finally {
+            _deferredTasks.remove(task.id)
+        }
+    }
+
+    /**
+     * Run the task and save the execution state, so it can be canceled by [cancel] and [cancelAll].
+     * */
+    private suspend fun runCancelable(task: WebDriverTask, driver: WebDriver): FetchResult? {
+        val deferred = supervisorScope {
+            // Creates a coroutine and returns its future result
+            // The running coroutine is cancelled when the resulting deferred is cancelled
+            async { task.driverFun(driver) }
+        }
+
+        _deferredTasks[task.id] = deferred
+        // Awaits for completion of this value without blocking a thread and resumes
+        // when deferred computation is complete, returning the resulting value or throwing
+        // the corresponding exception if the deferred was cancelled.
+        return try {
+            deferred.await()
+        } catch (e: CancellationException) {
+            logger.info("Coroutine cancelled, return null result | {}", e.message)
             null
         } finally {
             _deferredTasks.remove(task.id)

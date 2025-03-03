@@ -53,7 +53,7 @@ open class BrowserManager(
     /**
      * Check if the browser is active.
      * */
-    fun isActiveBrowser(browserId: BrowserId): Boolean {
+    fun isActive(browserId: BrowserId): Boolean {
         val browser = findBrowser(browserId) as? AbstractBrowser
         return browser != null && browser.isActive
     }

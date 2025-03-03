@@ -33,11 +33,26 @@ class ConcurrentStatefulDriverPoolPool {
      * Closed driver pool ids
      * */
     val closedDriverPools: Set<BrowserId> get() = _closedDriverPools
+
+    /**
+     * Check if the browser has no possibility to provide a webdriver for new tasks.
+     *
+     * @param browserId The id of the browser and its corresponding driver pool.
+     * @return True if the browser has no possibility to provide a webdriver for new tasks, false otherwise.
+     */
     @Synchronized
-    fun isActive(browserId: BrowserId): Boolean {
+    fun hasNoPossibility(browserId: BrowserId): Boolean {
         reassessClosedBrowserId(browserId)
-        return !(browserId in closedDriverPools || browserId in retiredDriverPools)
+        return closedDriverPools.contains(browserId) || retiredDriverPools.containsKey(browserId)
     }
+    /**
+     * Check if the browser has possibility to provide a webdriver for new tasks.
+     *
+     * @param browserId The id of the browser and its corresponding driver pool.
+     * @return True if the browser has possibility to provide a webdriver for new tasks, false otherwise.
+     * */
+    @Synchronized
+    fun hasPossibility(browserId: BrowserId) = !hasNoPossibility(browserId)
     /**
      * Return the number of new drivers can offer by the pool at the calling time point.
      *

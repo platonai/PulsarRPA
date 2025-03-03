@@ -26,6 +26,7 @@ import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
@@ -68,15 +69,16 @@ open class WebDriverContext(
 
     private val browserManager = driverPoolManager.browserManager
 
-    private val browser get() = browserManager.findBrowser(browserId)
+    private val browser get() = browserManager.findBrowser(browserId) as? AbstractBrowser
 
     /**
      * The driver context is active if the following conditions meet:
      * 1. the context is not closed
      * 2. the application is active
+     * 3. the browser is not in closed pool nor in retired pool
      * */
     open val isActive: Boolean get() {
-        return !closed.get() && AppContext.isActive && driverPoolManager.isActive(browserId)
+        return !closed.get() && AppContext.isActive && driverPoolManager.hasPossibility(browserId)
     }
     /**
      * Check if the driver context is retired.

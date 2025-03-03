@@ -209,7 +209,8 @@ open class MultiPrivacyContextManager(
         if (context.isReady) {
             return context
         } else {
-            // If a context is not ready, it can be fully loaded, all web drivers are working, it can turn to be ready later
+            // If a context is not ready, it can be fully loaded, which means all web drivers are working,
+            // and it can turn to be ready later
         }
 
         // The context is inactive, close it
