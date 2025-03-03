@@ -58,4 +58,6 @@ class AppPathsTest {
         // 只有后缀
         assertEquals("baidu-com-ddcd696103c7865a3301ac293b27c55c-post", fromUri("http://www.baidu.com/some/path?query=param", "", "-post"))
     }
+
+
 }

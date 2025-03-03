@@ -196,7 +196,23 @@ object AppPaths {
         }
         return result
     }
-    
+
+    /**
+     * Converts a path string, or a sequence of strings that when joined form a path string, to a [Path],
+     * but only in the application's home directory.
+     *
+     * @param   first
+     *          the path string or initial part of the path string
+     * @param   more
+     *          additional strings to be joined to form the path string
+     *
+     * @return  the resulting [Path]
+     *
+     * @throws  java.nio.file.InvalidPathException if the path string cannot be converted to a [Path]
+     *
+     * @see java.io.FileSystem#getPath
+     * @see Path#of(String,String...)
+     */
     fun get(first: String, vararg more: String): Path = Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)
     
     /**
@@ -216,13 +232,50 @@ object AppPaths {
      * @param first the first part of the path
      * @param more the rest parts of the path
      */
-    fun getTmp(first: String, vararg more: String): Path = resolve(TMP_DIR, first, *more)
-    
-    fun getRandomTmp(prefix: String = "", suffix: String = ""): Path =
-        getTmp(prefix, RandomStringUtils.randomAlphabetic(18), suffix)
-    
-    fun getProcTmp(first: String, vararg more: String): Path = resolve(PROC_TMP_DIR, first, *more)
-    
+    fun getTmpDirectory(first: String, vararg more: String): Path = resolve(TMP_DIR, first, *more)
+
+    @Deprecated("Inappropriate name", ReplaceWith("getTmpDirectory(first, *more)" ))
+    fun getTmp(first: String, vararg more: String) = getTmpDirectory(first, *more)
+
+    /**
+     * Get a random path of the process's temporary directory.
+     *
+     * A typical process temporary directory is:
+     *
+     * ```powershell
+     * $env:TMP/pulsar-$env:USERNAME/
+     * ```
+     *
+     * @param prefix the prefix of the directory name
+     * @param suffix the suffix of the directory name
+     *
+     * @return the path in the process's temporary directory
+     * */
+    fun getRandomTmpDirectory(prefix: String = "", suffix: String = ""): Path =
+        getTmpDirectory(prefix, RandomStringUtils.randomAlphabetic(18), suffix)
+
+    @Deprecated("Inappropriate name", ReplaceWith("getRandomTmpDirectory(first, *more)" ))
+    fun getRandomTmp(prefix: String = "", suffix: String = "") = getRandomTmpDirectory(prefix, suffix)
+
+    /**
+     * Get a path of the process's temporary directory.
+     *
+     * A typical process temporary directory is:
+     *
+     * ```powershell
+     * $env:TMP/pulsar-$env:USERNAME/
+     * ```
+     *
+     * @param first the first part of the path
+     * @param more the rest parts of the path
+     *
+     * @return the path in the process's temporary directory
+     * */
+    fun getProcTmpDirectory(first: String, vararg more: String): Path = resolve(PROC_TMP_DIR, first, *more)
+
+    @Deprecated("Inappropriate name", ReplaceWith("getProcTmpDirectory(first, *more)" ))
+    fun getProcTmp(first: String, vararg more: String) = getProcTmpDirectory(first, *more)
+
     /**
      * Get a path of the temporary directory in the process's temporary directory.
      *
@@ -243,10 +296,29 @@ object AppPaths {
      *
      * @return the path in the process's temporary directory
      * */
-    fun getProcTmpTmp(first: String, vararg more: String): Path = resolve(PROC_TMP_DIR.resolve("tmp"), first, *more)
-    
-    fun getRandomProcTmpTmp(prefix: String = "", suffix: String = ""): Path =
-        getProcTmpTmp(prefix + RandomStringUtils.randomAlphabetic(18) + suffix)
+    fun getProcTmpTmpDirectory(first: String, vararg more: String): Path = resolve(PROC_TMP_DIR.resolve("tmp"), first, *more)
+
+    @Deprecated("Inappropriate name", ReplaceWith("getProcTmpTmpDirectory(first, *more)" ))
+    fun getProcTmpTmp(first: String, vararg more: String) = getProcTmpTmpDirectory(first, *more)
+
+    /**
+     * Get a path of the temporary directory in the process's temporary directory.
+     *
+     * A typical process temporary directory is:
+     *
+     * ```powershell
+     * $env:TMP/pulsar-$env:USERNAME/tmp/
+     * ```
+     *
+     * @param prefix the prefix of the directory name
+     * @param suffix the suffix of the directory name
+     * @return the path in the process's temporary directory
+     * */
+    fun getRandomProcTmpTmpDirectory(prefix: String = "", suffix: String = ""): Path =
+        getProcTmpTmpDirectory(prefix + RandomStringUtils.randomAlphabetic(18) + suffix)
+
+    @Deprecated("Inappropriate name", ReplaceWith("getRandomProcTmpTmpDirectory(prefix, suffix)" ))
+    fun getRandomProcTmpTmp(prefix: String = "", suffix: String = "") = getRandomProcTmpTmpDirectory(prefix, suffix)
 
     fun getContextGroupDir(group: String) = CONTEXT_GROUP_BASE_DIR.resolve(group)
 
@@ -256,15 +328,56 @@ object AppPaths {
 
     fun getTmpContextBaseDir(group: String, browserType: BrowserType) = getTmpContextGroupDir(group).resolve(browserType.name)
 
+    /**
+     * Generates a random string that is compatible with file paths and can be used as a file name.
+     * The generated string consists of an optional prefix, a random alphabetic string of 18 characters,
+     * and an optional suffix.
+     *
+     * @param prefix the prefix of the name
+     * @param suffix the suffix of the name
+     * @return the random string
+     * */
     fun random(prefix: String = "", suffix: String = ""): String =
         "$prefix${RandomStringUtils.randomAlphabetic(18)}$suffix"
-    
+    /**
+     * Generates a path-compatible, hex string that can be used as a file name.
+     *
+     * This function takes a URI, hashes it using MD5, and then constructs a string by
+     * concatenating the provided prefix, the hashed value, and the provided suffix.
+     * The resulting string is suitable for use as a file name.
+     *
+     * @param uri The URI to be hashed. This is the input string that will be converted
+     *            into a hex string using MD5 hashing.
+     * @param prefix The prefix to be added before the hashed value. This is optional
+     *               and defaults to an empty string if not provided.
+     * @param suffix The suffix to be added after the hashed value. This is optional
+     *               and defaults to an empty string if not provided.
+     * @return A hex string that is the result of concatenating the prefix, the MD5
+     *         hash of the URI, and the suffix. This string is suitable for use as a
+     *         file name.
+     */
     fun hex(uri: String, prefix: String = "", suffix: String = ""): String {
+        // Generate the MD5 hash of the URI and construct the final string by
+        // concatenating the prefix, the hash, and the suffix.
         return DigestUtils.md5Hex(uri).let { "$prefix$it$suffix" }
     }
-    
-    fun fileId(uri: String) = DigestUtils.md5Hex(uri)
-    
+    /**
+     * Generates a path-compatible, hex string that can be used as a file name.
+     *
+     * This function takes a URI, hashes it using MD5.
+     * The resulting string is suitable for use as a file name.
+     *
+     * @param uri The URI to be hashed. This is the input string that will be converted
+     *            into a hex string using MD5 hashing.
+     * @return A hex string that is the result of concatenating the prefix, the MD5
+     *         hash of the URI, and the suffix. This string is suitable for use as a
+     *         file name.
+     */
+    fun md5Hex(uri: String) = DigestUtils.md5Hex(uri)
+
+    @Deprecated("Inappropriate name", ReplaceWith("md5Hex(uri)" ))
+    fun fileId(uri: String) = md5Hex(uri)
+
     /**
      * Create a mock page path.
      * */
