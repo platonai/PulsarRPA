@@ -255,7 +255,12 @@ open class WebDriverPoolManager(
     ): LoadingWebDriverPool {
         return LoadingWebDriverPool(browserId, priority, this, driverFactory, immutableConfig)
     }
-    
+
+    /**
+     * Check if the pool is active.
+     * */
+    fun isActive(browserId: BrowserId) = isActive && driverPoolPool.isActive(browserId)
+
     /**
      * Get the number of drivers which can serve tasks in the pool.
      * */

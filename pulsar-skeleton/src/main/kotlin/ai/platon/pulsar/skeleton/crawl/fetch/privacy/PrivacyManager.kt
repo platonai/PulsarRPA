@@ -20,7 +20,6 @@ interface PrivacyManager : AutoCloseable {
     suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
     fun tryGetNextReadyPrivacyContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
     fun tryGetNextReadyPrivacyContext(fingerprint: Fingerprint): PrivacyContext
-    fun tryGetNextUnderLoadedPrivacyContext(fingerprint: Fingerprint): PrivacyContext?
     fun tryGetNextUnderLoadedPrivacyContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
     fun getOrCreate(privacyAgent: PrivacyAgent): PrivacyContext
     fun createUnmanagedContext(privacyAgent: PrivacyAgent): PrivacyContext

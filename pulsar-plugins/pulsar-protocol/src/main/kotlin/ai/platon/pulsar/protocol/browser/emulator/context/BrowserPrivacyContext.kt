@@ -37,26 +37,33 @@ open class BrowserPrivacyContext(
     val coreMetrics: CoreMetrics? = null,
     conf: ImmutableConfig,
     privacyAgent: PrivacyAgent
-): AbstractPrivacyContext(privacyAgent, conf) {
+) : AbstractPrivacyContext(privacyAgent, conf) {
     private val logger = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
-    
+
     val browserId = BrowserId(privacyAgent.contextDir, privacyAgent.fingerprint)
     val driverContext = WebDriverContext(browserId, driverPoolManager, conf)
     var proxyContext: ProxyContext? = null
         private set
     val proxyEntry get() = proxyContext?.proxyEntry
 
-    override val isRetired: Boolean get() {
-        return retired || proxyContext?.isRetired == true || driverContext.isRetired
-    }
+    override val isRetired: Boolean
+        get() {
+            return retired || proxyContext?.isRetired == true || driverContext.isRetired
+        }
 
-    override val isReady: Boolean get() {
-        // NOTICE:
-        // too complex state checking, which is very easy to lead to bugs
-        val isProxyContextReady = proxyContext == null || proxyContext?.isReady == true
-        val isDriverContextReady = driverContext.isReady
-        return isProxyContextReady && isDriverContextReady && super.isReady
-    }
+    override val isActive: Boolean
+        get() {
+            val isProxyContextActive = proxyContext == null || proxyContext?.isActive == true
+            val isDriverContextActive = driverContext.isActive
+            return isProxyContextActive && isDriverContextActive && super.isActive
+        }
+
+    override val isReady: Boolean
+        get() {
+            val isProxyContextReady = proxyContext == null || proxyContext?.isReady == true
+            val isDriverContextReady = driverContext.isReady
+            return isProxyContextReady && isDriverContextReady && super.isReady
+        }
 
     override val isFullCapacity: Boolean get() = driverPoolManager.isFullCapacity(browserId)
 
@@ -65,20 +72,18 @@ open class BrowserPrivacyContext(
         val f = webdriverFetcher ?: throw IllegalStateException("Fetcher is null")
         return doRun(task) { _, driver -> f.fetchDeferred(task, driver) }
     }
-    
+
     override suspend fun open(url: String, options: LoadOptions): FetchResult {
         val task = FetchTask.create(url, options)
         val f = webdriverFetcher ?: throw IllegalStateException("Fetcher is null")
         return doRun(task) { _, driver -> f.fetchDeferred(task, driver) }
     }
-    
+
     @Throws(ProxyException::class, Exception::class)
     override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         initProxyContextIfNecessary(task)
 
-        return checkAbnormalResult(task) ?:
-            proxyContext?.run(task, fetchFun) ?:
-            driverContext.run(task, fetchFun)
+        return checkAbnormalResult(task) ?: proxyContext?.run(task, fetchFun) ?: driverContext.run(task, fetchFun)
     }
 
     override fun maintain() {
@@ -90,10 +95,11 @@ open class BrowserPrivacyContext(
 
     @Beta
     override fun subscribeWebDriver() = driverPoolManager.subscribeDriver(browserId)
-    
+
     override fun buildReport(): String {
-        var report = String.format("Privacy context has lived for %s | %s | %s" +
-            " | success: %s(%s pages/s) | small: %s(%s) | traffic: %s(%s/s) | tasks: %s total run: %s | %s",
+        var report = String.format(
+            "Privacy context has lived for %s | %s | %s" +
+                    " | success: %s(%s pages/s) | small: %s(%s) | traffic: %s(%s/s) | tasks: %s total run: %s | %s",
             // Privacy context has lived for {} | {} | {}
             elapsedTime.readable(), display, readableState,
             // success: {}({} pages/s)
@@ -101,34 +107,40 @@ open class BrowserPrivacyContext(
             // small: {}({})
             meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate),
             // traffic: {}({}/s)
-            Strings.compactFormat(coreMetrics?.totalNetworkIFsRecvBytes?:0),
-            Strings.compactFormat(coreMetrics?.networkIFsRecvBytesPerSecond?:0),
+            Strings.compactFormat(coreMetrics?.totalNetworkIFsRecvBytes ?: 0),
+            Strings.compactFormat(coreMetrics?.networkIFsRecvBytesPerSecond ?: 0),
             // tasks: {} total run: {}
             meterTasks.count, meterFinishes.count,
             // proxy: {}
             proxyContext?.proxyEntry?.toString()
         )
         report += "\n"
-        
+
         if (smallPageRate > 0.5) {
-            report += String.format("Privacy context #%s is disqualified, too many small pages: %s(%s)",
-                seq, meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate))
+            report += String.format(
+                "Privacy context #%s is disqualified, too many small pages: %s(%s)",
+                seq, meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate)
+            )
             report += "\n"
         }
-        
+
         // 0 to disable
         if (meterSuccesses.meanRate < 0) {
-            report += String.format("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", seq)
+            report += String.format(
+                "Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least",
+                seq
+            )
             // check the zombie context list, if the context keeps go bad, the proxy provider is bad
             report += "\n"
         }
-        
+
         return report.trimEnd()
     }
 
     override fun report() {
         logger.info(buildReport())
     }
+
     /**
      * Closing call stack:
      *
@@ -169,18 +181,18 @@ open class BrowserPrivacyContext(
             // logger.info("Proxy context is already created, skip creating proxy context")
             return
         }
-        
+
         createProxyContextIfEnabled()
         task.page.setVar(VAR_PRIVACY_CONTEXT_DISPLAY, display)
     }
-    
+
     @Throws(ProxyException::class)
     private fun createProxyContextIfEnabled() {
         if (proxyPoolManager == null) {
             // logger.info("Proxy pool manager is null, skip creating proxy context")
             return
         }
-        
+
         if (proxyPoolManager.isEnabled) {
             createProxyContext()
         } else {

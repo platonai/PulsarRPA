@@ -91,10 +91,6 @@ abstract class AbstractPrivacyManager(
     /**
      * Create a new context or return an existing one
      * */
-    abstract override fun tryGetNextUnderLoadedPrivacyContext(fingerprint: Fingerprint): PrivacyContext?
-    /**
-     * Create a new context or return an existing one
-     * */
     abstract override fun tryGetNextUnderLoadedPrivacyContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
 
     /**

@@ -18,18 +18,26 @@ class ConcurrentStatefulDriverPoolPool {
     private val _retiredDriverPools = ConcurrentSkipListMap<BrowserId, LoadingWebDriverPool>()
     private val _closedDriverPools = ConcurrentSkipListSet<BrowserId>()
     private val _closeHistory = mutableListOf<BrowserId>()
+
     /**
      * Working driver pools
      * */
     val workingDriverPools: Map<BrowserId, LoadingWebDriverPool> get() = _workingDriverPools
+
     /**
      * Retired but not closed driver pools
      * */
     val retiredDriverPools: Map<BrowserId, LoadingWebDriverPool> get() = _retiredDriverPools
+
     /**
      * Closed driver pool ids
      * */
     val closedDriverPools: Set<BrowserId> get() = _closedDriverPools
+    @Synchronized
+    fun isActive(browserId: BrowserId): Boolean {
+        reassessClosedBrowserId(browserId)
+        return !(browserId in closedDriverPools || browserId in retiredDriverPools)
+    }
     /**
      * Return the number of new drivers can offer by the pool at the calling time point.
      *

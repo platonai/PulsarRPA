@@ -76,11 +76,7 @@ open class WebDriverContext(
      * 2. the application is active
      * */
     open val isActive: Boolean get() {
-        return when {
-            closed.get() -> false
-            AppContext.isActive -> true
-            else -> false
-        }
+        return !closed.get() && AppContext.isActive && driverPoolManager.isActive(browserId)
     }
     /**
      * Check if the driver context is retired.
