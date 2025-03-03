@@ -10,4 +10,8 @@ data class ModelResponse(
     }
 
     override fun toString() = content
+
+    companion object {
+        val LLM_NOT_AVAILABLE = ModelResponse("LLM not available", ResponseState.OTHER)
+    }
 }

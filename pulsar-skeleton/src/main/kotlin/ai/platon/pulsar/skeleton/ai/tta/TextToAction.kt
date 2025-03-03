@@ -29,7 +29,15 @@ data class InstructionResult(
     val functionResults : List<Any?>,
     val modelResponse: ModelResponse,
 ) {
+    fun hasResults() = functionResults.isNotEmpty()
 
+    companion object {
+        val LLM_NOT_AVAILABLE = InstructionResult(
+            listOf(),
+            listOf(),
+            modelResponse = ModelResponse.LLM_NOT_AVAILABLE,
+        )
+    }
 }
 
 class TextToAction(

@@ -11,7 +11,6 @@ import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.CombinedUrlNormalizer
 import ai.platon.pulsar.skeleton.common.urls.NormURL
@@ -26,8 +25,6 @@ import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarEnvironment
 import ai.platon.pulsar.skeleton.session.PulsarSession
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import org.springframework.beans.factory.BeanCreationException
@@ -485,11 +482,11 @@ abstract class AbstractPulsarContext(
     }
 
     override fun chat(prompt: String): ModelResponse {
-        return ChatModelFactory.getOrCreate(unmodifiedConfig).call(prompt)
+        return ChatModelFactory.getOrCreateOrNull(unmodifiedConfig)?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
     override fun chat(userMessage: String, systemMessage: String): ModelResponse {
-        return ChatModelFactory.getOrCreate(unmodifiedConfig).call(userMessage, systemMessage)
+        return ChatModelFactory.getOrCreateOrNull(unmodifiedConfig)?.call(userMessage, systemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
     @Throws(WebDBException::class)

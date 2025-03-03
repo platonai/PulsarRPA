@@ -109,6 +109,7 @@ open class BrowserSettings constructor(
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.DefaultPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
+            maxBrowsers(1).maxOpenTabs(1000)
             return BrowserSettings
         }
         
@@ -128,6 +129,7 @@ open class BrowserSettings constructor(
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
+            maxBrowsers(1).maxOpenTabs(1000)
             return BrowserSettings
         }
         
@@ -277,8 +279,8 @@ open class BrowserSettings constructor(
             if (n <= 0) {
                 throw IllegalArgumentException("The number of browser contexts has to be greater than 0")
             }
-            if (n > 20) {
-                System.err.println("The number of browser contexts is too large, it may cause out of disk space")
+            if (n > 50) {
+                System.err.println("PulsarRPA: The number of browser contexts is too large, it may cause out of disk space")
             }
 
             System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
@@ -291,8 +293,8 @@ open class BrowserSettings constructor(
             if (n <= 0) {
                 throw IllegalArgumentException("The number of open tabs has to be > 0")
             }
-            if (n > 20) {
-                System.err.println("The number of open tabs is too large, it may cause out of memory")
+            if (n > 50) {
+                System.err.println("PulsarRPA: The number of open tabs is too large, it may cause out of memory")
             }
 
             System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")

@@ -15,6 +15,7 @@ import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
+import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
@@ -457,6 +458,10 @@ abstract class AbstractPulsarSession(
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
     override suspend fun instruct(prompt: String, driver: WebDriver): InstructionResult {
+        if (!ChatModelFactory.isModelConfigured(sessionConfig)) {
+            return InstructionResult.LLM_NOT_AVAILABLE
+        }
+
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(this)
         val actions = tta.generateWebDriverActions(prompt)

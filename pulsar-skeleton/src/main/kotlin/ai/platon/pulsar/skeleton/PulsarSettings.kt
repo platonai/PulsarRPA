@@ -252,6 +252,16 @@ open class PulsarSettings {
     }
 
     /**
+     * Set LLM provider, name and API key.
+     * */
+    fun withLLM(provider: String, name: String, apiKey: String): PulsarSettings {
+        withLLMProvider(provider)
+        withLLMName(name)
+        withLLMAPIKey(apiKey)
+        return this
+    }
+
+    /**
      * LLM provider
      * */
     fun withLLMProvider(provider: String?): PulsarSettings {

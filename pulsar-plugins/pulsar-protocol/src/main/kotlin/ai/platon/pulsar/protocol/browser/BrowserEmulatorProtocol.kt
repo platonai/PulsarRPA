@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.protocol.browser.impl
+package ai.platon.pulsar.protocol.browser
 
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.protocol.browser.DefaultBrowserComponents
 import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
 import ai.platon.pulsar.skeleton.context.PulsarContexts

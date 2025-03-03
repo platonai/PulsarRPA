@@ -1,5 +1,6 @@
 package ai.platon.pulsar.examples
 
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.context.PulsarContexts.createSession
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -50,6 +51,8 @@ internal class RPACrawler(private val session: PulsarSession = createSession()) 
  * Demonstrates how to use RPA for Web scraping.
  * */
 fun main() {
+    PulsarSettings().withDefaultBrowser()
+
     val url = "https://www.amazon.com/dp/B0C1H26C46"
     val args = "-refresh -parse"
     val session = createSession()
