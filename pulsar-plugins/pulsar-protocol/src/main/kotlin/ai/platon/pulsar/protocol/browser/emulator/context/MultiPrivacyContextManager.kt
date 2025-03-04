@@ -157,12 +157,12 @@ open class MultiPrivacyContextManager(
             }
             privacyAgent.isGroup -> {
                 logger.info(
-                    "Sequential privacy context in group is created | #{} | active: {}, allowed: {} | {}",
+                    "Sequential privacy context in group is created | {} | active: {}, allowed: {} | {}",
                     context.display, temporaryContexts.size, allowedPrivacyContextCount, context.baseDir
                 )
             }
             else -> {
-                logger.warn("Unexpected privacy context is created | #{} | {}", context.display, context.baseDir)
+                logger.warn("Unexpected privacy context is created | {} | {}", context.display, context.baseDir)
             }
         }
 

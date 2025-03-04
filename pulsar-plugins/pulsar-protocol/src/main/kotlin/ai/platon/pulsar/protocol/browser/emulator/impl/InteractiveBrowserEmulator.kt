@@ -275,9 +275,11 @@ open class InteractiveBrowserEmulator(
             // The web driver is canceled
             response = ForwardingResponse.canceled(task.page)
         } catch (e: IllegalWebDriverStateException) {
-            val browser = driver.browser
-            logger.info("Dismiss illegal driver #{}: {} | browser #{}:{} | {}",
-                driver.id, driver.status, browser.instanceId, browser.readableState, e.brief())
+            if (isActive) {
+                val browser = driver.browser
+                logger.info("Dismiss illegal driver #{}: {} | browser #{}:{} | {}",
+                    driver.id, driver.status, browser.instanceId, browser.readableState, e.brief())
+            }
 
             driver.retire()
             exception = e
