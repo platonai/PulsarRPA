@@ -100,10 +100,11 @@ class BrowserRotationTest : MassiveTestBase() {
         be.onDidInteract.addLast { page, driver ->
             require(driver is AbstractWebDriver)
             val browser = driver.browser
-            if (browser.navigateHistory.size >= 30) {
-                if (browser.isActive) {
-                    println("Closing browser, served ${browser.navigateHistory.size} pages | ${browser.id.display}")
-                }
+            val size = browser.navigateHistory.size
+            val readableState = browser.readableState
+            val display = browser.id.display
+            if (size >= 30) {
+                println("Closing browser #$display, served $size pages | $readableState | ${browser.id.contextDir}")
                 browser.close()
             }
         }

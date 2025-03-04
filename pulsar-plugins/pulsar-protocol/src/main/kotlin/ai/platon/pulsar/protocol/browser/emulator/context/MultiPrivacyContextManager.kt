@@ -146,25 +146,23 @@ open class MultiPrivacyContextManager(
 
         when {
             privacyAgent.isPermanent -> {
-                logger.info("Permanent privacy context is created #{} | {}", context.display, context.baseDir)
+                logger.info("Permanent privacy context is created | #{} | {}", context.display, context.baseDir)
             }
 
             privacyAgent.isTemporary -> {
                 logger.info(
-                    "Temporary privacy context is created #{}, active: {}, allowed: {} | {}",
+                    "Temporary privacy context is created | #{} | active: {}, allowed: {} | {}",
                     context.display, temporaryContexts.size, allowedPrivacyContextCount, context.baseDir
                 )
             }
-
             privacyAgent.isGroup -> {
                 logger.info(
-                    "Sequential privacy context in group is created #{}, active: {}, allowed: {} | {}",
+                    "Sequential privacy context in group is created | #{} | active: {}, allowed: {} | {}",
                     context.display, temporaryContexts.size, allowedPrivacyContextCount, context.baseDir
                 )
             }
-
             else -> {
-                logger.warn("Unexpected privacy context is created #{} | {}", context.display, context.baseDir)
+                logger.warn("Unexpected privacy context is created | #{} | {}", context.display, context.baseDir)
             }
         }
 
@@ -444,16 +442,16 @@ open class MultiPrivacyContextManager(
         val state = privacyContext.readableState
         val errorMessage = when {
             privacyContext.isIdle -> {
-                logger.info("Privacy context is idle, close it and retrying task #{} | {} | {}", task.id, state, url)
+                logger.info("Privacy context is idle, close it and retrying task | #{} | {} | {}", task.id, state, url)
                 close(privacyContext)
                 "PRIVACY CX IDLE"
             }
             privacyContext.isClosed -> {
-                logger.info("Privacy context is closed, retrying task #{} | {} | {}", task.id, state, url)
+                logger.info("Privacy context is closed, retrying task | #{} | {} | {}", task.id, state, url)
                 "PRIVACY CX CLOSED"
             }
             !privacyContext.isActive -> {
-                logger.info("Privacy context is inactive, close it and retrying task #{} | {} | {}", task.id, state, url)
+                logger.info("Privacy context is inactive, close it and retrying task | #{} | {} | {}", task.id, state, url)
                 close(privacyContext)
                 "PRIVACY CX INACTIVE"
             }

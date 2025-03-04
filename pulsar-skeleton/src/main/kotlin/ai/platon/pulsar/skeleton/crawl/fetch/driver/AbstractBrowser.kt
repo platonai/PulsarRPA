@@ -45,7 +45,7 @@ abstract class AbstractBrowser(
      * */
     override val data: MutableMap<String, Any?> = mutableMapOf()
 
-    override val isConnected: Boolean get() = AppContext.isActive && !closed.get() && initialized.get()
+    override val isConnected: Boolean get() = isActive
 
     override val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
     

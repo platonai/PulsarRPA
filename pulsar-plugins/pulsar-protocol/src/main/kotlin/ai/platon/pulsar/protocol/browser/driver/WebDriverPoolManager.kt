@@ -718,11 +718,12 @@ private class BrowserAccompaniedDriverPoolCloser(
     
     private fun closeBrowserAccompaniedDriverPool(browser: Browser, driverPool: LoadingWebDriverPool) {
         require(browser.id == driverPool.browserId) { "Browser id not match \n${browser.id}\n${driverPool.browserId}" }
-        
+
         val browserId = driverPool.browserId
         val displayMode = driverSettings.displayMode
-        logger.info("Closing browser & driver pool with {} mode | {}", displayMode, browserId.contextDir)
-        
+        logger.info("Closing browser & driver pool with {} mode | #{} | {} | {} | {}",
+            displayMode, browser.instanceId, browser.readableState, browserId.contextDir.last(), browserId.contextDir)
+
         kotlin.runCatching { driverPoolPool.close(driverPool) }.onFailure { warnInterruptible(this, it) }
         kotlin.runCatching { browserManager.closeBrowser(browser) }.onFailure { warnInterruptible(this, it) }
     }

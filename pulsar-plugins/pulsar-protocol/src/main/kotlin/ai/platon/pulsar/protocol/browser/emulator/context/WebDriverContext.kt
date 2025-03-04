@@ -216,7 +216,7 @@ open class WebDriverContext(
             logger.info("Still {} running tasks after context close$isShutdown | {} | {}",
                 runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" }, display)
         } else {
-            logger.info("Web driver context is closed successfully$isShutdown | {} | {}", display, browserId)
+            logger.info("Web driver context is closed successfully$isShutdown | {} | {}", display, browserId.contextDir)
         }
     }
 

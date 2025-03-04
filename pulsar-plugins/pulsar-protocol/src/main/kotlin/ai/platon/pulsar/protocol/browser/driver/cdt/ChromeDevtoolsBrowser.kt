@@ -336,8 +336,8 @@ class ChromeDevtoolsBrowser(
         // it's safe to close the browser multiple times and even if the remote browser is already closed.
         launcher?.close()
 
-        logger.info("Browser is closed successfully | history: {} | {} | #{}",
-            navigateHistory.size, readableState, id.display)
+        logger.info("Browser is closed successfully | #{} | history: {} | {} | {} | {}",
+            instanceId, navigateHistory.size, readableState, id.contextDir.last(), id.contextDir)
     }
 
     private fun closeDrivers() {
