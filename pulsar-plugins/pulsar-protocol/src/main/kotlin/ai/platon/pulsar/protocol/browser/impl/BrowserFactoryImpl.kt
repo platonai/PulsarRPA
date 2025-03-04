@@ -4,7 +4,7 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeLaunchException
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.getLogger
@@ -72,9 +72,8 @@ open class BrowserFactoryImpl {
         try {
             val chrome = launcher.launch(browserOptions)
             return ChromeDevtoolsBrowser(browserId, chrome, launcherOptions.browserSettings, launcher)
-        } catch (e: ChromeProcessException) {
-            logger.warn("Failed to launch browser", e)
-            throw BrowserLaunchException("Failed to launch browser | $browserId")
+        } catch (e: ChromeLaunchException) {
+            throw BrowserLaunchException("Failed to launch browser | $browserId", e)
         }
     }
 }

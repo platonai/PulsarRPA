@@ -719,7 +719,7 @@ private class BrowserAccompaniedDriverPoolCloser(
         
         val browserId = driverPool.browserId
         val displayMode = driverSettings.displayMode
-        logger.info("Closing browser & driver pool with {} mode | {}", displayMode, browserId)
+        logger.info("Closing browser & driver pool with {} mode | {}", displayMode, browserId.contextDir)
         
         kotlin.runCatching { driverPoolPool.close(driverPool) }.onFailure { warnInterruptible(this, it) }
         kotlin.runCatching { browserManager.closeBrowser(browser) }.onFailure { warnInterruptible(this, it) }

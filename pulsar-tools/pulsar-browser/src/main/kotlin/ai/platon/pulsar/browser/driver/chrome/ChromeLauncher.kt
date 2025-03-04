@@ -3,8 +3,8 @@ package ai.platon.pulsar.browser.driver.chrome
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeLaunchException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeLaunchTimeoutException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.browser.BrowserFiles.PID_FILE_NAME
@@ -16,6 +16,8 @@ import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import java.io.*
 import java.nio.channels.FileChannel
+import java.nio.channels.FileLockInterruptionException
+import java.nio.channels.OverlappingFileLockException
 import java.nio.charset.Charset
 import java.nio.file.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -69,14 +71,12 @@ class ChromeLauncher(
      * @param chromeBinaryPath The path to the Chrome binary executable.
      * @param options The Chrome options to be used when launching the Chrome process.
      * @return A [RemoteChrome] instance representing the launched Chrome process.
-     * @throws ChromeProcessException If an error occurs during the Chrome process launch.
+     * @throws ChromeLaunchException If an error occurs during the Chrome process launch.
      */
-    @Throws(ChromeProcessException::class)
+    @Throws(ChromeLaunchException::class)
     fun launch(chromeBinaryPath: Path, options: ChromeOptions): RemoteChrome {
-        // Attempt to prepare the user data directory. If it fails, log a warning but continue.
-        kotlin.runCatching { prepareUserDataDir() }.onFailure {
-            warnInterruptible(this, it, "Failed to prepare user data dir | {} | {}", userDataDir, it.stringify())
-        }
+        // Attempt to prepare the user data directory
+        prepareUserDataDir()
 
         // Launch the Chrome process with the specified binary path, user data directory, and options.
         val port = launchChromeProcess(chromeBinaryPath, userDataDir, options)
@@ -88,20 +88,20 @@ class ChromeLauncher(
     /**
      * Launch a chrome
      * */
-    @Throws(ChromeProcessException::class)
+    @Throws(ChromeLaunchException::class)
     fun launch(options: ChromeOptions) = launch(Browsers.searchChromeBinary(), options)
 
     /**
      * Launch a chrome
      * */
-    @Throws(ChromeProcessException::class)
+    @Throws(ChromeLaunchException::class)
     fun launch(headless: Boolean) =
         launch(Browsers.searchChromeBinary(), ChromeOptions().also { it.headless = headless })
 
     /**
      * Launch a chrome
      * */
-    @Throws(ChromeProcessException::class)
+    @Throws(ChromeLaunchException::class)
     fun launch() = launch(true)
 
     /**
@@ -178,9 +178,9 @@ class ChromeLauncher(
      * @param userDataDir Chrome user data dir.
      * @param chromeOptions Chrome arguments.
      * @return Port on which devtools is listening.
-     * @throws ChromeProcessException If an I/O error occurs during chrome process start.
+     * @throws ChromeLaunchException If an error occurs during chrome process start.
      */
-    @Throws(ChromeProcessException::class)
+    @Throws(ChromeLaunchException::class)
     @Synchronized
     private fun launchChromeProcess(chromeBinary: Path, userDataDir: Path, chromeOptions: ChromeOptions): Int {
         if (!isActive) {
@@ -218,7 +218,7 @@ class ChromeLauncher(
             shutdownHookRegistry.register(shutdownHookThread)
             process = ProcessLauncher.launch(executable, arguments)
 
-            val p = process ?: throw ChromeProcessException("Failed to start chrome process")
+            val p = process ?: throw ChromeLaunchException("Failed to start chrome process")
 
             Files.writeString(pidPath, p.pid().toString(), StandardOpenOption.CREATE)
 
@@ -229,11 +229,11 @@ class ChromeLauncher(
             port
         } catch (e: IllegalStateException) {
             shutdownHookRegistry.remove(shutdownHookThread)
-            throw ChromeProcessException("IllegalStateException while trying to launch chrome", e)
+            throw ChromeLaunchException("IllegalStateException while trying to launch chrome", e)
         } catch (e: IOException) {
             // Unsubscribe from registry on exceptions.
             shutdownHookRegistry.remove(shutdownHookThread)
-            throw ChromeProcessException("IOException while trying to start chrome", e)
+            throw ChromeLaunchException("IOException while trying to start chrome", e)
         } catch (e: Exception) {
             // Close the process if failed to start, it throws nothing by design.
             close()
@@ -246,9 +246,9 @@ class ChromeLauncher(
      *
      * @param process Chrome process.
      * @return DevTools listening port.
-     * @throws ChromeProcessTimeoutException If timeout expired while waiting for chrome process.
+     * @throws ChromeLaunchTimeoutException If timeout expired while waiting for chrome process.
      */
-    @Throws(ChromeProcessTimeoutException::class)
+    @Throws(ChromeLaunchTimeoutException::class)
     private fun waitForDevToolsServer(process: Process): Int {
         var port = 0
         val processOutput = StringBuilder()
@@ -284,7 +284,7 @@ class ChromeLauncher(
 
                 handleChromeFailedToStart()
 
-                throw ChromeProcessTimeoutException("Timeout to waiting for chrome to start")
+                throw ChromeLaunchTimeoutException("Timeout to waiting for chrome to start")
             }
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
@@ -330,6 +330,7 @@ Kill all Chrome processes and run the program again.
         return
     }
 
+
     /**
      * Prepare user data dir.
      *
@@ -337,6 +338,29 @@ Kill all Chrome processes and run the program again.
      * */
     @Throws(IOException::class)
     private fun prepareUserDataDir() {
+        try {
+            prepareUserDataDir0()
+        } catch (e: OverlappingFileLockException) {
+            logger.warn("OverlappingFileLockException, rethrow | {} | \n{}", userDataDir, e.message)
+            throw ChromeLaunchException("Failed to prepare user data dir", e)
+        } catch (e: FileLockInterruptionException) {
+            logger.warn("FileLockInterruptionException, rethrow | {} | \n{}", userDataDir, e.message)
+            Thread.currentThread().interrupt()
+            throw ChromeLaunchException("Failed to prepare user data dir", e)
+        }
+    }
+
+    /**
+     * Prepare user data dir.
+     *
+     * @throws FileLockInterruptionException – If the invoking thread is interrupted while blocked in this method
+     * @throws OverlappingFileLockException – If a lock that overlaps the requested region is already held
+     *      by this Java virtual machine, or if another thread is already blocked in this method and is
+     *      attempting to lock an overlapping region of the same file
+     * @throws IOException If failed to create user data dir.
+     * */
+    @Throws(FileLockInterruptionException::class, OverlappingFileLockException::class, IOException::class)
+    private fun prepareUserDataDir0() {
         val prototypeUserDataDir = AppPaths.CHROME_DATA_DIR_PROTOTYPE
         if (userDataDir == prototypeUserDataDir || userDataDir.toString().contains("/default/")) {
             logger.info("Running chrome with prototype/default data dir, no cleaning | {}", userDataDir)
