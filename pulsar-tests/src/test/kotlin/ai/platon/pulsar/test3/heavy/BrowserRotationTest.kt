@@ -12,13 +12,12 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Tag
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
+
 
 /**
  * Test the performance of PulsarRPA, every test url will be a local file, so the performance is not affected by network latency.
@@ -27,8 +26,6 @@ import kotlin.time.toJavaDuration
  *
  * Notice: before we load the local files using PulsarRPA, we have to transform the paths using [UrlUtils.pathToLocalURL].
  * */
-@Ignore("TimeConsumingTest, you should run the tests separately")
-@Tag("TimeConsumingTest")
 class BrowserRotationTest : MassiveTestBase() {
 
     companion object {
@@ -39,8 +36,6 @@ class BrowserRotationTest : MassiveTestBase() {
             // PulsarSettings().withTemporaryBrowser()
         }
     }
-
-    override val testFileCount = 30000
 
     @OptIn(ExperimentalPathApi::class)
     @AfterEach
