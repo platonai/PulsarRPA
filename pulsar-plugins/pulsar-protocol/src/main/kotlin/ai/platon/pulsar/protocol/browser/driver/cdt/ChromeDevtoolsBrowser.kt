@@ -346,7 +346,7 @@ class ChromeDevtoolsBrowser(
         _reusedDrivers.clear()
         _drivers.clear()
 
-        logger.info("Closing browser with {} drivers/devtools ... | #{}", dyingDrivers.size, id)
+        logger.info("Closing browser with {} drivers/devtools ... | #{}", dyingDrivers.size, id.contextDir)
 
         dyingDrivers.forEach { (id, driver) ->
             kotlin.runCatching { driver.close() }.onFailure { warnForClose(this, it) }

@@ -135,7 +135,8 @@ class ConcurrentStatefulDriverPoolPool {
         _workingDriverPools.remove(browserId)
 
         if (browserId in _closedDriverPools) {
-            logger.warn("Inconsistent driver pool state: retire pool who is already closed | {}", browserId)
+            // the user can call browser.close() now, so the inconsistent is possible
+            // logger.warn("Inconsistent driver pool state: retire pool who is already closed | {}", browserId)
         }
 
         driverPool.retire()

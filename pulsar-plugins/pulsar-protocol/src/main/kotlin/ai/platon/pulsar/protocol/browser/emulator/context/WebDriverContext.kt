@@ -131,11 +131,14 @@ open class WebDriverContext(
         } catch (e: IllegalWebDriverStateException) {
             if (AppContext.isActive) {
                 // log only when the application is active
-                logger.warn("Illegal web driver status, close it and retry task ${task.page.id} in crawl scope | {} | {} | {}",
-                    browserId, e.message, task.page.url)
+
+                val driver = e.driver
+                val b = driver?.browser ?: this.browser
+                logger.warn("Closing illegal web driver #{}, retrying task #${task.page.id} in crawl scope | {} | {} | {}",
+                    driver?.id, b?.status, e.message, task.page.url)
                 driverPoolManager.closeBrowserAccompaniedDriverPoolGracefully(browserId, DRIVER_FAST_CLOSE_TIME_OUT)
             }
-            FetchResult.crawlRetry(task, "Illegal web driver status")
+            FetchResult.crawlRetry(task, "Illegal web driver")
         } catch (e: WebDriverPoolExhaustedException) {
             if (AppContext.isActive) {
                 // log only when the application is active

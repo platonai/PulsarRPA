@@ -259,9 +259,10 @@ class LoadingWebDriverPool constructor(
             meterOffer.mark()
         } else {
             val browser = driver.browser
-            val isExpected = !browser.isActive && driver.isQuit
-            if (!isExpected) {
+            if (browser.isActive) {
                 logger.warn("Closing driver that not working #{}: {} | browser:{}", driver.id, driver.status, browser.status)
+            } else {
+                logger.info("Closing driver that not working #{}: {} | browser:{}", driver.id, driver.status, browser.status)
             }
 
             statefulDriverPool.close(driver)
