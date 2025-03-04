@@ -451,7 +451,9 @@ open class WebDriverPoolManager(
          * */
         whenNormalDeferred {
             if (!isActive) {
-                logger.warn("Web driver pool manager is inactive")
+                if (AppContext.isActive) {
+                    logger.warn("[Unexpected] Web driver pool manager is inactive")
+                }
                 return@whenNormalDeferred null
             }
             

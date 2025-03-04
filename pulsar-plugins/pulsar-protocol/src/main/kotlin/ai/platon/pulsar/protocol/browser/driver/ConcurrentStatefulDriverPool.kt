@@ -82,11 +82,17 @@ class ConcurrentStatefulDriverPool(
     @Synchronized
     fun close(driver: WebDriver) {
         require(driver is AbstractWebDriver)
-        driver.retire()
+
+        // Make sure the status of the driver is correct
+
         _standbyDrivers.remove(driver)
         _workingDrivers.remove(driver)
         _retiredDrivers.remove(driver)
         _closedDrivers.add(driver)
+
+        if (!driver.isRetired && !driver.isQuit) {
+            driver.retire()
+        }
 
         runCatching { browserManager.closeDriver(driver) }.onFailure { warnInterruptible(this, it) }
 

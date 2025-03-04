@@ -109,6 +109,29 @@ abstract class AbstractWebDriver(
     val isCanceled get() = canceled.get()
     val isCrashed get() = crashed.get()
 
+    val status: String get() {
+        val sb = StringBuilder()
+
+        val st = state.get() ?: return ""
+        val s = when (st) {
+            State.INIT -> "INIT"
+            State.READY -> "READY"
+            State.WORKING -> "WORKING"
+            State.RETIRED -> "RETIRED"
+            State.QUIT -> "QUIT"
+        }
+
+        sb.append(s)
+
+        if (isCrashed) sb.append(",CRASHED")
+        if (isCanceled) sb.append(",CANCELED")
+        if (isIdle) sb.append(",IDLE")
+        if (isRecovered) sb.append(",RECOVERED")
+        if (isReused) sb.append(",REUSED")
+
+        return sb.toString()
+    }
+
     open val supportJavascript: Boolean = true
 
     open val isMockedPageSource: Boolean = false

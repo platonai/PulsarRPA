@@ -112,7 +112,7 @@ open class BrowserManager(
         if (zombieBrowsers.isNotEmpty()) {
             logger.warn("There are {} zombie browsers, cleaning them ...", zombieBrowsers.size)
             zombieBrowsers.forEach { browser ->
-                logger.info("Closing zombie browser | {}", browser.id)
+                logger.info("Closing zombie browser | {}", browser.id.contextDir)
                 kotlin.runCatching { browser.destroyForcibly() }.onFailure { warnInterruptible(this, it) }
             }
         }

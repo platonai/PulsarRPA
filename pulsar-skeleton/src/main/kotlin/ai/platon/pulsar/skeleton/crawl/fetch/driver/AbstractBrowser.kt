@@ -29,8 +29,6 @@ abstract class AbstractBrowser(
     private val closed = AtomicBoolean()
     protected var lastActiveTime = Instant.now()
 
-    open val isActive get() = AppContext.isActive && !closed.get() && initialized.get()
-
     override val userAgent get() = DEFAULT_USER_AGENT
 
     var userAgentOverride = getRandomUserAgentOrNull()
@@ -42,12 +40,40 @@ abstract class AbstractBrowser(
      * */
     override val data: MutableMap<String, Any?> = mutableMapOf()
 
-    override val canConnect: Boolean get() = AppContext.isActive && !closed.get() && initialized.get()
+    override val isConnected: Boolean get() = AppContext.isActive && !closed.get() && initialized.get()
 
     override val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
     
     override val isPermanent: Boolean get() = id.privacyAgent.isPermanent
-    
+
+    override val isActive get() = AppContext.isActive && !closed.get() && initialized.get()
+
+    override val isClosed get() = closed.get()
+
+    override val status: String get() {
+        val sb = StringBuilder()
+        if (isActive) {
+            sb.append("Active")
+        } else {
+            sb.append("Inactive")
+        }
+        if (isClosed) {
+            sb.append(",Closed")
+        }
+        if (isPermanent) {
+            sb.append(",Permanent")
+        }
+        if (isIdle) {
+            sb.append(",Idle")
+        }
+        if (isConnected) {
+            sb.append(",Connected")
+        } else {
+            sb.append(",Disconnected")
+        }
+        return sb.toString()
+    }
+
     val isGUI get() = browserSettings.isGUI
     val idleTimeout = Duration.ofMinutes(10)
 

@@ -36,7 +36,7 @@ class ChromeDevtoolsBrowser(
 
     private val reuseRecoveredDriver get() = conf.getBoolean(BROWSER_REUSE_RECOVERED_DRIVERS, false)
 
-    override val canConnect: Boolean get() = isActive && chrome.canConnect()
+    override val isConnected: Boolean get() = isActive && chrome.canConnect()
 
     override val isActive get() = super.isActive && chrome.isActive
 

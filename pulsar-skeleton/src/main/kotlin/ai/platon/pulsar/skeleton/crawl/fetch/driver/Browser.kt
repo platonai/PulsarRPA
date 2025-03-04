@@ -28,9 +28,22 @@ interface Browser: AutoCloseable {
      * */
     val data: MutableMap<String, Any?>
     /**
+     * Check if this browser is active.
+     * */
+    val isActive: Boolean
+    /**
+     * Check if this browser is closed.
+     * */
+    val isClosed: Boolean
+    /**
      * Check if this browser is open.
      * */
-    val canConnect: Boolean
+    val isConnected: Boolean
+    /**
+     * Check if this browser is open.
+     * */
+    @Deprecated("Use isConnected instead", ReplaceWith("isConnected"))
+    val canConnect: Boolean get() = isConnected
     /**
      * Check if this browser is idle.
      * */
@@ -43,6 +56,10 @@ interface Browser: AutoCloseable {
      * - the user data will be kept after the browser is closed
      * */
     val isPermanent: Boolean
+    /**
+     * The status of this browser.
+     * */
+    val status: String
     /**
      * Create a new driver.
      * */
