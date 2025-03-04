@@ -260,9 +260,11 @@ class LoadingWebDriverPool constructor(
         } else {
             val browser = driver.browser
             if (browser.isActive) {
-                logger.warn("Closing driver that not working #{}: {} | browser:{}", driver.id, driver.status, browser.status)
+                logger.warn("Closing driver that doesn't work unexpectedly #{}: {} | browser #{}:{}",
+                    driver.id, driver.status, browser.instanceId, browser.status)
             } else {
-                logger.info("Closing driver that not working #{}: {} | browser:{}", driver.id, driver.status, browser.status)
+                logger.debug("Closing driver that doesn't work #{}: {} | browser #{}:{}",
+                    driver.id, driver.status, browser.instanceId, browser.status)
             }
 
             statefulDriverPool.close(driver)
@@ -388,7 +390,7 @@ class LoadingWebDriverPool constructor(
         // We leave a debug log here for diagnosis purpose.
         val resourceConsumingDriversInBrowser = _browser?.drivers?.values
             ?.filterIsInstance<AbstractWebDriver>()
-            ?.count { !it.isQuit } ?: 0
+            ?.count { !it.isQuit && !it.isRetired } ?: 0
         // Number of active drivers in this driver pool
         val resourceConsumingDriversInPool = statefulDriverPool.activeDriverCount
         if (resourceConsumingDriversInBrowser != resourceConsumingDriversInPool) {

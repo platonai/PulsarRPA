@@ -18,7 +18,6 @@ import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
-
 /**
  * Test the performance of PulsarRPA, every test url will be a local file, so the performance is not affected by network latency.
  *

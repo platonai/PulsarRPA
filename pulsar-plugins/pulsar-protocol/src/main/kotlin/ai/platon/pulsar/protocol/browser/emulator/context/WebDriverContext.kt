@@ -26,10 +26,7 @@ import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractBrowser
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
@@ -123,22 +120,11 @@ open class WebDriverContext(
         }
     }
 
-    private suspend fun doRunAndHandleWebDriverException(
-        task: FetchTask, browseFun: suspend () -> FetchResult
-    ): FetchResult {
+    private suspend fun doRunAndHandleWebDriverException(task: FetchTask, browseFun: suspend () -> FetchResult): FetchResult {
         return try {
             browseFun()
         } catch (e: IllegalWebDriverStateException) {
-            if (AppContext.isActive) {
-                // log only when the application is active
-
-                val driver = e.driver
-                val b = driver?.browser ?: this.browser
-                logger.warn("Closing illegal web driver #{}, retrying task #${task.page.id} in crawl scope | {} | {} | {}",
-                    driver?.id, b?.status, e.message, task.page.url)
-                driverPoolManager.closeBrowserAccompaniedDriverPoolGracefully(browserId, DRIVER_FAST_CLOSE_TIME_OUT)
-            }
-            FetchResult.crawlRetry(task, "Illegal web driver")
+            handleIllegalWebDriverStateException(task, e)
         } catch (e: WebDriverPoolExhaustedException) {
             if (AppContext.isActive) {
                 // log only when the application is active
@@ -157,6 +143,30 @@ open class WebDriverContext(
             logger.warn("{}. [WebDriverException] Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task, e)
         }
+    }
+
+    private fun handleIllegalWebDriverStateException(task: FetchTask, e: IllegalWebDriverStateException): FetchResult {
+        val driver = e.driver
+        val b = driver?.browser ?: this.browser
+
+        val reason = when {
+            !AppContext.isActive -> "PulsarRPA is shutting down"
+            e is BrowserUnavailableException -> "BrowserUnavailableException"
+            else -> "IllegalWebDriverStateException"
+        }
+
+        val result = when {
+            !AppContext.isActive -> FetchResult.canceled(task, reason)
+            b?.isActive == true -> {
+                logger.warn("Closing illegal browser, retrying task #${task.page.id} in crawl scope | {} | {} | {}",
+                    b.status, e.message, task.page.url)
+                FetchResult.crawlRetry(task, reason)
+            }
+            else -> FetchResult.canceled(task, reason)
+        }
+
+        driverPoolManager.closeBrowserAccompaniedDriverPoolGracefully(browserId, DRIVER_FAST_CLOSE_TIME_OUT)
+        return result
     }
 
     @Throws(Exception::class)

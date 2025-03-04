@@ -429,7 +429,7 @@ open class MultiPrivacyContextManager(
             }
 
             !privacyContext.isActive -> {
-                logger.warn("[Unexpected] Privacy is inactive and can not perform tasks, closing it now")
+                logger.warn("[Unexpected] Privacy context is inactive, closing it now")
                 close(privacyContext)
                 "PRIVACY CX INACTIVE"
             }

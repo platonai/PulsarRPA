@@ -9,13 +9,15 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 abstract class AbstractBrowser(
     override val id: BrowserId,
     val browserSettings: BrowserSettings
 ): Browser, AutoCloseable, AbstractEventEmitter<BrowserEvents>() {
     companion object {
-        val DEFAULT_USER_AGENT = "PulsarRobot/1.0"
+        protected val SEQUENCER = AtomicInteger()
+        val DEFAULT_USER_AGENT = "PulsarRPA Robot/1.0"
     }
 
     /**
@@ -29,12 +31,15 @@ abstract class AbstractBrowser(
     private val closed = AtomicBoolean()
     protected var lastActiveTime = Instant.now()
 
+    override val instanceId: Int = SEQUENCER.incrementAndGet()
+
     override val userAgent get() = DEFAULT_USER_AGENT
 
     var userAgentOverride = getRandomUserAgentOrNull()
 
     override val navigateHistory = NavigateHistory()
     override val drivers: Map<String, WebDriver> get() = _drivers
+
     /**
      * The associated data.
      * */
@@ -50,29 +55,7 @@ abstract class AbstractBrowser(
 
     override val isClosed get() = closed.get()
 
-    override val status: String get() {
-        val sb = StringBuilder()
-        if (isActive) {
-            sb.append("Active")
-        } else {
-            sb.append("Inactive")
-        }
-        if (isClosed) {
-            sb.append(",Closed")
-        }
-        if (isPermanent) {
-            sb.append(",Permanent")
-        }
-        if (isIdle) {
-            sb.append(",Idle")
-        }
-        if (isConnected) {
-            sb.append(",Connected")
-        } else {
-            sb.append(",Disconnected")
-        }
-        return sb.toString()
-    }
+    override val status: String get() = buildStatus()
 
     val isGUI get() = browserSettings.isGUI
     val idleTimeout = Duration.ofMinutes(10)
@@ -157,5 +140,29 @@ abstract class AbstractBrowser(
         off(BrowserEvents.initialize)
         off(BrowserEvents.willNavigate)
         off(BrowserEvents.maintain)
+    }
+
+    private fun buildStatus(): String {
+        val sb = StringBuilder()
+        if (isActive) {
+            sb.append("Active")
+        } else {
+            sb.append("Inactive")
+        }
+        if (isClosed) {
+            sb.append(",Closed")
+        }
+        if (isPermanent) {
+            sb.append(",Permanent")
+        }
+        if (isIdle) {
+            sb.append(",Idle")
+        }
+        if (isConnected) {
+            sb.append(",Connected")
+        } else {
+            sb.append(",Disconnected")
+        }
+        return sb.toString()
     }
 }

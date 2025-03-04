@@ -16,7 +16,7 @@ open class MassiveTestBase {
         val runtimeMxBean = ManagementFactory.getRuntimeMXBean()
         val systemProperties = runtimeMxBean.systemProperties.toString()
 
-        println(systemProperties)
+        // println(systemProperties)
 
         val clazzName = this.javaClass.simpleName
         val propertyName = "${clazzName}_TestFileCount"
