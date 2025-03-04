@@ -31,6 +31,7 @@ Test a single class
 ```shell
 # Test only the TestEventHandlers class
 mvn -pl pulsar-tests -Dtest=ai.platon.pulsar.test.crawl.TestEventHandlers test
+mvn -pl pulsar-tests -Dtest=ai.platon.pulsar.test3.heavy.BrowserRotationTest test
 ```
 
 Test a single method

@@ -330,7 +330,6 @@ Kill all Chrome processes and run the program again.
         return
     }
 
-
     /**
      * Prepare user data dir.
      *
