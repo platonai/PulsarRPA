@@ -101,7 +101,9 @@ class BrowserRotationTest : MassiveTestBase() {
             require(driver is AbstractWebDriver)
             val browser = driver.browser
             if (browser.navigateHistory.size >= 30) {
-                println("Closing browser, served ${browser.navigateHistory.size} pages | ${browser.id.display}")
+                if (browser.isActive) {
+                    println("Closing browser, served ${browser.navigateHistory.size} pages | ${browser.id.display}")
+                }
                 browser.close()
             }
         }

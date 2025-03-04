@@ -55,7 +55,7 @@ abstract class AbstractBrowser(
 
     override val isClosed get() = closed.get()
 
-    override val status: String get() = buildStatus()
+    override val readableState: String get() = buildReadableState()
 
     val isGUI get() = browserSettings.isGUI
     val idleTimeout = Duration.ofMinutes(10)
@@ -142,7 +142,7 @@ abstract class AbstractBrowser(
         off(BrowserEvents.maintain)
     }
 
-    private fun buildStatus(): String {
+    private fun buildReadableState(): String {
         val sb = StringBuilder()
         if (isActive) {
             sb.append("Active")

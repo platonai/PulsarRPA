@@ -340,10 +340,10 @@ Kill all Chrome processes and run the program again.
         try {
             prepareUserDataDir0()
         } catch (e: OverlappingFileLockException) {
-            logger.warn("OverlappingFileLockException, rethrow | {} | \n{}", userDataDir, e.message)
+            logger.warn("OverlappingFileLockException, rethrow | {} | \n{}", userDataDir, e.brief())
             throw ChromeLaunchException("Failed to prepare user data dir", e)
         } catch (e: FileLockInterruptionException) {
-            logger.warn("FileLockInterruptionException, rethrow | {} | \n{}", userDataDir, e.message)
+            logger.warn("FileLockInterruptionException, rethrow | {} | \n{}", userDataDir, e.brief())
             Thread.currentThread().interrupt()
             throw ChromeLaunchException("Failed to prepare user data dir", e)
         }

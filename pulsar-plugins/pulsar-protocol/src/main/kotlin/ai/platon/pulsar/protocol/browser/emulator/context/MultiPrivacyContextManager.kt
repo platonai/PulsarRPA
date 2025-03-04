@@ -418,42 +418,58 @@ open class MultiPrivacyContextManager(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {
         if (privacyContext !is BrowserPrivacyContext) {
-            throw ClassCastException("The privacy context should be a BrowserPrivacyContext | ${privacyContext.javaClass}")
+            throw IllegalArgumentException("The privacy context should be a BrowserPrivacyContext | ${privacyContext.javaClass}")
         }
 
-        val errorMessage = when {
-            privacyContext.isIdle -> {
-                logger.warn("[Unexpected] Privacy is idle and can not perform tasks, closing it now")
-                close(privacyContext)
-                "PRIVACY CX IDLE"
-            }
-
-            !privacyContext.isActive -> {
-                logger.warn("[Unexpected] Privacy context is inactive, closing it now")
-                close(privacyContext)
-                "PRIVACY CX INACTIVE"
-            }
-
-            else -> null
-        }
-
-        if (errorMessage != null) {
-            metrics.illegalDrivers.mark()
-            // rate_unit=events/minute
-            if (metrics.illegalDrivers.oneMinuteRate > 5) {
-                handleTooManyDriverAbsence(errorMessage, task)
-            }
+        val error = checkPrivacyContext(privacyContext, task)
+        if (error != null) {
             // Use default delay strategy.
-            return FetchResult.crawlRetry(task, errorMessage)
+            return FetchResult.crawlRetry(task, error)
         }
 
-        // No driver available currently, retry later
+        // No driver available currently, it indicates that all drivers are working, retry later
         if (!privacyContext.hasWebDriverPromise()) {
             // The schedule will check the driver again, so it's OK to retry in a short period
             return FetchResult.crawlRetry(task, delay = Duration.ofSeconds(10), "No driver available")
         }
 
         return runAndUpdate(privacyContext, task, fetchFun)
+    }
+
+    /**
+     * Check the privacy context, if the privacy context is inactive, close it and cancel the task.
+     * */
+    private fun checkPrivacyContext(privacyContext: PrivacyContext, task: FetchTask): String? {
+        val url = task.url
+        val state = privacyContext.readableState
+        val errorMessage = when {
+            privacyContext.isIdle -> {
+                logger.info("Privacy context is idle, close it and retrying task #{} | {} | {}", task.id, state, url)
+                close(privacyContext)
+                "PRIVACY CX IDLE"
+            }
+            privacyContext.isClosed -> {
+                logger.info("Privacy context is closed, retrying task #{} | {} | {}", task.id, state, url)
+                "PRIVACY CX CLOSED"
+            }
+            !privacyContext.isActive -> {
+                logger.info("Privacy context is inactive, close it and retrying task #{} | {} | {}", task.id, state, url)
+                close(privacyContext)
+                "PRIVACY CX INACTIVE"
+            }
+            else -> null
+        }
+
+        if (errorMessage != null) {
+            metrics.illegalDrivers.mark()
+
+            // rate_unit=events/minute
+            if (metrics.illegalDrivers.oneMinuteRate > 5) {
+                handleTooManyDriverAbsence(errorMessage, task)
+            }
+        }
+
+        return errorMessage
     }
 
     private fun handleTooManyDriverAbsence(errorMessage: String, task: FetchTask) {

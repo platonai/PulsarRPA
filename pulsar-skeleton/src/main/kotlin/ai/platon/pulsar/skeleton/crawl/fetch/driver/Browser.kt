@@ -63,7 +63,7 @@ interface Browser: AutoCloseable {
     /**
      * The status of this browser.
      * */
-    val status: String
+    val readableState: String
     /**
      * Create a new driver.
      * */

@@ -159,7 +159,7 @@ open class WebDriverContext(
             !AppContext.isActive -> FetchResult.canceled(task, reason)
             b?.isActive == true -> {
                 logger.warn("Closing illegal browser, retrying task #${task.page.id} in crawl scope | {} | {} | {}",
-                    b.status, e.message, task.page.url)
+                    b.readableState, e.message, task.page.url)
                 FetchResult.crawlRetry(task, reason)
             }
             else -> FetchResult.canceled(task, reason)
