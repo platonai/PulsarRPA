@@ -137,7 +137,7 @@ open class MultiPrivacyContextManager(
 
             return result
         } catch (e: ProxyVendorException) {
-            logger.warn("ProxyVendorException, can not handle at this layer, rethrow | ${task.url}", e)
+            logger.warn("ProxyVendorException, can not handle at this layer, rethrow | {}\n{}", task.url, e.brief())
             throw e
         } catch (e: PrivacyException) {
             logger.warn("PrivacyException, retry later | ${task.url}", e)
@@ -246,7 +246,7 @@ open class MultiPrivacyContextManager(
     ): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             if (!isActive) {
-                throw IllegalApplicationStateException("Inactive privacy context manager")
+                throw PrivacyException("Inactive privacy context manager")
             }
 
             val privacyAgent = createPrivacyAgent(page, fingerprint)
@@ -267,7 +267,7 @@ open class MultiPrivacyContextManager(
     override fun getOrCreate(privacyAgent: PrivacyAgent): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             if (!isActive) {
-                throw IllegalApplicationStateException("Inactive privacy context manager")
+                throw PrivacyException("Inactive privacy context manager")
             }
 
             return if (privacyAgent.isPermanent) {
@@ -440,7 +440,45 @@ open class MultiPrivacyContextManager(
             return FetchResult.crawlRetry(task, delay = Duration.ofSeconds(10), "No driver available")
         }
 
-        return runAndUpdate(privacyContext, task, fetchFun)
+        return doRunAndUpdate(privacyContext, task, fetchFun)
+    }
+
+    @Throws(ProxyVendorException::class)
+    private suspend fun doRunAndUpdate(
+        privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
+    ): FetchResult {
+        val result = doRun(privacyContext, task, fetchFun)
+
+        updatePrivacyContext(privacyContext as AbstractPrivacyContext, result)
+        // All retries are forced to do in crawl scope
+        if (result.isPrivacyRetry) {
+            result.status.upgradeRetry(RetryScope.CRAWL)
+        }
+
+        return result
+    }
+
+    @Throws(ProxyVendorException::class)
+    private suspend fun doRun(
+        privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
+    ): FetchResult {
+        val result: FetchResult = try {
+            require(!task.isCanceled)
+            require(task.state.get() == FetchTask.State.NOT_READY)
+            require(task.proxyEntry == null)
+
+            task.markReady()
+            // @Throws(Exception::class)
+            privacyContext.run(task) { _, driver ->
+                task.startWork()
+                fetchFun(task, driver)
+            }
+        } finally {
+            task.done()
+            task.page.variables[VAR_CONTEXT_INFO] = formatPrivacyContext(privacyContext as AbstractPrivacyContext)
+        }
+
+        return result
     }
 
     /**
@@ -492,44 +530,6 @@ open class MultiPrivacyContextManager(
                 promisedDrivers, errorMessage, states, idleTimes, task.url
             )
         }
-    }
-
-    @Throws(ProxyVendorException::class)
-    private suspend fun runAndUpdate(
-        privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
-    ): FetchResult {
-        val result = doRun(privacyContext, task, fetchFun)
-
-        updatePrivacyContext(privacyContext as AbstractPrivacyContext, result)
-        // All retries are forced to do in crawl scope
-        if (result.isPrivacyRetry) {
-            result.status.upgradeRetry(RetryScope.CRAWL)
-        }
-
-        return result
-    }
-
-    @Throws(ProxyVendorException::class)
-    private suspend fun doRun(
-        privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
-    ): FetchResult {
-        val result: FetchResult = try {
-            require(!task.isCanceled)
-            require(task.state.get() == FetchTask.State.NOT_READY)
-            require(task.proxyEntry == null)
-
-            task.markReady()
-            // @Throws(Exception::class)
-            privacyContext.run(task) { _, driver ->
-                task.startWork()
-                fetchFun(task, driver)
-            }
-        } finally {
-            task.done()
-            task.page.variables[VAR_CONTEXT_INFO] = formatPrivacyContext(privacyContext as AbstractPrivacyContext)
-        }
-
-        return result
     }
 
     private fun formatPrivacyContext(privacyContext: AbstractPrivacyContext): String {
