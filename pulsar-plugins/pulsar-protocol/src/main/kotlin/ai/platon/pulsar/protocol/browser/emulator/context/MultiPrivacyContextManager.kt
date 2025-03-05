@@ -116,8 +116,10 @@ open class MultiPrivacyContextManager(
      * @param task the fetch task
      * @param fetchFun the fetch function
      * @return the fetch result
+     * @throws ProxyVendorException if the proxy vendor is not available
+     * @throws Exception if the fetch function throws an exception
      * */
-    @Throws(Exception::class)
+    @Throws(ProxyVendorException::class, Exception::class)
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         metrics.tasks.mark()
 
