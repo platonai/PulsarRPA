@@ -21,8 +21,8 @@ import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.PopularEmoji
-import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import ai.platon.pulsar.common.proxy.ProxyVendorException
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
@@ -36,6 +36,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyContext
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyException
 import com.google.common.collect.Iterables
 import java.io.IOException
 import java.time.Duration
@@ -130,17 +131,23 @@ open class MultiPrivacyContextManager(
         // Try to get a ready privacy context, the privacy context is supposed to be:
         // not closed, not retired, [not idle]?, has promised driver.
         // If the privacy context is inactive, close it and cancel the task.
-        val context = tryGetNextReadyPrivacyContext(task.page, task.fingerprint, task)
-        // @Throws(ProxyException::class, Exception::class)
-        val result = runWithPrivacyContextChecked(context, task, fetchFun).also { metrics.finishes.mark() }
+        try {
+            val context = tryGetNextReadyPrivacyContext(task.page, task.fingerprint, task)
+            val result = runWithPrivacyContextChecked(context, task, fetchFun).also { metrics.finishes.mark() }
 
-        return result
+            return result
+        } catch (e: ProxyVendorException) {
+            logger.warn("ProxyVendorException, can not handle at this layer, rethrow | ${task.url}", e)
+            throw e
+        } catch (e: PrivacyException) {
+            logger.warn("PrivacyException, retry later | ${task.url}", e)
+            return FetchResult.crawlRetry(task, e)
+        }
     }
 
     /**
      * Create a privacy context who is not added to the context list yet.
      * */
-    @Throws(ProxyException::class)
     override fun createUnmanagedContext(privacyAgent: PrivacyAgent): BrowserPrivacyContext {
         val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, privacyAgent)
 
@@ -195,7 +202,7 @@ open class MultiPrivacyContextManager(
      * @param fingerprint The fingerprint of this privacy context.
      * @return A privacy context which is promised to be ready.
      * */
-    @Throws(ProxyException::class)
+    @Throws(PrivacyException::class)
     override fun tryGetNextReadyPrivacyContext(
         page: WebPage,
         fingerprint: Fingerprint,
@@ -231,6 +238,7 @@ open class MultiPrivacyContextManager(
      * @param fingerprint The fingerprint of this privacy context.
      * @return A privacy context which is promised to be ready.
      * */
+    @Throws(PrivacyException::class)
     override fun tryGetNextUnderLoadedPrivacyContext(
         page: WebPage,
         fingerprint: Fingerprint,
@@ -256,7 +264,6 @@ open class MultiPrivacyContextManager(
         }
     }
 
-    @Throws(ProxyException::class)
     override fun getOrCreate(privacyAgent: PrivacyAgent): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             if (!isActive) {
@@ -312,6 +319,7 @@ open class MultiPrivacyContextManager(
         dumpIfNecessary()
     }
 
+    @Throws(PrivacyException::class)
     private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): PrivacyAgent {
         // Specify the privacy agent by the user code
         var specifiedPrivacyAgent = page.getVar(PrivacyAgent::class.java)
@@ -325,7 +333,12 @@ open class MultiPrivacyContextManager(
             return specifiedPrivacyAgent
         }
 
-        return privacyAgentGeneratorFactory.generator.invoke(fingerprint)
+        val generator = privacyAgentGeneratorFactory.generator
+        try {
+            return generator.invoke(fingerprint)
+        } catch (e: IOException) {
+            throw PrivacyException("Failed to create a privacy agent | ${generator::class.simpleName}", e)
+        }
     }
 
     /**
@@ -411,14 +424,10 @@ open class MultiPrivacyContextManager(
      * not closed, not retired, [not idle]?, has promised driver.
      * If the privacy context is inactive, close it and cancel the task.
      * */
-    @Throws(ProxyException::class, Exception::class)
+    @Throws(ProxyVendorException::class)
     private suspend fun runWithPrivacyContextChecked(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {
-        if (privacyContext !is BrowserPrivacyContext) {
-            throw IllegalArgumentException("The privacy context should be a BrowserPrivacyContext | ${privacyContext.javaClass}")
-        }
-
         val error = checkPrivacyContext(privacyContext, task)
         if (error != null) {
             // Use default delay strategy.
@@ -485,7 +494,7 @@ open class MultiPrivacyContextManager(
         }
     }
 
-    @Throws(ProxyException::class, Exception::class)
+    @Throws(ProxyVendorException::class)
     private suspend fun runAndUpdate(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {
@@ -500,7 +509,7 @@ open class MultiPrivacyContextManager(
         return result
     }
 
-    @Throws(ProxyException::class, Exception::class)
+    @Throws(ProxyVendorException::class)
     private suspend fun doRun(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {
@@ -510,7 +519,7 @@ open class MultiPrivacyContextManager(
             require(task.proxyEntry == null)
 
             task.markReady()
-            // @Throws(ProxyException::class, Exception::class)
+            // @Throws(Exception::class)
             privacyContext.run(task) { _, driver ->
                 task.startWork()
                 fetchFun(task, driver)

@@ -67,9 +67,8 @@ open class ChromeFactoryImpl {
     private fun launchChromeDevtoolsBrowser(
         browserId: BrowserId, launcherOptions: LauncherOptions, browserOptions: ChromeOptions
     ): ChromeDevtoolsBrowser {
-        val launcher = ChromeLauncher(userDataDir = browserId.userDataDir, options = launcherOptions)
-        
         try {
+            val launcher = ChromeLauncher(userDataDir = browserId.userDataDir, options = launcherOptions)
             val chrome = launcher.launch(browserOptions)
             return ChromeDevtoolsBrowser(browserId, chrome, launcherOptions.browserSettings, launcher)
         } catch (e: ChromeLaunchException) {

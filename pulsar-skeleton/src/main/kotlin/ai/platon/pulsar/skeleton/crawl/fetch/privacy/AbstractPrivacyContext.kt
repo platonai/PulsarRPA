@@ -4,8 +4,8 @@ import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
+import ai.platon.pulsar.common.proxy.ProxyVendorException
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
@@ -209,6 +209,7 @@ abstract class AbstractPrivacyContext(
     /**
      * Open an url in the privacy context, with the specified fetch function.
      * */
+    @Throws(ProxyVendorException::class)
     override suspend fun open(url: String, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         val task = FetchTask.create(url, conf.toVolatileConfig())
         return run(task, fetchFun)
@@ -221,7 +222,7 @@ abstract class AbstractPrivacyContext(
      * @param fetchFun the fetch function
      * @return the fetch result
      * */
-    @Throws(ProxyException::class, Exception::class)
+    @Throws(ProxyVendorException::class, Exception::class)
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         beforeRun(task)
         val result = doRun(task, fetchFun)
@@ -236,7 +237,7 @@ abstract class AbstractPrivacyContext(
      * @param fetchFun the fetch function
      * @return the fetch result
      * */
-    @Throws(ProxyException::class)
+    @Throws(Exception::class)
     abstract override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
     override fun buildStatusString(): String {

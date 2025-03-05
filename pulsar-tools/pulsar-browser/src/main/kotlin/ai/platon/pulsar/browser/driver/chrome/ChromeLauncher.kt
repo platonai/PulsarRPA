@@ -30,7 +30,7 @@ import kotlin.time.toJavaDuration
 /**
  * The chrome launcher
  * */
-class ChromeLauncher(
+class ChromeLauncher constructor(
     val userDataDir: Path = BrowserFiles.computeNextSequentialContextDir(),
     val options: LauncherOptions = LauncherOptions(),
     private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry()

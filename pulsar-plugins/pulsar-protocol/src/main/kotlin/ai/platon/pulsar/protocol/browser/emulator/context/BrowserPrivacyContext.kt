@@ -67,19 +67,26 @@ open class BrowserPrivacyContext(
 
     override val isFullCapacity: Boolean get() = driverPoolManager.isFullCapacity(browserId)
 
+    @Throws(ProxyVendorException::class)
     override suspend fun open(url: String): FetchResult {
         val task = FetchTask.create(url, conf.toVolatileConfig())
         val f = webdriverFetcher ?: throw IllegalStateException("Fetcher is null")
         return doRun(task) { _, driver -> f.fetchDeferred(task, driver) }
     }
 
+
+    /**
+     * @param url The url to fetch
+     * @param options Load options
+     * */
+    @Throws(ProxyVendorException::class)
     override suspend fun open(url: String, options: LoadOptions): FetchResult {
         val task = FetchTask.create(url, options)
         val f = webdriverFetcher ?: throw IllegalStateException("Fetcher is null")
         return doRun(task) { _, driver -> f.fetchDeferred(task, driver) }
     }
 
-    @Throws(ProxyException::class, Exception::class)
+    @Throws(ProxyVendorException::class)
     override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         initProxyContextIfNecessary(task)
 

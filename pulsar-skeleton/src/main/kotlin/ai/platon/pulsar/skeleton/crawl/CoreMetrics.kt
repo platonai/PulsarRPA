@@ -9,6 +9,9 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnitConverter
+import ai.platon.pulsar.persist.WebDb
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
@@ -16,9 +19,6 @@ import ai.platon.pulsar.skeleton.crawl.component.LoadComponent
 import ai.platon.pulsar.skeleton.crawl.component.ParseComponent
 import ai.platon.pulsar.skeleton.crawl.fetch.UrlStat
 import ai.platon.pulsar.skeleton.crawl.parse.html.JsoupParser
-import ai.platon.pulsar.persist.WebDb
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
 import com.codahale.metrics.Gauge
 import com.google.common.collect.ConcurrentHashMultiset
@@ -314,7 +314,7 @@ class CoreMetrics(
      */
     fun trackHostUnreachable(url: String, occurrences: Int = 1): Boolean {
         val host = InternalURLUtil.getHost(url, groupMode)
-        if (host == null || host.isEmpty()) {
+        if (host.isNullOrEmpty()) {
             logger.warn("Malformed url identified as gone | <{}>", url)
             return false
         }
@@ -346,17 +346,19 @@ class CoreMetrics(
         return numUrls + failedTasks
     }
 
-    private fun getSuccessReport(): String {
-        if (successFetchTasks.count == 0L) return ""
+    private fun logSuccess() {
+        if (successFetchTasks.count == 0L) {
+            return
+        }
 
         val seconds = elapsedSeconds.coerceAtLeast(1)
         val count = successFetchTasks.count.coerceAtLeast(1)
         val bytes = meterContentBytes.count
         val proxyFmt = if (proxies.count > 0) " using %s proxies" else ""
         val symbol = PopularEmoji.DELIVERY_TRUCK
-        var format = "$symbol Fetched %d pages in %s(%.2f pages/s) successfully$proxyFmt | content: %s, %s/s, %s/p"
+        val format = "%d pages in %s(%.2f pages/s) successfully$proxyFmt | content: %s, %s/s, %s/p"
         // format += " | net recv: %s, %s/s, %s/p | total net recv: %s"
-        return String.format(
+        val message = String.format(
             format,
             count,
             elapsedTime.readable(),
@@ -370,6 +372,9 @@ class CoreMetrics(
             Strings.compactFormat(networkIFsRecvBytesPerPage),
             Strings.compactFormat(totalNetworkIFsRecvBytes)
         )
+
+        // keep some text in the line, so IDE like idea can track to the line.
+        logger.info("$symbol Fetched $message")
     }
 
     override fun close() {
@@ -378,7 +383,7 @@ class CoreMetrics(
             reportTimer = null
 
             if (successFetchTasks.count > 0) {
-                logger.info(getSuccessReport())
+                logSuccess()
             }
 
             if (fetchTasks.count > 0) {
@@ -449,7 +454,7 @@ class CoreMetrics(
             return
         }
 
-        logger.info(getSuccessReport())
+        logSuccess()
     }
 
     private fun reportWhenHighThroughput() {
@@ -463,10 +468,10 @@ class CoreMetrics(
         }.toInt()
 
         if (i % period == 0L) {
-            logger.info(getSuccessReport())
+            logSuccess()
         } else if (DateTimes.elapsedTime(lastReportTime).seconds > 4 * 60) {
-            // must report every 4 minutes
-            logger.info(getSuccessReport())
+            // have to report every 4 minutes
+            logSuccess()
         }
     }
 

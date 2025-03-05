@@ -205,6 +205,7 @@ interface PrivacyContext: AutoCloseable {
      * @param fetchFun The fetch function to use.
      * @return The fetch result.
      * */
+    @Throws(Exception::class)
     suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
     /**
      * Dismiss the privacy context.
