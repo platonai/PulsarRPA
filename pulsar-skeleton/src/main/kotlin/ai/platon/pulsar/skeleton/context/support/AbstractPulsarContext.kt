@@ -366,22 +366,6 @@ abstract class AbstractPulsarContext(
     }
 
     /**
-     * Connect to a web page with a web driver.
-     * */
-    override suspend fun connect(driver: WebDriver, options: LoadOptions): WebPage {
-        // NOTE: the url can be non-standard
-        val url = driver.currentUrl()
-
-        val url1 = if (UrlUtils.isBrowserURL(url)) {
-            UrlUtils.browserURLToStandardURL(url)
-        } else {
-            url
-        }
-
-        return abnormalPage ?: loadComponent.connect(normalize(url1, options), driver)
-    }
-
-    /**
      * Load a page with specified options, see [LoadOptions] for all options.
      *
      * @param url     The url which can be followed by arguments.

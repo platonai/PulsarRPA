@@ -16,6 +16,7 @@ import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.DocumentCatch
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.PageCatch
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.common.annotations.Beta
 import org.jsoup.nodes.Element
@@ -522,7 +523,11 @@ interface PulsarSession : AutoCloseable {
      *
      * @return The webpage connected to the webdriver or NIL
      */
-    suspend fun connect(driver: WebDriver): WebPage
+    @Beta
+    fun connect(driver: WebDriver)
+
+    @Beta
+    fun connect(browser: Browser)
 
     /**
      * Load an url.

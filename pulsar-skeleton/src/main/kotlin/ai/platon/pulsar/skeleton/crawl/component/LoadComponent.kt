@@ -141,21 +141,6 @@ class LoadComponent(
     }
 
     /**
-     * Connect a page to a web driver.
-     * */
-    suspend fun connect(normURL: NormURL, driver: WebDriver): WebPage {
-        val page = createPageShell(normURL)
-
-        page.setVar(VAR_CONNECT, FetchState.CONNECT)
-        page.putBean(driver)
-        page.setVar("WEB_DRIVER", driver)
-
-        loadNormalURLWithEventHandlersDeferred(normURL, page)
-
-        return page
-    }
-
-    /**
      * Load a page specified by [url] with the given arguments.
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
