@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import java.nio.file.Path
-import java.time.Instant
 
 /**
  * The unique browser id.

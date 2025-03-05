@@ -4,7 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.protocol.browser.BrowserFactory
+import ai.platon.pulsar.protocol.browser.ChromiumFactory
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
@@ -19,7 +19,7 @@ open class BrowserManager(
     private val logger = getLogger(this)
     private var registered = AtomicBoolean()
     private val closed = AtomicBoolean()
-    private val browserFactory = BrowserFactory()
+    private val browserFactory = ChromiumFactory()
     private val _browsers = ConcurrentHashMap<BrowserId, Browser>()
     private val historicalBrowsers = ConcurrentLinkedDeque<Browser>()
     private val closedBrowsers = ConcurrentLinkedDeque<Browser>()
@@ -53,7 +53,7 @@ open class BrowserManager(
     /**
      * Check if the browser is active.
      * */
-    fun isActiveBrowser(browserId: BrowserId): Boolean {
+    fun isActive(browserId: BrowserId): Boolean {
         val browser = findBrowser(browserId) as? AbstractBrowser
         return browser != null && browser.isActive
     }
@@ -112,7 +112,7 @@ open class BrowserManager(
         if (zombieBrowsers.isNotEmpty()) {
             logger.warn("There are {} zombie browsers, cleaning them ...", zombieBrowsers.size)
             zombieBrowsers.forEach { browser ->
-                logger.info("Closing zombie browser | {}", browser.id)
+                logger.info("Closing zombie browser | {}", browser.id.contextDir)
                 kotlin.runCatching { browser.destroyForcibly() }.onFailure { warnInterruptible(this, it) }
             }
         }

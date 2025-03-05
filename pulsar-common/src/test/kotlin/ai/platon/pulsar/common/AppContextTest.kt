@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes
-import org.apache.commons.lang3.SystemUtils
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnOs
@@ -39,8 +38,8 @@ class AppContextTest {
         Files.createDirectory(writableDir)
 
         // Test default data directory
-        assertTrue(Files.exists(AppContext.APP_DATA_DIR_RT),
-            "Tmp data directory should not exist: ${AppContext.APP_DATA_DIR}")
+        val dataDir = AppContext.APP_DATA_DIR_RT
+        assertTrue(Files.exists(dataDir), "App data directory should exist: $dataDir")
 
         // Test specified data directory
         val specifiedDir = tmpDir.resolve("specified")

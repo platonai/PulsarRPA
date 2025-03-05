@@ -7,28 +7,32 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.MIN_SEQUENTIAL_PRIVACY_AGENT_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import org.slf4j.LoggerFactory
+import java.io.IOException
 import java.nio.file.Files
 import java.util.concurrent.ConcurrentHashMap
 
 interface PrivacyAgentGenerator {
     var conf: ImmutableConfig
+    @Throws(Exception::class)
     operator fun invoke(fingerprint: Fingerprint): PrivacyAgent
 }
 
 open class DefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig()
+    @Throws(Exception::class)
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent = PrivacyAgent.DEFAULT
 }
 
 open class SystemDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig()
+    @Throws(Exception::class)
     override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.SYSTEM_DEFAULT
 }
 
 open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig()
+    @Throws(Exception::class)
     override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.PROTOTYPE
 }
 
@@ -38,7 +42,7 @@ open class SequentialPrivacyAgentGenerator(
     // should be late initialized
     override var conf: ImmutableConfig = ImmutableConfig()
 
-    fun computeMaxAgentCount(): Int {
+    private fun computeMaxAgentCount(): Int {
         // The number of allowed active privacy contexts
         val privacyContextNumber = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
         
@@ -50,7 +54,8 @@ open class SequentialPrivacyAgentGenerator(
         
         return maxAgents
     }
-    
+
+    @Throws(IOException::class)
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent {
         // The number of allowed active privacy contexts
         val maxAgents = computeMaxAgentCount()
@@ -75,6 +80,8 @@ open class SequentialPrivacyAgentGenerator(
  * */
 open class RandomPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
+
+    @Throws(IOException::class)
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
         PrivacyAgent(BrowserFiles.computeRandomTmpContextDir(), fingerprint)
 }

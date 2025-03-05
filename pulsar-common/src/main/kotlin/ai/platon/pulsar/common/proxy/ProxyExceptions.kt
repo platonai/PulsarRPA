@@ -1,35 +1,17 @@
 package ai.platon.pulsar.common.proxy
 
-open class ProxyException : RuntimeException {
+open class ProxyException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
-    constructor() : super() {}
+open class NoProxyException(message: String, cause: Throwable? = null) : ProxyException(message, cause)
 
-    constructor(message: String) : super(message) {}
+open class ProxyRetiredException(message: String, cause: Throwable? = null) : ProxyException(message, cause)
 
-    constructor(message: String, cause: Throwable) : super(message, cause) {}
+open class ProxyRetryException(message: String, cause: Throwable? = null) : ProxyException(message, cause)
 
-    constructor(cause: Throwable) : super(cause) {}
-}
+open class ProxyGoneException(message: String, cause: Throwable? = null) : ProxyException(message, cause)
 
-open class NoProxyException(message: String) : ProxyException(message)
+open class ProxyVendorException(message: String, cause: Throwable? = null) : ProxyException(message, cause)
 
-open class ProxyRetiredException(message: String) : ProxyException(message)
+open class ProxyInsufficientBalanceException(message: String, cause: Throwable? = null) : ProxyVendorException(message, cause)
 
-open class ProxyRetryException(message: String) : ProxyException(message)
-
-open class ProxyGoneException(message: String) : ProxyException(message)
-
-open class ProxyVendorException : ProxyException {
-
-    constructor() : super() {}
-
-    constructor(message: String) : super(message) {}
-
-    constructor(message: String, cause: Throwable) : super(message, cause) {}
-
-    constructor(cause: Throwable) : super(cause) {}
-}
-
-open class ProxyInsufficientBalanceException(message: String) : ProxyException(message)
-
-open class ProxyVendorUntrustedException(message: String) : ProxyException(message)
+open class ProxyVendorUntrustedException(message: String, cause: Throwable? = null) : ProxyVendorException(message, cause)

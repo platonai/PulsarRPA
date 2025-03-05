@@ -4,10 +4,12 @@
 
 ## 🥁 简介
 
-💖 **PulsarRPA - 您的大规模自动化解决方案！** 💖
+💖 **PulsarRPA - 您的终极 AI-RPA 解决方案！** 💖
 
-PulsarRPA 是一个高性能、分布式的开源机器人流程自动化（RPA）框架。它专为大规模 RPA 任务设计，提供强大的浏览器自动化、网页内容解析和数据提取功能。
-PulsarRPA 能够轻松应对复杂多变的网站环境，确保数据提取的准确性和全面性。
+**PulsarRPA** 是一个**高性能**、**分布式**且**开源**的机器人流程自动化（RPA）框架。
+它专为**大规模自动化**而设计，在**浏览器自动化**、**网页内容理解**和**数据提取**方面表现出色。
+PulsarRPA 解决了现代网页自动化的挑战，确保即使从最**复杂**和**动态**的网站中也能实现**准确**且**全面**的数据提取。
+
 
 ## 视频
 
@@ -19,18 +21,11 @@ Bilibili:
 
 ## 🚀 开始
 
-### 一行代码抓取
-
-```kotlin
-fun main() = PulsarContexts.createSession().scrapeOutPages(
-  "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
-```
-
 ### 谈论一个网页
 
 ```kotlin
 val document = session.loadDocument(url)
-val response = session.chat("Tell me something about this webpage", document)
+val response = session.chat("介绍一下这个网页", document)
 ```
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/ChatAboutPage.kt).
@@ -39,10 +34,10 @@ Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pul
 
 ```kotlin
 val prompts = """
-move cursor to the element with id 'title' and click it
-scroll to middle
-scroll to top
-get the text of the element with id 'title'
+移动光标到 id 为 'title' 的元素并点击
+滚动到页面中间
+滚动到顶部
+获取 id 为 'title' 的元素的文本
 """
 
 val eventHandlers = DefaultPageEventHandlers()
@@ -54,25 +49,12 @@ session.open(url, eventHandlers)
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/TalkToActivePage.kt).
 
-### 连续采集
+### 一行代码抓取
 
 ```kotlin
-fun main() {
-    val context = PulsarContexts.create()
-
-    val parseHandler = { _: WebPage, document: FeaturedDocument ->
-        // use the document
-        // ...
-        // and then extract further hyperlinks
-        context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
-    }
-    val urls = LinkExtractors.fromResource("seeds10.txt")
-        .map { ParsableHyperlink("$it -refresh", parseHandler) }
-    context.submitAll(urls).await()
-}
+session.scrapeOutPages(
+  "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ```
-
-Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
 
 ### 结合机器人流程自动化 (RPA) 进行网页抓取
 
@@ -102,7 +84,7 @@ session.load(url, options)
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
-### 使用 X-SQL 解决超级复杂的数据提取问题
+### 使用 X-SQL 解决*超级复杂*的数据提取问题
 
 ```sql
 select
@@ -118,6 +100,39 @@ Example code:
 
 * [X-SQL to scrape 100+ fields from an Amazon's product page](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [X-SQLs to scrape all types of Amazon webpages](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+
+
+
+### 连续采集
+
+```kotlin
+fun main() {
+    val context = PulsarContexts.create()
+
+    val parseHandler = { _: WebPage, document: FeaturedDocument ->
+        // use the document
+        // ...
+        // and then extract further hyperlinks
+        context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
+    }
+    val urls = LinkExtractors.fromResource("seeds10.txt")
+        .map { ParsableHyperlink("$it -refresh", parseHandler) }
+    context.submitAll(urls).await()
+}
+```
+
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
+
+
+
+
+
+
+
+
+
+
+
 
 
 # 🚄 核心功能
@@ -158,13 +173,13 @@ Example code:
 - 基于自监督机器学习自动进行信息提取的小程序，AI 算法可以识别详情页的所有字段，字段精确度达到 99% 以上。
 - 基于自监督机器学习自动学习并输出所有采集规则的小程序。
 - 可以直接从命令行执行网页数据采集任务，无需编写代码。
-- PulsarRPA 服务器，可以向服务器发送 SQL 语句来采集 Web 数据。
+- 升级的 PulsarRPA 服务器，可以向服务器发送 SQL 语句来采集 Web 数据。
 - 一个 Web UI，可以编写 SQL 语句并通过它发送到服务器。
 
 下载 [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro#download) 并使用以下命令行探索其能力：
 
 ```shell
-java -jar exotic-standalone.jar
+java -jar PulsarRPAPro.jar
 ```
 
 # 🎁 将 PulsarRPA 用作软件库
@@ -177,14 +192,14 @@ java -jar exotic-standalone.jar
 <dependency>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
-    <version>2.2.1</version>
+    <version>2.2.1-SNAPSHOT</version>
 </dependency>
 ```
 
 使用 Gradle 时，可以在 `build.gradle` 文件中添加以下依赖：
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-bom:2.2.1")
+implementation("ai.platon.pulsar:pulsar-bom:2.2.1-SNAPSHOT")
 ```
 
 也可以从 Github 克隆模板项目，包括 [kotlin](https://github.com/platonai/pulsar-kotlin-template),
@@ -233,7 +248,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 "
 ```
 
-示例代码可以在 [这里](https://github.com/platonai/pulsar/blob/master/bin/scrape.sh) 找到。
+示例代码: [bash](bin/scrape.sh), [PowerShell](bin/scrape.ps1), [batch](bin/scrape.bat), [java](/pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java), [kotlin](/pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt), [php](/pulsar-client/src/main/php/Scraper.php).
 
 点击 [X-SQL](docs/x-sql.md) 查看有关X-SQL的详细介绍和功能描述。
 

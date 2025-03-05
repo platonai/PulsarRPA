@@ -275,10 +275,15 @@ open class InteractiveBrowserEmulator(
             // The web driver is canceled
             response = ForwardingResponse.canceled(task.page)
         } catch (e: IllegalWebDriverStateException) {
-            logger.warn("Web driver is lost | #{} | {}", driver.id, e.brief())
+            if (isActive) {
+                val browser = driver.browser
+                logger.info("Dismiss illegal driver #{}: {} | browser #{}:{} | {}",
+                    driver.id, driver.status, browser.instanceId, browser.readableState, e.brief())
+            }
+
             driver.retire()
             exception = e
-            response = ForwardingResponse.privacyRetry(task.page, "Web driver lost")
+            response = ForwardingResponse.privacyRetry(task.page, "Illegal web driver")
         } catch (e: WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 logger.warn("Web driver is disconnected - {}", e.brief())

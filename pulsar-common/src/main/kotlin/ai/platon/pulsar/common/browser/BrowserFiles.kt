@@ -69,6 +69,7 @@ object BrowserFiles {
      * @param fingerprint The fingerprint
      * @param maxAgents The maximum number of available agents, every agent has its own context directory
      * @return The next sequential context directory
+     * @throws IOException If some I/O error occurs.
      * */
     @Throws(IOException::class)
     @Synchronized
@@ -323,6 +324,13 @@ object BrowserFiles {
     /**
      * Compute the next sequential context directory.
      * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/PULSAR_CHROME/cx.1
+     *
+     * @param group The group name.
+     * @param fingerprint The fingerprint of the browser.
+     * @param maxAgents The maximum number of agents.
+     * @param channel The file channel associated with
+     * @return The next sequential context directory.
+     * @throws IOException If an I/O error occurs.
      * */
     @Throws(IOException::class)
     private fun computeNextSequentialContextDir0(
@@ -344,6 +352,8 @@ object BrowserFiles {
         }
 
         val contextGroup = contextGroups.computeIfAbsent(group) { ContextGroup(group) }
+        // can throw too many open files in ubuntu when using Files.list()
+        // see too-many-open-files.md to resolve the problem
         Files.list(contextBaseDir)
             .filter { Files.isDirectory(it) }
             .filter { it.fileName.toString().startsWith(prefix) }

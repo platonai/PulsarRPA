@@ -3,8 +3,6 @@ package ai.platon.pulsar.test3.heavy
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
-import org.junit.jupiter.api.Tag
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 /**
@@ -14,8 +12,6 @@ import kotlin.test.Test
  *
  * Notice: before we load the local files using PulsarRPA, we have to transform the paths using [UrlUtils.pathToLocalURL].
  * */
-@Ignore("TimeConsumingTest, you should run the tests separately")
-@Tag("TimeConsumingTest")
 class MassiveUrlPoolTest: MassiveTestBase() {
 
     @Test

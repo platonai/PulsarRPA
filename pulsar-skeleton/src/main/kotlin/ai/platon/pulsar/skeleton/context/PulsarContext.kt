@@ -11,7 +11,6 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops
-import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
@@ -279,15 +278,6 @@ interface PulsarContext: AutoCloseable {
      * @return The web page
      * */
     suspend fun open(url: String, driver: WebDriver, options: LoadOptions): WebPage
-
-    /**
-     * Connect a webpage to a web driver
-     *
-     * @param options The options
-     * @param driver The web driver
-     * @return The web page
-     * */
-    suspend fun connect(driver: WebDriver, options: LoadOptions): WebPage
 
     /**
      * Load a url with specified options, see [LoadOptions] for all options

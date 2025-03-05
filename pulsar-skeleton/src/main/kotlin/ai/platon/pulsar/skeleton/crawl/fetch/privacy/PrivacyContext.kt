@@ -33,36 +33,200 @@ import java.time.Duration
  * For web scraping tasks, the website should have no idea whether a visit is
  * from a human being or a bot. Once a page visit is suspected by the website,
  * which we call a privacy leak, the privacy context has to be dropped,
- * and Pulsar will visit the page in another privacy context.
+ * and PulsarRPA will visit the page in another privacy context.
  * */
 interface PrivacyContext: AutoCloseable {
-    val failureRate: Float
-    val isHighFailureRate: Boolean
-    val idleTime: Duration
-    val elapsedTime: Duration
-    val isFullCapacity: Boolean
-    val isUnderLoaded: Boolean
+    /**
+     * The privacy context id.
+     * */
     val id: PrivacyAgentId
-    val isIdle: Boolean
-    val isRetired: Boolean
-    val isLeaked: Boolean
-    val isGood: Boolean
-    val isActive: Boolean
-    val isClosed: Boolean
-    val isReady: Boolean
-    val display: String
-    val readableState: String
+    /**
+     * The associated privacy agent.
+     * */
     val privacyAgent: PrivacyAgent
+    /**
+     * Check whether the privacy context is at full capacity. If the privacy context is
+     * indeed at full capacity, it should not be used for processing new tasks,
+     * and the underlying services may potentially refuse to provide service.
+     *
+     * A privacy context is running at full capacity when the underlying webdriver pool is
+     * full capacity, so the webdriver pool can not provide a webdriver for new tasks.
+     *
+     * Note that if a driver pool is retired or closed, it's not full capacity.
+     *
+     * @return True if the privacy context is running at full capacity, false otherwise.
+     * */
+    val isFullCapacity: Boolean
+    /**
+     * Check whether the privacy context is running under loaded.
+     * */
+    val isUnderLoaded: Boolean
+    /**
+     * Check whether the privacy context is idle.
+     * */
+    val isIdle: Boolean
+    /**
+     * Check whether the privacy context is retired.
+     *
+     * This property indicates whether the privacy context has been marked as retired.
+     * It returns the value of the `retired` field, which is a boolean indicating the retirement status.
+     *
+     * @return `true` if the privacy context is retired, `false` otherwise.
+     */
+    val isRetired: Boolean
+    /**
+     * Check whether the privacy context is leaked.
+     *
+     * This property indicates whether the privacy context has been marked as leaked.
+     * It returns the value of the `leaked` field, which is a boolean indicating the leakage status.
+     *
+     * @return `true` if the privacy context is leaked, `false` otherwise.
+     */
+    val isLeaked: Boolean
+    /**
+     * Check whether the privacy context is good.
+     *
+     * A good privacy context has to meet the following requirements:
+     * 1. the fetch speed is good
+     */
+    val isGood: Boolean
+    /**
+     * Check whether the privacy context is active.
+     *
+     * TODO: check and distinct from [isReady] in use cases.
+     *
+     * An active privacy context has to meet the following requirements:
+     * 1. not closed
+     * 2. not leaked
+     * 3. not retired
+     *
+     * Note: this flag does not guarantee consistency, and can change immediately after it's read
+     * */
+    val isActive: Boolean
+    /**
+     * Check whether the privacy context is closed.
+     * */
+    val isClosed: Boolean
+    /**
+     * A ready privacy context is ready to serve tasks.
+     *
+     * A ready privacy context has to meet the following requirements:
+     * 1. not closed
+     * 2. not leaked
+     * 3. [requirement removed] not idle
+     * 4. not retired
+     * 5. if there is a proxy, the proxy has to be ready
+     * 6. the associated driver pool promises to provide an available driver, ether one of the following:
+     *    1. it has slots to create new drivers
+     *    2. it has standby drivers
+     *
+     * Note: this flag does not guarantee consistency, and can change immediately after it's read
+     * */
+    val isReady: Boolean
+    /**
+     * The failure rate of the privacy context.
+     * */
+    val failureRate: Float
+    /**
+     * Check whether the failure rate is high.
+     * */
+    val isHighFailureRate: Boolean
+    /**
+     * The idle time of the privacy context.
+     * */
+    val idleTime: Duration
+    /**
+     * The elapsed time of the privacy context.
+     * */
+    val elapsedTime: Duration
+    /**
+     * A readable privacy context display.
+     * */
+    val display: String
+    /**
+     * Get the readable privacy context state.
+     * */
+    val readableState: String
+    /**
+     * Build the privacy context status string.
+     * */
     fun buildStatusString(): String
+    /**
+     * The promised workers (free web drivers) count.
+     *
+     * The implementation has to tell the caller how many workers (free web drivers)
+     * it can provide.
+     *
+     * The number of workers can change immediately after reading,
+     * so the caller only has promises but no guarantees.
+     *
+     * @return the number of workers promised.
+     * */
     fun promisedWebDriverCount(): Int
+    /**
+     * Check if the privacy context promises at least one worker to provide.
+     * */
     fun hasWebDriverPromise(): Boolean
+    /**
+     * Open a page in the privacy context.
+     *
+     * @param url The URL to open.
+     * @return The fetch result.
+     * */
     suspend fun open(url: String): FetchResult
+    /**
+     * Open a page in the privacy context.
+     *
+     * @param url The URL to open.
+     * @param fetchFun The fetch function to use.
+     * @return The fetch result.
+     * */
     suspend fun open(url: String, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
+    /**
+     * Open a page in the privacy context.
+     *
+     * @param url The URL to open.
+     * @param options The load options to use.
+     * @return The fetch result.
+     * */
     suspend fun open(url: String, options: LoadOptions): FetchResult
+    /**
+     * Run a task in the privacy context.
+     *
+     * @param task The task to run.
+     * @param fetchFun The fetch function to use.
+     * @return The fetch result.
+     * */
     suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
+    /**
+     * Run a task in the privacy context.
+     *
+     * @param task The task to run.
+     * @param fetchFun The fetch function to use.
+     * @return The fetch result.
+     * */
+    @Throws(Exception::class)
     suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
+    /**
+     * Dismiss the privacy context.
+     *
+     * This method is used to dismiss the privacy context.
+     * It should be called when the privacy context is no longer needed.
+     * */
     fun dismiss()
+    /**
+     * Maintain the privacy context.
+     *
+     * This method is used to maintain the privacy context.
+     * It should be called periodically to keep the privacy context alive.
+     * */
     fun maintain()
+    /**
+     * Build the privacy context report.
+     *
+     * This method is used to build the privacy context report.
+     * It should be called periodically to keep the privacy context alive.
+     * */
     fun buildReport(): String
     
     companion object {

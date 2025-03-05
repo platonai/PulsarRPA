@@ -28,13 +28,9 @@ import ai.platon.pulsar.skeleton.common.persist.ext.browseEventHandlers
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.WebDriverFetcher
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverCancellationException
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
-import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -143,7 +139,7 @@ open class PrivacyManagedBrowserFetcher(
     @Throws(Exception::class)
     suspend fun fetchDeferred(task: FetchTask): Response {
         // Specified driver is always used and ignore the privacy context
-        val driver = getSpecifiedWebDriver(task.page)
+        val driver = getWebDriver(task.page)
         if (driver != null) {
             return webdriverFetcher.fetchDeferred(task, driver).response
         }
@@ -174,8 +170,33 @@ open class PrivacyManagedBrowserFetcher(
         }
     }
 
+    private fun getWebDriver(page: WebPage): WebDriver? {
+        val driver = getSpecifiedWebDriver(page)
+        if (driver != null) {
+            return driver
+        }
+
+        val browser = getSpecifiedBrowser(page) ?: return null
+        return getRandomWebDriver(browser)
+    }
+
     /**
-     * Get specified web driver
+     * Get the specified web driver.
+     *
+     * You can set the web driver using the following ways:
+     *
+     * ```kotlin
+     * session.connect(driver)
+     * ```
+     *
+     * Or internally:
+     *
+     * ```kotlin
+     * page.putBean(driver)
+     * session.sessionConfig.putBean(driver)
+     * ```
+     *
+     * @param page The page to fetch
      * */
     private fun getSpecifiedWebDriver(page: WebPage): WebDriver? {
         // Specified driver is always used
@@ -184,5 +205,21 @@ open class PrivacyManagedBrowserFetcher(
             ?: page.conf.getBeanOrNull(WebDriver::class)
             ?: page.conf.getBeanOrNull(WebDriver::class.java)
         return driver as? WebDriver
+    }
+
+    private fun getSpecifiedBrowser(page: WebPage): Browser? {
+        val browser = page.getBeanOrNull(Browser::class.java)
+            ?: page.conf.getBeanOrNull(Browser::class)
+            ?: page.conf.getBeanOrNull(Browser::class.java)
+        return browser as? Browser
+    }
+
+    private fun getRandomWebDriver(browser: Browser): WebDriver {
+        val drivers = browser.drivers.values
+        if (drivers.isEmpty()) {
+            return browser.newDriver()
+        }
+
+        return drivers.shuffled().firstOrNull() ?: browser.newDriver()
     }
 }

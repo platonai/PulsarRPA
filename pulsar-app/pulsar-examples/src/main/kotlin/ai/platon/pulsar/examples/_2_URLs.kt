@@ -13,7 +13,7 @@ import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
  * Demonstrates various URLs in PulsarRPA.
  * */
 fun main() {
-    // Use the default browser, the browser is isolated from the system browsers.
+    // Use the default browser which has an isolated profile.
     // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
     PulsarSettings().withDefaultBrowser()
 

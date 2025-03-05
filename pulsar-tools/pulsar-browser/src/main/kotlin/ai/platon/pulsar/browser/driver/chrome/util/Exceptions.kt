@@ -5,20 +5,22 @@ open class ChromeDriverException(
     cause: Throwable? = null,
 ): RuntimeException(message, cause)
 
+/**
+ * Thrown when failed to launch Chrome.
+ * This is a fatal exception and the browser should be closed.
+ * */
+open class ChromeLaunchException(message: String, cause: Throwable? = null): ChromeDriverException(message, cause)
+
+/**
+ * Thrown when the connection to Chrome fails.
+ * This is a fatal exception and the browser should be closed.
+ * */
+open class ChromeLaunchTimeoutException(message: String, cause: Throwable? = null): ChromeLaunchException(message, cause)
+
 open class ChromeProtocolException(
     message: String,
     cause: Throwable? = null,
 ): ChromeDriverException(message, cause)
-
-open class ChromeProcessException: ChromeDriverException {
-    constructor(message: String): super(message)
-    constructor(message: String, cause: Throwable): super(message, cause)
-}
-
-open class ChromeProcessTimeoutException : ChromeProcessException {
-    constructor(message: String) : super(message)
-    constructor(message: String, cause: Throwable): super(message, cause)
-}
 
 /**
  * Thrown when the connection to Chrome fails.
@@ -51,13 +53,3 @@ open class ChromeRPCTimeoutException : ChromeRPCException {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable): super(message, cause)
 }
-
-//open class ChromeDevToolsLostException : ChromeRPCException {
-//    constructor(message: String) : super(message)
-//    constructor(message: String, cause: Throwable): super(message, cause)
-//}
-
-//open class ChromeDevToolsClosedException : ChromeDevToolsLostException {
-//    constructor(message: String) : super(message)
-//    constructor(message: String, cause: Throwable): super(message, cause)
-//}

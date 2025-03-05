@@ -26,6 +26,7 @@ import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.SimpleCommandDispatcher
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.jsoup.nodes.Element
@@ -180,7 +181,9 @@ abstract class AbstractPulsarSession(
     override suspend fun open(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage =
         context.open(url, driver, options("-refresh", eventHandlers))
 
-    override suspend fun connect(driver: WebDriver): WebPage = context.connect(driver, options())
+    override fun connect(driver: WebDriver) { sessionConfig.putBean(driver) }
+
+    override fun connect(browser: Browser) { sessionConfig.putBean(browser) }
 
     override fun load(url: String): WebPage = load(url, options())
     

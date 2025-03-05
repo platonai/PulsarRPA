@@ -11,6 +11,10 @@ interface Browser: AutoCloseable {
      * */
     val id: BrowserId
     /**
+     * The browser instance id
+     * */
+    val instanceId: Int
+    /**
      * The user agent. A user agent is a string that a browser sends to each website you visit.
      * It's created when the browser first connected to the remote browser.
      * */
@@ -28,9 +32,22 @@ interface Browser: AutoCloseable {
      * */
     val data: MutableMap<String, Any?>
     /**
+     * Check if this browser is active.
+     * */
+    val isActive: Boolean
+    /**
+     * Check if this browser is closed.
+     * */
+    val isClosed: Boolean
+    /**
      * Check if this browser is open.
      * */
-    val canConnect: Boolean
+    val isConnected: Boolean
+    /**
+     * Check if this browser is open.
+     * */
+    @Deprecated("Use isConnected instead", ReplaceWith("isConnected"))
+    val canConnect: Boolean get() = isConnected
     /**
      * Check if this browser is idle.
      * */
@@ -43,6 +60,10 @@ interface Browser: AutoCloseable {
      * - the user data will be kept after the browser is closed
      * */
     val isPermanent: Boolean
+    /**
+     * The status of this browser.
+     * */
+    val readableState: String
     /**
      * Create a new driver.
      * */
@@ -91,3 +112,4 @@ interface Browser: AutoCloseable {
     @Throws(WebDriverException::class)
     suspend fun clearCookies()
 }
+

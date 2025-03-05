@@ -13,7 +13,6 @@ import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
-import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
@@ -21,7 +20,6 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyContext
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
@@ -249,11 +247,17 @@ open class StreamingCrawler(
             return !urls.iterator().hasNext() && globalState.globalLoadingUrls.isEmpty()
                 && idleTime > Duration.ofSeconds(10)
         }
-    
+
     /**
      * Check if the crawler is active.
      * */
-    override val isActive get() = super.isActive && !forceQuit && !globalState.illegalApplicationState.get()
+    override val isActive: Boolean get() {
+        return super.isActive
+                && AppContext.isActive
+                && session.context.isActive
+                && !forceQuit
+                && !globalState.illegalApplicationState.get()
+    }
     
     /**
      * The job name.
@@ -332,7 +336,7 @@ open class StreamingCrawler(
         globalState.globalRunningInstances.incrementAndGet()
         runCrawlLoopWhileActive(scope)
         globalState.globalRunningInstances.decrementAndGet()
-        
+
         logger.info(
             "All done. Total {} tasks are processed in session {} in {}",
             globalState.globalMetrics.tasks.counter.count, session,
@@ -594,21 +598,30 @@ open class StreamingCrawler(
                 "{}. Task timeout ({}) to load page, thrown by [withTimeout] | {}",
                 globalState.globalMetrics.timeouts.count, timeout, url
             )
+        } catch (e: CancellationException) {
+            if (globalState.illegalApplicationState.compareAndSet(false, true)) {
+                if (AppContext.isActive) {
+                    logger.warn("Coroutine was cancelled, set flow state to be BREAK" +
+                            " and quit the crawler's loop | JobCancellationException", e)
+                }
+            }
+            flowState.set(FlowState.BREAK)
         } catch (e: Throwable) {
             when {
                 // The following exceptions can be caught as a Throwable but not the concrete exception,
                 // one of the reason is the concrete exception is not public.
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
                     if (globalState.illegalApplicationState.compareAndSet(false, true)) {
-                        logger.info("Coroutine was cancelled, quit the crawler | JobCancellationException")
+                        if (AppContext.isActive) {
+                            logger.warn("Coroutine was cancelled, set flow state to be BREAK" +
+                                    " and quit the crawler's loop | JobCancellationException", e)
+                        }
                     }
                     flowState.set(FlowState.BREAK)
                 }
-                
                 e.javaClass.name.contains("DriverLaunchException") -> {
                     logger.warn("[Unexpected] DriverLaunchException | {}", e.message)
                 }
-                
                 else -> {
                     logger.warn("[Unexpected] Exception details: >>>>", e)
                 }

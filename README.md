@@ -4,7 +4,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 ## 🥁 Introduce
 
-💖 **PulsarRPA: Your Ultimate RPA Solution!** 💖
+💖 **PulsarRPA: Your Ultimate AI-RPA Solution!** 💖
 
 **PulsarRPA** is a **high-performance**, **distributed**, and **open-source** Robotic Process Automation (RPA) framework.
 Designed for **large-scale automation**, it excels in **browser automation**, **web content understanding**,
@@ -19,9 +19,21 @@ YouTube:
 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
+
+
+
+
+
+
+
+
+
+
+
+
 ## 🚀 Quick start
 
-### Chat about an online page:
+### Chat about a webpage:
 
 ```kotlin
 val document = session.loadDocument(url)
@@ -40,6 +52,7 @@ scroll to top
 get the text of the element with id 'title'
 """
 
+val eventHandlers = DefaultPageEventHandlers()
 eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
     val result = session.instruct(prompts, driver)
 }
@@ -51,29 +64,9 @@ Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pul
 ### One line of code to scrape:
 
 ```kotlin
-fun main() = PulsarContexts.createSession().scrapeOutPages(
+session.scrapeOutPages(
     "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ```
-
-### Continuous web crawling:
-
-```kotlin
-fun main() {
-    val context = PulsarContexts.create()
-
-    val parseHandler = { _: WebPage, document: FeaturedDocument ->
-        // use the document
-        // ...
-        // and then extract further hyperlinks
-        context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
-    }
-    val urls = LinkExtractors.fromResource("seeds10.txt")
-        .map { ParsableHyperlink("$it -refresh", parseHandler) }
-    context.submitAll(urls).await()
-}
-```
-
-Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
 
 ### Crawl with Robotic Process Automation (RPA):
 
@@ -103,7 +96,7 @@ session.load(url, options)
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
-### Mange very complex web data extraction using X-SQL technology:
+### Resolve *super complex* web data extraction problems using X-SQL:
 
 ```sql
 select
@@ -119,6 +112,40 @@ Example code:
 
 * [X-SQL to scrape 100+ fields from an Amazon's product page](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [X-SQLs to scrape all types of Amazon webpages](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+
+### Continuous web crawling:
+
+```kotlin
+fun main() {
+    val context = PulsarContexts.create()
+
+    val parseHandler = { _: WebPage, document: FeaturedDocument ->
+        // use the document
+        // ...
+        // and then extract further hyperlinks
+        context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
+    }
+    val urls = LinkExtractors.fromResource("seeds10.txt")
+        .map { ParsableHyperlink("$it -refresh", parseHandler) }
+    context.submitAll(urls).await()
+}
+```
+
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 🚄 Features
 
@@ -152,6 +179,15 @@ Example code:
 
 ## 🧮 PulsarRPA as an executable jar
 
+We have released a standalone executable JAR based on PulsarRPA, which includes:
+
+- Data collection examples from top-tier websites.
+- A mini-program for automatic information extraction based on self-supervised machine learning. The AI algorithm can identify all fields on detail pages with field accuracy exceeding 99%.
+- A mini-program that automatically learns and outputs all collection rules based on self-supervised machine learning.
+- The ability to execute web data collection tasks directly from the command line without writing any code.
+- An upgraded PulsarRPA server that allows you to send SQL statements to collect web data.
+- A Web UI where you can write SQL statements and send them to the server.
+
 Download [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro#download) and explore its capabilities with a single command line:
 
 ```shell
@@ -168,14 +204,14 @@ Maven:
 <dependency>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
-    <version>2.2.1</version>
+    <version>2.2.1-SNAPSHOT</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-bom:2.2.1")
+implementation("ai.platon.pulsar:pulsar-bom:2.2.1-SNAPSHOT")
 ```
 
 Clone the template project from github.com:
@@ -225,7 +261,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 "
 ```
 
-Example code: [bash](bin/scrape.sh), [batch](bin/scrape.bat), [java](/pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java), [kotlin](/pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt), [php](/pulsar-client/src/main/php/Scraper.php).
+Example code: [bash](bin/scrape.sh), [PowerShell](bin/scrape.ps1), [batch](bin/scrape.bat), [java](/pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java), [kotlin](/pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt), [php](/pulsar-client/src/main/php/Scraper.php).
 
 Click [X-SQL](docs/x-sql.md) to see a detailed introduction and function descriptions about X-SQL.
 
