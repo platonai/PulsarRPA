@@ -4,10 +4,12 @@
 
 ## 🥁 简介
 
-💖 **PulsarRPA - 您的大规模自动化解决方案！** 💖
+💖 **PulsarRPA - 您的终极 AI-RPA 解决方案！** 💖
 
-PulsarRPA 是一个高性能、分布式的开源机器人流程自动化（RPA）框架。它专为大规模 RPA 任务设计，提供强大的浏览器自动化、网页内容解析和数据提取功能。
-PulsarRPA 能够轻松应对复杂多变的网站环境，确保数据提取的准确性和全面性。
+**PulsarRPA** 是一个**高性能**、**分布式**且**开源**的机器人流程自动化（RPA）框架。
+它专为**大规模自动化**而设计，在**浏览器自动化**、**网页内容理解**和**数据提取**方面表现出色。
+PulsarRPA 解决了现代网页自动化的挑战，确保即使从最**复杂**和**动态**的网站中也能实现**准确**且**全面**的数据提取。
+
 
 ## 视频
 
@@ -23,7 +25,7 @@ Bilibili:
 
 ```kotlin
 val document = session.loadDocument(url)
-val response = session.chat("Tell me something about this webpage", document)
+val response = session.chat("介绍一下这个网页", document)
 ```
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/ChatAboutPage.kt).
@@ -32,10 +34,10 @@ Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pul
 
 ```kotlin
 val prompts = """
-move cursor to the element with id 'title' and click it
-scroll to middle
-scroll to top
-get the text of the element with id 'title'
+移动光标到 id 为 'title' 的元素并点击
+滚动到页面中间
+滚动到顶部
+获取 id 为 'title' 的元素的文本
 """
 
 val eventHandlers = DefaultPageEventHandlers()
@@ -50,7 +52,7 @@ Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pul
 ### 一行代码抓取
 
 ```kotlin
-fun main() = PulsarContexts.createSession().scrapeOutPages(
+session.scrapeOutPages(
   "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ```
 
@@ -82,7 +84,7 @@ session.load(url, options)
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
-### 使用 X-SQL 解决超级复杂的数据提取问题
+### 使用 X-SQL 解决*超级复杂*的数据提取问题
 
 ```sql
 select

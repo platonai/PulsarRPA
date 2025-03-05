@@ -4,7 +4,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 ## 🥁 Introduce
 
-💖 **PulsarRPA: Your Ultimate RPA Solution!** 💖
+💖 **PulsarRPA: Your Ultimate AI-RPA Solution!** 💖
 
 **PulsarRPA** is a **high-performance**, **distributed**, and **open-source** Robotic Process Automation (RPA) framework.
 Designed for **large-scale automation**, it excels in **browser automation**, **web content understanding**,
@@ -33,7 +33,7 @@ Bilibili:
 
 ## 🚀 Quick start
 
-### Chat about an online page:
+### Chat about a webpage:
 
 ```kotlin
 val document = session.loadDocument(url)
@@ -64,7 +64,7 @@ Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pul
 ### One line of code to scrape:
 
 ```kotlin
-fun main() = PulsarContexts.createSession().scrapeOutPages(
+session.scrapeOutPages(
     "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ```
 
@@ -96,7 +96,7 @@ session.load(url, options)
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
-### Resolve super complex web data extraction problems using X-SQL:
+### Resolve *super complex* web data extraction problems using X-SQL:
 
 ```sql
 select

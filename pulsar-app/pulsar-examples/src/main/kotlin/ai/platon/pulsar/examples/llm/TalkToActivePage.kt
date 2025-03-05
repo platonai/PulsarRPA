@@ -32,16 +32,16 @@ fun main() {
     val session = PulsarContexts.createSession()
     val url = "https://www.amazon.com/dp/B0C1H26C46"
 
+    val prompts = """
+move cursor to the element with id 'title' and click it
+scroll to middle
+scroll to top
+get the text of the element with id 'title'
+        """.trimIndent().split("\n").filter { it.isNotBlank() }
+
     val eventHandlers = DefaultPageEventHandlers()
     eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
-        val prompts = listOf(
-            "move cursor to the element with id 'title' and click it",
-            "scroll to middle",
-            "scroll to top",
-            "get the text of the element with id 'title'",
-        )
-
-        while (!Thread.interrupted()) {
+        while (true) {
             prompts.forEach { prompt ->
                 println("\n")
                 println(OffsetDateTime.now())

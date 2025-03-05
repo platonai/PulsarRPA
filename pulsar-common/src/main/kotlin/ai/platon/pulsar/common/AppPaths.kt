@@ -234,7 +234,7 @@ object AppPaths {
      */
     fun getTmpDirectory(first: String, vararg more: String): Path = resolve(TMP_DIR, first, *more)
 
-    @Deprecated("Inappropriate name", ReplaceWith("getTmpDirectory(first, *more)" ))
+    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getTmpDirectory(first, *more)" ))
     fun getTmp(first: String, vararg more: String) = getTmpDirectory(first, *more)
 
     /**
@@ -254,7 +254,7 @@ object AppPaths {
     fun getRandomTmpDirectory(prefix: String = "", suffix: String = ""): Path =
         getTmpDirectory(prefix, RandomStringUtils.randomAlphabetic(18), suffix)
 
-    @Deprecated("Inappropriate name", ReplaceWith("getRandomTmpDirectory(first, *more)" ))
+    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getRandomTmpDirectory(first, *more)" ))
     fun getRandomTmp(prefix: String = "", suffix: String = "") = getRandomTmpDirectory(prefix, suffix)
 
     /**
@@ -273,7 +273,7 @@ object AppPaths {
      * */
     fun getProcTmpDirectory(first: String, vararg more: String): Path = resolve(PROC_TMP_DIR, first, *more)
 
-    @Deprecated("Inappropriate name", ReplaceWith("getProcTmpDirectory(first, *more)" ))
+    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getProcTmpDirectory(first, *more)" ))
     fun getProcTmp(first: String, vararg more: String) = getProcTmpDirectory(first, *more)
 
     /**
@@ -298,7 +298,7 @@ object AppPaths {
      * */
     fun getProcTmpTmpDirectory(first: String, vararg more: String): Path = resolve(PROC_TMP_DIR.resolve("tmp"), first, *more)
 
-    @Deprecated("Inappropriate name", ReplaceWith("getProcTmpTmpDirectory(first, *more)" ))
+    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getProcTmpTmpDirectory(first, *more)" ))
     fun getProcTmpTmp(first: String, vararg more: String) = getProcTmpTmpDirectory(first, *more)
 
     /**
@@ -317,7 +317,7 @@ object AppPaths {
     fun getRandomProcTmpTmpDirectory(prefix: String = "", suffix: String = ""): Path =
         getProcTmpTmpDirectory(prefix + RandomStringUtils.randomAlphabetic(18) + suffix)
 
-    @Deprecated("Inappropriate name", ReplaceWith("getRandomProcTmpTmpDirectory(prefix, suffix)" ))
+    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getRandomProcTmpTmpDirectory(prefix, suffix)" ))
     fun getRandomProcTmpTmp(prefix: String = "", suffix: String = "") = getRandomProcTmpTmpDirectory(prefix, suffix)
 
     fun getContextGroupDir(group: String) = CONTEXT_GROUP_BASE_DIR.resolve(group)

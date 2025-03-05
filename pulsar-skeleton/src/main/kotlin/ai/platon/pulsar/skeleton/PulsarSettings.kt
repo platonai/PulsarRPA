@@ -268,31 +268,86 @@ open class PulsarSettings {
     }
 
     /**
-     * LLM provider
-     * */
+     * Sets the Large Language Model (LLM) provider for the PulsarRPA settings.
+     *
+     * This function allows specifying the LLM provider to be used. The provider must be a non-null string.
+     *
+     * Supported LLM providers include:
+     * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
+     * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
+     *
+     * For example, you can use the following code to set the LLM provider:
+     * ```kotlin
+     * PulsarSettings()
+     *     .withLLMProvider("volcengine") // use volcengine as the LLM provider
+     *     .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
+     *     .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
+     * ```
+     *
+     * @param provider The name of the LLM provider to be used. Must not be null.
+     * @return The current instance of [PulsarSettings] to allow method chaining.
+     * @throws IllegalArgumentException If the provided `provider` is null.
+     */
     fun withLLMProvider(provider: String?): PulsarSettings {
+        // Validate that the provider is not null
         if (provider == null) throw IllegalArgumentException("LLM provider cannot be null")
 
+        // Set the LLM provider as a system property
         System.setProperty("llm.provider", provider)
         return this
     }
-
     /**
-     * LLM name
-     * */
+     * Sets the Large Language Model (LLM) name for the PulsarRPA settings.
+     *
+     * Supported LLM providers include:
+     * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
+     * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
+     *
+     * For example, you can use the following code to set the LLM provider:
+     * ```kotlin
+     * PulsarSettings()
+     *     .withLLMProvider("volcengine") // use volcengine as the LLM provider
+     *     .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
+     *     .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
+     * ```
+     *
+     * @param name The name of the Large Language Model (LLM) to be set. This parameter cannot be null.
+     * @return The current instance of [PulsarSettings] to allow for method chaining.
+     * @throws IllegalArgumentException If the provided name is null.
+     */
     fun withLLMName(name: String?): PulsarSettings {
+        // Validate that the LLM name is not null
         if (name == null) throw IllegalArgumentException("LLM name cannot be null")
 
+        // Set the LLM name as a system property
         System.setProperty("llm.name", name)
         return this
     }
 
     /**
-     * LLM API key
-     * */
+     * Sets the Large Language Model (LLM) API key for the PulsarRPA settings.
+     *
+     * Supported LLM providers include:
+     * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
+     * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
+     *
+     * For example, you can use the following code to set the LLM provider:
+     * ```kotlin
+     * PulsarSettings()
+     *     .withLLMProvider("volcengine") // use volcengine as the LLM provider
+     *     .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
+     *     .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
+     * ```
+     *
+     * @param key The API key to be set. This parameter cannot be null, as the LLM service requires a valid API key.
+     * @return The current instance of [PulsarSettings] to allow for method chaining.
+     * @throws IllegalArgumentException If the provided API key is null, indicating that a valid key is required.
+     */
     fun withLLMAPIKey(key: String?): PulsarSettings {
+        // Validate that the API key is not null before setting it as a system property.
         if (key == null) throw IllegalArgumentException("LLM API key cannot be null")
 
+        // Set the provided API key as a system property for global access.
         System.setProperty("llm.apiKey", key)
         return this
     }
