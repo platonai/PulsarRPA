@@ -33,7 +33,7 @@ class WebDriverTestBase : TestBase() {
     protected val logger = getLogger(this)
     protected val warnUpUrl = "https://www.amazon.com/"
     protected val originUrl = "https://www.amazon.com/"
-    protected val url = "https://www.amazon.com/dp/B0C1H26C46"
+    protected val productUrl = "https://www.amazon.com/dp/B0C1H26C46"
     protected val resourceUrl2 = "https://www.amazon.com/robots.txt"
 
     protected val baseURL get() = "http://127.0.0.1:$port"
@@ -54,8 +54,17 @@ class WebDriverTestBase : TestBase() {
      * @see [ai.platon.pulsar.test.rest.MockSiteController.robots]
      * */
     protected val robotsUrl get() = "$baseURL/robots.txt"
+    /**
+     * @see [ai.platon.pulsar.test.rest.MockSiteController.amazonHome]
+     * */
+    protected val mockAmazonHomeUrl get() = "$baseURL/amazon/home.htm"
+    /**
+     * @see [ai.platon.pulsar.test.rest.MockSiteController.amazonProduct]
+     * */
+    protected val mockAmazonProductUrl get() = "$baseURL/amazon/product.htm"
+
     protected val walmartUrl = "https://www.walmart.com/ip/584284401"
-    protected val asin get() = url.substringAfterLast("/dp/")
+    protected val asin get() = productUrl.substringAfterLast("/dp/")
     protected val driverFactory get() = session.context.getBean(WebDriverFactory::class)
     protected val settings get() = driverFactory.driverSettings
     protected val confuser get() = settings.confuser as SimpleScriptConfuser
