@@ -14,6 +14,7 @@ import java.time.Duration
 import java.time.MonthDay
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
+import kotlin.io.path.exists
 import kotlin.io.path.notExists
 
 internal class ContextGroup(val group: String) {
@@ -117,7 +118,8 @@ object BrowserFiles {
         Files.walk(AppPaths.CONTEXT_TMP_DIR, 3)
             .filter { it !in cleanedUserDataDirs } // not processed
             .filter { it.toString().contains("cx.") } // context dir
-            .filter { it.resolve("port").notExists() } // already closed
+            .filter { it.resolve(PID_FILE_NAME).exists() } // already launched
+            .filter { it.resolve(PORT_FILE_NAME).notExists() } // already closed
             .toList()
             .toSet()
             .sortedByDescending { Files.getLastModifiedTime(it) }  // newest first
@@ -135,7 +137,8 @@ object BrowserFiles {
         Files.walk(AppPaths.CONTEXT_TMP_DIR, 3)
             .filter { it !in cleanedUserDataDirs }
             .filter { it.fileName.toString().startsWith("cx.") }
-            .filter { it.resolve("port").notExists() }
+            .filter { it.resolve(PID_FILE_NAME).exists() } // already launched
+            .filter { it.resolve(PORT_FILE_NAME).notExists() }
             .forEach { path -> cleanUpContextDir(path, expiry) }
     }
 

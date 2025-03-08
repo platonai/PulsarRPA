@@ -8,11 +8,11 @@ class WebDriver2JsonProtocolTests: TTATestBase() {
 
     @Test
     fun `When ask to translate WebDriver interface to Json protocol then generate json protocol`() {
-        val userMessage = """
+        val prompt = """
 你的任务是将WebDriver的操作转换为Json协议，以便在浏览器中执行。
         """.trimIndent()
-        
-        val response = session.chat(userMessage, systemMessage)
+
+        val response = textToAction.chatAboutWebDriver(prompt)
         lastResponse = response
         println(response.content)
     }

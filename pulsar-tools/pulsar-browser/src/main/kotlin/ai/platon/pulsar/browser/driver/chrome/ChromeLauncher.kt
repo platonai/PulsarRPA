@@ -130,6 +130,9 @@ class ChromeLauncher constructor(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+            // delete the port file to indicate that the chrome process can be killed and the resources can be cleaned up
+            portPath.deleteIfExists()
+
             val p = process ?: return
             this.process = null
             if (p.isAlive) {
@@ -143,8 +146,6 @@ class ChromeLauncher constructor(
                 cleanUpContextTmpDir(temporaryUddExpiry)
                 cleanOldestContextTmpDirs(120.seconds.toJavaDuration(), recentNToKeep)
             }.onFailure { warnForClose(this, it) }
-
-            portPath.deleteIfExists()
         }
     }
 
@@ -167,7 +168,7 @@ class ChromeLauncher constructor(
      */
     val isAlive: Boolean get() = process?.isAlive == true
 
-    val isDirInUse: Boolean get() = portPath.exists()
+    val shouldBeWorking: Boolean get() = portPath.exists()
 
     /**
      * Launches a chrome process given a chrome binary and its arguments.
@@ -220,19 +221,23 @@ class ChromeLauncher constructor(
 
             val p = process ?: throw ChromeLaunchException("Failed to start chrome process")
 
+            // write pid file to indicate the process is alive
             Files.writeString(pidPath, p.pid().toString(), StandardOpenOption.CREATE)
 
             val port = waitForDevToolsServer(p)
 
+            // write port to indicate the process can be connected
             Files.writeString(portPath, port.toString(), StandardOpenOption.TRUNCATE_EXISTING)
 
             port
         } catch (e: IllegalStateException) {
             shutdownHookRegistry.remove(shutdownHookThread)
+            close()
             throw ChromeLaunchException("IllegalStateException while trying to launch chrome", e)
         } catch (e: IOException) {
             // Unsubscribe from registry on exceptions.
             shutdownHookRegistry.remove(shutdownHookThread)
+            close()
             throw ChromeLaunchException("IOException while trying to start chrome", e)
         } catch (e: Exception) {
             // Close the process if failed to start, it throws nothing by design.

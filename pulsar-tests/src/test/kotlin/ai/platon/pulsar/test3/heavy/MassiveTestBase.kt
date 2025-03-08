@@ -1,7 +1,6 @@
 package ai.platon.pulsar.test3.heavy
 
 import ai.platon.pulsar.ql.context.SQLContexts
-import java.lang.management.ManagementFactory
 import java.nio.file.Path
 import java.time.Duration
 import java.time.LocalDateTime
@@ -12,29 +11,18 @@ import kotlin.test.BeforeTest
 open class MassiveTestBase {
     protected val session = SQLContexts.createSession()
 
-    protected val testFileCount: Int get() {
-        val runtimeMxBean = ManagementFactory.getRuntimeMXBean()
-        val systemProperties = runtimeMxBean.systemProperties.toString()
+    protected val testFileCount: Int
+        get() {
+            val clazzName = this.javaClass.simpleName
+            val propertyName = "${clazzName}_TestFileCount"
 
-        // println(systemProperties)
+            println("------------- Massive Task Test Message -----------------")
+            println("Set system property $propertyName to enable the massive test")
+            println("For example: -D$propertyName=10000")
+            println("---------------------------------------------------------")
 
-        val clazzName = this.javaClass.simpleName
-        val propertyName = "${clazzName}_TestFileCount"
-
-        println("------------- Massive Task Test Message -----------------")
-        println("Set system property $propertyName to enable the massive test, or click the test button in Intellij IDEA")
-        println("For example: -D$propertyName=10000")
-        println("---------------------------------------------------------")
-
-        var count = System.getProperty(propertyName)?.toInt() ?: 0
-
-        val ideaSymbols = listOf("IntelliJ IDEA", "com.intellij.rt", "idea_rt.jar", "idea.test")
-        if (count == 0 && ideaSymbols.any { systemProperties.contains(it) }) {
-            count = 10000
+            return System.getProperty(propertyName)?.toInt() ?: 0
         }
-
-        return count
-    }
 
     protected val testPaths = ConcurrentSkipListSet<Path>()
 

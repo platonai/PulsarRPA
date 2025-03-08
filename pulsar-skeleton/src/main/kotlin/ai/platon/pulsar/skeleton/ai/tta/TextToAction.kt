@@ -32,17 +32,22 @@ data class InstructionResult(
 class TextToAction(
     private val session: PulsarSession = PulsarContexts.createSession()
 ) {
-    private val baseDir = AppPaths.get("tta")
-    private val pulsarSessionFile = baseDir.resolve("PulsarSession.kt")
-    private var pulsarSessionSourceCode: String
-    private var pulsarSessionMessage: String
+    val baseDir = AppPaths.get("tta")
+    val pulsarSessionFile = baseDir.resolve("PulsarSession.kt")
+    var pulsarSessionSourceCode: String
+        private set
+    var pulsarSessionMessage: String
+        private set
 
-    private val webDriverFile = baseDir.resolve("WebDriver.kt")
-    private var webDriverSourceCode: String
-    private var webDriverMessage: String
+    val webDriverFile = baseDir.resolve("WebDriver.kt")
+    var webDriverSourceCode: String
+        private set
+    var webDriverMessage: String
+        private set
 
-    private var actionInstructionMessage: String
-    private val actionInterfaceMessageFile = baseDir.resolve("system-message.txt")
+    var actionInstructionMessage: String
+        private set
+    val actionInterfaceMessageFile = baseDir.resolve("system-message.txt")
 
     init {
         Files.createDirectories(baseDir)
@@ -51,6 +56,7 @@ class TextToAction(
         webDriverSourceCode = Files.readString(webDriverFile)
         webDriverMessage = WEB_DRIVER_MESSAGE_TEMPLATE.replace("{{webDriverSourceCode}}", webDriverSourceCode)
 
+        LLMUtils.copyPulsarSessionFile(pulsarSessionFile)
         pulsarSessionSourceCode = Files.readString(pulsarSessionFile)
         pulsarSessionMessage = PULSAR_SESSION_MESSAGE_TEMPLATE.replace("{{pulsarSessionSourceCode}}", pulsarSessionSourceCode)
 
@@ -61,25 +67,44 @@ class TextToAction(
     /**
      * Generate the action code from the prompt.
      * */
-    fun generate(prompt: String): String {
+    fun chatAboutAllInstruction(prompt: String): ModelResponse {
         val promptWithSystemMessage = """
             $actionInstructionMessage
             $prompt
         """.trimIndent()
 
-        return session.chat(promptWithSystemMessage).content
+        return session.chat(promptWithSystemMessage)
+    }
+
+    /**
+     * Generate the action code from the prompt.
+     * */
+    fun chatAboutWebDriver(prompt: String): ModelResponse {
+        val promptWithSystemMessage = """
+            $webDriverMessage
+            $prompt
+        """.trimIndent()
+
+        return session.chat(promptWithSystemMessage)
+    }
+
+    /**
+     * Generate the action code from the prompt.
+     * */
+    fun chatAboutPulsarSession(prompt: String): ModelResponse {
+        val promptWithSystemMessage = """
+            $webDriverMessage
+            $prompt
+        """.trimIndent()
+
+        return session.chat(promptWithSystemMessage)
     }
 
     /**
      * Generate the action code from the prompt.
      * */
     fun generateWebDriverActions(prompt: String): ActionDescription {
-        val promptWithSystemMessage = """
-            $webDriverMessage
-            $prompt
-        """.trimIndent()
-
-        val response = session.chat(promptWithSystemMessage)
+        val response = chatAboutWebDriver(prompt)
         val functionCalls = response.content.split("\n")
             .map { it.trim() }.filter { it.startsWith("driver.") }
 
@@ -90,12 +115,7 @@ class TextToAction(
      * Generate the action code from the prompt.
      * */
     fun generatePulsarSessionActions(prompt: String): ActionDescription {
-        val promptWithSystemMessage = """
-            $pulsarSessionMessage
-            $prompt
-        """.trimIndent()
-
-        val response = session.chat(promptWithSystemMessage)
+        val response = chatAboutPulsarSession(prompt)
         val functionCalls = response.content.split("\n")
             .map { it.trim() }.filter { it.startsWith("session.") }
 

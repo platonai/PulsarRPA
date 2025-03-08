@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest
+package ai.platon.pulsar.test.rest
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest

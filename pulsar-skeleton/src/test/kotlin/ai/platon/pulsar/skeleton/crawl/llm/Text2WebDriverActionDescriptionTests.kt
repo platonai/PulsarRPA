@@ -15,11 +15,11 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
     
     @Test
     fun `When ask to open a web page then generate correct kotlin code`() {
-        val userMessage = """
+        val prompt = """
 如何打开一个网页？
         """.trimIndent()
         
-        val response = session.chat(userMessage, systemMessage)
+        val response = textToAction.chatAboutWebDriver(prompt)
         lastResponse = response
         println(response.content)
         
@@ -28,11 +28,11 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
     
     @Test
     fun `When ask to open a web page and scroll then generate correct kotlin code`() {
-        val userMessage = """
+        val prompt = """
 生成一个挂起函数，实现如下功能：打开一个网页，然后滚动到页面30%位置。
         """.trimIndent()
 
-        val response = session.chat(userMessage, systemMessage)
+        val response = textToAction.chatAboutWebDriver(prompt)
         lastResponse = response
         println(response.content)
 
@@ -42,11 +42,11 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
 
     @Test
     fun `When ask to open a web page, scroll and take snapshot then generate correct kotlin code`() {
-        val userMessage = """
+        val prompt = """
 生成一个挂起函数，实现如下功能：打开一个网页，然后滚动到页面30%位置，然后滚动到页面顶部，最后截取页面快照。
         """.trimIndent()
 
-        val response = session.chat(systemMessage + userMessage)
+        val response = textToAction.chatAboutWebDriver(prompt)
         lastResponse = response
         println(response.content)
 

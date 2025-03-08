@@ -1,5 +1,6 @@
 package ai.platon.pulsar.test.rest
 
+import ai.platon.pulsar.common.ResourceLoader
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -54,5 +55,15 @@ a,b,c,d,e,f,g
             Disallow: /gp/reader
             Disallow: /gp/sitbv3/reader
         """.trimIndent()
+    }
+
+    @GetMapping("amazon/home.htm", produces = ["text/html"])
+    fun amazonHome(): String {
+        return ResourceLoader.readString("pages/amazon/home.htm")
+    }
+
+    @GetMapping("amazon/product.htm", produces = ["text/html"])
+    fun amazonProduct(): String {
+        return ResourceLoader.readString("pages/amazon/B0C1H26C46.original.htm")
     }
 }
