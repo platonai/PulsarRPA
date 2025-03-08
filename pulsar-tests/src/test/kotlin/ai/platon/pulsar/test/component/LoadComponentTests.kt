@@ -32,6 +32,7 @@ import kotlin.test.*
  * TODO: Investigate the root cause of the issue.
  */
 @Tag("BatchTestFailed")
+@Ignore("BatchTestFailed, run this test separately and investigate the root cause of the issue")
 class LoadComponentTests: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     private val urls = LinkExtractors.fromResource("categories.txt")

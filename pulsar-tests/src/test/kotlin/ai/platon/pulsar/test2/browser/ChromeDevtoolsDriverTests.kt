@@ -332,30 +332,31 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
         }
         driver.press(selector, "Digit6")
         driver.press(selector, "0")
-        
+
         delay(1000)
-        
+
         MessageFormat.format("{0} key pressed {0}", PopularEmoji.SPARKLES).also { println(it) }
         
         var evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
         println("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
         println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
         // assertEquals("Mate60", evaluate?.value)
-        
+
         text = driver.selectAttributeAll(selector, "value").joinToString()
         println("Search bar value - 3 - selectAttributeAll() : <$text>")
 //            assertEquals("Mate60", text)
-        
+
         val html = driver.outerHTML(selector)
         println("Search bar html: >>>\n$html\n<<<")
         assertNotNull(html)
         // assertTrue { html.contains("Mate60") }
-        
+
         evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
         println("Search bar evaluate result - driver.evaluateDetail() : >>>\n$evaluate\n<<<")
         println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
         // assertEquals("Mate60", evaluate?.value)
-        
+
+        // TODO: FIXME: enter seems not working
         driver.press(selector, "Enter")
         driver.waitForNavigation()
         assertTrue { driver.currentUrl() != productUrl }
@@ -406,9 +407,10 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
         println("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
         println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
         assertEquals("Mate60", evaluate?.value)
-        
+
         val lastUrl = driver.currentUrl()
-        
+
+        // TODO: FIXME: enter seems not working
         driver.press(selector, "Enter")
         driver.waitForNavigation(lastUrl)
         assertTrue { driver.currentUrl() != lastUrl }
