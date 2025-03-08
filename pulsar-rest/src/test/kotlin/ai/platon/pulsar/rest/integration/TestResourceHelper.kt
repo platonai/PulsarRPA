@@ -11,7 +11,7 @@ object TestResourceHelper {
      * Generate [n] temporary files in the local file system before all the tests.
      * */
     fun generateTestFiles(n: Int = 10000): ConcurrentSkipListSet<Path> {
-        val baseDir = AppPaths.getProcTmpTmp("PerformanceTest")
+        val baseDir = AppPaths.getProcTmpTmpDirectory("PerformanceTest")
 
         val testPaths = ConcurrentSkipListSet<Path>()
 
