@@ -204,14 +204,14 @@ Maven:
 <dependency>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
-    <version>2.2.2-SNAPSHOT</version>
+    <version>2.3.0-SNAPSHOT</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-bom:2.2.2-SNAPSHOT")
+implementation("ai.platon.pulsar:pulsar-bom:2.3.0-SNAPSHOT")
 ```
 
 Clone the template project from github.com:
