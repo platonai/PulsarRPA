@@ -101,7 +101,12 @@ abstract class AbstractPulsarSession(
     override fun disablePDCache() = run { enablePDCache = false }
     
     override fun options(args: String) = options(args, null)
-    
+
+    override fun options(options: LoadOptions): LoadOptions {
+        options.conf = sessionConfig
+        return options
+    }
+
     override fun options(args: String, event: PageEventHandlers?): LoadOptions {
         val opts = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
         if (event != null) {
@@ -120,24 +125,27 @@ abstract class AbstractPulsarSession(
     
     override fun normalize(url: String) = normalize(url, "")
     
-    override fun normalize(url: String, args: String, toItemOption: Boolean) =
-        context.normalize(url, options(args), toItemOption)
-
-    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormURL {
-        return context.normalize(url, options, toItemOption)
+    override fun normalize(url: String, args: String, toItemOption: Boolean): NormURL {
+        return context.normalize(url, options(args), toItemOption)
     }
 
-    override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean) =
-        context.normalizeOrNull(url, options, toItemOption)
+    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormURL {
+        return context.normalize(url, options(options), toItemOption)
+    }
+
+    override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormURL? {
+        return context.normalizeOrNull(url, options(options), toItemOption)
+    }
     
     override fun normalize(urls: Iterable<String>) = normalize(urls, options(), false)
     
     override fun normalize(urls: Iterable<String>, args: String, toItemOption: Boolean) =
         normalize(urls, options(args), toItemOption)
     
-    override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean) =
-        context.normalize(urls, options, toItemOption)
-    
+    override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormURL> {
+        return context.normalize(urls, options(options), toItemOption)
+    }
+
     override fun normalize(url: UrlAware) = normalize(url, options())
     
     override fun normalize(url: UrlAware, args: String, toItemOption: Boolean) =

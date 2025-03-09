@@ -17,7 +17,6 @@ class HighPerformanceCrawler {
         val blockingUrls = BlockRule().blockingUrls
         // less interaction with the page, faster crawl speed
         val interactSettings = InteractSettings(initScrollPositions = "0.2,0.5", scrollCount = 0)
-        session.sessionConfig.putBean(interactSettings)
 
         val links = LinkExtractors.fromResource(resource).asSequence()
             .map { ListenableHyperlink(it, "", args = args) }

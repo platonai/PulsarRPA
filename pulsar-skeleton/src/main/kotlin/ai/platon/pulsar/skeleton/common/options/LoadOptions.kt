@@ -44,7 +44,7 @@ import kotlin.reflect.jvm.kotlinProperty
  * */
 open class LoadOptions(
     argv: Array<String>,
-    val conf: VolatileConfig,
+    var conf: VolatileConfig,
     var rawEvent: PageEventHandlers? = null,
     var rawItemEvent: PageEventHandlers? = null,
     var referrer: String? = null,

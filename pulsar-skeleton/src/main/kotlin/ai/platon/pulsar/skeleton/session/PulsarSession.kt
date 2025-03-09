@@ -228,6 +228,10 @@ interface PulsarSession : AutoCloseable {
      * */
     fun options(args: String = "", event: PageEventHandlers?): LoadOptions
     /**
+     * Create a new [LoadOptions] object with [options].
+     * */
+    fun options(options: LoadOptions): LoadOptions
+    /**
      * Normalize a url.
      *
      * @param url The url to normalize
