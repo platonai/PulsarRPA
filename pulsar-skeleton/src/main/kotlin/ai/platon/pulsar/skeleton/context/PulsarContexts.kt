@@ -98,6 +98,16 @@ object PulsarContexts {
     fun createSession() = create().createSession()
 
     /**
+     * Create a PulsarSession with the active context.
+     *
+     * @return the created session
+     */
+    @Synchronized
+    @JvmStatic
+    @Throws(Exception::class)
+    fun getOrCreateSession() = create().getOrCreateSession()
+
+    /**
      * Wait for all submitted urls to be processed.
      */
     @JvmStatic

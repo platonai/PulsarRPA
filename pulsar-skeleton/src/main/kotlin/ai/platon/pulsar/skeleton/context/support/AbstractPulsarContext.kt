@@ -169,7 +169,7 @@ abstract class AbstractPulsarContext(
     /**
      * All open sessions
      * */
-    val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
+    val sessions = ConcurrentSkipListMap<Int, AbstractPulsarSession>()
     
     private val crawlPoolOrNull: UrlPool? get() = runCatching { crawlPool }.getOrNull()
     
@@ -207,7 +207,10 @@ abstract class AbstractPulsarContext(
      * */
     @Throws(Exception::class)
     abstract override fun createSession(): AbstractPulsarSession
-    
+
+    @Throws(Exception::class)
+    override fun getOrCreateSession(): AbstractPulsarSession = sessions.values.firstOrNull() ?: createSession()
+
     /**
      * Close the given session
      * */

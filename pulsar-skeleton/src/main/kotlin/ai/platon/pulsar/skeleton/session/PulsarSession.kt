@@ -230,7 +230,7 @@ interface PulsarSession : AutoCloseable {
     /**
      * Create a new [LoadOptions] object with [options].
      * */
-    fun options(options: LoadOptions): LoadOptions
+    fun normalize(options: LoadOptions): LoadOptions
     /**
      * Normalize a url.
      *

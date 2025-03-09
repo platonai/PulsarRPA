@@ -80,6 +80,11 @@ interface PulsarContext: AutoCloseable {
     fun createSession(): PulsarSession
 
     /**
+     * Create a pulsar session
+     * */
+    fun getOrCreateSession(): PulsarSession
+
+    /**
      * Close a pulsar session
      * */
     fun closeSession(session: PulsarSession)

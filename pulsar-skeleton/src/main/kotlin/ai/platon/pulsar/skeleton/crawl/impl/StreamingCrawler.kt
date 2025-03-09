@@ -104,7 +104,7 @@ open class StreamingCrawler(
     /**
      * The default pulsar session to use
      * */
-    session: PulsarSession = PulsarContexts.createSession(),
+    session: PulsarSession = PulsarContexts.getOrCreateSession(),
     /**
      * Auto close or not
      * */
