@@ -122,10 +122,11 @@ abstract class AbstractPulsarSession(
     
     override fun normalize(url: String, args: String, toItemOption: Boolean) =
         context.normalize(url, options(args), toItemOption)
-    
-    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean) =
-        context.normalize(url, options, toItemOption)
-    
+
+    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormURL {
+        return context.normalize(url, options, toItemOption)
+    }
+
     override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean) =
         context.normalizeOrNull(url, options, toItemOption)
     

@@ -54,10 +54,13 @@ class NavigateTask constructor(
 
     /**
      * The interact settings.
-     * TODO: page.getVar("InteractSettings") is deprecated, use pageConf[BROWSER_INTERACT_SETTINGS] instead
      * */
-    val interactSettings get() = page.getVar("InteractSettings") as? InteractSettings
-        ?: InteractSettings.fromJson(pageConf[BROWSER_INTERACT_SETTINGS], browserSettings.interactSettings)
+    val interactSettings: InteractSettings get() {
+        return page.getBeanOrNull(InteractSettings::class.java) as? InteractSettings
+            ?: page.getVar("InteractSettings") as? InteractSettings
+            ?: page.conf.getBeanOrNull(InteractSettings::class.java)
+            ?: browserSettings.interactSettings
+    }
 
     init {
         pageDatum.headers[HttpHeaders.Q_REQUEST_TIME] = startTime.toEpochMilli().toString()

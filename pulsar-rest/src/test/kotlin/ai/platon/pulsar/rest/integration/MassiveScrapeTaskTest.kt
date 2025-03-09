@@ -40,7 +40,7 @@ class MassiveScrapeTaskTest : IntegrationTestBase() {
         )
 
         init {
-            PulsarSettings().maxBrowsers(10).maxOpenTabs(20)
+            PulsarSettings().maxBrowsers(5).maxOpenTabs(8).withSequentialBrowsers()
         }
 
         @JvmStatic

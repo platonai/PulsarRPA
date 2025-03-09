@@ -11,6 +11,7 @@ import ai.platon.pulsar.persist.experimental.WebAsset;
 import ai.platon.pulsar.persist.gora.generated.*;
 import ai.platon.pulsar.persist.metadata.*;
 import ai.platon.pulsar.persist.model.*;
+import kotlin.jvm.Throws;
 import kotlin.reflect.KClass;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
@@ -436,7 +437,9 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      * or {@code null} if the local bean map contains no mapping for the class.
      *
      * @param clazz the class of the variable
+     * @throws NoSuchElementException if no bean found for class {@code clazz} in WebPage
      */
+    @NotNull
     public Object getBean(Class<?> clazz) {
         var bean = getBeanOrNull(clazz);
         if (bean == null) {
