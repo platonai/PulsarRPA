@@ -17,9 +17,7 @@ fun main() {
     val session = PulsarContexts.createSession()
     // The main url we are playing with
     val url = "https://www.facebook.com/openai"
-
     val document = session.loadDocument(url)
-
     val response = session.chat("Tell me something about this webpage", document)
     println(response)
 }
