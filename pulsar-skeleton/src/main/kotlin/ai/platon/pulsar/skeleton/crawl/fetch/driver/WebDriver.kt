@@ -856,6 +856,7 @@ interface WebDriver : Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun clickNthAnchor(n: Int, rootSelector: String = "body"): String?
+
     /**
      * This method check an element with [selector]. If there's no element matching [selector], nothing to do.
      *
@@ -1254,6 +1255,7 @@ interface WebDriver : Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(): String?
+
     /**
      * This method scrolls element into view if needed, and then ake a screenshot of the element.
      *
@@ -1326,6 +1328,27 @@ interface WebDriver : Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun loadResource(url: String): NetworkResourceResponse
+
+    /**
+     * Delay for a given amount of time.
+     *
+     * @param millis The amount of time to delay, in milliseconds.
+     * */
+    suspend fun delay(millis: Long) = kotlinx.coroutines.delay(millis)
+
+    /**
+     * Delay for a given amount of time.
+     *
+     * @param duration The amount of time to delay.
+     * */
+    suspend fun delay(duration: java.time.Duration) = kotlinx.coroutines.delay(duration.toMillis())
+
+    /**
+     * Delay for a given amount of time.
+     *
+     * @param duration The amount of time to delay.
+     * */
+    suspend fun delay(duration: kotlin.time.Duration) = kotlinx.coroutines.delay(duration.inWholeMilliseconds)
 
     /**
      * Force the page pauses all navigations and PENDING resource fetches.
