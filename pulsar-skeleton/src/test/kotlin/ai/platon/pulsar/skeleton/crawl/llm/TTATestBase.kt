@@ -7,9 +7,9 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 open class TTATestBase {
 
     companion object {
-        val session = PulsarContexts.createSession()
+        val session = PulsarContexts.getOrCreateSession()
         var lastResponse: ModelResponse? = null
 
-        val textToAction = TextToAction(session)
+        val textToAction = TextToAction(session.sessionConfig)
     }
 }

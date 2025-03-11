@@ -1,10 +1,10 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
-import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import java.nio.file.Files
 
 data class ActionDescription(
@@ -29,9 +29,9 @@ data class InstructionResult(
     }
 }
 
-class TextToAction(
-    private val session: PulsarSession = PulsarContexts.createSession()
-) {
+class TextToAction(val conf: ImmutableConfig) {
+    private val model = ChatModelFactory.getOrCreateOrNull(conf)
+
     val baseDir = AppPaths.get("tta")
     val pulsarSessionFile = baseDir.resolve("PulsarSession.kt")
     var pulsarSessionSourceCode: String
@@ -73,7 +73,7 @@ class TextToAction(
             $prompt
         """.trimIndent()
 
-        return session.chat(promptWithSystemMessage)
+        return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
     /**
@@ -85,7 +85,7 @@ class TextToAction(
             $prompt
         """.trimIndent()
 
-        return session.chat(promptWithSystemMessage)
+        return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
     /**
@@ -97,7 +97,7 @@ class TextToAction(
             $prompt
         """.trimIndent()
 
-        return session.chat(promptWithSystemMessage)
+        return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
     /**

@@ -1,5 +1,7 @@
 package ai.platon.pulsar.common.config;
 
+import java.time.Duration;
+
 /**
  * Created by vincent on 17-1-17.
  * Copyright @ 2013-2023 Platon AI. All rights reserved
@@ -267,6 +269,7 @@ public interface CapabilityTypes {
     String BROWSER_LAUNCH_NO_SANDBOX = "browser.launch.no.sandbox";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS = "browser.launch.supervisor.process";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS = "browser.launch.supervisor.process.args";
+    String POLLING_DRIVER_TIMEOUT = "polling.driver.timeout";
 
     ///////////////////////////////////////////////////////////////////////////
     // Proxy

@@ -1,11 +1,11 @@
 package ai.platon.pulsar.protocol.browser.impl
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.protocol.browser.ChromiumFactory
-import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
@@ -32,29 +32,38 @@ open class BrowserManager(
      * Launch a browser. If the browser with the id is already launched, return the existing one.
      * */
     @Throws(BrowserLaunchException::class)
-    fun launch(browserId: BrowserId, driverSettings: WebDriverSettings, capabilities: Map<String, Any>): Browser {
+    fun launch(browserId: BrowserId, browserSettings: BrowserSettings, capabilities: Map<String, Any>): Browser {
         registerAsClosableIfNecessary()
 
-        val launcherOptions = LauncherOptions(driverSettings)
-        if (driverSettings.isSupervised) {
-            launcherOptions.supervisorProcess = driverSettings.supervisorProcess
-            launcherOptions.supervisorProcessArgs.addAll(driverSettings.supervisorProcessArgs)
+        val launcherOptions = LauncherOptions(browserSettings)
+        if (browserSettings.isSupervised) {
+            launcherOptions.supervisorProcess = browserSettings.supervisorProcess
+            launcherOptions.supervisorProcessArgs.addAll(browserSettings.supervisorProcessArgs)
         }
 
-        val launchOptions = driverSettings.createChromeOptions(capabilities)
+        val launchOptions = browserSettings.createChromeOptions(capabilities)
         return launchIfAbsent(browserId, launcherOptions, launchOptions)
     }
+
+    @Deprecated("Use findBrowserOrNull instead", ReplaceWith("findBrowserOrNull(browserId)"))
+    @Synchronized
+    fun findBrowser(browserId: BrowserId): Browser? = browsers[browserId]
+
     /**
-     * Find an existing browser.
+     * Find an existing browser by id.
+     * If the browser is not found, return null.
+     *
+     * @param browserId The browser id
+     * @return The browser or null if not found
      * */
     @Synchronized
-    fun findBrowser(browserId: BrowserId) = browsers[browserId]
+    fun findBrowserOrNull(browserId: BrowserId): Browser? = browsers[browserId]
 
     /**
      * Check if the browser is active.
      * */
     fun isActive(browserId: BrowserId): Boolean {
-        val browser = findBrowser(browserId) as? AbstractBrowser
+        val browser = findBrowserOrNull(browserId) as? AbstractBrowser
         return browser != null && browser.isActive
     }
 

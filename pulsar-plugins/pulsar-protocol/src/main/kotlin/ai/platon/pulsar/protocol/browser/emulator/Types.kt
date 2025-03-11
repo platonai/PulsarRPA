@@ -19,7 +19,6 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.HttpHeaders
-import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INTERACT_SETTINGS
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.PageDatum
@@ -30,8 +29,7 @@ import java.time.Instant
 
 class NavigateTask constructor(
     val fetchTask: FetchTask,
-    val driver: WebDriver,
-    val browserSettings: BrowserSettings
+    val driver: WebDriver
 ) {
     val startTime = Instant.now()
 
@@ -59,7 +57,7 @@ class NavigateTask constructor(
         return page.getBeanOrNull(InteractSettings::class.java) as? InteractSettings
             ?: page.getVar("InteractSettings") as? InteractSettings
             ?: page.conf.getBeanOrNull(InteractSettings::class.java)
-            ?: browserSettings.interactSettings
+            ?: driver.browser.settings.interactSettings
     }
 
     init {

@@ -32,7 +32,7 @@ class ChromeDevtoolsBrowser(
 
     private val toolsConfig = DevToolsConfig()
 
-    private val conf get() = browserSettings.conf
+    private val conf get() = settings.config
 
     private val reuseRecoveredDriver get() = conf.getBoolean(BROWSER_REUSE_RECOVERED_DRIVERS, false)
 
@@ -227,7 +227,7 @@ class ChromeDevtoolsBrowser(
         }
 
         val devTools = createDevTools(chromeTab, toolsConfig)
-        val driver = ChromeDevtoolsDriver(chromeTab, devTools, browserSettings, this)
+        val driver = ChromeDevtoolsDriver(chromeTab, devTools, settings, this)
         _drivers[chromeTab.id] = driver
 
         if (recovered) {
@@ -305,7 +305,7 @@ class ChromeDevtoolsBrowser(
     private fun closeRecoveredIdleDrivers() {
         val chromeDrivers = drivers.values.filterIsInstance<ChromeDevtoolsDriver>()
 
-        val pageLoadTimeout = browserSettings.interactSettings.pageLoadTimeout
+        val pageLoadTimeout = settings.interactSettings.pageLoadTimeout
         val seconds = if (AppSystemInfo.isCriticalResources) 15L else pageLoadTimeout.seconds
         val unmanagedTabTimeout = Duration.ofSeconds(seconds)
         val isIdle =

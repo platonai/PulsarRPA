@@ -55,7 +55,6 @@ open class WebDriverPoolManager(
      * */
     private val poolCapacity = immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, DEFAULT_BROWSER_MAX_ACTIVE_TABS)
     
-    val driverSettings get() = driverFactory.driverSettings
     val idleTimeout = Duration.ofMinutes(18)
     
     val workingDriverPools get() = driverPoolPool.workingDriverPools
@@ -512,7 +511,9 @@ open class WebDriverPoolManager(
 
     private suspend fun runCancelableWithTimeout(task: WebDriverTask, driver: WebDriver): FetchResult? {
         // do not take up too much time on this driver
-        val fetchTaskTimeout = driverSettings.fetchTaskTimeout
+        require(driver is AbstractWebDriver)
+        val settings = driver.browser.settings
+        val fetchTaskTimeout = settings.fetchTaskTimeout
 
         return try {
             // The code that is executing inside the [block] is cancelled on timeout.
@@ -579,7 +580,6 @@ private class BrowserAccompaniedDriverPoolCloser(
     private val driverPoolPool: ConcurrentStatefulDriverPoolPool,
     private val driverPoolManager: WebDriverPoolManager,
 ) {
-    private val driverSettings get() = driverPoolManager.driverSettings
     private val browserManager get() = driverPoolManager.browserManager
     
     private val workingDriverPools get() = driverPoolPool.workingDriverPools
@@ -637,7 +637,7 @@ private class BrowserAccompaniedDriverPoolCloser(
     @Synchronized
     fun closeUnexpectedActiveBrowsers() {
         driverPoolPool.closedDriverPools.forEach { browserId ->
-            val browser = browserManager.findBrowser(browserId)
+            val browser = browserManager.findBrowserOrNull(browserId)
             if (browser != null) {
                 logger.warn("Browser should be closed, but still in active list, closing them ... | {}", browserId)
                 runCatching { browserManager.closeBrowser(browserId) }.onFailure { warnInterruptible(this, it) }
@@ -674,15 +674,12 @@ private class BrowserAccompaniedDriverPoolCloser(
             // do not say anything to a browser when it's dying
             return
         }
-        
-        val isGUI = driverSettings.isGUI
-        if (isGUI) {
-            val browser = browserManager.findBrowser(browserId)
-            if (browser != null) {
-                // open for diagnosis
-                val urls = listOf("chrome://version/", "chrome://history/")
-                runBlocking { urls.forEach { openInformationPage(it, browser) } }
-            }
+
+        val browser = browserManager.findBrowserOrNull(browserId) ?: return
+        if (browser.settings.isGUI) {
+            // open for diagnosis
+            val urls = listOf("chrome://version/", "chrome://history/")
+            runBlocking { urls.forEach { openInformationPage(it, browser) } }
         }
     }
     
@@ -691,7 +688,11 @@ private class BrowserAccompaniedDriverPoolCloser(
     }
     
     private fun closeLeastValuableDriverPool(browserId: BrowserId, retiredDriverPool: LoadingWebDriverPool?) {
-        val isGUI = driverSettings.isGUI
+        val browser = browserManager.findBrowserOrNull(browserId) ?: return
+
+        val isGUI = browser.settings.isGUI
+        val displayMode = browser.settings.displayMode
+
         // Keep some web drivers in GUI mode open for diagnostic purposes.
         val dyingDriverPool = when {
             !isGUI -> retiredDriverPool
@@ -702,13 +703,12 @@ private class BrowserAccompaniedDriverPoolCloser(
         if (dyingDriverPool != null) {
             closeBrowserAccompaniedDriverPool(dyingDriverPool)
         } else {
-            val displayMode = driverSettings.displayMode
             logger.info("Web drivers are in {} mode, please close them manually | {} ", displayMode, browserId)
         }
     }
     
     private fun closeBrowserAccompaniedDriverPool(driverPool: LoadingWebDriverPool) {
-        val browser = browserManager.findBrowser(driverPool.browserId)
+        val browser = browserManager.findBrowserOrNull(driverPool.browserId)
         if (browser != null) {
             closeBrowserAccompaniedDriverPool(browser, driverPool)
         } else {
@@ -718,9 +718,12 @@ private class BrowserAccompaniedDriverPoolCloser(
     
     private fun closeBrowserAccompaniedDriverPool(browser: Browser, driverPool: LoadingWebDriverPool) {
         require(browser.id == driverPool.browserId) { "Browser id not match \n${browser.id}\n${driverPool.browserId}" }
+        require(browser is AbstractBrowser)
 
-        val browserId = driverPool.browserId
-        val displayMode = driverSettings.displayMode
+        val browserId = browser.id
+        val isGUI = browser.settings.isGUI
+        val displayMode = browser.settings.displayMode
+
         logger.info("Closing browser & driver pool with {} mode | #{} | {} | {} | {}",
             displayMode, browser.instanceId, browser.readableState, browserId.contextDir.last(), browserId.contextDir)
 

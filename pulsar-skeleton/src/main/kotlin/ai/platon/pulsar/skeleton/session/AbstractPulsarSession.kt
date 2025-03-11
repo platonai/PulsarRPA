@@ -459,22 +459,22 @@ abstract class AbstractPulsarSession(
     override fun chat(userMessage: String, systemMessage: String) = context.chat(userMessage, systemMessage)
 
     override fun chat(page: WebPage, prompt: String) = chat(prompt +
-            "\n\nThere is the source code of the page:" + page.contentAsString)
+            "\n\nThere is the source code of the page:\n\n\n" + page.contentAsString)
 
     override fun chat(prompt: String, page: WebPage) = chat(prompt +
-            "\n\nThere is the source code of the page:" + page.contentAsString)
+            "\n\nThere is the source code of the page:\n\n\n" + page.contentAsString)
 
     override fun chat(document: FeaturedDocument, prompt: String) = chat(prompt +
-            "\n\nThere is the text content of the page:" + document.text)
+            "\n\nThere is the text content of the page:\n\n\n" + document.text)
 
     override fun chat(prompt: String, document: FeaturedDocument) = chat(prompt +
-            "\n\nThere is the text content of the page:" + document.text)
+            "\n\nThere is the text content of the page:\n\n\n" + document.text)
 
     override fun chat(element: Element, prompt: String) = chat(prompt +
-            "\n\nThere is the text content of the element:" + element.text())
+            "\n\nThere is the text content of the selected element:\n\n\n" + element.text())
 
     override fun chat(prompt: String, element: Element) = chat(prompt +
-            "\n\nThere is the text content of the element:" + element.text())
+            "\n\nThere is the text content of the selected element:\n\n\n" + element.text())
     /**
      * Instructs the webdriver to perform a series of actions based on the given prompt.
      * This function converts the prompt into a sequence of webdriver actions, which are then executed.
@@ -489,7 +489,7 @@ abstract class AbstractPulsarSession(
         }
 
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
-        val tta = TextToAction(this)
+        val tta = TextToAction(sessionConfig)
         val actions = tta.generateWebDriverActions(prompt)
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.

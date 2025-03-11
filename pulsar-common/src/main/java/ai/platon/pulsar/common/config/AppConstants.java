@@ -142,6 +142,8 @@ public interface AppConstants {
 
     double DEFAULT_BROWSER_RESERVED_MEMORY_MIB = ByteUnit.BYTE.toMiB(DEFAULT_BROWSER_RESERVED_MEMORY); // 5 GiB
 
+    Duration POLLING_DRIVER_TIMEOUT_DEFAULT = Duration.ofSeconds(60);
+
     Dimension DEFAULT_VIEW_PORT = new Dimension(1920, 1080);
     String PULSAR_META_INFORMATION_ID = "PulsarMetaInformation";
     String PULSAR_META_INFORMATION_SELECTOR = "#" + PULSAR_META_INFORMATION_ID;

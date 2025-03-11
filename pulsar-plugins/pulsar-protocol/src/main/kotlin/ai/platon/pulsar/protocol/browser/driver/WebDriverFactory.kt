@@ -1,7 +1,9 @@
 package ai.platon.pulsar.protocol.browser.driver
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.protocol.browser.UnsupportedWebDriverException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowser
@@ -19,13 +21,12 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * A factory to create WebDriver.
  */
-open class WebDriverFactory(
-    val driverSettings: WebDriverSettings,
+open class WebDriverFactory constructor(
     val browserManager: BrowserManager,
     val immutableConfig: ImmutableConfig,
 ) {
     private val logger = LoggerFactory.getLogger(WebDriverFactory::class.java)
-    
+
     /**
      * The number of drivers created.
      */
@@ -49,9 +50,9 @@ open class WebDriverFactory(
     @Throws(BrowserLaunchException::class)
     fun create(
         browserId: BrowserId,
-        priority: Int = 0,
-        conf: VolatileConfig = VolatileConfig.UNSAFE,
-        start: Boolean = true
+        priority: Int,
+        conf: VolatileConfig,
+        start: Boolean
     ) = launchBrowserAndDriver(browserId, priority, conf, start).second
     
     /**
@@ -70,20 +71,21 @@ open class WebDriverFactory(
      * Launch a browser.
      */
     @Throws(BrowserLaunchException::class)
-    fun launchBrowser(browserId: BrowserId, conf: VolatileConfig = VolatileConfig.UNSAFE): Browser {
+    fun launchBrowser(browserId: BrowserId, conf: MutableConfig = immutableConfig.toMutableConfig()): Browser {
         numDrivers.incrementAndGet()
         
         logger.debug("Creating browser #{} | {}", numDrivers, browserId)
-        
+
         val browserType = browserId.browserType
+        val driverSettings = BrowserSettings(conf)
         val capabilities = driverSettings.createGeneralOptions()
         setProxy(capabilities, browserId.fingerprint.proxyURI)
         
         try {
             val browser = when (browserType) {
-                BrowserType.PULSAR_CHROME -> launchChrome(browserId, capabilities)
+                BrowserType.PULSAR_CHROME -> launchChrome(browserId, capabilities, driverSettings)
 //                BrowserType.PLAYWRIGHT_CHROME -> createPlaywrightDriver(browserInstanceId, capabilities)
-                BrowserType.MOCK_CHROME -> launchMockChrome(browserId, capabilities)
+                BrowserType.MOCK_CHROME -> launchMockChrome(browserId, capabilities, driverSettings)
                 else -> throw UnsupportedWebDriverException("Unsupported browser type: $browserType")
             }
             
@@ -121,7 +123,7 @@ open class WebDriverFactory(
      */
     @Throws(BrowserLaunchException::class)
     fun launchChrome(
-        browserId: BrowserId, capabilities: Map<String, Any>,
+        browserId: BrowserId, capabilities: Map<String, Any>, driverSettings: BrowserSettings
     ): ChromeDevtoolsBrowser {
         require(browserId.browserType == BrowserType.PULSAR_CHROME)
         return browserManager.launch(browserId, driverSettings, capabilities) as ChromeDevtoolsBrowser
@@ -138,11 +140,11 @@ open class WebDriverFactory(
      * Launch a mock Chrome browser.
      */
     @Throws(BrowserLaunchException::class)
-    private fun launchMockChrome(browserId: BrowserId, capabilities: Map<String, Any>): MockBrowser {
+    private fun launchMockChrome(browserId: BrowserId, capabilities: Map<String, Any>, driverSettings: BrowserSettings): MockBrowser {
         require(browserId.browserType == BrowserType.MOCK_CHROME)
         return browserManager.launch(browserId, driverSettings, capabilities) as MockBrowser
     }
-    
+
     private fun setProxy(capabilities: MutableMap<String, Any>, proxyURI: URI?) {
         if (proxyURI == null) {
             return

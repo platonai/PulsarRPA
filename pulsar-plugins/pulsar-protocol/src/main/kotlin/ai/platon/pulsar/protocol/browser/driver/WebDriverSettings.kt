@@ -16,13 +16,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
-import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_TASK_TIMEOUT
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyEntry
-import java.net.URI
-import java.time.Duration
 
 /**
  * A general chrome option set:
@@ -59,54 +53,7 @@ import java.time.Duration
         webStorageEnabled: true
     }
  * */
+@Deprecated("Use BrowserSettings instead", ReplaceWith("BrowserSettings"))
 open class WebDriverSettings(conf: ImmutableConfig): BrowserSettings(conf) {
 
-    companion object {
-        val POLLING_DRIVER_TIMEOUT = "polling.driver.timeout"
-        val POLLING_DRIVER_TIMEOUT_DEFAULT = Duration.ofSeconds(60)
-    }
-
-    val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
-    val pollingDriverTimeout get() = conf.getDuration(POLLING_DRIVER_TIMEOUT, POLLING_DRIVER_TIMEOUT_DEFAULT)
-
-    // Special
-    // var mobileEmulationEnabled = true
-
-    open fun formatViewPort(delimiter: String = ","): String {
-        return "${SCREEN_VIEWPORT.width}$delimiter${SCREEN_VIEWPORT.height}"
-    }
-
-    open fun createGeneralOptions(): MutableMap<String, Any> {
-        val generalOptions = mutableMapOf<String, Any>()
-
-        // generalOptions.setCapability("browserLanguage", "zh_CN")
-        // generalOptions.setCapability("resolution", "${viewPort.width}x${viewPort.height}")
-
-        return generalOptions
-    }
-
-    open fun createChromeOptions(generalOptions: Map<String, Any>): ChromeOptions {
-        val chromeOptions = ChromeOptions()
-        chromeOptions.merge(generalOptions)
-
-        // rewrite proxy argument
-        chromeOptions.removeArgument("proxy")
-        when (val proxy = generalOptions["proxy"]) {
-            is String -> chromeOptions.proxyServer = proxy
-            is URI -> chromeOptions.proxyServer = proxy.host + ":" + proxy.port
-            is ProxyEntry -> chromeOptions.proxyServer = proxy.hostPort
-        }
-
-        chromeOptions.headless = isHeadless
-        chromeOptions.noSandbox = noSandbox
-
-        chromeOptions
-            .addArgument("window-position", "0,0")
-            .addArgument("window-size", formatViewPort())
-            .addArgument("pageLoadStrategy", pageLoadStrategy)
-            .addArgument("throwExceptionOnScriptError", "true")
-//            .addArgument("start-maximized")
-
-        return chromeOptions
-    }
 }

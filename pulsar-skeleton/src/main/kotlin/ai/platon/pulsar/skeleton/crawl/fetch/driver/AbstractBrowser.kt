@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 abstract class AbstractBrowser(
     override val id: BrowserId,
-    val browserSettings: BrowserSettings
+    override val settings: BrowserSettings
 ): Browser, AutoCloseable, AbstractEventEmitter<BrowserEvents>() {
     companion object {
         protected val SEQUENCER = AtomicInteger()
@@ -57,7 +57,7 @@ abstract class AbstractBrowser(
 
     override val readableState: String get() = buildReadableState()
 
-    val isGUI get() = browserSettings.isGUI
+    val isGUI get() = settings.isGUI
     val idleTimeout = Duration.ofMinutes(10)
 
     init {
@@ -120,8 +120,8 @@ abstract class AbstractBrowser(
         // Nothing to do
     }
 
-    private fun getRandomUserAgentOrNull() = if (browserSettings.isUserAgentOverridingEnabled) {
-        browserSettings.userAgent.getRandomUserAgent()
+    private fun getRandomUserAgentOrNull() = if (settings.isUserAgentOverridingEnabled) {
+        settings.userAgent.getRandomUserAgent()
     } else null
 
     /**

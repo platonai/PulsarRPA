@@ -61,7 +61,7 @@ open class InteractiveBrowserEmulator(
      * */
     immutableConfig: ImmutableConfig,
 ) : BrowserEmulator,
-    BrowserEmulatorImplBase(driverPoolManager.driverSettings, responseHandler, immutableConfig) {
+    BrowserEmulatorImplBase(responseHandler, immutableConfig) {
     private val logger = getLogger(InteractiveBrowserEmulator::class)
     private val tracer = getTracerOrNull(InteractiveBrowserEmulator::class)
     private val taskLogger = getLogger(InteractiveBrowserEmulator::class, ".Task")
@@ -260,7 +260,7 @@ open class InteractiveBrowserEmulator(
         
         var exception: Exception? = null
         var response: Response?
-        val navigateTask = NavigateTask(task, driver, driverSettings)
+        val navigateTask = NavigateTask(task, driver)
         
         try {
             checkState(task, driver)
@@ -413,13 +413,14 @@ open class InteractiveBrowserEmulator(
         checkState(navigateTask.fetchTask, driver)
         require(driver is AbstractWebDriver)
 
+        val browserSettings = driver.browser.settings
         // TODO: a better flag to specify whether to connect or navigate
         val connect = fetchTask.page.hasVar("connect")
         val interactResult = if (connect) {
             driver.ignoreDOMFeatures = true
-            connect(navigateTask, driver, navigateTask.browserSettings)
+            connect(navigateTask, driver, browserSettings)
         } else {
-            navigateAndInteract(navigateTask, driver, navigateTask.browserSettings)
+            navigateAndInteract(navigateTask, driver, browserSettings)
         }
 
         // TODO: separate status code of pulsar system and the status code from browser

@@ -5,8 +5,13 @@ import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.dom.nodes.GeoAnchor
+import ai.platon.pulsar.external.ChatModelFactory
+import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
+import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.sun.tools.javac.code.Kinds.KindSelector.VAL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -92,6 +97,8 @@ abstract class AbstractWebDriver(
     private val jsoupCreateDestroyMonitor = Any()
     private var jsoupSession: Connection? = null
 
+    private val config get() = browser.settings.config
+
     var idleTimeout: Duration = Duration.ofMinutes(10)
     var lastActiveTime: Instant = Instant.now()
     /**
@@ -168,11 +175,11 @@ abstract class AbstractWebDriver(
     /**
      * The delay policy of the driver.
      * */
-    override val delayPolicy by lazy { browser.browserSettings.interactSettings.generateRestrictedDelayPolicy() }
+    override val delayPolicy by lazy { browser.settings.interactSettings.generateRestrictedDelayPolicy() }
     /**
      * The timeout policy of the driver.
      * */
-    override val timeoutPolicy by lazy { browser.browserSettings.interactSettings.generateRestrictedTimeoutPolicy() }
+    override val timeoutPolicy by lazy { browser.settings.interactSettings.generateRestrictedTimeoutPolicy() }
     /**
      * The frames of the current page.
      * */
@@ -252,6 +259,27 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun referrer() = evaluate("document.referrer", "")
+
+    @Throws(WebDriverException::class)
+    override suspend fun chat(prompt: String, selector: String): ModelResponse {
+        val textContent = selectFirstTextOrNull(selector) ?: return ModelResponse.EMPTY
+        val prompt2 = "$prompt\n\n\nThere is the text content of the selected element:\n\n\n$textContent"
+        return ChatModelFactory.getOrCreateOrNull(config)?.call(prompt2) ?: ModelResponse.LLM_NOT_AVAILABLE
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun instruct(prompt: String): InstructionResult {
+        // Converts the prompt into a sequence of webdriver actions using TextToAction.
+        val tta = TextToAction(config)
+        val actions = tta.generateWebDriverActions(prompt)
+
+        // Dispatches and executes each action using a SimpleCommandDispatcher.
+        val dispatcher = SimpleCommandDispatcher()
+        val functionResults = actions.functionCalls.map { action ->
+            dispatcher.execute(action, this)
+        }
+        return InstructionResult(actions.functionCalls, functionResults, actions.modelResponse)
+    }
 
     @Suppress("UNCHECKED_CAST")
     @Throws(WebDriverException::class)

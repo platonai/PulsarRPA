@@ -1,10 +1,12 @@
 package ai.platon.pulsar.protocol.browser.driver
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_TIMEOUT
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
@@ -210,12 +212,12 @@ class LoadingWebDriverPool constructor(
     fun poll(conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver = poll(0, conf, timeout, unit)
     
     @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
-    fun poll(priority: Int, conf: VolatileConfig, timeout: Duration): WebDriver {
+    fun poll(priority: Int, conf: MutableConfig, timeout: Duration): WebDriver {
         return poll(priority, conf, timeout.seconds, TimeUnit.SECONDS)
     }
     
     @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
-    fun poll(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver {
+    fun poll(priority: Int, conf: MutableConfig, timeout: Long, unit: TimeUnit): WebDriver {
         val driver = pollWebDriver(priority, conf, timeout, unit)
         if (driver == null) {
             val snapshot = takeSnapshot()
@@ -234,9 +236,10 @@ class LoadingWebDriverPool constructor(
      * Poll a [WebDriver]. If it's the browser is not launched yet, launch it and emit launch events
      * */
     @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
-    suspend fun poll(priority: Int, conf: VolatileConfig, event: BrowseEventHandlers?, page: WebPage): WebDriver {
-        val timeout = driverFactory.driverSettings.pollingDriverTimeout
-        
+    suspend fun poll(priority: Int, conf: MutableConfig, event: BrowseEventHandlers?, page: WebPage): WebDriver {
+        val driverSettings = BrowserSettings(conf)
+        val timeout = driverSettings.pollingDriverTimeout
+
         // NOTE: concurrency note - if multiple threads come to the code snippet,
         // only one goes to pollWithEvents, others wait in poll
         val notEmitted = launchEventsEmitted.compareAndSet(false, true)
@@ -329,7 +332,7 @@ class LoadingWebDriverPool constructor(
     
     @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
     private suspend fun pollWithEvents(
-        priority: Int, conf: VolatileConfig, event: BrowseEventHandlers?, page: WebPage, timeout: Duration
+        priority: Int, conf: MutableConfig, event: BrowseEventHandlers?, page: WebPage, timeout: Duration
     ): WebDriver {
         // TODO: is it better to handle launch events in browser?
         dispatchEvent("onWillLaunchBrowser") { event?.onWillLaunchBrowser?.invoke(page) }
@@ -340,7 +343,7 @@ class LoadingWebDriverPool constructor(
     }
     
     @Throws(BrowserLaunchException::class, InterruptedException::class)
-    private fun pollWebDriver(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver? {
+    private fun pollWebDriver(priority: Int, conf: MutableConfig, timeout: Long, unit: TimeUnit): WebDriver? {
         _numWaitingTasks.incrementAndGet()
         
         val driver = try {
@@ -359,7 +362,7 @@ class LoadingWebDriverPool constructor(
      * Web drivers are open in sequence, so memory and CPU usage will not skyrocket.
      * */
     @Throws(BrowserLaunchException::class)
-    private fun resourceSafeCreateDriverIfNecessary(priority: Int, conf: VolatileConfig) {
+    private fun resourceSafeCreateDriverIfNecessary(priority: Int, conf: MutableConfig) {
         synchronized(driverFactory) {
             if (!isActive) {
                 return
@@ -374,7 +377,7 @@ class LoadingWebDriverPool constructor(
     }
     
     @Throws(BrowserLaunchException::class)
-    private fun computeBrowserAndDriver(priority: Int, conf: VolatileConfig): WebDriver {
+    private fun computeBrowserAndDriver(priority: Int, conf: MutableConfig): WebDriver {
         return computeBrowserAndDriver0(conf)
 //        logger.warn("Failed to launch browser, rethrow BrowserLaunchException. " +
 //                "Enable debug to see the stack trace | {}", e.message)
@@ -420,7 +423,7 @@ class LoadingWebDriverPool constructor(
     }
     
     @Throws(WebDriverException::class)
-    private fun computeBrowserAndDriver0(conf: VolatileConfig): WebDriver {
+    private fun computeBrowserAndDriver0(conf: MutableConfig): WebDriver {
         logger.debug("Launch browser and new driver | {}", browserId)
 
         // TODO: if the browser exists, we should not create a new one
@@ -463,7 +466,7 @@ class LoadingWebDriverPool constructor(
     
     private fun logDriverOnline(driver: WebDriver) {
         require(driver is AbstractWebDriver)
-        val driverSettings = driverFactory.driverSettings
+        val driverSettings = driver.browser.settings
         logger.trace(
             "The {}th web driver is active, browser: {} pageLoadStrategy: {} capacity: {}",
             numActive, driver.name,
