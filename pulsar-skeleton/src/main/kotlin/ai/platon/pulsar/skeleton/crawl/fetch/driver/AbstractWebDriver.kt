@@ -11,7 +11,6 @@ import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.sun.tools.javac.code.Kinds.KindSelector.VAL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -98,6 +97,8 @@ abstract class AbstractWebDriver(
     private var jsoupSession: Connection? = null
 
     private val config get() = browser.settings.config
+
+    private val chatModel get() = ChatModelFactory.getOrCreateOrNull(config)
 
     var idleTimeout: Duration = Duration.ofMinutes(10)
     var lastActiveTime: Instant = Instant.now()
@@ -262,9 +263,15 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun chat(prompt: String, selector: String): ModelResponse {
+        val chatModel = chatModel ?: return ModelResponse.LLM_NOT_AVAILABLE
         val textContent = selectFirstTextOrNull(selector) ?: return ModelResponse.EMPTY
-        val prompt2 = "$prompt\n\n\nThere is the text content of the selected element:\n\n\n$textContent"
-        return ChatModelFactory.getOrCreateOrNull(config)?.call(prompt2) ?: ModelResponse.LLM_NOT_AVAILABLE
+        val textContent0 = textContent.take(chatModel.settings.maximumLength)
+
+        println(textContent0)
+
+        val prompt2 = "$prompt\n\n\nThere is the text content of the selected element:\n\n\n$textContent0"
+
+        return chatModel.call(prompt2)
     }
 
     @Throws(WebDriverException::class)

@@ -1,11 +1,9 @@
 package ai.platon.pulsar.external.impl
 
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.external.ChatModel
-import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.external.ResponseState
-import ai.platon.pulsar.external.TokenUsage
+import ai.platon.pulsar.external.*
 import dev.langchain4j.data.message.SystemMessage
 import dev.langchain4j.data.message.UserMessage
 import dev.langchain4j.model.chat.ChatLanguageModel
@@ -21,7 +19,8 @@ import org.jsoup.nodes.Element
 import java.time.Duration
 
 open class ChatModelImpl(
-    private val langchainModel: ChatLanguageModel
+    private val langchainModel: ChatLanguageModel,
+    private val conf: ImmutableConfig
 ) : ChatModel {
     private val logger = getLogger(this)
 
@@ -38,6 +37,8 @@ open class ChatModelImpl(
 
     private val responseCache: Cache<String, ModelResponse> =
         cacheManager.getCache("modelResponses", String::class.java, ModelResponse::class.java)
+
+    override val settings = ChatModelSettings(conf)
 
     /**
      * Generates a response from the model based on a sequence of messages.
@@ -87,8 +88,10 @@ open class ChatModelImpl(
             return ModelResponse("", ResponseState.OTHER)
         }
 
+        val userMessage1 = userMessage.take(settings.maximumLength)
         // Generate a cache key based on the user and system messages
-        val cacheKey = DigestUtils.md5Hex("$userMessage|$systemMessage")
+        val cacheKey = DigestUtils.md5Hex("$userMessage1|$systemMessage")
+
 
         // Check if the response is already cached
         val cachedResponse = responseCache.get(cacheKey)
@@ -97,7 +100,7 @@ open class ChatModelImpl(
             return cachedResponse
         }
 
-        val um = UserMessage.userMessage(userMessage)
+        val um = UserMessage.userMessage(userMessage1)
 
         val response = try {
             if (systemMessage.isBlank()) {
