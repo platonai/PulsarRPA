@@ -1,8 +1,10 @@
 package ai.platon.pulsar.test2.browser
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
@@ -33,7 +35,7 @@ class WebDriverTestBase : TestBase() {
     protected val logger = getLogger(this)
     protected val warnUpUrl = "https://www.amazon.com/"
     protected val originUrl = "https://www.amazon.com/"
-    protected val url = "https://www.amazon.com/dp/B0C1H26C46"
+    protected val productUrl = "https://www.amazon.com/dp/B0C1H26C46"
     protected val resourceUrl2 = "https://www.amazon.com/robots.txt"
 
     protected val baseURL get() = "http://127.0.0.1:$port"
@@ -54,10 +56,20 @@ class WebDriverTestBase : TestBase() {
      * @see [ai.platon.pulsar.test.rest.MockSiteController.robots]
      * */
     protected val robotsUrl get() = "$baseURL/robots.txt"
+    /**
+     * @see [ai.platon.pulsar.test.rest.MockSiteController.amazonHome]
+     * */
+    protected val mockAmazonHomeUrl get() = "$baseURL/amazon/home.htm"
+    /**
+     * @see [ai.platon.pulsar.test.rest.MockSiteController.amazonProduct]
+     * */
+    protected val mockAmazonProductUrl get() = "$baseURL/amazon/product.htm"
+
     protected val walmartUrl = "https://www.walmart.com/ip/584284401"
-    protected val asin get() = url.substringAfterLast("/dp/")
+    protected val asin get() = productUrl.substringAfterLast("/dp/")
     protected val driverFactory get() = session.context.getBean(WebDriverFactory::class)
-    protected val settings get() = driverFactory.driverSettings
+    protected val browser by lazy { driverFactory.launchTempBrowser() }
+    protected val settings by lazy { BrowserSettings(conf) }
     protected val confuser get() = settings.confuser as SimpleScriptConfuser
 
     protected val expressions = """
@@ -132,6 +144,12 @@ class WebDriverTestBase : TestBase() {
                     block(driver)
                 }
             }
+        }
+    }
+
+    protected fun runWebDriverTest(browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            browser.newDriver().use { block(it) }
         }
     }
 

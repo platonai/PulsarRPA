@@ -7,11 +7,11 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.urls.DegenerateHyperlink
-import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
-import org.apache.http.client.utils.URIBuilder
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import org.apache.hc.core5.net.URIBuilder
 import java.util.concurrent.atomic.AtomicInteger
 
 class SearchAgent {
@@ -23,7 +23,7 @@ class SearchAgent {
     private val baseUrl get() = bingBaseUrl
     private val submittedDegeneratedLinks = AtomicInteger()
     private val submittedSearchTasks = AtomicInteger()
-    
+
     private val context = SQLContexts.create()
     private val session = context.createSession()
     private val proxyPool get() = context.getBean(ProxyPool::class)
@@ -48,7 +48,7 @@ class SearchAgent {
                 }
             }
         }
-        
+
         PulsarContexts.await()
     }
 
@@ -94,22 +94,22 @@ class SearchAgent {
         val options = session.options(args)
         val be = options.eventHandlers.browseEventHandlers
         val le = options.eventHandlers.loadEventHandlers
-        
+
         be.onDocumentActuallyReady.addLast { page, driver ->
             driver.scrollTo("h3:nth-child(3)")
             driver.scrollTo("h3:nth-child(5)")
             driver.scrollTo("h3:nth-child(8)")
-            
+
             driver.click("textarea[name=q]")
             driver.scrollToTop()
-            
+
             println(String.format("%d.\t%s", page.id, page.url))
             val resultStats = driver.selectFirstTextOrNull("#result-stats")
             println(resultStats)
             val texts = driver.selectTextAll("h3")
             println(texts)
         }
-        
+
         le.onHTMLDocumentParsed.addLast { page, document ->
             extract(page, document)
         }
@@ -122,7 +122,7 @@ class SearchAgent {
         }
         submittedSearchTasks.incrementAndGet()
     }
-    
+
     private fun extract(page: WebPage, document: FeaturedDocument) {
         logger.info("Extract | {} | {}", page.protocolStatus, page.url)
     }
@@ -140,6 +140,6 @@ fun main() {
 
     val agent = SearchAgent()
     agent.search()
-    
+
     readlnOrNull()
 }

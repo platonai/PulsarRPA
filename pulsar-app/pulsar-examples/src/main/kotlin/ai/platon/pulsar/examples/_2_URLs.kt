@@ -2,16 +2,21 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.PlainUrl
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
-import ai.platon.pulsar.persist.WebPage
 
 /**
  * Demonstrates various URLs in PulsarRPA.
  * */
 fun main() {
+    // Use the default browser which has an isolated profile.
+    // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
+    PulsarSettings().withDefaultBrowser()
+
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with
@@ -83,5 +88,5 @@ fun main() {
     println("CompletableListenableHyperlink loaded | " + page4.url)
 
     // Wait until all tasks are done.
-    session.context.await()
+    PulsarContexts.await()
 }

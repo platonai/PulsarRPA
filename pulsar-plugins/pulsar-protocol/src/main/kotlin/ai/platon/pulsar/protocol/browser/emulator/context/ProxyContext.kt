@@ -17,8 +17,8 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.common.proxy.*
+import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -127,7 +127,12 @@ open class ProxyContext(
         maxAllowedProxyAbsence = conf.getInt(CapabilityTypes.PROXY_MAX_ALLOWED_PROXY_ABSENCE, 10)
     }
 
-    @Throws(ProxyException::class, Exception::class)
+    /**
+     * Run the task with the proxy context.
+     * @return the fetch result
+     * @throws ProxyVendorException if the proxy is not available
+     * */
+    @Throws(ProxyVendorException::class)
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         return checkAbnormalResult(task) ?:run0(task, browseFun)
     }
@@ -140,7 +145,7 @@ open class ProxyContext(
         // nothing to do currently
     }
 
-    @Throws(ProxyException::class, Exception::class)
+    @Throws(ProxyVendorException::class)
     private suspend fun run0(
         task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {
@@ -169,6 +174,7 @@ open class ProxyContext(
         return null
     }
 
+    @Throws(ProxyVendorException::class)
     private fun handleProxyException(task: FetchTask, e: ProxyException): FetchResult {
         return when (e) {
             is ProxyInsufficientBalanceException -> {

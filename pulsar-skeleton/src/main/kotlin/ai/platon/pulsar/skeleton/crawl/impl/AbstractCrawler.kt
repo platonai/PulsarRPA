@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.crawl.impl
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.persist.WebPage
@@ -39,7 +40,7 @@ abstract class AbstractCrawler(
 
     protected val closed = AtomicBoolean()
 
-    open val isActive get() = !closed.get()
+    open val isActive get() = !closed.get() && AppContext.isActive && session.context.isActive
 
     init {
         attach()

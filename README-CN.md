@@ -2,11 +2,14 @@
 
 [English](README.md) | 简体中文 | [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
 
-## 🚄 开始
+## 🥁 简介
 
-💖 **PulsarRPA - 您的大规模自动化解决方案！** 💖
+💖 **PulsarRPA - 您的终极 AI-RPA 解决方案！** 💖
 
-PulsarRPA 是一款高性能、分布式、开源的机器人流程自动化（RPA）框架，专为轻松应对大规模 RPA 任务而设计，为浏览器自动化、网络内容理解和数据提取提供了全面解决方案。PulsarRPA 结合了高性能分布式 RPA 的优势，旨在解决在快速演变且日益复杂的网站环境中进行浏览器自动化以及抽取准确、全面网络数据所固有的挑战。
+**PulsarRPA** 是一个**高性能**、**分布式**且**开源**的机器人流程自动化（RPA）框架。
+它专为**大规模自动化**而设计，在**浏览器自动化**、**网页内容理解**和**数据提取**方面表现出色。
+PulsarRPA 解决了现代网页自动化的挑战，确保即使从最**复杂**和**动态**的网站中也能实现**准确**且**全面**的数据提取。
+
 
 ## 视频
 
@@ -16,43 +19,44 @@ YouTube:
 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
-### 大多数抓取尝试可以从几乎一行代码开始：
+## 🚀 开始
 
-*Kotlin:*
+### 谈论一个网页
 
 ```kotlin
-fun main() = PulsarContexts.createSession().scrapeOutPages(
+val document = session.loadDocument(url)
+val response = session.chat("介绍一下这个网页", document)
+```
+
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/ChatAboutPage.kt).
+
+### 吩咐浏览器干活
+
+```kotlin
+val prompts = """
+移动光标到 id 为 'title' 的元素并点击
+滚动到页面中间
+滚动到顶部
+获取 id 为 'title' 的元素的文本
+"""
+
+val eventHandlers = DefaultPageEventHandlers()
+eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
+    val result = session.instruct(prompts, driver)
+}
+session.open(url, eventHandlers)
+```
+
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/TalkToActivePage.kt).
+
+### 一行代码抓取
+
+```kotlin
+session.scrapeOutPages(
   "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ```
 
-上面的代码从一组产品页面中抓取由 css 选择器 #title 和 #acrCustomerReviewText 指定的字段。 示例代码：[kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/sites/amazon/AmazonCrawler.java).
-
-### 大多数 *生产环境* 数据采集项目可以从以下代码片段开始：
-
-*Kotlin:*
-
-```kotlin
-fun main() {
-    val context = PulsarContexts.create()
-
-    val parseHandler = { _: WebPage, document: FeaturedDocument ->
-        // use the document
-        // ...
-        // and then extract further hyperlinks
-        context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
-    }
-    val urls = LinkExtractors.fromResource("seeds10.txt")
-        .map { ParsableHyperlink("$it -refresh", parseHandler) }
-    context.submitAll(urls).await()
-}
-```
-
-示例代码：
-[kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
-
-### **最复杂** 的数据采集项目需要使用 RPA：
-
-*Kotlin:*
+### 结合机器人流程自动化 (RPA) 进行网页抓取
 
 ```kotlin
 val options = session.options(args)
@@ -78,59 +82,46 @@ event.onWillCheckDocumentState.addLast { page, driver ->
 session.load(url, options)
 ```
 
-示例代码: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
 
-### *最复杂* 的 Web 数据抽取难题需要用 X-SQL 来解决：
-
-在很多情况下，您可能仍然需要使用基于规则的数据提取技术。X-SQL 被设计来描述和管理最复杂的数据提取规则。
-
-1. 您的 Web 数据提取规则非常复杂，例如，每个单独的页面有 100 多个规则
-2. 需要维护的数据提取规则很多，比如全球 20 多个亚马逊网站，每个网站 20 多个数据类型
+### 使用 X-SQL 解决*超级复杂*的数据提取问题
 
 ```sql
 select
-      dom_first_text(dom, '#productTitle') as title,
-      dom_first_text(dom, '#bylineInfo') as brand,
-      dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
-      dom_first_text(dom, '#acrCustomerReviewText') as ratings,
-      str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body');
+    dom_first_text(dom, '#productTitle') as title,
+    dom_first_text(dom, '#bylineInfo') as brand,
+    dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
+    dom_first_text(dom, '#acrCustomerReviewText') as ratings,
+    str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
+from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body');
 ```
 
-示例代码:
-- [X-SQL  to scrape 100+ fields from an Amazon's product page](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
-- [X-SQLs  to scrape all types of Amazon webpages](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+Example code:
 
-## 🥁 简介
-
-PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎所有规模和性质的网络数据采集需要。
-
-大规模提取 Web 数据非常困难。网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整，PulsarRPA 开发了一系列尖端技术来解决这些问题。
+* [X-SQL to scrape 100+ fields from an Amazon's product page](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+* [X-SQLs to scrape all types of Amazon webpages](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
 
-### 大规模网页数据提取面临的挑战
 
-1. **频繁的网站变更**：在线平台不断更新其布局、结构和内容，使得长期保持可靠的提取流程颇具挑战。传统的抓取工具难以迅速适应这些变化，导致获取到的数据过时或不再相关。
-2. **网页内容智能提取**：互联网拥有数十亿个网站，每个网站都包含海量数据。为了从如此众多的网站中提取信息，并且应对频繁的网站变更，智能化的网页内容采集技术至关重要。传统的网页抓取方法无法有效处理大量网页，导致数据提取效率低下。
-3. **复杂的网站架构**：现代网站常采用精巧的设计模式、动态内容加载及先进的安全措施，为常规抓取方法设立了严峻的难关。从这类网站中提取数据需深入理解其结构与行为，并具备像人类用户一样与其交互的能力。
+### 连续采集
 
-### PulsarRPA：革新网页数据采集方式
+```kotlin
+fun main() {
+    val context = PulsarContexts.create()
 
-为应对上述挑战，PulsarRPA 集成了多项创新技术，确保高效、精准、可扩展的网页数据提取：
+    val parseHandler = { _: WebPage, document: FeaturedDocument ->
+        // use the document
+        // ...
+        // and then extract further hyperlinks
+        context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
+    }
+    val urls = LinkExtractors.fromResource("seeds10.txt")
+        .map { ParsableHyperlink("$it -refresh", parseHandler) }
+    context.submitAll(urls).await()
+}
+```
 
-1. **浏览器渲染**：利用浏览器渲染和AJAX数据抓取从网站提取内容。
-2. **RPA（机器人流程自动化）**：采用类人类行为与网页互动，实现从现代复杂网站中收集数据。
-3. **智能抓取**：PulsarRPA采用智能抓取技术，能够自动识别并理解网页内容，从而确保数据提取的准确性和及时性。利用智能算法和机器学习技术，PulsarRPA能够自主学习和应用数据提取模型，显著提高数据检索的效率和精确度。
-4. **高级DOM解析**：利用高级文档对象模型（DOM）解析技术，PulsarRPA能够轻松导航复杂的网站结构。它能准确识别并提取现代网页元素中的数据，处理动态内容渲染，绕过反爬虫措施，即使面对网站的复杂性，也能提供完整准确的数据集。
-5. **分布式架构**：基于分布式架构构建的PulsarRPA，能够有效地处理大规模提取任务，因为它利用了多个节点组合的计算能力。这使得并行抓取、快速数据检索成为可能，并随着数据需求的增加实现无缝扩展，同时不损害性能或可靠性。
-6. **开源与可定制**：作为一个开源解决方案，PulsarRPA提供了无与伦比的灵活性和可扩展性。开发者可以轻松定制其组件、集成现有系统或贡献新功能以满足特定项目需求。
-
-综上所述，PulsarRPA 凭借其网页内容理解、智能抓取、先进 DOM 解析、分布式处理及开源特性，成为大规模网页数据提取首选的开源解决方案。其独特的技术组合使用户能够有效应对与大规模提取宝贵网页数据相关的复杂性和挑战，最终推动更明智的决策制定和竞争优势。
-
-
-我们发布了一些最大型电商网站的全站数据采集的完整解决方案，这些解决方案满足最高标准的性能、质量和成本要求，他们将永久免费并开放源代码，例如：
-- [Exotic Amazon](https://github.com/platonai/exotic-amazon)
-- [Exotic Walmart](https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart)
+Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
 
 
 
@@ -144,36 +135,35 @@ PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎�
 
 
 
-# 🚀 主要特性
+# 🚄 核心功能
 
-- 网络爬虫：支持多种数据采集模式，包括浏览器渲染、ajax数据采集、普通协议采集等。
-- RPA：机器人流程自动化，能够模仿人类行为，采集单网页应用程序或执行其他有价值的任务。
-- 简洁的 API：通过一行代码抓取数据，或者使用一条 SQL 语句将整个网站栏目转换成表格。
-- X-SQL：扩展 SQL 功能来管理 Web 数据，包括网络爬取、数据采集、Web 内容挖掘和 Web BI。
-- 爬虫隐身：通过浏览器驱动隐身技术，IP 轮换和隐私上下文轮换，确保爬虫不会被屏蔽。
-- 高性能：经过高度优化，能够在单机上并行渲染数百页而不被屏蔽。
-- 低成本：每天能够抓取 100,000 个浏览器渲染的电子商务网页，或者 n * 10,000,000 个数据点，仅需 8 核 CPU 和 32G 内存。
-- 数据质量保证：通过智能重试、精准调度和 Web 数据生命周期管理来确保数据质量。
-- 大规模采集：采用完全分布式架构，专为大规模数据采集而设计。
-- 大数据支持：支持多种后端存储，包括本地文件、MongoDB、HBase 和 Gora。
-- 日志和指标：密切监控并记录系统中的每个事件。
+- 网络爬虫：可扩展的爬取能力，支持浏览器渲染、AJAX数据提取等功能。
 
-# ♾ 核心概念
+- LLM集成：使用自然语言分析和描述网页内容。
 
-要释放 PulsarRPA 的全部潜能并应对最复杂的数据抓取任务，对其核心概念的扎实理解至关重要。通过掌握这些基本原理，您将能够使用 PulsarRPA 作为从网络中提取有价值信息的强大工具。
+- 文生行为：通过简单直观的语言指令控制浏览器操作。
 
-让我们深入探讨构成您使用 PulsarRPA 进行数据抓取之旅基础的关键概念：
+- RPA（机器人流程自动化）：模拟人类行为，自动化处理任务，包括单页应用（SPA）爬取及其他高价值工作流。
 
-- 网页抓取（Web Scraping）：使用机器人自动从网站中提取内容和数据。
-- 自动提取（Auto Extract）：通过自动学习数据模式并从网页中提取每个字段，由先进的人工智能算法驱动。
-- RPA：机器人流程自动化，是抓取现代网页的有效方法。
-- 网络即数据库（Network As A Database）：像访问本地数据库一样访问网络资源。
-- X-SQL：使用 SQL 语言直接查询 Web 数据。
-- Pulsar Session：提供一组简单、强大和灵活的 API 来执行 Web 抓取任务。
-- Web Driver：定义了一个简洁的接口来访问和交互网页，所有行为都经过优化以尽可能接近真实人类的行为。
-- UrlAware：包含了 URL 和描述任务的额外信息。PulsarRPA 中的每个任务都被定义为某种形式的 URLAware，主要有：PlainUrl, HyperLink, ListenableHyperlink, ParsableHyperlink。
-- Load Options：加载选项或加载参数会影响 PulsarRPA 如何加载或者抓取网页。
-- Event Handlers：捕获和处理在网页抓取的整个生命周期中发生的事件。
+- 简易API：用一行代码提取数据，或用一条SQL语句将网页转换为结构化表格。
+
+- X-SQL：扩展SQL功能，用于管理网络数据——爬取、抓取、内容挖掘和基于网页的商业智能分析。
+
+- 爬虫隐身：高级反检测技术，包括Web驱动隐身、IP轮换和隐私上下文轮换，避免被封锁。
+
+- 高性能：高度优化，单机可并行渲染数百个页面且不被屏蔽。
+
+- 低成本：每天爬取10万+个浏览器渲染的电商页面或处理数千万数据点，仅需8核CPU/32GB内存。
+
+- 数据量保障：智能重试机制、精准调度和全面的网页数据生命周期管理。
+
+- 大规模支持：完全分布式架构，专为大规模网页爬取设计。
+
+- 大数据支持：支持多种后端存储，包括本地文件、MongoDB、HBase和Gora。
+
+- 日志与指标：全面监控和详细事件记录，确保完全透明。
+
+- 自动提取：基于AI的模式识别，自动精准提取网页中的所有字段。
 
 # 🧮 通过可执行 jar 使用 PulsarRPA
 
@@ -183,13 +173,13 @@ PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎�
 - 基于自监督机器学习自动进行信息提取的小程序，AI 算法可以识别详情页的所有字段，字段精确度达到 99% 以上。
 - 基于自监督机器学习自动学习并输出所有采集规则的小程序。
 - 可以直接从命令行执行网页数据采集任务，无需编写代码。
-- PulsarRPA 服务器，可以向服务器发送 SQL 语句来采集 Web 数据。
+- 升级的 PulsarRPA 服务器，可以向服务器发送 SQL 语句来采集 Web 数据。
 - 一个 Web UI，可以编写 SQL 语句并通过它发送到服务器。
 
 下载 [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro#download) 并使用以下命令行探索其能力：
 
 ```shell
-java -jar exotic-standalone.jar
+java -jar PulsarRPAPro.jar
 ```
 
 # 🎁 将 PulsarRPA 用作软件库
@@ -202,17 +192,18 @@ java -jar exotic-standalone.jar
 <dependency>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
-  <version>2.1.4</version>
+    <version>2.3.0-SNAPSHOT</version>
 </dependency>
 ```
 
 使用 Gradle 时，可以在 `build.gradle` 文件中添加以下依赖：
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-bom:2.1.4")
+implementation("ai.platon.pulsar:pulsar-bom:2.3.0-SNAPSHOT")
 ```
 
-也可以从 Github 克隆模板项目，包括 [kotlin](https://github.com/platonai/pulsar-kotlin-template), [java-11](https://github.com/platonai/pulsar-java-template), [java-17](https://github.com/platonai/pulsar-java-17-template)。
+也可以从 Github 克隆模板项目，包括 [kotlin](https://github.com/platonai/pulsar-kotlin-template),
+[java-17](https://github.com/platonai/pulsar-java-17-template)。
 
 您还可以基于我们的商业级开源项目启动自己的大规模网络爬虫项目: [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro), [Exotic-amazon](https://github.com/platonai/exotic-amazon)。
 
@@ -257,7 +248,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 "
 ```
 
-示例代码可以在 [这里](https://github.com/platonai/pulsar/blob/master/bin/scrape.sh) 找到。
+示例代码: [bash](bin/scrape.sh), [PowerShell](bin/scrape.ps1), [batch](bin/scrape.bat), [java](/pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java), [kotlin](/pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt), [php](/pulsar-client/src/main/php/Scraper.php).
 
 点击 [X-SQL](docs/x-sql.md) 查看有关X-SQL的详细介绍和功能描述。
 

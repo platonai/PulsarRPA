@@ -11,11 +11,11 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
-import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
+import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
-import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
@@ -30,7 +30,7 @@ import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import org.apache.commons.lang3.SystemUtils
-import org.apache.http.client.utils.URIBuilder
+import org.apache.hc.core5.net.URIBuilder
 import java.nio.file.Files
 import java.text.MessageFormat
 import java.time.Duration
@@ -62,7 +62,7 @@ class ChromeDevtoolsDriver(
     private val _probabilityBlockedURLs = mutableListOf<String>()
     val blockedURLs: List<String> get() = _blockedURLs
     val probabilisticBlockedURLs: List<String> get() = _probabilityBlockedURLs
-    val canConnect get() = browser.canConnect
+    val isConnectable get() = browser.isConnected
 
     /**
      * TODO: distinguish the navigateUrl, currentUrl, chromeTab.url, mainFrameAPI.url, dom.document.documentURL, dom.document.baseURL
@@ -884,8 +884,8 @@ class ChromeDevtoolsDriver(
 
         // configurable
         val saveResourceBody = mimeType == "application/json"
-            && event.response.encodedDataLength < 1_000_000
-            && alwaysFalse()
+                && event.response.encodedDataLength < 1_000_000
+                && alwaysFalse()
         if (saveResourceBody) {
             val body = rpc.invokeSilently("getResponseBody") {
                 fetchAPI?.enable()

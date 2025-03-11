@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnInterruptible
+import ai.platon.pulsar.protocol.browser.impl.BrowserManager
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.runBlocking
@@ -81,11 +82,17 @@ class ConcurrentStatefulDriverPool(
     @Synchronized
     fun close(driver: WebDriver) {
         require(driver is AbstractWebDriver)
-        driver.retire()
+
+        // Make sure the status of the driver is correct
+
         _standbyDrivers.remove(driver)
         _workingDrivers.remove(driver)
         _retiredDrivers.remove(driver)
         _closedDrivers.add(driver)
+
+        if (!driver.isRetired && !driver.isQuit) {
+            driver.retire()
+        }
 
         runCatching { browserManager.closeDriver(driver) }.onFailure { warnInterruptible(this, it) }
 

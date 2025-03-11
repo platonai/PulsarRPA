@@ -5,7 +5,6 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.common.warnInterruptible
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserUnavailableException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
@@ -108,7 +107,7 @@ internal class RobustRPC(
 
         if (!e.isOpen) {
             throw BrowserUnavailableException("Browser connection closed | $message2", e)
-        } else if (!driver.canConnect) {
+        } else if (!driver.isConnectable) {
             throw BrowserUnavailableException("Browser connection lost | $message2", e)
         } else {
             throw IllegalWebDriverStateException("Unknown chrome IO error | $message2", e)

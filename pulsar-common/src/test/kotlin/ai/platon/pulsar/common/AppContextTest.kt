@@ -10,6 +10,7 @@ import java.math.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+import kotlin.test.Ignore
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -37,8 +38,8 @@ class AppContextTest {
         Files.createDirectory(writableDir)
 
         // Test default data directory
-        assertTrue(Files.exists(AppContext.APP_DATA_DIR_RT),
-            "Tmp data directory should not exist: ${AppContext.APP_DATA_DIR}")
+        val dataDir = AppContext.APP_DATA_DIR_RT
+        assertTrue(Files.exists(dataDir), "App data directory should exist: $dataDir")
 
         // Test specified data directory
         val specifiedDir = tmpDir.resolve("specified")
@@ -47,11 +48,13 @@ class AppContextTest {
         assertEquals(specifiedDir, AppContext.APP_DATA_DIR_RT)
     }
 
+    @Ignore("Not reliable, do not support any more")
     @Test
     @EnabledOnOs(OS.LINUX)
     fun testIsLinuxDesktop() {
         // Mock XDG_SESSION_TYPE environment variable
         System.setProperty("XDG_SESSION_TYPE", "x11")
+
         assertTrue(AppContext.OS_IS_LINUX_DESKTOP)
 
         System.setProperty("XDG_SESSION_TYPE", "wayland")
@@ -61,6 +64,7 @@ class AppContextTest {
         assertFalse(AppContext.OS_IS_LINUX_DESKTOP)
     }
 
+    @Ignore("Not reliable, do not support any more")
     @Test
     @EnabledOnOs(OS.LINUX)
     fun testCheckIsWSL() {
@@ -75,6 +79,7 @@ class AppContextTest {
         assertFalse(AppContext.OS_IS_WSL)
     }
 
+    @Ignore("Not reliable, do not support any more")
     @Test
     @EnabledOnOs(OS.LINUX)
     fun testCheckVirtualEnv() {

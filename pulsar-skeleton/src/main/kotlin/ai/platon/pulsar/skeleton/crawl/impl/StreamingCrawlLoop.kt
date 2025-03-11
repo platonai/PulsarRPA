@@ -115,7 +115,7 @@ open class StreamingCrawlLoop(
         require(applicationContext.isActive) { "Expect context is active | ${applicationContext.id}" }
         require(cx.isActive) { "Expect context is active | ${cx.id}" }
 
-        val session = cx.createSession()
+        val session = cx.getOrCreateSession()
         require(session.isActive) { "Expect session is active, actual ${session::class}#${session.id}" }
 
         // clear the global illegal states, so the newly created crawler can work properly
@@ -132,6 +132,11 @@ open class StreamingCrawlLoop(
         }
     }
 
+    /**
+     * Create a UrlFeeder with default data collectors.
+     * A UrlFeeder is a wrapper to globalCache.urlPool, to clear all the urls that waiting for fetching,
+     * use globalCache.urlPool.clear()
+     * */
     private fun createUrlFeeder(): UrlFeeder {
         val enableDefaults = config.getBoolean(CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS, true)
         return UrlFeeder(context.crawlPool, enableDefaults = enableDefaults)

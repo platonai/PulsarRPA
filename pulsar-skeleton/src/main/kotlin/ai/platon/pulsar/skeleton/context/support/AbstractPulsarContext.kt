@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ChatModelFactory
+import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -168,7 +169,7 @@ abstract class AbstractPulsarContext(
     /**
      * All open sessions
      * */
-    val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
+    val sessions = ConcurrentSkipListMap<Int, AbstractPulsarSession>()
     
     private val crawlPoolOrNull: UrlPool? get() = runCatching { crawlPool }.getOrNull()
     
@@ -206,7 +207,10 @@ abstract class AbstractPulsarContext(
      * */
     @Throws(Exception::class)
     abstract override fun createSession(): AbstractPulsarSession
-    
+
+    @Throws(Exception::class)
+    override fun getOrCreateSession(): AbstractPulsarSession = sessions.values.firstOrNull() ?: createSession()
+
     /**
      * Close the given session
      * */
@@ -365,22 +369,6 @@ abstract class AbstractPulsarContext(
     }
 
     /**
-     * Connect to a web page with a web driver.
-     * */
-    override suspend fun connect(driver: WebDriver, options: LoadOptions): WebPage {
-        // NOTE: the url can be non-standard
-        val url = driver.currentUrl()
-
-        val url1 = if (UrlUtils.isBrowserURL(url)) {
-            UrlUtils.browserURLToStandardURL(url)
-        } else {
-            url
-        }
-
-        return abnormalPage ?: loadComponent.connect(normalize(url1, options), driver)
-    }
-
-    /**
      * Load a page with specified options, see [LoadOptions] for all options.
      *
      * @param url     The url which can be followed by arguments.
@@ -480,10 +468,13 @@ abstract class AbstractPulsarContext(
         return parser?.parse(page, noLinkFilter = true)?.document
     }
 
-    override fun chat(prompt: String) = ChatModelFactory.getOrCreate(unmodifiedConfig).call(prompt)
+    override fun chat(prompt: String): ModelResponse {
+        return ChatModelFactory.getOrCreateOrNull(unmodifiedConfig)?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
+    }
 
-    override fun chat(userMessage: String, systemMessage: String) =
-        ChatModelFactory.getOrCreate(unmodifiedConfig).call(userMessage, systemMessage)
+    override fun chat(userMessage: String, systemMessage: String): ModelResponse {
+        return ChatModelFactory.getOrCreateOrNull(unmodifiedConfig)?.call(userMessage, systemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
+    }
 
     @Throws(WebDBException::class)
     override fun persist(page: WebPage) {

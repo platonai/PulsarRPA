@@ -7,6 +7,8 @@ import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.dom.nodes.GeoAnchor
+import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import com.google.common.annotations.Beta
 import org.jsoup.Connection
 import java.io.Closeable
@@ -377,6 +379,24 @@ interface WebDriver : Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun pageSource(): String?
+
+    /**
+     * Chat with the AI model about the specified element.
+     *
+     * @param prompt The prompt to chat with
+     * @param selector The selector to find the element
+     * @return The response from the model
+     */
+    suspend fun chat(prompt: String, selector: String): ModelResponse
+    /**
+     * Instructs the webdriver to perform a series of actions based on the given prompt.
+     * This function converts the prompt into a sequence of webdriver actions, which are then executed.
+     *
+     * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
+     * @return The response from the model, though in this implementation, the return value is not explicitly used.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun instruct(prompt: String): InstructionResult
 
     /**
      * Returns the cookies of the current page.
@@ -856,6 +876,7 @@ interface WebDriver : Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun clickNthAnchor(n: Int, rootSelector: String = "body"): String?
+
     /**
      * This method check an element with [selector]. If there's no element matching [selector], nothing to do.
      *
@@ -1254,6 +1275,7 @@ interface WebDriver : Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(): String?
+
     /**
      * This method scrolls element into view if needed, and then ake a screenshot of the element.
      *
@@ -1326,6 +1348,27 @@ interface WebDriver : Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun loadResource(url: String): NetworkResourceResponse
+
+    /**
+     * Delay for a given amount of time.
+     *
+     * @param millis The amount of time to delay, in milliseconds.
+     * */
+    suspend fun delay(millis: Long) = kotlinx.coroutines.delay(millis)
+
+    /**
+     * Delay for a given amount of time.
+     *
+     * @param duration The amount of time to delay.
+     * */
+    suspend fun delay(duration: java.time.Duration) = kotlinx.coroutines.delay(duration.toMillis())
+
+    /**
+     * Delay for a given amount of time.
+     *
+     * @param duration The amount of time to delay.
+     * */
+    suspend fun delay(duration: kotlin.time.Duration) = kotlinx.coroutines.delay(duration.inWholeMilliseconds)
 
     /**
      * Force the page pauses all navigations and PENDING resource fetches.

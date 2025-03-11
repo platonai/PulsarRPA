@@ -1,5 +1,6 @@
 package ai.platon.pulsar.test2.browser
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.examples
 
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
@@ -8,13 +9,20 @@ import kotlinx.coroutines.runBlocking
  * Demonstrates the very basic usage of PulsarRPA.
  * */
 fun main() {
+    // Use the default browser which has an isolated profile.
+    // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
+    PulsarSettings().withDefaultBrowser()
+
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with
     val url = "https://www.amazon.com/dp/B0C1H26C46"
 
+    // Open a page with the browser
+    val page = session.open(url)
+
     // Load a page from local storage, or fetch it from the Internet if it does not exist or has expired
-    val page = session.load(url, "-expires 1d")
+    val page2 = session.load(url, "-expires 1d")
 
     // Submit a url to the URL pool, the submitted url will be processed in a crawl loop
     session.submit(url, "-expires 1d")
@@ -28,6 +36,10 @@ fun main() {
     val document2 = session.loadDocument(url, "-expires 1d")
     // do something with the document
     // ...
+
+    // Chat with the page
+    val response = session.chat("Tell me something about the page", document)
+    println(response)
 
     // Load the portal page and then load all links specified by `-outLink`.
     // Option `-outLink` specifies the cssSelector to select links in the portal page to load.
@@ -82,5 +94,7 @@ fun main() {
     println(gson.toJson(fields3))
 
     // Wait until all tasks are done.
-    session.context.await()
+    PulsarContexts.await()
+
+    readlnOrNull()
 }

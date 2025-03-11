@@ -53,11 +53,13 @@ open class PulsarSettings {
         return this
     }
     /**
-     * Use the default Chrome browser. Any change to the browser will be kept.
+     * Use the default browser which has an isolated profile and user data directory.
+     * Any modifications made to the browser will be preserved, including the cookies, history, etc.
      * */
     fun withDefaultBrowser() = withDefaultBrowser(BrowserType.PULSAR_CHROME)
     /**
-     * Use the default Chrome browser. Any change to the browser will be kept.
+     * Use the default browser which has an isolated profile and user data directory.
+     * Any modifications made to the browser will be preserved, including the cookies, history, etc.
      *
      * NOTICE: PULSAR_CHROME is the only supported browser currently.
      * */
@@ -66,11 +68,15 @@ open class PulsarSettings {
         return this
     }
     /**
-     * Use google-chrome with the prototype environment, any change to the browser will be kept.
-     * */
+     * Use Google Chrome with the prototype environment.
+     * Any modifications made to the browser will be preserved.
+     * Sequential and temporary browsers will inherit the environment from the prototype browser.
+     */
     fun withPrototypeBrowser() = withPrototypeBrowser(BrowserType.PULSAR_CHROME)
     /**
-     * Use the specified browser with the prototype environment, any change to the browser will be kept.
+     * Use the specified browser with the prototype environment.
+     * Any modifications made to the browser will be preserved.
+     * Sequential and temporary browsers will inherit the environment from the prototype browser.
      *
      * PULSAR_CHROME is the only supported browser currently.
      * */
@@ -79,8 +85,8 @@ open class PulsarSettings {
         return this
     }
     /**
-     * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
-     * permanent unless the context directories are deleted manually.
+     * Use sequential browsers that inherits the prototype browser’s environment.
+     * The sequential browsers are permanent unless the context directories are deleted manually.
      *
      * PULSAR_CHROME is the only supported browser currently.
      *
@@ -252,25 +258,96 @@ open class PulsarSettings {
     }
 
     /**
-     * LLM provider
+     * Set LLM provider, name and API key.
      * */
-    fun withLLMProvider(provider: String): PulsarSettings {
-        System.setProperty("llm.provider", provider)
+    fun withLLM(provider: String, name: String, apiKey: String): PulsarSettings {
+        withLLMProvider(provider)
+        withLLMName(name)
+        withLLMAPIKey(apiKey)
         return this
     }
 
     /**
-     * LLM name
-     * */
-    fun withLLMName(name: String): PulsarSettings {
+     * Sets the Large Language Model (LLM) provider for the PulsarRPA settings.
+     *
+     * This function allows specifying the LLM provider to be used. The provider must be a non-null string.
+     *
+     * Supported LLM providers include:
+     * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
+     * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
+     *
+     * For example, you can use the following code to set the LLM provider:
+     * ```kotlin
+     * PulsarSettings()
+     *     .withLLMProvider("volcengine") // use volcengine as the LLM provider
+     *     .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
+     *     .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
+     * ```
+     *
+     * @param provider The name of the LLM provider to be used. Must not be null.
+     * @return The current instance of [PulsarSettings] to allow method chaining.
+     * @throws IllegalArgumentException If the provided `provider` is null.
+     */
+    fun withLLMProvider(provider: String?): PulsarSettings {
+        // Validate that the provider is not null
+        if (provider == null) throw IllegalArgumentException("LLM provider cannot be null")
+
+        // Set the LLM provider as a system property
+        System.setProperty("llm.provider", provider)
+        return this
+    }
+    /**
+     * Sets the Large Language Model (LLM) name for the PulsarRPA settings.
+     *
+     * Supported LLM providers include:
+     * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
+     * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
+     *
+     * For example, you can use the following code to set the LLM provider:
+     * ```kotlin
+     * PulsarSettings()
+     *     .withLLMProvider("volcengine") // use volcengine as the LLM provider
+     *     .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
+     *     .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
+     * ```
+     *
+     * @param name The name of the Large Language Model (LLM) to be set. This parameter cannot be null.
+     * @return The current instance of [PulsarSettings] to allow for method chaining.
+     * @throws IllegalArgumentException If the provided name is null.
+     */
+    fun withLLMName(name: String?): PulsarSettings {
+        // Validate that the LLM name is not null
+        if (name == null) throw IllegalArgumentException("LLM name cannot be null")
+
+        // Set the LLM name as a system property
         System.setProperty("llm.name", name)
         return this
     }
 
     /**
-     * LLM API key
-     * */
-    fun withLLMAPIKey(key: String): PulsarSettings {
+     * Sets the Large Language Model (LLM) API key for the PulsarRPA settings.
+     *
+     * Supported LLM providers include:
+     * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
+     * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
+     *
+     * For example, you can use the following code to set the LLM provider:
+     * ```kotlin
+     * PulsarSettings()
+     *     .withLLMProvider("volcengine") // use volcengine as the LLM provider
+     *     .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
+     *     .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
+     * ```
+     *
+     * @param key The API key to be set. This parameter cannot be null, as the LLM service requires a valid API key.
+     * @return The current instance of [PulsarSettings] to allow for method chaining.
+     * @throws IllegalArgumentException If the provided API key is null, indicating that a valid key is required.
+     */
+    fun withLLMAPIKey(key: String?): PulsarSettings {
+        // Validate that the API key is not null before setting it as a system property.
+        if (key == null) throw IllegalArgumentException("LLM API key cannot be null")
+
+        // Set the provided API key as a system property for global access.
         System.setProperty("llm.apiKey", key)
         return this
     }

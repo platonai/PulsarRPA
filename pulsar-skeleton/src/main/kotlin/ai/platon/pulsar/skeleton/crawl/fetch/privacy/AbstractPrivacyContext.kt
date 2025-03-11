@@ -1,13 +1,11 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.privacy
 
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.HtmlIntegrity
-import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
+import ai.platon.pulsar.common.proxy.ProxyVendorException
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
@@ -19,7 +17,6 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.common.annotations.Beta
 import org.slf4j.LoggerFactory
-import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
@@ -108,71 +105,23 @@ abstract class AbstractPrivacyContext(
      * Whether the privacy context is closed.
      * */
     protected val closed = AtomicBoolean()
-    /**
-     * Check whether the privacy context works fine and the fetch speed is qualified.
-     * */
+
     override val isGood get() = meterSuccesses.meanRate >= minimumThroughput
-    /**
-     * Check whether the privacy has been leaked since there are too many warnings about privacy leakage.
-     * */
+
     override val isLeaked get() = !privacyAgent.isPermanent && privacyLeakWarnings.get() >= maximumWarnings
-    /**
-     * Check whether the privacy context works fine and the fetch speed is qualified.
-     * */
+
     override val isRetired get() = retired
-    /**
-     * Check whether the privacy context is active.
-     * An active privacy context can be used to serve tasks, and an inactive one should be closed.
-     *
-     * An active privacy context has to meet the following requirements:
-     * 1. not closed
-     * 2. not leaked
-     * 3. not retired
-     *
-     * Note: this flag does not guarantee consistency, and can change immediately after it's read
-     * */
+
     override val isActive get() = !isLeaked && !isRetired && !isClosed
-    /**
-     * Check whether the privacy context is closed.
-     * */
+
     override val isClosed get() = closed.get()
-    /**
-     * A ready privacy context is ready to serve tasks.
-     *
-     * A ready privacy context has to meet the following requirements:
-     * 1. not closed
-     * 2. not leaked
-     * 3. [requirement removed] not idle
-     * 4. not retired
-     * 5. if there is a proxy, the proxy has to be ready
-     * 6. the associated driver pool promises to provide an available driver, ether one of the following:
-     *    1. it has slots to create new drivers
-     *    2. it has standby drivers
-     *
-     * Note: this flag does not guarantee consistency, and can change immediately after it's read
-     * */
+
     override val isReady get() = hasWebDriverPromise() && isActive
-    /**
-     * Check whether the privacy context is at full capacity. If the privacy context is indeed at full capacity, it
-     * should not be used for processing new tasks, and the underlying services may potentially refuse to provide service.
-     *
-     * A privacy context is running at full capacity when the underlying webdriver pool is full capacity,
-     * so the webdriver pool can not provide a webdriver for new tasks.
-     *
-     * Note that if a driver pool is retired or closed, it's not full capacity.
-     *
-     * @return True if the privacy context is running at full capacity, false otherwise.
-     * */
+
     override val isFullCapacity = false
 
-    /**
-     * Check if the privacy context is running under loaded.
-     * */
     override val isUnderLoaded get() = !isFullCapacity
 
-    /**
-     * Get the readable privacy context state.
-     * */
     override val readableState: String get() {
         return listOf(
             "closed" to isClosed, "leaked" to isLeaked, "active" to isActive,
@@ -185,15 +134,6 @@ abstract class AbstractPrivacyContext(
         globalMetrics.contexts.mark()
     }
 
-    /**
-     * The promised worker count.
-     *
-     * The implementation has to tell the caller how many workers it can provide.
-     * The number of workers can change immediately after reading, so the caller only has promises
-     * but no guarantees.
-     *
-     * @return the number of workers promised.
-     * */
     abstract override fun promisedWebDriverCount(): Int
 
     /**
@@ -205,7 +145,7 @@ abstract class AbstractPrivacyContext(
     abstract fun subscribeWebDriver(): WebDriver?
 
     /**
-     * Mark a success task.
+     * Marks a task as successful and updates relevant metrics.
      * */
     fun markSuccess() {
         privacyLeakWarnings.takeIf { it.get() > 0 }?.decrementAndGet()
@@ -269,6 +209,7 @@ abstract class AbstractPrivacyContext(
     /**
      * Open an url in the privacy context, with the specified fetch function.
      * */
+    @Throws(ProxyVendorException::class)
     override suspend fun open(url: String, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         val task = FetchTask.create(url, conf.toVolatileConfig())
         return run(task, fetchFun)
@@ -281,7 +222,7 @@ abstract class AbstractPrivacyContext(
      * @param fetchFun the fetch function
      * @return the fetch result
      * */
-    @Throws(ProxyException::class, Exception::class)
+    @Throws(ProxyVendorException::class, Exception::class)
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         beforeRun(task)
         val result = doRun(task, fetchFun)
@@ -296,15 +237,19 @@ abstract class AbstractPrivacyContext(
      * @param fetchFun the fetch function
      * @return the fetch result
      * */
-    @Throws(ProxyException::class)
+    @Throws(Exception::class)
     abstract override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
     override fun buildStatusString(): String {
         return "$readableState | promised drivers: ${promisedWebDriverCount()}"
     }
     /**
-     * Dismiss the privacy context and mark it as be retired, so it should be closed later.
-     * */
+     * Dismisses the privacy context and marks it as retired, indicating that it should be closed later.
+     * This function sets the `retired` flag to `true`, signaling that the privacy context is no longer active
+     * and should be handled accordingly (e.g., closed or cleaned up).
+     *
+     * This function does not take any parameters and does not return any value.
+     */
     override fun dismiss() {
         retired = true
     }

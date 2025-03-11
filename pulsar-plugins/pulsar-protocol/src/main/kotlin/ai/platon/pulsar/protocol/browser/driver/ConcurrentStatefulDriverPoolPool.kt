@@ -18,18 +18,41 @@ class ConcurrentStatefulDriverPoolPool {
     private val _retiredDriverPools = ConcurrentSkipListMap<BrowserId, LoadingWebDriverPool>()
     private val _closedDriverPools = ConcurrentSkipListSet<BrowserId>()
     private val _closeHistory = mutableListOf<BrowserId>()
+
     /**
      * Working driver pools
      * */
     val workingDriverPools: Map<BrowserId, LoadingWebDriverPool> get() = _workingDriverPools
+
     /**
      * Retired but not closed driver pools
      * */
     val retiredDriverPools: Map<BrowserId, LoadingWebDriverPool> get() = _retiredDriverPools
+
     /**
      * Closed driver pool ids
      * */
     val closedDriverPools: Set<BrowserId> get() = _closedDriverPools
+
+    /**
+     * Check if the browser has no possibility to provide a webdriver for new tasks.
+     *
+     * @param browserId The id of the browser and its corresponding driver pool.
+     * @return True if the browser has no possibility to provide a webdriver for new tasks, false otherwise.
+     */
+    @Synchronized
+    fun hasNoPossibility(browserId: BrowserId): Boolean {
+        reassessClosedBrowserId(browserId)
+        return closedDriverPools.contains(browserId) || retiredDriverPools.containsKey(browserId)
+    }
+    /**
+     * Check if the browser has possibility to provide a webdriver for new tasks.
+     *
+     * @param browserId The id of the browser and its corresponding driver pool.
+     * @return True if the browser has possibility to provide a webdriver for new tasks, false otherwise.
+     * */
+    @Synchronized
+    fun hasPossibility(browserId: BrowserId) = !hasNoPossibility(browserId)
     /**
      * Return the number of new drivers can offer by the pool at the calling time point.
      *
@@ -112,7 +135,8 @@ class ConcurrentStatefulDriverPoolPool {
         _workingDriverPools.remove(browserId)
 
         if (browserId in _closedDriverPools) {
-            logger.warn("Inconsistent driver pool state: retire pool who is already closed | {}", browserId)
+            // the user can call browser.close() now, so the inconsistent is possible
+            // logger.warn("Inconsistent driver pool state: retire pool who is already closed | {}", browserId)
         }
 
         driverPool.retire()

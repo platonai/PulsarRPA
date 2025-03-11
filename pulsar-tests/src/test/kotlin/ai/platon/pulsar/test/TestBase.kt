@@ -4,6 +4,7 @@ import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.gora.FileBackendPageStore
@@ -19,6 +20,7 @@ import kotlin.test.assertTrue
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class TestBase {
+    val logger get() = getLogger(this)
 
     @Autowired
     lateinit var conf: ImmutableConfig
@@ -37,9 +39,4 @@ class TestBase {
     val globalCache get() = session.globalCache
     
     val isFileBackendPageStore get() = webDB.dataStore is FileBackendPageStore
-    
-    @Test
-    fun smoke() {
-        assertTrue { alwaysTrue() }
-    }
 }

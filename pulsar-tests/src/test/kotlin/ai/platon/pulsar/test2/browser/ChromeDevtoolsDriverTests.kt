@@ -52,7 +52,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     
     @Test
     fun `When navigate to a HTML page then the navigate state are correct`() = runWebDriverTest { driver ->
-        open(url, driver, 1)
+        open(productUrl, driver, 1)
         
         val navigateEntry = driver.navigateEntry
         assertTrue { navigateEntry.documentTransferred }
@@ -166,7 +166,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun testOpenNewTab() = runWebDriverTest(url) { driver ->
+    fun testOpenNewTab() = runWebDriverTest(mockAmazonProductUrl) { driver ->
         driver.clickMatches("ol li a", "href", "product-reviews")
         driver.waitForNavigation()
         driver.waitForSelector("body")
@@ -175,7 +175,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     
     @Test
     fun test_selectTextAll() = runWebDriverTest { driver ->
-        driver.navigateTo(url)
+        driver.navigateTo(mockAmazonProductUrl)
         
         driver.waitForSelector("#productTitle")
         
@@ -193,10 +193,11 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
         assertTrue { texts.isNotEmpty() }
         texts.map { it.replace("\\s+".toRegex(), " ") }.forEach { text -> println(">>>$text<<<") }
     }
-    
+
+
     @Test
     fun test_selectFirstAttributeOrNull() = runWebDriverTest { driver ->
-        driver.navigateTo(url)
+        driver.navigateTo(mockAmazonProductUrl)
         
         driver.waitForSelector("#productTitle")
         
@@ -207,7 +208,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     
     @Test
     fun test_selectAttributes() = runWebDriverTest { driver ->
-        driver.navigateTo(originUrl)
+        driver.navigateTo(mockAmazonHomeUrl)
         
         val selector = "input[type=text]"
         driver.waitForSelector(selector)
@@ -219,9 +220,9 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     
     @Test
     fun test_selectAttributeAll() = runWebDriverTest { driver ->
-        driver.navigateTo(originUrl)
+        driver.navigateTo(mockAmazonHomeUrl)
         
-        val selector = ".product-shoveler a[href]"
+        val selector = "body a[href]"
         driver.waitForSelector(selector)
         
         println("Selecting attributes: ")
@@ -241,7 +242,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     
     @Test
     fun testClickTextMatches() = runWebDriverTest { driver ->
-        open(url, driver, 1)
+        open(productUrl, driver, 1)
 //        driver.waitForSelector("a[href*=stores]")
         driver.waitForSelector("a[href*=HUAWEI]")
 
@@ -260,7 +261,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
         assumeTrue { (pageSource?.length ?: 0) > 1000 }
         assumeTrue { pageSource?.contains("HUAWEI", ignoreCase = true) == true }
 
-        assertNotEquals(url, currentUrl)
+        assertNotEquals(productUrl, currentUrl)
         assertContains(currentUrl, "HUAWEI", ignoreCase = true)
     }
     
@@ -305,7 +306,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     
     @Test
     fun testKeyPress() = runWebDriverTest { driver ->
-        driver.navigateTo(url)
+        driver.navigateTo(productUrl)
         driver.waitForSelector("#productTitle")
         
         assertTrue { driver.exists("#productTitle") }
@@ -331,38 +332,39 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
         }
         driver.press(selector, "Digit6")
         driver.press(selector, "0")
-        
+
         delay(1000)
-        
+
         MessageFormat.format("{0} key pressed {0}", PopularEmoji.SPARKLES).also { println(it) }
         
         var evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
         println("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
         println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
         // assertEquals("Mate60", evaluate?.value)
-        
+
         text = driver.selectAttributeAll(selector, "value").joinToString()
         println("Search bar value - 3 - selectAttributeAll() : <$text>")
 //            assertEquals("Mate60", text)
-        
+
         val html = driver.outerHTML(selector)
         println("Search bar html: >>>\n$html\n<<<")
         assertNotNull(html)
         // assertTrue { html.contains("Mate60") }
-        
+
         evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
         println("Search bar evaluate result - driver.evaluateDetail() : >>>\n$evaluate\n<<<")
         println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
         // assertEquals("Mate60", evaluate?.value)
-        
+
+        // TODO: FIXME: enter seems not working
         driver.press(selector, "Enter")
         driver.waitForNavigation()
-        assertTrue { driver.currentUrl() != url }
+        assertTrue { driver.currentUrl() != productUrl }
     }
     
     @Test
     fun testTypeText() = runWebDriverTest { driver ->
-        driver.navigateTo(url)
+        driver.navigateTo(productUrl)
         driver.waitForSelector("#productTitle")
         
         assertTrue { driver.exists("#productTitle") }
@@ -405,16 +407,17 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
         println("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
         println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
         assertEquals("Mate60", evaluate?.value)
-        
+
         val lastUrl = driver.currentUrl()
-        
+
+        // TODO: FIXME: enter seems not working
         driver.press(selector, "Enter")
         driver.waitForNavigation(lastUrl)
         assertTrue { driver.currentUrl() != lastUrl }
     }
     
     @Test
-    fun testCaptureScreenshot() = runWebDriverTest(url) { driver ->
+    fun testCaptureScreenshot() = runWebDriverTest(productUrl) { driver ->
         driver.waitForSelector("#productTitle")
         assertTrue { driver.exists("body") }
         val pageSource = driver.pageSource()
@@ -452,7 +455,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun `When call queryClientRects then return client rects`() = runWebDriverTest(url) { driver ->
+    fun `When call queryClientRects then return client rects`() = runWebDriverTest(productUrl) { driver ->
         driver.mouseWheelDown(5)
         val box = driver.boundingBox("body")
         // RectD(x=0.0, y=-600.0, width=1912.0, height=10538.828125)

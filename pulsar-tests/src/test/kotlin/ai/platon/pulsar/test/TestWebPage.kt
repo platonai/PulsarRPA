@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.skeleton.common.persist.ext.options
+import org.junit.jupiter.api.BeforeEach
 import java.time.Instant
 import kotlin.test.*
 
@@ -16,14 +17,18 @@ class TestWebPage: TestBase() {
     private val url = "https://www.amazon.com/dp/B0C1H26C46"
     private val groupId = 43853791
 
+    @BeforeEach
+    fun clearResources() {
+        session.delete(url)
+        assertTrue("Page should not exists | $url") { !session.exists(url) }
+    }
+
     @Test
     fun testFetchTime() {
-        val url0 = "$url?t=" + System.currentTimeMillis()
-
         val args = "-i 5s"
         val normalizedArgs = "-expires PT5S"
         val option = session.options(args)
-        var page = session.load(url0, option)
+        var page = session.load(url, option)
         val prevFetchTime1 = page.prevFetchTime
         val fetchTime1 = page.fetchTime
 
@@ -43,7 +48,7 @@ class TestWebPage: TestBase() {
         val options2 = session.options("$args -expireAt $expireAt")
         assertTrue { options2.isExpired(page.prevFetchTime) }
 
-        page = session.load(url0, options2)
+        page = session.load(url, options2)
         assertTrue { page.protocolStatus.isSuccess }
         assertTrue { page.isContentUpdated }
         assertEquals(options2, page.options)

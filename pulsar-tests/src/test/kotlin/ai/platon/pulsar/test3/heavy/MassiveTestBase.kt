@@ -1,29 +1,28 @@
 package ai.platon.pulsar.test3.heavy
 
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.ql.context.SQLContexts
-import org.apache.commons.io.FileUtils
-import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
-import kotlin.test.assertTrue
 
 open class MassiveTestBase {
     protected val session = SQLContexts.createSession()
 
-//    protected val group = "MassiveTest"
-//    protected val groupBaseDir = AppPaths.getContextGroupDir(group)
-//    protected val contextBaseDir = AppPaths.getContextBaseDir(group, BrowserType.PULSAR_CHROME)
-//
-//    protected val tempContextGroupDir = AppPaths.getTmpContextGroupDir(group)
-//    protected val tempContextBaseDir = AppPaths.getTmpContextBaseDir(group, BrowserType.PULSAR_CHROME)
+    protected val testFileCount: Int
+        get() {
+            val clazzName = this.javaClass.simpleName
+            val propertyName = "${clazzName}_TestFileCount"
 
-    protected open val testFileCount = 10000
+            println("------------- Massive Task Test Message -----------------")
+            println("Set system property $propertyName to enable the massive test")
+            println("For example: -D$propertyName=10000")
+            println("---------------------------------------------------------")
+
+            return System.getProperty(propertyName)?.toInt() ?: 0
+        }
 
     protected val testPaths = ConcurrentSkipListSet<Path>()
 
@@ -34,7 +33,9 @@ open class MassiveTestBase {
      * */
     @BeforeTest
     fun generateTestFiles() {
-        TestResourceHelper.generateTestFiles(testFileCount).toCollection(testPaths)
+        if (testFileCount > 0) {
+            TestResourceHelper.generateTestFiles(testFileCount).toCollection(testPaths)
+        }
     }
 
     @BeforeTest

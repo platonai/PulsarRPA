@@ -12,10 +12,10 @@ import kotlin.test.*
  */
 class TestLoadResources: WebDriverTestBase() {
     private val resourceUrls = """
-        http://www.181hua.com/show/957.html
-        http://www.181hua.com/show/947.html
-        http://www.181hua.com/show/974.html
-        http://www.181hua.com/show/960.html
+        https://www.baidu.com/s?wd=china
+        https://www.baidu.com/s?wd=america
+        https://www.baidu.com/s?wd=england
+        https://www.baidu.com/s?wd=france
     """.trimIndent().split("\n")
 
     @BeforeTest

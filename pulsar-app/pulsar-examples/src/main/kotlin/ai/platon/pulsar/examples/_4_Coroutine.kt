@@ -1,8 +1,9 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.PulsarSettings
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 import kotlinx.coroutines.*
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -32,6 +33,10 @@ internal object CrawlCoroutines {
 }
 
 fun main() {
+    // Use the default browser which has an isolated profile.
+    // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
+    PulsarSettings().withDefaultBrowser()
+
     println("== loadAllInCoroutines ==")
     runBlocking { CrawlCoroutines.loadAllInCoroutines() }
 

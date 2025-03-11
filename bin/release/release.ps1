@@ -15,10 +15,17 @@ $BRANCH = &$gitExe branch --show-current
 $TAG = "v$VERSION"
 
 # Replace SNAPSHOT version with the release version in readme files
-@('README.md', 'README-CN.md') | ForEach-Object {
-  Get-ChildItem -Path "$AppHome" -Depth 2 -Filter $_ -Recurse | ForEach-Object {
-    (Get-Content $_.FullName) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content $_.FullName
+function Replace-Version-In-ReadmeFiles {
+  Write-Host "Replacing SNAPSHOT version with the release version in readme files"
+
+  @('README.md', 'README-CN.md') | ForEach-Object {
+    Get-ChildItem -Path "$AppHome" -Depth 2 -Filter $_ -Recurse | ForEach-Object {
+      (Get-Content $_.FullName) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content $_.FullName
+    }
   }
+
+  & $gitExe commit -m "Replace SNAPSHOT version with the release version in readme files"
+  & $gitExe push
 }
 
 function Restore-WorkingBranch {
@@ -103,6 +110,7 @@ function Checkout-WorkingBranch {
 # Call functions
 Restore-WorkingBranch
 Pull-Changes
+Replace-Version-In-ReadmeFiles
 Merge-ToMainBranch
 Checkout-WorkingBranch
 Add-Tag

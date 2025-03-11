@@ -14,6 +14,7 @@ import java.time.Duration
 import java.time.MonthDay
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
+import kotlin.io.path.exists
 import kotlin.io.path.notExists
 
 internal class ContextGroup(val group: String) {
@@ -69,6 +70,7 @@ object BrowserFiles {
      * @param fingerprint The fingerprint
      * @param maxAgents The maximum number of available agents, every agent has its own context directory
      * @return The next sequential context directory
+     * @throws IOException If some I/O error occurs.
      * */
     @Throws(IOException::class)
     @Synchronized
@@ -116,7 +118,8 @@ object BrowserFiles {
         Files.walk(AppPaths.CONTEXT_TMP_DIR, 3)
             .filter { it !in cleanedUserDataDirs } // not processed
             .filter { it.toString().contains("cx.") } // context dir
-            .filter { it.resolve("port").notExists() } // already closed
+            .filter { it.resolve(PID_FILE_NAME).exists() } // already launched
+            .filter { it.resolve(PORT_FILE_NAME).notExists() } // already closed
             .toList()
             .toSet()
             .sortedByDescending { Files.getLastModifiedTime(it) }  // newest first
@@ -134,7 +137,8 @@ object BrowserFiles {
         Files.walk(AppPaths.CONTEXT_TMP_DIR, 3)
             .filter { it !in cleanedUserDataDirs }
             .filter { it.fileName.toString().startsWith("cx.") }
-            .filter { it.resolve("port").notExists() }
+            .filter { it.resolve(PID_FILE_NAME).exists() } // already launched
+            .filter { it.resolve(PORT_FILE_NAME).notExists() }
             .forEach { path -> cleanUpContextDir(path, expiry) }
     }
 
@@ -323,6 +327,13 @@ object BrowserFiles {
     /**
      * Compute the next sequential context directory.
      * A typical context directory is like: /tmp/pulsar-vincent/context/group/default/PULSAR_CHROME/cx.1
+     *
+     * @param group The group name.
+     * @param fingerprint The fingerprint of the browser.
+     * @param maxAgents The maximum number of agents.
+     * @param channel The file channel associated with
+     * @return The next sequential context directory.
+     * @throws IOException If an I/O error occurs.
      * */
     @Throws(IOException::class)
     private fun computeNextSequentialContextDir0(
@@ -344,6 +355,8 @@ object BrowserFiles {
         }
 
         val contextGroup = contextGroups.computeIfAbsent(group) { ContextGroup(group) }
+        // can throw too many open files in ubuntu when using Files.list()
+        // see too-many-open-files.md to resolve the problem
         Files.list(contextBaseDir)
             .filter { Files.isDirectory(it) }
             .filter { it.fileName.toString().startsWith(prefix) }
@@ -373,7 +386,7 @@ object BrowserFiles {
         val rand = RandomStringUtils.randomAlphanumeric(5)
         val contextCount = computeContextCount(baseDir, prefix, channel)
         val fileName = String.format("%s%02d%02d%s%s", prefix, monthValue, dayOfMonth, rand, contextCount)
-        val path = baseDir.resolve(group).resolve(fileName)
+        val path = baseDir.resolve(fileName)
         Files.createDirectories(baseDir)
         return path
     }

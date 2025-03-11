@@ -81,6 +81,7 @@ class LoadComponent(
     private val loadStrategy = immutableConfig.get(LOAD_STRATEGY, "SIMPLE")
 
     private val deactivateFetchComponent1 = immutableConfig.getBoolean(LOAD_DEACTIVATE_FETCH_COMPONENT, false)
+
     /**
      * Deactivate the fetch component, ensuring that all pages are loaded exclusively from storage
      * and never fetched from the Internet.
@@ -136,21 +137,6 @@ class LoadComponent(
 
         page.putBean(driver)
         loadNormalURLWithEventHandlersDeferred(normURL, page)
-        return page
-    }
-
-    /**
-     * Connect a page to a web driver.
-     * */
-    suspend fun connect(normURL: NormURL, driver: WebDriver): WebPage {
-        val page = createPageShell(normURL)
-
-        page.setVar(VAR_CONNECT, FetchState.CONNECT)
-        page.putBean(driver)
-        page.setVar("WEB_DRIVER", driver)
-
-        loadNormalURLWithEventHandlersDeferred(normURL, page)
-
         return page
     }
 
@@ -306,30 +292,28 @@ class LoadComponent(
      * */
     @Throws(Exception::class)
     private fun loadWithEventHandlers(normURL: NormURL): WebPage {
-        if (normURL.isNil) {
-            doHandleOnWillLoadEvent(normURL)
-            doHandleOnLoadedEvent(normURL)
-            return WebPage.NIL
-        }
-
-        tracer?.trace("Loading normURL, creating page shell ... | {}", normURL.configuredUrl)
-
-        val page = createPageShell(normURL)
-
-        if (deactivateFetchComponent && shouldFetch(page)) {
-            return WebPage.NIL
+        val page = createPageShellOrNilWithEventHandlers(normURL)
+        if (page.isInternal) {
+            return page
         }
 
         return loadNormalURLWithEventHandlers(normURL, page)
     }
 
     @Throws(Exception::class)
-    private fun loadNormalURLWithEventHandlers(normURL: NormURL, page: WebPage): WebPage {
-        require(page.isNotNil) { "Page should not be nil | ${page.configuredUrl}" }
-
+    private suspend fun loadWithEventHandlersDeferred(normURL: NormURL): WebPage {
+        val page = createPageShellOrNilWithEventHandlers(normURL)
         if (page.isInternal) {
             return page
         }
+
+        return loadNormalURLWithEventHandlersDeferred(normURL, page)
+    }
+
+    @Throws(Exception::class)
+    private fun loadNormalURLWithEventHandlers(normURL: NormURL, page: WebPage): WebPage {
+        require(page.isNotNil) { "Page should not be nil | ${page.configuredUrl}" }
+        require(page.isNotInternal) { "Page should not be internal | ${page.configuredUrl}" }
 
         onWillLoad(normURL, page)
 
@@ -341,26 +325,10 @@ class LoadComponent(
     }
 
     @Throws(Exception::class)
-    private suspend fun loadWithEventHandlersDeferred(normURL: NormURL): WebPage {
-        if (normURL.isNil) {
-            doHandleOnWillLoadEvent(normURL)
-            doHandleOnLoadedEvent(normURL)
-            return WebPage.NIL
-        }
-
-        tracer?.trace("Loading normURL, creating page shell ... | {}", normURL.configuredUrl)
-
-        val page = createPageShell(normURL)
-
-        if (deactivateFetchComponent && shouldFetch(page)) {
-            return WebPage.NIL
-        }
-
-        return loadNormalURLWithEventHandlersDeferred(normURL, page)
-    }
-
-    @Throws(Exception::class)
     private suspend fun loadNormalURLWithEventHandlersDeferred(normURL: NormURL, page: WebPage): WebPage {
+        require(page.isNotNil) { "Page should not be nil | ${page.configuredUrl}" }
+        require(page.isNotInternal) { "Page should not be internal | ${page.configuredUrl}" }
+
         onWillLoad(normURL, page)
 
         fetchContentIfNecessaryDeferred(normURL, page)
@@ -370,8 +338,33 @@ class LoadComponent(
         return page
     }
 
+    private fun createPageShellOrNilWithEventHandlers(normURL: NormURL): WebPage {
+        if (normURL.isNil) {
+            doHandleLoadEventWithoutFetch(normURL)
+            return WebPage.NIL
+        }
+
+        tracer?.trace("Loading normURL, creating page shell ... | {}", normURL.configuredUrl)
+
+        val page = createPageShell(normURL)
+        if (page.isInternal) {
+            doHandleLoadEventWithoutFetch(normURL)
+            return page
+        }
+
+        if (deactivateFetchComponent && shouldFetch(page)) {
+            doHandleLoadEventWithoutFetch(normURL)
+            return WebPage.NIL
+        }
+
+        return page
+    }
+
     @Throws(Exception::class)
     private fun fetchContentIfNecessary(normURL: NormURL, page: WebPage) {
+        require(page.isNotInternal) { "Page should not be internal | ${page.configuredUrl}" }
+
+        // double check is OK
         if (page.isInternal) {
             return
         }
@@ -435,6 +428,7 @@ class LoadComponent(
                         it.setLazyFieldLoader(LazyFieldLoader(normURL.spec, webDb))
                     }
                 }
+
                 else -> {
                     webDb.getOrNull(normURL.spec)
                 }
@@ -528,6 +522,11 @@ class LoadComponent(
         if (options.persist && !page.isCanceled && !options.readonly) {
             persist(page, options)
         }
+    }
+
+    private fun doHandleLoadEventWithoutFetch(normURL: NormURL) {
+        doHandleOnWillLoadEvent(normURL)
+        doHandleOnLoadedEvent(normURL)
     }
 
     private fun doHandleOnWillLoadEvent(normURL: NormURL, page: WebPage? = null) {
@@ -677,7 +676,7 @@ class LoadComponent(
     private fun fetchContent(page: WebPage, normURL: NormURL) {
         if (page.isInternal) {
             // No need to fetch internal pages
-            // No event handlers should be handled: no fet
+            // No fetch event handlers should be handled for internal pages
             return
         }
 

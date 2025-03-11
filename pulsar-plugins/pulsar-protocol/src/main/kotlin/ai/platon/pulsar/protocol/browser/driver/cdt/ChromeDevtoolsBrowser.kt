@@ -32,11 +32,11 @@ class ChromeDevtoolsBrowser(
 
     private val toolsConfig = DevToolsConfig()
 
-    private val conf get() = browserSettings.conf
+    private val conf get() = settings.config
 
     private val reuseRecoveredDriver get() = conf.getBoolean(BROWSER_REUSE_RECOVERED_DRIVERS, false)
 
-    override val canConnect: Boolean get() = isActive && chrome.canConnect()
+    override val isConnected: Boolean get() = isActive && chrome.canConnect()
 
     override val isActive get() = super.isActive && chrome.isActive
 
@@ -227,7 +227,7 @@ class ChromeDevtoolsBrowser(
         }
 
         val devTools = createDevTools(chromeTab, toolsConfig)
-        val driver = ChromeDevtoolsDriver(chromeTab, devTools, browserSettings, this)
+        val driver = ChromeDevtoolsDriver(chromeTab, devTools, settings, this)
         _drivers[chromeTab.id] = driver
 
         if (recovered) {
@@ -305,7 +305,7 @@ class ChromeDevtoolsBrowser(
     private fun closeRecoveredIdleDrivers() {
         val chromeDrivers = drivers.values.filterIsInstance<ChromeDevtoolsDriver>()
 
-        val pageLoadTimeout = browserSettings.interactSettings.pageLoadTimeout
+        val pageLoadTimeout = settings.interactSettings.pageLoadTimeout
         val seconds = if (AppSystemInfo.isCriticalResources) 15L else pageLoadTimeout.seconds
         val unmanagedTabTimeout = Duration.ofSeconds(seconds)
         val isIdle =
@@ -336,7 +336,8 @@ class ChromeDevtoolsBrowser(
         // it's safe to close the browser multiple times and even if the remote browser is already closed.
         launcher?.close()
 
-        logger.info("Browser is closed successfully | #{}", id.display)
+        logger.info("Browser is closed successfully | #{} | history: {} | {} | {} | {}",
+            instanceId, navigateHistory.size, readableState, id.contextDir.last(), id.contextDir)
     }
 
     private fun closeDrivers() {
@@ -346,7 +347,7 @@ class ChromeDevtoolsBrowser(
         _reusedDrivers.clear()
         _drivers.clear()
 
-        logger.info("Closing browser with {} drivers/devtools ... | #{}", dyingDrivers.size, id)
+        logger.info("Closing browser with {} drivers/devtools ... | #{}", dyingDrivers.size, id.contextDir)
 
         dyingDrivers.forEach { (id, driver) ->
             kotlin.runCatching { driver.close() }.onFailure { warnForClose(this, it) }

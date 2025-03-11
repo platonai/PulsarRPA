@@ -12,10 +12,8 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Tag
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -27,8 +25,6 @@ import kotlin.time.toJavaDuration
  *
  * Notice: before we load the local files using PulsarRPA, we have to transform the paths using [UrlUtils.pathToLocalURL].
  * */
-@Ignore("TimeConsumingTest, you should run the tests separately")
-@Tag("TimeConsumingTest")
 class BrowserRotationTest : MassiveTestBase() {
 
     companion object {
@@ -39,8 +35,6 @@ class BrowserRotationTest : MassiveTestBase() {
             // PulsarSettings().withTemporaryBrowser()
         }
     }
-
-    override val testFileCount = 30000
 
     @OptIn(ExperimentalPathApi::class)
     @AfterEach
@@ -106,8 +100,11 @@ class BrowserRotationTest : MassiveTestBase() {
         be.onDidInteract.addLast { page, driver ->
             require(driver is AbstractWebDriver)
             val browser = driver.browser
-            if (browser.navigateHistory.size >= 30) {
-                println("Closing browser, served ${browser.navigateHistory.size} pages | ${browser.id.display}")
+            val size = browser.navigateHistory.size
+            val readableState = browser.readableState
+            val display = browser.id.display
+            if (size >= 30) {
+                println("Closing browser #$display, served $size pages | $readableState | ${browser.id.contextDir}")
                 browser.close()
             }
         }

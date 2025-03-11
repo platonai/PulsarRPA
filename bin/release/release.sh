@@ -9,14 +9,22 @@ while [[ "$APP_HOME" != "/" ]]; do
   APP_HOME=$(dirname "$APP_HOME")
 done
 
-# Switching remote URLs from HTTPS to SSH
-git remote set-url origin git@github.com:platonai/PulsarRPA.git
+cd "$APP_HOME" || exit
 
 SNAPSHOT_VERSION=$(head -n 1 "$APP_HOME/VERSION")
 VERSION=${SNAPSHOT_VERSION//"-SNAPSHOT"/""}
 LAST_COMMIT_ID=$(git log --format="%H" -n 1)
 BRANCH=$(git branch --show-current)
 TAG="v$VERSION"
+
+# Replace SNAPSHOT version with the release version in readme files
+function replace_version_in_readme_files() {
+  echo "Replacing SNAPSHOT version with the release version in readme files"
+
+  find . -type f -name "*.md" -exec sed -i '' "s/$SNAPSHOT_VERSION/$VERSION/g" {} \;
+  git commit -m "Replace SNAPSHOT version with the release version in readme files"
+  git push
+}
 
 function restore_working_branch() {
   echo "Ready to restore"
@@ -30,7 +38,7 @@ function restore_working_branch() {
   fi
 }
 
-function pull() {
+function pull_changes() {
   echo "Ready to pull"
   read -p "Are you sure to continue? [Y/n]" -n 1 -r
   echo
@@ -111,7 +119,8 @@ function checkout_working_branch() {
 }
 
 restore_working_branch
-pull
-add_tag
+pull_changes
+replace_version_in_readme_files
 merge_to_main_branch
 checkout_working_branch
+add_tag

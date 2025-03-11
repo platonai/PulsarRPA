@@ -1,21 +1,23 @@
 package ai.platon.pulsar.skeleton.session
 
 import ai.platon.pulsar.common.CheckState
-import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.extractor.TextDocument
+import ai.platon.pulsar.common.urls.UrlAware
+import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
-import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.skeleton.context.PulsarContext
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.DocumentCatch
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.PageCatch
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.persist.WebPage
 import com.google.common.annotations.Beta
 import org.jsoup.nodes.Element
 import java.nio.ByteBuffer
@@ -225,6 +227,10 @@ interface PulsarSession : AutoCloseable {
      * Create a new [LoadOptions] object with [args] and [event].
      * */
     fun options(args: String = "", event: PageEventHandlers?): LoadOptions
+    /**
+     * Create a new [LoadOptions] object with [options].
+     * */
+    fun normalize(options: LoadOptions): LoadOptions
     /**
      * Normalize a url.
      *
@@ -521,7 +527,11 @@ interface PulsarSession : AutoCloseable {
      *
      * @return The webpage connected to the webdriver or NIL
      */
-    suspend fun connect(driver: WebDriver): WebPage
+    @Beta
+    fun connect(driver: WebDriver)
+
+    @Beta
+    fun connect(browser: Browser)
 
     /**
      * Load an url.
@@ -2099,33 +2109,69 @@ interface PulsarSession : AutoCloseable {
      * @return The response from the model.
      */
     fun chat(userMessage: String, systemMessage: String): ModelResponse
-    
+
     /**
-     * Chat with the AI model.
+     * Chat with the AI model about the specified webpage.
      *
-     * @param page The page to chat with
      * @param prompt The prompt to chat with
+     * @param page The page to chat with
      * @return The response from the model
      */
     fun chat(page: WebPage, prompt: String): ModelResponse
-    
+
     /**
-     * Chat with the AI model.
+     * Chat with the AI model about the specified webpage.
+     *
+     * @param prompt The prompt to chat with
+     * @param page The page to chat with
+     * @return The response from the model
+     */
+    fun chat(prompt: String, page: WebPage): ModelResponse
+
+    /**
+     * Chat with the AI model about the specified document.
      *
      * @param document The document to chat with
      * @param prompt The prompt to chat with
      * @return The response from the model
      */
     fun chat(document: FeaturedDocument, prompt: String): ModelResponse
-    
+
     /**
-     * Chat with the AI model.
+     * Chat with the AI model about the specified document.
+     *
+     * @param document The document to chat with
+     * @param prompt The prompt to chat with
+     * @return The response from the model
+     */
+    fun chat(prompt: String, document: FeaturedDocument): ModelResponse
+
+    /**
+     * Chat with the AI model about the specified element.
      *
      * @param element The element to chat with
      * @param prompt The prompt to chat with
      * @return The response from the model
      */
     fun chat(element: Element, prompt: String): ModelResponse
+
+    /**
+     * Chat with the AI model about the specified element.
+     *
+     * @param prompt The prompt to chat with
+     * @param element The element to chat with
+     * @return The response from the model
+     */
+    fun chat(prompt: String, element: Element): ModelResponse
+    /**
+     * Instructs the webdriver to perform a series of actions based on the given prompt.
+     * This function converts the prompt into a sequence of webdriver actions, which are then executed.
+     *
+     * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
+     * @param driver The webdriver instance that will execute the actions.
+     * @return The response from the model, though in this implementation, the return value is not explicitly used.
+     */
+    suspend fun instruct(prompt: String, driver: WebDriver): InstructionResult
 
     /**
      * Export the content of a webpage.

@@ -41,42 +41,25 @@ public final class SAXInput {
     return parse(baseUrl, new InputSource(new StringReader(html)));
   }
 
-  /**
-   * Extracts text from the HTML code available from the given {@link URL}. NOTE: This method is
-   * mainly to be used for showcase purposes. If you are going to crawl the Web, consider using
-   * {@link #parse(String, InputSource)} instead.
-   *
-   * @param url The URL pointing to the HTML code.
-   * @return The extracted text.
-   * @throws ProcessingException
-   */
-  public BoiTextDocument parse(URL url) throws ProcessingException {
-    try {
-      return parse(url.toString(), HTMLDownloader.fetch(url));
-    } catch (IOException e) {
-      throw new ProcessingException(e);
-    }
-  }
-
-  public BoiTextDocument parse(String url) throws ProcessingException {
-    try {
-      String html = HTMLDownloader.fetch(url);
-      // System.out.println(html);
-      return parse(url, html);
-    } catch (IOException e) {
-      throw new ProcessingException(e);
-    }
-  }
-
-  /**
-   * Extracts text from the HTML code available from the given {@link Reader}.
-   *
-   * @param baseUrl The baseUrl of the page
-   * @param reader The Reader containing the HTML
-   * @return The extracted text.
-   * @throws ProcessingException
-   */
-  public BoiTextDocument parse(String baseUrl, Reader reader) throws ProcessingException {
-    return parse(baseUrl, new InputSource(reader));
-  }
+//  public BoiTextDocument parse(URL url) throws ProcessingException {
+//    try {
+//      return parse(url.toString(), HTMLDownloader.fetch(url));
+//    } catch (IOException e) {
+//      throw new ProcessingException(e);
+//    }
+//  }
+//
+//  public BoiTextDocument parse(String url) throws ProcessingException {
+//    try {
+//      String html = HTMLDownloader.fetch(url);
+//      // System.out.println(html);
+//      return parse(url, html);
+//    } catch (IOException e) {
+//      throw new ProcessingException(e);
+//    }
+//  }
+//
+//  public BoiTextDocument parse(String baseUrl, Reader reader) throws ProcessingException {
+//    return parse(baseUrl, new InputSource(reader));
+//  }
 }

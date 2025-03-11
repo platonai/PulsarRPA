@@ -39,10 +39,6 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
                 hyperlink.triggeredEvents.add("$seq. CrawlEvent.onWillLoad")
                 it
             }
-//            onLoad.addFirst {
-//                hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoad")
-//                it
-//            }
             onLoaded.addFirst { url: UrlAware, page: WebPage? ->
                 hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoaded")
 
@@ -129,8 +125,7 @@ open class MockDegeneratedListenableHyperlink : ListenableHyperlink("", ""), Deg
     val triggeredEvents = mutableListOf<String>()
     val expectedEvents = listOf(
         "1. CrawlEvent.onWillLoad",
-        "2. CrawlEvent.onLoad",
-        "3. CrawlEvent.onLoaded"
+        "2. CrawlEvent.onLoaded"
     )
 
     class MockCrawlEventHandlers(val hyperlink: MockDegeneratedListenableHyperlink): AbstractCrawlEventHandlers() {

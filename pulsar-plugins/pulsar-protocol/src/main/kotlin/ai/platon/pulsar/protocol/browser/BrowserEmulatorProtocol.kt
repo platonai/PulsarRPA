@@ -15,12 +15,12 @@
  */
 package ai.platon.pulsar.protocol.browser
 
-import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
+import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
+import ai.platon.pulsar.skeleton.crawl.protocol.Response
 
 class BrowserEmulatorProtocol : ForwardingProtocol() {
     private val defaults by lazy { DefaultBrowserComponents(conf) }
