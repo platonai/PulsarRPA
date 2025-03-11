@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
 import com.google.common.net.InternetDomainName
 import org.apache.commons.lang3.StringUtils
-import org.apache.http.client.utils.URIBuilder
+import org.apache.hc.core5.net.URIBuilder
 import java.net.*
 import java.nio.file.Path
 import java.util.*
@@ -79,6 +79,7 @@ object UrlUtils {
         val base64 = Base64.getUrlDecoder().decode(path).toString(Charsets.UTF_8)
         return Path.of(base64)
     }
+
     /**
      * Checks if the given string is a browser-specific url.
      *
@@ -93,6 +94,7 @@ object UrlUtils {
     fun isBrowserURL(str: String): Boolean {
         return INTERNAL_URLS.contains(str) || INTERNAL_URL_PREFIXES.any { str.startsWith(it) }
     }
+
     /**
      * Checks if the given URL is a browser-specific URL by verifying if it starts with a predefined prefix.
      *
@@ -839,6 +841,7 @@ object UrlUtils {
     fun getPublicSuffix(url: URL): String? {
         return InternetDomainName.from(url.host).publicSuffix()?.toString()
     }
+
     /**
      * Indicates whether this domain name is composed of exactly one subdomain component followed by a
      * {@linkplain #isPublicSuffix() public suffix}. For example, returns {@code true} for {@code
