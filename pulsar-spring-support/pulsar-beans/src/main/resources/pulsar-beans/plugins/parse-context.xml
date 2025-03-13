@@ -41,7 +41,6 @@
 
     <bean id="pageParser" class="ai.platon.pulsar.skeleton.crawl.parse.PageParser" destroy-method="close">
         <constructor-arg ref="parserFactory"/>
-        <constructor-arg ref="signature"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
