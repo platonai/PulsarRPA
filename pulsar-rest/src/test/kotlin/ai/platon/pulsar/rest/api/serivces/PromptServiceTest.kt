@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.serivces
+package ai.platon.pulsar.rest.api.serivces
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.rest.api.entities.PromptRequest

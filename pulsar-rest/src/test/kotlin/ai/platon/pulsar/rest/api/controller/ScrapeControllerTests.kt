@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.integration
+package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
@@ -8,8 +8,6 @@ import org.apache.http.HttpStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.web.client.ResourceAccessException
-import java.net.SocketTimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue

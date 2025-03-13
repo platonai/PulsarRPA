@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.integration
+package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextConfiguration
 import ai.platon.pulsar.common.config.ImmutableConfig

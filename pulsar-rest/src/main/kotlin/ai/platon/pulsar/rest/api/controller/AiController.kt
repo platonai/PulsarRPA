@@ -25,4 +25,13 @@ class AiController(
     fun chat(@RequestBody request: PromptRequest): String {
         return promptService.chat(request)
     }
+
+    /**
+     * @param request The request
+     * @return The response
+     * */
+    @PostMapping("/extract")
+    fun extract(@RequestBody request: PromptRequest): String {
+        return promptService.extract(request)
+    }
 }

@@ -25,16 +25,32 @@ class AiControllerTests : IntegrationTestBase() {
         assertTrue { response.isNotBlank() }
     }
 
+    fun testExtract(prompt: String, url: String) {
+        val request = PromptRequest(url, prompt)
+        val response = restTemplate.postForObject("$baseUri/ai/extract", request, String::class.java)
+        println(response)
+        assertTrue { response.isNotBlank() }
+    }
+
     fun testChat(url: String) {
         testChat("Tell me something about the page", url)
     }
 
+    fun testExtract(url: String) {
+        testChat("title, price, images", url)
+    }
+
     @Test
     fun testChatAboutPages() {
-        testChat("https://www.amazon.com")
-        testChat("https://www.amazon.com/dp/B0C1H26C46")
+        testExtract("https://www.amazon.com")
+        testExtract("https://www.amazon.com/dp/B0C1H26C46")
 
-        testChat("https://www.jd.com/")
-        testChat("https://www.ebay.com/")
+        testExtract("https://www.jd.com/")
+        testExtract("https://www.ebay.com/")
+    }
+
+    @Test
+    fun testExtractPages() {
+        testExtract("https://www.amazon.com/dp/B0C1H26C46")
     }
 }

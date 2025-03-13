@@ -46,4 +46,20 @@ class PromptService(
             page.protocolStatus.toString()
         }
     }
+
+    fun extract(request: PromptRequest): String {
+        val page = session.load(request.url, "-refresh")
+        val document = session.parse(page)
+
+        val prompt = """
+            Extract the following information from the web page:
+            ${request.prompt}
+            """.trimIndent() + "\n\n" + document.text
+        return if (page.protocolStatus.isSuccess) {
+            session.chat(prompt).content
+        } else {
+            // Throw?
+            page.protocolStatus.toString()
+        }
+    }
 }
