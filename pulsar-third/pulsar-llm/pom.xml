@@ -57,6 +57,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.ehcache</groupId>
+            <artifactId>ehcache</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-resources</artifactId>
             <scope>test</scope>
@@ -68,6 +73,7 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <properties>

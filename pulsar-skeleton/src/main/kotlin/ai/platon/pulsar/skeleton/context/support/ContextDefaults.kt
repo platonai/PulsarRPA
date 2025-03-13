@@ -27,6 +27,10 @@ class ContextDefaults {
      * */
     val globalCacheFactory = GlobalCacheFactory(unmodifiedConfig)
     /**
+     * The default global cache
+     * */
+    val injectComponent = InjectComponent(webDb, unmodifiedConfig)
+    /**
      * The default fetch component
      * */
     val fetchComponent = BatchFetchComponent(webDb, unmodifiedConfig)

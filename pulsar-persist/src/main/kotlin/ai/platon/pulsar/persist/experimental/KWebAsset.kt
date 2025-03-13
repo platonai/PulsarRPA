@@ -18,76 +18,77 @@ import java.time.ZoneId
 
 interface KWebAsset {
     
-    var id: Int
+    val id: Int
     
-    var url: String
-    var args: String?
-    var configuredUrl: String?
-    var location: String?
-    var baseUrl: String?
+    val url: String
+    val args: String?
+    val configuredUrl: String?
+    val location: String?
+    val baseUrl: String?
     
-    var referrer: String?
-    var href: String?
+    val referrer: String?
+    val href: String?
     
-    var zoneId: ZoneId?
-    var batchId: String?
-    var fetchPriority: Int
-    var fetchCount: Int
+    val zoneId: ZoneId?
+    val batchId: String?
+    val fetchPriority: Int
+    val fetchCount: Int
     
-    var createTime: Instant
-    var fetchTime: Instant?
-    var prevFetchTime: Instant?
-    var prevCrawlTime1: Instant?
+    val createTime: Instant
+    val fetchTime: Instant?
+    val prevFetchTime: Instant?
+    val prevCrawlTime1: Instant?
+    val fetchInterval: Duration?
 
-    var modifiedTime: Instant?
-    var prevModifiedTime: Instant?
-    var proxy: String?
+    val modifiedTime: Instant?
+    val prevModifiedTime: Instant?
+    val proxy: String?
     
-    var retryDelay: Duration?
-    var maxRetries: Int
-    var fetchRetries: Int
+    val retryDelay: Duration?
+    val maxRetries: Int
+    val fetchRetries: Int
     
-    var metadata: Metadata
-    var headers: ProtocolHeaders
-    var protocolStatus: ProtocolStatus?
+    val metadata: Metadata
+    val headers: ProtocolHeaders
+    val protocolStatus: ProtocolStatus?
     
-    var lastBrowser: BrowserType?
-    var generateTime: Instant?
-    var openPageCategory: OpenPageCategory
-    var pageCategory: PageCategory?
+    val lastBrowser: BrowserType?
+    val generateTime: Instant?
+    val openPageCategory: OpenPageCategory
+    val pageCategory: PageCategory?
 
-    var htmlIntegrity: HtmlIntegrity
-    var activeDOMStatus: ActiveDOMStatus?
-    var activeDOMStatTrace: Map<String, ActiveDOMStat>?
+    val htmlIntegrity: HtmlIntegrity
+    val activeDOMStatus: ActiveDOMStatus?
+    val activeDOMStatTrace: Map<String, ActiveDOMStat>?
 
-    var encoding: String?
-    var contentType: String?
-    var contentLength: Long
-    var aveContentLength: Long
-    var persistedContentLength: Long
-    var lastContentLength: Long
+    val encoding: String?
+    val contentType: String?
+    val contentLength: Long
+    val aveContentLength: Long
+    val persistedContentLength: Long
+    val lastContentLength: Long
 
-    var persistContent: ByteBuffer?
-    var content: ByteBuffer?
-    var contentAsBytes: ByteArray?
-    var contentAsString: String?
-    var contentAsSaxInputSource: InputSource?
-    var contentAsInputStream: ByteArrayInputStream?
+    val persistContent: ByteBuffer?
+    val content: ByteBuffer?
+    val contentAsBytes: ByteArray?
+    val contentAsString: String?
+    val contentAsSaxInputSource: InputSource?
+    val contentAsInputStream: ByteArrayInputStream?
     
-    var parseStatus: ParseStatus?
-    var crawlStatus: CrawlStatus
+    val parseStatus: ParseStatus?
+    val crawlStatus: CrawlStatus
     
-    var pageTitle: String?
+    val pageTitle: String?
     
-    var liveLinks: Map<CharSequence, GHypeLink>?
-    var vividLinks: Map<CharSequence, CharSequence>?
-    var deadLinks: List<CharSequence>?
-    var links: List<CharSequence>?
-    var estimatedLinkCount: Int
-    var anchor: CharSequence?
-    var anchorOrder: Int
-    var fetchedLinkCount: Int
+    val liveLinks: Map<CharSequence, GHypeLink>?
+    val vividLinks: Map<CharSequence, CharSequence>?
+    val deadLinks: List<CharSequence>?
+    val links: List<CharSequence>?
+    val estimatedLinkCount: Int
+    val anchor: CharSequence?
+    val anchorOrder: Int
+    val fetchedLinkCount: Int
     
-    var pageModelUpdateTime: Instant?
-    var pageModel: PageModel?
+    val pageModelUpdateTime: Instant?
+    val pageModel: PageModel?
 }
