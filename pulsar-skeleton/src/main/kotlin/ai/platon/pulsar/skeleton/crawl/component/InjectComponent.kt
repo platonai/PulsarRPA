@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.inject.SeedBuilder
@@ -53,7 +54,7 @@ class InjectComponent(
 
         // already exist in db, update the status and mark it as a seed
         page.args = args
-        return if (inject(page)) page else WebPage.NIL
+        return if (inject(page)) page else WebPageImpl.NIL
     }
 
     @Throws(WebDBException::class)

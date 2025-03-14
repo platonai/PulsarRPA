@@ -119,7 +119,7 @@ public interface CapabilityTypes {
      * Deactivate the fetch component, ensuring that all pages are loaded exclusively from storage
      * and never fetched from the Internet.
      * <p>
-     * If a page is not found in the local storage, return WebPage.NIL.
+     * If a page is not found in the local storage, return WebPageImpl.NIL.
      * */
     String LOAD_DEACTIVATE_FETCH_COMPONENT = "load.deactivate.fetch.component";
 

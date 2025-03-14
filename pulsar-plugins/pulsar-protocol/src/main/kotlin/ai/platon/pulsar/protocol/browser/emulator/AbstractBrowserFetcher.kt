@@ -18,6 +18,7 @@ package ai.platon.pulsar.protocol.browser.emulator
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import ai.platon.pulsar.skeleton.crawl.fetch.Fetcher
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import kotlinx.coroutines.runBlocking
@@ -33,10 +34,10 @@ abstract class AbstractBrowserFetcher: BrowserFetcher, Fetcher {
     abstract val isActive: Boolean
     
     @Throws(Exception::class)
-    override fun fetch(url: String) = fetchContent(WebPage.newWebPage(url, conf.toVolatileConfig()))
+    override fun fetch(url: String) = fetchContent(WebPageImpl.newWebPage(url, conf.toVolatileConfig()))
     
     @Throws(Exception::class)
-    override fun fetch(url: String, conf: VolatileConfig) = fetchContent(WebPage.newWebPage(url, conf))
+    override fun fetch(url: String, conf: VolatileConfig) = fetchContent(WebPageImpl.newWebPage(url, conf))
     
     /**
      * Fetch page content
@@ -48,11 +49,11 @@ abstract class AbstractBrowserFetcher: BrowserFetcher, Fetcher {
     
     @Throws(Exception::class)
     override suspend fun fetchDeferred(url: String) =
-        fetchContentDeferred(WebPage.newWebPage(url, conf.toVolatileConfig()))
+        fetchContentDeferred(WebPageImpl.newWebPage(url, conf.toVolatileConfig()))
     
     @Throws(Exception::class)
     override suspend fun fetchDeferred(url: String, volatileConfig: VolatileConfig) =
-        fetchContentDeferred(WebPage.newWebPage(url, volatileConfig))
+        fetchContentDeferred(WebPageImpl.newWebPage(url, volatileConfig))
     
     /**
      * Fetch page content

@@ -3,6 +3,7 @@ package ai.platon.pulsar.rest.api.common
 import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.warnUnexpected
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
@@ -54,7 +55,7 @@ open class DegenerateXSQLScrapeHyperlink(
             warnUnexpected(this, t, "Failed to execute query")
             throw t
         } finally {
-            this.complete(page ?: WebPage.NIL)
+            this.complete(page ?: WebPageImpl.NIL)
         }
     }
 }

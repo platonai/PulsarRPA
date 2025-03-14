@@ -11,6 +11,7 @@ import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.CombinedUrlNormalizer
 import ai.platon.pulsar.skeleton.common.urls.NormURL
@@ -97,7 +98,7 @@ abstract class AbstractPulsarContext(
     private val abnormalPage
         get() = when {
             loadComponentOrNull != null -> null // everything is OK
-            else -> WebPage.NIL
+            else -> WebPageImpl.NIL
         }
     
     /**
@@ -292,12 +293,12 @@ abstract class AbstractPulsarContext(
      * */
     @Throws(WebDBException::class)
     override fun get(url: String): WebPage {
-        return webDbOrNull?.get(url, false) ?: WebPage.NIL
+        return webDbOrNull?.get(url, false) ?: WebPageImpl.NIL
     }
     
     @Throws(WebDBException::class)
     override fun get(url: String, vararg fields: String): WebPage {
-        return webDbOrNull?.get(url, false, arrayOf(*fields)) ?: WebPage.NIL
+        return webDbOrNull?.get(url, false, arrayOf(*fields)) ?: WebPageImpl.NIL
     }
     
     /**
@@ -373,7 +374,7 @@ abstract class AbstractPulsarContext(
      *
      * @param url     The url which can be followed by arguments.
      * @param options The load options.
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned.
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPageImpl.NIL] is returned.
      */
     @Throws(WebDBException::class)
     override fun load(url: String, options: LoadOptions): WebPage {
@@ -386,7 +387,7 @@ abstract class AbstractPulsarContext(
      *
      * @param url     The url which can be followed by arguments.
      * @param options The load options.
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned.
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPageImpl.NIL] is returned.
      */
     @Throws(WebDBException::class)
     override fun load(url: URL, options: LoadOptions): WebPage {
@@ -397,7 +398,7 @@ abstract class AbstractPulsarContext(
      * Load a url, options can be specified following the url, see [LoadOptions] for all options.
      *
      * @param url The url which can be followed by arguments.
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned.
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPageImpl.NIL] is returned.
      */
     @Throws(WebDBException::class)
     override fun load(url: NormURL): WebPage {
@@ -416,7 +417,7 @@ abstract class AbstractPulsarContext(
      * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
      * a pending fetch list and will be fetched in background later.
      *
-     * If a page exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
+     * If a page exists neither in local storage nor at the given remote location, [WebPageImpl.NIL] is returned
      *
      * @param urls    The urls to load
      * @param options The load options
@@ -437,7 +438,7 @@ abstract class AbstractPulsarContext(
     @Throws(WebDBException::class)
     override fun loadAsync(url: NormURL): CompletableFuture<WebPage> {
         startLoopIfNecessary()
-        return loadComponentOrNull?.loadAsync(url) ?: CompletableFuture.completedFuture(WebPage.NIL)
+        return loadComponentOrNull?.loadAsync(url) ?: CompletableFuture.completedFuture(WebPageImpl.NIL)
     }
     
     @Throws(WebDBException::class)

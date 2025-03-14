@@ -20,8 +20,10 @@ import ai.platon.pulsar.skeleton.common.EncodingDetector
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import org.apache.avro.util.Utf8
 import java.nio.ByteBuffer
+import java.util.*
 import kotlin.test.*
 
 class TestEncodingDetector {
@@ -41,7 +43,7 @@ class TestEncodingDetector {
         // Content content;
         var encoding: String
         val url = "http://www.example.com/"
-        var page = WebPage.newWebPage(url, conf)
+        var page = WebPageImpl.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
         page.setContent(contentInOctets)
@@ -49,8 +51,8 @@ class TestEncodingDetector {
         detector.autoDetectClues(page, true)
         encoding = detector.guessEncoding(page, "utf-8")
         // no information is available, so it should return default encoding
-        assertEquals("utf-8", encoding.toLowerCase())
-        page = WebPage.newWebPage(url, conf)
+        assertEquals("utf-8", encoding.lowercase(Locale.getDefault()))
+        page = WebPageImpl.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
         page.setContent(contentInOctets)
@@ -58,8 +60,8 @@ class TestEncodingDetector {
         detector = EncodingDetector(conf)
         detector.autoDetectClues(page, true)
         encoding = detector.guessEncoding(page, "utf-8")
-        assertEquals("utf-16", encoding.toLowerCase())
-        page = WebPage.newWebPage(url, conf)
+        assertEquals("utf-16", encoding.lowercase(Locale.getDefault()))
+        page = WebPageImpl.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
         page.setContent(contentInOctets)
@@ -70,7 +72,7 @@ class TestEncodingDetector {
         assertEquals("windows-1254", encoding.toLowerCase())
         // enable autodetection
         conf.setInt(EncodingDetector.MIN_CONFIDENCE_KEY, 50)
-        page = WebPage.newWebPage(url, conf)
+        page = WebPageImpl.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
         page.setContent(contentInOctets)

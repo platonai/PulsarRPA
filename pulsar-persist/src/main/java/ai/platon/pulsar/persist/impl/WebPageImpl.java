@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.browser.BrowserType;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.urls.UrlUtils;
 import ai.platon.pulsar.persist.*;
-import ai.platon.pulsar.persist.experimental.WebAsset;
 import ai.platon.pulsar.persist.gora.generated.*;
 import ai.platon.pulsar.persist.metadata.*;
 import ai.platon.pulsar.persist.model.*;
@@ -36,7 +35,7 @@ import static ai.platon.pulsar.common.config.AppConstants.*;
 /**
  * The core web page structure
  */
-final public class WebPageImpl {
+final public class WebPageImpl implements WebPage {
     /**
      * The WebPage object sequence number generator.
      * */
@@ -360,7 +359,8 @@ final public class WebPageImpl {
         this.page = page;
     }
 
-    public void unsafeCloneGPage(WebPageImpl page) {
+    @Override
+    public void unsafeCloneGPage(WebPage page) {
         unsafeSetGPage(GWebPage.newBuilder(page.unbox()).build());
     }
 
@@ -397,6 +397,12 @@ final public class WebPageImpl {
         return variables.get(name);
     }
 
+    @Nullable
+    @Override
+    public Object getVar(Class<?> clazz) {
+        return null;
+    }
+
     /**
      * Retrieves and removes the local variable with the given name.
      */
@@ -410,8 +416,39 @@ final public class WebPageImpl {
      * @param name  The variable name.
      * @param value The variable value.
      */
+    @Override
     public void setVar(@NotNull String name, @NotNull Object value) {
         variables.set(name, value);
+    }
+
+    /**
+     * Returns the bean to which the specified class is mapped,
+     * or {@code null} if the local bean map contains no mapping for the class.
+     *
+     * @param clazz the class of the variable
+     */
+    public Object getBean(Class<?> clazz) {
+        var bean = getBeanOrNull(clazz);
+        if (bean == null) {
+            throw new NoSuchElementException("No bean found for class " + clazz + " in WebPage");
+        }
+        return bean;
+    }
+    /**
+     * Returns the data to which the specified class is mapped,
+     * or {@code null} if the local bean map contains no mapping for the class.
+     *
+     * @param clazz the class of the variable
+     * */
+    @Nullable
+    public Object getBeanOrNull(@NotNull Class<?> clazz) {
+        return variables.get(clazz.getName());
+    }
+    /**
+     * Set a page scope temporary java bean.
+     * */
+    public <T> void putBean(@NotNull T bean) {
+        variables.set(bean.getClass().getName(), bean);
     }
 
     /**
@@ -1661,5 +1698,32 @@ final public class WebPageImpl {
     @NotNull
     public PageCounters getPageCounters() {
         return PageCounters.box(page.getPageCounters());
+    }
+
+
+
+
+    @Override
+    public int hashCode() {
+        return url.hashCode();
+    }
+
+    @Override
+    public int compareTo(@NotNull WebPage o) {
+        return url.compareTo(o.getUrl());
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+
+        return other instanceof WebPage && ((WebPage) other).getUrl().equals(url);
+    }
+
+    @Override
+    public String toString() {
+        return new WebPageFormatter(this).format();
     }
 }

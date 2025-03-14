@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.gora.FileBackendPageStore
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.RandomUtils
 import java.nio.file.Files
@@ -56,7 +57,7 @@ class TestFileBackendStore {
         val key = UrlUtils.reverseUrl(url2)
         val loadedGPage = store.readAvro(key)
         assertNotNull(loadedGPage)
-        val loadedPage = WebPage.box(url2, loadedGPage, VolatileConfig.UNSAFE)
+        val loadedPage = WebPageImpl.box(url2, loadedGPage, VolatileConfig.UNSAFE)
         assertNotNull(loadedPage)
         var pageModel = loadedPage.pageModel
         assertNotNull(pageModel)
@@ -75,7 +76,7 @@ class TestFileBackendStore {
         // check the updated version
         val loadedGPage2 = store.readAvro(key2)
         assertNotNull(loadedGPage2)
-        val loadedPage2 = WebPage.box(url2, loadedGPage2, VolatileConfig.UNSAFE)
+        val loadedPage2 = WebPageImpl.box(url2, loadedGPage2, VolatileConfig.UNSAFE)
         pageModel = loadedPage2.pageModel
         assertNotNull(pageModel)
         
@@ -86,7 +87,7 @@ class TestFileBackendStore {
         store.writeAvro(loadedPage2)
         val loadedGPage3 = store.readAvro(key2)
         assertNotNull(loadedGPage3)
-        val loadedPage3 = WebPage.box(url2, loadedGPage3, VolatileConfig.UNSAFE)
+        val loadedPage3 = WebPageImpl.box(url2, loadedGPage3, VolatileConfig.UNSAFE)
         val group3 = loadedPage3.ensurePageModel().findGroup(groupId)
         assertNotNull(group3)
         assertNull(group3["c"])

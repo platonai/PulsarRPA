@@ -1,5 +1,6 @@
 package ai.platon.pulsar.persist;
 
+import ai.platon.pulsar.persist.impl.WebPageImpl;
 import ai.platon.pulsar.persist.metadata.Mark;
 import org.apache.avro.util.Utf8;
 
@@ -7,7 +8,7 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static ai.platon.pulsar.persist.WebPage.wrapKey;
+import static ai.platon.pulsar.persist.impl.WebPageImpl.wrapKey;
 
 /**
  * Created by vincent on 17-7-26.
@@ -45,7 +46,7 @@ public class CrawlMarks {
     }
 
     public void put(Mark mark, String value) {
-        put(mark, WebPage.u8(value));
+        put(mark, WebPageImpl.u8(value));
     }
 
     public void put(Mark mark, Utf8 value) {

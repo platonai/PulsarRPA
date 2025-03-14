@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.DateTimes.parseInstant
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.ActiveDOMStat
 import ai.platon.pulsar.persist.model.ActiveDOMStatus
@@ -16,7 +17,7 @@ class WebPageExt(private val page: WebPage) {
     companion object {
 
         fun newTestWebPage(url: String): WebPage {
-            val page = WebPage.newWebPage(url, VolatileConfig(), null)
+            val page = WebPageImpl.newWebPage(url, VolatileConfig(), null)
 
             page.activeDOMStatus = ActiveDOMStatus(1, 1, "1", "1", "1")
             page.activeDOMStatTrace = mapOf("a" to ActiveDOMStat(), "b" to ActiveDOMStat())
@@ -52,7 +53,7 @@ class WebPageExt(private val page: WebPage) {
         }
 
         for (link in hypeLinks) {
-            val url = WebPage.u8(link.toString())
+            val url = WebPageImpl.u8(link.toString())
             // Use a set?
             if (!links.contains(url)) {
                 links.add(url)

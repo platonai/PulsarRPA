@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.ql.common.ResultSets
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
@@ -13,7 +13,6 @@ import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultCrawlEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultLoadEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.skeleton.session.PulsarSession
-import java.sql.ResultSet
 import java.util.*
 
 open class XSQLScrapeHyperlink(
@@ -36,7 +35,7 @@ open class XSQLScrapeHyperlink(
             onLoaded.addLast { url, page ->
                 // println("crawl-onLoaded")
                 if (!hyperlink.isDone) {
-                    hyperlink.complete(page ?: WebPage.NIL)
+                    hyperlink.complete(page ?: WebPageImpl.NIL)
                 }
             }
         }

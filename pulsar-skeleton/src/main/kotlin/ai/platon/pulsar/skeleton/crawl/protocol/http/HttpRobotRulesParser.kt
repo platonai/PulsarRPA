@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton.crawl.protocol.http
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import ai.platon.pulsar.skeleton.crawl.protocol.Protocol
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.skeleton.crawl.protocol.RobotRulesParser
@@ -44,7 +45,7 @@ open class HttpRobotRulesParser(
             
             try {
                 val http = (protocol as? AbstractHttpProtocol) ?: return EMPTY_RULES
-                val page = WebPage.newWebPage(URL(url, "/robots.txt").toString(), volatileConfig)
+                val page = WebPageImpl.newWebPage(URL(url, "/robots.txt").toString(), volatileConfig)
                 var response: Response? = http.getResponse(page, true) ?: return EMPTY_RULES
                 
                 // try one level of redirection ?
@@ -60,7 +61,7 @@ open class HttpRobotRulesParser(
                             } else {
                                 URL(redirection)
                             }
-                        response = http.getResponse(WebPage.newWebPage(redir.toString(), volatileConfig), true)
+                        response = http.getResponse(WebPageImpl.newWebPage(redir.toString(), volatileConfig), true)
                     }
                 }
                 

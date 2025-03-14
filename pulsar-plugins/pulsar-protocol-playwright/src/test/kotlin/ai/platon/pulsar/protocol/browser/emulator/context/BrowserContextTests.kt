@@ -43,7 +43,7 @@ class BrowserContextTests {
     fun `When run tasks the contexts rotates`() {
         val manager = MultiPrivacyContextManager(webDriverPoolManager, conf)
         val url = "about:blank"
-        val page = WebPage.newTestWebPage(url)
+        val page = WebPageImpl.newTestWebPage(url)
 
         runBlocking {
             repeat(10) {

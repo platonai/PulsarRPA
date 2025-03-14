@@ -4,6 +4,7 @@ package ai.platon.pulsar.parse.html
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -18,7 +19,7 @@ class HtmlParserTestBase {
     protected val conf get() = immutableConfig.toVolatileConfig()
 
     protected fun getPage(html: String, charset: Charset): WebPage {
-        val page = WebPage.newWebPage(exampleUrl, conf)
+        val page = WebPageImpl.newWebPage(exampleUrl, conf)
         page.location = exampleUrl
         page.setContent(html.toByteArray(charset))
         page.contentType = "text/html"

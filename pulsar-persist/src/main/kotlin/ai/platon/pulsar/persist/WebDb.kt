@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrNull
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import org.apache.gora.filter.Filter
 import org.apache.gora.filter.FilterOp
 import org.apache.gora.filter.SingleFieldValueFilter
@@ -107,7 +108,7 @@ class WebDb(
         val page = getOrNull0(originalUrl, norm, fields)
 
         if (page != null) {
-            val p = WebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
+            val p = WebPageImpl.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
             tracer?.trace("Got {} {} {} {}", p.fetchCount, p.prevFetchTime, p.fetchTime, key)
             return p
         }
@@ -119,21 +120,21 @@ class WebDb(
      * Returns the WebPage corresponding to the given url.
      *
      * @param originalUrl the original address of the page
-     * @return the WebPage corresponding to the key or [WebPage.NIL] if it cannot be found
+     * @return the WebPage corresponding to the key or [WebPageImpl.NIL] if it cannot be found
      */
     @Throws(WebDBException::class)
-    fun get(originalUrl: String, field: GWebPage.Field) = getOrNull(originalUrl, field) ?: WebPage.NIL
+    fun get(originalUrl: String, field: GWebPage.Field) = getOrNull(originalUrl, field) ?: WebPageImpl.NIL
 
     @Throws(WebDBException::class)
     fun get(originalUrl: String, fields: Iterable<GWebPage.Field>) =
-        getOrNull(originalUrl, fields) ?: WebPage.NIL
+        getOrNull(originalUrl, fields) ?: WebPageImpl.NIL
 
     @Throws(WebDBException::class)
-    fun get(originalUrl: String, field: String) = getOrNull(originalUrl, field) ?: WebPage.NIL
+    fun get(originalUrl: String, field: String) = getOrNull(originalUrl, field) ?: WebPageImpl.NIL
 
     @Throws(WebDBException::class)
     fun get(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage {
-        return getOrNull(originalUrl, norm, fields) ?: WebPage.NIL
+        return getOrNull(originalUrl, norm, fields) ?: WebPageImpl.NIL
     }
 
     @Throws(WebDBException::class)

@@ -13,6 +13,7 @@ import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.ql.common.ResultSets
 import ai.platon.pulsar.ql.common.types.ValueDom
@@ -166,7 +167,7 @@ object DomToH2Queries {
         val links = normUrls
             .asSequence()
             .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
-            .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
+            .onEach { it.completeOnTimeout(WebPageImpl.NIL, timeoutSeconds, TimeUnit.SECONDS) }
             .toList()
 
         queue.addAll(links)

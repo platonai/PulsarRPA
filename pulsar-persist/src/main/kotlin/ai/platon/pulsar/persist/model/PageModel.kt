@@ -1,7 +1,7 @@
 package ai.platon.pulsar.persist.model
 
-import ai.platon.pulsar.persist.WebPage.u8
 import ai.platon.pulsar.persist.gora.generated.GPageModel
+import ai.platon.pulsar.persist.impl.WebPageImpl.u8
 
 /**
  * Created by vincent on 17-8-3.

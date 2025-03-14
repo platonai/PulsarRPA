@@ -21,6 +21,7 @@ import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import org.apache.gora.query.Result
 import org.slf4j.LoggerFactory
 import java.util.function.Predicate
@@ -57,7 +58,7 @@ class DbIterator(
             log.error("Failed to move to the next record", e)
         }
 
-        return nextPage ?: WebPage.NIL
+        return nextPage ?: WebPageImpl.NIL
     }
 
     @Throws(WebDBException::class)
@@ -74,7 +75,7 @@ class DbIterator(
     private fun moveToNext0() {
         nextPage = null
         while (nextPage == null && result.next()) {
-            val page = WebPage.box(result.key, result.get(), true, conf.toVolatileConfig())
+            val page = WebPageImpl.box(result.key, result.get(), true, conf.toVolatileConfig())
             val f = filter
             if (f == null || f.test(page)) {
                 nextPage = page

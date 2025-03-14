@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.impl.WebPageImpl
 import ai.platon.pulsar.skeleton.crawl.scoring.ScoringFilters
 import org.apache.commons.lang3.tuple.Pair
 import java.time.Instant
@@ -33,14 +34,14 @@ class SeedBuilder(
      * A configured url is a string contains the url and arguments.
      * @param args The args
      * @return The created WebPage.
-     * If the url is an invalid url or an internal url, return ai.platon.pulsar.persistWebPage.NIL
+     * If the url is an invalid url or an internal url, return ai.platon.pulsar.persistWebPageImpl.NIL
      */
     fun create(url: String, args: String): WebPage {
         if (url.isEmpty()) {
-            return WebPage.NIL
+            return WebPageImpl.NIL
         }
-        val page = WebPage.newWebPage(url, conf.toVolatileConfig())
-        return if (makeSeed(url, args, page)) page else WebPage.NIL
+        val page = WebPageImpl.newWebPage(url, conf.toVolatileConfig())
+        return if (makeSeed(url, args, page)) page else WebPageImpl.NIL
     }
 
     fun makeSeed(page: WebPage): Boolean {

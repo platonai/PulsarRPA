@@ -289,7 +289,7 @@ interface PulsarContext: AutoCloseable {
      *
      * @param url     The url followed by options
      * @param options The options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPageImpl.NIL] is returned
      */
     fun load(url: String, options: LoadOptions): WebPage
 
@@ -298,7 +298,7 @@ interface PulsarContext: AutoCloseable {
      *
      * @param url     The url followed by options
      * @param options The options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPageImpl.NIL] is returned
      */
     fun load(url: URL, options: LoadOptions): WebPage
 
@@ -306,7 +306,7 @@ interface PulsarContext: AutoCloseable {
      * Load a url, options can be specified following the url, see [LoadOptions] for all options
      *
      * @param url The url followed by options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPageImpl.NIL] is returned
      */
     fun load(url: NormURL): WebPage
 
@@ -314,7 +314,7 @@ interface PulsarContext: AutoCloseable {
      * Load a url, options can be specified following the url, see [LoadOptions] for all options
      *
      * @param url The url followed by options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPageImpl.NIL] is returned
      */
     suspend fun loadDeferred(url: NormURL): WebPage
 
@@ -325,7 +325,7 @@ interface PulsarContext: AutoCloseable {
      * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
      * a pending fetch list and will be fetched in background later.
      *
-     * If a page exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
+     * If a page exists neither in local storage nor at the given remote location, [WebPageImpl.NIL] is returned
      *
      * @param urls    The urls to load
      * @param options The options
@@ -340,7 +340,7 @@ interface PulsarContext: AutoCloseable {
      * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
      * a pending fetch list and will be fetched in background later.
      *
-     * If a page exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
+     * If a page exists neither in local storage nor at the given remote location, [WebPageImpl.NIL] is returned
      *
      * @param urls    The urls to load
      * @return Pages for all urls.

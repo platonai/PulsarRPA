@@ -7,6 +7,7 @@ Development Plan
 Must
 
 * Python Interface
+* Clear API - hide implementation details
 
 Optional
 
