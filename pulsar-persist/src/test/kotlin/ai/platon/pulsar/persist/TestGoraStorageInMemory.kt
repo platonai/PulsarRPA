@@ -24,20 +24,16 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.impl.GoraBackendWebPage
-import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
 import org.apache.avro.util.Utf8
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.gora.memory.store.MemStore
 import org.apache.gora.store.DataStore
-import kotlin.test.*
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Tests basic Gora functionality by writing and reading webpages.
@@ -176,7 +172,6 @@ class TestGoraStorageInMemory {
                 page.pageText = "text"
                 page.distance = 0
                 page.headers.put("header1", "header1")
-                page.marks.put(Mark.FETCH, "mark1")
                 page.metadata[Name.CASH_KEY] = "metadata1"
                 page.inlinks["http://www.a.com/1"] = ""
                 page.inlinks["http://www.a.com/2"] = ""
@@ -190,8 +185,6 @@ class TestGoraStorageInMemory {
                 assertEquals("text", page.pageText)
                 assertEquals(0, page.distance.toLong())
                 assertEquals("header1", page.headers["header1"])
-                // assertNotEquals("mark1", page.getMark(Mark.FETCH));
-                assertEquals(Utf8("mark1"), page.marks[Mark.FETCH])
                 assertEquals("metadata1", page.metadata.getOrDefault(Name.CASH_KEY, ""))
                 assertEquals(2, page.inlinks.size.toLong())
             }

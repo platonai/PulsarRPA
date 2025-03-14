@@ -10,7 +10,6 @@ class AppMetricRegistry : MetricRegistry() {
     private val elapsedToday get() = DateTimes.elapsedToday.seconds.coerceAtMost(DateTimes.elapsed.seconds)
     private val elapsedThisHour get() = DateTimes.elapsedThisHour.seconds.coerceAtMost(DateTimes.elapsed.seconds)
 
-    val enumCounterRegistry = EnumCounterRegistry()
     val enumCounters: MutableMap<Enum<*>, Counter> = mutableMapOf()
     val dailyCounters = mutableSetOf<Counter>()
     val hourlyCounters = mutableSetOf<Counter>()
@@ -69,7 +68,6 @@ class AppMetricRegistry : MetricRegistry() {
         metrics.forEach { (name, metric) -> register(obj, ident, name, metric) }
 
     fun <T : Enum<T>> register(counterClass: Class<T>, ident: String = "", withGauges: Boolean = false) {
-        enumCounterRegistry.register(counterClass)
         val enumConstants = counterClass.enumConstants
         if (withGauges) {
             enumConstants.associateWithTo(enumCounters) { counterAndGauge(counterClass, ident, it.name) }
@@ -129,7 +127,6 @@ class AppMetricRegistry : MetricRegistry() {
     }
 
     fun <T : Enum<T>> setValue(counter: T, value: Int) {
-        enumCounterRegistry.setValue(counter, value)
         enumCounters[counter]?.let { it.dec(it.count); it.inc(value.toLong()) }
     }
 }

@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -217,7 +216,6 @@ class FileBackendPageStore(
             it.prevFetchTime = lastModified
             it.fetchInterval = ChronoUnit.DECADES.duration
             it.fetchTime = lastModified + it.fetchInterval
-            it.crawlStatus = CrawlStatus.STATUS_FETCHED
             it.protocolStatus = ProtocolStatus.STATUS_SUCCESS
         }
 

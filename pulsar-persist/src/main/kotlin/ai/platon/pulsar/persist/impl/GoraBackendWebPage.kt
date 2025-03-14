@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.config.VolatileConfig.Companion.UNSAFE
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.mergeUrlArgs
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
 import ai.platon.pulsar.common.urls.UrlUtils.unreverseUrl
@@ -17,7 +18,10 @@ import ai.platon.pulsar.persist.gora.generated.GPageModel
 import ai.platon.pulsar.persist.gora.generated.GParseStatus
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.persist.metadata.*
+import ai.platon.pulsar.persist.metadata.FetchMode
+import ai.platon.pulsar.persist.metadata.Name
+import ai.platon.pulsar.persist.metadata.OpenPageCategory
+import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDOMStat
 import ai.platon.pulsar.persist.model.ActiveDOMStatus
 import ai.platon.pulsar.persist.model.Converters.convert
@@ -93,11 +97,8 @@ class GoraBackendWebPage(
             page.fetchTime = doomsday
             page.fetchInterval = ChronoUnit.CENTURIES.duration
             page.fetchPriority = AppConstants.FETCH_PRIORITY_MIN
-            page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
 
             page.distance = AppConstants.DISTANCE_INFINITE // or -1?
-            page.marks.put(Mark.INTERNAL, AppConstants.YES_STRING)
-            page.marks.put(Mark.INACTIVE, AppConstants.YES_STRING)
 
             page.pageTitle = title
             page.setStringContent(content)
@@ -118,7 +119,6 @@ class GoraBackendWebPage(
             page.location = url
             page.conf = conf
             page.href = href
-            page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
             page.createTime = Instant.now()
             page.modifiedTime = Instant.now()
             page.fetchCount = 0
@@ -268,7 +268,7 @@ class GoraBackendWebPage(
         get() = !isNil
 
     override val isInternal: Boolean
-        get() = hasMark(Mark.INTERNAL)
+        get() = UrlUtils.isInternal(url)
 
     override val isNotInternal: Boolean
         get() = !isInternal
@@ -385,22 +385,6 @@ class GoraBackendWebPage(
     override val metadata: Metadata
         get() = Metadata.box(page.metadata)
 
-    override val marks: CrawlMarks
-        /**
-         * CrawlMarks are used for nutch style crawling.
-         */
-        get() = CrawlMarks.box(page.markers)
-
-    /**
-     * Check if a mark is marked.
-     *
-     *
-     * CrawlMarks are used for nutch style crawling.
-     */
-    override fun hasMark(mark: Mark): Boolean {
-        return page.markers[PersistUtils.wrapKey(mark)] != null
-    }
-
     override var args: String
         /**
          * The load arguments is variant task by task, so the local version is the first choice,
@@ -449,32 +433,6 @@ class GoraBackendWebPage(
         set(zoneId) {
             page.zoneId = zoneId.id
         }
-
-    override var batchId: String?
-        get() = if (page.batchId == null) null else page.batchId.toString()
-        set(value) {
-            page.batchId = value
-        }
-
-    /**
-     * Mark this page as a seed where a crawl job starts from.
-     */
-    override fun markSeed() {
-        metadata[Name.IS_SEED] = AppConstants.YES_STRING
-    }
-
-    /**
-     * Unmark this page to be a seed.
-     */
-    override fun unmarkSeed() {
-        metadata.remove(Name.IS_SEED)
-    }
-
-    override val isSeed: Boolean
-        /**
-         * Check whether this page is a seed.
-         */
-        get() = metadata.contains(Name.IS_SEED)
 
     override var distance: Int
         /**
@@ -589,16 +547,6 @@ class GoraBackendWebPage(
     override fun updateFetchCount() {
         val count = fetchCount
         fetchCount = count + 1
-    }
-
-    override var crawlStatus: CrawlStatus
-        get() = CrawlStatus(page.crawlStatus.toByte())
-        set(crawlStatus) {
-            page.crawlStatus = crawlStatus.code
-        }
-
-    override fun setCrawlStatus(value: Int) {
-        page.crawlStatus = value
     }
 
     override var baseUrl: String

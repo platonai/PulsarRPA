@@ -37,13 +37,11 @@ public interface WebAsset {
   VolatileConfig getConf();
 
   Metadata getMetadata();
-  CrawlMarks getMarks();
   ProtocolHeaders getHeaders();
 
   Instant getCreateTime();
   int getDistance();
   int getFetchCount();
-  CrawlStatus getCrawlStatus();
 
   Instant getFetchTime();
   Instant getPrevFetchTime();

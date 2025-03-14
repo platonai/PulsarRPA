@@ -2,7 +2,10 @@ package ai.platon.pulsar.persist.experimental
 
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.persist.*
+import ai.platon.pulsar.persist.Metadata
+import ai.platon.pulsar.persist.ParseStatus
+import ai.platon.pulsar.persist.ProtocolHeaders
+import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
@@ -17,23 +20,23 @@ import java.time.Instant
 import java.time.ZoneId
 
 interface KWebAsset {
-    
+
     val id: Int
-    
+
     val url: String
     val args: String?
     val configuredUrl: String?
     val location: String?
     val baseUrl: String?
-    
+
     val referrer: String?
     val href: String?
-    
+
     val zoneId: ZoneId?
     val batchId: String?
     val fetchPriority: Int
     val fetchCount: Int
-    
+
     val createTime: Instant
     val fetchTime: Instant?
     val prevFetchTime: Instant?
@@ -43,15 +46,15 @@ interface KWebAsset {
     val modifiedTime: Instant?
     val prevModifiedTime: Instant?
     val proxy: String?
-    
+
     val retryDelay: Duration?
     val maxRetries: Int
     val fetchRetries: Int
-    
+
     val metadata: Metadata
     val headers: ProtocolHeaders
     val protocolStatus: ProtocolStatus?
-    
+
     val lastBrowser: BrowserType?
     val generateTime: Instant?
     val openPageCategory: OpenPageCategory
@@ -74,12 +77,11 @@ interface KWebAsset {
     val contentAsString: String?
     val contentAsSaxInputSource: InputSource?
     val contentAsInputStream: ByteArrayInputStream?
-    
+
     val parseStatus: ParseStatus?
-    val crawlStatus: CrawlStatus
-    
+
     val pageTitle: String?
-    
+
     val liveLinks: Map<CharSequence, GHypeLink>?
     val vividLinks: Map<CharSequence, CharSequence>?
     val deadLinks: List<CharSequence>?
@@ -88,7 +90,7 @@ interface KWebAsset {
     val anchor: CharSequence?
     val anchorOrder: Int
     val fetchedLinkCount: Int
-    
+
     val pageModelUpdateTime: Instant?
     val pageModel: PageModel?
 }

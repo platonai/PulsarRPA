@@ -2,8 +2,10 @@ package ai.platon.pulsar.persist.experimental
 
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.persist.*
+import ai.platon.pulsar.persist.Metadata
+import ai.platon.pulsar.persist.ParseStatus
+import ai.platon.pulsar.persist.ProtocolHeaders
+import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
@@ -33,7 +35,6 @@ class NilWebAsset : KWebAsset {
     override val batchId: String? = null
     override val fetchPriority: Int = 0
     override val fetchCount: Int = 0
-    override val crawlStatus: CrawlStatus = CrawlStatus.STATUS_UNFETCHED
     override val fetchTime: Instant? = null
     override val prevFetchTime: Instant? = null
     override val prevCrawlTime1: Instant? = null

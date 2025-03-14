@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.gora.generated.*
@@ -34,37 +33,32 @@ open class GoraWebAssetImpl(
     companion object {
         private val ID_SUPPLIER = AtomicInteger()
     }
-    
+
     override val id: Int = ID_SUPPLIER.incrementAndGet()
 
     /**
      * The url is the permanent internal address, and the location is the last working address
      */
     override var url = ""
-    
+
     override var args = ""
-    
+
     /**
      * The delay time to retry if a retry is needed
      */
     override val retryDelay = Duration.ZERO
 
     val key: String get() = reversedUrl
+
     /**
      * Get The hypertext reference of this page.
      * It defines the address of the document, which this time is linked from
      */
     override val href: String? get() = metadata[Name.HREF]
-    val isInternal get() = hasMark(Mark.INTERNAL)
-    val isNotInternal get() = !isInternal
-    
+
     private var contentCache: ByteBuffer? = null
 
-    fun hasMark(mark: Mark) = marks[mark] != null
-
     override val metadata get() = Metadata.box(page.metadata)
-
-    val marks get() = CrawlMarks.box(page.markers)
 
     // The underlying field should not use name 'args'
     /**
@@ -102,8 +96,6 @@ open class GoraWebAssetImpl(
     override val generateTime get() = Instant.parse(metadata[Name.GENERATE_TIME] ?: "0")
 
     override val fetchCount: Int get() = page.fetchCount
-
-    override val crawlStatus get() = CrawlStatus(page.crawlStatus.toByte())
 
     /**
      * The baseUrl is as the same as Location.
@@ -192,7 +184,7 @@ open class GoraWebAssetImpl(
      * Content encoding is detected just before it's parsed.
      */
     override val encoding get() = page.encoding?.toString()
-    
+
     override val content: ByteBuffer? get() = getContentWithLocalCache()
     override val persistContent: ByteBuffer? get() = getPersistContent0()
     override val contentAsBytes: ByteArray? get() = getContentAsBytes0()
@@ -203,7 +195,7 @@ open class GoraWebAssetImpl(
      * Get the page content as sax input source
      */
     override val contentAsSaxInputSource: InputSource get() = getContentAsSaxInputSource0()
-    
+
     /**
      * Get the length of content in bytes.
      *
@@ -238,28 +230,38 @@ open class GoraWebAssetImpl(
         page.aveContentLength = aveBytes
     }
 
-    override var persistedContentLength 
+    override var persistedContentLength
         get() = page.persistedContentLength ?: 0
-        set(value) { page.persistedContentLength = value }
+        set(value) {
+            page.persistedContentLength = value
+        }
 
-    override var lastContentLength 
+    override var lastContentLength
         get() = page.lastContentLength ?: 0
-        set(value) { page.lastContentLength = value }
+        set(value) {
+            page.lastContentLength = value
+        }
 
-    override var aveContentLength 
+    override var aveContentLength
         get() = page.aveContentLength ?: 0
-        set(value) { page.aveContentLength = value }
+        set(value) {
+            page.aveContentLength = value
+        }
 
-    override var contentType 
+    override var contentType
         get() = page.contentType?.toString() ?: ""
-        set(value) { page.contentType = value }
+        set(value) {
+            page.contentType = value
+        }
 
     /**
      * The last proxy used to fetch the page
      */
-    override var proxy 
+    override var proxy
         get() = page.proxy?.toString()
-        set(value) { page.proxy = value }
+        set(value) {
+            page.proxy = value
+        }
 
     override var activeDOMStatus: ActiveDOMStatus?
         get() {
@@ -279,50 +281,73 @@ open class GoraWebAssetImpl(
 
     override var activeDOMStatTrace
         get() = page.activeDOMStatTrace.entries.associate { it.key.toString() to convert(it.value) }
-        set(value) { page.activeDOMStatTrace = value.entries.associate { it.key to convert(it.value) } }
+        set(value) {
+            page.activeDOMStatTrace = value.entries.associate { it.key to convert(it.value) }
+        }
 
     override var pageTitle
         get() = page.pageTitle?.toString() ?: ""
-        set(value) { page.pageTitle = value }
+        set(value) {
+            page.pageTitle = value
+        }
 
     override var parseStatus
         get() = ParseStatus.box(page.parseStatus ?: GParseStatus.newBuilder().build())
-        set(value) { page.parseStatus = value.unbox() }
+        set(value) {
+            page.parseStatus = value.unbox()
+        }
 
     override var liveLinks
         get() = page.liveLinks
-        set(value) { page.liveLinks = value }
+        set(value) {
+            page.liveLinks = value
+        }
 
     val simpleLiveLinks get() = page.liveLinks.keys.map { it.toString() }
 
-    override var vividLinks get() = page.vividLinks
-        set(value) { page.vividLinks = value }
+    override var vividLinks
+        get() = page.vividLinks
+        set(value) {
+            page.vividLinks = value
+        }
 
     val simpleVividLinks get() = page.vividLinks.keys.map { it.toString() }
 
     override var deadLinks
         get() = page.deadLinks
-        set(value) { page.deadLinks = value }
+        set(value) {
+            page.deadLinks = value
+        }
 
     override var links
         get() = page.links
-        set(value) { page.links = value }
+        set(value) {
+            page.links = value
+        }
 
     override var estimatedLinkCount
         get() = metadata.get(Name.TOTAL_OUT_LINKS)?.toIntOrNull() ?: 0
-        set(value) { metadata[Name.TOTAL_OUT_LINKS] = value.toString() }
+        set(value) {
+            metadata[Name.TOTAL_OUT_LINKS] = value.toString()
+        }
 
     override var anchor
         get() = page.anchor ?: ""
-        set(value) { page.anchor = value }
+        set(value) {
+            page.anchor = value
+        }
 
     override var anchorOrder
         get() = page.anchorOrder
-        set(value) { page.anchorOrder = value }
+        set(value) {
+            page.anchorOrder = value
+        }
 
     override var referrer
         get() = if (page.referrer == null) null else page.referrer.toString()
-        set(value) { page.referrer = value }
+        set(value) {
+            page.referrer = value
+        }
 
     /**
      * *****************************************************************************
@@ -352,7 +377,7 @@ open class GoraWebAssetImpl(
     }
 
     override fun toString() = url
-    
+
     /**
      * The entire raw document content e.g. raw XHTML
      *
@@ -362,15 +387,15 @@ open class GoraWebAssetImpl(
         if (contentCache != null) {
             return contentCache
         }
-        
+
         return getPersistContent0()
     }
-    
+
     /**
      * Get the persistent page content
      */
     private fun getPersistContent0(): ByteBuffer = page.content
-    
+
     /**
      * Get content as bytes, the underling buffer is duplicated
      *
@@ -380,7 +405,7 @@ open class GoraWebAssetImpl(
         val content = getContentWithLocalCache() ?: return ByteUtils.toBytes('\u0000')
         return ByteUtils.toBytes(content)
     }
-    
+
     /**
      * Get the page content as a string, if the underlying page content is null, return an empty string
      */
@@ -390,7 +415,7 @@ open class GoraWebAssetImpl(
             ""
         } else String(buffer.array(), buffer.arrayOffset(), buffer.limit())
     }
-    
+
     /**
      * Get the page content as input stream
      */

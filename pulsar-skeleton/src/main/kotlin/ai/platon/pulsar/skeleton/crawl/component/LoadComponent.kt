@@ -710,12 +710,7 @@ class LoadComponent(
         globalCache.fetchingCache.remove(page.url)
     }
 
-    /**
-     * TODO: FetchSchedule.shouldFetch, crawlStatus and FetchReason should keep consistent
-     * */
     private fun getFetchStateForExistPage(page: WebPage, options: LoadOptions): CheckState {
-        // TODO: crawl status is better to decide the fetch reason
-        val crawlStatus = page.crawlStatus
         val protocolStatus = page.protocolStatus
 
         if (options.refresh) {
@@ -848,7 +843,7 @@ class LoadComponent(
     class LazyFieldLoader(
         val url: String,
         val db: WebDb
-    ): java.util.function.Function<String, GWebPage?> {
+    ) : java.util.function.Function<String, GWebPage?> {
         override fun apply(field: String): GWebPage? {
             return db.get0(url, false, arrayOf(field))
         }

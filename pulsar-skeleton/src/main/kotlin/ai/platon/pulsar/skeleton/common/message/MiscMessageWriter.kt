@@ -14,14 +14,12 @@ class MiscMessageWriter: MultiSinkWriter() {
 
     fun debugIllegalLastFetchTime(page: WebPage) {
         val report = String.format(
-            "ft: {} lft: {}, fc: {} fh: {} status: {} mk: {}",
+            "ft: {} lft: {}, fc: {} fh: {} status: {}",
             page.fetchTime,
             page.prevFetchTime,
             page.fetchCount,
-//            page.getFetchTimeHistory(""),
             "",
             page.protocolStatus,
-            page.marks
         )
 
         write(report, "illegal-last-fetch-time.txt")

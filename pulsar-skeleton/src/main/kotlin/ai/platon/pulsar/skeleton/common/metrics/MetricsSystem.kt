@@ -2,7 +2,6 @@ package ai.platon.pulsar.skeleton.common.metrics
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
@@ -70,7 +69,7 @@ class MultiMetric(
 
 open class MetricsSystem(
     conf: ImmutableConfig
-): AutoCloseable {
+) : AutoCloseable {
     companion object {
         init {
             // Spring boot do not support the companion object initialization, so we disable it.
@@ -93,6 +92,7 @@ open class MetricsSystem(
          * The default metric registry
          * */
         val defaultMetricRegistry = AppMetricRegistry()
+
         // a shortcut to the default metric registry
         val reg = defaultMetricRegistry
 
@@ -106,7 +106,8 @@ open class MetricsSystem(
         }
 
         private fun formatAvailableMemoryGauge(): String {
-            return AppSystemInfo.availableMemory?.runCatching { Strings.compactFormat(this) }?.getOrNull() ?: "Not available"
+            return AppSystemInfo.availableMemory?.runCatching { Strings.compactFormat(this) }?.getOrNull()
+                ?: "Not available"
         }
 
         private fun formatFreeSpaceGauge(): List<String> {
@@ -134,7 +135,8 @@ open class MetricsSystem(
 
     private val threadFactory = ThreadFactoryBuilder().setNameFormat("reporter-%d").build()
     private val executor = Executors.newSingleThreadScheduledExecutor(threadFactory)
-//    private val jmxReporter: JmxReporter = JmxReporter.forRegistry(metricRegistry)
+
+    //    private val jmxReporter: JmxReporter = JmxReporter.forRegistry(metricRegistry)
 //        .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
 //        .build()
 //    private val csvReporter: CsvReporter = CsvReporter.forRegistry(metricRegistry)
@@ -148,11 +150,9 @@ open class MetricsSystem(
         .convertDurationsTo(TimeUnit.MILLISECONDS)
         .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
         .build()
-    private val counterReporter = EnumCounterReporter(metricRegistry.enumCounterRegistry, conf = conf).apply {
-        outputTo(LoggerFactory.getLogger(EnumCounterReporter::class.java))
-    }
-    private val pickledGraphite get() = graphiteServer.takeIf { NetUtil.testNetwork(it, graphiteServerPort) }
-        ?.let { PickledGraphite(InetSocketAddress(it, graphiteServerPort), batchSize) }
+    private val pickledGraphite
+        get() = graphiteServer.takeIf { NetUtil.testNetwork(it, graphiteServerPort) }
+            ?.let { PickledGraphite(InetSocketAddress(it, graphiteServerPort), batchSize) }
     private var graphiteReporter: GraphiteReporter? = pickledGraphite?.let { pickled ->
         GraphiteReporter.forRegistry(metricRegistry)
             .prefixedWith(name)
@@ -172,7 +172,6 @@ open class MetricsSystem(
 
     fun inc(count: Int, vararg counters: Enum<*>) {
         counters.forEach {
-            metricRegistry.enumCounterRegistry.inc(it, count)
             metricRegistry.enumCounters[it]?.inc(count.toLong())
         }
     }
@@ -186,7 +185,6 @@ open class MetricsSystem(
             // jmxReporter.start()
             // csvReporter.start(initialDelay.seconds, csvReportInterval.seconds, TimeUnit.SECONDS)
             slf4jReporter.start(initialDelay.seconds, slf4jReportInterval.seconds, TimeUnit.SECONDS)
-            counterReporter.start(initialDelay, counterReportInterval)
 
             if (NetUtil.testNetwork(graphiteServer, graphiteServerPort)) {
                 graphiteReporter?.start(initialDelay.seconds, graphiteReportInterval.seconds, TimeUnit.SECONDS)
@@ -223,7 +221,5 @@ open class MetricsSystem(
 //            jmxReporter.close()
         graphiteReporter?.close()
         graphiteReporter = null
-
-        counterReporter.close()
     }
 }

@@ -5,10 +5,8 @@ import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
@@ -88,11 +86,6 @@ class PageParser(
             // If the parsing result indicates success, perform additional actions.
             if (parseResult.isSuccess) {
                 // do something
-            }
-
-            // Update the page's marks if the parsing was successful.
-            if (parseResult.isSuccess) {
-                page.marks.putIfNotNull(Mark.PARSE, page.marks[Mark.FETCH])
             }
         }
 

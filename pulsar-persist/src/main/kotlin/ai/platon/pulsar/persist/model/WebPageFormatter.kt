@@ -91,10 +91,8 @@ class WebPageFormatter(val page: WebPage) {
         fields["key"] = page.key
         fields["url"] = page.url
         fields["options"] = page.args
-        fields["isSeed"] = page.isSeed
         fields["createTime"] = format(page.createTime)
         fields["distance"] = page.distance
-        /* Fetch */fields["crawlStatus"] = page.crawlStatus.toString()
         fields["protocolStatus"] = page.protocolStatus.name
         fields["protocolStatusMessage"] = page.protocolStatus.toString()
         if (page.content != null) {
@@ -109,7 +107,6 @@ class WebPageFormatter(val page: WebPage) {
         fields["prevModifiedTime"] = format(page.prevModifiedTime)
         fields["modifiedTime"] = format(page.modifiedTime)
         fields["baseUrl"] = page.location
-        fields["batchId"] = page.batchId
         /* Parse */fields["parseStatus"] = page.parseStatus.name
         fields["parseStatusMessage"] = page.parseStatus.toString()
         fields["encoding"] = page.encoding
@@ -121,7 +118,6 @@ class WebPageFormatter(val page: WebPage) {
         fields["contentTitle"] = page.contentTitle
         fields["inlinkAnchor"] = page.anchor
         fields["title"] = pageExt.sniffTitle()
-        fields["marks"] = page.marks.asStringMap()
         fields["metadata"] = page.metadata.asStringMap()
         fields["headers"] = page.headers.asStringMap()
         fields["linkCount"] = page.links.size
@@ -161,8 +157,6 @@ class WebPageFormatter(val page: WebPage) {
         val sb = StringBuilder()
         sb.append("url:\t" + page.url + "\n")
                 .append("baseUrl:\t" + page.location + "\n")
-                .append("batchId:\t" + page.batchId + "\n")
-                .append("crawlStatus:\t" + page.crawlStatus + "\n")
                 .append("protocolStatus:\t" + page.protocolStatus + "\n")
                 .append("depth:\t" + page.distance + "\n")
                 .append("pageCategory:\t" + page.pageCategory + "\n")
@@ -189,11 +183,6 @@ class WebPageFormatter(val page: WebPage) {
                 .append("prevSignature:\t" + page.prevSignatureAsString + "\n")
                 .append("signature:\t" + page.signatureAsString + "\n")
 
-        val crawlMarks = page.marks
-        if (crawlMarks.unbox().isNotEmpty()) {
-            sb.append("\n")
-            crawlMarks.unbox().forEach { (key, value) -> sb.append("mark $key:\t$value\n") }
-        }
         val metadata = page.metadata.asStringMap()
         if (metadata.isNotEmpty()) {
             sb.append("\n")

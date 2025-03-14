@@ -3,10 +3,8 @@ package ai.platon.pulsar.persist
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
-import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDOMStat
@@ -91,15 +89,9 @@ interface WebPage : Comparable<WebPage> {
 
     val metadata: Metadata
 
-    val marks: CrawlMarks
-
-    fun hasMark(mark: Mark): Boolean
-
     var args: String
     
     var retryDelay: Duration
-
-    fun setLazyFieldLoader(lazyFieldLoader: Function<String, GWebPage>)
 
     var maxRetries: Int
 
@@ -108,14 +100,6 @@ interface WebPage : Comparable<WebPage> {
     var fetchedLinkCount: Int
 
     var zoneId: ZoneId
-
-    var batchId: String?
-
-    fun markSeed()
-
-    fun unmarkSeed()
-
-    val isSeed: Boolean
 
     var distance: Int
 
@@ -136,10 +120,6 @@ interface WebPage : Comparable<WebPage> {
     var fetchCount: Int
 
     fun updateFetchCount()
-
-    var crawlStatus: CrawlStatus
-
-    fun setCrawlStatus(value: Int)
 
     var baseUrl: String
 
@@ -246,4 +226,8 @@ interface WebPage : Comparable<WebPage> {
     val pageModel: PageModel?
 
     fun ensurePageModel(): PageModel
+
+
+    fun setLazyFieldLoader(lazyFieldLoader: Function<String, GWebPage>)
+
 }

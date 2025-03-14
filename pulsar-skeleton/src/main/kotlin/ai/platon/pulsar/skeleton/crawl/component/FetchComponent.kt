@@ -1,11 +1,9 @@
-
 package ai.platon.pulsar.skeleton.crawl.component
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.impl.GoraBackendWebPage
-import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.common.persist.ext.options
@@ -15,7 +13,6 @@ import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolNotFound
 import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolOutput
-import ai.platon.pulsar.skeleton.crawl.protocol.http.ProtocolStatusTranslator
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -41,7 +38,8 @@ open class FetchComponent(
      * @return The fetch result
      */
     @Throws(Exception::class)
-    fun fetch(url: String) = abnormalPage ?: fetchContent(GoraBackendWebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
+    fun fetch(url: String) =
+        abnormalPage ?: fetchContent(GoraBackendWebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
     /**
      * Fetch an url
@@ -99,7 +97,7 @@ open class FetchComponent(
             processProtocolOutput(page, protocol.getProtocolOutput(page))
         } catch (e: ProtocolNotFound) {
             logger.warn(e.message)
-            page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
+            page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND) }
         } finally {
             onFetched(page)
         }
@@ -121,7 +119,7 @@ open class FetchComponent(
             processProtocolOutput(page, protocol.getProtocolOutputDeferred(page))
         } catch (e: ProtocolNotFound) {
             logger.warn(e.message)
-            page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
+            page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND) }
         } finally {
             onFetched(page)
         }
@@ -163,17 +161,6 @@ open class FetchComponent(
 
         page.headers.putAll(output.headers.asMultimap())
 
-        val crawlStatus = ProtocolStatusTranslator.translateToCrawlStatus(protocolStatus, page)
-
-        when (crawlStatus) {
-            CrawlStatus.STATUS_FETCHED,
-            CrawlStatus.STATUS_REDIR_TEMP,
-            CrawlStatus.STATUS_REDIR_PERM -> updateFetchedPage(page, pageDatum, protocolStatus, crawlStatus)
-            else -> updateFetchedPage(page, null, protocolStatus, crawlStatus)
-        }
-
-        coreMetrics?.let { logMetrics(crawlStatus, page, it) }
-
         return page
     }
 
@@ -182,67 +169,10 @@ open class FetchComponent(
         }
     }
 
-    private fun updateFetchedPage(
-        page: WebPage, pageDatum: PageDatum?,
-        protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus,
-    ): WebPage {
-        val pageExt = WebPageExt(page)
-        updateStatus(page, protocolStatus, crawlStatus)
-
-        pageDatum?.also {
-            page.location = it.location
-            page.proxy = it.proxyEntry?.agentIp
-            val trace = it.activeDOMStatTrace
-            if (trace != null) {
-                page.activeDOMStatus = trace.status
-                page.activeDOMStatTrace = mapOf(
-                    "initStat" to trace.initStat, "initD" to trace.initD,
-                    "lastStat" to trace.lastStat, "lastD" to trace.lastD
-                )
-            }
-
-            it.pageCategory?.let { page.setPageCategory(it) }
-            it.htmlIntegrity?.let { page.htmlIntegrity = it }
-            it.lastBrowser?.let { page.lastBrowser = it }
-
-            if (protocolStatus.isSuccess) {
-                // good! persists content for only success pages
-                pageExt.updateContent(it)
-            }
-        }
-
-        updateMarks(page)
-
-        return page
-    }
-
-    private fun logMetrics(crawlStatus: CrawlStatus, page: WebPage, metrics: CoreMetrics) {
-        val url = page.url
-        when (crawlStatus) {
-            CrawlStatus.STATUS_REDIR_PERM,
-            CrawlStatus.STATUS_REDIR_TEMP -> metrics.trackMoved(url)
-            CrawlStatus.STATUS_GONE -> metrics.trackHostUnreachable(url)
-        }
-
-        if (crawlStatus.isFetched) {
-            metrics.trackSuccess(page)
-        } else if (crawlStatus.isFailed) {
-            metrics.trackFailedUrl(url)
-        }
-    }
-
     companion object {
-        private val logger = LoggerFactory.getLogger(FetchComponent::class.java)
-
-        fun updateStatus(page: WebPage, protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus) {
-            page.crawlStatus = crawlStatus
+        fun updateStatus(page: WebPage, protocolStatus: ProtocolStatus) {
             page.protocolStatus = protocolStatus
             page.updateFetchCount()
-        }
-
-        fun updateMarks(page: WebPage) {
-            val marks = page.marks
-            marks.putIfNotNull(Mark.FETCH, marks[Mark.GENERATE])
         }
     }
 }
