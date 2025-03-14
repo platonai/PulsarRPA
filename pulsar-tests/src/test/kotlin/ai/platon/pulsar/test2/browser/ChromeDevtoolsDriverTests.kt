@@ -51,7 +51,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun `When navigate to a HTML page then the navigate state are correct`() = runWebDriverTest { driver ->
+    fun `When navigate to a HTML page then the navigate state are correct`() = runWebDriverTest(browser) { driver ->
         open(productUrl, driver, 1)
         
         val navigateEntry = driver.navigateEntry
@@ -69,7 +69,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun `when open a HTML page then script is injected`() = runWebDriverTest(originUrl) { driver ->
+    fun `when open a HTML page then script is injected`() = runWebDriverTest(originUrl, browser) { driver ->
         var detail = driver.evaluateDetail("typeof(window)")
         println(detail)
         // assertNotNull(detail?.value)
@@ -117,7 +117,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun `Ensure injected js variables are not seen`() = runWebDriverTest(originUrl) { driver ->
+    fun `Ensure injected js variables are not seen`() = runWebDriverTest(originUrl, browser) { driver ->
         val windowVariables = driver.evaluate("JSON.stringify(Object.keys(window))").toString()
         assertTrue { windowVariables.contains("document") }
         assertTrue { windowVariables.contains("setTimeout") }
@@ -149,7 +149,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun `Ensure no injected document variables are seen`() = runWebDriverTest(originUrl) { driver ->
+    fun `Ensure no injected document variables are seen`() = runWebDriverTest(originUrl, browser) { driver ->
         val nodeVariables = driver.evaluate("JSON.stringify(Object.keys(document))").toString()
 //            assertTrue { nodeVariables.contains("querySelector") }
 //            assertTrue { nodeVariables.contains("textContent") }
@@ -166,7 +166,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun testOpenNewTab() = runWebDriverTest(mockAmazonProductUrl) { driver ->
+    fun testOpenNewTab() = runWebDriverTest(productUrl, browser) { driver ->
         driver.clickMatches("ol li a", "href", "product-reviews")
         driver.waitForNavigation()
         driver.waitForSelector("body")
@@ -174,8 +174,8 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun test_selectTextAll() = runWebDriverTest { driver ->
-        driver.navigateTo(mockAmazonProductUrl)
+    fun test_selectTextAll() = runWebDriverTest(browser) { driver ->
+        driver.navigateTo(productUrl)
         
         driver.waitForSelector("#productTitle")
         
@@ -196,8 +196,8 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
 
 
     @Test
-    fun test_selectFirstAttributeOrNull() = runWebDriverTest { driver ->
-        driver.navigateTo(mockAmazonProductUrl)
+    fun test_selectFirstAttributeOrNull() = runWebDriverTest(browser) { driver ->
+        driver.navigateTo(productUrl)
         
         driver.waitForSelector("#productTitle")
         
@@ -207,8 +207,8 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun test_selectAttributes() = runWebDriverTest { driver ->
-        driver.navigateTo(mockAmazonHomeUrl)
+    fun test_selectAttributes() = runWebDriverTest(browser) { driver ->
+        driver.navigateTo(productUrl)
         
         val selector = "input[type=text]"
         driver.waitForSelector(selector)
@@ -219,8 +219,8 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun test_selectAttributeAll() = runWebDriverTest { driver ->
-        driver.navigateTo(mockAmazonHomeUrl)
+    fun test_selectAttributeAll() = runWebDriverTest(browser) { driver ->
+        driver.navigateTo(productUrl)
         
         val selector = "body a[href]"
         driver.waitForSelector(selector)
@@ -241,7 +241,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun testClickTextMatches() = runWebDriverTest { driver ->
+    fun testClickTextMatches() = runWebDriverTest(browser) { driver ->
         open(productUrl, driver, 1)
 //        driver.waitForSelector("a[href*=stores]")
         driver.waitForSelector("a[href*=HUAWEI]")
@@ -266,7 +266,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun testClickNthAnchor() = runWebDriverTest(originUrl) { driver ->
+    fun testClickNthAnchor() = runWebDriverTest(originUrl, browser) { driver ->
         driver.clickNthAnchor(100, "body")
 //        println(href)
         
@@ -276,7 +276,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun testMouseMove() = runWebDriverTest(originUrl) { driver ->
+    fun testMouseMove() = runWebDriverTest(originUrl, browser) { driver ->
         repeat(10) { i ->
             val x = 100.0 + 2 * i
             val y = 100.0 + 3 * i
@@ -288,7 +288,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun testMouseWheel() = runWebDriverTest(originUrl) { driver ->
+    fun testMouseWheel() = runWebDriverTest(originUrl, browser) { driver ->
         driver.mouseWheelDown(5)
         val box = driver.boundingBox("body")
         println(box)
@@ -305,7 +305,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun testKeyPress() = runWebDriverTest { driver ->
+    fun testKeyPress() = runWebDriverTest(browser) { driver ->
         driver.navigateTo(productUrl)
         driver.waitForSelector("#productTitle")
         
@@ -363,7 +363,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun testTypeText() = runWebDriverTest { driver ->
+    fun testTypeText() = runWebDriverTest(browser) { driver ->
         driver.navigateTo(productUrl)
         driver.waitForSelector("#productTitle")
         
@@ -417,7 +417,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun testCaptureScreenshot() = runWebDriverTest(productUrl) { driver ->
+    fun testCaptureScreenshot() = runWebDriverTest(productUrl, browser) { driver ->
         driver.waitForSelector("#productTitle")
         assertTrue { driver.exists("body") }
         val pageSource = driver.pageSource()
@@ -445,7 +445,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun testDragAndHold() = runWebDriverTest(walmartUrl) { driver ->
+    fun testDragAndHold() = runWebDriverTest(walmartUrl, browser) { driver ->
         // 2022.09.06:
         // override the user agent, and walmart shows robot check page.
         // BrowserSettings.enableUserAgentOverriding()
@@ -455,7 +455,7 @@ class ChromeDevtoolsDriverTests : WebDriverTestBase() {
     }
     
     @Test
-    fun `When call queryClientRects then return client rects`() = runWebDriverTest(productUrl) { driver ->
+    fun `When call queryClientRects then return client rects`() = runWebDriverTest(productUrl, browser) { driver ->
         driver.mouseWheelDown(5)
         val box = driver.boundingBox("body")
         // RectD(x=0.0, y=-600.0, width=1912.0, height=10538.828125)

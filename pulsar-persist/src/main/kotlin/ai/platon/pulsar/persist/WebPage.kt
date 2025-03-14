@@ -127,7 +127,7 @@ interface WebPage : Comparable<WebPage> {
 
     var pageCategory: PageCategory
 
-    val openPageCategory: OpenPageCategory
+    var openPageCategory: OpenPageCategory
 
     var encoding: String?
 

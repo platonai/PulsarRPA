@@ -160,7 +160,7 @@ open class FetchComponent(
         page.isFetched = true
 
         page.headers.putAll(output.headers.asMultimap())
-
+        updateFetchedPage(page, pageDatum, protocolStatus)
         return page
     }
 
@@ -169,10 +169,42 @@ open class FetchComponent(
         }
     }
 
-    companion object {
-        fun updateStatus(page: WebPage, protocolStatus: ProtocolStatus) {
-            page.protocolStatus = protocolStatus
-            ++page.fetchCount
+    private fun updateFetchedPage(
+        page: WebPage, pageDatum: PageDatum?,
+        protocolStatus: ProtocolStatus,
+    ): WebPage {
+        val pageExt = WebPageExt(page)
+        updateStatus(page, protocolStatus)
+        if (pageDatum == null) {
+            return page
         }
+
+        val datum = pageDatum
+        page.location = datum.location
+        page.proxy = datum.proxyEntry?.agentIp
+        val trace = datum.activeDOMStatTrace
+        if (trace != null) {
+            page.activeDOMStatus = trace.status
+            page.activeDOMStatTrace = mapOf(
+                "initStat" to trace.initStat, "initD" to trace.initD,
+                "lastStat" to trace.lastStat, "lastD" to trace.lastD
+            )
+        }
+
+        datum.pageCategory?.let { page.openPageCategory = it }
+        datum.htmlIntegrity?.let { page.htmlIntegrity = it }
+        datum.lastBrowser?.let { page.lastBrowser = it }
+
+        if (protocolStatus.isSuccess) {
+            // good! persists content for only success pages
+            pageExt.updateContent(datum)
+        }
+
+        return page
+    }
+
+    private fun updateStatus(page: WebPage, protocolStatus: ProtocolStatus) {
+        page.protocolStatus = protocolStatus
+        ++page.fetchCount
     }
 }

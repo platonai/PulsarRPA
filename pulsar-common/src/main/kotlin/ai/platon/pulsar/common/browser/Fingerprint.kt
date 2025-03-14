@@ -82,13 +82,14 @@ data class Fingerprint(
      * @param hostPort the host and port of the proxy server, e.g. localhost:8080
      * */
     fun setProxy(protocol: String, hostPort: String, username: String?, password: String?) {
-        proxyURI = URIBuilder().apply {
-            scheme = protocol
-            host = hostPort
-            if (username != null && password != null) {
-                userInfo = "$username:$password"
-            }
-        }.build()
+        val (host, port) = hostPort.split(":")
+        val builder = URIBuilder()
+            .setScheme(protocol)
+            .setHost(host).setPort(port.toInt())
+        if (username != null && password != null) {
+            builder.userInfo = "$username:$password"
+        }
+        proxyURI = builder.build()
     }
 
     fun setProxy(proxy: ProxyEntry) = setProxy(proxy.protocol, proxy.hostPort, proxy.username, proxy.password)

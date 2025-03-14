@@ -69,7 +69,7 @@ class PulsarSessionTests: TestBase() {
 
     @Test
     fun testLoadLocalFile() {
-        val path = AppPaths.getTmp("test.html")
+        val path = AppPaths.getTmpDirectory("test.html")
         println(path)
         val html = """
             <html>

@@ -116,6 +116,23 @@ class WebDriverTestBase : TestBase() {
         }
     }
 
+    protected fun runWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            browser.newDriver().use { driver ->
+                open(url, driver)
+
+                val pageSource = driver.pageSource()
+                val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
+                assumeTrue(
+                    { (pageSource?.length ?: 0) > PAGE_SOURCE_MIN_LENGTH },
+                    "Page source is too small | $display"
+                )
+
+                block(driver)
+            }
+        }
+    }
+
     protected fun runResourceWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
         runBlocking {
             driverFactory.launchTempBrowser().use {
@@ -123,6 +140,15 @@ class WebDriverTestBase : TestBase() {
                     openResource(url, driver)
                     block(driver)
                 }
+            }
+        }
+    }
+
+    protected fun runResourceWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            browser.newDriver().use { driver ->
+                openResource(url, driver)
+                block(driver)
             }
         }
     }

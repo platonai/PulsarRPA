@@ -42,7 +42,7 @@ class TestLoadResources: WebDriverTestBase() {
 
     @Ignore("This test is not stable")
     @Test
-    fun testLoadResource2() = runWebDriverTest { driver ->
+    fun testLoadResource2() = runWebDriverTest(browser) { driver ->
         val resourceUrl = robotsUrl
 //        val resourceUrl = "https://www.amazon.com/robots.txt"
         val referrer = UrlUtils.getOrigin(resourceUrl)

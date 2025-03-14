@@ -612,7 +612,7 @@ class GoraWebPage(
             page.pageCategory = pageCategory.format()
         }
 
-    override val openPageCategory: OpenPageCategory
+    override var openPageCategory: OpenPageCategory
         get() {
             try {
                 val pageCategory = page.pageCategory
@@ -623,6 +623,9 @@ class GoraWebPage(
             }
 
             return OpenPageCategory("", "")
+        }
+        set(value) {
+            page.pageCategory = value.format()
         }
 
     override var encoding: String?
@@ -854,19 +857,19 @@ class GoraWebPage(
         }
 
     override var vividLinks: MutableMap<CharSequence, CharSequence>
-        get() = page.vividLinks.toMutableMap()
+        get() = page.vividLinks
         set(value) {
             page.vividLinks = value
         }
 
     override var links: MutableList<CharSequence>
-        get() = page.links.toMutableList()
+        get() = page.links
         set(value) {
             page.links = value
         }
 
     override var inlinks: MutableMap<CharSequence, CharSequence>
-        get() = page.inlinks.toMutableMap()
+        get() = page.inlinks
         set(value) {
             page.inlinks = value
         }

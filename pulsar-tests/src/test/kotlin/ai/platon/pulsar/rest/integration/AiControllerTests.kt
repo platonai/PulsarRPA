@@ -37,16 +37,16 @@ class AiControllerTests : IntegrationTestBase() {
     }
 
     fun testExtract(url: String) {
-        testChat("title, price, images", url)
+        testExtract("title, price, images", url)
     }
 
     @Test
     fun testChatAboutPages() {
-        testExtract("https://www.amazon.com")
-        testExtract("https://www.amazon.com/dp/B0C1H26C46")
+        testChat("https://www.amazon.com")
+        testChat("https://www.amazon.com/dp/B0C1H26C46")
 
-        testExtract("https://www.jd.com/")
-        testExtract("https://www.ebay.com/")
+        testChat("https://www.jd.com/")
+        testChat("https://www.ebay.com/")
     }
 
     @Test
