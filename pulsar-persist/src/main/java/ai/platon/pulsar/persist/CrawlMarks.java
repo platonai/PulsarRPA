@@ -1,14 +1,12 @@
 package ai.platon.pulsar.persist;
 
-import ai.platon.pulsar.persist.impl.WebPageImpl;
+import ai.platon.pulsar.persist.impl.GoraBackendWebPage;
 import ai.platon.pulsar.persist.metadata.Mark;
 import org.apache.avro.util.Utf8;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static ai.platon.pulsar.persist.impl.WebPageImpl.wrapKey;
 
 /**
  * Created by vincent on 17-7-26.
@@ -34,7 +32,7 @@ public class CrawlMarks {
     }
 
     public Utf8 get(Mark mark) {
-        return (Utf8) marks.get(wrapKey(mark));
+        return (Utf8) marks.get(PersistUtils.INSTANCE.wrapKey(mark));
     }
 
     public boolean contains(Mark mark) {
@@ -46,11 +44,11 @@ public class CrawlMarks {
     }
 
     public void put(Mark mark, String value) {
-        put(mark, WebPageImpl.u8(value));
+        put(mark, PersistUtils.INSTANCE.u8(value));
     }
 
     public void put(Mark mark, Utf8 value) {
-        marks.put(wrapKey(mark), value);
+        marks.put(PersistUtils.INSTANCE.wrapKey(mark), value);
     }
 
     public void putIfNotNull(Mark mark, Utf8 value) {
@@ -61,7 +59,7 @@ public class CrawlMarks {
 
     public void remove(Mark mark) {
         if (contains(mark)) {
-            marks.put(wrapKey(mark), null);
+            marks.put(PersistUtils.INSTANCE.wrapKey(mark), null);
         }
     }
 

@@ -3,7 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.common
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.impl.WebPageImpl
+import ai.platon.pulsar.persist.impl.GoraBackendWebPage
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 
@@ -24,13 +24,13 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
         }
         
         fun createPageShell(url: String, conf: VolatileConfig, href: String? = null, referrer: String? = null): WebPage {
-            val page = WebPageImpl.newWebPage(url, conf, href)
+            val page = GoraBackendWebPage.newWebPage(url, conf, href)
             initWebPage(page, null, href, referrer)
             return page
         }
 
         fun createPageShell(url: String, options: LoadOptions, href: String? = null, referrer: String? = null): WebPage {
-            val page = WebPageImpl.newWebPage(url, options.conf, href)
+            val page = GoraBackendWebPage.newWebPage(url, options.conf, href)
             initWebPage(page, options, href, referrer)
             return page
         }

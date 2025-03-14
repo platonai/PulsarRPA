@@ -19,8 +19,7 @@ package ai.platon.pulsar.skeleton.crawl.common
 import ai.platon.pulsar.skeleton.common.EncodingDetector
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.impl.WebPageImpl
+import ai.platon.pulsar.persist.impl.GoraBackendWebPage
 import org.apache.avro.util.Utf8
 import java.nio.ByteBuffer
 import java.util.*
@@ -43,28 +42,28 @@ class TestEncodingDetector {
         // Content content;
         var encoding: String
         val url = "http://www.example.com/"
-        var page = WebPageImpl.newWebPage(url, conf)
+        var page = GoraBackendWebPage.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
-        page.setContent(contentInOctets)
+        page.setByteArrayContent(contentInOctets)
         detector = EncodingDetector(conf)
         detector.autoDetectClues(page, true)
         encoding = detector.guessEncoding(page, "utf-8")
         // no information is available, so it should return default encoding
         assertEquals("utf-8", encoding.lowercase(Locale.getDefault()))
-        page = WebPageImpl.newWebPage(url, conf)
+        page = GoraBackendWebPage.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
-        page.setContent(contentInOctets)
+        page.setByteArrayContent(contentInOctets)
         page.headers.put(HttpHeaders.CONTENT_TYPE, "text/plain; charset=UTF-16")
         detector = EncodingDetector(conf)
         detector.autoDetectClues(page, true)
         encoding = detector.guessEncoding(page, "utf-8")
         assertEquals("utf-16", encoding.lowercase(Locale.getDefault()))
-        page = WebPageImpl.newWebPage(url, conf)
+        page = GoraBackendWebPage.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
-        page.setContent(contentInOctets)
+        page.setByteArrayContent(contentInOctets)
         detector = EncodingDetector(conf)
         detector.autoDetectClues(page, true)
         detector.addClue("windows-1254", "sniffed")
@@ -72,10 +71,10 @@ class TestEncodingDetector {
         assertEquals("windows-1254", encoding.toLowerCase())
         // enable autodetection
         conf.setInt(EncodingDetector.MIN_CONFIDENCE_KEY, 50)
-        page = WebPageImpl.newWebPage(url, conf)
+        page = GoraBackendWebPage.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
-        page.setContent(contentInOctets)
+        page.setByteArrayContent(contentInOctets)
         page.unbox().metadata[Utf8(HttpHeaders.CONTENT_TYPE)] = ByteBuffer.wrap("text/plain; charset=UTF-16".toByteArray())
         detector = EncodingDetector(conf)
         detector.autoDetectClues(page, true)

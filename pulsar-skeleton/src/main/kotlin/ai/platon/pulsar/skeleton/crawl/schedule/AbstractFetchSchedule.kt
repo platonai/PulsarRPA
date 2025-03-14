@@ -1,16 +1,15 @@
-
 package ai.platon.pulsar.skeleton.crawl.schedule
 
-import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.skeleton.common.persist.ext.options
-import ai.platon.pulsar.skeleton.common.persist.ext.updateFetchTime
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import ai.platon.pulsar.persist.metadata.Mark
+import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
+import ai.platon.pulsar.skeleton.common.persist.ext.options
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -68,7 +67,8 @@ abstract class AbstractFetchSchedule(
 
         // note: page.fetchTime might not be the same as the actual fetch time
         val now = Instant.now()
-        page.updateFetchTime(now, now + page.fetchInterval)
+        val pageEx = WebPageExt(page)
+        pageEx.updateFetchTime(now, now + page.fetchInterval)
 
         page.modifiedTime = m.modifiedTime
         page.prevModifiedTime = m.prevModifiedTime
@@ -94,9 +94,11 @@ abstract class AbstractFetchSchedule(
         // retry immediately, this is the default behaviour
         val now = Instant.now()
         page.fetchInterval = Duration.ofSeconds(0)
-        page.updateFetchTime(now, now)
+        val pageEx = WebPageExt(page)
+        pageEx.updateFetchTime(now, now)
 
-        val crawlStatus = if (page.fetchRetries <= page.maxRetries) CrawlStatusCodes.UNFETCHED else CrawlStatusCodes.GONE
+        val crawlStatus =
+            if (page.fetchRetries <= page.maxRetries) CrawlStatusCodes.UNFETCHED else CrawlStatusCodes.GONE
         page.setCrawlStatus(crawlStatus.toInt())
     }
 
@@ -114,7 +116,8 @@ abstract class AbstractFetchSchedule(
     ) {
         page.fetchInterval = ChronoUnit.DECADES.duration
         val now = Instant.now()
-        page.updateFetchTime(now, now + page.fetchInterval)
+        val pageEx = WebPageExt(page)
+        pageEx.updateFetchTime(now, now + page.fetchInterval)
     }
 
     /**
@@ -176,22 +179,27 @@ abstract class AbstractFetchSchedule(
             return
         }
 
+        val pageEx = WebPageExt(page)
         // reduce fetchInterval so that it fits within the max value
         if (page.fetchInterval > maxFetchInterval) {
-            page.setFetchInterval(maxFetchInterval.seconds * 0.9f)
+            pageEx.setFetchInterval(maxFetchInterval.seconds * 0.9f)
+            // page.fetchInterval = Duration.ofSeconds((maxFetchInterval.seconds * 0.9f).toLong())
         }
         page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
         page.fetchRetries = 0
 
         val fetchInterval = if (asap) Duration.ZERO else page.fetchInterval
         val now = Instant.now()
-        page.updateFetchTime(now, now + fetchInterval)
+        pageEx.updateFetchTime(now, now + fetchInterval)
     }
 
     protected fun updateRefetchTime(page: WebPage, fetchInterval: Duration, m: ModifyInfo) {
         val now = Instant.now()
         page.fetchInterval = fetchInterval
-        page.updateFetchTime(now, now + page.fetchInterval)
+
+        val pageEx = WebPageExt(page)
+        pageEx.updateFetchTime(now, now + page.fetchInterval)
+
         page.prevModifiedTime = m.prevModifiedTime
         page.modifiedTime = m.modifiedTime
     }

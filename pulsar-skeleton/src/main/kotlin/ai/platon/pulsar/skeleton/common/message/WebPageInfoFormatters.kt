@@ -4,12 +4,11 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.*
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.emoji.PopularEmoji
-import ai.platon.pulsar.skeleton.common.persist.ext.options
-import ai.platon.pulsar.skeleton.crawl.common.FetchState
-import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.ActiveDOMStat
+import ai.platon.pulsar.skeleton.common.persist.ext.options
+import ai.platon.pulsar.skeleton.crawl.common.FetchState
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.text.DecimalFormat
@@ -41,19 +40,6 @@ class FetchStatusFormatter(val page: WebPage) {
 
         return params.formatAsLine()
     }
-}
-
-data class Record(
-    val name: String,
-    val value: Any,
-    val prefix: String = "",
-    val postfix: String = "",
-    val width: Int = 0,
-    val padding: Char = ' ',
-) {
-    fun format(): String = if (width > 0) StringUtils.leftPad(toString(), width, padding) else toString()
-
-    override fun toString() = value.toString()
 }
 
 class PageLoadStatusFormatter(
@@ -107,7 +93,7 @@ class PageLoadStatusFormatter(
     private val fetchReason get() = buildFetchReason()
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) "" else " | $label"
-    private val prevFetchTimeBeforeUpdate = page.getVar(PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
+    private val prevFetchTimeBeforeUpdate = page.getVar(VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
     private val prevFetchTimeDuration: Duration get() = Duration.between(prevFetchTimeBeforeUpdate, Instant.now())
     private val prevFetchTimeReport: String get() = when {
         prevFetchTimeDuration.toDays() > 20 * 360 -> ""
@@ -163,36 +149,6 @@ class PageLoadStatusFormatter(
         )
     }
 
-    fun explain() {
-        listOf(
-            Record("id", page.id, width = 3),
-            Record("category", category),
-            Record("taskStatusSymbol", taskStatusSymbol, width = 1),
-            Record("pageStatusSymbol", pageStatusSymbol, width = 1),
-            Record("pageStatusText", pageStatusText),
-            Record("pageStatus", pageStatus),
-            Record("loadMessagePrefix", loadMessagePrefix),
-            Record("fetchReason", fetchReason, width = 1),
-
-            Record("contentBytes", buildContentBytes()),
-            Record("minorCode", page.protocolStatus.minorCode),
-            Record("responseTime", DateTimes.readableDuration(responseTime)),
-            Record("prevFetchTime", prevFetchTimeReport),
-            Record("fetchCount", fetchCount),
-            Record("failure", failure),
-            Record("jsSate", jsSate),
-            Record("fieldCount", fieldCount),
-            Record("proxy", proxy),
-            Record("contextName", contextName),
-            Record("symbolicLink", symbolicLink),
-            Record("location", buildLocation()),
-        )
-            .filter { it.width > 0 }
-            .joinToString(" ") { it.format() }
-
-        TODO("NOT IMPLEMENTED")
-    }
-
     private fun buildFetchReason(): String {
         val state = page.getVar(VAR_FETCH_STATE) as? CheckState
         val code = state?.code ?: FetchState.DO_NOT_FETCH
@@ -233,21 +189,5 @@ class PageLoadStatusFormatter(
         if (withReferer) readableLocation = "$readableLocation <- ${page.referrer}"
         val doWithSymbolicLink = page.isFetched && page.id < verboseCount && withSymbolicLink
         return if (doWithSymbolicLink) "file://$symbolicLink | $readableLocation" else readableLocation
-    }
-}
-
-class LoadedPagesStatusFormatter(
-        val pages: Collection<WebPage>,
-        val startTime: Instant,
-        val withSymbolicLink: Boolean = false
-) {
-    override fun toString(): String {
-        val elapsed = DateTimes.elapsedTime(startTime)
-        val message = String.format("Fetched total %d pages in %s:\n", pages.size, elapsed.readable())
-        val sb = StringBuilder(message)
-        pages.forEachIndexed { i, p ->
-            sb.append(i.inc()).append(".\t").append(PageLoadStatusFormatter(p, withSymbolicLink = withSymbolicLink)).append('\n')
-        }
-        return sb.toString()
     }
 }

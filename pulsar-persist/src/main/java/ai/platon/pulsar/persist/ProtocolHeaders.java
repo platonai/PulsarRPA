@@ -81,7 +81,7 @@ public class ProtocolHeaders implements HttpHeaders {
      * @return a {@link java.lang.String} object.
      */
     public String get(String name) {
-        CharSequence value = headers.get(WebPage.u8(name));
+        CharSequence value = headers.get(JPersistUtils.u8(name));
         return value == null ? null : value.toString();
     }
 
@@ -93,7 +93,7 @@ public class ProtocolHeaders implements HttpHeaders {
      * @return a {@link java.lang.String} object.
      */
     public String getOrDefault(String name, String defaultValue) {
-        CharSequence value = headers.get(WebPage.u8(name));
+        CharSequence value = headers.get(JPersistUtils.u8(name));
         return value == null ? defaultValue : value.toString();
     }
 
@@ -104,7 +104,7 @@ public class ProtocolHeaders implements HttpHeaders {
      * @param value a {@link java.lang.String} object.
      */
     public void put(String name, String value) {
-        headers.put(WebPage.u8(name), WebPage.u8(value));
+        headers.put(JPersistUtils.u8(name), JPersistUtils.u8(value));
     }
 
     /**
@@ -135,7 +135,7 @@ public class ProtocolHeaders implements HttpHeaders {
      * @param name a {@link java.lang.String} object.
      */
     public void remove(String name) {
-        headers.remove(WebPage.u8(name));
+        headers.remove(JPersistUtils.u8(name));
     }
 
     /**

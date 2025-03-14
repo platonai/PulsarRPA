@@ -4,22 +4,17 @@ import ai.platon.pulsar.common.HtmlIntegrity;
 import ai.platon.pulsar.common.browser.BrowserType;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.persist.*;
-import ai.platon.pulsar.persist.gora.generated.GHypeLink;
 import ai.platon.pulsar.persist.metadata.FetchMode;
 import ai.platon.pulsar.persist.metadata.OpenPageCategory;
 import ai.platon.pulsar.persist.metadata.PageCategory;
 import ai.platon.pulsar.persist.model.ActiveDOMStat;
 import ai.platon.pulsar.persist.model.ActiveDOMStatus;
 import ai.platon.pulsar.persist.model.PageModel;
-import org.xml.sax.InputSource;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 public interface WebAsset {

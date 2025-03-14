@@ -18,7 +18,8 @@ class MiscMessageWriter: MultiSinkWriter() {
             page.fetchTime,
             page.prevFetchTime,
             page.fetchCount,
-            page.getFetchTimeHistory(""),
+//            page.getFetchTimeHistory(""),
+            "",
             page.protocolStatus,
             page.marks
         )

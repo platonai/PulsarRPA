@@ -1,7 +1,7 @@
 package ai.platon.pulsar.persist.model
 
+import ai.platon.pulsar.persist.PersistUtils.u8
 import ai.platon.pulsar.persist.gora.generated.GFieldGroup
-import ai.platon.pulsar.persist.impl.WebPageImpl.u8
 
 class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
     fun unbox(): GFieldGroup {

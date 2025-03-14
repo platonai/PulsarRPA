@@ -2,6 +2,7 @@ package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.skeleton.common.persist.ext.options
@@ -32,8 +33,6 @@ class TestWebPage: TestBase() {
         val prevFetchTime1 = page.prevFetchTime
         val fetchTime1 = page.fetchTime
 
-        println("Fetch time history: " + page.getFetchTimeHistory(""))
-
         assertTrue { page.protocolStatus.isSuccess }
         assertTrue { page.isContentUpdated }
         assertEquals(option, page.variables[PulsarParams.VAR_LOAD_OPTIONS])
@@ -56,7 +55,6 @@ class TestWebPage: TestBase() {
 //        val fetchTime2 = page.fetchTime
 
         println(PageLoadStatusFormatter(page, "", true, true, true, true))
-        println("Fetch time history: " + page.getFetchTimeHistory(""))
         println("prevFetchTime: " + page.prevFetchTime)
         println("fetchTime: " + page.fetchTime)
         val responseTime = page.metadata[Name.RESPONSE_TIME]?:""

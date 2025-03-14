@@ -1,14 +1,13 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.DateTimes.constructTimeHistory
-import ai.platon.pulsar.common.DateTimes.parseInstant
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.persist.impl.WebPageImpl
+import ai.platon.pulsar.persist.impl.GoraBackendWebPage
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.ActiveDOMStat
 import ai.platon.pulsar.persist.model.ActiveDOMStatus
+import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -17,7 +16,7 @@ class WebPageExt(private val page: WebPage) {
     companion object {
 
         fun newTestWebPage(url: String): WebPage {
-            val page = WebPageImpl.newWebPage(url, VolatileConfig(), null)
+            val page = GoraBackendWebPage.newWebPage(url, VolatileConfig(), null)
 
             page.activeDOMStatus = ActiveDOMStatus(1, 1, "1", "1", "1")
             page.activeDOMStatTrace = mapOf("a" to ActiveDOMStat(), "b" to ActiveDOMStat())
@@ -27,15 +26,37 @@ class WebPageExt(private val page: WebPage) {
         }
     }
 
+    /**
+     * Set fetch interval in seconds
+     */
+    fun setFetchInterval(seconds: Long) {
+        page.fetchInterval = Duration.ofSeconds(seconds)
+    }
+
+    /**
+     * Set fetch interval in seconds
+     */
+    fun setFetchInterval(seconds: Float) {
+        setFetchInterval(Math.round(seconds).toLong())
+    }
+
+    fun updateFetchTime(prevFetchTime: Instant, fetchTime: Instant) {
+        page.prevFetchTime = prevFetchTime
+        // the next time supposed to fetch
+        page.fetchTime = fetchTime
+
+        updateFetchTimeHistory(fetchTime)
+    }
+
     fun sniffTitle(): String {
         var title = page.contentTitle
-        if (title.isEmpty()) {
+        if (title.isNullOrEmpty()) {
             title = page.anchor.toString()
         }
         if (title.isEmpty()) {
             title = page.pageTitle
         }
-        if (title.isEmpty()) {
+        if (title.isNullOrEmpty()) {
             title = page.location
         }
         if (title.isEmpty()) {
@@ -53,7 +74,7 @@ class WebPageExt(private val page: WebPage) {
         }
 
         for (link in hypeLinks) {
-            val url = WebPageImpl.u8(link.toString())
+            val url = PersistUtils.u8(link.toString())!!
             // Use a set?
             if (!links.contains(url)) {
                 links.add(url)
@@ -66,8 +87,8 @@ class WebPageExt(private val page: WebPage) {
     fun updateContent(pageDatum: PageDatum, contentTypeHint: String? = null) {
         var contentType = contentTypeHint
 
-        page.setOriginalContentLength(pageDatum.originalContentLength)
-        page.setContent(pageDatum.content)
+        page.originalContentLength = pageDatum.originalContentLength.toLong()
+        page.setByteArrayContent(pageDatum.content)
         // clear content immediately to release resource as soon as possible
         pageDatum.content = null
 
@@ -98,7 +119,7 @@ class WebPageExt(private val page: WebPage) {
     fun sniffModifiedTime(): Instant {
         var modifiedTime = page.modifiedTime
         val headerModifiedTime = page.headers.lastModified
-        if (page.isValidContentModifyTime(headerModifiedTime) && headerModifiedTime.isAfter(modifiedTime)) {
+        if (isValidContentModifyTime(headerModifiedTime) && headerModifiedTime.isAfter(modifiedTime)) {
             modifiedTime = headerModifiedTime
         }
         // A fix
@@ -107,5 +128,9 @@ class WebPageExt(private val page: WebPage) {
             modifiedTime = Instant.now()
         }
         return modifiedTime
+    }
+
+    fun isValidContentModifyTime(publishTime: Instant): Boolean {
+        return publishTime.isAfter(AppConstants.MIN_ARTICLE_PUBLISH_TIME)
     }
 }

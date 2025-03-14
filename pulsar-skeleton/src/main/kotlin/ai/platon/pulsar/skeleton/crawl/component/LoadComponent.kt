@@ -14,7 +14,7 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.persist.impl.WebPageImpl
+import ai.platon.pulsar.persist.impl.GoraBackendWebPage
 import ai.platon.pulsar.persist.model.ActiveDOMStat
 import ai.platon.pulsar.skeleton.common.AppStatusTracker
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
@@ -79,8 +79,6 @@ class LoadComponent(
     private val taskLogger = LoggerFactory.getLogger(LoadComponent::class.java.name + ".Task")
     private val tracer = logger.takeIf { it.isTraceEnabled }
 
-    private val loadStrategy = immutableConfig.get(LOAD_STRATEGY, "SIMPLE")
-
     private val deactivateFetchComponent1 = immutableConfig.getBoolean(LOAD_DEACTIVATE_FETCH_COMPONENT, false)
 
     /**
@@ -102,7 +100,7 @@ class LoadComponent(
 
     @Volatile
     private var numWrite = 0
-    private val abnormalPage get() = WebPageImpl.NIL.takeIf { !isActive }
+    private val abnormalPage get() = GoraBackendWebPage.NIL.takeIf { !isActive }
 
     private var reportCount = AtomicInteger()
     private val batchTaskCount = AtomicInteger()
@@ -342,7 +340,7 @@ class LoadComponent(
     private fun createPageShellOrNilWithEventHandlers(normURL: NormURL): WebPage {
         if (normURL.isNil) {
             doHandleLoadEventWithoutFetch(normURL)
-            return WebPageImpl.NIL
+            return GoraBackendWebPage.NIL
         }
 
         tracer?.trace("Loading normURL, creating page shell ... | {}", normURL.configuredUrl)
@@ -355,7 +353,7 @@ class LoadComponent(
 
         if (deactivateFetchComponent && shouldFetch(page)) {
             doHandleLoadEventWithoutFetch(normURL)
-            return WebPageImpl.NIL
+            return GoraBackendWebPage.NIL
         }
 
         return page
@@ -423,18 +421,7 @@ class LoadComponent(
             // get the metadata of the page from the database, this is very fast for a crawler
             // load page content and page model lazily, if we load page content and page model every time,
             // the underlying storage may crash due to the stress.
-            val loadedPage = when (loadStrategy) {
-                "PARTIAL_LAZY" -> {
-                    webDb.getOrNull(normURL.spec, fields = PAGE_FIELDS)?.also {
-                        it.setLazyFieldLoader(LazyFieldLoader(normURL.spec, webDb))
-                    }
-                }
-
-                else -> {
-                    webDb.getOrNull(normURL.spec)
-                }
-            }
-
+            val loadedPage = webDb.getOrNull(normURL.spec)
             dbGetCount.incrementAndGet()
             if (loadedPage != null) {
                 // override the old variables: args, href, etc
@@ -545,7 +532,7 @@ class LoadComponent(
     private fun doHandleOnLoadedEvent(normURL: NormURL, page: WebPage? = null) {
         val url = normURL.spec
         val detail = normURL.detail
-        val page0 = page ?: WebPageImpl.NIL
+        val page0 = page ?: GoraBackendWebPage.NIL
 
         try {
             // we might use the cached page's content in after load handler
@@ -609,7 +596,7 @@ class LoadComponent(
             // load the content of the page
             val contentPage = webDb.getOrNull(page.url, GWebPage.Field.CONTENT)
             if (contentPage != null) {
-                page.content = contentPage.content
+                page.setByteBufferContent(contentPage.content)
                 // TODO: test the dirty flag
                 page.unbox().clearDirty(GWebPage.Field.CONTENT.index)
             }

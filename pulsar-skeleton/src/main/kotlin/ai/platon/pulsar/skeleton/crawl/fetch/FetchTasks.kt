@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.impl.WebPageImpl
+import ai.platon.pulsar.persist.impl.GoraBackendWebPage
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
@@ -124,7 +124,7 @@ class FetchTask constructor(
     
     companion object {
         val DEFAULT_FINGERPRINT = Fingerprint(BrowserType.PULSAR_CHROME)
-        val NIL = FetchTask(0, 0, WebPageImpl.NIL, DEFAULT_FINGERPRINT, id = 0)
+        val NIL = FetchTask(0, 0, GoraBackendWebPage.NIL, DEFAULT_FINGERPRINT, id = 0)
         val instanceSequencer = AtomicInteger()
         
         fun create(url: String, conf: VolatileConfig): FetchTask {

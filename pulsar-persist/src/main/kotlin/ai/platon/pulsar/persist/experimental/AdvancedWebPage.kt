@@ -2,7 +2,6 @@ package ai.platon.pulsar.persist.experimental
 
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Name
@@ -83,8 +82,6 @@ open class AdvancedWebPage(
 
     val prevSignature get() = page.prevSignature
 
-    val pageCounters get() = PageCounters.box(page.pageCounters)
-    
     var incomingLinks get() = page.inlinks
         set(value) = run { page.inlinks = value }
 }

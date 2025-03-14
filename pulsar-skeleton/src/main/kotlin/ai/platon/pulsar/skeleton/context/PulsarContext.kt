@@ -182,20 +182,6 @@ interface PulsarContext: AutoCloseable {
      * */
     fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean = false): List<NormURL>
     /**
-     * Inject an url
-     *
-     * @param url The url followed by config options
-     * @return The web page created
-     */
-    fun inject(url: String): WebPage
-    /**
-     * Inject an url
-     *
-     * @param url The url followed by config options
-     * @return The web page created
-     */
-    fun inject(url: NormURL): WebPage
-    /**
      * Get a webpage from the storage
      *
      * @param url The url of the page to retrieve

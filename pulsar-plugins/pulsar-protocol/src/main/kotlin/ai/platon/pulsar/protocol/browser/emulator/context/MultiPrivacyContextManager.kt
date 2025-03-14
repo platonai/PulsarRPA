@@ -25,7 +25,7 @@ import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.proxy.ProxyVendorException
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.impl.WebPageImpl
+import ai.platon.pulsar.persist.impl.GoraBackendWebPage
 import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
@@ -282,7 +282,7 @@ open class MultiPrivacyContextManager(
     }
 
     override fun tryGetNextReadyPrivacyContext(fingerprint: Fingerprint): PrivacyContext {
-        return tryGetNextReadyPrivacyContext(WebPageImpl.NIL, fingerprint, FetchTask.NIL)
+        return tryGetNextReadyPrivacyContext(GoraBackendWebPage.NIL, fingerprint, FetchTask.NIL)
     }
 
     /**

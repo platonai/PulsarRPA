@@ -20,5 +20,6 @@ package ai.platon.pulsar.skeleton.signature;
 import ai.platon.pulsar.persist.WebPage;
 
 public abstract class Signature {
+
     public abstract byte[] calculate(WebPage page);
 }

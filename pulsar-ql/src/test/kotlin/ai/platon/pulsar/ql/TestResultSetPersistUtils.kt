@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
  * Created by vincent on 17-7-29.
  * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
-class TestResultSetUtils {
+class TestResultSetPersistUtils {
 
     @Test
     fun testResultSetFormatter() {

@@ -16,20 +16,14 @@
  */
 package ai.platon.pulsar.persist.model
 
-import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt
-import ai.platon.pulsar.persist.gora.generated.GFieldGroup
-import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import com.google.gson.GsonBuilder
-import org.apache.commons.lang3.StringUtils
 import org.apache.gora.util.ByteUtils
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.time.Instant
 import java.time.LocalDateTime
-import java.util.*
-import java.util.function.Consumer
 import java.util.stream.Collectors
 
 class WebPageFormatter(val page: WebPage) {
@@ -92,7 +86,7 @@ class WebPageFormatter(val page: WebPage) {
     }
 
     fun toMap(): Map<String, Any> {
-        val fields: MutableMap<String, Any> = LinkedHashMap()
+        val fields: MutableMap<String, Any?> = LinkedHashMap()
         /* General */
         fields["key"] = page.key
         fields["url"] = page.url
@@ -115,10 +109,10 @@ class WebPageFormatter(val page: WebPage) {
         fields["prevModifiedTime"] = format(page.prevModifiedTime)
         fields["modifiedTime"] = format(page.modifiedTime)
         fields["baseUrl"] = page.location
-        fields["batchId"] = page.batchId ?: "(null)"
+        fields["batchId"] = page.batchId
         /* Parse */fields["parseStatus"] = page.parseStatus.name
         fields["parseStatusMessage"] = page.parseStatus.toString()
-        fields["encoding"] = page.encoding?:""
+        fields["encoding"] = page.encoding
         fields["prevSignature"] = page.prevSignatureAsString
         fields["signature"] = page.signatureAsString
         fields["pageCategory"] = page.pageCategory.name
@@ -135,12 +129,11 @@ class WebPageFormatter(val page: WebPage) {
         fields["linksMessage"] = ("Total "
                 + page.links.size + " links, "
                 + page.vividLinks.size + " vivid links, "
-                + page.liveLinks.size + " live links, "
                 + page.inlinks.size + " inlinks")
         if (withLinks) {
             fields["links"] = page.links.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
-            fields["inlinks"] = page.inlinks.entries.stream()
-                    .map { il: Map.Entry<CharSequence, CharSequence> -> il.key.toString() + "\t" + il.value }.collect(Collectors.joining("\n"))
+//            fields["inlinks"] = page.inlinks.entries.stream()
+//                    .map { il: Map.Entry<CharSequence, CharSequence> -> il.key.toString() + "\t" + il.value }.collect(Collectors.joining("\n"))
         }
         if (withText) {
             fields["contentText"] = page.contentText
@@ -156,11 +149,12 @@ class WebPageFormatter(val page: WebPage) {
                 fields["pageEntities"] = pageEntities
             }
         }
-        return fields
+        return fields.filterValues { it != null }.entries.associate { it.key to it.value!! }
     }
 
     fun toMap(fields: Set<String>): Map<String, Any> {
-        return toMap().entries.filter { fields.contains(it.key) }.associate { it.key to it.value }
+        return toMap().entries.filter { fields.contains(it.key) }
+            .associate { it.key to it.value }
     }
 
     fun format(): String {
@@ -217,7 +211,6 @@ class WebPageFormatter(val page: WebPage) {
         sb.append("\n")
         sb.append("Total " + page.links.size + " links, ")
                 .append(page.vividLinks.size.toString() + " vivid links, ")
-                .append(page.liveLinks.size.toString() + " live links, ")
                 .append(page.inlinks.size.toString() + " inlinks\n")
 
         if (withLinks) {
@@ -226,8 +219,6 @@ class WebPageFormatter(val page: WebPage) {
             page.links.forEach { l -> sb.append("links:\t$l\n") }
             sb.append("vividLinks:\n")
             page.vividLinks.forEach { (k, v) -> sb.append("liveLinks:\t$k\t$v\n") }
-            sb.append("liveLinks:\n")
-            page.liveLinks.values.forEach(Consumer { e: GHypeLink -> sb.append("liveLinks:\t" + e.url + "\t" + e.anchor + "\n") })
             sb.append("inlinks:\n")
             page.inlinks.forEach { (key, value) -> sb.append("inlink:\t$key\t$value\n") }
         }
@@ -243,13 +234,13 @@ class WebPageFormatter(val page: WebPage) {
             }
         }
         if (withText) {
-            if (page.contentText.length > 0) {
+            if (page.contentText != null) {
                 sb.append("\n")
                 sb.append("contentText:START>>>\n")
                         .append(page.contentText)
                         .append("\n<<<END:contentText\n")
             }
-            if (page.pageText.length > 0) {
+            if (page.pageText != null) {
                 sb.append("pageText:START>>>\n")
                         .append(page.pageText)
                         .append("\n<<<END:pageText\n")
@@ -271,11 +262,11 @@ class WebPageFormatter(val page: WebPage) {
 
     fun createDocument(): Document {
         val doc = Document.createShell(page.location)
-        doc.head().appendElement("title").appendText(page.pageTitle)
-        doc.body().appendElement("h1").appendText(page.contentTitle)
+        doc.head().appendElement("title").appendText(page.pageTitle ?: "")
+        doc.body().appendElement("h1").appendText(page.contentTitle ?: "")
         doc.body().appendElement("div")
                 .attr("class", "content")
-                .append(page.contentText)
+                .append(page.contentText ?: "")
         createLinksElement(doc.body())
         return doc
     }
@@ -285,11 +276,11 @@ class WebPageFormatter(val page: WebPage) {
                 .attr("class", "links")
                 .appendElement("ul")
         var i = 0
-        for (l in page.liveLinks.values) {
+        val vividLinks = page.vividLinks ?: return
+        for (l in vividLinks) {
             ++i
-            val text = if (StringUtils.isBlank(l.anchor)) i.toString() else l.anchor.toString()
             links.appendElement("li")
-                    .appendElement("a").attr("href", l.url.toString()).appendText(text)
+                    .appendElement("a").attr("href", l.toString()).appendText(l.key.toString())
         }
     }
 
