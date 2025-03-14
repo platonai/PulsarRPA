@@ -1,7 +1,5 @@
 package ai.platon.pulsar.persist.graph
 
-import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.persist.impl.GoraBackendWebPage
 import org.jgrapht.ext.*
 import org.jgrapht.graph.DirectedWeightedPseudograph
 import java.io.StringWriter

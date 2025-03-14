@@ -14,7 +14,7 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.persist.impl.GoraBackendWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.persist.model.ActiveDOMStat
 import ai.platon.pulsar.skeleton.common.AppStatusTracker
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
@@ -100,7 +100,7 @@ class LoadComponent(
 
     @Volatile
     private var numWrite = 0
-    private val abnormalPage get() = GoraBackendWebPage.NIL.takeIf { !isActive }
+    private val abnormalPage get() = GoraWebPage.NIL.takeIf { !isActive }
 
     private var reportCount = AtomicInteger()
     private val batchTaskCount = AtomicInteger()
@@ -340,7 +340,7 @@ class LoadComponent(
     private fun createPageShellOrNilWithEventHandlers(normURL: NormURL): WebPage {
         if (normURL.isNil) {
             doHandleLoadEventWithoutFetch(normURL)
-            return GoraBackendWebPage.NIL
+            return GoraWebPage.NIL
         }
 
         tracer?.trace("Loading normURL, creating page shell ... | {}", normURL.configuredUrl)
@@ -353,7 +353,7 @@ class LoadComponent(
 
         if (deactivateFetchComponent && shouldFetch(page)) {
             doHandleLoadEventWithoutFetch(normURL)
-            return GoraBackendWebPage.NIL
+            return GoraWebPage.NIL
         }
 
         return page
@@ -414,6 +414,7 @@ class LoadComponent(
 
             // TODO: test the dirty flag
             // do not persist this copy
+            require(page is GoraWebPage)
             page.unbox().clearDirty()
             require(!page.isFetched)
             require(page.isNotInternal)
@@ -532,7 +533,7 @@ class LoadComponent(
     private fun doHandleOnLoadedEvent(normURL: NormURL, page: WebPage? = null) {
         val url = normURL.spec
         val detail = normURL.detail
-        val page0 = page ?: GoraBackendWebPage.NIL
+        val page0 = page ?: GoraWebPage.NIL
 
         try {
             // we might use the cached page's content in after load handler
@@ -598,6 +599,7 @@ class LoadComponent(
             if (contentPage != null) {
                 page.setByteBufferContent(contentPage.content)
                 // TODO: test the dirty flag
+                require(page is GoraWebPage)
                 page.unbox().clearDirty(GWebPage.Field.CONTENT.index)
             }
         }
@@ -795,6 +797,7 @@ class LoadComponent(
         // The content is loaded from cache, the content remains unchanged, do not persist it
         // TODO: check the logic again
         if (page.isCached) {
+            require(page is GoraWebPage)
             page.unbox().clearDirty(GWebPage.Field.CONTENT.index)
             assert(!page.unbox().isContentDirty)
         }

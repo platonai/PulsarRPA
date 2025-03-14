@@ -1,7 +1,7 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.persist.impl.GoraBackendWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -16,7 +16,7 @@ class TestPageModel {
     
     @Test
     fun testEmplace() {
-        val page = GoraBackendWebPage.newWebPage(baseUrl, conf)
+        val page = GoraWebPage.newWebPage(baseUrl, conf)
         val pageModel = page.ensurePageModel()
         
         pageModel.emplace(groupId, "", mapOf("a" to "1", "b" to "2"))
@@ -52,7 +52,7 @@ class TestPageModel {
     
     @Test
     fun testAccess() {
-        val page = GoraBackendWebPage.newWebPage(baseUrl, conf)
+        val page = GoraWebPage.newWebPage(baseUrl, conf)
         val pageModel = page.ensurePageModel()
         
         assertTrue { !pageModel.unbox().isDirty }

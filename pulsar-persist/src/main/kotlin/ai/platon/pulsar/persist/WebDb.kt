@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrNull
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.persist.impl.GoraBackendWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import org.apache.gora.filter.Filter
 import org.apache.gora.filter.FilterOp
 import org.apache.gora.filter.SingleFieldValueFilter
@@ -108,7 +108,7 @@ class WebDb(
         val page = getOrNull0(originalUrl, norm, fields)
 
         if (page != null) {
-            val p = GoraBackendWebPage.box(url, page, conf.toVolatileConfig()).also { it.isLoaded = true }
+            val p = GoraWebPage.box(url, page, conf.toVolatileConfig()).also { it.isLoaded = true }
             tracer?.trace("Got {} {} {} {}", p.fetchCount, p.prevFetchTime, p.fetchTime, key)
             return p
         }
@@ -120,21 +120,21 @@ class WebDb(
      * Returns the WebPage corresponding to the given url.
      *
      * @param originalUrl the original address of the page
-     * @return the WebPage corresponding to the key or [GoraBackendWebPage.NIL] if it cannot be found
+     * @return the WebPage corresponding to the key or [GoraWebPage.NIL] if it cannot be found
      */
     @Throws(WebDBException::class)
-    fun get(originalUrl: String, field: GWebPage.Field) = getOrNull(originalUrl, field) ?: GoraBackendWebPage.NIL
+    fun get(originalUrl: String, field: GWebPage.Field) = getOrNull(originalUrl, field) ?: GoraWebPage.NIL
 
     @Throws(WebDBException::class)
     fun get(originalUrl: String, fields: Iterable<GWebPage.Field>) =
-        getOrNull(originalUrl, fields) ?: GoraBackendWebPage.NIL
+        getOrNull(originalUrl, fields) ?: GoraWebPage.NIL
 
     @Throws(WebDBException::class)
-    fun get(originalUrl: String, field: String) = getOrNull(originalUrl, field) ?: GoraBackendWebPage.NIL
+    fun get(originalUrl: String, field: String) = getOrNull(originalUrl, field) ?: GoraWebPage.NIL
 
     @Throws(WebDBException::class)
     fun get(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage {
-        return getOrNull(originalUrl, norm, fields) ?: GoraBackendWebPage.NIL
+        return getOrNull(originalUrl, norm, fields) ?: GoraWebPage.NIL
     }
 
     @Throws(WebDBException::class)
@@ -178,7 +178,7 @@ class WebDb(
             return false
         }
 
-        val key = page.reversedUrl
+        val key = page.key
         if (key.isEmpty()) {
             return false
         }
@@ -190,6 +190,8 @@ class WebDb(
         tracer?.trace("Putting {} {} {} {}", page.fetchCount, page.prevFetchTime, page.fetchTime, key)
 
         val startTime = System.nanoTime()
+
+        require(page is GoraWebPage)
         performDSAction("put") { dataStore.put(key, page.unbox()) }
         dbPutCount.incrementAndGet()
         accumulatePutNanos.addAndGet(System.nanoTime() - startTime)

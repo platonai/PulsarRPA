@@ -25,8 +25,6 @@ interface WebPage : Comparable<WebPage> {
 
     val key: String
 
-    val reversedUrl: String
-
     var href: String?
 
     val isNil: Boolean
@@ -36,18 +34,6 @@ interface WebPage : Comparable<WebPage> {
     val isInternal: Boolean
 
     val isNotInternal: Boolean
-
-    @Deprecated(
-        """Use the method in concrete type of the page
-      """
-    )
-    fun unbox(): GWebPage
-
-    @Deprecated(
-        """Use the method in concrete type of the page
-      """
-    )
-    fun unsafeSetGPage(page: GWebPage)
 
     fun unsafeCloneGPage(page: WebPage)
 
@@ -90,14 +76,12 @@ interface WebPage : Comparable<WebPage> {
     val metadata: Metadata
 
     var args: String
-    
-    var retryDelay: Duration
-
-    var maxRetries: Int
 
     val configuredUrl: String
 
-    var fetchedLinkCount: Int
+    var retryDelay: Duration
+
+    var maxRetries: Int
 
     var zoneId: ZoneId
 
@@ -119,13 +103,13 @@ interface WebPage : Comparable<WebPage> {
 
     var fetchCount: Int
 
-    fun updateFetchCount()
-
     var baseUrl: String
 
     var location: String
 
     var fetchTime: Instant
+
+    var fetchRetries: Int
 
     var prevFetchTime: Instant
 
@@ -133,32 +117,28 @@ interface WebPage : Comparable<WebPage> {
 
     var fetchInterval: Duration
 
-    var protocolStatus: ProtocolStatus
-
-    val headers: ProtocolHeaders
-
-    var reprUrl: String
-
-    var fetchRetries: Int
-
     var modifiedTime: Instant
 
     var prevModifiedTime: Instant
+
+    var protocolStatus: ProtocolStatus
+
+    val headers: ProtocolHeaders
 
     var pageCategory: PageCategory
 
     val openPageCategory: OpenPageCategory
 
-    fun setPageCategory(pageCategory: OpenPageCategory)
-
     var encoding: String?
+
+    var contentType: String
 
     val content: ByteBuffer?
 
     var tmpContent: ByteBuffer?
 
     val persistContent: ByteBuffer?
-    
+
     val contentAsBytes: ByteArray
 
     val contentAsString: String
@@ -185,8 +165,6 @@ interface WebPage : Comparable<WebPage> {
 
     val aveContentLength: Long
 
-    var contentType: String
-
     var prevSignature: ByteBuffer?
 
     val prevSignatureAsString: String
@@ -202,7 +180,7 @@ interface WebPage : Comparable<WebPage> {
     var activeDOMStatTrace: Map<String, ActiveDOMStat?>
 
     var pageTitle: String?
-    
+
     var contentTitle: String?
 
     var pageText: String?
@@ -216,7 +194,7 @@ interface WebPage : Comparable<WebPage> {
     val vividLinks: MutableMap<CharSequence, CharSequence>
 
     val inlinks: MutableMap<CharSequence, CharSequence>
-    
+
     var anchor: CharSequence?
 
     var referrer: String?
@@ -227,7 +205,5 @@ interface WebPage : Comparable<WebPage> {
 
     fun ensurePageModel(): PageModel
 
-
     fun setLazyFieldLoader(lazyFieldLoader: Function<String, GWebPage>)
-
 }

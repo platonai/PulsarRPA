@@ -3,7 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.component
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.*
-import ai.platon.pulsar.persist.impl.GoraBackendWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.common.persist.ext.options
@@ -29,7 +29,7 @@ open class FetchComponent(
 
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get() && AppContext.isActive
-    private val abnormalPage get() = GoraBackendWebPage.NIL.takeIf { !isActive }
+    private val abnormalPage get() = GoraWebPage.NIL.takeIf { !isActive }
 
     /**
      * Fetch an url
@@ -39,7 +39,7 @@ open class FetchComponent(
      */
     @Throws(Exception::class)
     fun fetch(url: String) =
-        abnormalPage ?: fetchContent(GoraBackendWebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
+        abnormalPage ?: fetchContent(GoraWebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
     /**
      * Fetch an url
@@ -172,7 +172,7 @@ open class FetchComponent(
     companion object {
         fun updateStatus(page: WebPage, protocolStatus: ProtocolStatus) {
             page.protocolStatus = protocolStatus
-            page.updateFetchCount()
+            ++page.fetchCount
         }
     }
 }

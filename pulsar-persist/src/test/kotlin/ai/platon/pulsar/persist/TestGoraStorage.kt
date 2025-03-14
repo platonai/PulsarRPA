@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.persist.impl.GoraBackendWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import com.google.common.collect.Lists
 import org.apache.avro.util.Utf8
 import org.apache.gora.memory.store.MemStore
@@ -212,6 +212,8 @@ class TestGoraStorage {
         
         createExamplePage()
         var page = webDb.get(exampleUrl)
+        require(page is GoraWebPage)
+
         page.links = ArrayList()
         // page.getLinks().clear();
         assertTrue(page.links.isEmpty())
@@ -247,7 +249,7 @@ class TestGoraStorage {
         webDb.flush()
         
         LOG.debug("Random url: $exampleUrl")
-        val page = GoraBackendWebPage.newWebPage(exampleUrl, conf)
+        val page = GoraWebPage.newWebPage(exampleUrl, conf)
         
         for (i in 1..19) {
             val url = AppConstants.EXAMPLE_URL + "/" + i

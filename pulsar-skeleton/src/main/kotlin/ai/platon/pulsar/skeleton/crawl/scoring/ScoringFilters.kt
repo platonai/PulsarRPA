@@ -10,7 +10,10 @@ import ai.platon.pulsar.persist.graph.WebEdge
 import ai.platon.pulsar.persist.graph.WebGraph
 import java.util.*
 
-class ScoringFilters(scoringFilters: List<ScoringFilter> = emptyList(), val conf: ImmutableConfig) : ScoringFilter {
+class ScoringFilters(
+    scoringFilters: List<ScoringFilter> = emptyList(),
+    val conf: ImmutableConfig
+) : ScoringFilter {
     private val scoringFilters = ArrayList<ScoringFilter>()
 
     init {

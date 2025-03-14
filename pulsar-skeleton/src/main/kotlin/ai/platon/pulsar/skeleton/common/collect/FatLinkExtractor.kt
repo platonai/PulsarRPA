@@ -129,7 +129,7 @@ class FatLinkExtractor(
         val now = Instant.now()
 
         val vividLinks = if (document != null) {
-            parseVividLinks(seed, page, document, denyList).also { page.fetchedLinkCount = 0 }
+            parseVividLinks(seed, page, document, denyList)
         } else {
             loadVividLinks(page, options, denyList)
         }

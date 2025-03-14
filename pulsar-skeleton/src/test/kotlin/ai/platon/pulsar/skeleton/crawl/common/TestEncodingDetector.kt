@@ -19,7 +19,7 @@ package ai.platon.pulsar.skeleton.crawl.common
 import ai.platon.pulsar.skeleton.common.EncodingDetector
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.persist.impl.GoraBackendWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import org.apache.avro.util.Utf8
 import java.nio.ByteBuffer
 import java.util.*
@@ -42,7 +42,7 @@ class TestEncodingDetector {
         // Content content;
         var encoding: String
         val url = "http://www.example.com/"
-        var page = GoraBackendWebPage.newWebPage(url, conf)
+        var page = GoraWebPage.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
         page.setByteArrayContent(contentInOctets)
@@ -51,7 +51,7 @@ class TestEncodingDetector {
         encoding = detector.guessEncoding(page, "utf-8")
         // no information is available, so it should return default encoding
         assertEquals("utf-8", encoding.lowercase(Locale.getDefault()))
-        page = GoraBackendWebPage.newWebPage(url, conf)
+        page = GoraWebPage.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
         page.setByteArrayContent(contentInOctets)
@@ -60,7 +60,7 @@ class TestEncodingDetector {
         detector.autoDetectClues(page, true)
         encoding = detector.guessEncoding(page, "utf-8")
         assertEquals("utf-16", encoding.lowercase(Locale.getDefault()))
-        page = GoraBackendWebPage.newWebPage(url, conf)
+        page = GoraWebPage.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
         page.setByteArrayContent(contentInOctets)
@@ -71,7 +71,7 @@ class TestEncodingDetector {
         assertEquals("windows-1254", encoding.toLowerCase())
         // enable autodetection
         conf.setInt(EncodingDetector.MIN_CONFIDENCE_KEY, 50)
-        page = GoraBackendWebPage.newWebPage(url, conf)
+        page = GoraWebPage.newWebPage(url, conf)
         page.location = url
         page.contentType = "text/plain"
         page.setByteArrayContent(contentInOctets)

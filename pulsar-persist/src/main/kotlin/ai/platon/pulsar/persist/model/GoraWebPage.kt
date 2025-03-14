@@ -1,4 +1,4 @@
-package ai.platon.pulsar.persist.impl
+package ai.platon.pulsar.persist.model
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.DateTimes.doomsday
@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.config.VolatileConfig.Companion.UNSAFE
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.mergeUrlArgs
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
@@ -22,12 +21,8 @@ import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
-import ai.platon.pulsar.persist.model.ActiveDOMStat
-import ai.platon.pulsar.persist.model.ActiveDOMStatus
 import ai.platon.pulsar.persist.model.Converters.convert
-import ai.platon.pulsar.persist.model.PageModel
 import ai.platon.pulsar.persist.model.PageModel.Companion.box
-import ai.platon.pulsar.persist.model.WebPageFormatter
 import org.apache.gora.util.ByteUtils
 import org.xml.sax.InputSource
 import java.io.ByteArrayInputStream
@@ -45,7 +40,7 @@ import kotlin.math.max
 /**
  * The core web page structure
  */
-class GoraBackendWebPage(
+class GoraWebPage(
     /**
      * The url is the permanent internal address, while the location is the last working address.
      */
@@ -60,32 +55,21 @@ class GoraBackendWebPage(
     private var page: GWebPage
 ) : WebPage {
     companion object {
-        private val SEQUENCER = AtomicInteger(0)
+        // The ID starts from 10 to avoid conflict with the default id of 0.
+        private val ID_SEQUENCER = AtomicInteger(10)
 
-        val NIL = newInternalPage(AppConstants.NIL_PAGE_URL, 0, "nil", "nil")
+        val NIL = newInternalPage(AppConstants.NIL_PAGE_URL, 0, "", "")
 
-        fun newWebPage(url: String, conf: VolatileConfig): GoraBackendWebPage {
+        fun newWebPage(url: String, conf: VolatileConfig): GoraWebPage {
             return newWebPage(url, conf, null)
         }
 
-        fun newWebPage(url: String, conf: VolatileConfig, href: String?): GoraBackendWebPage {
+        fun newWebPage(url: String, conf: VolatileConfig, href: String?): GoraWebPage {
             return newWebPageInternal(url, conf, href)
         }
 
-        fun newInternalPage(url: String): GoraBackendWebPage {
-            return newInternalPage(url, "internal", "internal")
-        }
-
-        fun newInternalPage(url: String, title: String): GoraBackendWebPage {
-            return newInternalPage(url, title, "internal")
-        }
-
-        fun newInternalPage(url: String, title: String, content: String): GoraBackendWebPage {
-            return newInternalPage(url, -1, title, content)
-        }
-
-        fun newInternalPage(url: String, id: Int, title: String, content: String): GoraBackendWebPage {
-            val unsafe = UNSAFE
+        fun newInternalPage(url: String, id: Int, title: String, content: String): GoraWebPage {
+            val unsafe = VolatileConfig.UNSAFE
             val page = newWebPage(url, unsafe)
             if (id >= 0) {
                 page.id = id
@@ -109,12 +93,12 @@ class GoraBackendWebPage(
         /**
          * Initialize a WebPage with the underlying GWebPage instance.
          */
-        fun box(url: String, page: GWebPage, conf: VolatileConfig): GoraBackendWebPage {
-            return GoraBackendWebPage(url, conf, page)
+        fun box(url: String, page: GWebPage, conf: VolatileConfig): GoraWebPage {
+            return GoraWebPage(url, conf, page)
         }
 
-        private fun newWebPageInternal(url: String, conf: VolatileConfig, href: String?): GoraBackendWebPage {
-            val page = GoraBackendWebPage(url, GWebPage.newBuilder().build(), false, conf)
+        private fun newWebPageInternal(url: String, conf: VolatileConfig, href: String?): GoraWebPage {
+            val page = GoraWebPage(url, GWebPage.newBuilder().build(), false, conf)
 
             page.location = url
             page.conf = conf
@@ -137,10 +121,10 @@ class GoraBackendWebPage(
     /**
      * The page id which is unique in process scope.
      */
-    override var id: Int = SEQUENCER.incrementAndGet()
+    override var id: Int = ID_SEQUENCER.incrementAndGet()
         private set
 
-    override val reversedUrl get() = reverseUrlOrEmpty(url)
+    val reversedUrl get() = reverseUrlOrEmpty(url)
 
     /**
      * The reversed url of the web page, it's also the key of the underlying storage of this webpage.
@@ -273,15 +257,16 @@ class GoraBackendWebPage(
     override val isNotInternal: Boolean
         get() = !isInternal
 
-    override fun unbox(): GWebPage {
+    fun unbox(): GWebPage {
         return page
     }
 
-    override fun unsafeSetGPage(page: GWebPage) {
+    fun unsafeSetGPage(page: GWebPage) {
         this.page = page
     }
 
     override fun unsafeCloneGPage(page: WebPage) {
+        require(page is GoraWebPage)
         unsafeSetGPage(GWebPage.newBuilder(page.unbox()).build())
     }
 
@@ -422,12 +407,6 @@ class GoraBackendWebPage(
     override val configuredUrl: String
         get() = mergeUrlArgs(url, args)
 
-    override var fetchedLinkCount: Int
-        get() = metadata.getInt(Name.FETCHED_LINK_COUNT, 0)
-        set(count) {
-            metadata[Name.FETCHED_LINK_COUNT] = count
-        }
-
     override var zoneId: ZoneId
         get() = if (page.zoneId == null) DateTimes.zoneId else ZoneId.of(page.zoneId.toString())
         set(zoneId) {
@@ -544,11 +523,6 @@ class GoraBackendWebPage(
             page.fetchCount = count
         }
 
-    override fun updateFetchCount() {
-        val count = fetchCount
-        fetchCount = count + 1
-    }
-
     override var baseUrl: String
         get() = if (page.baseUrl == null) "" else page.baseUrl.toString()
         set(value) {
@@ -614,12 +588,6 @@ class GoraBackendWebPage(
             return ProtocolHeaders.box(headers)
         }
 
-    override var reprUrl: String
-        get() = if (page.reprUrl == null) "" else page.reprUrl.toString()
-        set(reprUrl) {
-            page.reprUrl = reprUrl
-        }
-
     override var fetchRetries: Int
         get() = page.fetchRetries
         set(fetchRetries) {
@@ -656,10 +624,6 @@ class GoraBackendWebPage(
 
             return OpenPageCategory("", "")
         }
-
-    override fun setPageCategory(pageCategory: OpenPageCategory) {
-        page.pageCategory = pageCategory.format()
-    }
 
     override var encoding: String?
         get() = page.encoding?.toString()

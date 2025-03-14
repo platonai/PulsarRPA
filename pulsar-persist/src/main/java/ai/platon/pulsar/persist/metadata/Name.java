@@ -26,7 +26,6 @@ public enum Name {
     FETCH_TIME_HISTORY("F_FTH"),
     FETCH_MAX_RETRY("F_MR"),
     RESPONSE_TIME("F_RT"),
-    FETCHED_LINK_COUNT("FFLC"),
 
     FORCE_FOLLOW("PFF"),
     REPARSE_LINKS("PRL"),

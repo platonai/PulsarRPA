@@ -1,7 +1,7 @@
 package ai.platon.pulsar.skeleton.crawl.common.url
 
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.impl.GoraBackendWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.event.WebPageHandler
 import java.util.concurrent.TimeUnit
@@ -27,7 +27,7 @@ fun NormURL.toCompletableListenableHyperlink(): CompletableListenableHyperlink<W
     link.eventHandlers.loadEventHandlers.onLoaded.addLast(CompleteWebPageHyperlinkHandler(link))
     options.rawEvent?.let { link.eventHandlers.chain(it) }
 
-    link.completeOnTimeout(GoraBackendWebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)
+    link.completeOnTimeout(GoraWebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)
 
     return link
 }

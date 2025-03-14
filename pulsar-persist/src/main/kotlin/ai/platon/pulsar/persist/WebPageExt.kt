@@ -3,7 +3,7 @@ package ai.platon.pulsar.persist
 import ai.platon.pulsar.common.DateTimes.constructTimeHistory
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.persist.impl.GoraBackendWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.ActiveDOMStat
 import ai.platon.pulsar.persist.model.ActiveDOMStatus
@@ -16,7 +16,7 @@ class WebPageExt(private val page: WebPage) {
     companion object {
 
         fun newTestWebPage(url: String): WebPage {
-            val page = GoraBackendWebPage.newWebPage(url, VolatileConfig(), null)
+            val page = GoraWebPage.newWebPage(url, VolatileConfig(), null)
 
             page.activeDOMStatus = ActiveDOMStatus(1, 1, "1", "1", "1")
             page.activeDOMStatTrace = mapOf("a" to ActiveDOMStat(), "b" to ActiveDOMStat())

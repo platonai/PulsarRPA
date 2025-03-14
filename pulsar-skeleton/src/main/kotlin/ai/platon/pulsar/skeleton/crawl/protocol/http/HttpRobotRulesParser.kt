@@ -1,7 +1,7 @@
 package ai.platon.pulsar.skeleton.crawl.protocol.http
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.persist.impl.GoraBackendWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.skeleton.crawl.protocol.Protocol
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.skeleton.crawl.protocol.RobotRulesParser
@@ -44,7 +44,7 @@ open class HttpRobotRulesParser(
             
             try {
                 val http = (protocol as? AbstractHttpProtocol) ?: return EMPTY_RULES
-                val page = GoraBackendWebPage.newWebPage(URL(url, "/robots.txt").toString(), volatileConfig)
+                val page = GoraWebPage.newWebPage(URL(url, "/robots.txt").toString(), volatileConfig)
                 var response: Response? = http.getResponse(page, true) ?: return EMPTY_RULES
                 
                 // try one level of redirection ?
@@ -60,7 +60,7 @@ open class HttpRobotRulesParser(
                             } else {
                                 URL(redirection)
                             }
-                        response = http.getResponse(GoraBackendWebPage.newWebPage(redir.toString(), volatileConfig), true)
+                        response = http.getResponse(GoraWebPage.newWebPage(redir.toString(), volatileConfig), true)
                     }
                 }
                 

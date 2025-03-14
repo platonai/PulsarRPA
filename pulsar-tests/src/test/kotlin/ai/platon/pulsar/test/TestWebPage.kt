@@ -2,7 +2,7 @@ package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.persist.WebPageExt
+import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.skeleton.common.persist.ext.options
@@ -75,6 +75,7 @@ class TestWebPage: TestBase() {
     @Test
     fun testPageModel() {
         var page = session.load(url)
+        require(page is GoraWebPage)
         page.unbox().pageModel?.fieldGroups = null
         page.unbox().pageModel = null
         page.unbox().setDirty("pageModel")
@@ -95,6 +96,7 @@ class TestWebPage: TestBase() {
         assertNotEquals(page.id, page2.id)
         val pageModel2 = page2.pageModel
         assertNotNull(pageModel2)
+        require(page2 is GoraWebPage)
         val fieldGroups2 = page2.unbox().pageModel.fieldGroups
         val fieldGroup2 = pageModel2.findGroup(groupId)
         val fieldGroup21 = fieldGroups2.firstOrNull { it.id == groupId.toLong() }
