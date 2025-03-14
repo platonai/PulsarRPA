@@ -198,6 +198,7 @@ open class FetchComponent(
         if (protocolStatus.isSuccess) {
             // good! persists content for only success pages
             pageExt.updateContent(datum)
+            logMetrics(protocolStatus, page)
         }
 
         return page
@@ -206,5 +207,15 @@ open class FetchComponent(
     private fun updateStatus(page: WebPage, protocolStatus: ProtocolStatus) {
         page.protocolStatus = protocolStatus
         ++page.fetchCount
+    }
+
+    private fun logMetrics(protocolStatus: ProtocolStatus, page: WebPage) {
+        val url = page.url
+
+        if (protocolStatus.isSuccess) {
+            coreMetrics?.trackSuccess(page)
+        } else {
+            coreMetrics?.trackFailedUrl(url)
+        }
     }
 }
