@@ -13,8 +13,6 @@ import java.time.Instant
 open class AdvancedWebPage(
     val page: GWebPage
 ) : KWebPage(GoraWebAssetImpl(page)) {
-    
-    val isSeed get() = metadata.contains(Name.IS_SEED)
 
     /**
      * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch
@@ -75,8 +73,6 @@ open class AdvancedWebPage(
     val contentScore get() = page.contentScore ?: 0.0
 
     val sortScore get() = page.sortScore?.toString() ?: ""
-
-    val cash get() = metadata.getFloat(Name.CASH_KEY, 0.0f)
 
     val signature get() = page.signature
 

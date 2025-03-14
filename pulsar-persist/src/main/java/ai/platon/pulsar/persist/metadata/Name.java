@@ -14,86 +14,31 @@ public enum Name {
     UNKNOWN(""),
 
     /**
-     * common
-     */
-    LINK_FILTER_OPTS("LFOPTS"),
-
-    IS_NAVIGATOR("I_N"),
-    IS_SEED("I_S"),
-    IS_PORTAL("I_P"),
-    IS_TMP_SEED("I_TS"),
-    IS_DETAIL("I_D"),
-
-    /**
      * generate
      */
     GENERATE_TIME("G_GT"),
-    MAX_DISTANCE("G_MD"),
 
     /**
      * fetch
      */
     HREF("F_HREF"),
     FETCH_MODE("F_MD"),
-    FETCH_AHEAD_TIME("F_EFT"),
     FETCH_TIME_HISTORY("F_FTH"),
     FETCH_MAX_RETRY("F_MR"),
-    REDIRECT_DISCOVERED("F_RD"),
     RESPONSE_TIME("F_RT"),
-    ACTIVE_DOM_MULTI_STATUS("F_ADMS"),
-    ACTIVE_DOM_URLS("F_ADU"),
     FETCHED_LINK_COUNT("FFLC"),
 
-    //////////////////////////
-    // parse section
-    //////////////////////////
-    NO_FOLLOW("PNF"),
     FORCE_FOLLOW("PFF"),
     REPARSE_LINKS("PRL"),
     PARSE_NO_LINK_FILTER("PNF"),
     PARSE_LINK_FILTER_DEBUG_LEVEL("PLFDL"),
     TOTAL_OUT_LINKS("PTOL"),
-    ANCHOR_COUNT("PAC"),
     ORIGINAL_CONTENT_LENGTH("POCL"),
-
-    MODEL_SYNC_TIME("PMST"),
-
-    /**
-     * harvest
-     */
-    HARVEST_STATUS("HS"),
 
     /**
      * export
      */
-    ORIGINAL_EXPORT_PATH("S_OEP"),
-    SCREENSHOT_EXPORT_PATH("S_SSEP"),
-
-    /**
-     * index
-     */
-    INDEX_TIME_HISTORY("I_ITH"),
-
-    /**
-     * score
-     */
-    CASH_KEY("SCASH"),
-
-    /** update */
-
-    /**
-     * content
-     */
-
-    META_KEYWORDS("meta_keywords"),
-    META_DESCRIPTION("meta_description"),
-
-    /**
-     * tmp
-     */
-    TMP_PAGE_FROM_SEED("T_PFS"),
-    TMP_IS_DETAIL("T_ID"),
-    TMP_CHARS("T_C");
+    ORIGINAL_EXPORT_PATH("S_OEP");
 
     private final String text;
 

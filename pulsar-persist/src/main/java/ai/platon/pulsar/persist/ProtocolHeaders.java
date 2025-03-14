@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  */
 public class ProtocolHeaders implements HttpHeaders {
 
-    static Perl5Pattern patterns[] = {null, null};
+    static Perl5Pattern[] patterns = {null, null};
 
     static {
         Perl5Compiler compiler = new Perl5Compiler();
@@ -216,7 +216,7 @@ public class ProtocolHeaders implements HttpHeaders {
         String filename = getDispositionFilename();
 
         if (filename != null) {
-            return URLDecoder.decode(filename, charset.toString());
+            return URLDecoder.decode(filename, charset);
         }
 
         return null;

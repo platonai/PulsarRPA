@@ -21,11 +21,10 @@ import ai.platon.pulsar.common.ResourceStatus;
 /**
  * ProtocolStatusCodes describe the fetch phase status, inherited from the standard HTTP error code.
  *
- * @link {https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
- * @link {https://developer.mozilla.org/en-US/docs/Web/HTTP/Status}
- * @link {http://hc.apache.org/httpcomponents-core-ga/httpcore/apidocs/org/apache/http/HttpStatus.html}
+ * @link <a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes">List_of_HTTP_status_codes</a>
+ * @link <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status">Status</a>
+ * @link <a href="http://hc.apache.org/httpcomponents-core-ga/httpcore/apidocs/org/apache/http/HttpStatus.html">HttpStatus</a>
  * @author vincent
- * @version $Id: $Id
  */
 public interface ProtocolStatusCodes {
 

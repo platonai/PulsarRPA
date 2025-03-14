@@ -31,7 +31,7 @@ class TestHtmlParser : HtmlParserTestBase() {
             LOG.debug(page.encoding)
             val title = page.pageTitle
             val text = page.pageText
-            val keywords = page.metadata[Name.META_KEYWORDS]
+            val keywords = page.metadata["meta_keywords"]
 
             LOG.debug("title: $title")
             LOG.debug("text: $text")
