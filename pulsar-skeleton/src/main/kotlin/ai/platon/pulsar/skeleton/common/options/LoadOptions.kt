@@ -167,46 +167,22 @@ open class LoadOptions constructor(
      *
      * Note: Consider use url args to set priority only.
      *
+     * Example:
+     *
+     * ```kotlin
+     * session.load(url, "-priority 2000")
+     *
+     * val options = session.options("-priority 2000")
+     * session.load(url, options)
+     * ```
+     *
      * @see Priority13
      * @see Priority13.NORMAL
      */
     @ApiPublic
     @Parameter(
         names = ["-p", "-priority"],
-        description = """
-/**
- * Represents the priority of a task, determining the order of execution.
- *
- * The priority value is an integer where a smaller value indicates a higher priority.
- * This is consistent with [java.util.concurrent.PriorityBlockingQueue].
- *
- * If the priority value is not within the range defined by [Priority13], it will be adjusted to the nearest valid value.
- * For example, a priority of -2001 will be adjusted to [Priority13.HIGHER2].
- *
- * Note: The priority specified in args or LoadOptions takes precedence over the priority in [UrlAware], [Hyperlink], etc.
- *
- * Priority can be set in the following ways:
- * 1. In the url, for example, `http://example.com -priority -2000`
- * 2. In the args, for example, `Hyperlink("http://example.com", "", args = "-priority -2000")`
- * 3. Int the [LoadOptions] object, for example, `session.load("http://example.com", options.apply { priority = -2000 })`
- * 4. In the [UrlAware] object, for example, `Hyperlink("http://example.com", "", priority = -2000)`
- *
- * If a url is normalized like this:
- * ```kotlin
- * session.normalize(url: UrlAware, options: LoadOptions)
- * ```
- * The priority will be set in the following order:
- *
- * 1. The priority in the url
- * 2. The priority in the args
- * 3. The priority in the options
- *
- * Note: Consider use url args to set priority only.
- *
- * @see Priority13
- * @see Priority13.NORMAL
- */
-        """
+        description = "Represents the priority of a task, determining the order of execution"
     )
     var priority = 0
 
@@ -302,17 +278,7 @@ open class LoadOptions constructor(
         description = "Specify how many links to extract for out pages."
     )
     var topLinks = 20
-    
-    /**
-     * Choose the top N anchor groups for further process. Used by auto web mining project.
-     * */
-    @ApiPublic
-    @Parameter(
-        names = ["-tng", "-topNAnchorGroups", "--top-anchor-groups"],
-        description = "Try the top N anchor groups"
-    )
-    var topNAnchorGroups = 3
-    
+
     /**
      * The selector specified element should have a non-blank text, the system should
      * wait until the element is filled by a non-blank text, or until it times out.
@@ -564,21 +530,22 @@ open class LoadOptions constructor(
     /**
      * If the option is set, do not persist the page content which is usually very large.
      * If the option is true, it overrides [storeContent].
+     *
+     * Example:
+     *
+     * ```kotlin
+     * session.load(url, "-dropContent")
+     *
+     * val options = session.options("-dropContent")
+     * session.load(url, options)
+     * ```
      * */
     @Parameter(
-        names = ["-dct", "-dropContent", "--drop-content"],
+        names = ["-dropContent", "--drop-content"],
         description = "If the option exists, do not persist the page content which is usually very large."
     )
     var dropContent = false
-    
-    /**
-     * If false, load the page without the content which is usually very large
-     * TODO: review the design
-     * */
-//    @Parameter(names = ["-lct", "-loadContent", "--load-content"], arity = 1,
-//        description = "If false, load the page without its content which is usually very large")
-//    var loadContent = LoadOptionDefaults.loadContent
-    
+
     /**
      * Refresh the fetch state of a page, clear the retry counters.
      * If true, the page should be fetched, just like we click the refresh button on a real browser.

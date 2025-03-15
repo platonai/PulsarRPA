@@ -41,15 +41,6 @@ object LoadOptionDefaults {
      * */
     const val STORE_CONTENT = true
     /**
-     * Load webpage content or not.
-     *
-     * Load webpage content by default.
-     * If we are running a public cloud, this option might be changed to false.
-     *
-     * TODO: review the design
-     * */
-//    var loadContent = true
-    /**
      * If true, still fetch the page even if it is gone.
      * */
     const val IGNORE_FAILURE = false
@@ -103,15 +94,6 @@ object LoadOptionDefaults {
      * If we are running a public cloud, this option might be changed to false.
      * */
     var storeContent = STORE_CONTENT
-    /**
-     * Load webpage content or not.
-     *
-     * Load webpage content by default.
-     * If we are running a public cloud, this option might be changed to false.
-     *
-     * TODO: review the design
-     * */
-//    var loadContent = true
     /**
      * If true, still fetch the page even if it is gone.
      * */
