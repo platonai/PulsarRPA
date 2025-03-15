@@ -18,14 +18,22 @@ class AiControllerTests : IntegrationTestBase() {
         Assumptions.assumeTrue(ChatModelFactory.hasModel(unmodifiedConfig))
     }
 
+    /**
+     * Test controller [ai.platon.pulsar.rest.api.controller.AiController.chat]
+     * */
     fun testChat(prompt: String, url: String) {
+        println("Chat about webpage $url")
         val request = PromptRequest(url, prompt)
         val response = restTemplate.postForObject("$baseUri/ai/chat", request, String::class.java)
         println(response)
         assertTrue { response.isNotBlank() }
     }
 
+    /**
+     * Test controller [ai.platon.pulsar.rest.api.controller.AiController.extract]
+     * */
     fun testExtract(prompt: String, url: String) {
+        println("Extracting fields from $url")
         val request = PromptRequest(url, prompt)
         val response = restTemplate.postForObject("$baseUri/ai/extract", request, String::class.java)
         println(response)

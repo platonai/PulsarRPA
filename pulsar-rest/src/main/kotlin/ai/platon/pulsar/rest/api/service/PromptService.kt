@@ -39,8 +39,9 @@ class PromptService(
 
     fun chat(request: PromptRequest): String {
         val page = session.load(request.url, "-refresh")
+        val document = session.parse(page)
         return if (page.protocolStatus.isSuccess) {
-            session.chat(request.prompt, page).content
+            session.chat(request.prompt, document.text).content
         } else {
             // Throw?
             page.protocolStatus.toString()
