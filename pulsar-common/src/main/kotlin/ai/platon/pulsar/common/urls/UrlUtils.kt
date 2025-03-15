@@ -355,7 +355,7 @@ object UrlUtils {
      * with pure query targets.
      *
      * @param base   base url
-     * @param target target url (may be relative)
+     * @param targetUrl target url (maybe relative)
      * @return resolved absolute url.
      * @throws MalformedURLException
      */

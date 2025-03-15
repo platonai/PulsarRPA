@@ -15,10 +15,16 @@
         <constructor-arg ref="conf"/>
     </bean>
 
+    <bean id="tikaParser" class="ai.platon.pulsar.parse.tika.TikaParser">
+        <constructor-arg ref="parseFilters"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
     <bean id="parserFactory" class="ai.platon.pulsar.skeleton.crawl.parse.ParserFactory">
         <constructor-arg>
             <list>
                 <ref bean="htmlParser"/>
+                <ref bean="tikaParser"/>
             </list>
         </constructor-arg>
         <constructor-arg ref="conf"/>
