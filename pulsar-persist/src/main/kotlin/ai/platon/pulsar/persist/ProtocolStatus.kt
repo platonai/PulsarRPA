@@ -4,7 +4,7 @@ import ai.platon.pulsar.persist.gora.generated.GProtocolStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import java.util.*
 
-class ProtocolStatus : ProtocolStatusCodes {
+class ProtocolStatus {
     private val protocolStatus: GProtocolStatus
 
     constructor(majorCode: Short) {
@@ -284,8 +284,8 @@ class ProtocolStatus : ProtocolStatusCodes {
             return protocolStatus
         }
 
-        fun failed(e: Throwable): ProtocolStatus {
-            return failed(ProtocolStatusCodes.EXCEPTION, "error", e.message)
+        fun failed(e: Throwable?): ProtocolStatus {
+            return failed(ProtocolStatusCodes.EXCEPTION, "error", e?.message)
         }
 
         fun fromMinor(minorCode: Int): ProtocolStatus {

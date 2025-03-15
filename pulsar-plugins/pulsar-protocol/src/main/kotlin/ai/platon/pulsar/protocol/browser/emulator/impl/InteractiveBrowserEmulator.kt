@@ -23,6 +23,7 @@ import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.*
@@ -426,7 +427,7 @@ open class InteractiveBrowserEmulator(
         // TODO: separate status code of pulsar system and the status code from browser
         val httpCode = driver.mainResponseStatus
         val finalProtocolStatus =
-            if (httpCode < 0 || interactResult.protocolStatus.minorCode >= ProtocolStatus.INCOMPATIBLE_CODE_START) {
+            if (httpCode < 0 || interactResult.protocolStatus.minorCode >= ProtocolStatusCodes.INCOMPATIBLE_CODE_START) {
                 // PulsarRPA status
                 interactResult.protocolStatus
             } else {

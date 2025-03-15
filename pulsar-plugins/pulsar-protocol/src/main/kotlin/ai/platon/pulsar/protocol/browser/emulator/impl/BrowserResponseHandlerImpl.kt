@@ -28,6 +28,7 @@ import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.protocol.browser.emulator.*
 import ai.platon.pulsar.protocol.browser.emulator.util.*
@@ -148,7 +149,7 @@ open class BrowserResponseHandlerImpl(
             htmlIntegrity.isWrongProfile ->
                 ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity).also { wrongProfile.mark() }
             htmlIntegrity.isForbidden -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { bannedPages.mark() }
-            htmlIntegrity.isNotFound -> ProtocolStatus.failed(ProtocolStatus.NOT_FOUND).also { notFoundPages.mark() }
+            htmlIntegrity.isNotFound -> ProtocolStatus.failed(ProtocolStatusCodes.NOT_FOUND).also { notFoundPages.mark() }
             // must come after privacy context reset, PRIVACY_CONTEXT reset have the higher priority
             htmlIntegrity.isEmpty -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { emptyPages.mark() }
             htmlIntegrity.isSmall -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity).also {

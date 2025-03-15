@@ -11,7 +11,6 @@ import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
-import ai.platon.pulsar.common.IllegalApplicationStateException
 import ai.platon.pulsar.skeleton.common.MimeTypeResolver
 import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.skeleton.crawl.protocol.Protocol
@@ -27,7 +26,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 
-abstract class AbstractHttpProtocol: Protocol {
+abstract class AbstractHttpProtocol : Protocol {
     private val log = LoggerFactory.getLogger(AbstractHttpProtocol::class.java)
     protected val closed = AtomicBoolean()
 
@@ -38,13 +37,14 @@ abstract class AbstractHttpProtocol: Protocol {
      * The max retry time
      */
     private var fetchMaxRetry = 3
+
     /**
      * The configuration
      */
     override lateinit var conf: ImmutableConfig
 
     private lateinit var mimeTypeResolver: MimeTypeResolver
-    
+
     private lateinit var robots: HttpRobotRulesParser
 
     /**
@@ -66,8 +66,8 @@ abstract class AbstractHttpProtocol: Protocol {
         return pages.takeIf { isActive }
             ?.mapNotNull {
                 it.runCatching { getResponse(it, false) }
-                .onFailure { warnInterruptible(this, it) }
-                .getOrNull()
+                    .onFailure { warnInterruptible(this, it) }
+                    .getOrNull()
             }
             ?: listOf()
     }
@@ -85,7 +85,7 @@ abstract class AbstractHttpProtocol: Protocol {
     override suspend fun getProtocolOutputDeferred(page: WebPage): ProtocolOutput {
         val startTime = Instant.now()
         val response = getResponseDeferred(page, false)
-                ?:return ProtocolOutput(ProtocolStatus.retry(RetryScope.CRAWL, "Null response from protocol"))
+            ?: return ProtocolOutput(ProtocolStatus.retry(RetryScope.CRAWL, "Null response from protocol"))
         setResponseTime(startTime, page, response)
         return getOutputWithHttpCodeTranslated(page.url, response)
     }
@@ -148,7 +148,7 @@ abstract class AbstractHttpProtocol: Protocol {
         pageDatum.contentType = resolveMimeType(contentType, url, content)
 
         val headers = pageDatum.headers
-        val finalProtocolStatus = if (httpCode >= ProtocolStatus.INCOMPATIBLE_CODE_START) {
+        val finalProtocolStatus = if (httpCode >= ProtocolStatusCodes.INCOMPATIBLE_CODE_START) {
             response.protocolStatus
         } else {
             ProtocolStatusTranslator.translateHttpCode(httpCode)
@@ -158,7 +158,7 @@ abstract class AbstractHttpProtocol: Protocol {
             in 300..399 -> {
                 // handle redirect
                 // some broken servers, such as MS IIS, use lowercase header name...
-                val redirect = response.getHeader("Location")?:response.getHeader("location")?:""
+                val redirect = response.getHeader("Location") ?: response.getHeader("location") ?: ""
                 u = URL(u, redirect)
                 finalProtocolStatus.args[ProtocolStatus.ARG_REDIRECT_TO_URL] = u.toString()
             }
@@ -173,23 +173,25 @@ abstract class AbstractHttpProtocol: Protocol {
 
     private fun getFailedResponse(lastThrowable: Throwable?, tryCount: Int, maxRry: Int): ProtocolOutput {
         val code = when (lastThrowable) {
-            is ConnectException -> ProtocolStatus.REQUEST_TIMEOUT
-            is SocketTimeoutException -> ProtocolStatus.REQUEST_TIMEOUT
-            is UnknownHostException -> ProtocolStatus.UNKNOWN_HOST
-            else -> ProtocolStatus.EXCEPTION
+            is ConnectException -> ProtocolStatusCodes.REQUEST_TIMEOUT
+            is SocketTimeoutException -> ProtocolStatusCodes.REQUEST_TIMEOUT
+            is UnknownHostException -> ProtocolStatusCodes.UNKNOWN_HOST
+            else -> ProtocolStatusCodes.EXCEPTION
         }
-        val protocolStatus = ProtocolStatus.failed(code,
-                "exception", lastThrowable,
-                "retry", tryCount,
-                "maxRetry", maxRry)
+        val protocolStatus = ProtocolStatus.failed(
+            code,
+            "exception", lastThrowable,
+            "retry", tryCount,
+            "maxRetry", maxRry
+        )
         return ProtocolOutput(null, MultiMetadata(), protocolStatus)
     }
 
     private fun setResponseTime(startTime: Instant, page: WebPage, response: Response) {
         val pageFetchMode = page.fetchMode
         val elapsedTime = if (pageFetchMode == FetchMode.BROWSER) {
-            val requestTime = response.getHeader(HttpHeaders.Q_REQUEST_TIME)?.toLongOrNull()?:-1
-            val responseTime = response.getHeader(HttpHeaders.Q_RESPONSE_TIME)?.toLongOrNull()?:-1
+            val requestTime = response.getHeader(HttpHeaders.Q_REQUEST_TIME)?.toLongOrNull() ?: -1
+            val responseTime = response.getHeader(HttpHeaders.Q_RESPONSE_TIME)?.toLongOrNull() ?: -1
             if (requestTime > 0 && responseTime > 0) {
                 Duration.ofMillis(responseTime - requestTime)
             } else {

@@ -1,9 +1,7 @@
 package ai.platon.pulsar.app.master
 
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextInitializer
-import ai.platon.pulsar.skeleton.crawl.CrawlLoops
 import org.h2.tools.Server
-import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
@@ -14,14 +12,7 @@ import java.sql.SQLException
 @SpringBootApplication
 @ImportResource("classpath:pulsar-beans/app-context.xml")
 @ComponentScan("ai.platon.pulsar.rest.api")
-class PulsarMaster(
-    /**
-     * Activate crawl loops
-     * */
-    val crawlLoops: CrawlLoops
-) {
-    private val logger = LoggerFactory.getLogger(PulsarMaster::class.java)
-
+class PulsarMaster {
     /**
      * Enable H2 client
      * */
