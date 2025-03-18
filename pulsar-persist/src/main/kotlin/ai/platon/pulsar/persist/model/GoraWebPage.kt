@@ -411,24 +411,8 @@ class GoraWebPage(
             page.prevModifiedTime = prevModifiedTime.toEpochMilli()
         }
 
-    override var pageCategory: PageCategory
-        get() = getPageCategory0()
-        set(pageCategory) {
-            page.pageCategory = pageCategory.format()
-        }
-
-    override var openPageCategory: OpenPageCategory
-        get() {
-            try {
-                val pageCategory = page.pageCategory
-                if (pageCategory != null) {
-                    return OpenPageCategory.parse(pageCategory.toString())
-                }
-            } catch (ignored: Throwable) {
-            }
-
-            return OpenPageCategory("", "")
-        }
+    override var pageCategory: OpenPageCategory
+        get() = OpenPageCategory.parse(page.pageCategory?.toString())
         set(value) {
             page.pageCategory = value.format()
         }

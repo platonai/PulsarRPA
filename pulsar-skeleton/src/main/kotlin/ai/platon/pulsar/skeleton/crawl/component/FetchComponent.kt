@@ -191,7 +191,7 @@ open class FetchComponent(
             )
         }
 
-        datum.pageCategory?.let { page.openPageCategory = it }
+        datum.pageCategory?.let { page.pageCategory = it }
         datum.htmlIntegrity?.let { page.htmlIntegrity = it }
         datum.lastBrowser?.let { page.lastBrowser = it }
 

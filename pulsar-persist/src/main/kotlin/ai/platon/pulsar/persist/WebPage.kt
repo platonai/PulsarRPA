@@ -282,12 +282,7 @@ interface WebPage : Comparable<WebPage> {
     /**
      * The content category of the web page.
      */
-    var pageCategory: PageCategory
-
-    /**
-     * The content category of the web page.
-     */
-    var openPageCategory: OpenPageCategory
+    var pageCategory: OpenPageCategory
 
     /**
      * The encoding of the web page, which is UTF-8 by default.
