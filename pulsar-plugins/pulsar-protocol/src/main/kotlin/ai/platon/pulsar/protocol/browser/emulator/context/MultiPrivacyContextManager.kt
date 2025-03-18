@@ -325,13 +325,7 @@ open class MultiPrivacyContextManager(
     @Throws(PrivacyException::class)
     private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): PrivacyAgent {
         // Specify the privacy agent by the user code
-        var specifiedPrivacyAgent = page.getVar(PrivacyAgent::class.java)
-        if (specifiedPrivacyAgent is PrivacyAgent) {
-            return specifiedPrivacyAgent
-        }
-
-        // Old style to specify the privacy agent, will remove in the future
-        specifiedPrivacyAgent = page.getVar(VAR_PRIVACY_AGENT)
+        val specifiedPrivacyAgent = page.getBeanOrNull(PrivacyAgent::class.java)
         if (specifiedPrivacyAgent is PrivacyAgent) {
             return specifiedPrivacyAgent
         }

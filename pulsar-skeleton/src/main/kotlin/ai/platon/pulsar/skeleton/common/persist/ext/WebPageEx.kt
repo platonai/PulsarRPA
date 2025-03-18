@@ -17,6 +17,7 @@ import java.time.Instant
  */
 val WebPage.options: LoadOptions
     get() {
+        require(this is GoraWebPage)
         return variables.variables.computeIfAbsent(VAR_LOAD_OPTIONS) {
             LoadOptions.parse(args ?: "", conf)
         } as LoadOptions

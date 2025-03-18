@@ -99,7 +99,6 @@ class WebPageFormatter(val page: WebPage) {
             fields["contentLength"] = page.content!!.array().size
         }
         fields["fetchCount"] = page.fetchCount
-        fields["fetchPriority"] = page.fetchPriority
         fields["fetchInterval"] = page.fetchInterval.toString()
         fields["retriesSinceFetch"] = page.fetchRetries
         fields["prevFetchTime"] = format(page.prevFetchTime)
@@ -161,7 +160,6 @@ class WebPageFormatter(val page: WebPage) {
                 .append("depth:\t" + page.distance + "\n")
                 .append("pageCategory:\t" + page.pageCategory + "\n")
                 .append("fetchCount:\t" + page.fetchCount + "\n")
-                .append("fetchPriority:\t" + page.fetchPriority + "\n")
                 .append("fetchInterval:\t" + page.fetchInterval + "\n")
                 .append("retriesSinceFetch:\t" + page.fetchRetries + "\n")
         sb.append("\n")

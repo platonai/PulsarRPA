@@ -17,182 +17,474 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.util.function.Function
+import kotlin.reflect.KClass
 
+/**
+ * Represents a web page in the Pulsar system. This interface provides methods to access and manipulate
+ * various properties and metadata associated with a web page, such as its content, headers, fetch status,
+ * and more. It also includes methods for managing variables, beans, and other page-related data.
+ *
+ * This interface extends `Comparable<WebPage>` to allow for comparison between web pages.
+ */
 interface WebPage : Comparable<WebPage> {
+    /**
+     * The unique identifier of the web page.
+     */
     val id: Int
 
+    /**
+     * The URL of the web page.
+     */
     val url: String
 
+    /**
+     * The key associated with the web page, typically used for indexing or identification purposes.
+     * The key is defined as the reserved url, for example, the key for page "https://www.amazon.co.uk/dp/B08JV5Q1DC"
+     * is "uk.co.amazon.www:https/dp/B08JV5Q1DC".
+     */
     val key: String
 
+    /**
+     * The href (hypertext reference) of the web page, which may differ from the URL in some cases.
+     */
     var href: String?
 
+    /**
+     * Indicates whether the web page is nil (i.e., not initialized or empty).
+     */
     val isNil: Boolean
 
+    /**
+     * Indicates whether the web page is not nil (i.e., initialized and contains data).
+     */
     val isNotNil: Boolean
 
+    /**
+     * Indicates whether the web page is internal (i.e., part of the same domain or system).
+     */
     val isInternal: Boolean
 
+    /**
+     * Indicates whether the web page is not internal (i.e., external to the domain or system).
+     */
     val isNotInternal: Boolean
 
+    /**
+     * Clones the given web page into this web page. This operation is considered unsafe as it may
+     * overwrite existing data.
+     *
+     * @param page The web page to clone.
+     */
     fun unsafeCloneGPage(page: WebPage)
 
-    val variables: Variables
-
+    /**
+     * Checks if a variable with the given name exists.
+     *
+     * This method is used internally, and will be hide to the user.
+     *
+     * @param name The name of the variable to check.
+     * @return `true` if the variable exists, `false` otherwise.
+     */
     fun hasVar(name: String): Boolean
 
+    /**
+     * Retrieves the value of the variable with the given name.
+     *
+     * This method is used internally, and will be hide to the user.
+     *
+     * @param name The name of the variable to retrieve.
+     * @return The value of the variable, or `null` if it does not exist.
+     */
     fun getVar(name: String): Any?
 
-    fun getVar(clazz: Class<*>): Any?
-
+    /**
+     * Removes the variable with the given name and returns its value.
+     *
+     * This method is used internally, and will be hide to the user.
+     *
+     * @param name The name of the variable to remove.
+     * @return The value of the removed variable, or `null` if it does not exist.
+     */
     fun removeVar(name: String): Any?
 
+    /**
+     * Sets the value of the variable with the given name.
+     *
+     * This method is used internally, and will be hide to the user.
+     *
+     * @param name The name of the variable to set.
+     * @param value The value to assign to the variable.
+     */
     fun setVar(name: String, value: Any)
 
+    /**
+     * Retrieves the bean of the specified class type associated with the web page.
+     *
+     * @param clazz The class type of the bean to retrieve.
+     * @return The bean instance.
+     */
     fun getBean(clazz: Class<*>): Any
 
+    /**
+     * Retrieves the bean of the specified class type associated with the web page, or `null` if it does not exist.
+     *
+     * @param clazz The class type of the bean to retrieve.
+     * @return The bean instance, or `null` if it does not exist.
+     */
     fun getBeanOrNull(clazz: Class<*>): Any?
 
+    /**
+     * Associates the given bean with the web page.
+     *
+     * @param bean The bean to associate with the web page.
+     */
     fun <T> putBean(bean: T)
 
+    /**
+     * Retrieves the data associated with the given name.
+     *
+     * @param name The name of the data to retrieve.
+     * @return The data value, or `null` if it does not exist.
+     */
     fun data(name: String): Any?
 
+    /**
+     * Sets the data associated with the given name.
+     *
+     * @param name The name of the data to set.
+     * @param value The value to assign to the data.
+     */
     fun data(name: String, value: Any?)
 
+    /**
+     * The page datum collected by the fetch component, used to update the page when it is fetched.
+     */
     var pageDatum: PageDatum?
 
+    /**
+     * Indicates whether the web page is stored in the in-memory cache.
+     */
     var isCached: Boolean
 
+    /**
+     * Indicates whether the web page is loaded from persistent storage.
+     */
     var isLoaded: Boolean
 
+    /**
+     * Indicates whether the web page is fetched from the Internet.
+     */
     var isFetched: Boolean
 
+    /**
+     * Indicates whether the web page is canceled by the user.
+     */
     var isCanceled: Boolean
 
+    /**
+     * Indicates whether the content of the web page has been updated.
+     */
     val isContentUpdated: Boolean
 
+    /**
+     * The page scope configuration, which is expected to be modified frequently.
+     */
     var conf: VolatileConfig
 
-    val metadata: Metadata
-
+    /**
+     * The load arguments used by the `session.load()` method series.
+     */
     var args: String
 
+    /**
+     * The configured URL of the web page, which is always a combination of `url` and `args`.
+     */
     val configuredUrl: String
 
+    /**
+     * The delay time before the next retry to load the web page.
+     */
     var retryDelay: Duration
 
+    /**
+     * The maximum number of retries to load the web page.
+     */
     var maxRetries: Int
 
+    /**
+     * The time zone of the web page.
+     */
     var zoneId: ZoneId
 
+    /**
+     * The distance of the web page from the root page.
+     */
     var distance: Int
 
+    /**
+     * The fetch mode of the web page.
+     */
     var fetchMode: FetchMode
 
+    /**
+     * The last browser used to fetch the web page.
+     */
     var lastBrowser: BrowserType
 
+    /**
+     * Indicates whether the web page is a resource, which can be fetched using a single request.
+     */
     var isResource: Boolean
 
+    /**
+     * The integrity of the web page, used to check if the page is valid.
+     */
     var htmlIntegrity: HtmlIntegrity
 
-    var fetchPriority: Int
-
+    /**
+     * The time when the web page was created.
+     */
     var createTime: Instant
 
-    var generateTime: Instant
-
+    /**
+     * The number of times the web page has been fetched.
+     */
     var fetchCount: Int
 
+    /**
+     * The base URL of the web page, used to resolve relative URLs.
+     */
     var baseUrl: String
 
+    /**
+     * The location of the web page, used to resolve relative URLs.
+     */
     var location: String
 
+    /**
+     * The time when the web page was last fetched.
+     */
     var fetchTime: Instant
 
+    /**
+     * The number of times the web page has been retried to fetch.
+     */
     var fetchRetries: Int
 
+    /**
+     * The previous time when the web page was fetched.
+     */
     var prevFetchTime: Instant
 
-    var prevCrawlTime1: Instant
-
+    /**
+     * The interval between the previous fetch and the current fetch.
+     */
     var fetchInterval: Duration
 
+    /**
+     * The time when the web page was last modified.
+     */
     var modifiedTime: Instant
 
+    /**
+     * The previous time when the web page was modified.
+     */
     var prevModifiedTime: Instant
 
+    /**
+     * The protocol status of the web page, used to check if the page was fetched successfully.
+     */
     var protocolStatus: ProtocolStatus
 
+    /**
+     * The metadata of the web page, which will be persisted to storage.
+     */
+    val metadata: Metadata
+
+    /**
+     * The headers of the web page, which will be persisted to storage.
+     */
     val headers: ProtocolHeaders
 
+    /**
+     * The category of the web page, used to check if the page is a resource.
+     */
     var pageCategory: PageCategory
 
+    /**
+     * The open page category of the web page, used to check if the page is a resource.
+     */
     var openPageCategory: OpenPageCategory
 
+    /**
+     * The encoding of the web page, which is UTF-8 by default.
+     */
     var encoding: String?
 
+    /**
+     * The content type of the web page, which is `text/html` by default.
+     */
     var contentType: String
 
+    /**
+     * The content of the web page, stored as a `ByteBuffer`.
+     */
     val content: ByteBuffer?
 
+    /**
+     * The temporary content of the web page, stored as a `ByteBuffer`.
+     */
     var tmpContent: ByteBuffer?
 
-    val persistContent: ByteBuffer?
+    /**
+     * The content of the web page, stored as a `ByteBuffer` for persistence.
+     */
+    val persistContent: ByteBuffer
 
+    /**
+     * The content of the web page, stored as a `ByteArray`.
+     */
     val contentAsBytes: ByteArray
 
+    /**
+     * The content of the web page, stored as a `String`.
+     */
     val contentAsString: String
 
+    /**
+     * The content of the web page, stored as a `ByteArrayInputStream`.
+     */
     val contentAsInputStream: ByteArrayInputStream
 
+    /**
+     * The content of the web page, stored as an `InputSource` for SAX parsing.
+     */
     val contentAsSaxInputSource: InputSource?
 
+    /**
+     * Sets the content of the web page using a `String`.
+     *
+     * @param value The content to set.
+     */
     fun setStringContent(value: String?)
 
+    /**
+     * Sets the content of the web page using a `ByteArray`.
+     *
+     * @param value The content to set.
+     */
     fun setByteArrayContent(value: ByteArray?)
 
+    /**
+     * Sets the content of the web page using a `ByteBuffer`.
+     *
+     * @param value The content to set.
+     */
     fun setByteBufferContent(value: ByteBuffer?)
 
+    /**
+     * Clears the persisted content of the web page.
+     */
     fun clearPersistContent()
 
+    /**
+     * The length of the content of the web page.
+     */
     val contentLength: Long
 
+    /**
+     * The original length of the content of the web page.
+     */
     var originalContentLength: Long
 
+    /**
+     * The length of the persisted content of the web page.
+     */
     var persistedContentLength: Long
 
+    /**
+     * The length of the last version of the content of the web page.
+     */
     val lastContentLength: Long
 
+    /**
+     * The average length of all versions of the content of the web page.
+     */
     val aveContentLength: Long
 
+    /**
+     * The previous signature of the web page, stored as a `ByteBuffer`.
+     */
     var prevSignature: ByteBuffer?
 
+    /**
+     * The previous signature of the web page, stored as a `String`.
+     */
     val prevSignatureAsString: String
 
+    /**
+     * The current signature of the web page, stored as a `ByteBuffer`.
+     */
     val signature: ByteBuffer?
 
+    /**
+     * The current signature of the web page, stored as a `String`.
+     */
     val signatureAsString: String
 
+    /**
+     * The proxy used to fetch the web page.
+     */
     var proxy: String?
 
+    /**
+     * The active DOM status of the web page.
+     */
     var activeDOMStatus: ActiveDOMStatus?
 
+    /**
+     * The trace of active DOM status changes for the web page.
+     */
     var activeDOMStatTrace: Map<String, ActiveDOMStat?>
 
+    /**
+     * The title of the web page.
+     */
     var pageTitle: String?
 
+    /**
+     * The title of the content of the web page.
+     */
     var contentTitle: String?
 
+    /**
+     * The text of the web page, typically extracted by removing all HTML tags.
+     */
     var pageText: String?
 
+    /**
+     * The text of the content of the web page, typically extracted using some algorithm.
+     */
     val contentText: String?
 
+    /**
+     * The parse status of the web page.
+     */
     var parseStatus: ParseStatus
 
+    /**
+     * The links contained within the web page.
+     */
     var links: MutableList<CharSequence>
 
+    /**
+     * The vivid links contained within the web page, typically with additional metadata.
+     */
     val vividLinks: MutableMap<CharSequence, CharSequence>
 
+    /**
+     * The inlinks contained within the web page, typically with additional metadata.
+     */
     val inlinks: MutableMap<CharSequence, CharSequence>
 
     var anchor: CharSequence?

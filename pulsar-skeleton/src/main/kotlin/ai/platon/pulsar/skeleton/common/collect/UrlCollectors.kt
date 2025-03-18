@@ -102,7 +102,6 @@ open class HyperlinkCollector(
     private fun collectToUnsafe(seed: NormURL, pageFatLink: PageFatLink, sink: MutableCollection<UrlAware>): Int {
         val (page, fatLink) = pageFatLink
 
-        page.prevCrawlTime1 = Instant.now()
         fatLinks[fatLink.url] = fatLink
         // url might be normalized, href is exactly the same as seed.spec
         requireNotNull(fatLink.href)

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage

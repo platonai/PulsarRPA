@@ -26,16 +26,10 @@ import java.time.Instant;
 public interface AppConstants {
 
     String PULSAR_CONTEXT_CONFIG_LOCATION = "classpath*:/pulsar-beans/app-context.xml";
-    String SCENT_CONTEXT_CONFIG_LOCATION = "classpath*:/scent-beans/app-context.xml";
 
     String YES_STRING = "y";
 
-    /** Don't show original forbidden content, but show summaries. */
-    String CACHING_FORBIDDEN_CONTENT = "content";
-
     String ALL_BATCHES = "all";
-
-    String ALL_BATCH_ID_STR = "-all";
 
     /**
      * The first non-null Unicode character is U+0001, which is the Start of Heading (SOH) character.
@@ -65,21 +59,9 @@ public interface AppConstants {
      * */
     String INTERNAL_URL_PREFIX = "http://internal.pulsar.platon.ai";
     /**
-     * The url of the empty page
-     * */
-    String EMPTY_PAGE_URL = INTERNAL_URL_PREFIX + "/empty";
-    /**
      * The url of the nil page
      * */
     String NIL_PAGE_URL = INTERNAL_URL_PREFIX + "/nil";
-    /**
-     * The url of the seed home page
-     * */
-    String SEED_HOME_URL = INTERNAL_URL_PREFIX + "/seeds";
-    /**
-     * The url of the seed home page
-     * */
-    String SEED_PAGE_1_URL = INTERNAL_URL_PREFIX + "/seeds/1";
     /**
      * The url of the top page
      * */
@@ -104,12 +86,7 @@ public interface AppConstants {
      * Fetch
      * */
     int DISTANCE_INFINITE = 10000;
-    int FETCH_PRIORITY_MIN = -10 * 10_000;
-    int FETCH_PRIORITY_DEFAULT = 10_000;
-    int FETCH_PRIORITY_DEPTH_BASE = 20_000;
     Duration FETCH_TASK_TIMEOUT_DEFAULT = Duration.ofMinutes(10);
-
-    int PERM_REFRESH_TIME = 5;
 
     /**
      * Parse
@@ -118,13 +95,11 @@ public interface AppConstants {
     Instant MIN_ARTICLE_PUBLISH_TIME = Instant.parse("1995-01-01T00:00:00Z");
     Duration DEFAULT_MAX_PARSE_TIME = Duration.ofSeconds(60);
 
-    int MAX_LIVE_LINK_PER_PAGE = 1000;
     int MAX_LINK_PER_PAGE = 4000;
 
     /**
      * Local file commands
      * */
-    String CMD_FORCE_GENERATE_SEEDS = "force-generate-seeds";
     String CMD_PROXY_POOL_DUMP = "dump-proxy-pool";
 
     String CMD_PROXY_FORCE_IDLE = "IPS-force-idle";

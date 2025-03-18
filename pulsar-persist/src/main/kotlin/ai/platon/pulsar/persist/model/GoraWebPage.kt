@@ -9,8 +9,6 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.common.urls.UrlUtils.mergeUrlArgs
-import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
 import ai.platon.pulsar.common.urls.UrlUtils.unreverseUrl
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.gora.generated.GPageModel
@@ -34,8 +32,6 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
-import kotlin.concurrent.Volatile
-import kotlin.math.max
 
 /**
  * The core web page structure
@@ -44,30 +40,52 @@ class GoraWebPage(
     /**
      * The url is the permanent internal address, while the location is the last working address.
      */
-    override val url: String,
+    url: String,
     /**
      * A webpage scope configuration, any modifications made to it will exclusively impact this particular webpage.
      */
-    override var conf: VolatileConfig,
+    conf: VolatileConfig,
     /**
      * The underlying persistent object.
      */
     private var page: GWebPage
-) : WebPage {
+) : AbstractWebPage(url, conf) {
     companion object {
-        // The ID starts from 10 to avoid conflict with the default id of 0.
-        private val ID_SEQUENCER = AtomicInteger(10)
-
+        // NIL is a predefined internal page with a NIL_PAGE_URL, ID 0, and empty title and content.
         val NIL = newInternalPage(AppConstants.NIL_PAGE_URL, 0, "", "")
 
+        /**
+         * Creates a new GoraWebPage with the given URL and configuration.
+         *
+         * @param url The URL of the web page.
+         * @param conf The volatile configuration for the web page.
+         * @return A new GoraWebPage instance.
+         */
         fun newWebPage(url: String, conf: VolatileConfig): GoraWebPage {
             return newWebPage(url, conf, null)
         }
 
+        /**
+         * Creates a new GoraWebPage with the given URL, configuration, and optional href.
+         *
+         * @param url The URL of the web page.
+         * @param conf The volatile configuration for the web page.
+         * @param href The optional href associated with the web page.
+         * @return A new GoraWebPage instance.
+         */
         fun newWebPage(url: String, conf: VolatileConfig, href: String?): GoraWebPage {
             return newWebPageInternal(url, conf, href)
         }
 
+        /**
+         * Creates a new internal GoraWebPage with the given URL, ID, title, and content.
+         *
+         * @param url The URL of the internal page.
+         * @param id The ID of the internal page. If negative, the ID will not be set.
+         * @param title The title of the internal page.
+         * @param content The content of the internal page.
+         * @return A new GoraWebPage instance representing an internal page.
+         */
         fun newInternalPage(url: String, id: Int, title: String, content: String): GoraWebPage {
             val unsafe = VolatileConfig.UNSAFE
             val page = newWebPage(url, unsafe)
@@ -75,12 +93,12 @@ class GoraWebPage(
                 page.id = id
             }
 
+            // Initialize page properties with default values.
             page.location = url
             page.modifiedTime = Instant.EPOCH
             page.prevFetchTime = Instant.EPOCH
             page.fetchTime = doomsday
             page.fetchInterval = ChronoUnit.CENTURIES.duration
-            page.fetchPriority = AppConstants.FETCH_PRIORITY_MIN
 
             page.distance = AppConstants.DISTANCE_INFINITE // or -1?
 
@@ -91,15 +109,29 @@ class GoraWebPage(
         }
 
         /**
-         * Initialize a WebPage with the underlying GWebPage instance.
+         * Wraps a GWebPage instance into a GoraWebPage with the given URL and configuration.
+         *
+         * @param url The URL of the web page.
+         * @param page The underlying GWebPage instance.
+         * @param conf The volatile configuration for the web page.
+         * @return A new GoraWebPage instance wrapping the provided GWebPage.
          */
         fun box(url: String, page: GWebPage, conf: VolatileConfig): GoraWebPage {
             return GoraWebPage(url, conf, page)
         }
 
+        /**
+         * Internal method to create a new GoraWebPage with the given URL, configuration, and optional href.
+         *
+         * @param url The URL of the web page.
+         * @param conf The volatile configuration for the web page.
+         * @param href The optional href associated with the web page.
+         * @return A new GoraWebPage instance.
+         */
         private fun newWebPageInternal(url: String, conf: VolatileConfig, href: String?): GoraWebPage {
             val page = GoraWebPage(url, GWebPage.newBuilder().build(), false, conf)
 
+            // Initialize page properties with default values.
             page.location = url
             page.conf = conf
             page.href = href
@@ -110,100 +142,17 @@ class GoraWebPage(
             return page
         }
 
+        /**
+         * Returns the URL based on whether it should be reversed or not.
+         *
+         * @param urlOrKey The original URL or key.
+         * @param urlReversed A flag indicating if the URL should be reversed.
+         * @return The processed URL.
+         */
         private fun getUrl(urlOrKey: String, urlReversed: Boolean): String {
             return if (urlReversed) unreverseUrl(urlOrKey) else urlOrKey
         }
     }
-
-    /**
-     * A process scope page id.
-     */
-    /**
-     * The page id which is unique in process scope.
-     */
-    override var id: Int = ID_SEQUENCER.incrementAndGet()
-        private set
-
-    val reversedUrl get() = reverseUrlOrEmpty(url)
-
-    /**
-     * The reversed url of the web page, it's also the key of the underlying storage of this webpage.
-     * It's faster to retrieve the page by the reversed url.
-     */
-    override val key: String get() = reversedUrl
-
-    /**
-     * Web page scope variables
-     */
-    override val variables: Variables = Variables()
-
-    /**
-     * Store arbitrary data associated with the webpage.
-     */
-    private val data = Variables()
-
-    /**
-     * The page datum for update.
-     * Page datum is collected during the fetch phrase and is used to update the page in the update phase.
-     */
-    override var pageDatum: PageDatum? = null
-
-    /**
-     * If this page is fetched from Internet
-     */
-    override var isCached: Boolean = false
-
-    /**
-     * If this page is loaded from database or is created and fetched from the web
-     */
-    override var isLoaded: Boolean = false
-
-    /**
-     * If this page is fetched from Internet
-     */
-    override var isFetched: Boolean = false
-
-    /**
-     * Check if the page is canceled.
-     *
-     *
-     * If a page is canceled, it should not be updated.
-     */
-    /**
-     * Check if the page is canceled.
-     *
-     *
-     * If a page is canceled, it should not be updated.
-     */
-    /**
-     * If this page is canceled
-     */
-    override var isCanceled: Boolean = false
-
-    /**
-     * If this page is fetched and updated
-     */
-    @Volatile
-    override var isContentUpdated: Boolean = false
-        private set
-
-    /**
-     * Get the cached content
-     */
-    /**
-     * Set the cached content, keep the persisted page content unmodified
-     */
-    /**
-     * The cached content.
-     * TODO: use a loading cache for all cached page contents.
-     */
-    @Volatile
-    override var tmpContent: ByteBuffer? = null
-
-    /**
-     * The delay time to retry if a retry is needed
-     */
-    override var retryDelay: Duration = Duration.ZERO
 
     /**
      * The field loader to load fields lazily.
@@ -219,10 +168,6 @@ class GoraWebPage(
     private constructor(
         urlOrKey: String, page: GWebPage, urlReversed: Boolean, conf: VolatileConfig
     ) : this(getUrl(urlOrKey, urlReversed), conf, page)
-
-    private constructor(
-        url: String, reversedUrl: String, page: GWebPage, conf: VolatileConfig
-    ) : this(url, page = page, conf = conf)
 
     override var href: String?
         /**
@@ -270,103 +215,6 @@ class GoraWebPage(
         unsafeSetGPage(GWebPage.newBuilder(page.unbox()).build())
     }
 
-    /**
-     * Check if the page scope temporary variable with `name` exists
-     *
-     * @param name The variable name to check
-     * @return true if the variable exist
-     */
-    override fun hasVar(name: String): Boolean {
-        return variables.contains(name)
-    }
-
-    /**
-     * Returns the page scope temporary variable to which the specified name is mapped,
-     * or `null` if the local variable map contains no mapping for the name.
-     *
-     * @param name the name whose associated value is to be returned
-     * @return the value to which the specified name is mapped, or
-     * `null` if the local variable map contains no mapping for the key
-     */
-    override fun getVar(name: String): Any? {
-        return variables[name]
-    }
-
-    override fun getVar(clazz: Class<*>): Any? {
-        return getVar(clazz::class.java.name)
-    }
-
-    /**
-     * Retrieves and removes the local variable with the given name.
-     */
-    override fun removeVar(name: String): Any? {
-        return variables.remove(name)
-    }
-
-    /**
-     * Set a page scope temporary variable.
-     *
-     * @param name  The variable name.
-     * @param value The variable value.
-     */
-    override fun setVar(name: String, value: Any) {
-        variables[name] = value
-    }
-
-    /**
-     * Returns the bean to which the specified class is mapped,
-     * or `null` if the local bean map contains no mapping for the class.
-     *
-     * @param clazz the class of the variable
-     */
-    override fun getBean(clazz: Class<*>): Any {
-        val bean = getBeanOrNull(clazz) ?: throw NoSuchElementException("No bean found for class $clazz in WebPage")
-        return bean
-    }
-
-    /**
-     * Returns the data to which the specified class is mapped,
-     * or `null` if the local bean map contains no mapping for the class.
-     *
-     * @param clazz the class of the variable
-     */
-    override fun getBeanOrNull(clazz: Class<*>): Any? {
-        return variables[clazz.name]
-    }
-
-    /**
-     * Set a page scope temporary java bean.
-     */
-    override fun <T> putBean(bean: T) {
-        variables.set(bean!!::class.java.name, bean)
-    }
-
-    /**
-     * Returns the data to which the specified name is mapped,
-     * or `null` if the data map contains no mapping for the name.
-     *
-     * @param name the name whose associated value is to be returned
-     * @return the value to which the specified name is mapped, or
-     * `null` if the local variable map contains no mapping for the key
-     */
-    override fun data(name: String): Any? {
-        return data[name]
-    }
-
-    /**
-     * Store arbitrary data associated with the webpage.
-     *
-     * @param name  A string naming the piece of data to set.
-     * @param value The new data value.
-     */
-    override fun data(name: String, value: Any?) {
-        if (value == null) {
-            data.remove(name)
-        } else {
-            data[name] = value
-        }
-    }
-
     override val metadata: Metadata
         get() = Metadata.box(page.metadata)
 
@@ -397,15 +245,6 @@ class GoraWebPage(
     override fun setLazyFieldLoader(lazyFieldLoader: Function<String, GWebPage>) {
         this.lazyFieldLoader = lazyFieldLoader
     }
-
-    override var maxRetries: Int
-        get() = metadata.getInt(Name.FETCH_MAX_RETRY, 3)
-        set(maxRetries) {
-            metadata[Name.FETCH_MAX_RETRY] = maxRetries
-        }
-
-    override val configuredUrl: String
-        get() = mergeUrlArgs(url, args)
 
     override var zoneId: ZoneId
         get() = if (page.zoneId == null) DateTimes.zoneId else ZoneId.of(page.zoneId.toString())
@@ -481,40 +320,10 @@ class GoraWebPage(
             page.htmlIntegrity = integrity.name
         }
 
-    override var fetchPriority: Int
-        get() = if (page.fetchPriority > 0) page.fetchPriority else AppConstants.FETCH_PRIORITY_DEFAULT
-        set(priority) {
-            page.fetchPriority = priority
-        }
-
-    fun sniffFetchPriority(): Int {
-        var priority = fetchPriority
-
-        val depth = distance
-        if (depth < AppConstants.FETCH_PRIORITY_DEPTH_BASE) {
-            priority = max(priority.toDouble(), (AppConstants.FETCH_PRIORITY_DEPTH_BASE - depth).toDouble()).toInt()
-        }
-
-        return priority
-    }
-
     override var createTime: Instant
         get() = Instant.ofEpochMilli(page.createTime)
         set(createTime) {
             page.createTime = createTime.toEpochMilli()
-        }
-
-    override var generateTime: Instant
-        get() {
-            val generateTime = metadata[Name.GENERATE_TIME]
-            return if (generateTime == null) {
-                Instant.EPOCH
-            } else {
-                Instant.parse(generateTime)
-            }
-        }
-        set(generateTime) {
-            metadata[Name.GENERATE_TIME] = generateTime.toString()
         }
 
     override var fetchCount: Int
@@ -545,12 +354,6 @@ class GoraWebPage(
         get() = Instant.ofEpochMilli(page.prevFetchTime)
         set(prevFetchTime) {
             page.prevFetchTime = prevFetchTime.toEpochMilli()
-        }
-
-    override var prevCrawlTime1: Instant
-        get() = Instant.ofEpochMilli(page.prevCrawlTime1)
-        set(prevCrawlTime1) {
-            page.prevCrawlTime1 = prevCrawlTime1.toEpochMilli()
         }
 
     override var fetchInterval: Duration
@@ -640,7 +443,7 @@ class GoraWebPage(
             setByteBufferContent1(value)
         }
 
-    override val persistContent: ByteBuffer?
+    override val persistContent: ByteBuffer
         get() = getPersistContent0()
 
     override val contentAsBytes get() = getContentAsBytes0()
@@ -920,27 +723,6 @@ class GoraWebPage(
         }
     }
 
-    override fun hashCode(): Int {
-        return url.hashCode()
-    }
-
-    override fun compareTo(o: WebPage): Int {
-        return url.compareTo(Objects.requireNonNull(o.url))
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        }
-
-        return other is WebPage && other.url == url
-    }
-
-    override fun toString(): String {
-        return WebPageFormatter(this).format()
-    }
-
-
     private fun getContent0(): ByteBuffer? {
         if (tmpContent != null) {
             return tmpContent
@@ -949,7 +731,7 @@ class GoraWebPage(
         return persistContent
     }
 
-    private fun getPersistContent0(): ByteBuffer? {
+    private fun getPersistContent0(): ByteBuffer {
         synchronized(CONTENT_MONITOR) {
             val fieldName = GWebPage.Field.CONTENT.getName()
             // load content lazily
