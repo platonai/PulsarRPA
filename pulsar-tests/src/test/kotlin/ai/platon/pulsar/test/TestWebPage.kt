@@ -2,6 +2,7 @@ package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
@@ -35,6 +36,7 @@ class TestWebPage: TestBase() {
 
         assertTrue { page.protocolStatus.isSuccess }
         assertTrue { page.isContentUpdated }
+        assertTrue(page is AbstractWebPage)
         assertEquals(option, page.variables[PulsarParams.VAR_LOAD_OPTIONS])
         assertTrue { page.args.contains(normalizedArgs) }
         // TODO: fix this issue: expected: <-expires PT5S> but was: <-expires PT5S -ignoreFailure -nJitRetry 3 -parse -test 1>

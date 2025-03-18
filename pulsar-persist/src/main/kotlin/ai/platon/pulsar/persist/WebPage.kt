@@ -17,7 +17,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.util.function.Function
-import kotlin.reflect.KClass
 
 /**
  * Represents a web page in the Pulsar system. This interface provides methods to access and manipulate
@@ -76,46 +75,6 @@ interface WebPage : Comparable<WebPage> {
      * @param page The web page to clone.
      */
     fun unsafeCloneGPage(page: WebPage)
-
-    /**
-     * Checks if a variable with the given name exists.
-     *
-     * This method is used internally, and will be hide to the user.
-     *
-     * @param name The name of the variable to check.
-     * @return `true` if the variable exists, `false` otherwise.
-     */
-    fun hasVar(name: String): Boolean
-
-    /**
-     * Retrieves the value of the variable with the given name.
-     *
-     * This method is used internally, and will be hide to the user.
-     *
-     * @param name The name of the variable to retrieve.
-     * @return The value of the variable, or `null` if it does not exist.
-     */
-    fun getVar(name: String): Any?
-
-    /**
-     * Removes the variable with the given name and returns its value.
-     *
-     * This method is used internally, and will be hide to the user.
-     *
-     * @param name The name of the variable to remove.
-     * @return The value of the removed variable, or `null` if it does not exist.
-     */
-    fun removeVar(name: String): Any?
-
-    /**
-     * Sets the value of the variable with the given name.
-     *
-     * This method is used internally, and will be hide to the user.
-     *
-     * @param name The name of the variable to set.
-     * @param value The value to assign to the variable.
-     */
-    fun setVar(name: String, value: Any)
 
     /**
      * Retrieves the bean of the specified class type associated with the web page.
@@ -307,12 +266,12 @@ interface WebPage : Comparable<WebPage> {
     val headers: ProtocolHeaders
 
     /**
-     * The category of the web page, used to check if the page is a resource.
+     * The content category of the web page.
      */
     var pageCategory: PageCategory
 
     /**
-     * The open page category of the web page, used to check if the page is a resource.
+     * The content category of the web page.
      */
     var openPageCategory: OpenPageCategory
 

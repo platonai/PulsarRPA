@@ -19,6 +19,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_DISPLAY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.CoreMetrics
@@ -190,7 +191,9 @@ open class BrowserPrivacyContext(
         }
 
         createProxyContextIfEnabled()
-        task.page.setVar(VAR_PRIVACY_CONTEXT_DISPLAY, display)
+        val page = task.page
+        require(page is AbstractWebPage)
+        page.setVar(VAR_PRIVACY_CONTEXT_DISPLAY, display)
     }
 
     @Throws(ProxyException::class)

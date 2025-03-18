@@ -19,6 +19,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.AbstractBrowserFetcher
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator
@@ -199,6 +200,7 @@ open class PrivacyManagedBrowserFetcher(
      * @param page The page to fetch
      * */
     private fun getSpecifiedWebDriver(page: WebPage): WebDriver? {
+        require(page is AbstractWebPage)
         // Specified driver is always used
         val driver = page.getBeanOrNull(WebDriver::class.java)
             ?: page.getVar("WEB_DRIVER") // Old style to retrieve the driver, will be removed in the future

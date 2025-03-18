@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
 
@@ -82,6 +83,7 @@ class AsinRPAScraper {
             logger.info("Seen selector $requiredElement")
             val sellerUrls = extractSellerUrlsFromPopupLayer(page, driver)
 //            logger.info("Extracted seller links: \n{}", sellerUrls)
+            require(page is AbstractWebPage)
             page.setVar(JS_EXTRACT_SELLER_URLS, sellerUrls)
         } else {
             logger.info("Timeout to wait for selector $requiredElement")

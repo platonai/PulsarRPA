@@ -20,6 +20,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.event.AbstractEventEmitter
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
@@ -416,7 +417,9 @@ open class InteractiveBrowserEmulator(
 
         val browserSettings = driver.browser.settings
         // TODO: a better flag to specify whether to connect or navigate
-        val connect = fetchTask.page.hasVar("connect")
+        val page = fetchTask.page
+        require(page is AbstractWebPage)
+        val connect = page.hasVar("connect")
         val interactResult = if (connect) {
             driver.ignoreDOMFeatures = true
             connect(navigateTask, driver, browserSettings)

@@ -6,8 +6,6 @@ import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.mergeUrlArgs
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
 import ai.platon.pulsar.common.urls.UrlUtils.unreverseUrl
-import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import org.apache.gora.util.ByteUtils
@@ -17,13 +15,12 @@ import java.nio.ByteBuffer
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.function.Function
 import kotlin.concurrent.Volatile
 
 /**
  * The core web page structure
  */
-abstract class AbstractWebPage (
+abstract class AbstractWebPage(
     /**
      * The url is the permanent internal address, while the location is the last working address.
      */
@@ -139,16 +136,6 @@ abstract class AbstractWebPage (
      */
     override var retryDelay: Duration = Duration.ZERO
 
-    /**
-     * The field loader to load fields lazily.
-     */
-    private var lazyFieldLoader: Function<String, GWebPage>? = null
-
-    private val lazyLoadedFields: MutableList<String> = ArrayList()
-
-    private val CONTENT_MONITOR = Any()
-    private val PAGE_MODEL_MONITOR = Any()
-
     override var href: String?
         /**
          * Get The hypertext reference of this page.
@@ -185,7 +172,7 @@ abstract class AbstractWebPage (
      * @param name The variable name to check
      * @return true if the variable exist
      */
-    override fun hasVar(name: String): Boolean {
+    fun hasVar(name: String): Boolean {
         return variables.contains(name)
     }
 
@@ -197,14 +184,14 @@ abstract class AbstractWebPage (
      * @return the value to which the specified name is mapped, or
      * `null` if the local variable map contains no mapping for the key
      */
-    override fun getVar(name: String): Any? {
+    fun getVar(name: String): Any? {
         return variables[name]
     }
 
     /**
      * Retrieves and removes the local variable with the given name.
      */
-    override fun removeVar(name: String): Any? {
+    fun removeVar(name: String): Any? {
         return variables.remove(name)
     }
 
@@ -214,7 +201,7 @@ abstract class AbstractWebPage (
      * @param name  The variable name.
      * @param value The variable value.
      */
-    override fun setVar(name: String, value: Any) {
+    fun setVar(name: String, value: Any) {
         variables[name] = value
     }
 
@@ -272,28 +259,8 @@ abstract class AbstractWebPage (
         }
     }
 
-    override var maxRetries: Int
-        get() = metadata.getInt(Name.FETCH_MAX_RETRY, 3)
-        set(maxRetries) {
-            metadata[Name.FETCH_MAX_RETRY] = maxRetries
-        }
-
     override val configuredUrl: String
         get() = mergeUrlArgs(url, args)
-
-    override var fetchMode: FetchMode
-        /**
-         * Get the fetch mode, only BROWSER mode is supported currently.
-         * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch.
-         */
-        get() = FetchMode.fromString(metadata[Name.FETCH_MODE])
-        /**
-         * Get the fetch mode, only BROWSER mode is supported currently.
-         * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch
-         */
-        set(mode) {
-            metadata[Name.FETCH_MODE] = mode.name
-        }
 
     override val contentAsBytes get() = getContentAsBytes0()
 
@@ -302,17 +269,6 @@ abstract class AbstractWebPage (
     override val contentAsInputStream get() = getContentAsInputStream0()
 
     override val contentAsSaxInputSource get() = getContentAsSaxInputSource0()
-
-    /**
-     * The length of the original page content in bytes, the content has no pulsar metadata inserted.
-     *
-     * @return The length of the original page content in bytes, negative means not specified
-     */
-    override var originalContentLength: Long
-        get() = metadata.getLong(Name.ORIGINAL_CONTENT_LENGTH, -1)
-        set(value) {
-            metadata[Name.ORIGINAL_CONTENT_LENGTH] = "" + value
-        }
 
     override fun hashCode(): Int {
         return url.hashCode()
@@ -332,15 +288,6 @@ abstract class AbstractWebPage (
 
     override fun toString(): String {
         return WebPageFormatter(this).format()
-    }
-
-
-    private fun getContent0(): ByteBuffer? {
-        if (tmpContent != null) {
-            return tmpContent
-        }
-
-        return persistContent
     }
 
     private fun getContentAsBytes0(): ByteArray {
@@ -374,21 +321,5 @@ abstract class AbstractWebPage (
             inputSource.encoding = encoding
         }
         return inputSource
-    }
-
-    private fun getSignatureAsString0(): String {
-        var sig = signature
-        if (sig == null) {
-            sig = ByteBuffer.wrap("".toByteArray())
-        }
-        return Strings.toHexString(sig)
-    }
-
-    private fun getPrevSignatureAsString0(): String {
-        var sig: ByteBuffer? = prevSignature
-        if (sig == null) {
-            sig = ByteBuffer.wrap("".toByteArray())
-        }
-        return Strings.toHexString(sig)
     }
 }

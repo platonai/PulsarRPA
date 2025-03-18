@@ -19,6 +19,7 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.HttpHeaders
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.PageDatum
@@ -54,8 +55,8 @@ class NavigateTask constructor(
      * The interact settings.
      * */
     val interactSettings: InteractSettings get() {
+        require(page is AbstractWebPage)
         return page.getBeanOrNull(InteractSettings::class.java) as? InteractSettings
-            ?: page.getVar("InteractSettings") as? InteractSettings
             ?: page.conf.getBeanOrNull(InteractSettings::class.java)
             ?: driver.browser.settings.interactSettings
     }

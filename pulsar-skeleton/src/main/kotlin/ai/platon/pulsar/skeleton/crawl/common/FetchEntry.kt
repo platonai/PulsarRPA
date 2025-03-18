@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton.crawl.common
 
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
@@ -48,7 +49,9 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
                 page.isResource = options.isResource
 
                 // since LoadOptions is not visible by WebPage, we use an unsafe method to pass the load options
-                page.setVar(PulsarParams.VAR_LOAD_OPTIONS, options)
+                if (page is AbstractWebPage) {
+                    page.setVar(PulsarParams.VAR_LOAD_OPTIONS, options)
+                }
             }
         }
     }

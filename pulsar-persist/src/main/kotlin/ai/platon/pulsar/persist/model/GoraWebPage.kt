@@ -21,16 +21,12 @@ import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.Converters.convert
 import ai.platon.pulsar.persist.model.PageModel.Companion.box
-import org.apache.gora.util.ByteUtils
-import org.xml.sax.InputSource
-import java.io.ByteArrayInputStream
 import java.nio.ByteBuffer
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
 
 /**
@@ -267,20 +263,6 @@ class GoraWebPage(
             page.distance = newDistance
         }
 
-    override var fetchMode: FetchMode
-        /**
-         * Get the fetch mode, only BROWSER mode is supported currently.
-         * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch.
-         */
-        get() = FetchMode.fromString(metadata[Name.FETCH_MODE])
-        /**
-         * Get the fetch mode, only BROWSER mode is supported currently.
-         * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch
-         */
-        set(mode) {
-            metadata[Name.FETCH_MODE] = mode.name
-        }
-
     override var lastBrowser: BrowserType
         /**
          * Get the browser used to fetch the page last time.
@@ -294,6 +276,26 @@ class GoraWebPage(
          */
         set(browser) {
             page.browser = browser.name
+        }
+
+    override var maxRetries: Int
+        get() = metadata.getInt(Name.FETCH_MAX_RETRY, 3)
+        set(maxRetries) {
+            metadata[Name.FETCH_MAX_RETRY] = maxRetries
+        }
+
+    override var fetchMode: FetchMode
+        /**
+         * Get the fetch mode, only BROWSER mode is supported currently.
+         * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch.
+         */
+        get() = FetchMode.fromString(metadata[Name.FETCH_MODE])
+        /**
+         * Get the fetch mode, only BROWSER mode is supported currently.
+         * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch
+         */
+        set(mode) {
+            metadata[Name.FETCH_MODE] = mode.name
         }
 
     override var isResource: Boolean
@@ -438,21 +440,13 @@ class GoraWebPage(
         }
 
     override var content: ByteBuffer?
-        get() = getContent0()
+        get() = getTmpContentOrPersistContent()
         set(value) {
             setByteBufferContent1(value)
         }
 
     override val persistContent: ByteBuffer
         get() = getPersistContent0()
-
-    override val contentAsBytes get() = getContentAsBytes0()
-
-    override val contentAsString get() = getContentAsString0()
-
-    override val contentAsInputStream get() = getContentAsInputStream0()
-
-    override val contentAsSaxInputSource get() = getContentAsSaxInputSource0()
 
     override fun setStringContent(value: String?) {
         if (value != null) {
@@ -723,7 +717,7 @@ class GoraWebPage(
         }
     }
 
-    private fun getContent0(): ByteBuffer? {
+    private fun getTmpContentOrPersistContent(): ByteBuffer? {
         if (tmpContent != null) {
             return tmpContent
         }
@@ -742,39 +736,6 @@ class GoraWebPage(
             }
             return page.content
         }
-    }
-
-    private fun getContentAsBytes0(): ByteArray {
-        val content = content ?: return ByteUtils.toBytes('\u0000')
-        return ByteUtils.toBytes(content)
-    }
-
-    private fun getContentAsString0(): String {
-        val buffer = content
-        if (buffer == null || buffer.remaining() == 0) {
-            return ""
-        }
-
-        return String(buffer.array(), buffer.arrayOffset(), buffer.limit())
-    }
-
-    private fun getContentAsInputStream0(): ByteArrayInputStream {
-        val contentInOctets = content ?: return ByteArrayInputStream(ByteUtils.toBytes('\u0000'))
-
-        return ByteArrayInputStream(
-            content!!.array(),
-            contentInOctets.arrayOffset() + contentInOctets.position(),
-            contentInOctets.remaining()
-        )
-    }
-
-    private fun getContentAsSaxInputSource0(): InputSource {
-        val inputSource = InputSource(contentAsInputStream)
-        val encoding = encoding
-        if (encoding != null) {
-            inputSource.encoding = encoding
-        }
-        return inputSource
     }
 
     /**

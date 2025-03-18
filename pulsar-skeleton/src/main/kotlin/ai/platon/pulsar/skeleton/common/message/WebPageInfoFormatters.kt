@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.*
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.emoji.PopularEmoji
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.ActiveDOMStat
@@ -93,7 +94,7 @@ class PageLoadStatusFormatter(
     private val fetchReason get() = buildFetchReason()
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) "" else " | $label"
-    private val prevFetchTimeBeforeUpdate = page.getVar(VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
+    private val prevFetchTimeBeforeUpdate = checkWebPage(page).getVar(VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
     private val prevFetchTimeDuration: Duration get() = Duration.between(prevFetchTimeBeforeUpdate, Instant.now())
     private val prevFetchTimeReport: String get() = when {
         prevFetchTimeDuration.toDays() > 20 * 360 -> ""
@@ -127,8 +128,8 @@ class PageLoadStatusFormatter(
         protocolStatus.isFailed -> String.format(" %s", page.protocolStatus.toString())
         else -> ""
     }
-    private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_DISPLAY]?.let { " | $it" } ?: ""
-    private val additionalStatus: String get() = page.getVar(VAR_ADD_LOAD_STATUS)?.toString()?.let { " | $it" } ?: ""
+    private val contextName get() = checkWebPage(page).variables[VAR_PRIVACY_CONTEXT_DISPLAY]?.let { " | $it" } ?: ""
+    private val additionalStatus: String get() = checkWebPage(page).getVar(VAR_ADD_LOAD_STATUS)?.toString()?.let { " | $it" } ?: ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
 
     private val formattedMessage = "$prevFetchTimeReport fc:$fetchCount$failure" +
@@ -149,7 +150,13 @@ class PageLoadStatusFormatter(
         )
     }
 
+    private fun checkWebPage(page: WebPage): AbstractWebPage {
+        require(page is AbstractWebPage)
+        return page
+    }
+
     private fun buildFetchReason(): String {
+        require(page is AbstractWebPage)
         val state = page.getVar(VAR_FETCH_STATE) as? CheckState
         val code = state?.code ?: FetchState.DO_NOT_FETCH
         return FetchState.toSymbol(code).takeIf { it.isNotBlank() }?.let { "for $it" } ?: ""

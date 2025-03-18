@@ -9,10 +9,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.persist.ProtocolStatus
-import ai.platon.pulsar.persist.RetryScope
-import ai.platon.pulsar.persist.WebDb
-import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.persist.model.ActiveDOMStat
@@ -130,6 +127,7 @@ class LoadComponent(
      * */
     suspend fun open(normURL: NormURL, driver: WebDriver): WebPage {
         val page = createPageShell(normURL)
+        require(page is AbstractWebPage)
         require(page.hasVar(VAR_REFRESH))
         val state = page.getVar(VAR_REFRESH)
         require(state is CheckState)
@@ -361,6 +359,7 @@ class LoadComponent(
 
     @Throws(Exception::class)
     private fun fetchContentIfNecessary(normURL: NormURL, page: WebPage) {
+        require(page is AbstractWebPage)
         require(page.isNotInternal) { "Page should not be internal | ${page.configuredUrl}" }
 
         // double check is OK
@@ -375,6 +374,7 @@ class LoadComponent(
 
     @Throws(Exception::class)
     private suspend fun fetchContentIfNecessaryDeferred(normURL: NormURL, page: WebPage) {
+        require(page is AbstractWebPage)
         when {
             page.hasVar(VAR_CONNECT) -> fetchContentDeferred(page, normURL)
             page.removeVar(VAR_REFRESH) != null -> fetchContentDeferred(page, normURL)
@@ -446,6 +446,7 @@ class LoadComponent(
             else -> fetchState(page, options)
         }
 
+        require(page is AbstractWebPage)
         page.setVar(VAR_FETCH_STATE, state)
         val refresh = state.code in FetchState.refreshCodes
         if (refresh) {
@@ -652,11 +653,13 @@ class LoadComponent(
     }
 
     private fun shouldFetch(page: WebPage): Boolean {
+        require(page is AbstractWebPage)
         return page.hasVar(VAR_REFRESH)
     }
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
         // require(page.options == options)
+        require(page is AbstractWebPage)
         page.setVar(VAR_PREV_FETCH_TIME_BEFORE_UPDATE, page.prevFetchTime)
         globalCache.fetchingCache.add(page.url)
         logger.takeIf { it.isDebugEnabled }?.debug("Loading url | {} {}", page.url, page.args)

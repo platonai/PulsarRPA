@@ -23,6 +23,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.proxy.ProxyVendorException
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
@@ -472,7 +473,8 @@ open class MultiPrivacyContextManager(
             }
         } finally {
             task.done()
-            task.page.variables[VAR_CONTEXT_INFO] = formatPrivacyContext(privacyContext as AbstractPrivacyContext)
+            val page = task.page as AbstractWebPage
+            page.variables[VAR_CONTEXT_INFO] = formatPrivacyContext(privacyContext as AbstractPrivacyContext)
         }
 
         return result

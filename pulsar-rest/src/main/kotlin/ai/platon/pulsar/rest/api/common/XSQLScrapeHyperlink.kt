@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
@@ -53,6 +54,7 @@ open class XSQLScrapeHyperlink(
             }
             onWillParseHTMLDocument.addLast { page ->
                 // println("onWillParseHTMLDocument")
+                require(page is AbstractWebPage)
                 page.variables[VAR_IS_SCRAPE] = true
                 null
             }
@@ -61,6 +63,7 @@ open class XSQLScrapeHyperlink(
             }
             onHTMLDocumentParsed.addLast { page, document ->
                 // println("onHTMLDocumentParsed")
+                require(page is AbstractWebPage)
                 require(page.hasVar(VAR_IS_SCRAPE))
                 hyperlink.extract(page, document)
             }
