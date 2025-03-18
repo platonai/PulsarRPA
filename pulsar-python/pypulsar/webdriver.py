@@ -18,15 +18,13 @@ class WebDriver:
     """
 
     _gateway: ClassVar[Optional[JavaGateway]] = None
-    _web_driver: ClassVar[Optional[JVMView]] = None
 
     def __init__(self, _web_driver: Optional[JVMView] = None):
-        if self._gateway is None:
-            self._gateway = JavaGateway()
-        if self._session is None:
-            self._session = self._gateway.entry_point.getWebDriver()
+        self._web_driver = _web_driver
+        if WebDriver._gateway is None:
+            WebDriver._gateway = JavaGateway()
 
-    def navigateTo(self, url: str):
+    def navigate(self, url: str):
         self._web_driver.navigateTo(url)
         pass
 

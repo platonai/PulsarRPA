@@ -9,8 +9,11 @@ import warnings
 import importlib
 
 from py4j.java_collections import JavaMap
-from py4j.protocol import Py4JError
+from py4j.protocol import Py4JError, Py4JJavaError
 from py4j.java_gateway import JavaGateway, JVMView
+
+from pypulsar.context import PulsarContext
+
 
 class PageEventHandler:
     """
@@ -58,10 +61,12 @@ class PulsarSession:
     _session: ClassVar[Optional[JVMView]] = None
 
     def __init__(self):
-        if self._gateway is None:
-            self._gateway = JavaGateway()
-        if self._session is None:
-            self._session = self._gateway.entry_point.getPulsarSession()
+        if PulsarSession._gateway is None:
+            PulsarSession._gateway = JavaGateway()
+        if PulsarSession._jvm is None:
+            PulsarSession._jvm = self._gateway.jvm
+        if PulsarSession._session is None:
+            PulsarSession._session = PulsarContext.get_or_create_session()
 
     def load(self, url: str, event_handler: Optional[PageEventHandler] = None):
         """

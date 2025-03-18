@@ -20,25 +20,19 @@ class PulsarContext:
     _jvm: ClassVar[Optional[JVMView]] = None
     _context: ClassVar[Optional[JVMView]] = None
 
+    @staticmethod
     def __init__(self):
-        if self._gateway is None:
-            self._gateway = JavaGateway()
-        if self._jvm is None:
-            self._jvm = self._gateway.jvm
-        if self._context is None:
-            self._context = self._jvm.ai.platon.pulsar.skeleton.context.PulsarContexts.create()
+        if PulsarContext._gateway is None:
+            PulsarContext._gateway = JavaGateway()
+        if PulsarContext._jvm is None:
+            PulsarContext._jvm = self._gateway.jvm
+        if PulsarContext._context is None:
+            PulsarContext._context = self._jvm.ai.platon.pulsar.skeleton.context.PulsarContexts.create()
         pass
 
-    def load(self, url: str):
-        """
-        Load a url using the PulsarRPA's API.
-        Call kotlin code to load the url.
-        """
-        self._context.load(url)
-        pass
-
-    def save(self, url: str):
-        pass
+    @staticmethod
+    def get_or_create_session():
+        return PulsarContext._context.getOrCreateSession()
 
     def close(self):
         pass
