@@ -77,7 +77,7 @@ abstract class AbstractWebPage(
      * The page datum for update.
      * Page datum is collected during the fetch phrase and is used to update the page in the update phase.
      */
-    override var pageDatum: PageDatum? = null
+    var pageDatum: PageDatum? = null
 
     /**
      * If this page is fetched from Internet

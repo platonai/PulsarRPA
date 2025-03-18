@@ -97,7 +97,11 @@ data class ActiveDOMUrls(
      * 2. If the document has an `<base>` element, its href attribute is used.
      * */
     var baseURI: String = "",
-    @Deprecated("Use location2 instead")
+    /**
+     * Represents the location of a document.
+     *
+     * This property is retrieved from javascript `document.location.href`.
+     * */
     var location: String = "",
     /**
      * In javascript, the `window.location`, or `document.location`, is a read-only property

@@ -14,14 +14,10 @@ public enum Name {
     UNKNOWN(""),
 
     /**
-     * generate
-     */
-    GENERATE_TIME("G_GT"),
-
-    /**
      * fetch
      */
     HREF("F_HREF"),
+    LOCATION("F_LOCATION"),
     FETCH_MODE("F_MD"),
     FETCH_TIME_HISTORY("F_FTH"),
     FETCH_MAX_RETRY("F_MR"),

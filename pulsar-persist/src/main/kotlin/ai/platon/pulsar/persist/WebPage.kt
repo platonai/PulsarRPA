@@ -21,32 +21,79 @@ import java.util.function.Function
 /**
  * Represents a web page in the Pulsar system. This interface provides methods to access and manipulate
  * various properties and metadata associated with a web page, such as its content, headers, fetch status,
- * and more. It also includes methods for managing variables, beans, and other page-related data.
+ * and more. It also includes methods for managing beans, and other page-related data.
  *
  * This interface extends `Comparable<WebPage>` to allow for comparison between web pages.
  */
 interface WebPage : Comparable<WebPage> {
     /**
-     * The unique identifier of the web page.
+     * The unique, in-process identifier of the web page.
      */
     val id: Int
 
     /**
-     * The URL of the web page.
+     * The url is the permanent internal address, and it's also the storage key (reserved).
+     * The url can differ from the original url passed by the user, because the original url might be normalized,
+     * and the url also can differ from the final location of the page, because the page can be redirected in the browser.
      */
     val url: String
 
     /**
      * The key associated with the web page, typically used for indexing or identification purposes.
-     * The key is defined as the reserved url, for example, the key for page "https://www.amazon.co.uk/dp/B08JV5Q1DC"
-     * is "uk.co.amazon.www:https/dp/B08JV5Q1DC".
+     * The key is defined as the reserved url, for example, the key for page "https://www.amazon.com/dp/B0C1H26C46"
+     * is "uk.co.amazon.www:https/dp/B0C1H26C46".
      */
     val key: String
 
     /**
-     * The href (hypertext reference) of the web page, which may differ from the URL in some cases.
+     * The href (hypertext reference) of the web page, the href should not be normalized and kept the original form
+     * where it extracted from.
+     * For example, the href can be extracted from an HTML page:
+     * ```html
+     * <a href='https://www.amazon.com/dp/B0C1H26C46?th=1'>Huawei P60 ...</a>
+     * ```
      */
     var href: String?
+
+    /**
+     * Returns the document location as a string.
+     *
+     * [location] is the last working address,
+     * it might redirect from the original url, or it might have additional query parameters.
+     * [location] can differ from [url].
+     *
+     * In javascript, the documentURI property can be used on any document types. The document.URL
+     * property can only be used on HTML documents.
+     *
+     * @see <a href='https://www.w3schools.com/jsref/prop_document_documenturi.asp'>
+     *     HTML DOM Document documentURI</a>
+     * */
+    var location: String
+
+    /**
+     * A baseUrl is used to resolve relative URLs.
+     *
+     * The base URL is determined as follows:
+     * 1. By default, the base URL is the location of the document
+     *    (as determined by window.location).
+     * 2. If the document has an `<base>` element, its href attribute is used.
+     * */
+    var baseUrl: String
+    /**
+     * The URL of the page that linked to this page.
+     */
+    var referrer: String?
+
+    /**
+     * The load arguments which can be parsed into a `LoadOptions` object.
+     * It's usually used by `session.load()` method series.
+     */
+    var args: String
+
+    /**
+     * The configured URL of the web page, which is always a combination of `url` and `args`.
+     */
+    val configuredUrl: String
 
     /**
      * Indicates whether the web page is nil (i.e., not initialized or empty).
@@ -69,12 +116,9 @@ interface WebPage : Comparable<WebPage> {
     val isNotInternal: Boolean
 
     /**
-     * Clones the given web page into this web page. This operation is considered unsafe as it may
-     * overwrite existing data.
-     *
-     * @param page The web page to clone.
+     * The page scope configuration, which is expected to be modified frequently.
      */
-    fun unsafeCloneGPage(page: WebPage)
+    var conf: VolatileConfig
 
     /**
      * Retrieves the bean of the specified class type associated with the web page.
@@ -116,11 +160,6 @@ interface WebPage : Comparable<WebPage> {
     fun data(name: String, value: Any?)
 
     /**
-     * The page datum collected by the fetch component, used to update the page when it is fetched.
-     */
-    var pageDatum: PageDatum?
-
-    /**
      * Indicates whether the web page is stored in the in-memory cache.
      */
     var isCached: Boolean
@@ -144,21 +183,6 @@ interface WebPage : Comparable<WebPage> {
      * Indicates whether the content of the web page has been updated.
      */
     val isContentUpdated: Boolean
-
-    /**
-     * The page scope configuration, which is expected to be modified frequently.
-     */
-    var conf: VolatileConfig
-
-    /**
-     * The load arguments used by the `session.load()` method series.
-     */
-    var args: String
-
-    /**
-     * The configured URL of the web page, which is always a combination of `url` and `args`.
-     */
-    val configuredUrl: String
 
     /**
      * The delay time before the next retry to load the web page.
@@ -209,16 +233,6 @@ interface WebPage : Comparable<WebPage> {
      * The number of times the web page has been fetched.
      */
     var fetchCount: Int
-
-    /**
-     * The base URL of the web page, used to resolve relative URLs.
-     */
-    var baseUrl: String
-
-    /**
-     * The location of the web page, used to resolve relative URLs.
-     */
-    var location: String
 
     /**
      * The time when the web page was last fetched.
@@ -448,13 +462,19 @@ interface WebPage : Comparable<WebPage> {
 
     var anchor: CharSequence?
 
-    var referrer: String?
-
     var pageModelUpdateTime: Instant?
 
     val pageModel: PageModel?
 
     fun ensurePageModel(): PageModel
+
+    /**
+     * Clones the given web page into this web page. This operation is considered unsafe as it may
+     * overwrite existing data.
+     *
+     * @param page The web page to clone.
+     */
+    fun unsafeCloneGPage(page: WebPage)
 
     fun setLazyFieldLoader(lazyFieldLoader: Function<String, GWebPage>)
 }

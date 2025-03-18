@@ -94,6 +94,7 @@ class PageDatum(
     var page = WeakReference<WebPage>(null)
 
     constructor(page: WebPage): this(page.url) {
+        require(page is AbstractWebPage)
         this.page = WeakReference(page)
         page.pageDatum = this
     }

@@ -335,15 +335,15 @@ class GoraWebPage(
         }
 
     override var baseUrl: String
-        get() = if (page.baseUrl == null) "" else page.baseUrl.toString()
+        get() = page.baseUrl?.toString() ?: ""
         set(value) {
             page.baseUrl = value
         }
 
     override var location: String
-        get() = baseUrl
+        get() = metadata[Name.LOCATION] ?: ""
         set(location) {
-            page.baseUrl = location
+            metadata[Name.LOCATION] = location
         }
 
     override var fetchTime: Instant
