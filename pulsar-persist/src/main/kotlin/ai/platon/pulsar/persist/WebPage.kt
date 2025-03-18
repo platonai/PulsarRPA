@@ -426,7 +426,7 @@ interface WebPage : Comparable<WebPage> {
     var contentTitle: String?
 
     /**
-     * The text of the web page, typically extracted by removing all HTML tags.
+     * The text of the web page, typically extracted by combining the texts within all HTML tags.
      */
     var pageText: String?
 
@@ -446,12 +446,12 @@ interface WebPage : Comparable<WebPage> {
     var links: MutableList<CharSequence>
 
     /**
-     * The vivid links contained within the web page, typically with additional metadata.
+     * The vivid links contained within the web page, typically change frequently.
      */
     val vividLinks: MutableMap<CharSequence, CharSequence>
 
     /**
-     * The inlinks contained within the web page, typically with additional metadata.
+     * The links that point to this web page.
      */
     val inlinks: MutableMap<CharSequence, CharSequence>
 
