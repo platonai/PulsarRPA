@@ -60,10 +60,8 @@ class PulsarSession:
     def __init__(self):
         if self._gateway is None:
             self._gateway = JavaGateway()
-        if self._jvm is None:
-            self._jvm = self._gateway.jvm
         if self._session is None:
-            self._session = self._jvm.ai.platon.pulsar.skeleton.context.PulsarContexts.createSession()
+            self._session = self._gateway.entry_point.getPulsarSession()
 
     def load(self, url: str, event_handler: Optional[PageEventHandler] = None):
         """
