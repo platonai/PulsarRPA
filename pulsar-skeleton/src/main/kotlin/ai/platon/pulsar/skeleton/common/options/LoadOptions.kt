@@ -198,7 +198,7 @@ open class LoadOptions constructor(
      * */
     @ApiPublic
     @Parameter(
-        names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
+        names = ["-i", "-expire", "-expires", "--expire"], converter = DurationConverter::class,
         description = "The expiry duration. " +
             "If the expiry time is exceeded, the page should be fetched from the Internet."
     )
@@ -407,7 +407,7 @@ open class LoadOptions constructor(
      * */
     @ApiPublic
     @Parameter(
-        names = ["-ii", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
+        names = ["-ii", "-itemExpire", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
         description = "The same as expires, but only works for item pages"
     )
     var itemExpires = ChronoUnit.DECADES.duration

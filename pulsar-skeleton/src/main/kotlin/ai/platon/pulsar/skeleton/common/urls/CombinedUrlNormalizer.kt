@@ -27,27 +27,30 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
         val finalArgs = "$args3 $args2 $args1".trim()
         val finalOptions = createLoadOptions(url, LoadOptions.parse(finalArgs, options), toItemOption)
 
-        val rawEvent = finalOptions.rawEvent
-        var normURL: String? = if (rawEvent?.loadEventHandlers?.onNormalize?.isNotEmpty == true) {
-            // 1. normalizer in event listener has the #1 priority.
-            val spec1 = GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onNormalize?.invoke(spec) ?: spec
-            // The more specific handlers has the opportunity to override the result of more general handlers.
-            rawEvent.loadEventHandlers.onNormalize(spec1) ?: return NormURL.createNil(url)
-        } else {
-            // 2. global normalizers has the #2 priority
-            val normalizers = urlNormalizers
-            if (!options.noNorm && normalizers != null) {
-                normalizers.normalize(spec) ?: return NormURL.createNil(url)
-            } else spec
-        }
-
         if (!finalOptions.isDefault("priority")) {
             url.priority = finalOptions.priority
         }
         val href = url.href?.let { UrlUtils.splitUrlArgs(it).first }?.takeIf { UrlUtils.isStandard(it) }
 
-        // 3. UrlUtils.normalize comes at last to remove fragment, and query string if required
-        normURL = UrlUtils.normalizeOrNull(normURL, options.ignoreUrlQuery)
+        var normURL: String? = spec
+        if (!options.noNorm) {
+            val rawEvent = finalOptions.rawEvent
+            normURL = if (rawEvent?.loadEventHandlers?.onNormalize?.isNotEmpty == true) {
+                // 1. normalizer in event listener has the #1 priority.
+                val spec1 = GlobalEventHandlers.pageEventHandlers?.loadEventHandlers?.onNormalize?.invoke(spec) ?: spec
+                // The more specific handlers has the opportunity to override the result of more general handlers.
+                rawEvent.loadEventHandlers.onNormalize(spec1) ?: return NormURL.createNil(url)
+            } else {
+                // 2. global normalizers has the #2 priority
+                val normalizers = urlNormalizers
+                if (normalizers != null) {
+                    normalizers.normalize(spec) ?: return NormURL.createNil(url)
+                } else spec
+            }
+
+            // 3. UrlUtils.normalize comes at last to remove fragment, and query string if required
+            normURL = UrlUtils.normalizeOrNull(normURL, options.ignoreUrlQuery)
+        }
 
         return if (normURL == null) {
             NormURL.createNil(url)
