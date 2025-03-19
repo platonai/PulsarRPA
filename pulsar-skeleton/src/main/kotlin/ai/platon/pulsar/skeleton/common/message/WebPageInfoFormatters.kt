@@ -36,7 +36,7 @@ class FetchStatusFormatter(val page: WebPage) {
         val params = Params.of(
                 "T", fetchTimeString,
                 "DC", "$distance,$fetchCount",
-                pageCategory.symbol(), StringUtils.substring(url, 0, 80)
+                pageCategory.toPageCategory().symbol(), StringUtils.substring(url, 0, 80)
         ).withKVDelimiter(":")
 
         return params.formatAsLine()
@@ -90,7 +90,7 @@ class PageLoadStatusFormatter(
         else -> pageStatusSymbol.toString()
     }
     private val loadMessagePrefix get() = prefix.takeIf { it.isNotEmpty() } ?: pageStatus
-    private val category get() = page.pageCategory.symbol()
+    private val category get() = page.pageCategory.toPageCategory().symbol()
     private val fetchReason get() = buildFetchReason()
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) "" else " | $label"

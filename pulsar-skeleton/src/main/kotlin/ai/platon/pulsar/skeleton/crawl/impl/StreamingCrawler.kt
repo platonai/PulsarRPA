@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.urls.*
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
@@ -810,7 +811,7 @@ open class StreamingCrawler(
         fetchDelayed(url, delay)
 
         // Collect all cancel reasons
-        if (page != null) {
+        if (page is AbstractWebPage) {
             // page is not updated using page datum if the page is canceled, so use pageDatum
             val reason = page.pageDatum?.protocolStatus?.reason ?: "unknown"
             globalState.lastCancelReason.add(reason.toString())
