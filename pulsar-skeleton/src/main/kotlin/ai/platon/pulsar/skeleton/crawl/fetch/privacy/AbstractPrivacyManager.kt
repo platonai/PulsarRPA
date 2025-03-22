@@ -18,8 +18,12 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Manage the privacy contexts.
- * */
+ * Manages the lifecycle of privacy contexts, including permanent and temporary contexts.
+ * Permanent contexts have a long lifecycle and are never deleted, while temporary contexts
+ * are short-lived and discarded if a privacy leak is detected.
+ *
+ * @param conf The immutable configuration used to initialize the privacy manager.
+ */
 abstract class AbstractPrivacyManager(
     override val conf: ImmutableConfig
 ): PrivacyManager {
@@ -27,108 +31,168 @@ abstract class AbstractPrivacyManager(
     private val closed = AtomicBoolean()
 
     /**
-     * life cycle of the permanent context is relatively long. The system will never delete the permanent contexts.
-     *
-     * The predefined privacy agents for permanent contexts are:
-     *
-     * 1. PrivacyAgent.USER_DEFAULT
+     * Permanent contexts have a long lifecycle and are never deleted by the system.
+     * Predefined privacy agents for permanent contexts include:
+     * 1. PrivacyAgent.SYSTEM_DEFAULT
      * 2. PrivacyAgent.PROTOTYPE
-     * 2. PrivacyAgent.DEFAULT
-     * */
+     * 3. PrivacyAgent.DEFAULT
+     * 4. PrivacyAgent.NEXT_SEQUENTIAL
+     */
     val permanentContexts = ConcurrentHashMap<PrivacyAgent, PrivacyContext>()
 
     /**
-     * The life cycle of the temporary context is very short. Whenever the system detects that the
-     * privacy context is leaked, the system discards the leaked context and creates a new one.
-     *
-     * NOTE: we can use a priority queue and every time we need a context, take the top one
-     * */
+     * Temporary contexts have a short lifecycle and are discarded if a privacy leak is detected.
+     * A new context is created to replace the leaked one.
+     */
     val temporaryContexts = ConcurrentHashMap<PrivacyAgent, PrivacyContext>()
 
+    /**
+     * Returns all active contexts, including both permanent and temporary contexts.
+     */
     val activeContexts get() = permanentContexts + temporaryContexts
 
+    /**
+     * Zombie contexts are contexts that are no longer active but have not yet been fully closed.
+     */
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
 
+    /**
+     * Dead contexts are contexts that have been fully closed and their resources released.
+     */
     val deadContexts = ConcurrentLinkedDeque<PrivacyContext>()
 
+    /**
+     * Monitor object used to synchronize operations on contexts.
+     */
     val contextLifeCycleMonitor = Any()
 
+    /**
+     * The strategy used to close contexts, either ASAP (as soon as possible) or LAZY.
+     */
     private val closeStrategy get() = conf.get(PRIVACY_CONTEXT_CLOSE_LAZY, CloseStrategy.ASAP.name)
 
+    /**
+     * Executor service used to schedule context cleaning tasks.
+     */
     private val cleaningService = Executors.newSingleThreadScheduledExecutor()
 
+    /**
+     * Factory for generating privacy agents.
+     */
     protected val privacyAgentGeneratorFactory = PrivacyAgentGeneratorFactory(conf)
 
+    /**
+     * The generator used to create privacy agents.
+     */
     open val privacyAgentGenerator get() = privacyAgentGeneratorFactory.generator
 
+    /**
+     * Indicates whether the privacy manager is closed.
+     */
     override val isClosed get() = closed.get()
-    
+
+    /**
+     * Indicates whether the privacy manager is active.
+     */
     override val isActive get() = !isClosed && AppContext.isActive
 
     /**
-     * Run a task in a privacy context.
+     * Runs a fetch task within a privacy context.
      *
-     * The privacy context is selected from the active privacy context pool,
-     * and it is supposed to have at least one ready web driver to run the task.
-     *
-     * If the privacy context chosen is not ready to serve, especially, it has no any ready web driver,
-     * the task will be canceled.
-     *
-     * @param task the fetch task
-     * @param fetchFun the fetch function
-     * @return the fetch result
-     * */
+     * @param task The fetch task to execute.
+     * @param fetchFun The function to execute the fetch task.
+     * @return The result of the fetch task.
+     */
     @Throws(Exception::class)
     abstract override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
+
     /**
-     * Create a new context or return an existing one.
-     * */
+     * Attempts to get the next ready privacy context for a given page, fingerprint, and task.
+     *
+     * @param page The web page associated with the context.
+     * @param fingerprint The fingerprint used to identify the context.
+     * @param task The fetch task associated with the context.
+     * @return The next ready privacy context.
+     */
     abstract override fun tryGetNextReadyPrivacyContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
+
     /**
-     * Create a new context or return an existing one.
-     * */
+     * Attempts to get the next ready privacy context for a given fingerprint.
+     *
+     * @param fingerprint The fingerprint used to identify the context.
+     * @return The next ready privacy context.
+     */
     abstract override fun tryGetNextReadyPrivacyContext(fingerprint: Fingerprint): PrivacyContext
+
     /**
-     * Create a new context or return an existing one
-     * */
+     * Attempts to get the next under-loaded privacy context for a given page, fingerprint, and task.
+     *
+     * @param page The web page associated with the context.
+     * @param fingerprint The fingerprint used to identify the context.
+     * @param task The fetch task associated with the context.
+     * @return The next under-loaded privacy context, or null if none is available.
+     */
     abstract override fun tryGetNextUnderLoadedPrivacyContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
 
     /**
-     * Create a context with [privacyAgent] and add it to active context list if not absent
-     * */
+     * Gets or creates a privacy context for the given privacy agent.
+     *
+     * @param privacyAgent The privacy agent associated with the context.
+     * @return The privacy context.
+     */
     abstract override fun getOrCreate(privacyAgent: PrivacyAgent): PrivacyContext
 
     /**
-     * Create a context and do not add to active context list
-     * */
+     * Creates an unmanaged privacy context for the given privacy agent.
+     *
+     * @param privacyAgent The privacy agent associated with the context.
+     * @return The unmanaged privacy context.
+     */
     abstract override fun createUnmanagedContext(privacyAgent: PrivacyAgent): PrivacyContext
-    
+
     /**
-     * Create a context and do not add to active context list
-     * */
+     * Creates an unmanaged privacy context for the given privacy agent and fetcher.
+     *
+     * @param privacyAgent The privacy agent associated with the context.
+     * @param fetcher The web driver fetcher used to create the context.
+     * @return The unmanaged privacy context.
+     */
     override fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: WebDriverFetcher) =
         createUnmanagedContext(privacyAgent).also { (it as? AbstractPrivacyContext)?.webdriverFetcher = fetcher }
 
+    /**
+     * Builds a status string summarizing the current state of active contexts.
+     *
+     * @return A string representation of the active contexts' status.
+     */
     override fun buildStatusString(): String {
         val snapshot = activeContexts.values.joinToString("\n") { it.display + ": " + it.buildStatusString() }
         return snapshot
     }
-    
+
+    /**
+     * Performs maintenance tasks on the privacy manager.
+     *
+     * @param force If true, forces maintenance tasks to run.
+     */
     override fun maintain(force: Boolean) {
         // do nothing by default
     }
 
     /**
-     * Close a given privacy context, remove it from the active list and add it to the zombie list.
-     * No exception.
-     * */
+     * Closes a given privacy context, moving it from the active list to the zombie list.
+     *
+     * @param privacyContext The privacy context to close.
+     */
     override fun close(privacyContext: PrivacyContext) {
         kotlin.runCatching { doClose(privacyContext) }.onFailure { warnForClose(this, it) }
     }
 
     /**
-     * Reset the privacy environment, close all privacy contexts, so all fetch tasks are handled by new browser contexts.
-     * */
+     * Resets the privacy environment by closing all privacy contexts.
+     *
+     * @param reason The reason for resetting the privacy environment.
+     */
     override fun reset(reason: String) {
         logger.info("Reset all privacy contexts, closing all ... | {}", reason.ifEmpty { "no reason" })
 
@@ -139,15 +203,8 @@ abstract class AbstractPrivacyManager(
     }
 
     /**
-     * Close the privacy manager. All active contexts are also be closed.
-     *
-     * Closing call stack:
-     *
-     * PrivacyManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
-     * -> BrowserManager.close -> Browser.close -> WebDriver.close
-     * |-> LoadingWebDriverPool.close
-     *
-     * */
+     * Closes the privacy manager, including all active contexts.
+     */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             logger.info("Closing privacy contexts ...")
@@ -162,8 +219,10 @@ abstract class AbstractPrivacyManager(
     }
 
     /**
-     * Close a given privacy context, remove it from the active list and add it to the zombie list.
-     * */
+     * Closes a given privacy context, moving it from the active list to the zombie list.
+     *
+     * @param privacyContext The privacy context to close.
+     */
     @Throws(Exception::class)
     private fun doClose(privacyContext: PrivacyContext) {
         if (logger.isDebugEnabled) {
@@ -173,24 +232,14 @@ abstract class AbstractPrivacyManager(
 
         val privacyAgent = privacyContext.privacyAgent
 
-        /**
-         * Operations on contexts are synchronized, so it's guaranteed that new contexts are allocated
-         * after dead contexts releasing their resources.
-         * */
         synchronized(contextLifeCycleMonitor) {
             permanentContexts.remove(privacyAgent)
             temporaryContexts.remove(privacyAgent)
 
             if (!zombieContexts.contains(privacyContext)) {
-                // every time we add the item to the head,
-                // so when we report the deque, the latest contexts are reported.
                 zombieContexts.addFirst(privacyContext)
             }
 
-            // Lazy closing is experimental.
-            // it is a bad idea to close lazily:
-            // 1. hard to control the hardware resources, especially the memory
-            // 2. the zombie contexts should be closed before new contexts are created
             val lazyClose = closeStrategy == CloseStrategy.LAZY.name
             when {
                 AppSystemInfo.isCriticalResources -> closeDyingContexts()
@@ -201,19 +250,15 @@ abstract class AbstractPrivacyManager(
     }
 
     /**
-     * Close zombie contexts lazily, hope the tasks returns better.
-     *
-     * It seems not very useful:
-     * 1. lazy closing causes the resource releases later
-     * 2. tasks canceling is good, no need to wait for the tasks
-     * */
+     * Closes zombie contexts lazily, delaying the resource release.
+     */
     private fun closeZombieContextsLazily() {
         cleaningService.schedule({ closeDyingContexts() }, 5, TimeUnit.SECONDS)
     }
 
     /**
-     * Close the zombie contexts, and the resources release immediately.
-     * */
+     * Closes zombie contexts immediately, releasing their resources.
+     */
     private fun closeDyingContexts() {
         val dyingContexts = zombieContexts.filter { !it.isClosed }.ifEmpty { return@closeDyingContexts }
 
@@ -228,6 +273,9 @@ abstract class AbstractPrivacyManager(
         reportHistoricalContexts()
     }
 
+    /**
+     * Reports the throughput of the latest temporary contexts.
+     */
     private fun reportHistoricalContexts() {
         val maximumRecords = 15
         val historicalContexts = zombieContexts.filter { it.privacyAgent.isTemporary } +
@@ -235,7 +283,6 @@ abstract class AbstractPrivacyManager(
         if (historicalContexts.isNotEmpty()) {
             val prefix = "The latest temporary context throughput: "
             val postfix = " (success/min)"
-            // zombieContexts is a deque, so here we take the latest n contexts.
             historicalContexts.take(maximumRecords)
                 .filterIsInstance<AbstractPrivacyContext>()
                 .joinToString(", ", prefix, postfix) { String.format("%.2f", 60 * it.meterSuccesses.meanRate) }

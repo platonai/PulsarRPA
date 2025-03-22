@@ -39,15 +39,15 @@ open class ListenableHyperlink(
      * */
     priority: Int = 0,
     /**
-     * The language of this hyperlink
+     * The language of this hyperlink, reserved
      * */
     lang: String = "*",
     /**
-     * The country of this hyperlink
+     * The country of this hyperlink, reserved
      * */
     country: String = "*",
     /**
-     * The district of this hyperlink
+     * The district of this hyperlink, reserved
      * */
     district: String = "*",
     /**

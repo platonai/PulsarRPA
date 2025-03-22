@@ -44,15 +44,15 @@ open class Hyperlink constructor(
      * */
     priority: Int = 0,
     /**
-     * The language of this hyperlink
+     * The language of this hyperlink, reserved
      * */
     lang: String = "*",
     /**
-     * The country of this hyperlink
+     * The country of this hyperlink, reserved
      * */
     country: String = "*",
     /**
-     * The district of this hyperlink
+     * The district of this hyperlink, reserved
      * */
     district: String = "*",
     /**
@@ -78,11 +78,13 @@ open class Hyperlink constructor(
     )
     constructor(link: Hyperlink) : this(
         link.url, text = link.text, order = link.order, referrer = link.referrer, args = link.args, href = link.href,
-        priority = link.priority, lang = link.lang, country = link.country, district = link.district, nMaxRetry = link.nMaxRetry, depth = link.depth
+        priority = link.priority, lang = link.lang, country = link.country, district = link.district,
+        nMaxRetry = link.nMaxRetry, depth = link.depth
     )
     constructor(datum: HyperlinkDatum) : this(
         datum.url, text = datum.text, order = datum.order, referrer = datum.referrer, args = datum.args, href = datum.href,
-        priority = datum.priority, lang = datum.lang, country = datum.country, district = datum.district, nMaxRetry = datum.nMaxRetry, depth = datum.depth
+        priority = datum.priority, lang = datum.lang, country = datum.country, district = datum.district,
+        nMaxRetry = datum.nMaxRetry, depth = datum.depth
     )
     
     fun data() = toDatum()

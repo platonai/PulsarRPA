@@ -145,6 +145,7 @@ open class PrivacyManagedBrowserFetcher(
             return webdriverFetcher.fetchDeferred(task, driver).response
         }
 
+        // Run the task within a privacy context.
         // If the driver is not specified, use privacy manager to get a driver
         // @Throws(ProxyException::class, Exception::class)
         return privacyManager.run(task) { _, driver2 -> webdriverFetcher.fetchDeferred(task, driver2) }.response

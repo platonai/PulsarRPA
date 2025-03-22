@@ -48,12 +48,6 @@ open class BrowserSettings constructor(
         var SCRIPT_CONFUSER: ScriptConfuser = SimpleScriptConfuser()
 
         /**
-         * Check if the current environment supports only headless mode.
-         * */
-        @Deprecated("Not reliable, not used anymore")
-        val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
-        
-        /**
          * Specify the browser type to fetch webpages.
          *
          * NOTICE: PULSAR_CHROME is the only supported browser currently.
@@ -229,11 +223,6 @@ open class BrowserSettings constructor(
          * */
         @JvmStatic
         fun withGUI(): Companion {
-            if (isHeadlessOnly) {
-                // System.err.println("GUI is not available")
-                // return BrowserSettings
-            }
-
             listOf(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
@@ -446,17 +435,12 @@ open class BrowserSettings constructor(
      * The supervisor process arguments
      * */
     val supervisorProcessArgs get() = config.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
-    /**
-     * Chrome has to run without sandbox in a virtual machine
-     * TODO: this flag might be upgraded by WSL
-     * */
-    val forceNoSandbox get() = AppContext.OS_IS_WSL
 
     /**
      * Add a --no-sandbox flag to launch the chrome if we are running inside a virtual machine,
      * for example, virtualbox, vmware or WSL
      * */
-    val noSandbox get() = forceNoSandbox || config.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
+    val noSandbox get() = config.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
 
     /**
      * The browser's display mode, can be one of the following values:
@@ -467,7 +451,6 @@ open class BrowserSettings constructor(
     val displayMode
         get() = when {
             config[BROWSER_DISPLAY_MODE] != null -> config.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS)
-            isHeadlessOnly -> DisplayMode.HEADLESS
             else -> DisplayMode.GUI
         }
 

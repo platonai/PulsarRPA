@@ -90,7 +90,7 @@ interface UrlAware {
     var priority: Int
 
     /**
-     * The configured url, always be "$url $args"
+     * The configured url, always be the combination of url and args, e.g. "$url $args"
      * */
     val configuredUrl: String
 

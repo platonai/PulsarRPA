@@ -267,11 +267,12 @@ open class WebDriverPoolManager(
      * */
     fun closeBrowserAccompaniedDriverPoolGracefully(browserId: BrowserId, timeToWait: Duration) {
         numReset.mark()
-        
+
+        // TODO: mark the driver pool and all the drivers as retired first and them close them
+
         // Preempt the channel to ensure consistency.
-        // TODO: remove preempt guard, just mark the driver pool and all the drivers as retired first and them close them
         //
-        // Wait until there is no normal tasks, and if there is at least one preemptive task
+        // Waits until there are no normal tasks. If there is at least one preemptive task
         // in the critical section, all normal tasks have to wait.
         preempt {
             try {
@@ -331,12 +332,14 @@ open class WebDriverPoolManager(
          * if there are some of such browsers, issue warnings and destroy them.
          * */
         browserManager.destroyZombieBrowsersForcibly()
-        
+
         val idleDriverPoolCount = workingDriverPools.values.count { it.isIdle }
         if (idleDriverPoolCount > 0) {
             logger.warn("There are {} idle driver pools, preempt and do the maintaining", idleDriverPoolCount)
+
+            // TODO: mark the driver pool and all the drivers as retired first and them close them
+
             // Preempt the channel to ensure consistency
-            // TODO: check if it's necessary to preempt the channel
             // We doubt the preemptive maintainer slows down the system if it runs too frequent
             preempt {
                 driverPoolCloser.closeIdleDriverPoolsSafely()
@@ -431,6 +434,17 @@ open class WebDriverPoolManager(
         return runCancelableWithTimeout(task, driver)
     }
 
+    /**
+     * Waits until there are no supervisor tasks running and run the task:
+     *
+     * 1. get or create a driver pool for the browserId
+     * 2. run the task with the driver pool
+     *
+     * There are two types of tasks: normal tasks and supervisor tasks.
+     * Normal tasks are executed concurrently; however, they cannot be executed simultaneously with supervisor tasks.
+     *
+     * The [PreemptChannelSupport] mechanism is designed to handle this behavior.
+     */
     @Throws(
         BrowserUnavailableException::class,
         BrowserLaunchException::class,
@@ -442,12 +456,7 @@ open class WebDriverPoolManager(
     private suspend fun runWithDriverPool(task: WebDriverTask): FetchResult? {
         val browserId = task.browserId
         var result: FetchResult? = null
-        /**
-         * There are two kind of tasks, normal tasks and supervisor tasks.
-         * Normal tasks are executed concurrently; however, they cannot be executed simultaneously with supervisor tasks.
-         *
-         * [PreemptChannelSupport] is developed for such mechanism.
-         * */
+
         whenNormalDeferred {
             if (!isActive) {
                 if (AppContext.isActive) {

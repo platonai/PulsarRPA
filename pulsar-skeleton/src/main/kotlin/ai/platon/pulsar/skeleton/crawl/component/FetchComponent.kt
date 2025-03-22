@@ -94,7 +94,8 @@ open class FetchComponent(
 
         return try {
             val protocol = protocolFactory.getProtocol(page)
-            processProtocolOutput(page, protocol.getProtocolOutput(page))
+            val output = protocol.getProtocolOutput(page)
+            processProtocolOutput(page, output)
         } catch (e: ProtocolNotFound) {
             logger.warn(e.message)
             page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND) }

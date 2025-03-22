@@ -7,13 +7,12 @@ import kotlin.concurrent.withLock
 import kotlin.jvm.Throws
 
 /**
- * The preemptive channel concurrency pattern, there are two channels: preemptive channel and normal channel
+ * Implements the preemptive channel concurrency pattern, which consists of two channels: preemptive and normal.
  *
- * TODO: compare with ReadWriteLock
- *
- * 1. both channel allows multiple threads
- * 2. new workers have to wait until there is no ready preemptive tasks nor running preemptive tasks
- * 3. a preemptive task locks the working channel immediately, but have to wait to run util all workers are finished
+ * Key characteristics:
+ * 1. Both channels allow multiple threads.
+ * 2. New workers must wait until there are no ready or running preemptive tasks.
+ * 3. A preemptive task locks the working channel immediately but must wait to run until all workers are finished.
  *
  *                     |------ waiting ------------|- ready -|-------------- critical  -------------------|---finished----
  *
@@ -30,8 +29,8 @@ import kotlin.jvm.Throws
  * *1 The waiting workers
  * *2 The running workers
  * *3 The finished workers
- * */
-abstract class PreemptChannelSupport(val name: String = "") {
+ */
+open class PreemptChannelSupport(val name: String = "") {
     private val lock = ReentrantLock()
     private val noPreemptiveTasks = lock.newCondition()
     private val noRunningNormalTasks = lock.newCondition()
@@ -42,29 +41,61 @@ abstract class PreemptChannelSupport(val name: String = "") {
     protected val numPendingNormalTasks = AtomicInteger()
     protected val numRunningNormalTasks = AtomicInteger()
 
+    /**
+     * Indicates whether there are any preemptive tasks.
+     */
     val isPreempted get() = numPreemptiveTasks.get() > 0
-    val isNormal get() = !isPreempted
-    val hasEvent get() = arrayOf(numRunningPreemptiveTasks,
-            numRunningPreemptiveTasks, numPendingNormalTasks, numRunningNormalTasks).sumBy { it.get() } > 0
 
     /**
-     * If there is at least one preemptive task in the critical section, all normal tasks must wait.
-     * */
+     * Indicates whether the channel is in a normal state (no preemptive tasks).
+     */
+    val isNormal get() = !isPreempted
+
+    /**
+     * Indicates whether there are any active events (preemptive or normal tasks).
+     */
+    val hasEvent get() = arrayOf(numRunningPreemptiveTasks,
+        numRunningPreemptiveTasks, numPendingNormalTasks, numRunningNormalTasks).sumBy { it.get() } > 0
+
+    /**
+     * Executes a preemptive task. If there is at least one preemptive task in the critical section, all normal tasks must wait.
+     *
+     * @param preemptiveTask The preemptive task to execute.
+     * @return The result of the preemptive task.
+     * @throws InterruptedException If the thread is interrupted while waiting.
+     */
     @Throws(InterruptedException::class)
     fun <T> preempt(preemptiveTask: () -> T) {
         beforePreempt().runCatching { preemptiveTask() }.also { afterPreempt() }.getOrThrow()
     }
-    
+
+    /**
+     * Executes a normal task. Normal tasks must wait until there are no preemptive tasks.
+     *
+     * @param task The normal task to execute.
+     * @return The result of the normal task.
+     * @throws InterruptedException If the thread is interrupted while waiting.
+     */
     @Throws(InterruptedException::class)
     fun <T> whenNormal(task: () -> T) {
         beforeTask().runCatching { task() }.also { afterTask() }.getOrThrow()
     }
-    
+
+    /**
+     * Executes a deferred normal task. Normal tasks must wait until there are no preemptive tasks.
+     *
+     * @param task The deferred normal task to execute.
+     * @return The result of the normal task.
+     * @throws InterruptedException If the thread is interrupted while waiting.
+     */
     @Throws(InterruptedException::class)
     suspend fun <T> whenNormalDeferred(task: suspend () -> T) {
         beforeTask().runCatching { task() }.also { afterTask() }.getOrThrow()
     }
 
+    /**
+     * Releases all locks forcefully. This is typically used in error recovery scenarios.
+     */
     fun releaseLocks() {
         if (numRunningNormalTasks.get() == 0) {
             System.err.println("Force release preemptive locks | ${formatPreemptChannelStatus()}")
@@ -75,13 +106,18 @@ abstract class PreemptChannelSupport(val name: String = "") {
         numRunningNormalTasks.set(0)
     }
 
+    /**
+     * Formats the current status of the preemptive channel.
+     *
+     * @return A string representation of the preemptive channel's status.
+     */
     fun formatPreemptChannelStatus(): String {
         return "pTasks: $numPreemptiveTasks," +
                 " rPTasks: $numRunningPreemptiveTasks," +
                 " pNTasks: $numPendingNormalTasks," +
                 " rNTasks: $numRunningNormalTasks"
     }
-    
+
     @Throws(InterruptedException::class)
     private fun beforePreempt() {
         // All workers must NOT pass now
@@ -89,7 +125,7 @@ abstract class PreemptChannelSupport(val name: String = "") {
         // Wait until all the normal tasks are finished
         waitUntilNoRunningNormalTasks()
     }
-    
+
     @Throws(InterruptedException::class)
     private fun afterPreempt() {
         numRunningPreemptiveTasks.decrementAndGet()
@@ -100,24 +136,24 @@ abstract class PreemptChannelSupport(val name: String = "") {
             }
         }
     }
-    
+
     @Throws(InterruptedException::class)
     private fun beforeTask() {
         numPendingNormalTasks.incrementAndGet()
-        // wait all the preemptive tasks  are finished
+        // wait all the preemptive tasks are finished
         waitUntilNoPreemptiveTask()
     }
-    
+
     @Throws(InterruptedException::class)
     private fun afterTask() {
         lock.withLock {
             if (numRunningNormalTasks.decrementAndGet() == 0) {
-                // all preemptive tasks  are allowed to pass
+                // all preemptive tasks are allowed to pass
                 noRunningNormalTasks.signalAll()
             }
         }
     }
-    
+
     @Throws(InterruptedException::class)
     private fun waitUntilNoRunningNormalTasks() {
         lock.withLock {

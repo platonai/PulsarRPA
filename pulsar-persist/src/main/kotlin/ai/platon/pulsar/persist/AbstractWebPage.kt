@@ -1,6 +1,5 @@
 package ai.platon.pulsar.persist
 
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.mergeUrlArgs

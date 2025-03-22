@@ -71,11 +71,9 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
     internal fun createLoadOptions0(url: UrlAware, options: LoadOptions): LoadOptions {
         val clone = options.clone()
 
-        // TODO: disable in product environment for performance issue
-        require(options.toString() == clone.toString())
-
         require(options.rawEvent == clone.rawEvent)
         require(options.rawItemEvent == clone.rawItemEvent)
+        require(options.toString() == clone.toString())
 
         clone.conf.name = clone.label
         clone.nMaxRetry = url.nMaxRetry

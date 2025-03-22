@@ -18,10 +18,7 @@ import ai.platon.pulsar.skeleton.crawl.protocol.ProtocolOutput
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import crawlercommons.robots.BaseRobotRules
 import org.slf4j.LoggerFactory
-import java.net.ConnectException
-import java.net.SocketTimeoutException
-import java.net.URL
-import java.net.UnknownHostException
+import java.net.*
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
@@ -76,7 +73,8 @@ abstract class AbstractHttpProtocol : Protocol {
         return try {
             getProtocolOutputWithRetry(page)
         } catch (e: Throwable) {
-            log.warn("Unexpected exception", e)
+            // log.warn("Unexpected exception", e)
+            warnUnexpected(this, e)
             ProtocolOutput(ProtocolStatus.failed(e))
         }
     }
@@ -90,6 +88,12 @@ abstract class AbstractHttpProtocol : Protocol {
         return getOutputWithHttpCodeTranslated(page.url, response)
     }
 
+    /**
+     * Retrieves the protocol output with retry logic. Retries are only performed if the retry scope is RetryScope.PROTOCOL.
+     *
+     * @param page The web page for which the protocol output is to be retrieved.
+     * @return The protocol output containing the status and response data.
+     */
     private fun getProtocolOutputWithRetry(page: WebPage): ProtocolOutput {
         val startTime = Instant.now()
         var response: Response?
@@ -97,6 +101,7 @@ abstract class AbstractHttpProtocol : Protocol {
         var lastThrowable: Throwable? = null
         var i = 0
 
+        // Calculate the maximum number of retries, ensuring it does not exceed the maximum retry guard value
         val maxTry = fetchMaxRetry.coerceAtMost(MAX_REY_GUARD)
         do {
             if (i > 0) {
@@ -105,6 +110,7 @@ abstract class AbstractHttpProtocol : Protocol {
 
             try {
                 // TODO: FETCH_PROTOCOL does not work if the response is a ForwardingResponse
+                // Fetch the response and determine if a retry is necessary
                 response = getResponse(page, false)
                 retry = response == null || shouldRetry(response)
             } catch (e: IllegalApplicationStateException) {
@@ -114,22 +120,27 @@ abstract class AbstractHttpProtocol : Protocol {
             } catch (e: Exception) {
                 response = null
                 lastThrowable = e
-                log.warn(e.stringify("[Unexpected]"))
+                // log.warn(e.stringify("[Unexpected]"))
+                warnUnexpected(this, e)
             } catch (t: Throwable) {
                 response = null
                 lastThrowable = t
-                log.warn(t.stringify("[Unexpected]"))
+                // log.warn(t.stringify("[Unexpected]"))
+                warnUnexpected(this, t)
             }
         } while (retry && ++i < maxTry && isActive)
 
+        // If the system is no longer active, return a canceled status
         if (!isActive) {
             return ProtocolOutput(ProtocolStatus.failed(ProtocolStatusCodes.CANCELED))
         }
 
+        // If the response is null, return a failed response
         if (response == null) {
             return getFailedResponse(lastThrowable, i, maxTry)
         }
 
+        // Set the response time and return the translated protocol output
         setResponseTime(startTime, page, response)
         return getOutputWithHttpCodeTranslated(page.url, response)
     }
@@ -139,7 +150,7 @@ abstract class AbstractHttpProtocol : Protocol {
     }
 
     private fun getOutputWithHttpCodeTranslated(url: String, response: Response): ProtocolOutput {
-        var u = URL(url)
+        var u = URI(url).toURL()
         val httpCode = response.httpCode
         val pageDatum = response.pageDatum
         val content = pageDatum.content
@@ -205,6 +216,14 @@ abstract class AbstractHttpProtocol : Protocol {
         page.metadata[Name.RESPONSE_TIME] = elapsedTime.toString()
     }
 
+    /**
+     * Get the protocol response for the given page.
+     *
+     * @param page The page to get the response for.
+     * @param followRedirects Whether to follow redirects.
+     * @return The response for the given page.
+     * @throws Exception If an error occurs while getting the response.
+     */
     @Throws(Exception::class)
     abstract fun getResponse(page: WebPage, followRedirects: Boolean): Response?
 
