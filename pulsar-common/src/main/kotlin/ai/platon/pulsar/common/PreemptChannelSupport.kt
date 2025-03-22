@@ -31,6 +31,10 @@ import kotlin.jvm.Throws
  * *3 The finished workers
  */
 open class PreemptChannelSupport(val name: String = "") {
+    /**
+     * The lock used to synchronize access to the preemptive channel.
+     * Preemptive tasks are low-probability events, so it's OK to use locks.
+     */
     private val lock = ReentrantLock()
     private val noPreemptiveTasks = lock.newCondition()
     private val noRunningNormalTasks = lock.newCondition()
@@ -59,6 +63,8 @@ open class PreemptChannelSupport(val name: String = "") {
 
     /**
      * Executes a preemptive task. If there is at least one preemptive task in the critical section, all normal tasks must wait.
+     * 
+     * Preemptive tasks are low-probability events, so it's OK to use locks.
      *
      * @param preemptiveTask The preemptive task to execute.
      * @return The result of the preemptive task.
@@ -83,6 +89,8 @@ open class PreemptChannelSupport(val name: String = "") {
 
     /**
      * Executes a deferred normal task. Normal tasks must wait until there are no preemptive tasks.
+     *
+     * Preemptive task is a low-probability event, so it's OK to use locks.
      *
      * @param task The deferred normal task to execute.
      * @return The result of the normal task.

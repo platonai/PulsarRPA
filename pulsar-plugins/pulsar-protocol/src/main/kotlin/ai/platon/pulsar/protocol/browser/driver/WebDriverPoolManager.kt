@@ -269,9 +269,10 @@ open class WebDriverPoolManager(
         numReset.mark()
 
         // TODO: mark the driver pool and all the drivers as retired first and them close them
+        // TODO: only lock the browser/driver pool
 
         // Preempt the channel to ensure consistency.
-        //
+        // Preemptive tasks are low-probability events, so it's OK to use locks.
         // Waits until there are no normal tasks. If there is at least one preemptive task
         // in the critical section, all normal tasks have to wait.
         preempt {
@@ -338,6 +339,7 @@ open class WebDriverPoolManager(
             logger.warn("There are {} idle driver pools, preempt and do the maintaining", idleDriverPoolCount)
 
             // TODO: mark the driver pool and all the drivers as retired first and them close them
+            // TODO: only lock the browser/driver pool
 
             // Preempt the channel to ensure consistency
             // We doubt the preemptive maintainer slows down the system if it runs too frequent
@@ -457,6 +459,7 @@ open class WebDriverPoolManager(
         val browserId = task.browserId
         var result: FetchResult? = null
 
+        // Preemptive task is a low-probability event, so it's OK to use locks in this case
         whenNormalDeferred {
             if (!isActive) {
                 if (AppContext.isActive) {
