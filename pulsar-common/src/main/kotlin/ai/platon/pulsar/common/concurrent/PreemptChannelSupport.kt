@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.concurrent
 
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger

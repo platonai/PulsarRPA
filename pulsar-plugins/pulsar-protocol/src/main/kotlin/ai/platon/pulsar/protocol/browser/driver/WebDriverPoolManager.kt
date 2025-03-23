@@ -1,15 +1,14 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.concurrent.PreemptChannelSupport
 import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import ai.platon.pulsar.protocol.browser.impl.BrowserManager
-import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.common.persist.ext.eventHandlers
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
