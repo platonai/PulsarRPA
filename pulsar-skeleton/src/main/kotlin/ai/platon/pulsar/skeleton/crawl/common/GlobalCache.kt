@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.collect.ConcurrentUrlPool
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache.Companion.CACHE_CAPACITY
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.GLOBAL_DOCUMENT_CACHE_SIZE
 import ai.platon.pulsar.common.config.CapabilityTypes.GLOBAL_PAGE_CACHE_SIZE
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -122,29 +121,3 @@ open class GlobalCache(val conf: ImmutableConfig) {
     }
 }
 
-/**
- * The global cache factory.
- * */
-class GlobalCacheFactory(
-    val immutableConfig: ImmutableConfig
-) {
-    companion object {
-        private var _globalCache: GlobalCache? = null
-    }
-
-    private fun createDefaultGlobalCache(): GlobalCache {
-        val cache = GlobalCache(immutableConfig)
-        _globalCache = cache
-        return cache
-    }
-
-    /**
-     * Get the global cache.
-     * */
-    @get:Synchronized
-    val globalCache get() = _globalCache ?: createDefaultGlobalCache()
-
-    constructor(globalCache: GlobalCache, immutableConfig: ImmutableConfig): this(immutableConfig) {
-        _globalCache = globalCache
-    }
-}
