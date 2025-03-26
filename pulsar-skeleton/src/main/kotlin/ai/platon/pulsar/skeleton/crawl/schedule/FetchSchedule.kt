@@ -16,7 +16,6 @@ data class ModifyInfo(
     var prevFetchTime: Instant,
     var prevModifiedTime: Instant,
     var modifiedTime: Instant,
-    var modified: Int,
 )
 
 interface FetchSchedule : Parameterized {

@@ -235,7 +235,7 @@ interface WebPage : Comparable<WebPage> {
     var fetchCount: Int
 
     /**
-     * The time when the web page was last fetched.
+     * The time the page to be fetched.
      */
     var fetchTime: Instant
 
@@ -307,7 +307,7 @@ interface WebPage : Comparable<WebPage> {
     /**
      * The content of the web page, stored as a `ByteBuffer` for persistence.
      */
-    val persistContent: ByteBuffer
+    val persistContent: ByteBuffer?
 
     /**
      * The content of the web page, stored as a `ByteArray`.

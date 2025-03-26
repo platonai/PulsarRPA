@@ -1,0 +1,16 @@
+.idea
+.vscode
+.github
+docs
+docker
+logs
+submodules
+extracted
+data
+
+*.xlsx
+*.db
+*.iml
+
+.dockerignore
+Dockerfile

@@ -429,7 +429,7 @@ class GoraWebPage(
             setByteBufferContent1(value)
         }
 
-    override val persistContent: ByteBuffer
+    override val persistContent: ByteBuffer?
         get() = getPersistContent0()
 
     override fun setStringContent(value: String?) {
@@ -709,7 +709,7 @@ class GoraWebPage(
         return persistContent
     }
 
-    private fun getPersistContent0(): ByteBuffer {
+    private fun getPersistContent0(): ByteBuffer? {
         synchronized(CONTENT_MONITOR) {
             val fieldName = GWebPage.Field.CONTENT.getName()
             // load content lazily
