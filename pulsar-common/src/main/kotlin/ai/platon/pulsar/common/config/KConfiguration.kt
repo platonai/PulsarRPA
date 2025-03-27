@@ -26,46 +26,43 @@ import kotlin.io.path.isReadable
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
 
+/**
+ * Configuration is a set of key/value pairs. Keys are always strings, values can be any type.
+ *
+ * @property profile The profile of the configuration.
+ * @property extraResources The extra resources to load.
+ * @property loadDefaults Whether to load the default resources.
+ * */
 class KConfiguration(
-    /**
-     * The profile of the configuration.
-     * */
     val profile: String = "",
-    @Deprecated("Use profile instead")
-    val mode: String = profile,
-    /**
-     * The extra resources to load.
-     * */
     val extraResources: Iterable<String> = listOf(),
-    /**
-     * Whether to load the default resources.
-     * */
     private val loadDefaults: Boolean = true,
 ) : Iterable<Map.Entry<String, String?>> {
 
     companion object {
         val DEFAULT_RESOURCES = mutableSetOf("pulsar-default.xml")
         val EXTERNAL_RESOURCE_BASE_DIR = AppPaths.CONFIG_DIR.resolve("conf-enabled")
-        val SYSTEM_DEFAULT_RESOURCES = mutableSetOf<String>()
         private val ID_SUPPLIER = AtomicInteger()
     }
 
     private var impl: ConfigurationImpl? = null
+
+    @get:Synchronized
     private val assuredImplementation: ConfigurationImpl
         get() {
             if (impl == null) {
-                impl = ConfigurationImpl(profile, profile, extraResources, loadDefaults)
+                impl = ConfigurationImpl(profile, extraResources, loadDefaults)
                 impl?.load()
             }
-            
+
             return impl!!
         }
-    
+
     val id = ID_SUPPLIER.incrementAndGet()
     val loadedResources: List<String> get() = impl?.resources?.map { it.name } ?: listOf()
-    
-    constructor(conf: KConfiguration) : this(conf.profile, conf.profile, conf.extraResources, conf.loadDefaults)
-    
+
+    constructor(conf: KConfiguration) : this(conf.profile, conf.extraResources, conf.loadDefaults)
+
     /**
      * Set the `value` of the `name` property. If
      * `name` is deprecated or there is a deprecated name associated to it,
@@ -82,44 +79,49 @@ class KConfiguration(
             assuredImplementation[name] = value
         }
     }
-    
+
     fun unset(name: String) {
         assuredImplementation.remove(name)
     }
-    
+
     operator fun get(name: String): String? {
         return assuredImplementation[name]?.toString()
     }
-    
+
     fun get(name: String, defaultValue: String): String {
         return get(name) ?: defaultValue
     }
-    
+
     fun setStrings(name: String, vararg values: String) {
         set(name, Strings.arrayToString(values))
     }
-    
+
     fun setIfUnset(name: String?, value: String?) {
         if (get(name!!) == null) {
             set(name, value)
         }
     }
-    
+
     /**
      * Return the number of keys in the configuration.
      *
      * @return number of keys in the configuration.
      */
     fun size() = assuredImplementation.size()
-    
+
     /**
      * Clears all keys from the configuration.
      */
     fun clear() {
         impl = null
     }
-    
-    override fun iterator(): MutableIterator<Map.Entry<String, String>> {
+
+    @Synchronized
+    fun reload() {
+        impl = null // trigger reload
+    }
+
+    override fun iterator(): Iterator<Map.Entry<String, String>> {
         // Get a copy of just the string to string pairs. After the old object
         // methods that allow non-strings to be put into configurations are removed,
         // we could replace properties with a Map<String,String> and get rid of this
@@ -132,18 +134,12 @@ class KConfiguration(
         }
         return result.entries.iterator()
     }
-    
-    @Synchronized
-    fun reloadConfiguration() {
-        impl = null // trigger reload
-    }
-    
+
     override fun toString() = assuredImplementation.toString()
 }
 
 private class ConfigurationImpl(
     private val profile: String,
-    private val mode: String,
     private val extraResources: Iterable<String>,
     private val loadDefaults: Boolean,
 ) {
@@ -168,8 +164,6 @@ private class ConfigurationImpl(
             addExternalResource(EXTERNAL_RESOURCE_BASE_DIR)
         }
     }
-
-    fun addResource(name: String) = addResourceObject(Resource(name))
 
     fun addResource(url: URL) = addResourceObject(Resource(url))
 
@@ -198,11 +192,11 @@ private class ConfigurationImpl(
      * @see #getProperty
      */
     operator fun set(name: String, value: String): Any? = properties.setProperty(name, value)
-    
+
     fun remove(name: String) = properties.remove(name)
-    
+
     fun size() = properties.size
-    
+
     override fun toString(): String {
         return resources.joinToString(", ", "[", "]") {
             it.name.substringAfterLast("/")
@@ -219,37 +213,21 @@ private class ConfigurationImpl(
             resourceNames.addAll(KConfiguration.DEFAULT_RESOURCES)
         }
 
-        for (name in resourceNames) {
-            val realResource = findRealResource(profile, mode, name)?.toString()
+        for (resourceName in resourceNames) {
+            val realResource = findRealResource(profile, resourceName)?.toString()
             if (realResource != null && realResource !in resourceURLs) {
                 resourceURLs.add(realResource)
                 logger.info("Found configuration: {}", realResource)
             } else {
-                logger.info("Resource not find: $name")
+                logger.info("Resource not find: $resourceName")
             }
         }
     }
 
-    private fun findRealResource(profile: String, mode: String, name: String): URL? {
-        return findNewStyleRealResource(profile, name) ?: findLegacyStyleRealResource(profile, mode, name)
-    }
-
-    private fun findLegacyStyleRealResource(profile: String, mode: String, name: String): URL? {
-        val prefix = "config/legacy"
-        val suffix = "$mode/$name"
-        val searchPaths = arrayOf(
-            "$prefix/$suffix", "$prefix/$profile/$suffix",
-            "$prefix/$name", "$prefix/$profile/$name",
-            name
-        ).map { it.replace("/+".toRegex(), "/") }.distinct().sortedByDescending { it.length }
-
-        return searchPaths.firstNotNullOfOrNull { SParser.wrap(it).resource }
-    }
-
-    private fun findNewStyleRealResource(profile: String, name: String): URL? {
+    private fun findRealResource(profile: String, resourceName: String): URL? {
         val prefix = "config"
-        val extension = name.substringAfterLast(".")
-        val nameWithoutExtension = name.substringBeforeLast(".")
+        val extension = resourceName.substringAfterLast(".")
+        val nameWithoutExtension = resourceName.substringBeforeLast(".")
 
         val searchPaths = arrayOf(
             "$prefix/$nameWithoutExtension-$profile.$extension"
@@ -260,39 +238,30 @@ private class ConfigurationImpl(
 
         return searchPaths.firstNotNullOfOrNull { SParser.wrap(it).resource }
     }
-    
+
     @Synchronized
     private fun addResourceObject(resource: Resource) {
         resources.add(resource) // add to resources
-        loadProps(resources.size - 1, false)
+        loadProps(resources.size - 1)
     }
-    
+
     /**
      * Loads the resource at a given index into the properties.
      *
-     * @param props      the object containing the loaded properties.
      * @param startIdx   the index where the new resource has been added.
-     * @param fullReload flag whether we do complete reload of the conf instead
      * of just loading the new resource.
      */
     @Synchronized
-    private fun loadProps(startIdx: Int, fullReload: Boolean) {
-        loadResources(resources, startIdx, fullReload)
+    private fun loadProps(startIdx: Int) {
+        loadResources(resources, startIdx)
     }
-    
-    private fun loadResources(
-        resources: ArrayList<Resource>, startIdx: Int, fullReload: Boolean
-    ) {
-        if (loadDefaults && fullReload) {
-            KConfiguration.SYSTEM_DEFAULT_RESOURCES.forEach { loadResource(Resource(it)) }
-        }
-        
+
+    private fun loadResources(resources: ArrayList<Resource>, startIdx: Int) {
         for (i in startIdx until resources.size) {
             loadResource(resources[i])?.let { resources[i] = it }
         }
-        // this.addTags(properties);
     }
-    
+
     private fun loadResource(wrapper: Resource): Resource? {
         return try {
             val resource = wrapper.resource
@@ -303,31 +272,31 @@ private class ConfigurationImpl(
             } else if (resource is Properties) {
                 overlay(properties, resource)
             }
-            
+
             val reader = getStreamReader(wrapper) ?: throw RuntimeException("$resource not found")
             var toAddTo = properties
             if (returnCachedProperties) {
                 toAddTo = Properties()
             }
-            
+
             val items: List<ParsedItem> = Parser(reader, wrapper, this).parse()
             for (item in items) {
                 loadProperty(toAddTo, item.name, item.key, item.value, item.isFinal, item.sources)
             }
             reader.close()
-            
+
             if (returnCachedProperties) {
                 overlay(properties, toAddTo)
                 return Resource(toAddTo, name)
             }
-            
+
             null
         } catch (e: Exception) {
             logger.warn("Exception", e)
             throw RuntimeException(e)
         }
     }
-    
+
     private fun overlay(to: Properties, from: Properties) {
         synchronized(from) {
             for ((key, value) in from) {
@@ -335,7 +304,7 @@ private class ConfigurationImpl(
             }
         }
     }
-    
+
     private fun loadProperty(
         properties: Properties, name: String, key: String,
         value: String?, finalParameter: Boolean, source: Array<String>?
@@ -345,24 +314,8 @@ private class ConfigurationImpl(
         } else {
             properties.remove(key)
         }
-//        var value: String? = value
-//        if (value != null || allowNullValueProperties) {
-//            if (!finalParameters.contains(attr)) {
-//                properties.setProperty(attr, value)
-//                source?.let { putIntoUpdatingResource(attr, it) }
-//            } else {
-//                // This is a final parameter so check for overrides.
-//                checkForOverride(this.properties, name, attr, value)
-//                if (this.properties !== properties) {
-//                    checkForOverride(properties, name, attr, value)
-//                }
-//            }
-//        }
-//        if (finalParameter && attr != null) {
-//            finalParameters.add(attr)
-//        }
     }
-    
+
     @Throws(XMLStreamException::class, IOException::class)
     internal fun getStreamReader(wrapper: Resource): XMLStreamReader2? {
         val resource = wrapper.resource
@@ -378,41 +331,41 @@ private class ConfigurationImpl(
                 val file = File(resource.toUri().path).absoluteFile.takeIf { it.exists() } ?: return null
                 parse(BufferedInputStream(Files.newInputStream(file.toPath())), resource.toString())
             }
-            
+
             is InputStream -> parse(resource, null)
             else -> null
         } as XMLStreamReader2?
     }
-    
+
     @Throws(IOException::class, XMLStreamException::class)
     private fun parse(url: URL): XMLStreamReader {
         val connection = url.openConnection()
         (connection as? JarURLConnection)?.useCaches = false
         return parse(connection.getInputStream(), url.toString())
     }
-    
+
     @Throws(IOException::class, XMLStreamException::class)
     private fun parse(input: InputStream, systemId: String?): XMLStreamReader {
         val id = SystemId.construct(systemId)
-        
+
         val readerConfig = wstxInputFactory.createPrivateConfig()
-        
+
         val bootstrapper = StreamBootstrapper.getInstance(null, id, input)
         return wstxInputFactory.createSR(readerConfig, systemId, bootstrapper, false, true)
     }
-    
+
     class Resource(
         val resource: Any,
         val name: String = resource.toString()
     ) {
         override fun toString() = name
     }
-    
+
     private class ParsedItem(
         var name: String, var key: String, var value: String?,
         var isFinal: Boolean, var sources: Array<String>
     )
-    
+
     /**
      * Parser to consume SAX stream of XML elements from a Configuration.
      */
@@ -432,7 +385,7 @@ private class ConfigurationImpl(
         private var parseToken = false
         private val confSource: MutableList<String> = ArrayList()
         private val results: MutableList<ParsedItem> = ArrayList<ParsedItem>()
-        
+
         @Throws(IOException::class, XMLStreamException::class)
         fun parse(): List<ParsedItem> {
             while (reader.hasNext()) {
@@ -440,7 +393,7 @@ private class ConfigurationImpl(
             }
             return results
         }
-        
+
         @Throws(XMLStreamException::class, IOException::class)
         private fun handleStartElement() {
             when (reader.localName) {
@@ -449,23 +402,23 @@ private class ConfigurationImpl(
                     parseToken = true
                     token.setLength(0)
                 }
-                
+
                 "include" -> handleInclude()
                 "configuration" -> {
                 }
-                
+
                 else -> {
                 }
             }
         }
-        
+
         private fun handleStartProperty() {
             key = null
             confValue = null
             confFinal = false
             confTag = null
             confSource.clear()
-            
+
             // First test for short format configuration
             val attrCount = reader.attributeCount
             for (i in 0 until attrCount) {
@@ -478,7 +431,7 @@ private class ConfigurationImpl(
                 }
             }
         }
-        
+
         @Throws(XMLStreamException::class, IOException::class)
         private fun handleInclude() {
             // Determine href for xi:include
@@ -491,9 +444,9 @@ private class ConfigurationImpl(
                     confInclude = reader.getAttributeValue(i)
                 }
             }
-            
+
             val confInclude2 = confInclude ?: return
-            
+
             // Determine if the included resource is a classpath resource
             // otherwise fallback to a file resource
             // xi:include are treated as inline and retain current source
@@ -543,10 +496,10 @@ private class ConfigurationImpl(
                     items = Parser(includeReader, uriResource, configurationImpl).parse()
                 }
             }
-            
+
             results.addAll(items)
         }
-        
+
         @Throws(IOException::class)
         fun handleEndElement() {
             val tokenStr = token.toString()
@@ -561,7 +514,7 @@ private class ConfigurationImpl(
                 }
             }
         }
-        
+
         fun handleEndProperty() {
             val confSourceArray = if (confSource.isEmpty()) {
                 nameSingletonArray
@@ -569,16 +522,16 @@ private class ConfigurationImpl(
                 confSource.add(name)
                 confSource.toTypedArray()
             }
-            
+
             // Read tags and put them in propertyTagsMap
 //            if (confTag != null) {
 //                readTagFromConfig(confTag, confName, confValue, confSourceArray)
 //            }
-            
+
             val key0 = key ?: return
             results.add(ParsedItem(name, key0, confValue, confFinal, confSourceArray))
         }
-        
+
         @Throws(IOException::class, XMLStreamException::class)
         fun parseNext() {
             when (reader.next()) {
@@ -587,7 +540,7 @@ private class ConfigurationImpl(
                     val text = reader.textCharacters
                     token.appendRange(text, reader.textStart, reader.textStart + reader.textLength)
                 }
-                
+
                 XMLStreamConstants.END_ELEMENT -> handleEndElement()
                 else -> {
                 }
