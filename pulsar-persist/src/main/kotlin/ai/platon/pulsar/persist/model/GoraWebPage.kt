@@ -206,7 +206,7 @@ class GoraWebPage(
         this.page = page
     }
 
-    override fun unsafeCloneGPage(page: WebPage) {
+    fun unsafeCloneGPage(page: WebPage) {
         require(page is GoraWebPage)
         unsafeSetGPage(GWebPage.newBuilder(page.unbox()).build())
     }
@@ -233,14 +233,6 @@ class GoraWebPage(
             variables.remove(PulsarParams.VAR_LOAD_OPTIONS)
             page.params = args
         }
-
-    /**
-     * Set a field loader, the loader takes a parameter as the field name,
-     * and returns a GWebPage containing the field.
-     */
-    override fun setLazyFieldLoader(lazyFieldLoader: Function<String, GWebPage>) {
-        this.lazyFieldLoader = lazyFieldLoader
-    }
 
     override var zoneId: ZoneId
         get() = if (page.zoneId == null) DateTimes.zoneId else ZoneId.of(page.zoneId.toString())
@@ -278,12 +270,20 @@ class GoraWebPage(
             page.browser = browser.name
         }
 
+    /**
+     * @inheritDoc
+     * TODO: use a separate field
+     */
     override var maxRetries: Int
         get() = metadata.getInt(Name.FETCH_MAX_RETRY, 3)
         set(maxRetries) {
             metadata[Name.FETCH_MAX_RETRY] = maxRetries
         }
 
+    /**
+     * @inheritDoc
+     * TODO: use a separate field
+     */
     override var fetchMode: FetchMode
         /**
          * Get the fetch mode, only BROWSER mode is supported currently.
@@ -722,9 +722,6 @@ class GoraWebPage(
         }
     }
 
-    /**
-     * Set the page content
-     */
     private fun setByteArrayContent1(value: ByteArray?) {
         if (value != null) {
             setByteBufferContent1(ByteBuffer.wrap(value))
@@ -745,10 +742,6 @@ class GoraWebPage(
                 persistedContentLength = length
 
                 length = originalContentLength
-                if (length <= 0) {
-                    // TODO: it's for old version compatible
-                    length = value.array().size.toLong()
-                }
                 computeContentLength(length)
             } else {
                 clearPersistContent()
@@ -770,17 +763,5 @@ class GoraWebPage(
             sig = ByteBuffer.wrap("".toByteArray())
         }
         return Strings.toHexString(sig)
-    }
-
-    private fun getPageCategory0(): PageCategory {
-        try {
-            val pageCategory = page.pageCategory
-            if (pageCategory != null) {
-                return PageCategory.parse(pageCategory.toString())
-            }
-        } catch (ignored: Throwable) {
-        }
-
-        return PageCategory.UNKNOWN
     }
 }

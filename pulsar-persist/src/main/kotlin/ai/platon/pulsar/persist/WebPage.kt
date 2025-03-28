@@ -19,7 +19,7 @@ import java.time.ZoneId
 import java.util.function.Function
 
 /**
- * Represents a web page in the Pulsar system. This interface provides methods to access and manipulate
+ * Represents a web page in the PulsarRPA system. This interface provides methods to access and manipulate
  * various properties and metadata associated with a web page, such as its content, headers, fetch status,
  * and more. It also includes methods for managing beans, and other page-related data.
  *
@@ -119,45 +119,6 @@ interface WebPage : Comparable<WebPage> {
      * The page scope configuration, which is expected to be modified frequently.
      */
     var conf: VolatileConfig
-
-    /**
-     * Retrieves the bean of the specified class type associated with the web page.
-     *
-     * @param clazz The class type of the bean to retrieve.
-     * @return The bean instance.
-     */
-    fun getBean(clazz: Class<*>): Any
-
-    /**
-     * Retrieves the bean of the specified class type associated with the web page, or `null` if it does not exist.
-     *
-     * @param clazz The class type of the bean to retrieve.
-     * @return The bean instance, or `null` if it does not exist.
-     */
-    fun getBeanOrNull(clazz: Class<*>): Any?
-
-    /**
-     * Associates the given bean with the web page.
-     *
-     * @param bean The bean to associate with the web page.
-     */
-    fun <T> putBean(bean: T)
-
-    /**
-     * Retrieves the data associated with the given name.
-     *
-     * @param name The name of the data to retrieve.
-     * @return The data value, or `null` if it does not exist.
-     */
-    fun data(name: String): Any?
-
-    /**
-     * Sets the data associated with the given name.
-     *
-     * @param name The name of the data to set.
-     * @param value The value to assign to the data.
-     */
-    fun data(name: String, value: Any?)
 
     /**
      * Indicates whether the web page is stored in the in-memory cache.
@@ -330,32 +291,6 @@ interface WebPage : Comparable<WebPage> {
     val contentAsSaxInputSource: InputSource?
 
     /**
-     * Sets the content of the web page using a `String`.
-     *
-     * @param value The content to set.
-     */
-    fun setStringContent(value: String?)
-
-    /**
-     * Sets the content of the web page using a `ByteArray`.
-     *
-     * @param value The content to set.
-     */
-    fun setByteArrayContent(value: ByteArray?)
-
-    /**
-     * Sets the content of the web page using a `ByteBuffer`.
-     *
-     * @param value The content to set.
-     */
-    fun setByteBufferContent(value: ByteBuffer?)
-
-    /**
-     * Clears the persisted content of the web page.
-     */
-    fun clearPersistContent()
-
-    /**
      * The length of the content of the web page.
      */
     val contentLength: Long
@@ -461,15 +396,70 @@ interface WebPage : Comparable<WebPage> {
 
     val pageModel: PageModel?
 
-    fun ensurePageModel(): PageModel
+    /**
+     * Retrieves the bean of the specified class type associated with the web page.
+     *
+     * @param clazz The class type of the bean to retrieve.
+     * @return The bean instance.
+     */
+    fun getBean(clazz: Class<*>): Any
 
     /**
-     * Clones the given web page into this web page. This operation is considered unsafe as it may
-     * overwrite existing data.
+     * Retrieves the bean of the specified class type associated with the web page, or `null` if it does not exist.
      *
-     * @param page The web page to clone.
+     * @param clazz The class type of the bean to retrieve.
+     * @return The bean instance, or `null` if it does not exist.
      */
-    fun unsafeCloneGPage(page: WebPage)
+    fun getBeanOrNull(clazz: Class<*>): Any?
 
-    fun setLazyFieldLoader(lazyFieldLoader: Function<String, GWebPage>)
+    /**
+     * Associates the given bean with the web page.
+     *
+     * @param bean The bean to associate with the web page.
+     */
+    fun <T> putBean(bean: T)
+
+    /**
+     * Retrieves the data associated with the given name.
+     *
+     * @param name The name of the data to retrieve.
+     * @return The data value, or `null` if it does not exist.
+     */
+    fun data(name: String): Any?
+
+    /**
+     * Sets the data associated with the given name.
+     *
+     * @param name The name of the data to set.
+     * @param value The value to assign to the data.
+     */
+    fun data(name: String, value: Any?)
+
+    /**
+     * Sets the content of the web page using a `String`.
+     *
+     * @param value The content to set.
+     */
+    fun setStringContent(value: String?)
+
+    /**
+     * Sets the content of the web page using a `ByteArray`.
+     *
+     * @param value The content to set.
+     */
+    fun setByteArrayContent(value: ByteArray?)
+
+    /**
+     * Sets the content of the web page using a `ByteBuffer`.
+     *
+     * @param value The content to set.
+     */
+    fun setByteBufferContent(value: ByteBuffer?)
+
+    /**
+     * Clears the persisted content of the web page.
+     */
+    fun clearPersistContent()
+
+    fun ensurePageModel(): PageModel
 }

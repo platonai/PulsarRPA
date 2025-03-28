@@ -399,6 +399,7 @@ class LoadComponent(
 
         val cachedPage = getCachedPageOrNull(normURL)
         var page = FetchEntry.createPageShell(normURL)
+        require(page is GoraWebPage)
 
         if (cachedPage != null) {
             pageCacheHits.incrementAndGet()
