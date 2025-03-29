@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: 'mongo:latest'
+    container_name: 'mongodb'
+    restart: always
+    ports:
+      - '27017:27017'
+    command: ["--bind_ip_all"]
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - backend
+
+  pulsar-rpa-dev:
+    image: 'pulsar-rpa-dev:latest'
+    container_name: 'pulsar-rpa-dev'
+    depends_on:
+      - 'mongodb'
+    environment:
+      "gora.mongodb.servers": "mongodb:27017"
+      "browser.display.mode": "HEADLESS"
+      SERVER_PORT: 8182
+      SERVER_ADDRESS: "0.0.0.0"
+    ports:
+      - '8182:8182'
+    networks:
+      - backend
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8182/api/pulsar-system/hello"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  mongodb_data:

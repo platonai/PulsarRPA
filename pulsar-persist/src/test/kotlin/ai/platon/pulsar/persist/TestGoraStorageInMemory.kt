@@ -48,13 +48,13 @@ class TestGoraStorageInMemory {
     }
 
     private lateinit var webDb: WebDb
-    private val store: DataStore<String, GWebPage> get() = webDb.dataStore
+    private val store: DataStore<String, GWebPage> get() = webDb.dataStorageFactory.getOrCreatePageStore()
     private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
 
     @BeforeTest
     fun setup() {
         assertEquals(MEM_STORE_CLASS, conf.get(CapabilityTypes.STORAGE_DATA_STORE_CLASS))
-        assertEquals(MEM_STORE_CLASS, AutoDetectStorageProvider.detectDataStoreClassName(conf))
+        assertEquals(MEM_STORE_CLASS, DataStorageFactory.detectDataStoreClassName(conf))
         webDb = WebDb(conf)
 //        assertTrue(store.javaClass.name) { store is MemStore }
         if (store is MemStore) {

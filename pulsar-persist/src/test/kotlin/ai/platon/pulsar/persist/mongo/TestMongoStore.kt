@@ -3,7 +3,7 @@ package ai.platon.pulsar.persist.mongo
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.persist.AutoDetectStorageProvider
+import ai.platon.pulsar.persist.DataStorageFactory
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.gora.mongodb.store.MongoStore
@@ -24,15 +24,15 @@ class TestMongoStore : MongoTestBase() {
         val store = MongoStore<String, GWebPage>()
         assertNull(store.schemaName)
         
-        val provider = AutoDetectStorageProvider(conf)
-        val store2 = provider.createPageStore()
+        val provider = DataStorageFactory(conf)
+        val store2 = provider.getOrCreatePageStore()
         assertEquals(AppConstants.MONGO_STORE_CLASS, provider.storeClassName)
         assertTrue("Actual schema name: ${store2.schemaName}") { crawlId in store2.schemaName }
     }
     
     @Test
     fun testOperation() {
-        val store = AutoDetectStorageProvider(conf).createPageStore()
+        val store = DataStorageFactory(conf).getOrCreatePageStore()
         
         val key = System.currentTimeMillis().toString()
         store.put(key, GWebPage())

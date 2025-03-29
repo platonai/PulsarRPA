@@ -19,7 +19,6 @@ class PulsarMaster {
     @Bean(initMethod = "start", destroyMethod = "stop")
     @Throws(SQLException::class)
     fun h2Server(): Server {
-        // return Server.createTcpServer("-trace")
         return Server.createTcpServer()
     }
 

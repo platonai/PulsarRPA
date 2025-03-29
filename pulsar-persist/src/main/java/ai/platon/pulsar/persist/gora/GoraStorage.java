@@ -22,13 +22,24 @@ import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 public class GoraStorage {
     public static final Logger logger = LoggerFactory.getLogger(GoraStorage.class);
 
-    // load properties from gora.properties
+    /**
+     * Load properties from gora.properties
+     * */
     public static Properties properties = DataStoreFactory.createProps();
+    /**
+     *
+     * */
     private static Map<String, Object> dataStores = new HashMap<>();
+
+    public synchronized static <K, V extends Persistent> DataStore<K, V>
+    createDataStore(ImmutableConfig conf, Class<K> keyClass, Class<V> persistentClass)
+            throws GoraException, ClassNotFoundException {
+        return createDataStore(HadoopUtils.INSTANCE.toHadoopConfiguration(conf), keyClass, persistentClass);
+    }
 
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>
-    createDataStore(ImmutableConfig conf, Class<K> keyClass, Class<V> persistentClass)
+    createDataStore(org.apache.hadoop.conf.Configuration conf, Class<K> keyClass, Class<V> persistentClass)
             throws GoraException, ClassNotFoundException {
         String className = conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS);
         Class<? extends DataStore<K, V>> dataStoreClass = (Class<? extends DataStore<K, V>>)Class.forName(className);
@@ -37,7 +48,7 @@ public class GoraStorage {
 
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>
-    createDataStore(ImmutableConfig conf,
+    createDataStore(org.apache.hadoop.conf.Configuration conf,
                     Class<K> keyClass, Class<V> persistentClass, Class<? extends DataStore<K, V>> dataStoreClass
     ) throws GoraException {
         String crawlId = conf.get(STORAGE_CRAWL_ID, "");
@@ -55,16 +66,18 @@ public class GoraStorage {
 
         Object o = dataStores.get(schema);
         if (o == null) {
-            org.apache.hadoop.conf.Configuration hadoopConf = HadoopUtils.INSTANCE.toHadoopConfiguration(conf);
             String realSchema = schemaPrefix + schema;
-            hadoopConf.set(STORAGE_PREFERRED_SCHEMA_NAME, realSchema);
+            conf.set(STORAGE_PREFERRED_SCHEMA_NAME, realSchema);
             DataStore<K, V> dataStore = DataStoreFactory.createDataStore(dataStoreClass,
-                    keyClass, persistentClass, hadoopConf, properties, schema);
+                    keyClass, persistentClass, conf, properties, schema);
+
+//System.out.println(hadoopConf.get("gora.mongodb.servers"));
+//System.out.println(properties.get("gora.mongodb.servers"));
 
             dataStores.put(realSchema, dataStore);
 
             String className = dataStore.getClass().getName();
-            if (className.equals("FileBackendPageStore")) {
+            if (className.contains("FileBackendPageStore")) {
                 logger.info("Backend data store: {}, real schema: {}", className, dataStore.getSchemaName());
                 logger.info("FileBackendPageStore is only for development and testing, " +
                         "it is not suitable for production environment");

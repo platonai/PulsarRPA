@@ -28,7 +28,7 @@ class TestGoraStorage {
         private val LOG = LoggerFactory.getLogger(TestGoraStorage::class.java)
         private val conf = VolatileConfig().also { it[CapabilityTypes.STORAGE_CRAWL_ID] = "test" }
         private val webDb = WebDb(conf)
-        private var store: DataStore<String, GWebPage> = webDb.dataStore
+        private var store: DataStore<String, GWebPage> = webDb.dataStorageFactory.getOrCreatePageStore()
         private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
         
         @AfterAll

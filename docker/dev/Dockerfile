@@ -4,18 +4,7 @@ FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
 # 设置工作目录
 WORKDIR /build
 
-# 复制项目的 Maven 相关文件（避免拷贝源码导致缓存失效）
-COPY pom.xml .
-# 下载所有依赖并进行编译（如果依赖没有变，则会使用缓存）
-RUN mvn dependency:go-offline -B
-
-# 复制整个项目
-COPY . .
-
-# 构建应用
-RUN mvn clean install -Pall-modules -DskipTests \
-    -Dmaven.javadoc.skip=true \
-    -Dmaven.source.skip=true
+COPY ../../pulsar-app/pulsar-master .
 
 # 复制 JAR 以便在下一阶段使用
 RUN cp $(find /build -name "*.jar" | grep "PulsarRPA.jar") /build/app.jar

@@ -1,16 +1,32 @@
+# 忽略所有 .git 目录
+**/.git/
+# 忽略所有 .idea 目录
+**/.idea/
+# 忽略所有 .vscode 目录
+**/.vscode/
+# 忽略所有 .mvn 目录
+**/.mvn/
+# 忽略所有 node_modules 目录
+**/node_modules/
+# 忽略所有日志文件
+**/*.log
+# 忽略所有临时文件
+**/*.tmp
+**/*.temp
+
+*.xlsx
+*.db
+*.iml
+
 .idea
-.vscode
 .github
 docs
 docker
 logs
 submodules
 extracted
-data
-
-*.xlsx
-*.db
-*.iml
 
 .dockerignore
 Dockerfile
+
+!docs/docker
