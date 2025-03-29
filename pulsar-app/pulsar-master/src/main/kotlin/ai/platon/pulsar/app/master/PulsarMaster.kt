@@ -1,27 +1,18 @@
 package ai.platon.pulsar.app.master
 
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextInitializer
-import ai.platon.pulsar.persist.HadoopUtils
-import ai.platon.pulsar.persist.WebDb
-import ai.platon.pulsar.skeleton.crawl.CrawlLoops
-import ai.platon.pulsar.skeleton.session.PulsarSession
-import jakarta.annotation.PostConstruct
 import org.h2.tools.Server
-import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.ImportResource
-import org.springframework.test.context.ActiveProfiles
 import java.sql.SQLException
 
 @SpringBootApplication
 @ImportResource("classpath:pulsar-beans/app-context.xml")
 @ComponentScan("ai.platon.pulsar.rest.api")
-class PulsarMaster(
-    val webDB: WebDb
-) {
+class PulsarMaster {
     /**
      * Enable H2 client
      * */
@@ -38,13 +29,6 @@ class PulsarMaster(
     @Throws(SQLException::class)
     fun h2WebServer(): Server {
         return Server.createWebServer("-webAllowOthers")
-    }
-
-    @PostConstruct
-    fun report() {
-        webDB.canConnect()
-        println(webDB.schemaName)
-
     }
 }
 

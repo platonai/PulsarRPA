@@ -13,17 +13,14 @@ services:
     networks:
       - backend
 
-  pulsar-rpa:
+  pulsar-rpa-dev:
     image: 'pulsar-rpa-dev:latest'
     container_name: 'pulsar-rpa-dev'
-    build:
-      context: ../..
-      dockerfile: ../Dockerfile
     depends_on:
       - 'mongodb'
     environment:
-      #      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/pulsar_rpa
       "gora.mongodb.servers": "mongodb:27017"
+      "browser.display.mode": "HEADLESS"
       SERVER_PORT: 8182
       SERVER_ADDRESS: "0.0.0.0"
     ports:
