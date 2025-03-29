@@ -31,6 +31,12 @@ public class GoraStorage {
      * */
     private static Map<String, Object> dataStores = new HashMap<>();
 
+    public synchronized static <K, V extends Persistent> DataStore<K, V>
+    createDataStore(ImmutableConfig conf, Class<K> keyClass, Class<V> persistentClass)
+            throws GoraException, ClassNotFoundException {
+        return createDataStore(HadoopUtils.INSTANCE.toHadoopConfiguration(conf), keyClass, persistentClass);
+    }
+
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>
     createDataStore(org.apache.hadoop.conf.Configuration conf, Class<K> keyClass, Class<V> persistentClass)

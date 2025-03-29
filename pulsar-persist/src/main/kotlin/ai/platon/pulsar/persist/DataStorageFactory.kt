@@ -22,15 +22,19 @@ import org.slf4j.LoggerFactory
  */
 class DataStorageFactory(conf: ImmutableConfig) {
     private val hadoopConf = HadoopUtils.toHadoopConfiguration(conf)
-    val storeClassName: String get() = detectDataStoreClassName(hadoopConf)
     private val pageStoreClass: Class<out DataStore<String, GWebPage>> get() = detectDataStoreClass(hadoopConf)
 
     private var _dataStore: DataStore<String, GWebPage>? = null
 
+    val storeClassName: String get() = detectDataStoreClassName(hadoopConf)
+
+    @get:Synchronized
     val schemaName: String get() = _dataStore?.schemaName ?: "(unknown, not initialized)"
 
+    @Synchronized
     fun isInitialized() = _dataStore != null
 
+    @Synchronized
     fun canConnect() = runCatching { _dataStore?.schemaExists() == true }.getOrNull() ?: false
 
     @Synchronized
