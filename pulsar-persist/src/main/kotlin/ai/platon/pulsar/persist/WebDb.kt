@@ -42,19 +42,16 @@ class WebDb(
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
 
-    var specifiedDataStore: DataStore<String, GWebPage>? = null
+    val dataStorageFactory = DataStorageFactory(conf)
 
-    private val dataStoreDelegate = lazy { specifiedDataStore ?: AutoDetectStorageProvider(conf).createPageStore() }
-
-    val dataStore: DataStore<String, GWebPage> by dataStoreDelegate
-    val dataStoreOrNull: DataStore<String, GWebPage>? get() = if (dataStoreDelegate.isInitialized()) dataStore else null
-    val schemaName: String get() = dataStoreOrNull?.schemaName?:"(unknown, not initialized)"
+    private val dataStore: DataStore<String, GWebPage> get() = dataStorageFactory.getOrCreatePageStore()
+    val schemaName: String get() = dataStorageFactory.schemaName
 
     /**
      * Test if the WebDB can be connected.
      * @return true if the WebDB can be connected.
      * */
-    fun canConnect() = dataStore.runCatching { schemaExists() }.isSuccess
+    fun canConnect() = dataStorageFactory.canConnect()
 
     /**
      * Returns the WebPage corresponding to the given url.
@@ -332,7 +329,7 @@ class WebDb(
 
     @Throws(WebDBException::class)
     fun flush() {
-        if (!dataStoreDelegate.isInitialized()) {
+        if (!dataStorageFactory.isInitialized()) {
             return
         }
 
@@ -351,7 +348,7 @@ class WebDb(
     @Throws(WebDBException::class)
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            if (dataStoreDelegate.isInitialized()) {
+            if (dataStorageFactory.isInitialized()) {
                 // flush()
                 // Note: mongo store does not close actually
                 performDSAction("close") { dataStore.close() }

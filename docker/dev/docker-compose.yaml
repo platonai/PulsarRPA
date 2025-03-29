@@ -14,13 +14,11 @@ services:
       - backend
 
   pulsar-rpa:
-    image: 'pulsar-rap:latest'
-    container_name: 'pulsar-rap'
+    image: 'pulsar-rpa-dev:latest'
+    container_name: 'pulsar-rpa-dev'
     build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - ~/.m2:/root/.m2  # 共享本地 Maven 缓存目录
+      context: ../..
+      dockerfile: ../Dockerfile
     depends_on:
       - 'mongodb'
     environment:
@@ -37,7 +35,7 @@ services:
         soft: 65535
         hard: 65535
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://0.0.0.0:8182/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8182/api/pulsar-system/hello"]
       interval: 30s
       timeout: 10s
       retries: 3

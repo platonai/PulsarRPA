@@ -28,34 +28,14 @@ public class NetUtil {
 
     public static final Pattern IP_PORT_PATTERN = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?");
 
-    /**
-     * <p>testNetwork.</p>
-     *
-     * @param host a {@link java.lang.String} object.
-     * @param port a int.
-     * @return a boolean.
-     */
     public static boolean testNetwork(String host, int port) {
         return testTcpNetwork(host, port);
     }
 
-    /**
-     * <p>testHttpNetwork.</p>
-     *
-     * @param url a {@link java.net.URL} object.
-     * @return a boolean.
-     */
     public static boolean testHttpNetwork(URL url) {
         return testHttpNetwork(url, null);
     }
 
-    /**
-     * <p>testHttpNetwork.</p>
-     *
-     * @param url a {@link java.net.URL} object.
-     * @param proxy a {@link java.net.Proxy} object.
-     * @return a boolean.
-     */
     public static boolean testHttpNetwork(URL url, Proxy proxy) {
         boolean reachable = false;
 

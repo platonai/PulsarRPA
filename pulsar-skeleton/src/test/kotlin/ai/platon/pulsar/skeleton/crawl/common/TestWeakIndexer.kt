@@ -23,7 +23,7 @@ class TestWeakIndexer {
     private val conf = MutableConfig().also { it[CapabilityTypes.STORAGE_CRAWL_ID] = "test" }
     private val webDb = WebDb(conf)
     private val urlTrackerIndexer = WeakPageIndexer(AppConstants.URL_TRACKER_HOME_URL, webDb)
-    private val store = webDb.dataStore
+    private val store = webDb.dataStorageFactory.getOrCreatePageStore()
     private val exampleUrls = IntRange(10000, 10050).map { AppConstants.EXAMPLE_URL + "/" + it }
     private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
 
