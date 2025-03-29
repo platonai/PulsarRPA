@@ -30,6 +30,22 @@ WORKDIR /app
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# 安装 Chromium 和必要的依赖
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# 设置 Chromium 环境变量
+ENV CHROME_BIN=/usr/bin/chromium-browser \
+    CHROME_PATH=/usr/lib/chromium/ \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
 # 复制构建产物
 COPY --from=builder /build/app.jar app.jar
 
@@ -37,11 +53,9 @@ COPY --from=builder /build/app.jar app.jar
 ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC"
 
 # 暴露端口
-# 8082: H2 web server
 # 8182: api server
-# 8282: web server
+# 8082: H2 web server
 # 9092: H2 TCP server
-# 3000: BI server(Metabase)
 
 EXPOSE 8082
 EXPOSE 8182
