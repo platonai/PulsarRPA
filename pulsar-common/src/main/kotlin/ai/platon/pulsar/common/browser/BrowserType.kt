@@ -11,13 +11,13 @@ enum class BrowserType {
      * */
     NATIVE,
     /**
-     * The main browser type available.
+     * The PulsarRPA's browser implementation which is superfast.
      * */
     PULSAR_CHROME,
     @Deprecated("No mock chrome available")
     MOCK_CHROME,
     /**
-     * Not implemented yet.
+     * The playwright's browser implementation.
      * */
     PLAYWRIGHT_CHROME;
 

@@ -84,6 +84,8 @@ abstract class AbstractWebDriver(
         val isRetired get() = this == RETIRED
     }
 
+    override val parentId: Int = -1
+
     /**
      * The state of the driver.
      * * [State.INIT]: The driver is initialized.

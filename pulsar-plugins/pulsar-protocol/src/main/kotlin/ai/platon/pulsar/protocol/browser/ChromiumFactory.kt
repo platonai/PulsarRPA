@@ -3,7 +3,7 @@ package ai.platon.pulsar.protocol.browser
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
-import ai.platon.pulsar.protocol.browser.impl.ChromeFactoryImpl
+import ai.platon.pulsar.protocol.browser.impl.ChromeDevtoolsBrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
@@ -13,7 +13,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
  * A factory to create browser instances.
  * */
 class ChromiumFactory: BrowserFactory {
-    private val factory = ChromeFactoryImpl()
+    private val factory = ChromeDevtoolsBrowserFactory()
 
     /**
      * Connect to a browser instance, the browser instance should be open with Chrome devtools open.

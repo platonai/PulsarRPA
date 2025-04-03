@@ -119,6 +119,16 @@ class ChromeDevtoolsBrowser(
         }
     }
 
+    @Synchronized
+    @Throws(WebDriverException::class)
+    override fun newDriverUnmanaged(url: String): ChromeDevtoolsDriver {
+        val chromeTab = createTab(url)
+        val devTools = createDevTools(chromeTab, toolsConfig)
+        val driver = ChromeDevtoolsDriver(chromeTab, devTools, this)
+
+        return driver
+    }
+
     //    @Synchronized
     @Throws(WebDriverException::class)
     override suspend fun listDrivers(): List<WebDriver> {
@@ -238,24 +248,24 @@ class ChromeDevtoolsBrowser(
         return driver
     }
 
-    private fun buildDriverTree() {
-        drivers.values.forEach { addToDriverTree(it) }
-    }
-
-    private fun addToDriverTree(driver: WebDriver) {
-        if (driver is ChromeDevtoolsDriver) {
-            val parentId = driver.chromeTab.parentId
-            if (parentId != null) {
-                val parent = drivers[parentId]
-                if (parent is ChromeDevtoolsDriver) {
-                    driver.opener = parent
-                    parent.outgoingPages.add(driver)
-
-                    logger.info("Add driver to tree | parent: {}, child: {} | {}", parent.chromeTab.url, driver.chromeTab.url, driver.chromeTab.id)
-                }
-            }
-        }
-    }
+//    private fun buildDriverTree() {
+//        drivers.values.forEach { addToDriverTree(it) }
+//    }
+//
+//    private fun addToDriverTree(driver: WebDriver) {
+//        if (driver is ChromeDevtoolsDriver) {
+//            val parentId = driver.chromeTab.parentId
+//            if (parentId != null) {
+//                val parent = drivers[parentId]
+//                if (parent is ChromeDevtoolsDriver) {
+//                    driver.opener = parent
+//                    parent.outgoingPages.add(driver)
+//
+//                    logger.info("Add driver to tree | parent: {}, child: {} | {}", parent.chromeTab.url, driver.chromeTab.url, driver.chromeTab.id)
+//                }
+//            }
+//        }
+//    }
 
     /**
      * Pages can be open in the browser, for example, by a click. We should recover the page

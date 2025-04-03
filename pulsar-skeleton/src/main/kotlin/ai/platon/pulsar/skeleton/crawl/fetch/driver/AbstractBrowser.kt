@@ -1,8 +1,10 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.driver.chrome.ChromeTab
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.event.AbstractEventEmitter
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import java.time.Duration
@@ -19,6 +21,8 @@ abstract class AbstractBrowser(
         protected val SEQUENCER = AtomicInteger()
         val DEFAULT_USER_AGENT = "PulsarRPA Robot/1.0"
     }
+
+    private val logger = getLogger(this)
 
     /**
      * All drivers, including the recovered drivers and the reused drivers.
@@ -164,5 +168,66 @@ abstract class AbstractBrowser(
             sb.append(",Disconnected")
         }
         return sb.toString()
+    }
+
+    abstract fun newDriverUnmanaged(url: String = ""): AbstractWebDriver
+
+    /**
+     * Create a new driver and add it to the driver tree.
+     * */
+    protected fun newDriverIfAbsent(url: String, id: String, recovered: Boolean): AbstractWebDriver {
+        // a Chrome tab id is like 'AE740895CB3F63220C3A3C751EF1F6E4'
+        var driver = _drivers[id]
+        if (driver != null) {
+            return driver as AbstractWebDriver
+        }
+
+        driver = doNewDriver(url, id, recovered)
+
+        addToDriverTree(driver)
+
+        return driver
+    }
+
+    protected fun doNewDriver(url: String, id: String, recovered: Boolean): AbstractWebDriver {
+        if (!recovered) {
+            val driver = _recoveredDrivers.values.firstOrNull { it is AbstractWebDriver && !it.isReused }
+            if (driver is AbstractWebDriver) {
+                driver.isReused = true
+                _reusedDrivers[id] = driver
+                logger.info("Reuse recovered driver | {} | {}", id, url)
+                return driver
+            }
+        }
+
+//        val devTools = createDevTools(chromeTab, toolsConfig)
+        val driver = newDriverUnmanaged(url)
+        _drivers[id] = driver
+
+        if (recovered) {
+            driver.isRecovered = true
+            _recoveredDrivers[id] = driver
+        }
+
+        return driver
+    }
+
+    protected fun buildDriverTree() {
+        drivers.values.forEach { addToDriverTree(it) }
+    }
+
+    protected fun addToDriverTree(driver: WebDriver) {
+        if (driver is AbstractWebDriver) {
+            val parentId = driver.parentId
+            if (parentId > 0) {
+                val parent = drivers[parentId.toString()]
+                if (parent is AbstractWebDriver) {
+                    driver.opener = parent
+                    parent.outgoingPages.add(driver)
+
+                    // logger.info("Add driver to tree | parent: {}, child: {} | {}", parent.chromeTab.url, driver.chromeTab.url, driver.chromeTab.id)
+                }
+            }
+        }
     }
 }

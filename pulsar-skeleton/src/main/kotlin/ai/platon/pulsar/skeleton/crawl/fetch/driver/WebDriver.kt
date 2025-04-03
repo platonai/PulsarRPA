@@ -125,7 +125,10 @@ interface WebDriver : Closeable {
      * The driver id.
      * */
     val id: Int
-
+    /**
+     * The parent driver id.
+     * */
+    val parentId: Int
     /**
      * The browser of the driver.
      * The browser defines methods and events to manipulate a real browser.
