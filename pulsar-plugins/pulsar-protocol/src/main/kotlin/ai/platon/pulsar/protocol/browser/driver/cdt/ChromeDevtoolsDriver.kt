@@ -97,7 +97,6 @@ class ChromeDevtoolsDriver(
     private val closed = AtomicBoolean()
 
     private val isGone get() = closed.get() || isQuit || !AppContext.isActive || !devTools.isOpen
-    val isActive get() = !isGone
 
     /**
      * Expose the underlying implementation, used for diagnosis purpose
@@ -557,26 +556,6 @@ class ChromeDevtoolsDriver(
             rpc.handleChromeException(e, "captureScreenshot")
             null
         }
-    }
-
-    internal fun checkState(action: String = ""): Boolean {
-        if (!isActive) {
-            return false
-            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
-        }
-
-        if (isCanceled) {
-            // is it good to throw here?
-            // throw WebDriverCancellationException("WebDriver is canceled #$id | $navigateUrl", this)
-            return false
-        }
-
-        if (action.isNotBlank()) {
-            lastActiveTime = Instant.now()
-            navigateEntry.refresh(action)
-        }
-
-        return isActive
     }
 
     @Throws(WebDriverException::class)

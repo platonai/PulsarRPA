@@ -6,6 +6,7 @@ open class WebDriverException(
     message: String? = null,
     cause: Throwable? = null,
     val driver: WebDriver? = null,
+    val code: Long = -1
 ): RuntimeException(message, cause)
 
 open class WebDriverCancellationException(

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.warnForClose
@@ -106,6 +107,8 @@ abstract class AbstractWebDriver(
      * Whether the driver is idle. The driver is idle if it is not working for a period of time.
      * */
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
+
+    val isActive get() = AppContext.isActive
 
     val isInit get() = state.get().isInit
     val isReady get() = state.get().isReady
@@ -570,5 +573,25 @@ abstract class AbstractWebDriver(
         }
 
         return session
+    }
+
+    open fun checkState(action: String = ""): Boolean {
+        if (!isActive) {
+            return false
+            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
+        }
+
+        if (isCanceled) {
+            // is it good to throw here?
+            // throw WebDriverCancellationException("WebDriver is canceled #$id | $navigateUrl", this)
+            return false
+        }
+
+        if (action.isNotBlank()) {
+            lastActiveTime = Instant.now()
+            navigateEntry.refresh(action)
+        }
+
+        return isActive
     }
 }

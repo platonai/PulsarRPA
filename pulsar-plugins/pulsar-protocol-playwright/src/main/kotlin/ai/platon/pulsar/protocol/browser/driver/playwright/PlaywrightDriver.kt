@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver.playwright
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
@@ -12,39 +13,6 @@ import com.microsoft.playwright.Page
 import org.jsoup.Connection
 import java.time.Duration
 import java.util.*
-
-private class RobustRPC(private val driver: PlaywrightDriver) {
-    private val logger = getLogger(this)
-
-    suspend fun <T> invokeDeferred(name: String, action: suspend () -> T): T? {
-        try {
-            return action()
-        } catch (e: Exception) {
-            handleException(e, name)
-        }
-        return null
-    }
-
-    suspend fun <T> invokeDeferredSilently(name: String, action: suspend () -> T): T? {
-        try {
-            return action()
-        } catch (e: Exception) {
-            logger.warn("Failed to execute $name: ${e.message}")
-        }
-        return null
-    }
-
-    private fun handleException(e: Exception, name: String, message: String? = null) {
-        val errorMessage = buildString {
-            append("Failed to execute $name")
-            if (message != null) {
-                append(" | $message")
-            }
-        }
-        logger.error(errorMessage, e)
-        throw WebDriverException(errorMessage, e)
-    }
-}
 
 /**
  * A Playwright-based implementation of the WebDriver interface.
@@ -247,28 +215,25 @@ class PlaywrightDriver(
 
     override suspend fun waitForNavigation(oldUrl: String): Duration {
         rpc.invokeDeferred("waitForNavigation") {
-            page.waitForNavigation(Page.WaitForNavigationOptions().setUrl(oldUrl))
+            page.waitForNavigation(Page.WaitForNavigationOptions().setUrl(oldUrl)) {}
         }
         return Duration.ZERO
     }
 
-    override suspend fun waitForNavigation(oldUrl: String, timeoutMillis: Long): Long {
-        rpc.invokeDeferred("waitForNavigation") {
-            page.waitForNavigation(Page.WaitForNavigationOptions().setUrl(oldUrl).setTimeout(timeoutMillis.toDouble()))
-        }
-        return timeoutMillis
-    }
-
     override suspend fun waitForNavigation(oldUrl: String, timeout: Duration): Duration {
         rpc.invokeDeferred("waitForNavigation") {
-            page.waitForNavigation(Page.WaitForNavigationOptions().setUrl(oldUrl).setTimeout(timeout.toMillis().toDouble()))
+            page.waitForNavigation(
+                Page.WaitForNavigationOptions().setUrl(oldUrl).setTimeout(timeout.toMillis().toDouble())
+            ) {}
         }
         return timeout
     }
 
     override suspend fun waitForPage(url: String, timeout: Duration): WebDriver? {
         rpc.invokeDeferred("waitForPage") {
-            page.waitForNavigation(Page.WaitForNavigationOptions().setUrl(url).setTimeout(timeout.toMillis().toDouble()))
+            page.waitForNavigation(
+                Page.WaitForNavigationOptions().setUrl(url).setTimeout(timeout.toMillis().toDouble())
+            ) {}
         }
         return this
     }
