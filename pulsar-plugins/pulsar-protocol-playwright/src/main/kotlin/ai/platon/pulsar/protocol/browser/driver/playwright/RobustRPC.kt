@@ -2,11 +2,13 @@ package ai.platon.pulsar.protocol.browser.driver.playwright
 
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserUnavailableException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.text.MessageFormat
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -39,7 +41,7 @@ internal class RobustRPC(
         }
     }
 
-    @Throws(Exception::class)
+    @Throws(WebDriverException::class)
     suspend fun <T> invokeDeferred(action: String, maxRetry: Int = 2, block: suspend CoroutineScope.() -> T): T? {
         if (!driver.checkState(action)) {
             return null
@@ -65,28 +67,33 @@ internal class RobustRPC(
     ): T? {
         return try {
             invokeDeferred(action, maxRetry, block)
-        } catch (e: Exception) {
-            handleException(e, action, message)
+        } catch (e: WebDriverException) {
+            handleWebDriverException(e, action, message)
             null
         }
     }
 
-    @Throws(IllegalWebDriverStateException::class)
-    fun handleException(e: Exception, action: String? = null, message: String? = null) {
-        if (rpcFailures.get() > maxRPCFailures) {
-            logger.warn("Too many RPC failures: {} ({}/{}) | {}", action, rpcFailures, maxRPCFailures, e.message)
-            throw IllegalWebDriverStateException("Too many RPC failures", driver = driver)
+    @Throws(WebDriverException::class)
+    fun handleWebDriverException(e: Exception, action: String? = null, message: String? = null) {
+        when (e) {
+            is WebDriverException -> {
+                handlePlaywrightIOException(e, action, message)
+            }
+            else -> throw e
         }
+    }
 
-        val count = exceptionCounts.computeIfAbsent(e.javaClass.name) { AtomicInteger() }.get()
-        traceException(e)
+    @Throws(BrowserUnavailableException::class, IllegalWebDriverStateException::class)
+    fun handlePlaywrightIOException(e: WebDriverException, action: String? = null, message: String? = null) {
+        val message2 = MessageFormat.format("Browser unavailable: {0} ({1}/{2}) | {3}",
+            action, rpcFailures, maxRPCFailures, e.message)
 
-        if (count < 10L) {
-            logException(count, e, action, message)
-        } else if (count < 100L && count % 10 == 0) {
-            logException(count, e, action, message)
-        } else if (count < 1000L && count % 50 == 0) {
-            logException(count, e, action, message)
+        if (!driver.isConnectable) {
+            throw BrowserUnavailableException("Browser connection closed | $message2", e)
+        } else if (!driver.isConnectable) {
+            throw BrowserUnavailableException("Browser connection lost | $message2", e)
+        } else {
+            throw IllegalWebDriverStateException("Unknown playwright IO error | $message2", e)
         }
     }
 
@@ -103,9 +110,9 @@ internal class RobustRPC(
                 // the rpc call blocks its calling thread and wait for the response.
                 // We should find a way to avoid the blocking in the block() and make it non-blocking.
                 block().also { decreaseRPCFailures() }
-            } catch (e: WebDriverException) {
+            } catch (e: Exception) {
                 increaseRPCFailures()
-                throw e
+                throw WebDriverException(cause = e)
             }
         }
     }
