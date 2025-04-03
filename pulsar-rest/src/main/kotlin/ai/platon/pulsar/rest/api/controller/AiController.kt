@@ -17,12 +17,28 @@ class AiController(
     val applicationContext: ApplicationContext,
     val promptService: PromptService,
 ) {
-    /**
-     * @param request The request
-     * @return The response
-     * */
-    @PostMapping("/chat")
+    @PostMapping("chat")
     fun chat(@RequestBody request: PromptRequest): String {
+        return promptService.chat(request)
+    }
+
+    @PostMapping("map")
+    fun map(@RequestBody request: PromptRequest): String {
+        return promptService.chat(request)
+    }
+
+    @PostMapping("scrape")
+    fun scrape(@RequestBody request: PromptRequest): String {
+        return promptService.chat(request)
+    }
+
+    @PostMapping("crawl")
+    fun crawl(@RequestBody request: PromptRequest): String {
+        return promptService.chat(request)
+    }
+
+    @PostMapping("extract")
+    fun extract(@RequestBody request: PromptRequest): String {
         return promptService.chat(request)
     }
 }
