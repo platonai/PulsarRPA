@@ -26,11 +26,19 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-skeleton</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-jsoup</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.microsoft.playwright</groupId>
             <artifactId>playwright</artifactId>
+            <version>${playwright.version}</version>
         </dependency>
     </dependencies>
 
+    <properties>
+        <playwright.version>1.50.0</playwright.version>
+    </properties>
 </project>
