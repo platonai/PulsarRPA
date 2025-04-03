@@ -227,7 +227,7 @@ class ChromeDevtoolsBrowser(
         }
 
         val devTools = createDevTools(chromeTab, toolsConfig)
-        val driver = ChromeDevtoolsDriver(chromeTab, devTools, settings, this)
+        val driver = ChromeDevtoolsDriver(chromeTab, devTools, this)
         _drivers[chromeTab.id] = driver
 
         if (recovered) {

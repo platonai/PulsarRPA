@@ -2,6 +2,8 @@ package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.warnForClose
@@ -18,6 +20,7 @@ import kotlinx.coroutines.withContext
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import java.io.IOException
+import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -93,6 +96,23 @@ abstract class AbstractWebDriver(
 
     private val canceled = AtomicBoolean()
     private val crashed = AtomicBoolean()
+
+    val settings get() = browser.settings
+
+    /**
+     * The probability to block a resource request if the request url is in probabilisticBlockedURLs.
+     * The probability must be in [0, 1].
+     * */
+    val resourceBlockProbability get() = settings.resourceBlockProbability
+
+    protected val _blockedURLs = mutableListOf<String>()
+    protected val _probabilityBlockedURLs = mutableListOf<String>()
+    val blockedURLs: List<String> get() = _blockedURLs
+    val probabilisticBlockedURLs: List<String> get() = _probabilityBlockedURLs
+    val isConnectable get() = browser.isConnected
+
+    protected val enableStartupScript get() = settings.isStartupScriptEnabled
+    protected val initScriptCache = mutableListOf<String>()
 
     private val jsoupCreateDestroyMonitor = Any()
     private var jsoupSession: Connection? = null
@@ -445,10 +465,94 @@ abstract class AbstractWebDriver(
         waitForSelector(selector, timeout("waitForSelector"), action)
 
     @Throws(WebDriverException::class)
-    override suspend fun waitUntil(predicate: suspend () -> Boolean) = waitUntil(timeout("waitUntil"), predicate)
+    override suspend fun waitForNavigation(oldUrl: String) = waitForNavigation(oldUrl, timeout("waitForNavigation"))
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(oldUrl: String) = waitForNavigation(oldUrl, timeout("waitForNavigation"))
+    override suspend fun waitForNavigation(oldUrl: String, timeout: Duration): Duration {
+        return waitUntil("waitForNavigation", timeout) { isNavigated(oldUrl) }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun waitUntil(predicate: suspend () -> Boolean) = waitUntil(timeout("waitUntil"), predicate)
+
+    override suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean) =
+        waitUntil("waitUtil", timeout, predicate)
+
+    protected suspend fun waitUntil(type: String, timeout: Duration, predicate: suspend () -> Boolean): Duration {
+        val startTime = Instant.now()
+        var elapsedTime = Duration.ZERO
+
+        // it's OK to wait using a while loop, because all the operations are coroutines
+        while (elapsedTime < timeout && !predicate()) {
+            gap(type)
+            elapsedTime = DateTimes.elapsedTime(startTime)
+        }
+
+        return timeout - elapsedTime
+    }
+
+    protected suspend fun <T> waitFor(type: String, timeout: Duration, supplier: suspend () -> T): T? {
+        val startTime = Instant.now()
+        var elapsedTime = Duration.ZERO
+        var result: T? = supplier()
+
+        // it's OK to wait using a while loop, because all the operations are coroutines
+        while (elapsedTime < timeout && result == null) {
+            gap(type)
+            result = supplier()
+            elapsedTime = DateTimes.elapsedTime(startTime)
+        }
+
+        return result
+    }
+
+    @Throws(WebDriverException::class)
+    protected suspend fun isNavigated(oldUrl: String): Boolean {
+        return oldUrl != currentUrl()
+    }
+
+    /**
+     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
+     *
+     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
+     * this suspending function is waiting, this function immediately resumes with CancellationException.
+     * */
+    protected suspend fun gap() {
+        if (!isActive) {
+            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
+        }
+
+        // Delays coroutine for a given time without blocking a thread and resumes it after a specified time.
+        delay(randomDelayMillis("gap"))
+    }
+
+    /**
+     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
+     *
+     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
+     * this suspending function is waiting, this function immediately resumes with CancellationException.
+     * */
+    protected suspend fun gap(type: String) {
+        if (!isActive) {
+            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
+        }
+
+        delay(randomDelayMillis(type))
+    }
+
+    /**
+     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
+     *
+     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
+     * this suspending function is waiting, this function immediately resumes with CancellationException.
+     * */
+    protected suspend fun gap(millis: Long) {
+        if (!isActive) {
+            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
+        }
+
+        delay(millis)
+    }
 
     @Throws(WebDriverException::class)
     override suspend fun newJsoupSession(): Connection {
@@ -575,7 +679,7 @@ abstract class AbstractWebDriver(
         return session
     }
 
-    open fun checkState(action: String = ""): Boolean {
+    fun checkState(action: String = ""): Boolean {
         if (!isActive) {
             return false
             // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
@@ -593,5 +697,16 @@ abstract class AbstractWebDriver(
         }
 
         return isActive
+    }
+
+    protected fun reportInjectedJs() {
+        val script = settings.confuser.confuse(initScriptCache.joinToString("\n;\n\n\n;\n"))
+
+        val dir = browser.id.contextDir.resolve("driver.$id/js")
+        Files.createDirectories(dir)
+        val report = Files.writeString(dir.resolve("preload.all.js"), script)
+
+        val tracer = getLogger(this).takeIf { it.isTraceEnabled }
+        tracer?.trace("All injected js: file://{}", report)
     }
 }

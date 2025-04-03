@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -13,6 +14,11 @@ import com.microsoft.playwright.Page
 import org.jsoup.Connection
 import java.time.Duration
 import java.util.*
+
+data class Credentials(
+    val username: String,
+    val password: String?
+)
 
 /**
  * A Playwright-based implementation of the WebDriver interface.
@@ -24,8 +30,7 @@ import java.util.*
  */
 class PlaywrightDriver(
     override val browser: PlaywrightBrowser,
-    val page: Page,
-    val settings: BrowserSettings,
+    private val page: Page,
 ) : AbstractWebDriver(browser) {
 
     private val logger = getLogger(this)
@@ -33,25 +38,9 @@ class PlaywrightDriver(
 
     override val browserType: BrowserType = BrowserType.PLAYWRIGHT_CHROME
 
-    override val id: Int = page.hashCode()
+    private var credentials: Credentials? = null
 
-    override val frames: MutableList<WebDriver> = mutableListOf()
-
-    override var opener: WebDriver? = null
-
-    override val outgoingPages: MutableSet<WebDriver> = mutableSetOf()
-
-    override var navigateEntry: NavigateEntry = NavigateEntry("")
-
-    override val navigateHistory: NavigateHistory = NavigateHistory()
-
-    override val data: MutableMap<String, Any?> = mutableMapOf()
-
-    override val delayPolicy: Map<String, IntRange> = mapOf()
-
-    override val timeoutPolicy: Map<String, Duration> = mapOf()
-
-    override fun jvm(): JvmWebDriver = this
+    private var navigateUrl = page.url() ?: ""
 
     override suspend fun addInitScript(script: String) {
         rpc.invokeDeferred("addInitScript") {
@@ -74,18 +63,6 @@ class PlaywrightDriver(
     }
 
     /**
-     * Opens a URL in the browser and waits for navigation to complete.
-     * @param url The URL to open
-     * @throws RuntimeException if navigation fails
-     */
-    override suspend fun open(url: String) {
-        rpc.invokeDeferred("open") {
-            page.navigate(url)
-            waitForNavigation()
-        }
-    }
-
-    /**
      * Navigates to a URL without waiting for navigation to complete.
      * @param url The URL to navigate to
      * @throws RuntimeException if navigation fails
@@ -97,9 +74,95 @@ class PlaywrightDriver(
     }
 
     override suspend fun navigateTo(entry: NavigateEntry) {
-        rpc.invokeDeferred("navigateTo") {
-            page.navigate(entry.url)
+        navigateHistory.add(entry)
+        this.navigateEntry = entry
+
+        browser.emit(BrowserEvents.willNavigate, entry)
+
+        try {
+            rpc.invokeDeferred("navigateTo") {
+                doNavigateTo(entry)
+            }
+        } catch (e: Exception) {
+            rpc.handleException(e, "navigateTo", entry.url)
         }
+    }
+
+    /**
+     * Navigate to the page and inject scripts.
+     * */
+    private fun doNavigateTo(entry: NavigateEntry) {
+        val url = entry.url
+
+        addScriptToEvaluateOnNewDocument()
+
+        if (blockedURLs.isNotEmpty()) {
+            // Blocks URLs from loading.
+            // TODO: networkAPI?.setBlockedURLs(blockedURLs)
+        }
+
+        // TODO: add events
+//        networkManager.on(NetworkEvents.RequestWillBeSent) { event: RequestWillBeSent ->
+//            onRequestWillBeSent(entry, event)
+//        }
+//        networkManager.on(NetworkEvents.ResponseReceived) { event: ResponseReceived ->
+//            onResponseReceived(entry, event)
+//        }
+
+        page.onResponse {
+            // entry.mainRequestCookies = it.request()
+        }
+
+        // pageAPI?.onDocumentOpened { entry.mainRequestCookies = getCookies0() }
+        // TODO: not working
+        // pageAPI?.onWindowOpen { onWindowOpen(it) }
+        // pageAPI?.onFrameAttached {  }
+//        pageAPI?.onDomContentEventFired {  }
+
+        val proxyEntry = browser.id.fingerprint.proxyEntry
+        if (proxyEntry?.username != null) {
+            credentials = Credentials(proxyEntry.username!!, proxyEntry.password)
+
+            // credentials?.let { networkManager.authenticate(it) }
+        }
+
+        navigateUrl = url
+        if (UrlUtils.isLocalFile(url)) {
+            // serve local file, for example:
+            // local file path:
+            // C:\Users\pereg\AppData\Local\Temp\pulsar\test.txt
+            // converted to:
+            // http://localfile.org?path=QzpcVXNlcnNccGVyZWdcQXBwRGF0YVxMb2NhbFxUZW1wXHB1bHNhclx0ZXN0LnR4dA==
+            openLocalFile(url)
+        } else {
+            page.navigate(url, Page.NavigateOptions().setReferer(navigateEntry.pageReferrer))
+        }
+    }
+
+    private fun addScriptToEvaluateOnNewDocument() {
+        val js = settings.scriptLoader.getPreloadJs(false)
+        if (js !in initScriptCache) {
+            // utils comes first
+            initScriptCache.add(0, js)
+        }
+
+        val confuser = settings.confuser
+        initScriptCache.forEach {
+            page.addInitScript(confuser.confuse(it))
+        }
+
+        if (logger.isTraceEnabled) {
+            reportInjectedJs()
+        }
+
+        // the cache is used for a single document, so we have to clear it
+        initScriptCache.clear()
+    }
+
+    private fun openLocalFile(url: String) {
+        val path = UrlUtils.localURLToPath(url)
+        val uri = path.toUri()
+        page.navigate(uri.toString())
     }
 
     override suspend fun currentUrl(): String {
@@ -213,52 +276,11 @@ class PlaywrightDriver(
         return timeout
     }
 
-    override suspend fun waitForNavigation(oldUrl: String): Duration {
-        rpc.invokeDeferred("waitForNavigation") {
-            page.waitForNavigation(Page.WaitForNavigationOptions().setUrl(oldUrl)) {}
-        }
-        return Duration.ZERO
-    }
-
-    override suspend fun waitForNavigation(oldUrl: String, timeout: Duration): Duration {
-        rpc.invokeDeferred("waitForNavigation") {
-            page.waitForNavigation(
-                Page.WaitForNavigationOptions().setUrl(oldUrl).setTimeout(timeout.toMillis().toDouble())
-            ) {}
-        }
-        return timeout
-    }
-
     override suspend fun waitForPage(url: String, timeout: Duration): WebDriver? {
         rpc.invokeDeferred("waitForPage") {
-            page.waitForNavigation(
-                Page.WaitForNavigationOptions().setUrl(url).setTimeout(timeout.toMillis().toDouble())
-            ) {}
+            page.waitForURL(url, Page.WaitForURLOptions().setTimeout(timeout.toMillis().toDouble()))
         }
         return this
-    }
-
-    override suspend fun waitUntil(predicate: suspend () -> Boolean): Duration {
-        while (!predicate()) {
-            delay(100)
-        }
-        return Duration.ZERO
-    }
-
-    override suspend fun waitUntil(timeoutMillis: Long, predicate: suspend () -> Boolean): Long {
-        val startTime = System.currentTimeMillis()
-        while (!predicate() && System.currentTimeMillis() - startTime < timeoutMillis) {
-            delay(100)
-        }
-        return timeoutMillis - (System.currentTimeMillis() - startTime)
-    }
-
-    override suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean): Duration {
-        val startTime = System.currentTimeMillis()
-        while (!predicate() && System.currentTimeMillis() - startTime < timeout.toMillis()) {
-            delay(100)
-        }
-        return timeout.minus(Duration.ofMillis(System.currentTimeMillis() - startTime))
     }
 
     /**

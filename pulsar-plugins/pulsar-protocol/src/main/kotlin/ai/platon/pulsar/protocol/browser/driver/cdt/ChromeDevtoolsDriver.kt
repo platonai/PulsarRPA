@@ -42,7 +42,6 @@ import kotlin.random.Random
 class ChromeDevtoolsDriver(
     val chromeTab: ChromeTab,
     val devTools: RemoteDevTools,
-    private val browserSettings: BrowserSettings,
     override val browser: ChromeDevtoolsBrowser,
 ) : AbstractWebDriver(browser) {
 
@@ -51,23 +50,6 @@ class ChromeDevtoolsDriver(
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
 
     override val browserType: BrowserType = BrowserType.PULSAR_CHROME
-
-    /**
-     * The probability to block a resource request if the request url is in probabilisticBlockedURLs.
-     * The probability must be in [0, 1].
-     * */
-    val resourceBlockProbability get() = browserSettings.resourceBlockProbability
-
-    private val _blockedURLs = mutableListOf<String>()
-    private val _probabilityBlockedURLs = mutableListOf<String>()
-    val blockedURLs: List<String> get() = _blockedURLs
-    val probabilisticBlockedURLs: List<String> get() = _probabilityBlockedURLs
-    val isConnectable get() = browser.isConnected
-
-    /**
-     * TODO: distinguish the navigateUrl, currentUrl, chromeTab.url, mainFrameAPI.url, dom.document.documentURL, dom.document.baseURL
-     * */
-    private var navigateUrl = chromeTab.url ?: ""
 
     private val browserAPI get() = devTools.browser.takeIf { isActive }
     private val pageAPI get() = devTools.page.takeIf { isActive }
@@ -82,21 +64,20 @@ class ChromeDevtoolsDriver(
     private val emulationAPI get() = devTools.emulation.takeIf { isActive }
 
     private val rpc = RobustRPC(this)
-    private val page = PageHandler(devTools, browserSettings.confuser)
+    private val page = PageHandler(devTools, settings.confuser)
     private val mouse get() = page.mouse.takeIf { isActive }
     private val keyboard get() = page.keyboard.takeIf { isActive }
     private val screenshot = Screenshot(page, devTools)
 
-    private var credentials: Credentials? = null
-
     private val networkManager by lazy { NetworkManager(this, rpc) }
     private val messageWriter = MiscMessageWriter()
 
-    private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
-    private val initScriptCache = mutableListOf<String>()
     private val closed = AtomicBoolean()
 
     private val isGone get() = closed.get() || isQuit || !AppContext.isActive || !devTools.isOpen
+
+    private var navigateUrl = chromeTab.url ?: ""
+    private var credentials: Credentials? = null
 
     /**
      * Expose the underlying implementation, used for diagnosis purpose
@@ -205,12 +186,6 @@ class ChromeDevtoolsDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForNavigation(oldUrl: String, timeout: Duration): Duration {
-        // TODO: listen to the navigation event
-        return waitUntil("waitForNavigation", timeout) { isNavigated(oldUrl) }
-    }
-
-    @Throws(WebDriverException::class)
     private suspend fun waitForNavigationExperimental(oldUrl: String, timeout: Duration): Duration {
         val startTime = Instant.now()
 
@@ -234,37 +209,6 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun waitForPage(url: String, timeout: Duration): WebDriver? {
         return waitFor("waitForPage", timeout) { browser.findDriver(url) }
-    }
-
-    override suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean) =
-        waitUntil("waitUtil", timeout, predicate)
-
-    private suspend fun waitUntil(type: String, timeout: Duration, predicate: suspend () -> Boolean): Duration {
-        val startTime = Instant.now()
-        var elapsedTime = Duration.ZERO
-
-        // it's OK to wait using a while loop, because all the operations are coroutines
-        while (elapsedTime < timeout && !predicate()) {
-            gap(type)
-            elapsedTime = DateTimes.elapsedTime(startTime)
-        }
-
-        return timeout - elapsedTime
-    }
-
-    private suspend fun <T> waitFor(type: String, timeout: Duration, supplier: suspend () -> T): T? {
-        val startTime = Instant.now()
-        var elapsedTime = Duration.ZERO
-        var result: T? = supplier()
-
-        // it's OK to wait using a while loop, because all the operations are coroutines
-        while (elapsedTime < timeout && result == null) {
-            gap(type)
-            result = supplier()
-            elapsedTime = DateTimes.elapsedTime(startTime)
-        }
-
-        return result
     }
 
     @Throws(WebDriverException::class)
@@ -888,13 +832,13 @@ class ChromeDevtoolsDriver(
     }
 
     private fun addScriptToEvaluateOnNewDocument() {
-        val js = browserSettings.scriptLoader.getPreloadJs(false)
+        val js = settings.scriptLoader.getPreloadJs(false)
         if (js !in initScriptCache) {
             // utils comes first
             initScriptCache.add(0, js)
         }
 
-        val confuser = browserSettings.confuser
+        val confuser = settings.confuser
         initScriptCache.forEach {
             pageAPI?.addScriptToEvaluateOnNewDocument(confuser.confuse(it))
         }
@@ -918,58 +862,6 @@ class ChromeDevtoolsDriver(
         val json = mapper.writeValueAsString(cookie)
         val map: Map<String, String?> = mapper.readValue(json)
         return map.filterValues { it != null }.mapValues { it.toString() }
-    }
-
-    private fun reportInjectedJs() {
-        val script = browserSettings.confuser.confuse(initScriptCache.joinToString("\n;\n\n\n;\n"))
-
-        val dir = browser.id.contextDir.resolve("driver.$id/js")
-        Files.createDirectories(dir)
-        val report = Files.writeString(dir.resolve("preload.all.js"), script)
-        tracer?.trace("All injected js: file://{}", report)
-    }
-
-    /**
-     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
-     *
-     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
-     * this suspending function is waiting, this function immediately resumes with CancellationException.
-     * */
-    private suspend fun gap() {
-        if (!isActive) {
-            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
-        }
-
-        // Delays coroutine for a given time without blocking a thread and resumes it after a specified time.
-        delay(randomDelayMillis("gap"))
-    }
-
-    /**
-     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
-     *
-     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
-     * this suspending function is waiting, this function immediately resumes with CancellationException.
-     * */
-    private suspend fun gap(type: String) {
-        if (!isActive) {
-            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
-        }
-
-        delay(randomDelayMillis(type))
-    }
-
-    /**
-     * Delays the coroutine for a given time without blocking a thread and resumes it after a specified time.
-     *
-     * This suspending function is cancellable. If the Job of the current coroutine is cancelled or completed while
-     * this suspending function is waiting, this function immediately resumes with CancellationException.
-     * */
-    private suspend fun gap(millis: Long) {
-        if (!isActive) {
-            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
-        }
-
-        delay(millis)
     }
 
     private suspend fun <T> invokeOnPage(name: String, message: String? = null, action: suspend () -> T): T? {
@@ -1015,11 +907,6 @@ class ChromeDevtoolsDriver(
         selector: String, name: String, focus: Boolean = false, scrollIntoView: Boolean = false,
         predicate: suspend (Int) -> Boolean
     ): Boolean = invokeOnElement(selector, name, focus, scrollIntoView, predicate) == true
-
-    @Throws(WebDriverException::class)
-    private suspend fun isNavigated(oldUrl: String): Boolean {
-        return oldUrl != currentUrl()
-    }
 
     private fun isValidNodeId(nodeId: Int?): Boolean {
         return nodeId != null && nodeId > 0
