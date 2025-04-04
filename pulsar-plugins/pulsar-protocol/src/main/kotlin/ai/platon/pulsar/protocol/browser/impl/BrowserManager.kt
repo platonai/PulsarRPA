@@ -5,7 +5,6 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.protocol.browser.DefaultBrowserFactory
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
@@ -15,19 +14,20 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 open class BrowserManager(
     val conf: ImmutableConfig
-): AutoCloseable {
+) : AutoCloseable {
     private val logger = getLogger(this)
     private var registered = AtomicBoolean()
     private val closed = AtomicBoolean()
-    private val browserFactory = DefaultBrowserFactory()
+    private val browserFactory = MultipleProtocolBrowserFactory()
     private val _browsers = ConcurrentHashMap<BrowserId, Browser>()
     private val historicalBrowsers = ConcurrentLinkedDeque<Browser>()
     private val closedBrowsers = ConcurrentLinkedDeque<Browser>()
-    
+
     /**
      * The active browsers
      * */
     val browsers: Map<BrowserId, Browser> = _browsers
+
     /**
      * Launch a browser. If the browser with the id is already launched, return the existing one.
      * */
@@ -44,10 +44,6 @@ open class BrowserManager(
         val launchOptions = browserSettings.createChromeOptions(capabilities)
         return launchIfAbsent(browserId, launcherOptions, launchOptions)
     }
-
-    @Deprecated("Use findBrowserOrNull instead", ReplaceWith("findBrowserOrNull(browserId)"))
-    @Synchronized
-    fun findBrowser(browserId: BrowserId): Browser? = browsers[browserId]
 
     /**
      * Find an existing browser by id.

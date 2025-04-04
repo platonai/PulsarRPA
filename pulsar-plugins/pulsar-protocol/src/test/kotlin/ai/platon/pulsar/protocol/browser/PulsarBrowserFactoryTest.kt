@@ -11,14 +11,14 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class DefaultBrowserFactoryTest {
+class PulsarBrowserFactoryTest {
 
-    private lateinit var browserFactory: DefaultBrowserFactory
+    private lateinit var browserFactory: PulsarBrowserFactory
     private val browsers = mutableListOf<Browser>()
 
     @Before
     fun setUp() {
-        browserFactory = DefaultBrowserFactory()
+        browserFactory = PulsarBrowserFactory()
     }
 
     @After

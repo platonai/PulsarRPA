@@ -48,8 +48,8 @@ class PulsarBrowser(
         launcher?.let { PulsarContexts.registerClosable(it, Int.MIN_VALUE) }
     }
 
-    constructor(port: Int, browserSettings: BrowserSettings = BrowserSettings()) :
-        this(BrowserId.RANDOM, ChromeImpl(port = port), browserSettings, null)
+    constructor(port: Int, settings: BrowserSettings = BrowserSettings()) :
+        this(BrowserId.RANDOM, ChromeImpl(port = port), settings, null)
 
     @Synchronized
     @Throws(WebDriverException::class)
