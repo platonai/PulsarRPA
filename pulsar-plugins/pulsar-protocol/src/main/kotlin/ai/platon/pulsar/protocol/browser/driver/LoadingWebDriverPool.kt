@@ -36,12 +36,12 @@ class LoadingWebDriverPool constructor(
     companion object {
         var CLOSE_ALL_TIMEOUT = Duration.ofSeconds(60)
         var POLLING_TIMEOUT = Duration.ofSeconds(60)
-        val instanceSequencer = AtomicInteger()
+        private val ID_SUPPLIER = AtomicInteger()
     }
     
     private val logger = LoggerFactory.getLogger(LoadingWebDriverPool::class.java)
     
-    val id = instanceSequencer.incrementAndGet()
+    val id = ID_SUPPLIER.incrementAndGet()
     
     private val registry = MetricsSystem.defaultMetricRegistry
     

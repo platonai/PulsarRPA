@@ -29,9 +29,10 @@ data class Credentials(
  * @property settings Browser configuration settings
  */
 class PlaywrightDriver(
+    uniqueID: String,
     override val browser: PlaywrightBrowser,
     private val page: Page,
-) : AbstractWebDriver(browser) {
+) : AbstractWebDriver(uniqueID, browser) {
 
     private val logger = getLogger(this)
     private val rpc = RobustRPC(this)

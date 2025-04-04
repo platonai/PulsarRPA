@@ -17,6 +17,8 @@ package ai.platon.pulsar.skeleton.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserFiles
+import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
@@ -240,12 +242,20 @@ interface PrivacyContext: AutoCloseable {
         // A random context directory, if you need a random temporary context, use this one
         val NEXT_SEQUENTIAL_CONTEXT_DIR get() = BrowserFiles.computeNextSequentialContextDir()
         // A random context directory, if you need a random temporary context, use this one
-        val RANDOM_CONTEXT_DIR get() = BrowserFiles.computeRandomTmpContextDir()
+        val RANDOM_CONTEXT_DIR get() = BrowserFiles.computeRandomTmpContextDir(browserType = BrowserType.PULSAR_CHROME)
         // The prototype context directory, all privacy contexts copies browser data from the prototype.
         // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
         val PROTOTYPE_DATA_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE
         // A context dir is the dir which contains the browser data dir, and supports different browsers.
         // For example: ~/.pulsar/browser/chrome/prototype/
         val PROTOTYPE_CONTEXT_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE.parent
+
+        fun createNextSequential(fingerprint: Fingerprint): Path {
+            return BrowserFiles.computeNextSequentialContextDir(fingerprint = fingerprint)
+        }
+
+        fun createRandom(browserType: BrowserType): Path {
+            return BrowserFiles.computeRandomTmpContextDir(browserType = browserType)
+        }
     }
 }

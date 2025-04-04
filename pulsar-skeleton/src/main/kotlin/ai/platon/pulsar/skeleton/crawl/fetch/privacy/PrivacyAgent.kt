@@ -52,36 +52,50 @@ data class PrivacyAgent(
          * */
         val SYSTEM_DEFAULT =
             PrivacyAgent(AppPaths.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
+
         /**
          * The prototype privacy agent opens browser with the prototype data dir.
          * Every change to the browser will be kept in the prototype data dir, and every temporary privacy agent
          * uses a copy of the prototype data dir.
          * */
         val PROTOTYPE = create(PrivacyContext.PROTOTYPE_CONTEXT_DIR)
+
         /**
          * The default privacy agent opens browser with the default data dir, the default data dir will not be removed
          * after the browser closes.
          * */
         val DEFAULT = create(PrivacyContext.DEFAULT_CONTEXT_DIR)
+
         /**
          * The privacy agent opens browser with a sequential data dir.
          * */
         val NEXT_SEQUENTIAL get() = createNextSequential()
+
         /**
          * The random privacy agent opens browser with a random data dir.
          * */
         val RANDOM get() = create(PrivacyContext.RANDOM_CONTEXT_DIR)
-        
-        fun create(contextDir: Path): PrivacyAgent {
+
+        fun create(contextDir: Path) = create(BrowserType.PULSAR_CHROME, contextDir)
+
+        fun create(browserType: BrowserType, contextDir: Path): PrivacyAgent {
             val path = contextDir.resolve("fingerprint.json")
             val fingerprint: Fingerprint = if (Files.exists(path)) {
                 pulsarObjectMapper().readValue<Fingerprint>(path.toFile()).also { it.source = path.toString() }
             } else {
-                Fingerprint(BrowserType.PULSAR_CHROME)
+                Fingerprint(browserType)
             }
             return PrivacyAgent(contextDir, fingerprint)
         }
-        
+
+        fun createRandom() = create(PrivacyContext.RANDOM_CONTEXT_DIR)
+
+        fun createRandom(browserType: BrowserType) = create(browserType, PrivacyContext.createRandom(browserType))
+
+        fun createDefault() = create(PrivacyContext.DEFAULT_CONTEXT_DIR)
+
+        fun createDefault(browserType: BrowserType) = create(browserType, PrivacyContext.DEFAULT_CONTEXT_DIR)
+
         fun createNextSequential() = create(PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
     }
 }

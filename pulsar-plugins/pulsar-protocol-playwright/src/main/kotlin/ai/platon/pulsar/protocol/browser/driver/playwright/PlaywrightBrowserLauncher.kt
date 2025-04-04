@@ -9,18 +9,13 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLauncher
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
-import com.microsoft.playwright.Playwright
 
 class PlaywrightBrowserLauncher : BrowserLauncher {
-    companion object {
-        private val playwright = Playwright.create()
-    }
-
     override fun connect(port: Int, settings: BrowserSettings): Browser {
         val browserId = BrowserId(PrivacyContext.RANDOM_CONTEXT_DIR, BrowserType.PLAYWRIGHT_CHROME)
         try {
-            val browser = playwright.chromium().connectOverCDP("http://localhost:$port")
-            return PlaywrightBrowser(browserId, browser, settings)
+            val browserContext = PlaywrightBrowser.connectOverCDP(port)
+            return PlaywrightBrowser(browserId, browserContext, settings)
         } catch (e: Exception) {
             throw BrowserLaunchException("Failed to launch browser | $browserId", e)
         }
@@ -35,6 +30,8 @@ class PlaywrightBrowserLauncher : BrowserLauncher {
     private fun launch0(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): Browser {
+        require(browserId.browserType == BrowserType.PLAYWRIGHT_CHROME) { "Browser type must be PLAYWRIGHT_CHROME" }
+
         val browserSettings = launcherOptions.browserSettings
         val browser = launchPlaywrightBrowser(browserId, launcherOptions, launchOptions)
 
@@ -65,11 +62,11 @@ class PlaywrightBrowserLauncher : BrowserLauncher {
             if (chromeOptions.noSandbox) {
                 options.chromiumSandbox = false
             }
-            val browser = playwright.chromium().launchPersistentContext(browserId.userDataDir, options).browser()
-            return PlaywrightBrowser(browserId, browser, launcherOptions.browserSettings)
+
+            val context = PlaywrightBrowser.launchPersistentContext(browserId.userDataDir, options)
+            return PlaywrightBrowser(browserId, context, launcherOptions.browserSettings)
         } catch (e: Exception) {
             throw BrowserLaunchException("Failed to launch browser | $browserId", e)
         }
     }
 }
-

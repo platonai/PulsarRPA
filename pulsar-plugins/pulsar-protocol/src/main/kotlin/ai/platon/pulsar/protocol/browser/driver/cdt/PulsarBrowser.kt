@@ -49,7 +49,7 @@ class PulsarBrowser(
     }
 
     constructor(port: Int, settings: BrowserSettings = BrowserSettings()) :
-        this(BrowserId.RANDOM, ChromeImpl(port = port), settings, null)
+            this(BrowserId.RANDOM, ChromeImpl(port = port), settings, null)
 
     @Synchronized
     @Throws(WebDriverException::class)
@@ -119,16 +119,6 @@ class PulsarBrowser(
         }
     }
 
-    @Synchronized
-    @Throws(WebDriverException::class)
-    override fun newDriverUnmanaged(url: String): PulsarWebDriver {
-        val chromeTab = createTab(url)
-        val devTools = createDevTools(chromeTab, toolsConfig)
-        val driver = PulsarWebDriver(chromeTab, devTools, this)
-
-        return driver
-    }
-
     //    @Synchronized
     @Throws(WebDriverException::class)
     override suspend fun listDrivers(): List<WebDriver> {
@@ -142,7 +132,7 @@ class PulsarBrowser(
         recoverUnmanagedPages()
         return drivers.values.filterIsInstance<PulsarWebDriver>().firstOrNull { currentUrl(it) == url }
     }
-    
+
     override suspend fun findDriver(urlRegex: Regex): WebDriver? {
         recoverUnmanagedPages()
         return drivers.values.filterIsInstance<PulsarWebDriver>().firstOrNull { currentUrl(it).matches(urlRegex) }
@@ -213,9 +203,10 @@ class PulsarBrowser(
      * */
     private fun newDriverIfAbsent(chromeTab: ChromeTab, recovered: Boolean): PulsarWebDriver {
         // a Chrome tab id is like 'AE740895CB3F63220C3A3C751EF1F6E4'
-        var driver = _drivers[chromeTab.id]
-        if (driver != null) {
-            return driver as PulsarWebDriver
+        val uniqueID = chromeTab.id
+        var driver = _drivers[uniqueID]
+        if (driver is PulsarWebDriver) {
+            return driver
         }
 
         driver = doNewDriver(chromeTab, recovered)
@@ -236,8 +227,9 @@ class PulsarBrowser(
             }
         }
 
+        val uniqueID = chromeTab.id
         val devTools = createDevTools(chromeTab, toolsConfig)
-        val driver = PulsarWebDriver(chromeTab, devTools, this)
+        val driver = PulsarWebDriver(uniqueID, chromeTab, devTools, this)
         _drivers[chromeTab.id] = driver
 
         if (recovered) {
@@ -248,24 +240,29 @@ class PulsarBrowser(
         return driver
     }
 
-//    private fun buildDriverTree() {
+    //    private fun buildDriverTree() {
 //        drivers.values.forEach { addToDriverTree(it) }
 //    }
 //
-//    private fun addToDriverTree(driver: WebDriver) {
-//        if (driver is ChromeDevtoolsDriver) {
-//            val parentId = driver.chromeTab.parentId
-//            if (parentId != null) {
-//                val parent = drivers[parentId]
-//                if (parent is ChromeDevtoolsDriver) {
-//                    driver.opener = parent
-//                    parent.outgoingPages.add(driver)
-//
-//                    logger.info("Add driver to tree | parent: {}, child: {} | {}", parent.chromeTab.url, driver.chromeTab.url, driver.chromeTab.id)
-//                }
-//            }
-//        }
-//    }
+    private fun addToDriverTree(driver: WebDriver) {
+        if (driver is PulsarWebDriver) {
+            val parentId = driver.chromeTab.parentId
+            if (parentId != null) {
+                val parent = drivers[parentId]
+                if (parent is PulsarWebDriver) {
+                    driver.opener = parent
+                    parent.outgoingPages.add(driver)
+
+                    logger.info(
+                        "Add driver to tree | parent: {}, child: {} | {}",
+                        parent.chromeTab.url,
+                        driver.chromeTab.url,
+                        driver.chromeTab.id
+                    )
+                }
+            }
+        }
+    }
 
     /**
      * Pages can be open in the browser, for example, by a click. We should recover the page
@@ -302,7 +299,8 @@ class PulsarBrowser(
     private fun reportNewDriver(tab: ChromeTab, driver: WebDriver) {
         val parentId = tab.parentId
         if (parentId != null) {
-            logger.info("Recover tab {} with parent: {} | driver: {}, opener: {}, siblings: {} | {}",
+            logger.info(
+                "Recover tab {} with parent: {} | driver: {}, opener: {}, siblings: {} | {}",
                 tab.id, tab.parentId,
                 driver.id, driver.opener?.id, driver.opener?.outgoingPages?.size ?: 0,
                 tab.url
@@ -319,7 +317,12 @@ class PulsarBrowser(
         val seconds = if (AppSystemInfo.isCriticalResources) 15L else pageLoadTimeout.seconds
         val unmanagedTabTimeout = Duration.ofSeconds(seconds)
         val isIdle =
-            { driver: AbstractWebDriver -> Duration.between(driver.lastActiveTime, Instant.now()) > unmanagedTabTimeout }
+            { driver: AbstractWebDriver ->
+                Duration.between(
+                    driver.lastActiveTime,
+                    Instant.now()
+                ) > unmanagedTabTimeout
+            }
         val unmanagedTimeoutDrivers = chromeDrivers.filter { it.isRecovered && !it.isReused && isIdle(it) }
         if (unmanagedTimeoutDrivers.isNotEmpty()) {
             logger.debug("Closing {} unmanaged drivers", unmanagedTimeoutDrivers.size)
@@ -346,8 +349,10 @@ class PulsarBrowser(
         // it's safe to close the browser multiple times and even if the remote browser is already closed.
         launcher?.close()
 
-        logger.info("Browser is closed successfully | #{} | history: {} | {} | {} | {}",
-            instanceId, navigateHistory.size, readableState, id.contextDir.last(), id.contextDir)
+        logger.info(
+            "Browser is closed successfully | #{} | history: {} | {} | {} | {}",
+            instanceId, navigateHistory.size, readableState, id.contextDir.last(), id.contextDir
+        )
     }
 
     private fun closeDrivers() {

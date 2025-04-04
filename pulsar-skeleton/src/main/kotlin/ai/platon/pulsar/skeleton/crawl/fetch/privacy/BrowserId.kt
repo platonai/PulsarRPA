@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent.Companion
 import java.nio.file.Path
 
 /**
@@ -39,7 +40,7 @@ data class BrowserId(
         get() = when {
             privacyAgent.isSystemDefault -> AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER
             privacyAgent.isPrototype -> PrivacyContext.PROTOTYPE_DATA_DIR
-            else -> contextDir.resolve(browserType.name.lowercase())
+            else -> contextDir.resolve(browserType.name)
         }
     /**
      * A human-readable short display of the context.
@@ -54,8 +55,6 @@ data class BrowserId(
      * @param privacyAgent The privacy agent of the browser.
      * */
     constructor(privacyAgent: PrivacyAgent): this(privacyAgent.contextDir, privacyAgent.fingerprint)
-    
-    fun hasProxy() = fingerprint.hasProxy()
     /**
      * The constructor of the browser id.
      *
@@ -63,6 +62,8 @@ data class BrowserId(
      * @param browserType The browser type of the browser.
      * */
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
+
+    fun hasProxy() = fingerprint.hasProxy()
     fun setProxy(schema: String, hostPort: String, username: String?, password: String?) {
         fingerprint.setProxy(schema, hostPort, username, password)
     }
@@ -107,5 +108,21 @@ data class BrowserId(
          * Create a browser with a specific context dir.
          * */
         fun create(contextDir: Path) = BrowserId(PrivacyAgent.create(contextDir))
+
+        fun create(browserType: BrowserType, contextDir: Path) = BrowserId(PrivacyAgent.create(browserType, contextDir))
+
+        fun createRandom() = create(PrivacyContext.RANDOM_CONTEXT_DIR)
+
+        fun createRandom(browserType: BrowserType) = create(browserType, PrivacyContext.createRandom(browserType))
+
+        fun createDefault() = create(PrivacyContext.DEFAULT_CONTEXT_DIR)
+
+        fun createDefault(browserType: BrowserType) =
+            create(browserType, PrivacyContext.DEFAULT_CONTEXT_DIR)
+
+        fun createNextSequential() = create(PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
+
+        fun createNextSequential(browserType: BrowserType) = create(browserType, PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
+
     }
 }

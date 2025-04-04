@@ -31,6 +31,7 @@ import kotlin.random.Random
 import kotlin.random.nextInt
 
 abstract class AbstractWebDriver(
+    val uniqueID: String,
     override val browser: AbstractBrowser,
     override val id: Int = ID_SUPPLIER.incrementAndGet()
 ): Comparable<AbstractWebDriver>, AbstractJvmWebDriver(), WebDriver, JvmWebDriver {
@@ -84,7 +85,7 @@ abstract class AbstractWebDriver(
         val isRetired get() = this == RETIRED
     }
 
-    override val parentId: Int = -1
+    override val parentSid: Int = -1
 
     /**
      * The state of the driver.

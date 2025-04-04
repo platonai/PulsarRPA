@@ -40,10 +40,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.random.Random
 
 class PulsarWebDriver(
+    uniqueID: String,
     val chromeTab: ChromeTab,
     val devTools: RemoteDevTools,
-    override val browser: PulsarBrowser,
-) : AbstractWebDriver(browser) {
+    override val browser: PulsarBrowser
+) : AbstractWebDriver(uniqueID, browser) {
 
     private val logger = getLogger(this)
 
