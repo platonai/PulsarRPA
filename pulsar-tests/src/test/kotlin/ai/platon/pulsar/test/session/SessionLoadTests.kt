@@ -1,7 +1,7 @@
 package ai.platon.pulsar.test.session
 
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
@@ -142,7 +142,7 @@ class SessionLoadTests: TestBase() {
 
         val options = session.options("-refresh")
         options.eventHandlers.browseEventHandlers.onDidScroll.addLast { page, driver ->
-            require(driver is ChromeDevtoolsDriver)
+            require(driver is PulsarWebDriver)
             val navigateEntry = driver.navigateEntry
             assertTrue { navigateEntry.documentTransferred }
             assertTrue { navigateEntry.networkRequestCount.get() > 0 }

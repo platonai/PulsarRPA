@@ -19,7 +19,7 @@ import java.util.*
 import kotlin.test.*
 
 @Tag("TimeConsumingTest")
-class ChromeDevtoolsDriverTests : WebDriverTestBase() {
+class PulsarWebDriverTests : WebDriverTestBase() {
     
     private val fieldSelectors = mapOf(
         "01productTitle" to "#productTitle",

@@ -7,21 +7,19 @@ import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeLaunchException
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowser
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarBrowser
 import ai.platon.pulsar.protocol.browser.driver.test.MockBrowser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 
 /**
- * A factory implementation for creating browser instances.
+ * A factory implementation to create browser instances.
  * */
-open class ChromeDevtoolsBrowserFactory {
-    private val logger = getLogger(this)
+open class PulsarBrowserLauncher {
 
-    fun connect(port: Int, browserSettings: BrowserSettings = BrowserSettings()): Browser {
-        return ChromeDevtoolsBrowser(port, browserSettings = browserSettings)
+    fun connect(port: Int, settings: BrowserSettings = BrowserSettings()): Browser {
+        return PulsarBrowser(port, browserSettings = settings)
     }
 
     @Throws(BrowserLaunchException::class)
@@ -66,11 +64,11 @@ open class ChromeDevtoolsBrowserFactory {
     @Throws(BrowserLaunchException::class)
     private fun launchChromeDevtoolsBrowser(
         browserId: BrowserId, launcherOptions: LauncherOptions, browserOptions: ChromeOptions
-    ): ChromeDevtoolsBrowser {
+    ): PulsarBrowser {
         try {
             val launcher = ChromeLauncher(userDataDir = browserId.userDataDir, options = launcherOptions)
             val chrome = launcher.launch(browserOptions)
-            return ChromeDevtoolsBrowser(browserId, chrome, launcherOptions.browserSettings, launcher)
+            return PulsarBrowser(browserId, chrome, launcherOptions.browserSettings, launcher)
         } catch (e: ChromeLaunchException) {
             throw BrowserLaunchException("Failed to launch browser | $browserId", e)
         }

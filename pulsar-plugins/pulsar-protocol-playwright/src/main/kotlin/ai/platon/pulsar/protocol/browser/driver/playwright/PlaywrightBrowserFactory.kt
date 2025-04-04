@@ -54,11 +54,11 @@ class PlaywrightBrowserFactory {
     @Synchronized
     @Throws(BrowserLaunchException::class)
     private fun launchPlaywrightBrowser(
-        browserId: BrowserId, launcherOptions: LauncherOptions, browserOptions: ChromeOptions
+        browserId: BrowserId, launcherOptions: LauncherOptions, chromeOptions: ChromeOptions
     ): PlaywrightBrowser {
         try {
             val options = com.microsoft.playwright.BrowserType.LaunchPersistentContextOptions()
-            if (browserOptions.headless) {
+            if (chromeOptions.headless) {
                 options.headless = true
             }
             val proxy = browserId.fingerprint.proxyEntry
@@ -67,7 +67,7 @@ class PlaywrightBrowserFactory {
                     com.microsoft.playwright.options.Proxy(proxy.toURI().toString()).setUsername(proxy.username)
                         .setPassword(proxy.password)
             }
-            if (browserOptions.noSandbox) {
+            if (chromeOptions.noSandbox) {
                 options.chromiumSandbox = false
             }
             val browser = playwright.chromium().launchPersistentContext(browserId.userDataDir, options).browser()

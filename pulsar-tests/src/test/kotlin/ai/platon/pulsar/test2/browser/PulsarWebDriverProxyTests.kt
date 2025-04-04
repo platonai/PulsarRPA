@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import kotlin.test.*
 
 @Ignore("You should provide valid proxies to run this test")
-class ChromeDevtoolsDriverProxyTests : WebDriverTestBase() {
+class PulsarWebDriverProxyTests : WebDriverTestBase() {
     
     private final val providerProxies = """
             113.219.171.252|2018|gdhx22x|ntmf23x123|2024-12-21

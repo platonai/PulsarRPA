@@ -39,10 +39,10 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.random.Random
 
-class ChromeDevtoolsDriver(
+class PulsarWebDriver(
     val chromeTab: ChromeTab,
     val devTools: RemoteDevTools,
-    override val browser: ChromeDevtoolsBrowser,
+    override val browser: PulsarBrowser,
 ) : AbstractWebDriver(browser) {
 
     private val logger = getLogger(this)

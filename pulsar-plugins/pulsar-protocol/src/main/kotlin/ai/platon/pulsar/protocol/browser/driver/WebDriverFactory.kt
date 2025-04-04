@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.protocol.browser.UnsupportedWebDriverException
-import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowser
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarBrowser
 import ai.platon.pulsar.protocol.browser.driver.test.MockBrowser
 import ai.platon.pulsar.protocol.browser.impl.BrowserManager
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
@@ -124,9 +124,9 @@ open class WebDriverFactory constructor(
     @Throws(BrowserLaunchException::class)
     fun launchChrome(
         browserId: BrowserId, capabilities: Map<String, Any>, driverSettings: BrowserSettings
-    ): ChromeDevtoolsBrowser {
+    ): PulsarBrowser {
         require(browserId.browserType == BrowserType.PULSAR_CHROME)
-        return browserManager.launch(browserId, driverSettings, capabilities) as ChromeDevtoolsBrowser
+        return browserManager.launch(browserId, driverSettings, capabilities) as PulsarBrowser
     }
 
 //    private fun createPlaywrightDriver(

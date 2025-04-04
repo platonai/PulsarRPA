@@ -7,9 +7,8 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import org.slf4j.LoggerFactory
-import java.awt.SystemColor.text
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
@@ -56,7 +55,7 @@ class MockWebDriver(
 
     override val supportJavascript: Boolean
         get() = when (realDriver) {
-            is ChromeDevtoolsDriver -> true
+            is PulsarWebDriver -> true
             else -> false
         }
 

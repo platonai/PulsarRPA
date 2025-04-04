@@ -11,14 +11,14 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class ChromiumFactoryTest {
+class DefaultBrowserFactoryTest {
 
-    private lateinit var browserFactory: ChromiumFactory
+    private lateinit var browserFactory: DefaultBrowserFactory
     private val browsers = mutableListOf<Browser>()
 
     @Before
     fun setUp() {
-        browserFactory = ChromiumFactory()
+        browserFactory = DefaultBrowserFactory()
     }
 
     @After

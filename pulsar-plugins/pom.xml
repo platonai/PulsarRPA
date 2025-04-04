@@ -26,6 +26,7 @@
         <module>pulsar-filter</module>
         <module>pulsar-parse</module>
         <module>pulsar-protocol</module>
+        <module>pulsar-protocol-playwright</module>
         <module>pulsar-scoring</module>
         <module>pulsar-index</module>
         <module>pulsar-schedule</module>
@@ -36,12 +37,6 @@
             <id>protocol-selenium</id>
             <modules>
                 <module>pulsar-protocol-selenium</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>protocol-playwright</id>
-            <modules>
-                <module>pulsar-protocol-playwright</module>
             </modules>
         </profile>
     </profiles>

@@ -19,14 +19,14 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 
-class ChromeDevtoolsBrowser(
+class PulsarBrowser(
     id: BrowserId,
     val chrome: RemoteChrome,
-    browserSettings: BrowserSettings,
+    settings: BrowserSettings,
     private val launcher: ChromeLauncher?
-) : AbstractBrowser(id, browserSettings) {
+) : AbstractBrowser(id, settings) {
 
-    private val logger = LoggerFactory.getLogger(ChromeDevtoolsBrowser::class.java)
+    private val logger = LoggerFactory.getLogger(PulsarBrowser::class.java)
 
     private val closed = AtomicBoolean()
 
@@ -106,7 +106,7 @@ class ChromeDevtoolsBrowser(
 
     @Synchronized
     @Throws(WebDriverException::class)
-    override fun newDriver(url: String): ChromeDevtoolsDriver {
+    override fun newDriver(url: String): PulsarWebDriver {
         try {
             // In chrome every tab is a separate process
             val chromeTab = createTab(url)
@@ -121,10 +121,10 @@ class ChromeDevtoolsBrowser(
 
     @Synchronized
     @Throws(WebDriverException::class)
-    override fun newDriverUnmanaged(url: String): ChromeDevtoolsDriver {
+    override fun newDriverUnmanaged(url: String): PulsarWebDriver {
         val chromeTab = createTab(url)
         val devTools = createDevTools(chromeTab, toolsConfig)
-        val driver = ChromeDevtoolsDriver(chromeTab, devTools, this)
+        val driver = PulsarWebDriver(chromeTab, devTools, this)
 
         return driver
     }
@@ -138,23 +138,23 @@ class ChromeDevtoolsBrowser(
 
     //    @Synchronized
     @Throws(WebDriverException::class)
-    override suspend fun findDriver(url: String): ChromeDevtoolsDriver? {
+    override suspend fun findDriver(url: String): PulsarWebDriver? {
         recoverUnmanagedPages()
-        return drivers.values.filterIsInstance<ChromeDevtoolsDriver>().firstOrNull { currentUrl(it) == url }
+        return drivers.values.filterIsInstance<PulsarWebDriver>().firstOrNull { currentUrl(it) == url }
     }
     
     override suspend fun findDriver(urlRegex: Regex): WebDriver? {
         recoverUnmanagedPages()
-        return drivers.values.filterIsInstance<ChromeDevtoolsDriver>().firstOrNull { currentUrl(it).matches(urlRegex) }
+        return drivers.values.filterIsInstance<PulsarWebDriver>().firstOrNull { currentUrl(it).matches(urlRegex) }
     }
 
     override suspend fun findDrivers(urlRegex: Regex): List<WebDriver> {
         recoverUnmanagedPages()
-        return drivers.values.filterIsInstance<ChromeDevtoolsDriver>().filter { currentUrl(it).matches(urlRegex) }
+        return drivers.values.filterIsInstance<PulsarWebDriver>().filter { currentUrl(it).matches(urlRegex) }
     }
 
     override fun destroyDriver(driver: WebDriver) {
-        if (driver is ChromeDevtoolsDriver) {
+        if (driver is PulsarWebDriver) {
             val chromeTab = driver.chromeTab
             val chromeTabId = chromeTab.id
 
@@ -211,11 +211,11 @@ class ChromeDevtoolsBrowser(
     /**
      * Create a new driver and add it to the driver tree.
      * */
-    private fun newDriverIfAbsent(chromeTab: ChromeTab, recovered: Boolean): ChromeDevtoolsDriver {
+    private fun newDriverIfAbsent(chromeTab: ChromeTab, recovered: Boolean): PulsarWebDriver {
         // a Chrome tab id is like 'AE740895CB3F63220C3A3C751EF1F6E4'
         var driver = _drivers[chromeTab.id]
         if (driver != null) {
-            return driver as ChromeDevtoolsDriver
+            return driver as PulsarWebDriver
         }
 
         driver = doNewDriver(chromeTab, recovered)
@@ -225,10 +225,10 @@ class ChromeDevtoolsBrowser(
         return driver
     }
 
-    private fun doNewDriver(chromeTab: ChromeTab, recovered: Boolean): ChromeDevtoolsDriver {
+    private fun doNewDriver(chromeTab: ChromeTab, recovered: Boolean): PulsarWebDriver {
         if (!recovered && reuseRecoveredDriver) {
-            val driver = _recoveredDrivers.values.firstOrNull { it is ChromeDevtoolsDriver && !it.isReused }
-            if (driver is ChromeDevtoolsDriver) {
+            val driver = _recoveredDrivers.values.firstOrNull { it is PulsarWebDriver && !it.isReused }
+            if (driver is PulsarWebDriver) {
                 driver.isReused = true
                 _reusedDrivers[driver.chromeTab.id] = driver
                 logger.info("Reuse recovered driver | {}", chromeTab.url)
@@ -237,7 +237,7 @@ class ChromeDevtoolsBrowser(
         }
 
         val devTools = createDevTools(chromeTab, toolsConfig)
-        val driver = ChromeDevtoolsDriver(chromeTab, devTools, this)
+        val driver = PulsarWebDriver(chromeTab, devTools, this)
         _drivers[chromeTab.id] = driver
 
         if (recovered) {
@@ -313,7 +313,7 @@ class ChromeDevtoolsBrowser(
     }
 
     private fun closeRecoveredIdleDrivers() {
-        val chromeDrivers = drivers.values.filterIsInstance<ChromeDevtoolsDriver>()
+        val chromeDrivers = drivers.values.filterIsInstance<PulsarWebDriver>()
 
         val pageLoadTimeout = settings.interactSettings.pageLoadTimeout
         val seconds = if (AppSystemInfo.isCriticalResources) 15L else pageLoadTimeout.seconds
