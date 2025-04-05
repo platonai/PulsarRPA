@@ -8,6 +8,7 @@ Must
 
 * Python Interface
 * Clear API - hide implementation details
+* Playwright as default browser
 
 Optional
 
