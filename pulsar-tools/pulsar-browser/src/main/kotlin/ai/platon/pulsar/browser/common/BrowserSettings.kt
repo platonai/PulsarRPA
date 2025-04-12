@@ -50,7 +50,7 @@ open class BrowserSettings constructor(
         /**
          * Specify the browser type to fetch webpages.
          *
-         * NOTICE: PULSAR_CHROME is the only supported browser currently.
+         * 
          * */
         @JvmStatic
         fun withBrowser(browserType: String): Companion {
@@ -61,7 +61,7 @@ open class BrowserSettings constructor(
         /**
          * Specify the browser type to fetch webpages.
          *
-         * NOTICE: PULSAR_CHROME is the only supported browser currently.
+         * 
          * */
         @JvmStatic
         fun withBrowser(browserType: BrowserType): Companion {
@@ -80,7 +80,7 @@ open class BrowserSettings constructor(
          * Use the system's default browser with the given type, so PulsarRPA visits websites just like you do.
          * Any change to the browser will be kept.
          *
-         * NOTICE: PULSAR_CHROME is the only supported browser currently.
+         * 
          * */
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
@@ -98,8 +98,7 @@ open class BrowserSettings constructor(
         
         /**
          * Use the default Chrome browser. Any change to the browser will be kept.
-         *
-         * NOTICE: PULSAR_CHROME is the only supported browser currently.
+         * 
          * */
         @JvmStatic
         fun withDefaultBrowser(browserType: BrowserType): Companion {

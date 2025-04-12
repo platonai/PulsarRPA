@@ -21,19 +21,19 @@ interface PrivacyAgentGenerator {
 open class DefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig()
     @Throws(Exception::class)
-    override fun invoke(fingerprint: Fingerprint): PrivacyAgent = PrivacyAgent.DEFAULT
+    override fun invoke(fingerprint: Fingerprint): PrivacyAgent = PrivacyAgent.createDefault(fingerprint.browserType)
 }
 
 open class SystemDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig()
     @Throws(Exception::class)
-    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.SYSTEM_DEFAULT
+    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.createDefault(fingerprint.browserType)
 }
 
 open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig()
     @Throws(Exception::class)
-    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.PROTOTYPE
+    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.createDefault(fingerprint.browserType)
 }
 
 open class SequentialPrivacyAgentGenerator(

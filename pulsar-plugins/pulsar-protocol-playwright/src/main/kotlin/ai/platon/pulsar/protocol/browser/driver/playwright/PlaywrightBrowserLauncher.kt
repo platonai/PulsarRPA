@@ -50,9 +50,7 @@ class PlaywrightBrowserLauncher : BrowserLauncher {
     ): PlaywrightBrowser {
         try {
             val options = com.microsoft.playwright.BrowserType.LaunchPersistentContextOptions()
-            if (chromeOptions.headless) {
-                options.headless = true
-            }
+            options.headless = chromeOptions.headless
             val proxy = browserId.fingerprint.proxyEntry
             if (proxy != null) {
                 options.proxy =

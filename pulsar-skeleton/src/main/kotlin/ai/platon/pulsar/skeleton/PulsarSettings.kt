@@ -46,7 +46,7 @@ open class PulsarSettings {
      * Use the system's default browser with the given type, so PulsarRPA visits websites just like you do.
      * Any change to the browser will be kept.
      *
-     * NOTICE: PULSAR_CHROME is the only supported browser currently.
+     * 
      * */
     fun withSystemDefaultBrowser(browserType: BrowserType): PulsarSettings {
         BrowserSettings.withSystemDefaultBrowser(browserType)
@@ -61,7 +61,7 @@ open class PulsarSettings {
      * Use the default browser which has an isolated profile and user data directory.
      * Any modifications made to the browser will be preserved, including the cookies, history, etc.
      *
-     * NOTICE: PULSAR_CHROME is the only supported browser currently.
+     * 
      * */
     fun withDefaultBrowser(browserType: BrowserType): PulsarSettings {
         BrowserSettings.withDefaultBrowser(browserType)

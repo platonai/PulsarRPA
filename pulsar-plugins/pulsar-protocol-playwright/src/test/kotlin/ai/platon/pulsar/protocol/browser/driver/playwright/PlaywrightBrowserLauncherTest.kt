@@ -3,6 +3,8 @@ package ai.platon.pulsar.protocol.browser.driver.playwright
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
@@ -42,13 +44,36 @@ class PlaywrightBrowserLauncherTest: PlaywrightTestBase() {
     }
 
     @Test
-    fun testLaunch() {
+    fun testLaunchRandomBrowser() {
         val browserId = BrowserId.createRandom(BrowserType.PLAYWRIGHT_CHROME)
         val chromeOptions = ChromeOptions()
         chromeOptions.headless = false
 
         val browser = browserLauncher.launch(browserId, LauncherOptions(), chromeOptions)
         val driver = browser.newDriver()
+        testBrowserAndDriver(browser, driver)
+        assertFalse(browser.isPermanent)
+
+        browser.close()
+    }
+
+    @Test
+    fun testLaunchDefaultBrowser() {
+        val browserId = BrowserId.createDefault(BrowserType.PLAYWRIGHT_CHROME)
+        val chromeOptions = ChromeOptions()
+        chromeOptions.headless = false
+
+        val browser = browserLauncher.launch(browserId, LauncherOptions(), chromeOptions)
+        val driver = browser.newDriver()
+        testBrowserAndDriver(browser, driver)
+        assertTrue(browser.isPermanent)
+
+        readln()
+
+        browser.close()
+    }
+
+    private fun testBrowserAndDriver(browser: Browser, driver: WebDriver) {
         val url = "https://www.baidu.com/"
 
         runBlocking {
@@ -58,11 +83,8 @@ class PlaywrightBrowserLauncherTest: PlaywrightTestBase() {
 
         assertNotNull(browser)
         assertFalse(browser.isClosed)
-        assertFalse(browser.isPermanent)
         assertTrue(browser.isActive)
         assertTrue(browser.isConnected)
         assertFalse(browser.isIdle)
-
-        browser.close()
     }
 }
