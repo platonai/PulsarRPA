@@ -9,6 +9,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLauncher
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
+import java.util.Optional
 
 class PlaywrightBrowserLauncher : BrowserLauncher {
     override fun connect(port: Int, settings: BrowserSettings): Browser {
@@ -49,22 +50,37 @@ class PlaywrightBrowserLauncher : BrowserLauncher {
         browserId: BrowserId, launcherOptions: LauncherOptions, chromeOptions: ChromeOptions
     ): PlaywrightBrowser {
         try {
-            val options = com.microsoft.playwright.BrowserType.LaunchPersistentContextOptions()
-            options.headless = chromeOptions.headless
-            val proxy = browserId.fingerprint.proxyEntry
-            if (proxy != null) {
-                options.proxy =
-                    com.microsoft.playwright.options.Proxy(proxy.toURI().toString()).setUsername(proxy.username)
-                        .setPassword(proxy.password)
-            }
-            if (chromeOptions.noSandbox) {
-                options.chromiumSandbox = false
-            }
+            val options = toLaunchPersistentContextOptions(browserId, launcherOptions, chromeOptions)
 
             val context = PlaywrightBrowser.launchPersistentContext(browserId.userDataDir, options)
             return PlaywrightBrowser(browserId, context, launcherOptions.browserSettings)
         } catch (e: Exception) {
             throw BrowserLaunchException("Failed to launch browser | $browserId", e)
         }
+    }
+
+    private fun toLaunchPersistentContextOptions(
+        browserId: BrowserId, launcherOptions: LauncherOptions, chromeOptions: ChromeOptions
+    ): com.microsoft.playwright.BrowserType.LaunchPersistentContextOptions {
+        val options = com.microsoft.playwright.BrowserType.LaunchPersistentContextOptions()
+        options.headless = chromeOptions.headless
+        val proxy = browserId.fingerprint.proxyEntry
+        if (proxy != null) {
+            options.proxy =
+                com.microsoft.playwright.options.Proxy(proxy.toURI().toString()).setUsername(proxy.username)
+                    .setPassword(proxy.password)
+        }
+        if (chromeOptions.noSandbox) {
+            options.chromiumSandbox = false
+        }
+
+        options.ignoreHTTPSErrors = true
+        // chromeOptions.ignoreCertificateErrors
+        val settings = launcherOptions.browserSettings
+        options.viewportSize = Optional.of(com.microsoft.playwright.options.ViewportSize(
+            settings.viewportSize.width, settings.viewportSize.height
+        ))
+
+        return options
     }
 }

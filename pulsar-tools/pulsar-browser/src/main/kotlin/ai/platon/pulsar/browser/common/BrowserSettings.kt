@@ -1,7 +1,6 @@
 package ai.platon.pulsar.browser.common
 
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
-import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.*
@@ -425,6 +424,11 @@ open class BrowserSettings constructor(
      * */
     private val jsPropertyNames: Array<String>
         get() = config.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, CLIENT_JS_PROPERTY_NAMES)
+
+    /**
+     * The screen viewport.
+     * */
+    val viewportSize get() = SCREEN_VIEWPORT
 
     /**
      * The supervisor process
