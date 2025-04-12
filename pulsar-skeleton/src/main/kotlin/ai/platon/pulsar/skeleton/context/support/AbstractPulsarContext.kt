@@ -145,9 +145,7 @@ abstract class AbstractPulsarContext(
     open val webDb: WebDb get() = getBean()
     
     open val globalCacheFactory: GlobalCacheFactory get() = getBean()
-    
-    open val injectComponent: InjectComponent get() = getBean()
-    
+
     open val fetchComponent: BatchFetchComponent get() = getBean()
     
     open val parseComponent: ParseComponent get() = getBean()

@@ -14,11 +14,6 @@
 
     <import resource="plugins/monitor-context.xml"/>
 
-    <bean id="injectComponent" class="ai.platon.pulsar.skeleton.crawl.component.InjectComponent">
-        <constructor-arg ref="webDb"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <bean id="fetchComponent" class="ai.platon.pulsar.skeleton.crawl.component.BatchFetchComponent" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="globalCacheFactory"/>
