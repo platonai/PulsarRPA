@@ -68,8 +68,6 @@ class PlaywrightBrowserLauncherTest: PlaywrightTestBase() {
         testBrowserAndDriver(browser, driver)
         assertTrue(browser.isPermanent)
 
-        readln()
-
         browser.close()
     }
 
