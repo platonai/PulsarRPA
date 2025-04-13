@@ -355,4 +355,10 @@ PulsarRPA 在 “主要特性” 部分中提到的特性都得到了良好的�
 - 微博：[galaxyeye](https://weibo.com/galaxyeye)
 - 邮箱：galaxyeye@live.cn, ivincent.zhang@gmail.com
 - Twitter: galaxyeye8
-- 网站：[platon.ai](http://platon.ai)
+- 网站：[platon.ai](https://platon.ai)
+
+<div style="display: flex;">
+  <img src="docs/images/wechat-author.png" width="300" alt="wechat-author" />
+  <img src="docs/images/buy-me-a-coffee.png" width="300" alt="buy-me-a-coffee" />
+</div>
+

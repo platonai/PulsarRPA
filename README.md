@@ -143,11 +143,6 @@ Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pul
 
 
 
-
-
-
-
-
 ## 🚄 Features
 
 - Web Spider: Scalable crawling, browser rendering, AJAX data extraction, and more.
@@ -364,4 +359,9 @@ Check the [technical details](docs/faq/technical-details.md) to see answers for 
 - Weibo: [galaxyeye](https://weibo.com/galaxyeye)
 - Email: galaxyeye@live.cn, ivincent.zhang@gmail.com
 - Twitter: galaxyeye8
-- Website: [platon.ai](http://platon.ai)
+- Website: [platon.ai](https://platon.ai)
+
+<div style="display: flex;">
+  <img src="docs/images/wechat-author.png" width="300" alt="wechat-author" />
+  <img src="docs/images/buy-me-a-coffee.png" width="300" alt="buy-me-a-coffee" />
+</div>
