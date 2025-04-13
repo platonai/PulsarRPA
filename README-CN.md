@@ -88,6 +88,7 @@ Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pul
 
 ```sql
 select
+    llm_extract(dom, 'product name, price, ratings, score') as llm_extracted_data,
     dom_first_text(dom, '#productTitle') as title,
     dom_first_text(dom, '#bylineInfo') as brand,
     dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
