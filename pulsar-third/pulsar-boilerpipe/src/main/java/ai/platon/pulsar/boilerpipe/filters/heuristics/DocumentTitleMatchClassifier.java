@@ -56,7 +56,7 @@ public final class DocumentTitleMatchClassifier implements TextBlockFilter {
 
       title = title.trim().toLowerCase();
 
-      if (title.length() == 0) {
+      if (title.isEmpty()) {
         this.potentialTitles = null;
       } else {
         this.potentialTitles = new HashSet<>();

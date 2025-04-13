@@ -12,7 +12,7 @@ import java.lang.ref.WeakReference
 import java.util.*
 
 /**
- * The page datum collected from a real page to update a WebPage.
+ * The page datum collected from a active page open in the browser, it is used to update a WebPage.
  * */
 class PageDatum(
     /**
