@@ -13,7 +13,6 @@ import javax.annotation.Nonnull;
  */
 public class ScoreEntry implements Comparable<ScoreEntry> {
 
-    
     public static final int DEFAULT_DIGITS = 5;
 
     private String name;

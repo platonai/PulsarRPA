@@ -32,9 +32,7 @@ import java.util.stream.Stream;
 
 /**
  * Detect a date time in a text.
- * TODO: see org.apache.commons.lang3.time.DateUtils
- * <p>
- * TODO: there are bugs
+ * @see org.apache.commons.lang3.time.DateUtils
  */
 public class DateTimeDetector {
 
