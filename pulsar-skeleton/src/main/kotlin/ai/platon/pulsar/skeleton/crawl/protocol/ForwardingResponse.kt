@@ -25,7 +25,7 @@ open class ForwardingResponse(
     constructor(e: Throwable?, page: WebPage) : this("", ProtocolStatus.failed(e), MultiMetadata(), page)
 
     constructor(content: String, status: ProtocolStatus, headers: MultiMetadata, page: WebPage)
-            : this(page, PageDatum(page.url, page.location, status, content.toByteArray(), headers = headers)) {
+            : this(page, PageDatum(page.url, page.baseURI, page.location, status, content.toByteArray(), headers = headers)) {
     }
 
     companion object {
