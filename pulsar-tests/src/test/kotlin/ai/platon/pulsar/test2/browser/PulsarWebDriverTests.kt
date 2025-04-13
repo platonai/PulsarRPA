@@ -1,5 +1,6 @@
 package ai.platon.pulsar.test2.browser
 
+import ai.platon.pulsar.browser.common.SimpleScriptConfuser
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser.Companion.IDENTITY_NAME_MANGLER
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
@@ -128,7 +129,9 @@ class PulsarWebDriverTests : WebDriverTestBase() {
         
         var result = driver.evaluate("typeof(__pulsar_)").toString()
         assertEquals("function", result)
-        
+
+        assertNotEquals(IDENTITY_NAME_MANGLER, confuser.nameMangler,
+            "confuser.nameMangler should not be IDENTITY_NAME_MANGLER")
         val injectedNames = listOf(
             "__pulsar_utils__",
             "__pulsar_NodeFeatureCalculator",
