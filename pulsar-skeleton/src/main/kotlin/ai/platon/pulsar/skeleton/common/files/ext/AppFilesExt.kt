@@ -26,7 +26,7 @@ fun AppFiles.export(
 ): Path {
     val dirName = AppPaths.fromHost(page.url)
 
-    val document = Documents.parse(content, page.baseUrl)
+    val document = Documents.parse(content, page.baseURI)
     document.absoluteLinks()
     val prettyHtml = document.prettyHtml
     val length = prettyHtml.length

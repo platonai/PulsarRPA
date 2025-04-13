@@ -22,6 +22,18 @@ class PageDatum(
      */
     val url: String,
     /**
+     * In javascript, the baseURI is a property of Node, it's the absolute base URL of the
+     * document containing the node. A baseURI is used to resolve relative URLs.
+     *
+     * This property is retrieved from javascript `document.baseURI`.
+     *
+     * The base URL is determined as follows:
+     * 1. By default, the base URL is the location of the document
+     *    (as determined by window.location).
+     * 2. If the document has an `<base>` element, its href attribute is used.
+     * */
+    var baseURI: String = url,
+    /**
      * Returns the document location as a string.
      *
      * [location] is the last working address, retrieved by javascript,

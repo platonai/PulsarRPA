@@ -39,7 +39,7 @@ class JsoupParser(
         }
 
         try {
-            val mutableDocument = Jsoup.parse(page.contentAsInputStream, page.encoding, page.baseUrl)
+            val mutableDocument = Jsoup.parse(page.contentAsInputStream, page.encoding, page.baseURI)
             updateMetaInfos(page, mutableDocument)
 
             // Calculate features for each node in the constructor

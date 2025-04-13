@@ -181,6 +181,7 @@ open class FetchComponent(
         }
 
         val datum = pageDatum
+        page.baseURI = datum.baseURI
         page.location = datum.location
         page.proxy = datum.proxyEntry?.agentIp
         val trace = datum.activeDOMStatTrace

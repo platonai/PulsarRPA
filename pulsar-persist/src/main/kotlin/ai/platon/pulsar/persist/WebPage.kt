@@ -78,7 +78,11 @@ interface WebPage : Comparable<WebPage> {
      *    (as determined by window.location).
      * 2. If the document has an `<base>` element, its href attribute is used.
      * */
+    var baseURI: String
+    @Deprecated("Use baseURI instead", ReplaceWith("baseURI"))
     var baseUrl: String
+        get() = baseURI
+        set(value) = run { baseURI = value }
     /**
      * The URL of the page that linked to this page.
      */

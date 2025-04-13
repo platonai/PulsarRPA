@@ -165,6 +165,7 @@ abstract class BrowserEmulatorImplBase(
         
         val urls = pageDatum.activeDOMUrls
         if (urls != null) {
+            pageDatum.baseURI = urls.baseURI
             pageDatum.location = urls.location
             if (pageDatum.url != pageDatum.location) {
                 // in-browser redirection
