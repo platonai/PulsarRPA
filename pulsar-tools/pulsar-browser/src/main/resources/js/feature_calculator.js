@@ -17,6 +17,9 @@ let __pulsar_NodeFeatureCalculator = function() {
     this.sequence = 0;
 };
 
+window.__pulsar_ = window.__pulsar_ || __pulsar_
+window.__pulsar_.__pulsar_NodeFeatureCalculator = __pulsar_NodeFeatureCalculator
+
 /**
  * Check if stopped
  */

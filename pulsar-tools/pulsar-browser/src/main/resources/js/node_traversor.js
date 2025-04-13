@@ -20,6 +20,9 @@ let __pulsar_NodeTraversor = function(visitor) {
     }
 }
 
+window.__pulsar_ = window.__pulsar_ || __pulsar_
+window.__pulsar_.__pulsar_NodeTraversor = __pulsar_NodeTraversor
+
 /**
  * Start a depth-first traverse of the root and all of its descendants.
  * @param root {Node} the root node point to traverse.

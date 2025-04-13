@@ -8,6 +8,9 @@ let __pulsar_utils__ = function () {
     this.fineNumImage = 20;
 };
 
+window.__pulsar_ = window.__pulsar_ || __pulsar_
+window.__pulsar_.__pulsar_utils__ = __pulsar_utils__
+
 /**
  * @param scroll The count to scroll down
  * @return {Object|boolean}
