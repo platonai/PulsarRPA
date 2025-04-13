@@ -226,11 +226,11 @@ private class ConfigurationImpl(
 
     private fun findRealResource(profile: String, resourceName: String): URL? {
         val prefix = "config"
-        val extension = resourceName.substringAfterLast(".")
-        val nameWithoutExtension = resourceName.substringBeforeLast(".")
+//        val extension = resourceName.substringAfterLast(".")
+//        val nameWithoutExtension = resourceName.substringBeforeLast(".")
 
         val searchPaths = arrayOf(
-            "$prefix/$nameWithoutExtension-$profile.$extension"
+            "$prefix/$resourceName"
         )
             .map { it.replace("/+".toRegex(), "/") }   // replace "//" with "/"
             .map { it.replace("-\\.".toRegex(), ".") } // replace "-." with ".", when profile is empty
