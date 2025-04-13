@@ -107,17 +107,21 @@ class PlaywrightDriverTest {
 
             result = driver.evaluate("typeof(window)")
             println("typeof(window) -> $result")
+            assertEquals("object", result)
 
 
             result = driver.evaluate("typeof(__test_utils__)")
             println("typeof(__test_utils__) -> $result")
+            assertEquals("object", result)
 
 
             result = driver.evaluate("typeof(__pulsar_)")
             println("typeof(__pulsar_) -> $result")
+            assertEquals("function", result)
 
             result = driver.evaluate("__pulsar_utils__.add(1, 2)")
             println(result)
+            assertEquals(3, result)
         }
     }
 
