@@ -65,7 +65,7 @@ open class SequentialPrivacyAgentGenerator(
         
         require(Files.exists(contextDir)) { "The context dir does not exist: $contextDir" }
 
-        val agent = PrivacyAgent(contextDir)
+        val agent = PrivacyAgent(contextDir, fingerprint)
         
         return agent
     }

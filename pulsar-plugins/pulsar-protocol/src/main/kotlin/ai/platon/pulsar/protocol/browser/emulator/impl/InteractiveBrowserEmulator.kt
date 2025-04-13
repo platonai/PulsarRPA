@@ -281,6 +281,7 @@ open class InteractiveBrowserEmulator(
                 val browser = driver.browser
                 logger.info("Dismiss illegal driver #{}: {} | browser #{}:{} | {}",
                     driver.id, driver.status, browser.instanceId, browser.readableState, e.brief())
+                // e.printStackTrace()
             }
 
             driver.retire()
@@ -666,7 +667,7 @@ open class InteractiveBrowserEmulator(
      * */
     protected suspend fun isScriptInjected(driver: WebDriver): Boolean {
         // Ensure __pulsar_utils__ is defined. For some type of pages, the script can not be injected.
-        val utils = driver.evaluate("typeof(__pulsar_utils__)")
+        val utils = driver.evaluate("typeof(__pulsar_)")
         return utils == "function"
     }
     

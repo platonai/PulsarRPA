@@ -841,7 +841,8 @@ class PulsarWebDriver(
 
         val confuser = settings.confuser
         initScriptCache.forEach {
-            pageAPI?.addScriptToEvaluateOnNewDocument(confuser.confuse(it))
+            val confusedJs = confuser.confuse(it)
+            pageAPI?.addScriptToEvaluateOnNewDocument(confusedJs)
         }
 
         if (logger.isTraceEnabled) {

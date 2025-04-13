@@ -138,9 +138,20 @@ open class BrowserSettings constructor(
          * */
         @JvmStatic
         fun withSequentialBrowsers(): Companion {
-            return withSequentialBrowsers(10)
+            return withSequentialBrowsers(BrowserType.PULSAR_CHROME, 10)
         }
-        
+        /**
+         * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
+         * permanent unless the context directories are deleted manually.
+         *
+         * PULSAR_CHROME is the only supported browser currently.
+         *
+         * @return the BrowserSettings itself
+         * */
+        @JvmStatic
+        fun withSequentialBrowsers(browserType: BrowserType): Companion {
+            return withSequentialBrowsers(browserType, 10)
+        }
         /**
          * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
          * permanent unless the context directories are deleted manually.
@@ -152,6 +163,23 @@ open class BrowserSettings constructor(
          * */
         @JvmStatic
         fun withSequentialBrowsers(maxAgents: Int): Companion {
+            System.setProperty(MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, "$maxAgents")
+            val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            return BrowserSettings
+        }
+        /**
+         * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
+         * permanent unless the context directories are deleted manually.
+         *
+         * PULSAR_CHROME is the only supported browser currently.
+         *
+         * @param maxAgents The maximum number of sequential agents, the active agents are chosen from them.
+         * @return the BrowserSettings itself
+         * */
+        @JvmStatic
+        fun withSequentialBrowsers(browserType: BrowserType, maxAgents: Int): Companion {
+            withBrowser(browserType)
             System.setProperty(MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, "$maxAgents")
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)

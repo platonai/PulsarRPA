@@ -37,11 +37,16 @@ import ai.platon.pulsar.common.browser.BrowserType
  * 3. Set the system to work with single page application
  * */
 open class PulsarSettings {
+
+    fun withBrowser(browserType: BrowserType): PulsarSettings {
+        BrowserSettings.withBrowser(browserType)
+        return this
+    }
     /**
      * Use the system's default Chrome browser, so PulsarRPA visits websites just like you do.
      * Any change to the browser will be kept.
      * */
-    fun withSystemDefaultBrowser() = withSystemDefaultBrowser(BrowserType.PULSAR_CHROME)
+    fun withSystemDefaultBrowser() = withSystemDefaultBrowser(BrowserType.DEFAULT)
     /**
      * Use the system's default browser with the given type, so PulsarRPA visits websites just like you do.
      * Any change to the browser will be kept.
@@ -56,7 +61,7 @@ open class PulsarSettings {
      * Use the default browser which has an isolated profile and user data directory.
      * Any modifications made to the browser will be preserved, including the cookies, history, etc.
      * */
-    fun withDefaultBrowser() = withDefaultBrowser(BrowserType.PULSAR_CHROME)
+    fun withDefaultBrowser() = withDefaultBrowser(BrowserType.DEFAULT)
     /**
      * Use the default browser which has an isolated profile and user data directory.
      * Any modifications made to the browser will be preserved, including the cookies, history, etc.
@@ -72,13 +77,11 @@ open class PulsarSettings {
      * Any modifications made to the browser will be preserved.
      * Sequential and temporary browsers will inherit the environment from the prototype browser.
      */
-    fun withPrototypeBrowser() = withPrototypeBrowser(BrowserType.PULSAR_CHROME)
+    fun withPrototypeBrowser() = withPrototypeBrowser(BrowserType.DEFAULT)
     /**
      * Use the specified browser with the prototype environment.
      * Any modifications made to the browser will be preserved.
      * Sequential and temporary browsers will inherit the environment from the prototype browser.
-     *
-     * PULSAR_CHROME is the only supported browser currently.
      * */
     fun withPrototypeBrowser(browserType: BrowserType): PulsarSettings {
         BrowserSettings.withPrototypeBrowser(browserType)
@@ -88,24 +91,35 @@ open class PulsarSettings {
      * Use sequential browsers that inherits the prototype browser’s environment.
      * The sequential browsers are permanent unless the context directories are deleted manually.
      *
-     * PULSAR_CHROME is the only supported browser currently.
+     *
      *
      * @return the PulsarSettings itself
      * */
     fun withSequentialBrowsers(): PulsarSettings {
-        return withSequentialBrowsers(10)
+        return withSequentialBrowsers(BrowserType.DEFAULT, 10)
+    }
+    /**
+     * Use sequential browsers that inherits the prototype browser’s environment.
+     * The sequential browsers are permanent unless the context directories are deleted manually.
+     *
+     *
+     *
+     * @return the PulsarSettings itself
+     * */
+    fun withSequentialBrowsers(browserType: BrowserType): PulsarSettings {
+        return withSequentialBrowsers(browserType, 10)
     }
     /**
      * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
      * permanent unless the context directories are deleted manually.
      *
-     * PULSAR_CHROME is the only supported browser currently.
+     *
      *
      * @param maxAgents The maximum number of sequential privacy agents, the active privacy contexts is chosen from them.
      * @return the PulsarSettings itself
      * */
-    fun withSequentialBrowsers(maxAgents: Int): PulsarSettings {
-        BrowserSettings.withSequentialBrowsers(maxAgents)
+    fun withSequentialBrowsers(browserType: BrowserType, maxAgents: Int): PulsarSettings {
+        BrowserSettings.withSequentialBrowsers(browserType, maxAgents)
         return this
     }
     /**
@@ -113,13 +127,13 @@ open class PulsarSettings {
      * will not be used again after it is shut down.
      * */
     fun withTemporaryBrowser(): PulsarSettings {
-        return withTemporaryBrowser(BrowserType.PULSAR_CHROME)
+        return withTemporaryBrowser(BrowserType.DEFAULT)
     }
     /**
      * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
      * will not be used again after it is shut down.
      *
-     * PULSAR_CHROME is the only supported browser currently.
+     *
      * */
     fun withTemporaryBrowser(browserType: BrowserType): PulsarSettings {
         BrowserSettings.withTemporaryBrowser(browserType)

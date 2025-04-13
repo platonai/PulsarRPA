@@ -25,12 +25,12 @@ class PlaywrightBrowserLauncher : BrowserLauncher {
     @Throws(BrowserLaunchException::class)
     override fun launch(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
-    ): Browser = launch0(browserId, launcherOptions, launchOptions)
+    ): PlaywrightBrowser = launch0(browserId, launcherOptions, launchOptions)
 
     @Throws(BrowserLaunchException::class)
     private fun launch0(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
-    ): Browser {
+    ): PlaywrightBrowser {
         require(browserId.browserType == BrowserType.PLAYWRIGHT_CHROME) { "Browser type must be PLAYWRIGHT_CHROME" }
 
         val browserSettings = launcherOptions.browserSettings

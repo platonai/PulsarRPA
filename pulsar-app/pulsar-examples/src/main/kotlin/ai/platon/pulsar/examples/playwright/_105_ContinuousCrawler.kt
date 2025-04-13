@@ -13,7 +13,7 @@ import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
  * */
 fun main() {
     // For continuous crawls, you'd better use sequential browsers or temporary browsers
-    PulsarSettings().withSequentialBrowsers().withDefaultBrowser(BrowserType.PLAYWRIGHT_CHROME)
+    PulsarSettings().withSequentialBrowsers(BrowserType.PLAYWRIGHT_CHROME, 2)
 
     val context = PulsarContexts.create()
 
@@ -26,7 +26,7 @@ fun main() {
     }
 
     // change to seeds100.txt to crawl more
-    val urls = LinkExtractors.fromResource("seeds100.txt")
+    val urls = LinkExtractors.fromResource("seeds10.txt")
         .map { ParsableHyperlink("$it -refresh", parseHandler) }
     context.submitAll(urls).await()
 }

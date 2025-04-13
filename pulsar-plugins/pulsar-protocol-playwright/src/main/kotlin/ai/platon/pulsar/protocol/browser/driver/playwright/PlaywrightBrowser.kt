@@ -86,8 +86,11 @@ class PlaywrightBrowser(
 
         if (url.isNotBlank()) {
             page.navigate(url)
+        } else {
+            page.navigate("about:blank")
         }
 
+        page.waitForLoadState()
         val driver = PlaywrightDriver(uniqueID, this, page)
 
         return driver

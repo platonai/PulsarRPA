@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver.playwright
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
+import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.geometric.PointD
@@ -10,6 +11,7 @@ import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import com.microsoft.playwright.Page
 import org.jsoup.Connection
 import java.time.Duration
@@ -43,7 +45,7 @@ class PlaywrightDriver(
 
     private var credentials: Credentials? = null
 
-    private var navigateUrl = page.url() ?: ""
+    private var navigateUrl = ""
 
     override suspend fun addInitScript(script: String) {
         try {
@@ -75,19 +77,8 @@ class PlaywrightDriver(
 
     /**
      * Navigates to a URL without waiting for navigation to complete.
-     * @param url The URL to navigate to
      * @throws RuntimeException if navigation fails
      */
-    override suspend fun navigateTo(url: String) {
-        try {
-            rpc.invokeDeferred("navigateTo") {
-                page.navigate(url)
-            }
-        } catch (e: Exception) {
-            rpc.handleWebDriverException(e, "navigateTo", url)
-        }
-    }
-
     override suspend fun navigateTo(entry: NavigateEntry) {
         navigateHistory.add(entry)
         this.navigateEntry = entry
@@ -164,7 +155,8 @@ class PlaywrightDriver(
 
                 val confuser = settings.confuser
                 initScriptCache.forEach {
-                    page.addInitScript(confuser.confuse(it))
+                    val scripts = confuser.confuse(it)
+                    page.addInitScript(scripts)
                 }
 
                 if (logger.isTraceEnabled) {
@@ -749,31 +741,14 @@ class PlaywrightDriver(
     }
 
     override suspend fun evaluate(expression: String): Any? {
-        return try {
-            rpc.invokeDeferred("evaluate") {
-                page.evaluate(expression)
-            }
-        } catch (e: Exception) {
-            rpc.handleWebDriverException(e, "evaluate", expression)
-            null
-        }
-    }
-
-    override suspend fun <T> evaluate(expression: String, defaultValue: T): T {
-        return try {
-            rpc.invokeDeferred("evaluate") {
-                (page.evaluate(expression) as? T) ?: defaultValue
-            } ?: defaultValue
-        } catch (e: Exception) {
-            rpc.handleWebDriverException(e, "evaluate", expression)
-            defaultValue
-        }
+        return evaluateDetail(expression)?.value
     }
 
     override suspend fun evaluateDetail(expression: String): JsEvaluation? {
         return try {
             rpc.invokeDeferred("evaluateDetail") {
-                JsEvaluation(page.evaluate(expression))
+                val result = page.evaluate(settings.confuser.confuse(expression))
+                JsEvaluation(result)
             }
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "evaluateDetail", expression)
@@ -919,7 +894,7 @@ class PlaywrightDriver(
     override suspend fun stop() {
         try {
             rpc.invokeDeferred("stop") {
-                page.close()
+                navigateTo(ChromeImpl.ABOUT_BLANK_PAGE)
             }
         } catch (e: Exception) {
             logger.warn("Failed to stop: ${e.message}")
@@ -932,9 +907,31 @@ class PlaywrightDriver(
     override fun close() {
         try {
             page.close()
-            browser.close()
         } catch (e: Exception) {
             logger.warn("Error during close: ${e.message}")
+        }
+    }
+
+    private fun createJsEvaluate(evaluate: Evaluate?): JsEvaluation? {
+        evaluate ?: return null
+
+        val result = evaluate.result
+        val exception = evaluate.exceptionDetails
+        return if (exception != null) {
+            val jsException = JsException(
+                text = exception.text,
+                lineNumber = exception.lineNumber,
+                columnNumber = exception.columnNumber,
+                url = exception.url,
+            )
+            JsEvaluation(exception = jsException)
+        } else {
+            JsEvaluation(
+                value = result.value,
+                unserializableValue = result.unserializableValue,
+                className = result.className,
+                description = result.description
+            )
         }
     }
 }

@@ -86,7 +86,7 @@ class WebDriverTestBase : TestBase() {
             typeof(document.body)
             document.body.clientWidth
             
-            typeof(__pulsar_utils__)
+            typeof(__pulsar_)
             __pulsar_utils__.add(1, 1)
         """.trimIndent().split("\n").map { it.trim() }.filter { it.isNotBlank() }
 

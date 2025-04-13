@@ -26,6 +26,8 @@ enum class BrowserType {
 //    }
 
     companion object {
+        val DEFAULT = PULSAR_CHROME
+
         /**
          * Create a browser type from a string.
          *
@@ -35,11 +37,11 @@ enum class BrowserType {
         @JvmStatic
         fun fromString(name: String?): BrowserType {
             return if (name.isNullOrEmpty()) {
-                PULSAR_CHROME
+                DEFAULT
             } else try {
                 valueOf(name.uppercase(Locale.getDefault()))
             } catch (e: Throwable) {
-                PULSAR_CHROME
+                DEFAULT
             }
         }
     }
