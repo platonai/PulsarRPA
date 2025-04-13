@@ -20,7 +20,7 @@ let __pulsar_NodeTraversor = function(visitor) {
     }
 }
 
-window.__pulsar_ = window.__pulsar_ || __pulsar_
+window.__pulsar_ = window.__pulsar_ || function () {}
 window.__pulsar_.__pulsar_NodeTraversor = __pulsar_NodeTraversor
 
 /**
