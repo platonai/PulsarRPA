@@ -2,6 +2,8 @@ package ai.platon.pulsar.rest.integration
 
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextConfiguration
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
+import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
@@ -10,6 +12,7 @@ import org.apache.hc.client5.http.classic.HttpClient
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.apache.hc.core5.util.Timeout
+import org.apache.http.HttpStatus
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -20,6 +23,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.client.ClientHttpRequestFactory
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import kotlin.test.BeforeTest
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -47,9 +51,35 @@ class IntegrationTestBase {
         assertTrue("Session should be BasicPulsarSession, actual ${session.javaClass}") { session is BasicPulsarSession }
     }
 
+    /**
+     * Test for Controller [ai.platon.pulsar.rest.api.controller.ScrapeController.execute]
+     * */
     fun scrape(url: String): ScrapeResponse? {
         val sql = "select dom_base_uri(dom) as url from load_and_select('$url', ':root')"
         return restTemplate.postForObject("$baseUri/x/e", sql, ScrapeResponse::class.java)
+    }
+
+    /**
+     * Test for Controller [ai.platon.pulsar.rest.api.controller.ScrapeController.submitJob]
+     * */
+    fun llmScrape(url: String): ScrapeResponse? {
+        val sql = "select llm_extract(dom, 'Title, Price, Description') as llm_extracted_fields from load_and_select('$url', 'body')"
+        val uuid = restTemplate.postForObject("$baseUri/x/s", sql, String::class.java)
+
+        return await(uuid, url)
+    }
+
+    private fun await(uuid: String, url: String): ScrapeResponse {
+        var tick = 0
+        val timeout = 60
+
+        var response: ScrapeResponse = restTemplate.getForObject("$baseUri/x/status?uuid=$uuid", ScrapeResponse::class.java)
+        while (!response.isDone && ++tick < timeout) {
+            sleepSeconds(1)
+            response = restTemplate.getForObject("$baseUri/x/status?uuid=$uuid", ScrapeResponse::class.java)
+        }
+
+        return response
     }
 
     // 自定义 RestTemplateBuilder 以设置超时时间

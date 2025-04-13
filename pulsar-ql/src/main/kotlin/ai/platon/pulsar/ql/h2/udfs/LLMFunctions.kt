@@ -42,7 +42,7 @@ Extract fields from the given HTML content, return the result in JSON format lik
 }
 ```
 
-Field descriptions: 
+Field descriptions:
 $fieldDescriptions
 
 """.trimIndent()

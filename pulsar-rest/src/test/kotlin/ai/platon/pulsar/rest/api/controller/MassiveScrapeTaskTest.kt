@@ -72,6 +72,9 @@ class MassiveScrapeTaskTest : IntegrationTestBase() {
         logger.info("Test finished, duration: $duration")
     }
 
+    /**
+     * Test for Controller [ai.platon.pulsar.rest.api.controller.ScrapeController.submitJob]
+     * */
     @Test
     fun whenIssueMassiveScrapeTask_thenShouldFinishAllTasks() {
         val sqls = testPaths.asSequence()
