@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>3.0.0-SNAPSHOT</version>
+        <version>3.0.0</version>
     </parent>
 
     <artifactId>pulsar-plugins</artifactId>
@@ -27,9 +27,9 @@
         <module>pulsar-parse</module>
         <module>pulsar-protocol</module>
         <module>pulsar-protocol-playwright</module>
-        <module>pulsar-scoring</module>
-        <module>pulsar-index</module>
-        <module>pulsar-schedule</module>
+<!--        <module>pulsar-scoring</module>-->
+<!--        <module>pulsar-index</module>-->
+<!--        <module>pulsar-schedule</module>-->
     </modules>
 
     <profiles>
@@ -80,21 +80,21 @@
                 <artifactId>pulsar-parse</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-scoring</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-index</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-schedule</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>ai.platon.pulsar</groupId>-->
+<!--                <artifactId>pulsar-scoring</artifactId>-->
+<!--                <version>${project.version}</version>-->
+<!--            </dependency>-->
+<!--            <dependency>-->
+<!--                <groupId>ai.platon.pulsar</groupId>-->
+<!--                <artifactId>pulsar-index</artifactId>-->
+<!--                <version>${project.version}</version>-->
+<!--            </dependency>-->
+<!--            <dependency>-->
+<!--                <groupId>ai.platon.pulsar</groupId>-->
+<!--                <artifactId>pulsar-schedule</artifactId>-->
+<!--                <version>${project.version}</version>-->
+<!--            </dependency>-->
         </dependencies>
     </dependencyManagement>
 
