@@ -26,7 +26,7 @@
         <module>pulsar-filter</module>
         <module>pulsar-parse</module>
         <module>pulsar-protocol</module>
-<!--        <module>pulsar-protocol-playwright</module>-->
+        <module>pulsar-protocol-playwright</module>
         <module>pulsar-scoring</module>
         <module>pulsar-index</module>
         <module>pulsar-schedule</module>

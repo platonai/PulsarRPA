@@ -33,12 +33,15 @@ open class PlaywrightTestBase {
     @BeforeEach
     fun checkNodeJSAvailability() {
         var output = Runtimes.exec("node --version")
+        // a typical version is v16.15.1
         println(output.joinToString())
-        Assumptions.assumeTrue { output.isNotEmpty() }
+        Assumptions.assumeTrue({ output.size == 1 }, output.joinToString())
+        Assumptions.assumeTrue({ output[0].startsWith("v") }, output.joinToString())
 
         output = Runtimes.exec("""node -e "console.log(1 + 1);" """)
         println(output.joinToString())
-        Assumptions.assumeTrue { output[0] == "2" }
+        // not all node version supports the expression
+        // Assumptions.assumeTrue { output[0] == "2" }
     }
 
     @BeforeEach
