@@ -56,6 +56,15 @@ interface WebPage : Comparable<WebPage> {
     var href: String?
 
     /**
+     * A baseUrl is used to resolve relative URLs.
+     *
+     * The base URL is determined as follows:
+     * 1. By default, the base URL is the location of the document
+     *    (as determined by window.location).
+     * 2. If the document has an `<base>` element, its href attribute is used.
+     * */
+    var baseURI: String
+    /**
      * Returns the document location as a string.
      *
      * [location] is the last working address,
@@ -69,20 +78,6 @@ interface WebPage : Comparable<WebPage> {
      *     HTML DOM Document documentURI</a>
      * */
     var location: String
-
-    /**
-     * A baseUrl is used to resolve relative URLs.
-     *
-     * The base URL is determined as follows:
-     * 1. By default, the base URL is the location of the document
-     *    (as determined by window.location).
-     * 2. If the document has an `<base>` element, its href attribute is used.
-     * */
-    var baseURI: String
-    @Deprecated("Use baseURI instead", ReplaceWith("baseURI"))
-    var baseUrl: String
-        get() = baseURI
-        set(value) = run { baseURI = value }
     /**
      * The URL of the page that linked to this page.
      */

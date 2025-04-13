@@ -334,7 +334,7 @@ class GoraWebPage(
             page.fetchCount = count
         }
 
-    override var baseUrl: String
+    override var baseURI: String
         get() = page.baseUrl?.toString() ?: ""
         set(value) {
             page.baseUrl = value
