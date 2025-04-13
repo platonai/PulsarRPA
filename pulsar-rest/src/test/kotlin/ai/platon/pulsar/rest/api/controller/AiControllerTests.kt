@@ -33,6 +33,9 @@ class AiControllerTests : IntegrationTestBase() {
     fun `When extract fields from a page then the result is not empty`() {
         val request = PromptRequest(productUrl, "title, price, brand")
         val response = restTemplate.postForObject("$baseUri/ai/extract", request, String::class.java)
+
+        println(response)
+
         assertTrue { response.isNotBlank() }
     }
 }

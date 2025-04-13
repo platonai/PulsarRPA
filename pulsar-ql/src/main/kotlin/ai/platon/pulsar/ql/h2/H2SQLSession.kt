@@ -42,6 +42,7 @@ class H2SQLSession(
         CommonFunctionTables::class,
         DateTimeFunctions::class,
         DomFunctions::class,
+        LLMFunctions::class,
         DomFunctionTables::class,
         DomInlineSelectFunctions::class,
         DomSelectFunctions::class,
@@ -74,11 +75,13 @@ class H2SQLSession(
         val udfClasses = udfClassSamples.flatMap { loadTopLevelClasses(it) }
             .filter { it.annotations.any { it is UDFGroup } }
 
-        registeredAllUdfClasses.addAll(udfClasses)
+        registeredAllUdfClasses.addAll(udfClassSamples.map { it.java } + udfClasses)
+        registeredAllUdfClasses.forEach { registerUdfs(session, it.kotlin) }
+
         registeredAllUdfClasses.forEach { registerUdfs(session, it.kotlin) }
 
         if (totalUdfs.get() > 0) {
-            log.debug("Added total {} new UDFs for session {}", totalUdfs, session)
+            log.info("Added total {} new UDFs for session {}", totalUdfs, session)
         }
     }
 
