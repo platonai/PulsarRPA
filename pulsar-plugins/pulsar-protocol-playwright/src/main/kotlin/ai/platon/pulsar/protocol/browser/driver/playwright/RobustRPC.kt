@@ -37,7 +37,13 @@ internal class RobustRPC(
             return block().also { decreaseRPCFailures() }
         } catch (e: Exception) {
             increaseRPCFailures()
-            throw WebDriverException(cause = e)
+
+            if (e is WebDriverException) {
+                throw e
+            }
+            else {
+                throw WebDriverException(cause = e)
+            }
         }
     }
 
@@ -85,8 +91,7 @@ internal class RobustRPC(
 
     @Throws(BrowserUnavailableException::class, IllegalWebDriverStateException::class)
     fun handlePlaywrightIOException(e: WebDriverException, action: String? = null, message: String? = null) {
-        val message2 = MessageFormat.format("Browser unavailable: {0} ({1}/{2}) | {3}",
-            action, rpcFailures, maxRPCFailures, e.message)
+        val message2 = MessageFormat.format("[{0}] ({1}/{2}) | {3}", action, rpcFailures, maxRPCFailures, message)
 
         if (!driver.isConnectable) {
             throw BrowserUnavailableException("Browser connection closed | $message2", e)
@@ -112,7 +117,12 @@ internal class RobustRPC(
                 block().also { decreaseRPCFailures() }
             } catch (e: Exception) {
                 increaseRPCFailures()
-                throw WebDriverException(cause = e)
+
+                if (e is WebDriverException) {
+                    throw e
+                } else {
+                    throw WebDriverException(cause = e)
+                }
             }
         }
     }

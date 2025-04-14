@@ -13,6 +13,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import com.microsoft.playwright.Page
+import com.microsoft.playwright.options.WaitUntilState
 import org.jsoup.Connection
 import java.time.Duration
 import java.util.*
@@ -100,7 +101,8 @@ class PlaywrightDriver(
     private fun doNavigateTo(entry: NavigateEntry) {
         val url = entry.url
 
-        addScriptToEvaluateOnNewDocument()
+        // add in context
+        // addScriptToEvaluateOnNewDocument()
 
         if (blockedURLs.isNotEmpty()) {
             // Blocks URLs from loading.
@@ -141,32 +143,38 @@ class PlaywrightDriver(
             // http://localfile.org?path=QzpcVXNlcnNccGVyZWdcQXBwRGF0YVxMb2NhbFxUZW1wXHB1bHNhclx0ZXN0LnR4dA==
             openLocalFile(url)
         } else {
-            page.navigate(url, Page.NavigateOptions().setReferer(navigateEntry.pageReferrer))
+            val options = Page.NavigateOptions()
+                .setReferer(navigateEntry.pageReferrer)
+                .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
+            check(page, url)
+            page.navigate(url, options)
         }
     }
 
+    @Throws(WebDriverException::class)
     private fun addScriptToEvaluateOnNewDocument() {
-        try {
-            rpc.invoke("addScriptToEvaluateOnNewDocument") {
-                val js = settings.scriptLoader.getPreloadJs(false)
-                if (js !in initScriptCache) {
-                    initScriptCache.add(0, js)
-                }
-
-                val confuser = settings.confuser
-                initScriptCache.forEach {
-                    val scripts = confuser.confuse(it)
-                    page.addInitScript(scripts)
-                }
-
-                if (logger.isTraceEnabled) {
-                    reportInjectedJs()
-                }
-
-                initScriptCache.clear()
+        rpc.invoke("addScriptToEvaluateOnNewDocument") {
+            val js = settings.scriptLoader.getPreloadJs(false)
+            if (js !in initScriptCache) {
+                initScriptCache.add(0, js)
             }
-        } catch (e: Exception) {
-            rpc.handleWebDriverException(e, "addScriptToEvaluateOnNewDocument")
+
+            val confuser = settings.confuser
+            initScriptCache.forEach {
+                val scripts = confuser.confuse(it)
+
+                val b = page.context().browser()
+                requireNotNull(b)
+                check(b.isConnected)
+
+                page.addInitScript(scripts)
+            }
+
+            if (logger.isTraceEnabled) {
+                reportInjectedJs()
+            }
+
+            initScriptCache.clear()
         }
     }
 
@@ -933,5 +941,9 @@ class PlaywrightDriver(
                 description = result.description
             )
         }
+    }
+
+    private fun check(page: Page, url: String) {
+        check(!page.isClosed) { "Page is closed | $url" }
     }
 }

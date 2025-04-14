@@ -919,6 +919,7 @@ class PulsarWebDriver(
 
         val result = evaluate.result
         val exception = evaluate.exceptionDetails
+
         return if (exception != null) {
             val jsException = JsException(
                 text = exception.text,

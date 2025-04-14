@@ -379,9 +379,6 @@ class LoadingWebDriverPool constructor(
     @Throws(BrowserLaunchException::class)
     private fun computeBrowserAndDriver(priority: Int, conf: MutableConfig): WebDriver {
         return computeBrowserAndDriver0(conf)
-//        logger.warn("Failed to launch browser, rethrow BrowserLaunchException. " +
-//                "Enable debug to see the stack trace | {}", e.message)
-//        logger.debug("Failed to launch browser", e)
     }
     
     /**
@@ -421,18 +418,14 @@ class LoadingWebDriverPool constructor(
         
         return isActive && !isCriticalResources && resourceConsumingDriversInPool < capacity
     }
-    
+
     @Throws(WebDriverException::class)
     private fun computeBrowserAndDriver0(conf: MutableConfig): WebDriver {
         logger.debug("Launch browser and new driver | {}", browserId)
 
-        // TODO: if the browser exists, we should not create a new one
-        if (_browser != null) {
-            // logger.warn("Browser already exists | {}", browserId.contextDir)
-        }
-
         //  Launch a browser. If the browser with the id is already launched, return the existing one.
-        val browser = driverFactory.launchBrowser(browserId, conf)
+        val browser = _browser ?: driverFactory.launchBrowser(browserId, conf)
+        check(browser.isActive)
         val driver = browser.newDriver()
         
         _browser = browser

@@ -54,7 +54,7 @@ abstract class AbstractBrowser(
     
     override val isPermanent: Boolean get() = id.privacyAgent.isPermanent
 
-    override val isActive get() = AppContext.isActive && !closed.get() // && initialized.get()
+    override val isActive get() = AppContext.isActive && !isClosed // && initialized.get()
 
     override val isClosed get() = closed.get()
 
@@ -67,21 +67,33 @@ abstract class AbstractBrowser(
         attach()
     }
 
+    abstract fun recoverUnmanagedPages()
+
+    //    @Synchronized
+    @Throws(WebDriverException::class)
     override suspend fun listDrivers(): List<WebDriver> {
-        return _drivers.values.toList()
+        recoverUnmanagedPages()
+        return drivers.values.toList()
     }
 
-    override suspend fun findDriver(url: String): WebDriver? {
-        return _drivers.values.firstOrNull { it.currentUrl() == url }
+    //    @Synchronized
+    @Throws(WebDriverException::class)
+    override suspend fun findDriver(url: String): AbstractWebDriver? {
+        recoverUnmanagedPages()
+        return drivers.values.filterIsInstance<AbstractWebDriver>().firstOrNull { currentUrl(it) == url }
     }
-    
+
     override suspend fun findDriver(urlRegex: Regex): WebDriver? {
-        return _drivers.values.firstOrNull { urlRegex.matches(it.currentUrl()) }
+        recoverUnmanagedPages()
+        return drivers.values.filterIsInstance<AbstractWebDriver>().firstOrNull { currentUrl(it).matches(urlRegex) }
     }
 
     override suspend fun findDrivers(urlRegex: Regex): List<WebDriver> {
-        return _drivers.values.filter { urlRegex.matches(it.currentUrl()) }
+        recoverUnmanagedPages()
+        return drivers.values.filterIsInstance<AbstractWebDriver>().filter { currentUrl(it).matches(urlRegex) }
     }
+
+    protected suspend fun currentUrl(driver: WebDriver) = driver.currentUrl()
 
     override fun destroyDriver(driver: WebDriver) {
         // Nothing to do

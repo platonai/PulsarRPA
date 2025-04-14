@@ -110,37 +110,15 @@ class PulsarBrowser(
         try {
             // In chrome every tab is a separate process
             val chromeTab = createTab(url)
-            return newDriverIfAbsent(chromeTab, false)
+            val driver = newDriverIfAbsent(chromeTab, false)
+            // driver is newly created
+            return driver
         } catch (e: ChromeIOException) {
             throw BrowserUnavailableException("newDriver", e)
         } catch (e: ChromeDriverException) {
             logger.warn("Failed to create new driver, rethrow | {}", e.message)
             throw WebDriverException("Failed to create chrome devtools driver | " + e.message)
         }
-    }
-
-    //    @Synchronized
-    @Throws(WebDriverException::class)
-    override suspend fun listDrivers(): List<WebDriver> {
-        recoverUnmanagedPages()
-        return drivers.values.toList()
-    }
-
-    //    @Synchronized
-    @Throws(WebDriverException::class)
-    override suspend fun findDriver(url: String): PulsarWebDriver? {
-        recoverUnmanagedPages()
-        return drivers.values.filterIsInstance<PulsarWebDriver>().firstOrNull { currentUrl(it) == url }
-    }
-
-    override suspend fun findDriver(urlRegex: Regex): WebDriver? {
-        recoverUnmanagedPages()
-        return drivers.values.filterIsInstance<PulsarWebDriver>().firstOrNull { currentUrl(it).matches(urlRegex) }
-    }
-
-    override suspend fun findDrivers(urlRegex: Regex): List<WebDriver> {
-        recoverUnmanagedPages()
-        return drivers.values.filterIsInstance<PulsarWebDriver>().filter { currentUrl(it).matches(urlRegex) }
     }
 
     override fun destroyDriver(driver: WebDriver) {
@@ -195,8 +173,6 @@ class PulsarBrowser(
             kotlin.runCatching { doClose() }.onFailure { warnForClose(this, it) }
         }
     }
-
-    private suspend fun currentUrl(driver: WebDriver) = driver.currentUrl()
 
     /**
      * Create a new driver and add it to the driver tree.
@@ -270,7 +246,7 @@ class PulsarBrowser(
      *
      * TODO: capture events that open new pages
      * */
-    private fun recoverUnmanagedPages() {
+    override fun recoverUnmanagedPages() {
         try {
             recoverUnmanagedPages0()
         } catch (e: WebDriverException) {
