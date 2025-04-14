@@ -398,14 +398,10 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun selectAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
-        val json = evaluate("__pulsar_utils__.selectAttributeAll('$selector', '$attrName')")?.toString() ?: return listOf()
-        val items: List<String> = jacksonObjectMapper().readValue(json)
-
-        return if (start >= 0 && limit > 0) {
-            items.subList(start, start + limit)
-        } else {
-            items
-        }
+        val end = start + limit
+        val expression = "__pulsar_utils__.selectAttributeAll('$selector', '$attrName', $start, $end)"
+        val json = evaluate(expression)?.toString() ?: return listOf()
+        return jacksonObjectMapper().readValue(json)
     }
 
     @Throws(WebDriverException::class)

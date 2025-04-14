@@ -1146,7 +1146,7 @@ interface WebDriver : Closeable {
      * @return The attribute values of the nodes.
      * */
     @Throws(WebDriverException::class)
-    suspend fun selectAttributeAll(selector: String, attrName: String, start: Int = 0, limit: Int = 1000): List<String>
+    suspend fun selectAttributeAll(selector: String, attrName: String, start: Int = 0, limit: Int = 10000): List<String>
 
     /**
      * Set the attribute of an element located by [selector].

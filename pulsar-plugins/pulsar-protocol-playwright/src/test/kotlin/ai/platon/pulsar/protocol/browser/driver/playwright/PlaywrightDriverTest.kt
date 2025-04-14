@@ -148,6 +148,7 @@ class PlaywrightDriverTest {
 
             val links = driver.selectHyperlinks("a[href*=product]", 0, 10)
             assertTrue { links.isNotEmpty() }
+            assertTrue { links.size <= 10 }
             links.map { link ->
                 browser.newDriver().use {
                     // ReferenceError: __pulsar_utils__ is not defined
@@ -165,7 +166,8 @@ class PlaywrightDriverTest {
             val text = driver.selectFirstTextOrNull("body")?.trim()
                 ?.replace("\\s+".toRegex(), " ")
             assertNotNull(text)
-            println(">>>\n" + text.substring(0, 100) + "\n<<<")
+            val start = text.length / 2
+            println(">>>\n" + text.substring(start, start + 100) + "\n<<<")
         }
     }
 }
