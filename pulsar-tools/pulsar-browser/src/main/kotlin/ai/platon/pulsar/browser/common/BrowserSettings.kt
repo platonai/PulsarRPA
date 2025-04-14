@@ -64,6 +64,10 @@ open class BrowserSettings constructor(
          * */
         @JvmStatic
         fun withBrowser(browserType: BrowserType): Companion {
+            if (browserType == BrowserType.PLAYWRIGHT_CHROME) {
+                System.err.println("Warning: PLAYWRIGHT is not thread safe! @see https://playwright.dev/java/docs/multithreading")
+            }
+
             System.setProperty(BROWSER_TYPE, browserType.name)
             return BrowserSettings
         }

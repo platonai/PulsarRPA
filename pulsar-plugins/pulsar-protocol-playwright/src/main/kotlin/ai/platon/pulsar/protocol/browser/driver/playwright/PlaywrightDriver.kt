@@ -151,6 +151,9 @@ class PlaywrightDriver(
         }
     }
 
+    /**
+     *
+     * */
     @Throws(WebDriverException::class)
     private fun addScriptToEvaluateOnNewDocument() {
         rpc.invoke("addScriptToEvaluateOnNewDocument") {
