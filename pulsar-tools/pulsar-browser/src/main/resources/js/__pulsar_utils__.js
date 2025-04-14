@@ -673,11 +673,20 @@ __pulsar_utils__.selectAttributes = function(selector) {
  *
  * @param  {String} selector
  * @param  {String} attrName
+ * @param  {Number} start The beginning index of the specified portion of the array.
+ * If start is undefined, then the slice begins at index 0.
+ * @param  {Number} end The end index of the specified portion of the array. This is exclusive of the element at the index 'end'.
+ * If end is undefined, then the slice extends to the end of the array.
  * @return {string} attribute values in json format
  */
-__pulsar_utils__.selectAttributeAll = function(selector, attrName) {
+__pulsar_utils__.selectAttributeAll = function(selector, attrName, start, end) {
     let elements = document.querySelectorAll(selector)
-    let values = Array.from(elements).map(e => e.getAttribute(attrName)).filter(v => v != null)
+    let values = Array.from(elements)
+        .map(e => e.getAttribute(attrName))
+        .filter(v => v != null)
+    if (start || end) {
+        values = values.slice(start, end)
+    }
     return JSON.stringify(values, null, 2)
 };
 

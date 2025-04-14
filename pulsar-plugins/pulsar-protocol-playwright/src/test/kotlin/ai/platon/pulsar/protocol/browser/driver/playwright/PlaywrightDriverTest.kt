@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.assertThrows
+import java.awt.SystemColor.text
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -126,12 +127,27 @@ class PlaywrightDriverTest {
     }
 
     @Test
+    fun test_evaluate() {
+        val selector = "a[href*=product]"
+        // TODO: do not support abs prefix
+        val attrName = "href"
+        val expression = "__pulsar_utils__.selectAttributeAll('$selector', '$attrName')"
+        runBlocking {
+            driver.navigateTo("https://www.hua.com/")
+            driver.waitForSelector("body")
+            val result = driver.evaluate(expression)
+            println(result)
+        }
+    }
+
+    @Test
     fun test_navigateTo_Parallel() {
         runBlocking {
-            driver.navigateTo("https://www.baidu.com/s?wd=agi")
-            driver.waitForNavigation()
+            driver.navigateTo("https://www.hua.com/")
+            driver.waitForSelector("body")
 
-            val links = driver.selectHyperlinks("a:not([href*=baidu])", 0, 10)
+            val links = driver.selectHyperlinks("a[href*=product]", 0, 10)
+            assertTrue { links.isNotEmpty() }
             links.map { link ->
                 browser.newDriver().use {
                     // ReferenceError: __pulsar_utils__ is not defined
@@ -145,8 +161,9 @@ class PlaywrightDriverTest {
         runBlocking {
             println("Navigating - $url")
             driver.navigateTo(url)
-            driver.waitForNavigation()
-            val text = driver.selectFirstTextOrNull("body")
+            driver.waitForSelector("body")
+            val text = driver.selectFirstTextOrNull("body")?.trim()
+                ?.replace("\\s+".toRegex(), " ")
             assertNotNull(text)
             println(">>>\n" + text.substring(0, 100) + "\n<<<")
         }

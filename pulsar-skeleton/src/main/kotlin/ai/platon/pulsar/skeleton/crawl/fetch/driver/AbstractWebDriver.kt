@@ -399,7 +399,13 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun selectAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
         val json = evaluate("__pulsar_utils__.selectAttributeAll('$selector', '$attrName')")?.toString() ?: return listOf()
-        return jacksonObjectMapper().readValue(json)
+        val items: List<String> = jacksonObjectMapper().readValue(json)
+
+        return if (start >= 0 && limit > 0) {
+            items.subList(start, start + limit)
+        } else {
+            items
+        }
     }
 
     @Throws(WebDriverException::class)
@@ -417,9 +423,11 @@ abstract class AbstractWebDriver(
      * */
     @Throws(WebDriverException::class)
     override suspend fun selectHyperlinks(selector: String, offset: Int, limit: Int): List<Hyperlink> {
-        // val result = evaluate("__pulsar_utils__.allAttrs('$selector', 'abs:href')")
         // TODO: add __pulsar_utils__.selectHyperlinks()
-        return selectAttributeAll(selector, "abs:href").drop(offset).take(limit).map { Hyperlink(it) }
+        // TODO: do not support abs prefix
+        val baseURI = baseURI().trimEnd('/')
+        return selectAttributeAll(selector, "href", offset, limit)
+            .map { Hyperlink("$baseURI/$it") }
     }
 
     /**
