@@ -3,10 +3,30 @@
 set -e  # 出错即停止
 set -o pipefail
 
+SOURCE_BRANCH=
+# 输入分支名
+read -p "Enter the branch name to sync: " SOURCE_BRANCH
+
+if [ -z "$SOURCE_BRANCH" ]; then
+  echo "❌ Branch name cannot be empty."
+  exit 1
+fi
+
+# Check if the source branch exists
+# Check if the branch exists locally
+if git show-ref --verify --quiet "refs/heads/$SOURCE_BRANCH"; then
+  echo "✅ Local branch '$SOURCE_BRANCH' exists."
+elif git ls-remote --exit-code --heads origin "$SOURCE_BRANCH" > /dev/null; then
+  echo "✅ Remote branch 'origin/$SOURCE_BRANCH' exists."
+else
+  echo "❌ Branch '$SOURCE_BRANCH' does not exist."
+fi
+
 # === 配置分支名 ===
-MAIN_BRANCH="main"
-SOURCE_BRANCH="release"
+MAIN_BRANCH="master"
 BACKUP_BRANCH="backup-main-$(date +%Y%m%d-%H%M%S)"
+
+exit 0
 
 echo "🚀 [1/5] Fetching latest branches..."
 git fetch origin
