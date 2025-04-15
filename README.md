@@ -11,7 +11,7 @@ Designed for **large-scale automation**, it excels in **browser automation**, **
 and **data extraction**. PulsarRPA tackles the challenges of modern web automation,
 ensuring **accurate** and **comprehensive** data extraction even from the most **complex** and **dynamic** websites.
 
-## Videos
+## 🎥 Videos
 
 YouTube:
 [![Watch the video](https://img.youtube.com/vi/lQXSSQSNQ7I/0.jpg)](https://www.youtube.com/watch?v=lQXSSQSNQ7I)
@@ -23,9 +23,12 @@ Bilibili:
 
 
 
+## 🐳 Docker
 
-
-
+```bash
+docker pull galaxyeye88/pulsar-rpa:latest
+docker run -d -p 8182:8182 galaxyeye88/pulsar-rpa:latest
+```
 
 
 
