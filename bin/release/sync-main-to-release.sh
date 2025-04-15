@@ -26,8 +26,6 @@ fi
 MAIN_BRANCH="master"
 BACKUP_BRANCH="backup-main-$(date +%Y%m%d-%H%M%S)"
 
-exit 0
-
 echo "🚀 [1/5] Fetching latest branches..."
 git fetch origin
 
