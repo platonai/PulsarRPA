@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.StringUtils
-import org.apache.http.client.utils.DateUtils
+import org.apache.commons.lang3.time.DateUtils
 import java.text.SimpleDateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -253,15 +253,6 @@ object DateTimes {
         }
     }
 
-    fun formatHttpDateTime(time: Long): String {
-        return DateUtils.formatDate(Date(time))
-    }
-
-    @JvmStatic
-    fun formatHttpDateTime(time: Instant): String {
-        return DateUtils.formatDate(Date.from(time))
-    }
-
     @JvmOverloads
     @JvmStatic
     fun parseInstant(text: String, defaultValue: Instant = Instant.EPOCH): Instant {
@@ -297,24 +288,28 @@ object DateTimes {
                 text.matches("${DATE_REGEX}T\\d{2}.+Z".toRegex()) -> {
                     Instant.parse(text)
                 }
+
                 text.matches(SIMPLE_DATE_TIME_REGEX.toRegex()) -> {
                     val pattern = "yyyy-MM-dd HH[:mm][:ss]"
                     DateTimeFormatter.ofPattern(pattern)
                         .parse(text) { LocalDateTime.from(it) }
                         .atZone(zoneId).toInstant()
                 }
+
                 text.matches(DATE_TIME_REGEX.toRegex()) -> {
                     val pattern = "yyyy-MM-dd'T'HH[:mm][:ss]"
                     DateTimeFormatter.ofPattern(pattern)
                         .parse(text) { LocalDateTime.from(it) }
                         .atZone(zoneId).toInstant()
                 }
+
                 text.matches(DATE_REGEX.toRegex()) -> {
                     val pattern = "yyyy-MM-dd"
                     DateTimeFormatter.ofPattern(pattern)
                         .parse(text) { LocalDate.from(it) }
                         .atStartOfDay().atZone(zoneId).toInstant()
                 }
+
                 else -> null
             }
         } catch (e: Throwable) {

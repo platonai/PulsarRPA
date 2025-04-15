@@ -24,6 +24,7 @@ function Replace-Version-In-ReadmeFiles {
     }
   }
 
+  & $gitExe add *.md
   & $gitExe commit -m "Replace SNAPSHOT version with the release version in readme files"
   & $gitExe push
 }

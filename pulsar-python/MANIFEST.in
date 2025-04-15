@@ -1,0 +1,9 @@
+global-exclude *.py[cod] __pycache__ .DS_Store
+recursive-include deps/jars *.jar
+graft deps/bin
+recursive-include deps/data *.data *.txt
+recursive-include deps/licenses *.txt
+recursive-include deps/examples *.py
+recursive-include lib *.zip
+recursive-include pypulsar *.pyi py.typed
+include README.md

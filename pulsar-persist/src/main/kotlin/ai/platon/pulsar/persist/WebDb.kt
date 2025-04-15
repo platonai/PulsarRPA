@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrNull
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import org.apache.gora.filter.Filter
 import org.apache.gora.filter.FilterOp
 import org.apache.gora.filter.SingleFieldValueFilter
@@ -42,19 +43,16 @@ class WebDb(
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
 
-    var specifiedDataStore: DataStore<String, GWebPage>? = null
+    val dataStorageFactory = DataStorageFactory(conf)
 
-    private val dataStoreDelegate = lazy { specifiedDataStore ?: AutoDetectStorageProvider(conf).createPageStore() }
-
-    val dataStore: DataStore<String, GWebPage> by dataStoreDelegate
-    val dataStoreOrNull: DataStore<String, GWebPage>? get() = if (dataStoreDelegate.isInitialized()) dataStore else null
-    val schemaName: String get() = dataStoreOrNull?.schemaName?:"(unknown, not initialized)"
+    private val dataStore: DataStore<String, GWebPage> get() = dataStorageFactory.getOrCreatePageStore()
+    val schemaName: String get() = dataStorageFactory.schemaName
 
     /**
      * Test if the WebDB can be connected.
      * @return true if the WebDB can be connected.
      * */
-    fun canConnect() = dataStore.runCatching { schemaExists() }.isSuccess
+    fun canConnect() = dataStorageFactory.canConnect()
 
     /**
      * Returns the WebPage corresponding to the given url.
@@ -107,7 +105,7 @@ class WebDb(
         val page = getOrNull0(originalUrl, norm, fields)
 
         if (page != null) {
-            val p = WebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
+            val p = GoraWebPage.box(url, page, conf.toVolatileConfig()).also { it.isLoaded = true }
             tracer?.trace("Got {} {} {} {}", p.fetchCount, p.prevFetchTime, p.fetchTime, key)
             return p
         }
@@ -119,21 +117,21 @@ class WebDb(
      * Returns the WebPage corresponding to the given url.
      *
      * @param originalUrl the original address of the page
-     * @return the WebPage corresponding to the key or [WebPage.NIL] if it cannot be found
+     * @return the WebPage corresponding to the key or [GoraWebPage.NIL] if it cannot be found
      */
     @Throws(WebDBException::class)
-    fun get(originalUrl: String, field: GWebPage.Field) = getOrNull(originalUrl, field) ?: WebPage.NIL
+    fun get(originalUrl: String, field: GWebPage.Field) = getOrNull(originalUrl, field) ?: GoraWebPage.NIL
 
     @Throws(WebDBException::class)
     fun get(originalUrl: String, fields: Iterable<GWebPage.Field>) =
-        getOrNull(originalUrl, fields) ?: WebPage.NIL
+        getOrNull(originalUrl, fields) ?: GoraWebPage.NIL
 
     @Throws(WebDBException::class)
-    fun get(originalUrl: String, field: String) = getOrNull(originalUrl, field) ?: WebPage.NIL
+    fun get(originalUrl: String, field: String) = getOrNull(originalUrl, field) ?: GoraWebPage.NIL
 
     @Throws(WebDBException::class)
     fun get(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage {
-        return getOrNull(originalUrl, norm, fields) ?: WebPage.NIL
+        return getOrNull(originalUrl, norm, fields) ?: GoraWebPage.NIL
     }
 
     @Throws(WebDBException::class)
@@ -177,7 +175,7 @@ class WebDb(
             return false
         }
 
-        val key = page.reversedUrl
+        val key = page.key
         if (key.isEmpty()) {
             return false
         }
@@ -189,6 +187,8 @@ class WebDb(
         tracer?.trace("Putting {} {} {} {}", page.fetchCount, page.prevFetchTime, page.fetchTime, key)
 
         val startTime = System.nanoTime()
+
+        require(page is GoraWebPage)
         performDSAction("put") { dataStore.put(key, page.unbox()) }
         dbPutCount.incrementAndGet()
         accumulatePutNanos.addAndGet(System.nanoTime() - startTime)
@@ -332,7 +332,7 @@ class WebDb(
 
     @Throws(WebDBException::class)
     fun flush() {
-        if (!dataStoreDelegate.isInitialized()) {
+        if (!dataStorageFactory.isInitialized()) {
             return
         }
 
@@ -351,7 +351,7 @@ class WebDb(
     @Throws(WebDBException::class)
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            if (dataStoreDelegate.isInitialized()) {
+            if (dataStorageFactory.isInitialized()) {
                 // flush()
                 // Note: mongo store does not close actually
                 performDSAction("close") { dataStore.close() }

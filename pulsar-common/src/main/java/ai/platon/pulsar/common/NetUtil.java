@@ -28,34 +28,14 @@ public class NetUtil {
 
     public static final Pattern IP_PORT_PATTERN = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?");
 
-    /**
-     * <p>testNetwork.</p>
-     *
-     * @param host a {@link java.lang.String} object.
-     * @param port a int.
-     * @return a boolean.
-     */
     public static boolean testNetwork(String host, int port) {
         return testTcpNetwork(host, port);
     }
 
-    /**
-     * <p>testHttpNetwork.</p>
-     *
-     * @param url a {@link java.net.URL} object.
-     * @return a boolean.
-     */
     public static boolean testHttpNetwork(URL url) {
         return testHttpNetwork(url, null);
     }
 
-    /**
-     * <p>testHttpNetwork.</p>
-     *
-     * @param url a {@link java.net.URL} object.
-     * @param proxy a {@link java.net.Proxy} object.
-     * @return a boolean.
-     */
     public static boolean testHttpNetwork(URL url, Proxy proxy) {
         boolean reachable = false;
 
@@ -117,106 +97,9 @@ public class NetUtil {
 
         return reachable;
     }
-    
-    public static String getAgentString(String agentName) {
-        return agentName;
-    }
-    
-    public static String getAgentString(String agentName, String agentVersion,
-                                        String agentDesc, String agentURL, String agentEmail) {
 
-        if ((agentName == null) || (agentName.trim().length() == 0)) {
-            log.error("No User-Agent string set (http.agent.name)!");
-        }
-
-        StringBuilder buf = new StringBuilder();
-
-        buf.append(agentName);
-        if (agentVersion != null) {
-            buf.append("/");
-            buf.append(agentVersion);
-        }
-        if (((agentDesc != null) && (agentDesc.length() != 0))
-                || ((agentEmail != null) && (agentEmail.length() != 0))
-                || ((agentURL != null) && (agentURL.length() != 0))) {
-            buf.append(" (");
-
-            if ((agentDesc != null) && (agentDesc.length() != 0)) {
-                buf.append(agentDesc);
-                if ((agentURL != null) || (agentEmail != null))
-                    buf.append("; ");
-            }
-
-            if ((agentURL != null) && (agentURL.length() != 0)) {
-                buf.append(agentURL);
-                if (agentEmail != null)
-                    buf.append("; ");
-            }
-
-            if ((agentEmail != null) && (agentEmail.length() != 0))
-                buf.append(agentEmail);
-
-            buf.append(")");
-        }
-        return buf.toString();
-    }
-    
-    public static String getChromeUserAgent(String mozilla, String appleWebKit, String chrome, String safari) {
-        return String.format("Mozilla/%s (X11; Linux x86_64) AppleWebKit/%s (KHTML, like Gecko) Chrome/%s Safari/%s",
-                mozilla, appleWebKit, chrome, safari);
-    }
-    
     public static String getHostname() {
         try {return "" + InetAddress.getLocalHost();}
         catch(UnknownHostException uhe) {return "" + uhe;}
-    }
-    
-    public static String gethostOfIP(String ipPort) {
-        if (null == ipPort || !IP_PORT_PATTERN.matcher(ipPort).matches()) {
-            return null;
-        }
-
-        try {
-            int colonIdx = ipPort.indexOf(':');
-            String ip = (-1 == colonIdx) ? ipPort
-                    : ipPort.substring(0, ipPort.indexOf(':'));
-            return InetAddress.getByName(ip).getHostName();
-        } catch (UnknownHostException e) {
-            return null;
-        }
-    }
-
-    /**
-     * TODO : We may need a better solution to indicate whether it's a master
-     *
-     * @return a boolean.
-     */
-    public static boolean isMaster(ImmutableConfig conf) {
-        String master = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
-        return master.equals("localhost") || master.equals(getHostname());
-    }
-
-    public static URL getMasterURL(ImmutableConfig conf, String path) throws MalformedURLException {
-        String host = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
-        int port = conf.getInt(CapabilityTypes.PULSAR_MASTER_PORT, 8182);
-
-        return new URL("http", host, port, path);
-    }
-
-    public static String getMasterUrl(ImmutableConfig conf) {
-        String host = conf.get(CapabilityTypes.PULSAR_MASTER_HOST);
-        int port = conf.getInt(CapabilityTypes.PULSAR_MASTER_PORT, 8182);
-        return "http://" + host + ":" + port;
-    }
-
-    public static boolean isExternalLink(String sourceUrl, String destUrl) {
-        try {
-            String toHost = new URL(destUrl).getHost().toLowerCase();
-            String fromHost = new URL(sourceUrl).getHost().toLowerCase();
-            return !toHost.equals(fromHost);
-        } catch (MalformedURLException ignored) {
-        }
-
-        return true;
     }
 }

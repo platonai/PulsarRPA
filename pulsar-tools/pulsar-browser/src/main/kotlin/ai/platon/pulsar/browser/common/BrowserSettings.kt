@@ -1,19 +1,21 @@
 package ai.platon.pulsar.browser.common
 
-import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.AppConstants.CLIENT_JS_PROPERTY_NAMES
+import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import java.net.URI
 import java.time.Duration
 
 open class BrowserSettings constructor(
     /**
      * The configuration.
      * */
-    val conf: ImmutableConfig = ImmutableConfig()
+    val config: ImmutableConfig = ImmutableConfig()
 ) {
     companion object {
         /**
@@ -45,15 +47,9 @@ open class BrowserSettings constructor(
         var SCRIPT_CONFUSER: ScriptConfuser = SimpleScriptConfuser()
 
         /**
-         * Check if the current environment supports only headless mode.
-         * */
-        @Deprecated("Not reliable, not used anymore")
-        val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
-        
-        /**
          * Specify the browser type to fetch webpages.
          *
-         * NOTICE: PULSAR_CHROME is the only supported browser currently.
+         * 
          * */
         @JvmStatic
         fun withBrowser(browserType: String): Companion {
@@ -64,10 +60,14 @@ open class BrowserSettings constructor(
         /**
          * Specify the browser type to fetch webpages.
          *
-         * NOTICE: PULSAR_CHROME is the only supported browser currently.
+         * 
          * */
         @JvmStatic
         fun withBrowser(browserType: BrowserType): Companion {
+            if (browserType == BrowserType.PLAYWRIGHT_CHROME) {
+                System.err.println("Warning: PLAYWRIGHT is not thread safe! @see https://playwright.dev/java/docs/multithreading")
+            }
+
             System.setProperty(BROWSER_TYPE, browserType.name)
             return BrowserSettings
         }
@@ -83,7 +83,7 @@ open class BrowserSettings constructor(
          * Use the system's default browser with the given type, so PulsarRPA visits websites just like you do.
          * Any change to the browser will be kept.
          *
-         * NOTICE: PULSAR_CHROME is the only supported browser currently.
+         * 
          * */
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
@@ -101,8 +101,7 @@ open class BrowserSettings constructor(
         
         /**
          * Use the default Chrome browser. Any change to the browser will be kept.
-         *
-         * NOTICE: PULSAR_CHROME is the only supported browser currently.
+         * 
          * */
         @JvmStatic
         fun withDefaultBrowser(browserType: BrowserType): Companion {
@@ -143,9 +142,20 @@ open class BrowserSettings constructor(
          * */
         @JvmStatic
         fun withSequentialBrowsers(): Companion {
-            return withSequentialBrowsers(10)
+            return withSequentialBrowsers(BrowserType.PULSAR_CHROME, 10)
         }
-        
+        /**
+         * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
+         * permanent unless the context directories are deleted manually.
+         *
+         * PULSAR_CHROME is the only supported browser currently.
+         *
+         * @return the BrowserSettings itself
+         * */
+        @JvmStatic
+        fun withSequentialBrowsers(browserType: BrowserType): Companion {
+            return withSequentialBrowsers(browserType, 10)
+        }
         /**
          * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
          * permanent unless the context directories are deleted manually.
@@ -157,6 +167,23 @@ open class BrowserSettings constructor(
          * */
         @JvmStatic
         fun withSequentialBrowsers(maxAgents: Int): Companion {
+            System.setProperty(MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, "$maxAgents")
+            val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
+            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            return BrowserSettings
+        }
+        /**
+         * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
+         * permanent unless the context directories are deleted manually.
+         *
+         * PULSAR_CHROME is the only supported browser currently.
+         *
+         * @param maxAgents The maximum number of sequential agents, the active agents are chosen from them.
+         * @return the BrowserSettings itself
+         * */
+        @JvmStatic
+        fun withSequentialBrowsers(browserType: BrowserType, maxAgents: Int): Companion {
+            withBrowser(browserType)
             System.setProperty(MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, "$maxAgents")
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
@@ -226,11 +253,6 @@ open class BrowserSettings constructor(
          * */
         @JvmStatic
         fun withGUI(): Companion {
-            if (isHeadlessOnly) {
-                // System.err.println("GUI is not available")
-                // return BrowserSettings
-            }
-
             listOf(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
@@ -433,27 +455,27 @@ open class BrowserSettings constructor(
      * The javascript to execute by Web browsers.
      * */
     private val jsPropertyNames: Array<String>
-        get() = conf.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, CLIENT_JS_PROPERTY_NAMES)
+        get() = config.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, CLIENT_JS_PROPERTY_NAMES)
+
+    /**
+     * The screen viewport.
+     * */
+    val viewportSize get() = SCREEN_VIEWPORT
 
     /**
      * The supervisor process
      * */
-    val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
+    val supervisorProcess get() = config.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
     /**
      * The supervisor process arguments
      * */
-    val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
-    /**
-     * Chrome has to run without sandbox in a virtual machine
-     * TODO: this flag might be upgraded by WSL
-     * */
-    val forceNoSandbox get() = AppContext.OS_IS_WSL
+    val supervisorProcessArgs get() = config.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
 
     /**
      * Add a --no-sandbox flag to launch the chrome if we are running inside a virtual machine,
      * for example, virtualbox, vmware or WSL
      * */
-    val noSandbox get() = forceNoSandbox || conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
+    val noSandbox get() = config.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
 
     /**
      * The browser's display mode, can be one of the following values:
@@ -463,8 +485,7 @@ open class BrowserSettings constructor(
      * */
     val displayMode
         get() = when {
-            conf[BROWSER_DISPLAY_MODE] != null -> conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS)
-            isHeadlessOnly -> DisplayMode.HEADLESS
+            config[BROWSER_DISPLAY_MODE] != null -> config.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS)
             else -> DisplayMode.GUI
         }
 
@@ -486,29 +507,33 @@ open class BrowserSettings constructor(
      * If PulsarPRA works in SPA mode:
      * 1. execution of loads and fetches has no timeout limit, so we can interact with the page as long as we want.
      * */
-    val isSPA get() = conf.getBoolean(BROWSER_SPA_MODE, false)
+    val isSPA get() = config.getBoolean(BROWSER_SPA_MODE, false)
     /**
      * Check if startup scripts are allowed. If true, PulsarPRA injects scripts into the browser
      * before loading a page, and custom scripts are also allowed.
      * */
-    val isStartupScriptEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
+    val isStartupScriptEnabled get() = config.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
     /**
      * The probability to block resource requests.
      * The probability must be in [0, 1].
      * */
-    val resourceBlockProbability get() = conf.getFloat(BROWSER_RESOURCE_BLOCK_PROBABILITY, 0.0f)
+    val resourceBlockProbability get() = config.getFloat(BROWSER_RESOURCE_BLOCK_PROBABILITY, 0.0f)
     /**
      * Check if user agent overriding is enabled. User agent overriding is disabled by default,
      * because inappropriate user agent overriding can be detected by the website,
      * furthermore, there is no obvious benefits to rotate the user agent.
      * */
-    val isUserAgentOverridingEnabled get() = conf.getBoolean(BROWSER_ENABLE_UA_OVERRIDING, false)
-    
+    val isUserAgentOverridingEnabled get() = config.getBoolean(BROWSER_ENABLE_UA_OVERRIDING, false)
+
+    val fetchTaskTimeout get() = config.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
+
+    val pollingDriverTimeout get() = config.getDuration(POLLING_DRIVER_TIMEOUT, POLLING_DRIVER_TIMEOUT_DEFAULT)
+
     /**
      * The interaction settings. Interaction settings define how the system
      * interacts with webpages to mimic the behavior of real people.
      * */
-    val interactSettings get() = InteractSettings.fromJson(conf[BROWSER_INTERACT_SETTINGS], InteractSettings.DEFAULT)
+    val interactSettings get() = InteractSettings.fromJson(config[BROWSER_INTERACT_SETTINGS], InteractSettings.DEFAULT)
 
     /**
      * Page load strategy.
@@ -531,4 +556,42 @@ open class BrowserSettings constructor(
      * The script loader.
      * */
     val scriptLoader = ScriptLoader(confuser, jsPropertyNames)
+
+    open fun formatViewPort(delimiter: String = ","): String {
+        return "${SCREEN_VIEWPORT.width}$delimiter${SCREEN_VIEWPORT.height}"
+    }
+
+    open fun createGeneralOptions(): MutableMap<String, Any> {
+        val generalOptions = mutableMapOf<String, Any>()
+
+        // generalOptions.setCapability("browserLanguage", "zh_CN")
+        // generalOptions.setCapability("resolution", "${viewPort.width}x${viewPort.height}")
+
+        return generalOptions
+    }
+
+    open fun createChromeOptions(generalOptions: Map<String, Any>): ChromeOptions {
+        val chromeOptions = ChromeOptions()
+        chromeOptions.merge(generalOptions)
+
+        // rewrite proxy argument
+        chromeOptions.removeArgument("proxy")
+        when (val proxy = generalOptions["proxy"]) {
+            is String -> chromeOptions.proxyServer = proxy
+            is URI -> chromeOptions.proxyServer = proxy.host + ":" + proxy.port
+            is ProxyEntry -> chromeOptions.proxyServer = proxy.hostPort
+        }
+
+        chromeOptions.headless = isHeadless
+        chromeOptions.noSandbox = noSandbox
+
+        chromeOptions
+            .addArgument("window-position", "0,0")
+            .addArgument("window-size", formatViewPort())
+            .addArgument("pageLoadStrategy", pageLoadStrategy)
+            .addArgument("throwExceptionOnScriptError", "true")
+//            .addArgument("start-maximized")
+
+        return chromeOptions
+    }
 }

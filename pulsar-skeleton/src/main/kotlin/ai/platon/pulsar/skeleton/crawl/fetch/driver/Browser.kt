@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 
 /**
@@ -43,6 +44,10 @@ interface Browser: AutoCloseable {
      * Check if this browser is open.
      * */
     val isConnected: Boolean
+    /**
+     * The browser settings.
+     * */
+    val settings: BrowserSettings
     /**
      * Check if this browser is open.
      * */

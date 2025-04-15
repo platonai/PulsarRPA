@@ -5,10 +5,10 @@ import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import org.apache.avro.AvroRuntimeException
 import org.apache.avro.file.DataFileReader
 import org.apache.avro.file.DataFileWriter
@@ -55,7 +55,7 @@ class FileBackendPageStore(
         super.put(reversedUrl, page)
 
         UrlUtils.unreverseUrlOrNull(reversedUrl)?.let {
-            val p = WebPage.box(it, page, unsafeConf)
+            val p = GoraWebPage.box(it, page, unsafeConf)
             writeAvro(p)
             writeHtml(p)
         }
@@ -114,6 +114,7 @@ class FileBackendPageStore(
             // never expire, so it serves as a mock site
             val lastModified = Instant.now()
             val page = newSuccessPage(url, lastModified, content)
+            require(page is GoraWebPage)
             return page.unbox()
         }
 
@@ -177,6 +178,7 @@ class FileBackendPageStore(
 
         Files.deleteIfExists(path)
         try {
+            require(page is GoraWebPage)
             writeAvro0(page.unbox(), path)
         } catch (e: AvroRuntimeException) {
             logger.warn("Failed to write avro file to $path", e)
@@ -209,14 +211,13 @@ class FileBackendPageStore(
     }
 
     private fun newSuccessPage(url: String, lastModified: Instant, content: ByteArray): WebPage {
-        val page = WebPage.newWebPage(url, VolatileConfig.UNSAFE)
+        val page = GoraWebPage.newWebPage(url, VolatileConfig.UNSAFE)
         page.also {
             it.location = url
             it.fetchCount = 1
             it.prevFetchTime = lastModified
             it.fetchInterval = ChronoUnit.DECADES.duration
             it.fetchTime = lastModified + it.fetchInterval
-            it.crawlStatus = CrawlStatus.STATUS_FETCHED
             it.protocolStatus = ProtocolStatus.STATUS_SUCCESS
         }
 

@@ -5,7 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserUnavailableException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
 import kotlinx.coroutines.CoroutineScope
@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 internal class RobustRPC(
-    private val driver: ChromeDevtoolsDriver
+    private val driver: PulsarWebDriver
 ) {
     companion object {
         // handle to many exceptions

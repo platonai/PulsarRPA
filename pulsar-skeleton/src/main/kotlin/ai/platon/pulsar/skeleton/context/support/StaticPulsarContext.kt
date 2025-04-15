@@ -26,10 +26,6 @@ class StaticPulsarContext(
      * */
     override val globalCacheFactory get() = getBeanOrNull() ?: defaults.globalCacheFactory
     /**
-     * The injection component
-     * */
-    override val injectComponent get() = getBeanOrNull() ?: defaults.injectComponent
-    /**
      * The fetch component
      * */
     override val fetchComponent get() = getBeanOrNull() ?: defaults.fetchComponent

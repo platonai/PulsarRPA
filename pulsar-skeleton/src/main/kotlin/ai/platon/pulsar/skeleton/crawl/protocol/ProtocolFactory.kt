@@ -14,8 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * Creates and caches [Protocol] plugins. Protocol plugins should define
  * the attribute "protocolName" with the name of the protocol that they
- * implement. Configuration object is used for caching. Cache key is constructed
- * from appending protocol name (eg. http) to constant
+ * implement.
  */
 class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoCloseable {
     private val logger = LoggerFactory.getLogger(ProtocolFactory::class.java)
@@ -38,17 +37,18 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
         protocols.keys.joinToString(", ", "Supported protocols: ", "")
             .also { logger.info(it) }
     }
-    
+
     /**
-     * TODO: configurable, using major protocol/sub protocol is a good idea
+     * Get the protocol for a page.
+     *
      * Using major protocol/sub protocol is a good idea, for example:
      * selenium:http://www.baidu.com/
      * jdbc:h2:tcp://localhost/~/test
      */
     fun getProtocol(page: WebPage): Protocol {
-        val fetchMode = page.fetchMode.takeIf { it != FetchMode.UNKNOWN } ?: FetchMode.BROWSER
+        val fetchMode = FetchMode.BROWSER
         page.fetchMode = fetchMode
-        
+
         return when (fetchMode) {
             FetchMode.BROWSER -> getProtocol("browser:" + page.url)
             else -> getProtocol(page.url)
@@ -59,8 +59,7 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
      * Returns the appropriate [Protocol] implementation for a url.
      *
      * @param url The url
-     * @return The appropriate [Protocol] implementation for a given
-     * [url].
+     * @return The appropriate [Protocol] implementation for a given [url].
      */
     fun getProtocol(url: String): Protocol? {
         val protocolName = StringUtils.substringBefore(url, ":")

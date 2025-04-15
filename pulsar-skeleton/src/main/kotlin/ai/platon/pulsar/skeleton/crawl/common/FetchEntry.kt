@@ -2,7 +2,9 @@ package ai.platon.pulsar.skeleton.crawl.common
 
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 
@@ -23,13 +25,13 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
         }
         
         fun createPageShell(url: String, conf: VolatileConfig, href: String? = null, referrer: String? = null): WebPage {
-            val page = WebPage.newWebPage(url, conf, href)
+            val page = GoraWebPage.newWebPage(url, conf, href)
             initWebPage(page, null, href, referrer)
             return page
         }
 
         fun createPageShell(url: String, options: LoadOptions, href: String? = null, referrer: String? = null): WebPage {
-            val page = WebPage.newWebPage(url, options.conf, href)
+            val page = GoraWebPage.newWebPage(url, options.conf, href)
             initWebPage(page, options, href, referrer)
             return page
         }
@@ -47,7 +49,9 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
                 page.isResource = options.isResource
 
                 // since LoadOptions is not visible by WebPage, we use an unsafe method to pass the load options
-                page.setVar(PulsarParams.VAR_LOAD_OPTIONS, options)
+                if (page is AbstractWebPage) {
+                    page.setVar(PulsarParams.VAR_LOAD_OPTIONS, options)
+                }
             }
         }
     }

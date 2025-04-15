@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.fetch.driver
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.event.AbstractEventEmitter
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
@@ -14,12 +15,14 @@ import java.util.concurrent.atomic.AtomicInteger
 
 abstract class AbstractBrowser(
     override val id: BrowserId,
-    val browserSettings: BrowserSettings
+    override val settings: BrowserSettings
 ): Browser, AutoCloseable, AbstractEventEmitter<BrowserEvents>() {
     companion object {
         protected val SEQUENCER = AtomicInteger()
         val DEFAULT_USER_AGENT = "PulsarRPA Robot/1.0"
     }
+
+    private val logger = getLogger(this)
 
     /**
      * Temporary added in 2.1.x for test only
@@ -57,34 +60,46 @@ abstract class AbstractBrowser(
     
     override val isPermanent: Boolean get() = id.privacyAgent.isPermanent
 
-    override val isActive get() = AppContext.isActive && !closed.get() && initialized.get()
+    override val isActive get() = AppContext.isActive && !isClosed // && initialized.get()
 
     override val isClosed get() = closed.get()
 
     override val readableState: String get() = buildReadableState()
 
-    val isGUI get() = browserSettings.isGUI
+    val isGUI get() = settings.isGUI
     val idleTimeout = Duration.ofMinutes(10)
 
     init {
         attach()
     }
 
+    abstract fun recoverUnmanagedPages()
+
+    //    @Synchronized
+    @Throws(WebDriverException::class)
     override suspend fun listDrivers(): List<WebDriver> {
-        return _drivers.values.toList()
+        recoverUnmanagedPages()
+        return drivers.values.toList()
     }
 
-    override suspend fun findDriver(url: String): WebDriver? {
-        return _drivers.values.firstOrNull { it.currentUrl() == url }
+    //    @Synchronized
+    @Throws(WebDriverException::class)
+    override suspend fun findDriver(url: String): AbstractWebDriver? {
+        recoverUnmanagedPages()
+        return drivers.values.filterIsInstance<AbstractWebDriver>().firstOrNull { currentUrl(it) == url }
     }
-    
+
     override suspend fun findDriver(urlRegex: Regex): WebDriver? {
-        return _drivers.values.firstOrNull { urlRegex.matches(it.currentUrl()) }
+        recoverUnmanagedPages()
+        return drivers.values.filterIsInstance<AbstractWebDriver>().firstOrNull { currentUrl(it).matches(urlRegex) }
     }
 
     override suspend fun findDrivers(urlRegex: Regex): List<WebDriver> {
-        return _drivers.values.filter { urlRegex.matches(it.currentUrl()) }
+        recoverUnmanagedPages()
+        return drivers.values.filterIsInstance<AbstractWebDriver>().filter { currentUrl(it).matches(urlRegex) }
     }
+
+    protected suspend fun currentUrl(driver: WebDriver) = driver.currentUrl()
 
     override fun destroyDriver(driver: WebDriver) {
         // Nothing to do
@@ -126,8 +141,8 @@ abstract class AbstractBrowser(
         // Nothing to do
     }
 
-    private fun getRandomUserAgentOrNull() = if (browserSettings.isUserAgentOverridingEnabled) {
-        browserSettings.userAgent.getRandomUserAgent()
+    private fun getRandomUserAgentOrNull() = if (settings.isUserAgentOverridingEnabled) {
+        settings.userAgent.getRandomUserAgent()
     } else null
 
     /**

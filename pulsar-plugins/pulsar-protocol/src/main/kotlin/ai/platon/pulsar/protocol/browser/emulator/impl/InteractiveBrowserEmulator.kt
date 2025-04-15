@@ -20,9 +20,11 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.event.AbstractEventEmitter
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.*
@@ -61,7 +63,7 @@ open class InteractiveBrowserEmulator(
      * */
     immutableConfig: ImmutableConfig,
 ) : BrowserEmulator,
-    BrowserEmulatorImplBase(driverPoolManager.driverSettings, responseHandler, immutableConfig) {
+    BrowserEmulatorImplBase(responseHandler, immutableConfig) {
     private val logger = getLogger(InteractiveBrowserEmulator::class)
     private val tracer = getTracerOrNull(InteractiveBrowserEmulator::class)
     private val taskLogger = getLogger(InteractiveBrowserEmulator::class, ".Task")
@@ -260,7 +262,7 @@ open class InteractiveBrowserEmulator(
         
         var exception: Exception? = null
         var response: Response?
-        val navigateTask = NavigateTask(task, driver, driverSettings)
+        val navigateTask = NavigateTask(task, driver)
         
         try {
             checkState(task, driver)
@@ -279,6 +281,7 @@ open class InteractiveBrowserEmulator(
                 val browser = driver.browser
                 logger.info("Dismiss illegal driver #{}: {} | browser #{}:{} | {}",
                     driver.id, driver.status, browser.instanceId, browser.readableState, e.brief())
+                // e.printStackTrace()
             }
 
             driver.retire()
@@ -413,19 +416,22 @@ open class InteractiveBrowserEmulator(
         checkState(navigateTask.fetchTask, driver)
         require(driver is AbstractWebDriver)
 
+        val browserSettings = driver.browser.settings
         // TODO: a better flag to specify whether to connect or navigate
-        val connect = fetchTask.page.hasVar("connect")
+        val page = fetchTask.page
+        require(page is AbstractWebPage)
+        val connect = page.hasVar("connect")
         val interactResult = if (connect) {
             driver.ignoreDOMFeatures = true
-            connect(navigateTask, driver, navigateTask.browserSettings)
+            connect(navigateTask, driver, browserSettings)
         } else {
-            navigateAndInteract(navigateTask, driver, navigateTask.browserSettings)
+            navigateAndInteract(navigateTask, driver, browserSettings)
         }
 
         // TODO: separate status code of pulsar system and the status code from browser
         val httpCode = driver.mainResponseStatus
         val finalProtocolStatus =
-            if (httpCode < 0 || interactResult.protocolStatus.minorCode >= ProtocolStatus.INCOMPATIBLE_CODE_START) {
+            if (httpCode < 0 || interactResult.protocolStatus.minorCode >= ProtocolStatusCodes.INCOMPATIBLE_CODE_START) {
                 // PulsarRPA status
                 interactResult.protocolStatus
             } else {
@@ -661,7 +667,7 @@ open class InteractiveBrowserEmulator(
      * */
     protected suspend fun isScriptInjected(driver: WebDriver): Boolean {
         // Ensure __pulsar_utils__ is defined. For some type of pages, the script can not be injected.
-        val utils = driver.evaluate("typeof(__pulsar_utils__)")
+        val utils = driver.evaluate("typeof(__pulsar_)")
         return utils == "function"
     }
     
@@ -744,11 +750,13 @@ open class InteractiveBrowserEmulator(
         val urls = mutableMapOf(AppConstants.PULSAR_DOCUMENT_NORMALIZED_URI to page.url)
         urls.forEach { (rel, href) ->
             val js = """
+                ;;
                 const link = document.createElement('link');
                 link.rel = '$rel';
                 link.href = '$href';
                 document.head.appendChild(link);
             """.trimIndent().replace("\n", ";")
+
             val result = driver.evaluateDetail(js)
             if (result?.exception != null) {
                 logger.warn("Failed to update meta info | $rel: $href | ${result.exception}")

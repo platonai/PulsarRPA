@@ -5,6 +5,11 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import java.time.Instant
 
+data class PromptRequest(
+    val url: String,
+    val prompt: String,
+)
+
 data class ScrapeRequest(
     val sql: String,
 )

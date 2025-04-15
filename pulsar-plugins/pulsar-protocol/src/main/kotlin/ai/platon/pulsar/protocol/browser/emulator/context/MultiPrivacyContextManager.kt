@@ -23,8 +23,10 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.proxy.ProxyVendorException
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
@@ -281,7 +283,7 @@ open class MultiPrivacyContextManager(
     }
 
     override fun tryGetNextReadyPrivacyContext(fingerprint: Fingerprint): PrivacyContext {
-        return tryGetNextReadyPrivacyContext(WebPage.NIL, fingerprint, FetchTask.NIL)
+        return tryGetNextReadyPrivacyContext(GoraWebPage.NIL, fingerprint, FetchTask.NIL)
     }
 
     /**
@@ -324,13 +326,7 @@ open class MultiPrivacyContextManager(
     @Throws(PrivacyException::class)
     private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): PrivacyAgent {
         // Specify the privacy agent by the user code
-        var specifiedPrivacyAgent = page.getVar(PrivacyAgent::class.java)
-        if (specifiedPrivacyAgent is PrivacyAgent) {
-            return specifiedPrivacyAgent
-        }
-
-        // Old style to specify the privacy agent, will remove in the future
-        specifiedPrivacyAgent = page.getVar(VAR_PRIVACY_AGENT)
+        val specifiedPrivacyAgent = page.getBeanOrNull(PrivacyAgent::class.java)
         if (specifiedPrivacyAgent is PrivacyAgent) {
             return specifiedPrivacyAgent
         }
@@ -477,7 +473,8 @@ open class MultiPrivacyContextManager(
             }
         } finally {
             task.done()
-            task.page.variables[VAR_CONTEXT_INFO] = formatPrivacyContext(privacyContext as AbstractPrivacyContext)
+            val page = task.page as AbstractWebPage
+            page.variables[VAR_CONTEXT_INFO] = formatPrivacyContext(privacyContext as AbstractPrivacyContext)
         }
 
         return result

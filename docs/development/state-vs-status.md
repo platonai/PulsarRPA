@@ -1,5 +1,4 @@
-State VS Status
-=
+# State vs Status
 
 In computer science, **status** and **state** are related but distinct concepts. Their differences are primarily reflected in the following aspects:
 

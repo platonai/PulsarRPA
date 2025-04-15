@@ -2,9 +2,13 @@ package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.persist.AbstractWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.skeleton.common.persist.ext.options
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import java.time.Instant
 import kotlin.test.*
@@ -29,13 +33,17 @@ class TestWebPage: TestBase() {
         val normalizedArgs = "-expires PT5S"
         val option = session.options(args)
         var page = session.load(url, option)
-        val prevFetchTime1 = page.prevFetchTime
-        val fetchTime1 = page.fetchTime
+        Assumptions.assumeTrue(page.protocolStatus.isSuccess,
+            "Failed to fetch the page, abort the test | $url")
 
-        println("Fetch time history: " + page.getFetchTimeHistory(""))
+        val prevFetchTime1 = page.prevFetchTime
+
+        val fetchTime1 = page.fetchTime
+        assertTrue("Fetch time should be in 1 minutes, actual $fetchTime1") { fetchTime1 > Instant.now().minusSeconds(60) }
 
         assertTrue { page.protocolStatus.isSuccess }
         assertTrue { page.isContentUpdated }
+        assertTrue(page is AbstractWebPage)
         assertEquals(option, page.variables[PulsarParams.VAR_LOAD_OPTIONS])
         assertTrue { page.args.contains(normalizedArgs) }
         // TODO: fix this issue: expected: <-expires PT5S> but was: <-expires PT5S -ignoreFailure -nJitRetry 3 -parse -test 1>
@@ -49,14 +57,19 @@ class TestWebPage: TestBase() {
         assertTrue { options2.isExpired(page.prevFetchTime) }
 
         page = session.load(url, options2)
+        Assumptions.assumeTrue(page.protocolStatus.isSuccess,
+            "Failed to fetch the page, abort the test | $url")
+
         assertTrue { page.protocolStatus.isSuccess }
+        assertTrue("Page should be fetched since it expireAt $expireAt") { page.isFetched }
         assertTrue { page.isContentUpdated }
         assertEquals(options2, page.options)
         val prevFetchTime2 = page.prevFetchTime
+        assertTrue("prevFetchTime2 should be in 1 minutes") { fetchTime1 > Instant.now().minusSeconds(60) }
+
 //        val fetchTime2 = page.fetchTime
 
         println(PageLoadStatusFormatter(page, "", true, true, true, true))
-        println("Fetch time history: " + page.getFetchTimeHistory(""))
         println("prevFetchTime: " + page.prevFetchTime)
         println("fetchTime: " + page.fetchTime)
         val responseTime = page.metadata[Name.RESPONSE_TIME]?:""
@@ -77,6 +90,7 @@ class TestWebPage: TestBase() {
     @Test
     fun testPageModel() {
         var page = session.load(url)
+        require(page is GoraWebPage)
         page.unbox().pageModel?.fieldGroups = null
         page.unbox().pageModel = null
         page.unbox().setDirty("pageModel")
@@ -97,6 +111,7 @@ class TestWebPage: TestBase() {
         assertNotEquals(page.id, page2.id)
         val pageModel2 = page2.pageModel
         assertNotNull(pageModel2)
+        require(page2 is GoraWebPage)
         val fieldGroups2 = page2.unbox().pageModel.fieldGroups
         val fieldGroup2 = pageModel2.findGroup(groupId)
         val fieldGroup21 = fieldGroups2.firstOrNull { it.id == groupId.toLong() }

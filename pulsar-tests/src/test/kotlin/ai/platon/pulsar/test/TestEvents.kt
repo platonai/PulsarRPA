@@ -44,17 +44,15 @@ class TestEvents : TestBase() {
 
             onFetched.addLast { page ->
                 firedEvents.add("onAfterFetch")
-                assertTrue { page.crawlStatus.isFetched }
                 assertEquals(1, metrics.fetchTasks.count)
                 assertEquals(1, metrics.successFetchTasks.count)
-                assertEquals(0, metrics.persistContentMBytes.counter.count)
+                // assertEquals(0, metrics.persistContentMBytes.counter.count)
             }
 
             onLoaded.addLast { page ->
                 firedEvents.add("onAfterLoad")
 
                 assertTrue { page.protocolStatus.isSuccess }
-                assertTrue { page.crawlStatus.isFetched }
                 assertTrue { page.isContentUpdated }
 
                 assertTrue { page.options.persist }

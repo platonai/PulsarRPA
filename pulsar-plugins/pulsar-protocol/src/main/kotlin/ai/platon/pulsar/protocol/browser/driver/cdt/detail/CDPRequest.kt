@@ -2,7 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.http.HttpStatus
-import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import com.github.kklisura.cdt.protocol.v2023.types.fetch.HeaderEntry
 import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.v2023.types.network.Initiator
@@ -12,23 +12,23 @@ import java.lang.ref.WeakReference
 import java.util.*
 
 class CDPRequest(
-        val driver: ChromeDevtoolsDriver,
-        /**
+    val driver: PulsarWebDriver,
+    /**
          * Request identifier.
          */
         var requestId: String,
-        /**
+    /**
          * Request data.
          */
         val request: Request,
-        /**
+    /**
          * Request identifier.
          */
         val interceptionId: String? = null,
 
-        val allowInterception: Boolean = false,
+    val allowInterception: Boolean = false,
 
-        val redirectChain: Queue<WeakReference<CDPRequest>> = LinkedList()
+    val redirectChain: Queue<WeakReference<CDPRequest>> = LinkedList()
 ) {
     /**
      * Loader identifier. Empty string if the request is fetched from worker.

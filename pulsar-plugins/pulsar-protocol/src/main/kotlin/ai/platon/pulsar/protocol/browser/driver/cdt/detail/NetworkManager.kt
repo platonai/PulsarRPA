@@ -3,7 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.protocol.browser.driver.cdt.Credentials
 import com.github.kklisura.cdt.protocol.v2023.events.fetch.AuthRequired
 import com.github.kklisura.cdt.protocol.v2023.events.fetch.RequestPaused
@@ -16,8 +16,8 @@ import java.lang.ref.WeakReference
 import java.util.*
 
 internal class NetworkManager(
-        private val driver: ChromeDevtoolsDriver,
-        private val rpc: RobustRPC,
+    private val driver: PulsarWebDriver,
+    private val rpc: RobustRPC,
 ) : AbstractEventEmitter<NetworkEvents>() {
     private val logger = getLogger(this)
     private val tracer get() = logger.takeIf { it.isTraceEnabled }

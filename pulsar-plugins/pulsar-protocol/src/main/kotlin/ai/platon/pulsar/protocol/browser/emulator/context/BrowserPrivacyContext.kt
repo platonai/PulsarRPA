@@ -19,6 +19,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_DISPLAY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.CoreMetrics
@@ -67,22 +68,21 @@ open class BrowserPrivacyContext(
 
     override val isFullCapacity: Boolean get() = driverPoolManager.isFullCapacity(browserId)
 
-    @Throws(ProxyVendorException::class)
+    @Throws(ProxyVendorException::class, IllegalStateException::class)
     override suspend fun open(url: String): FetchResult {
         val task = FetchTask.create(url, conf.toVolatileConfig())
-        val f = webdriverFetcher ?: throw IllegalStateException("Fetcher is null")
+        val f = checkNotNull(webdriverFetcher) { "WebDriverFetcher is null" }
         return doRun(task) { _, driver -> f.fetchDeferred(task, driver) }
     }
-
 
     /**
      * @param url The url to fetch
      * @param options Load options
      * */
-    @Throws(ProxyVendorException::class)
+    @Throws(ProxyVendorException::class, IllegalStateException::class)
     override suspend fun open(url: String, options: LoadOptions): FetchResult {
         val task = FetchTask.create(url, options)
-        val f = webdriverFetcher ?: throw IllegalStateException("Fetcher is null")
+        val f = checkNotNull(webdriverFetcher) { "WebDriverFetcher is null" }
         return doRun(task) { _, driver -> f.fetchDeferred(task, driver) }
     }
 
@@ -190,7 +190,9 @@ open class BrowserPrivacyContext(
         }
 
         createProxyContextIfEnabled()
-        task.page.setVar(VAR_PRIVACY_CONTEXT_DISPLAY, display)
+        val page = task.page
+        require(page is AbstractWebPage)
+        page.setVar(VAR_PRIVACY_CONTEXT_DISPLAY, display)
     }
 
     @Throws(ProxyException::class)

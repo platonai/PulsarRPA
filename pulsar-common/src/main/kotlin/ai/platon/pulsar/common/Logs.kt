@@ -108,7 +108,7 @@ fun warnUnexpected(target: Any, t: Throwable, message: String, vararg args: Any?
     try {
         val logger = getLogger(target)
         val message1 = """
-The exception is unexpected, it's best managed within custom code, such as event handlers.
+The exception was unexpected; refine the code to handle it appropriately.
         """.trimIndent()
         logger.warn("$message1\n$message", *args)
     } catch (t2: Throwable) {

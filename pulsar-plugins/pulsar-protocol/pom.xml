@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-plugins</artifactId>
-        <version>2.2.1-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-protocol</artifactId>
@@ -28,15 +28,28 @@
         </dependency>
 
         <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-protocol-playwright</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
         </dependency>
 
         <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-resources</artifactId>
+            <type>test-jar</type>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.ninja-squad</groupId>
             <artifactId>springmockk</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
 </project>

@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
@@ -271,7 +272,7 @@ class CoreMetrics(
         ++urlStats.urls
         ++urlStats.pageViews
 
-        val pageCategory = page.pageCategory
+        val pageCategory = page.pageCategory.toPageCategory()
         when {
             pageCategory.isIndex -> ++urlStats.indexUrls
             pageCategory.isDetail -> ++urlStats.detailUrls

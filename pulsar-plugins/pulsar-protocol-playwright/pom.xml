@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-plugins</artifactId>
-        <version>2.2.1-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-protocol-playwright</artifactId>
@@ -26,11 +26,27 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-skeleton</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-jsoup</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.microsoft.playwright</groupId>
             <artifactId>playwright</artifactId>
+            <version>${playwright.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-resources</artifactId>
+            <type>test-jar</type>
+            <classifier>tests</classifier>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
+    <properties>
+        <playwright.version>1.50.0</playwright.version>
+    </properties>
 </project>

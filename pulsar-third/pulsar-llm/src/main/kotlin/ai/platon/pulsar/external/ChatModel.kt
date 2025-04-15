@@ -4,7 +4,8 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import org.jsoup.nodes.Element
 
 interface ChatModel {
-    
+    val settings: ChatModelSettings
+
     /**
      * Generates a response from the model based on a sequence of messages.
      * Typically, the sequence contains messages in the following order:

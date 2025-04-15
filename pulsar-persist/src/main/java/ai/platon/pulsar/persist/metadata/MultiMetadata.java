@@ -45,7 +45,7 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
     /**
      * A map of all data attributes.
      */
-    private Multimap<String, String> data = ArrayListMultimap.create();
+    private final Multimap<String, String> data = ArrayListMultimap.create();
 
     /**
      * Constructs a new, empty data.

@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>2.2.1-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-common</artifactId>
@@ -36,19 +36,11 @@
             <artifactId>xml-apis</artifactId>
         </dependency>
 
-        <!-- for org.apache.http.client.utils.DateUtils -->
+        <!-- for URIBuilder -->
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.13</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
         </dependency>
-
         <!-- For ai.platon.pulsar.common.EncodingDetector -->
         <!-- TODO: use tika -->
         <dependency>

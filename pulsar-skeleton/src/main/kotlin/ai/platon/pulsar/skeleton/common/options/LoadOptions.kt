@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
+import ai.platon.pulsar.skeleton.common.ApiPublic
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import com.beust.jcommander.Parameter
@@ -42,14 +43,14 @@ import kotlin.reflect.jvm.kotlinProperty
  * session.load('https://www.jd.com', '-storeContent')
  * ```
  * */
-open class LoadOptions(
+open class LoadOptions constructor(
     argv: Array<String>,
-    val conf: VolatileConfig,
+    var conf: VolatileConfig,
     var rawEvent: PageEventHandlers? = null,
     var rawItemEvent: PageEventHandlers? = null,
     var referrer: String? = null,
 ) : CommonOptions(argv) {
-    
+
     /**
      * The entity name of the page, for example, article, product, hotel, flower, etc., it's optional.
      * */
@@ -166,46 +167,22 @@ open class LoadOptions(
      *
      * Note: Consider use url args to set priority only.
      *
+     * Example:
+     *
+     * ```kotlin
+     * session.load(url, "-priority 2000")
+     *
+     * val options = session.options("-priority 2000")
+     * session.load(url, options)
+     * ```
+     *
      * @see Priority13
      * @see Priority13.NORMAL
      */
     @ApiPublic
     @Parameter(
         names = ["-p", "-priority"],
-        description = """
-/**
- * Represents the priority of a task, determining the order of execution.
- *
- * The priority value is an integer where a smaller value indicates a higher priority.
- * This is consistent with [java.util.concurrent.PriorityBlockingQueue].
- *
- * If the priority value is not within the range defined by [Priority13], it will be adjusted to the nearest valid value.
- * For example, a priority of -2001 will be adjusted to [Priority13.HIGHER2].
- *
- * Note: The priority specified in args or LoadOptions takes precedence over the priority in [UrlAware], [Hyperlink], etc.
- *
- * Priority can be set in the following ways:
- * 1. In the url, for example, `http://example.com -priority -2000`
- * 2. In the args, for example, `Hyperlink("http://example.com", "", args = "-priority -2000")`
- * 3. Int the [LoadOptions] object, for example, `session.load("http://example.com", options.apply { priority = -2000 })`
- * 4. In the [UrlAware] object, for example, `Hyperlink("http://example.com", "", priority = -2000)`
- *
- * If a url is normalized like this:
- * ```kotlin
- * session.normalize(url: UrlAware, options: LoadOptions)
- * ```
- * The priority will be set in the following order:
- *
- * 1. The priority in the url
- * 2. The priority in the args
- * 3. The priority in the options
- *
- * Note: Consider use url args to set priority only.
- *
- * @see Priority13
- * @see Priority13.NORMAL
- */
-        """
+        description = "Represents the priority of a task, determining the order of execution"
     )
     var priority = 0
 
@@ -221,7 +198,7 @@ open class LoadOptions(
      * */
     @ApiPublic
     @Parameter(
-        names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
+        names = ["-i", "-expire", "-expires", "--expire"], converter = DurationConverter::class,
         description = "The expiry duration. " +
             "If the expiry time is exceeded, the page should be fetched from the Internet."
     )
@@ -301,17 +278,7 @@ open class LoadOptions(
         description = "Specify how many links to extract for out pages."
     )
     var topLinks = 20
-    
-    /**
-     * Choose the top N anchor groups for further process. Used by auto web mining project.
-     * */
-    @ApiPublic
-    @Parameter(
-        names = ["-tng", "-topNAnchorGroups", "--top-anchor-groups"],
-        description = "Try the top N anchor groups"
-    )
-    var topNAnchorGroups = 3
-    
+
     /**
      * The selector specified element should have a non-blank text, the system should
      * wait until the element is filled by a non-blank text, or until it times out.
@@ -440,7 +407,7 @@ open class LoadOptions(
      * */
     @ApiPublic
     @Parameter(
-        names = ["-ii", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
+        names = ["-ii", "-itemExpire", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
         description = "The same as expires, but only works for item pages"
     )
     var itemExpires = ChronoUnit.DECADES.duration
@@ -563,21 +530,22 @@ open class LoadOptions(
     /**
      * If the option is set, do not persist the page content which is usually very large.
      * If the option is true, it overrides [storeContent].
+     *
+     * Example:
+     *
+     * ```kotlin
+     * session.load(url, "-dropContent")
+     *
+     * val options = session.options("-dropContent")
+     * session.load(url, options)
+     * ```
      * */
     @Parameter(
-        names = ["-dct", "-dropContent", "--drop-content"],
+        names = ["-dropContent", "--drop-content"],
         description = "If the option exists, do not persist the page content which is usually very large."
     )
     var dropContent = false
-    
-    /**
-     * If false, load the page without the content which is usually very large
-     * TODO: review the design
-     * */
-//    @Parameter(names = ["-lct", "-loadContent", "--load-content"], arity = 1,
-//        description = "If false, load the page without its content which is usually very large")
-//    var loadContent = LoadOptionDefaults.loadContent
-    
+
     /**
      * Refresh the fetch state of a page, clear the retry counters.
      * If true, the page should be fetched, just like we click the refresh button on a real browser.
@@ -811,10 +779,7 @@ open class LoadOptions(
     open fun createItemOptions(): LoadOptions {
         val itemOptions = clone()
         itemOptions.itemOptions2MajorOptions()
-        
-        if (itemOptions.browser == BrowserType.NATIVE) {
-            itemOptions.fetchMode = FetchMode.NATIVE
-        }
+
         itemOptions.rawEvent = rawItemEvent
         
         return itemOptions
@@ -1182,7 +1147,6 @@ open class LoadOptions(
          * Parse the [args] with other [options].
          * */
         fun parse(args: String, options: LoadOptions) = LoadOptions(args.trim(), options).apply {
-            referrer = options.referrer
             parse()
         }
         
@@ -1218,148 +1182,3 @@ open class LoadOptions(
     }
 }
 
-/**
- * The default load options, be careful if you have to change the default behaviour.
- * */
-object LoadOptionDefaults {
-    /**
-     * The default expiry time, some time we may need expire all pages by default, for example, in test mode
-     * */
-    val EXPIRES = ChronoUnit.DECADES.duration
-    
-    /**
-     * The default time to expire
-     * */
-    val EXPIRE_AT = DateTimes.doomsday
-    
-    /**
-     * Lazy flush.
-     * */
-    const val LAZY_FLUSH = true
-    
-    /**
-     * Trigger the parse phase or not.
-     *
-     * Do not parse by default, since there are may ways to trigger a webpage parsing:
-     * 1. use session.parse()
-     * 2. add a -parse option
-     * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
-     * */
-    const val PARSE = false
-    
-    /**
-     * Store webpage content or not.
-     *
-     * Store webpage content by default.
-     * If we are running a public cloud, this option might be changed to false.
-     * */
-    const val STORE_CONTENT = true
-    /**
-     * Load webpage content or not.
-     *
-     * Load webpage content by default.
-     * If we are running a public cloud, this option might be changed to false.
-     *
-     * TODO: review the design
-     * */
-//    var loadContent = true
-    /**
-     * If true, still fetch the page even if it is gone.
-     * */
-    const val IGNORE_FAILURE = false
-    
-    /**
-     * There are several cases to enable jit retry.
-     * For example, in a test environment.
-     * */
-    const val N_JIT_RETRY = -1
-    
-    /**
-     * The default browser is chrome with pulsar implemented web driver.
-     * */
-    val BROWSER = BrowserType.PULSAR_CHROME
-    
-    /**
-     * Set to be > 0 if we are doing unit test or other test.
-     * We will talk more, log more and trace more in test mode.
-     * */
-    const val TEST = 0
-    
-    /**
-     * The default expiry time, some time we may need expire all pages by default, for example, in test mode
-     * */
-    var expires = EXPIRES
-    
-    /**
-     * The default time to expire
-     * */
-    var expireAt = EXPIRE_AT
-    
-    /**
-     * Lazy flush.
-     * */
-    var lazyFlush = LAZY_FLUSH
-    
-    /**
-     * Trigger the parse phase or not.
-     *
-     * Do not parse by default, since there are may ways to trigger a webpage parsing:
-     * 1. use session.parse()
-     * 2. add a -parse option
-     * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
-     * */
-    var parse = PARSE
-    
-    /**
-     * Store webpage content or not.
-     *
-     * Store webpage content by default.
-     * If we are running a public cloud, this option might be changed to false.
-     * */
-    var storeContent = STORE_CONTENT
-    /**
-     * Load webpage content or not.
-     *
-     * Load webpage content by default.
-     * If we are running a public cloud, this option might be changed to false.
-     *
-     * TODO: review the design
-     * */
-//    var loadContent = true
-    /**
-     * If true, still fetch the page even if it is gone.
-     * */
-    var ignoreFailure = IGNORE_FAILURE
-    
-    /**
-     * There are several cases to enable jit retry.
-     * For example, in a test environment.
-     * */
-    var nJitRetry = N_JIT_RETRY
-    
-    /**
-     * The default browser is chrome with pulsar implemented web driver.
-     * */
-    var browser = BROWSER
-    
-    /**
-     * Set to be > 0 if we are doing unit test or other test.
-     * We will talk more, log more and trace more in test mode.
-     * */
-    var test = TEST
-    
-    /**
-     * Reset all the options to default.
-     * */
-    fun reset() {
-        expires = EXPIRES
-        expireAt = EXPIRE_AT
-        lazyFlush = LAZY_FLUSH
-        parse = PARSE
-        storeContent = STORE_CONTENT
-        ignoreFailure = IGNORE_FAILURE
-        nJitRetry = N_JIT_RETRY
-        browser = BROWSER
-        test = TEST
-    }
-}

@@ -15,7 +15,12 @@ object AppContext {
     enum class State {
         NEW, RUNNING, TERMINATING, TERMINATED
     }
-    
+
+    /**
+     * The application is production environment
+     * */
+    val isProd get() = System.getenv("ENV").equals("prod", true)
+
     /**
      * The number of processors available to the Java virtual machine
      */
@@ -27,54 +32,30 @@ object AppContext {
      * otherwise, a reverse name lookup will be performed and the result will be returned based on the
      * system configured name lookup service.
      * */
-    val HOST_NAME get() = InetAddress.getLocalHost().hostName
+    val HOST_NAME: String get() = InetAddress.getLocalHost().hostName
     
     /**
      * The name of the current user
      * */
-    val USER get() = SystemUtils.USER_NAME
+    val USER_NAME: String get() = SystemUtils.USER_NAME
     
     /**
      * The java.io.tmpdir System Property. Default temp file path.
      * Defaults to null if the runtime does not have security access to read this property or the property does not exist.
      * This value is initialized when the class is loaded.
      */
-    val TMP_DIR get() = SystemUtils.JAVA_IO_TMPDIR
-    
-    // User's current working directory
-    val USER_DIR get() = SystemUtils.USER_DIR
-    
-    // User's home directory
-    val USER_HOME get() = SystemUtils.USER_HOME
-    
+    val TMP_DIR: String get() = SystemUtils.JAVA_IO_TMPDIR
+
     /**
-     * Check if the operating system is a Windows subsystem for linux
+     * User's current working directory
      * */
-    @Deprecated("Not reliable, not used anymore")
-    val OS_IS_WSL by lazy { checkIsWSL() }
+    val USER_DIR: String get() = SystemUtils.USER_DIR
+
     /**
-     * Check if the operating system is running on a virtual environment, e.g., virtualbox, vmware, etc
+     * User's home directory
      * */
-    @Deprecated("Not reliable, not used anymore")
-    val OS_IS_VIRT by lazy { checkVirtualEnv() }
-    /**
-     * Check if the operating system is a linux and desktop is available
-     * @see https://www.freedesktop.org/software/systemd/man/pam_systemd.html
-     * */
-    @Deprecated("Not reliable, not used anymore")
-    val OS_IS_LINUX_DESKTOP by lazy { checkIsLinuxDesktop() }
-    /**
-     * Check if GUI is available, so we can run pulsar in GUI mode and supervised mode.
-     * */
-    @Deprecated("Not used anymore")
-    val isGUIAvailable: Boolean get() {
-        return when {
-            OS_IS_LINUX_DESKTOP -> true
-            OS_IS_WSL -> false
-            else -> !GraphicsEnvironment.isHeadless()
-        }
-    }
-    
+    val USER_HOME: String get() = SystemUtils.USER_HOME
+
     /**
      * The application version
      * */
@@ -98,7 +79,7 @@ object AppContext {
      *
      * The default value is the current username.
      * */
-    val APP_IDENT_RT get() = System.getenv(APP_ID_KEY) ?: System.getProperty(APP_ID_KEY, USER)
+    val APP_IDENT_RT get() = System.getenv(APP_ID_KEY) ?: System.getProperty(APP_ID_KEY, USER_NAME)
     /**
      * The application identity string, can be specified by system environment variable or system property.
      * */
@@ -149,6 +130,7 @@ object AppContext {
             .first { Files.isWritable(it) }.resolve(".$APP_NAME_RT")
     }
     val APP_DATA_DIR = APP_DATA_DIR_RT
+
     /**
      * The application's runtime state
      * */
@@ -189,54 +171,5 @@ object AppContext {
                 ?.let { Files.readAllLines(it).firstOrNull() }
         }
         return version ?: "unknown"
-    }
-    
-    private fun checkIsLinuxDesktop(): Boolean {
-        if (SystemUtils.IS_OS_WINDOWS) {
-            return false
-        }
-        
-        val env = System.getenv("XDG_SESSION_TYPE")
-        
-        return env == "x11" || env == "wayland"
-    }
-    
-    private fun checkIsWSL(): Boolean {
-        if (SystemUtils.IS_OS_WINDOWS) {
-            return false
-        }
-        
-        try {
-            val path = Paths.get("/proc/version")
-            if (Files.isReadable(path)) {
-                val version = Files.readString(path)
-                logger.info("Version: $version")
-                
-                if (version.contains("microsoft-*-WSL".toRegex())) {
-                    return true
-                }
-            }
-        } catch (t: Throwable) {
-            logger.warn("Unexpected exception", t)
-        }
-        
-        return false
-    }
-    
-    private fun checkVirtualEnv(): Boolean {
-        if (SystemUtils.IS_OS_WINDOWS) {
-            logger.info("Not supported to check if a Windows OS running on a virtual machine")
-            return false
-        }
-
-//        var output = Runtimes.exec("hostnamectl")
-        try {
-            val output = Runtimes.exec("systemd-detect-virt")
-            return output.map { it.trim() }.filter { it != "none" }.any { it.isNotBlank() }
-        } catch (t: Throwable) {
-            logger.warn("Unexpected exception", t)
-        }
-        
-        return false
     }
 }

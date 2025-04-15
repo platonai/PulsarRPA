@@ -12,53 +12,17 @@ import java.time.Instant
  * An abstract url is a url with some common properties and methods.
  * */
 abstract class AbstractUrl(
-    /**
-     * The url specification of the hyperlink, it is usually normalized, and can contain load arguments.
-     * */
     override var url: String,
-    /**
-     * The anchor text
-     * */
     override var text: String = "",
-    /**
-     * The order of this hyperlink in it referrer page
-     * */
     override var order: Int = 0,
-    /**
-     * The url of the referrer page
-     * */
     override var referrer: String? = null,
-    /**
-     * The additional url arguments
-     * */
     override var args: String? = null,
-    /**
-     * The hypertext reference, It defines the address of the document, which this time is linked from
-     * */
     override var href: String? = null,
-    /**
-     * The priority of this hyperlink
-     * */
     override var priority: Int = 0,
-    /**
-     * The language of this hyperlink
-     * */
     override var lang: String = "*",
-    /**
-     * The country of this hyperlink
-     * */
     override var country: String = "*",
-    /**
-     * The district of this hyperlink
-     * */
     override var district: String = "*",
-    /**
-     * The maximum number of retries
-     * */
     override var nMaxRetry: Int = 3,
-    /**
-     * The depth of this hyperlink
-     * */
     override var depth: Int = 0
 ) : ComparableUrlAware {
 

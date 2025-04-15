@@ -94,7 +94,7 @@ open class ScriptLoader(
     }
 
     private fun loadDefaultResource() {
-        RESOURCES.distinct().associateWithTo(jsCache) {
+        RESOURCES.filter { !it.startsWith("#") }.distinct().associateWithTo(jsCache) {
             ResourceLoader.readAllLines(it).joinToString("\n") { confuser.confuse(it) }
         }
     }

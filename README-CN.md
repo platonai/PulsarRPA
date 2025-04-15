@@ -88,6 +88,7 @@ Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pul
 
 ```sql
 select
+    llm_extract(dom, 'product name, price, ratings, score') as llm_extracted_data,
     dom_first_text(dom, '#productTitle') as title,
     dom_first_text(dom, '#bylineInfo') as brand,
     dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
@@ -192,14 +193,14 @@ java -jar PulsarRPAPro.jar
 <dependency>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
-    <version>2.2.1-SNAPSHOT</version>
+    <version>3.0.0</version>
 </dependency>
 ```
 
 使用 Gradle 时，可以在 `build.gradle` 文件中添加以下依赖：
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-bom:2.2.1-SNAPSHOT")
+implementation("ai.platon.pulsar:pulsar-bom:3.0.0")
 ```
 
 也可以从 Github 克隆模板项目，包括 [kotlin](https://github.com/platonai/pulsar-kotlin-template),
@@ -354,4 +355,10 @@ PulsarRPA 在 “主要特性” 部分中提到的特性都得到了良好的�
 - 微博：[galaxyeye](https://weibo.com/galaxyeye)
 - 邮箱：galaxyeye@live.cn, ivincent.zhang@gmail.com
 - Twitter: galaxyeye8
-- 网站：[platon.ai](http://platon.ai)
+- 网站：[platon.ai](https://platon.ai)
+
+<div style="display: flex;">
+  <img src="docs/images/wechat-author.png" width="300" alt="wechat-author" />
+  <img src="docs/images/buy-me-a-coffee.png" width="300" alt="buy-me-a-coffee" />
+</div>
+

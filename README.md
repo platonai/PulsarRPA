@@ -100,6 +100,7 @@ Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pul
 
 ```sql
 select
+    llm_extract(dom, 'product name, price, ratings, score') as llm_extracted_data,
     dom_first_text(dom, '#productTitle') as title,
     dom_first_text(dom, '#bylineInfo') as brand,
     dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
@@ -132,11 +133,6 @@ fun main() {
 ```
 
 Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt), [java](/pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java).
-
-
-
-
-
 
 
 
@@ -204,14 +200,14 @@ Maven:
 <dependency>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
-    <version>2.2.1-SNAPSHOT</version>
+    <version>3.0.0</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-bom:2.2.1-SNAPSHOT")
+implementation("ai.platon.pulsar:pulsar-bom:3.0.0")
 ```
 
 Clone the template project from github.com:
@@ -363,4 +359,9 @@ Check the [technical details](docs/faq/technical-details.md) to see answers for 
 - Weibo: [galaxyeye](https://weibo.com/galaxyeye)
 - Email: galaxyeye@live.cn, ivincent.zhang@gmail.com
 - Twitter: galaxyeye8
-- Website: [platon.ai](http://platon.ai)
+- Website: [platon.ai](https://platon.ai)
+
+<div style="display: flex;">
+  <img src="docs/images/wechat-author.png" width="300" alt="wechat-author" />
+  <img src="docs/images/buy-me-a-coffee.png" width="300" alt="buy-me-a-coffee" />
+</div>

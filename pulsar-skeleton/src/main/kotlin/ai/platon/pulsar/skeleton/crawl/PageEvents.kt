@@ -224,6 +224,28 @@ interface PageEventHandlers {
      * */
     var crawlEventHandlers: CrawlEventHandlers
     /**
+     * Alias of [loadEventHandlers]
+     * */
+    var le get() = loadEventHandlers
+        set(value) {
+            loadEventHandlers = value
+        }
+    /**
+     * Alias of [browseEventHandlers]
+     * */
+    var be get() = browseEventHandlers
+        set(value) {
+            browseEventHandlers = value
+        }
+    /**
+     * Alias of [crawlEventHandlers]
+     * */
+    var ce get() = crawlEventHandlers
+        set(value) {
+            crawlEventHandlers = value
+        }
+
+    /**
      * Chain the other page event handlers to the tail of this one.
      * */
     fun chain(other: PageEventHandlers): PageEventHandlers

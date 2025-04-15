@@ -25,7 +25,7 @@ open class ForwardingResponse(
     constructor(e: Throwable?, page: WebPage) : this("", ProtocolStatus.failed(e), MultiMetadata(), page)
 
     constructor(content: String, status: ProtocolStatus, headers: MultiMetadata, page: WebPage)
-            : this(page, PageDatum(page.url, page.location, status, content.toByteArray(), headers = headers)) {
+            : this(page, PageDatum(page.url, page.baseURI, page.location, status, content.toByteArray(), headers = headers)) {
     }
 
     companion object {
@@ -34,11 +34,21 @@ open class ForwardingResponse(
         fun unfetched(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_NOTFETCHED, page)
         fun unchanged(page: WebPage) = ForwardingResponse(page.protocolStatus, page)
 
-        // TODO: define the difference between a canceled task and a retry task
+        /**
+         * Returns a canceled response. All status of the page remains unchanged.
+         * */
         fun canceled(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_CANCELED, page)
+        /**
+         * Returns a canceled response. All status of the page remains unchanged.
+         * */
         fun canceled(page: WebPage, reason: String) = ForwardingResponse(ProtocolStatus.cancel(reason), page)
-
+        /**
+         * Returns response that indicates that the page should be retried. Page status usually be changed.
+         * */
         fun retry(page: WebPage, retryScope: RetryScope, reason: String) = ForwardingResponse(retryScope, reason, page)
+        /**
+         * Returns response that indicates that the page should be retried. Page status usually be changed.
+         * */
         fun retry(page: WebPage, retryScope: RetryScope, retryReason: Exception) = ForwardingResponse(retryScope, retryReason, page)
 
         fun privacyRetry(page: WebPage, reason: String) = retry(page, RetryScope.PRIVACY, reason)

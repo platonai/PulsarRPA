@@ -136,7 +136,6 @@ class BatchFetchComponent(
         // forward a response
         protocol.setResponse(response)
         // run protocol.getProtocolOutput so the page have a chance to perform PROTOCOL scope retry if necessary
-        // TODO: RetryScope.PROTOCOL does not work since the response is forwarded
         return processProtocolOutput(page, protocol.getProtocolOutput(page))
     }
 

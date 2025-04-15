@@ -8,10 +8,6 @@ import org.jetbrains.annotations.NotNull;
 public enum FetchMode {
     UNKNOWN,
     /**
-     * Simple native fetcher, no script renderer/cookie supported
-     * */
-    NATIVE,
-    /**
      * Fetch every page using a real browser
      * */
     BROWSER;

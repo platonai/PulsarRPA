@@ -63,22 +63,22 @@ class TextProfileSignature(conf: ImmutableConfig) : Signature() {
         val tokens = HashMap<String, Token>()
         // String text = page.getPageText();
         var text = page.contentText
-        if (text.isEmpty() || text.length < GOOD_CONTENT_TEXT_LENGTH) {
+        if (text.isNullOrEmpty() || text.length < GOOD_CONTENT_TEXT_LENGTH) {
             text = page.pageText
         }
 
-        if (text.isEmpty()) {
+        if (text.isNullOrEmpty()) {
             return fallback.calculate(page)
         }
 
         val curToken = StringBuilder()
         var maxFreq = 0
-        for (i in 0 until text.length) {
-            val c = text[i]
+        for (element in text) {
+            val c = element
             if (Character.isLetterOrDigit(c)) {
                 curToken.append(Character.toLowerCase(c))
             } else {
-                if (curToken.length > 0) {
+                if (curToken.isNotEmpty()) {
                     if (curToken.length > MIN_TOKEN_LEN) {
                         // add it
                         val s = curToken.toString()

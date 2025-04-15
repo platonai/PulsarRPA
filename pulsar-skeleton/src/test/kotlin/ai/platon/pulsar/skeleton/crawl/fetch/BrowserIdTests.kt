@@ -64,7 +64,7 @@ class BrowserIdTests {
             println("Browser Id: $id")
             println("contextDir: " + id.contextDir)
             println("userDataDir: " + id.userDataDir)
-            assertTrue { id.userDataDir.toString().contains("pulsar_chrome") }
+            assertTrue("Actual: ${id.userDataDir}") { id.userDataDir.toString().contains("PULSAR_CHROME") }
             assertTrue("$expectedContextBaseDir <- ${id.userDataDir}") {
                 id.userDataDir.startsWith(expectedContextBaseDir) }
         }

@@ -1,5 +1,7 @@
 package ai.platon.pulsar.common.config;
 
+import java.time.Duration;
+
 /**
  * Created by vincent on 17-1-17.
  * Copyright @ 2013-2023 Platon AI. All rights reserved
@@ -117,7 +119,7 @@ public interface CapabilityTypes {
      * Deactivate the fetch component, ensuring that all pages are loaded exclusively from storage
      * and never fetched from the Internet.
      * <p>
-     * If a page is not found in the local storage, return WebPage.NIL.
+     * If a page is not found in the local storage, return WebPageImpl.NIL.
      * */
     String LOAD_DEACTIVATE_FETCH_COMPONENT = "load.deactivate.fetch.component";
 
@@ -267,6 +269,7 @@ public interface CapabilityTypes {
     String BROWSER_LAUNCH_NO_SANDBOX = "browser.launch.no.sandbox";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS = "browser.launch.supervisor.process";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS = "browser.launch.supervisor.process.args";
+    String POLLING_DRIVER_TIMEOUT = "polling.driver.timeout";
 
     ///////////////////////////////////////////////////////////////////////////
     // Proxy
@@ -405,12 +408,6 @@ public interface CapabilityTypes {
      * The size of global document cache
      * */
     String GLOBAL_DOCUMENT_CACHE_SIZE = "global.document.cache.size";
-
-    /**
-     * Sites may request that search engines don't provide access to cached
-     * documents.
-     */
-    String CACHING_FORBIDDEN_KEY = "caching.forbidden";
 
     String PULSAR_DOMAIN = "pulsar.domain";
 

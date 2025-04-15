@@ -33,16 +33,21 @@ class OpenPageCategory(
     override fun toString() = name
 
     companion object {
+        val UNKNOWN = OpenPageCategory("", "U")
 
         /**
          * Parse a string to a [OpenPageCategory] object, [format] and this method are symmetric.
          * */
-        fun parse(category: String): OpenPageCategory {
+        fun parse(category: String?): OpenPageCategory {
+            if (category == null) {
+                return UNKNOWN
+            }
+
             val parts = category.split(" ")
             return when (parts.size) {
                 1 -> OpenPageCategory(parts[0], "U")
                 2 -> OpenPageCategory(parts[0], parts[1])
-                else -> OpenPageCategory("", "")
+                else -> UNKNOWN
             }
         }
     }

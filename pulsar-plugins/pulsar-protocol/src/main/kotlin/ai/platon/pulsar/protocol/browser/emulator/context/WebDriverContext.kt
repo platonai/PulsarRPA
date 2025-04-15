@@ -66,7 +66,7 @@ open class WebDriverContext(
 
     private val browserManager = driverPoolManager.browserManager
 
-    private val browser get() = browserManager.findBrowser(browserId) as? AbstractBrowser
+    private val browser get() = browserManager.findBrowserOrNull(browserId) as? AbstractBrowser
 
     /**
      * The driver context is active if the following conditions meet:

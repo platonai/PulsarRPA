@@ -1,20 +1,19 @@
 package ai.platon.pulsar.persist.tools
 
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.experimental.WebAsset
 import org.apache.commons.lang3.StringUtils
 import kotlin.reflect.KType
 import kotlin.reflect.full.declaredMemberFunctions
 
 class WebPageCodeGenerator {
-    
+
     fun generateJavaInterface() {
         val properties = WebPage::class.declaredMemberFunctions
             .filter { it.isOpen }
             .filter { it.name.startsWith("get") }
             .map {
                 convertReturnType(it.returnType) + " " +
-                it.name + "();"
+                        it.name + "();"
             }
 
         val clazz = """
@@ -25,9 +24,9 @@ class WebPageCodeGenerator {
 
         println(clazz)
     }
-    
+
     fun generateJavaClassWithWebPageImpl() {
-        val getters = WebAsset::class.declaredMemberFunctions
+        val getters = WebPage::class.declaredMemberFunctions
             .filter { it.isOpen }
             .filter { it.name.startsWith("get") }
             .map {
@@ -42,15 +41,15 @@ class WebPageCodeGenerator {
         val properties = getters.zip(setters).map { it.first + "\n" + it.second }
 
         val clazz = """
-            |class WebPage implements WebAsset {
+            |class WebPageX implements WebPage {
             |    private final WebPageImpl impl;
             |    ${properties.joinToString("\n")}
             |}
         """.trimMargin()
-        
+
         println(clazz)
     }
-    
+
     fun generateJavaImmutableClass() {
         val properties = WebPage::class.declaredMemberFunctions
             .filter { it.isOpen }
@@ -76,8 +75,8 @@ class WebPageCodeGenerator {
             .map {
                 "val " + StringUtils.uncapitalize(it.name.substringAfter("get")) +
                         ": " + it.returnType.toString().filter { it != '!' }
-                            .replace("kotlin.", "")
-                            .replace("java.time.", "")
+                    .replace("kotlin.", "")
+                    .replace("java.time.", "")
             }
 
         val clazz = """

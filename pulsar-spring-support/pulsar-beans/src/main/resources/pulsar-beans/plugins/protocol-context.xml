@@ -17,7 +17,6 @@
     </bean>
 
     <bean id="webDriverFactory" class="ai.platon.pulsar.protocol.browser.driver.WebDriverFactory">
-        <constructor-arg ref="webDriverSettings"/>
         <constructor-arg ref="browserManager"/>
         <constructor-arg ref="conf"/>
     </bean>

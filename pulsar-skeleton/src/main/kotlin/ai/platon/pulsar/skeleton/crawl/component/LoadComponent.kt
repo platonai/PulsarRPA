@@ -9,12 +9,10 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.persist.ProtocolStatus
-import ai.platon.pulsar.persist.RetryScope
-import ai.platon.pulsar.persist.WebDb
-import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.model.ActiveDOMStat
+import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.skeleton.common.AppStatusTracker
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
@@ -78,15 +76,13 @@ class LoadComponent(
     private val taskLogger = LoggerFactory.getLogger(LoadComponent::class.java.name + ".Task")
     private val tracer = logger.takeIf { it.isTraceEnabled }
 
-    private val loadStrategy = immutableConfig.get(LOAD_STRATEGY, "SIMPLE")
-
     private val deactivateFetchComponent1 = immutableConfig.getBoolean(LOAD_DEACTIVATE_FETCH_COMPONENT, false)
 
     /**
      * Deactivate the fetch component, ensuring that all pages are loaded exclusively from storage
      * and never fetched from the Internet.
      *
-     * If a page is not found in the local storage, return WebPage.NIL.
+     * If a page is not found in the local storage, return WebPageImpl.NIL.
      * */
     private val deactivateFetchComponent = deactivateFetchComponent1
 
@@ -101,7 +97,7 @@ class LoadComponent(
 
     @Volatile
     private var numWrite = 0
-    private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
+    private val abnormalPage get() = GoraWebPage.NIL.takeIf { !isActive }
 
     private var reportCount = AtomicInteger()
     private val batchTaskCount = AtomicInteger()
@@ -131,6 +127,7 @@ class LoadComponent(
      * */
     suspend fun open(normURL: NormURL, driver: WebDriver): WebPage {
         val page = createPageShell(normURL)
+        require(page is AbstractWebPage)
         require(page.hasVar(VAR_REFRESH))
         val state = page.getVar(VAR_REFRESH)
         require(state is CheckState)
@@ -341,7 +338,7 @@ class LoadComponent(
     private fun createPageShellOrNilWithEventHandlers(normURL: NormURL): WebPage {
         if (normURL.isNil) {
             doHandleLoadEventWithoutFetch(normURL)
-            return WebPage.NIL
+            return GoraWebPage.NIL
         }
 
         tracer?.trace("Loading normURL, creating page shell ... | {}", normURL.configuredUrl)
@@ -354,7 +351,7 @@ class LoadComponent(
 
         if (deactivateFetchComponent && shouldFetch(page)) {
             doHandleLoadEventWithoutFetch(normURL)
-            return WebPage.NIL
+            return GoraWebPage.NIL
         }
 
         return page
@@ -362,6 +359,7 @@ class LoadComponent(
 
     @Throws(Exception::class)
     private fun fetchContentIfNecessary(normURL: NormURL, page: WebPage) {
+        require(page is AbstractWebPage)
         require(page.isNotInternal) { "Page should not be internal | ${page.configuredUrl}" }
 
         // double check is OK
@@ -376,6 +374,7 @@ class LoadComponent(
 
     @Throws(Exception::class)
     private suspend fun fetchContentIfNecessaryDeferred(normURL: NormURL, page: WebPage) {
+        require(page is AbstractWebPage)
         when {
             page.hasVar(VAR_CONNECT) -> fetchContentDeferred(page, normURL)
             page.removeVar(VAR_REFRESH) != null -> fetchContentDeferred(page, normURL)
@@ -400,6 +399,7 @@ class LoadComponent(
 
         val cachedPage = getCachedPageOrNull(normURL)
         var page = FetchEntry.createPageShell(normURL)
+        require(page is GoraWebPage)
 
         if (cachedPage != null) {
             pageCacheHits.incrementAndGet()
@@ -415,6 +415,7 @@ class LoadComponent(
 
             // TODO: test the dirty flag
             // do not persist this copy
+            require(page is GoraWebPage)
             page.unbox().clearDirty()
             require(!page.isFetched)
             require(page.isNotInternal)
@@ -422,18 +423,7 @@ class LoadComponent(
             // get the metadata of the page from the database, this is very fast for a crawler
             // load page content and page model lazily, if we load page content and page model every time,
             // the underlying storage may crash due to the stress.
-            val loadedPage = when (loadStrategy) {
-                "PARTIAL_LAZY" -> {
-                    webDb.getOrNull(normURL.spec, fields = PAGE_FIELDS)?.also {
-                        it.setLazyFieldLoader(LazyFieldLoader(normURL.spec, webDb))
-                    }
-                }
-
-                else -> {
-                    webDb.getOrNull(normURL.spec)
-                }
-            }
-
+            val loadedPage = webDb.getOrNull(normURL.spec)
             dbGetCount.incrementAndGet()
             if (loadedPage != null) {
                 // override the old variables: args, href, etc
@@ -457,6 +447,7 @@ class LoadComponent(
             else -> fetchState(page, options)
         }
 
+        require(page is AbstractWebPage)
         page.setVar(VAR_FETCH_STATE, state)
         val refresh = state.code in FetchState.refreshCodes
         if (refresh) {
@@ -544,7 +535,7 @@ class LoadComponent(
     private fun doHandleOnLoadedEvent(normURL: NormURL, page: WebPage? = null) {
         val url = normURL.spec
         val detail = normURL.detail
-        val page0 = page ?: WebPage.NIL
+        val page0 = page ?: GoraWebPage.NIL
 
         try {
             // we might use the cached page's content in after load handler
@@ -608,8 +599,9 @@ class LoadComponent(
             // load the content of the page
             val contentPage = webDb.getOrNull(page.url, GWebPage.Field.CONTENT)
             if (contentPage != null) {
-                page.content = contentPage.content
+                page.setByteBufferContent(contentPage.content)
                 // TODO: test the dirty flag
+                require(page is GoraWebPage)
                 page.unbox().clearDirty(GWebPage.Field.CONTENT.index)
             }
         }
@@ -662,11 +654,13 @@ class LoadComponent(
     }
 
     private fun shouldFetch(page: WebPage): Boolean {
+        require(page is AbstractWebPage)
         return page.hasVar(VAR_REFRESH)
     }
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
         // require(page.options == options)
+        require(page is AbstractWebPage)
         page.setVar(VAR_PREV_FETCH_TIME_BEFORE_UPDATE, page.prevFetchTime)
         globalCache.fetchingCache.add(page.url)
         logger.takeIf { it.isDebugEnabled }?.debug("Loading url | {} {}", page.url, page.args)
@@ -722,12 +716,7 @@ class LoadComponent(
         globalCache.fetchingCache.remove(page.url)
     }
 
-    /**
-     * TODO: FetchSchedule.shouldFetch, crawlStatus and FetchReason should keep consistent
-     * */
     private fun getFetchStateForExistPage(page: WebPage, options: LoadOptions): CheckState {
-        // TODO: crawl status is better to decide the fetch reason
-        val crawlStatus = page.crawlStatus
         val protocolStatus = page.protocolStatus
 
         if (options.refresh) {
@@ -812,6 +801,7 @@ class LoadComponent(
         // The content is loaded from cache, the content remains unchanged, do not persist it
         // TODO: check the logic again
         if (page.isCached) {
+            require(page is GoraWebPage)
             page.unbox().clearDirty(GWebPage.Field.CONTENT.index)
             assert(!page.unbox().isContentDirty)
         }
@@ -860,7 +850,7 @@ class LoadComponent(
     class LazyFieldLoader(
         val url: String,
         val db: WebDb
-    ): java.util.function.Function<String, GWebPage?> {
+    ) : java.util.function.Function<String, GWebPage?> {
         override fun apply(field: String): GWebPage? {
             return db.get0(url, false, arrayOf(field))
         }

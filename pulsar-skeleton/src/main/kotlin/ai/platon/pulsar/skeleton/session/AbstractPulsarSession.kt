@@ -18,6 +18,7 @@ import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
@@ -99,15 +100,28 @@ abstract class AbstractPulsarSession(
     fun registerClosable(closable: AutoCloseable) = ensureActive { closableObjects.add(closable) }
     
     override fun disablePDCache() = run { enablePDCache = false }
-    
+
+    /**
+     * Parse the args and create a LoadOptions instance.
+     *
+     * Note: if the url is submitted, the session is the one from a crawler loop such as StreamingCrawlerLoop.
+     *
+     * @param options The options to normalize.
+     * */
+    override fun normalize(options: LoadOptions): LoadOptions {
+        options.conf = sessionConfig.toVolatileConfig()
+        require(options.conf.fallbackConfig === sessionConfig)
+        return options
+    }
+
     override fun options(args: String) = options(args, null)
-    
+
     override fun options(args: String, event: PageEventHandlers?): LoadOptions {
         val opts = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
         if (event != null) {
             opts.rawEvent = event
         }
-        return opts
+        return normalize(opts)
     }
     
     override fun property(name: String): String? {
@@ -120,33 +134,37 @@ abstract class AbstractPulsarSession(
     
     override fun normalize(url: String) = normalize(url, "")
     
-    override fun normalize(url: String, args: String, toItemOption: Boolean) =
-        context.normalize(url, options(args), toItemOption)
-    
-    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean) =
-        context.normalize(url, options, toItemOption)
-    
-    override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean) =
-        context.normalizeOrNull(url, options, toItemOption)
+    override fun normalize(url: String, args: String, toItemOption: Boolean): NormURL {
+        return context.normalize(url, options(args), toItemOption)
+    }
+
+    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormURL {
+        return context.normalize(url, normalize(options), toItemOption)
+    }
+
+    override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormURL? {
+        return context.normalizeOrNull(url, normalize(options), toItemOption)
+    }
     
     override fun normalize(urls: Iterable<String>) = normalize(urls, options(), false)
     
     override fun normalize(urls: Iterable<String>, args: String, toItemOption: Boolean) =
         normalize(urls, options(args), toItemOption)
     
-    override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean) =
-        context.normalize(urls, options, toItemOption)
-    
+    override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormURL> {
+        return context.normalize(urls, normalize(options), toItemOption)
+    }
+
     override fun normalize(url: UrlAware) = normalize(url, options())
     
     override fun normalize(url: UrlAware, args: String, toItemOption: Boolean) =
         normalize(url, options(args), toItemOption)
     
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean) =
-        context.normalize(url, options, toItemOption)
+        context.normalize(url, normalize(options), toItemOption)
     
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean) =
-        context.normalizeOrNull(url, options, toItemOption)
+        context.normalizeOrNull(url, normalize(options), toItemOption)
     
     override fun normalize(urls: Collection<UrlAware>) = normalize(urls, options(), false)
     
@@ -154,7 +172,7 @@ abstract class AbstractPulsarSession(
         normalize(urls, options(args), toItemOption)
     
     override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean) =
-        context.normalize(urls, options, toItemOption)
+        context.normalize(urls, normalize(options), toItemOption)
     
     override fun get(url: String): WebPage = ensureActive { context.get(url) }
     
@@ -196,12 +214,12 @@ abstract class AbstractPulsarSession(
     override fun load(url: UrlAware, args: String): WebPage = load(normalize(url, options(args)))
     
     override fun load(url: UrlAware, options: LoadOptions): WebPage = load(normalize(url, options))
-    
+
     override fun load(url: NormURL): WebPage {
         if (!enablePDCache) {
             return context.load(url)
         }
-        
+
         return createPageWithCachedCoreOrNull(url) ?: loadAndCache(url)
     }
     
@@ -228,17 +246,17 @@ abstract class AbstractPulsarSession(
     override fun loadAll(urls: Iterable<String>, args: String) = loadAll(urls, options(args))
     
     override fun loadAll(urls: Iterable<String>, options: LoadOptions) = loadAll(normalize(urls, options))
-    
+
     override fun loadAll(urls: Collection<UrlAware>) = loadAll(urls, options())
-    
+
     override fun loadAll(urls: Collection<UrlAware>, args: String) = loadAll(urls, options(args))
-    
+
     override fun loadAll(urls: Collection<UrlAware>, options: LoadOptions) = loadAll(normalize(urls, options))
     
     override fun loadAll(normUrls: List<NormURL>) = context.loadAll(normUrls)
     
     override fun loadAsync(url: String) = loadAsync(normalize(url))
-    
+
     override fun loadAsync(url: String, args: String) = loadAsync(normalize(url, args))
     
     override fun loadAsync(url: String, options: LoadOptions) = loadAsync(normalize(url, options))
@@ -252,7 +270,7 @@ abstract class AbstractPulsarSession(
     override fun loadAsync(url: NormURL) = context.loadAsync(url)
     
     override fun loadAllAsync(urls: Iterable<String>) = loadAllAsync(normalize(urls))
-    
+
     override fun loadAllAsync(urls: Iterable<String>, args: String) = loadAllAsync(normalize(urls, args))
     
     override fun loadAllAsync(urls: Iterable<String>, options: LoadOptions) = loadAllAsync(normalize(urls, options))
@@ -441,17 +459,23 @@ abstract class AbstractPulsarSession(
     
     override fun chat(userMessage: String, systemMessage: String) = context.chat(userMessage, systemMessage)
 
-    override fun chat(page: WebPage, prompt: String) = chat(prompt + "\n\n" + page.contentAsString)
+    override fun chat(page: WebPage, prompt: String) = chat(prompt +
+            "\n\nThere is the source code of the page:\n\n\n" + page.contentAsString)
 
-    override fun chat(prompt: String, page: WebPage) = chat(prompt + "\n\n" + page.contentAsString)
+    override fun chat(prompt: String, page: WebPage) = chat(prompt +
+            "\n\nThere is the source code of the page:\n\n\n" + page.contentAsString)
 
-    override fun chat(document: FeaturedDocument, prompt: String) = chat(prompt + "\n\n" + document.text)
+    override fun chat(document: FeaturedDocument, prompt: String) = chat(prompt +
+            "\n\nThere is the text content of the page:\n\n\n" + document.text)
 
-    override fun chat(prompt: String, document: FeaturedDocument) = chat(prompt + "\n\n" + document.text)
+    override fun chat(prompt: String, document: FeaturedDocument) = chat(prompt +
+            "\n\nThere is the text content of the page:\n\n\n" + document.text)
 
-    override fun chat(element: Element, prompt: String) = chat(prompt + "\n\n" + element.text())
+    override fun chat(element: Element, prompt: String) = chat(prompt +
+            "\n\nThere is the text content of the selected element:\n\n\n" + element.text())
 
-    override fun chat(prompt: String, element: Element) = chat(prompt + "\n\n" + element.text())
+    override fun chat(prompt: String, element: Element) = chat(prompt +
+            "\n\nThere is the text content of the selected element:\n\n\n" + element.text())
     /**
      * Instructs the webdriver to perform a series of actions based on the given prompt.
      * This function converts the prompt into a sequence of webdriver actions, which are then executed.
@@ -466,7 +490,7 @@ abstract class AbstractPulsarSession(
         }
 
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
-        val tta = TextToAction(this)
+        val tta = TextToAction(sessionConfig)
         val actions = tta.generateWebDriverActions(prompt)
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
@@ -611,6 +635,8 @@ abstract class AbstractPulsarSession(
         if (cachedPage != null) {
             // the cached page can be or not be persisted, but not guaranteed
             // if a page is loaded from cache, the content remains unchanged and should not persist to database
+            require(cachedPage is GoraWebPage)
+            require(page is GoraWebPage)
             page.unsafeSetGPage(cachedPage.unbox())
             
             page.isCached = true

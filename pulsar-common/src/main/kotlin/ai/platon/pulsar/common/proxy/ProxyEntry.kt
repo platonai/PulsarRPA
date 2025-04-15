@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.collect.ConcurrentHashMultiset
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
-import org.apache.http.client.utils.URIBuilder
+import org.apache.hc.core5.net.URIBuilder
 import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Proxy

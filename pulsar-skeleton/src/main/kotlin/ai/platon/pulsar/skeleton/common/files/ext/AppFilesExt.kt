@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.dom.Documents
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
@@ -25,7 +26,7 @@ fun AppFiles.export(
 ): Path {
     val dirName = AppPaths.fromHost(page.url)
 
-    val document = Documents.parse(content, page.baseUrl)
+    val document = Documents.parse(content, page.baseURI)
     document.absoluteLinks()
     val prettyHtml = document.prettyHtml
     val length = prettyHtml.length
@@ -44,7 +45,9 @@ fun AppFiles.export(
 
     page.metadata.set(Name.ORIGINAL_EXPORT_PATH, path.toString())
 
-    page.setVar(Name.ORIGINAL_EXPORT_PATH.name, path)
+    if (page is AbstractWebPage) {
+        page.setVar(Name.ORIGINAL_EXPORT_PATH.name, path)
+    }
 
     return path
 }

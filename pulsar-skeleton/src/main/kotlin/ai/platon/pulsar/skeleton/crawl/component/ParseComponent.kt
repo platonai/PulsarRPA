@@ -3,12 +3,12 @@ package ai.platon.pulsar.skeleton.crawl.component
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
-import ai.platon.pulsar.skeleton.crawl.filter.CrawlFilters
-import ai.platon.pulsar.skeleton.crawl.parse.PageParser
-import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
+import ai.platon.pulsar.persist.model.GoraWebPage
+import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
+import ai.platon.pulsar.skeleton.crawl.parse.PageParser
+import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicInteger
  * The parse component.
  */
 class ParseComponent(
-        val crawlFilters: CrawlFilters,
         val pageParser: PageParser,
         val globalCacheFactory: GlobalCacheFactory,
         val conf: ImmutableConfig
@@ -30,7 +29,7 @@ class ParseComponent(
     private val logger = LoggerFactory.getLogger(ParseComponent::class.java)
     private var traceInfo: ConcurrentHashMap<String, Any>? = null
 
-    constructor(globalCacheFactory: GlobalCacheFactory, conf: ImmutableConfig): this(CrawlFilters(conf), PageParser(conf), globalCacheFactory, conf)
+    constructor(globalCacheFactory: GlobalCacheFactory, conf: ImmutableConfig): this(PageParser(conf), globalCacheFactory, conf)
 
     fun parse(page: WebPage, reparseLinks: Boolean = false, noLinkFilter: Boolean = true): ParseResult {
         beforeParse(page, reparseLinks, noLinkFilter)
@@ -40,6 +39,7 @@ class ParseComponent(
     private fun beforeParse(page: WebPage, reparseLinks: Boolean, noLinkFilter: Boolean) {
         numParses.incrementAndGet()
 
+        require(page is GoraWebPage)
         if (reparseLinks) {
             page.variables[Name.FORCE_FOLLOW] = AppConstants.YES_STRING
             page.variables[Name.REPARSE_LINKS] = AppConstants.YES_STRING
@@ -52,6 +52,7 @@ class ParseComponent(
     }
 
     private fun afterParse(page: WebPage, result: ParseResult) {
+        require(page is GoraWebPage)
         page.variables.remove(Name.REPARSE_LINKS)
         page.variables.remove(Name.FORCE_FOLLOW)
         page.variables.remove(Name.PARSE_LINK_FILTER_DEBUG_LEVEL)

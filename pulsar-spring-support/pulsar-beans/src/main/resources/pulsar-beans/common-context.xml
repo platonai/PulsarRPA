@@ -43,14 +43,11 @@
         <constructor-arg ref="conf" />
     </bean>
 
-    <bean id="globalCache" class="ai.platon.pulsar.skeleton.crawl.common.GlobalCache">
+    <bean id="globalCacheFactory" class="ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory">
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="globalCacheFactory" class="ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory">
-        <constructor-arg ref="globalCache"/>
-        <constructor-arg ref="conf"/>
-    </bean>
+    <bean id="globalCache" factory-bean="globalCacheFactory" factory-method="getGlobalCache"/>
 
     <bean id="crawlLoop" class="ai.platon.pulsar.skeleton.crawl.impl.StreamingCrawlLoop">
         <constructor-arg ref="conf"/>

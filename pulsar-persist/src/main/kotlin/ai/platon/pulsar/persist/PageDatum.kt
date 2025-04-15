@@ -12,7 +12,7 @@ import java.lang.ref.WeakReference
 import java.util.*
 
 /**
- * The page datum collected from a real page to update a WebPage.
+ * The page datum collected from a active page open in the browser, it is used to update a WebPage.
  * */
 class PageDatum(
     /**
@@ -21,6 +21,18 @@ class PageDatum(
      * and the url also can differ from the final location of the page, because the page can be redirected in the browser.
      */
     val url: String,
+    /**
+     * In javascript, the baseURI is a property of Node, it's the absolute base URL of the
+     * document containing the node. A baseURI is used to resolve relative URLs.
+     *
+     * This property is retrieved from javascript `document.baseURI`.
+     *
+     * The base URL is determined as follows:
+     * 1. By default, the base URL is the location of the document
+     *    (as determined by window.location).
+     * 2. If the document has an `<base>` element, its href attribute is used.
+     * */
+    var baseURI: String = url,
     /**
      * Returns the document location as a string.
      *
@@ -94,6 +106,7 @@ class PageDatum(
     var page = WeakReference<WebPage>(null)
 
     constructor(page: WebPage): this(page.url) {
+        require(page is AbstractWebPage)
         this.page = WeakReference(page)
         page.pageDatum = this
     }

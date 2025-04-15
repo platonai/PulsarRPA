@@ -1,0 +1,5 @@
+*.pyc
+docs/_build/
+pypulsar.egg-info
+build/
+dist/

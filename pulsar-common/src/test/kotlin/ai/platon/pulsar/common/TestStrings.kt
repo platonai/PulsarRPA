@@ -4,6 +4,14 @@ import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
 
 class TestStrings {
+
+    @Test
+    fun testTrimEnd() {
+        val s = "https://amazon.com/"
+        val s2 = s.trimEnd('/')
+        assertEquals("https://amazon.com", s2)
+    }
+
     @Test
     fun testHTMLCharsetReplacer() {
         val html = "<html><head><meta charset=\"GBK\"></head><body><div>Hello World</div></body></html>"

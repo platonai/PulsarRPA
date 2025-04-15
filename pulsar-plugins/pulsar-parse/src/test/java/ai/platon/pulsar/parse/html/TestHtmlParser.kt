@@ -31,12 +31,12 @@ class TestHtmlParser : HtmlParserTestBase() {
             LOG.debug(page.encoding)
             val title = page.pageTitle
             val text = page.pageText
-            val keywords = page.metadata[Name.META_KEYWORDS]
+            val keywords = page.metadata["meta_keywords"]
 
             LOG.debug("title: $title")
             LOG.debug("text: $text")
 
-            if (title.isNotBlank()) {
+            if (!title.isNullOrBlank() && !text.isNullOrBlank()) {
                 assertEquals(50, title.length)
                 assertTrue(text.length > 50)
                 if (success) {

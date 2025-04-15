@@ -4,12 +4,9 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
 import crawlercommons.robots.BaseRobotRules
-import org.slf4j.LoggerFactory
 
 /**
  * A retriever for url content. Implemented by protocol extensions.
- *
- * TODO: protocols are designed to be initialized at setConf() method, which is not good
  */
 interface Protocol : LazyConfigurable, AutoCloseable {
 
@@ -57,8 +54,4 @@ interface Protocol : LazyConfigurable, AutoCloseable {
     fun getRobotRules(page: WebPage): BaseRobotRules
 
     override fun close() {}
-
-    companion object {
-        val log = LoggerFactory.getLogger(Protocol::class.java)
-    }
 }

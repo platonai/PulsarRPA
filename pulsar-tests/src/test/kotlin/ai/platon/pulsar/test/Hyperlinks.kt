@@ -3,6 +3,7 @@ package ai.platon.pulsar.test
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
+import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
@@ -47,6 +48,7 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
                 }
 
                 println("............onLoaded " + page.id)
+                require(page is AbstractWebPage)
                 page.variables.variables.forEach { (t, u) -> println("$t $u") }
 
                 if (page.protocolStatus.isSuccess) {
@@ -75,6 +77,7 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onWillParseHTMLDocument")
                 println("............onWillParseHTMLDocument " + page.id)
                 println("$this " + page.loadEventHandlers)
+                require(page is AbstractWebPage)
                 page.variables[VAR_IS_SCRAPE] = true
                 null
             }
@@ -87,6 +90,7 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onHTMLDocumentParsed")
                 println("............onHTMLDocumentParsed " + page.id)
 //                assertSame(thisHandler, page.loadEvent)
+                require(page is AbstractWebPage)
                 assertTrue(page.hasVar(VAR_IS_SCRAPE))
             }
             onParsed.addFirst { page ->

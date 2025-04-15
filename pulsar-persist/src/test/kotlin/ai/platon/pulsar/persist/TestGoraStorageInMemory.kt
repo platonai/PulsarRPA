@@ -23,20 +23,16 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.persist.metadata.Mark
-import ai.platon.pulsar.persist.metadata.Name
+import ai.platon.pulsar.persist.model.GoraWebPage
 import org.apache.avro.util.Utf8
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.gora.memory.store.MemStore
 import org.apache.gora.store.DataStore
-import kotlin.test.*
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Tests basic Gora functionality by writing and reading webpages.
@@ -52,13 +48,13 @@ class TestGoraStorageInMemory {
     }
 
     private lateinit var webDb: WebDb
-    private val store: DataStore<String, GWebPage> get() = webDb.dataStore
+    private val store: DataStore<String, GWebPage> get() = webDb.dataStorageFactory.getOrCreatePageStore()
     private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
 
     @BeforeTest
     fun setup() {
         assertEquals(MEM_STORE_CLASS, conf.get(CapabilityTypes.STORAGE_DATA_STORE_CLASS))
-        assertEquals(MEM_STORE_CLASS, AutoDetectStorageProvider.detectDataStoreClassName(conf))
+        assertEquals(MEM_STORE_CLASS, DataStorageFactory.detectDataStoreClassName(conf))
         webDb = WebDb(conf)
 //        assertTrue(store.javaClass.name) { store is MemStore }
         if (store is MemStore) {
@@ -170,13 +166,11 @@ class TestGoraStorageInMemory {
             val max = 100
             for (i in 0 until max) {
                 val url = AppConstants.SHORTEST_VALID_URL + "/" + id + "/" + i
-                var page = WebPage.newWebPage(url, conf)
+                var page = GoraWebPage.newWebPage(url, conf)
                 page.location = url
                 page.pageText = "text"
                 page.distance = 0
                 page.headers.put("header1", "header1")
-                page.marks.put(Mark.FETCH, "mark1")
-                page.metadata[Name.CASH_KEY] = "metadata1"
                 page.inlinks["http://www.a.com/1"] = ""
                 page.inlinks["http://www.a.com/2"] = ""
                 store.put(url, page.unbox())
@@ -185,13 +179,10 @@ class TestGoraStorageInMemory {
                 // retrieve page and check title
                 val goraPage = store.get(url)
                 assertNotNull(goraPage)
-                page = WebPage.box(url, goraPage, conf)
+                page = GoraWebPage.box(url, goraPage, conf)
                 assertEquals("text", page.pageText)
                 assertEquals(0, page.distance.toLong())
                 assertEquals("header1", page.headers["header1"])
-                // assertNotEquals("mark1", page.getMark(Mark.FETCH));
-                assertEquals(Utf8("mark1"), page.marks[Mark.FETCH])
-                assertEquals("metadata1", page.metadata.getOrDefault(Name.CASH_KEY, ""))
                 assertEquals(2, page.inlinks.size.toLong())
             }
 

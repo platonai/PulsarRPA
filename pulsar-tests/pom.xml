@@ -14,18 +14,13 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>2.2.1-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-tests</artifactId>
     <name>Pulsar Tests</name>
 
     <dependencies>
-        <!-- Internal Dependencies -->
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-resources</artifactId>
-        </dependency>
         <!-- Internal Dependencies -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
@@ -51,14 +46,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-resources</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-            <version>${project.version}</version>
         </dependency>
         <!--
         If your build relies on dependency management support from Spring Boot, you should not import

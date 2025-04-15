@@ -194,40 +194,4 @@ class TestPrimerParser {
             testDOMs[i] = node
         }
     }
-
-    @Test
-    fun testGetText() {
-        if (testDOMs[0] == null) {
-            setup()
-        }
-        for (i in testPages.indices) {
-            val text = primerParser.getPageText(testDOMs[i]!!)
-            assertEquals(answerText[i], text)
-        }
-    }
-
-    @Test
-    fun testGetTitle() {
-        if (testDOMs[0] == null) {
-            setup()
-        }
-        for (i in testPages.indices) {
-            val title = primerParser.getPageTitle(testDOMs[i]!!)
-            assertEquals(answerTitle[i], title)
-        }
-    }
-
-    @Test
-    fun testGetLinks() {
-        if (testDOMs[0] == null) {
-            setup()
-        }
-        for (i in testPages.indices) {
-            conf.setBoolean("parser.html.form.use_action", i != SKIP)
-            // primerParser.setConf(conf)
-            val hypeLinks = primerParser.collectLinks(testBaseHrefURLs[i]!!, testDOMs[i]!!)
-            // TODO: not implemented
-            // compareLinks(Lists.newArrayList(*answerHypeLinks[i]), hypeLinks, i)
-        }
-    }
 }

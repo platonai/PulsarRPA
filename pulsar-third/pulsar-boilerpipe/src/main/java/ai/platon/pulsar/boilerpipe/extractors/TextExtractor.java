@@ -2,14 +2,11 @@ package ai.platon.pulsar.boilerpipe.extractors;
 
 import ai.platon.pulsar.boilerpipe.document.BoiTextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
-import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
 import ai.platon.pulsar.boilerpipe.sax.SAXInput;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 import org.xml.sax.InputSource;
 
-import java.io.IOException;
 import java.io.Reader;
-import java.net.URL;
 
 /**
  * Describes a complete filter pipeline.
@@ -36,23 +33,6 @@ public interface TextExtractor extends TextBlockFilter {
    */
   default String getText(String baseUrl, InputSource is) throws ProcessingException {
     return getText(new SAXInput().parse(baseUrl, is));
-  }
-
-  /**
-   * Extracts text from the HTML code available from the given {@link URL}. NOTE: This method is
-   * mainly to be used for show case purposes. If you are going to crawl the Web, consider using
-   * {@link #getText(String, InputSource)} instead.
-   *
-   * @param url The URL pointing to the HTML code.
-   * @return The extracted text.
-   * @throws ProcessingException
-   */
-  default String getText(URL url) throws ProcessingException {
-    try {
-      return getText(url.toString(), HTMLDownloader.fetch(url));
-    } catch (IOException e) {
-      throw new ProcessingException(e);
-    }
   }
 
   /**

@@ -19,7 +19,6 @@ import ai.platon.pulsar.common.ObjectCache
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator
 import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
 import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
@@ -30,12 +29,10 @@ import ai.platon.pulsar.protocol.browser.emulator.impl.PrivacyManagedBrowserFetc
 import ai.platon.pulsar.protocol.browser.impl.BrowserManager
 import ai.platon.pulsar.skeleton.crawl.fetch.WebDriverFetcher
 
-class DefaultWebDriverSettings(conf: ImmutableConfig): WebDriverSettings(conf)
-
 class DefaultBrowserManager(conf: ImmutableConfig): BrowserManager(conf)
 
 class DefaultWebDriverFactory(conf: ImmutableConfig)
-    : WebDriverFactory(DefaultWebDriverSettings(conf), DefaultBrowserManager(conf), conf)
+    : WebDriverFactory(DefaultBrowserManager(conf), conf)
 
 class DefaultWebDriverPoolManager(conf: ImmutableConfig) :
     WebDriverPoolManager(

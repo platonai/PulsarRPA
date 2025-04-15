@@ -1,8 +1,10 @@
 package ai.platon.pulsar.test2.browser
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
@@ -66,7 +68,8 @@ class WebDriverTestBase : TestBase() {
     protected val walmartUrl = "https://www.walmart.com/ip/584284401"
     protected val asin get() = productUrl.substringAfterLast("/dp/")
     protected val driverFactory get() = session.context.getBean(WebDriverFactory::class)
-    protected val settings get() = driverFactory.driverSettings
+    protected val browser by lazy { driverFactory.launchTempBrowser() }
+    protected val settings by lazy { BrowserSettings(conf) }
     protected val confuser get() = settings.confuser as SimpleScriptConfuser
 
     protected val expressions = """
@@ -83,7 +86,7 @@ class WebDriverTestBase : TestBase() {
             typeof(document.body)
             document.body.clientWidth
             
-            typeof(__pulsar_utils__)
+            typeof(__pulsar_)
             __pulsar_utils__.add(1, 1)
         """.trimIndent().split("\n").map { it.trim() }.filter { it.isNotBlank() }
 
@@ -113,6 +116,23 @@ class WebDriverTestBase : TestBase() {
         }
     }
 
+    protected fun runWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            browser.newDriver().use { driver ->
+                open(url, driver)
+
+                val pageSource = driver.pageSource()
+                val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
+                assumeTrue(
+                    { (pageSource?.length ?: 0) > PAGE_SOURCE_MIN_LENGTH },
+                    "Page source is too small | $display"
+                )
+
+                block(driver)
+            }
+        }
+    }
+
     protected fun runResourceWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
         runBlocking {
             driverFactory.launchTempBrowser().use {
@@ -120,6 +140,15 @@ class WebDriverTestBase : TestBase() {
                     openResource(url, driver)
                     block(driver)
                 }
+            }
+        }
+    }
+
+    protected fun runResourceWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            browser.newDriver().use { driver ->
+                openResource(url, driver)
+                block(driver)
             }
         }
     }
@@ -141,6 +170,12 @@ class WebDriverTestBase : TestBase() {
                     block(driver)
                 }
             }
+        }
+    }
+
+    protected fun runWebDriverTest(browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            browser.newDriver().use { block(it) }
         }
     }
 

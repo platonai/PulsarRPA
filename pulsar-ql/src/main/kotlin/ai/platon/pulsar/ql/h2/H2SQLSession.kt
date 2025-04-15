@@ -9,7 +9,7 @@ import ai.platon.pulsar.ql.common.annotation.UDFGroup
 import ai.platon.pulsar.ql.common.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.udas.GroupCollect
 import ai.platon.pulsar.ql.h2.udas.GroupFetch
-import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
+import ai.platon.pulsar.ql.h2.udfs.*
 import com.google.common.reflect.ClassPath
 import org.h2.api.Aggregate
 import org.h2.engine.Constants
@@ -32,11 +32,32 @@ class H2SQLSession(
     private var totalUdas = AtomicInteger()
     private val closed = AtomicBoolean()
 
+    // NOTE: there are problems to load classes from package dynamically if we create a fat-jar using spring-boot,
+    // so we have to add UDF class SAMPLES here manually.
+    private val defaultUdfClasses = listOf(
+        AdminFunctions::class,
+        ArrayFunctions::class,
+        BoxFunctions::class,
+        CommonFunctions::class,
+        CommonFunctionTables::class,
+        DateTimeFunctions::class,
+        DomFunctions::class,
+        LLMFunctions::class,
+        DomFunctionTables::class,
+        DomInlineSelectFunctions::class,
+        DomSelectFunctions::class,
+        MetadataFunctions::class,
+        MetadataFunctionTables::class,
+        StringFunctions::class,
+    )
+
     init {
         synchronized(AbstractSQLSession::class.java) {
-            udfClassSamples.add(CommonFunctions::class)
+//            udfClassSamples.add(CommonFunctions::class)
+            defaultUdfClasses.toCollection(udfClassSamples)
 
             registerDefaultUdfs(sessionDelegate.h2session)
+
             registerUdaf(sessionDelegate.h2session, GroupCollect::class)
             registerUdaf(sessionDelegate.h2session, GroupFetch::class)
         }
@@ -54,11 +75,13 @@ class H2SQLSession(
         val udfClasses = udfClassSamples.flatMap { loadTopLevelClasses(it) }
             .filter { it.annotations.any { it is UDFGroup } }
 
-        registeredAllUdfClasses.addAll(udfClasses)
+        registeredAllUdfClasses.addAll(udfClassSamples.map { it.java } + udfClasses)
+        registeredAllUdfClasses.forEach { registerUdfs(session, it.kotlin) }
+
         registeredAllUdfClasses.forEach { registerUdfs(session, it.kotlin) }
 
         if (totalUdfs.get() > 0) {
-            log.debug("Added total {} new UDFs for session {}", totalUdfs, session)
+            log.info("Added total {} new UDFs for session {}", totalUdfs, session)
         }
     }
 

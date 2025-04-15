@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
 import com.google.common.collect.Lists
 import org.apache.avro.util.Utf8
 import org.apache.gora.memory.store.MemStore
@@ -27,7 +28,7 @@ class TestGoraStorage {
         private val LOG = LoggerFactory.getLogger(TestGoraStorage::class.java)
         private val conf = VolatileConfig().also { it[CapabilityTypes.STORAGE_CRAWL_ID] = "test" }
         private val webDb = WebDb(conf)
-        private var store: DataStore<String, GWebPage> = webDb.dataStore
+        private var store: DataStore<String, GWebPage> = webDb.dataStorageFactory.getOrCreatePageStore()
         private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
         
         @AfterAll
@@ -211,6 +212,8 @@ class TestGoraStorage {
         
         createExamplePage()
         var page = webDb.get(exampleUrl)
+        require(page is GoraWebPage)
+
         page.links = ArrayList()
         // page.getLinks().clear();
         assertTrue(page.links.isEmpty())
@@ -246,16 +249,14 @@ class TestGoraStorage {
         webDb.flush()
         
         LOG.debug("Random url: $exampleUrl")
-        val page = WebPage.newWebPage(exampleUrl, conf)
+        val page = GoraWebPage.newWebPage(exampleUrl, conf)
         
         for (i in 1..19) {
             val url = AppConstants.EXAMPLE_URL + "/" + i
             val url2 = AppConstants.EXAMPLE_URL + "/" + (i - 1)
             val link = HyperlinkPersistable.parse(url2).unbox()
             link.anchor = "test anchor ord:1"
-            
-            page.liveLinks[link.url] = link
-            page.liveLinks = page.liveLinks
+
             page.links.add(url2)
             page.inlinks[url] = url2
         }

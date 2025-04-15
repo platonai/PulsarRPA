@@ -17,11 +17,6 @@ import java.util.stream.Collectors;
 
 public class ParseStatus implements ParseStatusCodes {
 
-    public static final String REFRESH_HREF = "refreshHref";
-
-    public static final String REFRESH_TIME = "refreshTime";
-
-
     public static final HashMap<Short, String> majorCodes = new HashMap<>();
 
     public static final HashMap<Integer, String> minorCodes = new HashMap<>();
