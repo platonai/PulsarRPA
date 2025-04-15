@@ -13,3 +13,6 @@ cd "$APP_HOME" || exit
 
 find "$APP_HOME"/bin -type f -print0 | xargs -0 dos2unix
 dos2unix "$APP_HOME"/VERSION
+
+# find all bash files and add executable permission
+find "$APP_HOME"/bin -type f -name "*.sh" -print0 | xargs -0 chmod +x
