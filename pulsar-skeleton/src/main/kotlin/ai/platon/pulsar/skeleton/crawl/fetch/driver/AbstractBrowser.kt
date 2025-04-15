@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -22,6 +23,11 @@ abstract class AbstractBrowser(
     }
 
     private val logger = getLogger(this)
+
+    /**
+     * Temporary added in 2.1.x for test only
+     * */
+    var tmpContext: PrivacyContext? = null
 
     /**
      * All drivers, including the recovered drivers and the reused drivers.
