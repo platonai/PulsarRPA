@@ -44,6 +44,8 @@ if [ -z "$VERSION" ]; then
   echo "❌ VERSION file is empty."
   exit 1
 fi
+# 去掉-SNAPSHOT后缀
+VERSION=${VERSION%-SNAPSHOT}
 echo "🏷️ Version: $VERSION"
 
 # ========== STEP 3: 构建镜像 ==========
