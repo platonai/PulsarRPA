@@ -4,7 +4,7 @@ set -e  # 出错即停止
 set -o pipefail
 
 # === 配置分支名 ===
-MAIN_BRANCH="main"
+MAIN_BRANCH="master"
 SOURCE_BRANCH="release"
 BACKUP_BRANCH="backup-main-$(date +%Y%m%d-%H%M%S)"
 
