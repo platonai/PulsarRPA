@@ -21,7 +21,7 @@ TAG="v$VERSION"
 function replace_version_in_readme_files() {
   echo "Replacing SNAPSHOT version with the release version in readme files"
 
-  find . -type f -name "*.md" -exec sed -i '' "s/$SNAPSHOT_VERSION/$VERSION/g" {} \;
+  find . -type f -name "*.md" -exec sed -i "s/$SNAPSHOT_VERSION/$VERSION/g" {} \;
   git commit -m "Replace SNAPSHOT version with the release version in readme files"
   git push
 }
