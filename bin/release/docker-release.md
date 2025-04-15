@@ -88,6 +88,18 @@ echo "   - $IMAGE_NAME:latest"
 
 ---
 
+##  在容器中执行：
+```bash
+docker run -d -p 8182:8182 galaxyeye88/pulsar-rpa
+```
+### 参数说明：
+
+* -d: 后台运行容器（detached 模式）。
+* -p 8182:8182: 将主机的 8182 端口映射到容器的 8182 端口。 格式为 <主机端口>:<容器端口>。
+* galaxyeye88/pulsar-rpa: 指定要运行的 Docker 镜像。
+
+容器运行成功后，你可以通过 `docker ps` 命令查看容器的运行状态。
+
 ## 🧠 可选增强（告诉我即可加上）：
 
 | 增强功能             | 说明                            |
