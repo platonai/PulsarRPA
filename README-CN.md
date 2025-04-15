@@ -11,13 +11,52 @@
 PulsarRPA 解决了现代网页自动化的挑战，确保即使从最**复杂**和**动态**的网站中也能实现**准确**且**全面**的数据提取。
 
 
-## 视频
+## 🎥 视频
 
 YouTube:
 [![Watch the video](https://img.youtube.com/vi/rF4wXbFlPXk/0.jpg)](https://www.youtube.com/watch?v=rF4wXbFlPXk)
 
 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
+
+
+
+## 🐳 Docker
+
+```bash
+docker pull galaxyeye88/pulsar-rpa:latest
+docker run -d -p 8182:8182 galaxyeye88/pulsar-rpa:latest
+```
+
+Your first request:
+
+Linux:
+
+
+```bash
+curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+  select
+      llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
+      dom_base_uri(dom) as url,
+      dom_first_text(dom, '#productTitle') as title,
+      dom_first_slim_html(dom, 'img:expr(width > 400)') as img
+  from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+"
+```
+
+Windows:
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8182/api/x/e" -Method Post -Headers @{ "Content-Type" = "text/plain" } -Body @"
+  select
+      llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
+      dom_base_uri(dom) as url,
+      dom_first_text(dom, '#productTitle') as title,
+      dom_first_slim_html(dom, 'img:expr(width > 400)') as img
+  from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+"@
+```
+
 
 ## 🚀 开始
 

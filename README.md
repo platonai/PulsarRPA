@@ -11,7 +11,7 @@ Designed for **large-scale automation**, it excels in **browser automation**, **
 and **data extraction**. PulsarRPA tackles the challenges of modern web automation,
 ensuring **accurate** and **comprehensive** data extraction even from the most **complex** and **dynamic** websites.
 
-## Videos
+## 🎥 Videos
 
 YouTube:
 [![Watch the video](https://img.youtube.com/vi/lQXSSQSNQ7I/0.jpg)](https://www.youtube.com/watch?v=lQXSSQSNQ7I)
@@ -23,13 +23,40 @@ Bilibili:
 
 
 
+## 🐳 Docker
 
+```bash
+docker pull galaxyeye88/pulsar-rpa:latest
+docker run -d -p 8182:8182 galaxyeye88/pulsar-rpa:latest
+```
 
+Your first request:
 
+Linux:
 
+```bash
+curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+  select
+      llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
+      dom_base_uri(dom) as url,
+      dom_first_text(dom, '#productTitle') as title,
+      dom_first_slim_html(dom, 'img:expr(width > 400)') as img
+  from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+"
+```
 
+Windows:
 
-
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8182/api/x/e" -Method Post -Headers @{ "Content-Type" = "text/plain" } -Body @"
+  select
+      llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
+      dom_base_uri(dom) as url,
+      dom_first_text(dom, '#productTitle') as title,
+      dom_first_slim_html(dom, 'img:expr(width > 400)') as img
+  from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+"@
+```
 
 ## 🚀 Quick start
 
@@ -224,7 +251,7 @@ When PulsarRPA runs as a REST service, X-SQL can be used to scrape webpages or t
 
 ## Build from Source
 
-```
+```shell
 git clone https://github.com/platonai/PulsarRPA.git
 cd PulsarRPA && bin/build-run.sh
 ```
@@ -241,8 +268,20 @@ bin/pulsar
 
 Scrape a webpage in another terminal window:
 
+Linux:
+
 ```shell
 bin/scrape.sh
+```
+
+Windows:
+
+```shell
+bin/scrape.ps1
+```
+Or
+```shell
+bin/scrape.bat
 ```
 
 The bash script is straightforward. It merely uses curl to send a POST request with an X-SQL.
