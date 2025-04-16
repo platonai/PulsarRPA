@@ -46,7 +46,7 @@ https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey?apikey=xxx
 
 ## 🚀 Quick start
 
-### For beginners - just ask LLM to get jobs done
+### For beginners - no special skill required, just ask LLM to get jobs done
 
 Talk about a webpage:
 ```shell

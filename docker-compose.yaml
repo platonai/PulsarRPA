@@ -14,8 +14,8 @@ services:
       - backend
 
   pulsar-rpa:
-    image: 'pulsar-rap:latest'
-    container_name: 'pulsar-rap'
+    image: 'pulsar-rpa:latest'
+    container_name: 'pulsar-rpa'
     depends_on:
       - 'mongodb'
     environment:
