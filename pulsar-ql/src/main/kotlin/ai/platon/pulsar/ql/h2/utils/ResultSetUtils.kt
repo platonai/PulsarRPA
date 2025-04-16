@@ -2,6 +2,7 @@ package ai.platon.pulsar.ql.h2.utils
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.ql.common.ResultSets
 import ai.platon.pulsar.ql.h2.addColumn
 import ai.platon.pulsar.ql.common.types.ValueDom
@@ -235,16 +236,34 @@ object ResultSetUtils {
     }
 
     @Throws(SQLException::class)
-    private fun getTextEntityFromCurrentRecord(resultSet: ResultSet): Map<String, String?> {
+    private fun getTextEntityFromCurrentRecord(resultSet: ResultSet): Map<String, Any?> {
         val metaData = resultSet.metaData
         val columnCount: Int = metaData.columnCount
-        val record = mutableMapOf<String, String?>()
+        val record = mutableMapOf<String, Any?>()
         for (i in 1..columnCount) {
-            val columnName = metaData.getColumnName(i)
+            val columnName = metaData.getColumnName(i).lowercase()
             val columnType = metaData.getColumnType(i)
             // remove ValueDom from the result
+
             if (columnType != ValueDom.type && columnName !in arrayOf("DOC", "DOM")) {
-                record[columnName.lowercase(Locale.getDefault())] = resultSet.getString(i)
+                when (columnType) {
+                    Types.BOOLEAN -> record[columnName] = resultSet.getBoolean(i)
+                    Types.FLOAT -> record[columnName] = resultSet.getFloat(i)
+                    Types.INTEGER -> record[columnName] = resultSet.getInt(i)
+                    Types.JAVA_OBJECT -> {
+                        val obj = resultSet.getObject(i)
+                        if (obj != null) {
+                            record[columnName] = obj
+                        }
+                    }
+                    Types.OTHER -> {
+                        val obj = resultSet.getObject(i)
+                        if (obj != null) {
+                            record[columnName] = obj
+                        }
+                    }
+                    else -> record[columnName] = resultSet.getString(i)
+                }
             }
         }
         return record

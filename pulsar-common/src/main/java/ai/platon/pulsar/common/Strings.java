@@ -101,8 +101,6 @@ public final class Strings {
   public static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ",
           "         ", "          "};
 
-  public static final String REGEX_JSON_FLAT_OBJECTS = "\\{\\s*\"([^\"]*)\":([^}]*)\\s*}";
-
   public static final Comparator<String> LongerFirstComparator = (s, s2) -> {
     int result = Integer.compare(s2.length(), s.length());
     if (result == 0)
@@ -1069,28 +1067,4 @@ public final class Strings {
     return text.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
   }
 
-  /**
-   * Extract a JSON string from a text.
-   * The JSON string should be a simple, flat json object, like:
-   * ```json
-   * {
-   * "field1": "value1",
-   * "field2": "value2",
-   * "field3": "value3"
-   * }
-   * ```
-   *
-   * @param text The text to extract the JSON string from.
-   * @return A JSON string or null if no JSON string is found.
-   */
-  public static String extractFlatJSON(String text) {
-    if (text == null) {
-      return null;
-    }
-    Matcher matcher = Pattern.compile(REGEX_JSON_FLAT_OBJECTS).matcher(text);
-    if (matcher.find()) {
-      return matcher.group();
-    }
-    return null;
-  }
 }

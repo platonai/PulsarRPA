@@ -40,6 +40,7 @@
         <constructor-arg ref="fetchComponent"/>
         <constructor-arg ref="updateComponent"/>
         <constructor-arg ref="parseComponent"/>
+        <constructor-arg ref="conf"/>
         <constructor-arg ref="appStatusTracker"/>
     </bean>
 </beans>

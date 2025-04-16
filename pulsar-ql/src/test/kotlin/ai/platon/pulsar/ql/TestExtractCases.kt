@@ -71,6 +71,7 @@ class TestExtractCases : TestBase() {
         }
     }
 
+    @Ignore("site not available")
     @Test
     fun testExtractSinglePageForTmall() {
         val url = "https://detail.tmall.com/item.htm?id=577089875457"
@@ -89,7 +90,7 @@ from
         execute(sql)
     }
 
-    @Ignore("TimeConsumingTest")
+    @Ignore("site not available")
     @Test
     fun testLoadOutPagesForMogujie() {
         val url = urlGroups["mogujie"]!![0]
@@ -111,6 +112,7 @@ WHERE LENGTH(DOM_BASE_URI(DOM)) < 50
         execute(sql)
     }
 
+    @Ignore("vip.com not available")
     @Test
     fun testLoadOutPagesForVipCom() {
         val url = urlGroups["vip"]!![0]
@@ -132,7 +134,7 @@ FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 5)
         execute(sql)
     }
 
-    @Ignore("TimeConsumingTest")
+    @Ignore("jd.com not available")
     @Test
     fun testLoadOutPagesForJd() {
         val url = urlGroups["jd"]!![0]
@@ -160,7 +162,7 @@ WHERE LOCATE('item', DOM_BASE_URI(DOM)) > 0;
     }
 
     @Test
-    @Ignore("Temperory disabled")
+    @Ignore("jd.com not available")
     fun testLoadOutPagesForJd2() {
         val sql = """
 select
