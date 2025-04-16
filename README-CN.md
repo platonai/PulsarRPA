@@ -21,19 +21,67 @@ Bilibili:
 
 
 
+
 ## 🐳 Docker
 
-```bash
+Scrape without LLM features:
+
+```shell
 docker run -d -p 8182:8182 galaxyeye88/pulsar-rpa:latest
 ```
 
-Your first request:
+LLM Integration:
+
+Click the link to get your own API key:
+https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey?apikey=xxx
 
 ```shell
-curl http://localhost:8182/api/ai/chat?prompt=
+docker run -d -p 8182:8182 \
+  -e llm.provider=volcengine \
+  -e llm.name=ep-20250218201413-f54pj \
+  -e llm.apiKey=${YOUR-LLM_API_KEY} \
+  galaxyeye88/pulsar-rpa:latest
 ```
 
-Linux:
+## 🚀 快速入门
+
+### 面向入门用户
+
+问一个非常简单的问题（使用 GET 方法）：
+```shell
+curl http://localhost:8182/api/ai/chat?prompt=greeting
+```
+
+问一个复杂一点的问题（使用 POST 方法）：
+```shell
+curl -X POST http://localhost:8182/api/ai/chat
+
+生命、宇宙以及任何事情的终极答案是什么？
+```
+
+谈论一个网页：
+```shell
+curl -X POST "http://localhost:8182/api/ai/chat-about" \
+-H "Content-Type: application/json" \
+-d '{
+  "url": "https://www.amazon.com/dp/B0C1H26C46",
+  "prompt": "introduce this product"
+}'
+```
+
+从要给网页提取数据：
+```shell
+curl -X POST "http://localhost:8182/api/ai/extract" \
+-H "Content-Type: application/json" \
+-d '{
+  "url": "https://www.amazon.com/dp/B0C1H26C46",
+  "prompt": "product name, price, and description"
+}'
+```
+
+### 面向进阶用户
+
+结合 LLM 和 X-SQL:
 
 ```bash
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
@@ -46,21 +94,8 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 "
 ```
 
-Windows:
+### 🚀 使用本地 API
 
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8182/api/x/e" -Method Post -Headers @{ "Content-Type" = "text/plain" } -Body @"
-  select
-      llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
-      dom_base_uri(dom) as url,
-      dom_first_text(dom, '#productTitle') as title,
-      dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-  from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
-"@
-```
-
-
-## 🚀 开始
 
 ### 谈论一个网页
 
