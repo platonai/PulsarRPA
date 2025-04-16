@@ -81,6 +81,20 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 "
 ```
 
+The extracted data:
+```json
+{
+  "llm_extracted_data": {
+    "product name": "Apple iPhone 15 Pro Max",
+    "price": "$1,199.00",
+    "ratings": "4.5 out of 5 stars"
+  },
+  "url": "https://www.amazon.com/dp/B0C1H26C46",
+  "title": "Apple iPhone 15 Pro Max",
+  "img": "<img src=\"https://example.com/image.jpg\" />"
+}
+```
+
 ### 👨‍💻 For Experts - Native API
 
 #### 💭 Chat About a Webpage:

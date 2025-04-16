@@ -101,6 +101,8 @@ public final class Strings {
   public static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ",
           "         ", "          "};
 
+  public static final String REGEX_JSON_FLAT_OBJECTS = "\\{\\s*\"([^\"]*)\":([^}]*)\\s*}";
+
   public static final Comparator<String> LongerFirstComparator = (s, s2) -> {
     int result = Integer.compare(s2.length(), s.length());
     if (result == 0)
@@ -303,14 +305,14 @@ public final class Strings {
 
   /**
    * @deprecated Use {@link #removeNonChar(String)} instead
-   * */
+   */
   public static String stripNonChar(String text) {
     return removeNonChar(text);
   }
 
   /**
    * @deprecated Use {@link #removeNonChar(String, String)} instead
-   * */
+   */
   public static String stripNonChar(String text, String keeps) {
     return removeNonChar(text, keeps);
   }
@@ -339,9 +341,9 @@ public final class Strings {
   }
 
   /**
-   // 对字符串的头部和尾部：
-   // 1. 仅保留英文字符、数字、汉字字符和keeps中的字符
-   // 2. 去除网页空白：&nbsp;
+   * // 对字符串的头部和尾部：
+   * // 1. 仅保留英文字符、数字、汉字字符和keeps中的字符
+   * // 2. 去除网页空白：&nbsp;
    */
   public static String trimNonChar(String text, String keeps) {
     int start = 0;
@@ -603,7 +605,7 @@ public final class Strings {
 
   /**
    * @deprecated use {@link #findFirstInteger(String)} instead
-   * */
+   */
   public static Integer getFirstInteger(String s) {
     return findFirstInteger(s);
   }
@@ -612,7 +614,7 @@ public final class Strings {
    * Find the first integer in the string.
    *
    * @return the first integer in the string, or null if not found
-   * */
+   */
   public static Integer findFirstInteger(String s) {
     if (s == null) {
       return null;
@@ -645,7 +647,7 @@ public final class Strings {
 
   /**
    * @deprecated use {@link #findLastInteger(String)} instead
-   * */
+   */
   public static int getLastInteger(String s, int defaultValue) {
     return findLastInteger(s, defaultValue);
   }
@@ -654,7 +656,7 @@ public final class Strings {
    * Find the last integer in the string.
    *
    * @return the last integer in the string, or null if not found
-   * */
+   */
   public static Integer findLastInteger(String s) {
     if (s == null) {
       return null;
@@ -734,7 +736,7 @@ public final class Strings {
 
   /**
    * @deprecated use {@link org.apache.commons.lang3.StringUtils#reverse(String)} instead
-   * */
+   */
   @Deprecated
   public static String reverse(String s) {
     return StringUtils.reverse(s);
@@ -1065,5 +1067,30 @@ public final class Strings {
 
   public static boolean isIpV4Like(String text) {
     return text.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
+  }
+
+  /**
+   * Extract a JSON string from a text.
+   * The JSON string should be a simple, flat json object, like:
+   * ```json
+   * {
+   * "field1": "value1",
+   * "field2": "value2",
+   * "field3": "value3"
+   * }
+   * ```
+   *
+   * @param text The text to extract the JSON string from.
+   * @return A JSON string or null if no JSON string is found.
+   */
+  public static String extractFlatJSON(String text) {
+    if (text == null) {
+      return null;
+    }
+    Matcher matcher = Pattern.compile(REGEX_JSON_FLAT_OBJECTS).matcher(text);
+    if (matcher.find()) {
+      return matcher.group();
+    }
+    return null;
   }
 }

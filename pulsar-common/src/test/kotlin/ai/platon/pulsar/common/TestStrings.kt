@@ -1,7 +1,10 @@
 package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.StringUtils
-import kotlin.test.*
+import org.junit.jupiter.api.Assertions.assertNull
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class TestStrings {
 
@@ -58,5 +61,48 @@ class TestStrings {
         val s2 = StringUtils.abbreviate(s, 50)
         assertEquals(50, s2.length)
         assertTrue(s2) { s2.endsWith("a...") }
+    }
+
+
+    @Test
+    fun testExtractFlatJSON_NullInput() {
+        // 测试输入为 null 的情况
+        val result = Strings.extractFlatJSON(null)
+        assertNull(result)
+    }
+
+    @Test
+    fun testExtractFlatJSON_NoJSONInText() {
+        // 测试输入文本中不包含符合格式的 JSON 字符串的情况
+        val text = "This is a plain text without JSON."
+        val result = Strings.extractFlatJSON(text)
+        assertNull(result)
+    }
+
+    @Test
+    fun testExtractFlatJSON_SingleJSONInText() {
+        // 测试输入文本中包含一个符合格式的 JSON 字符串的情况
+        val text = "Some text before {\"field1\": \"value1\"} some text after"
+        val expected = "{\"field1\": \"value1\"}"
+        val result = Strings.extractFlatJSON(text)
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun testExtractFlatJSON_SingleJSONWithTwoFieldsInText() {
+        // 测试输入文本中包含一个符合格式的 JSON 字符串的情况
+        val text = "Some text before {\"field1\": \"value1\", \"field2\": \"value2\"} some text after"
+        val expected = "{\"field1\": \"value1\", \"field2\": \"value2\"}"
+        val result = Strings.extractFlatJSON(text)
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun testExtractFlatJSON_MultipleJSONInText() {
+        // 测试输入文本中包含多个符合格式的 JSON 字符串的情况
+        val text = "Text before {\"field1\": \"value1\"} middle text {\"field2\": \"value2\"} text after"
+        val expected = "{\"field1\": \"value1\"}"
+        val result = Strings.extractFlatJSON(text)
+        assertEquals(expected, result)
     }
 }

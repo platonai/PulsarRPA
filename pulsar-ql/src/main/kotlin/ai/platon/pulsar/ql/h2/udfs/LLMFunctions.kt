@@ -1,5 +1,7 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.ql.common.annotation.UDFGroup
 import ai.platon.pulsar.ql.common.annotation.UDFunction
 import ai.platon.pulsar.ql.common.types.ValueDom
@@ -8,6 +10,7 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 @Suppress("unused")
 @UDFGroup(namespace = "LLM")
 object LLMFunctions {
+    private val logger = getLogger(this)
     private val session get() = PulsarContexts.getOrCreateSession()
 
     @JvmStatic
@@ -47,6 +50,11 @@ $fieldDescriptions
 
 """.trimIndent()
 
-        return session.chat(dom.element, prompt).content
+        val content = session.chat(dom.element, prompt).content
+        val json = Strings.extractFlatJSON(content)
+        if (json == null) {
+            logger.warn("Failed to extract a json from LLM's response | $content")
+        }
+        return json
     }
 }
