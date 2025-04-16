@@ -8,7 +8,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 **PulsarRPA** is a **high-performance** 🚀, **distributed** 🌐, and **open-source** 🔓 Robotic Process Automation (RPA) framework.
 Designed for **large-scale automation** 🏭, it excels in:
-- 🌐 **Browser automation**
+- 🌐 **Browser automation, superfast⚡⚡**
 - 🧠 **Web content understanding**
 - 📊 **Data extraction**
 
