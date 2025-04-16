@@ -18,20 +18,45 @@ class AiController(
     val promptService: PromptService,
 ) {
     /**
-     * @param request The request
+     * Chat with the LLM about anything.
+     *
+     * @param prompt The request
+     * @return The response
+     * */
+    @GetMapping("/chat")
+    fun simpleChat(@RequestParam(value = "prompt") prompt: String): String {
+        return promptService.chat(prompt)
+    }
+    /**
+     * Chat with the LLM about anything.
+     *
+     * @param prompt The request
      * @return The response
      * */
     @PostMapping("/chat")
-    fun chat(@RequestBody request: PromptRequest): String {
+    fun chat(@RequestBody prompt: String): String {
+        return promptService.chat(prompt)
+    }
+
+    /**
+     * Chat with the LLM about the page specified by the url.
+     *
+     * @param request The request
+     * @return The response
+     * */
+    @PostMapping("/chat-about")
+    fun chatAboutPage(@RequestBody request: PromptRequest): String {
         return promptService.chat(request)
     }
 
     /**
+     * Extract fields from the page specified by the url.
+     *
      * @param request The request
      * @return The response
      * */
     @PostMapping("/extract")
-    fun extract(@RequestBody request: PromptRequest): String {
+    fun extractFieldsFromPage(@RequestBody request: PromptRequest): String {
         return promptService.extract(request)
     }
 }

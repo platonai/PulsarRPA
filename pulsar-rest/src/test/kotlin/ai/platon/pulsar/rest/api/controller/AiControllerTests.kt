@@ -20,17 +20,28 @@ class AiControllerTests : IntegrationTestBase() {
      * Test [AiController.chat]
      * */
     @Test
-    fun `When chat about a page then the result is not empty`() {
-        val request = PromptRequest(indexUrl, "Tell me about something about this page")
-        val response = restTemplate.postForObject("$baseUri/ai/chat", request, String::class.java)
+    fun `When chat then LLM responses`() {
+        val prompt = "生命、宇宙以及任何事情的终极答案是什么？"
+        val response = restTemplate.getForObject("$baseUri/ai/chat?prompt={prompt}", String::class.java, prompt)
+        println(response)
         assertTrue { response.isNotBlank() }
     }
 
     /**
-     * Test [AiController.extract]
+     * Test [AiController.chatAboutPage]
      * */
     @Test
-    fun `When extract fields from a page then the result is not empty`() {
+    fun `When chat about a page then result is not empty`() {
+        val request = PromptRequest(indexUrl, "Tell me about something about this page")
+        val response = restTemplate.postForObject("$baseUri/ai/chat-about", request, String::class.java)
+        assertTrue { response.isNotBlank() }
+    }
+
+    /**
+     * Test [AiController.extractFieldsFromPage]
+     * */
+    @Test
+    fun `When extract fields from a page then result is not empty`() {
         val request = PromptRequest(productUrl, "title, price, brand")
         val response = restTemplate.postForObject("$baseUri/ai/extract", request, String::class.java)
 

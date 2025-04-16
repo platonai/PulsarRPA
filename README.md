@@ -26,7 +26,6 @@ Bilibili:
 ## 🐳 Docker
 
 ```bash
-docker pull galaxyeye88/pulsar-rpa:latest
 docker run -d -p 8182:8182 galaxyeye88/pulsar-rpa:latest
 ```
 

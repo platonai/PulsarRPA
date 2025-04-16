@@ -24,14 +24,16 @@ Bilibili:
 ## 🐳 Docker
 
 ```bash
-docker pull galaxyeye88/pulsar-rpa:latest
 docker run -d -p 8182:8182 galaxyeye88/pulsar-rpa:latest
 ```
 
 Your first request:
 
-Linux:
+```shell
+curl http://localhost:8182/api/ai/chat?prompt=
+```
 
+Linux:
 
 ```bash
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
