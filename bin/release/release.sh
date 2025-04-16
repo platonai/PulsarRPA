@@ -1,127 +1,156 @@
-#bin
+#!/bin/bash
+# 🚀 PulsarRPA Release Script
+# This script orchestrates the release process by executing git and docker release scripts
+# Usage: ./release.sh [-v|--verbose]
 
-# Find the first parent directory that contains a pom.xml file
-APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
-while [[ "$APP_HOME" != "/" ]]; do
-  if [[ -f "$APP_HOME/pom.xml" ]]; then
-    break
-  fi
-  APP_HOME=$(dirname "$APP_HOME")
+# Enable error handling
+set -euo pipefail
+IFS=$'\n\t'
+
+# Parse command line arguments
+VERBOSE=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        *)
+            echo "❌ Unknown option: $1"
+            exit 1
+            ;;
+    esac
 done
 
-cd "$APP_HOME" || exit
+# 🔍 Find the first parent directory containing the VERSION file
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+APP_HOME="$SCRIPT_DIR/../.."
 
-SNAPSHOT_VERSION=$(head -n 1 "$APP_HOME/VERSION")
-VERSION=${SNAPSHOT_VERSION//"-SNAPSHOT"/""}
-LAST_COMMIT_ID=$(git log --format="%H" -n 1)
-BRANCH=$(git branch --show-current)
-TAG="v$VERSION"
+while [[ ! -f "$APP_HOME/VERSION" ]]; do
+    if [[ "$APP_HOME" == "/" ]]; then
+        echo "❌ VERSION file not found in any parent directory"
+        exit 1
+    fi
+    APP_HOME="$(dirname "$APP_HOME")"
+done
 
-# Replace SNAPSHOT version with the release version in readme files
-function replace_version_in_readme_files() {
-  echo "Replacing SNAPSHOT version with the release version in readme files"
+if [[ "$VERBOSE" == true ]]; then
+    echo "📂 Found project root at: $APP_HOME"
+fi
 
-  find . -type f -name "*.md" -exec sed -i "s/$SNAPSHOT_VERSION/$VERSION/g" {} \;
-  git add *.md
-  git commit -m "Replace SNAPSHOT version with the release version in readme files"
-  git push
-}
+cd "$APP_HOME"
 
-function restore_working_branch() {
-  echo "Ready to restore"
-  read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    git restore .
-  else
-    echo "Bye."
-    exit 0
-  fi
-}
+# 📦 Define script paths
+BIN="$APP_HOME/bin"
+GIT_RELEASE_SCRIPT="$BIN/release/git-release.sh"
+DOCKER_RELEASE_SCRIPT="$BIN/release/docker-release.sh"
 
-function pull_changes() {
-  echo "Ready to pull"
-  read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    git pull
-  else
-    echo "Bye."
-    exit 0
-  fi
-}
+# 🔍 Verify required scripts exist
+if [[ ! -f "$GIT_RELEASE_SCRIPT" ]]; then
+    echo "❌ Git release script not found: $GIT_RELEASE_SCRIPT"
+    exit 1
+fi
 
-function add_tag() {
-  echo "Ready to add tag $TAG on $LAST_COMMIT_ID"
-  read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    git tag "$TAG" "$LAST_COMMIT_ID"
-    push_with_tags
-  else
-    echo "Do not add tag."
-  fi
-}
+if [[ ! -f "$DOCKER_RELEASE_SCRIPT" ]]; then
+    echo "❌ Docker release script not found: $DOCKER_RELEASE_SCRIPT"
+    exit 1
+fi
 
-function push_with_tags() {
-  echo "Ready to push with tags to $BRANCH"
-  read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    git push --tags
-  else
-    echo "Do not push with tags"
-  fi
-}
+# 🚀 Execute release scripts
+if [[ "$VERBOSE" == true ]]; then
+    echo "📦 Starting git release process..."
+fi
 
-function merge_to_main_branch() {
-  echo
-  git status
+if ! "$GIT_RELEASE_SCRIPT"; then
+    echo "❌ Git release failed"
+    exit 1
+fi
 
-  echo "Ready to merge to main branch"
-  read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    git checkout main
+if [[ "$VERBOSE" == true ]]; then
+    echo "🐳 Starting docker release process..."
+fi
 
-    # The main branch name is master
-    exitCode=$?
-    [ ! $exitCode -eq 0 ] && git checkout master
+if ! "$DOCKER_RELEASE_SCRIPT"; then
+    echo "❌ Docker release failed"
+    exit 1
+fi
 
-    git merge "$BRANCH"
+echo "✅ Release process completed successfully!"
+#!/bin/bash
+# 🚀 PulsarRPA Release Script
+# This script orchestrates the release process by executing git and docker release scripts
+# Usage: ./release.sh [-v|--verbose]
 
-    push_to_main_branch
-  else
-    echo "Do do merge to main branch."
-  fi
-}
+# Enable error handling
+set -euo pipefail
+IFS=$'\n\t'
 
-function push_to_main_branch() {
-  echo "Ready to push to main branch"
-  read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    git push
-  else
-    echo "Bye."
-    exit 0
-  fi
-}
+# Parse command line arguments
+VERBOSE=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        *)
+            echo "❌ Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
 
-function checkout_working_branch() {
-  echo "Ready to checkout working branch $BRANCH"
-  read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    git checkout "$BRANCH"
-  else
-    echo "Remain on main branch"
-  fi
-}
+# 🔍 Find the first parent directory containing the VERSION file
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+APP_HOME="$SCRIPT_DIR/../.."
 
-restore_working_branch
-pull_changes
-replace_version_in_readme_files
-merge_to_main_branch
-checkout_working_branch
-add_tag
+while [[ ! -f "$APP_HOME/VERSION" ]]; do
+    if [[ "$APP_HOME" == "/" ]]; then
+        echo "❌ VERSION file not found in any parent directory"
+        exit 1
+    fi
+    APP_HOME="$(dirname "$APP_HOME")"
+done
+
+if [[ "$VERBOSE" == true ]]; then
+    echo "📂 Found project root at: $APP_HOME"
+fi
+
+cd "$APP_HOME"
+
+# 📦 Define script paths
+BIN="$APP_HOME/bin"
+GIT_RELEASE_SCRIPT="$BIN/release/git-release.sh"
+DOCKER_RELEASE_SCRIPT="$BIN/release/docker-release.sh"
+
+# 🔍 Verify required scripts exist
+if [[ ! -f "$GIT_RELEASE_SCRIPT" ]]; then
+    echo "❌ Git release script not found: $GIT_RELEASE_SCRIPT"
+    exit 1
+fi
+
+if [[ ! -f "$DOCKER_RELEASE_SCRIPT" ]]; then
+    echo "❌ Docker release script not found: $DOCKER_RELEASE_SCRIPT"
+    exit 1
+fi
+
+# 🚀 Execute release scripts
+if [[ "$VERBOSE" == true ]]; then
+    echo "📦 Starting git release process..."
+fi
+
+if ! "$GIT_RELEASE_SCRIPT"; then
+    echo "❌ Git release failed"
+    exit 1
+fi
+
+if [[ "$VERBOSE" == true ]]; then
+    echo "🐳 Starting docker release process..."
+fi
+
+if ! "$DOCKER_RELEASE_SCRIPT"; then
+    echo "❌ Docker release failed"
+    exit 1
+fi
+
+echo "✅ Release process completed successfully!"
