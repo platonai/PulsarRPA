@@ -1,99 +1,96 @@
-# PulsarRPA
+# 🤖 PulsarRPA
 
 English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
 
-## 🥁 Introduce
+## 🌟 Introduction
 
 💖 **PulsarRPA: Your Ultimate AI-RPA Solution!** 💖
 
-**PulsarRPA** is a **high-performance**, **distributed**, and **open-source** Robotic Process Automation (RPA) framework.
-Designed for **large-scale automation**, it excels in **browser automation**, **web content understanding**,
-and **data extraction**. PulsarRPA tackles the challenges of modern web automation,
-ensuring **accurate** and **comprehensive** data extraction even from the most **complex** and **dynamic** websites.
+**PulsarRPA** is a **high-performance** 🚀, **distributed** 🌐, and **open-source** 🔓 Robotic Process Automation (RPA) framework.
+Designed for **large-scale automation** 🏭, it excels in:
+- 🌐 **Browser automation**
+- 🧠 **Web content understanding**
+- 📊 **Data extraction**
 
-## 🎥 Videos
+PulsarRPA tackles the challenges of modern web automation,
+ensuring **accurate** ✅ and **comprehensive** 📚 data extraction even from the most **complex** 🔄 and **dynamic** ⚡ websites.
 
-YouTube:
+## 🎥 Demo Videos
+
+🎬 YouTube:
 [![Watch the video](https://img.youtube.com/vi/lQXSSQSNQ7I/0.jpg)](https://www.youtube.com/watch?v=lQXSSQSNQ7I)
 
-Bilibili:
+📺 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
+## 🐳 Docker Setup
 
-
-
-
-## 🐳 Docker
-
-Scrape without LLM features:
+### 🔧 Basic Setup (Without LLM)
 
 ```shell
-  docker run -d -p 8182:8182 galaxyeye88/pulsar-rpa:latest
+docker run -d -p 8182:8182 galaxyeye88/pulsar-rpa:latest
 ```
 
-LLM Integration:
+### 🧠 LLM Integration
 
-Click the link to get your own API key:
+🔑 Get your API key here:
 https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey?apikey=xxx
 
 ```shell
-  docker run -d -p 8182:8182 \
-    -e llm.provider=volcengine \
-    -e llm.name=ep-20250218201413-f54pj \
-    -e llm.apiKey=${YOUR-LLM_API_KEY} \
-    galaxyeye88/pulsar-rpa:latest
+docker run -d -p 8182:8182 \
+  -e llm.provider=volcengine \
+  -e llm.name=${YOUR-MODEL_NAME} \
+  -e llm.apiKey=${YOUR-LLM_API_KEY} \
+  galaxyeye88/pulsar-rpa:latest
 ```
 
-## 🚀 Quick start
+## 🚀 Quick Start Guide
 
-### For beginners - no special skill required, just ask LLM to get jobs done
+### 🌟 For Beginners - No Special Skills Required!
 
-Talk about a webpage:
+#### 💬 Chat About a Webpage
 ```shell
-  curl -X POST "http://localhost:8182/api/ai/chat-about" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://www.amazon.com/dp/B0C1H26C46",
-    "prompt": "introduce this product"
-  }'
+curl -X POST "http://localhost:8182/api/ai/chat-about" \
+-H "Content-Type: application/json" \
+-d '{
+  "url": "https://www.amazon.com/dp/B0C1H26C46",
+  "prompt": "introduce this product"
+}'
 ```
 
-Extract data from a webpage:
+#### 📊 Extract Data
 ```shell
-  curl -X POST "http://localhost:8182/api/ai/extract" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://www.amazon.com/dp/B0C1H26C46",
-    "prompt": "product name, price, and description"
-  }'
+curl -X POST "http://localhost:8182/api/ai/extract" \
+-H "Content-Type: application/json" \
+-d '{
+  "url": "https://www.amazon.com/dp/B0C1H26C46",
+  "prompt": "product name, price, and description"
+}'
 ```
 
-### For advanced users - combine LLM and X-SQL
+### 🎓 For Advanced Users - LLM + X-SQL
 
 ```bash
-  curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
-    select
-      llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
-      dom_base_uri(dom) as url,
-      dom_first_text(dom, '#productTitle') as title,
-      dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-    from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
-  "
+curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+  select
+    llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
+    dom_base_uri(dom) as url,
+    dom_first_text(dom, '#productTitle') as title,
+    dom_first_slim_html(dom, 'img:expr(width > 400)') as img
+  from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+"
 ```
 
-### 🚀 For experts - use native API
+### 👨‍💻 For Experts - Native API
 
-#### Chat about a webpage:
-
+#### 💭 Chat About a Webpage:
 ```kotlin
 val document = session.loadDocument(url)
 val response = session.chat("Tell me something about this webpage", document)
 ```
+📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/ChatAboutPage.kt)
 
-Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/ChatAboutPage.kt).
-
-#### Tell the browser to get jobs done:
-
+#### 🎮 Browser Control:
 ```kotlin
 val prompts = """
 move cursor to the element with id 'title' and click it
@@ -108,109 +105,134 @@ eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver
 }
 session.open(url, eventHandlers)
 ```
+📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/TalkToActivePage.kt)
 
-Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/TalkToActivePage.kt).
-
-#### One line of code to scrape:
-
+#### ⚡ One-Line Scraping:
 ```kotlin
 session.scrapeOutPages(
-    "https://www.amazon.com/",  "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
+    "https://www.amazon.com/",  
+    "-outLink a[href~=/dp/]", 
+    listOf("#title", "#acrCustomerReviewText")
+)
 ```
 
-#### Crawl with Robotic Process Automation (RPA):
-
+#### 🤖 RPA Crawling:
 ```kotlin
 val options = session.options(args)
 val event = options.eventHandlers.browseEventHandlers
 event.onBrowserLaunched.addLast { page, driver ->
-    // warp up the browser to avoid being blocked by the website,
-    // or choose the global settings, such as your location.
     warnUpBrowser(page, driver)
 }
 event.onWillFetch.addLast { page, driver ->
-    // have to visit a referrer page before we can visit the desired page
     waitForReferrer(page, driver)
-    // websites may prevent us from opening too many pages at a time, so we should open links one by one.
     waitForPreviousPage(page, driver)
 }
 event.onWillCheckDocumentState.addLast { page, driver ->
-    // wait for a special fields to appear on the page
     driver.waitForSelector("body h1[itemprop=name]")
-    // close the mask layer, it might be promotions, ads, or something else.
     driver.click(".mask-layer-close-button")
 }
-// visit the URL and trigger events
 session.load(url, options)
 ```
+📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt)
 
-Example code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt).
-
-#### Resolve *super complex* web data extraction problems using X-SQL:
-
+#### 🔍 Complex Data Extraction with X-SQL:
 ```sql
 select
     llm_extract(dom, 'product name, price, ratings, score') as llm_extracted_data,
     dom_first_text(dom, '#productTitle') as title,
     dom_first_text(dom, '#bylineInfo') as brand,
-    dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
+    dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
     dom_first_text(dom, '#acrCustomerReviewText') as ratings,
     str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
 from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body');
 ```
 
-Example code:
+📚 Example Code:
+* [Amazon Product Page Scraping (100+ fields)](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+* [All Amazon Page Types Scraping](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
-* [X-SQL to scrape 100+ fields from an Amazon's product page](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
-* [X-SQLs to scrape all types of Amazon webpages](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+📖 [Advanced Guides](docs/advanced-guides.md)
 
-#### More advanced guides:
+## ✨ Features
 
-[advanced guides](docs/advanced-guides.md)
+🕷️ **Web Spider**
+- Scalable crawling
+- Browser rendering
+- AJAX data extraction
 
+🧠 **LLM Integration**
+- Natural language web content analysis
+- Intuitive content description
 
+🎯 **Text-to-Action**
+- Simple language commands
+- Intuitive browser control
 
+🤖 **RPA Capabilities**
+- Human-like task automation
+- SPA crawling support
+- Advanced workflow automation
 
+🛠️ **Developer-Friendly**
+- One-line data extraction
+- SQL-like query interface
+- Simple API integration
 
-## 🚄 Features
+📊 **X-SQL Power**
+- Extended SQL for web data
+- Content mining capabilities
+- Web business intelligence
 
-- Web Spider: Scalable crawling, browser rendering, AJAX data extraction, and more.
+🛡️ **Bot Protection**
+- Advanced stealth techniques
+- IP rotation
+- Privacy context management
 
-- LLM Integration: Analyze and describe web content using natural, everyday language.
+⚡ **Performance**
+- Parallel page rendering
+- High-efficiency processing
+- Block-resistant design
 
-- Text-to-Action: Control browser actions through simple, intuitive language commands.
+💰 **Cost-Effective**
+- 100,000+ pages/day
+- Minimal hardware requirements
+- Resource-efficient operation
 
-- RPA (Robotic Process Automation): Automate human-like tasks, including Single Page Application (SPA) crawling and other high-value workflows.
+✅ **Quality Assurance**
+- Smart retry mechanisms
+- Precise scheduling
+- Complete lifecycle management
 
-- Simple API: Extract data with a single line of code or transform websites into structured tables with a single SQL query.
+🌐 **Scalability**
+- Fully distributed architecture
+- Massive-scale capability
+- Enterprise-ready
 
-- X-SQL: Extended SQL for managing web data—crawling, scraping, content mining, and web-based business intelligence.
+📦 **Storage Options**
+- Local File System
+- MongoDB
+- HBase
+- Gora support
 
-- Bot Stealth: Advanced evasion techniques, including web driver stealth, IP rotation, and privacy context rotation to avoid detection and bans.
+📊 **Monitoring**
+- Comprehensive logging
+- Detailed metrics
+- Full transparency
 
-- High Performance: Optimized for efficiency, capable of rendering hundreds of pages in parallel on a single machine without being blocked.
+🤖 **AI-Powered**
+- Automatic field extraction
+- Pattern recognition
+- Accurate data capture
 
-- Low Cost: Scrape 100,000+ browser-rendered e-commerce pages or process tens of millions of data points daily with minimal hardware requirements (8-core CPU, 32GB RAM).
+## 📞 Contact Us
 
-- Data Quantity Assurance: Smart retry mechanisms, precise scheduling, and comprehensive web data lifecycle management.
-
-- Large-Scale Capability: Fully distributed architecture designed for massive-scale web crawling.
-
-- Big Data Support: Flexible backend storage options, including Local File, MongoDB, HBase, and Gora.
-
-- Logs & Metrics: Comprehensive monitoring and detailed event logging for full transparency.
-
-- Auto Extraction: AI-powered pattern recognition to automatically and accurately extract all fields from webpages.
-
-# 🐦 Contact
-
-- Wechat: galaxyeye
-- Weibo: [galaxyeye](https://weibo.com/galaxyeye)
-- Email: galaxyeye@live.cn, ivincent.zhang@gmail.com
-- Twitter: galaxyeye8
-- Website: [platon.ai](https://platon.ai)
+- 💬 WeChat: galaxyeye
+- 🌐 Weibo: [galaxyeye](https://weibo.com/galaxyeye)
+- 📧 Email: galaxyeye@live.cn, ivincent.zhang@gmail.com
+- 🐦 Twitter: galaxyeye8
+- 🌍 Website: [platon.ai](https://platon.ai)
 
 <div style="display: flex;">
-  <img src="docs/images/wechat-author.png" width="300" alt="wechat-author" />
-  <img src="docs/images/buy-me-a-coffee.png" width="300" alt="buy-me-a-coffee" />
+  <img src="docs/images/wechat-author.png" width="300" alt="WeChat QR Code" />
+  <img src="docs/images/buy-me-a-coffee.png" width="300" alt="Support Us" />
 </div>
