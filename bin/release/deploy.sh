@@ -137,7 +137,7 @@ run_integration_tests() {
 
 # 1. Deploy to local staging repository
 log "📦 Deploying to local staging repository..."
-if ! $APP_HOME/bin/release/oss-deploy.sh; then
+if ! $APP_HOME/bin/release/oss-deploy-local.sh; then
     echo "❌ Failed to deploy to local staging repository"
     exit 1
 fi
