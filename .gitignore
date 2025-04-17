@@ -102,3 +102,4 @@ derby.log
 !*/**/src/main/java/com/github/kklisura/cdt/protocol/v2023/types/target
 !*/**/src/**/target
 /cron.log
+/.vscode/settings.json
