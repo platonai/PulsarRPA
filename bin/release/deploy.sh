@@ -1,75 +1,180 @@
-#bin
+#!/bin/bash
+# 🚀 PulsarRPA Deployment Script
+# This script handles the deployment process including local testing and production deployment
+# Usage: ./deploy.sh [-v|--verbose] [-t|--test] [-p|--production]
 
-# Find the first parent directory that contains a pom.xml file
-APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
-while [[ "$APP_HOME" != "/" ]]; do
-  if [[ -f "$APP_HOME/pom.xml" ]]; then
-    break
-  fi
-  APP_HOME=$(dirname "$APP_HOME")
+# Enable error handling
+set -euo pipefail
+IFS=$'\n\t'
+
+# Default values
+VERBOSE=false
+TEST_MODE=false
+PRODUCTION_MODE=false
+DOCKER_CONTAINER_NAME="pulsar-rpa-test"
+DOCKER_IMAGE_NAME="pulsar-rpa"
+DOCKER_TAG="latest"
+SERVICE_PORT=8182
+MAX_WAIT_TIME=60  # seconds
+WAIT_INTERVAL=5   # seconds
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -t|--test)
+            TEST_MODE=true
+            shift
+            ;;
+        -p|--production)
+            PRODUCTION_MODE=true
+            shift
+            ;;
+        *)
+            echo "❌ Unknown option: $1"
+            exit 1
+            ;;
+    esac
 done
 
-cd "$APP_HOME" || exit
+# 🔍 Find the first parent directory containing the VERSION file
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+APP_HOME="$SCRIPT_DIR/.."
 
-printUsage() {
-  echo "Usage: deploy [-clean|-test]"
+while [[ ! -f "$APP_HOME/VERSION" ]]; do
+    if [[ "$APP_HOME" == "/" ]]; then
+        echo "❌ VERSION file not found in any parent directory"
+        exit 1
+    fi
+    APP_HOME="$(dirname "$APP_HOME")"
+done
+
+if [[ "$VERBOSE" == true ]]; then
+    echo "📂 Found project root at: $APP_HOME"
+fi
+
+cd "$APP_HOME"
+
+# Function to log messages
+log() {
+    if [[ "$VERBOSE" == true ]]; then
+        echo "$1"
+    fi
 }
 
-if [[ $# -gt 0 ]]; then
-  echo printUsage
-  exit 0
+# Function to wait for service to be ready
+wait_for_service() {
+    local url="http://localhost:$SERVICE_PORT/actuator/health"
+    local start_time=$(date +%s)
+    local end_time=$((start_time + MAX_WAIT_TIME))
+    
+    log "⏳ Waiting for service to be ready..."
+    
+    while [[ $(date +%s) -lt $end_time ]]; do
+        if curl -s "$url" | grep -q "UP"; then
+            log "✅ Service is ready!"
+            return 0
+        fi
+        sleep $WAIT_INTERVAL
+    done
+    
+    echo "❌ Service failed to start within $MAX_WAIT_TIME seconds"
+    return 1
+}
+
+# Function to run integration tests
+run_integration_tests() {
+    log "🔍 Running integration tests..."
+    
+    # Extract curl commands using Python script
+    local curl_examples
+    if ! curl_examples=$(python3 "$SCRIPT_DIR/extract_curl_commands.py" "$APP_HOME/README.md"); then
+        echo "❌ Failed to extract curl commands from README.md"
+        return 1
+    fi
+    
+    if [[ -z "$curl_examples" ]]; then
+        echo "❌ No curl examples found in README.md"
+        return 1
+    fi
+    
+    # Execute each curl example
+    while IFS= read -r line; do
+        if [[ "$line" =~ ^# ]]; then
+            # Skip comment lines
+            continue
+        fi
+        if [[ "$line" =~ curl ]]; then
+            log "🔍 Testing: $line"
+            if ! eval "$line"; then
+                echo "❌ Test failed: $line"
+                return 1
+            fi
+        fi
+    done <<< "$curl_examples"
+    
+    log "✅ All integration tests passed!"
+    return 0
+}
+
+# 1. Deploy to local staging repository
+log "📦 Deploying to local staging repository..."
+if ! $APP_HOME/bin/release/oss-deploy.sh; then
+    echo "❌ Failed to deploy to local staging repository"
+    exit 1
 fi
 
-ENABLE_TEST=false
-CLEAN=false
-
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    -clean)
-      CLEAN=true
-      shift # past argument
-      ;;
-    -test)
-      ENABLE_TEST=true
-      shift # past argument
-      ;;
-    -h|-help|--help)
-      printUsage
-      exit 1
-      ;;
-    -*|--*)
-      printUsage
-      exit 1
-      ;;
-    *)
-      shift # past argument
-      ;;
-  esac
-done
-
-echo "Deploy the project ..."
-echo "Changing version ..."
-
-SNAPSHOT_VERSION=$(head -n 1 "$APP_HOME/VERSION")
-VERSION=${SNAPSHOT_VERSION//"-SNAPSHOT"/""}
-echo "$VERSION" > "$APP_HOME"/VERSION
-
-find "$APP_HOME" -name 'pom.xml' -exec sed -i "s/$SNAPSHOT_VERSION/$VERSION/" {} \;
-
-if $CLEAN; then
-  ./mvnw clean
+# 2. Build docker image
+log "🐳 Building docker image..."
+if ! docker build -t "$DOCKER_IMAGE_NAME:$DOCKER_TAG" .; then
+    echo "❌ Failed to build docker image"
+    exit 1
 fi
 
-if $ENABLE_TEST; then
-  ./mvnw deploy -Pplaton-release -Pplaton-deploy
-else
-  ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests=true
+if [[ "$TEST_MODE" == true ]]; then
+    # 3. Run docker container for testing
+    log "🚀 Starting docker container for testing..."
+    if ! docker run -d -p "$SERVICE_PORT:$SERVICE_PORT" --name "$DOCKER_CONTAINER_NAME" "$DOCKER_IMAGE_NAME:$DOCKER_TAG"; then
+        echo "❌ Failed to start docker container"
+        exit 1
+    fi
+    
+    # Wait for service to be ready
+    if ! wait_for_service; then
+        docker logs "$DOCKER_CONTAINER_NAME"
+        docker rm -f "$DOCKER_CONTAINER_NAME"
+        exit 1
+    fi
+    
+    # Run integration tests
+    if ! run_integration_tests; then
+        docker logs "$DOCKER_CONTAINER_NAME"
+        docker rm -f "$DOCKER_CONTAINER_NAME"
+        exit 1
+    fi
+    
+    # Cleanup
+    log "🧹 Cleaning up test container..."
+    docker rm -f "$DOCKER_CONTAINER_NAME"
 fi
 
-exitCode=$?
-[ $exitCode -eq 0 ] && echo "Build successfully" || exit 1
+if [[ "$PRODUCTION_MODE" == true ]]; then
+    # 4.1 Deploy artifact to Sonatype
+    log "📦 Deploying artifact to Sonatype..."
+    if ! mvn clean deploy -P release; then
+        echo "❌ Failed to deploy to Sonatype"
+        exit 1
+    fi
+    
+    # 4.2 Push docker image
+    log "🐳 Pushing docker image..."
+    if ! docker push "$DOCKER_IMAGE_NAME:$DOCKER_TAG"; then
+        echo "❌ Failed to push docker image"
+        exit 1
+    fi
+fi
 
-echo "Artifacts are staged remotely, you should close and release the staging manually:"
-echo "https://oss.sonatype.org/#stagingRepositories"
-echo "Hit the following link to check if the artifacts are synchronized to the maven center: "
-echo "https://repo1.maven.org/maven2/ai/platon/pulsar"
+echo "✅ Deployment process completed successfully!" 
