@@ -1,4 +1,4 @@
-package ai.platon.pulsar.ql.udfs
+package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.ql.TestBase
 import kotlin.test.*

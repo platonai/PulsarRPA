@@ -6,7 +6,7 @@ while ($null -ne $AppHome -and !(Test-Path "$AppHome/VERSION")) {
 Set-Location $AppHome
 
 function printUsage {
-  Write-Host "Usage: deploy.ps1 [-clean|-test]"
+  Write-Host "Usage: oss-deploy.ps1 [-clean|-test]"
   exit 1
 }
 
@@ -64,9 +64,9 @@ if ($PerformClean) {
 }
 
 if ($SkipTests) {
-  & $MvnCmd deploy -Pplaton-release -Pplaton-deploy -DskipTests
+  & $MvnCmd deploy -Pplaton-deploy -Pplaton-release -DskipTests -DaltDeploymentRepository=local::default::file:./target/staging-deploy
 } else {
-  & $MvnCmd deploy -Pplaton-release -Pplaton-deploy
+  & $MvnCmd deploy -Pplaton-deploy -Pplaton-release -DaltDeploymentRepository=local::default::file:./target/staging-deploy
 }
 
 $exitCode =$LastExitCode

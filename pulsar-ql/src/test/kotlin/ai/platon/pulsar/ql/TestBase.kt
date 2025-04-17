@@ -67,6 +67,17 @@ abstract class TestBase {
         }
     }
 
+    fun query(sql: String, action: (ResultSet) -> Unit): ResultSet {
+        return context.runQuery { connection ->
+            val stat = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
+            val rs = stat.executeQuery(sql)
+            action(rs)
+            history.add("${sql.trim { it.isWhitespace() }};")
+            rs.beforeFirst()
+            rs
+        }
+    }
+
     fun query(sql: String, printResult: Boolean = true): ResultSet {
         return context.runQuery { connection ->
             val stat = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)

@@ -1,117 +1,54 @@
-# Find the first parent directory containing the VERSION file
-$AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
-while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
-  $AppHome=$AppHome.Parent
-}
-cd $AppHome
+# 🚀 PulsarRPA Release Script
+# This script orchestrates the release process by executing git and docker release scripts
+# Usage: .\release.ps1 [-Verbose]
 
-$gitExe = "git" # Assuming git is in the system PATH
-
-# Get version information
-$SNAPSHOT_VERSION = Get-Content "$AppHome\VERSION" -TotalCount 1
-$VERSION =$SNAPSHOT_VERSION -replace "-SNAPSHOT", ""
-$LAST_COMMIT_ID = &$gitExe log --format="%H" -n 1
-$BRANCH = &$gitExe branch --show-current
-$TAG = "v$VERSION"
-
-# Replace SNAPSHOT version with the release version in readme files
-function Replace-Version-In-ReadmeFiles {
-  Write-Host "Replacing SNAPSHOT version with the release version in readme files"
-
-  @('README.md', 'README-CN.md') | ForEach-Object {
-    Get-ChildItem -Path "$AppHome" -Depth 2 -Filter $_ -Recurse | ForEach-Object {
-      (Get-Content $_.FullName) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content $_.FullName
-    }
-  }
-
-  & $gitExe add *.md
-  & $gitExe commit -m "Replace SNAPSHOT version with the release version in readme files"
-  & $gitExe push
+# 🔍 Find the first parent directory containing the VERSION file
+$AppHome = (Get-Item -Path $MyInvocation.MyCommand.Path).Directory
+while ($null -ne $AppHome -and !(Test-Path "$AppHome/VERSION")) {
+    $AppHome = $AppHome.Parent
 }
 
-function Restore-WorkingBranch {
-  Write-Host "Ready to restore"
-  $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
-    & $gitExe restore .
-  } else {
-    Write-Host "Bye."
-    exit 0
-  }
+if ($null -eq $AppHome) {
+    Write-Error "❌ VERSION file not found in any parent directory"
+    exit 1
 }
 
-function Pull-Changes {
-  Write-Host "Ready to pull"
-  $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
-    & $gitExe pull
-  } else {
-    Write-Host "Bye."
-    exit 0
-  }
+Write-Verbose "📂 Found project root at: $AppHome"
+Set-Location $AppHome
+
+# 📦 Define script paths
+$Bin = "$AppHome\bin"
+$GitReleaseScript = "$Bin\release\git-release.ps1"
+$DockerReleaseScript = "$Bin\release\docker-release.ps1"
+
+# 🔍 Verify required scripts exist
+if (-not (Test-Path $GitReleaseScript)) {
+    Write-Error "❌ Git release script not found: $GitReleaseScript"
+    exit 1
 }
 
-function Add-Tag {
-  Write-Host "Ready to add tag $TAG on$LAST_COMMIT_ID"
-  $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
-    & $gitExe tag "$TAG" "$LAST_COMMIT_ID"
-    Push-WithTags
-  } else {
-    Write-Host "Do not add tag."
-  }
+if (-not (Test-Path $DockerReleaseScript)) {
+    Write-Error "❌ Docker release script not found: $DockerReleaseScript"
+    exit 1
 }
 
-function Push-WithTags {
-  Write-Host "Ready to push with tags to $BRANCH"
-  $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
-    & $gitExe push --tags
-  } else {
-    Write-Host "Do not push with tags"
-  }
-}
-
-function Merge-ToMainBranch {
-  Write-Host "Ready to merge to main branch"
-  $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
-    & $gitExe checkout main
+# 🚀 Execute release scripts
+try {
+    Write-Verbose "📦 Starting git release process..."
+    & $GitReleaseScript
     if ($LASTEXITCODE -ne 0) {
-      & $gitExe checkout master
+        throw "Git release failed with exit code $LASTEXITCODE"
     }
-    & $gitExe merge "$BRANCH"
-    Push-ToMainBranch
-  } else {
-    Write-Host "Do not merge to main branch."
-  }
-}
 
-function Push-ToMainBranch {
-  Write-Host "Ready to push to main branch"
-  $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
-    & $gitExe push
-  } else {
-    Write-Host "Bye."
-    exit 0
-  }
-}
+    Write-Verbose "🐳 Starting docker release process..."
+    & $DockerReleaseScript
+    if ($LASTEXITCODE -ne 0) {
+        throw "Docker release failed with exit code $LASTEXITCODE"
+    }
 
-function Checkout-WorkingBranch {
-  Write-Host "Ready to checkout working branch $BRANCH"
-  $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
-    & $gitExe checkout "$BRANCH"
-  } else {
-    Write-Host "Remain on main branch"
-  }
+    Write-Host "✅ Release process completed successfully!" -ForegroundColor Green
 }
-
-# Call functions
-Restore-WorkingBranch
-Pull-Changes
-Replace-Version-In-ReadmeFiles
-Merge-ToMainBranch
-Checkout-WorkingBranch
-Add-Tag
+catch {
+    Write-Error "❌ Release process failed: $_"
+    exit 1
+}

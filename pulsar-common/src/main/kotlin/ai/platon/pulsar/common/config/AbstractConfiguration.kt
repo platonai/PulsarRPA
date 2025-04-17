@@ -69,6 +69,13 @@ abstract class AbstractConfiguration {
     /**
      * Get the value of the `name` property, `null` if no such property exists.
      *
+     * PulsarRPA loads configurations from multiple sources in the following order of precedence:
+     *
+     * 1. 🔧 Java Environment Variables
+     * 2. ⚙️ Java System Properties
+     * 3. 📝 Spring Boot `application.properties` or `application.yml` (REST API only)
+     * 4. 📁 Configuration files in `${PULSAR_DATA_HOME}/config/conf-enabled` directory
+     *
      * @param name the property name, will be trimmed before get value.
      * @return the value of the `name`, or null if no such property exists.
      */

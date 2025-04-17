@@ -6,12 +6,11 @@ Development Plan
 
 Must
 
-* Python Interface
-* Clear API - hide implementation details
-* Playwright as default browser
+* Clear API
+* Simplified WebPage Interface
 
 Optional
 
-* Simplified WebPage Interface
+* Python Interface
 * Playwright protocol support
-* Use a professional message queue for URLPool
+* Improve URLPool

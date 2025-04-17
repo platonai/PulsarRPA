@@ -272,8 +272,24 @@ open class PulsarSettings {
     }
 
     /**
-     * Set LLM provider, name and API key.
-     * */
+     * Sets the Large Language Model (LLM) provider for the PulsarRPA settings.
+     *
+     * This function allows specifying the LLM provider to be used. The provider must be a non-null string.
+     *
+     * Supported LLM providers include:
+     * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
+     * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
+     *
+     * For example, you can use the following code to set the LLM provider:
+     * ```kotlin
+     * // use volcengine as the LLM provider
+     * PulsarSettings().withLLM("volcengine", "ep-20250218132011-2scs8", apiKey)
+     * ```
+     *
+     * @param provider The name of the LLM provider to be used. Must not be null.
+     * @return The current instance of [PulsarSettings] to allow method chaining.
+     * @throws IllegalArgumentException If the provided `provider` is null.
+     */
     fun withLLM(provider: String, name: String, apiKey: String): PulsarSettings {
         withLLMProvider(provider)
         withLLMName(name)

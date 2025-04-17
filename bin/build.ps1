@@ -6,7 +6,7 @@ while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
 cd $AppHome
 
 function printUsage {
-  Write-Host "Usage: deploy.ps1 [-clean|-test]"
+  Write-Host "Usage: oss-deploy.ps1 [-clean|-test]"
   exit 1
 }
 

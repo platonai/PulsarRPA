@@ -1,5 +1,6 @@
-package ai.platon.pulsar.ql
+package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.ql.TestBase
 import kotlin.test.Ignore
 import kotlin.test.Test
 
@@ -9,6 +10,7 @@ import kotlin.test.Test
  */
 class TestUdfs: TestBase() {
 
+    @Ignore("Site unavailable")
     @Test
     fun testFirstFloat() {
         val sql = """

@@ -1,7 +1,10 @@
 package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.StringUtils
-import kotlin.test.*
+import org.junit.jupiter.api.Assertions.assertNull
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class TestStrings {
 

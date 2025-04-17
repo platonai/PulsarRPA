@@ -53,7 +53,7 @@ ENV CHROME_BIN=/usr/bin/chromium-browser \
 COPY --from=builder /build/app.jar app.jar
 
 # 设置环境变量
-ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC"
+ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC -Dbrowser.display.mode=HEADLESS"
 
 # 暴露端口
 # 8182: api server
