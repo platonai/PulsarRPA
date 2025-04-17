@@ -58,6 +58,8 @@ fi
 
 cd "$APP_HOME"
 
+$APP_HOME/bin/tools/dos2unix.sh
+
 # Function to log messages
 log() {
     if [[ "$VERBOSE" == true ]]; then

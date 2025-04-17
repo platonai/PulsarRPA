@@ -11,6 +11,8 @@ done
 
 cd "$APP_HOME" || exit
 
+dos2unix "$APP_HOME"/mvnw
+
 find "$APP_HOME"/bin -type f -name "*.sh" -print0 | xargs -0 dos2unix
 dos2unix "$APP_HOME"/VERSION
 
