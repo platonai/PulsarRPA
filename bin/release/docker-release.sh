@@ -40,6 +40,16 @@ echo "🏷️ Tagging as latest..."
 docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:latest
 
 # ========== STEP 4: 推送 ==========
+
+# Ask the user if they want to push the image
+read -p "Do you want to push the image to Docker Hub? (y/n) " answer
+if [ "$answer" != "${answer#[Yy]}" ] ;then
+  echo "Pushing..."
+else
+  echo "Skipping..."
+  exit 0
+fi
+
 echo "🚀 Pushing images..."
 docker push $IMAGE_NAME:$VERSION
 docker push $IMAGE_NAME:latest
