@@ -58,6 +58,13 @@ fi
 
 cd "$APP_HOME"
 
+# Check if the git repository is clean
+if ! git diff --quiet; then
+    echo "❌ Git repository is not clean"
+    exit 1
+fi
+
+# Convert all files to Unix line endings
 $APP_HOME/bin/tools/dos2unix.sh -q
 
 # Function to log messages
@@ -137,7 +144,7 @@ run_integration_tests() {
 
 # 1. Deploy to local staging repository
 log "📦 Deploying to local staging repository..."
-if ! $APP_HOME/bin/release/oss-deploy-local.sh; then
+if ! $APP_HOME/bin/release/oss-deploy-locally.sh; then
     echo "❌ Failed to deploy to local staging repository"
     exit 1
 fi
