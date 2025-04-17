@@ -313,7 +313,6 @@
                 <module>pulsar-rest</module>
 
                 <module>pulsar-client</module>
-                <module>pulsar-app/pulsar-master</module>
             </modules>
 
             <build>

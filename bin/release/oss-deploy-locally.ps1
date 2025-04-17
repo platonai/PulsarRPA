@@ -64,9 +64,9 @@ if ($PerformClean) {
 }
 
 if ($SkipTests) {
-  & $MvnCmd deploy -Pplaton-release -Pplaton-deploy -DskipTests -DaltDeploymentRepository=local::default::file:./target/staging-deploy
+  & $MvnCmd deploy -Pplaton-deploy -Pplaton-release -DskipTests -DaltDeploymentRepository=local::default::file:./target/staging-deploy
 } else {
-  & $MvnCmd deploy -Pplaton-release -Pplaton-deploy -DaltDeploymentRepository=local::default::file:./target/staging-deploy
+  & $MvnCmd deploy -Pplaton-deploy -Pplaton-release -DaltDeploymentRepository=local::default::file:./target/staging-deploy
 }
 
 $exitCode =$LastExitCode
@@ -76,9 +76,7 @@ if ($exitCode -eq 0) {
   exit $exitCode
 }
 
-Write-Host "Artifacts are staged locally"
-
-#Write-Host "Artifacts are staged remotely, you should close and release the staging manually:"
-#Write-Host "https://oss.sonatype.org/#stagingRepositories"
-#Write-Host "Hit the following link to check if the artifacts are synchronized to the maven center: "
-#Write-Host "https://repo1.maven.org/maven2/ai/platon/pulsar"
+Write-Host "Artifacts are staged remotely, you should close and release the staging manually:"
+Write-Host "https://oss.sonatype.org/#stagingRepositories"
+Write-Host "Hit the following link to check if the artifacts are synchronized to the maven center: "
+Write-Host "https://repo1.maven.org/maven2/ai/platon/pulsar"

@@ -61,17 +61,15 @@ if $CLEAN; then
 fi
 
 if $ENABLE_TEST; then
-  ./mvnw deploy -Pplaton-release -Pplaton-deploy -DaltDeploymentRepository=local::default::file:./target/staging-deploy
+  ./mvnw deploy -Pplaton-deploy,platon-release -DaltDeploymentRepository=local::default::file:./target/staging-deploy
 else
-  ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests=true -DaltDeploymentRepository=local::default::file:./target/staging-deploy
+  ./mvnw deploy -Pplaton-deploy,platon-release -DskipTests=true -DaltDeploymentRepository=local::default::file:./target/staging-deploy
 fi
 
 exitCode=$?
 [ $exitCode -eq 0 ] && echo "Build successfully" || exit 1
 
-echo "Artifacts are staged locally"
-
-#echo "Artifacts are staged remotely, you should close and release the staging manually:"
-#echo "https://oss.sonatype.org/#stagingRepositories"
-#echo "Hit the following link to check if the artifacts are synchronized to the maven center: "
-#echo "https://repo1.maven.org/maven2/ai/platon/pulsar"
+echo "Artifacts are staged remotely, you should close and release the staging manually:"
+echo "https://oss.sonatype.org/#stagingRepositories"
+echo "Hit the following link to check if the artifacts are synchronized to the maven center: "
+echo "https://repo1.maven.org/maven2/ai/platon/pulsar"
