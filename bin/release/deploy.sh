@@ -58,7 +58,7 @@ fi
 
 cd "$APP_HOME"
 
-$APP_HOME/bin/tools/dos2unix.sh
+$APP_HOME/bin/tools/dos2unix.sh -q
 
 # Function to log messages
 log() {
@@ -93,7 +93,7 @@ run_integration_tests() {
     
     # Extract curl commands using Python script
     local curl_examples
-    if ! curl_examples=$(python3 "$SCRIPT_DIR/extract_curl_commands.py" "$APP_HOME/README.md"); then
+    if ! curl_examples=$(python3 "$APP_HOME/bin/tools/python/extract_curl_blocks.py" "$APP_HOME/README.md"); then
         echo "❌ Failed to extract curl commands from README.md"
         return 1
     fi
@@ -104,23 +104,46 @@ run_integration_tests() {
     fi
     
     # Execute each curl example
+    local test_count=0
+    local success_count=0
+    
     while IFS= read -r line; do
-        if [[ "$line" =~ ^# ]]; then
-            # Skip comment lines
+        if [[ -z "$line" ]]; then
             continue
         fi
-        if [[ "$line" =~ curl ]]; then
-            log "🔍 Testing: $line"
-            if ! eval "$line"; then
-                echo "❌ Test failed: $line"
-                return 1
-            fi
+        
+        # Basic command validation
+        if ! [[ "$line" =~ ^curl\s ]]; then
+            echo "⚠️  Skipping invalid command: $line"
+            continue
+        fi
+        
+        test_count=$((test_count + 1))
+        log "🔍 Testing ($test_count): $line"
+        
+        # Execute curl command and capture output
+        if output=$(eval "$line" 2>&1); then
+            success_count=$((success_count + 1))
+            log "✅ Test passed"
+        else
+            echo "❌ Test failed: $line"
+            echo "Error output:"
+            echo "$output"
+            return 1
         fi
     done <<< "$curl_examples"
     
-    log "✅ All integration tests passed!"
+    if [[ $test_count -eq 0 ]]; then
+        echo "❌ No valid curl commands found to test"
+        return 1
+    fi
+    
+    log "✅ Integration tests completed: $success_count/$test_count passed"
     return 0
 }
+
+run_integration_tests
+exit 0
 
 # 1. Deploy to local staging repository
 log "📦 Deploying to local staging repository..."
@@ -166,7 +189,7 @@ fi
 if [[ "$PRODUCTION_MODE" == true ]]; then
     # 4.1 Deploy artifact to Sonatype
     log "📦 Deploying artifact to Sonatype..."
-    if ! mvn clean deploy -P release; then
+    if ! $APP_HOME/mvnw -Pplaton-deploy -Pplaton-release nexus-deploy-staged; then
         echo "❌ Failed to deploy to Sonatype"
         exit 1
     fi

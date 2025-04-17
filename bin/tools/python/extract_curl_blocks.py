@@ -1,6 +1,7 @@
 import re
+import sys
 
-def extract_shell_blocks(file_path):
+def extract_curl_blocks(file_path):
     """
     Extract all shell code blocks that contain curl commands from a markdown file.
     Returns a list of strings, each containing a curl command block.
@@ -22,19 +23,27 @@ def extract_shell_blocks(file_path):
             if 'curl' in block.lower():
                 # Clean up the block by removing extra whitespace and newlines
                 block = re.sub(r'\n\s*\\\s*', ' ', block)  # Join lines with backslash
-                # block = re.sub(r'\s+', ' ', block)  # Normalize whitespace
+                block = re.sub(r'\s+', ' ', block)  # Normalize whitespace
                 curl_blocks.append(block)
 
         return curl_blocks
 
     except FileNotFoundError:
-        print(f"Error: File '{file_path}' not found.")
+        print(f"Error: File '{file_path}' not found.", file=sys.stderr)
         return []
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print(f"An error occurred: {str(e)}", file=sys.stderr)
         return []
 
 
 if __name__ == "__main__":
-    print("Extracting all shell blocks:")
-    extract_shell_blocks("README.md")
+    if len(sys.argv) != 2:
+        print("Usage: python extract_curl_blocks.py <markdown_file>", file=sys.stderr)
+        sys.exit(1)
+        
+    file_path = sys.argv[1]
+    curl_blocks = extract_curl_blocks(file_path)
+    
+    # When run directly, print each block on a new line
+    for block in curl_blocks:
+        print(block)

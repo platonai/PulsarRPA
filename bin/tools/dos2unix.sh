@@ -11,10 +11,10 @@ done
 
 cd "$APP_HOME" || exit
 
-dos2unix "$APP_HOME"/mvnw
+dos2unix $@ "$APP_HOME"/mvnw
 
-find "$APP_HOME"/bin -type f -name "*.sh" -print0 | xargs -0 dos2unix
-dos2unix "$APP_HOME"/VERSION
+find "$APP_HOME"/bin -type f -name "*.sh" -print0 | xargs -0 dos2unix $@
+dos2unix $@ "$APP_HOME"/VERSION
 
 # find all bash files and add executable permission
 find "$APP_HOME"/bin -type f -name "*.sh" -print0 | xargs -0 chmod +x
