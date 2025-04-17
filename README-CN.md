@@ -38,9 +38,9 @@ https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey?apikey=xxx
 
 ```shell
 docker run -d -p 8182:8182 \
-  -e llm.provider=volcengine \
-  -e llm.name=${YOUR-MODEL_NAME} \
-  -e llm.apiKey=${YOUR-LLM_API_KEY} \
+  -e LLM_PROVIDER=volcengine \
+  -e LLM_NAME=${YOUR-MODEL_NAME} \
+  -e LLM_API_KEY=${YOUR-LLM_API_KEY} \
   galaxyeye88/pulsar-rpa:latest
 ```
 

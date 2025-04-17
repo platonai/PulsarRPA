@@ -9,7 +9,6 @@ import java.io.InputStream
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 
 /**
  * Created by vincent on 17-1-17.
@@ -24,7 +23,6 @@ abstract class AbstractConfiguration {
     var name = "Configuration#" + hashCode()
     var profile = ""
         private set
-    val mode get() = if (isDistributedFs) "cluster" else "local"
 
     /**
      * Hadoop compatible configuration.
@@ -47,14 +45,6 @@ abstract class AbstractConfiguration {
     constructor(conf: KConfiguration) {
         this.conf = KConfiguration(conf)
     }
-    
-    /**
-     * Check if we are running on hdfs.
-     *
-     * @return a boolean.
-     */
-    private val isDistributedFs: Boolean
-        get() = get("fs.defaultFS")?.startsWith("hdfs") == true
 
     /**
      * Return the boxed KConfiguration.
