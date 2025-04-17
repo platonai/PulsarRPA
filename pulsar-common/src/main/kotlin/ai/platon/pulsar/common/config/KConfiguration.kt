@@ -59,7 +59,6 @@ class KConfiguration(
         }
 
     val id = ID_SUPPLIER.incrementAndGet()
-    val loadedResources: List<String> get() = impl?.resources?.map { it.name } ?: listOf()
 
     constructor(conf: KConfiguration) : this(conf.profile, conf.extraResources, conf.loadDefaults)
 
@@ -73,19 +72,23 @@ class KConfiguration(
      * @param value property value.
      */
     operator fun set(name: String, value: String?) {
+        val actualKey = KStrings.toDotSeparatedKebabCase(name)
+
         if (value == null) {
-            unset(name)
+            unset(actualKey)
         } else {
-            assuredImplementation[name] = value
+            assuredImplementation[actualKey] = value
         }
     }
 
     fun unset(name: String) {
-        assuredImplementation.remove(name)
+        val actualKey = KStrings.toDotSeparatedKebabCase(name)
+        assuredImplementation.remove(actualKey)
     }
 
     operator fun get(name: String): String? {
-        return assuredImplementation[name]?.toString()
+        val actualKey = KStrings.toDotSeparatedKebabCase(name)
+        return assuredImplementation[actualKey]?.toString()
     }
 
     fun get(name: String, defaultValue: String): String {
@@ -96,8 +99,8 @@ class KConfiguration(
         set(name, Strings.arrayToString(values))
     }
 
-    fun setIfUnset(name: String?, value: String?) {
-        if (get(name!!) == null) {
+    fun setIfUnset(name: String, value: String?) {
+        if (get(name) == null) {
             set(name, value)
         }
     }
@@ -191,7 +194,11 @@ private class ConfigurationImpl(
      *             list, or {@code null} if it did not have one.
      * @see #getProperty
      */
-    operator fun set(name: String, value: String): Any? = properties.setProperty(name, value)
+    operator fun set(name: String, value: String): Any? {
+        val actualKey = KStrings.toDotSeparatedKebabCase(name)
+        val oldValue = properties.setProperty(actualKey, value)
+        return oldValue
+    }
 
     fun remove(name: String) = properties.remove(name)
 
@@ -309,10 +316,14 @@ private class ConfigurationImpl(
         properties: Properties, name: String, key: String,
         value: String?, finalParameter: Boolean, source: Array<String>?
     ) {
+        // @see https://docs.spring.io/spring-boot/reference/features/external-config.html
+        val actualKey = KStrings.toDotSeparatedKebabCase(key)
+
         if (value != null) {
-            properties.setProperty(key, value)
+            properties.setProperty(actualKey, value)
+            // add kebab-case key
         } else {
-            properties.remove(key)
+            properties.remove(actualKey)
         }
     }
 
