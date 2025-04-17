@@ -1,5 +1,6 @@
 import re
 import sys
+import os
 
 def extract_curl_blocks(file_path):
     """
@@ -21,9 +22,15 @@ def extract_curl_blocks(file_path):
         for block in shell_blocks:
             block = block.strip()
             if 'curl' in block.lower():
-                # Clean up the block by removing extra whitespace and newlines
-                block = re.sub(r'\n\s*\\\s*', ' ', block)  # Join lines with backslash
-                block = re.sub(r'\s+', ' ', block)  # Normalize whitespace
+                # Clean up the block while preserving newlines
+                # Remove trailing backslashes and join continuation lines
+                block = re.sub(r'\\\s*\n\s*', ' ', block)
+                # Remove extra spaces but preserve newlines
+                block = re.sub(r'[ \t]+', ' ', block)
+                # Remove spaces before newlines
+                block = re.sub(r' \n', '\n', block)
+                # Remove multiple consecutive newlines
+                block = re.sub(r'\n+', '\n', block)
                 curl_blocks.append(block)
 
         return curl_blocks
@@ -44,6 +51,18 @@ if __name__ == "__main__":
     file_path = sys.argv[1]
     curl_blocks = extract_curl_blocks(file_path)
     
-    # When run directly, print each block on a new line
-    for block in curl_blocks:
-        print(block)
+    # Create /tmp/curl directory if it doesn't exist
+    temp_dir = '/tmp/curl'
+    os.makedirs(temp_dir, exist_ok=True)
+    
+    # Write each block to a separate file
+    for i, block in enumerate(curl_blocks, 1):
+        block_file = os.path.join(temp_dir, f'curl_block_{i}.sh')
+        with open(block_file, 'w') as f:
+            f.write(block)
+        # Make the file executable
+        os.chmod(block_file, 0o755)
+        
+    # Print the file path so it can be captured by the caller
+    print(temp_dir)
+

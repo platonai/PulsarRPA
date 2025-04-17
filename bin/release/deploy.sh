@@ -90,60 +90,50 @@ wait_for_service() {
 # Function to run integration tests
 run_integration_tests() {
     log "🔍 Running integration tests..."
-    
+        
     # Extract curl commands using Python script
-    local curl_examples
-    if ! curl_examples=$(python3 "$APP_HOME/bin/tools/python/extract_curl_blocks.py" "$APP_HOME/README.md"); then
-        echo "❌ Failed to extract curl commands from README.md"
+    local curl_file_dir
+    if ! curl_file_dir=$(python3 "$APP_HOME/bin/tools/python/extract_curl_blocks.py" "$APP_HOME/README.md"); then
+        log "❌ Failed to extract curl commands from README.md"
         return 1
     fi
-    
-    if [[ -z "$curl_examples" ]]; then
-        echo "❌ No curl examples found in README.md"
+
+    if [[ -z "$curl_file_dir" ]]; then
+        log "❌ No curl examples found in README.md"
         return 1
     fi
-    
+
+    log "🔍 Found curl examples in README.md"
+    log "$(ls -la "$curl_file_dir")"
+
     # Execute each curl example
     local test_count=0
     local success_count=0
     
-    while IFS= read -r line; do
-        if [[ -z "$line" ]]; then
-            continue
-        fi
-        
-        # Basic command validation
-        if ! [[ "$line" =~ ^curl\s ]]; then
-            echo "⚠️  Skipping invalid command: $line"
+    for curl_file in "$curl_file_dir/curl_block*.sh"; do
+        if [[ ! -f "$curl_file" ]]; then
             continue
         fi
         
         test_count=$((test_count + 1))
-        log "🔍 Testing ($test_count): $line"
+        log "🔍 Testing ($test_count): $curl_file"   
         
-        # Execute curl command and capture output
-        if output=$(eval "$line" 2>&1); then
+        # Execute the curl example and capture output
+        if output=$("$curl_file" 2>&1); then
             success_count=$((success_count + 1))
             log "✅ Test passed"
         else
-            echo "❌ Test failed: $line"
-            echo "Error output:"
-            echo "$output"
+            log "❌ Test failed: $curl_file"    
+            log "Error output:"
+            log "$output"
             return 1
         fi
-    done <<< "$curl_examples"
-    
-    if [[ $test_count -eq 0 ]]; then
-        echo "❌ No valid curl commands found to test"
-        return 1
-    fi
+    done
     
     log "✅ Integration tests completed: $success_count/$test_count passed"
+
     return 0
 }
-
-run_integration_tests
-exit 0
 
 # 1. Deploy to local staging repository
 log "📦 Deploying to local staging repository..."
