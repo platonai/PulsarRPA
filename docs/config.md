@@ -14,16 +14,17 @@ PulsarRPA is a standard Spring Boot application, which supports multiple configu
 Set configurations using environment variables:
 ```bash
 export PRIVACY_CONTEXT_NUMBER=2
+export BROWSER_MAX_ACTIVE_TABS=8
+export BROWSER_DISPLAY_MODE=GUI
 ```
 
-
 ### ⚙️ **System Properties**
-Set configurations programmatically in Java:
+Set configurations programmatically in Kotlin/Java:
 ```java
+System.setProperty("privacy.context.number", "8");
 System.setProperty("browser.max.active.tabs", "8");
 System.setProperty("browser.display.mode", "GUI");
 ```
-
 
 ### 📝 **Spring Boot Configuration**
 
@@ -36,7 +37,6 @@ privacy.context.number=2
 browser.max.active.tabs=8
 server.port=8182
 ```
-
 
 #### `application.yml`
 ```yaml
@@ -53,7 +53,6 @@ server:
   port: 8182
 ```
 
-
 ### 🐳 **Docker Configuration**
 For Docker users, configurations can be set using environment variables:
 ```shell
@@ -63,7 +62,6 @@ docker run -d -p 8182:8182 \
   -e LLM_API_KEY=${YOUR-LLM_API_KEY} \
   galaxyeye88/pulsar-rpa:latest
 ```
-
 
 ## ⚙️ Common Configuration Options
 
