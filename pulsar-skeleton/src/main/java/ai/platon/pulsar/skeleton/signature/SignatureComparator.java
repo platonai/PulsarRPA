@@ -20,7 +20,7 @@ package ai.platon.pulsar.skeleton.signature;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
 
-public class SignatureComparator implements Comparator {
+public class SignatureComparator implements Comparator<SignatureComparator> {
 
     public static int compare(byte[] data1, byte[] data2) {
         if (data1 == null && data2 == null)
@@ -75,7 +75,7 @@ public class SignatureComparator implements Comparator {
         return 0;
     }
 
-    public int compare(Object o1, Object o2) {
+    public int compare(SignatureComparator o1, SignatureComparator o2) {
         return _compare(o1, o2);
     }
 }
