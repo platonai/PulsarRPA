@@ -1,5 +1,6 @@
-package ai.platon.pulsar.protocol.browser.driver.playwright
+package ai.platon.pulsar.protocol.browser.driver.playwright.badcase
 
+import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightTestBase.Companion.BAD_PARALLELISM_WARNING
 import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright
@@ -12,6 +13,8 @@ const val PAGES_PER_THREAD = 5
 const val TOTAL_URLS = 1000
 
 fun main() {
+    println(BAD_PARALLELISM_WARNING)
+
     val testUrls = List(TOTAL_URLS) { "https://example.com/page${it + 1}" }
 
     Playwright.create().use { playwright ->

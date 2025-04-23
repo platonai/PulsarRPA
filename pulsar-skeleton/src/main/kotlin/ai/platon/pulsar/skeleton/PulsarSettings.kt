@@ -347,7 +347,7 @@ open class PulsarSettings {
      */
     fun withLLMName(name: String?): PulsarSettings {
         // Validate that the LLM name is not null
-        if (name == null) throw IllegalArgumentException("LLM name cannot be null")
+        requireNotNull(name) { "LLM name cannot be null" }
 
         // Set the LLM name as a system property
         System.setProperty("llm.name", name)
@@ -375,7 +375,7 @@ open class PulsarSettings {
      */
     fun withLLMAPIKey(key: String?): PulsarSettings {
         // Validate that the API key is not null before setting it as a system property.
-        if (key == null) throw IllegalArgumentException("LLM API key cannot be null")
+        requireNotNull(key) { "LLM API key cannot be null" }
 
         // Set the provided API key as a system property for global access.
         System.setProperty("llm.apiKey", key)
