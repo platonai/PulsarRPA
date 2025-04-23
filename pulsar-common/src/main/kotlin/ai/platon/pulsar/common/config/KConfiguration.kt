@@ -63,11 +63,6 @@ class KConfiguration(
     constructor(conf: KConfiguration) : this(conf.profile, conf.extraResources, conf.loadDefaults)
 
     /**
-     * Set the `value` of the `name` property. If
-     * `name` is deprecated or there is a deprecated name associated to it,
-     * it sets the value to both names. Name will be trimmed before put into
-     * configuration.
-     *
      * @param name property name.
      * @param value property value.
      */

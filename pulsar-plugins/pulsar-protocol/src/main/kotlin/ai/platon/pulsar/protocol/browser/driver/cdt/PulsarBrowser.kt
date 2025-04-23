@@ -216,10 +216,6 @@ class PulsarBrowser(
         return driver
     }
 
-    //    private fun buildDriverTree() {
-//        drivers.values.forEach { addToDriverTree(it) }
-//    }
-//
     private fun addToDriverTree(driver: WebDriver) {
         if (driver is PulsarWebDriver) {
             val parentId = driver.chromeTab.parentId

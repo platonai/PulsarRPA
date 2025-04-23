@@ -42,6 +42,8 @@ get the text of the element with id 'title'
     val eventHandlers = DefaultPageEventHandlers()
     eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
         while (true) {
+            println("Demonstrating talk and execute on the active page.")
+
             prompts.forEach { prompt ->
                 println("\n")
                 println(OffsetDateTime.now())
@@ -62,6 +64,8 @@ get the text of the element with id 'title'
                 }
                 delay(1000)
             }
+
+            println("All done.")
         }
     }
     session.open(url, eventHandlers)

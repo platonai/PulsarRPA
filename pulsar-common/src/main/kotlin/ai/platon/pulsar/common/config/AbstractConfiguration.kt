@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.config
 
+import ai.platon.pulsar.common.KStrings
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.config.KConfiguration.Companion.DEFAULT_RESOURCES
 import org.slf4j.LoggerFactory
@@ -70,7 +71,13 @@ abstract class AbstractConfiguration {
      * @return the value of the `name`, or null if no such property exists.
      */
     open operator fun get(name: String): String? {
-        return System.getenv(name) ?: System.getProperty(name) ?: environment?.get(name) ?: conf[name]
+        val value = System.getenv(name) ?: System.getProperty(name) ?: environment?.get(name) ?: conf[name]
+        if (value != null) {
+            return value
+        }
+
+        val kebabName = KStrings.toDotSeparatedKebabCase(name)
+        return System.getenv(kebabName) ?: System.getProperty(kebabName) ?: environment?.get(kebabName) ?: conf[kebabName]
     }
 
     /**

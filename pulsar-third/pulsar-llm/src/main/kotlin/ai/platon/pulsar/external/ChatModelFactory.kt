@@ -10,15 +10,24 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The factory for creating models.
+ *
+ * TODO: multiple model support
  */
 object ChatModelFactory {
     private val models = ConcurrentHashMap<String, ChatModel>()
 
     fun isModelConfigured(conf: ImmutableConfig): Boolean {
+        // deepseek official
+        val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
+        if (deepseekAPIKey != null) {
+            return true
+        }
+
+        val provider = conf["llm.provider"]
         val llm = conf["llm.name"]
         val apiKey = conf["llm.apiKey"]
 
-        return llm != null && apiKey != null
+        return provider != null && llm != null && apiKey != null
     }
 
     fun hasModel(conf: ImmutableConfig) = isModelConfigured(conf)
@@ -31,6 +40,15 @@ object ChatModelFactory {
      */
     @Throws(IllegalArgumentException::class)
     fun getOrCreate(conf: ImmutableConfig): ChatModel {
+        // Notice: all keys are transformed to dot.separated.kebab.case using KStrings.toDotSeparatedKebabCase(),
+        // so the following keys are equal:
+        // - DEEPSEEK_API_KEY, deepseek.apiKey
+        val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
+        val deepseekModelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
+        if (deepseekAPIKey != null) {
+            return getOrCreate("deepseek", deepseekModelName, deepseekAPIKey, conf)
+        }
+
         val provider = conf["llm.provider"] ?: throw IllegalArgumentException("llm.provider is not set")
         val modelName = conf["llm.name"] ?: throw IllegalArgumentException("llm.name is not set")
         val apiKey = conf["llm.apiKey"] ?: throw IllegalArgumentException("llm.apiKey is not set")

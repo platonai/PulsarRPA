@@ -2,15 +2,23 @@ package ai.platon.pulsar.protocol.browser.driver.playwright
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.skeleton.common.options.LoadOptionDefaults.browser
 import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright
 import com.microsoft.playwright.options.LoadState
 import java.nio.file.Paths
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * In this test, each tag is bound to a single thread. The page operations in a single browser context
+ * are performed in sequence to guarantee thread safety.
+ *
+ * Playwright Java is not thread safe, i.e. all its methods as well as methods on all objects created by it
+ * (such as BrowserContext, Browser, Page etc.) are expected to be called on the same thread where the
+ * Playwright object was created or proper synchronization should be implemented to ensure only one thread calls
+ * Playwright methods at any given time. Having said that it's okay to create multiple Playwright instances each on its
+ * own thread.
+ * */
 class PlaywrightSafeMultiTabTest {
 
     private val originURL = "https://www.amazon.com/"

@@ -22,6 +22,9 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Consumer
 
+/**
+ * TODO: use kotlinx.coroutines channels instead of CountDownLatch
+ * */
 class InvocationFuture(val returnProperty: String? = null) {
     var result: JsonNode? = null
     var isSuccess = false

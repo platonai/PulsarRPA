@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
@@ -102,6 +103,11 @@ internal class RobustRPC(
 
     @Throws(BrowserUnavailableException::class, IllegalWebDriverStateException::class)
     fun handleChromeIOException(e: ChromeIOException, action: String? = null, message: String? = null) {
+        if (!AppContext.isActive) {
+            logger.info("Ignored chrome IO exception because of system shutting down")
+            return
+        }
+
         val message2 = MessageFormat.format("Browser unavailable: {0} ({1}/{2}) | {3}",
             action, rpcFailures, maxRPCFailures, e.message)
 

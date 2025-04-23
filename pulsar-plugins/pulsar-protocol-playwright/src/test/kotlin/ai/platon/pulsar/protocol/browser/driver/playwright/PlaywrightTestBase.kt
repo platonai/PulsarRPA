@@ -8,9 +8,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 open class PlaywrightTestBase {
 
     companion object {
-        const val BAD_PARALLELISM_WARNING = """
-    This is a bad example of using Playwright in a multi-threaded environment.
-    
+        const val PARALLELISM_NOTICE = """    
     Playwright Java is not thread safe, i.e. all its methods as well as methods on all objects created by it 
     (such as BrowserContext, Browser, Page etc.) are expected to be called on the same thread where the 
     Playwright object was created or proper synchronization should be implemented to ensure only one thread calls 
@@ -20,6 +18,12 @@ open class PlaywrightTestBase {
     @see https://playwright.dev/java/docs/multithreading#introduction
     """
 
+        const val BAD_PARALLELISM_WARNING = """
+    This is a bad example of using Playwright in a multi-threaded environment.
+    
+    $PARALLELISM_NOTICE
+    
+    """
 
         lateinit var playwright: Playwright
 

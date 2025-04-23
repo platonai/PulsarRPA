@@ -27,6 +27,8 @@ class KStringsTest {
     @ParameterizedTest
     @CsvSource(
         "SPRING_PROFILES_ACTIVE, spring.profiles.active",
+        "DEEPSEEK_API_KEY, deepseek.api.key",
+        "llm.apiKey, llm.api.key",
         "MY_CUSTOM_SETTING, my.custom.setting",
         "DATABASE_URL, database.url",
         "REDIS_HOST, redis.host",
