@@ -13,9 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * A concurrent load test implementation that ensures each Playwright Page instance
- * is bound to a dedicated thread. All operations on a Page are guaranteed to be
- * executed in its bound thread.
+ * Warning: this is a bad case to demonstrate the problem of Playwright's parallelism.
  * */
 class PlaywrightThreadBoundLoadTest {
     companion object {

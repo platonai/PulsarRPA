@@ -8,12 +8,15 @@ import java.nio.file.Paths
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-const val THREAD_COUNT = 5
-const val PAGES_PER_THREAD = 5
-const val TOTAL_URLS = 1000
-
+/**
+ * Warning: this is a bad case to demonstrate the problem of Playwright's parallelism.
+ * */
 fun main() {
     println(BAD_PARALLELISM_WARNING)
+
+    val THREAD_COUNT = 5
+    val PAGES_PER_THREAD = 5
+    val TOTAL_URLS = 1000
 
     val testUrls = List(TOTAL_URLS) { "https://example.com/page${it + 1}" }
 
