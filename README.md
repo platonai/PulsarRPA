@@ -34,14 +34,10 @@ docker run -d -p 8182:8182 galaxyeye88/pulsar-rpa:latest
 ### 🧠 LLM Integration
 
 🔑 Get your API key here:
-https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey?apikey=xxx
+https://api-docs.deepseek.com/
 
 ```shell
-docker run -d -p 8182:8182 \
-  -e LLM_PROVIDER=volcengine \
-  -e LLM_NAME=${YOUR-MODEL_NAME} \
-  -e LLM_API_KEY=${YOUR-LLM_API_KEY} \
-  galaxyeye88/pulsar-rpa:latest
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${YOUR-DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
 ```
 
 ## 🚀 Quick Start Guide
@@ -49,20 +45,18 @@ docker run -d -p 8182:8182 \
 ### 🌟 For Beginners - No Special Skills Required!
 
 #### 💬 Chat About a Webpage
+
 ```shell
-curl -X POST "http://localhost:8182/api/ai/chat-about" \
--H "Content-Type: application/json" \
--d '{
+curl -X POST "http://localhost:8182/api/ai/chat-about" -H "Content-Type: application/json" -d '{
   "url": "https://www.amazon.com/dp/B0C1H26C46",
   "prompt": "introduce this product"
 }'
 ```
 
 #### 📊 Extract Data
+
 ```shell
-curl -X POST "http://localhost:8182/api/ai/extract" \
--H "Content-Type: application/json" \
--d '{
+curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{
   "url": "https://www.amazon.com/dp/B0C1H26C46",
   "prompt": "product name, price, and description"
 }'
@@ -71,7 +65,7 @@ curl -X POST "http://localhost:8182/api/ai/extract" \
 ### 🎓 For Advanced Users - LLM + X-SQL
 
 ```bash
-curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
     llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
     dom_base_uri(dom) as url,

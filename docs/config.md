@@ -10,20 +10,37 @@ PulsarRPA is a standard Spring Boot application, which supports multiple configu
 
 ## 🔧 Configuration Methods
 
+### 🐳 **Docker Configuration**
+For Docker users, configurations can be set using environment variables:
+
+Linux:
+
+```shell
+docker run -d -p 8182:8182 \
+  -e DEEPSEEK_API_KEY=${YOUR-DEEPSEEK_API_KEY} \
+  -e PRIVACY_CONTEXT_NUMBER=2 \
+  -e BROWSER_MAX_ACTIVE_TABS=8 \
+  -e BROWSER_DISPLAY_MODE=HEADLESS \
+  galaxyeye88/pulsar-rpa:latest
+```
+
+Windows (PowerShell):
+```powershell
+docker run -d -p 8182:8182 `
+  -e DEEPSEEK_API_KEY=$env:YOUR_DEEPSEEK_API_KEY `
+  -e PRIVACY_CONTEXT_NUMBER=2 `
+  -e BROWSER_MAX_ACTIVE_TABS=8 `
+  -e BROWSER_DISPLAY_MODE=HEADLESS `
+  galaxyeye88/pulsar-rpa:latest
+```
+
 ### 🌍 **Environment Variables**
 Set configurations using environment variables:
 ```bash
+export DEEPSEEK_API_KEY=
 export PRIVACY_CONTEXT_NUMBER=2
 export BROWSER_MAX_ACTIVE_TABS=8
 export BROWSER_DISPLAY_MODE=GUI
-```
-
-### ⚙️ **System Properties**
-Set configurations programmatically in Kotlin/Java:
-```java
-System.setProperty("privacy.context.number", "8");
-System.setProperty("browser.max.active.tabs", "8");
-System.setProperty("browser.display.mode", "GUI");
 ```
 
 ### 📝 **Spring Boot Configuration**
@@ -32,45 +49,18 @@ For REST API users, PulsarRPA supports standard Spring Boot configuration method
 
 #### `application.properties`
 ```properties
-browser.display.mode=GUI
+deepseek.api.key=
 privacy.context.number=2
 browser.max.active.tabs=8
-server.port=8182
-```
-
-#### `application.yml`
-```yaml
-privacy:
-  context:
-    number: 2
-browser:
-  display:
-    mode: GUI
-  max:
-    active:
-      tabs: 8
-server:
-  port: 8182
-```
-
-### 🐳 **Docker Configuration**
-For Docker users, configurations can be set using environment variables:
-```shell
-docker run -d -p 8182:8182 \
-  -e LLM_PROVIDER=volcengine \
-  -e LLM_NAME=${YOUR-MODEL_NAME} \
-  -e LLM_API_KEY=${YOUR-LLM_API_KEY} \
-  galaxyeye88/pulsar-rpa:latest
+browser.display.mode=GUI
 ```
 
 ## ⚙️ Common Configuration Options
 
-### 🌐 **Browser Settings**
+- `deepseek.api.key`: Your DeepSeek API key
+- `privacy.context.number`: Number of privacy contexts (default: 2)
 - `browser.max.active.tabs`: Maximum number of tabs allowed per browser (default: 8)
 - `browser.display.mode`: Browser display mode (`GUI`, `HEADLESS`, or `SUPERVISED`)
-
-### 🔒 **Privacy Context Settings**
-- `privacy.context.number`: Number of privacy contexts (default: 2)
 
 ## 💡 Configuration Best Practices
 
