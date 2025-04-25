@@ -9,10 +9,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class PlaywrightDriverTest {
 
@@ -91,11 +88,7 @@ class PlaywrightDriverTest {
     fun test_addInitScript() {
         runBlocking {
             browser.settings.confuser.clear()
-
-            val settings = browser.settings
-            var js = settings.scriptLoader.getPreloadJs(false)
-            val confusedJs = settings.confuser.confuse(js)
-            driver.addInitScript(confusedJs)
+            browser.settings.scriptLoader.reload()
 
             driver.addInitScript("window.__test_utils__ = { add: (a, b) => a + b }")
 

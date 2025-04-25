@@ -270,6 +270,10 @@ abstract class AbstractWebDriver(
     val mainResponseStatusText: String get() = navigateEntry.mainResponseStatusText
     val mainResponseHeaders: Map<String, Any> get() = navigateEntry.mainResponseHeaders
 
+    override suspend fun addInitScript(script: String) {
+        initScriptCache.add(script)
+    }
+
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
 
@@ -706,12 +710,14 @@ abstract class AbstractWebDriver(
         return isActive
     }
 
-    protected fun reportInjectedJs() {
-        val script = settings.confuser.confuse(initScriptCache.joinToString("\n;\n\n\n;\n"))
+    protected fun reportInjectedJs(scripts: String) {
+        if (scripts.isBlank()) {
+            return
+        }
 
         val dir = browser.id.contextDir.resolve("driver.$id/js")
         Files.createDirectories(dir)
-        val report = Files.writeString(dir.resolve("preload.all.js"), script)
+        val report = Files.writeString(dir.resolve("preload.all.js"), scripts)
 
         val tracer = getLogger(this).takeIf { it.isTraceEnabled }
         tracer?.trace("All injected js: file://{}", report)

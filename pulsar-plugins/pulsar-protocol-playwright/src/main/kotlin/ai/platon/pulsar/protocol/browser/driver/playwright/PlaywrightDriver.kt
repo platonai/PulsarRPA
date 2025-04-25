@@ -48,16 +48,6 @@ class PlaywrightDriver(
 
     private var navigateUrl = ""
 
-    override suspend fun addInitScript(script: String) {
-        try {
-            rpc.invokeDeferred("addInitScript") {
-                page.addInitScript(script)
-            }
-        } catch (e: Exception) {
-            rpc.handleWebDriverException(e, "addInitScript")
-        }
-    }
-
     override suspend fun addBlockedURLs(urlPatterns: List<String>) {
         try {
             rpc.invokeDeferred("addBlockedURLs") {
@@ -101,8 +91,7 @@ class PlaywrightDriver(
     private fun doNavigateTo(entry: NavigateEntry) {
         val url = entry.url
 
-        // add in context
-        // addScriptToEvaluateOnNewDocument()
+        addScriptToEvaluateOnNewDocument()
 
         if (blockedURLs.isNotEmpty()) {
             // Blocks URLs from loading.
@@ -162,19 +151,16 @@ class PlaywrightDriver(
                 initScriptCache.add(0, js)
             }
 
-            val confuser = settings.confuser
-            initScriptCache.forEach {
-                val scripts = confuser.confuse(it)
-
-                val b = page.context().browser()
-                requireNotNull(b)
-                check(b.isConnected)
-
-                page.addInitScript(scripts)
+            if (initScriptCache.isEmpty()) {
+                logger.warn("No initScriptCache found")
+                return@invoke
             }
 
+            val scripts = initScriptCache.joinToString("\n;\n\n\n;\n")
+            page.addInitScript("\n;;\n$scripts\n;;\n")
+
             if (logger.isTraceEnabled) {
-                reportInjectedJs()
+                reportInjectedJs(scripts)
             }
 
             initScriptCache.clear()
