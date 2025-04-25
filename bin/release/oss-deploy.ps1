@@ -64,9 +64,9 @@ if ($PerformClean) {
 }
 
 if ($SkipTests) {
-  & $MvnCmd deploy -Pplaton-deploy -Pplaton-release -DskipTests -DaltDeploymentRepository=local::default::file:./target/staging-deploy
+  & $MvnCmd deploy -P platon-deploy,platon-release -DskipTests
 } else {
-  & $MvnCmd deploy -Pplaton-deploy -Pplaton-release -DaltDeploymentRepository=local::default::file:./target/staging-deploy
+  & $MvnCmd deploy -P platon-deploy,platon-release
 }
 
 $exitCode =$LastExitCode
@@ -75,6 +75,10 @@ if ($exitCode -eq 0) {
 } else {
   exit $exitCode
 }
+
+# The following commands are commented out to avoid accidental execution
+# mvn nexus-staging:close -P platon-deploy
+# mvn nexus-staging:release -P platon-deploy
 
 Write-Host "Artifacts are staged remotely, you should close and release the staging manually:"
 Write-Host "https://oss.sonatype.org/#stagingRepositories"
