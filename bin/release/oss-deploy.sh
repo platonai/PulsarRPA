@@ -57,17 +57,27 @@ echo "$VERSION" > "$APP_HOME"/VERSION
 find "$APP_HOME" -name 'pom.xml' -exec sed -i "s/$SNAPSHOT_VERSION/$VERSION/" {} \;
 
 if $CLEAN; then
-  ./mvnw clean
+  ./mvnw clean -Pall-modules
 fi
 
 if $ENABLE_TEST; then
-  ./mvnw deploy -Pplaton-deploy,platon-release -DaltDeploymentRepository=local::default::file:./target/staging-deploy
+  ./mvnw deploy -P platon-deploy,platon-release
 else
-  ./mvnw deploy -Pplaton-deploy,platon-release -DskipTests=true -DaltDeploymentRepository=local::default::file:./target/staging-deploy
+  ./mvnw deploy -P platon-deploy,platon-release -DskipTests
 fi
 
 exitCode=$?
 [ $exitCode -eq 0 ] && echo "Build successfully" || exit 1
+
+# Build pulsar-app/pulsar-master but do not deploy the artifacts
+echo "Building pulsar-app/pulsar-master ..."
+cd "$APP_HOME/pulsar-app/pulsar-master" || exit
+./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true
+
+exitCode=$?
+[ $exitCode -eq 0 ] && echo "Build successfully" || exit 1
+
+cd "$APP_HOME" || exit
 
 echo "Artifacts are staged remotely, you should close and release the staging manually:"
 echo "https://oss.sonatype.org/#stagingRepositories"
