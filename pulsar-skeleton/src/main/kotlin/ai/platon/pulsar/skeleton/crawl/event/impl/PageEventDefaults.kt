@@ -66,7 +66,7 @@ class EmptyBrowseEventHandlers(
 /**
  * The default browse event handlers.
  */
-typealias DefaultBrowseEventHandlers = EmptyBrowseEventHandlers
+typealias DefaultBrowseEventHandlers = PerfectTraceBrowseEventHandlers
 
 /**
  * The default page event handlers.
