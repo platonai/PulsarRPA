@@ -41,10 +41,12 @@ fi
 
 cd "$APP_HOME" || exit 1
 
+VERSION=$(head -n 1 "$APP_HOME/VERSION" | sed 's/-SNAPSHOT//')
+
 # If pulsar-app/pulsar-master/target/PulsarRPA.jar exists, copy it to remote
 PULSAR_RPA_PATH="$APP_HOME/pulsar-app/pulsar-master/target/PulsarRPA.jar"
 if [[ -f "$PULSAR_RPA_PATH" ]]; then
-  DESTINATION_PATH="${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}"
+  DESTINATION_PATH="${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}PulsarRPA-${VERSION}.jar"
 
   echo "Copying $PULSAR_RPA_PATH to $DESTINATION_PATH..."
 
@@ -67,6 +69,13 @@ if [[ -f "$PULSAR_RPA_PATH" ]]; then
   fi
 
   echo -e "\e[32mFile copied successfully to $DESTINATION_PATH\e[0m"
+
+  # Create a symbolic link to the latest version
+  if ! ssh "${REMOTE_USER}@${REMOTE_HOST}" "cd ${REMOTE_PATH} && ln -sf PulsarRPA-${VERSION}.jar PulsarRPA.jar"; then
+    echo "Error: Failed to create symbolic link" >&2
+    exit 1
+  fi
+  echo -e "\e[32mSymbolic link created successfully\e[0m"
 else
   echo -e "\e[33mWarning: $PULSAR_RPA_PATH does not exist\e[0m" >&2
   exit 1

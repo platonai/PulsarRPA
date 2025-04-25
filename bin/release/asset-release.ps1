@@ -17,10 +17,12 @@ if ($null -eq $AppHome) {
 
 Set-Location $AppHome
 
+$Version=(Get-Content "$AppHome/VERSION" -TotalCount 1) -replace "-SNAPSHOT", ""
+
 # If pulsar-app/pulsar-master/target/PulsarRPA.jar exists, copy it to remote
 $PulsarRPAPath = "$AppHome/pulsar-app/pulsar-master/target/PulsarRPA.jar"
 if (Test-Path $PulsarRPAPath) {
-    $DestinationPath = "${RemoteUser}@${RemoteHost}:${RemotePath}"
+    $DestinationPath = "${RemoteUser}@${RemoteHost}:${RemotePath}PulsarRPA-${Version}.jar"
 
     Write-Host "Copying $PulsarRPAPath to $DestinationPath..."
 
@@ -44,6 +46,13 @@ if (Test-Path $PulsarRPAPath) {
         }
 
         Write-Host "File copied successfully to $DestinationPath" -ForegroundColor Green
+
+        # Create a symbolic link to the latest version
+        $linkResult = Invoke-Expression "ssh ${RemoteUser}@${RemoteHost} 'ln -sf PulsarRPA-${Version}.jar PulsarRPA.jar'"
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to create symbolic link"
+        }
+        Write-Host "Symbolic link created successfully" -ForegroundColor Green
     }
     catch {
         Write-Error "Error: $_"
