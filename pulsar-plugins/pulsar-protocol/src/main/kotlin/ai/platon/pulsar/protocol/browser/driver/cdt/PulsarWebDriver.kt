@@ -92,10 +92,6 @@ class PulsarWebDriver(
         }
     }
 
-    override suspend fun addInitScript(script: String) {
-        initScriptCache.add(script)
-    }
-
     override suspend fun addBlockedURLs(urlPatterns: List<String>) {
         _blockedURLs.addAll(urlPatterns)
     }
@@ -839,14 +835,16 @@ class PulsarWebDriver(
             initScriptCache.add(0, js)
         }
 
-        val confuser = settings.confuser
-        initScriptCache.forEach {
-            val confusedJs = confuser.confuse(it)
-            pageAPI?.addScriptToEvaluateOnNewDocument(confusedJs)
+        if (initScriptCache.isEmpty()) {
+            logger.warn("No initScriptCache found")
+            return
         }
 
+        val scripts = initScriptCache.joinToString("\n;\n\n\n;\n")
+        pageAPI?.addScriptToEvaluateOnNewDocument("\n;;\n$scripts\n;;\n")
+
         if (logger.isTraceEnabled) {
-            reportInjectedJs()
+            reportInjectedJs(scripts)
         }
 
         // the cache is used for a single document, so we have to clear it

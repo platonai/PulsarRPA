@@ -62,6 +62,11 @@ open class ScriptLoader(
         return preloadJs
     }
 
+    @Synchronized
+    fun reload() {
+        load()
+    }
+
     private fun load(): String {
         jsCache.clear()
 

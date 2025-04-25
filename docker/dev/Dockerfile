@@ -4,7 +4,10 @@ FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
 # 设置工作目录
 WORKDIR /build
 
+# 复制整个项目
 COPY ../../pulsar-app/pulsar-master .
+
+RUN ls -l
 
 # 复制 JAR 以便在下一阶段使用
 RUN cp $(find /build -name "*.jar" | grep "PulsarRPA.jar") /build/app.jar
@@ -19,6 +22,7 @@ WORKDIR /app
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+RUN apk add curl
 # 安装 Chromium 和必要的依赖
 RUN apk add --no-cache \
     chromium \
@@ -39,7 +43,7 @@ ENV CHROME_BIN=/usr/bin/chromium-browser \
 COPY --from=builder /build/app.jar app.jar
 
 # 设置环境变量
-ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC"
+ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC -Dbrowser.display.mode=HEADLESS"
 
 # 暴露端口
 # 8182: api server

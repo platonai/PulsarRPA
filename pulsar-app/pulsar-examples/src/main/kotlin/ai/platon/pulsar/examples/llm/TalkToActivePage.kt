@@ -18,8 +18,8 @@ fun main() {
     PulsarSettings()
         .withSPA() // enable Single Page Application mode, so the execution will not be timeout
         .withLLMProvider("volcengine") // use volcengine as the LLM provider
-        .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
-        .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
+        .withLLMName("ep-20250218201413-f54pj") // the LLM name, you should change it to your own
+        // .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
 
     // Or
     // use config file under $PULSAR_HOME/config/conf-enabled
@@ -42,6 +42,8 @@ get the text of the element with id 'title'
     val eventHandlers = DefaultPageEventHandlers()
     eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
         while (true) {
+            println("Demonstrating talk and execute on the active page.")
+
             prompts.forEach { prompt ->
                 println("\n")
                 println(OffsetDateTime.now())
@@ -62,6 +64,8 @@ get the text of the element with id 'title'
                 }
                 delay(1000)
             }
+
+            println("All done.")
         }
     }
     session.open(url, eventHandlers)

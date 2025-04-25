@@ -73,7 +73,6 @@ public class MD5Signature extends Signature {
             cb = buf.remaining();
         }
 
-        // org.apache.hadoop.io.MD5Hash.MD5Hash.digest(data, of, cb).getDigest();
         return digest(data, of, cb);
     }
 }

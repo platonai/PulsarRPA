@@ -27,6 +27,7 @@ class AiController(
     fun simpleChat(@RequestParam(value = "prompt") prompt: String): String {
         return promptService.chat(prompt)
     }
+
     /**
      * Chat with the LLM about anything.
      *

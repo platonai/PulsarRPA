@@ -315,9 +315,6 @@ open class BrowserSettings constructor(
             if (n <= 0) {
                 throw IllegalArgumentException("The number of open tabs has to be > 0")
             }
-            if (n > 50) {
-                System.err.println("PulsarRPA: The number of open tabs is too large, it may cause out of memory")
-            }
 
             System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")
             return BrowserSettings

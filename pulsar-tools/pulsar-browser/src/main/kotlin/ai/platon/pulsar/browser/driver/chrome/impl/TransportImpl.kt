@@ -83,7 +83,10 @@ class TransportImpl : Transport {
             throw ChromeIOException("Failed connecting to ws server | $uri", e, isOpen)
         }
     }
-    
+
+    /**
+     * Reserved for test purposes only.
+     * */
     @Throws(ChromeIOException::class)
     override fun send(message: String) {
         meterRequests.mark()

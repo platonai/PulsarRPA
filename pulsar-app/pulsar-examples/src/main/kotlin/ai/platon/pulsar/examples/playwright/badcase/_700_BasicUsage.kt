@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.playwright
+package ai.platon.pulsar.examples.playwright.badcase
 
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.skeleton.PulsarSettings
@@ -10,6 +10,8 @@ import kotlinx.coroutines.runBlocking
  * Demonstrates the very basic usage of PulsarRPA.
  * */
 fun main() {
+    println("This is a bad case. Playwright is not threadsafe nor coroutine safe")
+
     // Use the default browser which has an isolated profile.
     // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
     PulsarSettings().withDefaultBrowser(BrowserType.PLAYWRIGHT_CHROME)

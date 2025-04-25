@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.playwright
+package ai.platon.pulsar.examples.playwright.badcase
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.browser.BrowserType
@@ -12,9 +12,9 @@ import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
  * Demonstrates continuous crawls.
  * */
 fun main() {
-    // For continuous crawls, you'd better use sequential browsers or temporary browsers
-    PulsarSettings().withSequentialBrowsers(BrowserType.PLAYWRIGHT_CHROME)
+    println("This is a bad case. Playwright is not threadsafe nor coroutine safe")
 
+    PulsarSettings().withBrowser(BrowserType.PLAYWRIGHT_CHROME)
     val context = PulsarContexts.create()
 
     val parseHandler = { _: WebPage, document: FeaturedDocument ->

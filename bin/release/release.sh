@@ -122,6 +122,7 @@ cd "$APP_HOME"
 BIN="$APP_HOME/bin"
 GIT_RELEASE_SCRIPT="$BIN/release/git-release.sh"
 DOCKER_RELEASE_SCRIPT="$BIN/release/docker-release.sh"
+ASSET_RELEASE_SCRIPT="$BIN/release/asset-release.sh"
 
 # 🔍 Verify required scripts exist
 if [[ ! -f "$GIT_RELEASE_SCRIPT" ]]; then
@@ -131,6 +132,11 @@ fi
 
 if [[ ! -f "$DOCKER_RELEASE_SCRIPT" ]]; then
     echo "❌ Docker release script not found: $DOCKER_RELEASE_SCRIPT"
+    exit 1
+fi
+
+if [[ ! -f "$ASSET_RELEASE_SCRIPT" ]]; then
+    echo "❌ Asset release script not found: $ASSET_RELEASE_SCRIPT"
     exit 1
 fi
 
@@ -150,6 +156,15 @@ fi
 
 if ! "$DOCKER_RELEASE_SCRIPT"; then
     echo "❌ Docker release failed"
+    exit 1
+fi
+
+if [[ "$VERBOSE" == true ]]; then
+    echo "📦 Starting asset release process..."
+fi
+
+if ! "$ASSET_RELEASE_SCRIPT"; then
+    echo "❌ Asset release failed"
     exit 1
 fi
 
