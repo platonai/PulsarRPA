@@ -20,6 +20,7 @@ Set-Location $AppHome
 $Bin = "$AppHome\bin"
 $GitReleaseScript = "$Bin\release\git-release.ps1"
 $DockerReleaseScript = "$Bin\release\docker-release.ps1"
+$AssetReleaseScript = "$Bin\release\asset-release.ps1"
 
 # 🔍 Verify required scripts exist
 if (-not (Test-Path $GitReleaseScript)) {
@@ -44,6 +45,12 @@ try {
     & $DockerReleaseScript
     if ($LASTEXITCODE -ne 0) {
         throw "Docker release failed with exit code $LASTEXITCODE"
+    }
+
+    Write-Verbose "📦 Starting asset release process..."
+    & $AssetReleaseScript
+    if ($LASTEXITCODE -ne 0) {
+        throw "Asset release failed with exit code $LASTEXITCODE"
     }
 
     Write-Host "✅ Release process completed successfully!" -ForegroundColor Green
