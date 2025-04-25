@@ -1,6 +1,6 @@
 # Find the first parent directory containing the VERSION file
 $AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
-while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
+while ($null -ne $AppHome -and !(Test-Path "$AppHome/VERSION")) {
   $AppHome=$AppHome.Parent
 }
 cd $AppHome

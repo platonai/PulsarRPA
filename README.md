@@ -8,7 +8,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 **PulsarRPA** is a **high-performance** 🚀, **distributed** 🌐, and **open-source** 🔓 Robotic Process Automation (RPA) framework.
 Designed for **large-scale automation** 🏭, it excels in:
-- 🌐 **Browser automation, super-fast⚡, spider–grade⚡**
+- 🌐 **Browser automation, super-fast⚡, spider–grade❗**
 - 🧠 **Web content understanding**
 - 📊 **Data extraction**
 
@@ -23,28 +23,23 @@ ensuring **accurate** ✅ and **comprehensive** 📚 data extraction even from t
 📺 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
-## 🐳 Docker Setup
-
-### 🔧 Basic Setup (Without LLM)
-
-```shell
-docker run -d -p 8182:8182 galaxyeye88/pulsar-rpa:latest
-```
-
-### 🧠 LLM Integration
-
-🔑 Get your API key here:
-https://api-docs.deepseek.com/
-
-```shell
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${YOUR-DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
-```
-
 ## 🚀 Quick Start Guide
 
 ### 🌟 For Beginners - No Special Skills Required!
 
+#### Download
+
+Download the latest [Executable Jar](http://static.platonic.fun/repo/ai/platon/pulsar/PulsarRPA.jar) and run it.
+
+```shell
+java -D DEEPSEEK_API_KEY=${YOUR-DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+```
+
+You can ignore DEEPSEEK_API_KEY if you don't need LLM features.
+
 #### 💬 Chat About a Webpage
+
+Talk about a webpage using the `chat-about` API:
 
 ```shell
 curl -X POST "http://localhost:8182/api/ai/chat-about" -H "Content-Type: application/json" -d '{
@@ -55,11 +50,30 @@ curl -X POST "http://localhost:8182/api/ai/chat-about" -H "Content-Type: applica
 
 #### 📊 Extract Data
 
+Extract data from a webpage using `extract` API:
+
 ```shell
 curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{
   "url": "https://www.amazon.com/dp/B0C1H26C46",
   "prompt": "product name, price, and description"
 }'
+```
+
+#### 💬 Chat with AI
+
+Use the `chat` API to ask any questions:
+
+```shell
+curl http://localhost:8182/api/ai/chat?prompt=What-is-the-most-fantastical-technology-today
+```
+
+Use `post` method to send a longer prompt:
+
+```shell
+curl -X POST "http://localhost:8182/api/ai/chat" -H "Content-Type: application/json" -d '
+What is the most fantastical technology today?
+You should return a list of 5 items.
+'
 ```
 
 ### 🎓 For Advanced Users - LLM + X-SQL
