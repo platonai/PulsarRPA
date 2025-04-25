@@ -1,7 +1,7 @@
 param(
     [string]$RemoteUser = "vincent",
     [string]$RemoteHost = "platonai.cn",
-    [string]$RemotePath = "~/platonai.cn/repo/ai/platon/pulsar/"
+    [string]$RemotePath = "~/platonic.fun/repo/ai/platon/pulsar/"
 )
 
 # Find the first parent directory containing the VERSION file
@@ -55,6 +55,7 @@ if (Test-Path $PulsarRPAPath) {
         Write-Host "Symbolic link created successfully" -ForegroundColor Green
 
         # List the remote directory contents
+        # e.g. ssh vincent@platonai.cn ls -l ~/platonic.fun/repo/ai/platon/pulsar/
         $listResult = Invoke-Expression "ssh ${RemoteUser}@${RemoteHost} 'ls -l $RemotePath'"
     }
     catch {

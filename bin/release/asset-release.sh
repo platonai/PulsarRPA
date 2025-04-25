@@ -3,7 +3,7 @@
 # Default parameters
 REMOTE_USER="vincent"
 REMOTE_HOST="platonai.cn"
-REMOTE_PATH="~/platonai.cn/repo/ai/platon/pulsar/"
+REMOTE_PATH="~/platonic.fun/repo/ai/platon/pulsar/"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -78,6 +78,7 @@ if [[ -f "$PULSAR_RPA_PATH" ]]; then
   echo -e "\e[32mSymbolic link created successfully\e[0m"
 
   # List the files in the remote directory
+  # e.g. ssh vincent@platonai.cn ls -l ~/platonic.fun/repo/ai/platon/pulsar/
   echo -e "\e[32mFiles in $REMOTE_PATH:\e[0m"
   if ! ssh "${REMOTE_USER}@${REMOTE_HOST}" "ls -l ${REMOTE_PATH}"; then
     echo "Error: Failed to list files in remote directory" >&2
