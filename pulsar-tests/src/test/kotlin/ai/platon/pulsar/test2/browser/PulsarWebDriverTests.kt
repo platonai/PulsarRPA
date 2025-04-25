@@ -452,10 +452,7 @@ class PulsarWebDriverTests : WebDriverTestBase() {
     
     @Test
     fun testDragAndHold() = runWebDriverTest(walmartUrl, browser) { driver ->
-        // 2022.09.06:
-        // override the user agent, and walmart shows robot check page.
-        // BrowserSettings.enableUserAgentOverriding()
-        
+        // TODO: FIXME: dragAndHold not working on walmart.com
         val result = driver.evaluate("__pulsar_utils__.doForAllFrames('HOLD', 'ME')")
         println(result)
     }
