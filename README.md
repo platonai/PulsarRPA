@@ -29,7 +29,7 @@ ensuring **accurate** ✅ and **comprehensive** 📚 data extraction even from t
 
 #### Download
 
-Download the latest [Executable Jar](http://static.platonic.fun/repo/ai/platon/pulsar/PulsarRPA.jar) and run it.
+Download the latest [Executable Jar](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar) and run it.
 
 ```shell
 java -D DEEPSEEK_API_KEY=${YOUR-DEEPSEEK_API_KEY} -jar PulsarRPA.jar
@@ -256,5 +256,4 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 
 <div style="display: flex;">
   <img src="docs/images/wechat-author.png" width="300" alt="WeChat QR Code" />
-  <img src="docs/images/buy-me-a-coffee.png" width="300" alt="Support Us" />
 </div>

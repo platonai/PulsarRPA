@@ -2,8 +2,8 @@
 
 # Default parameters
 REMOTE_USER="vincent"
-REMOTE_HOST="platonic.fun"
-REMOTE_PATH="~/platonic.fun/repo/ai/platon/pulsar/"
+REMOTE_HOST="platonai.cn"
+REMOTE_PATH="~/platonai.cn/repo/ai/platon/pulsar/"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do

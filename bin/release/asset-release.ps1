@@ -1,7 +1,7 @@
 param(
     [string]$RemoteUser = "vincent",
-    [string]$RemoteHost = "platonic.fun",
-    [string]$RemotePath = "~/platonic.fun/repo/ai/platon/pulsar/"
+    [string]$RemoteHost = "platonai.cn",
+    [string]$RemotePath = "~/platonai.cn/repo/ai/platon/pulsar/"
 )
 
 # Find the first parent directory containing the VERSION file
