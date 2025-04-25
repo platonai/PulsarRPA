@@ -53,6 +53,9 @@ if (Test-Path $PulsarRPAPath) {
             throw "Failed to create symbolic link"
         }
         Write-Host "Symbolic link created successfully" -ForegroundColor Green
+
+        # List the remote directory contents
+        $listResult = Invoke-Expression "ssh ${RemoteUser}@${RemoteHost} 'ls -l $RemotePath'"
     }
     catch {
         Write-Error "Error: $_"

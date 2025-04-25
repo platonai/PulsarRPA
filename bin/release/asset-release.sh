@@ -76,6 +76,13 @@ if [[ -f "$PULSAR_RPA_PATH" ]]; then
     exit 1
   fi
   echo -e "\e[32mSymbolic link created successfully\e[0m"
+
+  # List the files in the remote directory
+  echo -e "\e[32mFiles in $REMOTE_PATH:\e[0m"
+  if ! ssh "${REMOTE_USER}@${REMOTE_HOST}" "ls -l ${REMOTE_PATH}"; then
+    echo "Error: Failed to list files in remote directory" >&2
+    exit 1
+  fi
 else
   echo -e "\e[33mWarning: $PULSAR_RPA_PATH does not exist\e[0m" >&2
   exit 1
