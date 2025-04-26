@@ -30,7 +30,7 @@ PulsarRPA 解决了现代网络自动化的挑战，
 
 #### 下载
 
-下载最新的[可执行Jar](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)并运行。
+下载最新的[可执行Jar](https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar)并运行。
 
 ```shell
 java -D DEEPSEEK_API_KEY=${您的DEEPSEEK_API_KEY} -jar PulsarRPA.jar

@@ -80,6 +80,27 @@ if ($exitCode -eq 0) {
 # mvn nexus-staging:close -P platon-deploy
 # mvn nexus-staging:release -P platon-deploy
 
+# Build pulsar-app/pulsar-master but do not deploy the artifacts
+$PulsarAppPath = Join-Path $AppHome 'pulsar-app/pulsar-master'
+if (Test-Path $PulsarAppPath) {
+  Set-Location $PulsarAppPath
+  & $MvnCmd clean install -DskipTests
+  if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+  }
+} else {
+  Write-Host "pulsar-app/pulsar-master not found, skipping build."
+}
+
+$exitCode =$LastExitCode
+if ($exitCode -eq 0) {
+  Write-Host "Build successfully"
+} else {
+  exit $exitCode
+}
+
+Set-Location $AppHome
+
 Write-Host "Artifacts are staged remotely, you should close and release the staging manually:"
 Write-Host "https://oss.sonatype.org/#stagingRepositories"
 Write-Host "Hit the following link to check if the artifacts are synchronized to the maven center: "

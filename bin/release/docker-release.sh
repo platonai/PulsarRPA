@@ -5,7 +5,6 @@ set -o pipefail
 
 # ========== CONFIG ==========
 IMAGE_NAME="galaxyeye88/pulsar-rpa"  # 👉 修改为你的镜像名
-DOCKERFILE_NAME="Dockerfile-jar"
 ROOT_DIR=""
 
 # ========== STEP 1: 查找项目根目录 ==========
@@ -32,6 +31,14 @@ echo "🏷️ Version: $VERSION"
 
 # ========== STEP 3: 构建镜像 ==========
 cd "$ROOT_DIR"
+
+DOCKERFILE_NAME="$ROOT_DIR/docker/dev/Dockerfile"
+
+# If pulsar-app/pulsar-master/target/PulsarRPA.jar is not found, build it first
+if [ ! -f "$ROOT_DIR/pulsar-app/pulsar-master/target/PulsarRPA.jar" ]; then
+  echo "❌ PulsarRPA.jar not found. Please build it first."
+  exit 1
+fi
 
 echo "🐳 Building Docker image: $IMAGE_NAME:$VERSION ..."
 docker build -f $DOCKERFILE_NAME -t $IMAGE_NAME:$VERSION .
