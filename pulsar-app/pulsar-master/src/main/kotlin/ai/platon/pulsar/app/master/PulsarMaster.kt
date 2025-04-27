@@ -35,7 +35,7 @@ class PulsarMaster {
 fun main(args: Array<String>) {
     runApplication<PulsarMaster>(*args) {
         addInitializers(PulsarContextInitializer())
-        setAdditionalProfiles("master")
+        setAdditionalProfiles("master", "private")
         setLogStartupInfo(true)
     }
 }
