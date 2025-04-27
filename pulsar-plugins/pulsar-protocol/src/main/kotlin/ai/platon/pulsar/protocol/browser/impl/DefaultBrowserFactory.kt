@@ -9,7 +9,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLauncher
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 
-class MultipleProtocolBrowserFactory : AbstractBrowserFactory() {
+class DefaultBrowserFactory : AbstractBrowserFactory() {
     private val launchers = mapOf(
         BrowserType.PULSAR_CHROME to PulsarBrowserLauncher(),
         BrowserType.PLAYWRIGHT_CHROME to PlaywrightBrowserLauncher()
