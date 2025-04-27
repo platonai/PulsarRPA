@@ -18,7 +18,7 @@ open class BrowserManager(
     private val logger = getLogger(this)
     private var registered = AtomicBoolean()
     private val closed = AtomicBoolean()
-    private val browserFactory = MultipleProtocolBrowserFactory()
+    private val browserFactory = DefaultBrowserFactory()
     private val _browsers = ConcurrentHashMap<BrowserId, Browser>()
     private val historicalBrowsers = ConcurrentLinkedDeque<Browser>()
     private val closedBrowsers = ConcurrentLinkedDeque<Browser>()
