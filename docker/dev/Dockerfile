@@ -39,6 +39,9 @@ ENV CHROME_BIN=/usr/bin/chromium-browser \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
+ENV BROWSER_DISPLAY_MODE=HEADLESS \
+    PRIVACY_AGENT_GENERATOR_CLASS=ai.platon.pulsar.skeleton.crawl.fetch.privacy.RandomPrivacyAgentGenerator
+
 # 复制构建产物
 COPY --from=builder /build/app.jar app.jar
 

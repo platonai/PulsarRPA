@@ -52,8 +52,11 @@ ENV CHROME_BIN=/usr/bin/chromium-browser \
 # 复制构建产物
 COPY --from=builder /build/app.jar app.jar
 
+ENV BROWSER_DISPLAY_MODE=HEADLESS \
+    PRIVACY_AGENT_GENERATOR_CLASS=ai.platon.pulsar.skeleton.crawl.fetch.privacy.RandomPrivacyAgentGenerator
+
 # 设置环境变量
-ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC -Dbrowser.display.mode=HEADLESS"
+ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC"
 
 # 暴露端口
 # 8182: api server

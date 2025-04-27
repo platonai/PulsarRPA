@@ -28,70 +28,80 @@ ensuring **accurate** ✅ and **comprehensive** 📚 data extraction even from t
 
 ### 🌟 For Beginners - No Special Skills Required!
 
-#### Download
+#### Run
 
 Download the latest Executable Jar and run it.
+
+   ```shell
+   # Linux/macOS and Windows (if curl is available)
+   curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar
+   java -D DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+   ```
+
+You can ignore `DEEPSEEK_API_KEY` if you don't need to use the AI features.
+
+Download links:
 
 * [Github](https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar)
 * [For Chinese User](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
 
-```shell
-java -D DEEPSEEK_API_KEY=${YOUR-DEEPSEEK_API_KEY} -jar PulsarRPA.jar
-```
+For docker user:
 
-You can ignore DEEPSEEK_API_KEY if you don't need LLM features.
+   ```shell
+   docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
+   ```
 
 #### 💬 Chat About a Webpage
 
 Talk about a webpage using the `chat-about` API:
 
-```shell
-curl -X POST "http://localhost:8182/api/ai/chat-about" -H "Content-Type: application/json" -d '{
-  "url": "https://www.amazon.com/dp/B0C1H26C46",
-  "prompt": "introduce this product"
-}'
-```
+   ```shell
+   curl -X POST "http://localhost:8182/api/ai/chat-about" -H "Content-Type: application/json" -d '{
+    "url": "https://www.amazon.com/dp/B0C1H26C46",
+    "prompt": "introduce this product"
+   }'
+   ```
 
 #### 📊 Extract Data
 
 Extract data from a webpage using `extract` API:
 
-```shell
-curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{
-  "url": "https://www.amazon.com/dp/B0C1H26C46",
-  "prompt": "product name, price, and description"
-}'
-```
+  ```shell
+  curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{
+    "url": "https://www.amazon.com/dp/B0C1H26C46",
+    "prompt": "product name, price, and description"
+  }'
+  ```
 
 #### 💬 Chat with AI
 
 Use the `chat` API to ask any questions:
 
-```shell
-curl http://localhost:8182/api/ai/chat?prompt=What-is-the-most-fantastical-technology-today
-```
+  ```shell
+  curl http://localhost:8182/api/ai/chat?prompt=What-is-the-most-fantastical-technology-today
+  ```
 
 Use `post` method to send a longer prompt:
 
-```shell
-curl -X POST "http://localhost:8182/api/ai/chat" -H "Content-Type: application/json" -d '
-What is the most fantastical technology today?
-You should return a list of 5 items.
-'
-```
+  ```shell
+  curl -X POST "http://localhost:8182/api/ai/chat" -H "Content-Type: application/json" -d '
+  What is the most fantastical technology today?
+  You should return a list of 5 items.
+  '
+  ```
 
 ### 🎓 For Advanced Users - LLM + X-SQL
 
-```bash
-curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+  ```bash
+  curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
     llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
     dom_base_uri(dom) as url,
     dom_first_text(dom, '#productTitle') as title,
     dom_first_slim_html(dom, 'img:expr(width > 400)') as img
   from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
-"
-```
+  "
+  ```
 
 The extracted data:
 ```json

@@ -28,70 +28,74 @@ PulsarRPA 解决了现代网络自动化的挑战，
 
 ### 🌟 初学者 - 无需特殊技能!
 
-#### 下载
+#### 运行
 
 下载最新的可执行Jar并运行：
 
+   ```shell
+   # Linux/macOS and Windows (if curl is available)
+   curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar
+   java -D DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+   ```
+
+如果您不需要LLM功能，可以忽略 `DEEPSEEK_API_KEY`。
+
+下载链接：
+
 * [Github](https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar)
 * [For Chinese User](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
-
-```shell
-java -D DEEPSEEK_API_KEY=${您的DEEPSEEK_API_KEY} -jar PulsarRPA.jar
-```
-
-如果您不需要LLM功能，可以忽略DEEPSEEK_API_KEY。
 
 #### 💬 关于网页的对话
 
 使用`chat-about` API与网页内容交流:
 
-```shell
-curl -X POST "http://localhost:8182/api/ai/chat-about" -H "Content-Type: application/json" -d '{
-  "url": "https://www.amazon.com/dp/B0C1H26C46",
-  "prompt": "介绍这个产品"
-}'
-```
+   ```shell
+   curl -X POST "http://localhost:8182/api/ai/chat-about" -H "Content-Type: application/json" -d '{
+     "url": "https://www.amazon.com/dp/B0C1H26C46",
+     "prompt": "介绍这个产品"
+   }'
+   ```
 
 #### 📊 提取数据
 
 使用`extract` API从网页提取数据:
 
-```shell
-curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{
-  "url": "https://www.amazon.com/dp/B0C1H26C46",
-  "prompt": "产品名称，价格和描述"
-}'
-```
+   ```shell
+   curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{
+     "url": "https://www.amazon.com/dp/B0C1H26C46",
+     "prompt": "产品名称，价格和描述"
+   }'
+   ```
 
 #### 💬 与AI对话
 
 使用`chat` API提问:
 
-```shell
-curl http://localhost:8182/api/ai/chat?prompt=当今最神奇的技术是什么
-```
+   ```shell
+   curl http://localhost:8182/api/ai/chat?prompt=当今最神奇的技术是什么
+   ```
 
 使用`post`方法发送更长的提示:
 
-```shell
-curl -X POST "http://localhost:8182/api/ai/chat" -H "Content-Type: application/json" -d '
-当今最神奇的技术是什么？
-请返回5个项目的列表。
-'
-```
+   ```shell
+   curl -X POST "http://localhost:8182/api/ai/chat" -H "Content-Type: application/json" -d '
+   当今最神奇的技术是什么？
+   请返回5个项目的列表。
+   '
+   ```
 
 ### 🎓 进阶用户 - LLM + X-SQL
 
-```bash
-curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
-  select
-    llm_extract(dom, '产品名称, 价格, 评分') as llm_extracted_data,
-    dom_base_uri(dom) as url,
-    dom_first_text(dom, '#productTitle') as title,
-    dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-  from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
-"
-```
+   ```bash
+   curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+     select
+       llm_extract(dom, '产品名称, 价格, 评分') as llm_extracted_data,
+       dom_base_uri(dom) as url,
+       dom_first_text(dom, '#productTitle') as title,
+       dom_first_slim_html(dom, 'img:expr(width > 400)') as img
+     from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+   "
+   ```
 
 提取的数据:
 ```json
