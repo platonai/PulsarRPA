@@ -4,17 +4,18 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 ## 🌟 Introduction
 
-💖 **PulsarRPA: A Super-Fast, AI-Enabled Browser Automation Solution!** 💖
+💖 **PulsarRPA: The AI-Powered, Lightning-Fast Browser Automation Solution!** 💖
 
-**PulsarRPA** is an **AI enabled🤖**, **high-performance** 🚀, **distributed** 🌐, and **open-source** 🔓 Browser Automation Solution.
-Designed for **large-scale automation** 🏭, it excels in:
-- 🌐 **Browser automation, super-fast⚡, spider–grade❗**
-- 🤖 **AI enabled, LLM powered🧠**
-- 🧠 **Web content understanding**
-- 📊 **Data extraction**
+**PulsarRPA** is an **AI-enabled** 🤖, **high-performance** 🚀, **distributed** 🌐, and **open-source** 🔓 
+browser automation platform, built for **large-scale automation** 🏭. It excels at:
 
-PulsarRPA tackles the challenges of modern web automation,
-ensuring **accurate** ✅ and **comprehensive** 📚 data extraction even from the most **complex** 🔄 and **dynamic** ⚡ websites.
+- 🤖 **AI integration with LLMs for smarter automation**
+- ⚡ **Ultra-fast, spider-grade browser automation**
+- 🧠 **Advanced web content understanding**
+- 📊 **Powerful data extraction APIs**
+
+PulsarRPA is designed to meet the demands of modern web automation, delivering **accurate** ✅ and **comprehensive** 📚 
+data extraction — even from the most **complex** 🔄 and **dynamic** ⚡ websites.
 
 ## 🎥 Demo Videos
 
@@ -26,7 +27,7 @@ ensuring **accurate** ✅ and **comprehensive** 📚 data extraction even from t
 
 ## 🚀 Quick Start Guide
 
-### 🌟 For Beginners - No Special Skills Required!
+### 🌟 For Beginners - Just Talk, No Special Skills Required!
 
 #### Run
 
@@ -119,13 +120,6 @@ The extracted data:
 
 ### 👨‍💻 For Experts - Native API
 
-#### 💭 Chat About a Webpage:
-```kotlin
-val document = session.loadDocument(url)
-val response = session.chat("Tell me something about this webpage", document)
-```
-📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/ChatAboutPage.kt)
-
 #### 🎮 Browser Control:
 ```kotlin
 val prompts = """
@@ -142,15 +136,6 @@ eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver
 session.open(url, eventHandlers)
 ```
 📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/TalkToActivePage.kt)
-
-#### ⚡ One-Line Scraping:
-```kotlin
-session.scrapeOutPages(
-    "https://www.amazon.com/",  
-    "-outLink a[href~=/dp/]", 
-    listOf("#title", "#acrCustomerReviewText")
-)
-```
 
 #### 🤖 RPA Crawling:
 ```kotlin
