@@ -30,7 +30,10 @@ ensuring **accurate** ✅ and **comprehensive** 📚 data extraction even from t
 
 #### Download
 
-Download the latest [Executable Jar](https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar) and run it.
+Download the latest Executable Jar and run it.
+
+* [Github](https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar)
+* [For Chinese User](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
 
 ```shell
 java -D DEEPSEEK_API_KEY=${YOUR-DEEPSEEK_API_KEY} -jar PulsarRPA.jar
