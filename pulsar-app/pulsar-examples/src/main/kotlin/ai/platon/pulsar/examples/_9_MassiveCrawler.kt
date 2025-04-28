@@ -17,7 +17,7 @@ fun main() {
     PulsarSettings().withSequentialBrowsers().maxBrowsers(10).maxOpenTabs(4).headless()
 
     val session = PulsarContexts.createSession()
-    val crawlPool = session.context.globalCache.urlPool
+    val urlPool = session.context.globalCache.urlPool
 
     val parseHandler = { _: WebPage, document: FeaturedDocument ->
         // do something wonderful with the document
@@ -34,16 +34,16 @@ fun main() {
     // feel free to submit millions of urls here
     session.submitAll(urls, "-i 7d")
 
-    crawlPool.add(url4)
-    crawlPool.add(url5.apply { priority = Priority13.HIGHER4.value })
+    urlPool.add(url4)
+    urlPool.add(url5.apply { priority = Priority13.HIGHER4.value })
 
-    crawlPool.highestCache.reentrantQueue.add(url1)
-    crawlPool.higher2Cache.nonReentrantQueue.add(url2)
-    crawlPool.lower2Cache.nReentrantQueue.add(url3)
+    urlPool.highestCache.reentrantQueue.add(url1)
+    urlPool.higher2Cache.nonReentrantQueue.add(url2)
+    urlPool.lower2Cache.nReentrantQueue.add(url3)
     // highest priority
-    crawlPool.realTimeCache.reentrantQueue.add(url4)
+    urlPool.realTimeCache.reentrantQueue.add(url4)
     // will start 2 hours later
-    crawlPool.delayCache.add(DelayUrl(url5, Duration.ofHours(2)))
+    urlPool.delayCache.add(DelayUrl(url5, Duration.ofHours(2)))
 
     // wait for all tasks to be finished.
     PulsarContexts.await()
