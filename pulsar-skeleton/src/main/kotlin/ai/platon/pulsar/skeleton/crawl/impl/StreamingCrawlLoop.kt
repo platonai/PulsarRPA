@@ -10,6 +10,8 @@ import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.Crawler
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
+import java.util.*
+import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.CountDownLatch
 
 open class StreamingCrawlLoop(
@@ -32,11 +34,12 @@ open class StreamingCrawlLoop(
     private lateinit var _crawler: StreamingCrawler
     override val crawler: Crawler get() = _crawler
 
-    private val _urlFeeder: UrlFeeder by lazy { createUrlFeeder() }
+    private val urlFeeders = ConcurrentSkipListMap<String, UrlFeeder>()
+
     /**
      * A UrlFeeder is a wrapper to globalCache.urlPool
      * */
-    override val urlFeeder: UrlFeeder get() = _urlFeeder
+    override val urlFeeder: UrlFeeder get() = getOrCreateUrlFeeder()
 
     private val context get() = PulsarContexts.create()
 
@@ -132,6 +135,24 @@ open class StreamingCrawlLoop(
         }
     }
 
+    private fun getOrCreateUrlFeeder(): UrlFeeder {
+        val feeder = urlFeeders.values.firstOrNull() ?: createUrlFeeder()
+        urlFeeders[feeder.id] = feeder
+
+        // check if the feeder is upgraded
+        if (feeder.urlPool.id == context.globalCache.urlPool.id) {
+            return feeder
+        }
+
+        // the feeder is upgraded, so we need to create a new one
+        val upgradedFeeder = createUrlFeeder()
+        urlFeeders[upgradedFeeder.id] = upgradedFeeder
+
+        logger.warn("The feeder is upgraded, use the new one | #{} <- #{} | {}", upgradedFeeder.id, feeder.id)
+
+        return upgradedFeeder
+    }
+
     /**
      * Create a UrlFeeder with default data collectors.
      * A UrlFeeder is a wrapper to globalCache.urlPool, to clear all the urls that waiting for fetching,
@@ -139,6 +160,6 @@ open class StreamingCrawlLoop(
      * */
     private fun createUrlFeeder(): UrlFeeder {
         val enableDefaults = config.getBoolean(CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS, true)
-        return UrlFeeder(context.crawlPool, enableDefaults = enableDefaults)
+        return UrlFeeder(context.globalCache.urlPool, enableDefaults = enableDefaults)
     }
 }

@@ -17,7 +17,7 @@ fun main() {
     PulsarSettings().withSequentialBrowsers().maxBrowsers(10).maxOpenTabs(4).headless()
 
     val session = PulsarContexts.createSession()
-    val crawlPool = session.context.crawlPool
+    val crawlPool = session.context.globalCache.urlPool
 
     val parseHandler = { _: WebPage, document: FeaturedDocument ->
         // do something wonderful with the document
