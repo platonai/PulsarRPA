@@ -49,7 +49,7 @@ open class DegenerateXSQLScrapeHyperlink(
     private fun executeQueryAndComplete(page: WebPage?) {
         try {
             val rs = executeQuery()
-            response.resultSet = ResultSetUtils.getEntitiesFromResultSet(rs)
+            response.resultSet = ResultSetUtils.getTextEntitiesFromResultSet(rs)
         } catch (t: Throwable) {
             // Log the exception and throw it
             warnUnexpected(this, t, "Failed to execute query")

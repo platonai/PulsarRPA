@@ -48,29 +48,22 @@ open class XSQLScrapeHyperlink(
     ) : DefaultLoadEventHandlers() {
         init {
             onWillLoad.addLast {
-                // println("onWillLoad")
                 response.pageStatusCode = ResourceStatus.SC_PROCESSING
                 null
             }
             onWillParseHTMLDocument.addLast { page ->
-                // println("onWillParseHTMLDocument")
                 require(page is AbstractWebPage)
                 page.variables[VAR_IS_SCRAPE] = true
                 null
             }
             onWillParseHTMLDocument.addLast { page ->
-                // println("onWillParseHTMLDocument")
             }
             onHTMLDocumentParsed.addLast { page, document ->
-                // println("onHTMLDocumentParsed")
                 require(page is AbstractWebPage)
                 require(page.hasVar(VAR_IS_SCRAPE))
                 hyperlink.extract(page, document)
             }
             onLoaded.addLast { page ->
-                // println("onLoaded")
-                // should complete in crawlEvent.onLoaded()
-                // hyperlink.complete(page)
             }
         }
     }
@@ -87,12 +80,12 @@ open class XSQLScrapeHyperlink(
         try {
             response.pageContentBytes = page.contentLength.toInt()
             response.pageStatusCode = page.protocolStatus.minorCode
-            
-            // logger.info("Extracting {} | {}", page.protocolStatus, page.url)
-            
+
             if (page.protocolStatus.isSuccess) {
                 doExtract(page, document)
             }
+
+            response
         } catch (t: Throwable) {
             // Log the exception and throw it.
             logger.warn("Unexpected exception", t)
@@ -107,6 +100,8 @@ open class XSQLScrapeHyperlink(
         }
 
         val rs = executeQuery(request, response)
-        response.resultSet = ResultSetUtils.getEntitiesFromResultSet(rs)
+        response.resultSet = ResultSetUtils.getTextEntitiesFromResultSet(rs)
+
+        val entities = response.resultSet
     }
 }

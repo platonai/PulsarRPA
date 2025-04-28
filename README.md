@@ -1,5 +1,11 @@
 # 🤖 PulsarRPA
 
+[![Docker Pulls](https://img.shields.io/docker/pulls/galaxyeye88/pulsar-rpa?style=flat-square)](https://hub.docker.com/r/galaxyeye88/pulsar-rpa)
+[![License: MIT](https://img.shields.io/badge/license-APACHE2-green?style=flat-square)](LICENSE)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.8-brightgreen?style=flat-square)](https://spring.io/projects/spring-boot)
+
+---
+
 English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
 
 ## 🌟 Introduction
@@ -17,6 +23,8 @@ browser automation platform, built for **large-scale automation** 🏭. It excel
 PulsarRPA is designed to meet the demands of modern web automation, delivering **accurate** ✅ and **comprehensive** 📚 
 data extraction — even from the most **complex** 🔄 and **dynamic** ⚡ websites.
 
+---
+
 ## 🎥 Demo Videos
 
 🎬 YouTube:
@@ -24,6 +32,8 @@ data extraction — even from the most **complex** 🔄 and **dynamic** ⚡ webs
 
 📺 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
+
+---
 
 ## 🚀 Quick Start Guide
 
@@ -52,6 +62,8 @@ For docker user:
    docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
    ```
 
+---
+
 #### 💬 Chat About a Webpage
 
 Talk about a webpage using the `chat-about` API:
@@ -63,6 +75,8 @@ Talk about a webpage using the `chat-about` API:
    }'
    ```
 
+---
+
 #### 📊 Extract Data
 
 Extract data from a webpage using `extract` API:
@@ -73,6 +87,8 @@ Extract data from a webpage using `extract` API:
     "prompt": "product name, price, and description"
   }'
   ```
+
+---
 
 #### 💬 Chat with AI
 
@@ -90,6 +106,8 @@ Use `post` method to send a longer prompt:
   You should return a list of 5 items.
   '
   ```
+
+---
 
 ### 🎓 For Advanced Users - LLM + X-SQL
 
@@ -118,6 +136,8 @@ The extracted data:
 }
 ```
 
+---
+
 ### 👨‍💻 For Experts - Native API
 
 #### 🎮 Browser Control:
@@ -136,6 +156,8 @@ eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver
 session.open(url, eventHandlers)
 ```
 📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/TalkToActivePage.kt)
+
+---
 
 #### 🤖 RPA Crawling:
 ```kotlin
@@ -156,6 +178,8 @@ session.load(url, options)
 ```
 📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt)
 
+---
+
 #### 🔍 Complex Data Extraction with X-SQL:
 ```sql
 select
@@ -173,6 +197,8 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 * [All Amazon Page Types Scraping](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
 📖 [Advanced Guides](docs/advanced-guides.md)
+
+---
 
 ## ✨ Features
 

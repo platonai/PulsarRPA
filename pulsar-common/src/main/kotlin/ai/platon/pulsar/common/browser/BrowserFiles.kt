@@ -159,10 +159,10 @@ object BrowserFiles {
         }
 
         // a typical path is:
-        // %USERPROFILE%\context\groups\default\PULSAR_CHROME\cx.2\pulsar_chrome
+        // %USERPROFILE%\context\groups\rand\PULSAR_CHROME\cx.2\PULSAR_CHROME
         val groupName = contextDir.parent.fileName.toString()
         Files.list(contextDir)
-            .filter { it.fileName.toString().lowercase() == "pulsar_chrome" }
+            .filter { it.fileName.toString().uppercase() == "PULSAR_CHROME" }
             .forEach { dirToDelete ->
                 deleteTemporaryUserDataDirWithLock(groupName, dirToDelete, expiry)
             }

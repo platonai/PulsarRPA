@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -89,5 +90,21 @@ class PulsarObjectMapperTest {
 
         // 验证 JavaTimeModule 是否正确处理 Java 8 日期时间
         assertEquals(date, deserializedDate)
+    }
+
+    @Test
+    fun `test extract json with special chars`() {
+        val json = """
+            {
+              "product_name": "Huawei P60 Pro Dual SIM 8GB + 256GB Global Model MNA-LX9 Factory Unlocked Mobile Cellphone - Black",
+              "price": "$595.00",
+              "ratings": "3.6 out of 5 stars (36 ratings)"
+            }
+        """.trimIndent()
+
+        val obj: Map<String, Any?> = pulsarObjectMapper().readValue(json)
+        assertEquals("Huawei P60 Pro Dual SIM 8GB + 256GB Global Model MNA-LX9 Factory Unlocked Mobile Cellphone - Black", obj["product_name"])
+        assertEquals("$595.00", obj["price"])
+        assertEquals("3.6 out of 5 stars (36 ratings)", obj["ratings"])
     }
 }

@@ -2,6 +2,7 @@ package ai.platon.pulsar.ql.common;
 
 import ai.platon.pulsar.ql.common.io.ValueDomWritable;
 import ai.platon.pulsar.ql.common.types.ValueDom;
+import ai.platon.pulsar.ql.common.types.ValueStringJSON;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.h2.api.ErrorCode;
@@ -12,22 +13,25 @@ public class PulsarObjectSerializer implements JavaObjectSerializer {
 
     @Override
     public byte[] serialize(Object obj) throws Exception {
-        if (obj instanceof org.jsoup.nodes.Element) {
-            org.jsoup.nodes.Element ele = (org.jsoup.nodes.Element) obj;
+        if (obj instanceof org.jsoup.nodes.Element ele) {
             obj = ValueDom.get(ele);
         }
 
-        if (obj instanceof ValueDom) {
-            ValueDom dom = (ValueDom) obj;
+        if (obj instanceof ValueDom dom) {
+            try(DataOutputBuffer buffer = new DataOutputBuffer(1024)) {
+                buffer.writeInt(ValueDom.type);
+                new ValueDomWritable(dom).write(buffer);
 
-            DataOutputBuffer buffer = new DataOutputBuffer(1024);
-            buffer.writeInt(ValueDom.type);
-            new ValueDomWritable(dom).write(buffer);
+                return buffer.getData();
+            }
+        } if (obj instanceof ValueStringJSON json) {
+            try(DataOutputBuffer buffer = new DataOutputBuffer(1024)) {
+                buffer.writeInt(ValueStringJSON.type);
+                buffer.writeUTF(json.getString());
+                buffer.writeUTF(json.getTargetClassName());
 
-            // Make a trace who is calling this method
-//            if (buffer.size() > 0) throw new RuntimeException("Throw from here");
-
-            return buffer.getData();
+                return buffer.getData();
+            }
         } else {
             throw DbException.get(ErrorCode.SERIALIZATION_FAILED_1);
         }
@@ -44,6 +48,10 @@ public class PulsarObjectSerializer implements JavaObjectSerializer {
             ValueDomWritable writable = new ValueDomWritable();
             writable.readFields(in);
             return writable.get();
+        } if (type == ValueStringJSON.type) {
+            String jsonText = in.readUTF();
+            String className = in.readUTF();
+            return ValueStringJSON.get(jsonText, className);
         } else {
             throw DbException.get(ErrorCode.DESERIALIZATION_FAILED_1, "Unknown custom type #" + type);
         }

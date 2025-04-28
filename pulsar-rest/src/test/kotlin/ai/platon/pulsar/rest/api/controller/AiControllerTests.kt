@@ -1,6 +1,7 @@
 package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.external.ChatModelFactory
+import ai.platon.pulsar.rest.api.TestUtils
 import ai.platon.pulsar.rest.api.entities.PromptRequest
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
@@ -14,6 +15,12 @@ class AiControllerTests : IntegrationTestBase() {
     @BeforeEach
     fun setUp() {
         Assumptions.assumeTrue(ChatModelFactory.hasModel(unmodifiedConfig))
+    }
+
+    @BeforeEach
+    fun `Ensure resources are prepared`() {
+        TestUtils.ensurePage(indexUrl)
+        TestUtils.ensurePage(productUrl)
     }
 
     /**
@@ -41,7 +48,7 @@ class AiControllerTests : IntegrationTestBase() {
      * Test [AiController.extractFieldsFromPage]
      * */
     @Test
-    fun `When extract fields from a page then result is not empty`() {
+    fun `Test extracting fields from a page`() {
         val request = PromptRequest(productUrl, "title, price, brand")
         val response = restTemplate.postForObject("$baseUri/ai/extract", request, String::class.java)
 
