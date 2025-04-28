@@ -144,11 +144,16 @@ open class StreamingCrawlLoop(
             return feeder
         }
 
+        if (feeder.isNotEmpty()) {
+            logger.warn("The url feeder is abundant, but not empty | #{} | size: {}", feeder.id, feeder.size)
+            logger.warn(feeder.report)
+        }
+
         // the feeder is upgraded, so we need to create a new one
         val upgradedFeeder = createUrlFeeder()
         urlFeeders[upgradedFeeder.id] = upgradedFeeder
 
-        logger.warn("The feeder is upgraded, use the new one | #{} <- #{} | {}", upgradedFeeder.id, feeder.id)
+        logger.warn("The url feeder is upgraded, use the new one instead | #{} <- #{} | {}", upgradedFeeder.id, feeder.id, this)
 
         return upgradedFeeder
     }
