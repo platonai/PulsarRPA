@@ -30,3 +30,8 @@ extracted
 Dockerfile
 
 !docs/docker
+
+
+/**/application-private.yml
+application-private.yml
+

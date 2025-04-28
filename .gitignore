@@ -108,3 +108,8 @@ derby.log
 /user-data-dir-2/
 /user-data-dir-3/
 /user-data-dir-4/
+
+
+/**/application-private.yml
+application-private.yml
+
