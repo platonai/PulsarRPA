@@ -90,6 +90,20 @@ Extract data from a webpage using `extract` API:
 
 ---
 
+#### 📊 Perform Instructions
+
+Extract data from a webpage using `extract` API:
+
+  ```shell
+  curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{
+    "url": "https://www.amazon.com/dp/B0C1H26C46",
+    "instructs": "get the text of the element with id 'title' and click it\n scroll to middle"
+    "prompt": "product name, price, and description",
+  }'
+  ```
+
+---
+
 #### 💬 Chat with AI
 
 Use the `chat` API to ask any questions:

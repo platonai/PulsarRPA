@@ -5,11 +5,40 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import java.time.Instant
 
+/**
+ * Request for chat
+ *
+ * @see [ai.platon.pulsar.rest.api.controller.AiController.chat]
+ *
+ * @property url The page url
+ * @property prompt The prompt, e.g. "Tell me something about the page"
+ * @property args The load arguments
+ * @property instructs Instructs, e.g. "click the button with id 'submit'", [instructs] is alias for [instructsOnDocumentReady]
+ * @property instructsOnDocumentReady Instructs on document ready, e.g. "click the button with id 'submit'"
+ * */
 data class PromptRequest(
+    /**
+     * The page url
+     * */
     var url: String,
-    var prompt: String,
+    /**
+     * The prompt, e.g. "Tell me something about the page"
+     * */
+    var prompt: String? = null,
+    /**
+     * The load arguments
+     *
+     * @see [ai.platon.pulsar.skeleton.common.options.LoadOptions]
+     * */
     var args: String? = null,
-    var instructOnDocumentReady: String? = null
+    /**
+     * Instructs, e.g. "click the button with id 'submit'", [instructs] is alias for [instructsOnDocumentReady]
+     * */
+    var instructs: String? = null,
+    /**
+     * Instructs on document ready, e.g. "click the button with id 'submit'",
+     * */
+    var instructsOnDocumentReady: String? = null,
 )
 
 data class ScrapeRequest(

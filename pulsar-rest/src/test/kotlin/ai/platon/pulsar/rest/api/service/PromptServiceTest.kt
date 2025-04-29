@@ -31,7 +31,7 @@ class PromptServiceTest {
 
     @Test
     fun `test instructOnDocumentReady`() {
-        val instruct = """
+        val instructions = """
             move cursor to the element with id 'title' and click it
             scroll to middle
             scroll to top
@@ -41,7 +41,7 @@ class PromptServiceTest {
             PRODUCT_DETAIL_URL,
             "Tell me something about the page",
             "",
-            instructOnDocumentReady = instruct
+            instructs = instructions
         )
 
         val response = service.chat(request)

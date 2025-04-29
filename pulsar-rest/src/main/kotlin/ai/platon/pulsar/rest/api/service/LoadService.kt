@@ -37,10 +37,12 @@ class LoadService {
         val args = request.args ?: ""
         val options = session.options(args)
 
-        val instructOnDocumentReady = request.instructOnDocumentReady
-        if (instructOnDocumentReady != null) {
+        // instructs is an alias for instructsOnDocumentReady
+        request.instructsOnDocumentReady = request.instructsOnDocumentReady ?: request.instructs
+        val instructsOnDocumentReady = request.instructsOnDocumentReady
+        if (instructsOnDocumentReady != null) {
             options.eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
-                driver.instruct(instructOnDocumentReady)
+                driver.instruct(instructsOnDocumentReady)
             }
         }
 
