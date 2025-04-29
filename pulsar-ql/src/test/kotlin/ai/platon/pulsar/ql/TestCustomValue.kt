@@ -3,8 +3,6 @@ package ai.platon.pulsar.ql
 import org.junit.jupiter.api.Test
 
 class TestCustomValue: TestBase() {
-    private val url = "https://www.example.com"
-
     @Test
     fun testDomValue() {
         query("SELECT DOM_TEXT(DOM) AS `book_categories` FROM LOAD_AND_SELECT('$productIndexUrl', '.bookclass_box')")
