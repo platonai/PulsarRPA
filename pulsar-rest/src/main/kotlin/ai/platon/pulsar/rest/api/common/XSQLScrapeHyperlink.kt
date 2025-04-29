@@ -3,6 +3,8 @@ package ai.platon.pulsar.rest.api.common
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.warnInterruptible
+import ai.platon.pulsar.common.warnUnexpected
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.WebPage
@@ -10,6 +12,7 @@ import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultCrawlEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultLoadEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
@@ -29,12 +32,10 @@ open class XSQLScrapeHyperlink(
     ) : DefaultCrawlEventHandlers() {
         init {
             onWillLoad.addLast {
-                // println("crawl-onWillLoad")
                 response.pageStatusCode = ResourceStatus.SC_PROCESSING
                 it
             }
             onLoaded.addLast { url, page ->
-                // println("crawl-onLoaded")
                 if (!hyperlink.isDone) {
                     hyperlink.complete(page ?: GoraWebPage.NIL)
                 }
@@ -64,6 +65,7 @@ open class XSQLScrapeHyperlink(
                 hyperlink.extract(page, document)
             }
             onLoaded.addLast { page ->
+                //
             }
         }
     }
@@ -87,9 +89,7 @@ open class XSQLScrapeHyperlink(
 
             response
         } catch (t: Throwable) {
-            // Log the exception and throw it.
-            logger.warn("Unexpected exception", t)
-            throw t
+            warnInterruptible(this, t, "Error extracting data from page: ${page.url}")
         }
     }
 

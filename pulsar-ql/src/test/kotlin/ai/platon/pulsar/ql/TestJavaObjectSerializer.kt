@@ -86,7 +86,7 @@ class TestJavaObjectSerializer : TestBase() {
     fun testLocalSerialization() {
         val serializer = PulsarObjectSerializer()
         
-        val baseURI = "http://example.com/"
+        val baseURI = "https://example.com/"
         val doc = Jsoup.parseBodyFragment("<div>Hello World</div>", baseURI)
         val baseDom = ValueDom.get(doc.body().selectFirst("div"))
         

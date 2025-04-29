@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Custom H2 config, must be called on both server and client side
  * */
 public class H2Config {
-    private static AtomicBoolean configured = new AtomicBoolean();
+    private static final AtomicBoolean configured = new AtomicBoolean();
 
     public static void config() {
         if (configured.getAndSet(true)) {
