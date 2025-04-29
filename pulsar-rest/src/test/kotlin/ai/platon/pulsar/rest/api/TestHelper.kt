@@ -5,7 +5,11 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.junit.jupiter.api.Assumptions
 
 object TestUtils {
-    private val session = PulsarContexts.getOrCreateSession()
+    val session = PulsarContexts.getOrCreateSession()
+
+    const val PRODUCT_LIST_URL = "https://www.amazon.com/b?node=1292115011"
+
+    const val PRODUCT_DETAIL_URL = "https://www.amazon.com/dp/B0C1H26C46"
 
     fun ensurePage(url: String) {
         val pageCondition = { page: WebPage -> page.protocolStatus.isSuccess && page.persistedContentLength > 8000 }

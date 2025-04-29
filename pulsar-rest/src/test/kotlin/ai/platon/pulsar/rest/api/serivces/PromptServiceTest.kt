@@ -1,6 +1,8 @@
 package ai.platon.pulsar.rest.api.serivces
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
+import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
+import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_LIST_URL
 import ai.platon.pulsar.rest.api.entities.PromptRequest
 import ai.platon.pulsar.rest.api.service.PromptService
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,8 +15,6 @@ import kotlin.test.assertTrue
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class PromptServiceTest {
 
-    private val url = "https://www.amazon.com/b?node=1292115011"
-
     @Autowired
     private lateinit var service: PromptService
 
@@ -23,7 +23,27 @@ class PromptServiceTest {
      * */
     @Test
     fun `When chat about a page then the result is not empty`() {
-        val request = PromptRequest(url, "Tell me something about the page")
+        val request = PromptRequest(PRODUCT_LIST_URL, "Tell me something about the page")
+
+        val response = service.chat(request)
+        println(response)
+        assertTrue { response.isNotEmpty() }
+    }
+
+    @Test
+    fun `test instructOnDocumentReady`() {
+        val instruct = """
+            move cursor to the element with id 'title' and click it
+            scroll to middle
+            scroll to top
+            get the text of the element with id 'title'
+        """.trimIndent()
+        val request = PromptRequest(
+            PRODUCT_DETAIL_URL,
+            "Tell me something about the page",
+            "",
+            instructOnDocumentReady = instruct
+        )
 
         val response = service.chat(request)
         println(response)

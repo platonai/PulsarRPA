@@ -6,12 +6,14 @@ import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import java.time.Instant
 
 data class PromptRequest(
-    val url: String,
-    val prompt: String,
+    var url: String,
+    var prompt: String,
+    var args: String? = null,
+    var instructOnDocumentReady: String? = null
 )
 
 data class ScrapeRequest(
-    val sql: String,
+    var sql: String,
 )
 
 data class ScrapeResponse(
@@ -25,7 +27,7 @@ data class ScrapeResponse(
     val status: String get() = ResourceStatus.getStatusText(statusCode)
     val pageStatus: String get() = ProtocolStatus.getMinorName(pageStatusCode)
     val createTime: Instant = Instant.now()
-    var finishTime: Instant = Instant.EPOCH
+    var finishTime: Instant? = null
 }
 
 data class ScrapeStatusRequest(

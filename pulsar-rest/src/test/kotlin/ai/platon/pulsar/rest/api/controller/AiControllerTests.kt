@@ -8,6 +8,9 @@ import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
+/**
+ * Test [AiController]
+ * */
 class AiControllerTests : IntegrationTestBase() {
     val indexUrl = "https://www.amazon.com/b?node=1292115011"
     val productUrl = "https://www.amazon.com/dp/B0C1H26C46"
