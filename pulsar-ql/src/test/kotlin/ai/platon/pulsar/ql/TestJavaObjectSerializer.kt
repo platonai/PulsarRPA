@@ -160,26 +160,7 @@ class TestJavaObjectSerializer : TestBase() {
         
         println(dom.element.uniqueName)
     }
-    
-    @Ignore("TimeConsumingTest")
-    @Test
-    fun testNetworkSerialization3() {
-        val conn = remoteDB.getConnection("testNetworkSerialization3")
-        val stat = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)
-        
-        val expr = "sibling > 20 && char > 40 && char < 100 && width > 200"
-        val sql = """SELECT
-            DOM_FIRST_HREF(DOM), DOM_TEXT(DOM)
-            FROM LOAD_OUT_PAGES('$productIndexUrl', '*:expr($expr)')
-            LIMIT 30"""
-        val rs = stat.executeQuery(sql)
-        
-        println(sql)
-        println(ResultSetFormatter(rs).toString())
-        println("serializeJavaObject: " + SysProperties.serializeJavaObject)
-        println("serializer: " + JdbcUtils.serializer.javaClass.name)
-    }
-    
+
     @Ignore("Ignored temporary")
     @Test
     fun testNetworkSerialization4() {
