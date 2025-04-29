@@ -4,8 +4,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 object TestResource {
 
-    val productIndexUrl = "http://category.dangdang.com/cid4001403.html"
-    val productDetailUrl = "http://product.dangdang.com/1184814777.html"
+    val productIndexUrl = "https://e.dangdang.com/index_page.html"
+    val productDetailUrl = "https://e.dangdang.com/products/1900991358.html"
     val newsIndexUrl = "http://news.baidu.com/guoji"
     val newsDetailUrl = "http://news.163.com/17/1119/09/D3JJF1290001875P.html"
     val newsDetailUrl2 = "http://www.chinanews.com/gn/2018/03-02/8458538.shtml"
@@ -13,9 +13,9 @@ object TestResource {
     var urlGroups = mutableMapOf<String, Array<String>>()
 
     val seeds = mapOf(
-        0 to "http://product.dangdang.com/1184814777.html",
+        0 to "https://e.dangdang.com/products/1900991358.html",
         1 to "http://category.dangdang.com/cid4003728.html",
-        2 to "http://category.dangdang.com/cid4002590.html",
+        2 to "https://e.dangdang.com/index_page.html",
         3 to "https://list.mogujie.com/book/magic/51894",
         4 to "https://category.vip.com/search-5-0-1.html?q=3|103363||&rp=26600|48483&ff=|0|2|2&adidx=1&f=ad&adp=130610&adid=632673",
         5 to "https://list.jd.com/list.html?cat=6728,6742,13246",

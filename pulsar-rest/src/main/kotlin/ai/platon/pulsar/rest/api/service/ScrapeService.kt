@@ -43,7 +43,6 @@ class ScrapeService(
             val hyperlink = createScrapeHyperlink(request)
             session.submit(hyperlink)
             val response = hyperlink.get(120, TimeUnit.SECONDS)
-            val rs = response.resultSet
             return response
         } catch (e: TimeoutException) {
             logger.warn("Error executing query: >>>${request.sql}<<<", e)

@@ -4,6 +4,8 @@ import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.SQLSession
@@ -11,10 +13,12 @@ import ai.platon.pulsar.ql.common.ResultSets
 import ai.platon.pulsar.ql.common.annotation.H2Context
 import ai.platon.pulsar.ql.common.annotation.UDFGroup
 import ai.platon.pulsar.ql.common.annotation.UDFunction
+import ai.platon.pulsar.ql.common.types.ValueStringJSON
 import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.addColumn
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
+import com.google.common.annotations.Beta
 import com.google.gson.Gson
 import org.apache.commons.lang3.StringUtils
 import org.h2.tools.SimpleResultSet
@@ -31,17 +35,22 @@ import java.util.*
 @UDFGroup
 object CommonFunctions {
 
-    private val sqlContext get() = SQLContexts.create()
-
     @UDFunction(description = "Test if the given string is a number")
     @JvmStatic
     fun isNumeric(str: String): Boolean {
         return StringUtils.isNumeric(str)
     }
 
+    @Deprecated("use getTopPrivateDomain instead", ReplaceWith("getTopPrivateDomain"))
     @UDFunction(description = "Get the domain of a url")
     @JvmStatic
     fun getDomain(url: String): String {
+        return UrlUtils.getTopPrivateDomain(url)
+    }
+
+    @UDFunction(description = "Get the top private domain of the url")
+    @JvmStatic
+    fun getTopPrivateDomain(url: String): String {
         return UrlUtils.getTopPrivateDomain(url)
     }
 
@@ -99,13 +108,26 @@ object CommonFunctions {
         val map = mutableMapOf<String, String>()
         rs.beforeFirst()
         while (rs.next()) {
-            // TODO: this is a temporary solution, find out why there is a ' surrounding
             val k = rs.getString(1).removeSurrounding("'")
             val v = rs.getString(2).removeSurrounding("'")
             map[k] = v
         }
 
         return Gson().toJson(map)
+    }
+
+    @Beta
+    @UDFunction
+    @JvmStatic
+    fun makeValueStringJSON(): ValueStringJSON {
+        return ValueStringJSON.get("{}")
+    }
+
+    @Beta
+    @UDFunction
+    @JvmStatic
+    fun makeValueStringJSON(jsonText: String, javaClassName: String): ValueStringJSON {
+        return ValueStringJSON.get(jsonText, javaClassName)
     }
 
     /**

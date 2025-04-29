@@ -59,6 +59,10 @@ class ScrapeServiceTests {
         assertEquals(2, records[0]["sum"].toString().toInt())
     }
 
+    /**
+     * Test [ai.platon.pulsar.ql.h2.udfs.DomFunctionTables.loadAndSelect]
+     * Test [ScrapeService.executeQuery]
+     * */
     @Test
     fun `When scraping with load_and_select then the result returns synchronously`() {
         val startTime = Instant.now()

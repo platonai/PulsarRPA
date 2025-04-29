@@ -101,7 +101,5 @@ open class XSQLScrapeHyperlink(
 
         val rs = executeQuery(request, response)
         response.resultSet = ResultSetUtils.getTextEntitiesFromResultSet(rs)
-
-        val entities = response.resultSet
     }
 }
