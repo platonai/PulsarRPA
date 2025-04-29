@@ -59,4 +59,24 @@ class AiControllerTests : IntegrationTestBase() {
 
         assertTrue { response.isNotBlank() }
     }
+
+    /**
+     * Test [AiController.extractFieldsFromPage]
+     * with [ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver.instruct]
+     * */
+    @Test
+    fun `Test extracting fields from a page with interactions`() {
+        val instruct = """
+            move cursor to the element with id 'title' and click it
+            scroll to middle
+            scroll to top
+            get the text of the element with id 'title'
+        """.trimIndent()
+        val request = PromptRequest(productUrl, "title, price, brand", instructOnDocumentReady = instruct)
+        val response = restTemplate.postForObject("$baseUri/ai/extract", request, String::class.java)
+
+        println(response)
+
+        assertTrue { response.isNotBlank() }
+    }
 }

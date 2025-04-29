@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.api.serivces
+package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.DateTimes
@@ -10,7 +10,6 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.TestUtils
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
-import ai.platon.pulsar.rest.api.service.ScrapeService
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
