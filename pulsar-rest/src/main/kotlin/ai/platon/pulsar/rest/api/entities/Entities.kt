@@ -13,8 +13,8 @@ import java.time.Instant
  * @property url The page url
  * @property prompt The prompt, e.g. "Tell me something about the page"
  * @property args The load arguments
- * @property instructs Instructs, e.g. "click the button with id 'submit'", [instructs] is alias for [instructsOnDocumentReady]
- * @property instructsOnDocumentReady Instructs on document ready, e.g. "click the button with id 'submit'"
+ * @property actions Instructs, e.g. "click the button with id 'submit'", [actions] is alias for [actionsOnDocumentReady]
+ * @property actionsOnDocumentReady Instructs on document ready, e.g. "click the button with id 'submit'"
  * */
 data class PromptRequest(
     /**
@@ -32,13 +32,13 @@ data class PromptRequest(
      * */
     var args: String? = null,
     /**
-     * Instructs, e.g. "click the button with id 'submit'", [instructs] is alias for [instructsOnDocumentReady]
+     * Actions, e.g. "click the button with id 'submit'", [actions] is alias for [actionsOnDocumentReady]
      * */
-    var instructs: String? = null,
+    var actions: String? = null,
     /**
-     * Instructs on document ready, e.g. "click the button with id 'submit'",
+     * Actions on document ready, e.g. "click the button with id 'submit'",
      * */
-    var instructsOnDocumentReady: String? = null,
+    var actionsOnDocumentReady: String? = null,
 )
 
 data class ScrapeRequest(

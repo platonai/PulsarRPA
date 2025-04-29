@@ -90,14 +90,14 @@ Extract data from a webpage using `extract` API:
 
 ---
 
-#### 📊 Perform Instructions
+#### 📊 Actions on Page
 
-Extract data from a webpage using `extract` API:
+Perform actions on the active page on the browser using the `actions` parameter:
 
   ```shell
   curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{
     "url": "https://www.amazon.com/dp/B0C1H26C46",
-    "instructs": "get the text of the element with id 'title' and click it\n scroll to middle"
+    "actions": "get the text of the element with id 'title' and click it\n scroll to middle"
     "prompt": "product name, price, and description",
   }'
   ```

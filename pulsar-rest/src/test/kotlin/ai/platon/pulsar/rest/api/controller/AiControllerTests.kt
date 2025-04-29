@@ -72,7 +72,7 @@ class AiControllerTests : IntegrationTestBase() {
             scroll to top
             get the text of the element with id 'title'
         """.trimIndent()
-        val request = PromptRequest(productUrl, "title, price, brand", instructs = instructions)
+        val request = PromptRequest(productUrl, "title, price, brand", actions = instructions)
         val response = restTemplate.postForObject("$baseUri/ai/extract", request, String::class.java)
 
         println(response)
