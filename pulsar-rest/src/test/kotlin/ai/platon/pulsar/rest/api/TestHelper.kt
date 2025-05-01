@@ -12,8 +12,8 @@ object TestUtils {
     const val PRODUCT_DETAIL_URL = "https://www.amazon.com/dp/B0C1H26C46"
 
     fun ensurePage(url: String) {
-        val pageCondition = { page: WebPage -> page.protocolStatus.isSuccess && page.persistedContentLength > 8000 }
-        val page = session.load(url).takeIf(pageCondition) ?: session.load(url, "-refresh")
+        val pageRequirement = { page: WebPage -> page.protocolStatus.isSuccess && page.persistedContentLength > 8000 }
+        val page = session.load(url).takeIf(pageRequirement) ?: session.load(url, "-refresh")
 
         Assumptions.assumeTrue(page.protocolStatus.isSuccess)
         Assumptions.assumeTrue(page.contentLength > 0)

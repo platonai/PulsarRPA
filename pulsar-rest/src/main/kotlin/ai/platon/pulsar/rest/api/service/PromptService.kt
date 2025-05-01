@@ -137,7 +137,7 @@ class PromptService(
                 selectNthScreenText(screenNumber, document)
             }
 
-println(richTextContent)
+// println(richTextContent)
 
             if (userMessage1 != null) {
                 val message = "$userMessage1\n$richTextContent"
@@ -187,9 +187,16 @@ println(richTextContent)
                             lastText = text
                         }
                     }
-                } else if (node.nodeName().lowercase() in BROWSER_INTERACTIVE_ELEMENTS_SELECTOR) {
-                    if (!sb.endsWith("\n")) {
-                        sb.appendLine()
+                } else {
+                    val nodeName = node.nodeName().lowercase()
+                    if (nodeName == "a") {
+                        if (!sb.endsWith(' ')) {
+                            sb.append(' ')
+                        }
+                    } else if (nodeName in BROWSER_INTERACTIVE_ELEMENTS_SELECTOR) {
+                        if (!sb.endsWith('\n')) {
+                            sb.append('\n')
+                        }
                     }
                 }
 

@@ -1154,17 +1154,19 @@ fun Node.isAncestorOf(other: Node, stop: (Node) -> Boolean): Boolean {
 
 private fun accumulateText(root: Element, seperator: String = " "): String {
     val sb = StringBuilder()
+
     NodeTraversor.traverse({ node, depth ->
-        val text = node.extension.immutableText
         if (node is TextNode) {
+            val text = node.extension.immutableText
             if (text.isNotBlank()) {
                 sb.append(text)
             }
         } else if (node is Element) {
             if (sb.isNotEmpty() && (node.isBlock || node.tagName() == "br")
                 && !(sb.isNotEmpty() && sb.endsWith(seperator))
-            )
+            ) {
                 sb.append(seperator)
+            }
         }
     }, root)
 
