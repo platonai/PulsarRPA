@@ -1,9 +1,9 @@
 package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.common.ResourceStatus
+import ai.platon.pulsar.common.config.AppConstants.BROWSER_INTERACTIVE_ELEMENTS_SELECTOR
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.dom.nodes.node.ext.screenNumber
-import ai.platon.pulsar.dom.select.ElementTraversor
+import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.rest.api.common.DEFAULT_INTRODUCE
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
@@ -14,7 +14,9 @@ import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.session.PulsarSession
+import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
+import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -121,34 +123,20 @@ class PromptService(
     }
 
     private fun doChat1(page: WebPage, document: FeaturedDocument, request: PromptRequestL2, response: PromptResponseL2) {
-        // the 0-based screen number
+        // the 0-based screen number, 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
         val screenNumber = page.activeDOMMetadata?.screenNumber ?: 0f
 
-        var userMessage1 = normalizeUserMessage(request.talkAboutTextContentPrompt)
-        var userMessage2 = normalizeUserMessage(request.textContentFieldDescriptions)
+        val userMessage1 = normalizeUserMessage(request.talkAboutPage)
+        val userMessage2 = normalizeUserMessage(request.fieldDescriptions)
         if (userMessage1 != null || userMessage2 != null) {
-            val textContent = selectNthScreenText(screenNumber, document)
+            val richTextContent = selectNthScreenRichText(screenNumber, document)
             if (userMessage1 != null) {
-                val message = userMessage1 + "\n" + textContent
-                response.talkAboutTextContentResponse = session.chat(message).content
+                val message = "$userMessage1\n$richTextContent"
+                response.talkAboutPageResponse = session.chat(message).content
             }
             if (userMessage2 != null) {
-                val message = userMessage2 + "\n" + textContent
-                response.textContentFields = session.chat(message).content
-            }
-        }
-
-        userMessage1 = normalizeUserMessage(request.talkAboutHTMLPrompt)
-        userMessage2 = normalizeUserMessage(request.htmlFieldDescriptions)
-        if (userMessage1 != null || userMessage2 != null) {
-            val htmlContent = selectNthScreenHTML(screenNumber, document)
-            if (userMessage1 != null) {
-                val message = userMessage1 + "\n" + htmlContent
-                response.talkAboutHTMLResponse = session.chat(message).content
-            }
-            if (userMessage2 != null) {
-                val message = userMessage2 + "\n" + htmlContent
-                response.htmlContentFields = session.chat(message).content
+                val message = "$userMessage2\n$richTextContent"
+                response.fields = session.chat(message).content
             }
         }
     }
@@ -171,33 +159,50 @@ class PromptService(
         }
     }
 
-    private fun selectNthScreenText(screenNumber: Float, document: FeaturedDocument): String {
+    private fun selectNthScreenRichText(screenNumber: Float, document: FeaturedDocument): String {
         val sb = StringBuilder()
-        NodeTraversor.traverse({ node, _ ->
-            if (node is TextNode) {
+
+        NodeTraversor.filter(object: NodeFilter {
+            override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
                 // Check if the node is within the specified screen number range
-                if (node.screenNumber > screenNumber - 0.5 && node.screenNumber < screenNumber + 0.5) {
-                    val text = node.text()
-                    if (text.isNotBlank()) {
-                        sb.append(text)
-                    }
+                if (node.screenNumber < screenNumber - 0.5 || node.screenNumber > screenNumber + 0.5) {
+                    return NodeFilter.FilterResult.CONTINUE
                 }
+
+                if (node is TextNode || node.isImage || node.isAnchor) {
+                    return accumRichText(node, sb)
+                } else if (node.nodeName().lowercase() in BROWSER_INTERACTIVE_ELEMENTS_SELECTOR) {
+                    sb.appendLine()
+                }
+
+                return NodeFilter.FilterResult.CONTINUE
             }
         }, document.body)
 
         return sb.toString()
     }
 
-    private fun selectNthScreenHTML(screenNumber: Float, document: FeaturedDocument): String {
-        val sb = StringBuilder()
-
-        ElementTraversor.traverse(document.body) { ele ->
-            // Check if the node is within the specified screen number range
-            if (ele.screenNumber > screenNumber - 0.5 && ele.screenNumber < screenNumber + 0.5) {
-                sb.append(ele.outerHtml())
+    private fun accumRichText(node: Node, sb: StringBuilder): NodeFilter.FilterResult {
+        if (node.isImage) {
+            val imageUrl = node.textRepresentation
+            if (imageUrl.isNotEmpty()) {
+                sb.appendLine("<img src=\"$imageUrl\" />")
             }
+            return NodeFilter.FilterResult.SKIP_CHILDREN
+        } else if (node.isAnchor) {
+            val anchorText = node.textRepresentation
+            val anchorUrl = node.attr("href")
+            if (anchorText.isNotEmpty() && anchorUrl.isNotEmpty()) {
+                sb.appendLine("<a href=\"$anchorUrl\">$anchorText</a>")
+            }
+            return NodeFilter.FilterResult.SKIP_CHILDREN
+        } else if (node is TextNode && node.numChars > 0) {
+            val text = node.text()
+            if (text.isNotEmpty()) {
+                sb.append(text)
+            }
+            return NodeFilter.FilterResult.CONTINUE
         }
-
-        return sb.toString()
+        return NodeFilter.FilterResult.CONTINUE
     }
 }

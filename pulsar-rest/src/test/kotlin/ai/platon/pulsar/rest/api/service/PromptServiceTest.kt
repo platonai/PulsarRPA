@@ -92,84 +92,32 @@ class PromptServiceTest {
     }
 
     @Test
-    fun `test command with talkAboutTextContentPrompt`() {
+    fun `test command with talkAboutPage`() {
         val request = PromptRequestL2(
             PRODUCT_DETAIL_URL,
-            talkAboutTextContentPrompt = "What is the product name?",
+            talkAboutPage = "Give me the product name",
         )
         val response = service.command(request)
-        println(response.talkAboutTextContentResponse)
+        println(response.talkAboutPageResponse)
 
         assertTrue { response.isDone }
-        assertNull(response.talkAboutHTMLResponse)
-        assertNull(response.textContentFields)
-        assertNull(response.htmlContentFields)
+        assertNull(response.fields)
         assertNull(response.xsqlResultSet)
-        assertTrue { !response.talkAboutTextContentResponse.isNullOrBlank() }
+        assertTrue { !response.talkAboutPageResponse.isNullOrBlank() }
     }
 
     @Test
-    fun `test command with talkAboutHTMLPrompt`() {
+    fun `test command with fieldDescriptions`() {
         val request = PromptRequestL2(
             PRODUCT_DETAIL_URL,
-            talkAboutHTMLPrompt = "Give the outerHTML of the product name",
+            fieldDescriptions = "product name, ratings, price",
         )
         val response = service.command(request)
-        println(response.talkAboutHTMLResponse)
+        println(response.fields)
 
         assertTrue { response.isDone }
-        assertNull(response.textContentFields)
-        assertNull(response.htmlContentFields)
+        assertNull(response.talkAboutPageResponse)
         assertNull(response.xsqlResultSet)
-        assertTrue { !response.talkAboutHTMLResponse.isNullOrBlank() }
-    }
-
-    @Test
-    fun `test command with textContentFieldDescriptions`() {
-        val request = PromptRequestL2(
-            PRODUCT_DETAIL_URL,
-            textContentFieldDescriptions = "product name, ratings, price",
-        )
-        val response = service.command(request)
-        println(response.textContentFields)
-
-        assertTrue { response.isDone }
-        assertNull(response.talkAboutHTMLResponse)
-        assertNull(response.htmlContentFields)
-        assertNull(response.xsqlResultSet)
-        assertTrue { !response.textContentFields.isNullOrBlank() }
-    }
-
-    @Test
-    fun `test command with textContentFieldDescriptions and perform actionsOnDocumentReady`() {
-        val request = PromptRequestL2(
-            PRODUCT_DETAIL_URL,
-            textContentFieldDescriptions = "product name, ratings, price",
-            actionsOnDocumentReady = "scroll to middle and click the button with text like 'add-to-cart'",
-        )
-        val response = service.command(request)
-        println(response.textContentFields)
-
-        assertTrue { response.isDone }
-        assertNull(response.talkAboutHTMLResponse)
-        assertNull(response.htmlContentFields)
-        assertNull(response.xsqlResultSet)
-        assertTrue { !response.textContentFields.isNullOrBlank() }
-    }
-
-    @Test
-    fun `test command with htmlFieldDescriptions`() {
-        val request = PromptRequestL2(
-            PRODUCT_DETAIL_URL,
-            htmlFieldDescriptions = "product name, ratings, price",
-        )
-        val response = service.command(request)
-        println(response.htmlContentFields)
-
-        assertTrue { response.isDone }
-        assertNull(response.talkAboutHTMLResponse)
-        assertNull(response.textContentFields)
-        assertNull(response.xsqlResultSet)
-        assertTrue { !response.htmlContentFields.isNullOrBlank() }
+        assertTrue { !response.fields.isNullOrBlank() }
     }
 }

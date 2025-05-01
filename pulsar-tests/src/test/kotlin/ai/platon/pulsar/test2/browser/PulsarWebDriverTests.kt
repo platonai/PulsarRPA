@@ -121,6 +121,11 @@ class PulsarWebDriverTests : WebDriverTestBase() {
         var metadata = computeActiveDOMMetadata(driver)
         assertEquals(0f, metadata.screenNumber)
 
+        driver.evaluate("window.scrollTo(0, 300)")
+        metadata = computeActiveDOMMetadata(driver)
+        assertTrue { metadata.screenNumber > 0.0 }
+        assertTrue { metadata.screenNumber < 1.0 }
+
         driver.evaluate("window.scrollTo(0, 1080)")
         metadata = computeActiveDOMMetadata(driver)
         assertTrue { metadata.screenNumber > 1 }

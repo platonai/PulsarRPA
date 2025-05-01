@@ -195,13 +195,13 @@ data class ActiveDOMMetadata(
     val viewPortWidth: Int = DEFAULT_VIEW_PORT.width,
     val viewPortHeight: Int = DEFAULT_VIEW_PORT.height,
 
-    val scrollTop: Int = 0,
-    val scrollLeft: Int = 0,
+    val scrollTop: Float = 0f,
+    val scrollLeft: Float = 0f,
 
-    val clientWidth: Int = DEFAULT_VIEW_PORT.width,
-    val clientHeight: Int = DEFAULT_VIEW_PORT.height,
+    val clientWidth: Float = DEFAULT_VIEW_PORT.width.toFloat(),
+    val clientHeight: Float = DEFAULT_VIEW_PORT.height.toFloat(),
 
-    // The screen number of the current scroll position.
+    // The screen number of the current scroll position, 0-based.
     // 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
     val screenNumber: Float = 0f,
 
@@ -220,7 +220,7 @@ data class ActiveDOMMessage(
 
     companion object {
         private val gson = Gson()
-        val default = ActiveDOMMessage()
+        val DEFAULT = ActiveDOMMessage()
 
         fun fromJson(json: String): ActiveDOMMessage {
             return gson.fromJson(json, ActiveDOMMessage::class.java)

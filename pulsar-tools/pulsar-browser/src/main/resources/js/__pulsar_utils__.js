@@ -1368,10 +1368,10 @@ __pulsar_utils__.computeMetadata = function() {
 
     metadata["viewPortWidth"] = config.viewPortWidth
     metadata["viewPortHeight"] = config.viewPortHeight
-    metadata["scrollTop"] = scrollTop
-    metadata["scrollLeft"] = scrollLeft
-    metadata["clientWidth"] = clientWidth
-    metadata["clientHeight"] = clientHeight
+    metadata["scrollTop"] = scrollTop.toFixed(2)
+    metadata["scrollLeft"] = scrollLeft.toFixed(2)
+    metadata["clientWidth"] = clientWidth.toFixed(2)
+    metadata["clientHeight"] = clientHeight.toFixed(2)
 
     metadata["screenNumber"] = screenNumber.toFixed(2)
 

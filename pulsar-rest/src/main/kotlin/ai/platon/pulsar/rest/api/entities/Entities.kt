@@ -71,10 +71,10 @@ data class W3DocumentRequest(
  *
  * @property url The target page URL to process.
  * @property args Optional load arguments to customize page loading behavior.
- * @property talkAboutTextContentPrompt A prompt to analyze or discuss the visible text content of the page.
- * @property talkAboutHTMLPrompt A prompt to analyze or discuss the HTML structure of the page.
+ * @property talkAboutTextContent A prompt to analyze or discuss the visible text content of the page.
+ * @property talkAboutPage A prompt to analyze or discuss the HTML structure of the page.
  * @property textContentFieldDescriptions Specifications for extracting structured fields from the visible text content.
- * @property htmlFieldDescriptions Specifications for extracting structured fields from the HTML content.
+ * @property fieldDescriptions Specifications for extracting structured fields from the HTML content.
  * @property xsql An X-SQL query for structured data extraction, e.g.
  *              "select dom_first_text(dom, '#title') as title, llm_extract(dom, 'price') as price".
  * @property actionsOnBrowserLaunched Actions to perform immediately after browser initialization (e.g., "clear cookies").
@@ -84,10 +84,8 @@ data class W3DocumentRequest(
 data class PromptRequestL2(
     var url: String,
     var args: String? = null,
-    var talkAboutTextContentPrompt: String? = null,
-    var talkAboutHTMLPrompt: String? = null,
-    var textContentFieldDescriptions: String? = null,
-    var htmlFieldDescriptions: String? = null,
+    var talkAboutPage: String? = null,
+    var fieldDescriptions: String? = null,
     var xsql: String? = null,
     var actionsOnBrowserLaunched: String? = null,
     var actionsOnDocumentReady: String? = null,
@@ -102,10 +100,8 @@ data class PromptResponseL2(
     var pageContentBytes: Int = 0,
     var isDone: Boolean = false,
 
-    var talkAboutTextContentResponse: String? = null,
-    var talkAboutHTMLResponse: String? = null,
-    var textContentFields: String? = null,
-    var htmlContentFields: String? = null,
+    var talkAboutPageResponse: String? = null,
+    var fields: String? = null,
     var xsqlResultSet: List<Map<String, Any?>>? = null,
 ) {
     val status: String get() = ResourceStatus.getStatusText(statusCode)
