@@ -98,6 +98,7 @@ class PromptServiceTest {
             talkAboutPage = "Give me the product name",
         )
         val response = service.command(request)
+        Assumptions.assumeTrue(response.pageStatusCode == 200)
         println(response.talkAboutPageResponse)
 
         assertTrue { response.isDone }
@@ -113,6 +114,7 @@ class PromptServiceTest {
             fieldDescriptions = "product name, ratings, price",
         )
         val response = service.command(request)
+        Assumptions.assumeTrue(response.pageStatusCode == 200)
         println(response.fields)
 
         assertTrue { response.isDone }

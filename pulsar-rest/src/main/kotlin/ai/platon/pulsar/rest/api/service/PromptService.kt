@@ -190,12 +190,12 @@ class PromptService(
                 } else {
                     val nodeName = node.nodeName().lowercase()
                     if (nodeName == "a") {
-                        if (!sb.endsWith(' ')) {
-                            sb.append(' ')
+                        if (!sb.endsWith(" ") && !sb.endsWith("\n")) {
+                            sb.append(" ")
                         }
                     } else if (nodeName in BROWSER_INTERACTIVE_ELEMENTS_SELECTOR) {
-                        if (!sb.endsWith('\n')) {
-                            sb.append('\n')
+                        if (!sb.endsWith("\n")) {
+                            sb.append("\n")
                         }
                     }
                 }
