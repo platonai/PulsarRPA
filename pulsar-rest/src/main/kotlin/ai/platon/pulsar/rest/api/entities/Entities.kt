@@ -86,6 +86,7 @@ data class PromptRequestL2(
     var args: String? = null,
     var talkAboutPage: String? = null,
     var fieldDescriptions: String? = null,
+    var richText: Boolean? = null,
     var xsql: String? = null,
     var actionsOnBrowserLaunched: String? = null,
     var actionsOnDocumentReady: String? = null,

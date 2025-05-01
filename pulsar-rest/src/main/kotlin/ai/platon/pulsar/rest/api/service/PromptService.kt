@@ -2,6 +2,7 @@ package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_INTERACTIVE_ELEMENTS_SELECTOR
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.persist.WebPage
@@ -20,6 +21,7 @@ import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
 import org.springframework.stereotype.Service
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicReference
 
 @Service
 class PromptService(
@@ -129,7 +131,14 @@ class PromptService(
         val userMessage1 = normalizeUserMessage(request.talkAboutPage)
         val userMessage2 = normalizeUserMessage(request.fieldDescriptions)
         if (userMessage1 != null || userMessage2 != null) {
-            val richTextContent = selectNthScreenRichText(screenNumber, document)
+            val richTextContent = if (request.richText == true) {
+                selectNthScreenRichText(screenNumber, document)
+            } else {
+                selectNthScreenText(screenNumber, document)
+            }
+
+println(richTextContent)
+
             if (userMessage1 != null) {
                 val message = "$userMessage1\n$richTextContent"
                 response.talkAboutPageResponse = session.chat(message).content
@@ -159,8 +168,9 @@ class PromptService(
         }
     }
 
-    private fun selectNthScreenRichText(screenNumber: Float, document: FeaturedDocument): String {
+    private fun selectNthScreenText(screenNumber: Float, document: FeaturedDocument): String {
         val sb = StringBuilder()
+        var lastText = ""
 
         NodeTraversor.filter(object: NodeFilter {
             override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
@@ -169,10 +179,18 @@ class PromptService(
                     return NodeFilter.FilterResult.CONTINUE
                 }
 
-                if (node is TextNode || node.isImage || node.isAnchor) {
-                    return accumRichText(node, sb)
+                if (node is TextNode) {
+                    if (node.numChars > 0) {
+                        val text = node.cleanText
+                        if (text.isNotBlank() && text != lastText) {
+                            sb.append(text)
+                            lastText = text
+                        }
+                    }
                 } else if (node.nodeName().lowercase() in BROWSER_INTERACTIVE_ELEMENTS_SELECTOR) {
-                    sb.appendLine()
+                    if (!sb.endsWith("\n")) {
+                        sb.appendLine()
+                    }
                 }
 
                 return NodeFilter.FilterResult.CONTINUE
@@ -182,24 +200,53 @@ class PromptService(
         return sb.toString()
     }
 
-    private fun accumRichText(node: Node, sb: StringBuilder): NodeFilter.FilterResult {
+    private fun selectNthScreenRichText(screenNumber: Float, document: FeaturedDocument): String {
+        val sb = StringBuilder()
+        val lastText = AtomicReference<String>()
+
+        NodeTraversor.filter(object: NodeFilter {
+            override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
+                // Check if the node is within the specified screen number range
+                if (node.screenNumber < screenNumber - 0.5 || node.screenNumber > screenNumber + 0.5) {
+                    return NodeFilter.FilterResult.CONTINUE
+                }
+
+                if (node is TextNode || node.isImage || node.isAnchor) {
+                    return accumRichText(node, sb, lastText)
+                } else if (node.nodeName().lowercase() in BROWSER_INTERACTIVE_ELEMENTS_SELECTOR) {
+                    if (!sb.endsWith("\n")) {
+                        sb.appendLine()
+                    }
+                }
+
+                return NodeFilter.FilterResult.CONTINUE
+            }
+        }, document.body)
+
+        return sb.toString()
+    }
+
+    private fun accumRichText(node: Node, sb: StringBuilder, lastText: AtomicReference<String>): NodeFilter.FilterResult {
         if (node.isImage) {
-            val imageUrl = node.textRepresentation
-            if (imageUrl.isNotEmpty()) {
-                sb.appendLine("<img src=\"$imageUrl\" />")
+            if (node.width > 200 && node.height > 200) {
+                val imageUrl = node.attr("abs:src")
+                if (UrlUtils.isStandard(imageUrl)) {
+                    sb.appendLine("<img src=\"$imageUrl\" />")
+                }
             }
             return NodeFilter.FilterResult.SKIP_CHILDREN
         } else if (node.isAnchor) {
-            val anchorText = node.textRepresentation
-            val anchorUrl = node.attr("href")
-            if (anchorText.isNotEmpty() && anchorUrl.isNotEmpty()) {
+            val anchorText = node.cleanText
+            val anchorUrl = node.attr("abs:href")
+            if (anchorText.isNotEmpty() && UrlUtils.isStandard(anchorUrl)) {
                 sb.appendLine("<a href=\"$anchorUrl\">$anchorText</a>")
             }
             return NodeFilter.FilterResult.SKIP_CHILDREN
         } else if (node is TextNode && node.numChars > 0) {
-            val text = node.text()
-            if (text.isNotEmpty()) {
+            val text = node.cleanText
+            if (text.isNotEmpty() && lastText.get() != text) {
                 sb.append(text)
+                lastText.set(text)
             }
             return NodeFilter.FilterResult.CONTINUE
         }
