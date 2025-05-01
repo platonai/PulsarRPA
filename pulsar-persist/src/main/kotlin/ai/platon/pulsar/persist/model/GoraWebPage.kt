@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.unreverseUrl
 import ai.platon.pulsar.persist.*
@@ -21,6 +22,7 @@ import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.Converters.convert
 import ai.platon.pulsar.persist.model.PageModel.Companion.box
+import com.fasterxml.jackson.module.kotlin.readValue
 import java.nio.ByteBuffer
 import java.time.Duration
 import java.time.Instant
@@ -590,6 +592,19 @@ class GoraWebPage(
         get() = getActiveDOMStatTrace0()
         set(value) {
             setActiveDOMStatTrace0(value)
+        }
+
+    /**
+     * TODO: USE A SEPARATE FIELD
+     * */
+    override var activeDOMMetadata: ActiveDOMMetadata?
+        get() = metadata["ACTIVE_DOM_METADATA"]?.let { pulsarObjectMapper().readValue(it) }
+        set(value) {
+            if (value != null) {
+                metadata["ACTIVE_DOM_METADATA"] = pulsarObjectMapper().writeValueAsString(value)
+            } else {
+                metadata.remove("ACTIVE_DOM_METADATA")
+            }
         }
 
     private fun getActiveDOMStatTrace0(): Map<String, ActiveDOMStat> {

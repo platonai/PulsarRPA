@@ -4,7 +4,9 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
+import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
@@ -67,8 +69,9 @@ class WebDriverTestBase : TestBase() {
 
     protected val walmartUrl = "https://www.walmart.com/ip/584284401"
     protected val asin get() = productUrl.substringAfterLast("/dp/")
+    protected val browserFactory = DefaultBrowserFactory()
     protected val driverFactory get() = session.context.getBean(WebDriverFactory::class)
-    protected val browser by lazy { driverFactory.launchTempBrowser() }
+    protected val browser by lazy { browserFactory.launchDefaultBrowser() }
     protected val settings by lazy { BrowserSettings(conf) }
     protected val confuser get() = settings.confuser as SimpleScriptConfuser
 
@@ -99,7 +102,7 @@ class WebDriverTestBase : TestBase() {
 
     protected fun runWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
         runBlocking {
-            driverFactory.launchTempBrowser().use {
+            browserFactory.launchRandomTempBrowser().use {
                 it.newDriver().use { driver ->
                     open(url, driver)
 
@@ -135,7 +138,7 @@ class WebDriverTestBase : TestBase() {
 
     protected fun runResourceWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
         runBlocking {
-            driverFactory.launchTempBrowser().use {
+            browserFactory.launchRandomTempBrowser().use {
                 it.newDriver().use { driver ->
                     openResource(url, driver)
                     block(driver)
@@ -155,7 +158,7 @@ class WebDriverTestBase : TestBase() {
 
     protected fun runWebDriverTest(block: suspend (driver: WebDriver) -> Unit) {
         runBlocking {
-            driverFactory.launchTempBrowser().use {
+            browserFactory.launchRandomTempBrowser().use {
                 it.newDriver().use { driver ->
                     block(driver)
                 }
@@ -183,6 +186,12 @@ class WebDriverTestBase : TestBase() {
         driver.navigateTo(url)
         driver.waitForSelector("body")
         driver.waitForSelector("input[id]")
+
+        // make sure all metadata are available
+        driver.evaluateDetail("__pulsar_utils__.waitForReady()")
+        // make sure all metadata are available
+        driver.evaluateDetail("__pulsar_utils__.compute()")
+
 //        driver.bringToFront()
         var n = scrollCount
         while (n-- > 0) {

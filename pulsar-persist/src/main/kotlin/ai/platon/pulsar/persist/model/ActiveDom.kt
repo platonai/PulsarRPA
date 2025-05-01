@@ -1,5 +1,6 @@
 package ai.platon.pulsar.persist.model
 
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_VIEW_PORT
 import ai.platon.pulsar.persist.gora.generated.GActiveDOMStat
 import ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus
 import com.google.gson.Gson
@@ -182,7 +183,7 @@ data class ActiveDOMStatTrace(
 
     companion object {
         private val gson = Gson()
-        val default = ActiveDOMStatTrace()
+        val DEFAULT = ActiveDOMStatTrace()
 
         fun fromJson(json: String): ActiveDOMStatTrace {
             return gson.fromJson(json, ActiveDOMStatTrace::class.java)
@@ -190,9 +191,28 @@ data class ActiveDOMStatTrace(
     }
 }
 
+data class ActiveDOMMetadata(
+    val viewPortWidth: Int = DEFAULT_VIEW_PORT.width,
+    val viewPortHeight: Int = DEFAULT_VIEW_PORT.height,
+
+    val scrollTop: Int = 0,
+    val scrollLeft: Int = 0,
+
+    val clientWidth: Int = DEFAULT_VIEW_PORT.width,
+    val clientHeight: Int = DEFAULT_VIEW_PORT.height,
+
+    // The screen number of the current scroll position.
+    // 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
+    val screenNumber: Float = 0f,
+
+    val dateTime: String? = null,
+    val timestamp: String? = null,
+)
+
 data class ActiveDOMMessage(
     var trace: ActiveDOMStatTrace? = null,
-    var urls: ActiveDOMUrls? = null
+    var urls: ActiveDOMUrls? = null,
+    var metadata: ActiveDOMMetadata? = null,
 ) {
     fun toJson(): String {
         return gson.toJson(this)

@@ -54,9 +54,10 @@ open class WebDriverFactory constructor(
     /**
      * Launch a browser with a random fingerprint.
      */
+    @Deprecated("Use BrowserFactory.launchRandomTempBrowser() instead", ReplaceWith("browserFactory.launchRandomTempBrowser()"))
     @Throws(BrowserLaunchException::class)
     fun launchTempBrowser() = launchBrowser(BrowserId.RANDOM)
-    
+
     /**
      * Launch a browser.
      */

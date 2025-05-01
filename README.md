@@ -90,9 +90,9 @@ Extract data from a webpage using `extract` API:
 
 ---
 
-#### 📊 Actions on Page
+#### 📊 Page Actions
 
-Perform actions on the active page on the browser using the `actions` parameter:
+Trigger browser page actions by specifying commands with the `actions` parameter:
 
   ```shell
   curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{

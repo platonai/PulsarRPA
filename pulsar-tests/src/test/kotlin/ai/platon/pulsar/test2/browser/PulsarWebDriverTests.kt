@@ -5,8 +5,14 @@ import ai.platon.pulsar.browser.common.SimpleScriptConfuser.Companion.IDENTITY_N
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
+import ai.platon.pulsar.persist.model.ActiveDOMMessage
+import ai.platon.pulsar.persist.model.ActiveDOMMetadata
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
+import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
@@ -73,15 +79,63 @@ class PulsarWebDriverTests : WebDriverTestBase() {
         var detail = driver.evaluateDetail("typeof(window)")
         println(detail)
         // assertNotNull(detail?.value)
-        
+
         detail = driver.evaluateDetail("typeof(document)")
         println(detail)
         // assertNotNull(detail?.value)
-        
+
         val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
         assertEquals(2, r)
     }
-    
+
+    @Test
+    fun `open a HTML page and compute metadata`() = runWebDriverTest(originUrl, browser) { driver ->
+        driver.evaluate("__pulsar_utils__.scrollToMiddle()")
+        var detail = driver.evaluateDetail("__pulsar_utils__.compute()")
+        println(detail)
+
+        detail = driver.evaluateDetail("__pulsar_utils__.getActiveDomMessage()")
+        println(detail)
+        val data = detail?.value?.toString()
+        assertNotNull(data)
+
+        val message = ActiveDOMMessage.fromJson(data)
+        val urls = message.urls
+        assertNotNull(urls)
+        assertEquals(originUrl, urls.URL)
+
+        val metadata = message.metadata
+        assertNotNull(metadata)
+        println(prettyPulsarObjectMapper().writeValueAsString(metadata))
+        assertEquals(1920, metadata.viewPortWidth)
+        assertEquals(1080, metadata.viewPortHeight)
+        assertTrue { metadata.scrollTop > 0 }
+        assertTrue { metadata.scrollLeft == 0 }
+        assertTrue { metadata.clientWidth > 0 } // 1683 on my laptop
+        assertTrue { metadata.clientHeight > 0 } // 986 on my laptop
+    }
+
+    @Test
+    fun `open a HTML page and compute screen number`() = runWebDriverTest(originUrl, browser) { driver ->
+        driver.evaluate("__pulsar_utils__.scrollToTop()")
+        var metadata = computeActiveDOMMetadata(driver)
+        assertEquals(0f, metadata.screenNumber)
+
+        driver.evaluate("window.scrollTo(0, 1080)")
+        metadata = computeActiveDOMMetadata(driver)
+        assertTrue { metadata.screenNumber > 1 }
+    }
+
+    private suspend fun computeActiveDOMMetadata(driver: WebDriver): ActiveDOMMetadata {
+        val detail = driver.evaluateDetail("JSON.stringify(__pulsar_utils__.computeMetadata())")
+        println(detail)
+        assertNotNull(detail)
+        assertNotNull(detail.value)
+        println(detail.value)
+        val data = requireNotNull(detail.value?.toString())
+        return pulsarObjectMapper().readValue(data)
+    }
+
     @Test
     fun `when open a PLAIN TXT page then script is injected`() = runResourceWebDriverTest(plainTextUrl) { driver ->
         val r = driver.evaluate("__pulsar_utils__.add(1, 1)")

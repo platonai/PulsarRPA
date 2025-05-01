@@ -422,6 +422,11 @@ val Node.centerY get() = (y + y2) / 2
  * */
 val Node.geoLocation get() = Point(x, y)
 /**
+ * The screen number of the node (0-based).
+ * 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
+ * */
+val Node.screenNumber get() = 1.0 * top / ownerDocument.viewPort.height
+/**
  * The dimension of the node.
  * */
 val Node.dimension get() = Dimension(width, height)

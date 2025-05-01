@@ -8,6 +8,7 @@ import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.model.ActiveDOMStatTrace
 import ai.platon.pulsar.persist.model.ActiveDOMUrls
+import ai.platon.pulsar.persist.model.ActiveDOMMetadata
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -92,6 +93,10 @@ class PageDatum(
      * The page URLs in a real browser calculated by javascript.
      * */
     var activeDOMUrls: ActiveDOMUrls? = null
+    /**
+     * The metadata of the active DOM, which is calculated by javascript.
+     * */
+    var activeDomMetadata: ActiveDOMMetadata? = null
     /**
      * The length of the original page content in bytes, the content has no inserted pulsar metadata.
      */

@@ -84,7 +84,8 @@ __pulsar_utils__.createDataIfAbsent = function() {
                 location: location,
                 documentURI: document.documentURI,
                 referrer: document.referrer
-            }
+            },
+            metadata: null
         };
     }
 };
@@ -385,10 +386,12 @@ __pulsar_utils__.isElementVisible = function(element) {
     if (style.display === 'contents') {
         // display:contents is not rendered itself, but its child nodes are.
         for (let child = element.firstChild; child; child = child.nextSibling) {
-            if (child.nodeType === 1 /* Node.ELEMENT_NODE */ && this.isElementVisible(child))
-            return true;
-            if (child.nodeType === 3 /* Node.TEXT_NODE */ && this.isVisibleTextNode(child))
-            return true;
+            if (child.nodeType === 1 /* Node.ELEMENT_NODE */ && this.isElementVisible(child)) {
+                return true;
+            }
+            if (child.nodeType === 3 /* Node.TEXT_NODE */ && this.isVisibleTextNode(child)) {
+                return true;
+            }
         }
         return false;
     }
@@ -408,6 +411,33 @@ __pulsar_utils__.isVisibleTextNode = function (node) {
     range.selectNode(node);
     const rect = range.getBoundingClientRect();
     return rect.width > 0 && rect.height > 0;
+}
+
+__pulsar_utils__.getVisibleTextContent = function() {
+    const elements = document.body.querySelectorAll('*');
+    const visibleTexts = [];
+
+    // new __pulsar_NodeTraversor(new __pulsar_NodeFeatureCalculator()).traverse(document.body);
+
+    elements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        const isVisible =
+            rect.width > 0 &&
+            rect.height > 0 &&
+            rect.bottom >= 0 &&
+            rect.right >= 0 &&
+            rect.top <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.left <= (window.innerWidth || document.documentElement.clientWidth);
+
+        const style = window.getComputedStyle(el);
+        const isDisplayed = style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+
+        if (isVisible && isDisplayed && el.childElementCount === 0 && el.textContent.trim()) {
+            visibleTexts.push(el.textContent.trim());
+        }
+    });
+
+    return visibleTexts;
 }
 
 /**
@@ -1319,6 +1349,39 @@ __pulsar_utils__.showInfoBox = function(selector) {
 }
 
 /**
+ * Compute the final metadata, the metadata is stored in the document.__pulsar__Data.metadata
+ * */
+__pulsar_utils__.computeMetadata = function() {
+    let config = __pulsar_CONFIGS
+
+    let dateTime = new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString()
+    let timestamp = new Date().getTime().toString()
+    // TODO: check the standard and understand the extract meaning of these parameters
+    let scrollTop = document.documentElement.scrollTop || document.body.scrollTop
+    let scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft
+    let clientWidth = window.innerWidth || document.documentElement.clientWidth
+    let clientHeight = window.innerHeight || document.documentElement.clientHeight
+    // 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
+    const screenNumber = window.scrollY / window.innerHeight;
+
+    let metadata = {};
+
+    metadata["viewPortWidth"] = config.viewPortWidth
+    metadata["viewPortHeight"] = config.viewPortHeight
+    metadata["scrollTop"] = scrollTop
+    metadata["scrollLeft"] = scrollLeft
+    metadata["clientWidth"] = clientWidth
+    metadata["clientHeight"] = clientHeight
+
+    metadata["screenNumber"] = screenNumber.toFixed(2)
+
+    metadata["dateTime"] = dateTime
+    metadata["timestamp"] = timestamp
+
+    return metadata
+}
+
+/**
  * Generate meta data
  * */
 __pulsar_utils__.generateMetadata = function() {
@@ -1329,15 +1392,18 @@ __pulsar_utils__.generateMetadata = function() {
         return
     }
 
-    let date = new Date();
+    let domain = document.domain
+    let viewPort = config.viewPortWidth + "x" + config.viewPortHeight
+    let dateTime = new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString()
+    let timestamp = new Date().getTime().toString()
 
     let ele = document.createElement("input");
     ele.setAttribute("type", "hidden");
     ele.setAttribute("id", config.META_INFORMATION_ID);
-    ele.setAttribute("domain", document.domain);
-    ele.setAttribute("view-port", config.viewPortWidth + "x" + config.viewPortHeight);
-    ele.setAttribute("date-time", date.toLocaleDateString() + " " + date.toLocaleTimeString());
-    ele.setAttribute("timestamp", date.getTime().toString());
+    ele.setAttribute("domain", domain);
+    ele.setAttribute("view-port", viewPort);
+    ele.setAttribute("date-time", dateTime);
+    ele.setAttribute("timestamp", timestamp);
 
     document.body.appendChild(ele);
 };
@@ -1356,6 +1422,8 @@ __pulsar_utils__.compute = function() {
     if (done) {
         return
     }
+
+    document.__pulsar__Data.metadata = this.computeMetadata();
 
     this.scrollToTop();
 
@@ -1380,11 +1448,20 @@ __pulsar_utils__.compute = function() {
     // if any script error occurs, the flag can NOT be seen
     document.body.setAttribute(DATA_ERROR, '0');
 
-    return JSON.stringify(document.__pulsar__Data)
+    return this.getActiveDomMessage()
 };
 
 __pulsar_utils__.addProjectSpecifiedData = function() {
 
+};
+
+/**
+ * Get the active DOM message which is the current state of the DOM.
+ * The active DOM message is the JSON string of the document.__pulsar__Data.
+ * It's computed in updateStat(), and computeFinalMetadata()
+ * */
+__pulsar_utils__.getActiveDomMessage = function() {
+    return JSON.stringify(document.__pulsar__Data)
 };
 
 /**
