@@ -1415,7 +1415,7 @@ __pulsar_utils__.computeMetadata = function() {
  * Generate meta data
  * */
 __pulsar_utils__.generateMetadata = function() {
-    const config = this.config;
+    const config = this.getConfig();
     let meta = document.getElementById(config.META_INFORMATION_ID);
     if (meta != null) {
         // already generated

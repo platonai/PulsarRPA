@@ -15,10 +15,12 @@ class DefaultBrowserFactory : AbstractBrowserFactory() {
         BrowserType.PLAYWRIGHT_CHROME to PlaywrightBrowserLauncher()
     )
 
+    @Synchronized
     override fun launch(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): Browser = getLauncher(browserId.browserType).launch(browserId, launcherOptions, launchOptions)
 
+    @Synchronized
     override fun connect(browserType: BrowserType, port: Int, settings: BrowserSettings): Browser =
         getLauncher(browserType).connect(port, settings)
 

@@ -71,7 +71,7 @@ class WebDriverTestBase : TestBase() {
     protected val asin get() = productUrl.substringAfterLast("/dp/")
     protected val browserFactory = DefaultBrowserFactory()
     protected val driverFactory get() = session.context.getBean(WebDriverFactory::class)
-    protected val browser by lazy { browserFactory.launchDefaultBrowser() }
+    protected val browser by lazy { browserFactory.launchRandomTempBrowser() }
     protected val settings by lazy { BrowserSettings(conf) }
     protected val confuser get() = settings.confuser as SimpleScriptConfuser
 

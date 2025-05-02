@@ -73,7 +73,7 @@ class PromptServiceTest {
     }
 
     @Test
-    fun `test prompt convertion to request with cache`() {
+    fun `test prompt conversion to request with cache`() {
         val url1 = "https://www.amazon.com/dp/B0C1H26C46"
         val url2 = "https://www.amazon.com/dp/B07PX3ZRJ6"
 
@@ -200,7 +200,7 @@ Page summary prompt: Provide a brief introduction of this product.
     }
 
     @Test
-    fun `test prompt convertion to request`() {
+    fun `test prompt conversion to request`() {
         val prompt = API_COMMAND_PROMPT1
 
         val request = service.convertPromptToRequest(prompt)
@@ -210,7 +210,7 @@ Page summary prompt: Provide a brief introduction of this product.
     }
 
     @Test
-    fun `test prompt convertion to request 2`() {
+    fun `test prompt conversion to request 2`() {
         val prompt = API_COMMAND_PROMPT2
 
         val request = service.convertPromptToRequest(prompt)
@@ -220,7 +220,7 @@ Page summary prompt: Provide a brief introduction of this product.
     }
 
     @Test
-    fun `test prompt convertion to request 3`() {
+    fun `test prompt conversion to request 3`() {
         val prompt = API_COMMAND_PROMPT3
 
         val request = service.convertPromptToRequest(prompt)
@@ -230,7 +230,19 @@ Page summary prompt: Provide a brief introduction of this product.
     }
 
     @Test
-    fun `test command 3`() {
+    fun `test simple and clean command`() {
+        val prompt = API_COMMAND_PROMPT1
+        val response = service.command(prompt)
+        println(prettyPulsarObjectMapper().writeValueAsString(response))
+        assertNotNull(response)
+        Assumptions.assumeTrue(response.pageStatusCode == 200)
+        assertEquals(200, response.statusCode)
+        assertNotNull(response.pageSummary)
+        assertNotNull(response.fields)
+    }
+
+    @Test
+    fun `test detailed and verbose command`() {
         val prompt = API_COMMAND_PROMPT3
         val response = service.command(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(response))

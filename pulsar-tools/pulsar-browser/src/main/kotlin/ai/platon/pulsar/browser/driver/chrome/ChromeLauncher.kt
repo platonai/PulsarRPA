@@ -46,7 +46,8 @@ class ChromeLauncher constructor(
     private val pidPath get() = userDataDir.resolveSibling(PID_FILE_NAME)
     private val portPath get() = userDataDir.resolveSibling(PORT_FILE_NAME)
     private val temporaryUddExpiry = BrowserFiles.TEMPORARY_UDD_EXPIRY
-    private val recentNToKeep = 20
+    // The number of recent temporary user data directories to keep, the browser has to be closed
+    private val recentNToKeep = 10
     private var process: Process? = null
 
     private val isClosed get() = closed.get()

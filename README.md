@@ -62,7 +62,7 @@ For docker user:
 
 ---
 
-### 🌟 For Beginners - Just Talk, No Special Skills Required!
+### 🌟 For Beginners - Just Speak, No Programming Skills Required!
 
 Use the `command` API to perform actions and extract data from a webpage:
 

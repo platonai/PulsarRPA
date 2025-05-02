@@ -156,7 +156,7 @@ Node.prototype.__pulsar_isImage = function() {
  * */
 Node.prototype.__pulsar_nScreen = function() {
     let rect = this.__pulsar_getRect();
-    const config = __pulsar_utils__.config;
+    const config = __pulsar_utils__.getConfig();
     const viewPortHeight = config.viewPortHeight;
     let ns = rect.y / viewPortHeight;
     return Math.ceil(ns);

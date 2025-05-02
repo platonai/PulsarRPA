@@ -113,7 +113,7 @@ object BrowserFiles {
     }
 
     @Throws(IOException::class)
-    fun cleanOldestContextTmpDirs(expiry: Duration, recentNToKeep: Int = 20) {
+    fun cleanOldestContextTmpDirs(expiry: Duration, recentNToKeep: Int = 10) {
         // Remove directories that have too many context directories
         Files.walk(AppPaths.CONTEXT_TMP_DIR, 3)
             .filter { it !in cleanedUserDataDirs } // not processed
@@ -123,7 +123,7 @@ object BrowserFiles {
             .toList()
             .toSet()
             .sortedByDescending { Files.getLastModifiedTime(it) }  // newest first
-            .drop(recentNToKeep)  // drop the newest 20 context dirs, so them are not cleaned
+            .drop(recentNToKeep)  // drop the newest N context dirs, so them are not cleaned
             .forEach { cleanUpContextDir(it, expiry) } // clean the rest
     }
 
@@ -138,8 +138,8 @@ object BrowserFiles {
             .filter { it !in cleanedUserDataDirs }
             .filter { it.fileName.toString().startsWith("cx.") }
             .filter { it.resolve(PID_FILE_NAME).exists() } // already launched
-            .filter { it.resolve(PORT_FILE_NAME).notExists() }
-            .forEach { path -> cleanUpContextDir(path, expiry) }
+            .filter { it.resolve(PORT_FILE_NAME).notExists() } // already closed
+            .forEach { path -> cleanUpContextDir(path, expiry) } // clean the rest
     }
 
     /**

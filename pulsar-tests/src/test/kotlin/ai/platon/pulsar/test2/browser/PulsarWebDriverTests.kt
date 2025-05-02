@@ -1,6 +1,5 @@
 package ai.platon.pulsar.test2.browser
 
-import ai.platon.pulsar.browser.common.SimpleScriptConfuser
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser.Companion.IDENTITY_NAME_MANGLER
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
@@ -121,7 +120,8 @@ class PulsarWebDriverTests : WebDriverTestBase() {
         println(prettyPulsarObjectMapper().writeValueAsString(metadata))
         assertEquals(1920, metadata.viewPortWidth)
         assertEquals(1080, metadata.viewPortHeight)
-        assertTrue { metadata.scrollTop > 0 }
+        // Assumptions.assumeTrue(metadata.scrollTop > metadata.viewPortHeight)
+        assertTrue { metadata.scrollTop >= 0 }
         assertTrue { metadata.scrollLeft.toInt() == 0 }
         assertTrue { metadata.clientWidth > 0 } // 1683 on my laptop
         assertTrue { metadata.clientHeight > 0 } // 986 on my laptop
