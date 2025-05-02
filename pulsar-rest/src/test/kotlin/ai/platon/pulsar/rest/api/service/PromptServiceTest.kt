@@ -15,6 +15,48 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
 import kotlin.test.*
 
+const val API_COMMAND_PROMPT1 = """
+Visit https://www.amazon.com/dp/B0C1H26C46.
+Summarize the product.
+Extract: product name, price, ratings.
+Find all links containing /dp/.
+After page load: click #title, then scroll to the middle.
+    """
+
+const val API_COMMAND_PROMPT2 = """
+Visit https://www.amazon.com/dp/B0C1H26C46
+
+Page summary prompt: Provide a brief introduction of this product.
+Extract fields: product name, price, and ratings.
+Extract links: all links containing `/dp/` on the page.
+
+When the page is ready, click the element with id "title" and scroll to the middle.
+
+    """
+
+const val API_COMMAND_PROMPT3 = """
+Visit the page: https://www.amazon.com/dp/B0C1H26C46
+
+### 📝 Tasks:
+
+**1. Page Summary**  
+Provide a brief introduction to the product.
+
+**2. Field Extraction**  
+Extract the following information from the page content:
+- Product name
+- Price
+- Ratings
+
+**3. Link Extraction**  
+Collect all hyperlinks on the page that contain the substring `/dp/`.
+
+**4. Page Interaction**  
+Once the document is fully loaded:
+- Click the element with `id="title"`
+- Scroll to the middle of the page
+    """
+
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class PromptServiceTest {
@@ -159,69 +201,47 @@ Page summary prompt: Provide a brief introduction of this product.
 
     @Test
     fun `test prompt convertion to request`() {
-        var prompt = """
-Visit https://www.amazon.com/dp/B0C1H26C46
-
-Page summary prompt: Provide a brief introduction of this product.
-Extract fields: product name, price, and ratings.
-Extract links: all links containing `/dp/` on the page.
-
-When the page is ready, click the element with id "title" and scroll to the middle.
-
-        """.trimIndent()
+        val prompt = API_COMMAND_PROMPT1
 
         val request = service.convertPromptToRequest(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(request))
         assertNotNull(request)
-        verifyConvertedPrompt(request)
+        verifyPromptRequestL2(request)
     }
 
     @Test
     fun `test prompt convertion to request 2`() {
-        val prompt = """
-Visit https://www.amazon.com/dp/B0C1H26C46.
-Summarize the product.
-Extract: product name, price, ratings.
-Find all links containing /dp/.
-After page load: click #title, then scroll to the middle.
-"""
+        val prompt = API_COMMAND_PROMPT2
+
         val request = service.convertPromptToRequest(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(request))
         assertNotNull(request)
-        verifyConvertedPrompt(request)
+        verifyPromptRequestL2(request)
     }
 
     @Test
     fun `test prompt convertion to request 3`() {
-        val prompt = """
-Visit the page: https://www.amazon.com/dp/B0C1H26C46
+        val prompt = API_COMMAND_PROMPT3
 
-### 📝 Tasks:
-
-**1. Page Summary**  
-Provide a brief introduction to the product.
-
-**2. Field Extraction**  
-Extract the following information from the page content:
-- Product name
-- Price
-- Ratings
-
-**3. Link Extraction**  
-Collect all hyperlinks on the page that contain the substring `/dp/`.
-
-**4. Page Interaction**  
-Once the document is fully loaded:
-- Click the element with `id="title"`
-- Scroll to the middle of the page
-"""
         val request = service.convertPromptToRequest(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(request))
         assertNotNull(request)
-        verifyConvertedPrompt(request)
+        verifyPromptRequestL2(request)
     }
 
-    private fun verifyConvertedPrompt(request: PromptRequestL2) {
+    @Test
+    fun `test command 3`() {
+        val prompt = API_COMMAND_PROMPT3
+        val response = service.command(prompt)
+        println(prettyPulsarObjectMapper().writeValueAsString(response))
+        assertNotNull(response)
+        Assumptions.assumeTrue(response.pageStatusCode == 200)
+        assertEquals(200, response.statusCode)
+        assertNotNull(response.pageSummary)
+        assertNotNull(response.fields)
+    }
+
+    private fun verifyPromptRequestL2(request: PromptRequestL2) {
         assertTrue { request.url == "https://www.amazon.com/dp/B0C1H26C46" }
         assertEquals("https://www.amazon.com/dp/B0C1H26C46", request.url)
         assertNotNull(request.pageSummaryPrompt)
