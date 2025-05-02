@@ -89,10 +89,10 @@ class PromptService(
         require(UrlUtils.isStandard(url)) { "URL must not be blank" }
 
         // Replace the URL in the request with a placeholder, so the result from the LLM can be cached.
-        val processedRequest = request.replace(url, URL_PLACEHOLDER)
+        val processedRequest = request.replace(url, PLACEHOLDER_URL)
         val prompt = API_REQUEST_COMMAND_CONVERSION_TEMPLATE
-            .replace(REQUEST_PLACEHOLDER, processedRequest)
-            .replace(URL_PLACEHOLDER, processedRequest)
+            .replace(PLACEHOLDER_REQUEST, processedRequest)
+            .replace(PLACEHOLDER_URL, processedRequest)
 
         val content = session.chat(prompt).content
 
@@ -227,33 +227,83 @@ class PromptService(
         // the 0-based screen number, 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
         val screenNumber = page.activeDOMMetadata?.screenNumber ?: 0f
 
-        val userMessage1 = normalizeUserMessage(request.pageSummaryPrompt)
-        val userMessage2 = normalizeUserMessage(request.dataExtractionRules)
+        val pageSummaryPrompt = normalizePageSummaryPrompt(request.pageSummaryPrompt)
+        val dataExtractionRules = normalizeDataExtractionRules(request.dataExtractionRules)
         var richText: String? = null
         var textContent: String? = null
-        if (userMessage1 != null || userMessage2 != null) {
+        if (pageSummaryPrompt != null || dataExtractionRules != null) {
             textContent = if (request.richText == true) {
                 selectNthScreenRichText(screenNumber, document).also { richText = it }
             } else {
                 selectNthScreenText(screenNumber, document)
             }
 
-            if (userMessage1 != null) {
-                val message = "$userMessage1\n$textContent"
+            if (pageSummaryPrompt != null) {
+                val message = pageSummaryPrompt.replace(PLACEHOLDER_PAGE_CONTENT, textContent)
                 response.pageSummary = session.chat(message).content
             }
-            if (userMessage2 != null) {
-                val message = "$userMessage2\n$textContent"
+            if (dataExtractionRules != null) {
+                val message = dataExtractionRules.replace(PLACEHOLDER_PAGE_CONTENT, textContent)
                 response.fields = session.chat(message).content
             }
         }
 
-        val userMessage3 = normalizeUserMessage(request.linkExtractionRules)
-        if (userMessage3 != null) {
+        val linkExtractionRules = normalizeLinkExtractionRules(request.linkExtractionRules)
+        if (linkExtractionRules != null) {
             val finalRichText = richText ?: selectNthScreenRichText(screenNumber, document)
-            val message = "$userMessage3\n$finalRichText"
+            val message = linkExtractionRules.replace(PLACEHOLDER_PAGE_CONTENT, finalRichText)
             response.links = session.chat(message).content
         }
+    }
+
+    private fun normalizePageSummaryPrompt(message: String?): String? {
+        val message2 = normalizeUserMessage(message) ?: return null
+
+        val suffix = """
+
+### Page Content:
+
+{PLACEHOLDER_PAGE_CONTENT}
+
+        """.trimIndent()
+
+        return "$message2\n$suffix"
+    }
+
+    private fun normalizeDataExtractionRules(message: String?): String? {
+        val message2 = normalizeUserMessage(message) ?: return null
+
+        val suffix = """
+
+### Rules:
+- According the request, extract fields from the page content
+- Your result should be a JSON object, where the key is the field name and the value is the field value.
+
+### Page Content:
+
+{PLACEHOLDER_PAGE_CONTENT}
+
+        """.trimIndent()
+
+        return "$message2\n$suffix"
+    }
+
+    private fun normalizeLinkExtractionRules(message: String?): String? {
+        val message2 = normalizeUserMessage(message) ?: return null
+
+        val suffix = """
+
+### Rules:
+- According the request, extract links from the page content
+- Your result should be a JSON object, where the key is the link and the value is the link text.
+
+### Page Content:
+
+{PLACEHOLDER_PAGE_CONTENT}
+
+        """.trimIndent()
+
+        return "$message2\n$suffix"
     }
 
     /**

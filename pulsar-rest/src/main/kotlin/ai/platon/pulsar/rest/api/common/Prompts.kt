@@ -8,9 +8,11 @@ const val DEFAULT_INTRODUCE = """
     I am PulsarRPA, what can I do for you?
 """
 
-const val URL_PLACEHOLDER = "{URL_PLACEHOLDER}"
+const val PLACEHOLDER_URL = "{PLACEHOLDER_URL}"
 
-const val REQUEST_PLACEHOLDER = "{REQUEST_PLACEHOLDER}"
+const val PLACEHOLDER_REQUEST = "{PLACEHOLDER_REQUEST}"
+
+const val PLACEHOLDER_PAGE_CONTENT = "{PLACEHOLDER_PAGE_CONTENT}"
 
 const val API_REQUEST_COMMAND_CONVERSION_TEMPLATE = """
 Interpret the following spoken or loosely structured request and convert it into a well-formed JSON object 
@@ -19,7 +21,7 @@ that describes how to interact with a web page.
 The input may contain informal, spoken, or multilingual instructions.
 
 ```text
-{REQUEST_PLACEHOLDER}
+{PLACEHOLDER_REQUEST}
 ```
 
 Use the following JSON format:

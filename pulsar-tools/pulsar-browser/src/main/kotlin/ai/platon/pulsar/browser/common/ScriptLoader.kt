@@ -90,8 +90,9 @@ open class ScriptLoader(
         // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
         val configs = GsonBuilder().create().toJson(jsInitParameters.toMap())
 
+
         // set predefined variables shared between javascript and jvm program
-        val configVar = confuser.confuse( "__pulsar_DEFAULT_CONFIGS")
+        val configVar = confuser.confuse( "__pulsar_CONFIGS")
         return """
             ;
             let $configVar = $configs;

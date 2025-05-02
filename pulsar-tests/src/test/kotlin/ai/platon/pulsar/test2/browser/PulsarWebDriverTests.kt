@@ -28,7 +28,7 @@ import kotlin.test.*
 
 @Tag("TimeConsumingTest")
 class PulsarWebDriverTests : WebDriverTestBase() {
-    
+
     private val fieldSelectors = mapOf(
         "01productTitle" to "#productTitle",
         "02acrPopover" to "#acrPopover",
@@ -43,28 +43,28 @@ class PulsarWebDriverTests : WebDriverTestBase() {
         "11review4" to "#cm-cr-dp-review-list div[data-hook=review]:nth-child(4)",
         "12review5" to "#cm-cr-dp-review-list div[data-hook=review]:nth-child(5)",
     )
-    
+
     private val screenshotDir = AppPaths.TEST_DIR.resolve("screenshot")
-    
+
     @BeforeTest
     fun setup() {
         session.globalCache.resetCaches()
     }
-    
+
     @AfterTest
     fun tearDown() {
         session.globalCache.resetCaches()
     }
-    
+
     @Test
     fun `When navigate to a HTML page then the navigate state are correct`() = runWebDriverTest(browser) { driver ->
         open(productUrl, driver, 1)
-        
+
         val navigateEntry = driver.navigateEntry
         assertTrue("Expect documentTransferred") { navigateEntry.documentTransferred }
         assertTrue { navigateEntry.networkRequestCount.get() > 0 }
         assertTrue { navigateEntry.networkResponseCount.get() > 0 }
-        
+
         require(driver is AbstractWebDriver)
         assertEquals(200, driver.mainResponseStatus)
         assertTrue { driver.mainResponseStatus == 200 }
@@ -73,7 +73,7 @@ class PulsarWebDriverTests : WebDriverTestBase() {
         assertTrue { navigateEntry.mainResponseStatus == 200 }
         assertTrue { navigateEntry.mainResponseHeaders.isNotEmpty() }
     }
-    
+
     @Test
     fun `when open a HTML page then script is injected`() = runWebDriverTest(originUrl, browser) { driver ->
         var detail = driver.evaluateDetail("typeof(window)")
@@ -86,6 +86,18 @@ class PulsarWebDriverTests : WebDriverTestBase() {
 
         val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
         assertEquals(2, r)
+
+        detail = driver.evaluateDetail("JSON.stringify(__pulsar_CONFIGS)")
+        val value = detail?.value?.toString()
+        assertNotNull(value)
+        println(value)
+        assertTrue { value.contains("viewPortWidth") }
+
+        detail = driver.evaluateDetail("JSON.stringify(__pulsar_utils__.getConfig())")
+        val value2 = detail?.value?.toString()
+        assertNotNull(value2)
+        println(value2)
+        assertTrue { value2.contains("viewPortWidth") }
     }
 
     @Test
