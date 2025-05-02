@@ -180,6 +180,8 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 * [Amazon Product Page Scraping (100+ fields)](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [All Amazon Page Types Scraping](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
+## 📜 Documents
+
 📊 [REST API Examples](docs/rest-api-examples.md)
 📖 [Advanced Guides](docs/advanced-guides.md)
 
