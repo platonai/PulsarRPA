@@ -1,7 +1,7 @@
 param(
     [string]$RemoteUser = "vincent",
     [string]$RemoteHost = "platonai.cn",
-    [string]$RemotePath = "~/platonic.fun/repo/ai/platon/pulsar/"
+    [string]$RemoteBaseDir = "~/platonic.fun/repo/ai/platon/pulsar/"
 )
 
 # Find the first parent directory containing the VERSION file
@@ -35,7 +35,9 @@ if (Test-Path $PulsarRPAPath) {
     Set-Location $AppHome
 }
 
-$DestinationPath = "${RemoteUser}@${RemoteHost}:${RemotePath}PulsarRPA-${Version}.jar"
+$VersionedJarRemoteFullPath = "${RemoteBaseDir}PulsarRPA-${Version}.jar"
+$JarRemoteFullPath = "${RemoteBaseDir}PulsarRPA.jar"
+$DestinationPath = "${RemoteUser}@${RemoteHost}:$VersionedJarRemoteFullPath"
 
 Write-Host "Copying $PulsarRPAPath to $DestinationPath..."
 
@@ -47,7 +49,7 @@ try {
     }
 
     # Ensure destination directory exists
-    $mkdirResult = Invoke-Expression "ssh ${RemoteUser}@${RemoteHost} 'mkdir -p $RemotePath'"
+    $mkdirResult = Invoke-Expression "ssh ${RemoteUser}@${RemoteHost} 'mkdir -p $RemoteBaseDir'"
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to create remote directory"
     }
@@ -61,7 +63,7 @@ try {
     Write-Host "File copied successfully to $DestinationPath" -ForegroundColor Green
 
     # Create a symbolic link to the latest version
-    $linkResult = Invoke-Expression "ssh ${RemoteUser}@${RemoteHost} 'ln -sf PulsarRPA-${Version}.jar PulsarRPA.jar'"
+    $linkResult = Invoke-Expression "ssh ${RemoteUser}@${RemoteHost} 'ln -sf $VersionedJarRemoteFullPath $JarRemoteFullPath'"
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to create symbolic link"
     }
@@ -69,7 +71,7 @@ try {
 
     # List the remote directory contents
     # e.g. ssh vincent@platonai.cn ls -l ~/platonic.fun/repo/ai/platon/pulsar/
-    $listResult = Invoke-Expression "ssh ${RemoteUser}@${RemoteHost} 'ls -l $RemotePath'"
+    $listResult = Invoke-Expression "ssh ${RemoteUser}@${RemoteHost} 'ls -l $RemoteBaseDir'"
 }
 catch {
     Write-Error "Error: $_"
