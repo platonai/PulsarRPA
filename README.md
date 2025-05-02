@@ -88,6 +88,8 @@ For a stricter JSON-based version:
    }'
    ```
 
+> 💡 **Tip:** You don't have to fill in every field.
+
 ---
 
 ### 🎓 For Advanced Users - LLM + X-SQL

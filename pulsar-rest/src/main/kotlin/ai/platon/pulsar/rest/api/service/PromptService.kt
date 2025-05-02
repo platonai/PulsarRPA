@@ -295,6 +295,8 @@ class PromptService(
 
 ### Rules:
 - According the request, extract links from the page content
+- The link should be a valid URL
+- No duplicate links
 - Your result should be a JSON object, where the key is the link and the value is the link text.
 
 ### Page Content:
