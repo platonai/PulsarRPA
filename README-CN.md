@@ -35,7 +35,7 @@ PulsarRPA 致力于突破传统网页自动化的边界，提供**精准** ✅�
    java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
    ```
 
-- 进阶用户暂时不填写 `DEEPSEEK_API_KEY` 仍可以使用 PulsarRPA 的采集和提取的进阶功能。
+- **进阶用户**即使不填写 `DEEPSEEK_API_KEY`，仍可以使用 PulsarRPA 的采集和提取的进阶功能。
 - 你也可以 [选择其他 LLM 提供商](docs/config/llm/template/README.md)。
 
 下载链接：

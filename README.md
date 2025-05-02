@@ -47,7 +47,7 @@ Download the latest Executable Jar and run it.
    java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
    ```
 
-- Advanced users can still use PulsarRPA's advanced features without `DEEPSEEK_API_KEY`.
+- **Advanced Users** can still use PulsarRPA's advanced features event without `DEEPSEEK_API_KEY`.
 - You can also [Choose Another LLM Provider](docs/config/llm/template/README.md)
 
 Download links:
@@ -180,6 +180,7 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 * [Amazon Product Page Scraping (100+ fields)](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [All Amazon Page Types Scraping](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
+📊 [REST API Examples](docs/rest-api-examples.md)
 📖 [Advanced Guides](docs/advanced-guides.md)
 
 ---
