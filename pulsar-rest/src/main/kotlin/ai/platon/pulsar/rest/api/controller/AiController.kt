@@ -64,7 +64,12 @@ class AiController(
     }
 
     @PostMapping("/command")
-    fun command(@RequestBody request: PromptRequestL2): PromptResponseL2 {
+    fun commandWithJSON(@RequestBody request: PromptRequestL2): PromptResponseL2 {
+        return promptService.command(request)
+    }
+
+    @PostMapping("/command", consumes = [MediaType.TEXT_PLAIN_VALUE])
+    fun commandWithSpokenLanguage(@RequestBody request: String): PromptResponseL2 {
         return promptService.command(request)
     }
 }

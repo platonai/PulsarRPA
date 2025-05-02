@@ -66,13 +66,13 @@ class AiControllerTests : IntegrationTestBase() {
      * */
     @Test
     fun `Test extracting fields from a page with instructions`() {
-        val instructions = """
+        val actions = """
             move cursor to the element with id 'title' and click it
             scroll to middle
             scroll to top
             get the text of the element with id 'title'
-        """.trimIndent()
-        val request = PromptRequest(productUrl, "title, price, brand", actions = instructions)
+        """.trimIndent().split("\n")
+        val request = PromptRequest(productUrl, "title, price, brand", actions = actions)
         val response = restTemplate.postForObject("$baseUri/ai/extract", request, String::class.java)
 
         println(response)

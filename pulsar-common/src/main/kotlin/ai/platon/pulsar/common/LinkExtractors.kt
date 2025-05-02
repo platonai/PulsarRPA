@@ -4,6 +4,17 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+internal class TextExtractor(
+    val text: String,
+    val filter: (String) -> Boolean = { true }
+) : UrlExtractor() {
+    fun extract(): Set<String> {
+        val urls = mutableSetOf<String>()
+        text.split("\n").forEach { line -> extractTo(line, urls, filter) }
+        return urls
+    }
+}
+
 internal class ResourceExtractor(
     val resource: String,
     val filter: (String) -> Boolean = { true }
@@ -50,6 +61,12 @@ internal class DirectoryExtractor(
 }
 
 object LinkExtractors {
+    @JvmStatic
+    fun fromText(text: String) = TextExtractor(text).extract()
+
+    @JvmStatic
+    fun fromText(text: String, filter: (String) -> Boolean) = TextExtractor(text, filter).extract()
+
     @JvmStatic
     fun fromResource(resource: String) = ResourceExtractor(resource).extract()
 

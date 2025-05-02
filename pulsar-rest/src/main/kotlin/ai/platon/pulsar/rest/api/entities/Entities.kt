@@ -33,7 +33,7 @@ data class PromptRequest(
     /**
      * Actions, e.g. "click the button with id 'submit'", [actions] are performed after the active DOM is ready
      * */
-    var actions: String? = null
+    var actions: List<String>? = null
 )
 
 data class ScrapeRequest(
@@ -71,26 +71,21 @@ data class W3DocumentRequest(
  *
  * @property url The target page URL to process.
  * @property args Optional load arguments to customize page loading behavior.
- * @property talkAboutTextContent A prompt to analyze or discuss the visible text content of the page.
- * @property talkAboutPage A prompt to analyze or discuss the HTML structure of the page.
- * @property textContentFieldDescriptions Specifications for extracting structured fields from the visible text content.
- * @property fieldDescriptions Specifications for extracting structured fields from the HTML content.
+ * @property pageSummaryPrompt A prompt to analyze or discuss the HTML structure of the page.
+ * @property dataExtractionRules Specifications for extracting structured fields from the HTML content.
+ * @property onPageReadyActions Actions to perform when the document is fully loaded (e.g., "scroll down", "click button").
  * @property xsql An X-SQL query for structured data extraction, e.g.
  *              "select dom_first_text(dom, '#title') as title, llm_extract(dom, 'price') as price".
- * @property actionsOnBrowserLaunched Actions to perform immediately after browser initialization (e.g., "clear cookies").
- * @property actionsOnDocumentReady Actions to perform when the document is fully loaded (e.g., "scroll down", "click button").
- * @property actionsOnDidInteract Actions to perform after user interaction simulations complete (e.g., "get text content").
  */
 data class PromptRequestL2(
     var url: String,
     var args: String? = null,
-    var talkAboutPage: String? = null,
-    var fieldDescriptions: String? = null,
+    var pageSummaryPrompt: String? = null,
+    var dataExtractionRules: String? = null,
+    var linkExtractionRules: String? = null,
     var richText: Boolean? = null,
+    var onPageReadyActions: List<String>? = null,
     var xsql: String? = null,
-    var actionsOnBrowserLaunched: String? = null,
-    var actionsOnDocumentReady: String? = null,
-    var actionsOnDidInteract: String? = null,
 )
 
 data class PromptResponseL2(
@@ -101,8 +96,11 @@ data class PromptResponseL2(
     var pageContentBytes: Int = 0,
     var isDone: Boolean = false,
 
-    var talkAboutPageResponse: String? = null,
+    var pageSummary: String? = null,
     var fields: String? = null,
+    var links: String? = null,
+//    var fields: List<String>? = null,
+//    var links: List<String>? = null,
     var xsqlResultSet: List<Map<String, Any?>>? = null,
 ) {
     val status: String get() = ResourceStatus.getStatusText(statusCode)

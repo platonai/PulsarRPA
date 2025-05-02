@@ -2,6 +2,7 @@ package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_LIST_URL
@@ -12,9 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
-import kotlin.test.Test
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
@@ -31,6 +30,44 @@ class PromptServiceTest {
         Assumptions.assumeTrue(ChatModelFactory.isModelConfigured(conf))
     }
 
+    @Test
+    fun `test prompt convertion to request with cache`() {
+        val url1 = "https://www.amazon.com/dp/B0C1H26C46"
+        val url2 = "https://www.amazon.com/dp/B07PX3ZRJ6"
+
+        val prompt1 = """
+Visit $url1
+
+Page summary prompt: Provide a brief introduction of this product.
+
+        """.trimIndent()
+
+        val result1 = service.convertAPIRequestCommandToJSON(prompt1, url1)
+
+        val prompt2 = """
+Visit $url2
+
+Page summary prompt: Provide a brief introduction of this product.
+
+        """.trimIndent()
+
+        val result2 = service.convertAPIRequestCommandToJSON(prompt2, url2)
+
+        assertEquals(result2, result1)
+    }
+
+    @Test
+    fun `test prompt conversion without URL`() {
+        val prompt = """
+Visit amazon.com/dp/B0C1H26C46
+
+Page summary prompt: Provide a brief introduction of this product.
+        """.trimIndent()
+
+        val request = service.convertPromptToRequest(prompt)
+        assertNull(request)
+    }
+
     /**
      * Execute a normal sql
      * */
@@ -44,13 +81,13 @@ class PromptServiceTest {
     }
 
     @Test
-    fun `test actions on document ready`() {
+    fun `test actions on page ready`() {
         val actions = """
             move cursor to the element with id 'title' and click it
             scroll to middle
             scroll to top
             get the text of the element with id 'title'
-        """.trimIndent()
+        """.trimIndent().split("\n")
         val request = PromptRequest(
             PRODUCT_DETAIL_URL,
             "Tell me something about the page",
@@ -78,7 +115,7 @@ class PromptServiceTest {
             scroll to middle
             scroll to top
             get the text of the element with id 'title'
-        """.trimIndent()
+        """.trimIndent().split("\n")
         val request = PromptRequest(
             PRODUCT_DETAIL_URL,
             "title, price, images",
@@ -92,34 +129,61 @@ class PromptServiceTest {
     }
 
     @Test
-    fun `test command with talkAboutPage`() {
+    fun `test command with pageSummaryPrompt`() {
         val request = PromptRequestL2(
             PRODUCT_DETAIL_URL,
-            talkAboutPage = "Give me the product name",
+            pageSummaryPrompt = "Give me the product name",
         )
         val response = service.command(request)
         Assumptions.assumeTrue(response.pageStatusCode == 200)
-        println(response.talkAboutPageResponse)
+        println(response.pageSummary)
 
         assertTrue { response.isDone }
         assertNull(response.fields)
         assertNull(response.xsqlResultSet)
-        assertTrue { !response.talkAboutPageResponse.isNullOrBlank() }
+        assertTrue { !response.pageSummary.isNullOrBlank() }
     }
 
     @Test
-    fun `test command with fieldDescriptions`() {
+    fun `test command with dataExtractionRules`() {
         val request = PromptRequestL2(
             PRODUCT_DETAIL_URL,
-            fieldDescriptions = "product name, ratings, price",
+            dataExtractionRules = "product name, ratings, price",
         )
         val response = service.command(request)
         Assumptions.assumeTrue(response.pageStatusCode == 200)
-        println(response.fields)
+        val fields = response.fields
+        println(fields)
 
         assertTrue { response.isDone }
-        assertNull(response.talkAboutPageResponse)
+        assertNull(response.pageSummary)
         assertNull(response.xsqlResultSet)
-        assertTrue { !response.fields.isNullOrBlank() }
+
+        assertNotNull(fields)
+        assertTrue { fields.isNotEmpty() }
+    }
+
+    @Test
+    fun `test prompt convertion to request`() {
+        val prompt = """
+Visit https://www.amazon.com/dp/B0C1H26C46
+
+Page summary prompt: Provide a brief introduction of this product.
+Extract fields: product name, price, and ratings.
+Extract links: all links containing `/dp/` on the page.
+
+When the page is ready, click the element with id "title" and scroll to the middle.
+
+        """.trimIndent()
+
+        val request = service.convertPromptToRequest(prompt)
+        println(prettyPulsarObjectMapper().writeValueAsString(request))
+        assertNotNull(request)
+        assertTrue { request.url == "https://www.amazon.com/dp/B0C1H26C46" }
+        assertEquals("https://www.amazon.com/dp/B0C1H26C46", request.url)
+        assertNotNull(request.pageSummaryPrompt)
+        assertNotNull(request.dataExtractionRules)
+        assertNotNull(request.linkExtractionRules)
+        assertNotNull(request.onPageReadyActions)
     }
 }

@@ -117,4 +117,3 @@ interface Browser: AutoCloseable {
     @Throws(WebDriverException::class)
     suspend fun clearCookies()
 }
-

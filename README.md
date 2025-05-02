@@ -37,9 +37,7 @@ data extraction — even from the most **complex** 🔄 and **dynamic** ⚡ webs
 
 ## 🚀 Quick Start Guide
 
-### 🌟 For Beginners - Just Talk, No Special Skills Required!
-
-#### Run
+### ▶️ Run
 
 Download the latest Executable Jar and run it.
 
@@ -64,62 +62,33 @@ For docker user:
 
 ---
 
-#### 💬 Chat About a Webpage
+### 🌟 For Beginners - Just Talk, No Special Skills Required!
 
-Talk about a webpage using the `chat-about` API:
+Use the `command` API to perform actions and extract data from a webpage:
 
    ```shell
-   curl -X POST "http://localhost:8182/api/ai/chat-about" -H "Content-Type: application/json" -d '{
-    "url": "https://www.amazon.com/dp/B0C1H26C46",
-    "prompt": "introduce this product"
-   }'
+   curl -X POST "http://localhost:8182/api/ai/command" -H "Content-Type: text/plain" -d '
+   Visit https://www.amazon.com/dp/B0C1H26C46
+
+   Page summary prompt: Provide a brief introduction of this product.
+   Extract fields: product name, price, and ratings.
+   Extract links: all links containing `/dp/` on the page.
+
+   When the page is ready, click the element with id "title" and scroll to the middle.
+   '
    ```
 
----
+For a stricter JSON-based version:
 
-#### 📊 Extract Data
-
-Extract data from a webpage using `extract` API:
-
-  ```shell
-  curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{
-    "url": "https://www.amazon.com/dp/B0C1H26C46",
-    "prompt": "product name, price, and description"
-  }'
-  ```
-
----
-
-#### 📊 Page Actions
-
-Trigger browser page actions by specifying commands with the `actions` parameter:
-
-  ```shell
-  curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{
-    "url": "https://www.amazon.com/dp/B0C1H26C46",
-    "actions": "get the text of the element with id 'title' and click it\n scroll to middle"
-    "prompt": "product name, price, and description",
-  }'
-  ```
-
----
-
-#### 💬 Chat with AI
-
-Use the `chat` API to ask any questions:
-
-  ```shell
-  curl http://localhost:8182/api/ai/chat?prompt=What-is-the-most-fantastical-technology-today
-  ```
-
-Use `post` method to send a longer prompt:
-
-  ```shell
-  curl -X POST "http://localhost:8182/api/ai/chat" -H "Content-Type: application/json" -d '
-  What is the most fantastical technology today?
-  You should return a list of 5 items.
-  '
-  ```
+   ```shell
+   curl -X POST "http://localhost:8182/api/ai/command" -H "Content-Type: application/json" -d '{
+     "url": "https://www.amazon.com/dp/B0C1H26C46",
+     "pageSummaryPrompt": "Provide a brief introduction of this product.",
+     "dataExtractionRules": "product name, price, and ratings",
+     "linkExtractionRules": "all links containing `/dp/` on the page",
+     "onPageReadyActions": "scroll to the middle"
+   }'
+   ```
 
 ---
 
