@@ -44,10 +44,11 @@ Download the latest Executable Jar and run it.
    ```shell
    # Linux/macOS and Windows (if curl is available)
    curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar
-   java -D DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+   java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
    ```
 
-You can ignore `DEEPSEEK_API_KEY` if you don't need to use the AI features.
+- Advanced users can still use PulsarRPA's advanced features without `DEEPSEEK_API_KEY`.
+- You can also [Choose Another LLM Provider](docs/config/llm/template/README.md)
 
 Download links:
 

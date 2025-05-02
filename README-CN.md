@@ -32,10 +32,11 @@ PulsarRPA 致力于突破传统网页自动化的边界，提供**精准** ✅�
    ```shell
    # Linux/macOS and Windows (if curl is available)
    curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar
-   java -D DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+   java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
    ```
 
-如果您不需要LLM功能，可以忽略 `DEEPSEEK_API_KEY`。
+- 进阶用户暂时不填写 `DEEPSEEK_API_KEY` 仍可以使用 PulsarRPA 的采集和提取的进阶功能。
+- 你也可以 [选择其他 LLM 提供商](docs/config/llm/template/README.md)。
 
 下载链接：
 
