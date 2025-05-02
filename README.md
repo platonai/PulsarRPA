@@ -68,13 +68,11 @@ Use the `command` API to perform actions and extract data from a webpage:
 
    ```shell
    curl -X POST "http://localhost:8182/api/ai/command" -H "Content-Type: text/plain" -d '
-   Visit https://www.amazon.com/dp/B0C1H26C46
-
-   Page summary prompt: Provide a brief introduction of this product.
-   Extract fields: product name, price, and ratings.
-   Extract links: all links containing `/dp/` on the page.
-
-   When the page is ready, click the element with id "title" and scroll to the middle.
+     Visit https://www.amazon.com/dp/B0C1H26C46.
+     Summarize the product.
+     Extract: product name, price, ratings.
+     Find all links containing /dp/.
+     After page load: click #title, then scroll to the middle.
    '
    ```
 

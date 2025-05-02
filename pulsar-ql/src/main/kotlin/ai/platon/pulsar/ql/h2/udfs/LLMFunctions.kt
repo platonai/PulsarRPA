@@ -11,16 +11,13 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.util.concurrent.atomic.AtomicInteger
 
-@Suppress("unused")
-@UDFGroup(namespace = "LLM")
-object LLMFunctions {
-    private val logger = getLogger(this)
-    private val session get() = PulsarContexts.getOrCreateSession()
-    private val llmFailureWarnings = AtomicInteger(0)
+const val DATA_EXTRACTION_RULES_PLACEHOLDER = "{DATA_EXTRACTION_RULES}"
 
-    val EXTRACT_PROMPT =
-        """
-Extract fields from the given HTML content, return the result in JSON format like:
+val LLM_UDF_EXTRACT_PROMPT =
+    """
+Extract the specified fields from the given HTML content and return the result as a JSON object.
+
+Use the following format:
 
 ```json
 {
@@ -29,10 +26,19 @@ Extract fields from the given HTML content, return the result in JSON format lik
 }
 ```
 
-Field descriptions:
-{fieldDescriptions}
+Data extraction rules:
+{DATA_EXTRACTION_RULES}
 
-""".trimIndent()
+Ensure all extracted values are clean and trimmed. If a field cannot be found, set its value to null.
+
+"""
+
+@Suppress("unused")
+@UDFGroup(namespace = "LLM")
+object LLMFunctions {
+    private val logger = getLogger(this)
+    private val session get() = PulsarContexts.getOrCreateSession()
+    private val llmFailureWarnings = AtomicInteger(0)
 
     @JvmStatic
     @UDFunction(description = "Get the LLM model name")
@@ -54,13 +60,13 @@ Field descriptions:
 
     @JvmStatic
     @UDFunction(description = "Extract fields from the content of the given DOM with the LLM model")
-    fun extract(dom: ValueDom, fieldDescriptions: String): ValueStringJSON {
-        val result = extractInternal(dom.element.text(), fieldDescriptions)
+    fun extract(dom: ValueDom, dataExtractionRules: String): ValueStringJSON {
+        val result = extractInternal(dom.element.text(), dataExtractionRules)
         return ValueStringJSON.get(pulsarObjectMapper().writeValueAsString(result), Map::class.qualifiedName)
     }
 
-    internal fun extractInternal(domContent: String, fieldDescriptions: String): Map<String, String> {
-        val prompt = EXTRACT_PROMPT.replace("{fieldDescriptions}", fieldDescriptions)
+    internal fun extractInternal(domContent: String, dataExtractionRules: String): Map<String, String> {
+        val prompt = LLM_UDF_EXTRACT_PROMPT.replace(DATA_EXTRACTION_RULES_PLACEHOLDER, dataExtractionRules)
         val content = session.chat(domContent, prompt).content
 
         val jsonBlocks = JsonExtractor.extractJsonBlocks(content)
@@ -77,7 +83,6 @@ Field descriptions:
             val result: Map<String, String> = pulsarObjectMapper().readValue(jsonBlock)
             result
         } catch (e: Exception) {
-            // e.printStackTrace()
             logger.warn("Failed to parse JSON from LLM's response | $content", e)
             mapOf()
         }
