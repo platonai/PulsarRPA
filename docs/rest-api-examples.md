@@ -19,9 +19,9 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 ### 🧾 Summary (Windows PowerShell)
 
 ```powershell
-Invoke-WebRequest -Uri "http://localhost:8182/api/ai/command" \
-  -Method POST \
-  -Headers @{ "Content-Type" = "text/plain" } \
+Invoke-WebRequest -Uri "http://localhost:8182/api/ai/command" `
+  -Method POST `
+  -Headers @{ "Content-Type" = "text/plain" } `
   -Body '
     Visit https://www.amazon.com/dp/B0C1H26C46
     Summarize the product.
@@ -96,9 +96,9 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 ### 📄 JSON-Based Command (Windows PowerShell)
 
 ```powershell
-Invoke-WebRequest -Uri "http://localhost:8182/api/ai/command" \
-  -Method POST \
-  -Headers @{ "Content-Type" = "application/json" } \
+Invoke-WebRequest -Uri "http://localhost:8182/api/ai/command" `
+  -Method POST `
+  -Headers @{ "Content-Type" = "application/json" } `
   -Body '{
     "url": "https://www.amazon.com/dp/B0C1H26C46",
     "pageSummaryPrompt": "Provide a brief introduction of this product.",
