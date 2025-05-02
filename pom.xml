@@ -185,8 +185,8 @@
                             <!-- List of '.md' files with package and module docs -->
                             <!-- https://kotlinlang.org/docs/reference/kotlin-doc.html#module-and-package-documentation -->
                             <!--                            <includes>-->
-                            <!--                                <include>README.md</include>-->
-                            <!--                                <include>README.md</include>-->
+                            <!--                                <include>llm-config-advanced.md</include>-->
+                            <!--                                <include>llm-config-advanced.md</include>-->
                             <!--                            </includes>-->
 
                             <!-- List of sample roots -->

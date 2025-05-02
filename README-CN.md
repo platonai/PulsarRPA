@@ -31,16 +31,16 @@ PulsarRPA 致力于突破传统网页自动化的边界，提供**精准** ✅�
 
    ```shell
    # Linux/macOS and Windows (if curl is available)
-   curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar
+   curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar
    java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
    ```
 
 - **进阶用户**即使不填写 `DEEPSEEK_API_KEY`，仍可以使用 PulsarRPA 的采集和提取的进阶功能。
-- 你也可以 [选择其他 LLM 提供商](docs/config/llm/template/README.md)。
+- 你也可以 [选择其他 LLM 提供商](docs/config/llm/llm-config-advanced.md)。
 
 下载链接：
 
-* [Github](https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar)
+* [Github](https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar)
 * [For Chinese User](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
 
 ### 🌟 初学者友好 - 只需对话，无需任何编程技能！

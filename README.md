@@ -12,16 +12,16 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 💖 **PulsarRPA: The AI-Powered, Lightning-Fast Browser Automation Solution!** 💖
 
-**PulsarRPA** is an **AI-enabled** 🤖, **high-performance** 🚀, **distributed** 🌐, and **open-source** 🔓 
-browser automation platform, built for **large-scale automation** 🏭. It excels at:
+**PulsarRPA** is an **AI-enabled** 🤖, **high-performance** 🚀, **distributed** 🌐, and **open-source** 🔓 browser automation platform built for **large-scale automation** 🏭.
 
-- 🤖 **AI integration with LLMs for smarter automation**
-- ⚡ **Ultra-fast, spider-grade browser automation**
-- 🧠 **Advanced web content understanding**
-- 📊 **Powerful data extraction APIs**
+### ✨ Key Capabilities:
 
-PulsarRPA is designed to meet the demands of modern web automation, delivering **accurate** ✅ and **comprehensive** 📚 
-data extraction — even from the most **complex** 🔄 and **dynamic** ⚡ websites.
+- 🤖 **AI Integration with LLMs** – Smarter automation powered by large language models.
+- ⚡ **Ultra-Fast Automation** – Spider-grade performance for high-speed browsing.
+- 🧠 **Web Understanding** – Deep comprehension of dynamic web content.
+- 📊 **Data Extraction APIs** – Powerful tools to extract structured data effortlessly.
+
+PulsarRPA delivers **accurate** ✅ and **comprehensive** 📚 data extraction — even from the most **complex** 🔄 and **dynamic** ⚡ websites. Built for real-world use cases at scale.
 
 ---
 
@@ -35,63 +35,72 @@ data extraction — even from the most **complex** 🔄 and **dynamic** ⚡ webs
 
 ---
 
-## 🚀 Quick Start Guide
+# 🚀 Quick Start Guide
 
-### ▶️ Run
+## ▶️ Run PulsarRPA
 
-Download the latest Executable Jar and run it.
+Download and run the latest executable JAR file:
 
-   ```shell
-   # Linux/macOS and Windows (if curl is available)
-   curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar
-   java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
-   ```
+```bash
+# Linux/macOS and Windows (if curl is available)
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar
+java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+```
 
-- **Advanced Users** can still use PulsarRPA's advanced features event without `DEEPSEEK_API_KEY`.
-- You can also [Choose Another LLM Provider](docs/config/llm/template/README.md)
 
-Download links:
+> 🔍 **Note:** Advanced users can still access all advanced features without setting `DEEPSEEK_API_KEY`.
 
-* [Github](https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar)
-* [For Chinese User](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
+🔗 [Choose Another LLM Provider](docs/config/llm/llm-config-advanced.md)
 
-For docker user:
+### 📦 Download Links
 
-   ```shell
-   docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
-   ```
+- 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar)
+- 🇨🇳 [For Chinese Users](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
 
----
+### 🐳 Docker Users
 
-### 🌟 For Beginners - Just Speak, No Programming Skills Required!
+```shell
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
+```
 
-Use the `command` API to perform actions and extract data from a webpage:
-
-   ```shell
-   curl -X POST "http://localhost:8182/api/ai/command" -H "Content-Type: text/plain" -d '
-     Visit https://www.amazon.com/dp/B0C1H26C46
-     Summarize the product.
-     Extract: product name, price, ratings.
-     Find all links containing /dp/.
-     After page load: click #title, then scroll to the middle.
-   '
-   ```
-
-For a stricter JSON-based version:
-
-   ```shell
-   curl -X POST "http://localhost:8182/api/ai/command" -H "Content-Type: application/json" -d '{
-     "url": "https://www.amazon.com/dp/B0C1H26C46",
-     "pageSummaryPrompt": "Provide a brief introduction of this product.",
-     "dataExtractionRules": "product name, price, and ratings",
-     "linkExtractionRules": "all links containing `/dp/` on the page",
-     "onPageReadyActions": ["click #title", "scroll to the middle"]
-   }'
-   ```
-
-> 💡 **Tip:** You don't have to fill in every field.
 
 ---
+
+# 🌟 For Beginners – Just Speak, No Programming Skills Needed!
+
+Use the `command` API to perform actions and extract data using natural language instructions.
+
+### 📥 Example Request (Text-based):
+
+```bash
+curl -X POST "http://localhost:8182/api/ai/command" \
+  -H "Content-Type: text/plain" \
+  -d '
+    Visit https://www.amazon.com/dp/B0C1H26C46
+    Summarize the product.
+    Extract: product name, price, ratings.
+    Find all links containing /dp/.
+    After page load: click #title, then scroll to the middle.
+  '
+```
+
+### 📄 JSON-Based Version:
+
+```bash
+curl -X POST "http://localhost:8182/api/ai/command" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://www.amazon.com/dp/B0C1H26C46",
+    "pageSummaryPrompt": "Provide a brief introduction of this product.",
+    "dataExtractionRules": "product name, price, and ratings",
+    "linkExtractionRules": "all links containing `/dp/` on the page",
+    "onPageReadyActions": ["click #title", "scroll to the middle"]
+  }'
+```
+
+💡 **Tip:** You don't need to fill in every field — just what you need.
+
+Windows User Examples: [REST API Examples](docs/rest-api-examples.md)
 
 ### 🎓 For Advanced Users - LLM + X-SQL
 
@@ -182,8 +191,8 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 
 ## 📜 Documents
 
-📊 [REST API Examples](docs/rest-api-examples.md)
-📖 [Advanced Guides](docs/advanced-guides.md)
+* 📖 [Advanced Guides](docs/advanced-guides.md)
+* 📊 [REST API Examples](docs/rest-api-examples.md)
 
 ---
 
@@ -193,6 +202,11 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 - Scalable crawling
 - Browser rendering
 - AJAX data extraction
+
+🤖 **AI-Powered**
+- Automatic field extraction
+- Pattern recognition
+- Accurate data capture
 
 🧠 **LLM Integration**
 - Natural language web content analysis
@@ -252,11 +266,6 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 - Comprehensive logging
 - Detailed metrics
 - Full transparency
-
-🤖 **AI-Powered**
-- Automatic field extraction
-- Pattern recognition
-- Accurate data capture
 
 ## 📞 Contact Us
 
