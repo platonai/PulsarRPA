@@ -77,6 +77,7 @@ object ChatModelFactory {
     fun getOrCreate(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig) =
         getOrCreateModel0(provider, modelName, apiKey, conf)
 
+
     /**
      * Create a default model.
      *
@@ -104,10 +105,40 @@ object ChatModelFactory {
 
     private fun doCreateModel(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
         return when (provider) {
+            "zhipu" -> createZhipuChatModel(apiKey, conf)
+            "bailian" -> createBaiLianChatModel(modelName, apiKey, conf)
             "deepseek" -> createDeepSeekChatModel(modelName, apiKey, conf)
             "volcengine" -> createVolcengineChatModel(modelName, apiKey, conf)
             else -> createDeepSeekChatModel(modelName, apiKey, conf)
         }
+    }
+
+    /**
+     * QianWen API is compatible with OpenAI API, so it's OK to use OpenAIChatModel.
+     * @see <a href='https://help.aliyun.com/zh/model-studio/getting-started/what-is-model-studio'>What is Model Studio</a>
+     * */
+    private fun createBaiLianChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
+        val baseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        val lm = OpenAiChatModel.builder()
+            .apiKey(apiKey)
+            .baseUrl(baseUrl)
+            .modelName(modelName)
+            .logRequests(false)
+            .logResponses(true)
+            .maxRetries(2)
+            .timeout(Duration.ofSeconds(60))
+            .build()
+        return ChatModelImpl(lm, conf)
+    }
+
+    private fun createZhipuChatModel(apiKey: String, conf: ImmutableConfig): ChatModel {
+        val lm = ZhipuAiChatModel.builder()
+            .apiKey(apiKey)
+            .logRequests(true)
+            .logResponses(true)
+            .maxRetries(2)
+            .build()
+        return ChatModelImpl(lm, conf)
     }
 
     /**
