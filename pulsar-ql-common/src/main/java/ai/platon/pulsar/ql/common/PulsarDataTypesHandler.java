@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql.common;
 
 import ai.platon.pulsar.ql.common.types.ValueDom;
+import ai.platon.pulsar.ql.common.types.ValueStringJSON;
 import ai.platon.pulsar.ql.common.types.ValueURI;
 import org.h2.api.CustomDataTypesHandler;
 import org.h2.api.ErrorCode;
@@ -23,6 +24,10 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
     public final static int URI_DATA_TYPE_ID = 1011;
     public final static int URI_DATA_TYPE_ORDER = 100_011;
 
+    public final static String STRING_JSON_DATA_TYPE_NAME = "STRING_JSON";
+    public final static int STRING_JSON_DATA_TYPE_ID = 1021;
+    public final static int STRING_JSON_DATA_TYPE_ORDER = 100_021;
+
     /**
      * The list of types. An ArrayList so that Tomcat doesn't set it to null
      * when clearing references.
@@ -35,6 +40,7 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
     public PulsarDataTypesHandler() {
         createDomDataType();
         createURIDataType();
+        createStringJSONDataType();
     }
 
     /** Constructs data type instance for complex number type */
@@ -52,6 +58,15 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
         DataType dt = new DataType();
         dt.type = URI_DATA_TYPE_ID;
         dt.name = URI_DATA_TYPE_NAME;
+        dt.sqlType = Types.JAVA_OBJECT;
+        register(dt);
+    }
+
+    /** Constructs data type instance for complex number type */
+    private static void createStringJSONDataType() {
+        DataType dt = new DataType();
+        dt.type = STRING_JSON_DATA_TYPE_ID;
+        dt.name = STRING_JSON_DATA_TYPE_NAME;
         dt.sqlType = Types.JAVA_OBJECT;
         register(dt);
     }
@@ -78,6 +93,8 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
             return ValueDom.class.getName();
         } else if (type == URI_DATA_TYPE_ID) {
             return ValueURI.class.getName();
+        } else if (type == STRING_JSON_DATA_TYPE_ID) {
+            return ValueStringJSON.class.getName();
         }
         throw DbException.throwInternalError("type="+type);
     }
@@ -88,6 +105,8 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
             return DOM_DATA_TYPE_ID;
         } else if (ValueURI.class.isAssignableFrom(x)) {
             return URI_DATA_TYPE_ID;
+        } else if (ValueStringJSON.class.isAssignableFrom(x)) {
+            return STRING_JSON_DATA_TYPE_ID;
         }
         return Value.JAVA_OBJECT;
     }
@@ -99,35 +118,55 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
         }
 
         if (targetType == DOM_DATA_TYPE_ID) {
-            switch (source.getType()) {
-                case Value.JAVA_OBJECT: {
+            return switch (source.getType()) {
+                case Value.JAVA_OBJECT -> {
                     assert source instanceof ValueJavaObject;
-                    return ValueDom.get(new String(source.getBytesNoCopy()));
-                } case Value.STRING: {
-                    assert source instanceof ValueString;
-                    return ValueDom.get(source.getString());
-                } case Value.BYTES: {
-                    assert source instanceof ValueBytes;
-                    return ValueDom.get(new String(source.getBytesNoCopy()));
+                    yield ValueDom.get(new String(source.getBytesNoCopy()));
                 }
-            }
+                case Value.STRING -> {
+                    assert source instanceof ValueString;
+                    yield ValueDom.get(source.getString());
+                }
+                case Value.BYTES -> {
+                    assert source instanceof ValueBytes;
+                    yield ValueDom.get(new String(source.getBytesNoCopy()));
+                }
+                default -> throw DbException.get(ErrorCode.DATA_CONVERSION_ERROR_1, source.getString());
+            };
 
-            throw DbException.get(ErrorCode.DATA_CONVERSION_ERROR_1, source.getString());
         } else if (targetType == URI_DATA_TYPE_ID) {
-            switch (source.getType()) {
-                case Value.JAVA_OBJECT: {
+            return switch (source.getType()) {
+                case Value.JAVA_OBJECT -> {
                     assert source instanceof ValueJavaObject;
-                    return ValueURI.get(new String(source.getBytesNoCopy()));
-                } case Value.STRING: {
-                    assert source instanceof ValueString;
-                    return ValueURI.get(source.getString());
-                } case Value.BYTES: {
-                    assert source instanceof ValueBytes;
-                    return ValueURI.get(new String(source.getBytesNoCopy()));
+                    yield ValueURI.get(new String(source.getBytesNoCopy()));
                 }
-            }
+                case Value.STRING -> {
+                    assert source instanceof ValueString;
+                    yield ValueURI.get(source.getString());
+                }
+                case Value.BYTES -> {
+                    assert source instanceof ValueBytes;
+                    yield ValueURI.get(new String(source.getBytesNoCopy()));
+                }
+                default -> throw DbException.get(ErrorCode.DATA_CONVERSION_ERROR_1, source.getString());
+            };
 
-            throw DbException.get(ErrorCode.DATA_CONVERSION_ERROR_1, source.getString());
+        } else if (targetType == STRING_JSON_DATA_TYPE_ID) {
+            return switch (source.getType()) {
+                case Value.JAVA_OBJECT -> {
+                    assert source instanceof ValueJavaObject;
+                    yield ValueStringJSON.get(new String(source.getBytesNoCopy()));
+                }
+                case Value.STRING -> {
+                    assert source instanceof ValueString;
+                    yield ValueStringJSON.get(source.getString());
+                }
+                case Value.BYTES -> {
+                    assert source instanceof ValueBytes;
+                    yield ValueStringJSON.get(new String(source.getBytesNoCopy()));
+                }
+                default -> throw DbException.get(ErrorCode.DATA_CONVERSION_ERROR_1, source.getString());
+            };
         } else {
             return source.convertTo(targetType);
         }
@@ -139,7 +178,10 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
             return DOM_DATA_TYPE_ORDER;
         } else if (type == URI_DATA_TYPE_ID) {
             return URI_DATA_TYPE_ORDER;
+        } else if (type == STRING_JSON_DATA_TYPE_ID) {
+            return STRING_JSON_DATA_TYPE_ORDER;
         }
+
         throw DbException.get(ErrorCode.UNKNOWN_DATA_TYPE_1, "type:" + type);
     }
 
@@ -151,22 +193,33 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
         } else if (type == URI_DATA_TYPE_ID) {
             assert data instanceof String;
             return ValueURI.get((String) data);
+        } else if (type == STRING_JSON_DATA_TYPE_ID) {
+            assert data instanceof String;
+            return ValueStringJSON.get((String) data);
         }
+
         return ValueJavaObject.getNoCopy(data, null, dataHandler);
     }
 
     @Override
     public Object getObject(Value value, Class<?> cls) {
         if (cls.equals(ValueDom.class)) {
-            // System.out.println(value.getType() + ", " + DataType.getDataType(value.getType()).name);
             if (value.getType() == DOM_DATA_TYPE_ID) {
                 return value.getObject();
             }
-//            else if (value.getType() == Value.NULL) {
-//                return null;
-//            }
             return convert(value, DOM_DATA_TYPE_ID).getObject();
+        } else if (cls.equals(ValueURI.class)) {
+            if (value.getType() == URI_DATA_TYPE_ID) {
+                return value.getObject();
+            }
+            return convert(value, URI_DATA_TYPE_ID).getObject();
+        } else if (cls.equals(ValueStringJSON.class)) {
+            if (value.getType() == STRING_JSON_DATA_TYPE_ID) {
+                return value.getObject();
+            }
+            return convert(value, STRING_JSON_DATA_TYPE_ID).getObject();
         }
+
         throw DbException.get(ErrorCode.UNKNOWN_DATA_TYPE_1, "type:" + value.getType());
     }
 

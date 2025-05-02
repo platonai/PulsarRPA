@@ -1,12 +1,17 @@
 package ai.platon.pulsar.test2.browser
 
-import ai.platon.pulsar.browser.common.SimpleScriptConfuser
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser.Companion.IDENTITY_NAME_MANGLER
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
+import ai.platon.pulsar.persist.model.ActiveDOMMessage
+import ai.platon.pulsar.persist.model.ActiveDOMMetadata
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
+import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
@@ -22,7 +27,7 @@ import kotlin.test.*
 
 @Tag("TimeConsumingTest")
 class PulsarWebDriverTests : WebDriverTestBase() {
-    
+
     private val fieldSelectors = mapOf(
         "01productTitle" to "#productTitle",
         "02acrPopover" to "#acrPopover",
@@ -37,28 +42,28 @@ class PulsarWebDriverTests : WebDriverTestBase() {
         "11review4" to "#cm-cr-dp-review-list div[data-hook=review]:nth-child(4)",
         "12review5" to "#cm-cr-dp-review-list div[data-hook=review]:nth-child(5)",
     )
-    
+
     private val screenshotDir = AppPaths.TEST_DIR.resolve("screenshot")
-    
+
     @BeforeTest
     fun setup() {
         session.globalCache.resetCaches()
     }
-    
+
     @AfterTest
     fun tearDown() {
         session.globalCache.resetCaches()
     }
-    
+
     @Test
     fun `When navigate to a HTML page then the navigate state are correct`() = runWebDriverTest(browser) { driver ->
         open(productUrl, driver, 1)
-        
+
         val navigateEntry = driver.navigateEntry
         assertTrue("Expect documentTransferred") { navigateEntry.documentTransferred }
         assertTrue { navigateEntry.networkRequestCount.get() > 0 }
         assertTrue { navigateEntry.networkResponseCount.get() > 0 }
-        
+
         require(driver is AbstractWebDriver)
         assertEquals(200, driver.mainResponseStatus)
         assertTrue { driver.mainResponseStatus == 200 }
@@ -67,21 +72,87 @@ class PulsarWebDriverTests : WebDriverTestBase() {
         assertTrue { navigateEntry.mainResponseStatus == 200 }
         assertTrue { navigateEntry.mainResponseHeaders.isNotEmpty() }
     }
-    
+
     @Test
     fun `when open a HTML page then script is injected`() = runWebDriverTest(originUrl, browser) { driver ->
         var detail = driver.evaluateDetail("typeof(window)")
         println(detail)
         // assertNotNull(detail?.value)
-        
+
         detail = driver.evaluateDetail("typeof(document)")
         println(detail)
         // assertNotNull(detail?.value)
-        
+
         val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
         assertEquals(2, r)
+
+        detail = driver.evaluateDetail("JSON.stringify(__pulsar_CONFIGS)")
+        val value = detail?.value?.toString()
+        assertNotNull(value)
+        println(value)
+        assertTrue { value.contains("viewPortWidth") }
+
+        detail = driver.evaluateDetail("JSON.stringify(__pulsar_utils__.getConfig())")
+        val value2 = detail?.value?.toString()
+        assertNotNull(value2)
+        println(value2)
+        assertTrue { value2.contains("viewPortWidth") }
     }
-    
+
+    @Test
+    fun `open a HTML page and compute metadata`() = runWebDriverTest(originUrl, browser) { driver ->
+        driver.evaluate("__pulsar_utils__.scrollToMiddle()")
+        var detail = driver.evaluateDetail("__pulsar_utils__.compute()")
+        println(detail)
+
+        detail = driver.evaluateDetail("__pulsar_utils__.getActiveDomMessage()")
+        println(detail)
+        val data = detail?.value?.toString()
+        assertNotNull(data)
+
+        val message = ActiveDOMMessage.fromJson(data)
+        val urls = message.urls
+        assertNotNull(urls)
+        assertEquals(originUrl, urls.URL)
+
+        val metadata = message.metadata
+        assertNotNull(metadata)
+        println(prettyPulsarObjectMapper().writeValueAsString(metadata))
+        assertEquals(1920, metadata.viewPortWidth)
+        assertEquals(1080, metadata.viewPortHeight)
+        // Assumptions.assumeTrue(metadata.scrollTop > metadata.viewPortHeight)
+        assertTrue { metadata.scrollTop >= 0 }
+        assertTrue { metadata.scrollLeft.toInt() == 0 }
+        assertTrue { metadata.clientWidth > 0 } // 1683 on my laptop
+        assertTrue { metadata.clientHeight > 0 } // 986 on my laptop
+    }
+
+    @Test
+    fun `open a HTML page and compute screen number`() = runWebDriverTest(originUrl, browser) { driver ->
+        driver.evaluate("__pulsar_utils__.scrollToTop()")
+        var metadata = computeActiveDOMMetadata(driver)
+        assertEquals(0f, metadata.screenNumber)
+
+        driver.evaluate("window.scrollTo(0, 300)")
+        metadata = computeActiveDOMMetadata(driver)
+        assertTrue { metadata.screenNumber > 0.0 }
+        assertTrue { metadata.screenNumber < 1.0 }
+
+        driver.evaluate("window.scrollTo(0, 1080)")
+        metadata = computeActiveDOMMetadata(driver)
+        assertTrue { metadata.screenNumber > 1 }
+    }
+
+    private suspend fun computeActiveDOMMetadata(driver: WebDriver): ActiveDOMMetadata {
+        val detail = driver.evaluateDetail("JSON.stringify(__pulsar_utils__.computeMetadata())")
+        println(detail)
+        assertNotNull(detail)
+        assertNotNull(detail.value)
+        println(detail.value)
+        val data = requireNotNull(detail.value?.toString())
+        return pulsarObjectMapper().readValue(data)
+    }
+
     @Test
     fun `when open a PLAIN TXT page then script is injected`() = runResourceWebDriverTest(plainTextUrl) { driver ->
         val r = driver.evaluate("__pulsar_utils__.add(1, 1)")

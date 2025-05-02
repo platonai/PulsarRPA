@@ -2,9 +2,11 @@ package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.skeleton.common.options.LoadOptionDefaults
 import ai.platon.pulsar.common.sql.ResultSetFormatter
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
+import ai.platon.pulsar.skeleton.common.options.LoadOptionDefaults
+import org.junit.jupiter.api.Assumptions
 import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 import java.time.Instant
@@ -26,8 +28,6 @@ abstract class TestBase {
                 ignoreFailure = true
                 nJitRetry = 3
                 test = 1
-                // TODO: there are problems to use fallback driver
-//                browser = BrowserType.MOCK_CHROME
                 browser = BrowserType.PULSAR_CHROME
             }
         }
@@ -36,11 +36,23 @@ abstract class TestBase {
 
         val history = mutableListOf<String>()
         val startTime = Instant.now()
+
+        val context = SQLContexts.create()
+        val session = context.getOrCreateSession()
+
+        fun ensurePage(url: String) {
+            val pageCondition = { page: WebPage -> page.protocolStatus.isSuccess && page.persistedContentLength > 8000 }
+            val page = session.load(url).takeIf(pageCondition) ?: session.load(url, "-refresh")
+
+            Assumptions.assumeTrue(page.protocolStatus.isSuccess)
+            Assumptions.assumeTrue(page.contentLength > 0)
+            if (page.isFetched) {
+                Assumptions.assumeTrue(page.persistedContentLength > 0)
+            }
+        }
     }
 
     val logger = getLogger(this)
-    val context = SQLContexts.create()
-    val session = context.createSession()
 
     val productIndexUrl = TestResource.productIndexUrl
     val productDetailUrl = TestResource.productDetailUrl

@@ -137,6 +137,10 @@ public interface AppConstants {
     String PULSAR_ATTR_ELEMENT_NODE_STYLE = "st";
     String PULSAR_ATTR_COMPUTED_STYLE = "cs";
 
+    // Browser use tool
+    String BROWSER_INTERACTIVE_ELEMENTS_SELECTOR = "a, button, input, select, textarea, " +
+                "[role='button'], [role='link'], [onclick], [onmousedown], [onmouseup]";
+
     /**
      * Other notable properties:
      * overflow

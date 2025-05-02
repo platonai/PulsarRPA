@@ -106,10 +106,6 @@ public class ValueDomWritable implements Writable {
             ele = doc.selectFirst(selector);
         }
 
-        if (ele == null) {
-            ele = NIL_DOC.getBody();
-        }
-
         dom = ValueDom.get(ele);
     }
 }

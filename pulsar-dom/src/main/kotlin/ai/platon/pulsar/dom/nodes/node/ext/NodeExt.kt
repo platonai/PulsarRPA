@@ -422,6 +422,11 @@ val Node.centerY get() = (y + y2) / 2
  * */
 val Node.geoLocation get() = Point(x, y)
 /**
+ * The screen number of the node (0-based).
+ * 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
+ * */
+val Node.screenNumber get() = 1.0 * top / ownerDocument.viewPort.height
+/**
  * The dimension of the node.
  * */
 val Node.dimension get() = Dimension(width, height)
@@ -1149,17 +1154,19 @@ fun Node.isAncestorOf(other: Node, stop: (Node) -> Boolean): Boolean {
 
 private fun accumulateText(root: Element, seperator: String = " "): String {
     val sb = StringBuilder()
+
     NodeTraversor.traverse({ node, depth ->
-        val text = node.extension.immutableText
         if (node is TextNode) {
+            val text = node.extension.immutableText
             if (text.isNotBlank()) {
                 sb.append(text)
             }
         } else if (node is Element) {
             if (sb.isNotEmpty() && (node.isBlock || node.tagName() == "br")
                 && !(sb.isNotEmpty() && sb.endsWith(seperator))
-            )
+            ) {
                 sb.append(seperator)
+            }
         }
     }, root)
 

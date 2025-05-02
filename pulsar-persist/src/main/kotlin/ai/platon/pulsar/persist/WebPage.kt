@@ -7,6 +7,7 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
+import ai.platon.pulsar.persist.model.ActiveDOMMetadata
 import ai.platon.pulsar.persist.model.ActiveDOMStat
 import ai.platon.pulsar.persist.model.ActiveDOMStatus
 import ai.platon.pulsar.persist.model.PageModel
@@ -348,6 +349,11 @@ interface WebPage : Comparable<WebPage> {
      * The trace of active DOM status changes for the web page.
      */
     var activeDOMStatTrace: Map<String, ActiveDOMStat?>
+
+    /**
+     * The metadata of the active DOM for the web page.
+     */
+    var activeDOMMetadata: ActiveDOMMetadata?
 
     /**
      * The title of the web page.

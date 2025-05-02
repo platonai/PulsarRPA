@@ -9,6 +9,8 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.warnInterruptible
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * The url feeder collects urls from the url pool and feed them to the crawlers.
@@ -31,6 +33,8 @@ class UrlFeeder(
         .apply { name = "DelayCC#Delay" }
 
     private val chainedDataCollector get() = loadingIterable.regularCollector as ChainedDataCollector
+
+    val id get() = urlPool.id
 
     /**
      * Open collectors

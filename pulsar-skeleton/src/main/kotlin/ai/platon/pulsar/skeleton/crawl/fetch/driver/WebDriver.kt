@@ -975,6 +975,21 @@ interface WebDriver : Closeable {
     suspend fun scrollToMiddle(ratio: Double)
 
     /**
+     * The current page frame scrolls to the middle.
+     *
+     * ```kotlin
+     * driver.scrollToScreen(0.0)
+     * driver.scrollToScreen(0.5)
+     * driver.scrollToScreen(1.5)
+     * driver.scrollToScreen(3.0)
+     * ```
+     *
+     * @param screenNumber The screen number of the page to scroll to,
+     */
+    @Throws(WebDriverException::class)
+    suspend fun scrollToScreen(screenNumber: Double)
+
+    /**
      * The mouse wheels down for [count] times.
      *
      * ```kotlin

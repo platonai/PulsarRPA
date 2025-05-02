@@ -1,11 +1,10 @@
 package ai.platon.pulsar.common.serialize.json
 
 import ai.platon.pulsar.common.serialize.json.JsonExtractor.extractJsonBlocks
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import java.util.function.Consumer
 
 object JsonExtractor {
+
     fun extractJsonBlocks(text: String): List<String> {
         val jsonBlocks: MutableList<String> = ArrayList()
         var braceCount = 0

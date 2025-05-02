@@ -156,6 +156,7 @@ abstract class AbstractPulsarContext(
     
     override val globalCache: GlobalCache get() = globalCacheFactory.globalCache
     
+    @Deprecated("Use globalCache.urlPool instead", replaceWith = ReplaceWith("globalCache.urlPool"))
     override val crawlPool: UrlPool get() = globalCache.urlPool
     
     override val crawlLoops: CrawlLoops get() = getBean()
@@ -169,9 +170,7 @@ abstract class AbstractPulsarContext(
      * All open sessions
      * */
     val sessions = ConcurrentSkipListMap<Int, AbstractPulsarSession>()
-    
-    private val crawlPoolOrNull: UrlPool? get() = runCatching { crawlPool }.getOrNull()
-    
+
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
      * */
@@ -425,14 +424,14 @@ abstract class AbstractPulsarContext(
     override fun submit(url: UrlAware): AbstractPulsarContext {
         startLoopIfNecessary()
         if (url.isStandard || url is DegenerateUrl) {
-            crawlPoolOrNull?.add(url)
+            globalCache.urlPool.add(url)
         }
         return this
     }
     
     override fun submitAll(urls: Iterable<UrlAware>): AbstractPulsarContext {
         startLoopIfNecessary()
-        crawlPoolOrNull?.addAll(urls.filter { it.isStandard || it is DegenerateUrl })
+        globalCache.urlPool.addAll(urls.filter { it.isStandard || it is DegenerateUrl })
         return this
     }
 

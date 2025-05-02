@@ -67,7 +67,7 @@ open class InteractiveBrowserEmulator(
     private val logger = getLogger(InteractiveBrowserEmulator::class)
     private val tracer = getTracerOrNull(InteractiveBrowserEmulator::class)
     private val taskLogger = getLogger(InteractiveBrowserEmulator::class, ".Task")
-    
+
     private val numDeferredNavigates by lazy { MetricsSystem.reg.meter(this, "deferredNavigates") }
 
     override var eventExceptionHandler: (Throwable) -> Unit = {
@@ -443,6 +443,7 @@ open class InteractiveBrowserEmulator(
             protocolStatus = finalProtocolStatus
             activeDOMStatTrace = interactResult.activeDOMMessage?.trace
             activeDOMUrls = interactResult.activeDOMMessage?.urls
+            activeDomMetadata = interactResult.activeDOMMessage?.metadata
         }
         val content = driver.pageSource()
         // Note: originalContentLength is already set before willComputeFeature event, (if not removed by someone)

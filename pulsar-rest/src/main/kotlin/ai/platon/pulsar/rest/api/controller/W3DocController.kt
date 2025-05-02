@@ -21,7 +21,7 @@ class W3DocController {
 
     @GetMapping
     fun get(request: W3DocumentRequest): String {
-        val document = loadService.loadDocument(request.url, request.args)
+        val (page, document) = loadService.loadDocument(request.url, request.args)
         return document.prettyHtml
     }
 }

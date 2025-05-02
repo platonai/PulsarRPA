@@ -1163,8 +1163,13 @@ open class LoadOptions constructor(
         /**
          * Create a new LoadOptions with [args] and [args2], [args2] overrides [args].
          * */
-        fun merge(args: String?, args2: String?, conf: VolatileConfig) = parse("$args $args2", conf)
-        
+        fun merge(args: String?, args2: String?, conf: VolatileConfig = VolatileConfig.UNSAFE) = parse("$args $args2", conf)
+
+        /**
+         * Create a new LoadOptions with args1, args2, args3, ..., the later override the previous ones, and return the merged args
+         * */
+        fun mergeArgs(vararg args: String?, conf: VolatileConfig = VolatileConfig.UNSAFE) = parse(args.joinToString(" "), conf).toString()
+
         /**
          * Erase the specified option, the option name has to match the field name in LoadOptions.
          * */

@@ -82,14 +82,6 @@ class TestManual : TestBase() {
     }
 
     @Test
-    @Ignore("TimeConsumingTest")
-    fun loadOutPagesUsingPreDefinedFunction() {
-        val expr = "width > 240 && width < 250 && height > 360 && height < 370"
-        execute("CALL SET_PAGE_EXPIRES('1s', 1)")
-        execute("SELECT DOM, DOM_TEXT(DOM) FROM LOAD_OUT_PAGES('$productIndexUrl', '*:expr($expr)', 1, 20)")
-    }
-
-    @Test
     fun loadAndGetFeatures() {
         execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl', '.nfList', 1, 20)")
         execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productDetailUrl', 'DIV,UL,UI,P', 1, 20)")
@@ -132,74 +124,6 @@ class TestManual : TestBase() {
     }
 
     /**
-     * Extracting by box is the simplest method to extract text from Web pages
-     * */
-    @Ignore("Disable box feature, it's never be used")
-    @Test
-    fun extractByBox() {
-        val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>30)"
-
-        val sql = """
-SELECT
-  IN_BOX_FIRST_TEXT(DOM, '560x27') AS TITLE,
-  IN_BOX_FIRST_TEXT(DOM, '570x36') AS PRICE1,
-  IN_BOX_FIRST_TEXT(DOM, '560x56') AS TITLE2,
-  IN_BOX_FIRST_TEXT(DOM, '570x85') AS PRICE2,
-  DOM_BASE_URI(DOM) AS URI,
-  IN_BOX_FIRST_IMG(DOM, '405x405') AS MAIN_IMAGE,
-  DOM_IMG(DOM) AS NIMG
-FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 10)
-WHERE DOM_CH(DOM) > 100;
-"""
-        execute(sql)
-    }
-
-    /**
-     * Extracting by box is the simplest method to extract text from Web pages
-     * */
-    @Ignore("Disable box feature, it's never be used")
-    @Test
-    fun extractByBox2() {
-        val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>=40)"
-
-        val sql = """
-SELECT
-  DOM_FIRST_TEXT(DOM, 'div:iN-bOx(560,27),*:IN-BOX(560,56)') AS TITLE,
-  DOM_FIRST_TEXT(DOM, '.brand') AS TITLE2,
-  DOM_WIDTH(DOM_SELECT_FIRST(DOM, '.brand')) AS W,
-  DOM_HEIGHT(DOM_SELECT_FIRST(DOM, '.brand')) AS H,
-  IN_BOX_FIRST_TEXT(DOM, '560x27,560x56') AS TITLE3
-FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 10)
-WHERE DOM_CH(DOM) > 100
-"""
-        execute(sql)
-    }
-    
-    @Ignore("Mia.com is closed")
-    @Test
-    fun testSqlVariables() {
-        val sql = """
-SET @LINK='https://www.mia.com/formulas.html';
-SET @OUT_LINK_STRICT_CSS='*:expr(img>0 && width>200 && height>200 && sibling>30)';
-
--- Show page features to see where are the useful links
--- SELECT * FROM DOMT_LOAD_AND_GET_FEATURES(@LINK, @OUT_LINK_STRICT_CSS) LIMIT 100;
-
-SELECT
-  DOM_FIRST_TEXT(DOM, '.brand') AS TITLE,
-  DOM_FIRST_TEXT(DOM, '.pbox_price') AS PRICE,
-  DOM_BASE_URI(DOM) AS URI,
-  IN_BOX_FIRST_IMG(DOM, '405x405') AS MAIN_IMAGE,
-  DOM_FIRST_TEXT(DOM, '#wrap_con') AS PARAMETERS_TEXT,
-  DOM_CH(DOM) AS NCHAR,
-  DOM_IMG(DOM) AS NIMG
-FROM LOAD_OUT_PAGES(@LINK, @OUT_LINK_STRICT_CSS, 1, 100)
-WHERE DOM_CH(DOM) > 100;
-        """.trimIndent()
-        execute(sql)
-    }
-
-    /**
      * A simple Web page monitor, monitoring news
      * */
     @Test
@@ -214,15 +138,6 @@ WHERE DOM_CH(DOM) > 100;
         val detail = "http://new.qq.com/omn/20180424/20180424A104ZC.html"
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, CHAR, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
                 "FROM LOAD_AND_GET_FEATURES('$detail') WHERE SEQ > 170 AND SEQ < 400")
-
-        val sql = """
-SELECT
-  DOM_FIRST_TEXT(DOM, 'H1') AS TITLE,
-  DOM_FIRST_TEXT(DOM, '#LeftTool') AS DATE_TIME,
-  DOM_FIRST_TEXT(DOM, '.content-article') AS CONTENT
-FROM LOAD_OUT_PAGES('$portal', '.Q-tpList', 1, 10)
-"""
-        execute(sql)
     }
 
     /**
@@ -239,36 +154,6 @@ FROM LOAD_OUT_PAGES('$portal', '.Q-tpList', 1, 10)
         val detail = "http://news.cnhubei.com/xw/jj/201804/t4102239.shtml"
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, CHAR, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
                 "FROM LOAD_AND_GET_FEATURES('$detail') WHERE SEQ > 170 AND SEQ < 400")
-
-        val sql = """
-SELECT
-  DOM_FIRST_TEXT(DOM, 'H1') AS TITLE,
-  DOM_FIRST_TEXT(DOM, '.jcwsy_mini_content') AS DATE_TIME,
-  DOM_FIRST_TEXT(DOM, '.content_box') AS CONTENT
-FROM LOAD_OUT_PAGES('$portal', '.news_list_box', 1, 10)
-"""
-        execute(sql)
-    }
-
-    /**
-     * A simple Web page monitor, monitoring products
-     * */
-    @Test
-    @Ignore("TimeConsumingTest")
-    fun monitorProductColumn() {
-        val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>30)"
-        val titleExpr =
-            "TOP>=287 && TOP<=307 && LEFT==472 && width==560 && height>=27 && height<=54 && char>=34 && char<=41"
-
-        val sql = """
-SELECT
-  DOM_FIRST_TEXT(DOM, 'div:iN-bOx(560,27),*:IN-BOX(560,56)') AS TITLE,
-  DOM_FIRST_TEXT(DOM, '*:expr($titleExpr)') AS TITLE2,
-  IN_BOX_FIRST_TEXT(DOM, '560x27,560x56') AS TITLE3
-FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 10)
-WHERE DOM_CH(DOM) > 100
-"""
-        execute(sql)
     }
 
     /**
@@ -283,16 +168,5 @@ WHERE DOM_CH(DOM) > 100
 
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, CHAR, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
                 "FROM LOAD_AND_GET_FEATURES('$productDetailUrl') WHERE SEQ > 170 AND SEQ < 400")
-
-        val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>30)"
-
-        val sql = """
-SELECT
-  DOM_FIRST_TEXT(DOM, 'div:iN-bOx(560,27),*:IN-BOX(560,56)') AS TITLE,
-  IN_BOX_FIRST_TEXT(DOM, '560x27,560x56') AS TITLE3
-FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 20)
-WHERE DOM_CH(DOM) > 100
-"""
-        execute(sql)
     }
 }

@@ -1,8 +1,11 @@
 package ai.platon.pulsar.rest.api.service
 
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.model.GoraWebPage
+import ai.platon.pulsar.rest.api.entities.PromptRequest
+import ai.platon.pulsar.rest.api.entities.PromptRequestL2
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -19,13 +22,56 @@ class LoadService {
         return session.load(url)
     }
 
-    fun loadDocument(url: String, args: String? = null): FeaturedDocument {
+    fun loadDocument(url: String, args: String? = null): Pair<WebPage, FeaturedDocument> {
         if (url.contains(":8182/")) {
             logger.warn("Unexpected url, internal url is not allowed | {}", url)
-            return FeaturedDocument.NIL
+            return GoraWebPage.NIL to FeaturedDocument.NIL
         }
 
         val page = session.load(url, args ?: "")
-        return session.parse(page, noCache = true)
+        val document = session.parse(page, noCache = true)
+
+        return page to document
+    }
+
+    fun loadDocument(request: PromptRequest): Pair<WebPage, FeaturedDocument> {
+        val args = request.args ?: ""
+        val options = session.options(args)
+        val be = options.eventHandlers.browseEventHandlers
+
+        val actions = request.actions
+        if (actions != null) {
+            be.onDocumentActuallyReady.addLast { page, driver ->
+                actions.forEach { driver.instruct(it) }
+            }
+        }
+
+        val page = session.load(request.url, options)
+        val document = session.parse(page)
+
+        return page to document
+    }
+
+    fun loadDocument(request: PromptRequestL2): Pair<WebPage, FeaturedDocument> {
+        val args = request.args ?: ""
+        val options = session.options(args)
+        val be = options.eventHandlers.browseEventHandlers
+
+//        request.actionsOnBrowserLaunched?.let { actions -> be.onBrowserLaunched.addLast { page, driver ->
+//            actions.forEach { driver.instruct(it) }
+//        } }
+
+        request.onPageReadyActions?.let { actions -> be.onDocumentActuallyReady.addLast { page, driver ->
+            actions.forEach { driver.instruct(it) }
+        } }
+
+//        request.actionsOnDidInteract?.let { actions -> be.onDidInteract.addLast { page, driver ->
+//            actions.forEach { driver.instruct(it) }
+//        } }
+
+        val page = session.load(request.url, options)
+        val document = session.parse(page)
+
+        return page to document
     }
 }

@@ -1,21 +1,29 @@
 # 🤖 PulsarRPA
 
+[![Docker Pulls](https://img.shields.io/docker/pulls/galaxyeye88/pulsar-rpa?style=flat-square)](https://hub.docker.com/r/galaxyeye88/pulsar-rpa)
+[![License: APACHE2](https://img.shields.io/badge/license-APACHE2-green?style=flat-square)](https://github.com/platonai/PulsarRPA/blob/main/LICENSE)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.8-brightgreen?style=flat-square)](https://spring.io/projects/spring-boot)
+
+---
+
 English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
 
 ## 🌟 Introduction
 
 💖 **PulsarRPA: The AI-Powered, Lightning-Fast Browser Automation Solution!** 💖
 
-**PulsarRPA** is an **AI-enabled** 🤖, **high-performance** 🚀, **distributed** 🌐, and **open-source** 🔓 
-browser automation platform, built for **large-scale automation** 🏭. It excels at:
+**PulsarRPA** is an **AI-enabled** 🤖, **high-performance** 🚀, **distributed** 🌐, and **open-source** 🔓 browser automation platform built for **large-scale automation** 🏭.
 
-- 🤖 **AI integration with LLMs for smarter automation**
-- ⚡ **Ultra-fast, spider-grade browser automation**
-- 🧠 **Advanced web content understanding**
-- 📊 **Powerful data extraction APIs**
+### ✨ Key Capabilities:
 
-PulsarRPA is designed to meet the demands of modern web automation, delivering **accurate** ✅ and **comprehensive** 📚 
-data extraction — even from the most **complex** 🔄 and **dynamic** ⚡ websites.
+- 🤖 **AI Integration with LLMs** – Smarter automation powered by large language models.
+- ⚡ **Ultra-Fast Automation** – Spider-grade performance for high-speed browsing.
+- 🧠 **Web Understanding** – Deep comprehension of dynamic web content.
+- 📊 **Data Extraction APIs** – Powerful tools to extract structured data effortlessly.
+
+PulsarRPA delivers **accurate** ✅ and **comprehensive** 📚 data extraction — even from the most **complex** 🔄 and **dynamic** ⚡ websites. Built for real-world use cases at scale.
+
+---
 
 ## 🎥 Demo Videos
 
@@ -25,71 +33,72 @@ data extraction — even from the most **complex** 🔄 and **dynamic** ⚡ webs
 📺 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
-## 🚀 Quick Start Guide
+---
 
-### 🌟 For Beginners - Just Talk, No Special Skills Required!
+# 🚀 Quick Start Guide
 
-#### Run
+## ▶️ Run PulsarRPA
 
-Download the latest Executable Jar and run it.
+Download and run the latest executable JAR file:
 
-   ```shell
-   # Linux/macOS and Windows (if curl is available)
-   curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar
-   java -D DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
-   ```
+```bash
+# Linux/macOS and Windows (if curl is available)
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar
+java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+```
 
-You can ignore `DEEPSEEK_API_KEY` if you don't need to use the AI features.
 
-Download links:
+> 🔍 **Note:** Advanced users can still access all advanced features without setting `DEEPSEEK_API_KEY`.
 
-* [Github](https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar)
-* [For Chinese User](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
+🔗 [Choose Another LLM Provider](docs/config/llm/llm-config-advanced.md)
 
-For docker user:
+### 📦 Download Links
 
-   ```shell
-   docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
-   ```
+- 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar)
+- 🇨🇳 [For Chinese Users](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
 
-#### 💬 Chat About a Webpage
+### 🐳 Docker Users
 
-Talk about a webpage using the `chat-about` API:
+```shell
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
+```
 
-   ```shell
-   curl -X POST "http://localhost:8182/api/ai/chat-about" -H "Content-Type: application/json" -d '{
-    "url": "https://www.amazon.com/dp/B0C1H26C46",
-    "prompt": "introduce this product"
-   }'
-   ```
 
-#### 📊 Extract Data
+---
 
-Extract data from a webpage using `extract` API:
+# 🌟 For Beginners – Just Speak, No Programming Skills Needed!
 
-  ```shell
-  curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{
-    "url": "https://www.amazon.com/dp/B0C1H26C46",
-    "prompt": "product name, price, and description"
-  }'
-  ```
+Use the `command` API to perform actions and extract data using natural language instructions.
 
-#### 💬 Chat with AI
+### 📥 Example Request (Text-based):
 
-Use the `chat` API to ask any questions:
-
-  ```shell
-  curl http://localhost:8182/api/ai/chat?prompt=What-is-the-most-fantastical-technology-today
-  ```
-
-Use `post` method to send a longer prompt:
-
-  ```shell
-  curl -X POST "http://localhost:8182/api/ai/chat" -H "Content-Type: application/json" -d '
-  What is the most fantastical technology today?
-  You should return a list of 5 items.
+```bash
+curl -X POST "http://localhost:8182/api/ai/command" \
+  -H "Content-Type: text/plain" \
+  -d '
+    Visit https://www.amazon.com/dp/B0C1H26C46
+    Summarize the product.
+    Extract: product name, price, ratings.
+    Find all links containing /dp/.
+    After page load: click #title, then scroll to the middle.
   '
-  ```
+```
+
+### 📄 JSON-Based Version:
+
+```bash
+curl -X POST "http://localhost:8182/api/ai/command" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://www.amazon.com/dp/B0C1H26C46",
+    "pageSummaryPrompt": "Provide a brief introduction of this product.",
+    "dataExtractionRules": "product name, price, and ratings",
+    "linkExtractionRules": "all links containing `/dp/` on the page",
+    "onPageReadyActions": ["click #title", "scroll to the middle"]
+  }'
+```
+
+💡 **Tip:** You don't need to fill in every field — just what you need.
 
 ### 🎓 For Advanced Users - LLM + X-SQL
 
@@ -104,7 +113,7 @@ Use `post` method to send a longer prompt:
   "
   ```
 
-The extracted data:
+The extracted data example:
 ```json
 {
   "llm_extracted_data": {
@@ -117,6 +126,8 @@ The extracted data:
   "img": "<img src=\"https://example.com/image.jpg\" />"
 }
 ```
+
+---
 
 ### 👨‍💻 For Experts - Native API
 
@@ -137,6 +148,8 @@ session.open(url, eventHandlers)
 ```
 📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/TalkToActivePage.kt)
 
+---
+
 #### 🤖 RPA Crawling:
 ```kotlin
 val options = session.options(args)
@@ -156,6 +169,8 @@ session.load(url, options)
 ```
 📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt)
 
+---
+
 #### 🔍 Complex Data Extraction with X-SQL:
 ```sql
 select
@@ -172,7 +187,12 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 * [Amazon Product Page Scraping (100+ fields)](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [All Amazon Page Types Scraping](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
-📖 [Advanced Guides](docs/advanced-guides.md)
+## 📜 Documents
+
+* 📖 [Advanced Guides](docs/advanced-guides.md)
+* 📊 [REST API Examples](docs/rest-api-examples.md)
+
+---
 
 ## ✨ Features
 
@@ -180,6 +200,11 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 - Scalable crawling
 - Browser rendering
 - AJAX data extraction
+
+🤖 **AI-Powered**
+- Automatic field extraction
+- Pattern recognition
+- Accurate data capture
 
 🧠 **LLM Integration**
 - Natural language web content analysis
@@ -239,11 +264,6 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 - Comprehensive logging
 - Detailed metrics
 - Full transparency
-
-🤖 **AI-Powered**
-- Automatic field extraction
-- Pattern recognition
-- Accurate data capture
 
 ## 📞 Contact Us
 

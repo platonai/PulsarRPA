@@ -3,9 +3,10 @@ package ai.platon.pulsar.ql.h2.utils
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
+import ai.platon.pulsar.ql.common.PulsarDataTypesHandler
 import ai.platon.pulsar.ql.common.ResultSets
-import ai.platon.pulsar.ql.h2.addColumn
 import ai.platon.pulsar.ql.common.types.ValueDom
+import ai.platon.pulsar.ql.h2.addColumn
 import com.google.gson.GsonBuilder
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
@@ -209,20 +210,23 @@ object ResultSetUtils {
         }
     }
 
+    /**
+     * TODO: this function is the same with [getTextEntityFromCurrentRecord]
+     * */
     @Throws(SQLException::class)
     private fun getEntityFromCurrentRecord(resultSet: ResultSet): Map<String, Any?> {
         val metaData = resultSet.metaData
         val columnCount: Int = metaData.columnCount
-        val record = mutableMapOf<String, Any?>()
+        val mapRecord = mutableMapOf<String, Any?>()
         for (i in 1..columnCount) {
-            val columnName = metaData.getColumnName(i)
+            val columnName = metaData.getColumnName(i).lowercase()
             val columnType = metaData.getColumnType(i)
             // remove ValueDom from the result
             if (columnType != ValueDom.type && columnName !in arrayOf("DOC", "DOM")) {
-                record[columnName.lowercase(Locale.getDefault())] = resultSet.getObject(i)
+                toJacksonCompatibleMapRecord(i, metaData, mapRecord, resultSet)
             }
         }
-        return record
+        return mapRecord
     }
 
     @Throws(SQLException::class)
@@ -239,34 +243,18 @@ object ResultSetUtils {
     private fun getTextEntityFromCurrentRecord(resultSet: ResultSet): Map<String, Any?> {
         val metaData = resultSet.metaData
         val columnCount: Int = metaData.columnCount
-        val record = mutableMapOf<String, Any?>()
+        val mapRecord = mutableMapOf<String, Any?>()
         for (i in 1..columnCount) {
             val columnName = metaData.getColumnName(i).lowercase()
             val columnType = metaData.getColumnType(i)
             // remove ValueDom from the result
 
             if (columnType != ValueDom.type && columnName !in arrayOf("DOC", "DOM")) {
-                when (columnType) {
-                    Types.BOOLEAN -> record[columnName] = resultSet.getBoolean(i)
-                    Types.FLOAT -> record[columnName] = resultSet.getFloat(i)
-                    Types.INTEGER -> record[columnName] = resultSet.getInt(i)
-                    Types.JAVA_OBJECT -> {
-                        val obj = resultSet.getObject(i)
-                        if (obj != null) {
-                            record[columnName] = obj
-                        }
-                    }
-                    Types.OTHER -> {
-                        val obj = resultSet.getObject(i)
-                        if (obj != null) {
-                            record[columnName] = obj
-                        }
-                    }
-                    else -> record[columnName] = resultSet.getString(i)
-                }
+                toJacksonCompatibleMapRecord(i, metaData, mapRecord, resultSet)
             }
         }
-        return record
+
+        return mapRecord
     }
 
     @Throws(SQLException::class)
@@ -293,6 +281,38 @@ object ResultSetUtils {
             builder.setPrettyPrinting()
         }
         return builder.create().toJson(entities)
+    }
+
+    /**
+     * Convert a record to a JSON compatible map, where each map value can be a [com.fasterxml.jackson.databind.JsonNode]
+     * */
+    private fun toJacksonCompatibleMapRecord(
+        i: Int, metaData: ResultSetMetaData,
+        record: MutableMap<String, Any?>, resultSet: ResultSet
+    ) {
+        val columnName = metaData.getColumnName(i).lowercase()
+        val columnType = metaData.getColumnType(i)
+        val columnClassName = metaData.getColumnClassName(i)
+
+        when (columnType) {
+            Types.BOOLEAN -> record[columnName] = resultSet.getBoolean(i)
+            Types.FLOAT -> record[columnName] = resultSet.getFloat(i)
+            Types.INTEGER -> record[columnName] = resultSet.getInt(i)
+            Types.JAVA_OBJECT -> {
+                val obj = resultSet.getObject(i)
+                if (obj != null) {
+                    record[columnName] = obj
+                }
+            }
+            Types.OTHER -> {
+                val obj = resultSet.getObject(i)
+
+                if (obj != null) {
+                    record[columnName] = obj
+                }
+            }
+            else -> record[columnName] = resultSet.getString(i)
+        }
     }
 
     /**

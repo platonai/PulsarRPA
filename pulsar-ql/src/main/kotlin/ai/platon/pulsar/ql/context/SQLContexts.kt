@@ -168,6 +168,9 @@ object SQLContexts {
     @Synchronized
     fun createSession() = create().createSession()
 
+    @Synchronized
+    fun getOrCreateSession() = create().getOrCreateSession()
+
     @Throws(InterruptedException::class)
     fun await() {
         PulsarContexts.await()

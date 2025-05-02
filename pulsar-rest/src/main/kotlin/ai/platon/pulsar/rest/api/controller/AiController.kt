@@ -1,6 +1,8 @@
 package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.rest.api.entities.PromptRequest
+import ai.platon.pulsar.rest.api.entities.PromptRequestL2
+import ai.platon.pulsar.rest.api.entities.PromptResponseL2
 import ai.platon.pulsar.rest.api.service.PromptService
 import org.springframework.context.ApplicationContext
 import org.springframework.http.MediaType
@@ -59,5 +61,19 @@ class AiController(
     @PostMapping("/extract")
     fun extractFieldsFromPage(@RequestBody request: PromptRequest): String {
         return promptService.extract(request)
+    }
+
+    @PostMapping("/command")
+    fun commandWithJSON(@RequestBody request: PromptRequestL2): PromptResponseL2 {
+        return promptService.command(request)
+    }
+
+    @PostMapping("/command",
+        consumes = [MediaType.TEXT_PLAIN_VALUE],
+        produces = [MediaType.TEXT_MARKDOWN_VALUE]
+    )
+    fun commandWithSpokenLanguage(@RequestBody request: String): String {
+        val response = promptService.command(request)
+        return promptService.convertResponseToMarkdown(response)
     }
 }

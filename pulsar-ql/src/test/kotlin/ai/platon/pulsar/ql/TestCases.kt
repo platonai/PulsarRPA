@@ -85,56 +85,11 @@ class TestCases: TestBase() {
         execute(sql)
     }
 
-    @Ignore("TimeConsumingTest")
-    @Test
-    fun loadInlineSelectNeeq() {
-        val cssQuery = "tbody:not(:first-child) > tr td:nth-child(7) > a:nth-child(2)"
-        val sql = """
-            select 
-                dom_doc_title(dom), 
-                dom_inline_select_text(dom, 'table tr'),
-                dom_base_uri(dom)
-            from
-                load_out_pages('http://www.neeq.com.cn/nq/listedcompany.html', '$cssQuery', 1, 20)
-        """.trimIndent()
-        execute(sql)
-    }
-
-    @Ignore("TimeConsumingTest")
-    @Test
-    fun loadOutPagesAndSelectNeeq() {
-        val cssQuery = "tbody:not(:first-child) > tr td:nth-child(7) > a:nth-child(2)"
-        val sql = """
-            select
-                dom_base_uri(tr),
-                dom_first_text(tr, 'td:nth-child(1)') as code,
-                dom_first_text(tr, 'td:nth-child(2)') as title,
-                dom_first_text(tr, 'td:nth-child(3)') as date
-            from
-                (select dom as tr from load_out_pages_and_select('http://www.neeq.com.cn/nq/listedcompany.html', '$cssQuery', 1, 20, 'table tr'))
-        """.trimIndent()
-
-        execute(sql)
-    }
-
     @Test
     fun loadAndGetLinksCityflower() {
         val sql = """
 select * 
 from load_and_get_links('https://www.cityflower.net/attribute/21.html -i 1d', '.recommend a');
-        """.trimIndent()
-
-        execute(sql)
-    }
-
-    @Ignore("TimeConsumingTest")
-    @Test
-    fun loadOutPagesAndSelectCityFlower() {
-        val sql = """
-select
-    dom_text(dom)
-from
-    load_out_pages_and_select('https://www.cityflower.net/attribute/21.html -i 1s', '.recommend a[href~=detail]', 1, 40, '.product_detail');
         """.trimIndent()
 
         execute(sql)

@@ -68,7 +68,6 @@ SELECT * FROM DOM_LOAD_AND_GET_LINKS(@LINK, '*:expr(_width > 240 && _width < 250
 -- 12. 批量下载网页
 
 -- SELECT DOM, DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD(@LINK), '.nfList', 0, 10);
--- SELECT DOM, DOM_TEXT(DOM) FROM DOM_LOAD_OUT_PAGES(@LINK, '*:expr(_width > 240 && _width < 250 && _height > 360 && _height < 370)', 0, 10);
 
 SELECT * FROM VALUES
 ('使用说明', ''),

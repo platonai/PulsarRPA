@@ -3,6 +3,7 @@ package ai.platon.pulsar.external
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.warn
 import ai.platon.pulsar.external.impl.ChatModelImpl
+import com.ibm.icu.impl.CurrencyData.provider
 import dev.langchain4j.model.openai.OpenAiChatModel
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import java.time.Duration
@@ -11,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * The factory for creating models.
  *
- * TODO: multiple model support
+ * TODO: integrate with LangChain4j or spring-ai
  */
 object ChatModelFactory {
     private val models = ConcurrentHashMap<String, ChatModel>()
@@ -44,14 +45,22 @@ object ChatModelFactory {
         // so the following keys are equal:
         // - DEEPSEEK_API_KEY, deepseek.apiKey
         val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
-        val deepseekModelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
+        val deepseekModelName = conf["DEEPSEEK_MODEL_NAME"] ?: conf["LLM_NAME"] ?: "deepseek-chat"
         if (deepseekAPIKey != null) {
             return getOrCreate("deepseek", deepseekModelName, deepseekAPIKey, conf)
+        }
+
+        val openaiAPIKey = conf["OPENAI_API_KEY"]
+        val openaiBaseURL = conf["OPENAI_BASE_URL"] ?: "https://api.openai.com/v1/chat/completions"
+        val openaiModelName = conf["OPENAI_MODEL_NAME"] ?: conf["LLM_NAME"] ?: "gpt-4o-mini"
+        if (openaiAPIKey != null) {
+            return getOrCreateOpenAICompatibleModel(openaiModelName, openaiAPIKey, openaiBaseURL, conf)
         }
 
         val provider = conf["llm.provider"] ?: throw IllegalArgumentException("llm.provider is not set")
         val modelName = conf["llm.name"] ?: throw IllegalArgumentException("llm.name is not set")
         val apiKey = conf["llm.apiKey"] ?: throw IllegalArgumentException("llm.apiKey is not set")
+
         return getOrCreate(provider, modelName, apiKey, conf)
     }
 
@@ -68,6 +77,7 @@ object ChatModelFactory {
     fun getOrCreate(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig) =
         getOrCreateModel0(provider, modelName, apiKey, conf)
 
+
     /**
      * Create a default model.
      *
@@ -83,10 +93,9 @@ object ChatModelFactory {
             .getOrNull()
     }
 
-    fun getOrCreateOpenAICompatibleModel(modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig): ChatModel? {
+    fun getOrCreateOpenAICompatibleModel(modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig): ChatModel {
         val key = "$modelName:$apiKey:$baseUrl"
-        return kotlin.runCatching { createOpenAICompatibleModel0(modelName, apiKey, baseUrl, conf) }
-            .onFailure { warn(this, it.message ?: "Failed to create chat model") }.getOrNull()
+        return models.computeIfAbsent(key) { createOpenAICompatibleModel0(modelName, apiKey, baseUrl, conf) }
     }
 
     private fun getOrCreateModel0(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
@@ -173,7 +182,9 @@ object ChatModelFactory {
      *
      * @see https://github.com/deepseek-ai/DeepSeek-V2/issues/18
      * */
-    private fun createOpenAICompatibleModel0(modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig): ChatModel {
+    private fun createOpenAICompatibleModel0(
+        modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig
+    ): ChatModel {
         val lm = OpenAiChatModel.builder()
             .apiKey(apiKey)
             .baseUrl(baseUrl)
