@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import java.time.Instant
+import java.util.*
 
 /**
  * Request for chat
@@ -107,4 +108,10 @@ data class PromptResponseL2(
     val pageStatus: String get() = ProtocolStatus.getMinorName(pageStatusCode)
     val createTime: Instant = Instant.now()
     var finishTime: Instant? = null
+
+    companion object {
+        fun failed(statusCode: Int): PromptResponseL2 {
+            return PromptResponseL2(uuid = UUID.randomUUID().toString(), statusCode = statusCode)
+        }
+    }
 }

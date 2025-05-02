@@ -151,11 +151,12 @@ Node.prototype.__pulsar_isImage = function() {
 };
 
 /**
+ * 1-based screen number in the viewport
  * @return {Number}
  * */
 Node.prototype.__pulsar_nScreen = function() {
     let rect = this.__pulsar_getRect();
-    const config = __pulsar_CONFIGS;
+    const config = __pulsar_DEFAULT_CONFIGS;
     const viewPortHeight = config.viewPortHeight;
     let ns = rect.y / viewPortHeight;
     return Math.ceil(ns);

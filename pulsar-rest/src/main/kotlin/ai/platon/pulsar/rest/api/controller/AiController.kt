@@ -68,8 +68,12 @@ class AiController(
         return promptService.command(request)
     }
 
-    @PostMapping("/command", consumes = [MediaType.TEXT_PLAIN_VALUE])
-    fun commandWithSpokenLanguage(@RequestBody request: String): PromptResponseL2 {
-        return promptService.command(request)
+    @PostMapping("/command",
+        consumes = [MediaType.TEXT_PLAIN_VALUE],
+        produces = [MediaType.TEXT_MARKDOWN_VALUE]
+    )
+    fun commandWithSpokenLanguage(@RequestBody request: String): String {
+        val response = promptService.command(request)
+        return promptService.convertResponseToMarkdown(response)
     }
 }

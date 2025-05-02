@@ -1,7 +1,7 @@
 "use strict";
 
 let __pulsar_utils__ = function () {
-    this.config = __pulsar_CONFIGS || __pulsar_DEFAULT_CONFIGS;
+    this.config = __pulsar_DEFAULT_CONFIGS;
 
     this.fineHeight = 4000;
     this.fineNumAnchor = 100;
@@ -95,13 +95,13 @@ __pulsar_utils__.writeData = function() {
         return false
     }
 
-    let script = document.getElementById(__pulsar_CONFIGS.SCRIPT_SECTION_ID);
+    let script = document.getElementById(__pulsar_DEFAULT_CONFIGS.SCRIPT_SECTION_ID);
     if (script != null) {
         return
     }
 
     script = document.createElement('script');
-    script.id = __pulsar_CONFIGS.SCRIPT_SECTION_ID;
+    script.id = __pulsar_DEFAULT_CONFIGS.SCRIPT_SECTION_ID;
     // javascript only
     // script.type = 'text/javascript';
     script.type = 'javascript';
@@ -184,7 +184,7 @@ __pulsar_utils__.updateStat = function(init = false) {
         return
     }
 
-    const config = __pulsar_CONFIGS;
+    const config = this.config || __pulsar_DEFAULT_CONFIGS;
     const viewPortWidth = config.viewPortWidth;
     const viewPortHeight = config.viewPortHeight;
     const maxWidth = 1.2 * viewPortWidth;
@@ -300,6 +300,31 @@ __pulsar_utils__.scrollToMiddle = function(ratio = 0.5) {
         document.body.scrollHeight
     );
     y = Math.min(y, 15000) * ratio
+
+    window.scrollTo(x, y)
+};
+
+/**
+ * @param {Number} screenNumber The ratio of the page's height to scroll to, default is 0.5
+ * */
+__pulsar_utils__.scrollToScreen = function(screenNumber = 0.5) {
+    if (!document || !document.documentElement || !document.body) {
+        return
+    }
+
+    if (screenNumber < 0) {
+        screenNumber = 0.0
+    }
+
+    let x = 0;
+    let y = Math.max(
+        document.documentElement.scrollHeight,
+        document.documentElement.clientHeight,
+        document.body.scrollHeight
+    );
+
+    let config = this.config || __pulsar_DEFAULT_CONFIGS;
+    y = Math.min(y, 15000) / config.viewPortHeight * screenNumber
 
     window.scrollTo(x, y)
 };
@@ -1352,7 +1377,7 @@ __pulsar_utils__.showInfoBox = function(selector) {
  * Compute the final metadata, the metadata is stored in the document.__pulsar__Data.metadata
  * */
 __pulsar_utils__.computeMetadata = function() {
-    let config = __pulsar_CONFIGS
+    let config = this.config || __pulsar_DEFAULT_CONFIGS;
 
     let dateTime = new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString()
     let timestamp = new Date().getTime().toString()
@@ -1385,7 +1410,7 @@ __pulsar_utils__.computeMetadata = function() {
  * Generate meta data
  * */
 __pulsar_utils__.generateMetadata = function() {
-    let config = __pulsar_CONFIGS
+    const config = this.config || __pulsar_DEFAULT_CONFIGS;
     let meta = document.getElementById(config.META_INFORMATION_ID);
     if (meta != null) {
         // already generated

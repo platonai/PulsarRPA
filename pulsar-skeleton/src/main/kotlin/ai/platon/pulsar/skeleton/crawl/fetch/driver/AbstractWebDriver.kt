@@ -361,6 +361,11 @@ abstract class AbstractWebDriver(
     }
 
     @Throws(WebDriverException::class)
+    override suspend fun scrollToScreen(screenNumber: Double) {
+        evaluate("__pulsar_utils__.scrollToScreen($screenNumber)")
+    }
+
+    @Throws(WebDriverException::class)
     override suspend fun clickNthAnchor(n: Int, rootSelector: String): String? {
         val result = evaluate("__pulsar_utils__.clickNthAnchor($n, '$rootSelector')")
         return result?.toString()

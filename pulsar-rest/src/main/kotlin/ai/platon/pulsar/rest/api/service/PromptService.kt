@@ -14,7 +14,6 @@ import ai.platon.pulsar.rest.api.entities.PromptRequest
 import ai.platon.pulsar.rest.api.entities.PromptRequestL2
 import ai.platon.pulsar.rest.api.entities.PromptResponseL2
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
-import ai.platon.pulsar.rest.api.service.PromptService.Companion.MIN_USER_MESSAGE_LENGTH
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -25,6 +24,7 @@ import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
 import org.springframework.stereotype.Service
 import java.time.Instant
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
 @Service
@@ -129,6 +129,16 @@ class PromptService(
         return request2
     }
 
+    fun convertResponseToMarkdown(response: PromptResponseL2): String {
+        val jsonResponse = pulsarObjectMapper().writeValueAsString(response)
+        return convertResponseToMarkdown(jsonResponse)
+    }
+
+    fun convertResponseToMarkdown(jsonResponse: String): String {
+        val userMessage = CONVERT_RESPONSE_TO_MARKDOWN_PROMPT_TEMPLATE.replace(JSON_STRING_PLACEHOLDER, jsonResponse)
+        return session.chat(userMessage).content
+    }
+
     /**
      * Executes a command based on the provided request string.
      *
@@ -141,13 +151,13 @@ class PromptService(
      * */
     fun command(request: String): PromptResponseL2 {
         val request2 = convertPromptToRequest(request)
-        if (request2 != null) {
-            return command(request2)
+        val response2 = if (request2 != null) {
+            command(request2)
         } else {
-            val failedResponse = PromptResponseL2()
-            failedResponse.statusCode = ResourceStatus.SC_BAD_REQUEST
-            return failedResponse
+            PromptResponseL2.failed(ResourceStatus.SC_BAD_REQUEST)
         }
+
+        return response2
     }
 
     /**
@@ -182,6 +192,7 @@ class PromptService(
             executeQuery(sql, response)
         }
 
+        response.uuid = UUID.randomUUID().toString()
         response.pageStatusCode = page.protocolStatus.minorCode
         response.pageContentBytes = page.originalContentLength.toInt()
         response.finishTime = Instant.now()
@@ -190,7 +201,12 @@ class PromptService(
         return response
     }
 
-    private fun doChat(page: WebPage, document: FeaturedDocument, request: PromptRequestL2, response: PromptResponseL2): Int {
+    private fun doChat(
+        page: WebPage,
+        document: FeaturedDocument,
+        request: PromptRequestL2,
+        response: PromptResponseL2
+    ): Int {
         var statusCode = ResourceStatus.SC_OK
 
         try {
@@ -202,20 +218,25 @@ class PromptService(
         return statusCode
     }
 
-    private fun doChat1(page: WebPage, document: FeaturedDocument, request: PromptRequestL2, response: PromptResponseL2) {
+    private fun doChat1(
+        page: WebPage,
+        document: FeaturedDocument,
+        request: PromptRequestL2,
+        response: PromptResponseL2
+    ) {
         // the 0-based screen number, 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
         val screenNumber = page.activeDOMMetadata?.screenNumber ?: 0f
 
         val userMessage1 = normalizeUserMessage(request.pageSummaryPrompt)
         val userMessage2 = normalizeUserMessage(request.dataExtractionRules)
+        var richText: String? = null
+        var textContent: String? = null
         if (userMessage1 != null || userMessage2 != null) {
-            val textContent = if (request.richText == true) {
-                selectNthScreenRichText(screenNumber, document)
+            textContent = if (request.richText == true) {
+                selectNthScreenRichText(screenNumber, document).also { richText = it }
             } else {
                 selectNthScreenText(screenNumber, document)
             }
-
-// println(richTextContent)
 
             if (userMessage1 != null) {
                 val message = "$userMessage1\n$textContent"
@@ -225,6 +246,13 @@ class PromptService(
                 val message = "$userMessage2\n$textContent"
                 response.fields = session.chat(message).content
             }
+        }
+
+        val userMessage3 = normalizeUserMessage(request.linkExtractionRules)
+        if (userMessage3 != null) {
+            val finalRichText = richText ?: selectNthScreenRichText(screenNumber, document)
+            val message = "$userMessage3\n$finalRichText"
+            response.links = session.chat(message).content
         }
     }
 
@@ -250,7 +278,7 @@ class PromptService(
         val sb = StringBuilder()
         var lastText = ""
 
-        NodeTraversor.filter(object: NodeFilter {
+        NodeTraversor.filter(object : NodeFilter {
             override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
                 // Check if the node is within the specified screen number range
                 if (node.screenNumber < screenNumber - 0.5 || node.screenNumber > screenNumber + 0.5) {
@@ -289,7 +317,7 @@ class PromptService(
         val sb = StringBuilder()
         val lastText = AtomicReference<String>()
 
-        NodeTraversor.filter(object: NodeFilter {
+        NodeTraversor.filter(object : NodeFilter {
             override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
                 // Check if the node is within the specified screen number range
                 if (node.screenNumber < screenNumber - 0.5 || node.screenNumber > screenNumber + 0.5) {
@@ -311,7 +339,11 @@ class PromptService(
         return sb.toString()
     }
 
-    private fun accumRichText(node: Node, sb: StringBuilder, lastText: AtomicReference<String>): NodeFilter.FilterResult {
+    private fun accumRichText(
+        node: Node,
+        sb: StringBuilder,
+        lastText: AtomicReference<String>
+    ): NodeFilter.FilterResult {
         if (node.isImage) {
             if (node.width > 200 && node.height > 200) {
                 val imageUrl = node.attr("abs:src")

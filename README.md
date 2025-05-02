@@ -68,7 +68,7 @@ Use the `command` API to perform actions and extract data from a webpage:
 
    ```shell
    curl -X POST "http://localhost:8182/api/ai/command" -H "Content-Type: text/plain" -d '
-     Visit https://www.amazon.com/dp/B0C1H26C46.
+     Visit https://www.amazon.com/dp/B0C1H26C46
      Summarize the product.
      Extract: product name, price, ratings.
      Find all links containing /dp/.
@@ -84,7 +84,7 @@ For a stricter JSON-based version:
      "pageSummaryPrompt": "Provide a brief introduction of this product.",
      "dataExtractionRules": "product name, price, and ratings",
      "linkExtractionRules": "all links containing `/dp/` on the page",
-     "onPageReadyActions": "scroll to the middle"
+     "onPageReadyActions": ["click #title", "scroll to the middle"]
    }'
    ```
 
@@ -103,7 +103,7 @@ For a stricter JSON-based version:
   "
   ```
 
-The extracted data:
+The extracted data example:
 ```json
 {
   "llm_extracted_data": {

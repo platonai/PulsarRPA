@@ -6,7 +6,7 @@ Development Plan
 
 Must
 
-* Clear API
+* Clean API
 * Simplified WebPage Interface
 
 Optional

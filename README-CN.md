@@ -25,9 +25,7 @@ PulsarRPA 致力于突破传统网页自动化的边界，提供**精准** ✅�
 
 ## 🚀 快速入门指南
 
-### 🌟 初学者 - 无需特殊技能!
-
-#### 运行
+### ▶️ 运行
 
 下载最新的可执行Jar并运行：
 
@@ -44,43 +42,30 @@ PulsarRPA 致力于突破传统网页自动化的边界，提供**精准** ✅�
 * [Github](https://github.com/platonai/PulsarRPA/releases/download/v3.0.2/PulsarRPA.jar)
 * [For Chinese User](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
 
-#### 💬 关于网页的对话
+### 🌟 初学者友好 - 只需对话，无需任何编程技能！
 
-使用`chat-about` API与网页内容交流:
+使用 `command` API 可执行网页操作并提取数据：
 
    ```shell
-   curl -X POST "http://localhost:8182/api/ai/chat-about" -H "Content-Type: application/json" -d '{
-     "url": "https://www.amazon.com/dp/B0C1H26C46",
-     "prompt": "介绍这个产品"
-   }'
+    curl -X POST "http://localhost:8182/api/ai/command" -H "Content-Type: text/plain" -d '
+      访问 https://www.amazon.com/dp/B0C1H26C46
+      总结该产品。
+      提取字段：产品名称、价格、评分。
+      查找所有包含 /dp/ 的链接。
+      页面加载完成后：点击 #title，然后滚动到页面中部。
+    '
    ```
 
-#### 📊 提取数据
-
-使用`extract` API从网页提取数据:
+如果你希望使用更严格的 `JSON` 格式：
 
    ```shell
-   curl -X POST "http://localhost:8182/api/ai/extract" -H "Content-Type: application/json" -d '{
-     "url": "https://www.amazon.com/dp/B0C1H26C46",
-     "prompt": "产品名称，价格和描述"
-   }'
-   ```
-
-#### 💬 与AI对话
-
-使用`chat` API提问:
-
-   ```shell
-   curl http://localhost:8182/api/ai/chat?prompt=当今最神奇的技术是什么
-   ```
-
-使用`post`方法发送更长的提示:
-
-   ```shell
-   curl -X POST "http://localhost:8182/api/ai/chat" -H "Content-Type: application/json" -d '
-   当今最神奇的技术是什么？
-   请返回5个项目的列表。
-   '
+    curl -X POST "http://localhost:8182/api/ai/command" -H "Content-Type: application/json" -d '{
+      "url": "https://www.amazon.com/dp/B0C1H26C46",
+      "pageSummaryPrompt": "请简要介绍该产品。",
+      "dataExtractionRules": "产品名称、价格、评分",
+      "linkExtractionRules": "页面上所有包含 `/dp/` 的链接",
+      "onPageReadyActions": ["点击 #title", "滚动到页面中部"]
+    }'
    ```
 
 ### 🎓 进阶用户 - LLM + X-SQL
