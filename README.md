@@ -100,8 +100,6 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 
 💡 **Tip:** You don't need to fill in every field — just what you need.
 
-Windows User Examples: [REST API Examples](docs/rest-api-examples.md)
-
 ### 🎓 For Advanced Users - LLM + X-SQL
 
   ```bash
