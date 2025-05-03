@@ -16,7 +16,7 @@ class MassiveUrlPoolTest: MassiveTestBase() {
 
     @Test
     fun test() {
-        PulsarSettings().maxBrowsers(4).maxOpenTabs(8)
+        PulsarSettings().maxBrowserContexts(4).maxOpenTabs(8)
 
         val links = testPaths.asSequence().map { UrlUtils.pathToLocalURL(it) }.map { createHyperlink(it) }
 

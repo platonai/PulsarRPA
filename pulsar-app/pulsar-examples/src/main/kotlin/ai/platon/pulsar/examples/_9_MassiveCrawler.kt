@@ -14,7 +14,7 @@ import java.time.Duration
  * Demonstrates how to crawl a massive collection of urls with various requirements.
  * */
 fun main() {
-    PulsarSettings().withSequentialBrowsers().maxBrowsers(4).maxOpenTabs(8).headless()
+    PulsarSettings().withSequentialBrowsers().maxBrowserContexts(4).maxOpenTabs(8).headless()
 
     val session = PulsarContexts.createSession()
     val urlPool = session.context.globalCache.urlPool

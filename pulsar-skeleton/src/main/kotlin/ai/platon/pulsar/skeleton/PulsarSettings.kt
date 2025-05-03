@@ -1,6 +1,7 @@
 package ai.platon.pulsar.skeleton
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.common.BrowserSettings.Companion.maxBrowserContexts
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.browser.BrowserType
 
@@ -167,8 +168,16 @@ open class PulsarSettings {
     /**
      * Set the max number of agents
      * */
+    @Deprecated("Use maxBrowserContexts instead", ReplaceWith("maxBrowserContexts(n)" ))
     fun maxBrowsers(n: Int): PulsarSettings {
-        BrowserSettings.maxBrowsers(n)
+        maxBrowserContexts(n)
+        return this
+    }
+    /**
+     * Set the max number of agents
+     * */
+    fun maxBrowserContexts(n: Int): PulsarSettings {
+        BrowserSettings.maxBrowserContexts(n)
         return this
     }
     /**
