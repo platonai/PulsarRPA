@@ -25,6 +25,19 @@ PulsarRPA delivers **accurate** ✅ and **comprehensive** 📚 data extraction �
 
 ---
 
+Simply speak to automate the browser and extract data at scale.
+
+```text
+Go to https://www.amazon.com/dp/B0C1H26C46
+After page load: scroll to the middle.
+
+Summarize the product.
+Extract: product name, price, ratings.
+Find all links containing /dp/.
+```
+
+---
+
 ## 🎥 Demo Videos
 
 🎬 YouTube:
@@ -76,11 +89,12 @@ Use the `command` API to perform actions and extract data using natural language
 curl -X POST "http://localhost:8182/api/ai/command" \
   -H "Content-Type: text/plain" \
   -d '
-    Visit https://www.amazon.com/dp/B0C1H26C46
+    Go to https://www.amazon.com/dp/B0C1H26C46
+    After page load: click #title, then scroll to the middle.
+    
     Summarize the product.
     Extract: product name, price, ratings.
     Find all links containing /dp/.
-    After page load: click #title, then scroll to the middle.
   '
 ```
 

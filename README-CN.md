@@ -19,6 +19,21 @@ PulsarRPA 致力于突破传统网页自动化的边界，提供 **精准** ✅�
 
 ---
 
+只需动口，即可自动操作浏览器并大规模提取数据。
+
+```text
+访问 https://www.amazon.com/dp/B0C1H26C46
+页面加载完成后：滚动到页面中部。
+
+总结该产品。
+提取字段：产品名称、价格、评分。
+查找所有包含 /dp/ 的链接。
+```
+
+---
+
+---
+
 ## 🎥 演示视频
 
 🎬 YouTube:
@@ -71,13 +86,13 @@ curl -X POST "http://localhost:8182/api/ai/command" \
   -H "Content-Type: text/plain" \
   -d '
     访问 https://www.amazon.com/dp/B0C1H26C46
+    页面加载完成后：点击 #title，然后滚动到页面中部。
+    
     总结该产品。
     提取字段：产品名称、价格、评分。
     查找所有包含 /dp/ 的链接。
-    页面加载完成后：点击 #title，然后滚动到页面中部。
   '
 ```
-
 
 ### 📄 JSON 格式请求：
 

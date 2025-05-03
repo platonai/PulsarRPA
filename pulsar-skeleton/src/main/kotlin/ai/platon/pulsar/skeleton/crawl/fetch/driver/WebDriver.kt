@@ -984,7 +984,8 @@ interface WebDriver : Closeable {
      * driver.scrollToScreen(3.0)
      * ```
      *
-     * @param screenNumber The screen number of the page to scroll to,
+     * @param screenNumber The screen number of the page to scroll to (0-based).
+     * 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
      */
     @Throws(WebDriverException::class)
     suspend fun scrollToScreen(screenNumber: Double)
