@@ -17,7 +17,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 ### ✨ Key Capabilities:
 
 - 🤖 **AI Integration with LLMs** – Smarter automation powered by large language models.
-- ⚡ **Ultra-Fast Automation** – Coroutine-powered concurrency for spider-level crawling performance.
+- ⚡ **Ultra-Fast Automation** – Coroutine-powered browser automation concurrency, spider-level crawling performance.
 - 🧠 **Web Understanding** – Deep comprehension of dynamic web content.
 - 📊 **Data Extraction APIs** – Powerful tools to extract structured data effortlessly.
 
