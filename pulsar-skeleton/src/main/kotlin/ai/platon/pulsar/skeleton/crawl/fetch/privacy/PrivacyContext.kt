@@ -235,7 +235,9 @@ interface PrivacyContext: AutoCloseable {
         // The prefix for all temporary privacy contexts. System context, prototype context and default context are not
         // required to start with the prefix.
         const val CONTEXT_DIR_PREFIX = "cx."
-        
+
+        val SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER: Path = AppPaths.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER
+
         // The default context directory, if you need a permanent and isolate context, use this one.
         // NOTE: the user-default context is not a default context.
         val DEFAULT_CONTEXT_DIR: Path = AppPaths.CONTEXT_DEFAULT_DIR

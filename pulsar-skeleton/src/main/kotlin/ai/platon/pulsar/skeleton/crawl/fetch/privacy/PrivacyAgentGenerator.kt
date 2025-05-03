@@ -27,7 +27,7 @@ open class DefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
 open class SystemDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig()
     @Throws(Exception::class)
-    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.createDefault(fingerprint.browserType)
+    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.createSystemDefault(fingerprint.browserType)
 }
 
 open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
