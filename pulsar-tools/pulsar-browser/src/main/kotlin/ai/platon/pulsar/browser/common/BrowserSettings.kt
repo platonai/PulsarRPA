@@ -1,5 +1,6 @@
 package ai.platon.pulsar.browser.common
 
+import ai.platon.pulsar.browser.common.BrowserSettings.Companion.maxBrowserContexts
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
@@ -22,7 +23,7 @@ open class BrowserSettings constructor(
          * The viewport size for browser to rendering all webpages.
          * */
         var SCREEN_VIEWPORT = AppConstants.DEFAULT_VIEW_PORT
-        
+
         /**
          * The screenshot quality.
          * Compression quality from range [0..100] (jpeg only) to capture screenshots.
@@ -49,18 +50,18 @@ open class BrowserSettings constructor(
         /**
          * Specify the browser type to fetch webpages.
          *
-         * 
+         *
          * */
         @JvmStatic
         fun withBrowser(browserType: String): Companion {
             System.setProperty(BROWSER_TYPE, browserType)
             return BrowserSettings
         }
-        
+
         /**
          * Specify the browser type to fetch webpages.
          *
-         * 
+         *
          * */
         @JvmStatic
         fun withBrowser(browserType: BrowserType): Companion {
@@ -71,53 +72,54 @@ open class BrowserSettings constructor(
             System.setProperty(BROWSER_TYPE, browserType.name)
             return BrowserSettings
         }
-        
+
         /**
          * Use the system's default Chrome browser, so PulsarRPA visits websites just like you do.
          * Any change to the browser will be kept.
          * */
         @JvmStatic
         fun withSystemDefaultBrowser() = withSystemDefaultBrowser(BrowserType.PULSAR_CHROME)
-        
+
         /**
          * Use the system's default browser with the given type, so PulsarRPA visits websites just like you do.
          * Any change to the browser will be kept.
          *
-         * 
+         *
          * */
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
+            maxBrowserContexts(1).maxOpenTabs(1000)
             return BrowserSettings
         }
-        
+
         /**
          * Use the default Chrome browser. Any change to the browser will be kept.
          * */
         @JvmStatic
         fun withDefaultBrowser() = withDefaultBrowser(BrowserType.PULSAR_CHROME)
-        
+
         /**
          * Use the default Chrome browser. Any change to the browser will be kept.
-         * 
+         *
          * */
         @JvmStatic
         fun withDefaultBrowser(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.DefaultPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
-            maxBrowsers(1).maxOpenTabs(1000)
+            maxBrowserContexts(1).maxOpenTabs(1000)
             return BrowserSettings
         }
-        
+
         /**
          * Use google-chrome with the prototype environment, any change to the browser will be kept.
          * */
         @JvmStatic
         fun withPrototypeBrowser() = withPrototypeBrowser(BrowserType.PULSAR_CHROME)
-        
+
         /**
          * Use the specified browser with the prototype environment, any change to the browser will be kept.
          *
@@ -128,10 +130,10 @@ open class BrowserSettings constructor(
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             withBrowser(browserType)
-            maxBrowsers(1).maxOpenTabs(1000)
+            maxBrowserContexts(1).maxOpenTabs(1000)
             return BrowserSettings
         }
-        
+
         /**
          * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
          * permanent unless the context directories are deleted manually.
@@ -144,6 +146,7 @@ open class BrowserSettings constructor(
         fun withSequentialBrowsers(): Companion {
             return withSequentialBrowsers(BrowserType.PULSAR_CHROME, 10)
         }
+
         /**
          * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
          * permanent unless the context directories are deleted manually.
@@ -156,6 +159,7 @@ open class BrowserSettings constructor(
         fun withSequentialBrowsers(browserType: BrowserType): Companion {
             return withSequentialBrowsers(browserType, 10)
         }
+
         /**
          * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
          * permanent unless the context directories are deleted manually.
@@ -172,6 +176,7 @@ open class BrowserSettings constructor(
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             return BrowserSettings
         }
+
         /**
          * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
          * permanent unless the context directories are deleted manually.
@@ -189,7 +194,7 @@ open class BrowserSettings constructor(
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
             return BrowserSettings
         }
-        
+
         /**
          * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
          * will not be used again after it is shut down.* */
@@ -197,7 +202,7 @@ open class BrowserSettings constructor(
         fun withTemporaryBrowser(): Companion {
             return withTemporaryBrowser(BrowserType.PULSAR_CHROME)
         }
-        
+
         /**
          * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
          * will not be used again after it is shut down.
@@ -211,7 +216,7 @@ open class BrowserSettings constructor(
             withBrowser(browserType)
             return BrowserSettings
         }
-        
+
         /**
          * Indicate the network condition.
          *
@@ -223,7 +228,7 @@ open class BrowserSettings constructor(
             InteractSettings.GOOD_NET_SETTINGS.overrideSystemProperties()
             return BrowserSettings
         }
-        
+
         /**
          * Indicate the network condition.
          *
@@ -235,7 +240,7 @@ open class BrowserSettings constructor(
             InteractSettings.WORSE_NET_SETTINGS.overrideSystemProperties()
             return BrowserSettings
         }
-        
+
         /**
          * Indicate the network condition.
          *
@@ -247,7 +252,7 @@ open class BrowserSettings constructor(
             InteractSettings.WORST_NET_SETTINGS.overrideSystemProperties()
             return BrowserSettings
         }
-        
+
         /**
          * Launch the browser in GUI mode.
          * */
@@ -257,18 +262,18 @@ open class BrowserSettings constructor(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
             ).forEach { System.clearProperty(it) }
-            
+
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.GUI.name)
-            
+
             return BrowserSettings
         }
-        
+
         /**
          * Launch the browser in GUI mode.
          * */
         @JvmStatic
         fun headed() = withGUI()
-        
+
         /**
          * Launch the browser in headless mode.
          * */
@@ -278,12 +283,12 @@ open class BrowserSettings constructor(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
             ).forEach { System.clearProperty(it) }
-            
+
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS.name)
-            
+
             return BrowserSettings
         }
-        
+
         /**
          * Launch the browser in supervised mode.
          * */
@@ -293,11 +298,15 @@ open class BrowserSettings constructor(
             return BrowserSettings
         }
 
+        @Deprecated("Use maxBrowserContexts instead", ReplaceWith("maxBrowserContexts(n)" ))
+        @JvmStatic
+        fun maxBrowsers(n: Int): Companion = maxBrowserContexts(n)
+
         /**
-         * Set the max number of browsers
+         * Set the max number of browser contexts, each browser context has a separate profile.
          * */
         @JvmStatic
-        fun maxBrowsers(n: Int): Companion {
+        fun maxBrowserContexts(n: Int): Companion {
             if (n <= 0) {
                 throw IllegalArgumentException("The number of browser contexts has to be greater than 0")
             }

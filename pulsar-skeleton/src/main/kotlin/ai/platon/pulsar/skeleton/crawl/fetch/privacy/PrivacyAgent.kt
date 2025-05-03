@@ -1,8 +1,10 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.privacy
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
+import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.skeleton.PulsarSettings
@@ -97,7 +99,8 @@ data class PrivacyAgent(
 
         fun createSystemDefault(browserType: BrowserType): PrivacyAgent {
             logger.info("You are creating a system default browser context, force set max browser number to be 1")
-            PulsarSettings().maxBrowsers(1)
+            BrowserSettings.withSystemDefaultBrowser(browserType)
+            require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("SystemDefaultPrivacyAgentGenerator"))
             return create(browserType, PrivacyContext.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER)
         }
 
@@ -107,7 +110,8 @@ data class PrivacyAgent(
 
         fun createDefault(browserType: BrowserType): PrivacyAgent {
             logger.info("You are creating a default browser context, force set max browser number to be 1")
-            PulsarSettings().maxBrowsers(1)
+            BrowserSettings.withDefaultBrowser(browserType)
+            require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("DefaultPrivacyAgentGenerator"))
             return create(browserType, PrivacyContext.DEFAULT_CONTEXT_DIR)
         }
 
