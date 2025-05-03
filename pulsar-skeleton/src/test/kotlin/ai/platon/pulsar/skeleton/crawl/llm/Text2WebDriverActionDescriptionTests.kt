@@ -1,6 +1,5 @@
 package ai.platon.pulsar.skeleton.crawl.llm
 
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import kotlin.test.AfterTest
 import kotlin.test.Test
