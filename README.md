@@ -25,7 +25,7 @@ PulsarRPA delivers **accurate** ✅ and **comprehensive** 📚 data extraction �
 
 ---
 
-Simply speak to automate the browser and extract data at scale.
+Automate the browser and extract data at scale with simple text.
 
 ```text
 Go to https://www.amazon.com/dp/B0C1H26C46
@@ -79,7 +79,7 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/p
 
 ---
 
-# 🌟 For Beginners – Just Speak, No Programming Skills Needed!
+# 🌟 For Beginners – Just Text, No Programming Skills Needed!
 
 Use the `command` API to perform actions and extract data using natural language instructions.
 
