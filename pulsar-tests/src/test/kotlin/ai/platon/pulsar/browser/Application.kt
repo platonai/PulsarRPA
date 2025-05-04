@@ -1,8 +1,7 @@
-package ai.platon.pulsar.basic.rest
+package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.runApplication
 import org.springframework.context.annotation.ImportResource
 import org.springframework.test.context.ContextConfiguration
 
@@ -12,10 +11,6 @@ import org.springframework.test.context.ContextConfiguration
         "ai.platon.pulsar.basic.rest"
     ]
 )
-@ImportResource("classpath:pulsar-beans/test-app-context.xml")
+@ImportResource("classpath:test-beans/app-context.xml")
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class Application
-
-fun main() {
-    runApplication<Application>()
-}
