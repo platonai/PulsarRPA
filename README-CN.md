@@ -11,7 +11,7 @@
 ### ✨ 核心能力：
 
 - 🤖 **LLM深度集成** – 使用大型语言模型实现更智能的自动化操作。
-- ⚡ **超高速浏览器操控** – 支持协程并发的浏览器控制，提供蜘蛛级别的高性能爬取体验。
+- ⚡ **超高速浏览器操控** – 协程安全的浏览器并发操作，蜘蛛级别的高性能爬取体验。
 - 🧠 **网页内容理解** – 深度解析动态网页结构。
 - 📊 **数据提取API** – 提供强大的结构化数据提取接口。
 
@@ -49,11 +49,13 @@ PulsarRPA 致力于突破传统网页自动化的边界，提供 **精准** ✅�
 下载并运行最新版本的 JAR 文件：
 
 ```bash
-# Linux/macOS 和 Windows（若已安装 curl）
+# Linux/macOS and Windows (if curl is available)
 curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar
-java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 ```
 
+```bash
+java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+```
 
 > 🔍 **提示：** 即使不设置 `DEEPSEEK_API_KEY`，高级用户仍可以使用所有进阶功能。
 

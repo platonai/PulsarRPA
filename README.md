@@ -17,7 +17,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 ### ✨ Key Capabilities:
 
 - 🤖 **AI Integration with LLMs** – Smarter automation powered by large language models.
-- ⚡ **Ultra-Fast Automation** – Coroutine-powered browser automation concurrency, spider-level crawling performance.
+- ⚡ **Ultra-Fast Automation** – Coroutine-safe browser automation concurrency, spider-level crawling performance.
 - 🧠 **Web Understanding** – Deep comprehension of dynamic web content.
 - 📊 **Data Extraction APIs** – Powerful tools to extract structured data effortlessly.
 
@@ -57,9 +57,11 @@ Download and run the latest executable JAR file:
 ```bash
 # Linux/macOS and Windows (if curl is available)
 curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar
-java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 ```
 
+```bash
+java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+```
 
 > 🔍 **Note:** Advanced users can still access all advanced features without setting `DEEPSEEK_API_KEY`.
 
