@@ -1,13 +1,13 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.privacy
 
-import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.browser.common.BrowserSettings.Companion.withBrowserContextMode
+import ai.platon.pulsar.common.browser.BrowserContextMode
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
-import ai.platon.pulsar.skeleton.PulsarSettings
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.nio.file.Files
 import java.nio.file.Path
@@ -79,7 +79,7 @@ data class PrivacyAgent(
         /**
          * The random privacy agent opens browser with a random data dir.
          * */
-        val RANDOM get() = create(PrivacyContext.RANDOM_CONTEXT_DIR)
+        val RANDOM_TEMP get() = create(PrivacyContext.RANDOM_TEMP_CONTEXT_DIR)
 
         fun create(contextDir: Path) = create(BrowserType.PULSAR_CHROME, contextDir)
 
@@ -98,8 +98,8 @@ data class PrivacyAgent(
         }
 
         fun createSystemDefault(browserType: BrowserType): PrivacyAgent {
-            logger.info("You are creating a system default browser context, force set max browser number to be 1")
-            BrowserSettings.withSystemDefaultBrowser(browserType)
+            withBrowserContextMode(BrowserContextMode.SYSTEM_DEFAULT, browserType)
+            require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
             require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("SystemDefaultPrivacyAgentGenerator"))
             return create(browserType, PrivacyContext.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER)
         }
@@ -110,14 +110,15 @@ data class PrivacyAgent(
 
         fun createDefault(browserType: BrowserType): PrivacyAgent {
             logger.info("You are creating a default browser context, force set max browser number to be 1")
-            BrowserSettings.withDefaultBrowser(browserType)
+            withBrowserContextMode(BrowserContextMode.DEFAULT, browserType)
+            require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
             require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("DefaultPrivacyAgentGenerator"))
             return create(browserType, PrivacyContext.DEFAULT_CONTEXT_DIR)
         }
 
         fun createNextSequential() = create(PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
 
-        fun createRandom() = create(PrivacyContext.RANDOM_CONTEXT_DIR)
+        fun createRandom() = create(PrivacyContext.RANDOM_TEMP_CONTEXT_DIR)
 
         fun createRandom(browserType: BrowserType) = create(browserType, PrivacyContext.createRandom(browserType))
     }

@@ -38,7 +38,7 @@ open class WebDriverFactory constructor(
      * Create a WebDriver.
      */
     @Throws(BrowserLaunchException::class)
-    fun create(conf: VolatileConfig, start: Boolean = true) = create(BrowserId.RANDOM, 0, conf, start)
+    fun create(conf: VolatileConfig, start: Boolean = true) = create(BrowserId.RANDOM_TEMP, 0, conf, start)
     
     /**
      * Create a WebDriver.
@@ -56,7 +56,7 @@ open class WebDriverFactory constructor(
      */
     @Deprecated("Use BrowserFactory.launchRandomTempBrowser() instead", ReplaceWith("browserFactory.launchRandomTempBrowser()"))
     @Throws(BrowserLaunchException::class)
-    fun launchTempBrowser() = launchBrowser(BrowserId.RANDOM)
+    fun launchTempBrowser() = launchBrowser(BrowserId.RANDOM_TEMP)
 
     /**
      * Launch a browser.

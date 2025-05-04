@@ -13,7 +13,7 @@ import java.util.Optional
 
 class PlaywrightBrowserLauncher : BrowserLauncher {
     override fun connect(port: Int, settings: BrowserSettings): Browser {
-        val browserId = BrowserId(PrivacyContext.RANDOM_CONTEXT_DIR, BrowserType.PLAYWRIGHT_CHROME)
+        val browserId = BrowserId(PrivacyContext.RANDOM_TEMP_CONTEXT_DIR, BrowserType.PLAYWRIGHT_CHROME)
         try {
             val browserContext = PlaywrightBrowser.connectOverCDP(port)
             return PlaywrightBrowser(browserId, browserContext, settings)

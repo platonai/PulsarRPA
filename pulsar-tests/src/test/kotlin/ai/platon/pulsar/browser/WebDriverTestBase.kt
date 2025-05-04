@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
@@ -43,27 +42,27 @@ class WebDriverTestBase : TestBase() {
     protected val baseURL get() = "http://127.0.0.1:$port"
 
     /**
-     * @see [ai.platon.pulsar.basic.rest.MockSiteController.text]
+     * @see [ai.platon.pulsar.test.server.MockSiteController.text]
      * */
     protected val plainTextUrl get() = "$baseURL/text"
     /**
-     * @see [ai.platon.pulsar.basic.rest.MockSiteController.csv]
+     * @see [ai.platon.pulsar.test.server.MockSiteController.csv]
      * */
     protected val csvTextUrl get() = "$baseURL/csv"
     /**
-     * @see [ai.platon.pulsar.basic.rest.MockSiteController.json]
+     * @see [ai.platon.pulsar.test.server.MockSiteController.json]
      * */
     protected val jsonUrl get() = "$baseURL/json"
     /**
-     * @see [ai.platon.pulsar.basic.rest.MockSiteController.robots]
+     * @see [ai.platon.pulsar.test.server.MockSiteController.robots]
      * */
     protected val robotsUrl get() = "$baseURL/robots.txt"
     /**
-     * @see [ai.platon.pulsar.basic.rest.MockSiteController.amazonHome]
+     * @see [ai.platon.pulsar.test.server.MockSiteController.amazonHome]
      * */
     protected val mockAmazonHomeUrl get() = "$baseURL/amazon/home.htm"
     /**
-     * @see [ai.platon.pulsar.basic.rest.MockSiteController.amazonProduct]
+     * @see [ai.platon.pulsar.test.server.MockSiteController.amazonProduct]
      * */
     protected val mockAmazonProductUrl get() = "$baseURL/amazon/product.htm"
 

@@ -237,7 +237,7 @@ class PulsarWebDriverTests : WebDriverTestBase() {
         val result = driver.evaluate("typeof(document.__pulsar_setAttributeIfNotBlank)").toString()
         assertEquals("function", result)
     }
-    
+
     @Test
     fun testOpenNewTab() = runWebDriverTest(productUrl, browser) { driver ->
         driver.clickMatches("ol li a", "href", "product-reviews")
@@ -245,7 +245,7 @@ class PulsarWebDriverTests : WebDriverTestBase() {
         driver.waitForSelector("body")
         driver.scrollDown(5)
     }
-    
+
     @Test
     fun test_selectTextAll() = runWebDriverTest(browser) { driver ->
         driver.navigateTo(productUrl)
@@ -577,7 +577,7 @@ class PulsarWebDriverTests : WebDriverTestBase() {
             return
         }
         
-        val browserId = BrowserId.RANDOM
+        val browserId = BrowserId.RANDOM_TEMP
         browserId.setProxy(proxyEntry)
         
         val browser = driverFactory.launchBrowser(browserId)

@@ -49,7 +49,7 @@ class PulsarBrowser(
     }
 
     constructor(port: Int, settings: BrowserSettings = BrowserSettings()) :
-            this(BrowserId.RANDOM, ChromeImpl(port = port), settings, null)
+            this(BrowserId.RANDOM_TEMP, ChromeImpl(port = port), settings, null)
 
     @Synchronized
     @Throws(WebDriverException::class)

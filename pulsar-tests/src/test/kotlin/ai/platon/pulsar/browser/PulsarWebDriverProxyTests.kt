@@ -1,10 +1,7 @@
 package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.common.brief
-import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.warnUnexpected
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
@@ -41,7 +38,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
     
 //    val proxyEntry = ProxyEntry("113.219.171.252", 2018)
     val ipTestUrl = "https://ip.tool.chinaz.com/"
-    val browserId = BrowserId.RANDOM
+    val browserId = BrowserId.RANDOM_TEMP
     
     @BeforeTest
     fun setup() {

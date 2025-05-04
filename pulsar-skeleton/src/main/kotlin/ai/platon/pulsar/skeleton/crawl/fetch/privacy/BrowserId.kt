@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent.Companion
 import java.nio.file.Path
 
 /**
@@ -103,7 +102,7 @@ data class BrowserId(
         /**
          * Create a browser with random context dir.
          * */
-        val RANDOM get() = BrowserId(PrivacyAgent.RANDOM)
+        val RANDOM_TEMP get() = BrowserId(PrivacyAgent.RANDOM_TEMP)
         /**
          * Create a browser with a specific context dir.
          * */
@@ -121,7 +120,7 @@ data class BrowserId(
         fun createSystemDefault(browserType: BrowserType) =
             create(browserType, PrivacyContext.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER)
 
-        fun createRandom() = create(PrivacyContext.RANDOM_CONTEXT_DIR)
+        fun createRandom() = create(PrivacyContext.RANDOM_TEMP_CONTEXT_DIR)
 
         fun createRandom(browserType: BrowserType) = create(browserType, PrivacyContext.createRandom(browserType))
 

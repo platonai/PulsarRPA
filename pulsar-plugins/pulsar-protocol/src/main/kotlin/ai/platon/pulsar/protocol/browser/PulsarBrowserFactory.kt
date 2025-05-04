@@ -57,7 +57,7 @@ class PulsarBrowserFactory : BrowserFactory {
      * */
     @Throws(BrowserLaunchException::class)
     override fun launchRandomTempBrowser(): Browser =
-        launcher.launch(BrowserId.RANDOM, LauncherOptions(), ChromeOptions())
+        launcher.launch(BrowserId.RANDOM_TEMP, LauncherOptions(), ChromeOptions())
 
     /**
      * Launch a browser with the given browser id, the browser id is used to identify the browser instance.

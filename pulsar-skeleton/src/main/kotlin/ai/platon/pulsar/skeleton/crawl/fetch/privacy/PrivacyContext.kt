@@ -244,7 +244,7 @@ interface PrivacyContext: AutoCloseable {
         // A random context directory, if you need a random temporary context, use this one
         val NEXT_SEQUENTIAL_CONTEXT_DIR get() = BrowserFiles.computeNextSequentialContextDir()
         // A random context directory, if you need a random temporary context, use this one
-        val RANDOM_CONTEXT_DIR get() = BrowserFiles.computeRandomTmpContextDir(browserType = BrowserType.PULSAR_CHROME)
+        val RANDOM_TEMP_CONTEXT_DIR get() = BrowserFiles.computeRandomTmpContextDir(browserType = BrowserType.PULSAR_CHROME)
         // The prototype context directory, all privacy contexts copies browser data from the prototype.
         // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
         val PROTOTYPE_DATA_DIR: Path = AppPaths.CHROME_DATA_DIR_PROTOTYPE

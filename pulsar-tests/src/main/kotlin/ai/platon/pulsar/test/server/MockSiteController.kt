@@ -1,12 +1,10 @@
-package ai.platon.pulsar.basic.rest
+package ai.platon.pulsar.test.server
 
 import ai.platon.pulsar.common.ResourceLoader
-import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 
-@Controller
+@RestController
 class MockSiteController {
     @GetMapping("/")
     fun home(): String {
