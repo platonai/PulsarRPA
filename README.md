@@ -12,16 +12,12 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 💖 **PulsarRPA: The AI-Powered, Lightning-Fast Browser Automation Solution!** 💖
 
-**PulsarRPA** is an **AI-enabled** 🤖, **high-performance** 🚀, **distributed** 🌐, and **open-source** 🔓 browser automation platform built for **large-scale automation** 🏭.
-
 ### ✨ Key Capabilities:
 
 - 🤖 **AI Integration with LLMs** – Smarter automation powered by large language models.
 - ⚡ **Ultra-Fast Automation** – Coroutine-safe browser automation concurrency, spider-level crawling performance.
 - 🧠 **Web Understanding** – Deep comprehension of dynamic web content.
 - 📊 **Data Extraction APIs** – Powerful tools to extract structured data effortlessly.
-
-PulsarRPA delivers **accurate** ✅ and **comprehensive** 📚 data extraction — even from the most **complex** 🔄 and **dynamic** ⚡ websites. Built for real-world use cases at scale.
 
 ---
 
