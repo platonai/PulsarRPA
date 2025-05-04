@@ -1342,7 +1342,7 @@ interface WebDriver : Closeable {
      * * **Escape line breaks** with `\n`.
      *
      * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * @return Remote object value in case of primitive values or null.
      * */
     @Throws(WebDriverException::class)
     suspend fun evaluate(expression: String): Any?
@@ -1356,7 +1356,7 @@ interface WebDriver : Closeable {
      * ```
      *
      * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * @return Remote object value in case of primitive values or null.
      * */
     @Throws(WebDriverException::class)
     suspend fun <T> evaluate(expression: String, defaultValue: T): T
@@ -1375,6 +1375,69 @@ interface WebDriver : Closeable {
     @Beta
     @Throws(WebDriverException::class)
     suspend fun evaluateDetail(expression: String): JsEvaluation?
+
+    /**
+     * Executes JavaScript in the context of the currently selected frame or window. The script
+     * fragment provided will be executed as the body of an anonymous function.
+     *
+     * ```kotlin
+     * val title = driver.evaluate("document.title")
+     * ```
+     *
+     * To execute multi-line JavaScript code:
+     *
+     * ```kotlin
+     * val code = """
+     * (() => {
+     *   const a = 10;
+     *   const b = 20;
+     *   return a * b;
+     * })()
+     * """.trimIndent()
+     *
+     * val result = driver.evaluate(code)
+     * ```
+     *
+     * ### 🔍 Notes:
+     * * **Wrap the code in an IIFE (Immediately Invoked Function Expression)** to return a value.
+     * * **Escape line breaks** with `\n`.
+     *
+     * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * */
+    @Beta
+    @Throws(WebDriverException::class)
+    suspend fun evaluateValue(expression: String): Any?
+
+    /**
+     * Executes JavaScript in the context of the currently selected frame or window. The script
+     * fragment provided will be executed as the body of an anonymous function.
+     *
+     * ```kotlin
+     * val title = driver.evaluate("document.title", "Untitled")
+     * ```
+     *
+     * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * */
+    @Beta
+    @Throws(WebDriverException::class)
+    suspend fun <T> evaluateValue(expression: String, defaultValue: T): T
+
+    /**
+     * Executes JavaScript in the context of the currently selected frame or window. The script
+     * fragment provided will be executed as the body of an anonymous function.
+     *
+     * ```kotlin
+     * val title = driver.evaluate("document.title")
+     * ```
+     *
+     * @param expression Javascript expression to evaluate
+     * @return expression result
+     * */
+    @Beta
+    @Throws(WebDriverException::class)
+    suspend fun evaluateValueDetail(expression: String): JsEvaluation?
 
     /**
      * This method scrolls element into view if needed, and then ake a screenshot of the element.

@@ -161,6 +161,16 @@ class PulsarWebDriver(
     }
 
     @Throws(WebDriverException::class)
+    override suspend fun evaluateValue(expression: String): Any? {
+        return invokeOnPage("evaluateValue") { page.evaluateValue(expression) }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun evaluateValueDetail(expression: String): JsEvaluation? {
+        return invokeOnPage("evaluateValueDetail") { createJsEvaluate(page.evaluateValueDetail(expression)) }
+    }
+
+    @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String {
         navigateUrl = invokeOnPage("currentUrl") { mainFrameAPI?.url } ?: navigateUrl
         return navigateUrl

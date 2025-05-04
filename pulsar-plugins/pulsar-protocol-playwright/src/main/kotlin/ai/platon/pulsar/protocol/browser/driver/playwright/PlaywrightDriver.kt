@@ -753,6 +753,22 @@ class PlaywrightDriver(
         }
     }
 
+    override suspend fun evaluateValue(expression: String): Any? {
+        return evaluateValueDetail(expression)?.value
+    }
+
+    override suspend fun evaluateValueDetail(expression: String): JsEvaluation? {
+        return try {
+            rpc.invokeDeferred("evaluateDetail") {
+                val result = page.evaluate(settings.confuser.confuse(expression))
+                JsEvaluation(result)
+            }
+        } catch (e: Exception) {
+            rpc.handleWebDriverException(e, "evaluateDetail", expression)
+            null
+        }
+    }
+
     /**
      * Captures a screenshot of the current page.
      * @return The screenshot as a base64 encoded string

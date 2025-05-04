@@ -1,12 +1,54 @@
 package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.common.ResourceLoader
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.apache.commons.lang3.StringUtils
+import kotlin.test.*
 
-class PulsarWebDriverMockSiteTests: WebDriverTestBase() {
+class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
 
     val text = "awesome AI enabled PulsarRPA!"
+
+    @Test
+    fun `test evaluate that returns primitive values`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+        val code = """1+1"""
+
+        val result = driver.evaluate(code)
+        assertEquals(2, result)
+    }
+
+    @Test
+    fun `test evaluate that returns object`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+        val code = """__pulsar_utils__.getConfig()"""
+
+        val result = driver.evaluateDetail(code)
+        println(result)
+        assertNotNull(result)
+        assertNull(result.value)
+        assertNull(result.exception)
+        assertEquals("Object", result.className)
+        assertEquals("Object", result.description)
+        // assertEquals(2, result)
+
+        val result2 = driver.evaluateValueDetail(code)
+        println(result2)
+        assertNotNull(result2)
+        assertNull(result2.exception)
+        assertNull(result2.className)
+        assertNull(result2.description)
+        val value2 = result2.value
+        assertNotNull(value2)
+        // println(value2::class.qualifiedName)
+        assertEquals("java.util.LinkedHashMap", value2::class.qualifiedName)
+        assertTrue { value2 is Map<*, *> }
+        value2 as Map<*, *>
+        assertEquals(browser.settings.viewportSize.width, value2["viewPortWidth"])
+
+        val propertyNames = value2["propertyNames"]
+        assertNotNull(propertyNames)
+        // println(propertyNames::class.qualifiedName)
+        assertEquals("java.util.ArrayList", propertyNames::class.qualifiedName)
+        assertTrue { propertyNames is List<*> }
+    }
 
     @Test
     fun `test evaluate single line expressions`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
@@ -98,12 +140,30 @@ class PulsarWebDriverMockSiteTests: WebDriverTestBase() {
     }
 
 
-
     @Test
     fun `test buildDomTree`() = runWebDriverTest("${aiGenBaseURL}/interactive-page-1.html", browser) { driver ->
-        val buildDomTreeJs = ResourceLoader.readAllLines("js/buildDomTree.js") { !it.startsWith("// ") }
-            .joinToString("\n")
-        val detail = driver.evaluateDetail(buildDomTreeJs)
+        var buildDomTreeJs = ResourceLoader.readString("js/buildDomTree.js")
+        buildDomTreeJs = buildDomTreeJs.trimEnd { it.isWhitespace() || it == ';' }
+        // println(StringUtils.abbreviateMiddle(buildDomTreeJs, "...", 500))
+
+        val expression = """
+                ($buildDomTreeJs)()
+            """.trimIndent()
+        val evaluation = driver.evaluateValueDetail(expression)
+        assertNotNull(evaluation)
+        evaluation.description = null
+        println(StringUtils.abbreviateMiddle(evaluation.toString(), "...", 500))
+        val value = evaluation.value
+        assertNotNull(value)
+        value as Map<*, *>
+        val rootId = value["rootId"]
+        assertNotNull(rootId)
+        val map = value["map"]
+        assertNotNull(map)
+        map as Map<*, *>
+        val node = map["0"]
+        println(node)
+        assertNotNull(node)
 
         readln()
     }

@@ -106,9 +106,11 @@ data class PrivacyAgent(
             return create(browserType, PrivacyContext.PROTOTYPE_CONTEXT_DIR)
         }
 
-        fun createNextSequential() = create(PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
+        fun createNextSequential() = createNextSequential(BrowserType.PULSAR_CHROME)
 
-        fun createRandomTemp() = create(PrivacyContext.RANDOM_TEMP_CONTEXT_DIR)
+        fun createNextSequential(browserType: BrowserType) = create(browserType, PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
+
+        fun createRandomTemp() = createRandomTemp(BrowserType.PULSAR_CHROME)
 
         fun createRandomTemp(browserType: BrowserType) = create(browserType, PrivacyContext.createRandom(browserType))
     }

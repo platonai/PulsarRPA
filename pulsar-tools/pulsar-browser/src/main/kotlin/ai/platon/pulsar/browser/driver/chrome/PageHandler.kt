@@ -2,7 +2,6 @@ package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.browser.common.ScriptConfuser
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeProtocolException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
@@ -14,6 +13,7 @@ import com.github.kklisura.cdt.protocol.v2023.types.page.Navigate
 import com.github.kklisura.cdt.protocol.v2023.types.page.ReferrerPolicy
 import com.github.kklisura.cdt.protocol.v2023.types.page.TransitionType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
+import com.github.kklisura.cdt.protocol.v2023.types.runtime.SerializationOptions
 
 class PageHandler(
     private val devTools: RemoteDevTools,
@@ -219,7 +219,30 @@ class PageHandler(
         val result = evaluate?.result
         return result?.value
     }
-    
+
+    @Throws(ChromeDriverException::class)
+    fun evaluateValueDetail(expression: String): Evaluate? {
+        return evaluate(confuser.confuse(expression), returnByValue = true)
+    }
+
+    /**
+     * Evaluates expression on global object.
+     *
+     * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * */
+    @Throws(ChromeDriverException::class)
+    fun evaluateValue(expression: String): Any? {
+        val evaluate = evaluateValueDetail(expression)
+
+        val exception = evaluate?.exceptionDetails?.exception
+        if (exception != null) {
+            logger.info(exception.description + "\n>>>$expression<<<")
+        }
+
+        return evaluate?.result?.value
+    }
+
     @Throws(ChromeDriverException::class)
     private fun querySelectorOrNull(selector: String): Int? {
         val rootId = domAPI?.document?.nodeId
@@ -246,5 +269,44 @@ class PageHandler(
         }
         
         return false
+    }
+
+    private fun evaluate(
+        expression: String,
+        objectGroup: String? = null,
+        includeCommandLineAPI: Boolean? = null,
+        silent: Boolean? = null,
+        contextId: Int? = null,
+        returnByValue: Boolean? = null,
+        @Experimental generatePreview: Boolean? = null,
+        userGesture: Boolean? = null,
+        awaitPromise: Boolean? = null,
+        @Experimental throwOnSideEffect: Boolean? = null,
+        @Experimental timeout: Double? = null,
+        @Experimental disableBreaks: Boolean? = null,
+        @Experimental replMode: Boolean? = null,
+        @Experimental allowUnsafeEvalBlockedByCSP: Boolean? = null,
+        @Experimental uniqueContextId: String? = null,
+        @Experimental serializationOptions: SerializationOptions? = null,
+    ): Evaluate? {
+        return runtime?.evaluate(
+            expression,
+            objectGroup,
+            includeCommandLineAPI,
+            silent,
+            contextId,
+            returnByValue,
+            generatePreview,
+            userGesture,
+            awaitPromise,
+            throwOnSideEffect,
+            timeout,
+            disableBreaks,
+            replMode,
+            allowUnsafeEvalBlockedByCSP,
+            uniqueContextId,
+            null,
+            serializationOptions
+        )
     }
 }

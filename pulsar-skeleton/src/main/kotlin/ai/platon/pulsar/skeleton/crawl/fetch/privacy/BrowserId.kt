@@ -86,15 +86,15 @@ data class BrowserId(
         /**
          * Represent the real user's default browser.
          * */
-        val SYSTEM_DEFAULT = createSystemDefault()
+        val SYSTEM_DEFAULT get() = createSystemDefault()
         /**
          * Represent the default browser.
          * */
-        val DEFAULT = createDefault()
+        val DEFAULT get() = createDefault()
         /**
          * Represent the prototype browser.
          * */
-        val PROTOTYPE = createPrototype()
+        val PROTOTYPE get() = createPrototype()
         /**
          * Represent a browser with a sequential context dir.
          * */
@@ -110,7 +110,7 @@ data class BrowserId(
 
         fun createSystemDefault() = BrowserId(PrivacyAgent.createSystemDefault())
 
-        fun createSystemDefault(browserType: BrowserType) = BrowserId(PrivacyAgent.createSystemDefault())
+        fun createSystemDefault(browserType: BrowserType) = BrowserId(PrivacyAgent.createSystemDefault(browserType))
 
         fun createPrototype() = BrowserId(PrivacyAgent.createDefault())
 

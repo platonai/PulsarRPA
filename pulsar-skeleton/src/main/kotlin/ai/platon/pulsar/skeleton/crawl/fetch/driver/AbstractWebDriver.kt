@@ -324,6 +324,12 @@ abstract class AbstractWebDriver(
         return evaluate(expression) as? T ?: defaultValue
     }
 
+    @Suppress("UNCHECKED_CAST")
+    @Throws(WebDriverException::class)
+    override suspend fun <T> evaluateValue(expression: String, defaultValue: T): T {
+        return evaluateValue(expression) as? T ?: defaultValue
+    }
+
     @Throws(WebDriverException::class)
     override suspend fun isVisible(selector: String): Boolean {
         return evaluate("__pulsar_utils__.isVisible('$selector')") == "true"

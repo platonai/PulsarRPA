@@ -4,7 +4,7 @@
       doHighlightElements: true,
       focusHighlightIndex: -1,
       viewportExpansion: 0,
-      debugMode: false,
+      debugMode: true,
     }
 ) => {
   const { doHighlightElements, focusHighlightIndex, viewportExpansion, debugMode } = args;
