@@ -286,5 +286,5 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 - 🌍 Website: [platon.ai](https://platon.ai)
 
 <div style="display: flex;">
-  <img src="docs/images/wechat-author.png" width="300" alt="WeChat QR Code" />
+  <img src="docs/images/wechat-author.png" width="300" height="365" alt="WeChat QR Code" />
 </div>
