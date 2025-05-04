@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 /**
  * Created by vincent on 17-1-14.
  */
-class TestConfig {
+class ConfigTest {
 
     @Test
     fun testConfig() {
@@ -102,3 +102,4 @@ class TestConfig {
         assertEquals(4, conf.getStrings(n1).size)
     }
 }
+

@@ -181,7 +181,7 @@ open class StreamingCrawler(
 
     private val gauges = mapOf(
         "idleTime" to Gauge { idleTime.readable() },
-        "numPrivacyContexts" to Gauge { numPrivacyContexts },
+        "numBrowserContexts" to Gauge { numBrowserContexts },
         "numMaxActiveTabs" to Gauge { numMaxActiveTabs },
         "fetchConcurrency" to Gauge { fetchConcurrency },
         "concurrency" to Gauge { concurrency },
@@ -192,7 +192,19 @@ open class StreamingCrawler(
     /**
      * The maximum number of privacy contexts allowed.
      * */
-    val numPrivacyContexts get() = sessionConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+    val numBrowserContexts: Int get() {
+        // return sessionConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+
+        // PRIVACY_CONTEXT_NUMBER is deprecated, use BROWSER_CONTEXT_NUMBER instead
+//        val fallbackValue = sessionConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+//        val browserContextNumber = sessionConfig.getInt(BROWSER_CONTEXT_NUMBER, fallbackValue)
+        // return browserContextNumber
+
+        return sessionConfig.getWithFallback(BROWSER_CONTEXT_NUMBER, PRIVACY_CONTEXT_NUMBER)?.toIntOrNull() ?: 2
+    }
+
+    @Deprecated("Use numBrowserContexts instead", replaceWith = ReplaceWith("numBrowserContexts"))
+    val numPrivacyContexts get() = numBrowserContexts
 
     /**
      * The maximum number of open tabs allowed in each open browser.
@@ -202,7 +214,7 @@ open class StreamingCrawler(
     /**
      * The fetch concurrency equals to the number of all allowed open tabs.
      * */
-    val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
+    val fetchConcurrency get() = numBrowserContexts * numMaxActiveTabs
 
     /**
      * The main loop concurrency.

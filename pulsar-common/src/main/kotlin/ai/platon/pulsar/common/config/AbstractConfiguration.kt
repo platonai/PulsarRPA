@@ -34,7 +34,7 @@ abstract class AbstractConfiguration {
      * Spring core is the first class dependency now.
      */
     var environment: Environment? = null
-    
+
     constructor(
         profile: String = System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
         loadDefaults: Boolean = true,
@@ -42,7 +42,7 @@ abstract class AbstractConfiguration {
     ) {
         conf = KConfiguration(profile = profile, extraResources = resources, loadDefaults = loadDefaults)
     }
-    
+
     constructor(conf: KConfiguration) {
         this.conf = KConfiguration(conf)
     }
@@ -77,7 +77,8 @@ abstract class AbstractConfiguration {
         }
 
         val kebabName = KStrings.toDotSeparatedKebabCase(name)
-        return System.getenv(kebabName) ?: System.getProperty(kebabName) ?: environment?.get(kebabName) ?: conf[kebabName]
+        return System.getenv(kebabName) ?: System.getProperty(kebabName) ?: environment?.get(kebabName)
+        ?: conf[kebabName]
     }
 
     /**
@@ -90,6 +91,21 @@ abstract class AbstractConfiguration {
      * @return property value, or `defaultValue` if the property doesn't exist.
      */
     open operator fun get(name: String, defaultValue: String) = get(name) ?: defaultValue
+
+    /**
+     * Attempts to retrieve the value associated with the given name; if not found, falls back to the specified fallback name.
+     *
+     * This method provides a way to attempt retrieval of configuration values in a prioritized manner.
+     * It tries to get the value for the primary name first. If it is not found (i.e., null),
+     * it proceeds to try the fallback name.
+     *
+     * @param name The primary name to look up the value.
+     * @param fallbackName The secondary name used if the primary name does not yield a value.
+     * @return The retrieved value, or null if neither the primary nor the fallback name yields a value.
+     */
+    open fun getWithFallback(name: String, fallbackName: String): String? {
+        return get(name) ?: get(fallbackName)
+    }
 
     /**
      * Get the value of the `name` property as an `int`.

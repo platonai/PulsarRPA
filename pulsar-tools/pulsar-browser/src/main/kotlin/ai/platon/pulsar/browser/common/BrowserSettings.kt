@@ -314,7 +314,10 @@ open class BrowserSettings constructor(
                 System.err.println("PulsarRPA: The number of browser contexts is too large, it may cause out of disk space")
             }
 
+            // PRIVACY_CONTEXT_NUMBER is deprecated, use BROWSER_CONTEXT_NUMBER instead
             System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
+            System.setProperty(BROWSER_CONTEXT_NUMBER, "$n")
+
             return BrowserSettings
         }
         /**
