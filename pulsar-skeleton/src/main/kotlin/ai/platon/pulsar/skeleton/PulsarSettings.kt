@@ -353,7 +353,7 @@ open class PulsarSettings {
      */
     fun withLLMProvider(provider: String?): PulsarSettings {
         // Validate that the provider is not null
-        if (provider == null) throw IllegalArgumentException("LLM provider cannot be null")
+        requireNotNull(provider) { "$LLM_PROVIDER NOT set" }
 
         // Set the LLM provider as a system property
         System.setProperty(LLM_PROVIDER, provider)
@@ -381,7 +381,7 @@ open class PulsarSettings {
      */
     fun withLLMName(name: String?): PulsarSettings {
         // Validate that the LLM name is not null
-        requireNotNull(name) { "LLM name cannot be null" }
+        requireNotNull(name) { "$LLM_NAME NOT set" }
 
         // Set the LLM name as a system property
         System.setProperty(LLM_NAME, name)
@@ -409,7 +409,7 @@ open class PulsarSettings {
      */
     fun withLLMAPIKey(key: String?): PulsarSettings {
         // Validate that the API key is not null before setting it as a system property.
-        requireNotNull(key) { "LLM API key cannot be null" }
+        requireNotNull(key) { "$LLM_API_KEY not set" }
 
         // Set the provided API key as a system property for global access.
         System.setProperty(LLM_API_KEY, key)

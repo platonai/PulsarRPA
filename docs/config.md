@@ -16,7 +16,7 @@ PulsarRPA is a standard Spring Boot application and supports multiple configurat
 
 You can configure PulsarRPA using either OS environment variables or JVM system properties.
 
-#### 💻 Example – Linux/macOS
+#### 💻 Example - OS environment variables
 
 For standard desktop usage:
 ```bash
