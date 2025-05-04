@@ -64,11 +64,7 @@ object InternalURLUtil {
                 return ""
             }
         } else if (groupMode == GroupMode.BY_DOMAIN) {
-            host = getDomainName(url)
-            if (host == null) {
-                logger.warn("Unknown domain for url: $url, using URL string as key")
-                host = url.toExternalForm()
-            }
+            host = UrlUtils.getTopPrivateDomain(url)
         } else {
             host = url.host
             if (host == null) {

@@ -38,8 +38,6 @@ public interface CapabilityTypes {
      * */
     String APP_TMP_BASE_DIR_KEY = "app.tmp.base.dir";
 
-    String DRY_RUN = "pulsar.dry.run";
-
     /**
      * Main loop
      * */
@@ -49,9 +47,7 @@ public interface CapabilityTypes {
 
     String LIMIT = "limit";
 
-    String CRAWL_MAX_DISTANCE = "crawl.max.distance";
-
-    String BATCH_ID = "batch.name";
+    String BATCH_ID = "batch.id";
 
     String PARAM_JOB_NAME = "job.name";
 
@@ -64,21 +60,9 @@ public interface CapabilityTypes {
      * */
     String METRICS_ENABLED = "metrics.enabled";
 
-    /**
-     * Distribution
-     */
-    String PULSAR_MASTER_HOST = "pulsar.master.host";
-
-    String PULSAR_MASTER_PORT = "pulsar.master.port";
-
     ///////////////////////////////////////////////////////////////////////////
     // Crawl section
 
-    /**
-     * The class name of the page event handler.
-     * <p>
-     * <code>System.setProperty(CapabilityTypes.PAGE_EVENT_CLASS, "ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEvent")</code>
-     * */
     String PAGE_EVENT_CLASS = "page.eventHandlers.class";
 
     ///////////////////////////////////////////////////////////////////////////
@@ -92,29 +76,14 @@ public interface CapabilityTypes {
 
     String STORAGE_DATA_STORE_CLASS = "storage.data.store.class";
 
-    String STORAGE_DATUM_EXPIRES = "storage.datum.expires";
-
     ///////////////////////////////////////////////////////////////////////////
     // Spring
 
     String APPLICATION_CONTEXT_CONFIG_LOCATION = "application.context.config.location";
 
     ///////////////////////////////////////////////////////////////////////////
-    // Inject phrase
-
-    /**
-     * Inject parameters
-     */
-    String INJECT_SCORE = "inject.score";
-
-
-    ///////////////////////////////////////////////////////////////////////////
     // Load phrase
 
-    /**
-     * Load parameters
-     */
-    String LOAD_STRATEGY = "load.strategy";
     /**
      * Deactivate the fetch component, ensuring that all pages are loaded exclusively from storage
      * and never fetched from the Internet.
@@ -126,54 +95,15 @@ public interface CapabilityTypes {
     ///////////////////////////////////////////////////////////////////////////
     // Fetch phrase
 
-    /**
-     * Fetch parameters
-     */
-    String FETCH_MODE = "fetch.fetch.mode";
-
     String FETCH_CONCURRENCY = "fetch.concurrency";
-
-    String FETCH_JOB_TIMEOUT = "fetch.job.timeout";
 
     String FETCH_TASK_TIMEOUT = "fetch.task.timeout";
 
-    String FETCH_PENDING_TIMEOUT = "fetch.pending.timeout";
-
     String FETCH_MAX_HOST_FAILURES = "fetch.max.host.failures";
-
-    String FETCH_QUEUE_MODE = "fetch.queue.mode";
-
-    String FETCH_QUEUE_RETUNE_INTERVAL = "fetch.pending.queue.check.time";
-
-    String FETCH_FEEDER_INIT_BATCH_SIZE = "fetch.feeder.init.batch.size";
-
-    String FETCH_THREADS_PER_POOL = "fetch.threads.per.pool";
-
-    String FETCH_THROUGHPUT_PAGES_PER_SECOND = "fetch.throughput.threshold.pages";
-
-    String FETCH_THROUGHPUT_THRESHOLD_SEQENCE = "fetch.throughput.threshold.sequence";
-
-    String FETCH_THROUGHPUT_CHECK_INTERVAL = "fetch.throughput.check.interval";
-
-    String FETCH_CHECK_INTERVAL = "fetch.check.interval";
-
-    String FETCH_QUEUE_DELAY = "fetch.queue.delay";
-
-    String FETCH_QUEUE_MIN_DELAY = "fetch.queue.min.delay";
-
-    String FETCH_MIN_INTERVAL = "fetch.interval.min";
 
     String FETCH_MAX_INTERVAL = "fetch.interval.max";
 
-    String FETCH_INTERVAL = "fetch.fetch.interval";
-
     String FETCH_DEFAULT_INTERVAL = "fetch.default.interval";
-
-    String FETCH_MAX_RETRY = "fetch.retry.max";
-
-    String FETCH_STORE_CONTENT = "fetch.store.content";
-
-    String FETCH_NET_BANDWIDTH_M = "fetcher.net.bandwidth.m";
 
     /**
      * The maximum number of pages to export in fetch phrase.
@@ -181,7 +111,7 @@ public interface CapabilityTypes {
     String FETCH_PAGE_AUTO_EXPORT_LIMIT = "fetch.page.auto.export.limit";
 
     /**
-     * Browser
+     * Fetch
      * */
     String FETCH_PAGE_LOAD_TIMEOUT = "fetch.page.load.timeout";
     String FETCH_SCRIPT_TIMEOUT = "fetch.script.timeout";
@@ -243,7 +173,6 @@ public interface CapabilityTypes {
     /**
      * The web driver to use
      * */
-    String BROWSER_WEB_DRIVER_CLASS = "browser.web.driver.class";
     String BROWSER_WEB_DRIVER_PRIORITY = "browser.web.driver.priority";
     String BROWSER_DRIVER_POOL_IDLE_TIMEOUT = "browser.driver.pool.idle.timeout";
     String BROWSER_TYPE = "browser.type";
@@ -282,9 +211,6 @@ public interface CapabilityTypes {
     ///////////////////////////////////////////////////////////////////////////
     // Proxy
 
-    /**
-     * Proxy
-     */
     String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
     String PROXY_POOL_MANAGER_CLASS = "proxy.pool.manager.class";
     String PROXY_LOADER_CLASS = "proxy.loader.class";
@@ -303,9 +229,6 @@ public interface CapabilityTypes {
     ///////////////////////////////////////////////////////////////////////////
     // Parse phrase
 
-    /**
-     * Parser parameters
-     */
     String PARSE_TIMEOUT = "parser.timeout";
     String PARSE_MAX_URL_LENGTH = "parse.max.url.length";
     String PARSE_MIN_ANCHOR_LENGTH = "parse.min.anchor.length";

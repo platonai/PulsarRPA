@@ -58,6 +58,7 @@ Example: `application-private.properties`
 For desktop user:
 
 ```properties
+# browser.context.mode=SYSTEM_DEFAULT
 deepseek.api.key=
 ```
 
@@ -98,6 +99,9 @@ docker run -d -p 8182:8182 `
   -e BROWSER_DISPLAY_MODE=HEADLESS `
   galaxyeye88/pulsar-rpa:latest
 ```
+
+> ⚠️ **Note**: Docker users may need to warm up the before crawling to avoid bot detection, 
+> for example, visit the home page and open some arbitrary pages.
 
 ---
 
