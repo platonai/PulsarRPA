@@ -30,12 +30,11 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 ### ▶️ Step 2: Run with Custom LLM Settings
 
 ```bash
-java -DOPENAI_API_KEY=${DEEPSEEK_API_KEY} \
+java -DOPENAI_API_KEY=${OPENAI_API_KEY} \
      -DOPENAI_MODEL_NAME=${OPENAI_MODEL_NAME} \
      -DOPENAI_BASE_URL=${OPENAI_BASE_URL} \
      -jar PulsarRPA.jar
 ```
-
 
 ### 🧩 Supported Environment Variables:
 

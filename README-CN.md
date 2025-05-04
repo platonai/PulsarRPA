@@ -50,12 +50,13 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 ```
 
 ```bash
-java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+export DEEPSEEK_API_KEY=YOUR-DEEPSEEK_API_KEY
+java -jar PulsarRPA.jar
 ```
 
 > 🔍 **提示：** 即使不设置 `DEEPSEEK_API_KEY`，高级用户仍可以使用所有进阶功能。
 
-🔗 [选择其他 LLM 提供商](docs/config/llm/llm-config-advanced.md)
+🔗 [选择其他 LLM 提供商](docs/config/llm/llm-config)
 
 ### 📦 下载链接
 

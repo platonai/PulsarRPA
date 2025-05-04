@@ -111,14 +111,19 @@ data class BrowserId(
 
         fun create(browserType: BrowserType, contextDir: Path) = BrowserId(PrivacyAgent.create(browserType, contextDir))
 
-        fun createRandom() = create(PrivacyContext.RANDOM_CONTEXT_DIR)
-
-        fun createRandom(browserType: BrowserType) = create(browserType, PrivacyContext.createRandom(browserType))
-
         fun createDefault() = create(PrivacyContext.DEFAULT_CONTEXT_DIR)
 
         fun createDefault(browserType: BrowserType) =
             create(browserType, PrivacyContext.DEFAULT_CONTEXT_DIR)
+
+        fun createSystemDefault() = create(PrivacyContext.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER)
+
+        fun createSystemDefault(browserType: BrowserType) =
+            create(browserType, PrivacyContext.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER)
+
+        fun createRandom() = create(PrivacyContext.RANDOM_CONTEXT_DIR)
+
+        fun createRandom(browserType: BrowserType) = create(browserType, PrivacyContext.createRandom(browserType))
 
         fun createNextSequential() = create(PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
 

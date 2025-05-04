@@ -205,6 +205,10 @@ public interface CapabilityTypes {
      */
     String BROWSER_CONTEXT_NUMBER = "browser.context.number";
     /**
+     * The number of active privacy contexts.
+     */
+    String BROWSER_PROFILE_MODE = "browser.profile.mode";
+    /**
      * The minimal number of sequential privacy agents, the active privacy contexts is chosen from them.
      * */
     String MIN_SEQUENTIAL_PRIVACY_AGENT_NUMBER = "min.sequential.privacy.agent.number";

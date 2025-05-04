@@ -56,12 +56,13 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 ```
 
 ```bash
-java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+export DEEPSEEK_API_KEY=YOUR-DEEPSEEK_API_KEY
+java -jar PulsarRPA.jar
 ```
 
 > 🔍 **Note:** Advanced users can still access all advanced features without setting `DEEPSEEK_API_KEY`.
 
-🔗 [Choose Another LLM Provider](docs/config/llm/llm-config-advanced.md)
+🔗 [Choose Another LLM Provider](docs/config/llm/llm-config)
 
 ### 📦 Download Links
 
@@ -73,7 +74,6 @@ java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 ```shell
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
 ```
-
 
 ---
 
