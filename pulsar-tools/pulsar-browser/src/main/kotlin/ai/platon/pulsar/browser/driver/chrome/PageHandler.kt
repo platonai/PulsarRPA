@@ -5,6 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.js.JsUtils
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
@@ -196,7 +197,8 @@ class PageHandler(
      * */
     @Throws(ChromeDriverException::class)
     fun evaluateDetail(expression: String): Evaluate? {
-        return runtime?.evaluate(confuser.confuse(expression))
+        val iife = JsUtils.toIIFE(confuser.confuse(expression))
+        return runtime?.evaluate(iife)
     }
 
     /**
@@ -222,7 +224,8 @@ class PageHandler(
 
     @Throws(ChromeDriverException::class)
     fun evaluateValueDetail(expression: String): Evaluate? {
-        return evaluate(confuser.confuse(expression), returnByValue = true)
+        val iife = JsUtils.toIIFE(confuser.confuse(expression))
+        return evaluate(iife, returnByValue = true)
     }
 
     /**

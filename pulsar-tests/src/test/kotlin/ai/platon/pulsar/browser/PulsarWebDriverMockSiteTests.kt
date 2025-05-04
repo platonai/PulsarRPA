@@ -1,6 +1,7 @@
 package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.JsException
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
 
@@ -59,7 +60,36 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test evaluate multiple line expressions`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+    fun `test evaluate multi-line expressions`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+        val code = """
+() => {
+  const a = 10;
+  const b = 20;
+  return a * b;
+}
+        """.trimIndent()
+
+        val result = driver.evaluate(code)
+        assertEquals(200, result)
+
+        val code2 = """
+  const a = 10;
+  const b = 20;
+  return a * b;
+        """.trimIndent()
+
+        // converted to "// ❌ Unsupported format: not a valid JS function"
+
+        val result2 = driver.evaluateValueDetail(code2)
+        println(result2)
+        assertNotNull(result2)
+        val exception = result2.exception
+        assertNull(exception)
+        // assertIs<JsException>(exception)
+    }
+
+    @Test
+    fun `test evaluate IIFE (Immediately Invoked Function Expression)`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val code = """
 (() => {
   const a = 10;
@@ -164,7 +194,5 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         val node = map["0"]
         println(node)
         assertNotNull(node)
-
-        readln()
     }
 }

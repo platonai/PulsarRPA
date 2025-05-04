@@ -1323,15 +1323,15 @@ interface WebDriver : Closeable {
      * val title = driver.evaluate("document.title")
      * ```
      *
-     * To execute multi-line JavaScript code:
+     * Multi-line JavaScript code:
      *
      * ```kotlin
      * val code = """
-     * (() => {
+     * () => {
      *   const a = 10;
      *   const b = 20;
      *   return a * b;
-     * })()
+     * }
      * """.trimIndent()
      *
      * val result = driver.evaluate(code)
@@ -1388,11 +1388,11 @@ interface WebDriver : Closeable {
      *
      * ```kotlin
      * val code = """
-     * (() => {
+     * () => {
      *   const a = 10;
      *   const b = 20;
      *   return a * b;
-     * })()
+     * }
      * """.trimIndent()
      *
      * val result = driver.evaluate(code)
