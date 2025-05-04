@@ -17,7 +17,7 @@ import kotlin.test.Test
 
 class LoadingWebDriverPoolTest {
     private val config = ImmutableConfig()
-    private val browserId = BrowserId.createRandom(BrowserType.PLAYWRIGHT_CHROME)
+    private val browserId = BrowserId.createRandomTemp(BrowserType.PLAYWRIGHT_CHROME)
     private val poolManager = DefaultWebDriverPoolManager(config)
     private lateinit var pool: LoadingWebDriverPool
     private val seeds = LinkExtractors.fromResource("seeds/seeds.txt")

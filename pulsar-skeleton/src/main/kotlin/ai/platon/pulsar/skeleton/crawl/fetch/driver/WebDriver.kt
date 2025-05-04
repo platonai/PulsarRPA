@@ -1192,6 +1192,84 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String)
 
+
+
+
+
+
+
+
+    /**
+     * Returns the node's property value, the node is located by [selector], the property is [attrName].
+     *
+     * If the node does not exist, or the property does not exist, returns null.
+     *
+     * ```kotlin
+     * val classes = driver.selectFirstPropertyOrNull("input#input", "value")
+     * ```
+     *
+     * @param selector The selector to locate the node.
+     * @param propName The property name to retrieve.
+     * @return The property value of the node.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectFirstPropertyValueOrNull(selector: String, propName: String): String?
+
+    /**
+     * Returns the nodes' property values, the nodes are located by [selector], the property is [propName].
+     *
+     * If the nodes do not exist, or the property does not exist, returns an empty list.
+     *
+     * ```kotlin
+     * val classes = driver.selectPropertyAll("input#input", "value")
+     * ```
+     *
+     * @param selector The selector to locate the nodes.
+     * @param propName The property name to retrieve.
+     * @param start The offset of the first node to select.
+     * @param limit The maximum number of nodes to select.
+     * @return The property values of the nodes.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectPropertyValueAll(selector: String, propName: String, start: Int = 0, limit: Int = 10000): List<String>
+
+    /**
+     * Set the property of an element located by [selector].
+     *
+     * ```kotlin
+     * driver.setProperty("input#input", "value")
+     * ```
+     *
+     * @param selector The CSS query to select an element.
+     * @param propName The property name to set.
+     * @param propValue The property value to set.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun setProperty(selector: String, propName: String, propValue: String)
+
+    /**
+     * Set the property of all elements matching the CSS query.
+     *
+     * ```kotlin
+     * driver.setPropertyAll("input#input", "value")
+     * ```
+     *
+     * @param selector The CSS query to select elements.
+     * @param propName The property name to set.
+     * @param propValue The property value to set.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun setPropertyAll(selector: String, propName: String, propValue: String)
+
+
+
+
+
+
+
+
+
+
     /**
      * Find hyperlinks in elements matching the CSS query.
      *
@@ -1244,6 +1322,24 @@ interface WebDriver : Closeable {
      * ```kotlin
      * val title = driver.evaluate("document.title")
      * ```
+     *
+     * To execute multi-line JavaScript code:
+     *
+     * ```kotlin
+     * val code = """
+     * (() => {
+     *   const a = 10;
+     *   const b = 20;
+     *   return a * b;
+     * })()
+     * """.trimIndent()
+     *
+     * val result = driver.evaluate(code)
+     * ```
+     *
+     * ### 🔍 Notes:
+     * * **Wrap the code in an IIFE (Immediately Invoked Function Expression)** to return a value.
+     * * **Escape line breaks** with `\n`.
      *
      * @param expression Javascript expression to evaluate
      * @return Remote object value in case of primitive values or JSON values (if it was requested).

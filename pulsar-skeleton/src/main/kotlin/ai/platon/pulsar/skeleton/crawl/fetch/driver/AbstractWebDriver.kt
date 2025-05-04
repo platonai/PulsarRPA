@@ -393,6 +393,9 @@ abstract class AbstractWebDriver(
         return result
     }
 
+
+
+
     @Throws(WebDriverException::class)
     override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
         val result = evaluate("__pulsar_utils__.selectFirstAttribute('$selector', '$attrName')")
@@ -422,6 +425,66 @@ abstract class AbstractWebDriver(
     override suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String) {
         evaluate("__pulsar_utils__.setAttributeAll('$selector', '$attrName', '$attrValue')")
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @Throws(WebDriverException::class)
+    override suspend fun selectFirstPropertyValueOrNull(selector: String, propName: String): String? {
+        val result = evaluate("__pulsar_utils__.selectFirstPropertyValue('$selector', '$propName')")
+        return result?.toString()
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun selectPropertyValueAll(selector: String, propName: String, start: Int, limit: Int): List<String> {
+        val end = start + limit
+        val expression = "__pulsar_utils__.selectPropertyValueAll('$selector', '$propName', $start, $end)"
+        val json = evaluate(expression)?.toString() ?: return listOf()
+        return jacksonObjectMapper().readValue(json)
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun setProperty(selector: String, propName: String, propValue: String) {
+        evaluate("__pulsar_utils__.setProperty('$selector', '$propName', '$propValue')")
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun setPropertyAll(selector: String, propName: String, propValue: String) {
+        evaluate("__pulsar_utils__.setPropertyAll('$selector', '$propName', '$propValue')")
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * Find hyperlinks in elements matching the CSS query.

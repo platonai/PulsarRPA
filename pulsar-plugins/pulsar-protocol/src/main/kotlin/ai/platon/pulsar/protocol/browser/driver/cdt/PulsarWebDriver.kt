@@ -138,6 +138,7 @@ class PulsarWebDriver(
         invokeOnPage("clearBrowserCookies") { networkAPI?.clearBrowserCookies() }
     }
 
+    // Use the JavaScript version in super class
     override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
         val name = "selectFirstAttributeOrNull"
         return invokeOnElement(selector, name) { page.getAttribute(it, attrName) }
@@ -369,6 +370,8 @@ class PulsarWebDriver(
             // keyboard?.type(text, randomDelayMillis("fill"))
             // For fill, there is no delay between key presses
             keyboard?.type(text, 0)
+
+            gap("fill")
         }
     }
 

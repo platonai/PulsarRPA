@@ -16,7 +16,7 @@ class MultiPrivacyContextManagerTest {
     
     @BeforeEach
     fun setUp() {
-        agent = PrivacyAgent.RANDOM_TEMP
+        agent = PrivacyAgent.createRandomTemp()
     }
     
     @AfterEach

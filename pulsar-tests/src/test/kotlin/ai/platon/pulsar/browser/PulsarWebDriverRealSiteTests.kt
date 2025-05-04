@@ -26,7 +26,7 @@ import java.util.*
 import kotlin.test.*
 
 @Tag("TimeConsumingTest")
-class PulsarWebDriverTests : WebDriverTestBase() {
+class PulsarWebDriverRealSiteTests : WebDriverTestBase() {
 
     private val fieldSelectors = mapOf(
         "01productTitle" to "#productTitle",
@@ -71,6 +71,14 @@ class PulsarWebDriverTests : WebDriverTestBase() {
         assertEquals(200, navigateEntry.mainResponseStatus)
         assertTrue { navigateEntry.mainResponseStatus == 200 }
         assertTrue { navigateEntry.mainResponseHeaders.isNotEmpty() }
+    }
+
+    @Test
+    fun `when open a JSON page then script is injected`() = runResourceWebDriverTest(jsonUrl) { driver ->
+        val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
+        assertEquals(2, r)
+
+        evaluateExpressions(driver, "JSON")
     }
 
     @Test
@@ -179,14 +187,6 @@ class PulsarWebDriverTests : WebDriverTestBase() {
         }
     }
 
-    @Test
-    fun `when open a JSON page then script is injected`() = runResourceWebDriverTest(jsonUrl) { driver ->
-        val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
-        assertEquals(2, r)
-        
-        evaluateExpressions(driver, "JSON")
-    }
-    
     @Test
     fun `Ensure injected js variables are not seen`() = runWebDriverTest(originUrl, browser) { driver ->
         val windowVariables = driver.evaluate("JSON.stringify(Object.keys(window))").toString()

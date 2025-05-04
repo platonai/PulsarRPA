@@ -697,6 +697,22 @@ __pulsar_utils__.firstAttr = function(selector, attrName) {
     return __pulsar_utils__.selectFirstAttribute(selector, attrName)
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * Select the first element and extract the text
  *
@@ -774,6 +790,118 @@ __pulsar_utils__.setAttributeAll = function(selector, attrName, attrValue) {
     let elements = document.querySelectorAll(selector)
     elements.forEach(e => e.setAttribute(attrName, attrValue))
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Select the first element and retrieve the property value
+ *
+ * @param  {String} selector
+ * @param  {String} propName
+ * @return {String|null}
+ */
+__pulsar_utils__.selectFirstPropertyValue = function(selector, propName) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        return element[propName]
+    }
+    return null
+};
+
+/**
+ * Select all the matching elements and extract the property value with given name.
+ *
+ * @param  {String} selector
+ * @param  {String} propName
+ * @param  {Number} start The beginning index of the specified portion of the array.
+ * If start is undefined, then the slice begins at index 0.
+ * @param  {Number} end The end index of the specified portion of the array. This is exclusive of the element at the index 'end'.
+ * If end is undefined, then the slice extends to the end of the array.
+ * @return {string} property values in json format
+ */
+__pulsar_utils__.selectPropertyValueAll = function(selector, propName, start, end) {
+    let elements = document.querySelectorAll(selector)
+    let values = Array.from(elements)
+        .map(e => e[propName])
+        .filter(v => v != null)
+    if (start || end) {
+        values = values.slice(start, end)
+    }
+    return JSON.stringify(values, null, 2)
+};
+
+/**
+ * Select elements and set the property value
+ *
+ * @param {String} selector
+ * @param {String} propName
+ * @param {String} propValue
+ */
+__pulsar_utils__.setProperty = function(selector, propName, propValue) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        element[propName] = propValue
+    }
+};
+
+/**
+ * Select elements and set the property value
+ *
+ * @param {String} selector
+ * @param {String} propName
+ * @param {String} propValue
+ */
+__pulsar_utils__.setPropertyAll = function(selector, propName, propValue) {
+    let elements = document.querySelectorAll(selector)
+    elements.forEach(e => e[propName] = propValue)
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Select the first anchor element and extract the link.

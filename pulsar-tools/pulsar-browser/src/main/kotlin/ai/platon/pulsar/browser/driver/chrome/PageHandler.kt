@@ -78,10 +78,16 @@ class PageHandler(
     
     @Throws(ChromeDriverException::class)
     fun getAttribute(nodeId: Int, attrName: String): String? {
-        val attributes = domAPI?.getAttributes(nodeId)
-        return attributes?.getOrNull(attributes.indexOf(attrName) + 1)
+        // `attributes`: n1, v1, n2, v2, n3, v3, ...
+        val attributes = domAPI?.getAttributes(nodeId) ?: return null
+        val nameIndex = attributes.indexOf(attrName)
+        if (nameIndex < 0) {
+            return null
+        }
+        val valueIndex = nameIndex + 1
+        return attributes.getOrNull(valueIndex)
     }
-    
+
     @Throws(ChromeDriverException::class)
     fun setAttribute(nodeId: Int, attrName: String, attrValue: String) {
         domAPI?.setAttributeValue(nodeId, attrName, attrValue)

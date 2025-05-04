@@ -7,20 +7,20 @@ import org.junit.jupiter.api.Assertions.*
 class PrivacyAgentTest {
     @org.junit.jupiter.api.Test
     fun testGetFingerprint() {
-        val privacyAgent = PrivacyAgent.RANDOM_TEMP
+        val privacyAgent = PrivacyAgent.createRandomTemp()
         val fingerprint = privacyAgent.fingerprint
         assertNotNull(fingerprint)
     }
     @org.junit.jupiter.api.Test
     fun testGetId() {
-        val privacyAgent = PrivacyAgent.RANDOM_TEMP
+        val privacyAgent = PrivacyAgent.createRandomTemp()
         val id = privacyAgent.id
         assertNotNull(id)
     }
     
     @org.junit.jupiter.api.Test
     fun testToJSON() {
-        val privacyAgent = PrivacyAgent.RANDOM_TEMP
+        val privacyAgent = PrivacyAgent.createRandomTemp()
         privacyAgent.fingerprint = Fingerprint.EXAMPLE
         val json = prettyPulsarObjectMapper().writeValueAsString(privacyAgent)
         val obj = prettyPulsarObjectMapper().readValue(json, PrivacyAgent::class.java)

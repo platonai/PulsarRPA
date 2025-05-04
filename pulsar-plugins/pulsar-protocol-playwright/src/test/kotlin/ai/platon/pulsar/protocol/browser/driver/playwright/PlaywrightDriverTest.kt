@@ -13,7 +13,7 @@ import kotlin.test.*
 
 class PlaywrightDriverTest {
 
-    val browserId = BrowserId.createRandom(BrowserType.PLAYWRIGHT_CHROME)
+    val browserId = BrowserId.createRandomTemp(BrowserType.PLAYWRIGHT_CHROME)
     val launcherOptions = LauncherOptions()
     val chromeOptions = ChromeOptions()
     lateinit var browser: PlaywrightBrowser

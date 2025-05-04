@@ -110,7 +110,7 @@ open class BrowserSettings constructor(
         private fun withSystemDefaultBrowserInternal(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
-            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(1000)
+            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(1000).withSPA()
             return BrowserSettings
         }
 
@@ -130,8 +130,7 @@ open class BrowserSettings constructor(
         private fun withDefaultBrowserInternal(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.DefaultPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
-            withBrowser(browserType)
-            maxBrowserContexts(1).maxOpenTabs(1000)
+            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(1000).withSPA()
             return BrowserSettings
         }
 
@@ -151,8 +150,7 @@ open class BrowserSettings constructor(
         private fun withPrototypeBrowserInternal(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
-            withBrowser(browserType)
-            maxBrowserContexts(1).maxOpenTabs(1000)
+            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(1000).withSPA()
             return BrowserSettings
         }
 
