@@ -2,6 +2,7 @@ package ai.platon.pulsar.test.rest
 
 import ai.platon.pulsar.common.ResourceLoader
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
