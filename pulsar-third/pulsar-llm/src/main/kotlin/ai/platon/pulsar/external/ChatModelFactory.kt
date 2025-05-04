@@ -1,5 +1,6 @@
 package ai.platon.pulsar.external
 
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.warn
 import ai.platon.pulsar.external.impl.ChatModelImpl
@@ -30,9 +31,9 @@ object ChatModelFactory {
             return true
         }
 
-        val provider = conf["llm.provider"]
-        val llm = conf["llm.name"]
-        val apiKey = conf["llm.apiKey"]
+        val provider = conf[LLM_PROVIDER]
+        val llm = conf[LLM_NAME]
+        val apiKey = conf[LLM_API_KEY]
 
         return provider != null && llm != null && apiKey != null
     }
@@ -64,9 +65,9 @@ object ChatModelFactory {
         }
 
         val documentPath = "https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/llm-config-advanced.md"
-        val provider = requireNotNull(conf["llm.provider"])  { "llm.provider is not set, see $documentPath" }
-        val modelName = requireNotNull(conf["llm.name"]) { "llm.name is not set, see $documentPath" }
-        val apiKey = requireNotNull(conf["llm.apiKey"]) { "llm.apiKey is not set, see $documentPath" }
+        val provider = requireNotNull(conf[LLM_PROVIDER])  { "$LLM_PROVIDER is not set, see $documentPath" }
+        val modelName = requireNotNull(conf[LLM_NAME]) { "$LLM_NAME is not set, see $documentPath" }
+        val apiKey = requireNotNull(conf[LLM_API_KEY]) { "$LLM_API_KEY is not set, see $documentPath" }
 
         return getOrCreate(provider, modelName, apiKey, conf)
     }

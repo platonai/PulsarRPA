@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.browser.BrowserContextMode
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 
 /**
  * The [PulsarSettings] class defines a convenient interface to control the behavior of PulsarRPA.
@@ -355,7 +356,7 @@ open class PulsarSettings {
         if (provider == null) throw IllegalArgumentException("LLM provider cannot be null")
 
         // Set the LLM provider as a system property
-        System.setProperty("llm.provider", provider)
+        System.setProperty(LLM_PROVIDER, provider)
         return this
     }
 
@@ -383,7 +384,7 @@ open class PulsarSettings {
         requireNotNull(name) { "LLM name cannot be null" }
 
         // Set the LLM name as a system property
-        System.setProperty("llm.name", name)
+        System.setProperty(LLM_NAME, name)
         return this
     }
 
@@ -411,7 +412,7 @@ open class PulsarSettings {
         requireNotNull(key) { "LLM API key cannot be null" }
 
         // Set the provided API key as a system property for global access.
-        System.setProperty("llm.apiKey", key)
+        System.setProperty(LLM_API_KEY, key)
         return this
     }
 }

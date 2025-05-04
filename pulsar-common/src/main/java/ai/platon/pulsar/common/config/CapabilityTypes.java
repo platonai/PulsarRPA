@@ -293,7 +293,6 @@ public interface CapabilityTypes {
     String PROXY_POOL_CAPACITY = "proxy.pool.size";
     String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
     String PROXY_IDLE_TIMEOUT = "proxy.idle.timeout";
-    String PROXY_ENABLE_DEFAULT_PROVIDERS = "proxy.enable.default.providers";
 
     ///////////////////////////////////////////////////////////////////////////
     // Network
@@ -301,101 +300,24 @@ public interface CapabilityTypes {
     String HTTP_TIMEOUT = "http.timeout";
     String HTTP_FETCH_MAX_RETRY = "http.fetch.max.retry";
 
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Generate phrase
-
-    /**
-     * Generator parameters
-     */
-    String PARTITION_MODE_KEY = "partition.url.mode";
-    String PARTITION_URL_SEED = "partition.url.seed";
-
-    String GENERATE_TIME = "generate.generate.time";
-    String GENERATE_UPDATE_CRAWLDB = "generate.update.crawldb";
-    String GENERATE_MIN_SCORE = "generate.min.score";
-    String GENERATE_REGENERATE = "generate.regenerate";
-    String GENERATE_REGENERATE_SEEDS = "generate.regenerate.seeds";
-    String GENERATE_FILTER = "generate.filter";
-    String GENERATE_NORMALISE = "generate.normalise";
-    String GENERATE_MAX_TASKS_PER_HOST = "generate.max.tasks.per.host";
-    String GENERATE_SITE_GROUP_MODE = "generate.count.mode";
-    String GENERATE_TOP_N = "generate.topN";
-    String GENERATE_LAST_GENERATED_ROWS = "generate.last.generated.rows";
-    String GENERATE_CUR_TIME = "generate.curr.time";
-    String GENERATE_DETAIL_PAGE_RATE = "generate.detail.page.rate";
-    String GENERATE_DELAY = "crawl.gen.delay";
-    String GENERATE_RANDOM_SEED = "generate.partition.seed";
-
-
     ///////////////////////////////////////////////////////////////////////////
     // Parse phrase
 
     /**
      * Parser parameters
      */
-    String PARSE_PARSE = "parser.parse";
-    String PARSE_REPARSE = "parser.reparse";
     String PARSE_TIMEOUT = "parser.timeout";
-    String PARSE_NORMALISE = "parse.normalise";
     String PARSE_MAX_URL_LENGTH = "parse.max.url.length";
     String PARSE_MIN_ANCHOR_LENGTH = "parse.min.anchor.length";
     String PARSE_MAX_ANCHOR_LENGTH = "parse.max.anchor.length";
-    String PARSE_LINK_PATTERN = "parse.link.pattern";
-    String PARSE_MAX_LINKS_PER_PAGE = "parse.max.links";
-    String PARSE_IGNORE_EXTERNAL_LINKS = "parse.ignore.external.links";
-    String PARSE_SKIP_TRUNCATED = "parser.skip.truncated";
-    String PARSE_HTML_IMPL = "parser.html.impl";
     String PARSE_SUPPORT_ALL_CHARSETS = "parser.support.all.charsets";
-    String PARSE_SUPPORTED_CHARSETS = "parser.supported.charsets";
     String PARSE_DEFAULT_ENCODING = "parser.character.encoding.default";
-    String PARSE_CACHING_FORBIDDEN_POLICY = "parser.caching.forbidden.policy";
-    String PARSE_TIKA_HTML_MAPPER_NAME = "tika.htmlmapper.classname";
-
-    String PARSE_RETRIEVE_FADED_LINKS = "parse.retrieve.faded.links";
 
     ///////////////////////////////////////////////////////////////////////////
-    // Update phrase
-
-    /**
-     * DbUpdater parameters
-     */
-    String UPDATE_MAX_INLINKS = "update.max.inlinks";
-    String UPDATE_IGNORE_IN2OUT_GRAPH = "update.ignore.in.graph";
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Scheduling
-
-    String SCHEDULE_INC_RATE = "db.fetch.schedule.adaptive.inc_rate";
-    String SCHEDULE_DEC_RATE = "db.fetch.schedule.adaptive.dec_rate";
-    String SCHEDULE_MIN_INTERVAL = "db.fetch.schedule.adaptive.min_interval";
-    String SCHEDULE_MAX_INTERVAL = "db.fetch.schedule.adaptive.max_interval";
-    String SCHEDULE_SEED_MAX_INTERVAL = "db.fetch.schedule.adaptive.seed_max_interval";
-    String SCHEDULE_SYNC_DELTA = "db.fetch.schedule.adaptive.sync_delta";
-    String SCHEDULE_SYNC_DELTA_RATE = "db.fetch.schedule.adaptive.sync_delta_rate";
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Scoring
-
-    /**
-     * Scoring
-     */
-    // divisor may have a better name
-    String SCORE_SORT_ERROR_COUNTER_DIVISOR = "score.sort.error.counter.divisor";
-    String SCORE_SORT_WEB_GRAPH_SCORE_DIVISOR = "score.sort.web.graph.score.divisor";
-    String SCORE_SORT_CONTENT_SCORE_DIVISOR = "score.sort.content.score.divisor";
-
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Indexing
-
-    /**
-     * Indexing parameters
-     */
-    String INDEXER_JIT = "indexer.just.in.time";
-    String INDEXER_HOSTNAME = "index.server.hostname";
-    String INDEXER_PORT = "index.server.port";
-
+    // LLM
+    String LLM_PROVIDER = "llm.provider";
+    String LLM_NAME = "llm.name";
+    String LLM_API_KEY = "llm.apiKey";
 
     ///////////////////////////////////////////////////////////////////////////
     // Other

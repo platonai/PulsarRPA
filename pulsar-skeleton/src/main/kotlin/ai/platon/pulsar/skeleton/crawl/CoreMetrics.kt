@@ -11,7 +11,6 @@ import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
@@ -77,7 +76,7 @@ class CoreMetrics(
     }
 
     private val logger = LoggerFactory.getLogger(CoreMetrics::class.java)!!
-    val groupMode = conf.getEnum(PARTITION_MODE_KEY, InternalURLUtil.GroupMode.BY_HOST)
+    val groupMode = InternalURLUtil.GroupMode.BY_HOST
     val maxHostFailureEvents = conf.getInt(FETCH_MAX_HOST_FAILURES, 20)
 
     /**
