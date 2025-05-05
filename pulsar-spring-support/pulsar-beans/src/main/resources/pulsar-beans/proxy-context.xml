@@ -7,13 +7,8 @@
 
     <import resource="common-context.xml"/>
 
-    <bean id="universalProxyVendorLoader" class="ai.platon.pulsar.skeleton.common.proxy.UniversalProxyVendorLoader">
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <bean id="proxyLoaderFactory" class="ai.platon.pulsar.common.proxy.ProxyLoaderFactory" destroy-method="close">
         <constructor-arg ref="conf"/>
-        <property name="specifiedProxyLoader" ref="universalProxyVendorLoader" />
     </bean>
 
     <bean id="proxyLoader" factory-bean="proxyLoaderFactory" factory-method="get" destroy-method="close"/>
