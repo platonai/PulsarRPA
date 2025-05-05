@@ -219,10 +219,9 @@ public interface CapabilityTypes {
     String PROXY_IDLE_TIMEOUT = "proxy.idle.timeout";
 
     /**
-     * The URL of ProxyHub server.
-     * @see <a href='https://github.com/platonai/ProxyHub'>ProxyHub</a>
+     * Any URL to fetch proxy rotation.
      * */
-    String PROXY_HUB_URL = "proxy.hub.url";
+    String PROXY_ROTATION_URL = "proxy.rotation.url";
 
     ///////////////////////////////////////////////////////////////////////////
     // Network

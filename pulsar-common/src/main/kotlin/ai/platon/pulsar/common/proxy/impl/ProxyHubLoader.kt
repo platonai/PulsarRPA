@@ -1,17 +1,20 @@
-package ai.platon.pulsar.common.proxy
+package ai.platon.pulsar.common.proxy.impl
 
-import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_HUB_URL
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
+import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyLoader
+import ai.platon.pulsar.common.proxy.ProxyParser
 import ai.platon.pulsar.common.urls.UrlUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.time.Duration
 
 open class ProxyHubLoader(conf: ImmutableConfig) : ProxyLoader(conf) {
-    private val logger = LoggerFactory.getLogger(FileProxyLoader::class.java)
+    private val logger = LoggerFactory.getLogger(ProxyHubLoader::class.java)
 
     val baseUrl get() = conf[PROXY_HUB_URL]
+
+    override var parser: ProxyParser? = ProxyHubParser(conf)
 
     @Synchronized
     @Throws(IOException::class)
@@ -40,36 +43,17 @@ open class ProxyHubLoader(conf: ImmutableConfig) : ProxyLoader(conf) {
             return listOf()
         }
 
-        return parseProxyHub(response)
-    }
-
-    internal fun parseProxyHub(response: String): List<ProxyEntry> {
-        val tree = pulsarObjectMapper().readTree(response)
-        val status = tree["status"]?.asText() ?: "failed"
-        val message = tree["message"]
-        if (status != "success") {
-            logger.debug("Failed to load proxies | {}", message)
-            return listOf()
-        }
-
-        return try {
-            val proxies = tree["data"]["proxies"]
-            return proxies.map { proxy ->
-                val host = proxy["host"]?.asText() ?: ""
-                val port = proxy["port"]?.asInt() ?: 0
-                val username = proxy["username"]?.asText() ?: ""
-                val password = proxy["password"]?.asText() ?: ""
-                val type = proxy["type"]?.asText() ?: ""
-                val declaredTTL = proxy["declaredTTL"]?.asText() ?: ""
-                ProxyEntry.create(host, port, username, password, type, declaredTTL)
-            }
-       } catch (e: Exception) {
-            logger.debug("Failed to parse proxies | {}", e.message)
-            listOf()
-       }
+        return parser?.parse(response) ?: listOf()
     }
 
     companion object {
+        /**
+         * The URL of ProxyHub server.
+         *
+         * [ProxyHub](https://github.com/platonai/ProxyHub)
+         */
+        const val PROXY_HUB_URL: String = "proxy.hub.url"
+
         fun mockProxyHubResponse(): Map<String, Any> {
             val proxies = listOf(
                 ProxyEntry(
@@ -101,3 +85,4 @@ open class ProxyHubLoader(conf: ImmutableConfig) : ProxyLoader(conf) {
         }
     }
 }
+

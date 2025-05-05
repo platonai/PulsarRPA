@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Check all unavailable proxies, recover them if possible.
  * This might take a long time, so it should be run in a separate thread.
  */
-open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
+open class ProxyPool(conf: ImmutableConfig) : AutoCloseable {
 
     private val logger = LoggerFactory.getLogger(ProxyPool::class.java)
 
@@ -28,7 +28,6 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
     protected val pollingTimeout: Duration = conf.getDuration(PROXY_POOL_POLLING_TIMEOUT, Duration.ofSeconds(1))
     protected val proxyEntries = mutableSetOf<ProxyEntry>()
     protected val freeProxies = LinkedBlockingDeque<ProxyEntry>(capacity)
-    protected var numProxyBanned = 0
     protected val closed = AtomicBoolean()
 
     /**
@@ -77,9 +76,10 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
     }
 
     open fun report(proxyEntry: ProxyEntry) {
-        logger.info("Ban proxy <{}> after {} pages served in {} | total ban: {} | {}",
-                proxyEntry.outIp, proxyEntry.numSuccessPages, proxyEntry.elapsedTime.readable(),
-                numProxyBanned, proxyEntry)
+        logger.info(
+            "Ban proxy <{}> after {} pages served in {} | {}",
+            proxyEntry.outIp, proxyEntry.numSuccessPages, proxyEntry.elapsedTime.readable(), proxyEntry
+        )
     }
 
     open fun dump() {

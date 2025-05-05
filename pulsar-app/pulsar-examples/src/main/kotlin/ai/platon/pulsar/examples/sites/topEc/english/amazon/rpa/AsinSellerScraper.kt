@@ -13,6 +13,7 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.examples.sites.topEc.english.amazon.AmazonUrls
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
+import ai.platon.pulsar.skeleton.PulsarSettings
 import java.sql.ResultSet
 
 class AsinSellerScraper {
@@ -220,7 +221,7 @@ class AsinSellerScraper {
 }
 
 fun main() {
-    BrowserSettings.maxBrowsers(2).maxOpenTabs(4)
+    PulsarSettings().maxBrowserContexts(2).maxOpenTabs(4)
 
     val crawler = AsinSellerScraper()
     crawler.crawl()

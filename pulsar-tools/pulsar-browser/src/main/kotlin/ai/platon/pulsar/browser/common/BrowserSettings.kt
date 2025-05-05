@@ -269,7 +269,7 @@ open class BrowserSettings constructor(
             return BrowserSettings
         }
 
-        @Deprecated("Use maxBrowserContexts instead", ReplaceWith("maxBrowserContexts(n)" ))
+        @Deprecated("Use maxBrowserContexts instead", ReplaceWith("BrowserSettings.maxBrowserContexts(n)" ))
         @JvmStatic
         fun maxBrowsers(n: Int): Companion = maxBrowserContexts(n)
 

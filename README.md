@@ -210,19 +210,13 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 
 ## 🔧 Proxies
 
-PulsarRPA uses [ProxyHub](https://github.com/platonai/ProxyHub) to manage proxies.
+Enable the environment variable `PROXY_ROTATION_URL` to point to your ProxyHub instance:
 
 ```shell
-export PROXY_HUB_URL=http://localhost:8192/api/proxies
+export PROXY_ROTATION_URL=https://your.ip.provider/proxy-rotation-link
 ```
 
-Start ProxyHub with Docker Compose:
-
-```shell
-docker-compose -f docker/docker-compose.yaml up -d proxyhub
-```
-
-🔗 [ProxyHub](https://github.com/platonai/ProxyHub) – Learn how to manage your proxy providers.
+Every time open proxy rotation link, it should return a text that contains one or more new proxy IPs.
 
 ---
 
