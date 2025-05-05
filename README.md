@@ -199,10 +199,30 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 * [Amazon Product Page Scraping (100+ fields)](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [All Amazon Page Types Scraping](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
+---
+
 ## 📜 Documents
 
 * 📖 [Advanced Guides](docs/advanced-guides.md)
 * 📊 [REST API Examples](docs/rest-api-examples.md)
+
+---
+
+## 🔧 Proxies
+
+PulsarRPA uses [ProxyHub](https://github.com/platonai/ProxyHub) to manage proxies.
+
+```shell
+export PROXY_HUB_URL=http://localhost:8192/api/proxies
+```
+
+Start ProxyHub with Docker Compose:
+
+```shell
+docker-compose -f docker/docker-compose.yaml up -d proxyhub
+```
+
+🔗 [ProxyHub](https://github.com/platonai/ProxyHub) – Learn how to manage your proxy providers.
 
 ---
 
