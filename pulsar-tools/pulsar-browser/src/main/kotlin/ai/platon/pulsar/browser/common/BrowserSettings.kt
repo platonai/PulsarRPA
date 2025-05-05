@@ -379,22 +379,6 @@ open class BrowserSettings constructor(
             return BrowserSettings
         }
         /**
-         * Enable proxy if available.
-         * */
-        @JvmStatic
-        fun enableProxy(): Companion {
-            ProxyPoolManager.enableProxy()
-            return this
-        }
-        /**
-         * Disable proxy.
-         * */
-        @JvmStatic
-        fun disableProxy(): Companion {
-            ProxyPoolManager.disableProxy()
-            return this
-        }
-        /**
          * Export all pages automatically once they are fetched.
          *
          * The export directory is under AppPaths.WEB_CACHE_DIR.

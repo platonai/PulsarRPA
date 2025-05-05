@@ -136,8 +136,6 @@ class SearchAgent {
 }
 
 fun main() {
-    BrowserSettings.enableProxy()
-
     val agent = SearchAgent()
     agent.search()
 

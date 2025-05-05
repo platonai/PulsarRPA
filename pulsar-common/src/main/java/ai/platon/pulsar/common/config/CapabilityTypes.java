@@ -1,7 +1,5 @@
 package ai.platon.pulsar.common.config;
 
-import java.time.Duration;
-
 /**
  * Created by vincent on 17-1-17.
  * Copyright @ 2013-2023 Platon AI. All rights reserved
@@ -210,8 +208,8 @@ public interface CapabilityTypes {
 
     ///////////////////////////////////////////////////////////////////////////
     // Proxy
+    ///
 
-    String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
     String PROXY_POOL_MANAGER_CLASS = "proxy.pool.manager.class";
     String PROXY_LOADER_CLASS = "proxy.loader.class";
     String PROXY_MAX_FETCH_SUCCESS = "proxy.max.fetch.success";
@@ -220,6 +218,10 @@ public interface CapabilityTypes {
     String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
     String PROXY_IDLE_TIMEOUT = "proxy.idle.timeout";
 
+    /**
+     * The URL of ProxyHub server.
+     * @see <a href='https://github.com/platonai/ProxyHub'>ProxyHub</a>
+     * */
     String PROXY_HUB_URL = "proxy.hub.url";
 
     ///////////////////////////////////////////////////////////////////////////

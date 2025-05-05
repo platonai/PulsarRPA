@@ -4,13 +4,9 @@ import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_HUB_URL
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.UrlUtils
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.slf4j.LoggerFactory
 import java.io.IOException
-import java.net.Proxy
 import java.time.Duration
-import java.time.Instant
 
 open class ProxyHubLoader(conf: ImmutableConfig) : ProxyLoader(conf) {
     private val logger = LoggerFactory.getLogger(FileProxyLoader::class.java)
