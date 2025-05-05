@@ -79,6 +79,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         """.trimIndent()
 
         // converted to "// ❌ Unsupported format: not a valid JS function"
+        // so it's an empty expressions sent to the browser
 
         val result2 = driver.evaluateValueDetail(code2)
         println(result2)
