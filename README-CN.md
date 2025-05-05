@@ -197,7 +197,6 @@ select
 from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body');
 ```
 
-
 📚 示例代码仓库：
 * [亚马逊产品页面爬取 (100+ 字段)](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [所有亚马逊页面类型爬取](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
@@ -210,6 +209,16 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 - 📊 [REST API 示例](docs/rest-api-examples.md)
 
 ---
+
+## 🔧 代理设置
+
+将环境变量 `PROXY_ROTATION_URL` 设置为你的代理服务商提供的地址：
+
+```shell
+export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
+```
+
+每次访问该轮换地址时，应返回一个包含一个或多个新代理 IP 的响应。
 
 ## ✨ 特性概览
 

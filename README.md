@@ -210,13 +210,13 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 
 ## 🔧 Proxies
 
-Enable the environment variable `PROXY_ROTATION_URL` to point to your ProxyHub instance:
+Set the environment variable PROXY_ROTATION_URL to the URL provided by your proxy service:
 
 ```shell
-export PROXY_ROTATION_URL=https://your.ip.provider/proxy-rotation-link
+export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 ```
 
-Every time open proxy rotation link, it should return a text that contains one or more new proxy IPs.
+Each time the rotation URL is accessed, it should return a response containing one or more fresh proxy IPs.
 
 ---
 
