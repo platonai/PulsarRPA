@@ -16,9 +16,9 @@ import java.util.concurrent.TimeUnit
  * This might take a long time, so it should be run in a separate thread.
  */
 class LoadingProxyPool(
-        val proxyLoader: ProxyLoader,
-        conf: ImmutableConfig
-): ProxyPool(conf) {
+    val proxyLoader: ProxyLoader,
+    conf: ImmutableConfig
+) : ProxyPool(conf) {
 
     private val logger = LoggerFactory.getLogger(LoadingProxyPool::class.java)
 
@@ -61,9 +61,11 @@ class LoadingProxyPool(
     }
 
     override fun report(proxyEntry: ProxyEntry) {
-        logger.info("Ban proxy <{}> after {} pages served in {} | total ban: {}, banned ips: {} | {}",
-                proxyEntry.outIp, proxyEntry.numSuccessPages, proxyEntry.elapsedTime.readable(),
-                numProxyBanned, bannedIps.size, proxyEntry)
+        logger.info(
+            "Ban proxy <{}> after {} pages served in {} | total ban: {}, banned ips: {} | {}",
+            proxyEntry.outIp, proxyEntry.numSuccessPages, proxyEntry.elapsedTime.readable(),
+            numProxyBanned, bannedIps.size, proxyEntry
+        )
         val s = bannedSegments.chunked(20).joinToString("\n") { it.joinToString() }
         logger.info("Banned segments ({}): {}", bannedSegments.size, s)
     }
@@ -117,15 +119,17 @@ class LoadingProxyPool(
 
         val banState = handleBanState(proxy).takeIf { it.isBanned }?.also {
             numProxyBanned++
-            logger.info("Proxy is banned <{}> | bp: {}, bh: {}, bs: {} | {}",
-                    it, numProxyBanned, bannedIps.size, bannedSegments.size, proxy.display)
+            logger.info(
+                "Proxy is banned <{}> | bp: {}, bh: {}, bs: {} | {}",
+                it, numProxyBanned, bannedIps.size, bannedSegments.size, proxy.display
+            )
         }
 
         return proxy.takeIf { banState == null }
     }
 
     private fun handleBanState(proxyEntry: ProxyEntry): ProxyEntry.BanState {
-        val banStrategy = proxyLoader.banStrategy?:""
+        val banStrategy = proxyLoader.banStrategy ?: ""
         return when {
             banStrategy == "" -> ProxyEntry.BanState.OK
             banStrategy == "none" -> ProxyEntry.BanState.OK
@@ -150,6 +154,8 @@ class LoadingProxyPool(
         super.dump()
     }
 
-    override fun toString(): String = String.format("total %d, free: %d, banH: %d banS: %d",
-            proxyEntries.size, freeProxies.size, bannedIps.size, bannedSegments.size)
+    override fun toString(): String = String.format(
+        "total %d, free: %d, banH: %d banS: %d",
+        proxyEntries.size, freeProxies.size, bannedIps.size, bannedSegments.size
+    )
 }

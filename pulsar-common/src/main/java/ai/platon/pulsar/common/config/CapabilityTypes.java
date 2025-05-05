@@ -220,6 +220,8 @@ public interface CapabilityTypes {
     String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
     String PROXY_IDLE_TIMEOUT = "proxy.idle.timeout";
 
+    String PROXY_HUB_URL = "proxy.hub.url";
+
     ///////////////////////////////////////////////////////////////////////////
     // Network
 

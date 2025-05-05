@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.common.proxy.ProxyType
 import java.net.Proxy
 
 class TemporaryProxyLoader(

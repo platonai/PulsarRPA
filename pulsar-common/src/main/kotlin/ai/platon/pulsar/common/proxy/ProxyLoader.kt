@@ -16,7 +16,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * Load proxies from proxy vendors
  */
-abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
+abstract class ProxyLoader(
+    val conf: ImmutableConfig
+): AutoCloseable {
     companion object {
         val TEST_PROXY_FILE = AppPaths.PROXY_BASE_DIR.resolve("test-ip")
     }
