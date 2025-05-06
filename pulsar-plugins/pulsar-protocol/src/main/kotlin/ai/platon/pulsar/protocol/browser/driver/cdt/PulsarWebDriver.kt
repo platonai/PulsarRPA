@@ -684,6 +684,7 @@ class PulsarWebDriver(
         page.navigate(uri.toString())
     }
 
+    @Deprecated("Use openLocalFile instead")
     private fun openLocalFileDeprecated(url: String) {
         if (url.contains("?path=")) {
             val queryParams = URIBuilder(url).queryParams
@@ -730,7 +731,7 @@ class PulsarWebDriver(
             return
         }
 
-        tracer?.trace("onRequestWillBeSent | driver | {}", event.requestId)
+        tracer?.trace("onRequestWillBeSent | driver | requestId: {}", event.requestId)
 
         val chromeNavigateEntry = ChromeNavigateEntry(navigateEntry)
         chromeNavigateEntry.updateStateBeforeRequestSent(event)

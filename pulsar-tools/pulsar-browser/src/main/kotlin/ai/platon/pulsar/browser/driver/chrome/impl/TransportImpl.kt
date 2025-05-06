@@ -6,10 +6,11 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.getTracerOrNull
 import ai.platon.pulsar.common.warnForClose
 import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.lang3.StringUtils
-import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.net.URI
 import java.util.concurrent.Future
@@ -19,10 +20,10 @@ import java.util.function.Consumer
 import javax.websocket.*
 
 class TransportImpl : Transport {
-    private val logger = LoggerFactory.getLogger(TransportImpl::class.java)
-    private val tracer = logger.takeIf { it.isTraceEnabled }
+    private val logger = getLogger(this)
+    private val tracer = getTracerOrNull(this)
     private val closed = AtomicBoolean()
-    
+
     private lateinit var session: Session
     private val metricsPrefix = "c.i.WebSocketClient"
     private val metrics = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
@@ -54,13 +55,13 @@ class TransportImpl : Transport {
         val endpoint = object : Endpoint() {
             override fun onOpen(session: Session, config: EndpointConfig) {
                 webSocketService.onOpen(session, config)
-                // logger.info("Connected to ws server {}", uri)
+                tracer?.trace("Connected to ws server {}", uri)
             }
             
             override fun onClose(session: Session, closeReason: CloseReason) {
                 super.onClose(session, closeReason)
                 webSocketService.onClose(session, closeReason)
-                // logger.info("Closing ws server {}", uri)
+                tracer?.trace("Closing ws server {}", uri)
             }
             
             override fun onError(session: Session, e: Throwable?) {
@@ -92,10 +93,8 @@ class TransportImpl : Transport {
         meterRequests.mark()
         
         try {
-            tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
+            tracer?.trace("▶ Send {}", shortenMessage(message))
             session.basicRemote.sendText(message)
-        } catch (e: IllegalStateException) {
-            throw ChromeIOException("Failed to send message", e, isOpen)
         } catch (e: IOException) {
             throw ChromeIOException("Failed to send message", e, isOpen)
         }
@@ -106,10 +105,8 @@ class TransportImpl : Transport {
         meterRequests.mark()
 
         return try {
-            tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
+            tracer?.trace("▶ Send {}", shortenMessage(message))
             session.asyncRemote.sendText(message)
-        } catch (e: IllegalStateException) {
-            throw ChromeIOException("Failed to send message, caused by ${e.message}", e, isOpen)
         } catch (e: IOException) {
             throw ChromeIOException("Failed to send message, caused by ${e.message}", e, isOpen)
         }
@@ -161,7 +158,11 @@ class TransportImpl : Transport {
     override fun toString(): String {
         return session.requestURI.toString()
     }
-    
+
+    private fun shortenMessage(message: String, length: Int = 500): String {
+        return StringUtils.abbreviateMiddle(message, "...", length)
+    }
+
     companion object {
         private val instanceSequencer = AtomicInteger()
         

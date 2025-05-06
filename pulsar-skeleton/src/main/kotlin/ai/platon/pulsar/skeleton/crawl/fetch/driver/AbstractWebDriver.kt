@@ -1,12 +1,9 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.URLUtils
-import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
@@ -791,9 +788,9 @@ abstract class AbstractWebDriver(
 
         val dir = browser.id.contextDir.resolve("driver.$id/js")
         Files.createDirectories(dir)
-        val report = Files.writeString(dir.resolve("preload.all.js"), scripts)
+        val path = Files.writeString(dir.resolve("preload.all.js"), scripts)
 
-        val tracer = getLogger(this).takeIf { it.isTraceEnabled }
-        tracer?.trace("All injected js: file://{}", report)
+        val tracer = getTracerOrNull(this)
+        tracer?.trace("All injected js: {}", path.toUri())
     }
 }

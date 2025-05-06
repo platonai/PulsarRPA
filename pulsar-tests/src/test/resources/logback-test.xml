@@ -16,8 +16,8 @@
 
     <logger name="ai.platon.pulsar" level="INFO"/>
     <logger name="ai.platon.pulsar.persist" level="INFO"/>
-    <logger name="ai.platon.pulsar.browser" level="WARN"/>
-    <logger name="ai.platon.pulsar.browser.driver.chrome.impl" level="WARN"/>
+    <logger name="ai.platon.pulsar.browser" level="INFO"/>
+    <logger name="ai.platon.pulsar.browser.driver.chrome.impl" level="INFO"/>
 
     <logger name="org.apache.gora.mongodb.store" level="INFO"/>
     <logger name="org.apache.gora" level="INFO"/>

@@ -174,7 +174,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
     
     @Throws(ChromeRPCException::class, IOException::class)
     override fun accept(message: String) {
-        tracer?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
+        tracer?.trace("◀ Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
         
         ChromeDevToolsImpl.numAccepts.inc()
         try {
