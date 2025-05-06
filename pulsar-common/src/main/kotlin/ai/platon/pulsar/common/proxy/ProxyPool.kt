@@ -95,7 +95,7 @@ open class ProxyPool(conf: ImmutableConfig) : AutoCloseable {
                 Files.createDirectories(currentArchiveDir)
 
                 dump(currentArchiveDir.resolve("proxies.all.txt"), proxyEntries)
-                logger.info("Proxy pool is dumped to file://{} | {}", currentArchiveDir, this)
+                logger.info("Proxy pool is dumped to {} | {}", currentArchiveDir.toUri(), this)
             } catch (e: IOException) {
                 logger.warn(e.toString())
             }

@@ -699,7 +699,7 @@ class PulsarWebDriver(
         if (SystemUtils.IS_OS_WINDOWS) {
             page.navigate(url0)
         } else {
-            page.navigate("file:///$url0")
+            page.navigate(url0)
         }
     }
 

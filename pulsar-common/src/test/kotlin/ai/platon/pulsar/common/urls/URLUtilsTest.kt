@@ -119,6 +119,14 @@ class URLUtilsTest {
      * */
     @Test
     fun testNormalize_WindowsFileURI() {
+        val filePath = "C:\\Users\\Vincent\\Documents"
+        val uri = java.io.File(filePath).toURI()  // 自动转换为合法的 file:// URI
+        println(uri.toString()) // 输出 file:/C:/Users/Vincent/Documents/
+        assertEquals("file:/C:/Users/Vincent/Documents/", uri.toString())
+
+        // 注意：虽然 URI 标准中为绝对路径推荐 file:///C:/...，
+        // 但 Java 会自动简化为 file:/C:/...，它依然是合法的并能正常解析。
+
         val url = "file:///C:/Users/User/Documents/file.txt"
         val normalizedUrl = URLUtils.normalize(url)
         assertEquals(URL("file:///C:/Users/User/Documents/file.txt"), normalizedUrl)
