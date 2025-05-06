@@ -16,8 +16,6 @@ class TemporaryProxyLoader(
     fun loadProxies() {
         logger.warn("!!! This is a temporary solution to load proxies !!!")
 
-        BrowserSettings.enableProxy()
-
         // only works before 2023-08-25
         // # IP:PORT:USER:PASS
         val proxyString = """

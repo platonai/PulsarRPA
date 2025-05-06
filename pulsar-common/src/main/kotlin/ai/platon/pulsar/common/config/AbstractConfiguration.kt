@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.KStrings
 import ai.platon.pulsar.common.SParser
-import ai.platon.pulsar.common.config.KConfiguration.Companion.DEFAULT_RESOURCES
+import ai.platon.pulsar.common.config.XmlConfiguration.Companion.DEFAULT_RESOURCES
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
 import org.springframework.core.env.get
@@ -28,7 +28,7 @@ abstract class AbstractConfiguration {
     /**
      * Hadoop compatible configuration.
      */
-    protected val conf: KConfiguration
+    protected val conf: XmlConfiguration
 
     /**
      * Spring core is the first class dependency now.
@@ -40,11 +40,11 @@ abstract class AbstractConfiguration {
         loadDefaults: Boolean = true,
         resources: Iterable<String> = DEFAULT_RESOURCES
     ) {
-        conf = KConfiguration(profile = profile, extraResources = resources, loadDefaults = loadDefaults)
+        conf = XmlConfiguration(profile = profile, extraResources = resources, loadDefaults = loadDefaults)
     }
 
-    constructor(conf: KConfiguration) {
-        this.conf = KConfiguration(conf)
+    constructor(conf: XmlConfiguration) {
+        this.conf = XmlConfiguration(conf)
     }
 
     /**

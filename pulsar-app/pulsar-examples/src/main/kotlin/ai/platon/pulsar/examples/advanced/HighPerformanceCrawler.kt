@@ -3,6 +3,7 @@ package ai.platon.pulsar.examples.advanced
 import ai.platon.pulsar.browser.common.BlockRule
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.LinkExtractors
+import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
@@ -25,7 +26,7 @@ class HighPerformanceCrawler {
                 it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
                     driver.addBlockedURLs(blockingUrls)
                 }
-            }.toList().take(2)
+            }.toList()
 
         session.submitAll(links)
     }
@@ -33,9 +34,12 @@ class HighPerformanceCrawler {
 
 fun main(args: Array<String>) {
     // Highly recommended to enable proxies, or you will be blocked by Amazon
-    // System.setProperty("PROXY_HUB_URL", "http://localhost:8192/api/proxies")
+    val proxyHubURL = "http://localhost:8192/api/proxies"
+    if (NetUtil.testHttpNetwork(proxyHubURL)) {
+        System.setProperty("PROXY_ROTATION_URL", proxyHubURL)
+    }
 
-    PulsarSettings().maxBrowserContexts(4).maxOpenTabs(12).withSequentialBrowsers()
+    PulsarSettings().maxBrowserContexts(2).maxOpenTabs(8).withSequentialBrowsers()
     HighPerformanceCrawler().crawl()
     PulsarContexts.await()
 }

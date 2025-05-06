@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.ResourceLoader.getURLOrNull
-import ai.platon.pulsar.common.config.KConfiguration.Companion.EXTERNAL_RESOURCE_BASE_DIR
+import ai.platon.pulsar.common.config.XmlConfiguration.Companion.EXTERNAL_RESOURCE_BASE_DIR
 import ai.platon.pulsar.common.urls.UrlUtils
 import com.ctc.wstx.io.StreamBootstrapper
 import com.ctc.wstx.io.SystemId
@@ -33,7 +33,7 @@ import kotlin.io.path.listDirectoryEntries
  * @property extraResources The extra resources to load.
  * @property loadDefaults Whether to load the default resources.
  * */
-class KConfiguration(
+class XmlConfiguration(
     val profile: String = "",
     val extraResources: Iterable<String> = listOf(),
     private val loadDefaults: Boolean = true,
@@ -60,7 +60,7 @@ class KConfiguration(
 
     val id = ID_SUPPLIER.incrementAndGet()
 
-    constructor(conf: KConfiguration) : this(conf.profile, conf.extraResources, conf.loadDefaults)
+    constructor(conf: XmlConfiguration) : this(conf.profile, conf.extraResources, conf.loadDefaults)
 
     /**
      * @param name property name.
@@ -212,7 +212,7 @@ private class ConfigurationImpl(
 
         resourceNames.addAll(extraResources)
         if (loadDefaults) {
-            resourceNames.addAll(KConfiguration.DEFAULT_RESOURCES)
+            resourceNames.addAll(XmlConfiguration.DEFAULT_RESOURCES)
         }
 
         for (resourceName in resourceNames) {

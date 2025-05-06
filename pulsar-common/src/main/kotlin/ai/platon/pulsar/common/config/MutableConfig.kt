@@ -232,7 +232,7 @@ open class MutableConfig : ImmutableConfig {
      *
      * reset.
      */
-    fun reset(conf: KConfiguration) {
+    fun reset(conf: XmlConfiguration) {
         for ((key) in conf) {
             unset(key)
         }
@@ -247,7 +247,7 @@ open class MutableConfig : ImmutableConfig {
      *
      * @param names a [java.lang.String] object.
      */
-    fun merge(conf: KConfiguration, vararg names: String?) {
+    fun merge(conf: XmlConfiguration, vararg names: String?) {
         for ((key, value) in conf) {
             if (names.isEmpty() || ArrayUtils.contains(names, key)) {
                 set(key, value)

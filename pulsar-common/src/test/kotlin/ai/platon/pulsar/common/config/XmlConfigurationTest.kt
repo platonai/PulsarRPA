@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class KConfigurationTest {
+class XmlConfigurationTest {
 
-    private lateinit var config: KConfiguration
+    private lateinit var config: XmlConfiguration
 
     @BeforeEach
     fun setUp() {
-        config = KConfiguration(loadDefaults = false)
+        config = XmlConfiguration(loadDefaults = false)
     }
 
     @Test
@@ -141,8 +141,8 @@ class KConfigurationTest {
 
     @Test
     fun testIdIncrement() {
-        val config1 = KConfiguration()
-        val config2 = KConfiguration()
+        val config1 = XmlConfiguration()
+        val config2 = XmlConfiguration()
         assertTrue(config2.id > config1.id)
     }
 }
