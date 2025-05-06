@@ -220,7 +220,7 @@ public interface CapabilityTypes {
     String PROXY_IDLE_TIMEOUT = "proxy.idle.timeout";
 
     /**
-     * Any URL to fetch proxy rotation.
+     * The key used to retrieve a proxy rotation URL. Each time the URL is accessed, a new set of proxy IPs will be returned.
      * */
     String PROXY_ROTATION_URL = "proxy.rotation.url";
 

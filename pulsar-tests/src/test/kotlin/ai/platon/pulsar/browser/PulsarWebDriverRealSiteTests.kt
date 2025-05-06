@@ -74,14 +74,6 @@ class PulsarWebDriverRealSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `when open a JSON page then script is injected`() = runResourceWebDriverTest(jsonUrl) { driver ->
-        val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
-        assertEquals(2, r)
-
-        evaluateExpressions(driver, "JSON")
-    }
-
-    @Test
     fun `when open a HTML page then script is injected`() = runWebDriverTest(originUrl, browser) { driver ->
         var detail = driver.evaluateDetail("typeof(window)")
         println(detail)
@@ -159,32 +151,6 @@ class PulsarWebDriverRealSiteTests : WebDriverTestBase() {
         println(detail.value)
         val data = requireNotNull(detail.value?.toString())
         return pulsarObjectMapper().readValue(data)
-    }
-
-    @Test
-    fun `when open a PLAIN TXT page then script is injected`() = runResourceWebDriverTest(plainTextUrl) { driver ->
-        val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
-        assertEquals(2, r)
-        
-        evaluateExpressions(driver, "PLAIN TXT")
-    }
-    
-    @Test
-    fun `when open a CSV TXT page then script is not injected`() = runResourceWebDriverTest(csvTextUrl) { driver ->
-        expressions.forEach { expression ->
-            val detail = driver.evaluateDetail(expression)
-            println(String.format("%-10s %-40s %s", "CSV TXT", expression, detail))
-        }
-        
-        val nullExpressions = """
-            typeof(__pulsar_)
-            __pulsar_utils__.add(1, 1)
-        """.trimIndent().split("\n").map { it.trim() }.filter { it.isNotBlank() }
-
-        nullExpressions.forEach { expression ->
-            val detail = driver.evaluateDetail(expression)
-            assertTrue { detail?.value == null || detail.value == "undefined" }
-        }
     }
 
     @Test

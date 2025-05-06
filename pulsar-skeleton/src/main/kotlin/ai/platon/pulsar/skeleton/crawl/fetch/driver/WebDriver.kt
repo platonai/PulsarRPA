@@ -1316,8 +1316,8 @@ interface WebDriver : Closeable {
     suspend fun selectImages(selector: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String>
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. The script
-     * fragment provided will be executed as the body of an anonymous function.
+     * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
+     * it is not returned.
      *
      * ```kotlin
      * val title = driver.evaluate("document.title")
@@ -1348,8 +1348,8 @@ interface WebDriver : Closeable {
     suspend fun evaluate(expression: String): Any?
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. The script
-     * fragment provided will be executed as the body of an anonymous function.
+     * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
+     * it is not returned.
      *
      * ```kotlin
      * val title = driver.evaluate("document.title", "Untitled")
@@ -1362,8 +1362,8 @@ interface WebDriver : Closeable {
     suspend fun <T> evaluate(expression: String, defaultValue: T): T
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. The script
-     * fragment provided will be executed as the body of an anonymous function.
+     * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
+     * it is not returned.
      *
      * ```kotlin
      * val title = driver.evaluate("document.title")
@@ -1377,8 +1377,8 @@ interface WebDriver : Closeable {
     suspend fun evaluateDetail(expression: String): JsEvaluation?
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. The script
-     * fragment provided will be executed as the body of an anonymous function.
+     * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
+     * it is returned as a JSON object.
      *
      * ```kotlin
      * val title = driver.evaluate("document.title")
@@ -1410,8 +1410,8 @@ interface WebDriver : Closeable {
     suspend fun evaluateValue(expression: String): Any?
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. The script
-     * fragment provided will be executed as the body of an anonymous function.
+     * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
+     * it is returned as a JSON object.
      *
      * ```kotlin
      * val title = driver.evaluate("document.title", "Untitled")
@@ -1425,8 +1425,8 @@ interface WebDriver : Closeable {
     suspend fun <T> evaluateValue(expression: String, defaultValue: T): T
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. The script
-     * fragment provided will be executed as the body of an anonymous function.
+     * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
+     * it is returned as a JSON object.
      *
      * ```kotlin
      * val title = driver.evaluate("document.title")

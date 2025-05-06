@@ -164,11 +164,5 @@ public interface AppConstants {
      * */
     String LOCAL_FILE_BASE_URL = "http://localfile.org";
 
-    /**
-     * @deprecated Use LOCAL_FILE_BASE_URL instead
-     * */
-    @Deprecated
-    String LOCAL_FILE_SERVE_PREFIX = LOCAL_FILE_BASE_URL;
-
     String BROWSER_SPECIFIC_URL_PREFIX = "http://browser-specific.org";
 }

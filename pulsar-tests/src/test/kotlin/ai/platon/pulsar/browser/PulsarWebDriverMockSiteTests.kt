@@ -1,7 +1,7 @@
 package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.JsException
+import ai.platon.pulsar.common.js.JsUtils
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
 
@@ -53,10 +53,10 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
 
     @Test
     fun `test evaluate single line expressions`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
-        val code = """(() => {\n  const a = 1;\n  const b = 2;\n  return a + b;\n})()"""
+        val code = "(() => {\n  const a = 1;\n  const b = 2;\n  return a + b;\n})()"
 
         val result = driver.evaluate(code)
-        assertEquals(200, result)
+        assertEquals(3, result)
     }
 
     @Test
@@ -69,7 +69,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
 }
         """.trimIndent()
 
-        val result = driver.evaluate(code)
+        val result = driver.evaluate(JsUtils.toIIFE(code))
         assertEquals(200, result)
 
         val code2 = """
@@ -81,7 +81,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         // converted to "// ❌ Unsupported format: not a valid JS function"
         // so it's an empty expressions sent to the browser
 
-        val result2 = driver.evaluateValueDetail(code2)
+        val result2 = driver.evaluateValueDetail(JsUtils.toIIFE(code2))
         println(result2)
         assertNotNull(result2)
         val exception = result2.exception
@@ -107,12 +107,12 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     fun `test fill form with JavaScript`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val selector = "input[id=input]"
 
-        driver.evaluateDetail("document.querySelector('$selector', 'value')")
+        driver.fill(selector, text)
 
         val detail = driver.evaluateDetail("document.querySelector('$selector')")
         println(detail)
 
-        val inputValue = driver.selectFirstAttributeOrNull(selector, "value")
+        val inputValue = driver.selectFirstPropertyValueOrNull(selector, "value")
 
         assertEquals(text, inputValue)
     }
@@ -195,5 +195,39 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         val node = map["0"]
         println(node)
         assertNotNull(node)
+    }
+
+    @Test
+    fun `when open a JSON page then script is injected`() = runResourceWebDriverTest(jsonUrl) { driver ->
+        val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
+        assertEquals(2, r)
+
+        evaluateExpressions(driver, "JSON")
+    }
+
+    @Test
+    fun `when open a PLAIN TXT page then script is injected`() = runResourceWebDriverTest(plainTextUrl) { driver ->
+        val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
+        assertEquals(2, r)
+
+        evaluateExpressions(driver, "PLAIN TXT")
+    }
+
+    @Test
+    fun `when open a CSV TXT page then script is not injected`() = runResourceWebDriverTest(csvTextUrl) { driver ->
+        expressions.forEach { expression ->
+            val detail = driver.evaluateDetail(expression)
+            println(String.format("%-10s %-40s %s", "CSV TXT", expression, detail))
+        }
+
+        val nullExpressions = """
+            typeof(__pulsar_)
+            __pulsar_utils__.add(1, 1)
+        """.trimIndent().split("\n").map { it.trim() }.filter { it.isNotBlank() }
+
+        nullExpressions.forEach { expression ->
+            val detail = driver.evaluateDetail(expression)
+            assertTrue { detail?.value == null || detail.value == "undefined" }
+        }
     }
 }

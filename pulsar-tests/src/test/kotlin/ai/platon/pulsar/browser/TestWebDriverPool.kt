@@ -1,10 +1,9 @@
 package ai.platon.pulsar.browser
 
-import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
+import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
@@ -14,10 +13,6 @@ import kotlin.test.*
 class TestWebDriverPool {
     companion object {
         val logger = LoggerFactory.getLogger(TestWebDriverPool::class.java)
-
-        init {
-            System.setProperty(PROXY_USE_PROXY, "no")
-        }
 
         val context = PulsarContexts.create()
         val conf = context.unmodifiedConfig

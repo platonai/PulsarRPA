@@ -5,7 +5,6 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.js.JsUtils
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
@@ -15,6 +14,7 @@ import com.github.kklisura.cdt.protocol.v2023.types.page.ReferrerPolicy
 import com.github.kklisura.cdt.protocol.v2023.types.page.TransitionType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.SerializationOptions
+import com.google.gson.Gson
 
 class PageHandler(
     private val devTools: RemoteDevTools,
@@ -197,8 +197,11 @@ class PageHandler(
      * */
     @Throws(ChromeDriverException::class)
     fun evaluateDetail(expression: String): Evaluate? {
-        val iife = JsUtils.toIIFE(confuser.confuse(expression))
-        return runtime?.evaluate(iife)
+//        val iife = JsUtils.toIIFE(confuser.confuse(expression))
+//        return runtime?.evaluate(iife)
+        val evaluate = runtime?.evaluate(confuser.confuse(expression))
+
+        return evaluate
     }
 
     /**
@@ -216,16 +219,16 @@ class PageHandler(
             logger.info(exception.description + "\n>>>$expression<<<")
         }
 
-        // println(Gson().toJson(evaluate))
-
         val result = evaluate?.result
         return result?.value
     }
 
     @Throws(ChromeDriverException::class)
     fun evaluateValueDetail(expression: String): Evaluate? {
-        val iife = JsUtils.toIIFE(confuser.confuse(expression))
-        return evaluate(iife, returnByValue = true)
+//        val iife = JsUtils.toIIFE(confuser.confuse(expression))
+//        return evaluate(iife, returnByValue = true)
+        val expression2 = confuser.confuse(expression)
+        return cdpEvaluate(expression2, returnByValue = true)
     }
 
     /**
@@ -274,7 +277,7 @@ class PageHandler(
         return false
     }
 
-    private fun evaluate(
+    private fun cdpEvaluate(
         expression: String,
         objectGroup: String? = null,
         includeCommandLineAPI: Boolean? = null,
