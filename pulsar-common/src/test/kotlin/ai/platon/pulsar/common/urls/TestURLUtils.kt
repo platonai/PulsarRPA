@@ -16,13 +16,13 @@
  */
 package ai.platon.pulsar.common.urls
 
-import ai.platon.pulsar.common.urls.UrlUtils.reverseUrl
-import ai.platon.pulsar.common.urls.UrlUtils.unreverseUrl
+import ai.platon.pulsar.common.urls.URLUtils.reverseUrl
+import ai.platon.pulsar.common.urls.URLUtils.unreverseUrl
 import kotlin.test.*
 
 typealias uc = UrlCommon
 
-class TestUrlUtils {
+class TestURLUtils {
 
     @Test
     fun testReverseUrl() {
@@ -60,10 +60,10 @@ class TestUrlUtils {
         val url = "https://www.amazon.com/s?k=sleep&i=amazonfresh&bbn=10329849011&page=2&qid=1609388361&ref=sr_pg_2"
         val stripedUrl = "https://www.amazon.com/s?k=sleep&i=amazonfresh"
 
-        assertTrue { "10329849011" !in UrlUtils.removeQueryParameters(url, "bbn") }
-        assertTrue { "page" !in UrlUtils.removeQueryParameters(url, "page") }
+        assertTrue { "10329849011" !in URLUtils.removeQueryParameters(url, "bbn") }
+        assertTrue { "page" !in URLUtils.removeQueryParameters(url, "page") }
 
-        assertEquals(stripedUrl, UrlUtils.removeQueryParameters(url, "bbn", "page", "ref", "qid"))
+        assertEquals(stripedUrl, URLUtils.removeQueryParameters(url, "bbn", "page", "ref", "qid"))
     }
 
     @Test
@@ -71,12 +71,12 @@ class TestUrlUtils {
         val url = "https://www.amazon.com/s?k=sleep&i=amazonfresh&bbn=10329849011&page=2&qid=1609388361&ref=sr_pg_2"
         val stripedUrl = "https://www.amazon.com/s?k=sleep&i=amazonfresh"
 
-        assertTrue { "10329849011" in UrlUtils.keepQueryParameters(url, "bbn") }
+        assertTrue { "10329849011" in URLUtils.keepQueryParameters(url, "bbn") }
 
-        assertTrue { "page" in UrlUtils.keepQueryParameters(url, "page") }
-        assertTrue { "bbn" !in UrlUtils.keepQueryParameters(url, "page") }
+        assertTrue { "page" in URLUtils.keepQueryParameters(url, "page") }
+        assertTrue { "bbn" !in URLUtils.keepQueryParameters(url, "page") }
 
-        assertEquals(stripedUrl, UrlUtils.keepQueryParameters(url, "k", "i"))
+        assertEquals(stripedUrl, URLUtils.keepQueryParameters(url, "k", "i"))
     }
 
     companion object {

@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.skeleton.common.options.Condition
 import ai.platon.pulsar.skeleton.common.options.LoadOptionDefaults
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.common.url.StatefulListenableHyperlink
@@ -29,11 +29,11 @@ class TestLoadOptions {
 
     @Test
     fun testOptions() {
-        val args0 = UrlUtils.splitUrlArgs(url).second
+        val args0 = URLUtils.splitUrlArgs(url).second
         val options = i.options("$args0 $args")
         assertEquals(".products a", options.outLinkSelector)
 
-        val (url, args) = UrlUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure")
+        val (url, args) = URLUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure")
         val options2 = LoadOptions.parse(args, conf)
         val options3 = LoadOptions.merge(options, options2)
         assertOptions(options3)
@@ -258,7 +258,7 @@ class TestLoadOptions {
 
     @Test
     fun testNormalizeOptions() {
-        val op = LoadOptions.parse(UrlUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure").second, conf)
+        val op = LoadOptions.parse(URLUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure").second, conf)
         val normURL = i.normalize(url, op)
         val options = normURL.options
         assertTrue(options.incognito)
@@ -268,7 +268,7 @@ class TestLoadOptions {
 
     @Test
     fun testNormalizeOptions2() {
-        val options = LoadOptions.parse(UrlUtils.splitUrlArgs("$url $args -incognito -expires 1s -ignoreFailure -storeContent false").second, conf)
+        val options = LoadOptions.parse(URLUtils.splitUrlArgs("$url $args -incognito -expires 1s -ignoreFailure -storeContent false").second, conf)
         val normURL = i.normalize(url, options)
 
         println(normURL.configuredUrl)
@@ -292,13 +292,13 @@ class TestLoadOptions {
 
     @Test
     fun testHashCode() {
-        val op = LoadOptions.parse(UrlUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure").second, conf)
+        val op = LoadOptions.parse(URLUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure").second, conf)
         println(op.hashCode())
     }
 
     @Test
     fun testNormalizeItemOptions() {
-        val options = LoadOptions.parse(UrlUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure").second, conf)
+        val options = LoadOptions.parse(URLUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure").second, conf)
         val normURL = i.normalize(url, options)
         println(normURL.configuredUrl)
 

@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ChatModelFactory
@@ -753,8 +753,8 @@ abstract class AbstractWebDriver(
         // Since the browser uses the system proxy (by default),
         // so the http connection should also use the system proxy
         val proxy = browser.id.fingerprint.proxyURI?.toString() ?: System.getenv("http_proxy")
-        if (proxy != null && UrlUtils.isStandard(proxy)) {
-            val u = UrlUtils.getURLOrNull(proxy)
+        if (proxy != null && URLUtils.isStandard(proxy)) {
+            val u = URLUtils.getURLOrNull(proxy)
             if (u != null) {
                 // TODO: sock proxy support
                 session.proxy(u.host, u.port)

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.skeleton.crawl.common
 
-import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.common.urls.UrlUtils.getURLOrNull
+import ai.platon.pulsar.common.urls.URLUtils
+import ai.platon.pulsar.common.urls.URLUtils.getURLOrNull
 import ai.platon.pulsar.skeleton.common.domain.DomainSuffix
 import ai.platon.pulsar.skeleton.common.domain.DomainSuffixes
 import org.slf4j.LoggerFactory
@@ -64,7 +64,7 @@ object InternalURLUtil {
                 return ""
             }
         } else if (groupMode == GroupMode.BY_DOMAIN) {
-            host = UrlUtils.getTopPrivateDomain(url)
+            host = URLUtils.getTopPrivateDomain(url)
         } else {
             host = url.host
             if (host == null) {
@@ -77,7 +77,7 @@ object InternalURLUtil {
 
     @Deprecated("Moved to UrlUtils", ReplaceWith("UrlUtils.getTopPrivateDomain(url)"))
     @Throws(MalformedURLException::class)
-    fun getDomainName(url: String): String = UrlUtils.getTopPrivateDomain(url)
+    fun getDomainName(url: String): String = URLUtils.getTopPrivateDomain(url)
 
     @Deprecated("Use getTopPrivateDomain(url) instead", ReplaceWith("getTopPrivateDomain(url)"))
     fun getDomainName(url: URL): String {
@@ -108,7 +108,7 @@ object InternalURLUtil {
      * @return true if the domain names are equal
      */
     fun isSameDomainName(url1: URL, url2: URL): Boolean {
-        return UrlUtils.getTopPrivateDomain(url1).equals(UrlUtils.getTopPrivateDomain(url2), ignoreCase = true)
+        return URLUtils.getTopPrivateDomain(url1).equals(URLUtils.getTopPrivateDomain(url2), ignoreCase = true)
     }
 
     /**
@@ -355,11 +355,11 @@ object InternalURLUtil {
 
     @Deprecated("Moved to UrlUtils", ReplaceWith("UrlUtils.getOrigin(url)"))
     @Throws(MalformedURLException::class)
-    fun getOrigin(url: String) = UrlUtils.getOrigin(url)
+    fun getOrigin(url: String) = URLUtils.getOrigin(url)
 
     @Deprecated("Moved to UrlUtils", ReplaceWith("UrlUtils.getHostName(url)"))
     @Throws(MalformedURLException::class)
-    fun getHostName(url: String) = UrlUtils.getHostName(url)
+    fun getHostName(url: String) = URLUtils.getHostName(url)
 
     /**
      * Returns the path for the url. The path consists of the protocol, host, and

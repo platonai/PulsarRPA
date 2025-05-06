@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import com.google.common.collect.ConcurrentHashMultiset
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
@@ -328,7 +328,7 @@ open class ProxyEntry(
         val TEST_URLS = mutableListOf<URL>()
         
         init {
-            ResourceLoader.readAllLines(PROXY_TEST_WEB_SITES_FILE).mapNotNullTo(TEST_URLS) { UrlUtils.getURLOrNull(it) }
+            ResourceLoader.readAllLines(PROXY_TEST_WEB_SITES_FILE).mapNotNullTo(TEST_URLS) { URLUtils.getURLOrNull(it) }
         }
 
         fun create(

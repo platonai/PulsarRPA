@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyLoader
 import ai.platon.pulsar.common.proxy.ProxyParser
 import ai.platon.pulsar.common.proxy.ProxyParserFactory
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import java.io.IOException
 import java.time.Duration
 
@@ -16,7 +16,7 @@ open class ProxyVendorLoader(
 ) : ProxyLoader(conf) {
     private val logger = getLogger(this)
     private val proxyRotationURLSpec get() = conf[PROXY_ROTATION_URL]
-    private val proxyRotationURL get() = UrlUtils.getURLOrNull(proxyRotationURLSpec)
+    private val proxyRotationURL get() = URLUtils.getURLOrNull(proxyRotationURLSpec)
 
     override val parser: ProxyParser
         get() {

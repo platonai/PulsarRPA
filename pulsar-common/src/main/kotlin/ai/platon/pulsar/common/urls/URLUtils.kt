@@ -9,7 +9,7 @@ import java.net.*
 import java.nio.file.Path
 import java.util.*
 
-object UrlUtils {
+object URLUtils {
     /**
      * The prefix of allowed urls
      */
@@ -989,3 +989,6 @@ object UrlUtils {
         }
     }
 }
+
+@Deprecated("Inappropriate name", ReplaceWith("URLUtils"))
+typealias UrlUtils  = URLUtils

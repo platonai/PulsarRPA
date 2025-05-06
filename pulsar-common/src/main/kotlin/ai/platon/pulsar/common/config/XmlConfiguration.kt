@@ -3,7 +3,7 @@ package ai.platon.pulsar.common.config
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.ResourceLoader.getURLOrNull
 import ai.platon.pulsar.common.config.XmlConfiguration.Companion.EXTERNAL_RESOURCE_BASE_DIR
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import com.ctc.wstx.io.StreamBootstrapper
 import com.ctc.wstx.io.SystemId
 import org.codehaus.stax2.XMLStreamReader2
@@ -157,7 +157,7 @@ private class ConfigurationImpl(
         resources.clear()
 
         collectResourcePaths()
-        resourceURLs.mapNotNull { UrlUtils.getURLOrNull(it) }.forEach { addResource(it) }
+        resourceURLs.mapNotNull { URLUtils.getURLOrNull(it) }.forEach { addResource(it) }
         if (loadDefaults && Files.isDirectory(EXTERNAL_RESOURCE_BASE_DIR)) {
             addExternalResource(EXTERNAL_RESOURCE_BASE_DIR)
         }

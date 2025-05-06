@@ -2,7 +2,7 @@ package ai.platon.pulsar.basic.session
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.AppConstants.LOCAL_FILE_BASE_URL
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.basic.TestBase
 import com.google.gson.Gson
@@ -83,7 +83,7 @@ class PulsarSessionTests: TestBase() {
             </html>
         """.trimIndent()
         Files.writeString(path, html)
-        val url = UrlUtils.pathToLocalURL(path)
+        val url = URLUtils.pathToLocalURL(path)
         assertTrue { url.startsWith(LOCAL_FILE_BASE_URL) }
         val document = session.loadDocument(url, "-refresh")
         assertEquals("Hello", document.selectFirstTextOrNull("h1"))

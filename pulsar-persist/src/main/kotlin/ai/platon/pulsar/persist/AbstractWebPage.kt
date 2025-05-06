@@ -1,10 +1,10 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.common.urls.UrlUtils.mergeUrlArgs
-import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
-import ai.platon.pulsar.common.urls.UrlUtils.unreverseUrl
+import ai.platon.pulsar.common.urls.URLUtils
+import ai.platon.pulsar.common.urls.URLUtils.mergeUrlArgs
+import ai.platon.pulsar.common.urls.URLUtils.reverseUrlOrEmpty
+import ai.platon.pulsar.common.urls.URLUtils.unreverseUrl
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import org.apache.gora.util.ByteUtils
@@ -160,7 +160,7 @@ abstract class AbstractWebPage(
         get() = !isNil
 
     override val isInternal: Boolean
-        get() = UrlUtils.isInternal(url)
+        get() = URLUtils.isInternal(url)
 
     override val isNotInternal: Boolean
         get() = !isInternal

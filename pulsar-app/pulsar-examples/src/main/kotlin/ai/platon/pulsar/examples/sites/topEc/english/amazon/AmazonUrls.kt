@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites.topEc.english.amazon
 
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.common.urls.preprocess.AbstractUrlNormalizer
 import org.apache.http.client.utils.URIBuilder
 import java.nio.charset.Charset
@@ -85,7 +85,7 @@ class AsinUrlNormalizer : AbstractUrlNormalizer() {
             return url
         }
 
-        val u = UrlUtils.getURLOrNull(url) ?: return null
+        val u = URLUtils.getURLOrNull(url) ?: return null
         val asin = AmazonUrls.findAsin(url) ?: return null
         return u.protocol + "://" + u.host + "/dp/" + asin
     }

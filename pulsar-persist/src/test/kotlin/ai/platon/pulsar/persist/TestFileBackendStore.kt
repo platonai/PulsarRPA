@@ -2,7 +2,7 @@ package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.persist.gora.FileBackendPageStore
 import ai.platon.pulsar.persist.model.GoraWebPage
 import org.apache.commons.io.FileUtils
@@ -32,7 +32,7 @@ class TestFileBackendStore {
         store.writeAvro(page)
         assertTrue { Files.exists(path) }
 
-        val key = UrlUtils.reverseUrl(url)
+        val key = URLUtils.reverseUrl(url)
         val loadedPage = store.readAvro(key)
         assertNotNull(loadedPage)
     }
@@ -41,7 +41,7 @@ class TestFileBackendStore {
     fun whenWritePage_ThenReadSuccess() {
         store.writeAvro(page)
 
-        val key = UrlUtils.reverseUrl(url)
+        val key = URLUtils.reverseUrl(url)
         val loadedPage = store.readAvro(key)
         assertNotNull(loadedPage)
     }
@@ -54,7 +54,7 @@ class TestFileBackendStore {
         page2.ensurePageModel().emplace(100, mapOf("a" to "1", "b" to "2"))
         store.writeAvro(page2)
 
-        val key = UrlUtils.reverseUrl(url2)
+        val key = URLUtils.reverseUrl(url2)
         val loadedGPage = store.readAvro(key)
         assertNotNull(loadedGPage)
         val loadedPage = GoraWebPage.box(url2, loadedGPage, VolatileConfig.UNSAFE)
@@ -72,7 +72,7 @@ class TestFileBackendStore {
         pageModel.put(groupId, "c", "3")
         store.writeAvro(loadedPage)
         
-        val key2 = UrlUtils.reverseUrl(url2)
+        val key2 = URLUtils.reverseUrl(url2)
         // check the updated version
         val loadedGPage2 = store.readAvro(key2)
         assertNotNull(loadedGPage2)

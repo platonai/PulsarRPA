@@ -9,7 +9,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_REUSE_RECOVERED_DRIVERS
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
@@ -260,7 +260,7 @@ class PulsarBrowser(
         // the tab id is the key of the driver in drivers
         tabs.filter { it.id !in drivers.keys } // it is not created yet
             .filter { it.isPageType() } // handler HTML document only
-            .filter { UrlUtils.isStandard(it.url) } // make sure the url is correct
+            .filter { URLUtils.isStandard(it.url) } // make sure the url is correct
             .forEach { tab ->
                 // create a new driver and associate it with the tab
                 val driver = newDriverIfAbsent(tab, true)

@@ -11,7 +11,7 @@ import java.net.URL
 import java.net.URLEncoder
 import java.util.*
 
-class UrlUtilsTest {
+class URLUtilsTest {
 
     @Test
     fun testURIBasics() {
@@ -26,11 +26,11 @@ class UrlUtilsTest {
     @Test
     fun testNormalizer() {
         var url = "https://www.amazon.com/s?k=\"Boys%27+Novelty+Belt+Buckles\"&rh=n:9057119011&page=1"
-        var normUrl = UrlUtils.normalizeOrNull(url, true)
+        var normUrl = URLUtils.normalizeOrNull(url, true)
         assertNull(normUrl)
         
         url = "https://www.amazon.com/s?k=Boys%27+Novelty+Belt+Buckles&rh=n:9057119011&page=1"
-        normUrl = UrlUtils.normalizeOrNull(url, true)
+        normUrl = URLUtils.normalizeOrNull(url, true)
         assertNotNull(normUrl)
     }
 
@@ -38,31 +38,31 @@ class UrlUtilsTest {
     fun `isStandard should return true for standard URL`() {
         // 标准 URL 测试
         val standardUrl = "https://www.example.com"
-        assertTrue(UrlUtils.isStandard(standardUrl))
+        assertTrue(URLUtils.isStandard(standardUrl))
     }
 
     @Test
     fun `isStandard should return false for non-standard URL`() {
         // 非标准 URL 测试
         val nonStandardUrl = "example"
-        assertFalse(UrlUtils.isStandard(nonStandardUrl))
+        assertFalse(URLUtils.isStandard(nonStandardUrl))
 
-        assertFalse(UrlUtils.isStandard("about:blank"))
-        assertFalse(UrlUtils.isStandard("chrome://chrome-urls"))
-        assertFalse(UrlUtils.isStandard("chrome://accessibility"))
+        assertFalse(URLUtils.isStandard("about:blank"))
+        assertFalse(URLUtils.isStandard("chrome://chrome-urls"))
+        assertFalse(URLUtils.isStandard("chrome://accessibility"))
     }
 
     @Test
     fun `isStandard should return false for null input`() {
         // 空输入测试
-        assertFalse(UrlUtils.isStandard(null))
+        assertFalse(URLUtils.isStandard(null))
     }
 
     @Test
     fun `isStandard should return false for empty string`() {
         // 空字符串测试
         val emptyString = ""
-        assertFalse(UrlUtils.isStandard(emptyString))
+        assertFalse(URLUtils.isStandard(emptyString))
     }
 
     @Test
@@ -74,26 +74,26 @@ class UrlUtilsTest {
 
     @Test
     fun testNormalize_WithoutQuery() {
-        val result = UrlUtils.normalize("http://example.com/path?query=123#fragment", true)
+        val result = URLUtils.normalize("http://example.com/path?query=123#fragment", true)
         assertEquals(URL("http://example.com/path"), result)
     }
 
     @Test
     fun testNormalize_WithQuery() {
-        val result = UrlUtils.normalize("http://example.com/path?query=123#fragment")
+        val result = URLUtils.normalize("http://example.com/path?query=123#fragment")
         assertEquals(URL("http://example.com/path?query=123"), result)
     }
 
     @Test
     fun testNormalize_RemoveFragment() {
-        val result = UrlUtils.normalize("http://example.com/path#fragment")
+        val result = URLUtils.normalize("http://example.com/path#fragment")
         assertEquals(URL("http://example.com/path"), result)
     }
 
     @Test
     fun testNormalize_InvalidUrl() {
         assertThrows(IllegalArgumentException::class.java) {
-            val url = UrlUtils.normalize("invalid-url")
+            val url = URLUtils.normalize("invalid-url")
 //            println(url)
         }
     }
@@ -101,14 +101,14 @@ class UrlUtilsTest {
     @Test
     fun testNormalize_InvalidUriSyntax() {
         assertThrows(URISyntaxException::class.java) {
-            UrlUtils.normalize("http://example.com/path&%!({{")
+            URLUtils.normalize("http://example.com/path&%!({{")
         }
     }
 
     @Test
     fun testNormalize_EmptyUrl() {
         assertThrows(IllegalArgumentException::class.java) {
-            UrlUtils.normalize("")
+            URLUtils.normalize("")
         }
     }
 
@@ -120,10 +120,10 @@ class UrlUtilsTest {
     @Test
     fun testNormalize_WindowsFileURI() {
         val url = "file:///C:/Users/User/Documents/file.txt"
-        val normalizedUrl = UrlUtils.normalize(url)
+        val normalizedUrl = URLUtils.normalize(url)
         assertEquals(URL("file:///C:/Users/User/Documents/file.txt"), normalizedUrl)
     }
-    
+
 
 
 
@@ -133,11 +133,11 @@ class UrlUtilsTest {
     @Test
     fun testIsBrowserURL() {
         // Test with a browser-specific protocol
-        assertTrue(UrlUtils.isBrowserURL("chrome://settings"))
-        assertTrue(UrlUtils.isBrowserURL("edge://settings"))
-        assertTrue(UrlUtils.isBrowserURL("about:blank"))
+        assertTrue(URLUtils.isBrowserURL("chrome://settings"))
+        assertTrue(URLUtils.isBrowserURL("edge://settings"))
+        assertTrue(URLUtils.isBrowserURL("about:blank"))
         // Test with a non-browser-specific protocol
-        assertFalse(UrlUtils.isBrowserURL("http"))
+        assertFalse(URLUtils.isBrowserURL("http"))
     }
 
     @Test
@@ -146,7 +146,7 @@ class UrlUtilsTest {
         val url = "chrome://settings"
         val expected = "$BROWSER_SPECIFIC_URL_PREFIX?url=${URLEncoder.encode(url, Charsets.UTF_8)}"
         println(expected)
-        assertEquals(expected, UrlUtils.browserURLToStandardURL(url))
+        assertEquals(expected, URLUtils.browserURLToStandardURL(url))
     }
 
     @Test
@@ -154,10 +154,10 @@ class UrlUtilsTest {
         // Test extracting and re-encoding a browser protocol from URL
         val expected = "chrome://settings"
         val url = "$BROWSER_SPECIFIC_URL_PREFIX?url=${URLEncoder.encode(expected, Charsets.UTF_8)}"
-        assertEquals(expected, UrlUtils.standardURLToBrowserURL(url))
+        assertEquals(expected, URLUtils.standardURLToBrowserURL(url))
 
         // Test with a URL that does not contain a browser protocol
-        assertNull(UrlUtils.standardURLToBrowserURL("http://example.com"))
+        assertNull(URLUtils.standardURLToBrowserURL("http://example.com"))
     }
 
     @Test
@@ -167,7 +167,7 @@ class UrlUtilsTest {
         assertEquals("file", path.toUri().scheme)
 
         // 调用待测试的方法
-        val result = UrlUtils.pathToLocalURL(path)
+        val result = URLUtils.pathToLocalURL(path)
 
         // 验证结果是否符合预期
         val expectedPrefix = AppConstants.LOCAL_FILE_BASE_URL

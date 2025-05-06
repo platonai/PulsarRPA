@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureRegistry.registeredFeatures
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
@@ -120,7 +120,7 @@ object DomToH2Queries {
         val limit2 = min(limit, normURL.options.topLinks)
 
         val document = session.loadDocument(normURL)
-        var links = transformer(document.document, restrictCss, offset, Int.MAX_VALUE).filter { !UrlUtils.isInternal(it) }
+        var links = transformer(document.document, restrictCss, offset, Int.MAX_VALUE).filter { !URLUtils.isInternal(it) }
 
         if (normalize) {
             links = links.mapNotNull { session.normalizeOrNull(it)?.spec }
@@ -238,7 +238,7 @@ object DomToH2Queries {
     fun getLinksIgnoreQuery(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
         val cssQuery = appendSelectorIfMissing(restrictCss, "a")
         return ele.select(cssQuery, offset, limit) {
-            it.absUrl("href").takeIf { UrlUtils.isStandard(it) }?.substringBefore("?")
+            it.absUrl("href").takeIf { URLUtils.isStandard(it) }?.substringBefore("?")
         }.filterNotNull()
     }
 

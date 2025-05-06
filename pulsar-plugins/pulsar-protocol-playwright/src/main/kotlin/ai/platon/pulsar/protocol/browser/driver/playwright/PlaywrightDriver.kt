@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -124,7 +124,7 @@ class PlaywrightDriver(
         }
 
         navigateUrl = url
-        if (UrlUtils.isLocalFile(url)) {
+        if (URLUtils.isLocalFile(url)) {
             // serve local file, for example:
             // local file path:
             // C:\Users\pereg\AppData\Local\Temp\pulsar\test.txt
@@ -170,7 +170,7 @@ class PlaywrightDriver(
     private fun openLocalFile(url: String) {
         try {
             rpc.invoke("openLocalFile") {
-                val path = UrlUtils.localURLToPath(url)
+                val path = URLUtils.localURLToPath(url)
                 val uri = path.toUri()
                 page.navigate(uri.toString())
             }

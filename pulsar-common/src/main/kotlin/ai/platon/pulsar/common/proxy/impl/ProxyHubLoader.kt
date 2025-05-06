@@ -3,7 +3,7 @@ package ai.platon.pulsar.common.proxy.impl
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyLoader
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.time.Duration
@@ -36,7 +36,7 @@ open class ProxyHubLoader(conf: ImmutableConfig) : ProxyLoader(conf) {
             return listOf()
         }
 
-        val url = UrlUtils.getURLOrNull(baseUrl) ?: throw IOException("No base url is set")
+        val url = URLUtils.getURLOrNull(baseUrl) ?: throw IOException("No base url is set")
         val response = url.readText()
         if (response.isBlank()) {
             return listOf()

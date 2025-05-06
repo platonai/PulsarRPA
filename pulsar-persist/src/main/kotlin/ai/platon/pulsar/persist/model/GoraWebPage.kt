@@ -9,8 +9,8 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
-import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.common.urls.UrlUtils.unreverseUrl
+import ai.platon.pulsar.common.urls.URLUtils
+import ai.platon.pulsar.common.urls.URLUtils.unreverseUrl
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.gora.generated.GPageModel
 import ai.platon.pulsar.persist.gora.generated.GParseStatus
@@ -19,7 +19,6 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
-import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.Converters.convert
 import ai.platon.pulsar.persist.model.PageModel.Companion.box
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -195,7 +194,7 @@ class GoraWebPage(
         get() = !isNil
 
     override val isInternal: Boolean
-        get() = UrlUtils.isInternal(url)
+        get() = URLUtils.isInternal(url)
 
     override val isNotInternal: Boolean
         get() = !isInternal

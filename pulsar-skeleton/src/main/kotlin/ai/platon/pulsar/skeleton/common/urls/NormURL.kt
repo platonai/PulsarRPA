@@ -3,7 +3,7 @@ package ai.platon.pulsar.skeleton.common.urls
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import java.net.MalformedURLException
 import java.net.URL
@@ -133,7 +133,7 @@ open class NormURL constructor(
          */
         @JvmStatic
         fun parse(configuredUrl: String, volatileConfig: VolatileConfig): NormURL {
-            val (url, args) = UrlUtils.splitUrlArgs(configuredUrl)
+            val (url, args) = URLUtils.splitUrlArgs(configuredUrl)
             val options = LoadOptions.parse(args, volatileConfig)
             return NormURL(url, options)
         }

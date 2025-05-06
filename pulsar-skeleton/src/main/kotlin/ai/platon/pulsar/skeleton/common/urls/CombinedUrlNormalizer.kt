@@ -1,7 +1,7 @@
 package ai.platon.pulsar.skeleton.common.urls
 
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableUrl
@@ -19,7 +19,7 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
      * @return the normalized url, or a NIL NormURL if the url is invalid
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormURL {
-        val (spec, args1) = UrlUtils.splitUrlArgs(url.url)
+        val (spec, args1) = URLUtils.splitUrlArgs(url.url)
         val args2 = url.args ?: ""
         val args3 = options.toString()
         // args1 has the #1 priority, and then args2, and at last args3.
@@ -30,7 +30,7 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
         if (!finalOptions.isDefault("priority")) {
             url.priority = finalOptions.priority
         }
-        val href = url.href?.let { UrlUtils.splitUrlArgs(it).first }?.takeIf { UrlUtils.isStandard(it) }
+        val href = url.href?.let { URLUtils.splitUrlArgs(it).first }?.takeIf { URLUtils.isStandard(it) }
 
         var normURL: String? = spec
         if (!options.noNorm) {
@@ -49,7 +49,7 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
             }
 
             // 3. UrlUtils.normalize comes at last to remove fragment, and query string if required
-            normURL = UrlUtils.normalizeOrNull(normURL, options.ignoreUrlQuery)
+            normURL = URLUtils.normalizeOrNull(normURL, options.ignoreUrlQuery)
         }
 
         return if (normURL == null) {

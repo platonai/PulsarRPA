@@ -153,7 +153,7 @@ open class Hyperlink constructor(
         fun create(url: String?): Hyperlink? {
             return when {
                 url == null -> null
-                !UrlUtils.isStandard(url) -> null
+                !URLUtils.isStandard(url) -> null
                 else -> Hyperlink(url)
             }
         }

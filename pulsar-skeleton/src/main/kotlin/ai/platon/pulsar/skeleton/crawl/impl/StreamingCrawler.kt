@@ -396,7 +396,7 @@ open class StreamingCrawler(
                 }
 
                 // disabled, might be slow
-                val urlSpec = UrlUtils.splitUrlArgs(url.url).first
+                val urlSpec = URLUtils.splitUrlArgs(url.url).first
                 if (alwaysFalse() && doLaterIfProcessing(urlSpec, url, Duration.ofSeconds(10))) {
                     return@forEachIndexed
                 }
@@ -512,7 +512,7 @@ open class StreamingCrawler(
         globalState.criticalWarning = null
 
         val context = Dispatchers.Default + CoroutineName("w")
-        val urlSpec = UrlUtils.splitUrlArgs(url.url).first
+        val urlSpec = URLUtils.splitUrlArgs(url.url).first
         // We must increase the number before the task is actually launched in a coroutine,
         // otherwise, it's easy to grow larger than fetchConcurrency.
         globalState.globalRunningTasks.incrementAndGet()

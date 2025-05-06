@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.urls.sites.amazon
 
 import kotlin.test.*
 
-class TestAmazonUrlUtils {
+class TestAmazonURLUtils {
     val asin = "B01LSUQSB0"
     val normalizedAsinUrl = "https://www.amazon.com/dp/$asin"
     val asinUrls = listOf(

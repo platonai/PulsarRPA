@@ -6,8 +6,7 @@ import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.persist.AbstractWebPage
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
@@ -41,8 +40,8 @@ data class UrlStat(
 ) : Comparable<UrlStat> {
     
     override fun compareTo(other: UrlStat): Int {
-        val reverseHost = UrlUtils.reverseHost(hostName)
-        val reverseHost2 = UrlUtils.reverseHost(other.hostName)
+        val reverseHost = URLUtils.reverseHost(hostName)
+        val reverseHost2 = URLUtils.reverseHost(other.hostName)
         
         return reverseHost.compareTo(reverseHost2)
     }
@@ -83,7 +82,7 @@ class FetchTask constructor(
     val url get() = page.url
     val href get() = page.href
     val pageConf get() = page.conf
-    val domain get() = UrlUtils.getTopPrivateDomain(url)
+    val domain get() = URLUtils.getTopPrivateDomain(url)
     val isCanceled get() = state.get() == State.CANCELED
     val isWorking get() = state.get() == State.WORKING
     

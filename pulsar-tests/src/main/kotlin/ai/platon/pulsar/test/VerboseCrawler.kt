@@ -3,7 +3,7 @@ package ai.platon.pulsar.basic
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.context.PulsarContext
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.persist.WebPage
@@ -43,7 +43,7 @@ open class VerboseCrawler(
         }
 
         doc.select(options.outLinkSelector) { it.attr("abs:href") }.asSequence()
-            .filter { UrlUtils.isStandard(it) }
+            .filter { URLUtils.isStandard(it) }
             .mapTo(HashSet()) { it.substringBefore(".com") }
             .asSequence()
             .filter { it.isNotBlank() }

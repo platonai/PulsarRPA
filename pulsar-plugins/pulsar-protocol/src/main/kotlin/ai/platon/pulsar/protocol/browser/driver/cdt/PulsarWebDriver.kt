@@ -11,7 +11,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
@@ -656,7 +656,7 @@ class PulsarWebDriver(
         }
 
         navigateUrl = url
-        if (UrlUtils.isLocalFile(url)) {
+        if (URLUtils.isLocalFile(url)) {
             // serve local file, for example:
             // local file path:
             // C:\Users\pereg\AppData\Local\Temp\pulsar\test.txt
@@ -679,7 +679,7 @@ class PulsarWebDriver(
     }
 
     private fun openLocalFile(url: String) {
-        val path = UrlUtils.localURLToPath(url)
+        val path = URLUtils.localURLToPath(url)
         val uri = path.toUri()
         page.navigate(uri.toString())
     }
@@ -725,7 +725,7 @@ class PulsarWebDriver(
             return
         }
 
-        if (!UrlUtils.isStandard(entry.url)) {
+        if (!URLUtils.isStandard(entry.url)) {
             logger.warn("Not a valid url | {}", entry.url)
             return
         }

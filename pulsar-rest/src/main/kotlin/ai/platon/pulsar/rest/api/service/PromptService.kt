@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_INTERACTIVE_ELEMENTS_SELECTOR
 import ai.platon.pulsar.common.serialize.json.JsonExtractor
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.persist.WebPage
@@ -86,7 +86,7 @@ class PromptService(
     }
 
     fun convertAPIRequestCommandToJSON(request: String, url: String): String? {
-        require(UrlUtils.isStandard(url)) { "URL must not be blank" }
+        require(URLUtils.isStandard(url)) { "URL must not be blank" }
 
         // Replace the URL in the request with a placeholder, so the result from the LLM can be cached.
         val processedRequest = request.replace(url, PLACEHOLDER_URL)
@@ -399,7 +399,7 @@ class PromptService(
         if (node.isImage) {
             if (node.width > 200 && node.height > 200) {
                 val imageUrl = node.attr("abs:src")
-                if (UrlUtils.isStandard(imageUrl)) {
+                if (URLUtils.isStandard(imageUrl)) {
                     sb.appendLine("<img src=\"$imageUrl\" />")
                 }
             }
@@ -407,7 +407,7 @@ class PromptService(
         } else if (node.isAnchor) {
             val anchorText = node.cleanText
             val anchorUrl = node.attr("abs:href")
-            if (anchorText.isNotEmpty() && UrlUtils.isStandard(anchorUrl)) {
+            if (anchorText.isNotEmpty() && URLUtils.isStandard(anchorUrl)) {
                 sb.appendLine("<a href=\"$anchorUrl\">$anchorText</a>")
             }
             return NodeFilter.FilterResult.SKIP_CHILDREN

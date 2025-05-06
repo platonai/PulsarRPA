@@ -6,12 +6,12 @@ import java.net.MalformedURLException
 class TenantedUrl(val tenantId: Int, var url: String) : Comparable<TenantedUrl> {
 
     fun reverseUrl(): TenantedUrl {
-        this.url = UrlUtils.reverseUrl(url)
+        this.url = URLUtils.reverseUrl(url)
         return this
     }
 
     fun unreverseUrl(): TenantedUrl {
-        this.url = UrlUtils.unreverseUrl(url)
+        this.url = URLUtils.unreverseUrl(url)
         return this
     }
 

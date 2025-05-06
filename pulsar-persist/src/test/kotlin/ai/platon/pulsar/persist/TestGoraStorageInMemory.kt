@@ -21,7 +21,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.MEM_STORE_CLASS
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
 import org.apache.avro.util.Utf8
@@ -71,7 +71,7 @@ class TestGoraStorageInMemory {
         webDb.delete(exampleUrl)
         webDb.flush()
         webDb.close()
-        LOG.debug("get '{}', '{}'", store.schemaName, UrlUtils.reverseUrlOrEmpty(exampleUrl))
+        LOG.debug("get '{}', '{}'", store.schemaName, URLUtils.reverseUrlOrEmpty(exampleUrl))
     }
 
     /**

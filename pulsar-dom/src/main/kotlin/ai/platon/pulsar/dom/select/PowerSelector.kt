@@ -2,7 +2,7 @@ package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
@@ -187,7 +187,7 @@ object PowerSelector {
         } catch (e: PowerSelectorParseException) {
             var message = e.brief()
             if (!message.isNullOrBlank()) {
-                val host = UrlUtils.getURLOrNull(baseUri)?.host
+                val host = URLUtils.getURLOrNull(baseUri)?.host
                 val key = "$host $cssQuery"
                 message = "$key\n>>>$message<<<"
                 val count1 = totalParseExceptions.computeIfAbsent(cssQuery) { AtomicInteger() }.incrementAndGet()

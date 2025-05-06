@@ -1,11 +1,9 @@
 package ai.platon.pulsar.examples.sites.topEc.english.amazon.rpa
 
-import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -45,7 +43,7 @@ class AsinSellerScraper {
      * After clicking `New seller` button, the seller url will be displayed.
      * */
     fun crawl() {
-        val groupedUrls = asinUrls.groupBy { UrlUtils.getTopPrivateDomain(it)!! }
+        val groupedUrls = asinUrls.groupBy { URLUtils.getTopPrivateDomain(it)!! }
         val groupedUrls0 = mutableMapOf<String, List<String>>()
         groupedUrls.forEach { (group, urls0) ->
             logger.info(group + "\t" + urls0.size)
@@ -152,7 +150,7 @@ class AsinSellerScraper {
         totalOtherSellerCount += otherSellerCount
 
         val extractedSellerUrls = rs.getArray("buy_box_seller_id").array as Array<Object>
-        val sellerLinks = extractedSellerUrls.map { it.toString() }.filter { UrlUtils.isStandard(it) }
+        val sellerLinks = extractedSellerUrls.map { it.toString() }.filter { URLUtils.isStandard(it) }
             .mapNotNull { href ->
                 AmazonUrls.normalizeSellerUrl(href)?.let { Hyperlink(it, "", href = href, referrer = asinUrl) }
             }

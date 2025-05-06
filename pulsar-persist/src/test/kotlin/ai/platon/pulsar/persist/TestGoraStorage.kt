@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
+import ai.platon.pulsar.common.urls.URLUtils.reverseUrlOrEmpty
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
 import com.google.common.collect.Lists

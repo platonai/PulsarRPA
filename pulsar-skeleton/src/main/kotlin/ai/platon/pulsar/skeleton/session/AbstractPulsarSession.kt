@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
@@ -672,7 +672,7 @@ abstract class AbstractPulsarSession(
             link = normalizeOrNull(link)?.spec ?: return null
         }
         
-        link = link.takeUnless { ignoreQuery } ?: UrlUtils.getUrlWithoutParameters(link)
+        link = link.takeUnless { ignoreQuery } ?: URLUtils.getUrlWithoutParameters(link)
         return link.substringBeforeLast("#")
     }
     
