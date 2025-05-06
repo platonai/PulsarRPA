@@ -99,31 +99,3 @@ fun simplifyException(e: Throwable, prefix: String = "", postfix: String = ""): 
     return "$prefix$message$postfix"
 }
 
-object KStrings {
-    /**
-     * To convert a property name in the canonical-form to an environment variable name you can follow these rules:
-     *
-     * * Replace dots (.) with underscores (_).
-     * * Remove any dashes (-).
-     * * Convert to uppercase.
-     *
-     * Converts environment variable names to Spring Boot property format.
-     * Example: 'SPRING_PROFILES_ACTIVE' -> 'spring.profiles.active'
-     *
-     * | 设置方式         | 写法                          | 说明 |
-     * |------------------|-------------------------------|------|
-     * | ☁️ 环境变量       | `SPRING_PROFILES_ACTIVE=prod` | Spring Boot 会自动将环境变量名转为配置 key |
-     * | 🔧 application.yml | `spring.profiles.active: prod`| 推荐用于本地默认配置 |
-     * | 🏁 JVM 参数       | `-Dspring.profiles.active=prod`| 适合在运行 jar 时传参 |
-     * | 🖥️ 命令行参数     | `--spring.profiles.active=prod`| 优先级最高，常用于容器运行时 |
-     *
-     * @see [relaxed-binding](https://docs.spring.io/spring-boot/docs/3.0.0/reference/html/features.html#features.external-config.typesafe-configuration-properties.relaxed-binding)
-     * */
-    fun toDotSeparatedKebabCase(input: String): String {
-        return input
-            .replace(Regex("([a-z0-9])([A-Z])"), "$1.$2")     // camelCase → camel.Case
-            .replace(Regex("([A-Z])([A-Z][a-z])"), "$1.$2")   // ABCWord → ABC.Word
-            .replace(Regex("[-_\\s]+"), ".")                 // _ - 空格 → .
-            .lowercase()
-    }
-}

@@ -7,7 +7,7 @@ package ai.platon.pulsar.common.config
  * @author vincent
  * @version $Id: $Id
  */
-open class ImmutableConfig : AbstractConfiguration {
+open class ImmutableConfig : RelaxedConfiguration {
 
     constructor(): this(false)
 

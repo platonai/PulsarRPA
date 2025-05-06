@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.config
 
-import ai.platon.pulsar.common.KStrings
+import ai.platon.pulsar.common.StringCases
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.config.XmlConfiguration.Companion.DEFAULT_RESOURCES
 import org.slf4j.LoggerFactory
@@ -12,23 +12,37 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * Created by vincent on 17-1-17.
- * Copyright @ 2013-2023 Platon AI. All rights reserved.
+ * A configuration class that supports relaxed property binding rules.
+ *
+ * Relaxed property matching allows for flexible mapping between environment variables,
+ * system properties, and bean property names. For example:
+ * - `context-path` binds to `contextPath`
+ * - `PORT` binds to `port`
+ *
+ * Properties are retrieved from the following sources in order of precedence:
+ * 1. ⚙️ Java System Properties
+ * 2. 🔧 Java Environment Variables
+ * 3. 📝 Spring Boot Environment (REST API only)
+ * 4. 📁 Configuration files in `${PULSAR_DATA_HOME}/config/conf-enabled`
+ *
+ * Rules:
+ * - When setting a property: names are normalized to `dot.separated.kebab-case`, e.g. server.servlet.context-path.
+ * - When getting a property: three formats are checked in order:
+ *   - Original name (`unRelaxedName.Any-Case`)
+ *   - Kebab-case with dots (`dot.separated.kebab.case`)
+ *   - Upper case with underscores (`UNDERSCORE_SEPARATED_UPPER_CASE`)
  *
  * @author vincent
  */
-abstract class AbstractConfiguration {
-    protected val logger = LoggerFactory.getLogger(AbstractConfiguration::class.java)
+abstract class RelaxedConfiguration {
+    protected val logger = LoggerFactory.getLogger(RelaxedConfiguration::class.java)
 
     private val resources = LinkedHashSet<String>()
     var name = "Configuration#" + hashCode()
     var profile = ""
         private set
 
-    /**
-     * Hadoop compatible configuration.
-     */
-    protected val conf: XmlConfiguration
+    protected val xmlConfiguration: XmlConfiguration
 
     /**
      * Spring core is the first class dependency now.
@@ -40,45 +54,61 @@ abstract class AbstractConfiguration {
         loadDefaults: Boolean = true,
         resources: Iterable<String> = DEFAULT_RESOURCES
     ) {
-        conf = XmlConfiguration(profile = profile, extraResources = resources, loadDefaults = loadDefaults)
+        xmlConfiguration = XmlConfiguration(profile = profile, extraResources = resources, loadDefaults = loadDefaults)
     }
 
     constructor(conf: XmlConfiguration) {
-        this.conf = XmlConfiguration(conf)
+        this.xmlConfiguration = XmlConfiguration(conf)
     }
 
     /**
-     * Return the boxed KConfiguration.
+     * Return the underlying implementation
      */
-    fun unbox() = conf
+    fun unbox() = xmlConfiguration
 
     /**
      * The configured item size.
      */
-    fun size() = conf.size()
+    fun size() = xmlConfiguration.size()
 
+    fun getUnrelaxed(name: String): String? {
+        return System.getProperty(name) ?: System.getenv(name) ?: environment?.get(name) ?: xmlConfiguration[name]
+    }
     /**
-     * Get the value of the `name` property, `null` if no such property exists.
+     * Retrieves the value of the given property name, or `null` if it does not exist.
      *
-     * PulsarRPA loads configurations from multiple sources in the following order of precedence:
+     * PulsarRPA supports relaxed binding rules, so the provided name does not need to exactly match
+     * the underlying property name in the environment or Spring context.
+     *
+     * This is particularly useful for:
+     * - Dash-separated environment variables (e.g., `context-path` → `contextPath`)
+     * - Uppercase environment variables (e.g., `PORT` → `port`)
+     *
+     * Property lookup is case-insensitive and tolerant of naming style differences.
+     *
+     * PulsarRPA resolves properties from multiple sources in the following order:
      *
      * 1. 🔧 Java Environment Variables
      * 2. ⚙️ Java System Properties
-     * 3. 📝 Spring Boot `application.properties` or `application.yml` (REST API only)
-     * 4. 📁 Configuration files in `${PULSAR_DATA_HOME}/config/conf-enabled` directory
+     * 3. 📝 Spring Boot `application.properties` / `application.yml` (REST API only)
+     * 4. 📁 Files in `${PULSAR_DATA_HOME}/config/conf-enabled`
      *
-     * @param name the property name, will be trimmed before get value.
-     * @return the value of the `name`, or null if no such property exists.
+     * @param name The logical property name. Leading/trailing whitespace will be trimmed.
+     * @return The resolved property value, or `null` if not found in any format.
      */
     open operator fun get(name: String): String? {
-        val value = System.getenv(name) ?: System.getProperty(name) ?: environment?.get(name) ?: conf[name]
-        if (value != null) {
-            return value
-        }
+        // Try the name as-is
+        var value = getUnrelaxed(name.trim())
+        if (value != null) return value
 
-        val kebabName = KStrings.toDotSeparatedKebabCase(name)
-        return System.getenv(kebabName) ?: System.getProperty(kebabName) ?: environment?.get(kebabName)
-        ?: conf[kebabName]
+        // Try kebab-case (e.g., contextPath → context-path)
+        val kebabName = StringCases.toDotSeparatedKebabCase(name)
+        value = getUnrelaxed(kebabName)
+        if (value != null) return value
+
+        // Try upper snake case (e.g., contextPath → CONTEXT_PATH)
+        val upperUnderscoreName = StringCases.toUpperUnderscoreCase(name)
+        return getUnrelaxed(upperUnderscoreName)
     }
 
     /**
@@ -419,5 +449,5 @@ abstract class AbstractConfiguration {
 
     private fun p(name: String) = SParser(get(name))
 
-    override fun toString() = "profile: <$profile> | $conf"
+    override fun toString() = "profile: <$profile> | $xmlConfiguration"
 }
