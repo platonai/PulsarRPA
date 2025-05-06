@@ -4,9 +4,6 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.alwaysFalse
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.AppConstants.CLIENT_JS_PROPERTY_NAMES
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_COMPUTED_STYLES
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import com.google.gson.GsonBuilder
 import java.nio.file.Files
@@ -15,7 +12,7 @@ import kotlin.io.path.listDirectoryEntries
 
 open class ScriptLoader(
     val confuser: ScriptConfuser,
-    val jsPropertyNames: Array<String>
+    val jsPropertyNames: List<String>
 ) {
     companion object {
         private val logger = getLogger(this)
@@ -90,7 +87,6 @@ open class ScriptLoader(
         // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
         val configs = GsonBuilder().create().toJson(jsInitParameters.toMap())
 
-
         // set predefined variables shared between javascript and jvm program
         val configVar = confuser.confuse( "__pulsar_CONFIGS")
         return """
@@ -135,6 +131,8 @@ open class ScriptLoader(
             "ATTR_OVERFLOW_VISIBLE" to AppConstants.PULSAR_ATTR_OVERFLOW_VISIBLE,
             "ATTR_ELEMENT_NODE_VI" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_VI,
             "ATTR_TEXT_NODE_VI" to AppConstants.PULSAR_ATTR_TEXT_NODE_VI,
+
+            "ATTR_ELEMENT_NODE_DATA" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_DATA
         ).also { jsInitParameters.putAll(it) }
         
         if (alwaysFalse()) {

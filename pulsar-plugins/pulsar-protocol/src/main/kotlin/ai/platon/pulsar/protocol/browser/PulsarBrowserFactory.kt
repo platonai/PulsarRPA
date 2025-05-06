@@ -19,6 +19,18 @@ class PulsarBrowserFactory : BrowserFactory {
     val browserType = BrowserType.PULSAR_CHROME
 
     /**
+     * Launch a browser with the given browser id, the browser id is used to identify the browser instance.
+     * */
+    override fun launch(browserId: BrowserId): Browser {
+        require(browserId.browserType == browserType) { "Browser type should be $browserType" }
+
+        val launcherOptions = LauncherOptions()
+        val chromeOptions = ChromeOptions()
+
+        return launcher.launch(browserId, launcherOptions, chromeOptions)
+    }
+
+    /**
      * Connect to a browser instance, the browser instance should be open with Chrome devtools open.
      * */
     override fun connect(browserType: BrowserType, port: Int, settings: BrowserSettings): Browser =

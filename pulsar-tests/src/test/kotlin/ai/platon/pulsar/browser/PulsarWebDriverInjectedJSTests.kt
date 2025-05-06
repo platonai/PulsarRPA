@@ -1,31 +1,28 @@
 package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.*
 
 /**
  * Test injected JS
  * */
 class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
 
-    val testURL get() = "$generatedAssetsBaseURL/interactive-4.html"
+    val testURL get() = "$generatedAssetsBaseURL/injected-js-test.html"
 
     @Test
     fun `test evaluate that returns primitive value`() = runWebDriverTest(testURL, browser) { driver ->
-        val code = """1+1"""
+        val expression = """1+1"""
 
-        val result = driver.evaluate(code)
+        val result = driver.evaluate(expression)
         assertEquals(2, result)
     }
 
     @Test
     fun `test evaluate that returns JS Object`() = runWebDriverTest(testURL, browser) { driver ->
-        val code = """document"""
+        val expression = """document"""
 
-        val result = driver.evaluateDetail(code)
+        val result = driver.evaluateDetail(expression)
         assertNotNull(result)
 
         println(result)
@@ -51,5 +48,61 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
         assertNotNull(result.value)
         assertNull(result.exception)
         assertNull(result.className)
+    }
+
+    @Test
+    fun `test __pulsar_NodeExt`() = runWebDriverTest(testURL, browser) { driver ->
+        var result = driver.evaluateValue("__pulsar_NodeExt")
+        println(result)
+
+        result = driver.evaluateValue("__pulsar_NodeExt.prototype")
+        println(result)
+
+        result = driver.evaluateValue("document.body.nodeExt")
+        println(result)
+    }
+
+    @Test
+    fun `test getConfig`() = runWebDriverTest(testURL, browser) { driver ->
+        val expression = """__pulsar_utils__.getConfig()"""
+
+        val result = driver.evaluateValue(expression)
+        println(result)
+    }
+
+    @Test
+    fun `test queryComputedStyle`() = runWebDriverTest(testURL, browser) { driver ->
+        val expression = """__pulsar_utils__.queryComputedStyle('button', ['color', 'background-color'])"""
+
+        val result = driver.evaluateValue(expression)
+        println(result)
+        assertTrue { result is Map<*, *> }
+        assertEquals("{color=f, background-color=007bff}", result.toString())
+    }
+
+    @Test
+    fun `test JS selectAttributes`() = runWebDriverTest(testURL, browser) { driver ->
+        val expression = """__pulsar_utils__.selectAttributes('section')"""
+
+        val result = driver.evaluateValue(expression)
+        println(result)
+    }
+
+    @Test
+    fun `test JS queryComputedStyle`() = runWebDriverTest(testURL, browser) { driver ->
+        val expression = """__pulsar_utils__.queryComputedStyle('button', ['color', 'background-color'])"""
+
+        val result = driver.evaluateValue(expression)
+        println(result)
+        assertTrue { result is Map<*, *> }
+        assertEquals("{color=f, background-color=007bff}", result.toString())
+    }
+
+    @Test
+    fun `test JS compute`() = runWebDriverTest(testURL, browser) { driver ->
+        val expression = """new __pulsar_NodeTraversor(new __pulsar_NodeFeatureCalculator()).traverse(document.body);"""
+
+        val result = driver.evaluateValue(expression)
+        println(result)
     }
 }

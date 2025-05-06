@@ -1278,7 +1278,7 @@ __pulsar_utils__.getClientRect = function(node) {
  * The computed style.
  *
  * @param selector {string} The selector to get the element from.
- * @param propertyNames {Array}
+ * @param propertyNames {String|Array}
  * @return {DOMRect|String|Boolean}
  * * */
 __pulsar_utils__.queryComputedStyle = function(selector, propertyNames) {
@@ -1291,13 +1291,20 @@ __pulsar_utils__.queryComputedStyle = function(selector, propertyNames) {
 };
 
 /**
- * The computed style.
+ * Get the computed style of a node.
+ *
+ * Example result:
+ * {color=f, background-color=007bff}
  *
  * @param node {Node|Element|Text}
- * @param propertyNames {Array}
+ * @param propertyNames {String|Array}
  * @return {Object|Boolean|null}
  * */
 __pulsar_utils__.getComputedStyle = function(node, propertyNames) {
+    if (typeof propertyNames === 'string') {
+        propertyNames = [propertyNames]
+    }
+
     if (node.nodeType === Node.ELEMENT_NODE) {
         let styles = {};
         let computedStyle = window.getComputedStyle(node, null);

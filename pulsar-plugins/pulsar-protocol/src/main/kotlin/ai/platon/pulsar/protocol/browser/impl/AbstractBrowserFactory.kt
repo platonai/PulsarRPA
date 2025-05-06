@@ -8,6 +8,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 
 abstract class AbstractBrowserFactory : BrowserFactory {
+
     /**
      * Launch a browser with the given browser id, the browser id is used to identify the browser instance.
      * */

@@ -1,5 +1,5 @@
 const __pulsar_DEFAULT_CONFIGS = {
-    "propertyNames": ["font-size, color, background-color"],
+    "propertyNames": ['font-size', 'color', 'background-color'],
     "viewPortWidth": 1920,
     "viewPortHeight": 1080,
     "META_INFORMATION_ID": "PulsarMetaInformation",
@@ -7,7 +7,8 @@ const __pulsar_DEFAULT_CONFIGS = {
     "ATTR_HIDDEN": "h",
     "ATTR_OVERFLOW_HIDDEN": "_oh",
     "ATTR_OVERFLOW_VISIBLE": "_visible",
-    // "ATTR_COMPUTED_STYLE": "cs",
     "ATTR_ELEMENT_NODE_VI": "vi",
-    "ATTR_TEXT_NODE_VI": "tv"
+    "ATTR_TEXT_NODE_VI": "tv",
+    "ATTR_COMPUTED_STYLE": "cs", // deprecated
+    "ATTR_ELEMENT_NODE_DATA": "nd"
 };

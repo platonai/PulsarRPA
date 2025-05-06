@@ -1,5 +1,6 @@
 package ai.platon.pulsar.browser
 
+import ai.platon.pulsar.browser.WebDriverTaskRunner.Companion.PAGE_SOURCE_MIN_LENGTH
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
 import ai.platon.pulsar.common.getLogger
@@ -19,10 +20,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class WebDriverTestBase : TestBase() {
-
-    companion object {
-        protected const val PAGE_SOURCE_MIN_LENGTH = 100
-    }
 
     @Value("\${server.port}")
     val port: Int = 0
@@ -75,6 +72,7 @@ class WebDriverTestBase : TestBase() {
     protected val browserFactory = DefaultBrowserFactory()
     protected val driverFactory get() = session.context.getBean(WebDriverFactory::class)
     protected val browser by lazy { browserFactory.launchRandomTempBrowser() }
+    protected val driverTaskRunner by lazy { WebDriverTaskRunner(browserFactory) }
     protected val settings by lazy { BrowserSettings(conf) }
     protected val confuser get() = settings.confuser as SimpleScriptConfuser
 
@@ -103,41 +101,8 @@ class WebDriverTestBase : TestBase() {
         }
     }
 
-    protected fun runWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
-        runBlocking {
-            browserFactory.launchRandomTempBrowser().use {
-                it.newDriver().use { driver ->
-                    open(url, driver)
-
-                    val pageSource = driver.pageSource()
-                    val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
-                    assumeTrue(
-                        { (pageSource?.length ?: 0) > PAGE_SOURCE_MIN_LENGTH },
-                        "Page source is too small | $display"
-                    )
-
-                    block(driver)
-                }
-            }
-        }
-    }
-
-    protected fun runWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
-        runBlocking {
-            browser.newDriver().use { driver ->
-                open(url, driver)
-
-                val pageSource = driver.pageSource()
-                val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
-                assumeTrue(
-                    { (pageSource?.length ?: 0) > PAGE_SOURCE_MIN_LENGTH },
-                    "Page source is too small | $display"
-                )
-
-                block(driver)
-            }
-        }
-    }
+    protected fun runWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
+        driverTaskRunner.runWebDriverTest(url, browser, block)
 
     protected fun runResourceWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
         runBlocking {

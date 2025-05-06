@@ -130,12 +130,9 @@ public interface AppConstants {
     String PULSAR_ATTR_OVERFLOW_VISIBLE = "_visible";
     String PULSAR_ATTR_ELEMENT_NODE_VI = "vi";
     String PULSAR_ATTR_TEXT_NODE_VI = "tv";
-    /**
-     * @deprecated Use PULSAR_ATTR_COMPUTED_STYLE instead
-     * */
-    @Deprecated
-    String PULSAR_ATTR_ELEMENT_NODE_STYLE = "st";
+
     String PULSAR_ATTR_COMPUTED_STYLE = "cs";
+    String PULSAR_ATTR_ELEMENT_NODE_DATA = "nd";
 
     // Browser use tool
     String BROWSER_INTERACTIVE_ELEMENTS_SELECTOR = "a, button, input, select, textarea, " +

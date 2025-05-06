@@ -418,8 +418,8 @@ open class BrowserSettings constructor(
     /**
      * The javascript to execute by Web browsers.
      * */
-    private val jsPropertyNames: Array<String>
-        get() = config.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, CLIENT_JS_PROPERTY_NAMES)
+    private val jsPropertyNames: List<String>
+        get() = config[FETCH_CLIENT_JS_COMPUTED_STYLES, CLIENT_JS_PROPERTY_NAMES].split(", ")
 
     /**
      * The screen viewport.

@@ -376,7 +376,7 @@ __pulsar_NodeExt.prototype.hasParent = function() {
  * @return {__pulsar_NodeExt}
  * */
 __pulsar_NodeExt.prototype.parent = function() {
-    return this.node.parentElement.nodeExt;
+    return this.node.parentElement.__pulsar_nodeExt;
 };
 
 /**

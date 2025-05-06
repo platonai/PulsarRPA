@@ -13,6 +13,7 @@ import java.text.MessageFormat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class PulsarWebDriverCDPTests : WebDriverTestBase() {
     fun setLogLevel(loggerName: String?, level: Level?) {
@@ -55,7 +56,7 @@ class PulsarWebDriverCDPTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test devTools dom event`() = runWebDriverDOMEventTest(testURL, browser) { driver ->
+    fun `test DOM event`() = runWebDriverDOMEventTest(testURL, browser) { driver ->
         assertIs<PulsarWebDriver>(driver)
 
         val code = """1+1"""
@@ -73,6 +74,11 @@ class PulsarWebDriverCDPTests : WebDriverTestBase() {
                 devTools.dom.onAttributeModified { e ->
                     val message = MessageFormat.format("> {0}. node changed | {1} := {2}", e.nodeId, e.name, e.value)
                     println(message)
+                }
+
+                devTools.console.enable()
+                devTools.console.onMessageAdded { e ->
+                    println(e.message)
                 }
 
                 open(url, driver)
