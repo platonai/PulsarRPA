@@ -531,34 +531,7 @@ class PulsarWebDriverRealSiteTests : WebDriverTestBase() {
         // [{0 0 1912 10538.8}, ]
         println("body.clientWidth: $bodyInfo")
     }
-    
-    @Test
-    fun testProxyAuthorization() {
-        val proxyEntry = ProxyEntry("127.0.0.1", 10808, "abc", "abc", Proxy.Type.SOCKS)
-        if (!NetUtil.testTcpNetwork(proxyEntry.host, proxyEntry.port)) {
-            logger.info(
-                "To run this test case, you should rise a local proxy server with proxy: {}",
-                proxyEntry.toURI()
-            )
-            return
-        }
-        
-        val browserId = BrowserId.RANDOM_TEMP
-        browserId.setProxy(proxyEntry)
-        
-        val browser = driverFactory.launchBrowser(browserId)
-        val driver = browser.newDriver()
-        
-        runBlocking {
-            driver.navigateTo("https://www.baidu.com/")
-            driver.waitForNavigation()
-            driver.waitForSelector("body")
-            delay(1000)
-            val source = driver.pageSource()
-            assertTrue { source != null && source.length > 1000 }
-        }
-    }
-    
+
     @Throws(IOException::class)
     private fun exportScreenshot(filename: String, screenshot: String): Path {
         val path = screenshotDir.resolve(filename)

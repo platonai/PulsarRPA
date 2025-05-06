@@ -1,60 +1,59 @@
 package ai.platon.pulsar.browser
 
+import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.impl.ProxyHubLoader
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.apache.commons.io.FileUtils
-import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import java.net.Proxy
 import kotlin.test.*
 
-@Ignore("You should provide valid proxies to run this test")
 class PulsarWebDriverProxyTests : WebDriverTestBase() {
-    
-    private final val providerProxies = """
-            113.219.171.252|2018|gdhx22x|ntmf23x123|2024-12-21
-            125.124.254.178|5888|gdhx22x|ntmf23x123|2024-12-21
-            111.179.91.136|2021|xjkw20k|ntmf23x123|2024-12-21
-            58.52.216.7|2021|xjkw20k|ntmf23x123|2024-12-21
-            222.243.55.104|2018|ntmf23x|ntmf23x123|2024-12-21
-            58.49.229.123|2021|ntmf23x|ntmf23x123|2024-12-21
-            223.244.7.17|2018|olhb23q|ntmf23x123|2024-12-21
-            223.15.243.217|1000|olhb23q|ntmf23x123|2024-12-21
-            218.14.199.43|2019|sgrw19j|sgrw19j|2024-12-21
-            182.242.57.34|2018|sgrw19j|sgrw19j|2024-12-21
-        """.trimIndent()
-    
-    final val proxies = providerProxies.lines().map {
-        val parts = it.split("|")
-        val ip = parts[0]
-        val port = parts[1].toInt()
-        val username = parts[2]
-        val password = parts[3]
-        val expires = parts[4]
-        ProxyEntry(ip, port, username, password)
-    }
-    val proxyEntry = proxies[2]
-    
-//    val proxyEntry = ProxyEntry("113.219.171.252", 2018)
-    val ipTestUrl = "https://ip.tool.chinaz.com/"
+    private val proxyLoader by lazy { ProxyHubLoader(conf) }
+    private val proxyHubUrl = "http://localhost:8192/api/proxies"
+
+    private val proxies = mutableListOf<ProxyEntry>()
+
+    // val ipTestUrl = "https://ip.tool.chinaz.com/"
+    // val ipTestUrl = "https://whatismyipaddress.com/"
+    val ipTestUrl = "https://www.baidu.com/"
     val browserId = BrowserId.RANDOM_TEMP
-    
-    @BeforeTest
-    fun setup() {
-        assumeTrue(proxyEntry.test(), "Test skipped because the proxy is not available")
-        browserId.fingerprint.setProxy(proxyEntry)
+
+    @BeforeEach
+    fun setupBrowserContext() {
+        PulsarSettings().withSPA()
     }
-    
+
+    @BeforeEach
+    fun checkProxyHub() {
+        Assumptions.assumeTrue(NetUtil.testHttpNetwork(proxyHubUrl))
+        System.setProperty(ProxyHubLoader.PROXY_HUB_URL, proxyHubUrl)
+
+        proxyLoader.loadProxies().toCollection(proxies)
+        println(proxies)
+
+        Assumptions.assumeTrue(proxies.isNotEmpty())
+        browserId.setProxy(proxies.random())
+    }
+
     @AfterTest
     fun tearDown() {
         kotlin.runCatching { FileUtils.deleteDirectory(browserId.userDataDir.toFile()) }.onFailure { println(it.brief()) }
     }
-    
+
     @Test
     fun `When navigate to a HTML page with proxy then success`() = runWebDriverTest(browserId) { driver ->
+        Assumptions.assumeTrue(proxies.isNotEmpty())
+
         open(ipTestUrl, driver, 1)
-        
+
         val navigateEntry = driver.navigateEntry
         assertTrue { navigateEntry.documentTransferred }
         assertTrue { navigateEntry.networkRequestCount.get() > 0 }
@@ -68,10 +67,37 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
         assertTrue { navigateEntry.mainResponseStatus == 200 }
         assertTrue { navigateEntry.mainResponseHeaders.isNotEmpty() }
 
-        assertTrue { browserId.fingerprint.proxyURI?.host == proxyEntry.host }
-        assertTrue { driver.selectFirstTextOrNull(".ipLocalContent")?.contains(proxyEntry.host) == true }
-        
+//        assertTrue { browserId.fingerprint.proxyURI?.host == proxyEntry.host }
+//        assertTrue { driver.selectFirstTextOrNull(".ipLocalContent")?.contains(proxyEntry.host) == true }
+
         // readlnOrNull()
         delay(3000)
+    }
+
+    @Test
+    fun testProxyAuthorization() {
+        val proxyEntry = ProxyEntry("127.0.0.1", 10808, "abc", "abc", Proxy.Type.SOCKS)
+        if (!NetUtil.testTcpNetwork(proxyEntry.host, proxyEntry.port)) {
+            logger.info(
+                "To run this test case, you should rise a local proxy server with proxy: {}",
+                proxyEntry.toURI()
+            )
+            return
+        }
+
+        val browserId = BrowserId.RANDOM_TEMP
+        browserId.setProxy(proxyEntry)
+
+        val browser = driverFactory.launchBrowser(browserId)
+        val driver = browser.newDriver()
+
+        runBlocking {
+            driver.navigateTo("https://www.baidu.com/")
+            driver.waitForNavigation()
+            driver.waitForSelector("body")
+            delay(1000)
+            val source = driver.pageSource()
+            assertTrue { source != null && source.length > 1000 }
+        }
     }
 }

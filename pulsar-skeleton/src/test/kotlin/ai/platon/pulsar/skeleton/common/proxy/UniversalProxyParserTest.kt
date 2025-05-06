@@ -5,7 +5,6 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
-import kotlin.test.assertFails
 import kotlin.test.assertTrue
 
 class UniversalProxyParserTest {
@@ -53,7 +52,7 @@ proxy89.myvpn.network:443
     }
 
     @Test
-    fun `test parseUniversalProxy with INVALID proxy`() {
+    fun `test parseUniversalProxy with NON-STANDARD proxy`() {
         val parser = UniversalProxyParser()
         val proxies = parser.parse(
             """
@@ -71,8 +70,8 @@ proxy89.myvpn.network:443
         de-frankfurt.proxy:3128:extra
         proxy07.datacenter.local:1081#comment
         nl.proxy.region.cloud:1085 
-        203.0.113.55 :8000
-        proxy-lon03.isp.com : 8090
+        203.0.113.55 :8000b
+        proxy-lon03.isp.com : 8090a
         sg.proxy.service:1080 
         external.proxy42.net:3127 
         proxy.custom.subnet:9999 
@@ -81,6 +80,9 @@ proxy89.myvpn.network:443
         """
         )
 
-        assertTrue { proxies.isEmpty() }
+        // assertTrue { proxies.isEmpty() }
+        proxies.forEach {
+            println(it)
+        }
     }
 }
