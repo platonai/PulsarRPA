@@ -2,6 +2,7 @@ package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.js.JsUtils
+import ai.platon.pulsar.common.sleepSeconds
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
 
@@ -170,9 +171,8 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         assertEquals(listOf(text, text, text), propValues)
     }
 
-
     @Test
-    fun `test buildDomTree`() = runWebDriverTest("${aiGenBaseURL}/interactive-1.html", browser) { driver ->
+    fun `test buildDomTree`() = runWebDriverTest("${generatedAssetsBaseURL}/interactive-1.html", browser) { driver ->
         var buildDomTreeJs = ResourceLoader.readString("js/buildDomTree.js")
         buildDomTreeJs = buildDomTreeJs.trimEnd { it.isWhitespace() || it == ';' }
         // println(StringUtils.abbreviateMiddle(buildDomTreeJs, "...", 500))
@@ -195,6 +195,8 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         val node = map["0"]
         println(node)
         assertNotNull(node)
+
+        sleepSeconds(10)
     }
 
     @Test

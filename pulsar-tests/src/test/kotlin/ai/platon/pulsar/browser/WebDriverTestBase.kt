@@ -43,7 +43,7 @@ class WebDriverTestBase : TestBase() {
 
     protected val assetsBaseURL get() = "http://127.0.0.1:$port/assets"
 
-    protected val aiGenBaseURL get() = "http://127.0.0.1:$port/ai-gen"
+    protected val generatedAssetsBaseURL get() = "http://127.0.0.1:$port/generated"
 
     /**
      * @see [ai.platon.pulsar.test.server.MockSiteController.text]

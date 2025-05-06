@@ -16,7 +16,7 @@ class UrlUtilsTest {
     @Test
     fun testURIBasics() {
         // 准备测试数据
-        val path = AppPaths.getTmp("test.txt")
+        val path = AppPaths.getTmpDirectory("test.txt")
         val uri = path.toUri()
         val url = uri.toURL()
         assertEquals("file", uri.scheme)
@@ -112,6 +112,24 @@ class UrlUtilsTest {
         }
     }
 
+
+
+    /**
+     * Test Windows file URI
+     * */
+    @Test
+    fun testNormalize_WindowsFileURI() {
+        val url = "file:///C:/Users/User/Documents/file.txt"
+        val normalizedUrl = UrlUtils.normalize(url)
+        assertEquals(URL("file:///C:/Users/User/Documents/file.txt"), normalizedUrl)
+    }
+    
+
+
+
+
+
+
     @Test
     fun testIsBrowserURL() {
         // Test with a browser-specific protocol
@@ -145,7 +163,7 @@ class UrlUtilsTest {
     @Test
     fun testPathToLocalURL() {
         // 准备测试数据
-        val path = AppPaths.getTmp("test.txt")
+        val path = AppPaths.getTmpDirectory("test.txt")
         assertEquals("file", path.toUri().scheme)
 
         // 调用待测试的方法
