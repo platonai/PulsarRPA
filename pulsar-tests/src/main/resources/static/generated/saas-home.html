@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>FlowCloud – Automate Your Workflow</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #222222;
+            --accent: #3366ff;
+        }
+        body.dark {
+            --bg: #121212;
+            --text: #e0e0e0;
+            --accent: #6699ff;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            scroll-behavior: smooth;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: var(--bg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        nav a {
+            margin: 0 1rem;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+        }
+
+        .hero {
+            text-align: center;
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, #eef2ff, #dde6ff);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        section {
+            padding: 4rem 2rem;
+            max-width: 960px;
+            margin: auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: #f7f9fc;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+            background: #f1f3f6;
+        }
+
+        .toggle-theme {
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0.3rem 1rem;
+            border: 1px solid var(--accent);
+            border-radius: 5px;
+            background: none;
+            color: var(--accent);
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+
+        .fade-in.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div><strong>FlowCloud</strong></div>
+    <nav>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#contact">Contact</a>
+        <button class="toggle-theme">🌙 Dark</button>
+    </nav>
+</header>
+
+<div class="hero">
+    <h1>Automate Everything</h1>
+    <p>Streamline your business processes with FlowCloud’s powerful SaaS platform.</p>
+</div>
+
+<section id="features">
+    <h2>🚀 Features</h2>
+    <div class="grid fade-in">
+        <div class="card"><h3>Task Automation</h3><p>Create, assign, and monitor tasks automatically.</p></div>
+        <div class="card"><h3>Real-time Collaboration</h3><p>Chat, comment, and collaborate with your team.</p></div>
+        <div class="card"><h3>AI Suggestions</h3><p>Let AI help optimize your daily workflow.</p></div>
+    </div>
+</section>
+
+<section id="pricing">
+    <h2>💰 Pricing</h2>
+    <div class="grid fade-in">
+        <div class="card"><h3>Free</h3><p>$0 / month<br/>Basic features<br/>Single user</p></div>
+        <div class="card"><h3>Pro</h3><p>$19 / month<br/>Unlimited projects<br/>Priority support</p></div>
+        <div class="card"><h3>Enterprise</h3><p>Custom quote<br/>Team access<br/>Dedicated manager</p></div>
+    </div>
+</section>
+
+<section id="contact">
+    <h2>📬 Contact Us</h2>
+    <form class="fade-in" style="max-width:600px; margin:auto;">
+        <label>Name:<br/><input type="text" required /></label><br/><br/>
+        <label>Email:<br/><input type="email" required /></label><br/><br/>
+        <label>Message:<br/><textarea rows="4" required></textarea></label><br/><br/>
+        <button type="submit">Send</button>
+    </form>
+</section>
+
+<footer>
+    &copy; 2025 FlowCloud Inc. All rights reserved.
+</footer>
+
+<script>
+    const themeBtn = document.querySelector('.toggle-theme');
+    themeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        themeBtn.textContent = document.body.classList.contains('dark') ? '☀️ Light' : '🌙 Dark';
+    });
+
+    const fadeEls = document.querySelectorAll('.fade-in');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('show');
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    fadeEls.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

@@ -172,7 +172,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
 
 
     @Test
-    fun `test buildDomTree`() = runWebDriverTest("${aiGenBaseURL}/interactive-page-1.html", browser) { driver ->
+    fun `test buildDomTree`() = runWebDriverTest("${aiGenBaseURL}/interactive-1.html", browser) { driver ->
         var buildDomTreeJs = ResourceLoader.readString("js/buildDomTree.js")
         buildDomTreeJs = buildDomTreeJs.trimEnd { it.isWhitespace() || it == ';' }
         // println(StringUtils.abbreviateMiddle(buildDomTreeJs, "...", 500))
