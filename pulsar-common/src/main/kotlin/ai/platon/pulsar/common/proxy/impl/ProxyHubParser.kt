@@ -36,4 +36,36 @@ open class ProxyHubParser(conf: ImmutableConfig) : ProxyParser() {
             listOf()
         }
     }
+
+    companion object {
+        fun mockProxyHubResponse(): Map<String, Any> {
+            val proxies = listOf(
+                ProxyEntry(
+                    "127.0.0.1",
+                    10908,
+                ),
+                ProxyEntry(
+                    "127.0.0.1",
+                    10909,
+                )
+            )
+
+            return mapOf(
+                "status" to "success",
+                "message" to "Proxies retrieved successfully",
+                "data" to mapOf(
+                    "proxies" to proxies.map { proxy ->
+                        mapOf(
+                            "host" to proxy.host,
+                            "port" to proxy.port,
+                            "username" to proxy.username,
+                            "password" to proxy.password,
+                            "type" to proxy.type,
+                            "declaredTTL" to proxy.declaredTTL
+                        )
+                    }
+                )
+            )
+        }
+    }
 }

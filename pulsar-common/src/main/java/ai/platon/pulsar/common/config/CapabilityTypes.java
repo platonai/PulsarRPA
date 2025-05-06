@@ -212,6 +212,7 @@ public interface CapabilityTypes {
 
     String PROXY_POOL_MANAGER_CLASS = "proxy.pool.manager.class";
     String PROXY_LOADER_CLASS = "proxy.loader.class";
+    String PROXY_PARSER_CLASS = "proxy.parser.class";
     String PROXY_MAX_FETCH_SUCCESS = "proxy.max.fetch.success";
     String PROXY_MAX_ALLOWED_PROXY_ABSENCE = "proxy.max.allowed.proxy.absence";
     String PROXY_POOL_CAPACITY = "proxy.pool.size";

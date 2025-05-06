@@ -17,6 +17,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_DISPLAY
+import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_ROTATION_URL
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.external.ChatModelFactory
@@ -191,16 +192,20 @@ open class BrowserPrivacyContext(
             return
         }
 
-        val proxyRotationURL = conf["PROXY_ROTATION_URL"]
-        val isModelConfigured = ChatModelFactory.isModelConfigured(conf)
-        if (proxyRotationURL != null && isModelConfigured) {
-            ProxyLoaderFactory.proxyParser.compareAndSet(null, UniversalProxyParser())
-        }
+        setProxyParser()
 
         createProxyContextIfEnabled()
         val page = task.page
         require(page is AbstractWebPage)
         page.setVar(VAR_PRIVACY_CONTEXT_DISPLAY, display)
+    }
+
+    private fun setProxyParser() {
+        val proxyRotationURL = conf[PROXY_ROTATION_URL]
+        val isModelConfigured = ChatModelFactory.isModelConfigured(conf)
+        if (proxyRotationURL != null && isModelConfigured) {
+            ProxyLoaderFactory.proxyParser.compareAndSet(null, UniversalProxyParser())
+        }
     }
 
     @Throws(ProxyException::class)
