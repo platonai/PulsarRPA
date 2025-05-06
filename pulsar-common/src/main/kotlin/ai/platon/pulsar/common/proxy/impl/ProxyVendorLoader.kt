@@ -37,7 +37,7 @@ open class ProxyVendorLoader(
         return try {
             val text = url.readText()
 
-            logger.info("Proxy provider response: {}", text)
+            logger.info("Proxy provider response: {} | {}", text, proxyRotationURLSpec)
 
             parser.parse(text, "auto")
         } catch (e: IOException) {
