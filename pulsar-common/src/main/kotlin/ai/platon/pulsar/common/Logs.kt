@@ -105,6 +105,15 @@ fun warnUnexpected(target: Any, t: Throwable) = warnUnexpected(target, t, t.stri
  * @param message the message to log
  * */
 fun warnUnexpected(target: Any, t: Throwable, message: String, vararg args: Any?) {
+    if (t is InterruptedException) {
+        val logger = getLogger(target)
+        // We will suppress the message
+        logger.info("[Interrupted] {}$message", *args)
+        // Preserve interrupt status
+        Thread.currentThread().interrupt()
+        return
+    }
+
     try {
         val logger = getLogger(target)
         val message1 = """
@@ -113,11 +122,6 @@ The exception was unexpected; refine the code to handle it appropriately.
         logger.warn("$message1\n$message", *args)
     } catch (t2: Throwable) {
         catastrophicError(t2, message, *args)
-    }
-    
-    if (t is InterruptedException) {
-        // Preserve interrupt status
-        Thread.currentThread().interrupt()
     }
 }
 
