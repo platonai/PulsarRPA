@@ -31,6 +31,7 @@ export BROWSER_CONTEXT_MODE=SYSTEM_DEFAULT
 For high-performance parallel crawling:
 
 ```bash
+export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 export BROWSER_CONTEXT_MODE=SEQUENTIAL
 export BROWSER_CONTEXT_NUMBER=2
 export BROWSER_MAX_ACTIVE_TABS=8
@@ -64,6 +65,7 @@ deepseek.api.key=
 
 For high performance, parallel crawling users:
 ```properties
+proxy.rotation.url=https://your-proxy-provider.com/rotation-endpoint
 browser.context.mode=SEQUENTIAL
 browser.context.number=2
 browser.max.active.tabs=8
@@ -81,6 +83,7 @@ For Docker deployments, use environment variables in the `docker run` command.
 ```bash
 docker run -d -p 8182:8182 \
   -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
+  -e PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint \
   -e BROWSER_CONTEXT_MODE=SEQUENTIAL \
   -e BROWSER_CONTEXT_NUMBER=2 \
   -e BROWSER_MAX_ACTIVE_TABS=8 \
@@ -93,6 +96,7 @@ docker run -d -p 8182:8182 \
 ```powershell
 docker run -d -p 8182:8182 `
   -e DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY `
+  -e PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint `
   -e BROWSER_CONTEXT_MODE=SEQUENTIAL `
   -e BROWSER_CONTEXT_NUMBER=2 `
   -e BROWSER_MAX_ACTIVE_TABS=8 `
@@ -119,6 +123,10 @@ docker run -d -p 8182:8182 `
     - All `SEQUENTIAL` and `TEMPORARY` modes inherit from this prototype.
   - `SEQUENTIAL` **[Advanced]**: Selects a user data directory from a managed pool to enable sequential isolation.
   - `TEMPORARY` **[Advanced]**: Generates a new, isolated user data directory for each browser instance.
+
+* **`proxy.rotation.url`**
+  Defines the URL provided by your proxy service.
+  Each time the rotation URL is accessed, it should return a response containing one or more fresh proxy IPs.
 
 * **`browser.context.number`** *(default: 2)*
   Number of browser contexts (isolated, incognito-like sessions).

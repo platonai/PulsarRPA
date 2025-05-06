@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.proxy.ProxyLoader
 import ai.platon.pulsar.common.proxy.ProxyParser
 import ai.platon.pulsar.common.proxy.ProxyParserFactory
 import ai.platon.pulsar.common.urls.UrlUtils
+import java.io.IOException
 import java.time.Duration
 
 open class ProxyVendorLoader(
@@ -24,10 +25,6 @@ open class ProxyVendorLoader(
             val vendorProxyParser = ProxyParserFactory.get(spec)
             val universalProxyParser = ProxyParserFactory.get("UniversalProxyParser")
             return when {
-                spec == "http://localhost:8192/api/proxies" -> {
-                    ProxyParserFactory.getOrCreate(spec) { ProxyHubParser(conf) }
-                }
-
                 vendorProxyParser != null -> vendorProxyParser
                 universalProxyParser != null -> universalProxyParser
                 else -> ProxyParserFactory.getOrCreateDefault { ProxyHubParser(conf) }
@@ -39,9 +36,12 @@ open class ProxyVendorLoader(
 
         return try {
             val text = url.readText()
+
+            logger.info("Proxy provider response: {}", text)
+
             parser.parse(text, "auto")
-        } catch (e: Exception) {
-            logger.error("Failed to fetch proxies from provider | {}", url, e)
+        } catch (e: IOException) {
+            logger.error("Failed to fetch proxies from provider | {} | {}", url, e.message)
             emptyList()
         }
     }

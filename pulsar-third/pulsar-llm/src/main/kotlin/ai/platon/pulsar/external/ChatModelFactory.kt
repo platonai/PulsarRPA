@@ -48,19 +48,19 @@ object ChatModelFactory {
      */
     @Throws(IllegalArgumentException::class)
     fun getOrCreate(conf: ImmutableConfig): ChatModel {
-        // Notice: all keys are transformed to dot.separated.kebab.case using KStrings.toDotSeparatedKebabCase(),
+        // Notice: all keys are transformed to dot.separated.kebab-case using KStrings.toDotSeparatedKebabCase(),
         // so the following keys are equal:
-        // - DEEPSEEK_API_KEY, deepseek.apiKey
+        // - DEEPSEEK_API_KEY, deepseek.apiKey, deepseek.api-key
         val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
         if (deepseekAPIKey != null) {
-            val deepseekModelName = conf["DEEPSEEK_MODEL_NAME"] ?: conf["LLM_NAME"] ?: "deepseek-chat"
+            val deepseekModelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
             return getOrCreate("deepseek", deepseekModelName, deepseekAPIKey, conf)
         }
 
         val openaiAPIKey = conf["OPENAI_API_KEY"]
         if (openaiAPIKey != null) {
             val openaiBaseURL = conf["OPENAI_BASE_URL"] ?: "https://api.openai.com/v1/chat/completions"
-            val openaiModelName = conf["OPENAI_MODEL_NAME"] ?: conf["LLM_NAME"] ?: "gpt-4o"
+            val openaiModelName = conf["OPENAI_MODEL_NAME"] ?: "gpt-4o"
             return getOrCreateOpenAICompatibleModel(openaiModelName, openaiAPIKey, openaiBaseURL, conf)
         }
 
