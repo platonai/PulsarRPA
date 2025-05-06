@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common
 
-object StringCases {
+object PropertyNameCases {
     /**
      * Converts environment variable names to Spring Boot property format.
      * Example:

@@ -1,18 +1,18 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.StringCases.toDotSeparatedKebabCase
-import ai.platon.pulsar.common.StringCases.toUpperUnderscoreCase
+import ai.platon.pulsar.common.PropertyNameCases.toDotSeparatedKebabCase
+import ai.platon.pulsar.common.PropertyNameCases.toUpperUnderscoreCase
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import kotlin.test.Test
 
-class StringCasesTest {
+class PropertyNameCasesTest {
 
     @Test
     fun testPrependReadableClassName_ClassNameContainsSeparator() {
         // Arrange
-        val obj = StringCasesTest()
+        val obj = PropertyNameCasesTest()
         val ident = "testIdent"
         val name = "testName"
         val separator = "-"
@@ -29,8 +29,11 @@ class StringCasesTest {
     @CsvSource(
         "SPRING_PROFILES_ACTIVE, spring.profiles.active",
         "server.servlet.contextPath, server.servlet.context-path",
+        "my.main-project.person.firstName, my.main-project.person.first-name",
+
         "DEEPSEEK_API_KEY, deepseek.api.key",
         "llm.apiKey, llm.api-key",
+
         "MY_CUSTOM_SETTING, my.custom.setting",
         "DATABASE_URL, database.url",
         "REDIS_HOST, redis.host",

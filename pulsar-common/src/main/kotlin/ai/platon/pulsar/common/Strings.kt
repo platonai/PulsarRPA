@@ -98,4 +98,3 @@ fun simplifyException(e: Throwable, prefix: String = "", postfix: String = ""): 
 
     return "$prefix$message$postfix"
 }
-
