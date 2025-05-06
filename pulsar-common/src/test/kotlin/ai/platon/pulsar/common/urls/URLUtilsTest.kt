@@ -5,11 +5,12 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_SPECIFIC_URL_PREFIX
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import java.net.MalformedURLException
-import java.net.URISyntaxException
-import java.net.URL
-import java.net.URLEncoder
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
+import java.io.File
+import java.net.*
 import java.util.*
+import kotlin.io.path.toPath
 
 class URLUtilsTest {
 
@@ -28,7 +29,7 @@ class URLUtilsTest {
         var url = "https://www.amazon.com/s?k=\"Boys%27+Novelty+Belt+Buckles\"&rh=n:9057119011&page=1"
         var normUrl = URLUtils.normalizeOrNull(url, true)
         assertNull(normUrl)
-        
+
         url = "https://www.amazon.com/s?k=Boys%27+Novelty+Belt+Buckles&rh=n:9057119011&page=1"
         normUrl = URLUtils.normalizeOrNull(url, true)
         assertNotNull(normUrl)
@@ -112,30 +113,34 @@ class URLUtilsTest {
         }
     }
 
-
-
     /**
-     * Test Windows file URI
+     * Test Windows file URI.
+     * Enable only on Windows.
      * */
     @Test
+    @EnabledOnOs(OS.WINDOWS)
     fun testNormalize_WindowsFileURI() {
         val filePath = "C:\\Users\\Vincent\\Documents"
-        val uri = java.io.File(filePath).toURI()  // 自动转换为合法的 file:// URI
-        println(uri.toString()) // 输出 file:/C:/Users/Vincent/Documents/
-        assertEquals("file:/C:/Users/Vincent/Documents/", uri.toString())
+        val uri = File(filePath).toURI()  // 自动转换为合法的 file:// URI
+        println(uri.toString()) // 输出 file:/C:/Users/Vincent/Documents
+        assertEquals("file:/C:/Users/Vincent/Documents", uri.toString())
 
         // 注意：虽然 URI 标准中为绝对路径推荐 file:///C:/...，
         // 但 Java 会自动简化为 file:/C:/...，它依然是合法的并能正常解析。
+        val uri1 = URI.create("file:/C:/Users/Vincent/Documents")
+        val uri2 = URI.create("file:///C:/Users/Vincent/Documents")
+        assertEquals(uri1, uri2)
+
+        assertEquals("file:/C:/Users/Vincent/Documents", uri1.toPath().toFile().toURI().toString())
+        assertEquals("file:/C:/Users/Vincent/Documents", uri2.toPath().toFile().toURI().toString())
+
+        assertEquals("file:///C:/Users/Vincent/Documents", uri1.toPath().toUri().toString())
+        assertEquals("file:///C:/Users/Vincent/Documents", uri2.toPath().toUri().toString())
 
         val url = "file:///C:/Users/User/Documents/file.txt"
         val normalizedUrl = URLUtils.normalize(url)
         assertEquals(URL("file:///C:/Users/User/Documents/file.txt"), normalizedUrl)
     }
-
-
-
-
-
 
 
     @Test
