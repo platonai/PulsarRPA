@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 open class ProxyHubParser(conf: ImmutableConfig) : ProxyParser() {
     private val logger = LoggerFactory.getLogger(ProxyHubParser::class.java)
 
-    override val name: String = "ProxyHub"
+    override val name: String = "ProxyHubParser"
 
     override fun parse(text: String, format: String): List<ProxyEntry> {
         val tree = pulsarObjectMapper().readTree(text)

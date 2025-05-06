@@ -6,14 +6,10 @@ import ai.platon.pulsar.common.proxy.impl.ProxyVendorLoader
 import ai.platon.pulsar.common.warnForClose
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicReference
 
-class ProxyLoaderFactory(val conf: ImmutableConfig) : AutoCloseable {
-    companion object {
-        // TODO: a temporary solution
-        val proxyParser = AtomicReference<ProxyParser>()
-    }
-
+class ProxyLoaderFactory(
+    val conf: ImmutableConfig
+) : AutoCloseable {
     private val logger = LoggerFactory.getLogger(ProxyLoaderFactory::class.java)
 
     private val proxyLoaders = ConcurrentHashMap<String, ProxyLoader>()
@@ -26,20 +22,16 @@ class ProxyLoaderFactory(val conf: ImmutableConfig) : AutoCloseable {
 
     private fun computeIfAbsent(conf: ImmutableConfig): ProxyLoader {
         synchronized(ProxyLoaderFactory::class) {
-            val clazz = getLoaderClass(conf)
-            val loader = proxyLoaders.computeIfAbsent(clazz.name) {
-                clazz.constructors.first { it.parameters.size == 1 }.newInstance(conf) as ProxyLoader
-            }
-
-            if (proxyParser.get() != null) {
-                loader.parser = proxyParser.get()
+            val javaClass = getProxyLoaderJavaClass(conf)
+            val loader = proxyLoaders.computeIfAbsent(javaClass.name) {
+                javaClass.constructors.first { it.parameters.size == 1 }.newInstance(conf) as ProxyLoader
             }
 
             return loader
         }
     }
 
-    private fun getLoaderClass(conf: ImmutableConfig): Class<*> {
+    private fun getProxyLoaderJavaClass(conf: ImmutableConfig): Class<*> {
         val defaultClazz = ProxyVendorLoader::class.java
         return try {
             conf.getClass(PROXY_LOADER_CLASS, defaultClazz)

@@ -14,10 +14,9 @@ abstract class ProxyLoader(
 
     protected val startTime = Instant.now()
     protected val closed = AtomicBoolean()
-
-    open var parser: ProxyParser? = null
-
     val isActive get() = !closed.get()
+
+    abstract val parser: ProxyParser
 
     @Throws(ProxyException::class)
     fun updateProxies() = updateProxies(Duration.ZERO)
@@ -26,7 +25,7 @@ abstract class ProxyLoader(
     abstract fun updateProxies(reloadInterval: Duration): List<ProxyEntry>
 
     protected fun parse(text: String, format: String): List<ProxyEntry> {
-        return parser?.parse(text, format) ?: emptyList()
+        return parser.parse(text, format) ?: emptyList()
     }
 
     override fun close() {

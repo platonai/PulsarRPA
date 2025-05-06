@@ -30,8 +30,7 @@ Your response should contains ONLY the JSON object, and nothing else.
 
     """.trimIndent()
 
-    override val name: String
-        get() = "universal"
+    override val name = "UniversalProxyParser"
 
     /**
      * TODO: parse multiple proxies

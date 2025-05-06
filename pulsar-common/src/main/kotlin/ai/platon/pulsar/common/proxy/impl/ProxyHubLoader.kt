@@ -3,7 +3,6 @@ package ai.platon.pulsar.common.proxy.impl
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyLoader
-import ai.platon.pulsar.common.proxy.ProxyParser
 import ai.platon.pulsar.common.urls.UrlUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -14,7 +13,7 @@ open class ProxyHubLoader(conf: ImmutableConfig) : ProxyLoader(conf) {
 
     val baseUrl get() = conf[PROXY_HUB_URL]
 
-    override var parser: ProxyParser? = ProxyHubParser(conf)
+    override val parser = ProxyHubParser(conf)
 
     @Synchronized
     @Throws(IOException::class)
@@ -43,7 +42,7 @@ open class ProxyHubLoader(conf: ImmutableConfig) : ProxyLoader(conf) {
             return listOf()
         }
 
-        return parser?.parse(response) ?: listOf()
+        return parser.parse(response)
     }
 
     companion object {
