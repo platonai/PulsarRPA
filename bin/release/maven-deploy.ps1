@@ -6,7 +6,7 @@ while ($null -ne $AppHome -and !(Test-Path "$AppHome/VERSION")) {
 Set-Location $AppHome
 
 function printUsage {
-  Write-Host "Usage: oss-deploy.ps1 [-clean|-test]"
+  Write-Host "Usage: maven-deploy.ps1 [-clean|-test]"
   exit 1
 }
 
