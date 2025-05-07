@@ -63,6 +63,11 @@ java -jar PulsarRPA.jar
 - 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar)
 - 🇨🇳 [国内用户专用](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
 
+### ▶ 通过 IDE 运行 PulsarRPA
+
+- 使用你的开发工具（如 IntelliJ IDEA、Android Studio 等）打开整个 PulsarRPA 项目；
+- 找到主类 ai.platon.pulsar.app.PulsarApplicationKt 并运行它。这个类是程序的入口点，执行后将启动 PulsarRPA 应用。
+
 ### 🐳 Docker 用户
 
 ```bash

@@ -57,7 +57,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>ai.platon.pulsar.app.master.PulsarMasterKt</mainClass>
+                    <mainClass>ai.platon.pulsar.app.PulsarApplicationKt</mainClass>
                     <addResources>true</addResources>
                     <executable>true</executable>
                 </configuration>

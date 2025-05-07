@@ -69,6 +69,11 @@ java -jar PulsarRPA.jar
 - 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar)
 - 🇨🇳 [For Chinese Users](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
 
+### ▶ Run with IDE
+
+- Open the project in your IDE
+- Run the `ai.platon.pulsar.app.PulsarApplicationKt` main class
+
 ### 🐳 Docker Users
 
 ```shell
