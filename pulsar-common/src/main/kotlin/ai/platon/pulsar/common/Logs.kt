@@ -91,7 +91,7 @@ fun warnInterruptible(target: Any, t: Throwable, message: String?, vararg args: 
  * @param target the object that is being closed
  * @param t the exception thrown by the close method
  * */
-fun warnUnexpected(target: Any, t: Throwable) = warnUnexpected(target, t, t.stringify())
+fun warnUnexpected(target: Any, t: Throwable) = warnUnexpected(target, t, "")
 
 /**
  * Log a warning message for an unexpected exception.
@@ -105,17 +105,29 @@ fun warnUnexpected(target: Any, t: Throwable) = warnUnexpected(target, t, t.stri
  * @param message the message to log
  * */
 fun warnUnexpected(target: Any, t: Throwable, message: String, vararg args: Any?) {
-    if (t is InterruptedException) {
-        val logger = getLogger(target)
-        // We will suppress the message
-        logger.info("[Interrupted] {}$message", *args)
-        // Preserve interrupt status
-        Thread.currentThread().interrupt()
-        return
-    }
-
     try {
         val logger = getLogger(target)
+
+        if (!AppContext.isActive) {
+            // Since the system is shutting down, we will suppress the exception
+            logger.info("System is shutting down $message", *args)
+            return
+        }
+
+        if (t is InterruptedException || Thread.currentThread().isInterrupted) {
+            // We will suppress the message
+            logger.info("[Interrupted] $message", *args)
+            // Preserve interrupt status
+            Thread.currentThread().interrupt()
+            return
+        }
+
+        if (t.toString().contains("kotlinx.coroutines.JobCancellationException")) {
+            // We will suppress the message
+            logger.info("JobCancelled $message", *args)
+            return
+        }
+
         val message1 = """
 The exception was unexpected; refine the code to handle it appropriately.
         """.trimIndent()
