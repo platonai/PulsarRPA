@@ -37,7 +37,7 @@ class BrowserIdTests {
         println(id)
         println(id.contextDir)
         println(id.userDataDir)
-        assertTrue { id.userDataDir.toString().contains("google-chrome") }
+        assertTrue { id.userDataDir.toString().contains("PULSAR_CHROME") }
         assertEquals(id.contextDir, PrivacyContext.PROTOTYPE_CONTEXT_DIR)
         assertEquals(id.userDataDir, PrivacyContext.PROTOTYPE_DATA_DIR)
         assertTrue { id.userDataDir.startsWith(PrivacyContext.PROTOTYPE_DATA_DIR) }
@@ -49,7 +49,7 @@ class BrowserIdTests {
         println(id)
         println(id.contextDir)
         println(id.userDataDir)
-        assertFalse { id.userDataDir.toString().contains("google-chrome") }
+        assertFalse { id.userDataDir.toString().contains("PULSAR_CHROME") }
         assertEquals(id.contextDir, AppPaths.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER)
         assertTrue { id.userDataDir.startsWith(AppPaths.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER) }
         assertEquals(id.userDataDir, AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER)

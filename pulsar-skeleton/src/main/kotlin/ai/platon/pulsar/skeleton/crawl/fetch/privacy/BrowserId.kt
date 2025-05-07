@@ -112,9 +112,9 @@ data class BrowserId(
 
         fun createSystemDefault(browserType: BrowserType) = BrowserId(PrivacyAgent.createSystemDefault(browserType))
 
-        fun createPrototype() = BrowserId(PrivacyAgent.createDefault())
+        fun createPrototype() = BrowserId(PrivacyAgent.createPrototype())
 
-        fun createPrototype(browserType: BrowserType) = BrowserId(PrivacyAgent.createDefault(browserType))
+        fun createPrototype(browserType: BrowserType) = BrowserId(PrivacyAgent.createPrototype(browserType))
 
         fun createRandomTemp() = BrowserId(PrivacyAgent.createRandomTemp())
 
@@ -123,6 +123,5 @@ data class BrowserId(
         fun createNextSequential() = BrowserId(PrivacyAgent.createNextSequential())
 
         fun createNextSequential(browserType: BrowserType) = BrowserId(PrivacyAgent.createNextSequential())
-
     }
 }
