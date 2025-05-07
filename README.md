@@ -117,7 +117,7 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 
 💡 **Tip:** You don't need to fill in every field — just what you need.
 
-### 🎓 For Advanced Users - LLM + X-SQL
+### 🎓 For Advanced Users - LLM + X-SQL: Simple & Powerful
 
   ```bash
   curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
@@ -146,7 +146,7 @@ The extracted data example:
 
 ---
 
-### 👨‍💻 For Experts - Native API
+### 👨‍💻 For Experts - Native API: Very Powerful!
 
 #### 🎮 Browser Control:
 ```kotlin
