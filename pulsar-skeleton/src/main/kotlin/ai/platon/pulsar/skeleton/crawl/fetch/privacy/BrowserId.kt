@@ -118,10 +118,10 @@ data class BrowserId(
 
         fun createRandomTemp() = BrowserId(PrivacyAgent.createRandomTemp())
 
-        fun createRandomTemp(browserType: BrowserType) = BrowserId(PrivacyAgent.createRandomTemp())
+        fun createRandomTemp(browserType: BrowserType) = BrowserId(PrivacyAgent.createRandomTemp(browserType))
 
         fun createNextSequential() = BrowserId(PrivacyAgent.createNextSequential())
 
-        fun createNextSequential(browserType: BrowserType) = BrowserId(PrivacyAgent.createNextSequential())
+        fun createNextSequential(browserType: BrowserType) = BrowserId(PrivacyAgent.createNextSequential(browserType))
     }
 }
