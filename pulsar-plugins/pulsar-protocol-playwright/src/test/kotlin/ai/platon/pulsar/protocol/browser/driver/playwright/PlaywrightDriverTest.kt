@@ -9,7 +9,10 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class PlaywrightDriverTest {
 
@@ -22,6 +25,8 @@ class PlaywrightDriverTest {
 
     @BeforeEach
     fun setup() {
+        assertEquals("PLAYWRIGHT_CHROME", browserId.browserType.name)
+
         launcherOptions.browserSettings.confuser.reset()
         browser = PlaywrightBrowserLauncher().launch(browserId, launcherOptions, chromeOptions)
         driver = browser.newDriver()
