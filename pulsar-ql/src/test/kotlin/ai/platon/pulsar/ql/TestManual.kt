@@ -129,14 +129,14 @@ class TestManual : TestBase() {
      * */
     @Test
     fun monitorNewsColumnForQQ() {
-        val portal = "http://news.qq.com/world_index.shtml"
+        val portal = "https://news.qq.com/ch/world"
 
         // Tencent news have a redirect mechanism, we have to fix this
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
                 "FROM LOAD_AND_GET_FEATURES('$portal') " +
                 "WHERE SIBLING>20 AND DOM_TEXT_LENGTH(DOM) > 10 AND TOP > 300 AND TOP < 3000")
 
-        val detail = "http://new.qq.com/omn/20180424/20180424A104ZC.html"
+        val detail = "https://news.qq.com/rain/a/20250507A052WD00"
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, CHAR, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
                 "FROM LOAD_AND_GET_FEATURES('$detail') WHERE SEQ > 170 AND SEQ < 400")
     }
