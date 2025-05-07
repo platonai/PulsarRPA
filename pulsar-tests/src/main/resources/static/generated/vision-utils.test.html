@@ -248,7 +248,7 @@
 
 
 
-<script src="vision_utils_copy.js"></script> <!-- 路径视情况调整 -->
+<script src="vision_utils_test.js"></script> <!-- 路径视情况调整 -->
 <script>
     (function () {
         const VisionUtils = window.VisionUtils;
@@ -282,7 +282,7 @@
             document.body.appendChild(parent);
 
             const result = VisionUtils.getEffectiveBgColor(child);
-            assertEqual(result, {"r":100,"g":150,"b":200,"a":null});
+            assertEqual(result, {"r":100,"g":150,"b":200,"a":1});
 
             parent.remove(); // 清理
         });

@@ -246,53 +246,9 @@
     }
 </script>
 </body>
-<script src="vision_utils_copy.js"></script> <!-- 路径视情况调整 -->
+<script src="vision_utils_test.js"></script> <!-- 路径视情况调整 -->
 <script>
-    (function () {
-        const utils = window.VisionUtils;
-
-        const viewportHeight = window.innerHeight;
-        const viewportWidth = window.innerWidth;
-        const highlighted = [];
-
-        const walker = document.createTreeWalker(
-            document.body,
-            NodeFilter.SHOW_ELEMENT,
-            {
-                acceptNode(node) {
-                    const rect = node.getBoundingClientRect();
-                    if (
-                        rect.width < 10 || rect.height < 10 || // 太小的跳过
-                        rect.bottom < 0 || rect.top > viewportHeight || // 不在视口内
-                        rect.right < 0 || rect.left > viewportWidth
-                    ) {
-                        return NodeFilter.FILTER_SKIP;
-                    }
-                    return NodeFilter.FILTER_ACCEPT;
-                }
-            }
-        );
-
-        let node;
-        while ((node = walker.nextNode())) {
-            const rgb = utils.getEffectiveBgColor(node);
-
-            if (utils.isColorBright(rgb)) {
-                node.style.outline = "2px solid red";
-                highlighted.push({ node, rgb });
-            }
-        }
-
-        // 打印报告
-        console.log(`🌟 发现 ${highlighted.length} 个显目的元素：`);
-        highlighted.forEach(({ node, rgb }, index) => {
-            console.log(
-                `%c#${index + 1} <${node.tagName.toLowerCase()}> - rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`,
-                "color: green; font-weight: bold"
-            );
-        });
-    })();
-
+    VisionUtils.findTopNMostContrastElements(10)
 </script>
 
 <script>

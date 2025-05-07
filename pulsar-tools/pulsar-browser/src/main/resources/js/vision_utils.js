@@ -146,38 +146,47 @@ function computeAverageBackgroundColorInViewport() {
         b: Math.round(totalB / totalWeight),
     };
 }
-
 /**
- * 分析给定前景色和背景色之间的对比度
+ * Analyzes the contrast between a given foreground and background color.
  *
- * 此函数首先计算前景色和背景色的相对亮度，然后用这些值来计算对比度比率
- * 最后，根据对比度比率返回对比度分析结果，包括比率数值和无障碍级别
+ * This function first calculates the relative luminance of both the foreground and background colors.
+ * Then, it computes the contrast ratio using these luminance values.
+ * Finally, it returns an object containing the contrast ratio and an accessibility level based on WCAG standards.
  *
- * @param {Array} foregroundRGB 前景色的RGB值数组，如 [R, G, B]
- * @param {Array} backgroundRGB 背景色的RGB值数组，如 [R, G, B]
- * @returns {Object} 返回包含对比度比率和无障碍级别的对象
+ * @param {Array} foregroundRGB - An array representing the RGB values of the foreground color, e.g., [R, G, B]
+ * @param {Array} backgroundRGB - An array representing the RGB values of the background color, e.g., [R, G, B]
+ * @returns {Object} - Returns an object containing:
+ *   - [ratio](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-tools\pulsar-browser\src\main\resources\js\vision_utils.js#L165-L165): The contrast ratio rounded to two decimal places
+ *   - [level](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-tools\pulsar-browser\src\main\java\com\github\kklisura\cdt\protocol\v2023\types\log\LogEntry.java#L33-L33): A string indicating the accessibility level based on the contrast ratio:
+ *         - "AAA（优秀）" for excellent (ratio ≥ 7)
+ *         - "AA（合格）" for acceptable (ratio ≥ 4.5)
+ *         - "⚠️ 仅适合大号文字" for suitable only for large text (ratio ≥ 3)
+ *         - "❌ 不合格" for insufficient contrast (ratio < 3)
  */
 function analyzeContrast(foregroundRGB, backgroundRGB) {
-    // 计算前景色的相对亮度
+    // Calculate the relative luminance of the foreground color
     const l1 = relativeLuminance(foregroundRGB);
-    // 计算背景色的相对亮度
+
+    // Calculate the relative luminance of the background color
     const l2 = relativeLuminance(backgroundRGB);
-    // 计算对比度比率
+
+    // Compute the contrast ratio using the luminance values
     const ratio = contrastRatio(l1, l2);
 
-    // 返回对比度分析结果
+    // Return the contrast analysis result
     return {
-        // 对比度比率，保留两位小数
+        // Contrast ratio, rounded to 2 decimal places
         ratio: ratio.toFixed(2),
-        // 根据对比度比率确定无障碍级别
+
+        // Determine accessibility level based on the contrast ratio
         level:
             ratio >= 7
-                ? "AAA（优秀）"
+                ? "AAA（Excellent）"
                 : ratio >= 4.5
-                    ? "AA（合格）"
+                    ? "AA（Acceptable）"
                     : ratio >= 3
-                        ? "⚠️ 仅适合大号文字"
-                        : "❌ 不合格",
+                        ? "⚠️ Suitable only for large text"
+                        : "❌ Insufficient contrast",
     };
 }
 

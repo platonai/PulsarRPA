@@ -10,7 +10,7 @@
 <h1>VisionUtils Test - F12 to open dev tools to see console</h1>
 
 </body>
-<script src="vision_utils_copy.js"></script> <!-- 路径视情况调整 -->
+<script src="vision_utils_test.js"></script> <!-- 路径视情况调整 -->
 <script>
     (function () {
         const VisionUtils = window.VisionUtils;
@@ -88,7 +88,6 @@
             if (!VisionUtils.isColorBright(bright)) throw new Error("Expected bright color to be bright");
             if (VisionUtils.isColorBright(dark)) throw new Error("Expected dark color to be dark");
         });
-
 
         test("computeAverageBackgroundColorInViewport - simple DOM", () => {
             // 创建几个视口内元素
