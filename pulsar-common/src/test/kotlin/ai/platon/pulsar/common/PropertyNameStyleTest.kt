@@ -1,22 +1,22 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.PropertyNameCases.toDotSeparatedKebabCase
-import ai.platon.pulsar.common.PropertyNameCases.toUpperUnderscoreCase
+import ai.platon.pulsar.common.PropertyNameStyle.toDotSeparatedKebabCase
+import ai.platon.pulsar.common.PropertyNameStyle.toUpperUnderscoreCase
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import kotlin.test.Test
 
-class PropertyNameCasesTest {
+class PropertyNameStyleTest {
 
     @Test
     fun testPrependReadableClassName_ClassNameContainsSeparator() {
         // Arrange
-        val obj = PropertyNameCasesTest()
+        val obj = PropertyNameStyleTest()
         val ident = "testIdent"
         val name = "testName"
         val separator = "-"
-        val expectedResult = "p-c-PropertyNameCasesTest-testIdent-testName"
+        val expectedResult = "p-c-PropertyNameStyleTest-testIdent-testName"
 
         // Act
         val result = prependReadableClassName(obj, ident, name, separator)
@@ -115,10 +115,11 @@ class PropertyNameCasesTest {
 
 
 
-
-
+    /**
+     *
+     * */
     @Test
-    fun `TC01 example(dot)property-name should convert to EXAMPLE_PROPERTY_NAME`() {
+    fun `TC01 example(dot)property-name should convert to EXAMPLE_PROPERTYNAME`() {
         val result = toUpperUnderscoreCase("example.property-name")
         assertEquals("EXAMPLE_PROPERTYNAME", result)
     }

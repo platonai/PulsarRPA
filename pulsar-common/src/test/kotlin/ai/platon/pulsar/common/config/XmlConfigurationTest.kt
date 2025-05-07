@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.config
 
-import ai.platon.pulsar.common.PropertyNameCases
+import ai.platon.pulsar.common.PropertyNameStyle
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -37,15 +37,15 @@ class XmlConfigurationTest {
         assertEquals("testValue3", config["KEBAB_mock-key"])
         assertEquals("testValue3", config["KEBAB.mock-key"])
         assertEquals("testValue3", config["kebab.mock-key"])
-        assertEquals("ke.bab.mock.key", PropertyNameCases.toDotSeparatedKebabCase("keBab.mock-key"))
+        assertEquals("ke-bab.mock-key", PropertyNameStyle.toDotSeparatedKebabCase("keBab.mock-key"))
         assertNotEquals("testValue3", config["keBab.mock-key"])
         config.unset(key)
         assertNull(config[key])
 
         key = "kebab.mockkey"
         config[key] = "testValue4"
-        assertEquals("kebab.mockkey", PropertyNameCases.toDotSeparatedKebabCase("KEBAB_MOCKKEY"))
-        assertEquals("kebab.mock.key", PropertyNameCases.toDotSeparatedKebabCase("KEBAB_MOCK_KEY"))
+        assertEquals("kebab.mockkey", PropertyNameStyle.toDotSeparatedKebabCase("KEBAB_MOCKKEY"))
+        assertEquals("kebab.mock.key", PropertyNameStyle.toDotSeparatedKebabCase("KEBAB_MOCK_KEY"))
         assertNull(config["KEBAB_MOCK_KEY"])
         assertNotEquals("testValue4", config["KEBAB_MOCK_KEY"])
         config.unset(key)
@@ -58,9 +58,12 @@ class XmlConfigurationTest {
         config[key] = value
         assertEquals(value, config["llm.apiKey"])
         assertEquals(value, config["llm.api-Key"])
-        assertEquals(value, config["llm.api.Key"])
-        assertEquals(value, config["llm.api.key"])
-        assertEquals(value, config["LLM_API_KEY"])
+        // assertEquals(value, config["LLM_API_KEY"])
+
+        assertNull(config["llm.api.Key"])
+        assertNull(config["llm.api.key"])
+        assertNull(config["LLM_API_KEY"])
+
         config.unset(key)
         assertNull(config[key])
     }

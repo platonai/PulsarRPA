@@ -67,7 +67,7 @@ class XmlConfiguration(
      * @param value property value.
      */
     operator fun set(name: String, value: String?) {
-        val actualKey = PropertyNameCases.toDotSeparatedKebabCase(name)
+        val actualKey = PropertyNameStyle.toDotSeparatedKebabCase(name)
 
         if (value == null) {
             unset(actualKey)
@@ -77,12 +77,12 @@ class XmlConfiguration(
     }
 
     fun unset(name: String) {
-        val actualKey = PropertyNameCases.toDotSeparatedKebabCase(name)
+        val actualKey = PropertyNameStyle.toDotSeparatedKebabCase(name)
         assuredImplementation.remove(actualKey)
     }
 
     operator fun get(name: String): String? {
-        val actualKey = PropertyNameCases.toDotSeparatedKebabCase(name)
+        val actualKey = PropertyNameStyle.toDotSeparatedKebabCase(name)
         return assuredImplementation[actualKey]?.toString()
     }
 
@@ -190,7 +190,7 @@ private class ConfigurationImpl(
      * @see #getProperty
      */
     operator fun set(name: String, value: String): Any? {
-        val actualKey = PropertyNameCases.toDotSeparatedKebabCase(name)
+        val actualKey = PropertyNameStyle.toDotSeparatedKebabCase(name)
         val oldValue = properties.setProperty(actualKey, value)
         return oldValue
     }
@@ -312,7 +312,7 @@ private class ConfigurationImpl(
         value: String?, finalParameter: Boolean, source: Array<String>?
     ) {
         // @see https://docs.spring.io/spring-boot/reference/features/external-config.html
-        val actualKey = PropertyNameCases.toDotSeparatedKebabCase(key)
+        val actualKey = PropertyNameStyle.toDotSeparatedKebabCase(key)
 
         if (value != null) {
             properties.setProperty(actualKey, value)

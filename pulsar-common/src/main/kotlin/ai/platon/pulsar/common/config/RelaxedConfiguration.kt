@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.config
 
-import ai.platon.pulsar.common.PropertyNameCases
+import ai.platon.pulsar.common.PropertyNameStyle
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.config.XmlConfiguration.Companion.DEFAULT_RESOURCES
 import org.slf4j.LoggerFactory
@@ -102,12 +102,12 @@ abstract class RelaxedConfiguration {
         if (value != null) return value
 
         // Try kebab-case (e.g., contextPath → context-path)
-        val kebabName = PropertyNameCases.toDotSeparatedKebabCase(name)
+        val kebabName = PropertyNameStyle.toDotSeparatedKebabCase(name)
         value = getUnrelaxed(kebabName)
         if (value != null) return value
 
         // Try upper snake case (e.g., contextPath → CONTEXT_PATH)
-        val upperUnderscoreName = PropertyNameCases.toUpperUnderscoreCase(name)
+        val upperUnderscoreName = PropertyNameStyle.toUpperUnderscoreCase(name)
         return getUnrelaxed(upperUnderscoreName)
     }
 
