@@ -2,8 +2,9 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.concurrent.PreemptChannelSupport
-import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_ACTIVE_TABS
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_OPEN_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_OPEN_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
@@ -52,8 +53,12 @@ open class WebDriverPoolManager(
     /**
      * The max number of drivers the pool can hold
      * */
-    private val poolCapacity = immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, DEFAULT_BROWSER_MAX_ACTIVE_TABS)
-    
+    private val poolCapacity: Int get() {
+        val c = immutableConfig.getWithFallback(BROWSER_MAX_OPEN_TABS, BROWSER_MAX_ACTIVE_TABS)
+            ?.toIntOrNull() ?: DEFAULT_BROWSER_MAX_OPEN_TABS
+        return c.coerceAtMost(50)
+    }
+
     val idleTimeout = Duration.ofMinutes(18)
     
     val workingDriverPools get() = driverPoolPool.workingDriverPools

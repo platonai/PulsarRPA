@@ -37,6 +37,7 @@ class TestWebDriverPool {
         val driverPool = driverPoolManager.createUnmanagedDriverPool()
         val workingDrivers = mutableListOf<WebDriver>()
         val numDrivers = driverPool.capacity
+        assertTrue("driverPool.capacity should not be too large, actual ${driverPool.capacity}") { numDrivers <= 50 }
         repeat(numDrivers) {
             val driver = driverPool.poll()
             require(driver is AbstractWebDriver)

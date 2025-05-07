@@ -109,7 +109,7 @@ public interface AppConstants {
     /**
      * Browser
      * */
-    int DEFAULT_BROWSER_MAX_ACTIVE_TABS = 8;
+    int DEFAULT_BROWSER_MAX_OPEN_TABS = 50;
 
     double BROWSER_TAB_REQUIRED_MEMORY = ByteUnit.GIB.toBytes(1.5); // at least 1.5 GiB to open a new tab
 

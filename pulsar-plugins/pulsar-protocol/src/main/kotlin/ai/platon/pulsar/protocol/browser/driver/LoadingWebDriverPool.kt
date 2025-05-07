@@ -2,9 +2,8 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_ACTIVE_TABS
-import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_TIMEOUT
-import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_OPEN_TABS
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -48,8 +47,12 @@ class LoadingWebDriverPool constructor(
     /**
      * The max number of drivers the pool can hold
      * */
-    val capacity get() = immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, DEFAULT_BROWSER_MAX_ACTIVE_TABS)
-    
+    val capacity: Int get() {
+        val c = immutableConfig.getWithFallback(BROWSER_MAX_OPEN_TABS, BROWSER_MAX_ACTIVE_TABS)
+            ?.toIntOrNull() ?: DEFAULT_BROWSER_MAX_OPEN_TABS
+        return c.coerceAtMost(50)
+    }
+
     /**
      * The browser who create all drivers for this pool.
      * */

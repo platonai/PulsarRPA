@@ -9,10 +9,9 @@ import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.StringUtils
 import org.junit.jupiter.api.Assumptions.assumeTrue
 
-class WebDriverTaskRunner(
+class WebDriverService(
     val browserFactory: BrowserFactory
 ) {
-
     companion object {
         const val PAGE_SOURCE_MIN_LENGTH = 100
     }

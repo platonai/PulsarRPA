@@ -1,19 +1,15 @@
 package ai.platon.pulsar.browser
 
-import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.delay
-import org.springframework.web.method.annotation.ModelFactory
 import kotlin.test.Test
 
 /**
  * Created by vincent on 16-7-20.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-class WebDriverTests: WebDriverTestBase() {
+class WebDriverSimpleTests: WebDriverTestBase() {
     private val url = "https://www.amazon.com/"
     private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     private val productURL = "https://www.amazon.com/dp/B0C1H26C46?th=1"

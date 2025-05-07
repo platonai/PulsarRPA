@@ -1,5 +1,6 @@
-package ai.platon.pulsar.browser
+package ai.platon.pulsar.browser.js
 
+import ai.platon.pulsar.browser.WebDriverTestBase
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import kotlin.test.*
 

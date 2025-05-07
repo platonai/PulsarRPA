@@ -13,7 +13,10 @@ import org.apache.commons.io.FileUtils
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import java.net.Proxy
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class PulsarWebDriverProxyTests : WebDriverTestBase() {
     private val proxyLoader by lazy { ProxyHubLoader(conf) }
@@ -88,7 +91,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
         val browserId = BrowserId.RANDOM_TEMP
         browserId.setProxy(proxyEntry)
 
-        val browser = driverFactory.launchBrowser(browserId)
+        val browser = browserFactory.launch(browserId)
         val driver = browser.newDriver()
 
         runBlocking {

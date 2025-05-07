@@ -110,7 +110,7 @@ open class BrowserSettings constructor(
         private fun withSystemDefaultBrowserInternal(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
-            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(1000).withSPA()
+            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(50).withSPA()
             return BrowserSettings
         }
 
@@ -130,7 +130,7 @@ open class BrowserSettings constructor(
         private fun withDefaultBrowserInternal(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.DefaultPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
-            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(1000).withSPA()
+            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(50).withSPA()
             return BrowserSettings
         }
 
@@ -150,7 +150,7 @@ open class BrowserSettings constructor(
         private fun withPrototypeBrowserInternal(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
-            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(1000).withSPA()
+            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(50).withSPA()
             return BrowserSettings
         }
 
@@ -295,11 +295,11 @@ open class BrowserSettings constructor(
          * Set the max number to open tabs in each browser context
          * */
         fun maxOpenTabs(n: Int): Companion {
-            if (n <= 0) {
-                throw IllegalArgumentException("The number of open tabs has to be > 0")
-            }
+            require(n > 0) { "The number of open tabs has to be > 0" }
+            require(n <= 50) { "The number of open tabs has to be <= 50" }
 
             System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")
+            System.setProperty(BROWSER_MAX_OPEN_TABS, "$n")
             return BrowserSettings
         }
         /**

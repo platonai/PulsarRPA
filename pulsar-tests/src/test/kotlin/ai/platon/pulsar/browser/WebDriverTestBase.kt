@@ -1,10 +1,9 @@
 package ai.platon.pulsar.browser
 
-import ai.platon.pulsar.browser.WebDriverTaskRunner.Companion.PAGE_SOURCE_MIN_LENGTH
+import ai.platon.pulsar.browser.WebDriverService.Companion.PAGE_SOURCE_MIN_LENGTH
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -20,6 +19,16 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class WebDriverTestBase : TestBase() {
+
+    companion object {
+        val browserFactory = DefaultBrowserFactory()
+        val webDriverService = WebDriverService(browserFactory)
+        val browser = browserFactory.launchRandomTempBrowser()
+
+        init {
+            browser.newDriver()
+        }
+    }
 
     @Value("\${server.port}")
     val port: Int = 0
@@ -69,12 +78,6 @@ class WebDriverTestBase : TestBase() {
 
     protected val walmartUrl = "https://www.walmart.com/ip/584284401"
     protected val asin get() = productUrl.substringAfterLast("/dp/")
-    protected val browserFactory = DefaultBrowserFactory()
-    protected val driverFactory get() = session.context.getBean(WebDriverFactory::class)
-    protected val browser by lazy { browserFactory.launchRandomTempBrowser() }
-    protected val driverTaskRunner by lazy { WebDriverTaskRunner(browserFactory) }
-    protected val settings by lazy { BrowserSettings(conf) }
-    protected val confuser get() = settings.confuser as SimpleScriptConfuser
 
     protected val expressions = """
             typeof(window)
@@ -94,6 +97,9 @@ class WebDriverTestBase : TestBase() {
             __pulsar_utils__.add(1, 1)
         """.trimIndent().split("\n").map { it.trim() }.filter { it.isNotBlank() }
 
+    val settings get() = BrowserSettings(session.sessionConfig)
+    val confuser get() = settings.confuser as SimpleScriptConfuser
+
     suspend fun evaluateExpressions(driver: WebDriver, type: String) {
         expressions.forEach { expression ->
             val detail = driver.evaluateDetail(expression)
@@ -102,85 +108,23 @@ class WebDriverTestBase : TestBase() {
     }
 
     protected fun runWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
-        driverTaskRunner.runWebDriverTest(url, browser, block)
+        webDriverService.runWebDriverTest(url, browser, block)
 
-    protected fun runResourceWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
-        runBlocking {
-            browserFactory.launchRandomTempBrowser().use {
-                it.newDriver().use { driver ->
-                    openResource(url, driver)
-                    block(driver)
-                }
-            }
-        }
-    }
+    protected fun runResourceWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runResourceWebDriverTest(url, block)
 
-    protected fun runResourceWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
-        runBlocking {
-            browser.newDriver().use { driver ->
-                openResource(url, driver)
-                block(driver)
-            }
-        }
-    }
+    protected fun runResourceWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runResourceWebDriverTest(url, browser, block)
 
-    protected fun runWebDriverTest(block: suspend (driver: WebDriver) -> Unit) {
-        runBlocking {
-            browserFactory.launchRandomTempBrowser().use {
-                it.newDriver().use { driver ->
-                    block(driver)
-                }
-            }
-        }
-    }
+    protected fun runWebDriverTest(block: suspend (driver: WebDriver) -> Unit) = webDriverService.runWebDriverTest(block)
 
-    protected fun runWebDriverTest(browserId: BrowserId, block: suspend (driver: WebDriver) -> Unit) {
-        runBlocking {
-            driverFactory.launchBrowser(browserId).use {
-                it.newDriver().use { driver ->
-                    block(driver)
-                }
-            }
-        }
-    }
+    protected fun runWebDriverTest(browserId: BrowserId, block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runWebDriverTest(browserId, block)
 
-    protected fun runWebDriverTest(browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
-        runBlocking {
-            browser.newDriver().use { block(it) }
-        }
-    }
+    protected fun runWebDriverTest(browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runWebDriverTest(browser, block)
 
-    protected suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) {
-        driver.navigateTo(url)
-        driver.waitForSelector("body")
-        driver.waitForSelector("input[id]")
+    protected suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) = webDriverService.open(url, driver, scrollCount)
 
-        // make sure all metadata are available
-        driver.evaluateDetail("__pulsar_utils__.waitForReady()")
-        // make sure all metadata are available
-        driver.evaluateDetail("__pulsar_utils__.compute()")
-
-//        driver.bringToFront()
-        var n = scrollCount
-        while (n-- > 0) {
-            driver.scrollDown(1)
-            delay(1000)
-        }
-        driver.scrollToTop()
-
-        val pageSource = driver.pageSource()
-        val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
-        assumeTrue({ (pageSource?.length ?: 0) > PAGE_SOURCE_MIN_LENGTH }, "Page source is too small | $display")
-    }
-
-    protected suspend fun openResource(url: String, driver: WebDriver, scrollCount: Int = 1) {
-        driver.navigateTo(url)
-        driver.waitForNavigation()
-        var n = scrollCount
-        while (n-- > 0) {
-            driver.scrollDown(1)
-            delay(1000)
-        }
-        driver.scrollToTop()
-    }
+    protected suspend fun openResource(url: String, driver: WebDriver, scrollCount: Int = 1) = webDriverService.openResource(url, driver, scrollCount)
 }

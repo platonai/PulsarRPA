@@ -3,7 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.impl
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
-import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_ACTIVE_TABS
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_OPEN_TABS
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
@@ -182,7 +182,7 @@ open class StreamingCrawler(
     private val gauges = mapOf(
         "idleTime" to Gauge { idleTime.readable() },
         "numBrowserContexts" to Gauge { numBrowserContexts },
-        "numMaxActiveTabs" to Gauge { numMaxActiveTabs },
+        "numMaxActiveTabs" to Gauge { numMaxOpenTabs },
         "fetchConcurrency" to Gauge { fetchConcurrency },
         "concurrency" to Gauge { concurrency },
     )
@@ -209,12 +209,16 @@ open class StreamingCrawler(
     /**
      * The maximum number of open tabs allowed in each open browser.
      * */
-    val numMaxActiveTabs get() = sessionConfig.getInt(BROWSER_MAX_ACTIVE_TABS, DEFAULT_BROWSER_MAX_ACTIVE_TABS)
+    val numMaxOpenTabs: Int get() {
+        val c = sessionConfig.getWithFallback(BROWSER_MAX_OPEN_TABS, BROWSER_MAX_ACTIVE_TABS)
+            ?.toIntOrNull() ?: DEFAULT_BROWSER_MAX_OPEN_TABS
+        return c.coerceAtMost(50)
+    }
 
     /**
      * The fetch concurrency equals to the number of all allowed open tabs.
      * */
-    val fetchConcurrency get() = numBrowserContexts * numMaxActiveTabs
+    val fetchConcurrency get() = numBrowserContexts * numMaxOpenTabs
 
     /**
      * The main loop concurrency.
