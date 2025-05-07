@@ -157,7 +157,7 @@
 <body>
 
 <header>
-    <h1>🎨 Interactive Showroom - ColorUtils 测试（请打开控制台查看结果）</h1>
+    <h1>🎨 Interactive Showroom - VisionUtils 测试（请打开控制台查看结果）</h1>
     <p>Now with Drag & Drop and Dark Mode</p>
 </header>
 
@@ -249,7 +249,7 @@
 <script src="vision_utils_copy.js"></script> <!-- 路径视情况调整 -->
 <script>
     (function analyzeAllTextElementsContrast() {
-        const ColorUtils = window.VisionUtils;
+        const VisionUtils = window.VisionUtils;
 
         // 辅助函数：判断是否是纯文本节点或有文本内容的元素
         function hasVisibleText(el) {
@@ -277,10 +277,10 @@
                     if (!parentEl) continue;
 
                     const foreground = parseRGB(window.getComputedStyle(parentEl).color);
-                    const background = ColorUtils.getEffectiveBgColor(parentEl);
+                    const background = VisionUtils.getEffectiveBgColor(parentEl);
 
                     if (foreground && background) {
-                        const result = ColorUtils.analyzeContrast(foreground, background);
+                        const result = VisionUtils.analyzeContrast(foreground, background);
                         logResult(`📄 文本：“${node.textContent.trim()}”`, foreground, background, result);
                     }
                 } else if (node.nodeType === Node.ELEMENT_NODE) {
@@ -288,10 +288,10 @@
                     if (!textContent) continue;
 
                     const foreground = parseRGB(window.getComputedStyle(node).color);
-                    const background = ColorUtils.getEffectiveBgColor(node);
+                    const background = VisionUtils.getEffectiveBgColor(node);
 
                     if (foreground && background) {
-                        const result = ColorUtils.analyzeContrast(foreground, background);
+                        const result = VisionUtils.analyzeContrast(foreground, background);
                         logResult(`📄 元素：<${node.tagName.toLowerCase()}> "${textContent}"`, foreground, background, result);
 
                         // 可选：对不达标的文本添加高亮样式

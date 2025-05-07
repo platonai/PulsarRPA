@@ -157,7 +157,7 @@
 <body>
 
 <header>
-    <h1>🎨 Interactive Showroom - ColorUtils 测试（请打开控制台查看结果）</h1>
+    <h1>🎨 Interactive Showroom - VisionUtils 测试（请打开控制台查看结果）</h1>
     <p>Now with Drag & Drop and Dark Mode</p>
 </header>
 
@@ -245,11 +245,13 @@
         }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
 </script>
-</body>
+
+
+
 <script src="vision_utils_copy.js"></script> <!-- 路径视情况调整 -->
 <script>
     (function () {
-        const ColorUtils = window.VisionUtils;
+        const VisionUtils = window.VisionUtils;
 
         function test(name, fn) {
             try {
@@ -279,7 +281,7 @@
             parent.appendChild(child);
             document.body.appendChild(parent);
 
-            const result = ColorUtils.getEffectiveBgColor(child);
+            const result = VisionUtils.getEffectiveBgColor(child);
             assertEqual(result, {"r":100,"g":150,"b":200,"a":null});
 
             parent.remove(); // 清理
@@ -300,7 +302,7 @@
             document.body.appendChild(el1);
             document.body.appendChild(el2);
 
-            const avgColor = ColorUtils.computeAverageBackgroundColorInViewport();
+            const avgColor = VisionUtils.computeAverageBackgroundColorInViewport();
             const { r, g, b } = avgColor;
             if (!(r > 100 && b > 100)) {
                 throw new Error(`Unexpected average color: ${JSON.stringify(avgColor)}`);
@@ -316,4 +318,5 @@
 <script>
 </script>
 
+</body>
 </html>

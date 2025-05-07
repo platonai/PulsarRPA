@@ -1,4 +1,4 @@
-// colorUtils.js
+// VisionUtils.js
 /**
  * 解析RGB或RGBA颜色字符串
  * 该函数接受一个颜色字符串作为输入，尝试解析它，并返回一个包含红、绿、蓝和透明度分量的对象
@@ -189,7 +189,7 @@ function isColorBright(rgb) {
 }
 
 // --- 导出 API ---
-window.ColorUtils = {
+window.VisionUtils = {
     parseRGB,
     getEffectiveBgColor,
     computeAverageBackgroundColorInViewport,
