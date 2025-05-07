@@ -94,7 +94,11 @@ abstract class AbstractSQLContext constructor(
     
     @Throws(Exception::class)
     override fun run(block: (Connection) -> Unit) {
-        val conn = connectionPool.poll() ?: randomConnection
+        var conn = connectionPool.poll() ?: randomConnection
+        while (conn.isClosed) {
+            conn = connectionPool.poll() ?: randomConnection
+        }
+
         try {
             block(conn)
         } finally {
@@ -104,7 +108,11 @@ abstract class AbstractSQLContext constructor(
 
     @Throws(Exception::class)
     override fun runQuery(block: (Connection) -> ResultSet): ResultSet {
-        val conn = connectionPool.poll() ?: randomConnection
+        var conn = connectionPool.poll() ?: randomConnection
+        while (conn.isClosed) {
+            conn = connectionPool.poll() ?: randomConnection
+        }
+
         try {
             return block(conn)
         } finally {
