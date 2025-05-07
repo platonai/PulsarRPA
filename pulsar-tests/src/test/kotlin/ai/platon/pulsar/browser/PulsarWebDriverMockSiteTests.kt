@@ -173,7 +173,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
 
     @Test
     fun `test buildDomTree`() = runWebDriverTest("${generatedAssetsBaseURL}/interactive-1.html", browser) { driver ->
-        var buildDomTreeJs = ResourceLoader.readString("js/buildDomTree.js")
+        var buildDomTreeJs = ResourceLoader.readString("js/build_dom_tree.js")
         buildDomTreeJs = buildDomTreeJs.trimEnd { it.isWhitespace() || it == ';' }
         // println(StringUtils.abbreviateMiddle(buildDomTreeJs, "...", 500))
 

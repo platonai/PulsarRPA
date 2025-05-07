@@ -334,6 +334,13 @@ __pulsar_NodeExt.prototype.isVisible = function() {
         return false
     }
 
+    if (this.node instanceof Element) {
+        const style = getComputedStyle(this.node);
+        if (style.display !== "none" && style.visibility !== "hidden") {
+            return true;
+        }
+    }
+
     return !this.isOverflowHidden()
 };
 

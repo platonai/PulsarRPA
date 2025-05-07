@@ -7,7 +7,9 @@
 /**
  * Create a new traversor.
  *
- * @param visitor {Object} a class implementing the {@link NodeFeatureCalculator} interface, to be called when visiting each node.
+ * NOTE: document.createTreeWalker is OK
+ *
+ * @param visitor {Object} a class implementing the {@link __pulsar_NodeFeatureCalculator} interface, to be called when visiting each node.
  */
 let __pulsar_NodeTraversor = function(visitor) {
     this.visitor = visitor;

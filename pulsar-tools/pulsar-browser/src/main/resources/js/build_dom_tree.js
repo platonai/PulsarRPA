@@ -4,7 +4,7 @@
       doHighlightElements: true,
       focusHighlightIndex: -1,
       viewportExpansion: 0,
-      debugMode: true,
+      debugMode: false,
     }
 ) => {
   const { doHighlightElements, focusHighlightIndex, viewportExpansion, debugMode } = args;
@@ -1222,6 +1222,25 @@
     if (debugMode) PERF_METRICS.nodeMetrics.processedNodes++;
     return id;
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // After all functions are defined, wrap them with performance measurement
   // Remove buildDomTree from here as we measure it separately
