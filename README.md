@@ -213,7 +213,7 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 
 ---
 
-## 🔧 Proxies
+## 🔧 Proxies - Only For Advanced Users
 
 Set the environment variable PROXY_ROTATION_URL to the URL provided by your proxy service:
 
