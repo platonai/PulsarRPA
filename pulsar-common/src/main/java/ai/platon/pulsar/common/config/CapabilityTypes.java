@@ -1,7 +1,5 @@
 package ai.platon.pulsar.common.config;
 
-import java.time.Duration;
-
 /**
  * Created by vincent on 17-1-17.
  * Copyright @ 2013-2023 Platon AI. All rights reserved
@@ -38,8 +36,6 @@ public interface CapabilityTypes {
      * */
     String APP_TMP_BASE_DIR_KEY = "app.tmp.base.dir";
 
-    String DRY_RUN = "pulsar.dry.run";
-
     /**
      * Main loop
      * */
@@ -49,9 +45,7 @@ public interface CapabilityTypes {
 
     String LIMIT = "limit";
 
-    String CRAWL_MAX_DISTANCE = "crawl.max.distance";
-
-    String BATCH_ID = "batch.name";
+    String BATCH_ID = "batch.id";
 
     String PARAM_JOB_NAME = "job.name";
 
@@ -64,21 +58,9 @@ public interface CapabilityTypes {
      * */
     String METRICS_ENABLED = "metrics.enabled";
 
-    /**
-     * Distribution
-     */
-    String PULSAR_MASTER_HOST = "pulsar.master.host";
-
-    String PULSAR_MASTER_PORT = "pulsar.master.port";
-
     ///////////////////////////////////////////////////////////////////////////
     // Crawl section
 
-    /**
-     * The class name of the page event handler.
-     * <p>
-     * <code>System.setProperty(CapabilityTypes.PAGE_EVENT_CLASS, "ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEvent")</code>
-     * */
     String PAGE_EVENT_CLASS = "page.eventHandlers.class";
 
     ///////////////////////////////////////////////////////////////////////////
@@ -92,29 +74,14 @@ public interface CapabilityTypes {
 
     String STORAGE_DATA_STORE_CLASS = "storage.data.store.class";
 
-    String STORAGE_DATUM_EXPIRES = "storage.datum.expires";
-
     ///////////////////////////////////////////////////////////////////////////
     // Spring
 
     String APPLICATION_CONTEXT_CONFIG_LOCATION = "application.context.config.location";
 
     ///////////////////////////////////////////////////////////////////////////
-    // Inject phrase
-
-    /**
-     * Inject parameters
-     */
-    String INJECT_SCORE = "inject.score";
-
-
-    ///////////////////////////////////////////////////////////////////////////
     // Load phrase
 
-    /**
-     * Load parameters
-     */
-    String LOAD_STRATEGY = "load.strategy";
     /**
      * Deactivate the fetch component, ensuring that all pages are loaded exclusively from storage
      * and never fetched from the Internet.
@@ -126,54 +93,15 @@ public interface CapabilityTypes {
     ///////////////////////////////////////////////////////////////////////////
     // Fetch phrase
 
-    /**
-     * Fetch parameters
-     */
-    String FETCH_MODE = "fetch.fetch.mode";
-
     String FETCH_CONCURRENCY = "fetch.concurrency";
-
-    String FETCH_JOB_TIMEOUT = "fetch.job.timeout";
 
     String FETCH_TASK_TIMEOUT = "fetch.task.timeout";
 
-    String FETCH_PENDING_TIMEOUT = "fetch.pending.timeout";
-
     String FETCH_MAX_HOST_FAILURES = "fetch.max.host.failures";
-
-    String FETCH_QUEUE_MODE = "fetch.queue.mode";
-
-    String FETCH_QUEUE_RETUNE_INTERVAL = "fetch.pending.queue.check.time";
-
-    String FETCH_FEEDER_INIT_BATCH_SIZE = "fetch.feeder.init.batch.size";
-
-    String FETCH_THREADS_PER_POOL = "fetch.threads.per.pool";
-
-    String FETCH_THROUGHPUT_PAGES_PER_SECOND = "fetch.throughput.threshold.pages";
-
-    String FETCH_THROUGHPUT_THRESHOLD_SEQENCE = "fetch.throughput.threshold.sequence";
-
-    String FETCH_THROUGHPUT_CHECK_INTERVAL = "fetch.throughput.check.interval";
-
-    String FETCH_CHECK_INTERVAL = "fetch.check.interval";
-
-    String FETCH_QUEUE_DELAY = "fetch.queue.delay";
-
-    String FETCH_QUEUE_MIN_DELAY = "fetch.queue.min.delay";
-
-    String FETCH_MIN_INTERVAL = "fetch.interval.min";
 
     String FETCH_MAX_INTERVAL = "fetch.interval.max";
 
-    String FETCH_INTERVAL = "fetch.fetch.interval";
-
     String FETCH_DEFAULT_INTERVAL = "fetch.default.interval";
-
-    String FETCH_MAX_RETRY = "fetch.retry.max";
-
-    String FETCH_STORE_CONTENT = "fetch.store.content";
-
-    String FETCH_NET_BANDWIDTH_M = "fetcher.net.bandwidth.m";
 
     /**
      * The maximum number of pages to export in fetch phrase.
@@ -181,7 +109,7 @@ public interface CapabilityTypes {
     String FETCH_PAGE_AUTO_EXPORT_LIMIT = "fetch.page.auto.export.limit";
 
     /**
-     * Browser
+     * Fetch
      * */
     String FETCH_PAGE_LOAD_TIMEOUT = "fetch.page.load.timeout";
     String FETCH_SCRIPT_TIMEOUT = "fetch.script.timeout";
@@ -200,6 +128,14 @@ public interface CapabilityTypes {
      * The number of active privacy contexts.
      */
     String PRIVACY_CONTEXT_NUMBER = "privacy.context.number";
+    /**
+     * The number of active privacy contexts.
+     */
+    String BROWSER_CONTEXT_NUMBER = "browser.context.number";
+    /**
+     * The number of active privacy contexts.
+     */
+    String BROWSER_PROFILE_MODE = "browser.profile.mode";
     /**
      * The minimal number of sequential privacy agents, the active privacy contexts is chosen from them.
      * */
@@ -230,12 +166,17 @@ public interface CapabilityTypes {
 
     /**
      * The max value of tabs a browser can open
+     * @deprecated use BROWSER_MAX_OPEN_TABS
      */
+    @Deprecated(since = "3.0.4")
     String BROWSER_MAX_ACTIVE_TABS = "browser.max.active.tabs";
+    /**
+     * The max value of tabs a browser can open
+     */
+    String BROWSER_MAX_OPEN_TABS = "browser.max.open.tabs";
     /**
      * The web driver to use
      * */
-    String BROWSER_WEB_DRIVER_CLASS = "browser.web.driver.class";
     String BROWSER_WEB_DRIVER_PRIORITY = "browser.web.driver.priority";
     String BROWSER_DRIVER_POOL_IDLE_TIMEOUT = "browser.driver.pool.idle.timeout";
     String BROWSER_TYPE = "browser.type";
@@ -273,19 +214,21 @@ public interface CapabilityTypes {
 
     ///////////////////////////////////////////////////////////////////////////
     // Proxy
+    ///
 
-    /**
-     * Proxy
-     */
-    String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
     String PROXY_POOL_MANAGER_CLASS = "proxy.pool.manager.class";
     String PROXY_LOADER_CLASS = "proxy.loader.class";
+    String PROXY_PARSER_CLASS = "proxy.parser.class";
     String PROXY_MAX_FETCH_SUCCESS = "proxy.max.fetch.success";
     String PROXY_MAX_ALLOWED_PROXY_ABSENCE = "proxy.max.allowed.proxy.absence";
     String PROXY_POOL_CAPACITY = "proxy.pool.size";
     String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
     String PROXY_IDLE_TIMEOUT = "proxy.idle.timeout";
-    String PROXY_ENABLE_DEFAULT_PROVIDERS = "proxy.enable.default.providers";
+
+    /**
+     * The key used to retrieve a proxy rotation URL. Each time the URL is accessed, a new set of proxy IPs will be returned.
+     * */
+    String PROXY_ROTATION_URL = "proxy.rotation.url";
 
     ///////////////////////////////////////////////////////////////////////////
     // Network
@@ -293,101 +236,21 @@ public interface CapabilityTypes {
     String HTTP_TIMEOUT = "http.timeout";
     String HTTP_FETCH_MAX_RETRY = "http.fetch.max.retry";
 
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Generate phrase
-
-    /**
-     * Generator parameters
-     */
-    String PARTITION_MODE_KEY = "partition.url.mode";
-    String PARTITION_URL_SEED = "partition.url.seed";
-
-    String GENERATE_TIME = "generate.generate.time";
-    String GENERATE_UPDATE_CRAWLDB = "generate.update.crawldb";
-    String GENERATE_MIN_SCORE = "generate.min.score";
-    String GENERATE_REGENERATE = "generate.regenerate";
-    String GENERATE_REGENERATE_SEEDS = "generate.regenerate.seeds";
-    String GENERATE_FILTER = "generate.filter";
-    String GENERATE_NORMALISE = "generate.normalise";
-    String GENERATE_MAX_TASKS_PER_HOST = "generate.max.tasks.per.host";
-    String GENERATE_SITE_GROUP_MODE = "generate.count.mode";
-    String GENERATE_TOP_N = "generate.topN";
-    String GENERATE_LAST_GENERATED_ROWS = "generate.last.generated.rows";
-    String GENERATE_CUR_TIME = "generate.curr.time";
-    String GENERATE_DETAIL_PAGE_RATE = "generate.detail.page.rate";
-    String GENERATE_DELAY = "crawl.gen.delay";
-    String GENERATE_RANDOM_SEED = "generate.partition.seed";
-
-
     ///////////////////////////////////////////////////////////////////////////
     // Parse phrase
 
-    /**
-     * Parser parameters
-     */
-    String PARSE_PARSE = "parser.parse";
-    String PARSE_REPARSE = "parser.reparse";
     String PARSE_TIMEOUT = "parser.timeout";
-    String PARSE_NORMALISE = "parse.normalise";
     String PARSE_MAX_URL_LENGTH = "parse.max.url.length";
     String PARSE_MIN_ANCHOR_LENGTH = "parse.min.anchor.length";
     String PARSE_MAX_ANCHOR_LENGTH = "parse.max.anchor.length";
-    String PARSE_LINK_PATTERN = "parse.link.pattern";
-    String PARSE_MAX_LINKS_PER_PAGE = "parse.max.links";
-    String PARSE_IGNORE_EXTERNAL_LINKS = "parse.ignore.external.links";
-    String PARSE_SKIP_TRUNCATED = "parser.skip.truncated";
-    String PARSE_HTML_IMPL = "parser.html.impl";
     String PARSE_SUPPORT_ALL_CHARSETS = "parser.support.all.charsets";
-    String PARSE_SUPPORTED_CHARSETS = "parser.supported.charsets";
     String PARSE_DEFAULT_ENCODING = "parser.character.encoding.default";
-    String PARSE_CACHING_FORBIDDEN_POLICY = "parser.caching.forbidden.policy";
-    String PARSE_TIKA_HTML_MAPPER_NAME = "tika.htmlmapper.classname";
-
-    String PARSE_RETRIEVE_FADED_LINKS = "parse.retrieve.faded.links";
 
     ///////////////////////////////////////////////////////////////////////////
-    // Update phrase
-
-    /**
-     * DbUpdater parameters
-     */
-    String UPDATE_MAX_INLINKS = "update.max.inlinks";
-    String UPDATE_IGNORE_IN2OUT_GRAPH = "update.ignore.in.graph";
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Scheduling
-
-    String SCHEDULE_INC_RATE = "db.fetch.schedule.adaptive.inc_rate";
-    String SCHEDULE_DEC_RATE = "db.fetch.schedule.adaptive.dec_rate";
-    String SCHEDULE_MIN_INTERVAL = "db.fetch.schedule.adaptive.min_interval";
-    String SCHEDULE_MAX_INTERVAL = "db.fetch.schedule.adaptive.max_interval";
-    String SCHEDULE_SEED_MAX_INTERVAL = "db.fetch.schedule.adaptive.seed_max_interval";
-    String SCHEDULE_SYNC_DELTA = "db.fetch.schedule.adaptive.sync_delta";
-    String SCHEDULE_SYNC_DELTA_RATE = "db.fetch.schedule.adaptive.sync_delta_rate";
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Scoring
-
-    /**
-     * Scoring
-     */
-    // divisor may have a better name
-    String SCORE_SORT_ERROR_COUNTER_DIVISOR = "score.sort.error.counter.divisor";
-    String SCORE_SORT_WEB_GRAPH_SCORE_DIVISOR = "score.sort.web.graph.score.divisor";
-    String SCORE_SORT_CONTENT_SCORE_DIVISOR = "score.sort.content.score.divisor";
-
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Indexing
-
-    /**
-     * Indexing parameters
-     */
-    String INDEXER_JIT = "indexer.just.in.time";
-    String INDEXER_HOSTNAME = "index.server.hostname";
-    String INDEXER_PORT = "index.server.port";
-
+    // LLM
+    String LLM_PROVIDER = "llm.provider";
+    String LLM_NAME = "llm.name";
+    String LLM_API_KEY = "llm.apiKey";
 
     ///////////////////////////////////////////////////////////////////////////
     // Other

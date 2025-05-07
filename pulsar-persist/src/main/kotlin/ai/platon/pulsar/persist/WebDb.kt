@@ -4,8 +4,8 @@ import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrNull
+import ai.platon.pulsar.common.urls.URLUtils
+import ai.platon.pulsar.common.urls.URLUtils.reverseUrlOrNull
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -100,7 +100,7 @@ class WebDb(
     @Throws(WebDBException::class)
     fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage? {
         // TODO: consider the design again whether we need normalize the url here
-        val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
+        val (url, key) = URLUtils.normalizedUrlAndKey(originalUrl, norm)
 
         val page = getOrNull0(originalUrl, norm, fields)
 
@@ -202,7 +202,7 @@ class WebDb(
     @JvmOverloads
     @Throws(WebDBException::class)
     fun delete(originalUrl: String, norm: Boolean = false): Boolean {
-        val (_, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
+        val (_, key) = URLUtils.normalizedUrlAndKey(originalUrl, norm)
         if (key.isBlank()) {
             return false
         }
@@ -369,7 +369,7 @@ class WebDb(
      */
     @Throws(WebDBException::class)
     private fun getOrNull0(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): GWebPage? {
-        val (_, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
+        val (_, key) = URLUtils.normalizedUrlAndKey(originalUrl, norm)
 
         tracer?.trace("Getting $key")
 

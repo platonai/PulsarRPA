@@ -984,7 +984,8 @@ interface WebDriver : Closeable {
      * driver.scrollToScreen(3.0)
      * ```
      *
-     * @param screenNumber The screen number of the page to scroll to,
+     * @param screenNumber The screen number of the page to scroll to (0-based).
+     * 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
      */
     @Throws(WebDriverException::class)
     suspend fun scrollToScreen(screenNumber: Double)
@@ -1191,6 +1192,84 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String)
 
+
+
+
+
+
+
+
+    /**
+     * Returns the node's property value, the node is located by [selector], the property is [attrName].
+     *
+     * If the node does not exist, or the property does not exist, returns null.
+     *
+     * ```kotlin
+     * val classes = driver.selectFirstPropertyOrNull("input#input", "value")
+     * ```
+     *
+     * @param selector The selector to locate the node.
+     * @param propName The property name to retrieve.
+     * @return The property value of the node.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectFirstPropertyValueOrNull(selector: String, propName: String): String?
+
+    /**
+     * Returns the nodes' property values, the nodes are located by [selector], the property is [propName].
+     *
+     * If the nodes do not exist, or the property does not exist, returns an empty list.
+     *
+     * ```kotlin
+     * val classes = driver.selectPropertyAll("input#input", "value")
+     * ```
+     *
+     * @param selector The selector to locate the nodes.
+     * @param propName The property name to retrieve.
+     * @param start The offset of the first node to select.
+     * @param limit The maximum number of nodes to select.
+     * @return The property values of the nodes.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun selectPropertyValueAll(selector: String, propName: String, start: Int = 0, limit: Int = 10000): List<String>
+
+    /**
+     * Set the property of an element located by [selector].
+     *
+     * ```kotlin
+     * driver.setProperty("input#input", "value")
+     * ```
+     *
+     * @param selector The CSS query to select an element.
+     * @param propName The property name to set.
+     * @param propValue The property value to set.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun setProperty(selector: String, propName: String, propValue: String)
+
+    /**
+     * Set the property of all elements matching the CSS query.
+     *
+     * ```kotlin
+     * driver.setPropertyAll("input#input", "value")
+     * ```
+     *
+     * @param selector The CSS query to select elements.
+     * @param propName The property name to set.
+     * @param propValue The property value to set.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun setPropertyAll(selector: String, propName: String, propValue: String)
+
+
+
+
+
+
+
+
+
+
     /**
      * Find hyperlinks in elements matching the CSS query.
      *
@@ -1237,36 +1316,54 @@ interface WebDriver : Closeable {
     suspend fun selectImages(selector: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String>
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. The script
-     * fragment provided will be executed as the body of an anonymous function.
+     * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
+     * it is not returned.
      *
      * ```kotlin
      * val title = driver.evaluate("document.title")
      * ```
      *
+     * Multi-line JavaScript code:
+     *
+     * ```kotlin
+     * val code = """
+     * () => {
+     *   const a = 10;
+     *   const b = 20;
+     *   return a * b;
+     * }
+     * """.trimIndent()
+     *
+     * val result = driver.evaluate(code)
+     * ```
+     *
+     * ### 🔍 Notes:
+     * * **Wrap the code in an IIFE (Immediately Invoked Function Expression)** to return a value.
+     * * **Escape line breaks** with `\n`.
+     *
      * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * @return Remote object value in case of primitive values or null.
      * */
     @Throws(WebDriverException::class)
     suspend fun evaluate(expression: String): Any?
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. The script
-     * fragment provided will be executed as the body of an anonymous function.
+     * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
+     * it is not returned.
      *
      * ```kotlin
      * val title = driver.evaluate("document.title", "Untitled")
      * ```
      *
      * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * @return Remote object value in case of primitive values or null.
      * */
     @Throws(WebDriverException::class)
     suspend fun <T> evaluate(expression: String, defaultValue: T): T
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. The script
-     * fragment provided will be executed as the body of an anonymous function.
+     * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
+     * it is not returned.
      *
      * ```kotlin
      * val title = driver.evaluate("document.title")
@@ -1278,6 +1375,69 @@ interface WebDriver : Closeable {
     @Beta
     @Throws(WebDriverException::class)
     suspend fun evaluateDetail(expression: String): JsEvaluation?
+
+    /**
+     * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
+     * it is returned as a JSON object.
+     *
+     * ```kotlin
+     * val title = driver.evaluate("document.title")
+     * ```
+     *
+     * To execute multi-line JavaScript code:
+     *
+     * ```kotlin
+     * val code = """
+     * () => {
+     *   const a = 10;
+     *   const b = 20;
+     *   return a * b;
+     * }
+     * """.trimIndent()
+     *
+     * val result = driver.evaluate(code)
+     * ```
+     *
+     * ### 🔍 Notes:
+     * * **Wrap the code in an IIFE (Immediately Invoked Function Expression)** to return a value.
+     * * **Escape line breaks** with `\n`.
+     *
+     * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * */
+    @Beta
+    @Throws(WebDriverException::class)
+    suspend fun evaluateValue(expression: String): Any?
+
+    /**
+     * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
+     * it is returned as a JSON object.
+     *
+     * ```kotlin
+     * val title = driver.evaluate("document.title", "Untitled")
+     * ```
+     *
+     * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * */
+    @Beta
+    @Throws(WebDriverException::class)
+    suspend fun <T> evaluateValue(expression: String, defaultValue: T): T
+
+    /**
+     * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
+     * it is returned as a JSON object.
+     *
+     * ```kotlin
+     * val title = driver.evaluate("document.title")
+     * ```
+     *
+     * @param expression Javascript expression to evaluate
+     * @return expression result
+     * */
+    @Beta
+    @Throws(WebDriverException::class)
+    suspend fun evaluateValueDetail(expression: String): JsEvaluation?
 
     /**
      * This method scrolls element into view if needed, and then ake a screenshot of the element.

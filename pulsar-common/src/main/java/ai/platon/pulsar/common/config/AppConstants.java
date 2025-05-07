@@ -109,7 +109,7 @@ public interface AppConstants {
     /**
      * Browser
      * */
-    int DEFAULT_BROWSER_MAX_ACTIVE_TABS = 8;
+    int DEFAULT_BROWSER_MAX_OPEN_TABS = 50;
 
     double BROWSER_TAB_REQUIRED_MEMORY = ByteUnit.GIB.toBytes(1.5); // at least 1.5 GiB to open a new tab
 
@@ -130,12 +130,9 @@ public interface AppConstants {
     String PULSAR_ATTR_OVERFLOW_VISIBLE = "_visible";
     String PULSAR_ATTR_ELEMENT_NODE_VI = "vi";
     String PULSAR_ATTR_TEXT_NODE_VI = "tv";
-    /**
-     * @deprecated Use PULSAR_ATTR_COMPUTED_STYLE instead
-     * */
-    @Deprecated
-    String PULSAR_ATTR_ELEMENT_NODE_STYLE = "st";
+
     String PULSAR_ATTR_COMPUTED_STYLE = "cs";
+    String PULSAR_ATTR_ELEMENT_NODE_DATA = "nd";
 
     // Browser use tool
     String BROWSER_INTERACTIVE_ELEMENTS_SELECTOR = "a, button, input, select, textarea, " +
@@ -163,12 +160,6 @@ public interface AppConstants {
      * Consider just use http://localhost.
      * */
     String LOCAL_FILE_BASE_URL = "http://localfile.org";
-
-    /**
-     * @deprecated Use LOCAL_FILE_BASE_URL instead
-     * */
-    @Deprecated
-    String LOCAL_FILE_SERVE_PREFIX = LOCAL_FILE_BASE_URL;
 
     String BROWSER_SPECIFIC_URL_PREFIX = "http://browser-specific.org";
 }

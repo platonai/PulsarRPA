@@ -7,17 +7,17 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
 class ProxyPoolManagerFactory(
-        val proxyPool: ProxyPool,
-        val conf: ImmutableConfig
-): AutoCloseable {
+    val proxyPool: ProxyPool,
+    val conf: ImmutableConfig
+) : AutoCloseable {
     private val logger = LoggerFactory.getLogger(ProxyPoolManagerFactory::class.java)
 
     private val proxyPoolManagers = ConcurrentHashMap<String, ProxyPoolManager>()
-    
+
     var specifiedProxyManager: ProxyPoolManager? = null
-    
+
     fun get(): ProxyPoolManager = specifiedProxyManager ?: computeIfAbsent(conf)
-    
+
     override fun close() {
         specifiedProxyManager?.runCatching { close() }?.onFailure { warnForClose(this, it) }
         proxyPoolManagers.values.forEach { it.runCatching { close() }.onFailure { warnForClose(this, it) } }
@@ -34,14 +34,16 @@ class ProxyPoolManagerFactory(
     }
 
     private fun getClass(conf: ImmutableConfig): Class<*> = getClass(conf, PROXY_POOL_MANAGER_CLASS)
-    
+
     private fun getClass(conf: ImmutableConfig, clazzName: String): Class<*> {
         val defaultClazz = ProxyPoolManager::class.java
         return try {
             conf.getClass(clazzName, defaultClazz)
         } catch (e: Exception) {
-            logger.warn("Configured proxy loader {}({}) is not found, use default ({})",
-                clazzName, conf.get(clazzName), defaultClazz.simpleName)
+            logger.warn(
+                "Configured proxy loader {}({}) is not found, use default ({})",
+                clazzName, conf.get(clazzName), defaultClazz.simpleName
+            )
             defaultClazz
         }
     }

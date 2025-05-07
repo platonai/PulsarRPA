@@ -7,7 +7,7 @@ package ai.platon.pulsar.common.config
  * @author vincent
  * @version $Id: $Id
  */
-open class ImmutableConfig : AbstractConfiguration {
+open class ImmutableConfig : RelaxedConfiguration {
 
     constructor(): this(false)
 
@@ -22,7 +22,7 @@ open class ImmutableConfig : AbstractConfiguration {
         resources: Iterable<String> = mutableSetOf()
     ): super(profile, loadDefaults, resources)
 
-    constructor(conf: KConfiguration) : super(conf)
+    constructor(conf: XmlConfiguration) : super(conf)
 
     constructor(conf: ImmutableConfig) : super(conf.unbox()) {
         this.environment = conf.environment

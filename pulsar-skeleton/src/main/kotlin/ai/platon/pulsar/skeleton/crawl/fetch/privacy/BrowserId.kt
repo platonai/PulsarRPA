@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent.Companion
 import java.nio.file.Path
 
 /**
@@ -87,42 +86,42 @@ data class BrowserId(
         /**
          * Represent the real user's default browser.
          * */
-        val SYSTEM_DEFAULT = BrowserId(PrivacyAgent.SYSTEM_DEFAULT)
+        val SYSTEM_DEFAULT get() = createSystemDefault()
         /**
          * Represent the default browser.
          * */
-        val DEFAULT = BrowserId(PrivacyAgent.DEFAULT)
+        val DEFAULT get() = createDefault()
         /**
          * Represent the prototype browser.
          * */
-        val PROTOTYPE = BrowserId(PrivacyAgent.PROTOTYPE)
+        val PROTOTYPE get() = createPrototype()
         /**
          * Represent a browser with a sequential context dir.
          * */
-        val NEXT_SEQUENTIAL get() = BrowserId(PrivacyAgent.createNextSequential())
+        val NEXT_SEQUENTIAL get() = createNextSequential()
         /**
          * Create a browser with random context dir.
          * */
-        val RANDOM get() = BrowserId(PrivacyAgent.RANDOM)
-        /**
-         * Create a browser with a specific context dir.
-         * */
-        fun create(contextDir: Path) = BrowserId(PrivacyAgent.create(contextDir))
+        val RANDOM_TEMP get() = createRandomTemp()
 
-        fun create(browserType: BrowserType, contextDir: Path) = BrowserId(PrivacyAgent.create(browserType, contextDir))
+        fun createDefault() = BrowserId(PrivacyAgent.createDefault())
 
-        fun createRandom() = create(PrivacyContext.RANDOM_CONTEXT_DIR)
+        fun createDefault(browserType: BrowserType) = BrowserId(PrivacyAgent.createDefault(browserType))
 
-        fun createRandom(browserType: BrowserType) = create(browserType, PrivacyContext.createRandom(browserType))
+        fun createSystemDefault() = BrowserId(PrivacyAgent.createSystemDefault())
 
-        fun createDefault() = create(PrivacyContext.DEFAULT_CONTEXT_DIR)
+        fun createSystemDefault(browserType: BrowserType) = BrowserId(PrivacyAgent.createSystemDefault(browserType))
 
-        fun createDefault(browserType: BrowserType) =
-            create(browserType, PrivacyContext.DEFAULT_CONTEXT_DIR)
+        fun createPrototype() = BrowserId(PrivacyAgent.createPrototype())
 
-        fun createNextSequential() = create(PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
+        fun createPrototype(browserType: BrowserType) = BrowserId(PrivacyAgent.createPrototype(browserType))
 
-        fun createNextSequential(browserType: BrowserType) = create(browserType, PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
+        fun createRandomTemp() = BrowserId(PrivacyAgent.createRandomTemp())
 
+        fun createRandomTemp(browserType: BrowserType) = BrowserId(PrivacyAgent.createRandomTemp(browserType))
+
+        fun createNextSequential() = BrowserId(PrivacyAgent.createNextSequential())
+
+        fun createNextSequential(browserType: BrowserType) = BrowserId(PrivacyAgent.createNextSequential(browserType))
     }
 }

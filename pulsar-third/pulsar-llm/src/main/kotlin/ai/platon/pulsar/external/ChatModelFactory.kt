@@ -1,8 +1,10 @@
 package ai.platon.pulsar.external
 
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.warn
 import ai.platon.pulsar.external.impl.ChatModelImpl
+import com.alibaba.dashscope.utils.Constants.apiKey
 import com.ibm.icu.impl.CurrencyData.provider
 import dev.langchain4j.model.openai.OpenAiChatModel
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel
@@ -24,9 +26,14 @@ object ChatModelFactory {
             return true
         }
 
-        val provider = conf["llm.provider"]
-        val llm = conf["llm.name"]
-        val apiKey = conf["llm.apiKey"]
+        val openaiAPIKey = conf["OPENAI_API_KEY"]
+        if (openaiAPIKey != null) {
+            return true
+        }
+
+        val provider = conf[LLM_PROVIDER]
+        val llm = conf[LLM_NAME]
+        val apiKey = conf[LLM_API_KEY]
 
         return provider != null && llm != null && apiKey != null
     }
@@ -41,25 +48,26 @@ object ChatModelFactory {
      */
     @Throws(IllegalArgumentException::class)
     fun getOrCreate(conf: ImmutableConfig): ChatModel {
-        // Notice: all keys are transformed to dot.separated.kebab.case using KStrings.toDotSeparatedKebabCase(),
+        // Notice: all keys are transformed to dot.separated.kebab-case using KStrings.toDotSeparatedKebabCase(),
         // so the following keys are equal:
-        // - DEEPSEEK_API_KEY, deepseek.apiKey
+        // - DEEPSEEK_API_KEY, deepseek.apiKey, deepseek.api-key
         val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
-        val deepseekModelName = conf["DEEPSEEK_MODEL_NAME"] ?: conf["LLM_NAME"] ?: "deepseek-chat"
         if (deepseekAPIKey != null) {
+            val deepseekModelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
             return getOrCreate("deepseek", deepseekModelName, deepseekAPIKey, conf)
         }
 
         val openaiAPIKey = conf["OPENAI_API_KEY"]
-        val openaiBaseURL = conf["OPENAI_BASE_URL"] ?: "https://api.openai.com/v1/chat/completions"
-        val openaiModelName = conf["OPENAI_MODEL_NAME"] ?: conf["LLM_NAME"] ?: "gpt-4o-mini"
         if (openaiAPIKey != null) {
+            val openaiBaseURL = conf["OPENAI_BASE_URL"] ?: "https://api.openai.com/v1/chat/completions"
+            val openaiModelName = conf["OPENAI_MODEL_NAME"] ?: "gpt-4o"
             return getOrCreateOpenAICompatibleModel(openaiModelName, openaiAPIKey, openaiBaseURL, conf)
         }
 
-        val provider = conf["llm.provider"] ?: throw IllegalArgumentException("llm.provider is not set")
-        val modelName = conf["llm.name"] ?: throw IllegalArgumentException("llm.name is not set")
-        val apiKey = conf["llm.apiKey"] ?: throw IllegalArgumentException("llm.apiKey is not set")
+        val documentPath = "https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/llm-config-advanced.md"
+        val provider = requireNotNull(conf[LLM_PROVIDER])  { "$LLM_PROVIDER is not set, see $documentPath" }
+        val modelName = requireNotNull(conf[LLM_NAME]) { "$LLM_NAME is not set, see $documentPath" }
+        val apiKey = requireNotNull(conf[LLM_API_KEY]) { "$LLM_API_KEY is not set, see $documentPath" }
 
         return getOrCreate(provider, modelName, apiKey, conf)
     }
@@ -76,7 +84,6 @@ object ChatModelFactory {
     @Throws(IllegalArgumentException::class)
     fun getOrCreate(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig) =
         getOrCreateModel0(provider, modelName, apiKey, conf)
-
 
     /**
      * Create a default model.
@@ -191,7 +198,8 @@ object ChatModelFactory {
             .modelName(modelName)
             .logRequests(false)
             .logResponses(true)
-            .maxRetries(1)
+            .maxRetries(2)
+            .timeout(Duration.ofSeconds(90))
             .build()
         return ChatModelImpl(lm, conf)
     }

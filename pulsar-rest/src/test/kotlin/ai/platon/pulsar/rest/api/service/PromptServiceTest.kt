@@ -10,6 +10,7 @@ import ai.platon.pulsar.rest.api.entities.PromptRequest
 import ai.platon.pulsar.rest.api.entities.PromptRequestL2
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
@@ -57,6 +58,10 @@ Once the document is fully loaded:
 - Scroll to the middle of the page
     """
 
+/**
+ * [WARNING] Tests run: 14, Failures: 0, Errors: 0, Skipped: 4, Time elapsed: 111.2 s -- in ai.platon.pulsar.rest.api.service.PromptServiceTest
+ * */
+@Tag("TimeConsumingTest")
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class PromptServiceTest {

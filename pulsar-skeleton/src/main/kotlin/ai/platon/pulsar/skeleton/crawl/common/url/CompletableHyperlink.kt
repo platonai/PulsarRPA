@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.OptionUtils
 import ai.platon.pulsar.common.urls.StatefulUrl
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import java.net.MalformedURLException
 import java.net.URL
 import java.time.Instant
@@ -63,14 +63,14 @@ open class CompletableHyperlink<T>(
     override var depth: Int = 0
 ): UrlAware, Comparable<UrlAware>, StatefulUrl, CompletableFuture<T>() {
 
-    override val configuredUrl get() = UrlUtils.mergeUrlArgs(url, args)
+    override val configuredUrl get() = URLUtils.mergeUrlArgs(url, args)
 
-    override val isStandard get() = UrlUtils.isStandard(url)
+    override val isStandard get() = URLUtils.isStandard(url)
 
     @get: Throws(MalformedURLException::class)
     override val toURL get() = URL(url)
 
-    override val toURLOrNull get() = UrlUtils.getURLOrNull(url)
+    override val toURLOrNull get() = URLUtils.getURLOrNull(url)
 
     override val isNil: Boolean get() = url == AppConstants.NIL_PAGE_URL
 

@@ -17,7 +17,7 @@
 package ai.platon.pulsar.persist.gora.db
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -76,7 +76,7 @@ class DbIterator(
     private fun moveToNext0() {
         nextPage = null
         while (nextPage == null && result.next()) {
-            val url = UrlUtils.unreverseUrlOrNull(result.key) ?: continue
+            val url = URLUtils.unreverseUrlOrNull(result.key) ?: continue
             val page = GoraWebPage.box(url, result.get(), conf.toVolatileConfig())
             val f = filter
             if (f == null || f.test(page)) {

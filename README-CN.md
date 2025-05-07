@@ -6,16 +6,12 @@
 
 💖 **PulsarRPA：AI驱动的极速浏览器自动化新纪元！** 💖
 
-**PulsarRPA** 是一款集 **AI智能赋能** 🤖、**极致性能** 🚀、**分布式架构** 🌐 与 **开源精神** 🔓 于一体的下一代浏览器自动化平台，专为 **大规模高强度自动化场景** 🏭 而生。
-
 ### ✨ 核心能力：
 
 - 🤖 **LLM深度集成** – 使用大型语言模型实现更智能的自动化操作。
 - ⚡ **超高速浏览器操控** – 协程安全的浏览器并发操作，蜘蛛级别的高性能爬取体验。
 - 🧠 **网页内容理解** – 深度解析动态网页结构。
 - 📊 **数据提取API** – 提供强大的结构化数据提取接口。
-
-PulsarRPA 致力于突破传统网页自动化的边界，提供 **精准** ✅、**全面** 📚 的数据提取解决方案，轻松应对最 **复杂** 🔄、最 **动态变化** ⚡ 的网站挑战，助力企业极速获取核心数据，赢在未来！
 
 ---
 
@@ -54,18 +50,23 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 ```
 
 ```bash
-java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+export DEEPSEEK_API_KEY=YOUR-DEEPSEEK_API_KEY
+java -jar PulsarRPA.jar
 ```
-
 
 > 🔍 **提示：** 即使不设置 `DEEPSEEK_API_KEY`，高级用户仍可以使用所有进阶功能。
 
-🔗 [选择其他 LLM 提供商](docs/config/llm/llm-config-advanced.md)
+🔗 [选择其他 LLM 提供商](docs/config/llm/llm-config)
 
 ### 📦 下载链接
 
 - 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar)
 - 🇨🇳 [国内用户专用](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
+
+### ▶ 通过 IDE 运行 PulsarRPA
+
+- 使用你的开发工具（如 IntelliJ IDEA、Android Studio 等）打开整个 PulsarRPA 项目；
+- 找到主类 ai.platon.pulsar.app.PulsarApplicationKt 并运行它。这个类是程序的入口点，执行后将启动 PulsarRPA 应用。
 
 ### 🐳 Docker 用户
 
@@ -87,13 +88,13 @@ curl -X POST "http://localhost:8182/api/ai/command" \
   -H "Content-Type: text/plain" \
   -d '
     访问 https://www.amazon.com/dp/B0C1H26C46
+    页面加载完成后：点击 #title，然后滚动到页面中部。
+    
     总结该产品。
     提取字段：产品名称、价格、评分。
     查找所有包含 /dp/ 的链接。
-    页面加载完成后：点击 #title，然后滚动到页面中部。
   '
 ```
-
 
 ### 📄 JSON 格式请求：
 
@@ -201,7 +202,6 @@ select
 from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body');
 ```
 
-
 📚 示例代码仓库：
 * [亚马逊产品页面爬取 (100+ 字段)](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [所有亚马逊页面类型爬取](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
@@ -214,6 +214,16 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 - 📊 [REST API 示例](docs/rest-api-examples.md)
 
 ---
+
+## 🔧 代理设置
+
+将环境变量 `PROXY_ROTATION_URL` 设置为你的代理服务商提供的地址：
+
+```shell
+export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
+```
+
+每次访问该轮换地址时，应返回一个包含一个或多个新代理 IP 的响应。
 
 ## ✨ 特性概览
 
@@ -296,6 +306,5 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 - 🌍 官网: [platon.ai](https://platon.ai)
 
 <div style="display: flex;">
-  <img src="docs/images/wechat-author.png" width="300" alt="微信二维码" />
+  <img src="docs/images/wechat-author.png" width="300" height="365" alt="微信二维码" />
 </div>
-

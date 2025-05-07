@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.common.proxy.ProxyType
 import java.net.Proxy
 
 class TemporaryProxyLoader(
@@ -16,8 +15,6 @@ class TemporaryProxyLoader(
 
     fun loadProxies() {
         logger.warn("!!! This is a temporary solution to load proxies !!!")
-
-        BrowserSettings.enableProxy()
 
         // only works before 2023-08-25
         // # IP:PORT:USER:PASS

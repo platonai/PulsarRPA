@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.RandomStringUtils
@@ -404,7 +404,7 @@ object AppPaths {
      * Create a filename compatible string from the given url.
      * */
     fun fromHost(url: String): String {
-        val u = UrlUtils.getURLOrNull(url) ?: return "unknown"
+        val u = URLUtils.getURLOrNull(url) ?: return "unknown"
         return fromHost(u)
     }
     
@@ -415,7 +415,7 @@ object AppPaths {
      * Create a filename compatible string from the given uri.
      * */
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
-        val u = UrlUtils.getURLOrNull(uri) ?: return "${prefix}unknown$suffix"
+        val u = URLUtils.getURLOrNull(uri) ?: return "${prefix}unknown$suffix"
         
         val dirForDomain = fromHost(u)
         val fileId = fileId(uri)

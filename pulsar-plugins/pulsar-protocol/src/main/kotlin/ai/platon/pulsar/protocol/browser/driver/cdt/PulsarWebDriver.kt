@@ -11,7 +11,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
@@ -138,6 +138,7 @@ class PulsarWebDriver(
         invokeOnPage("clearBrowserCookies") { networkAPI?.clearBrowserCookies() }
     }
 
+    // Use the JavaScript version in super class
     override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
         val name = "selectFirstAttributeOrNull"
         return invokeOnElement(selector, name) { page.getAttribute(it, attrName) }
@@ -157,6 +158,16 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun evaluateDetail(expression: String): JsEvaluation? {
         return invokeOnPage("evaluateDetail") { createJsEvaluate(page.evaluateDetail(expression)) }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun evaluateValue(expression: String): Any? {
+        return invokeOnPage("evaluateValue") { page.evaluateValue(expression) }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun evaluateValueDetail(expression: String): JsEvaluation? {
+        return invokeOnPage("evaluateValueDetail") { createJsEvaluate(page.evaluateValueDetail(expression)) }
     }
 
     @Throws(WebDriverException::class)
@@ -369,6 +380,8 @@ class PulsarWebDriver(
             // keyboard?.type(text, randomDelayMillis("fill"))
             // For fill, there is no delay between key presses
             keyboard?.type(text, 0)
+
+            gap("fill")
         }
     }
 
@@ -643,7 +656,7 @@ class PulsarWebDriver(
         }
 
         navigateUrl = url
-        if (UrlUtils.isLocalFile(url)) {
+        if (URLUtils.isLocalFile(url)) {
             // serve local file, for example:
             // local file path:
             // C:\Users\pereg\AppData\Local\Temp\pulsar\test.txt
@@ -666,11 +679,12 @@ class PulsarWebDriver(
     }
 
     private fun openLocalFile(url: String) {
-        val path = UrlUtils.localURLToPath(url)
+        val path = URLUtils.localURLToPath(url)
         val uri = path.toUri()
         page.navigate(uri.toString())
     }
 
+    @Deprecated("Use openLocalFile instead")
     private fun openLocalFileDeprecated(url: String) {
         if (url.contains("?path=")) {
             val queryParams = URIBuilder(url).queryParams
@@ -686,7 +700,7 @@ class PulsarWebDriver(
         if (SystemUtils.IS_OS_WINDOWS) {
             page.navigate(url0)
         } else {
-            page.navigate("file:///$url0")
+            page.navigate(url0)
         }
     }
 
@@ -712,12 +726,12 @@ class PulsarWebDriver(
             return
         }
 
-        if (!UrlUtils.isStandard(entry.url)) {
+        if (!URLUtils.isStandard(entry.url)) {
             logger.warn("Not a valid url | {}", entry.url)
             return
         }
 
-        tracer?.trace("onRequestWillBeSent | driver | {}", event.requestId)
+        tracer?.trace("onRequestWillBeSent | driver | requestId: {}", event.requestId)
 
         val chromeNavigateEntry = ChromeNavigateEntry(navigateEntry)
         chromeNavigateEntry.updateStateBeforeRequestSent(event)

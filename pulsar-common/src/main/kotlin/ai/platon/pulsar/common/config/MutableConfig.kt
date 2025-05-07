@@ -45,7 +45,7 @@ open class MutableConfig : ImmutableConfig {
      * @param value property value.
      */
     operator fun set(name: String, value: String?) {
-        conf[name] = value
+        xmlConfiguration[name] = value
     }
 
     /**
@@ -113,7 +113,7 @@ open class MutableConfig : ImmutableConfig {
      * @param values The values
      */
     fun setStrings(name: String?, vararg values: String) {
-        conf.setStrings(name!!, *values)
+        xmlConfiguration.setStrings(name!!, *values)
     }
 
     /**
@@ -217,7 +217,7 @@ open class MutableConfig : ImmutableConfig {
      * @param name a [java.lang.String] object.
      */
     fun unset(name: String) {
-        conf.unset(name)
+        xmlConfiguration.unset(name)
     }
 
     /**
@@ -225,14 +225,14 @@ open class MutableConfig : ImmutableConfig {
      * clear.
      */
     fun clear() {
-        conf.clear()
+        xmlConfiguration.clear()
     }
 
     /**
      *
      * reset.
      */
-    fun reset(conf: KConfiguration) {
+    fun reset(conf: XmlConfiguration) {
         for ((key) in conf) {
             unset(key)
         }
@@ -247,7 +247,7 @@ open class MutableConfig : ImmutableConfig {
      *
      * @param names a [java.lang.String] object.
      */
-    fun merge(conf: KConfiguration, vararg names: String?) {
+    fun merge(conf: XmlConfiguration, vararg names: String?) {
         for ((key, value) in conf) {
             if (names.isEmpty() || ArrayUtils.contains(names, key)) {
                 set(key, value)

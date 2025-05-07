@@ -3,7 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.common
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.skeleton.common.options.LoadOptionDefaults
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.UrlUtils.splitUrlArgs
+import ai.platon.pulsar.common.urls.URLUtils.splitUrlArgs
 import ai.platon.pulsar.persist.metadata.PageCategory
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets

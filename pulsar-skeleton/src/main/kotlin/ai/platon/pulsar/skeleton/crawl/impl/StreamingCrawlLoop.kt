@@ -151,6 +151,7 @@ open class StreamingCrawlLoop(
 
         // the feeder is upgraded, so we need to create a new one
         val upgradedFeeder = createUrlFeeder()
+        urlFeeders.remove(feeder.id)
         urlFeeders[upgradedFeeder.id] = upgradedFeeder
 
         logger.warn("The url feeder is upgraded, use the new one instead | #{} <- #{} | {}", upgradedFeeder.id, feeder.id, this)

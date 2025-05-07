@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -54,7 +54,7 @@ class FileBackendPageStore(
     override fun put(reversedUrl: String, page: GWebPage) {
         super.put(reversedUrl, page)
 
-        UrlUtils.unreverseUrlOrNull(reversedUrl)?.let {
+        URLUtils.unreverseUrlOrNull(reversedUrl)?.let {
             val p = GoraWebPage.box(it, page, unsafeConf)
             writeAvro(p)
             writeHtml(p)
@@ -76,7 +76,7 @@ class FileBackendPageStore(
         var success = super.delete(reversedUrl)
 
         // Unreverse the URL to get the original URL.
-        val url = UrlUtils.unreverseUrlOrNull(reversedUrl)
+        val url = URLUtils.unreverseUrlOrNull(reversedUrl)
         if (url != null) {
             // Get the paths for the associated `.avro` and `.html` files.
             val path1 = getPersistPath(url, ".avro")
@@ -103,7 +103,7 @@ class FileBackendPageStore(
 
     @Synchronized
     fun readHtml(reversedUrl: String): GWebPage? {
-        val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
+        val url = URLUtils.unreverseUrlOrNull(reversedUrl) ?: return null
         val path = getPersistPath(url, ".html")
 
         tracer?.trace("Getting {} {} | {}", reversedUrl, Files.exists(path), path)
@@ -123,7 +123,7 @@ class FileBackendPageStore(
 
     @Synchronized
     fun readAvro(reversedUrl: String): GWebPage? {
-        val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
+        val url = URLUtils.unreverseUrlOrNull(reversedUrl) ?: return null
         val path = getPersistPath(url, ".avro")
 
         if (!Files.exists(path)) {

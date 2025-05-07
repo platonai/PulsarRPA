@@ -1,8 +1,12 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.privacy
 
-import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.common.browser.BrowserContextMode
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_CONTEXT_NUMBER
+import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.nio.file.Files
@@ -17,7 +21,7 @@ import java.nio.file.Path
 data class PrivacyAgent(
     val contextDir: Path,
     var fingerprint: Fingerprint
-): Comparable<PrivacyAgent> {
+) : Comparable<PrivacyAgent> {
 
     val id = PrivacyAgentId(contextDir, fingerprint.browserType)
     val ident get() = id.ident
@@ -29,11 +33,11 @@ data class PrivacyAgent(
     val isGroup get() = id.isGroup
     val isTemporary get() = id.isTemporary
     val isPermanent get() = id.isPermanent
-    
-    constructor(contextDir: Path): this(contextDir, BrowserType.PULSAR_CHROME)
 
-    constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
-    
+    constructor(contextDir: Path) : this(contextDir, BrowserType.PULSAR_CHROME)
+
+    constructor(contextDir: Path, browserType: BrowserType) : this(contextDir, Fingerprint(browserType))
+
     /**
      * The PrivacyAgent equality.
      * Note: do not use the default equality function
@@ -47,55 +51,68 @@ data class PrivacyAgent(
 //    override fun toString() = /** AUTO GENERATED **/
 
     companion object {
-        /**
-         * The system default privacy agent opens browser just like real users do every day.
-         * */
-        val SYSTEM_DEFAULT =
-            PrivacyAgent(AppPaths.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
-
-        /**
-         * The prototype privacy agent opens browser with the prototype data dir.
-         * Every change to the browser will be kept in the prototype data dir, and every temporary privacy agent
-         * uses a copy of the prototype data dir.
-         * */
-        val PROTOTYPE = create(PrivacyContext.PROTOTYPE_CONTEXT_DIR)
-
-        /**
-         * The default privacy agent opens browser with the default data dir, the default data dir will not be removed
-         * after the browser closes.
-         * */
-        val DEFAULT = create(PrivacyContext.DEFAULT_CONTEXT_DIR)
-
-        /**
-         * The privacy agent opens browser with a sequential data dir.
-         * */
-        val NEXT_SEQUENTIAL get() = createNextSequential()
+        private val logger = getLogger(this)
 
         /**
          * The random privacy agent opens browser with a random data dir.
          * */
-        val RANDOM get() = create(PrivacyContext.RANDOM_CONTEXT_DIR)
+        val RANDOM_TEMP get() = createRandomTemp()
 
-        fun create(contextDir: Path) = create(BrowserType.PULSAR_CHROME, contextDir)
+        private fun create(contextDir: Path) = create(BrowserType.PULSAR_CHROME, contextDir)
 
-        fun create(browserType: BrowserType, contextDir: Path): PrivacyAgent {
+        private fun create(browserType: BrowserType, contextDir: Path): PrivacyAgent {
             val path = contextDir.resolve("fingerprint.json")
             val fingerprint: Fingerprint = if (Files.exists(path)) {
                 pulsarObjectMapper().readValue<Fingerprint>(path.toFile()).also { it.source = path.toString() }
             } else {
                 Fingerprint(browserType)
             }
+            fingerprint.browserType = browserType
             return PrivacyAgent(contextDir, fingerprint)
         }
 
-        fun createRandom() = create(PrivacyContext.RANDOM_CONTEXT_DIR)
+        fun createSystemDefault(): PrivacyAgent {
+            return createSystemDefault(BrowserType.DEFAULT)
+        }
 
-        fun createRandom(browserType: BrowserType) = create(browserType, PrivacyContext.createRandom(browserType))
+        fun createSystemDefault(browserType: BrowserType): PrivacyAgent {
+            logger.info("You are creating a SYSTEM_DEFAULT browser context, force set max browser number to be 1")
+            BrowserSettings.withBrowserContextMode(BrowserContextMode.SYSTEM_DEFAULT, browserType)
+            require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
+            require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("SystemDefaultPrivacyAgentGenerator"))
+            return create(browserType, PrivacyContext.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER)
+        }
 
-        fun createDefault() = create(PrivacyContext.DEFAULT_CONTEXT_DIR)
+        fun createDefault(): PrivacyAgent {
+            return createDefault(BrowserType.DEFAULT)
+        }
 
-        fun createDefault(browserType: BrowserType) = create(browserType, PrivacyContext.DEFAULT_CONTEXT_DIR)
+        fun createDefault(browserType: BrowserType): PrivacyAgent {
+            logger.info("You are creating a DEFAULT browser context, force set max browser number to be 1")
+            BrowserSettings.withBrowserContextMode(BrowserContextMode.DEFAULT, browserType)
+            require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
+            require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("DefaultPrivacyAgentGenerator"))
+            return create(browserType, PrivacyContext.DEFAULT_CONTEXT_DIR)
+        }
 
-        fun createNextSequential() = create(PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
+        fun createPrototype(): PrivacyAgent {
+            return createPrototype(BrowserType.DEFAULT)
+        }
+
+        fun createPrototype(browserType: BrowserType): PrivacyAgent {
+            logger.info("You are creating a PROTOTYPE browser context, force set max browser number to be 1")
+            BrowserSettings.withBrowserContextMode(BrowserContextMode.PROTOTYPE, browserType)
+            require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
+            require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("PrototypePrivacyAgentGenerator"))
+            return create(browserType, PrivacyContext.PROTOTYPE_CONTEXT_DIR)
+        }
+
+        fun createNextSequential() = createNextSequential(BrowserType.PULSAR_CHROME)
+
+        fun createNextSequential(browserType: BrowserType) = create(browserType, PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
+
+        fun createRandomTemp() = createRandomTemp(BrowserType.PULSAR_CHROME)
+
+        fun createRandomTemp(browserType: BrowserType) = create(browserType, PrivacyContext.createRandom(browserType))
     }
 }

@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.config.AppConstants.PULSAR_DOCUMENT_NORMALIZED_UR
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_META_INFORMATION_SELECTOR
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.common.persist.ext.options
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
@@ -62,10 +62,10 @@ class JsoupParser(
 
         val urls = mutableMapOf(PULSAR_DOCUMENT_NORMALIZED_URI to page.url)
 
-        page.href?.takeIf { UrlUtils.isStandard(it) }?.let {
+        page.href?.takeIf { URLUtils.isStandard(it) }?.let {
             urls.put("href", it)
         }
-        page.referrer.takeIf { UrlUtils.isStandard(it) }?.let {
+        page.referrer.takeIf { URLUtils.isStandard(it) }?.let {
             urls.put("referrer", it)
         }
 

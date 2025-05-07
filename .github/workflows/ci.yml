@@ -39,7 +39,7 @@ jobs:
           docker run -d --rm --name pulsar-rpa-test -p 8182:8182 $IMAGE_NAME:$VERSION
           sleep 10  # 等待 Spring Boot 启动
 
-      - name: Run curl integration tests from llm-config-advanced.md
+      - name: Run curl integration tests from llm-config.md
         run: |
           ./bin/scrape.sh
 

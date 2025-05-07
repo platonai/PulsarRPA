@@ -11,9 +11,15 @@ services:
     networks:
       - backend
 
+  proxy-hub:
+    image: 'proxy-hub:latest'
+    container_name: 'proxyhub'
+    ports:
+      - '8192:8192'
+
   pulsar-rpa:
     image: 'pulsar-rpa:latest'
-    container_name: 'pulsar-rpa'
+    container_name: 'pulsarrpa'
     depends_on:
       - 'mongodb'
     environment:

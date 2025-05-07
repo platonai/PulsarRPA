@@ -12,16 +12,12 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 💖 **PulsarRPA: The AI-Powered, Lightning-Fast Browser Automation Solution!** 💖
 
-**PulsarRPA** is an **AI-enabled** 🤖, **high-performance** 🚀, **distributed** 🌐, and **open-source** 🔓 browser automation platform built for **large-scale automation** 🏭.
-
 ### ✨ Key Capabilities:
 
 - 🤖 **AI Integration with LLMs** – Smarter automation powered by large language models.
 - ⚡ **Ultra-Fast Automation** – Coroutine-safe browser automation concurrency, spider-level crawling performance.
 - 🧠 **Web Understanding** – Deep comprehension of dynamic web content.
 - 📊 **Data Extraction APIs** – Powerful tools to extract structured data effortlessly.
-
-PulsarRPA delivers **accurate** ✅ and **comprehensive** 📚 data extraction — even from the most **complex** 🔄 and **dynamic** ⚡ websites. Built for real-world use cases at scale.
 
 ---
 
@@ -60,24 +56,29 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 ```
 
 ```bash
-java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+export DEEPSEEK_API_KEY=YOUR-DEEPSEEK_API_KEY
+java -jar PulsarRPA.jar
 ```
 
 > 🔍 **Note:** Advanced users can still access all advanced features without setting `DEEPSEEK_API_KEY`.
 
-🔗 [Choose Another LLM Provider](docs/config/llm/llm-config-advanced.md)
+🔗 [Choose Another LLM Provider](docs/config/llm/llm-config)
 
 ### 📦 Download Links
 
 - 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar)
 - 🇨🇳 [For Chinese Users](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
 
+### ▶ Run with IDE
+
+- Open the project in your IDE
+- Run the `ai.platon.pulsar.app.PulsarApplicationKt` main class
+
 ### 🐳 Docker Users
 
 ```shell
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
 ```
-
 
 ---
 
@@ -91,11 +92,12 @@ Use the `command` API to perform actions and extract data using natural language
 curl -X POST "http://localhost:8182/api/ai/command" \
   -H "Content-Type: text/plain" \
   -d '
-    Visit https://www.amazon.com/dp/B0C1H26C46
+    Go to https://www.amazon.com/dp/B0C1H26C46
+    After page load: click #title, then scroll to the middle.
+    
     Summarize the product.
     Extract: product name, price, ratings.
     Find all links containing /dp/.
-    After page load: click #title, then scroll to the middle.
   '
 ```
 
@@ -202,10 +204,24 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 * [Amazon Product Page Scraping (100+ fields)](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [All Amazon Page Types Scraping](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
+---
+
 ## 📜 Documents
 
 * 📖 [Advanced Guides](docs/advanced-guides.md)
 * 📊 [REST API Examples](docs/rest-api-examples.md)
+
+---
+
+## 🔧 Proxies
+
+Set the environment variable PROXY_ROTATION_URL to the URL provided by your proxy service:
+
+```shell
+export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
+```
+
+Each time the rotation URL is accessed, it should return a response containing one or more fresh proxy IPs.
 
 ---
 
@@ -289,5 +305,5 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 - 🌍 Website: [platon.ai](https://platon.ai)
 
 <div style="display: flex;">
-  <img src="docs/images/wechat-author.png" width="300" alt="WeChat QR Code" />
+  <img src="docs/images/wechat-author.png" width="300" height="365" alt="WeChat QR Code" />
 </div>

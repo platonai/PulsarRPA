@@ -13,7 +13,7 @@
 
     <bean id="proxyLoader" factory-bean="proxyLoaderFactory" factory-method="get" destroy-method="close"/>
 
-    <bean id="proxyPool" class="ai.platon.pulsar.common.proxy.LoadingProxyPool">
+    <bean id="proxyPool" class="ai.platon.pulsar.common.proxy.impl.LoadingProxyPool">
         <constructor-arg ref="proxyLoader"/>
         <constructor-arg ref="conf"/>
     </bean>

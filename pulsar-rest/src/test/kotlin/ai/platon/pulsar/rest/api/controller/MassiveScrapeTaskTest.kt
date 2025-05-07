@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.sql.SQLTemplate
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.PulsarSettings
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -40,7 +40,7 @@ class MassiveScrapeTaskTest : IntegrationTestBase() {
         )
 
         init {
-            PulsarSettings().maxBrowsers(5).maxOpenTabs(8).withSequentialBrowsers()
+            PulsarSettings().maxBrowserContexts(5).maxOpenTabs(8).withSequentialBrowsers()
         }
 
         @JvmStatic
@@ -78,7 +78,7 @@ class MassiveScrapeTaskTest : IntegrationTestBase() {
     @Test
     fun whenIssueMassiveScrapeTask_thenShouldFinishAllTasks() {
         val sqls = testPaths.asSequence()
-            .map { UrlUtils.pathToLocalURL(it) }
+            .map { URLUtils.pathToLocalURL(it) }
             .map { SQL_TEMPLATE.createInstance("$it -refresh") }
             .toList()
 

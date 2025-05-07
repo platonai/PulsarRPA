@@ -1,12 +1,9 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.common.warnForClose
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
@@ -324,6 +321,12 @@ abstract class AbstractWebDriver(
         return evaluate(expression) as? T ?: defaultValue
     }
 
+    @Suppress("UNCHECKED_CAST")
+    @Throws(WebDriverException::class)
+    override suspend fun <T> evaluateValue(expression: String, defaultValue: T): T {
+        return evaluateValue(expression) as? T ?: defaultValue
+    }
+
     @Throws(WebDriverException::class)
     override suspend fun isVisible(selector: String): Boolean {
         return evaluate("__pulsar_utils__.isVisible('$selector')") == "true"
@@ -393,6 +396,9 @@ abstract class AbstractWebDriver(
         return result
     }
 
+
+
+
     @Throws(WebDriverException::class)
     override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
         val result = evaluate("__pulsar_utils__.selectFirstAttribute('$selector', '$attrName')")
@@ -422,6 +428,66 @@ abstract class AbstractWebDriver(
     override suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String) {
         evaluate("__pulsar_utils__.setAttributeAll('$selector', '$attrName', '$attrValue')")
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @Throws(WebDriverException::class)
+    override suspend fun selectFirstPropertyValueOrNull(selector: String, propName: String): String? {
+        val result = evaluate("__pulsar_utils__.selectFirstPropertyValue('$selector', '$propName')")
+        return result?.toString()
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun selectPropertyValueAll(selector: String, propName: String, start: Int, limit: Int): List<String> {
+        val end = start + limit
+        val expression = "__pulsar_utils__.selectPropertyValueAll('$selector', '$propName', $start, $end)"
+        val json = evaluate(expression)?.toString() ?: return listOf()
+        return jacksonObjectMapper().readValue(json)
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun setProperty(selector: String, propName: String, propValue: String) {
+        evaluate("__pulsar_utils__.setProperty('$selector', '$propName', '$propValue')")
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun setPropertyAll(selector: String, propName: String, propValue: String) {
+        evaluate("__pulsar_utils__.setPropertyAll('$selector', '$propName', '$propValue')")
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * Find hyperlinks in elements matching the CSS query.
@@ -684,8 +750,8 @@ abstract class AbstractWebDriver(
         // Since the browser uses the system proxy (by default),
         // so the http connection should also use the system proxy
         val proxy = browser.id.fingerprint.proxyURI?.toString() ?: System.getenv("http_proxy")
-        if (proxy != null && UrlUtils.isStandard(proxy)) {
-            val u = UrlUtils.getURLOrNull(proxy)
+        if (proxy != null && URLUtils.isStandard(proxy)) {
+            val u = URLUtils.getURLOrNull(proxy)
             if (u != null) {
                 // TODO: sock proxy support
                 session.proxy(u.host, u.port)
@@ -722,9 +788,9 @@ abstract class AbstractWebDriver(
 
         val dir = browser.id.contextDir.resolve("driver.$id/js")
         Files.createDirectories(dir)
-        val report = Files.writeString(dir.resolve("preload.all.js"), scripts)
+        val path = Files.writeString(dir.resolve("preload.all.js"), scripts)
 
-        val tracer = getLogger(this).takeIf { it.isTraceEnabled }
-        tracer?.trace("All injected js: file://{}", report)
+        val tracer = getTracerOrNull(this)
+        tracer?.trace("All injected js: {}", path.toUri())
     }
 }

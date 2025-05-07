@@ -1,13 +1,12 @@
 package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.dom.nodes.TraverseState
 import ai.platon.pulsar.dom.nodes.node.ext.cleanText
 import ai.platon.pulsar.dom.nodes.node.ext.rectangle
 import ai.platon.pulsar.dom.nodes.node.ext.sequence
-import org.apache.commons.lang3.StringUtils
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
@@ -289,12 +288,12 @@ fun Node.selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_V
 
     return select(cssQuery, offset, limit).asSequence()
         .map { it to it.absUrl("href") }
-        .filter { UrlUtils.isStandard(it.second) }
+        .filter { URLUtils.isStandard(it.second) }
         .map { Hyperlink(it.second, it.first.cleanText, href = it.second, referrer = it.first.baseUri()) }
         .toList()
 }
 
-private fun Element.anchorOrNull() = absUrl("href").takeIf { UrlUtils.isStandard(it) }
+private fun Element.anchorOrNull() = absUrl("href").takeIf { URLUtils.isStandard(it) }
         ?.let { GeoAnchor(it, cleanText, cssSelector(), rectangle) }
 
 @JvmOverloads
@@ -310,7 +309,7 @@ fun Node.selectAnchors(query: String, offset: Int = 1, limit: Int = Int.MAX_VALU
 @JvmOverloads
 fun Node.selectImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> {
     val cssQuery = appendSelectorIfMissing(query, "img")
-    return select(cssQuery, offset, limit) { it.absUrl("src").takeIf { UrlUtils.isStandard(it) } }
+    return select(cssQuery, offset, limit) { it.absUrl("src").takeIf { URLUtils.isStandard(it) } }
         .filterNotNull()
 }
 

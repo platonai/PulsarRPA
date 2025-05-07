@@ -30,7 +30,7 @@ Test a single module
 Test a single class
 ```shell
 # Test only the TestEventHandlers class
-./mvnw -Pall-modules -pl pulsar-tests -Dtest=ai.platon.pulsar.test.crawl.TestEventHandlers test
+./mvnw -Pall-modules -pl pulsar-tests -Dtest=ai.platon.pulsar.basic.crawl.TestEventHandlers test
 ./mvnw -Pall-modules -pl pulsar-tests -Dtest=ai.platon.pulsar.test3.heavy.BrowserRotationTest -DBrowserRotationTest_TestFileCount=10000 test
 
 ./mvnw -Pall-modules -pl pulsar-tests -Dtest="ai.platon.pulsar.test3.heavy.BrowserRotationTest#testWithSequentialBrowser" -DBrowserRotationTest_TestFileCount=10000 test
@@ -40,5 +40,5 @@ Test a single class
 Test a single method
 ```shell
 # Test only the TestEventHandlers class
-./mvnw -Pall-modules -pl pulsar-tests -Dtest=ai.platon.pulsar.test.crawl.TestEventHandlers#whenLoadAListenableLink_ThenEventsAreTriggered test
+./mvnw -Pall-modules -pl pulsar-tests -Dtest=ai.platon.pulsar.basic.crawl.TestEventHandlers#whenLoadAListenableLink_ThenEventsAreTriggered test
 ```

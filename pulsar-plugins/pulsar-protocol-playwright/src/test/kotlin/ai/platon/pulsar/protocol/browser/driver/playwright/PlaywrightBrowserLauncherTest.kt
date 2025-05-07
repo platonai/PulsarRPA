@@ -29,7 +29,7 @@ class PlaywrightBrowserLauncherTest: PlaywrightTestBase() {
 
     @Test
     fun testPlaywrightLaunchPersistentContext() {
-        val browserId = BrowserId.createRandom(BrowserType.PLAYWRIGHT_CHROME)
+        val browserId = BrowserId.createRandomTemp(BrowserType.PLAYWRIGHT_CHROME)
         val options = com.microsoft.playwright.BrowserType.LaunchPersistentContextOptions()
         options.headless = false
         val browserContext = playwright.chromium().launchPersistentContext(browserId.userDataDir, options)
@@ -45,7 +45,7 @@ class PlaywrightBrowserLauncherTest: PlaywrightTestBase() {
 
     @Test
     fun testLaunchRandomBrowser() {
-        val browserId = BrowserId.createRandom(BrowserType.PLAYWRIGHT_CHROME)
+        val browserId = BrowserId.createRandomTemp(BrowserType.PLAYWRIGHT_CHROME)
         val chromeOptions = ChromeOptions()
         chromeOptions.headless = false
 

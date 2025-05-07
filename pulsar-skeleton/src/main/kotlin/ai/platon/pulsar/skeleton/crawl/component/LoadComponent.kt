@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.model.ActiveDOMStat
@@ -207,7 +207,7 @@ class LoadComponent(
     fun loadWithRetry(normURL: NormURL): WebPage {
         var page = loadWithEventHandlers(normURL)
 
-        if (UrlUtils.isInternal(normURL.spec)) {
+        if (URLUtils.isInternal(normURL.spec)) {
             normURL.options.nJitRetry = 1
         }
 
@@ -222,7 +222,7 @@ class LoadComponent(
     suspend fun loadWithRetryDeferred(normURL: NormURL): WebPage {
         var page = loadWithEventHandlersDeferred(normURL)
 
-        if (UrlUtils.isInternal(normURL.spec)) {
+        if (URLUtils.isInternal(normURL.spec)) {
             normURL.options.nJitRetry = 1
         }
 

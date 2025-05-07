@@ -14,17 +14,17 @@ import java.util.*
 class CDPRequest(
     val driver: PulsarWebDriver,
     /**
-         * Request identifier.
-         */
-        var requestId: String,
+     * Request identifier.
+     */
+    var requestId: String,
     /**
-         * Request data.
-         */
-        val request: Request,
+     * Request data.
+     */
+    val request: Request,
     /**
-         * Request identifier.
-         */
-        val interceptionId: String? = null,
+     * Request identifier.
+     */
+    val interceptionId: String? = null,
 
     val allowInterception: Boolean = false,
 
@@ -34,19 +34,22 @@ class CDPRequest(
      * Loader identifier. Empty string if the request is fetched from worker.
      */
     var loaderId: String? = null
+
     /**
      * URL of the document this request is loaded for.
      */
     var documentURL: String? = null
+
     /**
      * Request initiator.
      */
     var initiator: Initiator? = null
+
     /**
      * Type of this resource.
      */
     var type: ResourceType? = null
-    
+
     var response: CDPResponse? = null
 
     var fromMemoryCache: Boolean = false
@@ -68,12 +71,15 @@ class CDPRequest(
         interceptionHandled = true
 
         val postDataBinaryBase64 = overrides.postData?.let { Base64.getEncoder().encodeToString(it.toByteArray()) }
-        val requestId = interceptionId ?: throw ChromeRPCException("InterceptionId is required by Fetch.continueRequest")
+        val requestId =
+            interceptionId ?: throw ChromeRPCException("InterceptionId is required by Fetch.continueRequest")
 
         try {
             val interceptResponse = false
-            fetchAPI?.continueRequest(requestId,
-                    overrides.url, overrides.method, postDataBinaryBase64, overrides.headers, interceptResponse)
+            fetchAPI?.continueRequest(
+                requestId,
+                overrides.url, overrides.method, postDataBinaryBase64, overrides.headers, interceptResponse
+            )
         } catch (e: Exception) {
             interceptionHandled = false
         }
@@ -88,7 +94,8 @@ class CDPRequest(
             else -> body.toString().toByteArray()
         }
 
-        val responseHeaders = response.headers.entries.mapTo(mutableListOf()) { (name, value) -> headerEntry(name, value) }
+        val responseHeaders =
+            response.headers.entries.mapTo(mutableListOf()) { (name, value) -> headerEntry(name, value) }
         response.contentType?.let { responseHeaders.add(headerEntry("content-type", it)) }
         if (!response.headers.containsKey("content-length")) {
             responseHeaders.add(headerEntry("content-length", responseBody.size.toString()))
@@ -103,16 +110,18 @@ class CDPRequest(
         try {
             val responseBodyBase64 = Base64.getEncoder().encodeToString(responseBody)
             // Provides response to the request.
-            fetchAPI?.fulfillRequest(requestId,
-                responseCode, responseHeaders, binaryResponseHeaders, responseBodyBase64, httpStatus.reasonPhrase)
+            fetchAPI?.fulfillRequest(
+                requestId,
+                responseCode, responseHeaders, binaryResponseHeaders, responseBodyBase64, httpStatus.reasonPhrase
+            )
         } catch (e: Exception) {
             interceptionHandled = false
         }
     }
-    
+
     fun abort(abortErrorReason: ErrorReason?) {
         interceptionHandled = true
-        
+
         interceptionId?.let { fetchAPI?.failRequest(it, abortErrorReason) }
             ?: throw ChromeRPCException("HTTPRequest is missing _interceptionId needed for Fetch.failRequest")
     }

@@ -10,12 +10,15 @@ enum class BrowserType {
      * Every request will be sent via raw http client.
      * */
     NATIVE,
+
     /**
      * The PulsarRPA's browser implementation which is superfast.
      * */
     PULSAR_CHROME,
+
     @Deprecated("No mock chrome available")
     MOCK_CHROME,
+
     /**
      * The playwright's browser implementation.
      * */

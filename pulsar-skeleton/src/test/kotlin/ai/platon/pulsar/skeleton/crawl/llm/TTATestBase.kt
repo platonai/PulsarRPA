@@ -1,7 +1,7 @@
 package ai.platon.pulsar.skeleton.crawl.llm
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.KConfiguration
+import ai.platon.pulsar.common.config.XmlConfiguration
 import ai.platon.pulsar.external.ChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
@@ -31,7 +31,7 @@ open class TTATestBase {
                 println("=========================== LLM NOT CONFIGURED ==========================================")
                 println("> Skip the tests because the API key is not set")
                 println("> Please set the API key in the configuration file or environment variable")
-                println("> The configuration file can be found in: " + KConfiguration.EXTERNAL_RESOURCE_BASE_DIR)
+                println("> The configuration file can be found in: " + XmlConfiguration.EXTERNAL_RESOURCE_BASE_DIR)
                 println("> All xml files in the directory will be loaded as the configuration file")
             }
 

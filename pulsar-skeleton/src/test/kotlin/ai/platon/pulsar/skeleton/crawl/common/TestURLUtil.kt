@@ -3,7 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.urls.UrlUtils.resolveURL
+import ai.platon.pulsar.common.urls.URLUtils.resolveURL
 import ai.platon.pulsar.skeleton.common.domain.DomainSuffixes
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.chooseRepr
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.getDomainName

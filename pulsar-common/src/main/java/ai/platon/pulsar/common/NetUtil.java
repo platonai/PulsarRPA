@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common;
 
-import ai.platon.pulsar.common.config.CapabilityTypes;
-import ai.platon.pulsar.common.config.ImmutableConfig;
+import ai.platon.pulsar.common.urls.URLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +29,14 @@ public class NetUtil {
 
     public static boolean testNetwork(String host, int port) {
         return testTcpNetwork(host, port);
+    }
+
+    public static boolean testHttpNetwork(String url) {
+        var u = URLUtils.getURLOrNull(url);
+        if (u == null) {
+            return false;
+        }
+        return testHttpNetwork(u.getHost(), u.getPort());
     }
 
     public static boolean testHttpNetwork(URL url) {

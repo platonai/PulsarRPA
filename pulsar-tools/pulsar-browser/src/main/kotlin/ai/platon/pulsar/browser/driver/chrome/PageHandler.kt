@@ -2,7 +2,6 @@ package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.browser.common.ScriptConfuser
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeProtocolException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
@@ -14,6 +13,8 @@ import com.github.kklisura.cdt.protocol.v2023.types.page.Navigate
 import com.github.kklisura.cdt.protocol.v2023.types.page.ReferrerPolicy
 import com.github.kklisura.cdt.protocol.v2023.types.page.TransitionType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
+import com.github.kklisura.cdt.protocol.v2023.types.runtime.SerializationOptions
+import com.google.gson.Gson
 
 class PageHandler(
     private val devTools: RemoteDevTools,
@@ -78,10 +79,16 @@ class PageHandler(
     
     @Throws(ChromeDriverException::class)
     fun getAttribute(nodeId: Int, attrName: String): String? {
-        val attributes = domAPI?.getAttributes(nodeId)
-        return attributes?.getOrNull(attributes.indexOf(attrName) + 1)
+        // `attributes`: n1, v1, n2, v2, n3, v3, ...
+        val attributes = domAPI?.getAttributes(nodeId) ?: return null
+        val nameIndex = attributes.indexOf(attrName)
+        if (nameIndex < 0) {
+            return null
+        }
+        val valueIndex = nameIndex + 1
+        return attributes.getOrNull(valueIndex)
     }
-    
+
     @Throws(ChromeDriverException::class)
     fun setAttribute(nodeId: Int, attrName: String, attrValue: String) {
         domAPI?.setAttributeValue(nodeId, attrName, attrValue)
@@ -190,7 +197,11 @@ class PageHandler(
      * */
     @Throws(ChromeDriverException::class)
     fun evaluateDetail(expression: String): Evaluate? {
-        return runtime?.evaluate(confuser.confuse(expression))
+//        val iife = JsUtils.toIIFE(confuser.confuse(expression))
+//        return runtime?.evaluate(iife)
+        val evaluate = runtime?.evaluate(confuser.confuse(expression))
+
+        return evaluate
     }
 
     /**
@@ -208,12 +219,36 @@ class PageHandler(
             logger.info(exception.description + "\n>>>$expression<<<")
         }
 
-        // println(Gson().toJson(evaluate))
-
         val result = evaluate?.result
         return result?.value
     }
-    
+
+    @Throws(ChromeDriverException::class)
+    fun evaluateValueDetail(expression: String): Evaluate? {
+//        val iife = JsUtils.toIIFE(confuser.confuse(expression))
+//        return evaluate(iife, returnByValue = true)
+        val expression2 = confuser.confuse(expression)
+        return cdpEvaluate(expression2, returnByValue = true)
+    }
+
+    /**
+     * Evaluates expression on global object.
+     *
+     * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * */
+    @Throws(ChromeDriverException::class)
+    fun evaluateValue(expression: String): Any? {
+        val evaluate = evaluateValueDetail(expression)
+
+        val exception = evaluate?.exceptionDetails?.exception
+        if (exception != null) {
+            logger.info(exception.description + "\n>>>$expression<<<")
+        }
+
+        return evaluate?.result?.value
+    }
+
     @Throws(ChromeDriverException::class)
     private fun querySelectorOrNull(selector: String): Int? {
         val rootId = domAPI?.document?.nodeId
@@ -240,5 +275,44 @@ class PageHandler(
         }
         
         return false
+    }
+
+    private fun cdpEvaluate(
+        expression: String,
+        objectGroup: String? = null,
+        includeCommandLineAPI: Boolean? = null,
+        silent: Boolean? = null,
+        contextId: Int? = null,
+        returnByValue: Boolean? = null,
+        @Experimental generatePreview: Boolean? = null,
+        userGesture: Boolean? = null,
+        awaitPromise: Boolean? = null,
+        @Experimental throwOnSideEffect: Boolean? = null,
+        @Experimental timeout: Double? = null,
+        @Experimental disableBreaks: Boolean? = null,
+        @Experimental replMode: Boolean? = null,
+        @Experimental allowUnsafeEvalBlockedByCSP: Boolean? = null,
+        @Experimental uniqueContextId: String? = null,
+        @Experimental serializationOptions: SerializationOptions? = null,
+    ): Evaluate? {
+        return runtime?.evaluate(
+            expression,
+            objectGroup,
+            includeCommandLineAPI,
+            silent,
+            contextId,
+            returnByValue,
+            generatePreview,
+            userGesture,
+            awaitPromise,
+            throwOnSideEffect,
+            timeout,
+            disableBreaks,
+            replMode,
+            allowUnsafeEvalBlockedByCSP,
+            uniqueContextId,
+            null,
+            serializationOptions
+        )
     }
 }

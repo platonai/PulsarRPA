@@ -27,14 +27,14 @@ Maven:
 <dependency>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
-    <version>3.0.0</version>
+    <version>VERSION</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("ai.platon.pulsar:pulsar-bom:3.0.0")
+implementation("ai.platon.pulsar:pulsar-bom:VERSION")
 ```
 
 Clone the template project from github.com:
@@ -191,16 +191,3 @@ Check the [technical details](docs/faq/technical-details.md) to see answers for 
 - How to hide my bot from being detected?
 - How & why to simulate human behaviors?
 - How to render as many pages as possible on a single machine without being blocked?
-
-# 🐦 Contact
-
-- Wechat: galaxyeye
-- Weibo: [galaxyeye](https://weibo.com/galaxyeye)
-- Email: galaxyeye@live.cn, ivincent.zhang@gmail.com
-- Twitter: galaxyeye8
-- Website: [platon.ai](https://platon.ai)
-
-<div style="display: flex;">
-  <img src="docs/images/wechat-author.png" width="300" alt="wechat-author" />
-  <img src="docs/images/buy-me-a-coffee.png" width="300" alt="buy-me-a-coffee" />
-</div>

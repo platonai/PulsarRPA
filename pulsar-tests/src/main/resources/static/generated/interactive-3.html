@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Interactive Showroom</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f6f9;
+            color: #333;
+        }
+
+        header {
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        section {
+            padding: 2rem;
+            margin: 1rem auto;
+            max-width: 800px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        /* --- Animations --- */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- Inputs and controls --- */
+        input, select, textarea {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            transition: box-shadow 0.3s, border 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #007BFF;
+            box-shadow: 0 0 8px rgba(0,123,255,0.2);
+        }
+
+        button {
+            padding: 0.6rem 1.2rem;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        label {
+            display: block;
+            margin-top: 1rem;
+        }
+
+        /* --- Toggle Switch --- */
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0;
+            right: 0; bottom: 0;
+            background-color: #ccc;
+            border-radius: 26px;
+            transition: background-color 0.3s;
+        }
+
+        .slider::before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle input:checked + .slider {
+            background-color: #4caf50;
+        }
+
+        .toggle input:checked + .slider::before {
+            transform: translateX(24px);
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🎨 Interactive Showroom</h1>
+    <p>Experience various UI interactions and animations</p>
+</header>
+
+<section class="fade-in-up">
+    <h2>📝 User Information</h2>
+    <label>Name:
+        <input type="text" placeholder="Enter your name"/>
+    </label>
+    <label>Email:
+        <input type="email" placeholder="Enter your email"/>
+    </label>
+    <label>Comment:
+        <textarea placeholder="Leave your message"></textarea>
+    </label>
+    <button onclick="alert('Form Submitted!')">Submit</button>
+</section>
+
+<section class="fade-in-up">
+    <h2>🎛️ Controls & Toggles</h2>
+    <label>Choose a language:
+        <select>
+            <option>JavaScript</option>
+            <option>Kotlin</option>
+            <option>Python</option>
+        </select>
+    </label>
+
+    <label>
+        Dark Mode:
+        <span class="toggle">
+        <input type="checkbox" id="darkToggle">
+        <span class="slider"></span>
+      </span>
+    </label>
+
+    <label>Volume:
+        <input type="range" min="0" max="100" value="50" onchange="document.getElementById('volumeValue').innerText = this.value">
+        <span id="volumeValue">50</span>
+    </label>
+</section>
+
+<section class="fade-in-up">
+    <h2>📊 Interaction Demo</h2>
+    <p>Click the button below to trigger a fade animation:</p>
+    <button onclick="toggleBox()">Toggle Box</button>
+    <div id="demoBox" style="margin-top:1rem;width:100%;height:100px;background:#eee;border-radius:6px;display:none;transition:opacity 0.4s ease;"></div>
+</section>
+
+<footer>
+    © 2025 Interactive Showroom by ChatGPT
+</footer>
+
+<script>
+    // Intersection observer for fade-in sections
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
+
+    // Toggle demo box
+    function toggleBox() {
+        const box = document.getElementById('demoBox');
+        if (box.style.display === 'none') {
+            box.style.display = 'block';
+            box.style.opacity = 0;
+            setTimeout(() => { box.style.opacity = 1 }, 10);
+        } else {
+            box.style.opacity = 0;
+            setTimeout(() => { box.style.display = 'none'; }, 400);
+        }
+    }
+</script>
+
+</body>
+</html>

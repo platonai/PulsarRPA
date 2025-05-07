@@ -156,10 +156,10 @@ internal class NetworkManager(
     }
     
     private fun onRequestWillBeSent(event: RequestWillBeSent) {
-        tracer?.trace("onRequestWillBeSent | {}", event.requestId)
+        tracer?.trace("onRequestWillBeSent | requestId: {}", event.requestId)
         // Request interception doesn't happen for data URLs with Network Service.
         
-        // TODO: remove RequestWillBeSent, use emit(NetworkManagerEvents.Request, request)
+        // Consider to remove RequestWillBeSent, use emit(NetworkManagerEvents.Request, request)
         emit(NetworkEvents.RequestWillBeSent, event)
         
         val url = event.request.url
@@ -426,8 +426,8 @@ internal class NetworkManager(
     
     private fun onLoadingFailed(event: LoadingFailed) {
         val requestId = event.requestId
-        tracer?.trace("onLoadingFailed | {}", event.requestId)
-        
+        tracer?.trace("onLoadingFailed | requestId: {} | {}", event.requestId, event.errorText)
+
         // If the response event for this request is still waiting on a
         // corresponding ExtraInfo event, then wait to emit this event too.
         val queuedEventGroup = networkEventManager.getQueuedEventGroup(requestId)

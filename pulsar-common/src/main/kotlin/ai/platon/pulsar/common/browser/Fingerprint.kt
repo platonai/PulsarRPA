@@ -46,7 +46,7 @@ data class WebsiteAccount(
  * @property source the full path of the source file of the fingerprint.
  * */
 data class Fingerprint(
-    val browserType: BrowserType,
+    var browserType: BrowserType,
     var proxyURI: URI? = null,
     var userAgent: String? = null,
     val websiteAccounts: MutableMap<String, WebsiteAccount> = mutableMapOf(),

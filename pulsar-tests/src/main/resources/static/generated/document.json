@@ -1,0 +1,79 @@
+{
+  "location" : {
+    "ancestorOrigins" : { },
+    "href" : "http://127.0.0.1:8182/generated/interactive-4.html",
+    "origin" : "http://127.0.0.1:8182",
+    "protocol" : "http:",
+    "host" : "127.0.0.1:8182",
+    "hostname" : "127.0.0.1",
+    "port" : "8182",
+    "pathname" : "/generated/interactive-4.html",
+    "search" : "",
+    "hash" : "",
+    "assign" : { },
+    "reload" : { },
+    "replace" : { },
+    "toString" : { }
+  },
+  "wIcphd_Data" : {
+    "trace" : {
+      "status" : {
+        "n" : 1,
+        "scroll" : 1,
+        "idl" : 0,
+        "st" : "c",
+        "r" : "st"
+      },
+      "initStat" : {
+        "w" : 0,
+        "h" : 0,
+        "na" : 0,
+        "ni" : 0,
+        "nst" : 8,
+        "nnm" : 0
+      },
+      "lastStat" : {
+        "w" : 0,
+        "h" : 0,
+        "na" : 0,
+        "ni" : 0,
+        "nst" : 8,
+        "nnm" : 0
+      },
+      "lastD" : {
+        "w" : 0,
+        "h" : 0,
+        "na" : 0,
+        "ni" : 0,
+        "nst" : 0,
+        "nnm" : 0
+      },
+      "initD" : {
+        "w" : 0,
+        "h" : 0,
+        "na" : 0,
+        "ni" : 0,
+        "nst" : 0,
+        "nnm" : 0
+      }
+    },
+    "urls" : {
+      "URL" : "http://127.0.0.1:8182/generated/interactive-4.html",
+      "baseURI" : "http://127.0.0.1:8182/generated/interactive-4.html",
+      "location" : "http://127.0.0.1:8182/generated/interactive-4.html",
+      "documentURI" : "http://127.0.0.1:8182/generated/interactive-4.html",
+      "referrer" : ""
+    },
+    "metadata" : {
+      "viewPortWidth" : 1920,
+      "viewPortHeight" : 1080,
+      "scrollTop" : "228.00",
+      "scrollLeft" : "0.00",
+      "clientWidth" : "1683.00",
+      "clientHeight" : "986.00",
+      "screenNumber" : "0.23",
+      "dateTime" : "2025/5/6 21:45:40",
+      "timestamp" : "1746539140516"
+    }
+  }
+}

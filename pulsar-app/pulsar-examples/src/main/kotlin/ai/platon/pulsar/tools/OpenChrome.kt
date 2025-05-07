@@ -1,12 +1,10 @@
 package ai.platon.pulsar.tools
 
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
-import ai.platon.pulsar.ql.context.SQLContexts
+import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
 import kotlinx.coroutines.runBlocking
 
 fun main() {
-    val driver = SQLContexts.create().getBean(WebDriverFactory::class).launchBrowser(BrowserId.PROTOTYPE).newDriver()
+    val driver = DefaultBrowserFactory().launchDefaultBrowser().newDriver()
 
     runBlocking {
         driver.navigateTo("about:blank")

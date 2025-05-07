@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common.urls
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.OptionUtils
 import java.net.MalformedURLException
@@ -26,14 +25,14 @@ abstract class AbstractUrl(
     override var depth: Int = 0
 ) : ComparableUrlAware {
 
-    override val configuredUrl get() = UrlUtils.mergeUrlArgs(url, args)
+    override val configuredUrl get() = URLUtils.mergeUrlArgs(url, args)
 
-    override val isStandard get() = UrlUtils.isStandard(url)
+    override val isStandard get() = URLUtils.isStandard(url)
 
     @get:Throws(MalformedURLException::class)
     override val toURL get() = URL(url)
 
-    override val toURLOrNull get() = UrlUtils.getURLOrNull(url)
+    override val toURLOrNull get() = URLUtils.getURLOrNull(url)
 
     override val isNil get() = url == AppConstants.NIL_PAGE_URL
 

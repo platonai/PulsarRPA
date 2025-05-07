@@ -1,35 +1,16 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
-import ai.platon.pulsar.common.SParser
-import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
-import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.persist.metadata.FetchMode
-import ai.platon.pulsar.ql.SQLSession
-import ai.platon.pulsar.ql.common.ResultSets
-import ai.platon.pulsar.ql.common.annotation.H2Context
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.ql.common.annotation.UDFGroup
 import ai.platon.pulsar.ql.common.annotation.UDFunction
 import ai.platon.pulsar.ql.common.types.ValueStringJSON
-import ai.platon.pulsar.ql.context.SQLContexts
-import ai.platon.pulsar.ql.h2.H2SessionFactory
-import ai.platon.pulsar.ql.h2.addColumn
-import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import com.google.common.annotations.Beta
 import com.google.gson.Gson
 import org.apache.commons.lang3.StringUtils
-import org.h2.tools.SimpleResultSet
 import org.h2.value.*
-import org.slf4j.LoggerFactory
-import java.io.File
-import java.lang.Long.MAX_VALUE
-import java.sql.Connection
 import java.sql.ResultSet
 import java.text.SimpleDateFormat
-import java.time.Duration
 import java.util.*
 
 @UDFGroup
@@ -45,13 +26,13 @@ object CommonFunctions {
     @UDFunction(description = "Get the domain of a url")
     @JvmStatic
     fun getDomain(url: String): String {
-        return UrlUtils.getTopPrivateDomain(url)
+        return URLUtils.getTopPrivateDomain(url)
     }
 
     @UDFunction(description = "Get the top private domain of the url")
     @JvmStatic
     fun getTopPrivateDomain(url: String): String {
-        return UrlUtils.getTopPrivateDomain(url)
+        return URLUtils.getTopPrivateDomain(url)
     }
 
     @UDFunction(description = "Extract the first group of the result of java.util.regex.matcher()")

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.test
+package ai.platon.pulsar.basic
 
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.sql.SQLConverter

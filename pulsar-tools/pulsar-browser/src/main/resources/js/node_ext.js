@@ -334,6 +334,13 @@ __pulsar_NodeExt.prototype.isVisible = function() {
         return false
     }
 
+    if (this.node instanceof Element) {
+        const style = getComputedStyle(this.node);
+        if (style.display !== "none" && style.visibility !== "hidden") {
+            return true;
+        }
+    }
+
     return !this.isOverflowHidden()
 };
 
@@ -376,7 +383,7 @@ __pulsar_NodeExt.prototype.hasParent = function() {
  * @return {__pulsar_NodeExt}
  * */
 __pulsar_NodeExt.prototype.parent = function() {
-    return this.node.parentElement.nodeExt;
+    return this.node.parentElement.__pulsar_nodeExt;
 };
 
 /**
@@ -436,7 +443,7 @@ __pulsar_NodeExt.prototype.updateMaxWidth = function(width) {
  * @return {String|null}
  * */
 __pulsar_NodeExt.prototype.attr = function(attrName) {
-    if (this.node.isElement()) {
+    if (this.node.__pulsar_isElement()) {
         return this.node.getAttribute(attrName)
     }
     return null
@@ -454,7 +461,7 @@ __pulsar_NodeExt.prototype.formatDOMRect = function() {
  * @return string
  * */
 __pulsar_NodeExt.prototype.formatStyles = function() {
-    return this.propertyNames.map(propertyName => this.styles[propertyName]).join(", ")
+    return this.propertyNames.map(propertyName => this.styles[propertyName]).join(",")
 };
 
 /**

@@ -16,9 +16,9 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_AGENT
 import ai.platon.pulsar.common.browser.Fingerprint
-import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_CONTEXT_NUMBER
+import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
@@ -72,7 +72,13 @@ open class MultiPrivacyContextManager(
     private val logger = getLogger(MultiPrivacyContextManager::class)
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private var numTasksAtLastReportTime = 0L
-    private val allowedPrivacyContextCount: Int get() = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
+    private val allowedPrivacyContextCount: Int get() {
+        // PRIVACY_CONTEXT_NUMBER is deprecated, use BROWSER_CONTEXT_NUMBER instead
+//        val defaultValue = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+//        return conf.getInt(BROWSER_CONTEXT_NUMBER, defaultValue)
+
+        return conf.getWithFallback(BROWSER_CONTEXT_NUMBER, PRIVACY_CONTEXT_NUMBER)?.toIntOrNull() ?: 2
+    }
 
     val maxAllowedBadContexts = 10
 

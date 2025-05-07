@@ -18,7 +18,7 @@ $TAG = "v$VERSION"
 function Replace-Version-In-ReadmeFiles {
   Write-Host "Replacing SNAPSHOT version with the release version in readme files"
 
-  @('llm-config-advanced.md', 'README-CN.md') | ForEach-Object {
+  @('llm-config.md', 'README-CN.md') | ForEach-Object {
     Get-ChildItem -Path "$AppHome" -Depth 2 -Filter $_ -Recurse | ForEach-Object {
       (Get-Content $_.FullName) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content $_.FullName
     }

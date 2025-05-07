@@ -2,7 +2,9 @@ package ai.platon.pulsar.skeleton
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.InteractSettings
+import ai.platon.pulsar.common.browser.BrowserContextMode
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 
 /**
  * The [PulsarSettings] class defines a convenient interface to control the behavior of PulsarRPA.
@@ -38,66 +40,75 @@ import ai.platon.pulsar.common.browser.BrowserType
  * */
 open class PulsarSettings {
 
+    fun withBrowserContextMode(contextMode: BrowserContextMode): PulsarSettings =
+        withBrowserContextMode(contextMode, BrowserType.DEFAULT)
+
+    fun withBrowserContextMode(contextMode: BrowserContextMode, browserType: BrowserType): PulsarSettings {
+        BrowserSettings.withBrowserContextMode(contextMode, browserType)
+        return this
+    }
+
     fun withBrowser(browserType: BrowserType): PulsarSettings {
         BrowserSettings.withBrowser(browserType)
         return this
     }
+
     /**
      * Use the system's default Chrome browser, so PulsarRPA visits websites just like you do.
      * Any change to the browser will be kept.
      * */
-    fun withSystemDefaultBrowser() = withSystemDefaultBrowser(BrowserType.DEFAULT)
+    fun withSystemDefaultBrowser() = withBrowserContextMode(BrowserContextMode.DEFAULT, BrowserType.DEFAULT)
+
     /**
      * Use the system's default browser with the given type, so PulsarRPA visits websites just like you do.
      * Any change to the browser will be kept.
-     *
-     * 
      * */
     fun withSystemDefaultBrowser(browserType: BrowserType): PulsarSettings {
-        BrowserSettings.withSystemDefaultBrowser(browserType)
-        return this
+        return withBrowserContextMode(BrowserContextMode.SYSTEM_DEFAULT, browserType)
     }
+
     /**
      * Use the default browser which has an isolated profile and user data directory.
      * Any modifications made to the browser will be preserved, including the cookies, history, etc.
      * */
-    fun withDefaultBrowser() = withDefaultBrowser(BrowserType.DEFAULT)
+    fun withDefaultBrowser() = withBrowserContextMode(BrowserContextMode.DEFAULT, BrowserType.DEFAULT)
+
     /**
      * Use the default browser which has an isolated profile and user data directory.
      * Any modifications made to the browser will be preserved, including the cookies, history, etc.
      *
-     * 
+     *
      * */
     fun withDefaultBrowser(browserType: BrowserType): PulsarSettings {
-        BrowserSettings.withDefaultBrowser(browserType)
-        return this
+        return withBrowserContextMode(BrowserContextMode.DEFAULT, browserType)
     }
+
     /**
      * Use Google Chrome with the prototype environment.
      * Any modifications made to the browser will be preserved.
      * Sequential and temporary browsers will inherit the environment from the prototype browser.
      */
-    fun withPrototypeBrowser() = withPrototypeBrowser(BrowserType.DEFAULT)
+    fun withPrototypeBrowser() = withBrowserContextMode(BrowserContextMode.PROTOTYPE, BrowserType.DEFAULT)
+
     /**
      * Use the specified browser with the prototype environment.
      * Any modifications made to the browser will be preserved.
      * Sequential and temporary browsers will inherit the environment from the prototype browser.
      * */
     fun withPrototypeBrowser(browserType: BrowserType): PulsarSettings {
-        BrowserSettings.withPrototypeBrowser(browserType)
-        return this
+        return withBrowserContextMode(BrowserContextMode.PROTOTYPE, browserType)
     }
+
     /**
      * Use sequential browsers that inherits the prototype browser’s environment.
      * The sequential browsers are permanent unless the context directories are deleted manually.
-     *
-     *
      *
      * @return the PulsarSettings itself
      * */
     fun withSequentialBrowsers(): PulsarSettings {
         return withSequentialBrowsers(BrowserType.DEFAULT, 10)
     }
+
     /**
      * Use sequential browsers that inherits the prototype browser’s environment.
      * The sequential browsers are permanent unless the context directories are deleted manually.
@@ -109,11 +120,10 @@ open class PulsarSettings {
     fun withSequentialBrowsers(browserType: BrowserType): PulsarSettings {
         return withSequentialBrowsers(browserType, 10)
     }
+
     /**
      * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
      * permanent unless the context directories are deleted manually.
-     *
-     *
      *
      * @param maxAgents The maximum number of sequential privacy agents, the active privacy contexts is chosen from them.
      * @return the PulsarSettings itself
@@ -122,23 +132,21 @@ open class PulsarSettings {
         BrowserSettings.withSequentialBrowsers(browserType, maxAgents)
         return this
     }
+
     /**
      * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
      * will not be used again after it is shut down.
      * */
     fun withTemporaryBrowser(): PulsarSettings {
-        return withTemporaryBrowser(BrowserType.DEFAULT)
+        return withBrowserContextMode(BrowserContextMode.TEMPORARY, BrowserType.DEFAULT)
     }
+
     /**
      * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
      * will not be used again after it is shut down.
-     *
-     *
      * */
-    fun withTemporaryBrowser(browserType: BrowserType): PulsarSettings {
-        BrowserSettings.withTemporaryBrowser(browserType)
-        return this
-    }
+    fun withTemporaryBrowser(browserType: BrowserType) = withBrowserContextMode(BrowserContextMode.TEMPORARY, browserType)
+
     /**
      * Launch the browser in GUI mode.
      * */
@@ -146,10 +154,12 @@ open class PulsarSettings {
         BrowserSettings.withGUI()
         return this
     }
+
     /**
      * Launch the browser in GUI mode.
      * */
     fun headed() = withGUI()
+
     /**
      * Launch the browser in headless mode.
      * */
@@ -157,6 +167,7 @@ open class PulsarSettings {
         BrowserSettings.headless()
         return this
     }
+
     /**
      * Launch the browser in supervised mode.
      * */
@@ -164,13 +175,24 @@ open class PulsarSettings {
         BrowserSettings.supervised()
         return this
     }
+
     /**
      * Set the max number of agents
      * */
+    @Deprecated("Use maxBrowserContexts instead", ReplaceWith("maxBrowserContexts(n)"))
     fun maxBrowsers(n: Int): PulsarSettings {
-        BrowserSettings.maxBrowsers(n)
+        maxBrowserContexts(n)
         return this
     }
+
+    /**
+     * Set the max number of agents
+     * */
+    fun maxBrowserContexts(n: Int): PulsarSettings {
+        BrowserSettings.maxBrowserContexts(n)
+        return this
+    }
+
     /**
      * Set the max number to open tabs in each browser context
      * */
@@ -178,6 +200,7 @@ open class PulsarSettings {
         BrowserSettings.maxOpenTabs(n)
         return this
     }
+
     /**
      * Tell the system to work with single page application.
      * To collect SPA data, the execution needs to have no timeout limit.
@@ -186,6 +209,7 @@ open class PulsarSettings {
         BrowserSettings.withSPA()
         return this
     }
+
     /**
      * Use the specified interact settings to interact with webpages.
      * */
@@ -193,6 +217,7 @@ open class PulsarSettings {
         BrowserSettings.withInteractSettings(settings)
         return this
     }
+
     /**
      * Enable url blocking. If url blocking is enabled and the blocking rules are set,
      * resources matching the rules will be blocked by the browser.
@@ -201,6 +226,7 @@ open class PulsarSettings {
         BrowserSettings.enableUrlBlocking()
         return this
     }
+
     /**
      * Enable url blocking with the given probability.
      * The probability must be in [0, 1].
@@ -209,6 +235,7 @@ open class PulsarSettings {
         BrowserSettings.enableUrlBlocking(probability)
         return this
     }
+
     /**
      * Disable url blocking. If url blocking is disabled, blocking rules are ignored.
      * */
@@ -216,6 +243,7 @@ open class PulsarSettings {
         BrowserSettings.disableUrlBlocking()
         return this
     }
+
     /**
      * Block all images.
      * */
@@ -223,20 +251,7 @@ open class PulsarSettings {
         BrowserSettings.blockImages()
         return this
     }
-    /**
-     * Enable proxy if available.
-     * */
-    fun enableProxy(): PulsarSettings {
-        BrowserSettings.enableProxy()
-        return this
-    }
-    /**
-     * Disable proxy.
-     * */
-    fun disableProxy(): PulsarSettings {
-        BrowserSettings.disableProxy()
-        return this
-    }
+
     /**
      * Export all pages automatically once they are fetched.
      *
@@ -250,6 +265,7 @@ open class PulsarSettings {
         BrowserSettings.enableOriginalPageContentAutoExporting()
         return this
     }
+
     /**
      * Export at most [limit] pages once they are fetched.
      *
@@ -263,6 +279,7 @@ open class PulsarSettings {
         BrowserSettings.enableOriginalPageContentAutoExporting(limit)
         return this
     }
+
     /**
      * Disable original page content exporting.
      * */
@@ -320,12 +337,13 @@ open class PulsarSettings {
      */
     fun withLLMProvider(provider: String?): PulsarSettings {
         // Validate that the provider is not null
-        if (provider == null) throw IllegalArgumentException("LLM provider cannot be null")
+        requireNotNull(provider) { "$LLM_PROVIDER NOT set" }
 
         // Set the LLM provider as a system property
-        System.setProperty("llm.provider", provider)
+        System.setProperty(LLM_PROVIDER, provider)
         return this
     }
+
     /**
      * Sets the Large Language Model (LLM) name for the PulsarRPA settings.
      *
@@ -347,10 +365,10 @@ open class PulsarSettings {
      */
     fun withLLMName(name: String?): PulsarSettings {
         // Validate that the LLM name is not null
-        requireNotNull(name) { "LLM name cannot be null" }
+        requireNotNull(name) { "$LLM_NAME NOT set" }
 
         // Set the LLM name as a system property
-        System.setProperty("llm.name", name)
+        System.setProperty(LLM_NAME, name)
         return this
     }
 
@@ -375,10 +393,10 @@ open class PulsarSettings {
      */
     fun withLLMAPIKey(key: String?): PulsarSettings {
         // Validate that the API key is not null before setting it as a system property.
-        requireNotNull(key) { "LLM API key cannot be null" }
+        requireNotNull(key) { "$LLM_API_KEY not set" }
 
         // Set the provided API key as a system property for global access.
-        System.setProperty("llm.apiKey", key)
+        System.setProperty(LLM_API_KEY, key)
         return this
     }
 }

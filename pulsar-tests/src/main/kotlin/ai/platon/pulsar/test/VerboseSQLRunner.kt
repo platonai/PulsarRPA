@@ -1,4 +1,4 @@
-package ai.platon.pulsar.test
+package ai.platon.pulsar.basic
 
 import ai.platon.pulsar.ql.context.SQLContext
 import ai.platon.pulsar.ql.context.SQLContexts

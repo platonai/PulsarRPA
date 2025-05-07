@@ -31,7 +31,7 @@ class BlockUrlsExample: BrowserExampleBase() {
             val source = pageSource
             val path = AppPaths.WEB_CACHE_DIR.resolve(AppPaths.fromUri(testUrl, "", ".htm"))
             AppFiles.saveTo(source, path, true)
-            logger.debug("Page is saved to file://$path")
+            logger.debug("Page is saved to {}", path.toUri())
 
             TimeUnit.SECONDS.sleep(5)
             devTools.close()

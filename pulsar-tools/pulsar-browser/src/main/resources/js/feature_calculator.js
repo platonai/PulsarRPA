@@ -68,8 +68,8 @@ __pulsar_NodeFeatureCalculator.prototype.calcSelfIndicator = function(node, dept
     if (node.__pulsar_isElement()) {
         // Browser computed styles. Only leaf elements matter
         nodeExt.propertyNames = this.config.propertyNames || [];
-        let requiredPropertyNames = nodeExt.propertyNames.concat("overflow");
-        nodeExt.styles = __pulsar_utils__.getComputedStyle(node, requiredPropertyNames);
+        let morePropertyNames = nodeExt.propertyNames.concat("overflow");
+        nodeExt.styles = __pulsar_utils__.getComputedStyle(node, morePropertyNames);
     }
 
     // Calculate the rectangle of this node
@@ -129,9 +129,11 @@ __pulsar_NodeFeatureCalculator.prototype.tail = function(node, depth) {
     }
 
     if (node.__pulsar_isElement()) {
-        if (config.ATTR_COMPUTED_STYLE) {
-            node.__pulsar_setAttributeIfNotBlank(config.ATTR_COMPUTED_STYLE, nodeExt.formatStyles());
+        if (config.ATTR_ELEMENT_NODE_DATA) {
+            let data = nodeExt.formatDOMRect() + "|" + nodeExt.sequence + "|" + nodeExt.formatStyles()
+            node.__pulsar_setAttributeIfNotBlank(config.ATTR_ELEMENT_NODE_DATA, data);
         }
+
         node.__pulsar_setAttributeIfNotBlank(config.ATTR_ELEMENT_NODE_VI, nodeExt.formatDOMRect());
 
         // calculate the rectangle of each child text node

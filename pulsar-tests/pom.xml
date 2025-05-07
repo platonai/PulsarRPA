@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>3.0.3-SNAPSHOT</version>
+        <version>3.0.4-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-tests</artifactId>
@@ -47,6 +47,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!--
         If your build relies on dependency management support from Spring Boot, you should not import
         the junit-bom in your build script since that will result in duplicate

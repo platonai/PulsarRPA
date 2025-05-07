@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.common.proxy.UniversalProxyParser
 import ai.platon.pulsar.skeleton.crawl.CoreMetrics
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
@@ -189,10 +190,16 @@ open class BrowserPrivacyContext(
             return
         }
 
+        registerProxyParser()
+
         createProxyContextIfEnabled()
         val page = task.page
         require(page is AbstractWebPage)
         page.setVar(VAR_PRIVACY_CONTEXT_DISPLAY, display)
+    }
+
+    private fun registerProxyParser() {
+        ProxyParserFactory.registerIfAbsent("UniversalProxyParser", UniversalProxyParser())
     }
 
     @Throws(ProxyException::class)
