@@ -95,7 +95,7 @@ data class PrivacyAgent(
         }
 
         fun createPrototype(): PrivacyAgent {
-            return createDefault(BrowserType.DEFAULT)
+            return createPrototype(BrowserType.DEFAULT)
         }
 
         fun createPrototype(browserType: BrowserType): PrivacyAgent {

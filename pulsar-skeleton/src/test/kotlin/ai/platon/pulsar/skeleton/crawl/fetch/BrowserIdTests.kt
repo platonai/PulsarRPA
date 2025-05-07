@@ -37,10 +37,22 @@ class BrowserIdTests {
         println(id)
         println(id.contextDir)
         println(id.userDataDir)
-        assertTrue { id.userDataDir.toString().contains("PULSAR_CHROME") }
+        assertTrue { id.userDataDir.toString().contains("google-chrome") }
         assertEquals(id.contextDir, PrivacyContext.PROTOTYPE_CONTEXT_DIR)
         assertEquals(id.userDataDir, PrivacyContext.PROTOTYPE_DATA_DIR)
         assertTrue { id.userDataDir.startsWith(PrivacyContext.PROTOTYPE_DATA_DIR) }
+    }
+
+    @Test
+    fun testDefaultBrowserId() {
+        val id = BrowserId.DEFAULT
+        println(id)
+        println(id.contextDir)
+        println(id.userDataDir)
+        assertTrue { id.userDataDir.toString().contains("PULSAR_CHROME") }
+        assertEquals(id.contextDir, PrivacyContext.DEFAULT_CONTEXT_DIR)
+        assertEquals(id.userDataDir, PrivacyContext.DEFAULT_CONTEXT_DIR.resolve(BrowserType.PULSAR_CHROME.name))
+        assertTrue { id.userDataDir.startsWith(PrivacyContext.DEFAULT_CONTEXT_DIR.resolve(BrowserType.PULSAR_CHROME.name)) }
     }
 
     @Test
