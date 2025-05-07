@@ -84,7 +84,7 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/p
 
 ---
 
-## 🌟 For Beginners – Just Text, No Programming Skills Needed!
+## 🌟 For Beginners – Just Text, No Code!
 
 Use the `command` API to perform actions and extract data using natural language instructions.
 
