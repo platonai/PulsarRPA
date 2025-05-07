@@ -420,9 +420,14 @@ class TestString {
     fun testBase64() {
         val s = "409.7 219.3 864 411.8|12|16, 3, f"
         val base64 = Base64.getEncoder().encodeToString(s.toByteArray())
-        assertEquals("NDA5LjcgMjE5LjMgODY0IDQxMS44fDEyfDE2LCAzLCBm", s)
+        assertEquals("NDA5LjcgMjE5LjMgODY0IDQxMS44fDEyfDE2LCAzLCBm", base64)
         println(base64)
         val decoded = String(Base64.getDecoder().decode(base64))
         assertEquals(s, decoded)
+
+        val s2 = "409.7 219.3 864 411.8"
+        val base64_2 = Base64.getEncoder().encodeToString(s2.toByteArray())
+        assertEquals("NDA5LjcgMjE5LjMgODY0IDQxMS44", base64_2)
+        println(base64_2)
     }
 }

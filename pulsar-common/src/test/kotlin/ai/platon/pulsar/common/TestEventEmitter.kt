@@ -91,7 +91,7 @@ class TestEventEmitter {
     @Test
     fun testEmitException() {
         val emitter = FooEventEmitter()
-        emitter.on(FooEvents.onWillDoA) { throw IllegalArgumentException("emit with exception") }
+        emitter.on(FooEvents.onWillDoA) { throw IllegalArgumentException("emit with exception, you can ignore this message") }
         assertTrue { emitter.emit(FooEvents.onWillDoA).first() is Exception }
 
         emitter.on1(FooEvents.onWillDoADelayed) { withContext(Dispatchers.Default) { throw IllegalArgumentException("emit with exception") } }

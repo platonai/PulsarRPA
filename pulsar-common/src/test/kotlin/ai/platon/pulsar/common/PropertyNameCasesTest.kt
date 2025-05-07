@@ -16,7 +16,7 @@ class PropertyNameCasesTest {
         val ident = "testIdent"
         val name = "testName"
         val separator = "-"
-        val expectedResult = "p-c-StringCasesTest-testIdent-testName"
+        val expectedResult = "p-c-PropertyNameCasesTest-testIdent-testName"
 
         // Act
         val result = prependReadableClassName(obj, ident, name, separator)
