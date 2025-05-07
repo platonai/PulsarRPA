@@ -10,6 +10,7 @@ import java.io.IOException
 import java.nio.charset.Charset
 import java.util.*
 
+@SuppressWarnings("unused")
 @UDFGroup(namespace = "STR")
 object StringFunctions {
 

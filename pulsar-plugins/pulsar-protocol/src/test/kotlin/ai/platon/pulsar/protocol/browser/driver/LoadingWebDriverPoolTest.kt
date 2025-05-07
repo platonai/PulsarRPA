@@ -41,6 +41,7 @@ class LoadingWebDriverPoolTest {
             runBlocking {
                 driver.navigateTo(seeds.random())
                 driver.waitForSelector("body")
+                driver.stop()
             }
         }
     }
