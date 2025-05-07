@@ -1,4 +1,3 @@
-
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -7,6 +6,7 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.nio.file.Files
+import java.util.Base64
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.stream.Collectors
@@ -133,8 +133,8 @@ class TestString {
         assertTrue(charsetPattern.matcher("UTF-8").matches())
         assertTrue(charsetPattern.matcher("windows-1257").matches())
         charsets = ("UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1"
-            + "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257"
-            + "|UTF-8")
+                + "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257"
+                + "|UTF-8")
         charsets = charsets.replace("UTF-8\\|?".toRegex(), "")
         charsetPattern = Pattern.compile(charsets, Pattern.CASE_INSENSITIVE)
         assertTrue(charsetPattern.matcher("gb2312").matches())
@@ -172,7 +172,7 @@ class TestString {
         // String.trim() == CharSequence.trim(Char::isWhitespace)
         assertEquals("使用条件修剪", text.trim())
         assertEquals("使用条件修剪  ", text.trim { it <= ' ' })
-        
+
         assertEquals("line-break-is-trimmed", "line-break-is-trimmed\n".trimEnd())
         assertEquals("line-break-is-trimmed", "line-break-is-trimmed\r\n".trimEnd())
     }
@@ -222,7 +222,7 @@ class TestString {
         for (text in mainlyChineseTexts) {
             println(
                 Strings.countChinese(text).toString() + "/" + text.length
-                    + "=" + Strings.countChinese(text) * 1.0 / text.length + "\t" + text
+                        + "=" + Strings.countChinese(text) * 1.0 / text.length + "\t" + text
             )
             assertTrue(Strings.isMainlyChinese(text, 0.6), text)
         }
@@ -313,19 +313,19 @@ class TestString {
     @Test
     fun testGetUnslashedLines() {
         var s = "http://www.sxrb.com/sxxww/\t--fetch-interval=1s --fetch-priority=1010 \\\n" +
-            "    --follow-dom=:root --follow-url=.+ --follow-anchor=8,40 \\\n" +
-            "    --entity=#content --entity-fields=title:#title,content:#content,publish_time:#publish_time \\\n" +
-            "    --collection=#comments --collection-item=.comment --collection-item-fields=publish_time:.comment_publish_time,author:.author,content:.content\n" +
-            "http://news.qq.com/\t--fetch-interval=1h --entity=#content\n" +
-            "http://news.youth.cn/\t--fetch-interval=1h --entity=#content\\\n" +
-            "    --collection=#comments\n" +
-            "http://news.163.com/\t--fetch-interval=1h --entity=#content" +
-            "\n"
+                "    --follow-dom=:root --follow-url=.+ --follow-anchor=8,40 \\\n" +
+                "    --entity=#content --entity-fields=title:#title,content:#content,publish_time:#publish_time \\\n" +
+                "    --collection=#comments --collection-item=.comment --collection-item-fields=publish_time:.comment_publish_time,author:.author,content:.content\n" +
+                "http://news.qq.com/\t--fetch-interval=1h --entity=#content\n" +
+                "http://news.youth.cn/\t--fetch-interval=1h --entity=#content\\\n" +
+                "    --collection=#comments\n" +
+                "http://news.163.com/\t--fetch-interval=1h --entity=#content" +
+                "\n"
         var lines = Strings.getUnslashedLines(s)
         assertEquals(4, lines.size.toLong())
         s = "http://sz.sxrb.com/sxxww/dspd/szpd/bwch/\n" +
-            "http://sz.sxrb.com/sxxww/dspd/szpd/fcjjjc/\n" +
-            "http://sz.sxrb.com/sxxww/dspd/szpd/hydt/"
+                "http://sz.sxrb.com/sxxww/dspd/szpd/fcjjjc/\n" +
+                "http://sz.sxrb.com/sxxww/dspd/szpd/hydt/"
         lines = Strings.getUnslashedLines(s)
         assertEquals(3, lines.size.toLong())
     }
@@ -400,5 +400,29 @@ class TestString {
         assertNotEquals(s.hashCode(), s2.hashCode())
         assertNotEquals(s.hashCode(), s3.hashCode())
         assertNotEquals(s2.hashCode(), s3.hashCode())
+    }
+
+    @Test
+    fun testGetFirstInteger2() {
+        val texts = arrayOf(
+            "-hello world 999 i love you 520 forever",
+            "i have received $1964,234 last day",
+            "this is a java number: 1_435_324"
+        )
+        val expects = arrayOf(999, 1964_234, 1_435_324)
+
+        IntRange(0, texts.size - 1).forEach { i ->
+            assertEquals(expects[i], Strings.getFirstInteger(texts[i], 0), "The $i-th test is failed")
+        }
+    }
+
+    @Test
+    fun testBase64() {
+        val s = "409.7 219.3 864 411.8|12|16, 3, f"
+        val base64 = Base64.getEncoder().encodeToString(s.toByteArray())
+        assertEquals("NDA5LjcgMjE5LjMgODY0IDQxMS44fDEyfDE2LCAzLCBm", s)
+        println(base64)
+        val decoded = String(Base64.getDecoder().decode(base64))
+        assertEquals(s, decoded)
     }
 }

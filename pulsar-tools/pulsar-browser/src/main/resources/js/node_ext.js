@@ -436,7 +436,7 @@ __pulsar_NodeExt.prototype.updateMaxWidth = function(width) {
  * @return {String|null}
  * */
 __pulsar_NodeExt.prototype.attr = function(attrName) {
-    if (this.node.isElement()) {
+    if (this.node.__pulsar_isElement()) {
         return this.node.getAttribute(attrName)
     }
     return null
@@ -454,7 +454,7 @@ __pulsar_NodeExt.prototype.formatDOMRect = function() {
  * @return string
  * */
 __pulsar_NodeExt.prototype.formatStyles = function() {
-    return this.propertyNames.map(propertyName => this.styles[propertyName]).join(", ")
+    return this.propertyNames.map(propertyName => this.styles[propertyName]).join(",")
 };
 
 /**

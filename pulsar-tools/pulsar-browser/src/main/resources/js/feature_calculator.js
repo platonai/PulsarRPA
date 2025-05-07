@@ -68,9 +68,8 @@ __pulsar_NodeFeatureCalculator.prototype.calcSelfIndicator = function(node, dept
     if (node.__pulsar_isElement()) {
         // Browser computed styles. Only leaf elements matter
         nodeExt.propertyNames = this.config.propertyNames || [];
-        let requiredPropertyNames = ['color', 'background-color', 'font-size', 'overflow']// nodeExt.propertyNames.concat("overflow");
-        nodeExt.styles = __pulsar_utils__.getComputedStyle(node, requiredPropertyNames);
-        // console.log(nodeExt.styles)
+        let morePropertyNames = nodeExt.propertyNames.concat("overflow");
+        nodeExt.styles = __pulsar_utils__.getComputedStyle(node, morePropertyNames);
     }
 
     // Calculate the rectangle of this node

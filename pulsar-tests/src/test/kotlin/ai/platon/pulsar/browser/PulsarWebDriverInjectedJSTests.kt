@@ -8,7 +8,7 @@ import kotlin.test.*
  * */
 class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
 
-    val testURL get() = "$generatedAssetsBaseURL/injected-js-test.html"
+    val testURL get() = "$generatedAssetsBaseURL/injected-js.test.html"
 
     @Test
     fun `test evaluate that returns primitive value`() = runWebDriverTest(testURL, browser) { driver ->
@@ -86,6 +86,15 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
 
         val result = driver.evaluateValue(expression)
         println(result)
+        assertNotNull(result)
+        // println(result.javaClass.name)
+        assertEquals("java.util.ArrayList", result.javaClass.name)
+        assertTrue { result is List<*> }
+        require(result is List<*>)
+//        assertEquals("nd", result[2])
+//        assertEquals("409.7 222 864 411.8|12|16,3,f", result[3])
+        // schema: ['color', 'background-color', 'font-size']
+        assertContains(result[3].toString(), "16,3,f")
     }
 
     @Test
