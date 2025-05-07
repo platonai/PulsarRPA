@@ -31,7 +31,9 @@ class PlaywrightBrowserLauncher : BrowserLauncher {
     private fun launch0(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): PlaywrightBrowser {
-        require(browserId.browserType == BrowserType.PLAYWRIGHT_CHROME) { "Browser type must be PLAYWRIGHT_CHROME" }
+        require(browserId.browserType == BrowserType.PLAYWRIGHT_CHROME) {
+            "Browser type must be PLAYWRIGHT_CHROME | $browserId"
+        }
 
         val browserSettings = launcherOptions.browserSettings
         val browser = launchPlaywrightBrowser(browserId, launcherOptions, launchOptions)

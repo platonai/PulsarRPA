@@ -67,6 +67,7 @@ data class PrivacyAgent(
             } else {
                 Fingerprint(browserType)
             }
+            fingerprint.browserType = browserType
             return PrivacyAgent(contextDir, fingerprint)
         }
 
