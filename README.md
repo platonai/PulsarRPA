@@ -48,6 +48,8 @@ Find all links containing /dp/.
 
 ## ▶️ Run PulsarRPA
 
+### 📦 Run Executable Jar
+
 Download and run the latest executable JAR file:
 
 ```bash
@@ -64,7 +66,7 @@ java -jar PulsarRPA.jar
 
 🔗 [Choose Another LLM Provider](docs/config/llm/llm-config)
 
-### 📦 Download Links
+#### 📦 Download Links
 
 - 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar)
 - 🇨🇳 [For Chinese Users](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
@@ -82,7 +84,7 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/p
 
 ---
 
-# 🌟 For Beginners – Just Text, No Programming Skills Needed!
+## 🌟 For Beginners – Just Text, No Code!
 
 Use the `command` API to perform actions and extract data using natural language instructions.
 
@@ -103,6 +105,8 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 
 ### 📄 JSON-Based Version:
 
+<details>
+
 ```bash
 curl -X POST "http://localhost:8182/api/ai/command" \
   -H "Content-Type: application/json" \
@@ -115,9 +119,11 @@ curl -X POST "http://localhost:8182/api/ai/command" \
   }'
 ```
 
+</details>
+
 💡 **Tip:** You don't need to fill in every field — just what you need.
 
-### 🎓 For Advanced Users - LLM + X-SQL
+## 🎓 For Advanced Users - LLM + X-SQL: Simple & Powerful
 
   ```bash
   curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
@@ -146,9 +152,9 @@ The extracted data example:
 
 ---
 
-### 👨‍💻 For Experts - Native API
+## 👨‍💻 For Experts - Native API: Very Powerful!
 
-#### 🎮 Browser Control:
+### 🎮 Browser Control:
 ```kotlin
 val prompts = """
 move cursor to the element with id 'title' and click it
@@ -167,7 +173,7 @@ session.open(url, eventHandlers)
 
 ---
 
-#### 🤖 RPA Crawling:
+### 🤖 RPA Crawling:
 ```kotlin
 val options = session.options(args)
 val event = options.eventHandlers.browseEventHandlers
@@ -188,7 +194,7 @@ session.load(url, options)
 
 ---
 
-#### 🔍 Complex Data Extraction with X-SQL:
+### 🔍 Complex Data Extraction with X-SQL:
 ```sql
 select
     llm_extract(dom, 'product name, price, ratings, score') as llm_extracted_data,
@@ -213,7 +219,7 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 
 ---
 
-## 🔧 Proxies
+## 🔧 Proxies - Unlock Advanced Capabilities
 
 Set the environment variable PROXY_ROTATION_URL to the URL provided by your proxy service:
 
