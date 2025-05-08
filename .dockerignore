@@ -27,7 +27,7 @@ submodules
 extracted
 
 .dockerignore
-Dockerfile
+docker/pulsar-rpa/Dockerfile
 
 !docs/docker
 

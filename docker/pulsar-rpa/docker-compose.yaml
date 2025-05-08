@@ -13,20 +13,22 @@ services:
 
   proxy-hub:
     image: 'proxy-hub:latest'
-    container_name: 'proxyhub'
+    container_name: 'proxy-hub'
     ports:
       - '8192:8192'
+    profiles: ["proxy"]  # ✅ Only start when profile=proxy, e.g., docker compose --profile proxy up
 
   pulsar-rpa:
     image: 'pulsar-rpa:latest'
-    container_name: 'pulsarrpa'
+    container_name: 'pulsar-rpa'
     depends_on:
       - 'mongodb'
     environment:
-      "gora.mongodb.servers": "mongodb:27017"
-      "browser.display.mode": "HEADLESS"
+      "gora.mongodb.servers": mongodb:27017
+      "spring.data.mongodb.uri": mongodb://mongodb:27017/pulsar-rpa
+      BROWSER_DISPLAY_MODE: HEADLESS
       SERVER_PORT: 8182
-      SERVER_ADDRESS: "0.0.0.0"
+      SERVER_ADDRESS: 0.0.0.0
     ports:
       - '8182:8182'
     networks:

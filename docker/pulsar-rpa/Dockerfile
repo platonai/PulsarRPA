@@ -4,10 +4,20 @@ FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
 # 设置工作目录
 WORKDIR /build
 
+# 复制项目的 Maven 相关文件（避免拷贝源码导致缓存失效）
+COPY ../../pom.xml .
+# 下载所有依赖并进行编译（如果依赖没有变，则会使用缓存）
+RUN mvn dependency:go-offline -B
+
 # 复制整个项目
-COPY ../../pulsar-app/pulsar-master .
+COPY ../.. .
 
 RUN ls -l
+
+# 构建应用
+RUN mvn clean install -Pall-modules -DskipTests \
+    -Dmaven.javadoc.skip=true \
+    -Dmaven.source.skip=true
 
 # 复制 JAR 以便在下一阶段使用
 RUN cp $(find /build -name "*.jar" | grep "PulsarRPA.jar") /build/app.jar
@@ -39,14 +49,14 @@ ENV CHROME_BIN=/usr/bin/chromium-browser \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-ENV BROWSER_DISPLAY_MODE=HEADLESS \
-    PRIVACY_AGENT_GENERATOR_CLASS=ai.platon.pulsar.skeleton.crawl.fetch.privacy.RandomPrivacyAgentGenerator
-
 # 复制构建产物
 COPY --from=builder /build/app.jar app.jar
 
+ENV BROWSER_DISPLAY_MODE=HEADLESS \
+    PRIVACY_AGENT_GENERATOR_CLASS=ai.platon.pulsar.skeleton.crawl.fetch.privacy.RandomPrivacyAgentGenerator
+
 # 设置环境变量
-ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC -Dbrowser.display.mode=HEADLESS"
+ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC"
 
 # 暴露端口
 # 8182: api server
