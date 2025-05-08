@@ -58,8 +58,7 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 ```
 
 ```bash
-export DEEPSEEK_API_KEY=YOUR-DEEPSEEK_API_KEY
-java -jar PulsarRPA.jar
+java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 ```
 
 > 🔍 **Note:** Advanced users can still access all advanced features without setting `DEEPSEEK_API_KEY`.
@@ -73,14 +72,22 @@ java -jar PulsarRPA.jar
 
 ### ▶ Run with IDE
 
+<details>
+
 - Open the project in your IDE
 - Run the `ai.platon.pulsar.app.PulsarApplicationKt` main class
 
+</details>
+
 ### 🐳 Docker Users
+
+<details>
 
 ```shell
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
 ```
+
+</details>
 
 ---
 
@@ -137,6 +144,7 @@ curl -X POST "http://localhost:8182/api/ai/command" \
   ```
 
 The extracted data example:
+
 ```json
 {
   "llm_extracted_data": {
@@ -155,6 +163,9 @@ The extracted data example:
 ## 👨‍💻 For Experts - Native API: Very Powerful!
 
 ### 🎮 Browser Control:
+
+<details>
+
 ```kotlin
 val prompts = """
 move cursor to the element with id 'title' and click it
@@ -171,9 +182,14 @@ session.open(url, eventHandlers)
 ```
 📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/TalkToActivePage.kt)
 
+</details>
+
 ---
 
-### 🤖 RPA Crawling:
+### 🤖 Complete Robotic Process Automation Capabilities:
+
+<details>
+
 ```kotlin
 val options = session.options(args)
 val event = options.eventHandlers.browseEventHandlers
@@ -192,9 +208,14 @@ session.load(url, options)
 ```
 📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt)
 
+</details>
+
 ---
 
 ### 🔍 Complex Data Extraction with X-SQL:
+
+<details>
+
 ```sql
 select
     llm_extract(dom, 'product name, price, ratings, score') as llm_extracted_data,
@@ -210,6 +231,8 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 * [Amazon Product Page Scraping (100+ fields)](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [All Amazon Page Types Scraping](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
+</details>
+
 ---
 
 ## 📜 Documents
@@ -221,6 +244,8 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 
 ## 🔧 Proxies - Unlock Advanced Capabilities
 
+<details>
+
 Set the environment variable PROXY_ROTATION_URL to the URL provided by your proxy service:
 
 ```shell
@@ -228,6 +253,8 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 ```
 
 Each time the rotation URL is accessed, it should return a response containing one or more fresh proxy IPs.
+
+</details>
 
 ---
 
