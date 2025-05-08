@@ -13,6 +13,8 @@
 # 忽略所有临时文件
 **/*.tmp
 **/*.temp
+**/*.bak
+**/target
 
 *.xlsx
 *.db
@@ -26,12 +28,8 @@ logs
 submodules
 extracted
 
-.dockerignore
-docker/pulsar-rpa/Dockerfile
-
-!docs/docker
-
-
-/**/application-private.yml
+**/application-private.yml
 application-private.yml
 
+.dockerignore
+docker/pulsar-rpa/Dockerfile
