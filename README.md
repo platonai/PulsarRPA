@@ -58,8 +58,7 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 ```
 
 ```bash
-export DEEPSEEK_API_KEY=YOUR-DEEPSEEK_API_KEY
-java -jar PulsarRPA.jar
+java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 ```
 
 > 🔍 **Note:** Advanced users can still access all advanced features without setting `DEEPSEEK_API_KEY`.
@@ -137,6 +136,7 @@ curl -X POST "http://localhost:8182/api/ai/command" \
   ```
 
 The extracted data example:
+
 ```json
 {
   "llm_extracted_data": {
@@ -173,7 +173,10 @@ session.open(url, eventHandlers)
 
 ---
 
-### 🤖 RPA Crawling:
+### 🤖 Complete Robotic Process Automation Capabilities:
+
+<details>
+
 ```kotlin
 val options = session.options(args)
 val event = options.eventHandlers.browseEventHandlers
@@ -191,6 +194,8 @@ event.onWillCheckDocumentState.addLast { page, driver ->
 session.load(url, options)
 ```
 📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt)
+
+</details>
 
 ---
 
