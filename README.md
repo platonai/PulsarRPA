@@ -54,7 +54,7 @@ Download and run the latest executable JAR file:
 
 ```bash
 # Linux/macOS and Windows (if curl is available)
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar
 ```
 
 ```bash
@@ -68,7 +68,7 @@ java -jar PulsarRPA.jar
 
 #### 📦 Download Links
 
-- 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar)
+- 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar)
 - 🇨🇳 [For Chinese Users](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
 
 ### ▶ Run with IDE

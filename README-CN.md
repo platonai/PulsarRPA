@@ -46,7 +46,7 @@
 
 ```bash
 # Linux/macOS and Windows (if curl is available)
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar
 ```
 
 ```bash
@@ -60,7 +60,7 @@ java -jar PulsarRPA.jar
 
 ### 📦 下载链接
 
-- 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar)
+- 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar)
 - 🇨🇳 [国内用户专用](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
 
 ### ▶ 通过 IDE 运行 PulsarRPA
