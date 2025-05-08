@@ -24,8 +24,8 @@ services:
     depends_on:
       - 'mongodb'
     environment:
-      "gora.mongodb.servers": mongodb:27017
-      "spring.data.mongodb.uri": mongodb://mongodb:27017/pulsar-rpa
+      "gora.mongodb.servers": mongodb:27017  # Required by Gora, keep it exactly dot.separated.lowercase
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/pulsar-rpa
       BROWSER_DISPLAY_MODE: HEADLESS
       SERVER_PORT: 8182
       SERVER_ADDRESS: 0.0.0.0
