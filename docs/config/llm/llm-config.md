@@ -24,7 +24,7 @@ Use any OpenAI-compatible API provider (e.g., DeepSeek, Moonshot, etc.) by setti
 
 ```shell
 # Linux/macOS and Windows (if curl is available)
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.3/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar
 ```
 
 ### ▶️ Step 2: Run with Custom LLM Settings
