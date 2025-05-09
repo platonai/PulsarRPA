@@ -5,10 +5,13 @@ import ai.platon.pulsar.common.urls.URLUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.RandomStringUtils
+import java.io.IOException
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.exists
+import kotlin.io.path.notExists
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)
@@ -48,7 +51,13 @@ object AppPaths {
     
     @RequiredDirectory
     val CONFIG_DIR = AppContext.APP_DATA_DIR.resolve("config")
-    
+
+    @RequiredDirectory
+    val CONFIG_AVAILABLE_DIR = CONFIG_DIR.resolve("conf-available")
+
+    @RequiredDirectory
+    val CONFIG_ENABLED_DIR = CONFIG_DIR.resolve("conf-enabled")
+
     @RequiredDirectory
     val BROWSER_DATA_DIR = DATA_DIR.resolve("browser")
     

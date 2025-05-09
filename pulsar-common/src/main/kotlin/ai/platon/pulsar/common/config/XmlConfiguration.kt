@@ -35,13 +35,13 @@ import kotlin.io.path.listDirectoryEntries
  * */
 class XmlConfiguration(
     val profile: String = "",
-    val extraResources: Iterable<String> = listOf(),
+    val extraResources: List<String> = listOf(),
     private val loadDefaults: Boolean = true,
 ) : Iterable<Map.Entry<String, String?>> {
 
     companion object {
         val DEFAULT_RESOURCES = mutableSetOf("pulsar-default.xml")
-        val EXTERNAL_RESOURCE_BASE_DIR = AppPaths.CONFIG_DIR.resolve("conf-enabled")
+        val EXTERNAL_RESOURCE_BASE_DIR = AppPaths.CONFIG_ENABLED_DIR
         private val ID_SUPPLIER = AtomicInteger()
     }
 
@@ -59,6 +59,8 @@ class XmlConfiguration(
         }
 
     val id = ID_SUPPLIER.incrementAndGet()
+
+    constructor(xmlPath: Path) : this("", listOf(xmlPath.toString()), false)
 
     constructor(conf: XmlConfiguration) : this(conf.profile, conf.extraResources, conf.loadDefaults)
 
@@ -144,7 +146,7 @@ private class ConfigurationImpl(
     private val logger = getLogger(this)
 
     val resourceNames = mutableSetOf<String>()
-    val resourceURLs = mutableSetOf<String>()
+    val resourceURIs = mutableSetOf<String>()
     val resources = ArrayList<Resource>()
     val properties = Properties()
 
@@ -153,11 +155,11 @@ private class ConfigurationImpl(
     @Synchronized
     fun load() {
         resourceNames.clear()
-        resourceURLs.clear()
+        resourceURIs.clear()
         resources.clear()
 
         collectResourcePaths()
-        resourceURLs.mapNotNull { URLUtils.getURLOrNull(it) }.forEach { addResource(it) }
+        resourceURIs.mapNotNull { URLUtils.getURLOrNull(it) }.forEach { addResource(it) }
         if (loadDefaults && Files.isDirectory(EXTERNAL_RESOURCE_BASE_DIR)) {
             addExternalResource(EXTERNAL_RESOURCE_BASE_DIR)
         }
@@ -217,8 +219,8 @@ private class ConfigurationImpl(
 
         for (resourceName in resourceNames) {
             val realResource = findRealResource(profile, resourceName)?.toString()
-            if (realResource != null && realResource !in resourceURLs) {
-                resourceURLs.add(realResource)
+            if (realResource != null && realResource !in resourceURIs) {
+                resourceURIs.add(realResource)
                 logger.info("Found configuration: {}", realResource)
             } else {
                 logger.info("Resource not find: $resourceName")

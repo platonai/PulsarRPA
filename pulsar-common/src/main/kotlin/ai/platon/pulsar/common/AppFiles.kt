@@ -1,5 +1,7 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.AppPaths.CONFIG_AVAILABLE_DIR
+import ai.platon.pulsar.common.AppPaths.CONFIG_ENABLED_DIR
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.StringUtils.SPACE
@@ -14,6 +16,9 @@ import java.nio.file.StandardOpenOption
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import kotlin.io.path.createFile
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.exists
+import kotlin.io.path.notExists
 import kotlin.random.Random
 
 object AppFiles {
@@ -126,5 +131,23 @@ object AppFiles {
         } catch (e: IOException) {
             logger.error(e.toString())
         }
+    }
+
+    @Throws(IOException::class)
+    fun enableConfig(fileName: String) {
+        if (CONFIG_AVAILABLE_DIR.resolve(fileName).notExists()) {
+            return
+        }
+
+        if (CONFIG_ENABLED_DIR.resolve(fileName).exists()) {
+            return
+        }
+
+        Files.copy(CONFIG_AVAILABLE_DIR.resolve(fileName), CONFIG_ENABLED_DIR.resolve(fileName))
+    }
+
+    @Throws(IOException::class)
+    fun disableConfig(fileName: String) {
+        CONFIG_ENABLED_DIR.resolve(fileName).deleteIfExists()
     }
 }
