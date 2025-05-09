@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.browser.BrowserContextMode
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.browser.InteractLevel
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 
 /**
@@ -207,6 +208,17 @@ open class PulsarSettings {
      * */
     fun withSPA(): PulsarSettings {
         BrowserSettings.withSPA()
+        return this
+    }
+
+    /**
+     * Defines the level of interaction with a webpage during crawling.
+     *
+     * Higher levels involve more interaction (e.g., scrolling, clicking),
+     * which may improve content extraction quality at the cost of speed.
+     * */
+    fun withInteractLevel(level: InteractLevel): PulsarSettings {
+        BrowserSettings.withInteractSettings(InteractSettings.create(level))
         return this
     }
 

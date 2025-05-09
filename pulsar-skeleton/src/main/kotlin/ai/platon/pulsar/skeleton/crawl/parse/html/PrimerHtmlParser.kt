@@ -102,8 +102,6 @@ class PrimerHtmlParser(
         if (selector.isNotBlank()) {
             val element = document.selectFirstOrNull(selector)
 
-//            println(element?.text() + " | " + page.url)
-
             val text = element?.text() ?: ""
             if (text.isBlank()) {
                 // The required condition is not matched, the page is not valid
