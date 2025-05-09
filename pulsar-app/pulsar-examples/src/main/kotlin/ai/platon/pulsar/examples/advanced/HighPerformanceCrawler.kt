@@ -4,23 +4,22 @@ import ai.platon.pulsar.browser.common.BlockRule
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_ROTATION_URL
-import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 
 class HighPerformanceCrawler {
-    private val session = SQLContexts.getOrCreateSession()
+    private val session = PulsarContexts.createSession()
 
     fun crawl() {
-        // Setup crawl arguments
-        // -refresh: visit the page every time
-        // -dropContent: do not save the content of the page
-        // -interactLevel fastest: visit the page as fast as possible
+        // Crawl arguments:
+        // -refresh: always re-fetch the page
+        // -dropContent: do not persist page content
+        // -interactLevel fastest: prioritize speed over data completeness
         val args = "-refresh -dropContent -interactLevel fastest"
 
-        // Block unnecessary resources to speed up loading.
-        // ⚠️ Be cautious with what you block — some resources may be essential for rendering.
+        // Block non-essential resources to improve load speed.
+        // ⚠️ Be careful — blocking critical resources may break rendering or script execution.
         val blockingUrls = BlockRule().blockingUrls
 
         val resource = "seeds/amazon/best-sellers/leaf-categories.txt"

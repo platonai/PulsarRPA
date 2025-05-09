@@ -48,7 +48,7 @@ Find all links containing /dp/.
 
 ## ▶️ Run PulsarRPA
 
-### 📦 Run Executable Jar - Enjoy the Best Experience
+### 📦 Run Executable Jar - Best Experience
 
 Download:
 
@@ -239,12 +239,12 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 
 ## 📜 Documents
 
-* 📖 [Advanced Guides](docs/advanced-guides.md)
-* 📊 [REST API Examples](docs/rest-api-examples.md)
+* 📖 [REST API Examples](docs/rest-api-examples.md)
+* 🧠 [Expert Guide](docs/advanced-guides.md)
 
 ---
 
-## 🔧 Proxies - Unlock Advanced Capabilities
+## 🔧 Proxies - Unblock Websites
 
 <details>
 
