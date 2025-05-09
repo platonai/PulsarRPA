@@ -130,7 +130,9 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 
 </details>
 
-## 🎓 For Advanced Users - LLM + X-SQL: Simple & Powerful
+## 🎓 For Advanced Users — LLM + X-SQL: Precise, Flexible, Powerful
+
+Harness the power of the `x/e` API for highly precise, flexible, and intelligent data extraction.
 
   ```bash
   curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
