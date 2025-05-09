@@ -35,7 +35,7 @@ import kotlin.io.path.listDirectoryEntries
  * */
 class XmlConfiguration(
     val profile: String = "",
-    val extraResources: List<String> = listOf(),
+    val extraResources: Iterable<String> = listOf(),
     private val loadDefaults: Boolean = true,
 ) : Iterable<Map.Entry<String, String?>> {
 

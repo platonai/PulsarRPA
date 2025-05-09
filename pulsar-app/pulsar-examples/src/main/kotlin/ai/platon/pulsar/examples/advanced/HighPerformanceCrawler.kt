@@ -15,20 +15,25 @@ class HighPerformanceCrawler {
 
     fun crawl() {
         val resource = "seeds/amazon/best-sellers/leaf-categories.txt"
-        val args = "-refresh"
-        // block unnecessary resources, we must be very careful to choose the resource to block
+        val args = "-refresh -dropContent"
+
+        // Block unnecessary resources to speed up loading.
+        // ⚠️ Be cautious with what you block — some resources may be essential for rendering.
         val blockingUrls = BlockRule().blockingUrls
-        // less interaction with the page, faster crawl speed
-        val interactSettings = InteractSettings(initScrollPositions = "0.2,0.5", scrollCount = 0)
+
+        // Reduce interaction to increase crawling speed.
+        val interactSettings = InteractSettings(
+            initScrollPositions = "0.2,0.5",  // Initial scroll positions to simulate user behavior
+            scrollCount = 0                   // No additional scrolling
+        )
         session.sessionConfig.putBean(interactSettings)
 
-        val links = LinkExtractors.fromResource(resource).asSequence()
-            .map { ListenableHyperlink(it, "", args = args) }
-            .onEach {
-                it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
-                    driver.addBlockedURLs(blockingUrls)
-                }
-            }.toList()
+        val links =
+            LinkExtractors.fromResource(resource).asSequence().map { ListenableHyperlink(it, "", args = args) }.onEach {
+                    it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
+                        driver.addBlockedURLs(blockingUrls)
+                    }
+                }.toList()
 
         session.submitAll(links)
     }

@@ -40,6 +40,7 @@ data class InteractSettings(
      * Some typical positions are:
      * * 0.3,0.75,0.4,0.5
      * * 0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75
+     * 0.3,0.75,0.4,0.5
      * */
     var initScrollPositions: String = "0.3,0.75,0.4,0.5"
 ) {
