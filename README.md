@@ -160,6 +160,8 @@ The extracted data example:
 }
 ```
 
+* X-SQL Guide: [X-SQL](docs/x-sql.md)
+
 ---
 
 ## 👨‍💻 For Experts - Native API: Super Powerful!

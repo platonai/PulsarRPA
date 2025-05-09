@@ -1,22 +1,5 @@
 # PulsarRPA - Advanced Usage
 
-## 🧮 PulsarRPA as an executable jar
-
-We have released a standalone executable JAR based on PulsarRPA, which includes:
-
-- Data collection examples from top-tier websites.
-- A mini-program for automatic information extraction based on self-supervised machine learning. The AI algorithm can identify all fields on detail pages with field accuracy exceeding 99%.
-- A mini-program that automatically learns and outputs all collection rules based on self-supervised machine learning.
-- The ability to execute web data collection tasks directly from the command line without writing any code.
-- An upgraded PulsarRPA server that allows you to send SQL statements to collect web data.
-- A Web UI where you can write SQL statements and send them to the server.
-
-Download [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro#download) and explore its capabilities with a single command line:
-
-```shell
-java -jar PulsarRPAPro.jar
-```
-
 ## 🎁 PulsarRPA as a java library
 
 The simplest way to leverage the power of PulsarRPA is to add it to your project as a library.
@@ -38,12 +21,14 @@ implementation("ai.platon.pulsar:pulsar-bom:VERSION")
 ```
 
 Clone the template project from github.com:
-[kotlin](https://github.com/platonai/pulsar-kotlin-template),
-[java-17](https://github.com/platonai/pulsar-java-17-template).
+* [kotlin](https://github.com/platonai/pulsar-kotlin-template)
+* [java-17](https://github.com/platonai/pulsar-java-17-template)
 
-Start your own large-scale web crawling projects based on our commercial-grade open source projects: [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro), [Exotic-amazon](https://github.com/platonai/exotic-amazon).
+Start your own large-scale web crawling projects based on our commercial-grade open source projects: 
+* [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro)
+* [Exotic-amazon](https://github.com/platonai/exotic-amazon)
 
-Check the [quick start](docs/get-started/2basic-usage.md) for more details.
+Check the [Step-by-Step Course](#-step-by-step-course) for more details.
 
 # 🌐 PulsarRPA as a REST Service
 
@@ -98,30 +83,30 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 
 Example code: [bash](bin/scrape.sh), [PowerShell](bin/scrape.ps1), [batch](bin/scrape.bat), [java](/ai/platon/pulsar/client/Scraper.java), [kotlin](/ai/platon/pulsar/client/Scraper.kt), [php](/src/main/php/Scraper.php).
 
-Click [X-SQL](docs/x-sql.md) to see a detailed introduction and function descriptions about X-SQL.
+Click [X-SQL](x-sql.md) to see a detailed introduction and function descriptions about X-SQL.
 
 # 📖 Step-by-Step Course
 
 We have a step-by-step course by example:
 
-- [Home](docs/get-started/1home.md)
-- [Basic Usage](docs/get-started/2basic-usage.md)
-- [Load Options](docs/get-started/3load-options.md)
-- [Data Extraction](docs/get-started/4data-extraction.md)
-- [URL](docs/get-started/5URL.md)
-- [Java-style Async](docs/get-started/6Java-style-async.md)
-- [Kotlin-style Async](docs/get-started/7Kotlin-style-async.md)
-- [Continuous Crawling](docs/get-started/8continuous-crawling.md)
-- [Event Handling](docs/get-started/9event-handling.md)
-- [RPA](docs/get-started/10RPA.md)
-- [WebDriver](docs/get-started/11WebDriver.md)
-- [Massive Crawling](docs/get-started/12massive-crawling.md)
-- [X-SQL](docs/get-started/13X-SQL.md)
-- [AI Extraction](docs/get-started/14AI-extraction.md)
-- [REST](docs/get-started/15REST.md)
-- [Console](docs/get-started/16console.md)
-- [Top Practice](docs/get-started/17top-practice.md)
-- [Miscellaneous](docs/get-started/18miscellaneous.md)
+- [Home](get-started/1home.md)
+- [Basic Usage](get-started/2basic-usage.md)
+- [Load Options](get-started/3load-options.md)
+- [Data Extraction](get-started/4data-extraction.md)
+- [URL](get-started/5URL.md)
+- [Java-style Async](get-started/6Java-style-async.md)
+- [Kotlin-style Async](get-started/7Kotlin-style-async.md)
+- [Continuous Crawling](get-started/8continuous-crawling.md)
+- [Event Handling](get-started/9event-handling.md)
+- [RPA](get-started/10RPA.md)
+- [WebDriver](get-started/11WebDriver.md)
+- [Massive Crawling](get-started/12massive-crawling.md)
+- [X-SQL](get-started/13X-SQL.md)
+- [AI Extraction](get-started/14AI-extraction.md)
+- [REST](get-started/15REST.md)
+- [Console](get-started/16console.md)
+- [Top Practice](get-started/17top-practice.md)
+- [Miscellaneous](get-started/18miscellaneous.md)
 
 # 📊 Logs & Metrics
 
@@ -129,7 +114,7 @@ PulsarRPA has carefully designed the logging and metrics subsystem to record eve
 
 By focusing on a concise set of indicators, you can unlock a deeper understanding of the system’s overall condition: 💯 💔 🗙  ?💿 🔃 🤺.
 
-Typical page loading logs are shown below. Check the [log-format](docs/log-format.md) to learn how to read the logs and gain insight into the state of the entire system at a glance.
+Typical page loading logs are shown below. Check the [log-format](log-format.md) to learn how to read the logs and gain insight into the state of the entire system at a glance.
 
 ```plaintext
 2022-09-24 11:46:26.045  INFO [-worker-14] a.p.p.c.c.L.Task - 3313. 💯  ?U for N got 200 580.92 KiB in 1m14.277s, fc:1 | 75/284/96/277/6554 | 106.32.12.75 | 3xBpaR2 | https://www.walmart.com/ip/Restored-iPhone-7-32GB-Black-T-Mobile-Refurbished/329207863  -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
@@ -150,7 +135,7 @@ PulsarRPA is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 7, Windows 11, WSL, a
 
 # 🛸 Advanced Topics
 
-Check the [advanced topics](docs/faq/advanced-topics.md) to find out the answers for the following questions:
+Check the [advanced topics](faq/advanced-topics.md) to find out the answers for the following questions:
 
 - What’s so difficult about scraping web data at scale?
 - How to scrape a million product pages from an e-commerce website a day?
@@ -177,7 +162,7 @@ Check the [advanced topics](docs/faq/advanced-topics.md) to find out the answers
 
 In general, the features mentioned in the Feature section are well-supported by PulsarRPA, but other solutions do not.
 
-Check the [solution comparison](docs/faq/solution-comparison.md) to see the detailed comparison to the other solutions:
+Check the [solution comparison](faq/solution-comparison.md) to see the detailed comparison to the other solutions:
 
 - PulsarRPA vs selenium/puppeteer/playwright
 - PulsarRPA vs nutch
@@ -185,7 +170,7 @@ Check the [solution comparison](docs/faq/solution-comparison.md) to see the deta
 
 # 🤓 Technical Details
 
-Check the [technical details](docs/faq/technical-details.md) to see answers for the following questions:
+Check the [technical details](faq/technical-details.md) to see answers for the following questions:
 
 - How to rotate my IP addresses?
 - How to hide my bot from being detected?
