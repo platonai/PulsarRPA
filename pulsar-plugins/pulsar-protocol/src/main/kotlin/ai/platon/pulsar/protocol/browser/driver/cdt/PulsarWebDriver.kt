@@ -93,11 +93,11 @@ class PulsarWebDriver(
     }
 
     override suspend fun addBlockedURLs(urlPatterns: List<String>) {
-        _blockedURLs.addAll(urlPatterns)
+        _blockedURLPatterns.addAll(urlPatterns)
     }
 
     override suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>) {
-        _probabilityBlockedURLs.addAll(urlPatterns)
+        _probabilityBlockedURLPatterns.addAll(urlPatterns)
     }
 
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {

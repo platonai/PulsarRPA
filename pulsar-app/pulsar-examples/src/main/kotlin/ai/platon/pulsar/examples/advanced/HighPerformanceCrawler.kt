@@ -1,7 +1,6 @@
 package ai.platon.pulsar.examples.advanced
 
 import ai.platon.pulsar.browser.common.BlockRule
-import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_ROTATION_URL
@@ -14,32 +13,29 @@ class HighPerformanceCrawler {
     private val session = SQLContexts.getOrCreateSession()
 
     fun crawl() {
-        val resource = "seeds/amazon/best-sellers/leaf-categories.txt"
-        val args = "-refresh -dropContent"
+        // Setup crawl arguments
+        // -refresh: visit the page every time
+        // -dropContent: do not save the content of the page
+        // -interactLevel fastest: visit the page as fast as possible
+        val args = "-refresh -dropContent -interactLevel fastest"
 
         // Block unnecessary resources to speed up loading.
         // ⚠️ Be cautious with what you block — some resources may be essential for rendering.
         val blockingUrls = BlockRule().blockingUrls
 
-        // Reduce interaction to increase crawling speed.
-        val interactSettings = InteractSettings(
-            initScrollPositions = "0.2,0.5",  // Initial scroll positions to simulate user behavior
-            scrollCount = 0                   // No additional scrolling
-        )
-        session.sessionConfig.putBean(interactSettings)
-
+        val resource = "seeds/amazon/best-sellers/leaf-categories.txt"
         val links =
             LinkExtractors.fromResource(resource).asSequence().map { ListenableHyperlink(it, "", args = args) }.onEach {
-                    it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
-                        driver.addBlockedURLs(blockingUrls)
-                    }
-                }.toList()
+                it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
+                    driver.addBlockedURLs(blockingUrls)
+                }
+            }.toList()
 
         session.submitAll(links)
     }
 }
 
-fun main(args: Array<String>) {
+fun main() {
     // Highly recommended to enable proxies, or you will be blocked by Amazon
     val proxyHubURL = "http://localhost:8192/api/proxies"
     if (NetUtil.testHttpNetwork(proxyHubURL)) {
@@ -47,6 +43,7 @@ fun main(args: Array<String>) {
     }
 
     PulsarSettings().maxBrowserContexts(2).maxOpenTabs(8).withSequentialBrowsers()
+
     HighPerformanceCrawler().crawl()
     PulsarContexts.await()
 }
