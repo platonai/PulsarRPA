@@ -48,9 +48,9 @@ Find all links containing /dp/.
 
 ## ▶️ Run PulsarRPA
 
-### 📦 Run Executable Jar
+### 📦 Run Executable Jar - Enjoy the Best Experience
 
-Download and run the latest executable JAR file:
+Download:
 
 ```bash
 # Linux/macOS and Windows (if curl is available)
@@ -61,14 +61,14 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 ```
 
-> 🔍 **Note:** Advanced users can still access all advanced features without setting `DEEPSEEK_API_KEY`.
+> 🔍 **Tip:** You can still access NON-LLM features without a LLM KEY.
 
 🔗 [Choose Another LLM Provider](docs/config/llm/llm-config)
 
 #### 📦 Download Links
 
 - 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar)
-- 🇨🇳 [For Chinese Users](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
+- 📦 [Backup Downloads](http://static.platonai.cn/repo/ai/platon/pulsar/)
 
 ### ▶ Run with IDE
 
@@ -110,6 +110,8 @@ curl -X POST "http://localhost:8182/api/ai/command" \
   '
 ```
 
+💡 **Tip:** You don't need to fill in every field — just what you need.
+
 ### 📄 JSON-Based Version:
 
 <details>
@@ -127,8 +129,6 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 ```
 
 </details>
-
-💡 **Tip:** You don't need to fill in every field — just what you need.
 
 ## 🎓 For Advanced Users - LLM + X-SQL: Simple & Powerful
 
@@ -160,7 +160,7 @@ The extracted data example:
 
 ---
 
-## 👨‍💻 For Experts - Native API: Very Powerful!
+## 👨‍💻 For Experts - Native API: Super Powerful!
 
 ### 🎮 Browser Control:
 
