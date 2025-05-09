@@ -1,6 +1,7 @@
 package ai.platon.pulsar.browser.common
 
 import ai.platon.pulsar.common.Systems
+import ai.platon.pulsar.common.browser.InteractLevel
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
@@ -14,9 +15,19 @@ import kotlin.random.Random
  * */
 data class InteractSettings(
     /**
+     * Page positions to scroll to, these numbers are percentages of the total height,
+     * e.g., 0.2 means to scroll to 20% of the height of the page.
+     *
+     * Some typical positions are:
+     * * 0.3,0.75,0.4,0.5
+     * * 0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75
+     * 0.3,0.75,0.4,0.5
+     * */
+    var initScrollPositions: String = "0.3,0.75",
+    /**
      * The number of scroll downs on the page.
      * */
-    var scrollCount: Int = 3,
+    var scrollCount: Int = 1,
     /**
      * The time interval to scroll down on the page.
      * */
@@ -33,16 +44,6 @@ data class InteractSettings(
      * Whether to bring the page to the front.
      * */
     var bringToFront: Boolean = false,
-    /**
-     * Page positions to scroll to, these numbers are percentages of the total height,
-     * e.g., 0.2 means to scroll to 20% of the height of the page.
-     *
-     * Some typical positions are:
-     * * 0.3,0.75,0.4,0.5
-     * * 0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75
-     * 0.3,0.75,0.4,0.5
-     * */
-    var initScrollPositions: String = "0.3,0.75,0.4,0.5"
 ) {
     /**
      * The minimum delay time in milliseconds.
@@ -159,10 +160,7 @@ data class InteractSettings(
         
         return timeoutPolicy
     }
-    
-    /**
-     * TODO: just use an InteractSettings object, instead of separate properties
-     * */
+
     fun overrideSystemProperties(): InteractSettings {
         Systems.setProperty(CapabilityTypes.BROWSER_INTERACT_SETTINGS, toJson())
         
@@ -176,9 +174,7 @@ data class InteractSettings(
     
     fun overrideConfiguration(conf: MutableConfig): InteractSettings {
         conf[CapabilityTypes.BROWSER_INTERACT_SETTINGS] = toJson()
-        /**
-         * TODO: just use an InteractSettings object, instead of separate properties
-         * */
+
         conf.setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
         conf.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         conf.setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
@@ -186,6 +182,7 @@ data class InteractSettings(
         
         return this
     }
+
     /**
      * Do not scroll the page by default.
      * */
@@ -207,27 +204,6 @@ data class InteractSettings(
     }
 
     /**
-     * Build the scroll positions.
-     * */
-    fun buildScrollPositions(): List<Double> {
-        val positions = buildInitScrollPositions().toMutableList()
-
-        if (scrollCount <= 0) {
-            return positions
-        }
-
-        val random = Random.nextInt(3)
-        val enhancedScrollCount = (scrollCount + random - 1).coerceAtLeast(1)
-        // some website show lazy content only when the page is in the front.
-        repeat(enhancedScrollCount) { i ->
-            val ratio = (0.6 + 0.1 * i).coerceAtMost(0.8)
-            positions.add(ratio)
-        }
-
-        return positions
-    }
-    
-    /**
      * Convert the object to a json string.
      *
      * @return a json string
@@ -239,40 +215,94 @@ data class InteractSettings(
 
     companion object {
         private val OBJECT_CACHE = ConcurrentHashMap<String, InteractSettings>()
-        
+
         /**
-         * Default settings for Web page interaction behavior.
+         * Interaction behavior to visit pages at fastest speed.
+         * */
+        val FASTEST get() = InteractSettings(
+            scrollInterval = Duration.ofMillis(500),
+            scriptTimeout = Duration.ofSeconds(30),
+            pageLoadTimeout = Duration.ofMinutes(2),
+            bringToFront = false
+        ).noScroll()
+
+        /**
+         * Interaction behavior to visit pages at faster speed.
+         * */
+        val FASTER get() = InteractSettings(
+            scrollCount = 0,
+            scrollInterval = Duration.ofMillis(500),
+            scriptTimeout = Duration.ofSeconds(30),
+            pageLoadTimeout = Duration.ofMinutes(2),
+            bringToFront = false,
+            initScrollPositions = "0.2"
+        )
+
+        /**
+         * Interaction behavior to visit pages at faster speed.
+         * */
+        val FAST get() = InteractSettings(
+            scrollCount = 0,
+            scrollInterval = Duration.ofMillis(500),
+            scriptTimeout = Duration.ofSeconds(30),
+            pageLoadTimeout = Duration.ofMinutes(2),
+            bringToFront = false,
+            initScrollPositions = "0.2,0.5"
+        )
+
+        /**
+         * Default interaction behavior.
          * */
         val DEFAULT get() = InteractSettings()
 
         /**
-         * Web page interaction behavior settings under good network conditions, in which case we perform
-         * each action faster.
+         * Interaction behavior for good data.
          * */
-        val GOOD_NET_SETTINGS get() = InteractSettings()
-
-        /**
-         * Web page interaction behavior settings under worse network conditions, in which case we perform
-         * each action more slowly.
-         * */
-        val WORSE_NET_SETTINGS get() = InteractSettings(
-            scrollCount = 10,
+        val GOOD_DATA get() = InteractSettings(
+            scrollCount = 2,
             scrollInterval = Duration.ofSeconds(1),
-            scriptTimeout = Duration.ofMinutes(2),
-            Duration.ofMinutes(3),
+            scriptTimeout = Duration.ofSeconds(30),
+            pageLoadTimeout = Duration.ofMinutes(3),
+            bringToFront = true,
+            initScrollPositions = "0.3,0.75,0.4,0.5"
         )
 
         /**
-         * Web page interaction behavior settings under worst network conditions, in which case we perform
-         * each action very slowly.
+         * Interaction behavior for better data.
          * */
-        val WORST_NET_SETTINGS get() = InteractSettings(
-            scrollCount = 15,
-            scrollInterval = Duration.ofSeconds(3),
-            scriptTimeout = Duration.ofMinutes(3),
-            Duration.ofMinutes(4),
+        val BETTER_DATA get() = InteractSettings(
+            scrollCount = 3,
+            scrollInterval = Duration.ofSeconds(1),
+            scriptTimeout = Duration.ofSeconds(30),
+            pageLoadTimeout = Duration.ofMinutes(3),
+            bringToFront = true,
+            initScrollPositions = "0.3,0.75,0.4,0.5"
         )
-        
+
+        /**
+         * Interaction behavior for best data.
+         * */
+        val BEST_DATA get() = InteractSettings(
+            scrollCount = 5,
+            scrollInterval = Duration.ofSeconds(1),
+            scriptTimeout = Duration.ofSeconds(30),
+            pageLoadTimeout = Duration.ofMinutes(3),
+            bringToFront = true,
+            initScrollPositions = "0.3,0.75,0.3,0.5,0.75"
+        )
+
+        fun create(level: InteractLevel): InteractSettings {
+            return when  (level) {
+                InteractLevel.FASTEST -> FASTEST
+                InteractLevel.FASTER -> FASTER
+                InteractLevel.FAST -> FAST
+                InteractLevel.DEFAULT -> DEFAULT
+                InteractLevel.GOOD_DATA -> GOOD_DATA
+                InteractLevel.BETTER_DATA -> BETTER_DATA
+                InteractLevel.BEST_DATA -> BEST_DATA
+            }
+        }
+
         /**
          * Parse the json string to an InteractSettings object.
          *
@@ -285,7 +315,7 @@ data class InteractSettings(
                 pulsarObjectMapper().readValue(json, InteractSettings::class.java)
             }
         }
-        
+
         /**
          * Parse the json string to an InteractSettings object.
          *

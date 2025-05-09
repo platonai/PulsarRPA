@@ -3,7 +3,7 @@ package ai.platon.pulsar.skeleton.common.options
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Priority13
-import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.browser.InteractLevel
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -15,6 +15,7 @@ import ai.platon.pulsar.skeleton.common.ApiPublic
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import com.beust.jcommander.Parameter
+import com.google.common.annotations.Beta
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -609,9 +610,10 @@ open class LoadOptions constructor(
      * Run browser in incognito mode.
      * Not used since the browser always running in temporary contexts.
      * */
+    @Beta
     @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
     var incognito = false
-    
+
     /**
      * Do not redirect.
      * Ignored in browser mode since the browser handles the redirection itself.
@@ -677,13 +679,33 @@ open class LoadOptions constructor(
     /**
      * Indicates the network condition.
      * */
+    @Deprecated("Use interactBehavior instead", ReplaceWith("options.interactBehavior"))
     @Parameter(
         names = ["-netCond", "-netCondition", "--net-condition"],
         converter = ConditionConverter::class,
         description = "Indicates the network condition"
     )
     var netCondition = Condition.GOOD
-    
+
+    /**
+     * Controls the level of interaction with the page during crawling.
+     *
+     * Higher interaction levels may improve content completeness and quality,
+     * but typically reduce performance due to slower page processing.
+     *
+     * Lower levels favor speed but may miss dynamically loaded content.
+     *
+     * @see InteractLevel
+     * @see InteractSettings
+     * @see InteractSettings.DEFAULT
+     */
+    @Parameter(
+        names = ["-ilv", "-interactLevel", "--interact-level"],
+        converter = InteractLevelConverter::class,
+        description = "Specifies the interaction level with the page (higher = better data, lower = faster)."
+    )
+    var interactLevel = InteractLevel.DEFAULT
+
     /**
      * The test level, 0 to disable, we will talk more in test mode.
      * */
@@ -861,39 +883,39 @@ open class LoadOptions constructor(
      * [LoadOptions] is not globally visible, we have to pass values to modules which can not see it
      * through a [VolatileConfig] object.
      * */
-    fun overrideConfiguration(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
+    fun overrideConfiguration(conf: VolatileConfig?): VolatileConfig? {
         setInteractionSettings()
-        
-        rawEvent?.let { putBean(it) }
-        setEnum(CapabilityTypes.BROWSER_TYPE, browser)
-        // incognito mode is never used because the browsers are always running in temporary contexts
-        setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
+
+        if (conf != null) {
+            rawEvent?.let { conf.putBean(it) }
+            conf.setEnum(CapabilityTypes.BROWSER_TYPE, browser)
+            // incognito mode is never used because the browsers are always running in temporary contexts
+            conf.setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
+        }
+
+        return conf
     }
     
     private fun setInteractionSettings() {
         val modified = listOf(
-            "netCondition",
+            "interactLevel",
             "scrollCount",
             "scrollInterval",
             "scriptTimeout",
             "pageLoadTimeout"
         ).any { !isDefault(it) }
-        
+
         if (!modified) {
             return
         }
-        
-        val interactSettings = when (netCondition) {
-            Condition.WORSE -> InteractSettings.WORSE_NET_SETTINGS
-            Condition.WORST -> InteractSettings.WORST_NET_SETTINGS
-            else -> InteractSettings.GOOD_NET_SETTINGS
-        }.copy()
-        
-        interactSettings.scrollCount = scrollCount
-        interactSettings.scrollInterval = scrollInterval
-        interactSettings.scriptTimeout = scriptTimeout
-        interactSettings.pageLoadTimeout = pageLoadTimeout
-        
+
+        val interactSettings = InteractSettings.create(interactLevel)
+
+        if (!isDefault("scrollCount")) interactSettings.scrollCount = scrollCount
+        if (!isDefault("scrollInterval")) interactSettings.scrollInterval = scrollInterval
+        if (!isDefault("scriptTimeout")) interactSettings.scriptTimeout = scriptTimeout
+        if (!isDefault("pageLoadTimeout")) interactSettings.pageLoadTimeout = pageLoadTimeout
+
         interactSettings.overrideConfiguration(conf)
     }
     
@@ -949,8 +971,12 @@ open class LoadOptions constructor(
         
         return other is LoadOptions && other.toString() == toString()
     }
-    
-    // TODO: hashCode can not rely on any member filed because static filed defaultParams uses hashCode before
+
+    /**
+     * The hash code is based on the normalized arguments string.
+     *
+     * TODO: hashCode can not rely on any member filed because static filed defaultParams uses hashCode before
+     * */
     override fun hashCode(): Int {
         return super.hashCode()
     }
