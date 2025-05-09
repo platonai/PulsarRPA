@@ -23,27 +23,33 @@ import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.jvm.kotlinProperty
 
 /**
- * Load options are a set of parameters that define how a page should be loaded, including any specific
- * behaviors or conditions that should be applied during the loading process.
+ * Load options define the parameters controlling how web pages are fetched, processed, and stored.
  *
- * The load options, or load arguments, can be a plain string in the form of command line parameters,
- * and can be parsed into a [LoadOptions] object.
+ * These options can be specified as command-line style parameters and parsed into a [LoadOptions] object.
+ * They control aspects such as caching behavior, page interaction, content requirements, and more.
+ *
+ * Examples:
  *
  * ```kotlin
- * // parse a string into a LoadOptions object
+ * // Parse a string into a LoadOptions object
  * val options = session.options('-expires 1d -itemExpires 1d -ignoreFailure -parse -storeContent')
- * // fetch after 1d since last fetch
+ * 
+ * // Fetch after 1 day since last fetch
  * session.load('https://www.jd.com', '-expires 1d')
- * // fetch immediately ignoring errors
+ * 
+ * // Force immediate fetch regardless of cache
  * session.load('https://www.jd.com', '-refresh')
- * // do not fetch after dead time
+ * 
+ * // Don't fetch after specified deadline
  * session.load('https://www.jd.com', '-deadline 2022-04-15T18:36:54.941Z')
- * // activate the parse phase
+ * 
+ * // Enable parsing phase
  * session.load('https://www.jd.com', '-parse')
- * // write the page content into storage
+ * 
+ * // Store page content in storage
  * session.load('https://www.jd.com', '-storeContent')
  * ```
- * */
+ */
 open class LoadOptions constructor(
     argv: Array<String>,
     var conf: VolatileConfig,
@@ -53,8 +59,9 @@ open class LoadOptions constructor(
 ) : CommonOptions(argv) {
 
     /**
-     * The entity name of the page, for example, article, product, hotel, flower, etc., it's optional.
-     * */
+     * The entity name representing the type of content being crawled (e.g., article, product, hotel).
+     * Used for classification and specialized processing of different content types.
+     */
     @ApiPublic
     @Parameter(
         names = ["-e", "-entity", "--entity"],
@@ -63,8 +70,9 @@ open class LoadOptions constructor(
     var entity = ""
     
     /**
-     * The task label is optional and may be utilized to categorize tasks into groups.
-     * */
+     * Optional label used to categorize tasks into logical groups.
+     * Useful for organizing related crawl tasks and filtering/querying results.
+     */
     @ApiPublic
     @Parameter(
         names = ["-l", "-label", "--label"],
@@ -73,8 +81,9 @@ open class LoadOptions constructor(
     var label = ""
     
     /**
-     * The taskId is optional and serves to differentiate tasks if needed.
-     * */
+     * Optional identifier to distinguish between separate tasks.
+     * Provides a unique reference for individual crawl operations within the system.
+     */
     @ApiPublic
     @Parameter(
         names = ["-taskId", "--task-id"],
@@ -83,10 +92,11 @@ open class LoadOptions constructor(
     var taskId = ""
 
     /**
-     * Task time is usually used to denote the name of a batch of tasks.
-     *
-     * The task time is initialized to Instant.EPOCH, so parse() and toString() operations are symmetric.
-     * */
+     * Timestamp used to identify a batch of related tasks.
+     * 
+     * Initialized to Instant.EPOCH to maintain symmetry between parse() and toString() operations.
+     * When specified, groups tasks that belong to the same logical batch or execution window.
+     */
     @ApiPublic
     @Parameter(
         names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
@@ -95,9 +105,11 @@ open class LoadOptions constructor(
     var taskTime = Instant.EPOCH
     
     /**
-     * The task's deadline indicates the time by which it should be completed. If this deadline is surpassed,
-     * the task must be promptly discarded.
-     * */
+     * Absolute deadline after which the task should be discarded.
+     * 
+     * If the current time exceeds this deadline, the task will be immediately abandoned.
+     * Used to prevent processing of stale or irrelevant tasks.
+     */
     @ApiPublic
     @Parameter(
         names = ["-deadline", "--deadline"], converter = InstantConverter::class,
@@ -107,8 +119,9 @@ open class LoadOptions constructor(
     var deadline = DateTimes.doomsday
     
     /**
-     * The auth token, used for authorization purpose.
-     * */
+     * Authentication token for authorized access to protected resources.
+     * Can be used to access restricted content or APIs requiring authentication.
+     */
     @ApiPublic
     @Parameter(
         names = ["-authToken", "--auth-token"],
@@ -117,9 +130,11 @@ open class LoadOptions constructor(
     var authToken = ""
     
     /**
-     * Specify whether the load execution is read-only or not. When a load execution is read-only, it ensures that the
-     * webpage loaded remains unchanged by the execution.
-     * */
+     * When enabled, ensures the crawler operates in a non-destructive mode.
+     * 
+     * Prevents modifications to the target page during interactions, making the crawl
+     * operation completely passive without side effects on the target site.
+     */
     @ApiPublic
     @Parameter(
         names = ["-readonly"],
@@ -129,8 +144,11 @@ open class LoadOptions constructor(
     var readonly = false
     
     /**
-     * If true, fetch the url as a resource without browser rendering.
-     * */
+     * When true, fetches the URL as a basic resource without browser rendering.
+     * 
+     * Useful for simple file downloads, APIs, or static content where browser
+     * rendering and JavaScript execution aren't necessary.
+     */
     @ApiPublic
     @Parameter(
         names = ["-resource", "-isResource"],
@@ -139,43 +157,22 @@ open class LoadOptions constructor(
     var isResource = false
 
     /**
-     * Represents the priority of a task, determining the order of execution.
-     *
-     * The priority value is an integer where a smaller value indicates a higher priority.
-     * This is consistent with [java.util.concurrent.PriorityBlockingQueue].
-     *
-     * If the priority value is not within the range defined by [Priority13], it will be adjusted to the nearest valid value.
-     * For example, a priority of -2001 will be adjusted to [Priority13.HIGHER2].
-     *
-     * Note: The priority specified in args or LoadOptions takes precedence over the priority in [UrlAware], [Hyperlink], etc.
-     *
-     * Priority can be set in the following ways:
-     * 1. In the url, for example, `http://example.com -priority -2000`
-     * 2. In the args, for example, `Hyperlink("http://example.com", "", args = "-priority -2000")`
-     * 3. Int the [LoadOptions] object, for example, `session.load("http://example.com", options.apply { priority = -2000 })`
-     * 4. In the [UrlAware] object, for example, `Hyperlink("http://example.com", "", priority = -2000)`
-     *
-     * If a url is normalized like this:
-     * ```kotlin
-     * session.normalize(url: UrlAware, options: LoadOptions)
-     * ```
-     * The priority will be set in the following order:
-     *
-     * 1. The priority in the url
-     * 2. The priority in the args
-     * 3. The priority in the options
-     *
-     * Note: Consider use url args to set priority only.
-     *
-     * Example:
-     *
-     * ```kotlin
-     * session.load(url, "-priority 2000")
-     *
-     * val options = session.options("-priority 2000")
-     * session.load(url, options)
-     * ```
-     *
+     * Determines task execution priority in the crawl queue.
+     * 
+     * Lower numerical values indicate higher priority (consistent with [java.util.concurrent.PriorityBlockingQueue]).
+     * Values outside the valid range defined by [Priority13] will be adjusted to the nearest valid value.
+     * 
+     * Priority can be specified in multiple ways:
+     * 1. In the URL: `http://example.com -priority -2000`
+     * 2. In args: `Hyperlink("http://example.com", "", args = "-priority -2000")`
+     * 3. In LoadOptions: `session.load("http://example.com", options.apply { priority = -2000 })`
+     * 4. In UrlAware: `Hyperlink("http://example.com", "", priority = -2000)`
+     * 
+     * When normalizing URLs, priorities are resolved in this order:
+     * 1. Priority in the URL
+     * 2. Priority in the args
+     * 3. Priority in the options
+     * 
      * @see Priority13
      * @see Priority13.NORMAL
      */
@@ -187,15 +184,15 @@ open class LoadOptions constructor(
     var priority = 0
 
     /**
-     * The expiry duration. If the expiry time is exceeded, the page should be fetched from the Internet.
-     *
-     * The term "expires" usually be used for an expiry time, for example, http-equiv, or in cookie specification,
-     * guess it means "expires at".
-     *
-     * The expires field supports both ISO-8601 standard and hadoop time duration format:
-     * 1. ISO-8601 standard : PnDTnHnMn.nS
-     * 2. Hadoop time duration format: 100s, 1m, 1h, 1d, valid units are : ns, us, ms, s, m, h, d.
-     * */
+     * Duration after which cached content is considered stale and should be refetched.
+     * 
+     * Controls the crawler's caching behavior by specifying how long fetched content remains valid.
+     * When the duration since last fetch exceeds this value, the page will be fetched again.
+     * 
+     * Supports two time format standards:
+     * - ISO-8601 duration format: PnDTnHnMn.nS
+     * - Hadoop time duration format: 100s, 1m, 1h, 1d (units: ns, us, ms, s, m, h, d)
+     */
     @ApiPublic
     @Parameter(
         names = ["-i", "-expire", "-expires", "--expire"], converter = DurationConverter::class,
@@ -205,12 +202,15 @@ open class LoadOptions constructor(
     var expires = LoadOptionDefaults.expires
     
     /**
-     * The expiry time point. If the expiry time is exceeded, the page should be fetched from the Internet.
-     *
-     * Accept the following format:
-     * 1. yyyy-MM-dd[ HH[:mm[:ss]]]
-     * 2. ISO_INSTANT, or yyyy-MM-ddTHH:mm:ssZ
-     * */
+     * Absolute timestamp after which cached content should be refetched.
+     * 
+     * Provides an explicit expiration point rather than a relative duration.
+     * When current time exceeds this value, the page will be fetched again regardless of when it was last fetched.
+     * 
+     * Accepts the following timestamp formats:
+     * - yyyy-MM-dd[ HH[:mm[:ss]]]
+     * - ISO_INSTANT (yyyy-MM-ddTHH:mm:ssZ)
+     */
     @ApiPublic
     @Parameter(
         names = ["-expireAt", "--expire-at"], converter = InstantConverter::class,
@@ -220,8 +220,11 @@ open class LoadOptions constructor(
     var expireAt = LoadOptionDefaults.expireAt
     
     /**
-     * The selector to extract links in portal pages.
-     * */
+     * CSS selector used to identify and extract links from portal/index pages.
+     * 
+     * Specifies which elements containing links should be extracted for subsequent crawling.
+     * If not specified, default link extraction behavior will be used.
+     */
     @ApiPublic
     @Parameter(
         names = ["-ol", "-outLink", "-outLinkSelector", "--out-link-selector", "-outlink", "-outlinkSelector", "--outlink-selector"],
@@ -230,8 +233,11 @@ open class LoadOptions constructor(
     var outLinkSelector = ""
     
     /**
-     * The pattern to select out links in the portal page.
-     * */
+     * Regular expression pattern to filter extracted outlinks.
+     * 
+     * Only links matching this pattern will be followed after extraction.
+     * Default pattern (.+) matches all URLs.
+     */
     @ApiPublic
     @Parameter(
         names = ["-olp", "-outLinkPattern", "--out-link-pattern"],
@@ -240,9 +246,11 @@ open class LoadOptions constructor(
     var outLinkPattern = ".+"
     
     /**
-     * The selector for element to click.
-     * TODO: not implemented yet
-     * */
+     * CSS selector for elements to be clicked during page interaction.
+     * 
+     * Used to simulate user clicks on specific elements (e.g., "Load more" buttons).
+     * NOTE: This feature is planned but not fully implemented yet.
+     */
     @ApiPublic
     @Parameter(
         names = ["-click", "-clickTarget", "--click-target"],
@@ -251,9 +259,11 @@ open class LoadOptions constructor(
     var clickTarget = ""
     
     /**
-     * The selector for next page anchor.
-     * TODO: not implemented yet
-     * */
+     * CSS selector to identify the "next page" link for pagination handling.
+     * 
+     * Used to navigate through multi-page content by automatically following pagination links.
+     * NOTE: This feature is planned but not fully implemented yet.
+     */
     @ApiPublic
     @Parameter(
         names = ["-np", "-nextPage", "-nextPageSelector", "--next-page-selector"],
@@ -262,16 +272,21 @@ open class LoadOptions constructor(
     var nextPageSelector = ""
     
     /**
-     * The iframe id to switch to.
-     * TODO: not implemented yet
-     * */
+     * The index of the iframe to focus on during page interaction.
+     * 
+     * Used to target specific iframes within complex pages for content extraction.
+     * NOTE: This feature is planned but not fully implemented yet.
+     */
     @ApiPublic
     @Parameter(names = ["-ifr", "-iframe", "--iframe"], description = "The iframe id to switch to")
     var iframe = 0
     
     /**
-     * Specify how many links to extract for out pages.
-     * */
+     * Maximum number of outlinks to extract and follow from a single page.
+     * 
+     * Limits the number of child URLs to be processed from portal/index pages
+     * to prevent excessive crawling depth or breadth.
+     */
     @ApiPublic
     @Parameter(
         names = ["-tl", "-topLinks", "--top-links"],
@@ -280,9 +295,11 @@ open class LoadOptions constructor(
     var topLinks = 20
 
     /**
-     * The selector specified element should have a non-blank text, the system should
-     * wait until the element is filled by a non-blank text, or until it times out.
-     * */
+     * CSS selector for an element that must contain non-blank text before proceeding.
+     * 
+     * The crawler will wait until the specified element contains text or until a timeout occurs.
+     * Useful for ensuring that dynamic content has properly loaded before processing the page.
+     */
     @ApiPublic
     @Parameter(
         names = ["-wnb", "-waitNonBlank", "--wait-non-blank"],
@@ -291,9 +308,11 @@ open class LoadOptions constructor(
     var waitNonBlank: String = ""
     
     /**
-     * The selector specified element should have a non-blank text, the task should
-     * be retried if the element's text content is empty or blank.
-     * */
+     * CSS selector for an element that must contain non-blank text for valid retrieval.
+     * 
+     * If the specified element's text is empty or blank, the page fetch will be considered
+     * unsuccessful and retried. Used to validate that critical content is present.
+     */
     @ApiPublic
     @Parameter(
         names = ["-rnb", "-requireNotBlank"],
@@ -302,10 +321,11 @@ open class LoadOptions constructor(
     var requireNotBlank: String = ""
     
     /**
-     * The minimum page size expected, if it is less than that, it will need to be re-fetched.
-     *
-     * The unit is byte.
-     * */
+     * Minimum acceptable page size in bytes to consider the fetch successful.
+     * 
+     * Pages smaller than this threshold will be treated as incomplete and refetched.
+     * Helps detect truncated downloads or error pages that are abnormally small.
+     */
     @ApiPublic
     @Parameter(
         names = ["-rs", "-requireSize", "--require-size"],
@@ -314,9 +334,11 @@ open class LoadOptions constructor(
     var requireSize = 0
     
     /**
-     * The minimum number of images expected in the page, if it is less than that,
-     * it will need to be re-fetched.
-     * */
+     * Minimum number of images required for a page to be considered complete.
+     * 
+     * Pages with fewer images than this threshold will be refetched.
+     * Useful for ensuring media-rich content has properly loaded.
+     */
     @ApiPublic
     @Parameter(
         names = ["-ri", "-requireImages", "--require-images"],
@@ -325,9 +347,11 @@ open class LoadOptions constructor(
     var requireImages = 0
     
     /**
-     * The minimum number of anchors expected in the page, if it is less than that,
-     * it will need to be re-fetched.
-     * */
+     * Minimum number of anchor (link) elements required for a page to be considered complete.
+     * 
+     * Pages with fewer links than this threshold will be refetched.
+     * Useful for validating that navigational elements have properly loaded.
+     */
     @ApiPublic
     @Parameter(
         names = ["-ra", "-requireAnchors", "--require-anchors"],
@@ -336,10 +360,11 @@ open class LoadOptions constructor(
     var requireAnchors = 0
     
     /**
-     * The fetch mode.
-     *
-     * Only BROWSER is supported currently.
-     * */
+     * Specifies the mechanism used to fetch web content.
+     * 
+     * Currently, only BROWSER mode is fully supported, which uses a headless browser
+     * for rendering and JavaScript execution during content retrieval.
+     */
     @Parameter(
         names = ["-fm", "-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
         description = "The fetch mode"
@@ -347,9 +372,11 @@ open class LoadOptions constructor(
     var fetchMode = FetchMode.BROWSER
     
     /**
-     * Specify which browser to use, google chrome is the default.
-     * TODO: session scope browser choice is not support by now
-     * */
+     * Specifies which browser engine to use for rendering pages.
+     * 
+     * Google Chrome is the default and recommended browser engine.
+     * NOTE: Session-scope browser selection is not yet fully supported.
+     */
     @Parameter(
         names = ["-b", "-browser", "--browser"], converter = BrowserTypeConverter::class,
         description = "Specify which browser to use, google chrome is the default"
@@ -357,8 +384,11 @@ open class LoadOptions constructor(
     var browser = LoadOptionDefaults.browser
     
     /**
-     * The number of times the page should be scrolled down after it has just been opened in a browser.
-     * */
+     * Number of times to scroll down the page after initial load.
+     * 
+     * Controls how aggressively the crawler attempts to load additional content
+     * by simulating scroll events. Higher values trigger more dynamic content loading.
+     */
     @Parameter(
         names = ["-sc", "-scrollCount", "--scroll-count"],
         description = "The count to scroll down after a page being opened in a browser"
@@ -366,8 +396,12 @@ open class LoadOptions constructor(
     var scrollCount = InteractSettings.DEFAULT.scrollCount
     
     /**
-     * The interval to scroll down.
-     * */
+     * Time interval between successive scroll actions.
+     * 
+     * Controls the pace of scrolling to allow time for content to load between scrolls.
+     * Shorter intervals may miss content that takes longer to load, while longer intervals
+     * increase overall crawl time.
+     */
     @Parameter(
         names = ["-si", "-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
         description = "The interval to scroll down after a page being opened in a browser"
@@ -375,8 +409,11 @@ open class LoadOptions constructor(
     var scrollInterval = InteractSettings.DEFAULT.scrollInterval
     
     /**
-     * The maximum time to perform javascript injected into the browser.
-     * */
+     * Maximum time allowed for injected JavaScript execution before timeout.
+     * 
+     * Limits how long custom scripts can run during page interaction to prevent
+     * hanging on problematic scripts.
+     */
     @Parameter(
         names = ["-stt", "-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
         description = "The maximum time to perform javascript injected into the browser"
@@ -384,8 +421,11 @@ open class LoadOptions constructor(
     var scriptTimeout = InteractSettings.DEFAULT.scriptTimeout
     
     /**
-     * The maximum time to wait for a page to finish.
-     * */
+     * Maximum time to wait for page loading to complete.
+     * 
+     * Controls how long the crawler waits for a page to fully load before considering
+     * it ready for processing or timing out if loading takes too long.
+     */
     @Parameter(
         names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
         description = "The maximum time to wait for a page to finish"
@@ -393,9 +433,11 @@ open class LoadOptions constructor(
     var pageLoadTimeout = InteractSettings.DEFAULT.pageLoadTimeout
     
     /**
-     * The browser used to visit the item pages.
-     * TODO: session scope browser choice is not support by now
-     * */
+     * Browser to use specifically for item detail pages (as opposed to index pages).
+     * 
+     * Allows using different browser configurations for detail pages vs. index pages.
+     * NOTE: Session-scope browser selection is not yet fully supported.
+     */
     @Parameter(
         names = ["-ib", "-itemBrowser", "--item-browser"], converter = BrowserTypeConverter::class,
         description = "The browser used to visit the item pages"
@@ -403,8 +445,11 @@ open class LoadOptions constructor(
     var itemBrowser = LoadOptionDefaults.browser
     
     /**
-     * The same as expires, but only works for item pages.
-     * */
+     * Cache expiration duration specifically for item detail pages.
+     * 
+     * Controls how long item detail pages remain valid in the cache before requiring refresh.
+     * Works identically to [expires] but applies only to item pages, not index pages.
+     */
     @ApiPublic
     @Parameter(
         names = ["-ii", "-itemExpire", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
@@ -413,8 +458,11 @@ open class LoadOptions constructor(
     var itemExpires = ChronoUnit.DECADES.duration
     
     /**
-     * If an item page is expired, it should be fetched from the web again.
-     * */
+     * Absolute timestamp after which item detail pages should be refetched.
+     * 
+     * Works identically to [expireAt] but applies only to item pages, not index pages.
+     * Provides a fixed point in time after which cached item pages are considered invalid.
+     */
     @ApiPublic
     @Parameter(
         names = ["-itemExpireAt", "--item-expire-at"], converter = InstantConverter::class,
@@ -423,8 +471,11 @@ open class LoadOptions constructor(
     var itemExpireAt = DateTimes.doomsday
     
     /**
-     * The same as scrollCount, but only works for item pages.
-     * */
+     * Number of scroll actions for item detail pages.
+     * 
+     * Works identically to [scrollCount] but applies only to item pages.
+     * Controls how thoroughly dynamic content is loaded on item detail pages.
+     */
     @Parameter(
         names = ["-isc", "-itemScrollCount", "--item-scroll-count"],
         description = "The same as scrollCount, but only works for item pages"
@@ -432,8 +483,11 @@ open class LoadOptions constructor(
     var itemScrollCount = scrollCount
     
     /**
-     * The same as scrollInterval, but only works for item pages.
-     * */
+     * Time interval between scrolls for item detail pages.
+     * 
+     * Works identically to [scrollInterval] but applies only to item pages.
+     * Controls the pace of content loading on item detail pages.
+     */
     @Parameter(
         names = ["-isi", "-itemScrollInterval", "--item-scroll-interval"], converter = DurationConverter::class,
         description = "The same as scrollInterval, but only works for item pages"
@@ -441,8 +495,11 @@ open class LoadOptions constructor(
     var itemScrollInterval = scrollInterval
     
     /**
-     * The same as scriptTimeout, but only works for item pages.
-     * */
+     * JavaScript execution timeout for item detail pages.
+     * 
+     * Works identically to [scriptTimeout] but applies only to item pages.
+     * Controls how long scripts can run when processing item detail pages.
+     */
     @Parameter(
         names = ["-ist", "-itemScriptTimeout", "--item-script-timeout"], converter = DurationConverter::class,
         description = "The same as scriptTimeout, but only works for item pages"
@@ -450,8 +507,11 @@ open class LoadOptions constructor(
     var itemScriptTimeout = scriptTimeout
     
     /**
-     * The same as pageLoadTimeout, but only works for item pages.
-     * */
+     * Page load timeout for item detail pages.
+     * 
+     * Works identically to [pageLoadTimeout] but applies only to item pages.
+     * Controls maximum wait time for item detail pages to load.
+     */
     @Parameter(
         names = ["-iplt", "-itemPageLoadTimeout", "--item-page-load-timeout"], converter = DurationConverter::class,
         description = "The same as pageLoadTimeout, but only works for item pages"
@@ -459,9 +519,11 @@ open class LoadOptions constructor(
     var itemPageLoadTimeout = pageLoadTimeout
     
     /**
-     * The selector specified element should have a non-blank text, the system should
-     * wait until the element is filled by a non-blank text, or until it times out.
-     * */
+     * CSS selector for non-blank text validation on item detail pages.
+     * 
+     * Works identically to [waitNonBlank] but applies only to item pages.
+     * Makes the crawler wait until the specified element contains text.
+     */
     @ApiPublic
     @Parameter(
         names = ["-iwnb", "-itemWaitNonBlank", "--item-wait-non-blank"],
@@ -470,8 +532,11 @@ open class LoadOptions constructor(
     var itemWaitNonBlank: String = ""
     
     /**
-     * Re-fetch the item pages if the required text is blank.
-     * */
+     * CSS selector for content validation on item detail pages.
+     * 
+     * Works identically to [requireNotBlank] but applies only to item pages.
+     * Pages without text in this selector will be considered invalid and refetched.
+     */
     @ApiPublic
     @Parameter(
         names = ["-irnb", "-itemRequireNotBlank", "--item-require-not-blank"],
@@ -480,8 +545,11 @@ open class LoadOptions constructor(
     var itemRequireNotBlank = ""
     
     /**
-     * Re-fetch item pages smaller than requireSize.
-     * */
+     * Minimum page size required for item detail pages.
+     * 
+     * Works identically to [requireSize] but applies only to item pages.
+     * Item pages smaller than this threshold (in bytes) will be refetched.
+     */
     @ApiPublic
     @Parameter(
         names = ["-irs", "-itemRequireSize", "--item-require-size"],
@@ -490,8 +558,11 @@ open class LoadOptions constructor(
     var itemRequireSize = 0
     
     /**
-     * Re-fetch item pages whose images is less than requireImages.
-     * */
+     * Minimum number of images required for item detail pages.
+     * 
+     * Works identically to [requireImages] but applies only to item pages.
+     * Item pages with fewer images than this threshold will be refetched.
+     */
     @ApiPublic
     @Parameter(
         names = ["-iri", "-itemRequireImages", "--item-require-images"],
@@ -500,8 +571,11 @@ open class LoadOptions constructor(
     var itemRequireImages = 0
     
     /**
-     * Re-fetch item pages with fewer anchors than the required number specified by requireAnchors.
-     * */
+     * Minimum number of links required for item detail pages.
+     * 
+     * Works identically to [requireAnchors] but applies only to item pages.
+     * Item pages with fewer links than this threshold will be refetched.
+     */
     @ApiPublic
     @Parameter(
         names = ["-ira", "-itemRequireAnchors", "--item-require-anchors"],
@@ -510,8 +584,11 @@ open class LoadOptions constructor(
     var itemRequireAnchors = 0
     
     /**
-     * Persist fetched pages as soon as possible.
-     * */
+     * Controls whether fetched pages are immediately persisted to storage.
+     * 
+     * When enabled, pages are saved to the database as soon as they're fetched.
+     * Disabling this can improve performance for tasks where persistence isn't needed.
+     */
     @Parameter(
         names = ["-persist", "--persist"], arity = 1,
         description = "Persist fetched pages as soon as possible"
@@ -519,8 +596,11 @@ open class LoadOptions constructor(
     var persist = true
     
     /**
-     * If false, do not persist the page content which is usually very large.
-     * */
+     * Controls whether page content (HTML) is stored in the database.
+     * 
+     * The page content is typically the largest part of a page record. Disabling storage
+     * can significantly reduce database size when only metadata is needed.
+     */
     @Parameter(
         names = ["-sct", "-storeContent", "--store-content"], arity = 1,
         description = "If false, do not persist the page content which is usually very large."
@@ -528,9 +608,11 @@ open class LoadOptions constructor(
     var storeContent = LoadOptionDefaults.storeContent
     
     /**
-     * If the option is set, do not persist the page content which is usually very large.
-     * If the option is true, it overrides [storeContent].
-     *
+     * When enabled, page content (HTML) will not be stored in the database.
+     * 
+     * This is the inverse of [storeContent] and takes precedence when both are specified.
+     * Useful for saving storage space when only page metadata is needed.
+     * 
      * Example:
      *
      * ```kotlin
@@ -539,7 +621,7 @@ open class LoadOptions constructor(
      * val options = session.options("-dropContent")
      * session.load(url, options)
      * ```
-     * */
+     */
     @Parameter(
         names = ["-dropContent", "--drop-content"],
         description = "If the option exists, do not persist the page content which is usually very large."
@@ -547,12 +629,15 @@ open class LoadOptions constructor(
     var dropContent = false
 
     /**
-     * Refresh the fetch state of a page, clear the retry counters.
-     * If true, the page should be fetched, just like we click the refresh button on a real browser.
-     * The option can be explained as follows: -refresh = -ignoreFailure -i 0s and set page.fetchRetries = 0.
-     *
-     * TODO: consider add an option itemRefresh
-     * */
+     * Forces an immediate fetch of the page, ignoring cache state and past failures.
+     * 
+     * Acts as a shorthand for setting multiple options:
+     * - Sets expires to 0s (immediate expiration)
+     * - Enables ignoreFailure
+     * - Resets fetch retry counters
+     * 
+     * Equivalent to clicking refresh in a browser - fetches the latest version regardless of cache.
+     */
     @ApiPublic
     @Parameter(
         names = ["-refresh", "--refresh"],
@@ -567,8 +652,11 @@ open class LoadOptions constructor(
         }
     
     /**
-     * Retry fetching the page even if it's failed last time.
-     * */
+     * Attempts to fetch a page even if previous fetch attempts have failed.
+     * 
+     * By default, pages that have failed to fetch will be skipped until refresh is called.
+     * This option overrides that behavior and retries failed pages.
+     */
     @ApiPublic
     @Parameter(
         names = ["-ignF", "-ignoreFailure", "--ignore-failure"],
@@ -577,9 +665,11 @@ open class LoadOptions constructor(
     var ignoreFailure = LoadOptionDefaults.ignoreFailure
     
     /**
-     * Retry to fetch at most n times, if page.fetchRetries > nMaxRetry,
-     * the page is marked as gone and do not fetch it again until -refresh is set to clear page.fetchRetries
-     * */
+     * Maximum number of fetch retries before marking a page as permanently failed.
+     * 
+     * Once a page has been retried this many times without success, it will be considered
+     * "gone" and won't be attempted again unless explicitly refreshed.
+     */
     @Parameter(
         names = ["-nmr", "-nMaxRetry", "--n-max-retry"],
         description = "Retry to fetch at most n times, if page.fetchRetries > nMaxRetry," +
@@ -588,8 +678,11 @@ open class LoadOptions constructor(
     var nMaxRetry = 3
     
     /**
-     * Retry at most n times at fetch phase immediately if RETRY(1601) code return.
-     * */
+     * Maximum number of immediate retries during a single fetch operation.
+     * 
+     * When a RETRY status code (1601) is encountered, the system will retry
+     * immediately up to this many times before giving up on the current attempt.
+     */
     @Parameter(
         names = ["-njr", "-nJitRetry", "--n-jit-retry"],
         description = "Retry at most n times at fetch phase immediately if RETRY(1601) code return"
@@ -597,8 +690,11 @@ open class LoadOptions constructor(
     var nJitRetry = LoadOptionDefaults.nJitRetry
     
     /**
-     * If false, pages are flushed into database as soon as possible.
-     * */
+     * Controls when pages are flushed to the database.
+     * 
+     * When enabled, page writes are batched and delayed for better performance.
+     * When disabled, pages are written immediately for better data safety.
+     */
     @Parameter(
         names = ["-lazyFlush", "--lazy-flush"],
         description = "If false, pages are flushed into database as soon as possible"
@@ -606,25 +702,32 @@ open class LoadOptions constructor(
     var lazyFlush = LoadOptionDefaults.lazyFlush
     
     /**
-     * Run browser in incognito mode.
-     * Not used since the browser always running in temporary contexts.
-     * */
+     * Enables browser incognito/private mode for page fetching.
+     * 
+     * NOTE: This setting has limited effect since browsers always run in
+     * temporary contexts in the current implementation.
+     */
     @Beta
     @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
     var incognito = false
 
     /**
-     * Do not redirect.
-     * Ignored in browser mode since the browser handles the redirection itself.
-     * */
+     * Prevents following redirects when fetching a page.
+     * 
+     * NOTE: This setting has no effect in browser mode since browsers
+     * automatically handle redirects.
+     */
     @Parameter(names = ["-noRedirect", "--no-redirect"], description = "Do not redirect")
     var noRedirect = false
     
     /**
-     * If false, return the original page record but the redirect target's content,
-     * otherwise, return the page record of the redirected target.
-     * If we use a browser, redirections are handled by the browser so the flag is ignored.
-     * */
+     * Controls how redirects are handled in page records.
+     * 
+     * When enabled, the page record will reflect the final destination URL after redirects.
+     * When disabled, the original URL is preserved in the record (though content comes from the final URL).
+     * 
+     * NOTE: This setting has minimal effect in browser mode since browsers handle redirects internally.
+     */
     @Parameter(
         names = ["-hardRedirect", "--hard-redirect"],
         description = "If false, return the original page record but the redirect target's content," +
@@ -634,14 +737,20 @@ open class LoadOptions constructor(
     var hardRedirect = false
     
     /**
-     * If true, parse the page when it's just be fetched.
-     * */
+     * Enables immediate parsing of fetched pages.
+     * 
+     * When enabled, pages are parsed as soon as they're fetched, extracting links and other
+     * structured data. This is typically enabled for crawler operations.
+     */
     @Parameter(names = ["-ps", "-parse", "--parse"], description = "If true, parse the page when it's just be fetched.")
     var parse = LoadOptionDefaults.parse
     
     /**
-     * Reparse links if the page has been parsed before.
-     * */
+     * Forces re-parsing of links even for previously parsed pages.
+     * 
+     * When enabled, link extraction will be performed even if the page has been
+     * parsed before. Useful when link extraction rules have changed.
+     */
     @Parameter(
         names = ["-rpl", "-reparseLinks", "--reparse-links"],
         description = "Re-parse links if the page has been parsed before."
@@ -649,8 +758,11 @@ open class LoadOptions constructor(
     var reparseLinks = false
     
     /**
-     * If true, remove the query parameters in the url.
-     * */
+     * Removes query parameters from URLs during processing.
+     * 
+     * When enabled, query strings (parameters after '?') are stripped from URLs.
+     * Useful for treating URLs with different query parameters as the same resource.
+     */
     @Parameter(
         names = ["-ignoreUrlQuery", "--ignore-url-query"],
         description = "Remove the query parameters in the url"
@@ -658,8 +770,11 @@ open class LoadOptions constructor(
     var ignoreUrlQuery = false
     
     /**
-     * If true, no normalizer will be applied when parse links.
-     * */
+     * Disables URL normalization during link processing.
+     * 
+     * When enabled, extracted links are used exactly as found without normalization.
+     * This can lead to duplicate URLs in different formats being treated as distinct.
+     */
     @Parameter(
         names = ["-noNorm", "--no-link-normalizer"],
         description = "If true, no normalizer will be applied when parse links."
@@ -667,8 +782,11 @@ open class LoadOptions constructor(
     var noNorm = false
     
     /**
-     * If true, no filter will be applied when parse links.
-     * */
+     * Disables URL filtering during link processing.
+     * 
+     * When enabled, all extracted links are processed without filtering.
+     * This can lead to following links that would normally be excluded (like external domains).
+     */
     @Parameter(
         names = ["-noFilter", "--no-link-filter"],
         description = "If true, no filter will be applied when parse links."
@@ -676,8 +794,8 @@ open class LoadOptions constructor(
     var noFilter = false
     
     /**
-     * Indicates the network condition.
-     * */
+     * Deprecated network condition parameter, use interactLevel instead.
+     */
     @Deprecated("Use interactBehavior instead", ReplaceWith("options.interactBehavior"))
     @Parameter(
         names = ["-netCond", "-netCondition", "--net-condition"],
@@ -687,16 +805,18 @@ open class LoadOptions constructor(
     var netCondition = Condition.GOOD
 
     /**
-     * Controls the level of interaction with the page during crawling.
-     *
-     * Higher interaction levels may improve content completeness and quality,
-     * but typically reduce performance due to slower page processing.
-     *
-     * Lower levels favor speed but may miss dynamically loaded content.
-     *
+     * Controls the level of interaction with web pages during crawling.
+     * 
+     * This setting balances content quality against performance:
+     * - Higher levels: More thorough interaction (scrolling, waiting, etc.) produces better content
+     *   extraction but slower performance
+     * - Lower levels: Minimal interaction for faster crawling but potentially missing dynamic content
+     * 
+     * This is the primary setting for controlling how aggressively the crawler
+     * interacts with pages to discover content.
+     * 
      * @see InteractLevel
      * @see InteractSettings
-     * @see InteractSettings.DEFAULT
      */
     @Parameter(
         names = ["-ilv", "-interactLevel", "--interact-level"],
@@ -706,8 +826,11 @@ open class LoadOptions constructor(
     var interactLevel = InteractLevel.DEFAULT
 
     /**
-     * The test level, 0 to disable, we will talk more in test mode.
-     * */
+     * Enables test mode with various verbosity levels.
+     * 
+     * Higher values produce more detailed logging and output.
+     * Set to 0 to disable test mode completely.
+     */
     @Parameter(
         names = ["-test", "--test"],
         description = "The test level, 0 to disable, we will talk more in test mode"
@@ -715,29 +838,40 @@ open class LoadOptions constructor(
     var test = LoadOptionDefaults.test
     
     /**
-     * The load option version.
-     * */
+     * Version identifier for the load options format.
+     * 
+     * Used to track compatibility between different versions of the load options parser.
+     */
     @Parameter(names = ["-v", "-version", "--version"], description = "The load option version")
     var version = "20220918"
     
     /**
-     * Get the corrected [outLinkSelector] or null. See [outLinkSelector] for more information.
-     * */
+     * Returns the outLinkSelector if it's non-blank, or null otherwise.
+     * 
+     * Provides a convenient way to check if an outlink selector has been specified.
+     */
     val outLinkSelectorOrNull
         get() = outLinkSelector.takeIf { it.isNotBlank() }
 
     /**
-     * Enable the page event handlers and return it.
-     * */
+     * Returns the page event handlers, initializing them if needed.
+     * 
+     * Ensures event handlers are available for the main page processing.
+     */
     val eventHandlers: PageEventHandlers get() = enableEventHandlers()
+    
     /**
-     * Enable the item event handlers and return it.
-     * */
+     * Returns the item event handlers, initializing them if needed.
+     * 
+     * Ensures event handlers are available for item page processing.
+     */
     val itemEventHandlers: PageEventHandlers get() = enableItemEventHandlers()
 
     /**
-     * Find out the modified fields and return a [Params].
-     * */
+     * Returns parameters that have been modified from their defaults.
+     * 
+     * Useful for showing only the non-default options that are in effect.
+     */
     open val modifiedParams: Params
         get() {
             val rowFormat = "%40s: %s"
@@ -750,8 +884,10 @@ open class LoadOptions constructor(
         }
     
     /**
-     * Find out the modified fields and return a map.
-     * */
+     * Returns a map of option names to their modified values.
+     * 
+     * Includes only options that differ from their defaults.
+     */
     open val modifiedOptions: Map<String, Any>
         get() {
             val fields = LoadOptions::class.java.declaredFields
@@ -762,21 +898,33 @@ open class LoadOptions constructor(
         }
     
     /**
-     * The constructor.
-     * */
+     * Additional constructor that accepts a string of arguments.
+     */
     protected constructor(args: String, conf: VolatileConfig) : this(split(args), conf)
     
     /**
-     * The constructor.
-     * */
+     * Additional constructor that copies settings from another LoadOptions instance.
+     */
     protected constructor(args: String, other: LoadOptions) :
         this(split(args), other.conf, other.rawEvent, other.rawItemEvent, other.referrer)
     
+    /**
+     * Checks if the parser phase should be activated based on current settings.
+     * 
+     * Returns true if either explicit parsing is enabled or if content validation
+     * requiring parsing is requested.
+     */
     fun parserEngaged() = parse || requireNotBlank.isNotBlank()
     
     /**
-     * Parse the arguments into [LoadOptions] with JCommander and with bug fixes.
-     * */
+     * Parses command-line arguments into this LoadOptions object.
+     * 
+     * In addition to standard parameter parsing, it also:
+     * 1. Fixes special handling for zero-arity boolean parameters
+     * 2. Corrects the outLinkSelector format
+     * 
+     * @return true if parsing was successful
+     */
     override fun parse(): Boolean {
         val b = super.parse()
         if (b) {
@@ -795,8 +943,13 @@ open class LoadOptions constructor(
     }
     
     /**
-     * Create a new [LoadOptions] object for item pages.
-     * */
+     * Creates a new LoadOptions instance specifically for item page processing.
+     * 
+     * The new instance applies item-specific options to the main options for
+     * processing detail pages rather than index pages.
+     * 
+     * @return a new LoadOptions instance optimized for item page processing
+     */
     open fun createItemOptions(): LoadOptions {
         val itemOptions = clone()
         itemOptions.itemOptions2MajorOptions()
@@ -807,12 +960,16 @@ open class LoadOptions constructor(
     }
     
     /**
-     * Check if the page expires.
-     *
-     * A page is expired when:
-     * 1. the last fetch time is before [expireAt] and now is after [expireAt]
-     * 2. (the last fetch time + [expires]) is exceeded
-     * */
+     * Determines if a page should be considered expired based on its last fetch time.
+     * 
+     * A page is considered expired when any of these conditions is true:
+     * 1. The refresh flag is set (forcing immediate refresh)
+     * 2. Current time is after expireAt and the last fetch was before expireAt
+     * 3. The time since last fetch exceeds the expires duration
+     * 
+     * @param prevFetchTime when the page was last fetched
+     * @return true if the page should be fetched again
+     */
     fun isExpired(prevFetchTime: Instant): Boolean {
         val now = Instant.now()
         return when {
@@ -824,16 +981,20 @@ open class LoadOptions constructor(
     }
     
     /**
-     * If the page is dead, drop the task as soon as possible.
-     * */
+     * Checks if the task's deadline has passed and it should be abandoned.
+     * 
+     * @return true if the current time is after the deadline
+     */
     fun isDead(): Boolean {
         return deadline < Instant.now()
     }
     
     /**
-     * Convert the item options to major options. The system do not use item options directly,
-     * we have to do the convert before we process item pages.
-     * */
+     * Converts item-specific options to main options for item page processing.
+     * 
+     * This method is called when transitioning from processing index pages to
+     * detail pages, applying the item-specific settings as the new main settings.
+     */
     open fun itemOptions2MajorOptions() {
         // Apply item options to major options
         expires = itemExpires
@@ -869,19 +1030,21 @@ open class LoadOptions constructor(
     }
     
     /**
-     * Write option values to [conf].
-     *
-     * [LoadOptions] is not globally visible, we have to pass values to modules which can not see it
-     * through a [VolatileConfig] object.
-     * */
+     * Copies option values to the configuration object for use by other components.
+     * 
+     * @return the updated configuration object
+     */
     fun overrideConfiguration() = overrideConfiguration(this.conf)
     
     /**
-     * Write option values to [conf].
-     *
-     * [LoadOptions] is not globally visible, we have to pass values to modules which can not see it
-     * through a [VolatileConfig] object.
-     * */
+     * Copies option values to the provided configuration object for use by other components.
+     * 
+     * Since LoadOptions isn't globally accessible, this method transfers settings to
+     * a VolatileConfig that can be passed to other modules.
+     * 
+     * @param conf the configuration to update
+     * @return the updated configuration object
+     */
     fun overrideConfiguration(conf: VolatileConfig?): VolatileConfig? {
         setInteractionSettings()
 
@@ -895,6 +1058,12 @@ open class LoadOptions constructor(
         return conf
     }
     
+    /**
+     * Configures interaction settings based on the current options.
+     * 
+     * Updates the interaction behavior configuration when any interaction-related
+     * options have been modified from their defaults.
+     */
     private fun setInteractionSettings() {
         val modified = listOf(
             "interactLevel",
@@ -919,18 +1088,21 @@ open class LoadOptions constructor(
     }
     
     /**
-     * Check if the option value is the default.
-     *
-     * @param optionName the option name, without the leading `-`
-     * */
+     * Checks if an option has its default value.
+     * 
+     * @param optionName the option name without leading dash
+     * @return true if the option has its default value
+     */
     open fun isDefault(optionName: String): Boolean {
          val value = optionFieldsMap[optionName]?.also { it.isAccessible = true }?.get(this) ?: return false
         return value == defaultParams[optionName]
     }
     
     /**
-     * Convert the [LoadOptions] to be a [Params].
-     * */
+     * Converts this LoadOptions to a Params object containing all options.
+     * 
+     * @return a Params object representing all options
+     */
     override fun getParams(): Params {
         val rowFormat = "%40s: %s"
         return optionFields.filter { it.annotations.any { it is Parameter } }
@@ -941,17 +1113,13 @@ open class LoadOptions constructor(
     }
     
     /**
-     * Convert the [LoadOptions] to a string.
-     * The two operations [parse] and [toString] are reversible:
-     *
-     * ```
-     * val args = "..."
-     * val options1 = LoadOptions.parse(args)
-     * val normalizedArgs = options1
-     * val options2 = LoadOptions.parse(normalizedArgs)
-     * require(normalizedArgs == options2.toString())
-     * ```
-     * */
+     * Converts this LoadOptions to a normalized command-line string.
+     * 
+     * Only includes options that differ from defaults. The resulting string
+     * can be parsed back into an equivalent LoadOptions object.
+     * 
+     * @return a normalized command-line string representing these options
+     */
     override fun toString(): String {
         return modifiedParams.distinct().sorted()
             .withCmdLineStyle(true)
@@ -961,8 +1129,14 @@ open class LoadOptions constructor(
     }
     
     /**
-     * The equality check, two [LoadOptions] are equal only when the normalized arguments string are equal.
-     * */
+     * Compares this LoadOptions with another object for equality.
+     * 
+     * Two LoadOptions are considered equal if their normalized string
+     * representations are identical.
+     * 
+     * @param other the object to compare with
+     * @return true if the objects are equal
+     */
     override fun equals(other: Any?): Boolean {
         if (this === other) {
             return true;
@@ -972,29 +1146,44 @@ open class LoadOptions constructor(
     }
 
     /**
-     * The hash code is based on the normalized arguments string.
-     *
-     * TODO: hashCode can not rely on any member filed because static filed defaultParams uses hashCode before
-     * */
+     * Returns a hash code for this LoadOptions.
+     * 
+     * @return the hash code
+     */
     override fun hashCode(): Int {
         return super.hashCode()
     }
     
     /**
-     * Create a new [LoadOptions] object with the same arguments string and event handlers.
-     * */
+     * Creates a copy of this LoadOptions with the same settings.
+     * 
+     * @return a new LoadOptions instance with the same settings
+     */
     open fun clone() = parse(toString(), this)
     
     /**
-     * Correct [outLinkSelector].
-     * There is a JCommand bug with quoted options.
-     * */
+     * Corrects the outLinkSelector format by removing quotes and ensuring proper format.
+     * 
+     * Handles a JCommander bug with quoted options and ensures the selector
+     * has the correct form with an "a" tag if needed.
+     * 
+     * @return the corrected selector or null if blank
+     */
     private fun correctOutLinkSelector(): String? {
         return outLinkSelector.trim('"')
             .takeIf { it.isNotBlank() }
             ?.let { appendSelectorIfMissing(it, "a") }
     }
     
+    /**
+     * Implements the refresh action when the refresh flag is set.
+     * 
+     * Sets expired/expireAt to force immediate refresh and enables ignoreFailure
+     * to retry even failed pages.
+     * 
+     * @param value the new refresh flag value
+     * @return the refresh flag value
+     */
     private fun doRefresh(value: Boolean): Boolean {
         if (value) {
             expires = Duration.ZERO
@@ -1009,8 +1198,12 @@ open class LoadOptions constructor(
     }
     
     /**
-     * Ensure [event] is created.
-     * */
+     * Initializes and returns the page event handlers.
+     * 
+     * Creates event handlers if they don't already exist.
+     * 
+     * @return the page event handlers
+     */
     private fun enableEventHandlers(): PageEventHandlers {
         val eh = rawEvent ?: PageEventHandlersFactory(conf).create()
         rawEvent = eh
@@ -1018,8 +1211,12 @@ open class LoadOptions constructor(
     }
     
     /**
-     * Ensure [rawItemEvent] is created.
-     * */
+     * Initializes and returns the item page event handlers.
+     * 
+     * Creates item event handlers if they don't already exist.
+     * 
+     * @return the item page event handlers
+     */
     private fun enableItemEventHandlers(): PageEventHandlers {
         val eh = rawEvent ?: PageEventHandlersFactory(conf).create()
         rawItemEvent = eh
@@ -1028,13 +1225,15 @@ open class LoadOptions constructor(
     
     companion object {
         /**
-         * The default option.
-         * */
+         * Default LoadOptions instance with standard settings.
+         * Used as a base for comparison and default values.
+         */
         val DEFAULT = LoadOptions("", VolatileConfig.UNSAFE)
         
         /**
-         * A list of all option fields.
-         * */
+         * List of all option fields in the LoadOptions class.
+         * Contains fields with Parameter annotations for option parsing.
+         */
         val optionFields = LoadOptions::class.java.declaredFields
             .asSequence()
             .onEach { it.isAccessible = true }
@@ -1049,23 +1248,24 @@ open class LoadOptions constructor(
             }
         
         /**
-         * A map of all option fields.
-         * */
+         * Map of field names to their corresponding Field objects.
+         */
         val optionFieldsMap = optionFields.associateBy { it.name }
         
         /**
-         * A map of all default options.
-         * */
+         * Map of field names to their default values from DEFAULT instance.
+         */
         val defaultParams = optionFields.associate { it.name to it.get(DEFAULT) }
         
         /**
-         * A map of all default options.
-         * */
+         * Map of default option names and values.
+         */
         val defaultArgsMap = DEFAULT.toArgsMap()
         
         /**
-         * A list of the options who's arity is 0.
-         * */
+         * List of zero-arity boolean parameter names.
+         * These are parameters that don't require a value (flag parameters).
+         */
         val arity0BooleanParams = optionFields
             .onEach { it.isAccessible = true }
             .filter { it.get(DEFAULT) is Boolean }
@@ -1076,8 +1276,9 @@ open class LoadOptions constructor(
             .toList()
         
         /**
-         * A list of the options who's arity is 1.
-         * */
+         * List of single-arity boolean parameter names.
+         * These are boolean parameters that require a value.
+         */
         val arity1BooleanParams = optionFields
             .onEach { it.isAccessible = true }
             .filter { it.get(DEFAULT) is Boolean }
@@ -1088,8 +1289,8 @@ open class LoadOptions constructor(
             .toList()
         
         /**
-         * A list of all the option names.
-         * */
+         * List of all option names from parameter annotations.
+         */
         val optionNames = optionFields
             .flatMap { it.annotations.toList() }
             .filterIsInstance<Parameter>()
@@ -1097,8 +1298,9 @@ open class LoadOptions constructor(
             .toList()
         
         /**
-         * A list of all the names of options who are allowed with REST APIs.
-         * */
+         * List of option names that are marked as API public.
+         * These options are exposed through REST APIs.
+         */
         val apiPublicOptionNames = optionFields
             .filter { it.kotlinProperty?.hasAnnotation<ApiPublic>() == true }
             .flatMap { it.annotations.toList() }
@@ -1107,8 +1309,9 @@ open class LoadOptions constructor(
             .toList()
         
         /**
-         * Generate the help message from the field annotations.
-         * */
+         * Generates help documentation from field annotations.
+         * Returns a list of option descriptions for documentation.
+         */
         val helpList: List<List<String>>
             get() =
                 optionFields
@@ -1123,8 +1326,12 @@ open class LoadOptions constructor(
                     }.toList()
         
         /**
-         * Set the field value who has an annotation [annotationName].
-         * */
+         * Sets the value of a field based on its annotation name.
+         * 
+         * @param options the LoadOptions instance to modify
+         * @param annotationName the annotation name to search for
+         * @param value the value to set
+         */
         fun setFieldByAnnotation(options: LoadOptions, annotationName: String, value: Any) {
             optionFields.forEach {
                 val found = it.annotations.filterIsInstance<Parameter>().any { annotationName in it.names }
@@ -1136,8 +1343,11 @@ open class LoadOptions constructor(
         }
         
         /**
-         * Get all the available option names for field [fieldName].
-         * */
+         * Returns all option names for a given field.
+         * 
+         * @param fieldName the field name to look up
+         * @return list of all option names for that field
+         */
         fun getOptionNames(fieldName: String): List<String> {
             return optionFields
                 .filter { it.name == fieldName }
@@ -1148,56 +1358,93 @@ open class LoadOptions constructor(
         }
         
         /**
-         * Create an empty [LoadOptions].
-         * */
+         * Creates a new empty LoadOptions with the given configuration.
+         * 
+         * @param conf the configuration to use
+         * @return a new LoadOptions instance
+         */
         fun create(conf: VolatileConfig) = LoadOptions(arrayOf(), conf).apply { parse() }
         
         /**
-         * Create an empty [LoadOptions].
-         * */
+         * Creates a new empty LoadOptions with an unsafe configuration.
+         * 
+         * @return a new LoadOptions instance
+         */
         fun createUnsafe() = create(VolatileConfig.UNSAFE)
         
         /**
-         * Normalize [args], all option names in a normalized argument string match the field name in [LoadOptions].
-         * */
+         * Normalizes arguments into a standard format.
+         * 
+         * @param args the arguments to normalize
+         * @return normalized arguments string
+         */
         fun normalize(vararg args: String?) = parse(args.filterNotNull().joinToString(" ")).toString()
         
         /**
-         * Parse the [args] with other [conf].
-         * */
+         * Parses a string of arguments into a LoadOptions object.
+         * 
+         * @param args the arguments string to parse
+         * @param conf the configuration to use
+         * @return the parsed LoadOptions
+         */
         fun parse(args: String, conf: VolatileConfig = VolatileConfig()) =
             LoadOptions(args.trim(), conf).apply { parse() }
         
         /**
-         * Parse the [args] with other [options].
-         * */
+         * Parses a string of arguments into a LoadOptions object based on another instance.
+         * 
+         * @param args the arguments string to parse
+         * @param options the base options to use
+         * @return the parsed LoadOptions
+         */
         fun parse(args: String, options: LoadOptions) = LoadOptions(args.trim(), options).apply {
             parse()
         }
         
         /**
-         * Create a new LoadOptions with [o1] and [o2]'s items, [o2] overrides [o1].
-         * */
+         * Merges two LoadOptions objects, with o2 options taking precedence.
+         * 
+         * @param o1 the base options
+         * @param o2 the overriding options
+         * @return a new merged LoadOptions
+         */
         fun merge(o1: LoadOptions, o2: LoadOptions) = parse("$o1 $o2", o2)
         
         /**
-         * Create a new LoadOptions with [o1] and [args], [args] overrides [o1].
-         * */
+         * Merges a LoadOptions object with additional arguments string.
+         * 
+         * @param o1 the base options
+         * @param args the overriding arguments
+         * @return a new merged LoadOptions
+         */
         fun merge(o1: LoadOptions, args: String?) = parse("$o1 $args", o1)
         
         /**
-         * Create a new LoadOptions with [args] and [args2], [args2] overrides [args].
-         * */
+         * Merges two argument strings into a single LoadOptions.
+         * 
+         * @param args the base arguments
+         * @param args2 the overriding arguments
+         * @param conf the configuration to use
+         * @return a new merged LoadOptions
+         */
         fun merge(args: String?, args2: String?, conf: VolatileConfig = VolatileConfig.UNSAFE) = parse("$args $args2", conf)
 
         /**
-         * Create a new LoadOptions with args1, args2, args3, ..., the later override the previous ones, and return the merged args
-         * */
+         * Merges multiple argument strings, with later arguments taking precedence.
+         * 
+         * @param args the argument strings to merge
+         * @param conf the configuration to use
+         * @return the merged arguments string
+         */
         fun mergeArgs(vararg args: String?, conf: VolatileConfig = VolatileConfig.UNSAFE) = parse(args.joinToString(" "), conf).toString()
 
         /**
-         * Erase the specified option, the option name has to match the field name in LoadOptions.
-         * */
+         * Removes specified options from an arguments string.
+         * 
+         * @param args the original arguments string
+         * @param fieldNames the field names to remove
+         * @return the modified arguments string
+         */
         fun eraseOptions(args: String, vararg fieldNames: String): String {
             // do not forget the blanks
             var normalizedArgs = " $args "
