@@ -1,8 +1,8 @@
-# 🤖 Additional LLM Configuration Methods
+# 🤖 Additional LLM Configuration Options
 
-## 🔌 Method 1: OpenAI-Compatible LLM Configuration
+## 🔌 Method 1: Configure with OpenAI-Compatible API
 
-Use any OpenAI-compatible API provider (e.g., DeepSeek, Moonshot, etc.) by setting environment variables at runtime.
+Use any OpenAI-compatible provider (e.g., DeepSeek, Moonshot, etc.) by setting environment variables at runtime:
 
 ```bash
 java -DOPENAI_API_KEY=${OPENAI_API_KEY} \
@@ -10,6 +10,18 @@ java -DOPENAI_API_KEY=${OPENAI_API_KEY} \
      -DOPENAI_BASE_URL=${OPENAI_BASE_URL} \
      -jar PulsarRPA.jar
 ```
+
+<details>
+<summary>💡 PowerShell Version</summary>
+
+```powershell
+java -DOPENAI_API_KEY=${OPENAI_API_KEY} `
+     -DOPENAI_MODEL_NAME=${OPENAI_MODEL_NAME} `
+     -DOPENAI_BASE_URL=${OPENAI_BASE_URL} `
+     -jar PulsarRPA.jar
+```
+
+</details>
 
 ### 🧩 Supported Environment Variables:
 

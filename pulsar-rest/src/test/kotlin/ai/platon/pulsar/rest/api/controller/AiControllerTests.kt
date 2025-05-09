@@ -1,18 +1,13 @@
 package ai.platon.pulsar.rest.api.controller
 
-import ai.platon.pulsar.common.AppFiles
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.external.ChatModelFactory
+import ai.platon.pulsar.external.ChatModelTestUtils
 import ai.platon.pulsar.rest.api.TestUtils
 import ai.platon.pulsar.rest.api.entities.PromptRequest
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import java.nio.file.Path
-import kotlin.io.path.deleteIfExists
-import kotlin.io.path.exists
-import kotlin.io.path.listDirectoryEntries
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -22,27 +17,16 @@ import kotlin.test.assertTrue
 class AiControllerTests : IntegrationTestBase() {
 
     companion object {
-        private val enabledConfigs = mutableSetOf<Path>()
-
         @JvmStatic
         @BeforeAll
-        fun initLLMConfiguration() {
-            AppPaths.CONFIG_ENABLED_DIR.listDirectoryEntries("*.xml").toCollection(enabledConfigs)
-            if (enabledConfigs.isNotEmpty()) {
-                return
-            }
-
-            listOf("pulsar-volcengine-deepseek-v3.xml", "pulsar-deepseek.xml")
-                .sorted()
-                .firstOrNull { AppPaths.CONFIG_ENABLED_DIR.resolve(it).exists() }
-                ?.let { AppFiles.enableConfig(it) }
+        fun initConfig() {
+            ChatModelTestUtils.initConfig()
         }
 
         @JvmStatic
         @AfterAll
-        fun resetLLMConfiguration() {
-            AppPaths.CONFIG_ENABLED_DIR.listDirectoryEntries("*.xml").forEach { it.deleteIfExists() }
-            enabledConfigs.forEach { AppFiles.enableConfig(it.fileName.toString()) }
+        fun resetConfig() {
+            ChatModelTestUtils.resetConfig()
         }
     }
 

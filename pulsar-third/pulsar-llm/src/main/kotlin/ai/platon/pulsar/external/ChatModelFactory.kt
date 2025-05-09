@@ -5,8 +5,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warn
 import ai.platon.pulsar.external.impl.ChatModelImpl
-import com.alibaba.dashscope.utils.Constants.apiKey
-import com.ibm.icu.impl.CurrencyData.provider
 import dev.langchain4j.model.openai.OpenAiChatModel
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import java.time.Duration
@@ -69,7 +67,7 @@ object ChatModelFactory {
         }
 
         val documentPath = "https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/llm-config-advanced.md"
-        val provider = requireNotNull(conf[LLM_PROVIDER])  { "$LLM_PROVIDER is not set, see $documentPath" }
+        val provider = requireNotNull(conf[LLM_PROVIDER]) { "$LLM_PROVIDER is not set, see $documentPath" }
         val modelName = requireNotNull(conf[LLM_NAME]) { "$LLM_NAME is not set, see $documentPath" }
         val apiKey = requireNotNull(conf[LLM_API_KEY]) { "$LLM_API_KEY is not set, see $documentPath" }
 
@@ -105,12 +103,22 @@ object ChatModelFactory {
             .getOrNull()
     }
 
-    fun getOrCreateOpenAICompatibleModel(modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig): ChatModel {
+    fun getOrCreateOpenAICompatibleModel(
+        modelName: String,
+        apiKey: String,
+        baseUrl: String,
+        conf: ImmutableConfig
+    ): ChatModel {
         val key = "$modelName:$apiKey:$baseUrl"
         return models.computeIfAbsent(key) { createOpenAICompatibleModel0(modelName, apiKey, baseUrl, conf) }
     }
 
-    private fun getOrCreateModel0(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
+    private fun getOrCreateModel0(
+        provider: String,
+        modelName: String,
+        apiKey: String,
+        conf: ImmutableConfig
+    ): ChatModel {
         val key = "$modelName:$apiKey"
         return models.computeIfAbsent(key) { doCreateModel(provider, modelName, apiKey, conf) }
     }

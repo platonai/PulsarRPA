@@ -3,7 +3,6 @@ package ai.platon.pulsar.external
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.impl.ChatModelImpl
 import org.junit.jupiter.api.Assertions.assertNotNull
-import kotlin.test.assertFails
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
