@@ -206,10 +206,10 @@ open class LoadOptions constructor(
      * 
      * Provides an explicit expiration point rather than a relative duration.
      * When current time exceeds this value, the page will be fetched again regardless of when it was last fetched.
-     * 
-     * Accepts the following timestamp formats:
-     * - yyyy-MM-dd[ HH[:mm[:ss]]]
-     * - ISO_INSTANT (yyyy-MM-ddTHH:mm:ssZ)
+     *
+     * Supports two time format standards:
+     * - ISO-8601 duration format: PnDTnHnMn.nS
+     * - Hadoop time duration format: 100s, 1m, 1h, 1d (units: ns, us, ms, s, m, h, d)
      */
     @ApiPublic
     @Parameter(
@@ -249,36 +249,39 @@ open class LoadOptions constructor(
      * CSS selector for elements to be clicked during page interaction.
      * 
      * Used to simulate user clicks on specific elements (e.g., "Load more" buttons).
-     * NOTE: This feature is planned but not fully implemented yet.
+     * TODO: This feature is planned but not fully implemented yet.
      */
     @ApiPublic
     @Parameter(
         names = ["-click", "-clickTarget", "--click-target"],
         description = "The selector for element to click."
     )
+    @Beta
     var clickTarget = ""
     
     /**
      * CSS selector to identify the "next page" link for pagination handling.
      * 
      * Used to navigate through multi-page content by automatically following pagination links.
-     * NOTE: This feature is planned but not fully implemented yet.
+     * TODO: This feature is planned but not fully implemented yet.
      */
     @ApiPublic
     @Parameter(
         names = ["-np", "-nextPage", "-nextPageSelector", "--next-page-selector"],
         description = "The css selector of next page anchor"
     )
+    @Beta
     var nextPageSelector = ""
     
     /**
      * The index of the iframe to focus on during page interaction.
      * 
      * Used to target specific iframes within complex pages for content extraction.
-     * NOTE: This feature is planned but not fully implemented yet.
+     * TODO: This feature is planned but not fully implemented yet.
      */
     @ApiPublic
     @Parameter(names = ["-ifr", "-iframe", "--iframe"], description = "The iframe id to switch to")
+    @Beta
     var iframe = 0
     
     /**
@@ -305,6 +308,7 @@ open class LoadOptions constructor(
         names = ["-wnb", "-waitNonBlank", "--wait-non-blank"],
         description = "The selector specified element should have a non-blank text"
     )
+    @Beta
     var waitNonBlank: String = ""
     
     /**
@@ -318,6 +322,7 @@ open class LoadOptions constructor(
         names = ["-rnb", "-requireNotBlank"],
         description = "The selector specified element should have a non-blank text"
     )
+    @Beta
     var requireNotBlank: String = ""
     
     /**
@@ -542,6 +547,7 @@ open class LoadOptions constructor(
         names = ["-irnb", "-itemRequireNotBlank", "--item-require-not-blank"],
         description = "Re-fetch the item pages if the required text is blank"
     )
+    @Beta
     var itemRequireNotBlank = ""
     
     /**
@@ -712,35 +718,10 @@ open class LoadOptions constructor(
     var incognito = false
 
     /**
-     * Prevents following redirects when fetching a page.
-     * 
-     * NOTE: This setting has no effect in browser mode since browsers
-     * automatically handle redirects.
-     */
-    @Parameter(names = ["-noRedirect", "--no-redirect"], description = "Do not redirect")
-    var noRedirect = false
-    
-    /**
-     * Controls how redirects are handled in page records.
-     * 
-     * When enabled, the page record will reflect the final destination URL after redirects.
-     * When disabled, the original URL is preserved in the record (though content comes from the final URL).
-     * 
-     * NOTE: This setting has minimal effect in browser mode since browsers handle redirects internally.
-     */
-    @Parameter(
-        names = ["-hardRedirect", "--hard-redirect"],
-        description = "If false, return the original page record but the redirect target's content," +
-            " otherwise, return the page record of the redirected target." +
-            " If we use a browser, redirections are handled by the browser so the flag is ignored."
-    )
-    var hardRedirect = false
-    
-    /**
      * Enables immediate parsing of fetched pages.
      * 
-     * When enabled, pages are parsed as soon as they're fetched, extracting links and other
-     * structured data. This is typically enabled for crawler operations.
+     * When enabled, pages are parsed into a [ai.platon.pulsar.dom.FeaturedDocument] as soon as they're fetched,
+     * extracting links and other structured data. This is typically enabled for crawler operations.
      */
     @Parameter(names = ["-ps", "-parse", "--parse"], description = "If true, parse the page when it's just be fetched.")
     var parse = LoadOptionDefaults.parse
@@ -755,6 +736,7 @@ open class LoadOptions constructor(
         names = ["-rpl", "-reparseLinks", "--reparse-links"],
         description = "Re-parse links if the page has been parsed before."
     )
+    @Beta
     var reparseLinks = false
     
     /**
@@ -767,6 +749,7 @@ open class LoadOptions constructor(
         names = ["-ignoreUrlQuery", "--ignore-url-query"],
         description = "Remove the query parameters in the url"
     )
+    @Beta
     var ignoreUrlQuery = false
     
     /**
@@ -779,6 +762,7 @@ open class LoadOptions constructor(
         names = ["-noNorm", "--no-link-normalizer"],
         description = "If true, no normalizer will be applied when parse links."
     )
+    @Beta
     var noNorm = false
     
     /**
@@ -791,12 +775,13 @@ open class LoadOptions constructor(
         names = ["-noFilter", "--no-link-filter"],
         description = "If true, no filter will be applied when parse links."
     )
+    @Beta
     var noFilter = false
     
     /**
      * Deprecated network condition parameter, use interactLevel instead.
      */
-    @Deprecated("Use interactBehavior instead", ReplaceWith("options.interactBehavior"))
+    @Deprecated("Use interactLevel instead", ReplaceWith("options.interactLevel"))
     @Parameter(
         names = ["-netCond", "-netCondition", "--net-condition"],
         converter = ConditionConverter::class,
