@@ -352,7 +352,6 @@ open class BrowserSettings constructor(
          * */
         @JvmStatic
         fun blockImages(): Companion {
-            TODO("Not implemented")
             enableUrlBlocking()
             return BrowserSettings
         }

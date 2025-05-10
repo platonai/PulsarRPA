@@ -37,7 +37,7 @@ Find all links containing /dp/.
 ## 🎥 Demo Videos
 
 🎬 YouTube:
-[![Watch the video](https://img.youtube.com/vi/lQXSSQSNQ7I/0.jpg)](https://www.youtube.com/watch?v=lQXSSQSNQ7I)
+[![Watch the video](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
 
 📺 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
@@ -65,10 +65,13 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 
 🔗 [Choose Another LLM Provider](docs/config/llm/llm-config)
 
-#### 📦 Download Links
+<details>
+<summary>📦 Download Links</summary>
 
 - 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar)
 - 📦 [Backup Downloads](http://static.platonai.cn/repo/ai/platon/pulsar/)
+
+</details>
 
 ### ▶ Run with IDE
 
@@ -164,7 +167,7 @@ The extracted data example:
 
 ---
 
-## 👨‍💻 For Experts - Native API: Super Powerful!
+## 👨‍💻 For Experts - Native API: Powerful!
 
 ### 🎮 Browser Control:
 
