@@ -1,21 +1,43 @@
-# Docker for development
+# 🐳 Docker for Development
 
-Create a docker image for development:
+## 🛠️ Create a Docker Image for Development
+
 ```shell
 docker build -t pulsar-rpa-dev .
 ```
 
-Run all services:
+## 🚀 Run Docker Image
+
 ```shell
-docker compose -f docker-compose.yaml up -d --profile proxy
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
 ```
 
-Run MongoDB only:
+## 🏠 Run Local Docker Image
+
 ```shell
-docker compose -f docker-compose.yaml up -d mongodb
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} pulsar-rpa-dev:latest
+```
+## ⚙️ Run Default Configuration
+
+```shell
+export DEEPSEEK_API_KEY=YOUR_API_KEY
+docker compose up -d
 ```
 
-Run ProxyHub only:
+## 🌐 Run All Services
+
 ```shell
-docker compose -f docker-compose.yaml up -d proxyhub
+docker compose up -d --profile proxy
+```
+
+## 🗄️ Run MongoDB Only
+
+```shell
+docker compose up -d mongodb
+```
+
+## 🔗 Run ProxyHub Only
+
+```shell
+docker compose up -d proxyhub
 ```
