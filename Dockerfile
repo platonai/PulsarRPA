@@ -5,7 +5,7 @@ FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
 WORKDIR /build
 
 # 复制项目, 使用 .dockerignore 控制哪些文件需要复制
-COPY ../../pulsar-app .
+COPY pulsar-app .
 
 RUN ls -l
 
