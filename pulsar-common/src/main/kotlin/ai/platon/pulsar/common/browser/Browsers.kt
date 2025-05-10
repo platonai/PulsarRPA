@@ -32,7 +32,7 @@ object Browsers {
      * @return Chrome binary path.
      */
     fun searchChromeBinary(): Path {
-        val path = System.getProperty(CapabilityTypes.BROWSER_CHROME_PATH)
+        val path = System.getProperty(CapabilityTypes.CHROME_PATH)
         if (path != null) {
             return Paths.get(path).takeIf { Files.isExecutable(it) }?.toAbsolutePath()
                 ?: throw RuntimeException("CHROME_PATH is not executable | $path")
@@ -51,11 +51,11 @@ object Browsers {
      * Find BROWSER_CHROME_PATH in all config files
      * */
     private fun searchChromeBinaryPathAllAround(conf: ImmutableConfig) {
-        val chromeBinaryPath = conf.get(CapabilityTypes.BROWSER_CHROME_PATH)
+        val chromeBinaryPath = conf.get(CapabilityTypes.CHROME_PATH)
         if (chromeBinaryPath != null) {
             val path = Paths.get(chromeBinaryPath).takeIf { Files.isExecutable(it) }?.toAbsolutePath()
             if (path != null) {
-                System.setProperty(CapabilityTypes.BROWSER_CHROME_PATH, chromeBinaryPath)
+                System.setProperty(CapabilityTypes.CHROME_PATH, chromeBinaryPath)
             }
         }
     }

@@ -166,6 +166,7 @@ public interface CapabilityTypes {
     ///////////////////////////////////////////////////////////////////////////
     // Browser
 
+    String CHROME_PATH = "chrome.path";
     /**
      * The max value of tabs a browser can open
      * @deprecated use BROWSER_MAX_OPEN_TABS
@@ -200,7 +201,6 @@ public interface CapabilityTypes {
     String BROWSER_RESOURCE_BLOCK_PROBABILITY = "browser.url.block.probability";
     String BROWSER_ENABLE_UA_OVERRIDING = "browser.enable.ua.overriding";
     String BROWSER_SPA_MODE = "browser.spa.mode";
-    String BROWSER_CHROME_PATH = "browser.chrome.path";
     /**
      * Whether reuse the recovered drivers to serve new tasks.
      * */
