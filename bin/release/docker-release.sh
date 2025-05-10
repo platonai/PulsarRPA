@@ -20,13 +20,13 @@ done
 echo "📁 Project root found: $ROOT_DIR"
 
 # ========== STEP 2: 读取版本号 ==========
-VERSION=$(cat "$ROOT_DIR/VERSION" | tr -d ' \n')
-if [ -z "$VERSION" ]; then
+SNAPSHOT_VERSION=$(head -n 1 "$ROOT_DIR/VERSION")
+if [ -z "$SNAPSHOT_VERSION" ]; then
   echo "❌ VERSION file is empty."
   exit 1
 fi
 # 去掉-SNAPSHOT后缀
-VERSION=${VERSION%-SNAPSHOT}
+VERSION=${SNAPSHOT_VERSION//"-SNAPSHOT"/""}
 echo "🏷️ Version: $VERSION"
 
 # ========== STEP 3: 构建镜像 ==========
