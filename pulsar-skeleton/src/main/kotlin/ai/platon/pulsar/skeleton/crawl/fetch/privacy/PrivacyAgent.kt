@@ -9,8 +9,13 @@ import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CL
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import org.apache.commons.collections4.MultiValuedMap
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentSkipListSet
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * A privacy agent defines a unique agent to visit websites.
@@ -53,6 +58,8 @@ data class PrivacyAgent(
     companion object {
         private val logger = getLogger(this)
 
+        private val reportedBrowserTypes = ConcurrentSkipListSet<BrowserType>()
+
         /**
          * The random privacy agent opens browser with a random data dir.
          * */
@@ -76,7 +83,9 @@ data class PrivacyAgent(
         }
 
         fun createSystemDefault(browserType: BrowserType): PrivacyAgent {
-            logger.info("You are creating a SYSTEM_DEFAULT browser context, force set max browser number to be 1")
+            if (reportedBrowserTypes.add(browserType)) {
+                logger.info("You are creating a SYSTEM_DEFAULT browser context, force set max browser number to be 1")
+            }
             BrowserSettings.withBrowserContextMode(BrowserContextMode.SYSTEM_DEFAULT, browserType)
             require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
             require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("SystemDefaultPrivacyAgentGenerator"))
@@ -88,7 +97,10 @@ data class PrivacyAgent(
         }
 
         fun createDefault(browserType: BrowserType): PrivacyAgent {
-            logger.info("You are creating a DEFAULT browser context, force set max browser number to be 1")
+            if (reportedBrowserTypes.add(browserType)) {
+                logger.info("You are creating a DEFAULT browser context, force set max browser number to be 1")
+            }
+
             BrowserSettings.withBrowserContextMode(BrowserContextMode.DEFAULT, browserType)
             require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
             require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("DefaultPrivacyAgentGenerator"))
@@ -100,7 +112,10 @@ data class PrivacyAgent(
         }
 
         fun createPrototype(browserType: BrowserType): PrivacyAgent {
-            logger.info("You are creating a PROTOTYPE browser context, force set max browser number to be 1")
+            if (reportedBrowserTypes.add(browserType)) {
+                logger.info("You are creating a PROTOTYPE browser context, force set max browser number to be 1")
+            }
+
             BrowserSettings.withBrowserContextMode(BrowserContextMode.PROTOTYPE, browserType)
             require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
             require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("PrototypePrivacyAgentGenerator"))
