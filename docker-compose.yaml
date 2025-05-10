@@ -5,11 +5,16 @@ services:
     restart: always
     ports:
       - '27017:27017'
-    command: ["--bind_ip_all"]
+    command: ["mongod", "--bind_ip_all"]
     volumes:
       - mongodb_data:/data/db
     networks:
       - backend
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   proxy-hub:
     image: 'proxy-hub:latest'
@@ -17,17 +22,19 @@ services:
     ports:
       - '8192:8192'
     profiles: ["proxy"]  # ✅ Only start when profile=proxy, e.g., docker compose --profile proxy up
+    restart: unless-stopped
 
   pulsar-rpa:
     image: 'pulsar-rpa:latest'
     container_name: 'pulsar-rpa'
     depends_on:
-      - 'mongodb'
+      mongodb:
+        condition: service_healthy
     environment:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      PROXY_ROTATION_URL: ${PROXY_ROTATION_URL}
       "gora.mongodb.servers": mongodb:27017  # Required by Gora, keep it exactly dot.separated.lowercase
       SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/pulsar-rpa
-      BROWSER_DISPLAY_MODE: HEADLESS
       SERVER_PORT: 8182
       SERVER_ADDRESS: 0.0.0.0
     ports:
@@ -43,6 +50,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    restart: unless-stopped
 
 networks:
   backend:

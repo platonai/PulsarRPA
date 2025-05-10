@@ -1,43 +1,66 @@
 # 🐳 Docker for Development
 
-## 🛠️ Create a Docker Image for Development
+## 🛠️ Build Local Development Image
 
-```shell
+```bash
 docker build -t pulsar-rpa-dev .
-```
-
-## 🚀 Run Docker Image
-
-```shell
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
-```
+````
 
 ## 🏠 Run Local Docker Image
 
-```shell
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} pulsar-rpa-dev:latest
+```bash
+docker run -p 8182:8182 \
+  -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
+  pulsar-rpa-dev:latest
 ```
-## ⚙️ Run Default Configuration
 
-```shell
-export DEEPSEEK_API_KEY=YOUR_API_KEY
+> 💡 Please make sure you have set `DEEPSEEK_API_KEY` environment.
+
+## ✅ Test PulsarRPA API
+
+```bash
+curl -X POST "http://localhost:8182/api/ai/command" \
+  -H "Content-Type: text/plain" \
+  -d '
+    Go to https://www.amazon.com/dp/B0C1H26C46
+    After page load: click #title, then scroll to the middle.
+
+    Summarize the product.
+    Extract: product name, price, ratings.
+    Find all links containing /dp/.
+  '
+```
+
+## 🚀 Run Hosted Docker Image
+
+```bash
+docker run -d -p 8182:8182 \
+  -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
+  galaxyeye88/pulsar-rpa:latest
+```
+
+## ⚙️ Run with Docker Compose
+
+```bash
+export DEEPSEEK_API_KEY=your-api-key
+# export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 docker compose up -d
 ```
 
-## 🌐 Run All Services
+## 🌐 Run Docker Compose with Proxy Profile
 
-```shell
+```bash
 docker compose up -d --profile proxy
 ```
 
-## 🗄️ Run MongoDB Only
+## 🗄️ Run Only MongoDB Service
 
-```shell
+```bash
 docker compose up -d mongodb
 ```
 
-## 🔗 Run ProxyHub Only
+## 🔗 Run Only ProxyHub Service
 
-```shell
+```bash
 docker compose up -d proxyhub
 ```
