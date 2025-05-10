@@ -242,7 +242,7 @@ abstract class AbstractPrivacyManager(
 
             val lazyClose = closeStrategy == CloseStrategy.LAZY.name
             when {
-                AppSystemInfo.isCriticalResources -> closeDyingContexts()
+                AppSystemInfo.isSystemOverCriticalLoad -> closeDyingContexts()
                 lazyClose -> closeZombieContextsLazily()
                 else -> closeDyingContexts()
             }

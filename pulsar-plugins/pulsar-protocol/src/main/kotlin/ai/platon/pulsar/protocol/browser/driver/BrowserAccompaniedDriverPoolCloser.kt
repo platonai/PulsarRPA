@@ -184,7 +184,7 @@ internal class BrowserAccompaniedDriverPoolCloser(
         val maxAllowedDyingDrivers = driverPoolManager.maxAllowedDyingDrivers
         return when {
             // low memory
-            AppSystemInfo.isCriticalResources -> oldestRetiredDriverPool
+            AppSystemInfo.isSystemOverCriticalLoad -> oldestRetiredDriverPool
             // The drivers are in GUI mode and there are many open drivers.
             totalDyingDrivers > maxAllowedDyingDrivers -> oldestRetiredDriverPool
             else -> null
