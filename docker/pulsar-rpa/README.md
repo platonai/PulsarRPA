@@ -2,7 +2,7 @@
 
 Create a docker image for development:
 ```shell
-docker build -t pulsar-rpa-dev . -f docker/dev/Dockerfile
+docker build -t pulsar-rpa-dev . -f docker/pulsar-rpa/Dockerfile
 ```
 
 Run all services:

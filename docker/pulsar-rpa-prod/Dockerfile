@@ -4,13 +4,23 @@ FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
 # 设置工作目录
 WORKDIR /build
 
+# 复制项目的 Maven 相关文件（避免拷贝源码导致缓存失效）
+COPY ../../pom.xml .
+# 下载所有依赖并进行编译（如果依赖没有变，则会使用缓存）
+RUN mvn dependency:go-offline -B
+
 # 复制整个项目
-COPY . .
+COPY ../.. .
 
 RUN ls -l
 
+# 构建应用
+RUN mvn clean install -Pall-modules -DskipTests \
+    -Dmaven.javadoc.skip=true \
+    -Dmaven.source.skip=true
+
 # 复制 JAR 以便在下一阶段使用
-RUN cp $(find . -type f -name PulsarRPA*.jar | head -n 1) /build/app.jar
+RUN cp $(find /build -name "*.jar" | grep "PulsarRPA.jar") /build/app.jar
 
 # 第二阶段：运行阶段
 FROM eclipse-temurin:21-jre-alpine AS runner
@@ -42,10 +52,17 @@ ENV CHROME_BIN=/usr/bin/chromium-browser \
 # 复制构建产物
 COPY --from=builder /build/app.jar app.jar
 
+ENV BROWSER_DISPLAY_MODE=HEADLESS \
+    PRIVACY_AGENT_GENERATOR_CLASS=ai.platon.pulsar.skeleton.crawl.fetch.privacy.RandomPrivacyAgentGenerator
+
 # 设置环境变量
 ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC"
 
-# 暴露端口（仅文档声明）
+# 暴露端口
+# 8182: api server
+# 8082: H2 web server
+# 9092: H2 TCP server
+
 EXPOSE 8082
 EXPOSE 8182
 
@@ -61,7 +78,7 @@ USER appuser
 
 # 添加构建参数
 LABEL maintainer="Vincent Zhang <ivincent.zhang@gmail.com>"
-LABEL description="PulsarRPA: An AI-Enabled, Super-Fast, Thread-Safe Browser Automation Solution! 💖"
+LABEL description="PulsarRPA: Your Ultimate AI-RPA Solution!"
 
 # 启动命令，支持动态端口配置
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar serve --server.port=${SERVER_PORT:-8082}"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar --server.port=${SERVER_PORT:-8182}"]
