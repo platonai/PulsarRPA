@@ -4,18 +4,16 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserContextMode
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
+import ai.platon.pulsar.common.concurrent.ConcurrentPassiveExpiringSet
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import org.apache.commons.collections4.MultiValuedMap
-import org.apache.commons.collections4.multimap.ArrayListValuedHashMap
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.concurrent.ConcurrentHashMap
+import java.time.Duration
 import java.util.concurrent.ConcurrentSkipListSet
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * A privacy agent defines a unique agent to visit websites.
@@ -58,7 +56,10 @@ data class PrivacyAgent(
     companion object {
         private val logger = getLogger(this)
 
-        private val reportedBrowserTypes = ConcurrentSkipListSet<BrowserType>()
+        /**
+         * To prevent issuing too many reports.
+         * */
+        private val reportedBrowserTypes = ConcurrentPassiveExpiringSet<BrowserType>(ttl = Duration.ofMinutes(30))
 
         /**
          * The random privacy agent opens browser with a random data dir.
