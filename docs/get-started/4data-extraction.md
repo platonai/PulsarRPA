@@ -53,7 +53,7 @@ To make up for the shortcomings of existing CSS expressions, PulsarRPA extends C
 
 For example:
 
-```
+```css
 /* Select links in the left column with a width of 500 */
 a:expr(left < 100 && width == 500)
 
