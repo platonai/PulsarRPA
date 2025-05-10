@@ -32,7 +32,7 @@ echo "🏷️ Version: $VERSION"
 # ========== STEP 3: 构建镜像 ==========
 cd "$ROOT_DIR"
 
-DOCKERFILE_NAME="$ROOT_DIR/docker/dev/Dockerfile"
+DOCKERFILE_NAME="$ROOT_DIR/Dockerfile"
 
 # If pulsar-app/pulsar-master/target/PulsarRPA.jar is not found, build it first
 if [ ! -f "$ROOT_DIR/pulsar-app/pulsar-master/target/PulsarRPA.jar" ]; then
