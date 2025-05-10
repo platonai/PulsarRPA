@@ -14,7 +14,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
  * you can use the following code:
  *
  * ```kotlin
- * PulsarSettings
+ * PulsarSettings()
  *    .headless()
  *    .maxBrowsers(4)
  *    .maxOpenTabs(12)
@@ -31,7 +31,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
  * following code:
  *
  * ```kotlin
- * PulsarSettings.withSystemDefaultBrowser().withGUI().withSPA()
+ * PulsarSettings().withSystemDefaultBrowser().withGUI().withSPA()
  * ```
  *
  * The above code will:
