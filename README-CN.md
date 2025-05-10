@@ -83,6 +83,17 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 
 </details>
 
+### 🐳 Docker用户
+
+<details>
+
+```shell
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
+```
+
+
+</details>
+
 ---
 
 ## 🌟 对于初学者 – 只需文本，无需代码！
