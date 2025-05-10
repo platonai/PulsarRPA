@@ -4,7 +4,7 @@ set -e
 set -o pipefail
 
 # ========== CONFIG ==========
-IMAGE_NAME="galaxyeye88/pulsar-rpa"  # 👉 修改为你的镜像名
+IMAGE_NAME="galaxyeye88/pulsar-rpa"
 ROOT_DIR=""
 
 # ========== STEP 1: 查找项目根目录 ==========
