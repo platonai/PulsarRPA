@@ -130,9 +130,11 @@ class AppSystemInfo {
         val isCriticalDiskSpace get() = checkIsOutOfDisk()
 
         /**
-         * Check whether hardware resource usage reaches critical status.
-         * */
-        val isCriticalResources get() = isCriticalMemory || isCriticalCPULoad || isCriticalDiskSpace
+         * Determines if any of the monitored hardware resources (CPU, memory, or disk space)
+         * have reached a critical usage level. Returns `true` if at least one resource is in
+         * a critical state, otherwise returns `false`.
+         */
+        val isSystemOverCriticalLoad get() = isCriticalMemory || isCriticalCPULoad || isCriticalDiskSpace
 
         /**
          *

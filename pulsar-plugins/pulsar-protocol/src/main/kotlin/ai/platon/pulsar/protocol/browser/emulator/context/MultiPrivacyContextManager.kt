@@ -370,7 +370,7 @@ open class MultiPrivacyContextManager(
     private fun reserveResourceForcefully() {
         doMaintain()
 
-        if (AppSystemInfo.isCriticalResources) {
+        if (AppSystemInfo.isSystemOverCriticalLoad) {
             logger.info(
                 "Critical resource, closing a temporary context | availableMem: {}, memToReserve: {}, shortage: {}",
                 AppSystemInfo.formatAvailableMemory(), AppSystemInfo.formatMemoryToReserve(),

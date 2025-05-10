@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
+import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.runBlocking
@@ -17,6 +18,7 @@ import kotlin.test.Test
 
 class LoadingWebDriverPoolTest {
     private val config = ImmutableConfig()
+    // private val browserId = BrowserId.createRandomTemp(BrowserType.PLAYWRIGHT_CHROME)
     private val browserId = BrowserId.createRandomTemp(BrowserType.PLAYWRIGHT_CHROME)
     private val poolManager = DefaultWebDriverPoolManager(config)
     private lateinit var pool: LoadingWebDriverPool
@@ -35,9 +37,14 @@ class LoadingWebDriverPoolTest {
 
     @Test
     fun test_pollWebDrivers() {
-        while(pool.numDriverSlots > 0) {
-            val driver = pool.poll() as PlaywrightDriver
-            println("Created driver #${driver.id} | ${driver.guid}")
+        while(pool.numDriverSlots > 0 && !AppSystemInfo.isSystemOverCriticalLoad) {
+            val driver = pool.poll()
+            if (driver is PlaywrightDriver) {
+                println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver.guid} | ${driver::class.qualifiedName}")
+            } else {
+                println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver::class.qualifiedName}")
+            }
+
             runBlocking {
                 driver.navigateTo(seeds.random())
                 driver.waitForSelector("body")

@@ -193,7 +193,7 @@ open class WebDriverContext(
     }
 
     private fun closeContext() {
-        val asap = !AppContext.isActive || AppSystemInfo.isCriticalResources
+        val asap = !AppContext.isActive || AppSystemInfo.isSystemOverCriticalLoad
 
         logger.debug("Closing web driver context, asap: $asap")
 
@@ -255,7 +255,7 @@ open class WebDriverContext(
         var n = timeout.seconds
         lock.lockInterruptibly()
         try {
-            while (runningTasks.isNotEmpty() && !AppSystemInfo.isCriticalResources && n-- > 0) {
+            while (runningTasks.isNotEmpty() && !AppSystemInfo.isSystemOverCriticalLoad && n-- > 0) {
                 notBusy.await(1, TimeUnit.SECONDS)
             }
         } finally {
