@@ -103,6 +103,7 @@ function Merge-ToMainBranch {
     if ($LASTEXITCODE -ne 0) {
       & $gitExe checkout master
     }
+    & $gitExe pull
     & $gitExe merge "$BRANCH"
     Push-ToMainBranch
   } else {
