@@ -12,25 +12,7 @@ import java.sql.SQLException
 @SpringBootApplication
 @ImportResource("classpath:pulsar-beans/app-context.xml")
 @ComponentScan("ai.platon.pulsar.rest.api")
-class PulsarApplication {
-    /**
-     * Enable H2 client
-     * */
-    @Bean(initMethod = "start", destroyMethod = "stop")
-    @Throws(SQLException::class)
-    fun h2Server(): Server {
-        return Server.createTcpServer()
-    }
-
-    /**
-     * Enable H2 console
-     * */
-    @Bean(initMethod = "start", destroyMethod = "stop")
-    @Throws(SQLException::class)
-    fun h2WebServer(): Server {
-        return Server.createWebServer("-webAllowOthers")
-    }
-}
+class PulsarApplication
 
 fun main(args: Array<String>) {
     runApplication<PulsarApplication>(*args) {

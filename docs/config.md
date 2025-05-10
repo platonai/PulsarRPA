@@ -34,7 +34,7 @@ For high-performance parallel crawling:
 export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 export BROWSER_CONTEXT_MODE=SEQUENTIAL
 export BROWSER_CONTEXT_NUMBER=2
-export BROWSER_MAX_ACTIVE_TABS=8
+export BROWSER_MAX_OPEN_TABS=8
 export BROWSER_DISPLAY_MODE=HEADLESS
 ```
 
@@ -86,7 +86,7 @@ docker run -d -p 8182:8182 \
   -e PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint \
   -e BROWSER_CONTEXT_MODE=SEQUENTIAL \
   -e BROWSER_CONTEXT_NUMBER=2 \
-  -e BROWSER_MAX_ACTIVE_TABS=8 \
+  -e BROWSER_MAX_OPEN_TABS=8 \
   -e BROWSER_DISPLAY_MODE=HEADLESS \
   galaxyeye88/pulsar-rpa:latest
 ```
@@ -99,7 +99,7 @@ docker run -d -p 8182:8182 `
   -e PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint `
   -e BROWSER_CONTEXT_MODE=SEQUENTIAL `
   -e BROWSER_CONTEXT_NUMBER=2 `
-  -e BROWSER_MAX_ACTIVE_TABS=8 `
+  -e BROWSER_MAX_OPEN_TABS=8 `
   -e BROWSER_DISPLAY_MODE=HEADLESS `
   galaxyeye88/pulsar-rpa:latest
 ```

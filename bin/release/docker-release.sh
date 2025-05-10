@@ -4,7 +4,7 @@ set -e
 set -o pipefail
 
 # ========== CONFIG ==========
-IMAGE_NAME="galaxyeye88/pulsar-rpa"  # 👉 修改为你的镜像名
+IMAGE_NAME="galaxyeye88/pulsar-rpa"
 ROOT_DIR=""
 
 # ========== STEP 1: 查找项目根目录 ==========
@@ -20,19 +20,19 @@ done
 echo "📁 Project root found: $ROOT_DIR"
 
 # ========== STEP 2: 读取版本号 ==========
-VERSION=$(cat "$ROOT_DIR/VERSION" | tr -d ' \n')
-if [ -z "$VERSION" ]; then
+SNAPSHOT_VERSION=$(head -n 1 "$ROOT_DIR/VERSION" | tr -d '\r\n')
+if [ -z "$SNAPSHOT_VERSION" ]; then
   echo "❌ VERSION file is empty."
   exit 1
 fi
 # 去掉-SNAPSHOT后缀
-VERSION=${VERSION%-SNAPSHOT}
-echo "🏷️ Version: $VERSION"
+VERSION=${SNAPSHOT_VERSION//"-SNAPSHOT"/""}
+echo "🏷️ Version: >$VERSION<"
 
 # ========== STEP 3: 构建镜像 ==========
 cd "$ROOT_DIR"
 
-DOCKERFILE_NAME="$ROOT_DIR/docker/dev/Dockerfile"
+DOCKERFILE_NAME="$ROOT_DIR/Dockerfile"
 
 # If pulsar-app/pulsar-master/target/PulsarRPA.jar is not found, build it first
 if [ ! -f "$ROOT_DIR/pulsar-app/pulsar-master/target/PulsarRPA.jar" ]; then

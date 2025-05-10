@@ -54,7 +54,6 @@ object ChatModelFactory {
         val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
         if (deepseekAPIKey != null) {
             val deepseekModelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
-            logger.info("Creating LLM | {} {}", "deepseek", deepseekModelName)
             return getOrCreate("deepseek", deepseekModelName, deepseekAPIKey, conf)
         }
 
@@ -62,7 +61,6 @@ object ChatModelFactory {
         if (openaiAPIKey != null) {
             val openaiBaseURL = conf["OPENAI_BASE_URL"] ?: "https://api.openai.com/v1/chat/completions"
             val openaiModelName = conf["OPENAI_MODEL_NAME"] ?: "gpt-4o"
-            logger.info("Creating OpenAI compatible LLM | {} {}", openaiModelName, openaiBaseURL)
             return getOrCreateOpenAICompatibleModel(openaiModelName, openaiAPIKey, openaiBaseURL, conf)
         }
 
@@ -71,7 +69,6 @@ object ChatModelFactory {
         val modelName = requireNotNull(conf[LLM_NAME]) { "$LLM_NAME is not set, see $documentPath" }
         val apiKey = requireNotNull(conf[LLM_API_KEY]) { "$LLM_API_KEY is not set, see $documentPath" }
 
-        logger.info("Creating LLM | {} {}", provider, modelName)
         return getOrCreate(provider, modelName, apiKey, conf)
     }
 
@@ -124,6 +121,8 @@ object ChatModelFactory {
     }
 
     private fun doCreateModel(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
+        logger.info("Creating LLM with provider and model name | {} {}", provider, modelName)
+
         return when (provider) {
             "zhipu" -> createZhipuChatModel(apiKey, conf)
             "bailian" -> createBaiLianChatModel(modelName, apiKey, conf)

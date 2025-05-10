@@ -72,6 +72,9 @@ try {
     # List the remote directory contents
     # e.g. ssh vincent@platonai.cn ls -l ~/platonic.fun/repo/ai/platon/pulsar/
     $listResult = Invoke-Expression "ssh ${RemoteUser}@${RemoteHost} 'ls -l $RemoteBaseDir'"
+
+    Write-Host "Done."
+    Write-Host "Assets are available at: http://static.platonai.cn/repo/ai/platon/pulsar/"
 }
 catch {
     Write-Error "Error: $_"
