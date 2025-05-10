@@ -28,8 +28,16 @@ logs
 submodules
 extracted
 
+.dockerignore
+Dockerfile
+
+!docs/development/maven
+
+*/target/**
+
 **/application-private.yml
 application-private.yml
 
-.dockerignore
 docker/pulsar-rpa/Dockerfile
+
+!pulsar-app/pulsar-master/target/PulsarRPA.jar
