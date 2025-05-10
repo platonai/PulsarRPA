@@ -70,4 +70,12 @@ open class ListenableHyperlink(
     override val isPersistable: Boolean = false
     
     constructor(link: Hyperlink): this(link.url, link.text, link.order, link.referrer, link.args, link.href)
+
+    companion object {
+
+        @JvmStatic
+        fun create(url: String): ListenableHyperlink {
+            return ListenableHyperlink(url, "")
+        }
+    }
 }
