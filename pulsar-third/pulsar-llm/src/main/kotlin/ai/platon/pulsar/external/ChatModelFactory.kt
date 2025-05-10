@@ -2,10 +2,9 @@ package ai.platon.pulsar.external
 
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warn
 import ai.platon.pulsar.external.impl.ChatModelImpl
-import com.alibaba.dashscope.utils.Constants.apiKey
-import com.ibm.icu.impl.CurrencyData.provider
 import dev.langchain4j.model.openai.OpenAiChatModel
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import java.time.Duration
@@ -17,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap
  * TODO: integrate with LangChain4j or spring-ai
  */
 object ChatModelFactory {
+    private val logger = getLogger(this::class)
     private val models = ConcurrentHashMap<String, ChatModel>()
 
     fun isModelConfigured(conf: ImmutableConfig): Boolean {
@@ -54,6 +54,7 @@ object ChatModelFactory {
         val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
         if (deepseekAPIKey != null) {
             val deepseekModelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
+            logger.info("Creating LLM | {} {}", "deepseek", deepseekModelName)
             return getOrCreate("deepseek", deepseekModelName, deepseekAPIKey, conf)
         }
 
@@ -61,14 +62,16 @@ object ChatModelFactory {
         if (openaiAPIKey != null) {
             val openaiBaseURL = conf["OPENAI_BASE_URL"] ?: "https://api.openai.com/v1/chat/completions"
             val openaiModelName = conf["OPENAI_MODEL_NAME"] ?: "gpt-4o"
+            logger.info("Creating OpenAI compatible LLM | {} {}", openaiModelName, openaiBaseURL)
             return getOrCreateOpenAICompatibleModel(openaiModelName, openaiAPIKey, openaiBaseURL, conf)
         }
 
         val documentPath = "https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/llm-config-advanced.md"
-        val provider = requireNotNull(conf[LLM_PROVIDER])  { "$LLM_PROVIDER is not set, see $documentPath" }
+        val provider = requireNotNull(conf[LLM_PROVIDER]) { "$LLM_PROVIDER is not set, see $documentPath" }
         val modelName = requireNotNull(conf[LLM_NAME]) { "$LLM_NAME is not set, see $documentPath" }
         val apiKey = requireNotNull(conf[LLM_API_KEY]) { "$LLM_API_KEY is not set, see $documentPath" }
 
+        logger.info("Creating LLM | {} {}", provider, modelName)
         return getOrCreate(provider, modelName, apiKey, conf)
     }
 
@@ -100,12 +103,22 @@ object ChatModelFactory {
             .getOrNull()
     }
 
-    fun getOrCreateOpenAICompatibleModel(modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig): ChatModel {
+    fun getOrCreateOpenAICompatibleModel(
+        modelName: String,
+        apiKey: String,
+        baseUrl: String,
+        conf: ImmutableConfig
+    ): ChatModel {
         val key = "$modelName:$apiKey:$baseUrl"
         return models.computeIfAbsent(key) { createOpenAICompatibleModel0(modelName, apiKey, baseUrl, conf) }
     }
 
-    private fun getOrCreateModel0(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
+    private fun getOrCreateModel0(
+        provider: String,
+        modelName: String,
+        apiKey: String,
+        conf: ImmutableConfig
+    ): ChatModel {
         val key = "$modelName:$apiKey"
         return models.computeIfAbsent(key) { doCreateModel(provider, modelName, apiKey, conf) }
     }
@@ -135,6 +148,9 @@ object ChatModelFactory {
             .maxRetries(2)
             .timeout(Duration.ofSeconds(60))
             .build()
+
+
+
         return ChatModelImpl(lm, conf)
     }
 
@@ -176,7 +192,7 @@ object ChatModelFactory {
             .apiKey(apiKey)
             .baseUrl("https://ark.cn-beijing.volces.com/api/v3")
             .modelName(modelName)
-            .logRequests(false)
+            .logRequests(true)
             .logResponses(true)
             .maxRetries(2)
             .timeout(Duration.ofSeconds(90))
@@ -196,7 +212,7 @@ object ChatModelFactory {
             .apiKey(apiKey)
             .baseUrl(baseUrl)
             .modelName(modelName)
-            .logRequests(false)
+            .logRequests(true)
             .logResponses(true)
             .maxRetries(2)
             .timeout(Duration.ofSeconds(90))

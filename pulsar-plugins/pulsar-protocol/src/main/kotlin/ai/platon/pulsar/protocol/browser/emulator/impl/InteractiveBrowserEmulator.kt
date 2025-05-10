@@ -740,10 +740,12 @@ open class InteractiveBrowserEmulator(
         val expressions = buildScrollExpressions(interactTask)
 
         val interactSettings = interactTask.interactSettings
-        // some website shows lazy content only when the page is in the front.
-        val bringToFront = interactTask.interactSettings.bringToFront
-        val scrollInterval = interactSettings.scrollInterval.toMillis()
-        evaluate(interactTask, expressions, scrollInterval, bringToFront = bringToFront)
+        if (interactSettings.scrollCount > 0) {
+            // some website shows lazy content only when the page is in the front.
+            val bringToFront = interactTask.interactSettings.bringToFront
+            val scrollInterval = interactSettings.scrollInterval.toMillis()
+            evaluate(interactTask, expressions, scrollInterval, bringToFront = bringToFront)
+        }
     }
     
     private suspend fun updateMetaInfos(page: WebPage, driver: WebDriver) {

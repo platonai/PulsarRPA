@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton.common.options
 
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.browser.InteractLevel
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.IStringConverter
 import org.apache.commons.lang3.StringUtils
@@ -121,16 +122,17 @@ enum class Condition {
     BEST, BETTER, GOOD, WORSE, WORST;
 
     companion object {
-        fun valueOfOrDefault(s: String?): Condition {
-            return try {
-                valueOf(s?.uppercase(Locale.getDefault()) ?: "GOOD")
-            } catch (e: Throwable) {
-                GOOD
-            }
+        fun valueOfOrDefault(s: String?): Condition = when {
+            s.isNullOrEmpty() -> GOOD
+            else -> runCatching { valueOf(s.uppercase()) }.getOrDefault(GOOD)
         }
     }
 }
 
 class ConditionConverter : IStringConverter<Condition> {
     override fun convert(value: String) = Condition.valueOfOrDefault(value)
+}
+
+class InteractLevelConverter : IStringConverter<InteractLevel> {
+    override fun convert(value: String) = InteractLevel.from(value)
 }

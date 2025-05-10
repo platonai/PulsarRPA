@@ -21,13 +21,9 @@ fun main() {
         .withLLMName("ep-20250218201413-f54pj") // the LLM name, you should change it to your own
         // .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
 
-    // Or
-    // use config file under $PULSAR_HOME/config/conf-enabled
-    // You can find the template config files here:
-    // https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/template
-
-    // Use the default browser which has an isolated user data directory
-    PulsarSettings().withDefaultBrowser()
+    // Use the default browser for best experience
+    // Enable Single Page Application mode to avoid timeout
+    PulsarSettings().withDefaultBrowser().withSPA()
 
     val session = PulsarContexts.createSession()
     val url = "https://www.amazon.com/dp/B0C1H26C46"
@@ -42,7 +38,7 @@ get the text of the element with id 'title'
     val eventHandlers = DefaultPageEventHandlers()
     eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
         while (true) {
-            println("Demonstrating talk and execute on the active page.")
+            println("Talk and execute on the active page")
 
             prompts.forEach { prompt ->
                 println("\n")

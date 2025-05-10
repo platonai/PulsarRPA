@@ -1,9 +1,12 @@
 package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.external.ChatModelFactory
+import ai.platon.pulsar.external.ChatModelTestUtils
 import ai.platon.pulsar.rest.api.TestUtils
 import ai.platon.pulsar.rest.api.entities.PromptRequest
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -12,6 +15,21 @@ import kotlin.test.assertTrue
  * Test [AiController]
  * */
 class AiControllerTests : IntegrationTestBase() {
+
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun initConfig() {
+            ChatModelTestUtils.initConfig()
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun resetConfig() {
+            ChatModelTestUtils.resetConfig()
+        }
+    }
+
     val indexUrl = "https://www.amazon.com/b?node=1292115011"
     val productUrl = "https://www.amazon.com/dp/B0C1H26C46"
 

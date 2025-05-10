@@ -37,7 +37,7 @@ Find all links containing /dp/.
 ## 🎥 Demo Videos
 
 🎬 YouTube:
-[![Watch the video](https://img.youtube.com/vi/lQXSSQSNQ7I/0.jpg)](https://www.youtube.com/watch?v=lQXSSQSNQ7I)
+[![Watch the video](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
 
 📺 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
@@ -48,9 +48,9 @@ Find all links containing /dp/.
 
 ## ▶️ Run PulsarRPA
 
-### 📦 Run Executable Jar
+### 📦 Run Executable Jar - Best Experience
 
-Download and run the latest executable JAR file:
+Download:
 
 ```bash
 # Linux/macOS and Windows (if curl is available)
@@ -61,14 +61,17 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 ```
 
-> 🔍 **Note:** Advanced users can still access all advanced features without setting `DEEPSEEK_API_KEY`.
+> 🔍 **Tip:** You can still access NON-LLM features without a LLM KEY.
 
 🔗 [Choose Another LLM Provider](docs/config/llm/llm-config)
 
-#### 📦 Download Links
+<details>
+<summary>📦 Download Links</summary>
 
 - 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar)
-- 🇨🇳 [For Chinese Users](http://static.platonai.cn/repo/ai/platon/pulsar/PulsarRPA.jar)
+- 📦 [Backup Downloads](http://static.platonai.cn/repo/ai/platon/pulsar/)
+
+</details>
 
 ### ▶ Run with IDE
 
@@ -93,7 +96,7 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/p
 
 ## 🌟 For Beginners – Just Text, No Code!
 
-Use the `command` API to perform actions and extract data using natural language instructions.
+Use the `ai/command` API to perform actions and extract data using natural language instructions.
 
 ### 📥 Example Request (Text-based):
 
@@ -109,6 +112,8 @@ curl -X POST "http://localhost:8182/api/ai/command" \
     Find all links containing /dp/.
   '
 ```
+
+💡 **Tip:** You don't need to fill in every field — just what you need.
 
 ### 📄 JSON-Based Version:
 
@@ -128,9 +133,9 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 
 </details>
 
-💡 **Tip:** You don't need to fill in every field — just what you need.
+## 🎓 For Advanced Users — LLM + X-SQL: Precise, Flexible, Powerful
 
-## 🎓 For Advanced Users - LLM + X-SQL: Simple & Powerful
+Harness the power of the `x/e` API for highly precise, flexible, and intelligent data extraction.
 
   ```bash
   curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
@@ -158,9 +163,11 @@ The extracted data example:
 }
 ```
 
+* X-SQL Guide: [X-SQL](docs/x-sql.md)
+
 ---
 
-## 👨‍💻 For Experts - Native API: Very Powerful!
+## 👨‍💻 For Experts - Native API: Powerful!
 
 ### 🎮 Browser Control:
 
@@ -237,12 +244,12 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 
 ## 📜 Documents
 
-* 📖 [Advanced Guides](docs/advanced-guides.md)
-* 📊 [REST API Examples](docs/rest-api-examples.md)
+* 📖 [REST API Examples](docs/rest-api-examples.md)
+* 🧠 [Expert Guide](docs/advanced-guides.md)
 
 ---
 
-## 🔧 Proxies - Unlock Advanced Capabilities
+## 🔧 Proxies - Unblock Websites
 
 <details>
 

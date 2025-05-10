@@ -105,10 +105,10 @@ abstract class AbstractWebDriver(
      * */
     val resourceBlockProbability get() = settings.resourceBlockProbability
 
-    protected val _blockedURLs = mutableListOf<String>()
-    protected val _probabilityBlockedURLs = mutableListOf<String>()
-    val blockedURLs: List<String> get() = _blockedURLs
-    val probabilisticBlockedURLs: List<String> get() = _probabilityBlockedURLs
+    protected val _blockedURLPatterns = mutableListOf<String>()
+    protected val _probabilityBlockedURLPatterns = mutableListOf<String>()
+    val blockedURLs: List<String> get() = _blockedURLPatterns
+    val probabilisticBlockedURLs: List<String> get() = _probabilityBlockedURLPatterns
     val isConnectable get() = browser.isConnected
 
     protected val enableStartupScript get() = settings.isStartupScriptEnabled

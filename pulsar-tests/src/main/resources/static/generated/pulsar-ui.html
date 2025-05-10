@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Command Submitter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            max-width: 800px;
+            margin: auto;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 0.5rem;
+            font-family: monospace;
+        }
+        button {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+        }
+        #status {
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+<h1>Submit AI Command</h1>
+<label for="commandInput">Command:</label><textarea id="commandInput" placeholder="Enter your command script here..."></textarea>
+<br />
+<button onclick="submitCommand()">Submit</button>
+<div id="status"></div>
+<pre id="result"></pre>
+
+<script>
+    async function submitCommand() {
+        const input = document.getElementById('commandInput').value.trim();
+        const status = document.getElementById('status');
+        const result = document.getElementById('result');
+        status.textContent = 'Submitting...';
+        result.textContent = '';
+
+        try {
+            const response = await fetch('http://localhost:8182/api/ai/command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: input
+            });
+
+            if (!response.ok) throw new Error('Failed to submit command.');
+
+            const uuid = await response.text();
+            status.textContent = `Submitted. Tracking UUID: ${uuid}`;
+
+            await pollResult(uuid);
+        } catch (err) {
+            status.textContent = 'Error: ' + err.message;
+        }
+    }
+
+    async function pollResult(uuid) {
+        const status = document.getElementById('status');
+        const result = document.getElementById('result');
+        let retry = 0;
+
+        const interval = setInterval(async () => {
+            try {
+                const response = await fetch(`http://localhost:8182/api/ai/command/${uuid}`);
+                if (!response.ok) throw new Error('Polling failed');
+
+                const data = await response.json();
+                if (data.status === 'completed') {
+                    clearInterval(interval);
+                    status.textContent = 'Completed';
+                    result.textContent = JSON.stringify(data.result, null, 2);
+                } else if (data.status === 'failed') {
+                    clearInterval(interval);
+                    status.textContent = 'Failed';
+                    result.textContent = data.error || 'Unknown error';
+                } else {
+                    status.textContent = 'Processing...';
+                }
+            } catch (err) {
+                retry++;
+                if (retry > 5) {
+                    clearInterval(interval);
+                    status.textContent = 'Polling failed too many times.';
+                }
+            }
+        }, 2000);
+    }
+</script>
+</body>
+</html>

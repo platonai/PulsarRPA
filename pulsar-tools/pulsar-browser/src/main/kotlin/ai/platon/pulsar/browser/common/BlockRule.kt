@@ -42,12 +42,12 @@ open class BlockRule {
             "https://img*"
         ).filterNot { it in mustPassUrls }.toMutableList()
 
-    open val mustPassUrlPatterns: MutableList<Regex>
+    open val mustPassUrlRegexes: MutableList<Regex>
         get() = listOf(
             "about:blank",
             "data:.+",
         ).map { it.toRegex() }.union(mustPassUrls.map { Wildchar(it).toRegex() }).toMutableList()
 
-    open val blockingUrlPatterns: MutableList<Regex>
+    open val blockingUrlRegexes: MutableList<Regex>
         get() = blockingUrls.map { Wildchar(it).toRegex() }.toMutableList()
 }

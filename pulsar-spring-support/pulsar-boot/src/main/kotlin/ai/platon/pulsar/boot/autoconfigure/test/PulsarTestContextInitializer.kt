@@ -9,8 +9,8 @@ import org.springframework.context.support.AbstractApplicationContext
 
 class PulsarTestContextInitializer : ApplicationContextInitializer<AbstractApplicationContext> {
     override fun initialize(applicationContext: AbstractApplicationContext) {
-        // Use sequential browsers to avoid browser conflicts, and also gain better performance
-        BrowserSettings.withSequentialBrowsers()
+        // Use temporary browsers to avoid browser conflicts, and also gain better performance
+        BrowserSettings.withTemporaryBrowser()
 
         PulsarContextInitializer().initialize(applicationContext)
 
