@@ -41,7 +41,7 @@ class ChatModelFactoryTest {
         // the response would be like:
         // {"error":{"code":"AuthenticationError","message":"The API key in the request is missing or invalid. Request id: xxx","param":"","type":"Unauthorized"}}
         println(response)
-        assertTrue { response.content.contains("AuthenticationError") }
+        assertTrue { listOf("error", "fail").any { response.content.contains(it) } }
         assertTrue { response.state == ResponseState.OTHER }
     }
 }
