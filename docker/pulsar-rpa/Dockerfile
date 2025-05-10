@@ -46,7 +46,6 @@ COPY --from=builder /build/app.jar app.jar
 ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC"
 
 # 暴露端口（仅文档声明）
-EXPOSE 8082
 EXPOSE 8182
 
 # 创建非 root 用户
@@ -64,4 +63,4 @@ LABEL maintainer="Vincent Zhang <ivincent.zhang@gmail.com>"
 LABEL description="PulsarRPA: An AI-Enabled, Super-Fast, Thread-Safe Browser Automation Solution! 💖"
 
 # 启动命令，支持动态端口配置
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar serve --server.port=${SERVER_PORT:-8082}"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
