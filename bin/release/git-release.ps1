@@ -16,17 +16,26 @@ $TAG = "v$VERSION"
 
 # Replace SNAPSHOT version with the release version in readme files
 function Replace-Version-In-ReadmeFiles {
-  Write-Host "Replacing SNAPSHOT version with the release version in readme files"
+  Write-Host "Replacing SNAPSHOT version with the release version in all markdown files"
 
-  @('llm-config.md', 'README-CN.md') | ForEach-Object {
-    Get-ChildItem -Path "$AppHome" -Depth 2 -Filter $_ -Recurse | ForEach-Object {
-      (Get-Content $_.FullName) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content $_.FullName
-    }
+  # Find all .md files recursively in the project directory
+  $mdFiles = Get-ChildItem -Path "$AppHome" -Recurse -Filter *.md
+
+  # Replace SNAPSHOT version with the release version in each file
+  $mdFiles | ForEach-Object {
+    $filePath = $_.FullName
+    (Get-Content $filePath) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content $filePath
+    Write-Host "Updated version in: $filePath"
+
+    # Replace tags in all README files, for example, v0.0.1 -> v$VERSION
+    (Get-Content $filePath) -replace 'v\d\.\d{1,2}\.\d{1,3}', $VERSION | Set-Content $filePath
+    Write-Host "Updated version in: $filePath"
   }
 
-  & $gitExe add *.md
-  & $gitExe commit -m "Replace SNAPSHOT version with the release version in readme files"
-  & $gitExe push
+  # Stage, commit, and push the changes
+  Push-ReadmeFiles-Changes
+
+  Write-Host "Version replacement completed and changes pushed to the repository."
 }
 
 function Restore-WorkingBranch {
@@ -48,6 +57,20 @@ function Pull-Changes {
   } else {
     Write-Host "Bye."
     exit 0
+  }
+}
+
+function Push-ReadmeFiles-Changes {
+  Write-Host "Ready to push to $BRANCH"
+  $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
+  if ($confirm -eq 'Y') {
+
+    & $gitExe add *.md
+    & $gitExe commit -m "Replace SNAPSHOT version with the release version in all markdown files"
+    & $gitExe push
+
+  } else {
+    Write-Host "Do not push"
   }
 }
 
