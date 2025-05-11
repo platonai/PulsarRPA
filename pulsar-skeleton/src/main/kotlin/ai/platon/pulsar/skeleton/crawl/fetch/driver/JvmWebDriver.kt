@@ -223,7 +223,7 @@ interface JvmWebDriver {
      * @return The WebDriver for the new page, or null if timeout.
      */
     @Throws(WebDriverException::class)
-    fun waitForPageAsync(url: String, timeout: Duration): CompletableFuture<JvmWebDriver?>
+    fun waitForPageAsync(url: String, timeout: Duration): CompletableFuture<WebDriver?>
     
     /**
      * Wait until the predicate returns true.
