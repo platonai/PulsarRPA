@@ -1,0 +1,62 @@
+name: Pull Request CI
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  # Allow manual workflow runs
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        java-version: [ 17 ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java-version }}
+          cache: maven
+          
+      - name: Read VERSION
+        id: version
+        run: |
+          echo "VERSION=$(head -n 1 VERSION)" >> $GITHUB_ENV
+          
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+          
+      - name: Build with Maven
+        run: ./mvnw clean package -DskipTests -Pall-modules
+        
+      - name: Run Tests
+        run: ./mvnw test -Pall-modules
+        
+      - name: Build Docker image
+        run: |
+          docker build -t pulsar-rpa-test:${{ github.sha }} -f Dockerfile .
+          
+      - name: Start Docker container for integration tests
+        run: |
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 pulsar-rpa-test:${{ github.sha }}
+          sleep 10  # Wait for Spring Boot to start
+          
+      - name: Run curl integration tests
+        run: |
+          ./bin/scrape.sh
+          
+      - name: Stop Docker container
+        if: always()
+        run: docker stop pulsar-rpa-test || true 
