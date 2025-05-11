@@ -30,7 +30,7 @@ object PulsarContexts {
     fun create(): PulsarContext {
         val activated = activeContext
         if (activated != null && activated.isActive) {
-            // logger.info("Context is already activated | {}#{}", activated::class, activated.id)
+            logger.debug("Context is already activated | {}#{}", activated::class, activated.id)
             return activated
         }
 

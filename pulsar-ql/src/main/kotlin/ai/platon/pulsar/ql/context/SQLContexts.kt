@@ -41,8 +41,9 @@ open class H2SQLContext(
     }
 
     /**
-     * Create a pulsar session, note that the session is not a SQLSession.
-     * TODO: return a better PulsarSession
+     * Create a [BasicPulsarSession].
+     *
+     * > **NOTE:** The session is not a SQLSession, use [execute], [executeQuery] to access [ai.platon.pulsar.ql.SQLSession].
      * */
     @Throws(Exception::class)
     override fun createSession(): BasicPulsarSession {
@@ -120,7 +121,9 @@ open class ClassPathXmlSQLContext(configLocation: String) :
     }
 
     /**
-     * TODO: return a better PulsarSession
+     * Create a [BasicPulsarSession].
+     *
+     * > **NOTE:** The session is not a SQLSession, use [execute], [executeQuery] to access [ai.platon.pulsar.ql.SQLSession].
      * */
     override fun createSession(): BasicPulsarSession {
         val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())

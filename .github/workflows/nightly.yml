@@ -1,0 +1,60 @@
+name: Nightly Build
+
+on:
+  schedule:
+    # Runs at 00:00 UTC every day
+    - cron: '0 0 * * *'
+  # Allow manual workflow runs
+  workflow_dispatch:
+
+jobs:
+  nightly-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+
+      - name: Read VERSION
+        id: version
+        run: |
+          echo "VERSION=$(head -n 1 VERSION)" >> $GITHUB_ENV
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build with Maven
+        run: ./mvnw clean package -Pall-modules
+
+      - name: Build Docker image
+        run: |
+          docker build -t pulsar-rpa-nightly:${{ github.sha }} -f Dockerfile .
+
+      - name: Integration Test
+        run: |
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 pulsar-rpa-nightly:${{ github.sha }}
+          sleep 10  # Wait for Spring Boot to start
+          ./bin/scrape.sh
+          docker stop pulsar-rpa-test || true
+
+      - name: Slack Notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: ci-builds
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: Nightly Build Result
+          SLACK_MESSAGE: 'Build status: ${{ job.status }}' 
