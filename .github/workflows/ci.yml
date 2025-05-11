@@ -1,62 +1,77 @@
-name: Pull Request CI
+name: CI & Release
 
 on:
-  pull_request:
-    branches: [ main, master ]
+  push:
+    branches:
+      - main
   # Allow manual workflow runs
   workflow_dispatch:
 
-jobs:
-  build-and-test:
-    name: Build and Test
-    runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        java-version: [ 17 ]
+env:
+  IMAGE_NAME: galaxyeye88/pulsar-rpa
 
+jobs:
+  build-test-release:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-        
-      - name: Set up JDK ${{ matrix.java-version }}
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: ${{ matrix.java-version }}
+          java-version: 17
           cache: maven
-          
+
       - name: Read VERSION
         id: version
         run: |
           echo "VERSION=$(head -n 1 VERSION)" >> $GITHUB_ENV
-          
+
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-          
-      - name: Build with Maven
-        run: ./mvnw clean package -DskipTests -Pall-modules
-        
+
+      - name: Maven build and deploy to local repo
+        run: ./mvnw clean install -DskipTests -Pall-modules
+
       - name: Run Tests
         run: ./mvnw test -Pall-modules
-        
+
       - name: Build Docker image
         run: |
-          docker build -t pulsar-rpa-test:${{ github.sha }} -f Dockerfile .
-          
-      - name: Start Docker container for integration tests
+          docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest -f Dockerfile .
+
+      - name: Start Docker container
         run: |
-          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 pulsar-rpa-test:${{ github.sha }}
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 $IMAGE_NAME:$VERSION
           sleep 10  # Wait for Spring Boot to start
-          
+
       - name: Run curl integration tests
         run: |
           ./bin/scrape.sh
-          
+
       - name: Stop Docker container
         if: always()
-        run: docker stop pulsar-rpa-test || true 
+        run: docker stop pulsar-rpa-test || true
+
+      - name: Deploy to Sonatype OSSRH
+        if: success()
+        run: |
+          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests \
+            -Dgpg.skip=true \
+            -Dossrh.username=${{ secrets.SONATYPE_USERNAME }} \
+            -Dossrh.password=${{ secrets.SONATYPE_PASSWORD }}
+
+      - name: Push Docker image
+        if: success()
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker push $IMAGE_NAME:$VERSION
+          docker push $IMAGE_NAME:latest 
