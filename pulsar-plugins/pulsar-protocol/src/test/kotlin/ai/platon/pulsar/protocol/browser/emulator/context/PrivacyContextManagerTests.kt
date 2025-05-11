@@ -5,8 +5,10 @@ import ai.platon.pulsar.browser.common.UserAgent
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
@@ -26,17 +28,27 @@ import kotlin.random.Random
 import kotlin.test.*
 
 class PrivacyContextManagerTests {
+    private val logger = getLogger(this)
     private val contextPathBase = Files.createTempDirectory("test-")
     private val contextPath = contextPathBase.resolve("cx.5kDMDS2")
     private val contextPath2 = contextPathBase.resolve("cx.7KmtAC2")
     private val conf = ImmutableConfig()
-    private val driverPoolManager = DefaultWebDriverPoolManager(conf)
+    private lateinit var driverPoolManager: WebDriverPoolManager
     
     @BeforeTest
     fun setup() {
         BrowserSettings.maxBrowserContexts(6).maxOpenTabs(10).withSequentialBrowsers(15)
+        driverPoolManager = DefaultWebDriverPoolManager(conf)
     }
-    
+
+    @AfterTest
+    fun tearDown() {
+        driverPoolManager.close()
+        Files.walk(contextPathBase)
+            .filter { it.fileName.toString().startsWith("cx.") }
+            .forEach { Files.delete(it) }
+    }
+
     @Test
     fun testPrivacyContextReport() {
         var report = String.format(
@@ -115,7 +127,7 @@ class PrivacyContextManagerTests {
         val userAgents = UserAgent()
         
         val volatileContexts = ConcurrentLinkedDeque<PrivacyContext>()
-        val producer = Executors.newScheduledThreadPool(5)
+        val producer = Executors.newScheduledThreadPool(50)
         val closer = Executors.newScheduledThreadPool(5)
         
         producer.scheduleWithFixedDelay({
@@ -129,17 +141,23 @@ class PrivacyContextManagerTests {
             val userAgent = userAgents.getRandomUserAgent()
             val fingerprint = Fingerprint(BrowserType.DEFAULT, proxyServer, userAgent = userAgent)
             val pc = privacyManager.tryGetNextReadyPrivacyContext(fingerprint)
-            
             volatileContexts.add(pc)
+
+            logger.info("Produced privacy context {} | {}", pc.display, pc.id)
+
             assertTrue { pc.isActive }
-        }, 1, 800, TimeUnit.MILLISECONDS)
+        }, 100, 500, TimeUnit.MILLISECONDS)
         
         closer.scheduleWithFixedDelay({
             volatileContexts.forEach { pc ->
                 // proxy server can be changed, which will be improved in the further
                 pc.privacyAgent.fingerprint.proxyURI = URI("127.0.0." + Random.nextInt(200))
-                
+
                 privacyManager.close(pc)
+                volatileContexts.remove(pc)
+
+                logger.info("Closed privacy context {} | {}", pc.display, pc.id)
+
                 assertTrue { !pc.isActive }
                 assertFalse { privacyManager.temporaryContexts.containsKey(pc.privacyAgent) }
                 assertFalse { privacyManager.temporaryContexts.containsValue(pc) }

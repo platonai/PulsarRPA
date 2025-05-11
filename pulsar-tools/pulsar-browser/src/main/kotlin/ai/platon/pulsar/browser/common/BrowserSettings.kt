@@ -165,8 +165,6 @@ open class BrowserSettings constructor(
             ReplaceWith("withBrowserContextMode(contextMode, browserType)"))
         fun withSequentialBrowsers(browserType: BrowserType): Companion = withSequentialBrowsersInternal(browserType, 10)
 
-        @Deprecated("Use withBrowserContextMode instead, this method will be a private method",
-            ReplaceWith("withBrowserContextMode(contextMode, browserType)"))
         fun withSequentialBrowsers(maxAgents: Int): Companion {
             return withSequentialBrowsersInternal(BrowserType.PULSAR_CHROME, maxAgents)
         }
