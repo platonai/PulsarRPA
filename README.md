@@ -54,7 +54,7 @@ Download:
 
 ```bash
 # Linux/macOS and Windows (if curl is available)
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.5/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.6/PulsarRPA.jar
 ```
 
 ```bash

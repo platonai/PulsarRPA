@@ -55,7 +55,7 @@
 
 ```bash
 # Linux/macOS 和 Windows（如果 curl 可用）
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.5/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.6/PulsarRPA.jar
 ```
 ```bash
 java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
