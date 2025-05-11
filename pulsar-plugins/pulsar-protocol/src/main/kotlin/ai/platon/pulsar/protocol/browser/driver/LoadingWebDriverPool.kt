@@ -159,8 +159,7 @@ class LoadingWebDriverPool constructor(
         val numClosed: Int,
         val isRetired: Boolean,
         val isIdle: Boolean,
-        val idleTime: Duration,
-        val criticalResource: Boolean = AppSystemInfo.isSystemOverCriticalLoad
+        val idleTime: Duration
     ) {
         fun format(verbose: Boolean): String {
             val status = if (verbose) {
@@ -174,10 +173,13 @@ class LoadingWebDriverPool constructor(
                     numActive, numStandby, numWaiting, numWorking, numDriverSlots, numRetired, numClosed
                 )
             }
-            
+
             val time = idleTime.readable()
             return when {
-                criticalResource -> "[Critical resource] | $status"
+                AppSystemInfo.isCriticalDiskSpace -> "[Critical disk space] | $status"
+                AppSystemInfo.isCriticalMemory -> "[Critical memory] | $status"
+                AppSystemInfo.isCriticalCPULoad -> "[Critical CPU] | $status"
+                AppSystemInfo.isSystemOverCriticalLoad -> "[System over critical load] | $status"
                 isIdle -> "[Idle] $time | $status"
                 isRetired -> "[Retired] | $status"
                 else -> status
