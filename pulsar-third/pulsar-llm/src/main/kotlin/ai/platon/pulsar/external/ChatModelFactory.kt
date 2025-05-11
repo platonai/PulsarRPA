@@ -107,7 +107,7 @@ object ChatModelFactory {
      * @return The created model.
      */
     fun getOrCreateOrNull(conf: ImmutableConfig): ChatModel? {
-        if (!isModelConfigured(conf)) {
+        if (!hasModel(conf)) {
             return null
         }
 

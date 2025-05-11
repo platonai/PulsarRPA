@@ -55,11 +55,6 @@
             <artifactId>langchain4j-qianfan</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-deepseek</artifactId>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.ehcache</groupId>
