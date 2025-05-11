@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
+import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -114,10 +115,16 @@ class PrivacyContextManagerTests {
         val userAgents = UserAgent()
         
         val volatileContexts = ConcurrentLinkedDeque<PrivacyContext>()
-        val producer = Executors.newSingleThreadScheduledExecutor()
-        val closer = Executors.newSingleThreadScheduledExecutor()
+        val producer = Executors.newScheduledThreadPool(5)
+        val closer = Executors.newScheduledThreadPool(5)
         
         producer.scheduleWithFixedDelay({
+            // LoadingWebDriverPoolTest failed on low-spec computers #87
+            // https://github.com/platonai/PulsarRPA/issues/87
+            if (AppSystemInfo.isSystemOverCriticalLoad) {
+                return@scheduleWithFixedDelay
+            }
+
             val proxyServer = "127.0.0." + Random.nextInt(200)
             val userAgent = userAgents.getRandomUserAgent()
             val fingerprint = Fingerprint(BrowserType.DEFAULT, proxyServer, userAgent = userAgent)
