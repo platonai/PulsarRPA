@@ -14,11 +14,18 @@ import kotlin.reflect.KClass
 
 /**
  * The factory for creating models.
+ *
+ * * [Langchain4j Models](https://github.com/langchain4j/langchain4j/blob/main/docs/docs/integrations/language-models)
  */
 object ChatModelFactory {
     private val logger = getLogger(this::class)
     private val registeredModels = ConcurrentHashMap<String, ChatModel>()
     private val configuredModels = ConcurrentHashMap<String, ChatModel>()
+
+    var logRequest = false
+    var logResponse = false
+    var maxRetries = 3
+    var timeout = Duration.ofSeconds(30)
 
     fun isModelConfigured(conf: ImmutableConfig): Boolean {
         // deepseek official
@@ -211,8 +218,11 @@ object ChatModelFactory {
      * */
     private fun createBaiLianChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
         val baseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-        val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl(baseUrl).modelName(modelName).logRequests(false)
-            .logResponses(true).maxRetries(2).timeout(Duration.ofSeconds(60)).build()
+        val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl(baseUrl).modelName(modelName)
+            .logRequests(logRequest)
+            .logResponses(logResponse).maxRetries(maxRetries)
+            .timeout(timeout)
+            .build()
 
 
 
@@ -220,7 +230,12 @@ object ChatModelFactory {
     }
 
     private fun createZhipuChatModel(apiKey: String, conf: ImmutableConfig): ChatModel {
-        val lm = ZhipuAiChatModel.builder().apiKey(apiKey).logRequests(true).logResponses(true).maxRetries(2).build()
+        val lm = ZhipuAiChatModel.builder().apiKey(apiKey)
+            .logRequests(logRequest)
+            .logResponses(logResponse).maxRetries(maxRetries)
+            .readTimeout(timeout)
+            .writeTimeout(timeout)
+            .build()
         return ChatModelImpl(lm, conf)
     }
 
@@ -231,7 +246,10 @@ object ChatModelFactory {
      * */
     private fun createDeepSeekChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
         val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl("https://api.deepseek.com/").modelName(modelName)
-            .logRequests(false).logResponses(true).maxRetries(2).timeout(Duration.ofSeconds(90)).build()
+            .logRequests(logRequest)
+            .logResponses(logResponse).maxRetries(maxRetries)
+            .timeout(timeout)
+            .build()
         return ChatModelImpl(lm, conf)
     }
 
@@ -242,7 +260,10 @@ object ChatModelFactory {
      * */
     private fun createVolcengineChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
         val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl("https://ark.cn-beijing.volces.com/api/v3")
-            .modelName(modelName).logRequests(true).logResponses(true).maxRetries(2).timeout(Duration.ofSeconds(90))
+            .modelName(modelName)
+            .logRequests(logRequest)
+            .logResponses(logResponse).maxRetries(maxRetries)
+            .timeout(timeout)
             .build()
         return ChatModelImpl(lm, conf)
     }
@@ -256,7 +277,10 @@ object ChatModelFactory {
         modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig
     ): ChatModel {
         val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl(baseUrl).modelName(modelName).logRequests(true)
-            .logResponses(true).maxRetries(2).timeout(Duration.ofSeconds(90)).build()
+            .logRequests(logRequest)
+            .logResponses(logResponse).maxRetries(maxRetries)
+            .timeout(timeout)
+            .build()
         return ChatModelImpl(lm, conf)
     }
 }
