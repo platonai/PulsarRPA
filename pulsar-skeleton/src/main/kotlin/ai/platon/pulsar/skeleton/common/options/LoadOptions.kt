@@ -35,19 +35,19 @@ import kotlin.reflect.jvm.kotlinProperty
  * val options = session.options('-expires 1d -itemExpires 1d -ignoreFailure -parse -storeContent')
  * 
  * // Fetch after 1 day since last fetch
- * session.load('https://www.jd.com', '-expires 1d')
+ * session.load('https://www.amazon.com', '-expires 1d')
  * 
  * // Force immediate fetch regardless of cache
- * session.load('https://www.jd.com', '-refresh')
+ * session.load('https://www.amazon.com', '-refresh')
  * 
  * // Don't fetch after specified deadline
- * session.load('https://www.jd.com', '-deadline 2022-04-15T18:36:54.941Z')
+ * session.load('https://www.amazon.com', '-deadline 2022-04-15T18:36:54.941Z')
  * 
  * // Enable parsing phase
- * session.load('https://www.jd.com', '-parse')
+ * session.load('https://www.amazon.com', '-parse')
  * 
  * // Store page content in storage
- * session.load('https://www.jd.com', '-storeContent')
+ * session.load('https://www.amazon.com', '-storeContent')
  * ```
  */
 open class LoadOptions constructor(
