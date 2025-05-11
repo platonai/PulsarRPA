@@ -52,6 +52,7 @@ class LoadingWebDriverPoolTest {
     fun test_pollWebDrivers() {
         while(pool.numDriverSlots > 0 && !AppSystemInfo.isSystemOverCriticalLoad) {
             val driver = pool.poll()
+
             if (driver is PlaywrightDriver) {
                 println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver.guid} | ${driver::class.qualifiedName}")
             } else {
@@ -80,9 +81,14 @@ class LoadingWebDriverPoolTest {
             }
 
             println("$i. Round $i polling a driver")
-            val driver = pool.poll() as PlaywrightDriver
+            val driver = pool.poll()
             drivers += driver
-            println("Get driver #${driver.id} | ${driver.guid}")
+
+            if (driver is PlaywrightDriver) {
+                println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver.guid} | ${driver::class.qualifiedName}")
+            } else {
+                println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver::class.qualifiedName}")
+            }
 
             executor.submit {
                 val url = seeds.random()

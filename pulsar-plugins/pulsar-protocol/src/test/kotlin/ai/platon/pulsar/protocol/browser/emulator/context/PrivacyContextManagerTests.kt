@@ -97,7 +97,7 @@ class PrivacyContextManagerTests {
         repeat(100) {
             val proxyServer = "127.0.0." + Random.nextInt(200)
             val userAgent = userAgents.getRandomUserAgent()
-            val fingerprint = Fingerprint(BrowserType.PULSAR_CHROME, proxyServer, userAgent = userAgent)
+            val fingerprint = Fingerprint(BrowserType.DEFAULT, proxyServer, userAgent = userAgent)
             val pc = privacyManager.tryGetNextReadyPrivacyContext(fingerprint)
             
             assertTrue { pc.isActive }
@@ -120,7 +120,7 @@ class PrivacyContextManagerTests {
         producer.scheduleWithFixedDelay({
             val proxyServer = "127.0.0." + Random.nextInt(200)
             val userAgent = userAgents.getRandomUserAgent()
-            val fingerprint = Fingerprint(BrowserType.MOCK_CHROME, proxyServer, userAgent = userAgent)
+            val fingerprint = Fingerprint(BrowserType.DEFAULT, proxyServer, userAgent = userAgent)
             val pc = privacyManager.tryGetNextReadyPrivacyContext(fingerprint)
             
             volatileContexts.add(pc)
@@ -149,7 +149,7 @@ class PrivacyContextManagerTests {
     fun `When a privacy context closed then it's removed from the active queue`() {
         val manager = MultiPrivacyContextManager(driverPoolManager, conf)
         
-        val agent = PrivacyAgent(contextPath, BrowserType.MOCK_CHROME)
+        val agent = PrivacyAgent(contextPath, BrowserType.DEFAULT)
         val privacyContext = manager.getOrCreate(agent)
         
         assertTrue { manager.temporaryContexts.containsKey(agent) }
