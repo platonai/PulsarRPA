@@ -139,7 +139,7 @@ interface WebDriver : Closeable {
      * Web pages for the page open from the current page, via window.open(), link click, form submission,
      * etc.
      *
-     * NOT IMPLEMENTED
+     * TODO: NOT IMPLEMENTED
      * */
     val frames: List<WebDriver>
 
@@ -156,7 +156,8 @@ interface WebDriver : Closeable {
 
     /**
      * The browser type.
-     * BrowserType.PULSAR_CHROME is the only supported browser type currently.
+     * BrowserType.PULSAR_CHROME is the only fully supported browser type currently.
+     * BrowserType.PLAYWRIGHT_CHROME is a partially supported browser type since Playwright is not thread safe.
      * */
     val browserType: BrowserType
 

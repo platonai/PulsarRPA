@@ -644,7 +644,7 @@ class PulsarWebDriver(
         }
 
         pageAPI?.onDocumentOpened { entry.mainRequestCookies = getCookies0() }
-        // TODO: not working
+        // TODO: seems not working
         pageAPI?.onWindowOpen { onWindowOpen(it) }
         // pageAPI?.onFrameAttached {  }
 //        pageAPI?.onDomContentEventFired {  }
@@ -662,6 +662,8 @@ class PulsarWebDriver(
             // C:\Users\pereg\AppData\Local\Temp\pulsar\test.txt
             // converted to:
             // http://localfile.org?path=QzpcVXNlcnNccGVyZWdcQXBwRGF0YVxMb2NhbFxUZW1wXHB1bHNhclx0ZXN0LnR4dA==
+            //
+            // DISCUSS: support URI format in the system, for example: file:///C:/Users/pereg/AppData/Local/Temp/pulsar/test.txt
             openLocalFile(url)
         } else {
             page.navigate(url, referrer = navigateEntry.pageReferrer)
