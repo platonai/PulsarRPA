@@ -108,6 +108,12 @@ class PrivacyContextManagerTests {
         val userAgents = UserAgent()
         
         repeat(100) {
+            if (AppSystemInfo.isSystemOverCriticalLoad) {
+                // Test failed on low-spec computers #87
+                // https://github.com/platonai/PulsarRPA/issues/87
+                return@repeat
+            }
+
             val proxyServer = "127.0.0." + Random.nextInt(200)
             val userAgent = userAgents.getRandomUserAgent()
             val fingerprint = Fingerprint(BrowserType.DEFAULT, proxyServer, userAgent = userAgent)
@@ -131,12 +137,6 @@ class PrivacyContextManagerTests {
         val closer = Executors.newScheduledThreadPool(5)
         
         producer.scheduleWithFixedDelay({
-            // LoadingWebDriverPoolTest failed on low-spec computers #87
-            // https://github.com/platonai/PulsarRPA/issues/87
-            if (AppSystemInfo.isSystemOverCriticalLoad) {
-                return@scheduleWithFixedDelay
-            }
-
             val proxyServer = "127.0.0." + Random.nextInt(200)
             val userAgent = userAgents.getRandomUserAgent()
             val fingerprint = Fingerprint(BrowserType.DEFAULT, proxyServer, userAgent = userAgent)
