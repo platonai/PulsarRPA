@@ -1,0 +1,655 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "WebDriver API",
+    "description": "API for browser automation and web scraping operations",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/api/webdriver",
+      "description": "WebDriver API"
+    }
+  ],
+  "paths": {
+    "/open": {
+      "post": {
+        "summary": "Open a URL in the browser",
+        "description": "Navigates to the specified URL and waits for page load to complete",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "The URL to open"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "URL opened successfully"
+          }
+        }
+      }
+    },
+    "/navigateTo": {
+      "post": {
+        "summary": "Navigate to a URL",
+        "description": "Navigates to the specified URL without waiting for page load to complete",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "The URL to navigate to"
+                  },
+                  "pageUrl": {
+                    "type": "string",
+                    "description": "Optional base URL for the page"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Navigation started successfully"
+          }
+        }
+      }
+    },
+    "/click": {
+      "post": {
+        "summary": "Click an element",
+        "description": "Clicks an element identified by selector",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["selector"],
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector of the element to click"
+                  },
+                  "count": {
+                    "type": "integer",
+                    "description": "Number of times to click",
+                    "default": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Element clicked successfully"
+          }
+        }
+      }
+    },
+    "/type": {
+      "post": {
+        "summary": "Type text into an element",
+        "description": "Types text into an element identified by selector",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["selector", "text"],
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector of the element to type into"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Text to type"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Text typed successfully"
+          }
+        }
+      }
+    },
+    "/fill": {
+      "post": {
+        "summary": "Clear and fill text in an element",
+        "description": "Clears existing content and fills text into an element identified by selector",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["selector", "text"],
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector of the element to fill"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Text to fill"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Text filled successfully"
+          }
+        }
+      }
+    },
+    "/waitForNavigation": {
+      "post": {
+        "summary": "Wait for navigation to complete",
+        "description": "Waits for the current navigation to complete or timeout",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "oldUrl": {
+                    "type": "string",
+                    "description": "The URL to compare against for navigation change detection"
+                  },
+                  "timeoutMillis": {
+                    "type": "integer",
+                    "description": "Maximum time to wait in milliseconds"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Navigation completed or timed out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "remainingTimeMillis": {
+                      "type": "integer",
+                      "description": "Remaining time until timeout"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/captureScreenshot": {
+      "post": {
+        "summary": "Capture screenshot",
+        "description": "Captures a screenshot of the page or a specific element",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector of the element to capture"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Screenshot captured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "screenshot": {
+                      "type": "string",
+                      "description": "Base64-encoded screenshot data"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scroll": {
+      "post": {
+        "summary": "Scroll the page",
+        "description": "Scrolls the page in various directions",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action"],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": ["down", "up", "top", "bottom", "middle"],
+                    "description": "Scroll direction or position"
+                  },
+                  "count": {
+                    "type": "integer",
+                    "description": "Number of times to scroll (for up/down)",
+                    "default": 1
+                  },
+                  "ratio": {
+                    "type": "number",
+                    "description": "Ratio for middle scrolling (0.0-1.0)",
+                    "default": 0.5
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scrolled successfully"
+          }
+        }
+      }
+    },
+    "/currentUrl": {
+      "get": {
+        "summary": "Get current URL",
+        "description": "Returns the URL currently displayed in the browser's address bar",
+        "responses": {
+          "200": {
+            "description": "Current URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": "The current URL"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pageSource": {
+      "get": {
+        "summary": "Get page source",
+        "description": "Returns the HTML source code of the current page",
+        "responses": {
+          "200": {
+            "description": "Page source",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string",
+                      "description": "The HTML source code"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/outerHTML": {
+      "post": {
+        "summary": "Get element's outer HTML",
+        "description": "Returns the outer HTML of an element or the entire page",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector of the element"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Outer HTML",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "html": {
+                      "type": "string",
+                      "description": "The outer HTML markup"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evaluate": {
+      "post": {
+        "summary": "Evaluate JavaScript on the page",
+        "description": "Executes JavaScript in the context of the current page",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["expression"],
+                "properties": {
+                  "expression": {
+                    "type": "string",
+                    "description": "JavaScript expression to evaluate"
+                  },
+                  "defaultValue": {
+                    "type": "string",
+                    "description": "Default value to return if evaluation fails"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evaluation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "description": "Result of JavaScript evaluation"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cookies": {
+      "get": {
+        "summary": "Get all cookies",
+        "description": "Returns all cookies from the current page",
+        "responses": {
+          "200": {
+            "description": "All cookies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Cookie name"
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "Cookie value"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete cookies",
+        "description": "Deletes cookies with the specified name",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the cookie to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cookies deleted successfully"
+          }
+        }
+      }
+    },
+    "/selectText": {
+      "post": {
+        "summary": "Get text content of elements",
+        "description": "Returns the text content of elements matching the selector",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["selector"],
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector of the elements"
+                  },
+                  "firstOnly": {
+                    "type": "boolean",
+                    "description": "Whether to return only the first match",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Text content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string",
+                          "description": "Text content of the first matching element"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "texts": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Text content of all matching elements"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/execute": {
+      "post": {
+        "summary": "Execute WebDriver command",
+        "description": "Executes a WebDriver command in text format",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["command"],
+                "properties": {
+                  "command": {
+                    "type": "string",
+                    "description": "WebDriver command in text format (e.g., 'driver.click(\"button\")')"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Command execution result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "description": "Result of the command execution"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "NavigateEntry": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "URL to navigate to"
+          },
+          "pageUrl": {
+            "type": "string",
+            "description": "Base page URL"
+          }
+        }
+      },
+      "Point": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "format": "double",
+            "description": "X coordinate"
+          },
+          "y": {
+            "type": "number",
+            "format": "double",
+            "description": "Y coordinate"
+          }
+        }
+      },
+      "Rect": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "format": "double",
+            "description": "X coordinate of the top-left corner"
+          },
+          "y": {
+            "type": "number",
+            "format": "double",
+            "description": "Y coordinate of the top-left corner"
+          },
+          "width": {
+            "type": "number",
+            "format": "double",
+            "description": "Width of the rectangle"
+          },
+          "height": {
+            "type": "number",
+            "format": "double",
+            "description": "Height of the rectangle"
+          }
+        }
+      },
+      "Hyperlink": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "URL of the hyperlink"
+          },
+          "text": {
+            "type": "string",
+            "description": "Text of the hyperlink"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title attribute of the hyperlink"
+          }
+        }
+      }
+    }
+  }
+} 
