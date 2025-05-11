@@ -13,6 +13,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.JvmWebDriver;
 import ai.platon.pulsar.skeleton.session.PulsarSession;
 import kotlin.coroutines.Continuation;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -36,24 +37,23 @@ public class JvmHighPerformanceCrawler {
         List<String> blockingUrls = new BlockRule().getBlockingUrls();
 
         String resource = "seeds/amazon/best-sellers/leaf-categories.txt";
-        Iterable<String> linkIterable = LinkExtractors.fromResource(resource);
-        List<ListenableHyperlink> links = StreamSupport.stream(linkIterable.spliterator(), false)
-                .map(url -> {
-                    var hyperlink = ListenableHyperlink.create(url);
-                    hyperlink.setArgs(args);
+        Iterable<String> urls = LinkExtractors.fromResource(resource);
+        List<ListenableHyperlink> links = new ArrayList<>();
+        for (String url : urls) {
+            var hyperlink = ListenableHyperlink.create(url);
+            hyperlink.setArgs(args);
 
-                    var eventHandlers = hyperlink.getEventHandlers().getBrowseEventHandlers().getOnWillNavigate();
-                    eventHandlers.addLast(new JvmWebPageWebDriverEventHandler() {
-                        @Override
-                        public Object invoke(WebPage page, JvmWebDriver driver, Continuation<? super Object> $completion) {
-                            driver.addBlockedURLsAsync(blockingUrls);
-                            return null;
-                        }
-                    });
+            var eventHandlers = hyperlink.getEventHandlers().getBrowseEventHandlers().getOnWillNavigate();
+            eventHandlers.addLast(new JvmWebPageWebDriverEventHandler() {
+                @Override
+                public Object invoke(WebPage page, JvmWebDriver driver, Continuation<? super Object> $completion) {
+                    driver.addBlockedURLsAsync(blockingUrls);
+                    return null;
+                }
+            });
 
-                    return hyperlink;
-                })
-                .collect(Collectors.toList());
+            links.add(hyperlink);
+        }
 
         session.submitAll(links);
     }

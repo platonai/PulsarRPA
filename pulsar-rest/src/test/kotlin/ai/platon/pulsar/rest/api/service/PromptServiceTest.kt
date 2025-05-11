@@ -18,20 +18,19 @@ import kotlin.test.*
 
 const val API_COMMAND_PROMPT1 = """
 Visit https://www.amazon.com/dp/B0C1H26C46
+After page load: click #title, then scroll to the middle.
 Summarize the product.
 Extract: product name, price, ratings.
 Find all links containing /dp/.
-After page load: click #title, then scroll to the middle.
     """
 
 const val API_COMMAND_PROMPT2 = """
 Visit https://www.amazon.com/dp/B0C1H26C46
+When the page is ready, click the element with id "title" and scroll to the middle.
 
 Page summary prompt: Provide a brief introduction of this product.
 Extract fields: product name, price, and ratings.
 Extract links: all links containing `/dp/` on the page.
-
-When the page is ready, click the element with id "title" and scroll to the middle.
 
     """
 
