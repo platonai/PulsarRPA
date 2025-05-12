@@ -31,6 +31,7 @@ export BROWSER_CONTEXT_MODE=SYSTEM_DEFAULT
 
 For high-performance parallel crawling:
 
+**Linux/MaxOS:**
 ```bash
 export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 export BROWSER_CONTEXT_MODE=SEQUENTIAL
@@ -38,6 +39,18 @@ export BROWSER_CONTEXT_NUMBER=4
 export BROWSER_MAX_OPEN_TABS=8
 export BROWSER_DISPLAY_MODE=HEADLESS
 ```
+
+<details>
+<summary>Windows (PowerShell):</summary>
+
+```powershell
+$env:PROXY_ROTATION_URL = "https://your-proxy-provider.com/rotation-endpoint"
+$env:BROWSER_CONTEXT_MODE = "SEQUENTIAL"
+$env:BROWSER_CONTEXT_NUMBER = "4"
+$env:BROWSER_MAX_OPEN_TABS = "8"
+$env:BROWSER_DISPLAY_MODE = "HEADLESS"
+```
+</details>
 
 #### ☕ Example – JVM Arguments
 
@@ -92,7 +105,8 @@ docker run -d -p 8182:8182 \
   galaxyeye88/pulsar-rpa:latest
 ```
 
-**Windows (PowerShell):**
+<details>
+<summary>Windows (PowerShell):</summary>
 
 ```powershell
 docker run -d -p 8182:8182 `
@@ -104,6 +118,8 @@ docker run -d -p 8182:8182 `
   -e BROWSER_DISPLAY_MODE=HEADLESS `
   galaxyeye88/pulsar-rpa:latest
 ```
+
+</details>
 
 > ⚠️ **Note**: Docker users may need to warm up the before crawling to avoid bot detection, 
 > for example, visit the home page and open some arbitrary pages.
