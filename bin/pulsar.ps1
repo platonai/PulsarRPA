@@ -25,6 +25,4 @@ Write-Host "Starting PulsarRPA..."
 # $env:BROWSER_MAX_OPEN_TABS = "8"
 # $env:BROWSER_DISPLAY_MODE = "HEADLESS"
 
-# java -jar PulsarRPA.jar
-
-Start-Process -NoNewWindow -Wait -FilePath "java" -ArgumentList ("$JAVA_OPTS", "-jar", "$UBERJAR")
+java -jar "$UBERJAR" $JAVA_OPTS
