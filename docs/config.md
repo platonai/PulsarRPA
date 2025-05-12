@@ -22,6 +22,7 @@ For standard desktop usage:
 ```bash
 export DEEPSEEK_API_KEY=sk-yourdeepseekapikey
 ```
+* 🤖 [Switch to a Different LLM Provider](config/llm/llm-config)
 
 If you want to use your daily used browser profile (remember closed the browser first):
 ```bash
@@ -33,7 +34,7 @@ For high-performance parallel crawling:
 ```bash
 export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 export BROWSER_CONTEXT_MODE=SEQUENTIAL
-export BROWSER_CONTEXT_NUMBER=2
+export BROWSER_CONTEXT_NUMBER=4
 export BROWSER_MAX_OPEN_TABS=8
 export BROWSER_DISPLAY_MODE=HEADLESS
 ```
@@ -67,7 +68,7 @@ For high performance, parallel crawling users:
 ```properties
 proxy.rotation.url=https://your-proxy-provider.com/rotation-endpoint
 browser.context.mode=SEQUENTIAL
-browser.context.number=2
+browser.context.number=4
 browser.max.active.tabs=8
 browser.display.mode=HEADLESS
 ```
@@ -117,12 +118,12 @@ docker run -d -p 8182:8182 `
 - **`browser.context.mode`** (`DEFAULT` | `SYSTEM_DEFAULT` | `PROTOTYPE` | `SEQUENTIAL` | `TEMPORARY`)  
   Defines how the user data directory is assigned for each browser instance.
 
-  - `DEFAULT`: Uses the default PulsarRPA-managed user data directory.
+  - `DEFAULT`: Uses the default PulsarRPA-managed browser profile.
   - `SYSTEM_DEFAULT`: Uses the system's default browser profile (e.g., your personal Chrome/Edge profile).
-  - `PROTOTYPE` **[Advanced]**: Uses a predefined prototype user data directory.
+  - `PROTOTYPE` **[Advanced]**: Uses a predefined prototype browser profile.
     - All `SEQUENTIAL` and `TEMPORARY` modes inherit from this prototype.
-  - `SEQUENTIAL` **[Advanced]**: Selects a user data directory from a managed pool to enable sequential isolation.
-  - `TEMPORARY` **[Advanced]**: Generates a new, isolated user data directory for each browser instance.
+  - `SEQUENTIAL` **[Advanced]**: Selects a browser profile from a managed pool to enable sequential isolation.
+  - `TEMPORARY` **[Advanced]**: Generates a new, isolated browser profile for each browser instance.
 
 * **`proxy.rotation.url`**
   Defines the URL provided by your proxy service.
@@ -131,6 +132,7 @@ docker run -d -p 8182:8182 `
 * **`browser.context.number`** *(default: 2)*
   Number of browser contexts (isolated, incognito-like sessions).
   Each context has its own cookies, local storage, and cache.
+  Increase this value to improve parallel execution and overall performance.
 
   > For `DEFAULT`, `SYSTEM_DEFAULT`, and `PROTOTYPE` browser contexts, this value is **1**.
 
