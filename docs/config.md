@@ -43,7 +43,7 @@ export BROWSER_DISPLAY_MODE=HEADLESS
 Set configuration via command-line JVM args:
 
 ```bash
--Ddeepseek.api.key=sk-yourdeepseekapikey
+-DDEEPSEEK_API_KEY=sk-yourdeepseekapikey
 ```
 
 ---
