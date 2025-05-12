@@ -48,28 +48,32 @@ Find all links containing /dp/.
 
 ## ▶️ Run PulsarRPA
 
-### 📦 Run Executable Jar - Best Experience
+### 📦 Run the Executable JAR — Best Experience
 
-Download:
+#### 🧩 Download
 
 ```bash
-# Linux/macOS and Windows (if curl is available)
+# For Linux/macOS/Windows (with curl)
 curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.1.0/PulsarRPA.jar
 ```
+
+#### 🚀 Run
 
 ```bash
 java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 ```
 
-> 🔍 Tip: Make sure DEEPSEEK_API_KEY is set in your environment to access AI features.
+> 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` is set in your environment, or AI features will not be available.
 
-🔗 [Choose Another LLM Provider](docs/config/llm/llm-config)
+---
 
 <details>
-<summary>📦 Download Links</summary>
+<summary>📂 Resources</summary>
 
-- 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar)
-- 📦 [Backup Downloads](http://static.platonai.cn/repo/ai/platon/pulsar/)
+* 🟦 [Official GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar)
+* 📁 [Mirror / Backup Download](http://static.platonai.cn/repo/ai/platon/pulsar/)
+* 🛠️ [Configuration Guide](docs/config.md)
+* 🤖 [Switch to a Different LLM Provider](docs/config/llm/llm-config)
 
 </details>
 

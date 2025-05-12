@@ -63,13 +63,13 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 
 > 🔍 提示: 确保环境中设置了 DEEPSEEK_API_KEY 以访问 AI 功能。
 
-🔗 [选择其他 LLM 提供商](docs/config/llm/llm-config)
-
 <details>
-<summary>📦 下载链接</summary>
+<summary>📂 相关资源</summary>
 
-- 🟦 [GitHub 发布版](https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar)
-- 📦 [备用下载](http://static.platonai.cn/repo/ai/platon/pulsar/)
+* 🟦 [Official GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar)
+* 📁 [Mirror / Backup Download](http://static.platonai.cn/repo/ai/platon/pulsar/)
+* 🛠️ [Configuration Guide](docs/config.md)
+* 🤖 [Switch to a Different LLM Provider](docs/config/llm/llm-config)
 
 </details>
 
