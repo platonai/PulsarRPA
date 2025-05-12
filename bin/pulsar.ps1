@@ -16,6 +16,15 @@ if (-not (Test-Path $UBERJAR)) {
 # Other Java options
 $JAVA_OPTS = "$JAVA_OPTS -Dfile.encoding=UTF-8" # Use UTF-8
 
-Write-Host "Using these JAVA_OPTS: $JAVA_OPTS"
+Write-Host "Starting PulsarRPA..."
+
+# Uncomment the following lines to set environment variables
+# $env:PROXY_ROTATION_URL = "https://your-proxy-provider.com/rotation-endpoint"
+# $env:BROWSER_CONTEXT_MODE = "SEQUENTIAL"
+# $env:BROWSER_CONTEXT_NUMBER = "2"
+# $env:BROWSER_MAX_OPEN_TABS = "8"
+# $env:BROWSER_DISPLAY_MODE = "HEADLESS"
+
+# java -jar PulsarRPA.jar
 
 Start-Process -NoNewWindow -Wait -FilePath "java" -ArgumentList ("$JAVA_OPTS", "-jar", "$UBERJAR")

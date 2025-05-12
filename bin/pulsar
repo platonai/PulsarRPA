@@ -26,4 +26,11 @@ if [ ! -f "$UBERJAR" ]; then
   cp "$SERVER_HOME"/target/PulsarRPA.jar "$UBERJAR"
 fi
 
+# Uncomment the following lines to set environment variables
+# export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
+# export BROWSER_CONTEXT_MODE=SEQUENTIAL
+# export BROWSER_CONTEXT_NUMBER=2
+# export BROWSER_MAX_OPEN_TABS=8
+# export BROWSER_DISPLAY_MODE=HEADLESS
+
 java -jar "$UBERJAR"
