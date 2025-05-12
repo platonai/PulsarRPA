@@ -61,7 +61,7 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 ```
 
-> 🔍 Tip: Make sure DEEPSEEK_API_KEY is set in your environment, otherwise you won’t be able to access AI features.
+> 🔍 Tip: Make sure DEEPSEEK_API_KEY is set in your environment to access AI features.
 
 🔗 [Choose Another LLM Provider](docs/config/llm/llm-config)
 
