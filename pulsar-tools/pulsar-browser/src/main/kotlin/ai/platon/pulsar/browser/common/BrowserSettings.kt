@@ -264,6 +264,9 @@ open class BrowserSettings constructor(
         @JvmStatic
         fun supervised(): Companion {
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
+            System.setProperty(BROWSER_LAUNCH_SUPERVISOR_PROCESS, "xvfb-run")
+            System.setProperty(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS, "-a, -e, /dev/stdout, -s, -screen 0 1920x1080x24")
+
             return BrowserSettings
         }
 
@@ -453,7 +456,7 @@ open class BrowserSettings constructor(
     /**
      * If true, the browser will run in supervised mode.
      * */
-    val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED
+    val isSupervised get() = displayMode == DisplayMode.SUPERVISED
     /**
      * If true, the browser will run in headless mode.
      * */

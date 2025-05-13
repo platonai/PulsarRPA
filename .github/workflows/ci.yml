@@ -3,7 +3,7 @@ name: CI & Release
 on:
   push:
     branches:
-      - main
+      - master
   # Allow manual workflow runs
   workflow_dispatch:
 

@@ -4,6 +4,8 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_LAUNCH_SUPERVISOR_PROCESS
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
@@ -37,6 +39,8 @@ open class BrowserManager(
 
         val launcherOptions = LauncherOptions(browserSettings)
         if (browserSettings.isSupervised) {
+            // make sure consistency
+            BrowserSettings.supervised()
             launcherOptions.supervisorProcess = browserSettings.supervisorProcess
             launcherOptions.supervisorProcessArgs.addAll(browserSettings.supervisorProcessArgs)
         }
