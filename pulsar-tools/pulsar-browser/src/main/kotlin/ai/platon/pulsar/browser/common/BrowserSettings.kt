@@ -166,10 +166,6 @@ open class BrowserSettings constructor(
         @JvmStatic
         fun withSequentialBrowsers(): Companion = withSequentialBrowsersInternal(BrowserType.PULSAR_CHROME, 10)
 
-        @Deprecated("Use withBrowserContextMode instead, this method will be a private method",
-            ReplaceWith("withBrowserContextMode(contextMode, browserType)"))
-        fun withSequentialBrowsers(browserType: BrowserType): Companion = withSequentialBrowsersInternal(browserType, 10)
-
         fun withSequentialBrowsers(maxAgents: Int): Companion {
             return withSequentialBrowsersInternal(BrowserType.PULSAR_CHROME, maxAgents)
         }
@@ -178,8 +174,13 @@ open class BrowserSettings constructor(
             return withSequentialBrowsersInternal(browserType, maxAgents)
         }
 
+        @Deprecated("Use withBrowserContextMode instead, this method will be a private method",
+            ReplaceWith("withBrowserContextMode(contextMode, browserType)"))
+        fun withSequentialBrowsers(browserType: BrowserType): Companion = withSequentialBrowsersInternal(browserType, 10)
+
         private fun withSequentialBrowsersInternal(browserType: BrowserType, maxAgents: Int): Companion {
             withBrowser(browserType)
+            System.setProperty(BROWSER_CONTEXT_MODE, "SEQUENTIAL")
             System.setProperty(MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, "$maxAgents")
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
