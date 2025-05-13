@@ -1,15 +1,12 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.privacy
 
-import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.Files
-import java.util.concurrent.ConcurrentHashMap
 
 interface PrivacyAgentGenerator {
     var conf: ImmutableConfig
@@ -89,60 +86,3 @@ open class RandomPrivacyAgentGenerator: PrivacyAgentGenerator {
         PrivacyAgent(BrowserFiles.computeRandomTmpContextDir(), fingerprint)
 }
 
-class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {
-    companion object {
-        private val generators = ConcurrentHashMap<String, PrivacyAgentGenerator>()
-    }
-    
-    private val logger = LoggerFactory.getLogger(PrivacyAgentGeneratorFactory::class.java)
-    
-    val generator: PrivacyAgentGenerator get() {
-        val className = conf[PRIVACY_AGENT_GENERATOR_CLASS] ?: DefaultPrivacyAgentGenerator::class.java.name
-        return getOrCreate(className)
-    }
-    
-    private fun getOrCreate(className: String): PrivacyAgentGenerator {
-        synchronized(generators) {
-            return getOrCreate0(className)
-        }
-    }
-    
-    private fun getOrCreate0(className: String): PrivacyAgentGenerator {
-        var gen = generators[className]
-        if (gen != null) {
-            return gen
-        }
-        
-        gen = forName(conf, className)
-        
-        generators[gen::class.java.name] = gen
-        generators[className] = gen
-        
-        logger.info("Created privacy agent generator | {}", gen::class.java.name)
-        
-        return gen
-    }
-    
-    /**
-     * Get the value of the `name` property as a `Class`.
-     * If the property is not set, or the class is not found, use the default class.
-     * The default class is `DefaultPageEvent`.
-     *
-     * Set the class:
-     * `System.setProperty(CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS, "ai.platon.pulsar.skeleton.crawl.fetch.privacy.DefaultPrivacyAgentGenerator")`
-     * */
-    private fun forName(conf: ImmutableConfig, className: String): PrivacyAgentGenerator {
-        val defaultClazz = DefaultPrivacyAgentGenerator::class.java
-        val clazz = try {
-            SParser(className).getClass(defaultClazz)
-        } catch (e: Exception) {
-            logger.warn("No configured privacy agent generator {}, use default ({})",
-                className, defaultClazz.simpleName)
-            defaultClazz
-        }
-        
-        val gen = clazz.constructors.first { it.parameters.isEmpty() }.newInstance() as PrivacyAgentGenerator
-        gen.conf = conf
-        return gen
-    }
-}

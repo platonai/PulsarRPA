@@ -1,6 +1,5 @@
 package ai.platon.pulsar.browser.common
 
-import ai.platon.pulsar.browser.common.BrowserSettings.Companion.maxBrowserContexts
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.common.browser.BrowserContextMode
 import ai.platon.pulsar.common.browser.BrowserType
@@ -9,7 +8,6 @@ import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import java.net.URI
 import java.time.Duration
 
@@ -59,6 +57,13 @@ open class BrowserSettings constructor(
 
             System.setProperty(BROWSER_TYPE, browserType.name)
             return BrowserSettings
+        }
+
+        @JvmStatic
+        fun overrideBrowserContextMode(conf: ImmutableConfig): Companion {
+            val modeString = conf[BROWSER_CONTEXT_MODE]?.uppercase()
+            val mode = BrowserContextMode.fromString(modeString)
+            return withBrowserContextMode(mode)
         }
 
         @JvmStatic

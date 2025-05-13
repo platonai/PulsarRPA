@@ -126,6 +126,7 @@ public interface CapabilityTypes {
     ///////////////////////////////////////////////////////////////////////////
     // Privacy context
 
+    String BROWSER_CONTEXT_MODE = "browser.context.mode";
     /**
      * The number of active privacy contexts.
      */
