@@ -46,7 +46,7 @@ jobs:
         run: |
           docker run -d --rm --name pulsar-rpa-test -p 8182:8182 pulsar-rpa-nightly:${{ github.sha }}
           sleep 10  # Wait for Spring Boot to start
-          ./bin/scrape.sh
+          ./bin/scrape-async.sh
           docker stop pulsar-rpa-test || true
 
       - name: Slack Notification
