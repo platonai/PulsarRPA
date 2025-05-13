@@ -160,10 +160,15 @@ internal class RobustRPC(
         }
     }
 
+    @Throws(ChromeIOException::class)
     private fun fixCDTAgentIfNecessary(e: Exception) {
         if (e.toString().contains("agent was not enabled")) {
             logger.warn(e.stringify())
-            driver.enableAPIAgents()
+            try {
+                driver.enableAPIAgents()
+            } catch (ex: Exception) {
+                throw ChromeIOException("Failed to enable CDT agents", e)
+            }
             decreaseRPCFailures()
         }
     }
