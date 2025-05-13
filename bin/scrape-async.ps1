@@ -50,7 +50,7 @@ if (-not (Test-Path "seeds.txt")) {
 }
 
 # Use regex to extract URL substrings from each line
-$maxUrls = 10
+$maxUrls = 200
 $urls = Get-Content -Path "seeds.txt" | ForEach-Object {
     $match = [regex]::Match($_, 'https?://[^\s/$.?#].[^\s]*')
     if ($match.Success) {
