@@ -290,7 +290,7 @@ class ChromeLauncher constructor(
 
                 handleChromeFailedToStart()
 
-                throw ChromeLaunchTimeoutException("Timeout to waiting for chrome to start")
+                throw ChromeLaunchTimeoutException("Timeout to waiting for chrome to start | $userDataDir")
             }
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
