@@ -44,7 +44,7 @@ class WebDriverTestBase : TestBase() {
     val port: Int = 0
 
 //    @Value("\${server.servlet.context-path}")
-//    val contextPath: String = "/api"
+//    val contextPath: String = "/"
 
     @Autowired
     lateinit var restTemplate: TestRestTemplate

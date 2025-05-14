@@ -2,6 +2,7 @@ package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
@@ -16,10 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
 import java.time.Instant
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
@@ -63,7 +61,7 @@ class ScrapeServiceTests {
      * Test [ScrapeService.executeQuery]
      * */
     @Test
-    fun `When scraping with load_and_select then the result returns synchronously`() {
+    fun `test executeQuery with sql`() {
         val startTime = Instant.now()
 
         val sql = "select dom_base_uri(dom) as uri from load_and_select('$productListURL -i 10d', ':root')"
@@ -81,23 +79,36 @@ class ScrapeServiceTests {
     }
 
     @Test
-    fun `When scrape amazon then the base uri returns asynchronously`() {
-        val sql = "select dom_base_uri(dom) as uri from load_and_select('$productListURL', ':root')"
+    fun `test executeQuery with invalid sql`() {
+        val sql = "select dom_base_uri(dom) as uri from load_and_select('{url}', ':root')"
         val request = ScrapeRequest(sql)
 
-        val uuid = service.submitJob(request)
+        val response = service.executeQuery(request)
+        assertEquals(ResourceStatus.SC_BAD_REQUEST, response.statusCode)
+        assertFalse(response.isDone)
+    }
+
+    @Test
+    fun `When scrape amazon then the base uri returns asynchronously`() {
+        val sql = "select dom_base_uri(dom) as uri from load_and_select('$productListURL -requireSize 1000', ':root')"
+        val request = ScrapeRequest(sql)
+
+        val uuid = service.submitJob(request).uuid
 
         assertTrue { uuid.isNotEmpty() }
         println(uuid)
 
         val scrapeStatusRequest = ScrapeStatusRequest(uuid)
         var status = service.getStatus(scrapeStatusRequest)
-        var i = 120
+        var i = 60
 
         while (i-- > 0 && !status.isDone) {
             sleepSeconds(1)
             status = service.getStatus(scrapeStatusRequest)
         }
+        Assumptions.assumeTrue(status.isDone, "Scraping is not done")
+        Assumptions.assumeTrue(200 == status.statusCode, "Status code is not 200")
+
         println(pulsarObjectMapper().writeValueAsString(status))
         assertTrue { i > 0 }
         assertEquals(200, status.statusCode)

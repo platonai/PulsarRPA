@@ -1,6 +1,7 @@
 package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.common.ResourceStatus
+import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.rest.api.common.DegenerateXSQLScrapeHyperlink
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
@@ -9,7 +10,6 @@ import ai.platon.pulsar.rest.api.common.XSQLScrapeHyperlink
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
-import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.apache.commons.collections4.MultiMapUtils
@@ -21,66 +21,87 @@ import java.util.concurrent.TimeoutException
 
 @Service
 class ScrapeService(
-    val session: PulsarSession,
-    val globalCacheFactory: GlobalCacheFactory,
+    val session: PulsarSession
 ) {
     private val logger = LoggerFactory.getLogger(ScrapeService::class.java)
-    /**
-     * The response cache, the key is the uuid, the value is the response
-     * */
     private val responseCache = ConcurrentSkipListMap<String, ScrapeResponse>()
-    /**
-     * The response status map, the key is the status code, the value is the response's uuid
-     * */
     private val responseStatusIndex = MultiMapUtils.newListValuedHashMap<Int, String>()
 
-    /**
-     * Execute a scrape task and wait until the execution is done,
-     * for test purpose only, no customer should access this api
-     * */
+    companion object {
+        const val DEFAULT_STATUS_CODE = 0
+        const val MAX_CACHE_SIZE = 1000
+    }
+
     fun executeQuery(request: ScrapeRequest): ScrapeResponse {
+        var uuid: String? = null
         try {
-            val hyperlink = createScrapeHyperlink(request)
-            session.submit(hyperlink)
-            val response = hyperlink.get(120, TimeUnit.SECONDS)
+            val hyperlink = doSubmit(request)
+
+            uuid = hyperlink.uuid
+            val response = hyperlink.get(3, TimeUnit.MINUTES)
             return response
         } catch (e: TimeoutException) {
-            logger.warn("Error executing query: >>>${request.sql}<<<", e)
-            return ScrapeResponse("", ResourceStatus.SC_INTERNAL_SERVER_ERROR, ProtocolStatusCodes.EXCEPTION)
+            logger.info("Invalid scrape request. {}", e.message)
+            if (uuid == null) {
+                return ScrapeResponse(null, ResourceStatus.SC_REQUEST_TIMEOUT, ProtocolStatusCodes.REQUEST_TIMEOUT)
+            }
+
+            val response = responseCache[uuid]
+            return response?.copy(statusCode = ResourceStatus.SC_REQUEST_TIMEOUT)
+                ?: ScrapeResponse(null, ResourceStatus.SC_REQUEST_TIMEOUT, ProtocolStatusCodes.REQUEST_TIMEOUT)
+        } catch (e: IllegalArgumentException) {
+            logger.info("Invalid scrape request. {}", e.message)
+            return ScrapeResponse(null, ResourceStatus.SC_BAD_REQUEST, ProtocolStatusCodes.EXCEPTION)
+        } catch (e: Exception) {
+            logger.error("Error executing query: >>>${request.sql}<<<", e)
+            return ScrapeResponse(null, ResourceStatus.SC_INTERNAL_SERVER_ERROR, ProtocolStatusCodes.EXCEPTION)
         }
     }
 
-    /**
-     * Submit a scraping task
-     * */
-    fun submitJob(request: ScrapeRequest): String {
+    fun submitJob(request: ScrapeRequest): ScrapeHyperlink {
+        try {
+            return doSubmit(request)
+        } catch (e: IllegalArgumentException) {
+            throw e
+        } catch (e: Exception) {
+            throw ScrapeSubmissionException("Failed to submit job | >>>\n$request\n<<<")
+        }
+    }
+
+    @Throws(IllegalArgumentException::class)
+    private fun doSubmit(request: ScrapeRequest): ScrapeHyperlink {
         val hyperlink = createScrapeHyperlink(request)
+
         responseCache[hyperlink.uuid] = hyperlink.response
         hyperlink.response.uuid = hyperlink.uuid
         require(session is BasicPulsarSession)
         session.submit(hyperlink)
-        return hyperlink.uuid
+        logger.info("Job submitted successfully: ${hyperlink.uuid}")
+
+        return hyperlink
     }
 
-    /**
-     * Get the response
-     * */
     fun getStatus(request: ScrapeStatusRequest): ScrapeResponse {
         return responseCache.computeIfAbsent(request.uuid) {
             ScrapeResponse(request.uuid, ResourceStatus.SC_NOT_FOUND, ProtocolStatusCodes.NOT_FOUND)
         }
     }
 
-    /**
-     * Get the response count by status code
-     * */
     fun count(statusCode: Int): Int {
         return when (statusCode) {
-            0 -> responseCache.size
+            DEFAULT_STATUS_CODE -> responseCache.size
             else -> responseStatusIndex[statusCode]?.size ?: 0
         }
     }
 
+    /**
+     * Create a scrape hyperlink from a scrape request.
+     *
+     * @param request The scrape request
+     * @return The scrape hyperlink
+     * @throws IllegalArgumentException If the request is invalid
+     * */
+    @Throws(IllegalArgumentException::class)
     private fun createScrapeHyperlink(request: ScrapeRequest): ScrapeHyperlink {
         val sql = request.sql
         val link = if (ScrapeAPIUtils.isScrapeUDF(sql)) {

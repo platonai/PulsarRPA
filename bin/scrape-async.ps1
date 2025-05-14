@@ -22,8 +22,8 @@
 #
 
 # Configuration
-$baseUrl = "http://localhost:8182/api/x/s"
-$statusUrlTemplate = "http://localhost:8182/api/x/status?uuid={0}"
+$baseUrl = "http://localhost:8182/api/scrape/execute"
+$statusUrlTemplate = "http://localhost:8182/api/scrape/status?uuid={0}"
 $maxPollingTasks = 10
 $delaySeconds = 5
 $maxAttempts = 30

@@ -176,8 +176,8 @@ class LoadingWebDriverPool constructor(
 
             val time = idleTime.readable()
             return when {
-                AppSystemInfo.isCriticalDiskSpace -> "[Critical disk space] | $status"
-                AppSystemInfo.isCriticalMemory -> "[Critical memory] | $status"
+                AppSystemInfo.isCriticalDiskSpace -> "[Insufficient disk space] | $status"
+                AppSystemInfo.isCriticalMemory -> "[Insufficient memory] | $status"
                 AppSystemInfo.isCriticalCPULoad -> "[Critical CPU] | $status"
                 AppSystemInfo.isSystemOverCriticalLoad -> "[System over critical load] | $status"
                 isIdle -> "[Idle] $time | $status"

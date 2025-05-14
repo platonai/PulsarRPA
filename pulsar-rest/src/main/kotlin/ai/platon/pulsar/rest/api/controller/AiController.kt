@@ -4,19 +4,17 @@ import ai.platon.pulsar.rest.api.entities.PromptRequest
 import ai.platon.pulsar.rest.api.entities.PromptRequestL2
 import ai.platon.pulsar.rest.api.entities.PromptResponseL2
 import ai.platon.pulsar.rest.api.service.PromptService
-import org.springframework.context.ApplicationContext
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @CrossOrigin
 @RequestMapping(
-    "ai",
+    "api/ai",
     consumes = [MediaType.ALL_VALUE],
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class AiController(
-    val applicationContext: ApplicationContext,
     val promptService: PromptService,
 ) {
     /**

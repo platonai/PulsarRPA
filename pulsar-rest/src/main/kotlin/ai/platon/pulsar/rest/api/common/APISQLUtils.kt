@@ -11,7 +11,7 @@ object APISQLUtils {
             throw IllegalArgumentException("Sql is required")
         }
 
-        var sql0 = sql.trim().lowercase(Locale.getDefault())
+        var sql0 = sql.trim().lowercase()
         if (!sql0.startsWith("select")) {
             throw IllegalArgumentException("Only select statements are supported")
         }

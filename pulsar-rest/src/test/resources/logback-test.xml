@@ -54,6 +54,10 @@
         </encoder>
     </appender>
 
+    <!-- Stop logback status INFO at the start -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
+
     <root level="${log.level:-INFO}">
         <appender-ref ref="DRFA"/>
         <appender-ref ref="stdout"/>

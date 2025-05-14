@@ -73,7 +73,7 @@ class MassiveScrapeTaskTest : IntegrationTestBase() {
     }
 
     /**
-     * Test for Controller [ai.platon.pulsar.rest.api.controller.ScrapeController.submitJob]
+     * Test for Controller [ai.platon.pulsar.rest.api.controller.ScrapeController.submit]
      * */
     @Test
     fun whenIssueMassiveScrapeTask_thenShouldFinishAllTasks() {
@@ -83,7 +83,7 @@ class MassiveScrapeTaskTest : IntegrationTestBase() {
             .toList()
 
         val tasks = sqls.associateBy { sql ->
-            restTemplate.postForObject("$baseUri/x/s", sql.sql, String::class.java)
+            restTemplate.postForObject("$baseUri/scrape/execute", sql.sql, String::class.java)
         }
 
         var round = 0

@@ -41,7 +41,7 @@ class IntegrationTestBase {
 
     val hostname = "127.0.0.1"
 
-    val baseUri get() = String.format("http://%s:%d", hostname, serverPort)
+    val baseUri get() = String.format("http://%s:%d/api", hostname, serverPort)
 
     @BeforeTest
     fun setup() {

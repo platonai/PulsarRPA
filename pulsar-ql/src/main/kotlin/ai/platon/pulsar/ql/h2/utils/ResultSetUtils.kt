@@ -304,6 +304,7 @@ object ResultSetUtils {
                     record[columnName] = obj
                 }
             }
+
             Types.OTHER -> {
                 val obj = resultSet.getObject(i)
 
@@ -311,6 +312,7 @@ object ResultSetUtils {
                     record[columnName] = obj
                 }
             }
+
             else -> record[columnName] = resultSet.getString(i)
         }
     }

@@ -1,6 +1,5 @@
 package ai.platon.pulsar.rest.api.controller
 
-import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
@@ -9,13 +8,12 @@ import ai.platon.pulsar.ql.h2.udfs.LLMFunctions
 import ai.platon.pulsar.rest.api.TestUtils
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import org.apache.http.HttpStatus
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
-class ScrapeControllerTests : IntegrationTestBase() {
+class ScrapeLegacyControllerTests : IntegrationTestBase() {
 
     val urls = mapOf(
         "productListPage" to "https://www.amazon.com/b?node=1292115011",
@@ -49,58 +47,22 @@ class ScrapeControllerTests : IntegrationTestBase() {
     }
 
     @BeforeEach
-    fun `ensure resources are prepared`() {
+    fun `Ensure resources are prepared`() {
         TestUtils.ensurePage(requireNotNull(urls["productListPage"]))
         TestUtils.ensurePage(requireNotNull(urls["productDetailPage"]))
     }
 
-    @Test
-    fun `test hello`() {
-        assertThat(
-            restTemplate.getForObject("$baseUri/pulsar-system/hello", String::class.java)
-        ).contains("hello")
-    }
-
     /**
-     * Test [ScrapeController.execute]
+     * Test [ScrapeLegacyController.submitJob]
+     * Test [ScrapeLegacyController.status]
      * */
     @Test
-    fun `test execute with X-SQL`() {
+    fun `Test extracting product list page with X-SQL`() {
         val pageType = "productListPage"
         val url = requireNotNull(urls[pageType])
         val sql = requireNotNull(sqlTemplates[pageType]).createSQL(url)
 
-        val response = restTemplate.postForObject("$baseUri/scrape/execute", sql, ScrapeResponse::class.java)
-        println("Response: $response")
-        Assumptions.assumeTrue(response.statusCode == 200)
-        assertNotNull(response)
-        assertEquals(200, response.statusCode)
-        assertEquals(200, response.pageStatusCode)
-    }
-
-    /**
-     * Test [ScrapeController.execute]
-     * */
-    @Test
-    fun `test execute with invalid X-SQL`() {
-        val sql = "select dom_uri(dom) from load_and_select()"
-
-        val response = restTemplate.postForObject("$baseUri/scrape/execute", sql, ScrapeResponse::class.java)
-        assertEquals(ResourceStatus.SC_BAD_REQUEST, response.statusCode)
-        assertFalse(response.isDone)
-    }
-
-    /**
-     * Test [ScrapeController.submit]
-     * Test [ScrapeController.status]
-     * */
-    @Test
-    fun `test submit with X-SQL`() {
-        val pageType = "productListPage"
-        val url = requireNotNull(urls[pageType])
-        val sql = requireNotNull(sqlTemplates[pageType]).createSQL(url)
-
-        val uuid = restTemplate.postForObject("$baseUri/scrape/submit", sql, String::class.java)
+        val uuid = restTemplate.postForObject("$baseUri/x/s", sql, String::class.java)
         println("UUID: $uuid")
         assertNotNull(uuid)
 
@@ -108,26 +70,23 @@ class ScrapeControllerTests : IntegrationTestBase() {
     }
 
     /**
-     * Test [ScrapeController.submit]
-     * Test [ScrapeController.status]
+     * Test [ScrapeLegacyController.submitJob]
+     * Test [ScrapeLegacyController.status]
      * Test [LLMFunctions.extract]
      * */
     @Test
-    fun `test submit with LLM + X-SQL`() {
+    fun `Test extracting product detail page with LLM + X-SQL`() {
         val pageType = "productDetailPage"
         val url = requireNotNull(urls[pageType])
         val sql = requireNotNull(sqlTemplates[pageType]).createSQL(url)
 
-        val uuid = restTemplate.postForObject("$baseUri/scrape/submit", sql, String::class.java)
+        val uuid = restTemplate.postForObject("$baseUri/x/s", sql, String::class.java)
         println("UUID: $uuid")
         assertNotNull(uuid)
 
         await(pageType, uuid, url)
     }
 
-    /**
-     * Test [ScrapeController.status]
-     * */
     private fun await(pageType: String, uuid: String, url: String) {
         var records: List<Map<String, Any?>>? = null
         var tick = 0
@@ -135,7 +94,7 @@ class ScrapeControllerTests : IntegrationTestBase() {
         while (records == null && ++tick < timeout) {
             sleepSeconds(1)
 
-            val response = restTemplate.getForObject("$baseUri/scrape/status?uuid=$uuid", ScrapeResponse::class.java)
+            val response = restTemplate.getForObject("$baseUri/x/status?uuid=$uuid", ScrapeResponse::class.java)
 
             if (tick % 10 == 0) {
                 println(pulsarObjectMapper().writeValueAsString(response))
@@ -159,7 +118,7 @@ class ScrapeControllerTests : IntegrationTestBase() {
         // wait for callback
         sleepSeconds(3)
 
-        val response = restTemplate.getForObject("$baseUri/scrape/status?uuid=$uuid", ScrapeResponse::class.java)
+        val response = restTemplate.getForObject("$baseUri/x/status?uuid=$uuid", ScrapeResponse::class.java)
         println("Final scrape task status: ")
         println(pulsarObjectMapper().writeValueAsString(response))
 

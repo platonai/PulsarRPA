@@ -1,8 +1,9 @@
 package ai.platon.pulsar.rest.api.common
 
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import org.nibor.autolink.LinkExtractor
 import org.nibor.autolink.LinkType
 import java.util.*
@@ -10,14 +11,16 @@ import java.util.*
 object ScrapeAPIUtils {
 
     private val allowedArgs = LoadOptions.apiPublicOptionNames
-    private val allowedScrapeUDFs = arrayOf("loadandselect", "loadoutpages")
+    private val allowedScrapeUDFs = arrayOf("loadandselect")
 
     @Throws(IllegalArgumentException::class)
     fun normalize(rawSql: String?): NormXSQL {
         if (rawSql == null) {
             throw throw IllegalArgumentException("SQL is required")
         }
-        val configuredUrl = extractUrl(rawSql) ?: throw IllegalArgumentException("No url found in sql: >>>$rawSql<<<")
+
+        val configuredUrl = extractConfiguredUrl(rawSql).takeIf { URLUtils.isStandard(it) }
+            ?: throw IllegalArgumentException("No url found in sql: >>>$rawSql<<<")
 
         val (url, args) = URLUtils.splitUrlArgs(configuredUrl)
         val sql = eraseExpireOptions(rawSql)
@@ -39,7 +42,7 @@ object ScrapeAPIUtils {
             return false
         }
 
-        val s = sql.replace("_", "").lowercase(Locale.getDefault())
+        val s = sql.replace("_", "").replace("\\s+", " ").lowercase()
         return allowedScrapeUDFs.any { it in s }
     }
 
@@ -66,29 +69,18 @@ object ScrapeAPIUtils {
     /**
      * Extract the url from the SQL, the url might be configured
      * */
-    fun extractUrl(sql: String?): String? {
+    fun extractConfiguredUrl(sql: String?): String? {
         if (sql == null) {
             return null
         }
 
+        LinkExtractors.fromText(sql).firstOrNull() ?: return null
+
         val sql0 = checkSql(sql).replace("\\s+".toRegex(), " ")
         return if (sql0.contains(" from ", ignoreCase = true)) {
-            ResultSetUtils.extractUrlFromFromClause(sql0)
+            ResultSetUtils.extractUrlFromFromClause(sql0).takeIf { URLUtils.isStandard(it) }
         } else {
-            // TODO: this branch is deprecated
-            val input = sql0
-            val linkExtractor = LinkExtractor.builder()
-                .linkTypes(EnumSet.of(LinkType.URL))
-                .build()
-            val links = linkExtractor.extractLinks(input).iterator()
-
-            if (links.hasNext()) {
-                val link = links.next()
-                input.substring(link.beginIndex, link.endIndex)
-            } else {
-                null
-            }
+            null
         }
     }
-
 }
