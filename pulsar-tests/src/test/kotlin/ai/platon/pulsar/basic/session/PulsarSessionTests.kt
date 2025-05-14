@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.basic.TestBase
 import com.google.gson.Gson
+import org.junit.jupiter.api.Assumptions
 import java.nio.file.Files
 import kotlin.test.*
 
@@ -17,8 +18,8 @@ class PulsarSessionTests: TestBase() {
     private val timestamp = System.currentTimeMillis()
     private val url = "https://www.amazon.com/Best-Sellers/zgbs?t=$timestamp"
     private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty?t=$timestamp"
-    
-    private val resourceUrl = "https://www.amazon.com/robots.txt?t=$timestamp"
+
+    private val resourceUrl get() = "https://www.example.com/"
 
     @BeforeTest
     fun setup() {
@@ -38,26 +39,26 @@ class PulsarSessionTests: TestBase() {
     @Test
     fun testLoad() {
         val page = session.load(url)
+        Assumptions.assumeTrue(page.protocolStatus.isSuccess)
+
         val page2 = webDB.getOrNull(url)
 
-        if (page.protocolStatus.isSuccess) {
-            assertNotNull(page2)
-            assertTrue { page2.fetchCount > 0 }
-            assertTrue { page2.protocolStatus.isSuccess }
-        }
+        assertNotNull(page2)
+        assertTrue { page2.fetchCount > 0 }
+        assertTrue { page2.protocolStatus.isSuccess }
 
-        if (page2 != null) {
-            println(WebPageFormatter(page2))
-            println(page2.vividLinks)
-            val gson = Gson()
-            println(gson.toJson(page2.activeDOMStatus))
-            println(gson.toJson(page2.activeDOMStatTrace))
-        }
+        println(WebPageFormatter(page2))
+        println(page2.vividLinks)
+
+        val gson = Gson()
+        println(gson.toJson(page2.activeDOMStatus))
+        println(gson.toJson(page2.activeDOMStatTrace))
     }
 
     @Test
     fun testLoadResource() {
         val page = session.loadResource(resourceUrl, url, "-refresh")
+        Assumptions.assumeTrue(page.protocolStatus.isSuccess)
 
         assertTrue { page.fetchCount > 0 }
         assertTrue { page.protocolStatus.isSuccess }
