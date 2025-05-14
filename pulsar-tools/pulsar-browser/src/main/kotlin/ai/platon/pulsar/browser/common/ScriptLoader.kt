@@ -141,3 +141,9 @@ open class ScriptLoader(
         }
     }
 }
+
+fun main() {
+    val confuser = SimpleScriptConfuser()
+    val loader = ScriptLoader(confuser, listOf("id", "class", "style"))
+    loader.getPreloadJs()
+}
