@@ -29,7 +29,18 @@ function Get-HeadHash {
 function Run-BuildScript {
     if (Test-Path $buildScript) {
         Write-Output "[INFO] Running $buildScript..."
-        & "$buildScript" -clean -test
+
+        # Test the pulsar-tests module first
+        Write-Output "[INFO] Testing pulsar-tests module..."
+        $testResult = & "$buildScript" -clean -test -pl :pulsar-tests
+
+        # Check if the pulsar-tests module had any failed tests
+        if ($LASTEXITCODE -eq 0) {
+            Write-Output "[INFO] pulsar-tests module passed. Testing all modules..."
+            & "$buildScript" -clean -test
+        } else {
+            Write-Output "[ERROR] pulsar-tests module failed. Skipping testing of all other modules."
+        }
     } else {
         Write-Output "[ERROR] $buildScript not found in $repoPath"
     }

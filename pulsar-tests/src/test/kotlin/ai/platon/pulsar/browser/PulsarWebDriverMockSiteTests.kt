@@ -1,8 +1,16 @@
 package ai.platon.pulsar.browser
 
+import ai.platon.pulsar.browser.common.SimpleScriptConfuser.Companion.IDENTITY_NAME_MANGLER
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.js.JsUtils
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.persist.model.ActiveDOMMessage
+import ai.platon.pulsar.persist.model.ActiveDOMMetadata
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
 
@@ -172,7 +180,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test buildDomTree`() = runWebDriverTest("${generatedAssetsBaseURL}/interactive-1.html", browser) { driver ->
+    fun `test buildDomTree`() = runWebDriverTest(interactiveUrl, browser) { driver ->
         var buildDomTreeJs = ResourceLoader.readString("js/build_dom_tree.js")
         buildDomTreeJs = buildDomTreeJs.trimEnd { it.isWhitespace() || it == ';' }
         // println(StringUtils.abbreviateMiddle(buildDomTreeJs, "...", 500))
