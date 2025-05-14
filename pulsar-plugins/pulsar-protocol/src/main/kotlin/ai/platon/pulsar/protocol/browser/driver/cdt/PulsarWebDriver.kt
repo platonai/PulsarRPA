@@ -110,14 +110,12 @@ class PulsarWebDriver(
 
         browser.emit(BrowserEvents.willNavigate, entry)
 
-        try {
+        invokeOnPage("enableAPIAgents") {
             enableAPIAgents()
+        }
 
-            rpc.invokeDeferred("navigateTo") {
-                if (enableStartupScript) navigateInvaded(entry) else navigateNonInvaded(entry)
-            }
-        } catch (e: ChromeDriverException) {
-            rpc.handleChromeException(e, "navigateTo", entry.url)
+        invokeOnPage("navigateTo") {
+            if (enableStartupScript) navigateInvaded(entry) else navigateNonInvaded(entry)
         }
     }
 
@@ -348,17 +346,13 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) {
-        try {
-            rpc.invokeDeferred("type") {
-                val nodeId = page.focusOnSelector(selector)
-                if (nodeId > 0) {
-                    click(nodeId, 1)
-                    keyboard?.type(text, randomDelayMillis("type"))
-                    gap("type")
-                }
+        invokeOnElement(selector, "type") {
+            val nodeId = page.focusOnSelector(selector)
+            if (nodeId > 0) {
+                click(nodeId, 1)
+                keyboard?.type(text, randomDelayMillis("type"))
+                gap("type")
             }
-        } catch (e: ChromeDriverException) {
-            rpc.handleChromeException(e, "type")
         }
     }
 
@@ -604,22 +598,30 @@ class PulsarWebDriver(
 
     override fun toString() = "Driver#$id"
 
+    /**
+     *
+     * */
+    @Throws(ChromeIOException::class)
     fun enableAPIAgents() {
-        pageAPI?.enable()
-        domAPI?.enable()
-        runtimeAPI?.enable()
-        networkAPI?.enable()
-        cssAPI?.enable()
+        try {
+            pageAPI?.enable()
+            domAPI?.enable()
+            runtimeAPI?.enable()
+            networkAPI?.enable()
+            cssAPI?.enable()
 
-        if (resourceBlockProbability > 1e-6) {
-            fetchAPI?.enable()
-        }
+            if (resourceBlockProbability > 1e-6) {
+                fetchAPI?.enable()
+            }
 
-        val proxyUsername = browser.id.fingerprint.proxyEntry?.username
-        if (!proxyUsername.isNullOrBlank()) {
-            // allow all url patterns
-            val patterns = listOf(RequestPattern())
-            fetchAPI?.enable(patterns, true)
+            val proxyUsername = browser.id.fingerprint.proxyEntry?.username
+            if (!proxyUsername.isNullOrBlank()) {
+                // allow all url patterns
+                val patterns = listOf(RequestPattern())
+                fetchAPI?.enable(patterns, true)
+            }
+        } catch (e: Exception) {
+            throw ChromeIOException("Failed to enable CDT agents", e)
         }
     }
 

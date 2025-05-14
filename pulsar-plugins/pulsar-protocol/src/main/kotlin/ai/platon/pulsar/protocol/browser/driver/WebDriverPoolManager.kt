@@ -258,7 +258,7 @@ open class WebDriverPoolManager(
      * Create a driver pool, but the driver pool is not added to [workingDriverPools].
      * */
     fun createUnmanagedDriverPool(
-        browserId: BrowserId = BrowserId.DEFAULT, priority: Int = 0,
+        browserId: BrowserId, priority: Int = 0,
     ): LoadingWebDriverPool {
         return LoadingWebDriverPool(browserId, priority, this, driverFactory, immutableConfig)
     }

@@ -12,6 +12,7 @@ import ai.platon.pulsar.skeleton.session.PulsarSession
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.random.Random
 
 enum class CrawlEvents {
     filter,
@@ -33,7 +34,8 @@ abstract class AbstractCrawler(
     override val name: String get() = this.javaClass.simpleName
 
     override var retryDelayPolicy: (Int, UrlAware?) -> Duration = { nextRetryNumber, url ->
-        Duration.ofMinutes(1L + 2 * nextRetryNumber)
+        // Duration.ofMinutes(1L + 2 * nextRetryNumber)
+        Duration.ofSeconds(30 + Random.nextLong(15))
     }
 
     protected var isPaused = false

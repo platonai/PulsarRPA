@@ -800,7 +800,8 @@ open class StreamingCrawler(
 
             is IllegalStateException -> {
                 logger.warn("Illegal state", e)
-                return FlowState.BREAK
+                return state.get()
+                // return FlowState.BREAK
             }
 
             else -> throw e

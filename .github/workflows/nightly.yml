@@ -26,6 +26,7 @@ jobs:
       - name: Read VERSION
         id: version
         run: |
+          if [ ! -f VERSION ]; then echo "VERSION file not found!" && exit 1; fi
           echo "VERSION=$(head -n 1 VERSION)" >> $GITHUB_ENV
 
       - name: Cache Maven packages
@@ -36,7 +37,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build with Maven
-        run: ./mvnw clean package -Pall-modules
+        run: ./mvnw clean install -Pall-modules
 
       - name: Build Docker image
         run: |
@@ -45,8 +46,9 @@ jobs:
       - name: Integration Test
         run: |
           docker run -d --rm --name pulsar-rpa-test -p 8182:8182 pulsar-rpa-nightly:${{ github.sha }}
-          sleep 10  # Wait for Spring Boot to start
-          ./bin/scrape.sh
+          echo "Waiting for service..."
+          sleep 10
+          ./bin/scrape-async.sh || (echo "Integration test failed" && exit 1)
           docker stop pulsar-rpa-test || true
 
       - name: Slack Notification
@@ -57,4 +59,4 @@ jobs:
           SLACK_CHANNEL: ci-builds
           SLACK_COLOR: ${{ job.status }}
           SLACK_TITLE: Nightly Build Result
-          SLACK_MESSAGE: 'Build status: ${{ job.status }}' 
+          SLACK_MESSAGE: 'Build status: ${{ job.status }}'

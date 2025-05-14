@@ -125,7 +125,11 @@ public interface CapabilityTypes {
 
     ///////////////////////////////////////////////////////////////////////////
     // Privacy context
-
+    /**
+     * The mode of browser context, case-insensitive.
+     * default, system_default, prototype, sequential, temporary
+     */
+    String BROWSER_CONTEXT_MODE = "browser.context.mode";
     /**
      * The number of active privacy contexts.
      */

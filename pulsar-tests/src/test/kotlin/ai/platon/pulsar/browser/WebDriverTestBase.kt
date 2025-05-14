@@ -1,21 +1,22 @@
 package ai.platon.pulsar.browser
 
-import ai.platon.pulsar.browser.WebDriverService.Companion.PAGE_SOURCE_MIN_LENGTH
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
+import ai.platon.pulsar.persist.model.ActiveDOMMetadata
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import org.apache.commons.lang3.StringUtils
-import org.junit.jupiter.api.Assumptions.assumeTrue
+import com.fasterxml.jackson.module.kotlin.readValue
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import kotlin.test.assertNotNull
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class WebDriverTestBase : TestBase() {
@@ -23,10 +24,19 @@ class WebDriverTestBase : TestBase() {
     companion object {
         val browserFactory = DefaultBrowserFactory()
         val webDriverService = WebDriverService(browserFactory)
-        val browser = browserFactory.launchRandomTempBrowser()
+        lateinit var browser: Browser
 
-        init {
+        @JvmStatic
+        @BeforeAll
+        fun initBrowser() {
+            browser = browserFactory.launchRandomTempBrowser()
             browser.newDriver()
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun closeBrowser() {
+            browser.close()
         }
     }
 
@@ -50,6 +60,10 @@ class WebDriverTestBase : TestBase() {
     protected val assetsBaseURL get() = "http://127.0.0.1:$port/assets"
 
     protected val generatedAssetsBaseURL get() = "http://127.0.0.1:$port/generated"
+
+    protected val interactiveUrl get() = "$generatedAssetsBaseURL/interactive-1.html"
+
+    protected val multiScreensInteractiveUrl get() = "$generatedAssetsBaseURL/interactive-screens.html"
 
     /**
      * @see [ai.platon.pulsar.test.server.MockSiteController.text]
@@ -127,4 +141,14 @@ class WebDriverTestBase : TestBase() {
     protected suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) = webDriverService.open(url, driver, scrollCount)
 
     protected suspend fun openResource(url: String, driver: WebDriver, scrollCount: Int = 1) = webDriverService.openResource(url, driver, scrollCount)
+
+    protected suspend fun computeActiveDOMMetadata(driver: WebDriver): ActiveDOMMetadata {
+        val detail = driver.evaluateDetail("JSON.stringify(__pulsar_utils__.computeMetadata())")
+        println(detail)
+        assertNotNull(detail)
+        assertNotNull(detail.value)
+        println(detail.value)
+        val data = requireNotNull(detail.value?.toString())
+        return pulsarObjectMapper().readValue(data)
+    }
 }

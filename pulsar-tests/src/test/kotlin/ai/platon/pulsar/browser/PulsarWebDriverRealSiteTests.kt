@@ -26,7 +26,7 @@ import java.util.*
 import kotlin.test.*
 
 @Tag("TimeConsumingTest")
-class PulsarWebDriverRealSiteTests : WebDriverTestBase() {
+open class PulsarWebDriverRealSiteTests : WebDriverTestBase() {
 
     private val fieldSelectors = mapOf(
         "01productTitle" to "#productTitle",
@@ -127,136 +127,6 @@ class PulsarWebDriverRealSiteTests : WebDriverTestBase() {
         assertTrue { metadata.clientHeight > 0 } // 986 on my laptop
     }
 
-    @Test
-    fun `open a HTML page and compute screen number`() = runWebDriverTest(originUrl, browser) { driver ->
-        driver.evaluate("__pulsar_utils__.scrollToTop()")
-        var metadata = computeActiveDOMMetadata(driver)
-        assertEquals(0f, metadata.screenNumber)
-
-        driver.evaluate("window.scrollTo(0, 300)")
-        metadata = computeActiveDOMMetadata(driver)
-        assertTrue { metadata.screenNumber > 0.0 }
-        assertTrue { metadata.screenNumber < 1.0 }
-
-        driver.evaluate("window.scrollTo(0, 1080)")
-        metadata = computeActiveDOMMetadata(driver)
-        assertTrue { metadata.screenNumber > 1 }
-    }
-
-    private suspend fun computeActiveDOMMetadata(driver: WebDriver): ActiveDOMMetadata {
-        val detail = driver.evaluateDetail("JSON.stringify(__pulsar_utils__.computeMetadata())")
-        println(detail)
-        assertNotNull(detail)
-        assertNotNull(detail.value)
-        println(detail.value)
-        val data = requireNotNull(detail.value?.toString())
-        return pulsarObjectMapper().readValue(data)
-    }
-
-    @Test
-    fun `Ensure injected js variables are not seen`() = runWebDriverTest(originUrl, browser) { driver ->
-        val windowVariables = driver.evaluate("JSON.stringify(Object.keys(window))").toString()
-        assertTrue { windowVariables.contains("document") }
-        assertTrue { windowVariables.contains("setTimeout") }
-        assertTrue { windowVariables.contains("scrollTo") }
-        
-        val variables = windowVariables.split(",")
-            .map { it.trim('\"') }
-            .filter { it.contains("__pulsar_") }
-        assertEquals(0, variables.size, "__pulsar_ should be confused")
-        
-        var result = driver.evaluate("typeof(__pulsar_)").toString()
-        assertEquals("function", result)
-
-        assertNotEquals(IDENTITY_NAME_MANGLER, confuser.nameMangler,
-            "confuser.nameMangler should not be IDENTITY_NAME_MANGLER")
-        val injectedNames = listOf(
-            "__pulsar_utils__",
-            "__pulsar_NodeFeatureCalculator",
-            "__pulsar_NodeTraversor"
-        )
-        injectedNames.forEach { name ->
-            result = driver.evaluate("typeof($name)").toString()
-            assertEquals("function", result)
-        }
-        
-        result = driver.evaluate("typeof(window.__pulsar_utils__)").toString()
-        assertEquals("function", result)
-        
-        result = driver.evaluate("typeof(document.__pulsar_setAttributeIfNotBlank)").toString()
-        assertEquals("function", result)
-    }
-    
-    @Test
-    fun `Ensure no injected document variables are seen`() = runWebDriverTest(originUrl, browser) { driver ->
-        val nodeVariables = driver.evaluate("JSON.stringify(Object.keys(document))").toString()
-//            assertTrue { nodeVariables.contains("querySelector") }
-//            assertTrue { nodeVariables.contains("textContent") }
-        
-        val variables = nodeVariables.split(",").map { it.trim('\"') }
-        
-        println(variables)
-        
-        val pulsarVariables = variables.filter { it.contains("__pulsar_") }
-        assertTrue { pulsarVariables.isEmpty() }
-        
-        val result = driver.evaluate("typeof(document.__pulsar_setAttributeIfNotBlank)").toString()
-        assertEquals("function", result)
-    }
-
-    @Test
-    fun testOpenNewTab() = runWebDriverTest(productUrl, browser) { driver ->
-        driver.clickMatches("ol li a", "href", "product-reviews")
-        driver.waitForNavigation()
-        driver.waitForSelector("body")
-        driver.scrollDown(5)
-    }
-
-    @Test
-    fun test_selectTextAll() = runWebDriverTest(browser) { driver ->
-        driver.navigateTo(productUrl)
-        
-        driver.waitForSelector("#productTitle")
-        
-        val timeout = Duration.ofSeconds(120)
-        val remainingTime = driver.waitForSelector("#reviewsMedley", timeout) {
-            driver.mouseWheelDown()
-            driver.scrollTo("#reviewsMedley")
-        }
-        println("Remaining time: $remainingTime ms")
-        assertTrue { !remainingTime.isNegative }
-        assertTrue { driver.exists("#reviewsMedley") }
-        
-        driver.waitForSelector("a[data-hook=review]") { driver.mouseWheelDown() }
-        val texts = driver.selectTextAll("a[data-hook=review-title]")
-        assertTrue { texts.isNotEmpty() }
-        texts.map { it.replace("\\s+".toRegex(), " ") }.forEach { text -> println(">>>$text<<<") }
-    }
-
-
-    @Test
-    fun test_selectFirstAttributeOrNull() = runWebDriverTest(browser) { driver ->
-        driver.navigateTo(productUrl)
-        
-        driver.waitForSelector("#productTitle")
-        
-        val cssClass = driver.selectFirstAttributeOrNull("#productTitle", "class")
-        assertNotNull(cssClass)
-        println("Product title class: $cssClass")
-    }
-    
-    @Test
-    fun test_selectAttributes() = runWebDriverTest(browser) { driver ->
-        driver.navigateTo(productUrl)
-        
-        val selector = "input[type=text]"
-        driver.waitForSelector(selector)
-        
-        val attributes = driver.selectAttributes(selector)
-        assertTrue { attributes.isNotEmpty() }
-        println("attributes: $attributes")
-    }
-    
     @Test
     fun test_selectAttributeAll() = runWebDriverTest(browser) { driver ->
         driver.navigateTo(productUrl)

@@ -42,6 +42,7 @@ Find all links containing /dp/.
 📺 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
+
 ---
 
 # 🚀 Quick Start Guide
@@ -117,8 +118,6 @@ curl -X POST "http://localhost:8182/api/ai/command" \
   '
 ```
 
-💡 **Tip:** You don't need to fill in every field — just what you need.
-
 ### 📄 JSON-Based Version:
 
 <details>
@@ -134,6 +133,8 @@ curl -X POST "http://localhost:8182/api/ai/command" \
     "onPageReadyActions": ["click #title", "scroll to the middle"]
   }'
 ```
+
+💡 **Tip:** You don't need to fill in every field — just what you need.
 
 </details>
 

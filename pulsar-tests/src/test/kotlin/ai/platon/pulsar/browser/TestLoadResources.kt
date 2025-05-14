@@ -10,11 +10,17 @@ import kotlin.test.*
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class TestLoadResources: WebDriverTestBase() {
-    private val resourceUrls = """
-        https://www.baidu.com/s?wd=china
+    private val resourceUrls get() = """
+        $csvTextUrl
+        $jsonUrl
+        ${"$assetsBaseURL/dom.html"}
+        ${"$assetsBaseURL/drag-n-drop.html"}
+        ${"$assetsBaseURL/error.html"}
+        ${"$assetsBaseURL/injectedfile.js"}
+        ${"$assetsBaseURL/simple.json"}
+        ${"$generatedAssetsBaseURL/interactive-1.html"}
+        ${"$generatedAssetsBaseURL/interactive-2.html"}
         https://www.baidu.com/s?wd=america
-        https://www.baidu.com/s?wd=england
-        https://www.baidu.com/s?wd=france
     """.trimIndent().split("\n")
 
     @BeforeTest

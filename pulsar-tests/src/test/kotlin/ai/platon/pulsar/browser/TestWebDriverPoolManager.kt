@@ -1,31 +1,28 @@
 package ai.platon.pulsar.browser
 
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
-import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.test.*
 
-class TestWebDriverPool {
+class TestWebDriverPoolManager {
     companion object {
-        val logger = LoggerFactory.getLogger(TestWebDriverPool::class.java)
+        val logger = LoggerFactory.getLogger(TestWebDriverPoolManager::class.java)
 
-        val context = PulsarContexts.create()
-        val conf = context.unmodifiedConfig
-        val driverPoolManager = DefaultWebDriverPoolManager(conf)
+        lateinit var driverPoolManager: DefaultWebDriverPoolManager
         var quitMultiThreadTesting = false
     }
 
-//    @Test
-//    fun testCapabilities() {
-//        val generalOptions = driverControl.createGeneralOptions()
-//        generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
-//        generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
-//    }
+    @BeforeTest
+    fun setup() {
+        driverPoolManager = DefaultWebDriverPoolManager(ImmutableConfig())
+    }
 
     @AfterTest
     fun tearDown() {
@@ -33,8 +30,8 @@ class TestWebDriverPool {
     }
 
     @Test
-    fun testWebDriverPool() {
-        val driverPool = driverPoolManager.createUnmanagedDriverPool()
+    fun `test createUnmanagedDriverPool`() {
+        val driverPool = driverPoolManager.createUnmanagedDriverPool(BrowserId.RANDOM_TEMP)
         val workingDrivers = mutableListOf<WebDriver>()
         val numDrivers = driverPool.capacity
         assertTrue("driverPool.capacity should not be too large, actual ${driverPool.capacity}") { numDrivers <= 50 }
@@ -76,7 +73,7 @@ class TestWebDriverPool {
     @Ignore("Time consuming (and also bugs)")
     @Test
     fun testWebDriverPoolMultiThreaded() {
-        val driverPool = driverPoolManager.createUnmanagedDriverPool()
+        val driverPool = driverPoolManager.createUnmanagedDriverPool(BrowserId.RANDOM_TEMP)
         val workingDrivers = ArrayBlockingQueue<WebDriver>(30)
 
         val consumer = Thread {

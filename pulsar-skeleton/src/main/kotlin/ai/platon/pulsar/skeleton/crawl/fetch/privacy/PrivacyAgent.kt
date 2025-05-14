@@ -13,7 +13,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
-import java.util.concurrent.ConcurrentSkipListSet
 
 /**
  * A privacy agent defines a unique agent to visit websites.

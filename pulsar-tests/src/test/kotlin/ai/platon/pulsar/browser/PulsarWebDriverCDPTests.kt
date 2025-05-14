@@ -45,6 +45,7 @@ class PulsarWebDriverCDPTests : WebDriverTestBase() {
 
     @AfterEach
     fun tearDown() {
+        resetLogs()
     }
 
     @Test
