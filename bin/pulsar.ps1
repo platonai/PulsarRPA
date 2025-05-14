@@ -1,11 +1,14 @@
+#!/usr/bin/env pwsh
+# Usage: .\bin\pulsar.ps1
+
 $ErrorActionPreference = "Stop"
 
 # Find the first parent directory containing the VERSION file
 $AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
 while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
-    $AppHome=$AppHome.Parent
+    $AppHome = Split-Path -Parent $AppHome
 }
-cd $AppHome
+Set-Location $AppHome
 
 $UBERJAR = Join-Path $PWD "target\PulsarRPA.jar"
 if (-not (Test-Path $UBERJAR)) {
