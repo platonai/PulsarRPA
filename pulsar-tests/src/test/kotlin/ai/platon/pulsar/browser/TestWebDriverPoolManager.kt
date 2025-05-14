@@ -1,5 +1,6 @@
 package ai.platon.pulsar.browser
 
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_CONTEXT_MODE
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
@@ -20,6 +21,7 @@ class TestWebDriverPoolManager {
 
     @BeforeTest
     fun setup() {
+        System.setProperty(BROWSER_CONTEXT_MODE, "temporary")
         driverPoolManager = DefaultWebDriverPoolManager(ImmutableConfig())
     }
 

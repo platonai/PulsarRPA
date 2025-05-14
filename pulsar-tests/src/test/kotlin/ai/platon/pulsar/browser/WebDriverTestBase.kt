@@ -11,7 +11,9 @@ import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.StringUtils
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.BeforeAll
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -27,6 +29,18 @@ class WebDriverTestBase : TestBase() {
 
         init {
             browser.newDriver()
+        }
+
+        @JvmStatic
+        @BeforeAll
+        fun initBrowser() {
+            browser.newDriver()
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun closeBrowser() {
+            browser.close()
         }
     }
 
