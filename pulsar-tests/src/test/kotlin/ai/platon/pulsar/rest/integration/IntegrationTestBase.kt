@@ -52,7 +52,7 @@ class IntegrationTestBase {
      * */
     fun scrape(url: String): ScrapeResponse? {
         val sql = "select dom_base_uri(dom) as url from load_and_select('$url', ':root')"
-        return restTemplate.postForObject("$baseUri/x/e", sql, ScrapeResponse::class.java)
+        return restTemplate.postForObject("$baseUri/scrape/execute", sql, ScrapeResponse::class.java)
     }
 
     /**

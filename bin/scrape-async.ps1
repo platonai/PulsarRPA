@@ -22,7 +22,7 @@
 #
 
 # Configuration
-$baseUrl = "http://localhost:8182/api/scrape/execute"
+$baseUrl = "http://localhost:8182/api/scrape/submit"
 $statusUrlTemplate = "http://localhost:8182/api/scrape/status?uuid={0}"
 $maxPollingTasks = 10
 $delaySeconds = 5

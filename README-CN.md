@@ -135,10 +135,10 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 
 ## 🎓 进阶用户指南 — LLM + X-SQL: 精确、灵活、强大
 
-利用 `x/e` API 进行高度精确、灵活和智能的数据提取。
+利用 `scrape/execute` API 进行高度精确、灵活和智能的数据提取。
 
   ```bash
-  curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+  curl -X POST "http://localhost:8182/api/scrape/execute" -H "Content-Type: text/plain" -d "
   select
     llm_extract(dom, '产品名称、价格、评分') as llm_extracted_data,
     dom_base_uri(dom) as url,

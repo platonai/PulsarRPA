@@ -143,7 +143,7 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 Harness the power of the `x/e` API for highly precise, flexible, and intelligent data extraction.
 
   ```bash
-  curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+  curl -X POST "http://localhost:8182/api/scrape/execute" -H "Content-Type: text/plain" -d "
   select
     llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
     dom_base_uri(dom) as url,

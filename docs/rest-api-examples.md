@@ -145,7 +145,7 @@ Use structured SQL-like queries combined with LLM extraction.
 ### Example Query
 
 ```bash
-curl -X POST "http://localhost:8182/api/x/e" \
+curl -X POST "http://localhost:8182/api/scrape/execute" \
   -H "Content-Type: text/plain" \
   -d "
     SELECT

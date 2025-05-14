@@ -24,7 +24,7 @@ from
 """;
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8182/api/x/e"))
+                .uri(URI.create("http://localhost:8182/api/scrape/execute"))
                 .header("Content-Type", "text/plain")
                 .POST(HttpRequest.BodyPublishers.ofString(sql)).build();
         String response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();

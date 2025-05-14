@@ -74,7 +74,7 @@ bin/scrape.sh
 该 bash 脚本非常简单，只需使用 curl 发送 X-SQL：
 
 ```shell
-curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+curl -X POST --location "http://localhost:8182/api/scrape/execute" -H "Content-Type: text/plain" -d "
   select
       dom_base_uri(dom) as url,
       dom_first_text(dom, '#productTitle') as title,

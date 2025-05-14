@@ -20,6 +20,6 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46 -i 20s -njr 3', 'body
 # Commented out since PowerShell doesn't support 'echo' command
 # Write-Output $sql
 
-Invoke-RestMethod -Method POST -Uri "http://localhost:8182/api/x/e" -Headers @{"Content-Type" = "text/plain"} -Body $sql
+Invoke-RestMethod -Method POST -Uri "http://localhost:8182/api/scrape/execute" -Headers @{"Content-Type" = "text/plain"} -Body $sql
 
 Write-Output ""
