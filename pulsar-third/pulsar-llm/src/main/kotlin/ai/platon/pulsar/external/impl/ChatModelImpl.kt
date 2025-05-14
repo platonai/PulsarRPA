@@ -1,5 +1,6 @@
 package ai.platon.pulsar.external.impl
 
+import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -18,13 +19,17 @@ import org.ehcache.config.builders.CacheManagerBuilder
 import org.ehcache.config.builders.ExpiryPolicyBuilder
 import org.ehcache.config.builders.ResourcePoolsBuilder
 import org.jsoup.nodes.Element
+import java.text.MessageFormat
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicInteger
 
 open class ChatModelImpl(
     private val langchainModel: ChatLanguageModel,
     private val conf: ImmutableConfig
 ) : ChatModel {
     private val logger = getLogger(this)
+
+    private val failureCounts = ConcurrentExpiringLRUCache<String, AtomicInteger>()
 
     private val cacheManager: CacheManager = CacheManagerBuilder.newCacheManagerBuilder()
         .withCache(
@@ -104,7 +109,7 @@ open class ChatModelImpl(
 
         val um = UserMessage.userMessage(userMessage1)
 
-        val response = generateWithRetry(systemMessage, um) ?: return ModelResponse("", ResponseState.OTHER)
+        val response = generateWithRetryOrNull(systemMessage, um) ?: return ModelResponse("", ResponseState.OTHER)
 
         val u = response.tokenUsage()
         val tokenUsage = TokenUsage(u.inputTokenCount(), u.outputTokenCount(), u.totalTokenCount())
@@ -126,6 +131,17 @@ open class ChatModelImpl(
         return modelResponse
     }
 
+    @Throws(RuntimeException::class)
+    private fun generateWithRetryOrNull(systemMessage: String, um: UserMessage): Response<AiMessage>? {
+        return try {
+            generateWithRetry(systemMessage, um)
+        } catch (e: RuntimeException) {
+            logger.warn("Model call failed after retries | ${e.message}")
+            null
+        }
+    }
+
+    @Throws(RuntimeException::class)
     private fun generateWithRetry(systemMessage: String, um: UserMessage): Response<AiMessage>? {
         var i = 0
         val n = 3
@@ -134,10 +150,18 @@ open class ChatModelImpl(
             try {
                 return generate0(systemMessage, um)
             } catch (e: RuntimeException) {
+                val modelClass = langchainModel.javaClass.simpleName
+                val messageDetails = MessageFormat.format("$i/$n | {0} | {1}", modelClass, e.message)
                 if (i < 3) {
-                    logger.info("Model call failure, retrying... | $i/$n | {} | {}", langchainModel.javaClass.simpleName, e.message)
+                    val message = "Model call failure, retrying..."
+                    val totalLogCount = failureCounts.computeIfAbsent(message) { AtomicInteger() }.incrementAndGet()
+                    if (totalLogCount < 20) {
+                        logger.info("{} {} | enable debug to show every failure", message, messageDetails)
+                    } else {
+                        logger.debug("[Verbose] {} {}", message, messageDetails)
+                    }
                 } else {
-                    throw RuntimeException("Model call failure | $i/$n | $langchainModel | ${e.message}")
+                    throw RuntimeException("Model call failure, retry failed | $messageDetails")
                 }
             }
         }

@@ -37,7 +37,6 @@ class ChatModelFactoryTest {
         assertNotNull(model)
         assertIs<ChatModelImpl>(model)
 
-
         val response = model.call("This is a fake API key so you must fail")
 
         // will throw a Exception with message like:
@@ -54,7 +53,9 @@ class ChatModelFactoryTest {
         val modelName = "doubao-1-5-pro-32k-250115"
         val apiKey = "9cc8e998-4655-4e90-a54c1-66659a524a97"
 
-        val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl(baseUrl).build()
+        val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl(baseUrl)
+            .maxRetries(1)
+            .build()
 
         ChatModelFactory.register(lm)
 

@@ -24,7 +24,7 @@ object ChatModelFactory {
 
     var logRequest = false
     var logResponse = false
-    var maxRetries = 0
+    var maxRetries = 1
     var timeout = Duration.ofSeconds(30)
 
     fun isModelConfigured(conf: ImmutableConfig): Boolean {
@@ -221,8 +221,6 @@ object ChatModelFactory {
             .timeout(timeout)
             .build()
 
-
-
         return ChatModelImpl(lm, conf)
     }
 
@@ -276,7 +274,7 @@ object ChatModelFactory {
     private fun createOpenAICompatibleModel0(
         modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig
     ): ChatModel {
-        val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl(baseUrl).modelName(modelName).logRequests(true)
+        val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl(baseUrl).modelName(modelName)
             .logRequests(logRequest)
             .logResponses(logResponse)
             .maxRetries(maxRetries)
