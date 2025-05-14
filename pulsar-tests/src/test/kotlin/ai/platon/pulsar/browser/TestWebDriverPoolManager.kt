@@ -2,6 +2,7 @@ package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
+import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
@@ -33,13 +34,17 @@ class TestWebDriverPoolManager {
     fun `test createUnmanagedDriverPool`() {
         val driverPool = driverPoolManager.createUnmanagedDriverPool(BrowserId.RANDOM_TEMP)
         val workingDrivers = mutableListOf<WebDriver>()
-        val numDrivers = driverPool.capacity
-        assertTrue("driverPool.capacity should not be too large, actual ${driverPool.capacity}") { numDrivers <= 50 }
-        repeat(numDrivers) {
+        var numDrivers = 0
+        assertTrue("driverPool.capacity should not be too large, actual ${driverPool.capacity}") {
+            driverPool.capacity <= 50
+        }
+        var i = 0
+        while (i++ < driverPool.capacity && !AppSystemInfo.isCriticalMemory) {
             val driver = driverPool.poll()
             require(driver is AbstractWebDriver)
             assertTrue { driver.isWorking }
             workingDrivers.add(driver)
+            ++numDrivers
         }
 
         assertEquals(numDrivers, driverPool.numWorking)

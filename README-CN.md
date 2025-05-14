@@ -55,7 +55,7 @@
 
 ```bash
 # Linux/macOS 和 Windows（如果 curl 可用）
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.6/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.6-SNAPSHOT/PulsarRPA.jar
 ```
 ```bash
 java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
@@ -64,7 +64,7 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 
 > 🔍 **提示：** 即使没有LLM KEY，您仍然可以访问非LLM功能。
 
-🔗 [选择其他LLM提供商](docs/config/llm/llm-config)
+🔗 [选择其他LLM提供商](docs/config/llm/llm-config.md)
 
 <details>
 <summary>📦 下载链接</summary>

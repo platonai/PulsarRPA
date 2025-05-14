@@ -55,7 +55,7 @@ Download:
 
 ```bash
 # Linux/macOS and Windows (if curl is available)
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.6/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.6-SNAPSHOT/PulsarRPA.jar
 ```
 
 ```bash
@@ -64,7 +64,7 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 
 > 🔍 Tip: Make sure DEEPSEEK_API_KEY is set in your environment, otherwise you won’t be able to access AI features.
 
-🔗 [Choose Another LLM Provider](docs/config/llm/llm-config)
+🔗 [Choose Another LLM Provider](docs/config/llm/llm-config.md)
 
 <details>
 <summary>📦 Download Links</summary>
