@@ -41,6 +41,7 @@ for arg in "$@"; do
             print_usage
             ;;
         -*)
+            ADDITIONAL_MVN_ARGS+=("$arg")
             print_usage
             ;;
         *)
