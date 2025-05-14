@@ -32,7 +32,8 @@ function Run-BuildScript {
 
         # Test the pulsar-tests module first
         Write-Output "[INFO] Testing pulsar-tests module..."
-        $testResult = & "$buildScript" -clean -test -pl :pulsar-tests
+        $testResult = & "$buildScript" -clean -pl :pulsar-tests
+        $testResult = & "$buildScript" -test -pl :pulsar-tests
 
         # Check if the pulsar-tests module had any failed tests
         if ($LASTEXITCODE -eq 0) {

@@ -27,7 +27,8 @@ run_build_script() {
 
         # Test the pulsar-tests module first
         echo "[INFO] Testing pulsar-tests module..."
-        "$build_script" -clean -test -pl :pulsar-tests
+        "$build_script" -clean
+        "$build_script" -test -pl :pulsar-tests
         test_result=$?
 
         # Check if the pulsar-tests module had any failed tests

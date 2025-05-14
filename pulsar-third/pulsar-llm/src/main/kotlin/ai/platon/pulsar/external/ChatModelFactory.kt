@@ -216,7 +216,8 @@ object ChatModelFactory {
         val baseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1"
         val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl(baseUrl).modelName(modelName)
             .logRequests(logRequest)
-            .logResponses(logResponse).maxRetries(maxRetries)
+            .logResponses(logResponse)
+            .maxRetries(maxRetries)
             .timeout(timeout)
             .build()
 
@@ -228,7 +229,8 @@ object ChatModelFactory {
     private fun createZhipuChatModel(apiKey: String, conf: ImmutableConfig): ChatModel {
         val lm = ZhipuAiChatModel.builder().apiKey(apiKey)
             .logRequests(logRequest)
-            .logResponses(logResponse).maxRetries(maxRetries)
+            .logResponses(logResponse)
+            .maxRetries(maxRetries)
             .readTimeout(timeout)
             .writeTimeout(timeout)
             .build()
@@ -243,7 +245,8 @@ object ChatModelFactory {
     private fun createDeepSeekChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
         val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl("https://api.deepseek.com/").modelName(modelName)
             .logRequests(logRequest)
-            .logResponses(logResponse).maxRetries(maxRetries)
+            .logResponses(logResponse)
+            .maxRetries(maxRetries)
             .timeout(timeout)
             .build()
         return ChatModelImpl(lm, conf)
@@ -258,7 +261,8 @@ object ChatModelFactory {
         val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl("https://ark.cn-beijing.volces.com/api/v3")
             .modelName(modelName)
             .logRequests(logRequest)
-            .logResponses(logResponse).maxRetries(maxRetries)
+            .logResponses(logResponse)
+            .maxRetries(maxRetries)
             .timeout(timeout)
             .build()
         return ChatModelImpl(lm, conf)
@@ -274,7 +278,8 @@ object ChatModelFactory {
     ): ChatModel {
         val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl(baseUrl).modelName(modelName).logRequests(true)
             .logRequests(logRequest)
-            .logResponses(logResponse).maxRetries(maxRetries)
+            .logResponses(logResponse)
+            .maxRetries(maxRetries)
             .timeout(timeout)
             .build()
         return ChatModelImpl(lm, conf)
