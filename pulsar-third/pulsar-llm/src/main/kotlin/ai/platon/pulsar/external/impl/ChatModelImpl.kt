@@ -4,10 +4,12 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.*
+import dev.langchain4j.data.message.AiMessage
 import dev.langchain4j.data.message.SystemMessage
 import dev.langchain4j.data.message.UserMessage
 import dev.langchain4j.model.chat.ChatLanguageModel
 import dev.langchain4j.model.output.FinishReason
+import dev.langchain4j.model.output.Response
 import org.apache.commons.codec.digest.DigestUtils
 import org.ehcache.Cache
 import org.ehcache.CacheManager
@@ -102,17 +104,7 @@ open class ChatModelImpl(
 
         val um = UserMessage.userMessage(userMessage1)
 
-        val response = try {
-            if (systemMessage.isBlank()) {
-                langchainModel.generate(um)
-            } else {
-                val sm = SystemMessage.systemMessage(systemMessage)
-                langchainModel.generate(um, sm)
-            }
-        } catch (e: Exception) {
-            logger.warn("Model call failure | {} | {}", langchainModel.javaClass.simpleName, e.message)
-            return ModelResponse("", ResponseState.OTHER)
-        }
+        val response = generateWithRetry(systemMessage, um) ?: return ModelResponse("", ResponseState.OTHER)
 
         val u = response.tokenUsage()
         val tokenUsage = TokenUsage(u.inputTokenCount(), u.outputTokenCount(), u.totalTokenCount())
@@ -132,5 +124,34 @@ open class ChatModelImpl(
         logger.debug("Cached response for key: $cacheKey")
 
         return modelResponse
+    }
+
+    private fun generateWithRetry(systemMessage: String, um: UserMessage): Response<AiMessage>? {
+        var i = 0
+        val n = 3
+
+        while (i++ <= n) {
+            try {
+                return generate0(systemMessage, um)
+            } catch (e: RuntimeException) {
+                if (i < 3) {
+                    logger.info("Model call failure, retrying... | $i/$n | {} | {}", langchainModel.javaClass.simpleName, e.message)
+                } else {
+                    throw RuntimeException("Model call failure | $i/$n | $langchainModel | ${e.message}")
+                }
+            }
+        }
+
+        throw RuntimeException("Model call failure")
+    }
+
+    @Throws(RuntimeException::class)
+    private fun generate0(systemMessage: String, um: UserMessage): Response<AiMessage>? {
+        return if (systemMessage.isBlank()) {
+            langchainModel.generate(um)
+        } else {
+            val sm = SystemMessage.systemMessage(systemMessage)
+            langchainModel.generate(um, sm)
+        }
     }
 }

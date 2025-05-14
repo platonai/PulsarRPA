@@ -485,7 +485,7 @@ class PlaywrightDriver(
         }
     }
 
-    override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
+    override suspend fun clickAttributeMatches(selector: String, attrName: String, pattern: String, count: Int) {
         try {
             rpc.invokeDeferred("clickMatches") {
                 val elements = page.querySelectorAll(selector)

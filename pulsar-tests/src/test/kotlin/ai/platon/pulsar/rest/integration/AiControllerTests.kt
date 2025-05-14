@@ -15,7 +15,7 @@ class AiControllerTests : IntegrationTestBase() {
 
     @BeforeEach
     fun setUp() {
-        Assumptions.assumeTrue(ChatModelFactory.hasModel(unmodifiedConfig))
+        Assumptions.assumeTrue(ChatModelFactory.isModelConfigured(unmodifiedConfig))
     }
 
     /**

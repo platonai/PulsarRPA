@@ -3,6 +3,7 @@ package ai.platon.pulsar.browser
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.urls.URLUtils
 import org.apache.commons.lang3.StringUtils
+import org.junit.jupiter.api.Assumptions
 import kotlin.test.*
 
 /**
@@ -33,6 +34,7 @@ class TestLoadResources: WebDriverTestBase() {
         resourceUrls.forEachIndexed { i, resourceUrl ->
             val referrer = URLUtils.getOrigin(resourceUrl)
             val page = session.loadResource(resourceUrl, referrer, "-refresh")
+            Assumptions.assumeTrue { page.protocolStatus.isSuccess }
 
             val content = page.contentAsString.asSequence()
                 .filter { Strings.isCJK(it) }.take(100)

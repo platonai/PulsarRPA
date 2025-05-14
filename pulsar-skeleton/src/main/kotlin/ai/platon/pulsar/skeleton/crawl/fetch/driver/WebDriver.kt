@@ -860,7 +860,10 @@ interface WebDriver : Closeable {
      * @param count The number of times to click.
      * */
     @Throws(WebDriverException::class)
-    suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
+    suspend fun clickAttributeMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
+
+    @Deprecated(message = "Use clickAttributeMatches instead", replaceWith = ReplaceWith("driver.clickAttributeMatches"))
+    suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1) = clickAttributeMatches(selector, attrName, pattern, count)
 
     /**
      * Clicks the nth anchor element in the DOM.

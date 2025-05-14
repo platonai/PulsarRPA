@@ -525,7 +525,7 @@ abstract class AbstractWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
+    override suspend fun clickAttributeMatches(selector: String, attrName: String, pattern: String, count: Int) {
         evaluate("__pulsar_utils__.clickMatches('$selector', '$attrName', '$pattern')")
     }
 

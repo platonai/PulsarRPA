@@ -30,7 +30,7 @@ class WebDriverSimpleTests: WebDriverTestBase() {
 
     @Test
     fun testChat() {
-        if (!ChatModelFactory.hasModel(conf)) {
+        if (!ChatModelFactory.isModelConfigured(conf)) {
             return
         }
 

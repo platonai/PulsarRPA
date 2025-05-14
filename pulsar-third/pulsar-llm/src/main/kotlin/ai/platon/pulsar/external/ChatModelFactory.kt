@@ -24,7 +24,7 @@ object ChatModelFactory {
 
     var logRequest = false
     var logResponse = false
-    var maxRetries = 3
+    var maxRetries = 0
     var timeout = Duration.ofSeconds(30)
 
     fun isModelConfigured(conf: ImmutableConfig): Boolean {
@@ -107,10 +107,6 @@ object ChatModelFactory {
      * @return The created model.
      */
     fun getOrCreateOrNull(conf: ImmutableConfig): ChatModel? {
-        if (!hasModel(conf)) {
-            return null
-        }
-
         return kotlin.runCatching { getOrCreate(conf) }
             .onFailure { warn(this, it.message ?: "Failed to create chat model") }.getOrNull()
     }

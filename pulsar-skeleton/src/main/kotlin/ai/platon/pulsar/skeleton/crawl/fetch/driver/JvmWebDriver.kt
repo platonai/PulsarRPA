@@ -291,16 +291,16 @@ interface JvmWebDriver {
      * @param count The number of times to click.
      */
     @Throws(WebDriverException::class)
-    fun clickTextMatchesAsync(selector: String, pattern: String, count: Int = 1): CompletableFuture<Unit>
+    fun clickTextMatchesAsync(selector: String, pattern: String, count: Int): CompletableFuture<Unit>
     
+//    @Throws(WebDriverException::class)
+//    fun clickAttributeMatchesAsync(selector: String, pattern: String) = clickAttributeMatchesAsync(selector, pattern, 1)
+//    @Throws(WebDriverException::class)
+//    fun clickAttributeMatchesAsync(selector: String, pattern: String, count: Int): CompletableFuture<Unit>
     @Throws(WebDriverException::class)
-    fun clickMatchesAsync(selector: String, pattern: String) = clickMatchesAsync(selector, pattern, 1)
+    fun clickAttributeMatchesAsync(selector: String, attrName: String, pattern: String) = clickAttributeMatchesAsync(selector, attrName, pattern, 1)
     @Throws(WebDriverException::class)
-    fun clickMatchesAsync(selector: String, pattern: String, count: Int): CompletableFuture<Unit>
-    @Throws(WebDriverException::class)
-    fun clickMatchesAsync(selector: String, attrName: String, pattern: String) = clickMatchesAsync(selector, attrName, pattern, 1)
-    @Throws(WebDriverException::class)
-    fun clickMatchesAsync(selector: String, attrName: String, pattern: String, count: Int): CompletableFuture<Unit>
+    fun clickAttributeMatchesAsync(selector: String, attrName: String, pattern: String, count: Int): CompletableFuture<Unit>
     @Throws(WebDriverException::class)
     fun clickNthAnchorAsync(n: Int, rootSelector: String = "body"): CompletableFuture<String?>
     @Throws(WebDriverException::class)
