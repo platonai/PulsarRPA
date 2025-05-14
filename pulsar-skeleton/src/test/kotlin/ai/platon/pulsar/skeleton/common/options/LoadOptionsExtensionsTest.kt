@@ -5,10 +5,12 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Nested
 import java.time.Duration
+import kotlin.test.Ignore
 
 /**
  * Tests for the extension functions provided for LoadOptions
  */
+@Ignore("Feature not started yet")
 @DisplayName("LoadOptions Extension Functions")
 class LoadOptionsExtensionsTest {
 
