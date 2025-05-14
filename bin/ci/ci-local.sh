@@ -13,7 +13,7 @@ cd "$app_home" || exit
 
 # Configuration
 repo_path="$app_home"
-build_script="$app_home/bin/build.ps1"
+build_script="$app_home/bin/build.sh"
 
 # Function to get the current HEAD hash
 get_head_hash() {
