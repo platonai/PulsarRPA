@@ -250,6 +250,7 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 
 * 📖 [REST API Examples](docs/rest-api-examples.md)
 * 🛠️ [Configuration Guide](docs/config.md)
+* 📚 [Build from Source](docs/development/build.md)
 * 🧠 [Expert Guide](docs/advanced-guides.md)
 
 ---
@@ -265,6 +266,7 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 ```
 
 Each time the rotation URL is accessed, it should return a response containing one or more fresh proxy IPs.
+Ask your proxy provider for such a URL.
 
 </details>
 
