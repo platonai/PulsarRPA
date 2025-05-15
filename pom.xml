@@ -66,6 +66,8 @@
         </pluginRepository>
     </pluginRepositories>
 
+    <!-- Default active modules. The main goal is to allow the user to run PulsarApplication
+     with a single click in the IDE right after opening the project. -->
     <modules>
         <module>pulsar-resources</module>
         <module>pulsar-common</module>
@@ -88,6 +90,36 @@
     </modules>
 
     <profiles>
+
+        <profile>
+            <!-- Deprecated, keep it just for backward compatibility, we will remove this profile in the further -->
+            <id>all-modules</id>
+            <modules>
+                <module>pulsar-common</module>
+                <module>pulsar-persist</module>
+                <module>pulsar-third</module>
+                <module>pulsar-skeleton</module>
+                <module>pulsar-resources</module>
+                <module>pulsar-dom</module>
+                <module>pulsar-plugins</module>
+
+                <module>pulsar-tools</module>
+                <module>pulsar-ql-common</module>
+                <module>pulsar-ql</module>
+
+                <module>pulsar-spring-support</module>
+                <module>pulsar-rest</module>
+
+                <module>pulsar-tests</module>
+                <module>pulsar-all</module>
+
+                <module>pulsar-client</module>
+                <module>pulsar-app</module>
+
+                <module>pulsar-bom</module>
+            </modules>
+        </profile>
+
         <profile>
             <id>dev-plugins</id>
 
@@ -194,6 +226,7 @@
                 </plugins>
             </build>
         </profile>
+
 
         <profile>
             <id>platon-deploy</id>
