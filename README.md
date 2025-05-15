@@ -49,28 +49,31 @@ Find all links containing /dp/.
 
 ## ▶️ Run PulsarRPA
 
-### 📦 Run Executable Jar - Best Experience
+### 📦 Run the Executable JAR — Best Experience
 
-Download:
+#### 🧩 Download
 
 ```bash
-# Linux/macOS and Windows (if curl is available)
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/3.0.6/PulsarRPA.jar
+# For Linux/macOS/Windows (with curl)
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.6/PulsarRPA.jar
 ```
+
+#### 🚀 Run
 
 ```bash
 java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 ```
 
-> 🔍 Tip: Make sure DEEPSEEK_API_KEY is set in your environment, otherwise you won’t be able to access AI features.
+> 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` is set in your environment, or AI features will not be available.
 
-🔗 [Choose Another LLM Provider](docs/config/llm/llm-config.md)
+---
 
 <details>
-<summary>📦 Download Links</summary>
+<summary>📂 Resources</summary>
 
-- 🟦 [GitHub Release](https://github.com/platonai/PulsarRPA/releases/download/3.0.6/PulsarRPA.jar)
-- 📦 [Backup Downloads](http://static.platonai.cn/repo/ai/platon/pulsar/)
+* 🟦 [GitHub Release Download](https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar)
+* 📁 [Mirror / Backup Download](http://static.platonai.cn/repo/ai/platon/pulsar/)
+* 🛠️ [Configuration Guide](docs/config.md)
 
 </details>
 
@@ -139,7 +142,7 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 Harness the power of the `x/e` API for highly precise, flexible, and intelligent data extraction.
 
   ```bash
-  curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+  curl -X POST "http://localhost:8182/api/scrape/execute" -H "Content-Type: text/plain" -d "
   select
     llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
     dom_base_uri(dom) as url,
@@ -246,6 +249,7 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 ## 📜 Documents
 
 * 📖 [REST API Examples](docs/rest-api-examples.md)
+* 🛠️ [Configuration Guide](docs/config.md)
 * 🧠 [Expert Guide](docs/advanced-guides.md)
 
 ---

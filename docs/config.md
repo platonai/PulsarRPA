@@ -2,7 +2,7 @@
 
 ## 📋 Configuration Sources
 
-PulsarRPA is a standard Spring Boot application and supports multiple configuration sources in order of precedence:
+PulsarRPA supports multiple configuration sources in order of precedence:
 
 1. 🔧 **Environment Variables**
 2. ⚙️ **JVM System Properties**
@@ -11,6 +11,30 @@ PulsarRPA is a standard Spring Boot application and supports multiple configurat
 ---
 
 ## 🔧 Configuration Methods
+
+### 📝 Spring Boot Configuration Files
+
+PulsarRPA supports Spring Boot-style configuration files.
+
+A sample `application.properties` is located at the project root. For privacy, consider renaming it to `application-private.properties`.
+
+#### For desktop usage:
+
+```properties
+# browser.context.mode=SYSTEM_DEFAULT # Optional: use your system's default browser profile
+deepseek.api.key=
+```
+
+#### [**Advanced**] For high-performance, parallel crawling:
+```properties
+proxy.rotation.url=https://your-proxy-provider.com/rotation-endpoint
+browser.context.mode=SEQUENTIAL
+browser.context.number=2
+browser.max.active.tabs=8
+browser.display.mode=HEADLESS
+```
+
+---
 
 ### 🌍 Environment Variables / JVM System Properties
 
@@ -44,32 +68,6 @@ Set configuration via command-line JVM args:
 
 ```bash
 -Ddeepseek.api.key=sk-yourdeepseekapikey
-```
-
----
-
-### 📝 Spring Boot Configuration Files
-
-PulsarRPA supports standard Spring Boot configuration files.
-
-Place your custom config in either the current directory (`.`) or the `./config` directory.
-
-Example: `application-private.properties`
-
-For desktop user:
-
-```properties
-# browser.context.mode=SYSTEM_DEFAULT
-deepseek.api.key=
-```
-
-For high performance, parallel crawling users:
-```properties
-proxy.rotation.url=https://your-proxy-provider.com/rotation-endpoint
-browser.context.mode=SEQUENTIAL
-browser.context.number=2
-browser.max.active.tabs=8
-browser.display.mode=HEADLESS
 ```
 
 ---
@@ -125,10 +123,13 @@ docker run -d -p 8182:8182 `
   - `TEMPORARY` **[Advanced]**: Generates a new, isolated user data directory for each browser instance.
 
 * **`proxy.rotation.url`**
+  [**Advanced**] Only for `SEQUENTIAL` and `TEMPORARY` modes.
   Defines the URL provided by your proxy service.
   Each time the rotation URL is accessed, it should return a response containing one or more fresh proxy IPs.
+  Ask your proxy provider for such a URL.
 
 * **`browser.context.number`** *(default: 2)*
+  [**Advanced**] Only for `SEQUENTIAL` and `TEMPORARY` modes.
   Number of browser contexts (isolated, incognito-like sessions).
   Each context has its own cookies, local storage, and cache.
 
