@@ -79,6 +79,7 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 <details>
 
 - Open the project in your IDE
+- Check profile `all-modules` and disable tests
 - Run the `ai.platon.pulsar.app.PulsarApplicationKt` main class
 
 </details>

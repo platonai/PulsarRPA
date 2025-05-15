@@ -1,9 +1,9 @@
 # Find the first parent directory containing the VERSION file
 $AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
 while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
-    $AppHome=$AppHome.Parent
+    $AppHome = Split-Path -Parent $AppHome
 }
-cd $AppHome
+Set-Location $AppHome
 
 .\bin\build.ps1 $args
 
