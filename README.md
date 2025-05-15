@@ -55,7 +55,7 @@ Find all links containing /dp/.
 
 ```bash
 # For Linux/macOS/Windows (with curl)
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.6/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.7/PulsarRPA.jar
 ```
 
 #### 🚀 Run
