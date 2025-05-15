@@ -57,6 +57,13 @@ object ChatModelFactory {
             return getOrCreate("deepseek", deepseekModelName, deepseekAPIKey, conf)
         }
 
+        val volcengineAPIKey = conf["VOLCENGINE_API_KEY"]
+        if (volcengineAPIKey != null) {
+            val volcengineModelName = conf["VOLCENGINE_MODEL_NAME"] ?: "doubao-1.5-pro-32k-250115"
+            val volcengineBaseURL = conf["VOLCENGINE_BASE_URL"] ?: "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
+            return getOrCreateOpenAICompatibleModel(volcengineModelName, volcengineAPIKey, volcengineBaseURL, conf)
+        }
+
         val openaiAPIKey = conf["OPENAI_API_KEY"]
         if (openaiAPIKey != null) {
             val openaiBaseURL = conf["OPENAI_BASE_URL"] ?: "https://api.openai.com/v1/chat/completions"
