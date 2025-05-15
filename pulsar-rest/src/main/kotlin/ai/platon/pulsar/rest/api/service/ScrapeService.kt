@@ -45,7 +45,10 @@ class ScrapeService(
             val response = hyperlink.get(120, TimeUnit.SECONDS)
             return response
         } catch (e: TimeoutException) {
-            logger.warn("Error executing query: >>>${request.sql}<<<", e)
+            logger.warn("Timeout executing query: >>>${request.sql}<<<", e)
+            return ScrapeResponse("", ResourceStatus.SC_REQUEST_TIMEOUT, ProtocolStatusCodes.REQUEST_TIMEOUT)
+        } catch (e: Exception) {
+            logger.error("Unexpected error executing query: >>>${request.sql}<<<", e)
             return ScrapeResponse("", ResourceStatus.SC_INTERNAL_SERVER_ERROR, ProtocolStatusCodes.EXCEPTION)
         }
     }
