@@ -28,7 +28,7 @@ function Replace-Version-In-ReadmeFiles {
     Write-Host "Updated version in: $filePath"
 
     # Replace tags in all README files, for example, v0.0.1 -> v$VERSION
-    (Get-Content $filePath) -replace 'v\d\.\d{1,2}\.\d{1,3}', $VERSION | Set-Content $filePath
+    (Get-Content $filePath) -replace 'v\d+\.\d+\.\d+', "v$VERSION" | Set-Content $filePath
     Write-Host "Updated version in: $filePath"
   }
 
@@ -41,7 +41,7 @@ function Replace-Version-In-ReadmeFiles {
 function Restore-WorkingBranch {
   Write-Host "Ready to restore"
   $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
+  if ($confirm -eq 'Y' -or $confirm -eq 'y' -or $confirm -eq '') {
     & $gitExe restore .
   } else {
     Write-Host "Bye."
@@ -52,7 +52,7 @@ function Restore-WorkingBranch {
 function Pull-Changes {
   Write-Host "Ready to pull"
   $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
+  if ($confirm -eq 'Y' -or $confirm -eq 'y' -or $confirm -eq '') {
     & $gitExe pull
   } else {
     Write-Host "Bye."
@@ -63,9 +63,9 @@ function Pull-Changes {
 function Push-ReadmeFiles-Changes {
   Write-Host "Ready to push to $BRANCH"
   $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
+  if ($confirm -eq 'Y' -or $confirm -eq 'y' -or $confirm -eq '') {
 
-    & $gitExe add *.md
+    & $gitExe add '**/*.md'
     & $gitExe commit -m "Replace SNAPSHOT version with the release version in all markdown files"
     & $gitExe push
 
@@ -74,10 +74,33 @@ function Push-ReadmeFiles-Changes {
   }
 }
 
+function Run-Tests {
+  Write-Host "Running tests..."
+  ./mvnw test -Pall-modules -pl pulsar-tests
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "Tests failed. Aborting release."
+    exit 1
+  }
+}
+
 function Add-Tag {
+  Write-Host "Switching to master branch before tagging..."
+  & $gitExe checkout master
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "Failed to checkout master branch. Aborting tag."
+    exit 1
+  }
+
+  # Update commit id
+  $LAST_COMMIT_ID = &$gitExe log --format="%H" -n 1
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "Failed to get commit id. Aborting tag."
+    exit 1
+  }
+
   Write-Host "Ready to add tag $TAG on$LAST_COMMIT_ID"
   $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
+  if ($confirm -eq 'Y' -or $confirm -eq 'y' -or $confirm -eq '') {
     & $gitExe tag "$TAG" "$LAST_COMMIT_ID"
     Push-WithTags
   } else {
@@ -88,7 +111,7 @@ function Add-Tag {
 function Push-WithTags {
   Write-Host "Ready to push with tags to $BRANCH"
   $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
+  if ($confirm -eq 'Y' -or $confirm -eq 'y' -or $confirm -eq '') {
     & $gitExe push --tags
   } else {
     Write-Host "Do not push with tags"
@@ -98,13 +121,22 @@ function Push-WithTags {
 function Merge-ToMainBranch {
   Write-Host "Ready to merge to main branch"
   $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
+  if ($confirm -eq 'Y' -or $confirm -eq 'y' -or $confirm -eq '') {
     & $gitExe checkout main
     if ($LASTEXITCODE -ne 0) {
       & $gitExe checkout master
     }
     & $gitExe pull
     & $gitExe merge "$BRANCH"
+
+    # 检查合并是否成功
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "Merge failed. Aborting merge."
+      exit 1
+    } else {
+      Write-Host "Merge successful."
+    }
+
     Push-ToMainBranch
   } else {
     Write-Host "Do not merge to main branch."
@@ -114,7 +146,7 @@ function Merge-ToMainBranch {
 function Push-ToMainBranch {
   Write-Host "Ready to push to main branch"
   $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
+  if ($confirm -eq 'Y' -or $confirm -eq 'y' -or $confirm -eq '') {
     & $gitExe push
   } else {
     Write-Host "Bye."
@@ -125,7 +157,7 @@ function Push-ToMainBranch {
 function Checkout-WorkingBranch {
   Write-Host "Ready to checkout working branch $BRANCH"
   $confirm = Read-Host -Prompt "Are you sure to continue? [Y/n]"
-  if ($confirm -eq 'Y') {
+  if ($confirm -eq 'Y' -or $confirm -eq 'y' -or $confirm -eq '') {
     & $gitExe checkout "$BRANCH"
   } else {
     Write-Host "Remain on main branch"
@@ -137,5 +169,6 @@ Restore-WorkingBranch
 Pull-Changes
 Replace-Version-In-ReadmeFiles
 Merge-ToMainBranch
-Checkout-WorkingBranch
+Run-Tests
 Add-Tag
+Checkout-WorkingBranch
