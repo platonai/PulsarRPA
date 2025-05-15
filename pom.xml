@@ -66,71 +66,33 @@
         </pluginRepository>
     </pluginRepositories>
 
+    <modules>
+        <module>pulsar-common</module>
+        <module>pulsar-persist</module>
+        <module>pulsar-third</module>
+        <module>pulsar-skeleton</module>
+        <module>pulsar-resources</module>
+        <module>pulsar-dom</module>
+        <module>pulsar-plugins</module>
+
+        <module>pulsar-tools</module>
+        <module>pulsar-ql-common</module>
+        <module>pulsar-ql</module>
+
+        <module>pulsar-spring-support</module>
+        <module>pulsar-rest</module>
+
+        <module>pulsar-client</module>
+        <module>pulsar-app</module>
+    </modules>
+
     <profiles>
         <profile>
-            <id>all-modules</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <modules>
-                <module>pulsar-common</module>
-                <module>pulsar-persist</module>
-                <module>pulsar-third</module>
-                <module>pulsar-skeleton</module>
-                <module>pulsar-resources</module>
-                <module>pulsar-dom</module>
-                <module>pulsar-plugins</module>
-
-                <module>pulsar-tools</module>
-                <module>pulsar-ql-common</module>
-                <module>pulsar-ql</module>
-
-                <module>pulsar-spring-support</module>
-                <module>pulsar-rest</module>
-
-                <module>pulsar-tests</module>
-                <module>pulsar-all</module>
-
-                <module>pulsar-client</module>
-                <module>pulsar-app</module>
-
-                <module>pulsar-bom</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>dev-daily</id>
-            <modules>
-                <module>pulsar-common</module>
-                <module>pulsar-persist</module>
-                <module>pulsar-third</module>
-                <module>pulsar-skeleton</module>
-                <module>pulsar-resources</module>
-                <module>pulsar-dom</module>
-
-                <module>pulsar-tools</module>
-                <module>pulsar-ql</module>
-
-                <module>pulsar-spring-support</module>
-                <module>pulsar-rest</module>
-
-                <module>pulsar-app</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>dev-plugins</id>
+            <id>pulsar-plugins</id>
 
             <modules>
                 <module>pulsar-skeleton</module>
                 <module>pulsar-plugins</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>dev-app</id>
-            <modules>
-                <module>pulsar-app</module>
             </modules>
         </profile>
 
@@ -167,34 +129,9 @@
                             </execution>
                         </executions>
                         <configuration>
-
-                            <!-- Set to true to skip dokka task, default: false -->
                             <skip>false</skip>
-
-                            <!-- Default: ${project.artifactId} -->
-                            <!--                            <moduleName>data</moduleName>-->
-
-                            <!-- Default: ${project.basedir}/target/dokka -->
-                            <!--                            <outputDir>${project.basedir}/target/dokka</outputDir>-->
-
-
-                            <!-- Use default or set to custom path to cache directory to enable package-list caching. -->
-                            <!-- When set to default, caches stored in $USER_HOME/.cache/dokka -->
                             <cacheRoot>default</cacheRoot>
 
-                            <!-- List of '.md' files with package and module docs -->
-                            <!-- https://kotlinlang.org/docs/reference/kotlin-doc.html#module-and-package-documentation -->
-                            <!--                            <includes>-->
-                            <!--                                <include>llm-config.md</include>-->
-                            <!--                                <include>llm-config.md</include>-->
-                            <!--                            </includes>-->
-
-                            <!-- List of sample roots -->
-                            <!--                            <samples>-->
-                            <!--                                <dir>src/test/samples</dir>-->
-                            <!--                            </samples>-->
-
-                            <!-- Used for linking to JDK, default: 11 -->
                             <jdkVersion>11</jdkVersion>
 
                             <!-- Do not output deprecated members, applies globally, can be overridden by packageOptions -->
@@ -211,40 +148,17 @@
                                 <dir>${project.basedir}/src/main/kotlin</dir>
                             </sourceDirectories>
 
-                            <!-- Specifies the location of the project source code on the Web. If provided, Dokka generates "source" links
-                                 for each declaration. -->
-                            <!--                            <sourceLinks>-->
-                            <!--                                <link>-->
-                            <!--                                    &lt;!&ndash; Source directory &ndash;&gt;-->
-                            <!--                                    <path>${project.basedir}/src/main/kotlin</path>-->
-                            <!--                                    &lt;!&ndash; URL showing where the source code can be accessed through the web browser &ndash;&gt;-->
-                            <!--                                    <url>https://github.com/cy6erGn0m/vertx3-lang-kotlin/blob/master/src/main/kotlin</url> &lt;!&ndash; //remove src/main/kotlin if you use "./" above &ndash;&gt;-->
-                            <!--                                    &lt;!&ndash;Suffix which is used to append the line number to the URL. Use #L for GitHub &ndash;&gt;-->
-                            <!--                                    <lineSuffix>#L</lineSuffix>-->
-                            <!--                                </link>-->
-                            <!--                            </sourceLinks>-->
-
                             <!-- Disable linking to online kotlin-stdlib documentation  -->
                             <noStdlibLink>false</noStdlibLink>
 
                             <!-- Disable linking to online JDK documentation -->
                             <noJdkLink>false</noJdkLink>
 
-                            <!-- Allows linking to documentation of the project's dependencies (generated with Javadoc or Dokka) -->
-                            <!--                            <externalDocumentationLinks>-->
-                            <!--                                <link>-->
-                            <!--                                    &lt;!&ndash; Root URL of the generated documentation to link with. The trailing slash is required! &ndash;&gt;-->
-                            <!--                                    <url>https://example.com/docs/</url>-->
-                            <!--                                    &lt;!&ndash; If package-list file located in non-standard location &ndash;&gt;-->
-                            <!--                                    &lt;!&ndash; <packageListUrl>file:///home/user/localdocs/package-list</packageListUrl> &ndash;&gt;-->
-                            <!--                                </link>-->
-                            <!--                            </externalDocumentationLinks>-->
-
                             <!-- Allows to customize documentation generation options on a per-package basis -->
                             <perPackageOptions>
                                 <packageOptions>
                                     <!-- Will match kotlin and all sub-packages of it -->
-                                    <!--                                    <prefix>kotlin</prefix>-->
+                                    <!-- <prefix>kotlin</prefix>-->
 
                                     <!-- All options are optional, default values are below: -->
                                     <skipDeprecated>false</skipDeprecated>
@@ -253,15 +167,6 @@
                                     <includeNonPublic>false</includeNonPublic>
                                 </packageOptions>
                             </perPackageOptions>
-
-                            <!-- Allows to use any dokka plugin, eg. GFM format   -->
-                            <!--                            <dokkaPlugins>-->
-                            <!--                                <plugin>-->
-                            <!--                                    <groupId>org.jetbrains.dokka</groupId>-->
-                            <!--                                    <artifactId>gfm-plugin</artifactId>-->
-                            <!--                                    <version>${dokka.version}</version>-->
-                            <!--                                </plugin>-->
-                            <!--                            </dokkaPlugins>-->
                         </configuration>
                     </plugin>
 
@@ -307,12 +212,16 @@
                 <module>pulsar-ql-common</module>
                 <module>pulsar-ql</module>
 
-                <module>pulsar-bom</module>
-
                 <module>pulsar-spring-support</module>
                 <module>pulsar-rest</module>
 
+                <module>pulsar-tests</module>
+                <module>pulsar-all</module>
+
                 <module>pulsar-client</module>
+                <module>pulsar-app</module>
+
+                <module>pulsar-bom</module>
             </modules>
 
             <build>
@@ -345,22 +254,6 @@
                 </plugins>
             </build>
         </profile>
-
-<!--        <profile>-->
-<!--            <id>ExternalServiceTest</id>-->
-<!--            <build>-->
-<!--                <plugins>-->
-<!--                    <plugin>-->
-<!--                        <groupId>org.apache.maven.plugins</groupId>-->
-<!--                        <artifactId>maven-surefire-plugin</artifactId>-->
-<!--                        <version>${surefire.version}</version>-->
-<!--                        <configuration>-->
-<!--                            <groups>ExternalServiceTest</groups>-->
-<!--                        </configuration>-->
-<!--                    </plugin>-->
-<!--                </plugins>-->
-<!--            </build>-->
-<!--        </profile>-->
     </profiles>
 
     <build>
