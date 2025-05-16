@@ -48,6 +48,7 @@ jobs:
           docker run -d --rm --name pulsar-rpa-test -p 8182:8182 pulsar-rpa-nightly:${{ github.sha }}
           echo "Waiting for service..."
           sleep 10
+          chmod +x ./bin/test.sh
           ./bin/test.sh || (echo "Integration test failed" && exit 1)
           docker stop pulsar-rpa-test || true
 
