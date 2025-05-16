@@ -22,7 +22,7 @@ class TestRuntimes {
     @Test
     fun testLocateBinary() {
         if (SystemUtils.IS_OS_LINUX) {
-            val locations = Runtimes.locateBinary("dir")
+            val locations = Runtimes.locateBinary("ls")
             assertTrue { locations.isNotEmpty() }
         }
     }
