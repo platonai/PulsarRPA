@@ -235,7 +235,7 @@ private class ConfigurationImpl(
                 resourceURIs.add(realResource)
                 logger.info("Found configuration: {}", realResource)
             } else {
-                logger.info("Resource not find: $resourceName")
+                logger.debug("Resource not find: $resourceName")
             }
         }
     }
