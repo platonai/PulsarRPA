@@ -57,6 +57,8 @@ curl https://ark.cn-beijing.volces.com/api/v3/chat/completions \
   }'
 ```
 
+> 💡 Tip: Alternatively, you can configure these settings in the application.properties file located in the project root directory.
+
 ## ⚙️ Method 2: XML Configuration
 
 To configure an LLM using XML, simply copy one of the provided configuration files into your PulsarRPA config directory.
