@@ -39,7 +39,7 @@ class TestWebDriverPoolManager {
             driverPool.capacity <= 50
         }
         var i = 0
-        while (i++ < driverPool.capacity && !AppSystemInfo.isCriticalMemory) {
+        while (i++ < driverPool.capacity && !AppSystemInfo.isSystemOverCriticalLoad) {
             val driver = driverPool.poll()
             require(driver is AbstractWebDriver)
             assertTrue { driver.isWorking }
