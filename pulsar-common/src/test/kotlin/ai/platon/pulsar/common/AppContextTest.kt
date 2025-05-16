@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.exists
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -18,6 +19,8 @@ class AppContextTest {
     fun setUp() {
         // Set up necessary environment variables and system properties
         System.setProperty("app.version", "test-version")
+        // Trigger ~/.pulsar creation
+        assertTrue { AppPaths.DATA_DIR.exists() }
     }
 
     @Test
