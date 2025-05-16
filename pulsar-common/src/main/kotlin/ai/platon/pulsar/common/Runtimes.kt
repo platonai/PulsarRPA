@@ -197,7 +197,7 @@ object Runtimes {
     private fun isHeadless0(): Boolean {
         // First check: Java headless mode
         if (GraphicsEnvironment.isHeadless()) {
-            return false
+            return true
         }
 
         // Third check: Try to create a Swing window (safe fallback)

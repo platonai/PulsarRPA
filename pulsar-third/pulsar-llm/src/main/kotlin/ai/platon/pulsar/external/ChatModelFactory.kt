@@ -26,6 +26,11 @@ object ChatModelFactory {
             return true
         }
 
+        val volcengineAPIKey = conf["VOLCENGINE_API_KEY"]
+        if (volcengineAPIKey != null) {
+            return true
+        }
+
         val openaiAPIKey = conf["OPENAI_API_KEY"]
         if (openaiAPIKey != null) {
             return true
