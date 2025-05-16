@@ -22,7 +22,7 @@ For standard desktop usage:
 ```bash
 export DEEPSEEK_API_KEY=sk-yourdeepseekapikey
 ```
-* 🤖 [Switch to a Different LLM Provider](config/llm/llm-config)
+* 🤖 [Switch to a Different LLM Provider](config/llm/llm-config.md)
 
 If you want to use your daily used browser profile (remember closed the browser first):
 ```bash

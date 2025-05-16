@@ -74,7 +74,6 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 * 🟦 [GitHub Release Download](https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar)
 * 📁 [Mirror / Backup Download](http://static.platonai.cn/repo/ai/platon/pulsar/)
 * 🛠️ [Configuration Guide](docs/config.md)
-* 🤖 [Switch to a Different LLM Provider](docs/config/llm/llm-config)
 
 </details>
 
