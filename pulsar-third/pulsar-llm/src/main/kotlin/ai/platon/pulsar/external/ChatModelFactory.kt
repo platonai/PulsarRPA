@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object ChatModelFactory {
     private val logger = getLogger(this::class)
-    private val throttlingLogger = ThrottlingLogger(logger, ttl = Duration.ofMinutes(30))
+    private val throttlingLogger = ThrottlingLogger(logger, ttl = Duration.ofHours(4))
     private val models = ConcurrentHashMap<String, ChatModel>()
 
     fun isModelConfigured(conf: ImmutableConfig): Boolean {
