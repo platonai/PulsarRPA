@@ -3,12 +3,14 @@ package ai.platon.pulsar.protocol.browser.driver.playwright
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.LinkExtractors
+import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 
@@ -22,6 +24,7 @@ class PlaywrightBrowserTest {
 
     @BeforeEach
     fun setup() {
+        Assumptions.assumeTrue(Runtimes.isGUIAvailable(), "Test playwright only in a GUI environment")
         launcherOptions.browserSettings.confuser.reset()
         browser = PlaywrightBrowserLauncher().launch(browserId, launcherOptions, chromeOptions)
     }

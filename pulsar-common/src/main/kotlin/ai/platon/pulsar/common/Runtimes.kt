@@ -20,8 +20,6 @@ import kotlin.random.Random
 object Runtimes {
     private val logger = LoggerFactory.getLogger(Runtimes::class.java)
 
-    private val _isHeadless = lazy { isHeadless0() }
-
     fun exec(name: String): List<String> {
         try {
             val process = Runtime.getRuntime().exec(name)
@@ -191,13 +189,13 @@ object Runtimes {
     }
 
     fun isHeadless(): Boolean {
-        return _isHeadless.value
+        return !isGUIAvailable()
     }
 
-    private fun isHeadless0(): Boolean {
+    fun isGUIAvailable(): Boolean {
         // First check: Java headless mode
         if (GraphicsEnvironment.isHeadless()) {
-            return true
+            return false
         }
 
         // Third check: Try to create a Swing window (safe fallback)
