@@ -461,11 +461,12 @@ open class BrowserSettings constructor(
      * */
     val displayMode
         get() = when {
-            config[BROWSER_DISPLAY_MODE] != null -> config.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS)
             Runtimes.isRunningInDocker() -> {
+                // force headless mode in docker
                 headless()
                 DisplayMode.HEADLESS
             }
+            config[BROWSER_DISPLAY_MODE] != null -> config.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS)
             else -> DisplayMode.GUI
         }
 
