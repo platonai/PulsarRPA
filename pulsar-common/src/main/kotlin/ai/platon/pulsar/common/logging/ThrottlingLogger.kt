@@ -7,9 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * A logger wrapper that ensures a message is logged only once within a given time-to-live (TTL).
- *
- * This helps avoid spamming logs with repetitive messages while still ensuring important information gets through.
+ * A logger wrapper that ensures a message (including formatted ones) is logged only once within a given time-to-live (TTL).
  */
 class ThrottlingLogger(
     private val logger: Logger,
@@ -20,9 +18,10 @@ class ThrottlingLogger(
     private val suppressedCountMap = if (enableSuppressedCount) ConcurrentHashMap<String, AtomicInteger>() else null
 
     /**
-     * Logs a message at the specified level if it hasn't been logged in the last [ttl].
+     * Logs a formatted message at the specified level if it hasn't been logged in the last [ttl].
      */
-    fun logIfNotExpired(message: String, logLevel: (String) -> Unit) {
+    fun logIfNotExpired(format: String, args: Array<out Any?>, logLevel: (String) -> Unit) {
+        val message = String.format(format, *args)
         if (!expiringMessageCache.contains(message)) {
             expiringMessageCache.add(message)
             logLevel(message)
@@ -32,29 +31,34 @@ class ThrottlingLogger(
     }
 
     /**
-     * Logs a message at the debug level if not expired.
+     * Logs a formatted message at the debug level if not expired.
      */
-    fun debug(message: String) = logIfNotExpired(message, logger::debug)
+    fun debug(format: String, vararg args: Any?) =
+        logIfNotExpired(format, args, logger::debug)
 
     /**
-     * Logs a message at the info level if not expired.
+     * Logs a formatted message at the info level if not expired.
      */
-    fun info(message: String) = logIfNotExpired(message, logger::info)
+    fun info(format: String, vararg args: Any?) =
+        logIfNotExpired(format, args, logger::info)
 
     /**
-     * Logs a message at the warn level if not expired.
+     * Logs a formatted message at the warn level if not expired.
      */
-    fun warn(message: String) = logIfNotExpired(message, logger::warn)
+    fun warn(format: String, vararg args: Any?) =
+        logIfNotExpired(format, args, logger::warn)
 
     /**
-     * Logs a message at the error level if not expired.
+     * Logs a formatted message at the error level if not expired.
      */
-    fun error(message: String) = logIfNotExpired(message, logger::error)
+    fun error(format: String, vararg args: Any?) =
+        logIfNotExpired(format, args, logger::error)
 
     /**
-     * Logs a message and associated exception at the error level if not expired.
+     * Logs a formatted message and associated exception at the error level if not expired.
      */
-    fun error(message: String, throwable: Throwable) {
+    fun error(throwable: Throwable, format: String, vararg args: Any?) {
+        val message = String.format(format, *args)
         if (!expiringMessageCache.contains(message)) {
             expiringMessageCache.add(message)
             logger.error(message, throwable)
