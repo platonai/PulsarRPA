@@ -4,16 +4,15 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ChatModelTestUtils
 import ai.platon.pulsar.rest.api.TestUtils
 import ai.platon.pulsar.rest.api.entities.PromptRequest
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.*
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
  * Test [AiController]
  * */
+@Tag("TimeConsumingTest")
+@Tag("ExternalServiceTest")
 class AiControllerTests : IntegrationTestBase() {
 
     companion object {
@@ -62,6 +61,7 @@ class AiControllerTests : IntegrationTestBase() {
     fun `When chat about a page then result is not empty`() {
         val request = PromptRequest(indexUrl, "Tell me about something about this page")
         val response = restTemplate.postForObject("$baseUri/ai/chat-about", request, String::class.java)
+        println(response)
         assertTrue { response.isNotBlank() }
     }
 
@@ -72,9 +72,7 @@ class AiControllerTests : IntegrationTestBase() {
     fun `Test extracting fields from a page`() {
         val request = PromptRequest(productUrl, "title, price, brand")
         val response = restTemplate.postForObject("$baseUri/ai/extract", request, String::class.java)
-
         println(response)
-
         assertTrue { response.isNotBlank() }
     }
 

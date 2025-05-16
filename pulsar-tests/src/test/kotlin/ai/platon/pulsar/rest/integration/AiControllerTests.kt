@@ -11,6 +11,7 @@ import kotlin.test.assertTrue
 
 @Ignore("Websites might be fall, run these integration tests manually")
 @Tag("TimeConsumingTest")
+@Tag("ExternalServiceTest")
 class AiControllerTests : IntegrationTestBase() {
 
     @BeforeEach

@@ -20,9 +20,11 @@ internal class RobustRPC(
     private val driver: PulsarWebDriver
 ) {
     companion object {
+        private val logger = getLogger(this)
         // handle to many exceptions
         private val exceptionCounts = ConcurrentHashMap<Long, AtomicInteger>()
         private val exceptionMessages = ConcurrentHashMap<Long, String>()
+
         var MAX_RPC_FAILURES = 5
     }
     
