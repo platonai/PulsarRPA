@@ -32,7 +32,7 @@ function get_head_hash {
 function run_build_script {
     if [[ -f "$buildScript" ]]; then
         echo "[INFO] Running $buildScript..."
-        "$buildScript" -clean -test
+        "$buildScript" -clean -test -pl :pulsar-tests
     else
         echo "[ERROR] $buildScript not found in $repoPath"
     fi
