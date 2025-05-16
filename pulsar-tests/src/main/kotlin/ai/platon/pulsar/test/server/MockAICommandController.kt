@@ -12,7 +12,8 @@ import java.util.concurrent.Executors
  * Use pulsar-ui.html to test this controller.
  * */
 @RestController
-@RequestMapping("ai/command")
+@RequestMapping("/mock/api/ai/command")
+@CrossOrigin
 class MockAICommandController {
     private val executor: ExecutorService = Executors.newCachedThreadPool()
     private val tasks: MutableMap<String, TaskStatus> = ConcurrentHashMap()

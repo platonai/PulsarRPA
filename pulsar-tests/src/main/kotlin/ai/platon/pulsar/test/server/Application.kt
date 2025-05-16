@@ -8,7 +8,8 @@ import org.springframework.test.context.ContextConfiguration
 
 @SpringBootApplication(
     scanBasePackages = [
-        "ai.platon.pulsar.boot.autoconfigure"
+        "ai.platon.pulsar.boot.autoconfigure",
+        "ai.platon.pulsar.test.server",
     ]
 )
 @ImportResource("classpath:pulsar-beans/test-app-context.xml")
