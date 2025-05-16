@@ -48,12 +48,12 @@ jobs:
           docker run -d --rm --name pulsar-rpa-test -p 8182:8182 pulsar-rpa-nightly:${{ github.sha }}
           echo "Waiting for service..."
           sleep 10
-          chmod +x ./bin/test.sh
+          find bin/ -name "*.sh" -exec chmod +x {} \;
           ./bin/test.sh || (echo "Integration test failed" && exit 1)
           docker stop pulsar-rpa-test || true
 
       - name: Slack Notification
-        if: always()
+        if: false
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
