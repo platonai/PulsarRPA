@@ -27,7 +27,6 @@
     </build>
 
     <modules>
-        <module>pulsar-qa</module>
         <module>pulsar-master</module>
         <module>pulsar-examples</module>
     </modules>
