@@ -7,7 +7,9 @@ import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import java.awt.GraphicsEnvironment
 import java.awt.HeadlessException
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.nio.file.*
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -61,6 +63,75 @@ object Runtimes {
 
     fun checkIfProcessRunning(pattern: String): Boolean {
         return countSystemProcess(pattern) > 0
+    }
+
+    fun listAllChromeProcesses(): List<String> {
+        return when {
+            SystemUtils.IS_OS_WINDOWS -> listAllChromeProcessesOnWindows()
+            SystemUtils.IS_OS_LINUX -> listAllChromeProcessesOnPosix()
+            SystemUtils.IS_OS_MAC -> listAllChromeProcessesOnPosix()
+            else -> listOf()
+        }
+    }
+
+    fun listAllChromeProcessesOnPosix(): List<String> {
+        if (!SystemUtils.IS_OS_LINUX) {
+            return listOf()
+        }
+
+        val result = mutableListOf<String>()
+        try {
+            // Command to list all Chrome processes
+            val command = "ps -ef | grep -i 'chrome' | grep -v 'grep'"
+
+            // Execute the command
+            val process = Runtime.getRuntime().exec(arrayOf("bash", "-c", command))
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+
+            // Read and print each line of the output
+            var line: String?
+            // println("Running Chrome Processes:")
+            while ((reader.readLine().also { line = it }) != null) {
+                line?.let { result.add(it) }
+            }
+
+            // Wait for the process to complete
+            process.waitFor()
+        } catch (e: java.lang.Exception) {
+            System.err.println("An error occurred: " + e.message)
+        }
+
+        return result
+    }
+
+    fun listAllChromeProcessesOnWindows(): List<String> {
+        if (!SystemUtils.IS_OS_WINDOWS) {
+            return listOf()
+        }
+
+        val result = mutableListOf<String>()
+        try {
+            // Command to list all Chrome processes
+            val command = "tasklist | findstr chrome && tasklist | findstr chromium"
+
+            // Execute the command
+            val process = Runtime.getRuntime().exec(arrayOf("cmd.exe", "/c", command))
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+
+            // Read and print each line of the output
+            var line: String?
+            // println("Running Chrome Processes:")
+            while ((reader.readLine().also { line = it }) != null) {
+                line?.let { result.add(it) }
+            }
+
+            // Wait for the process to complete
+            process.waitFor()
+        } catch (e: java.lang.Exception) {
+            System.err.println("An error occurred: " + e.message)
+        }
+
+        return result
     }
 
     fun destroyProcess(process: Process, shutdownWaitTime: Duration) {

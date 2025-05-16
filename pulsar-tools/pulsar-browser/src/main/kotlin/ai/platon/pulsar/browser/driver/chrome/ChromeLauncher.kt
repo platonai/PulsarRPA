@@ -337,6 +337,10 @@ Kill all Chrome processes and run the program again.
 
                     """.trimIndent()
 
+//        Runtimes.listAllChromeProcesses().forEach {
+//            println(it)
+//        }
+
         logger.warn(message)
         return
     }
