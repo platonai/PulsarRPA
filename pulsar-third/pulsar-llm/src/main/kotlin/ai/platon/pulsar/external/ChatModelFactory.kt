@@ -3,6 +3,7 @@ package ai.platon.pulsar.external
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.logging.ThrottlingLogger
 import ai.platon.pulsar.common.warn
 import ai.platon.pulsar.external.impl.ChatModelImpl
 import dev.langchain4j.model.openai.OpenAiChatModel
@@ -11,39 +12,28 @@ import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * The factory for creating models.
- *
- * TODO: integrate with LangChain4j or spring-ai
+ * The factory to create models.
  */
 object ChatModelFactory {
     private val logger = getLogger(this::class)
+    private val throttlingLogger = ThrottlingLogger(logger, ttl = Duration.ofMinutes(30))
     private val models = ConcurrentHashMap<String, ChatModel>()
 
     fun isModelConfigured(conf: ImmutableConfig): Boolean {
-        // deepseek official
-        val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
-        if (deepseekAPIKey != null) {
-            return true
+        if (!isModelConfigured0(conf)) {
+            if (!hasModel(conf)) {
+                val documentPath = "docs/config/llm/llm-config.md"
+                val message = "The LLM is not configured. Please review the documentation for configuration " +
+                        "instructions. $documentPath"
+                throttlingLogger.info(message)
+            }
+            return false
         }
 
-        val volcengineAPIKey = conf["VOLCENGINE_API_KEY"]
-        if (volcengineAPIKey != null) {
-            return true
-        }
-
-        val openaiAPIKey = conf["OPENAI_API_KEY"]
-        if (openaiAPIKey != null) {
-            return true
-        }
-
-        val provider = conf[LLM_PROVIDER]
-        val llm = conf[LLM_NAME]
-        val apiKey = conf[LLM_API_KEY]
-
-        return provider != null && llm != null && apiKey != null
+        return true
     }
 
-    fun hasModel(conf: ImmutableConfig) = isModelConfigured(conf)
+    fun hasModel(conf: ImmutableConfig) = isModelConfigured0(conf)
 
     /**
      * Create a default model.
@@ -120,6 +110,30 @@ object ChatModelFactory {
     ): ChatModel {
         val key = "$modelName:$apiKey:$baseUrl"
         return models.computeIfAbsent(key) { createOpenAICompatibleModel0(modelName, apiKey, baseUrl, conf) }
+    }
+
+    private fun isModelConfigured0(conf: ImmutableConfig): Boolean {
+        // deepseek official
+        val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
+        if (deepseekAPIKey != null) {
+            return true
+        }
+
+        val volcengineAPIKey = conf["VOLCENGINE_API_KEY"]
+        if (volcengineAPIKey != null) {
+            return true
+        }
+
+        val openaiAPIKey = conf["OPENAI_API_KEY"]
+        if (openaiAPIKey != null) {
+            return true
+        }
+
+        val provider = conf[LLM_PROVIDER]
+        val llm = conf[LLM_NAME]
+        val apiKey = conf[LLM_API_KEY]
+
+        return provider != null && llm != null && apiKey != null
     }
 
     private fun getOrCreateModel0(
