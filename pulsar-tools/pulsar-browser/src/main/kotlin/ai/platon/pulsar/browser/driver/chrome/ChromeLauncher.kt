@@ -1,5 +1,7 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.common.BrowserSettings.Companion
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
@@ -196,6 +198,11 @@ class ChromeLauncher constructor(
         if (supervisorProcess != null && Runtimes.locateBinary(supervisorProcess).isEmpty()) {
             logger.warn("Supervisor program {} can not be located", options.supervisorProcess)
             supervisorProcess = null
+        }
+
+        if (Runtimes.isHeadless()) {
+            logger.info("The current environment has no GUI support, force to headless mode")
+            chromeOptions.headless = true
         }
 
         val executable = supervisorProcess ?: "$chromeBinary"
