@@ -2,11 +2,13 @@ package ai.platon.pulsar.protocol.browser.driver.playwright
 
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
+import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
@@ -24,7 +26,14 @@ class PlaywrightDriverTest {
     val url = "https://www.baidu.com"
 
     @BeforeEach
+    fun checkIfGUIAvailable() {
+        Assumptions.assumeTrue(Runtimes.isGUIAvailable(), "Test playwright only in a GUI environment")
+    }
+
+    @BeforeEach
     fun setup() {
+        Assumptions.assumeTrue(Runtimes.isGUIAvailable(), "Test playwright only in a GUI environment")
+
         assertEquals("PLAYWRIGHT_CHROME", browserId.browserType.name)
 
         launcherOptions.browserSettings.confuser.reset()

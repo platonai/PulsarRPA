@@ -23,6 +23,11 @@ class PlaywrightBrowserTest {
     private val seeds = LinkExtractors.fromResource("seeds/seeds.txt")
 
     @BeforeEach
+    fun checkIfGUIAvailable() {
+        Assumptions.assumeTrue(Runtimes.isGUIAvailable(), "Test playwright only in a GUI environment")
+    }
+
+    @BeforeEach
     fun setup() {
         Assumptions.assumeTrue(Runtimes.isGUIAvailable(), "Test playwright only in a GUI environment")
         launcherOptions.browserSettings.confuser.reset()
