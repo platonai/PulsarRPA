@@ -45,7 +45,9 @@ open class PlaywrightTestBase {
         @JvmStatic
         @AfterAll
         fun cleanUp() {
-            playwright.close()
+            if (::playwright.isInitialized) {
+                playwright.close()
+            }
         }
     }
 

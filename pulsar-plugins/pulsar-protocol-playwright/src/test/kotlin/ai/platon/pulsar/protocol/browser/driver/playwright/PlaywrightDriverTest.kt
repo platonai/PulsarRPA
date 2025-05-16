@@ -43,8 +43,13 @@ class PlaywrightDriverTest {
 
     @AfterEach
     fun tearDown() {
-        driver.close()
-        browser.close()
+        if (::driver.isInitialized) {
+            driver.close()
+        }
+
+        if (::browser.isInitialized) {
+            browser.close()
+        }
     }
 
     @Test

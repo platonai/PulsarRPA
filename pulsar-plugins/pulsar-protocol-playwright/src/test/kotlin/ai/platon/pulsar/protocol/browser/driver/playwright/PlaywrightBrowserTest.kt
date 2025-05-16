@@ -36,7 +36,9 @@ class PlaywrightBrowserTest {
 
     @AfterEach
     fun tearDown() {
-        browser.close()
+        if (::browser.isInitialized) {
+            browser.close()
+        }
     }
 
     @Test
