@@ -236,8 +236,8 @@ open class BrowserSettings constructor(
          * */
         @JvmStatic
         fun withGUI(): Companion {
-            if (Runtimes.isRunningInDocker()) {
-                logger.warn("The current process is running in Docker, GUI is not available, fallback to headless mode")
+            if (Runtimes.isHeadless()) {
+                logger.warn("The current environment has no GUI support, fallback to headless mode")
                 headless()
                 return BrowserSettings
             }
@@ -461,8 +461,8 @@ open class BrowserSettings constructor(
      * */
     val displayMode
         get() = when {
-            Runtimes.isRunningInDocker() -> {
-                // force headless mode in docker
+            Runtimes.isHeadless() -> {
+                // force headless mode if there is no display
                 headless()
                 DisplayMode.HEADLESS
             }
@@ -473,7 +473,7 @@ open class BrowserSettings constructor(
     /**
      * If true, the browser will run in supervised mode.
      * */
-    val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED
+    val isSupervised get() = displayMode == DisplayMode.SUPERVISED
     /**
      * If true, the browser will run in headless mode.
      * */

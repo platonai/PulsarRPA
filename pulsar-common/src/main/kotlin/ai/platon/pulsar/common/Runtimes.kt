@@ -4,13 +4,13 @@ import ai.platon.pulsar.common.measure.ByteUnit
 import kotlinx.coroutines.delay
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
-import java.io.BufferedReader
+import java.awt.GraphicsEnvironment
+import java.awt.HeadlessException
 import java.io.File
-import java.io.FileReader
-import java.io.IOException
 import java.nio.file.*
 import java.time.Duration
 import java.util.concurrent.TimeUnit
+import javax.swing.JFrame
 import kotlin.random.Random
 
 
@@ -19,6 +19,8 @@ import kotlin.random.Random
  * */
 object Runtimes {
     private val logger = LoggerFactory.getLogger(Runtimes::class.java)
+
+    private val _isHeadless = lazy { isHeadless0() }
 
     fun exec(name: String): List<String> {
         try {
@@ -125,12 +127,20 @@ object Runtimes {
         val info = process.info()
         val user = info.user().orElse("")
         val pid = process.pid()
-        val ppid = process.parent().orElseGet { null }?.pid()?.toString()?:"?"
+        val ppid = process.parent().orElseGet { null }?.pid()?.toString() ?: "?"
         val startTime = info.startInstant().orElse(null)
         val cpuDuration = info.totalCpuDuration()?.orElse(null)
         val cmdLine = info.commandLine().orElseGet { "" }
 
-        return String.format("%-8s %-6d %-6s %-25s %-10s %s", user, pid, ppid, startTime?:"", cpuDuration?:"", cmdLine)
+        return String.format(
+            "%-8s %-6d %-6s %-25s %-10s %s",
+            user,
+            pid,
+            ppid,
+            startTime ?: "",
+            cpuDuration ?: "",
+            cmdLine
+        )
     }
 
     fun deleteBrokenSymbolicLinks(symbolicLink: Path) {
@@ -177,6 +187,27 @@ object Runtimes {
             }
         } catch (e: Exception) {
             false
+        }
+    }
+
+    fun isHeadless(): Boolean {
+        return _isHeadless.value
+    }
+
+    private fun isHeadless0(): Boolean {
+        // First check: Java headless mode
+        if (GraphicsEnvironment.isHeadless()) {
+            return false
+        }
+
+        // Third check: Try to create a Swing window (safe fallback)
+        return try {
+            JFrame().apply { isVisible = false; dispose() }
+            true
+        } catch (e: HeadlessException) {
+            false
+        } catch (e: Exception) {
+            false // In case of unexpected GUI-related errors
         }
     }
 
