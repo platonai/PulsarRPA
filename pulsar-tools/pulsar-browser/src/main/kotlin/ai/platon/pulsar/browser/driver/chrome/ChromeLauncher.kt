@@ -1,7 +1,5 @@
 package ai.platon.pulsar.browser.driver.chrome
 
-import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.browser.common.BrowserSettings.Companion
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
@@ -200,7 +198,7 @@ class ChromeLauncher constructor(
             supervisorProcess = null
         }
 
-        if (Runtimes.isHeadless()) {
+        if (Runtimes.hasOnlyHeadlessBrowser()) {
             logger.info("The current environment has no GUI support, force to headless mode")
             chromeOptions.headless = true
         }

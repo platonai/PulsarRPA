@@ -74,6 +74,7 @@ abstract class RelaxedConfiguration {
     fun getUnrelaxed(name: String): String? {
         return System.getProperty(name) ?: System.getenv(name) ?: environment?.get(name) ?: xmlConfiguration[name]
     }
+
     /**
      * Retrieves the value of the given property name, or `null` if it does not exist.
      *

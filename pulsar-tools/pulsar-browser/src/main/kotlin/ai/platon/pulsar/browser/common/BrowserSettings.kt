@@ -236,7 +236,7 @@ open class BrowserSettings constructor(
          * */
         @JvmStatic
         fun withGUI(): Companion {
-            if (Runtimes.isHeadless()) {
+            if (Runtimes.hasOnlyHeadlessBrowser()) {
                 logger.warn("The current environment has no GUI support, fallback to headless mode")
                 headless()
                 return BrowserSettings
@@ -461,7 +461,7 @@ open class BrowserSettings constructor(
      * */
     val displayMode
         get() = when {
-            Runtimes.isHeadless() -> {
+            Runtimes.hasOnlyHeadlessBrowser() -> {
                 // force headless mode if there is no display
                 headless()
                 DisplayMode.HEADLESS

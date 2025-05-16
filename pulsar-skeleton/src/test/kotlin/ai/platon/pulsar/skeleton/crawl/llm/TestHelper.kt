@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.crawl.llm
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.XmlConfiguration
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
@@ -18,7 +19,7 @@ object TestHelper {
             println("=========================== LLM NOT CONFIGURED ==========================================")
             println("> Skip the tests because the API key is not set")
             println("> Please set the API key in the configuration file or environment variable")
-            println("> The configuration file can be found in: " + XmlConfiguration.EXTERNAL_RESOURCE_BASE_DIR)
+            println("> The configuration file can be found in: " + AppPaths.CONFIG_ENABLED_DIR)
             println("> All xml files in the directory will be loaded as the configuration file")
         } else {
             var response = session.chat("这是一个测试，来测试你是否工作正常。计算11的平方，仅返回数字。")

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.measure.ByteUnit
 import kotlinx.coroutines.delay
 import org.apache.commons.lang3.SystemUtils
@@ -19,6 +20,7 @@ import kotlin.random.Random
  * */
 object Runtimes {
     private val logger = LoggerFactory.getLogger(Runtimes::class.java)
+    private val heavyOperationResultCache = ConcurrentExpiringLRUCache<String, Any>(ttl = Duration.ofSeconds(10))
 
     fun exec(name: String): List<String> {
         try {
@@ -170,10 +172,14 @@ object Runtimes {
         }
     }
 
+    fun isRunningInDocker(): Boolean {
+        return heavyOperationResultCache.computeIfAbsent("isRunningInDocker") { isRunningInDockerRT() } == true
+    }
+
     /**
      * Check if the current process is running in Docker
      * */
-    fun isRunningInDocker(): Boolean {
+    fun isRunningInDockerRT(): Boolean {
         // Check for /.dockerenv file
         if (File("/.dockerenv").exists()) {
             return true
@@ -188,11 +194,28 @@ object Runtimes {
         }
     }
 
-    fun isHeadless(): Boolean {
-        return !isGUIAvailable()
+    fun supportHeadedBrowser(): Boolean {
+        return heavyOperationResultCache.computeIfAbsent("supportHeadedChromium") { supportHeadedChromiumRT() } == true
+    }
+
+    fun supportHeadedChromiumRT(): Boolean {
+        return when {
+            isRunningInDocker() -> false
+            SystemUtils.IS_OS_WINDOWS -> true
+            SystemUtils.IS_OS_LINUX -> hasXGraphicalInterface()
+            else -> isGUIAvailable()
+        }
+    }
+
+    fun hasOnlyHeadlessBrowser(): Boolean {
+        return !supportHeadedBrowser()
     }
 
     fun isGUIAvailable(): Boolean {
+        return heavyOperationResultCache.computeIfAbsent("isGUIAvailable") { isGUIAvailableRT() } == true
+    }
+
+    fun isGUIAvailableRT(): Boolean {
         // First check: Java headless mode
         if (GraphicsEnvironment.isHeadless()) {
             return false
@@ -207,6 +230,35 @@ object Runtimes {
         } catch (e: Exception) {
             false // In case of unexpected GUI-related errors
         }
+    }
+
+    fun hasXGraphicalInterface(): Boolean {
+        // 方法 1: 检查 DISPLAY 环境变量
+        val display = System.getenv("DISPLAY")
+        if (!display.isNullOrEmpty()) {
+            logger.info("Detected DISPLAY environment variable: $display")
+            return true
+        }
+
+        // 方法 2: 检查 Xorg 是否安装
+        val xorgPath = File("/usr/bin/Xorg")
+        if (xorgPath.exists()) {
+            logger.info("Xorg is installed at: ${xorgPath.path}")
+            return true
+        }
+
+        // 方法 3: 检查常见桌面环境进程是否运行
+        val desktopProcesses = listOf("gnome-session", "kdeinit", "xfce4-session")
+        for (process in desktopProcesses) {
+            if (checkIfProcessRunning(process)) {
+                // println("Detected running desktop environment process: $process")
+                return true
+            }
+        }
+
+        // 如果所有检查都失败，则认为没有图形化界面
+        logger.info("No graphical interface detected.")
+        return false
     }
 
     private fun totalSpaceOr0(store: FileStore) = store.runCatching { totalSpace }.getOrNull() ?: 0L
