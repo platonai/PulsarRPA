@@ -1,9 +1,9 @@
 package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.common.DescriptiveResult
+import ai.platon.pulsar.common.io.VirtualKey
 import ai.platon.pulsar.common.io.VirtualKeyboard
 import ai.platon.pulsar.common.io.VirtualKeyboard.KEYPAD_LOCATION
-import ai.platon.pulsar.common.io.VirtualKey
 import ai.platon.pulsar.common.math.geometric.DimD
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
@@ -19,7 +19,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.commons.math3.util.Precision
-import java.awt.Robot
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -192,9 +191,9 @@ class Mouse(private val devTools: ChromeDevTools) {
      */
     suspend fun click(x: Double, y: Double, clickCount: Int = 1, delayMillis: Long = 500) {
 // println("click($x, $y, $clickCount, $delayMillis)")
-        
+
         moveTo(x, y)
-        
+
 //        down(x, y, clickCount)
 //        if (delayMillis > 0) {
 //            delay(delayMillis)
@@ -256,11 +255,6 @@ class Mouse(private val devTools: ChromeDevTools) {
             deltaY = null,
             pointerType = null
         )
-    }
-
-    private fun awtMoveTo(x: Double, y: Double) {
-        val robot = Robot()
-        robot.mouseMove(x.toInt(), y.toInt())
     }
 
     /**
@@ -501,7 +495,7 @@ class Mouse(private val devTools: ChromeDevTools) {
         drop(target, data)
         up()
     }
-    
+
     private fun dispatchMouseEvent(
         @ParamName("type") type: DispatchMouseEventType,
         @ParamName("x") x: Double? = null,
@@ -521,7 +515,22 @@ class Mouse(private val devTools: ChromeDevTools) {
         @Optional @ParamName("pointerType") pointerType: DispatchMouseEventPointerType? = null
     ) {
         input.dispatchMouseEvent(
-            type, x, y, modifiers, timestamp, button, buttons, clickCount, force, tangentialPressure, tiltX, tiltY, twist, deltaX, deltaY, pointerType
+            type,
+            x,
+            y,
+            modifiers,
+            timestamp,
+            button,
+            buttons,
+            clickCount,
+            force,
+            tangentialPressure,
+            tiltX,
+            tiltY,
+            twist,
+            deltaX,
+            deltaY,
+            pointerType
         )
     }
 }
@@ -541,13 +550,13 @@ class Keyboard(private val devTools: ChromeDevTools) {
             } else {
                 input.insertText("$char")
             }
-            
+
             if (delayMillis > 0) {
                 delay(delayMillis)
             }
         }
     }
-    
+
     suspend fun delete(n: Int, delayMillis: Long) {
         repeat(n) {
             press("Backspace", delayMillis)
@@ -563,23 +572,23 @@ class Keyboard(private val devTools: ChromeDevTools) {
         if (keyString.isEmpty()) {
             return
         }
-        
+
         val tokens = splitKeyString(keyString).ifEmpty { return@press }
-        
+
         val key = tokens.last()
         for (i in 0 until tokens.size - 1) {
             down(tokens[i])
         }
-        
+
         down(key)
         delay(delayMillis)
         up(key)
-        
+
         for (i in tokens.size - 2 downTo 0) {
             up(tokens[i])
         }
     }
-    
+
     suspend fun press(key: VirtualKey, delayMillis: Long) {
         try {
             down(key)
@@ -593,7 +602,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
         if (singleKey.isEmpty()) {
             return
         }
-        
+
         val virtualKey = createVirtualKeyForSingleKeyString(singleKey)
         down(virtualKey)
     }
@@ -602,7 +611,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
         if (singleKey.isEmpty()) {
             return
         }
-        
+
         val virtualKey = createVirtualKeyForSingleKeyString(singleKey)
         up(virtualKey)
     }
@@ -610,7 +619,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
     suspend fun down(key: VirtualKey) {
         // From playwright:
         // {"type":"keyDown","modifiers":0,"windowsVirtualKeyCode":13,"code":"Enter","commands":[],"key":"Enter","text":"\r","unmodifiedText":"\r","autoRepeat":false,"location":0,"isKeypad":false},"sessionId":"45E0A2ABC64CE5ACDC8A98061CC4667B"}
-        
+
         down(pressedModifiers, key)
     }
 
@@ -619,7 +628,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
 
         up(pressedModifiers, key)
     }
-    
+
     /**
      * Splits a key string into its components.
      * The key string can be a single character, a key name, or a combination of both.
@@ -628,7 +637,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
     private fun splitKeyString(keyString: String): List<String> {
         val keys = mutableListOf<String>()
         val token = StringBuilder()
-        
+
         keyString.forEach { char ->
             if (char == '+' && token.isNotEmpty()) {
                 keys.add(token.toString().trim())
@@ -637,33 +646,33 @@ class Keyboard(private val devTools: ChromeDevTools) {
                 token.append(char)
             }
         }
-        
+
         if (token.isNotEmpty()) {
             keys.add(token.toString().trim())
         }
-        
+
         return keys
     }
-    
+
     private fun createVirtualKeyForSingleKeyString(singleKey: String): VirtualKey {
-        var virtualKey = VirtualKeyboard.KEYBOARD_LAYOUT[singleKey] ?:
-            throw IllegalArgumentException("Unknown key: >$singleKey<")
+        var virtualKey =
+            VirtualKeyboard.KEYBOARD_LAYOUT[singleKey] ?: throw IllegalArgumentException("Unknown key: >$singleKey<")
 
         val shift = isShifted(virtualKey)
         val shifted = virtualKey.shifted
         virtualKey = if (shift && shifted != null) shifted else virtualKey
-        
+
         return when {
             pressedModifiers.size > 1 -> virtualKey.copy(text = "")
             shift && pressedModifiers.size == 1 -> virtualKey.copy(text = "")
             else -> virtualKey
         }
     }
-    
+
     private fun isShifted(key: VirtualKey): Boolean {
         return pressedModifiers.contains("Shift") && key.shifted != null
     }
-    
+
     private fun toModifiersMask(modifiers: Set<String>): Int {
         var mask = 0
         if (modifiers.contains("Alt")) mask = mask or 1
@@ -672,17 +681,17 @@ class Keyboard(private val devTools: ChromeDevTools) {
         if (modifiers.contains("Shift")) mask = mask or 8
         return mask
     }
-    
+
     private suspend fun down(modifiers: Set<String>, key: VirtualKey) {
         // playwright format:
         // {"type":"keyDown","modifiers":0,"windowsVirtualKeyCode":13,"code":"Enter","commands":[],"key":"Enter","text":"\r","unmodifiedText":"\r","autoRepeat":false,"location":0,"isKeypad":false},"sessionId":"45E0A2ABC64CE5ACDC8A98061CC4667B"}
-        
+
         val autoRepeat = pressedKeys.contains(key.code)
         pressedKeys.add(key.code)
         if (key.isModifier) {
             pressedModifiers.add(key.key)
         }
-        
+
         val type = if (key.text.isEmpty()) DispatchKeyEventType.RAW_KEY_DOWN else DispatchKeyEventType.KEY_DOWN
         val commands = emptyList<String>()
         withContext(Dispatchers.IO) {
@@ -701,11 +710,11 @@ class Keyboard(private val devTools: ChromeDevTools) {
             )
         }
     }
-    
+
     private suspend fun up(modifiers: Set<String>, key: VirtualKey) {
         // playwright format:
         // {"type":"keyUp","modifiers":0,"key":"Enter","windowsVirtualKeyCode":13,"code":"Enter","location":0}
-        
+
         if (key.isModifier) {
             pressedModifiers.remove(key.key)
         }
@@ -722,7 +731,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
             )
         }
     }
-    
+
     /**
      * Dispatches a key event to the page.
      *
