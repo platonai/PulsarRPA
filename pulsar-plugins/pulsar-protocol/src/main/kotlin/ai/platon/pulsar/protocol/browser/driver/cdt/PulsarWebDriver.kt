@@ -16,6 +16,7 @@ import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
@@ -876,10 +877,8 @@ class PulsarWebDriver(
     }
 
     private fun serialize(cookie: Cookie): Map<String, String> {
-        val mapper = jacksonObjectMapper()
-        val json = mapper.writeValueAsString(cookie)
-        val map: Map<String, String?> = mapper.readValue(json)
-        return map.filterValues { it != null }.mapValues { it.toString() }
+        val mapper = jacksonObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        return mapper.readValue(mapper.writeValueAsString(cookie))
     }
 
     private suspend fun <T> invokeOnPage(name: String, message: String? = null, action: suspend () -> T): T? {

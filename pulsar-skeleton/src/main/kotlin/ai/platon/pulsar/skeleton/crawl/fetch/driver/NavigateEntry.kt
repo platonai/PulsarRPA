@@ -58,7 +58,7 @@ data class NavigateEntry(
      * */
     var mainRequestId = ""
     var mainRequestHeaders: Map<String, Any> = mapOf()
-    var mainRequestCookies: List<Map<String, String>> = listOf()
+    var mainRequestCookies: List<Map<String, String>> = emptyList()
     /**
      * The response status of the main request
      * */

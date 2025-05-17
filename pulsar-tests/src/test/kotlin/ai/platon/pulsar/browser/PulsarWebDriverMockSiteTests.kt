@@ -176,20 +176,20 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     @Test
     fun `test clearBrowserCookies`() = runWebDriverTest("$assetsPBaseURL/cookie.html", browser) { driver ->
         var cookies = driver.getCookies()
-        // assertEquals("abc123", cookies[0]["name"])
-        cookies.forEach {
-            it.entries.forEach {
-                println(it.key)
-                println(it.value)
-            }
-        }
+
+        println(cookies.toString())
+
+        assertTrue(cookies.toString()) { cookies.isNotEmpty() }
+        val cookie = cookies[0]
+        assertEquals("token", cookie["name"])
+        assertEquals("abc123", cookie["value"])
+        assertEquals("127.0.0.1", cookie["domain"])
+        assertEquals("/", cookie["path"])
 
         driver.clearBrowserCookies()
 
         cookies = driver.getCookies()
-        cookies.forEach { cookie ->
-            cookie.entries.joinToString { it.key + "=" + it.value }.let { println(it) }
-        }
+        assertTrue(cookies.toString()) { cookies.isEmpty() }
     }
 
     @Test
