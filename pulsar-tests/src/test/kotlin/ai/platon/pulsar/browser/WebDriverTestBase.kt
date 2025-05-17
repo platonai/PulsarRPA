@@ -23,7 +23,6 @@ class WebDriverTestBase : TestBase() {
 
     companion object {
         val browserFactory = DefaultBrowserFactory()
-        val webDriverService = WebDriverService(browserFactory)
         lateinit var browser: Browser
 
         @JvmStatic
@@ -49,6 +48,8 @@ class WebDriverTestBase : TestBase() {
     @Autowired
     lateinit var restTemplate: TestRestTemplate
 
+    open val webDriverService get() = WebDriverService(browserFactory)
+
     protected val logger = getLogger(this)
     protected val warnUpUrl = "https://www.amazon.com/"
     protected val originUrl = "https://www.amazon.com/"
@@ -58,6 +59,8 @@ class WebDriverTestBase : TestBase() {
     protected val baseURL get() = "http://127.0.0.1:$port"
 
     protected val assetsBaseURL get() = "http://127.0.0.1:$port/assets"
+
+    protected val assetsPBaseURL get() = "http://127.0.0.1:$port/assets-p"
 
     protected val generatedAssetsBaseURL get() = "http://127.0.0.1:$port/generated"
 

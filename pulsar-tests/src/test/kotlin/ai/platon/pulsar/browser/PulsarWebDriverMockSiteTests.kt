@@ -1,20 +1,14 @@
 package ai.platon.pulsar.browser
 
-import ai.platon.pulsar.browser.common.SimpleScriptConfuser.Companion.IDENTITY_NAME_MANGLER
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.js.JsUtils
-import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.persist.model.ActiveDOMMessage
-import ai.platon.pulsar.persist.model.ActiveDOMMetadata
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
 
 class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
+
+    override val webDriverService get() = FastWebDriverService(browserFactory)
 
     val text = "awesome AI enabled PulsarRPA!"
 
@@ -177,6 +171,25 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         val propValues = driver.selectPropertyValueAll(selector, propName)
         println(propValues)
         assertEquals(listOf(text, text, text), propValues)
+    }
+
+    @Test
+    fun `test clearBrowserCookies`() = runWebDriverTest("$assetsPBaseURL/cookie.html", browser) { driver ->
+        var cookies = driver.getCookies()
+        // assertEquals("abc123", cookies[0]["name"])
+        cookies.forEach {
+            it.entries.forEach {
+                println(it.key)
+                println(it.value)
+            }
+        }
+
+        driver.clearBrowserCookies()
+
+        cookies = driver.getCookies()
+        cookies.forEach { cookie ->
+            cookie.entries.joinToString { it.key + "=" + it.value }.let { println(it) }
+        }
     }
 
     @Test
