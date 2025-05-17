@@ -14,7 +14,6 @@ import com.github.kklisura.cdt.protocol.v2023.types.page.ReferrerPolicy
 import com.github.kklisura.cdt.protocol.v2023.types.page.TransitionType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.SerializationOptions
-import com.google.gson.Gson
 
 class PageHandler(
     private val devTools: RemoteDevTools,
