@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.mock
+package ai.platon.pulsar.test.server
 
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -6,6 +6,9 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
+/**
+ * Test SSE with OkHttp for [MockAICommandController].
+ * */
 fun main() {
     val client = OkHttpClient.Builder()
         .readTimeout(0, TimeUnit.MILLISECONDS) // Disable read timeout for SSE

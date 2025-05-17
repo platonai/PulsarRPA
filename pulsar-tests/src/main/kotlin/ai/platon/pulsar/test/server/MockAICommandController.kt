@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * Use pulsar-ui.html to test this controller.
+ * Use mock-sse.html to test this controller.
  * */
 @RestController
 @RequestMapping("/mock/api/ai/command")

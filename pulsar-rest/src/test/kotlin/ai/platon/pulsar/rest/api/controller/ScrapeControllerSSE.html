@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>ScrapeController SSE Client</title>
+</head>
+<body>
+<h2>Submit Command (SSE)</h2>
+<textarea id="commandInput" rows="6" cols="60">
+select
+  llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
+  dom_base_uri(dom) as url,
+  dom_first_text(dom, '#productTitle') as title,
+  dom_first_slim_html(dom, 'img:expr(width > 400)') as img
+from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+</textarea><br>
+<button onclick="submitCommand()">Submit</button>
+<div id="status"></div>
+<pre id="events"></pre>
+<script>
+    function submitCommand() {
+        const command = document.getElementById('commandInput').value.trim();
+        const status = document.getElementById('status');
+        const events = document.getElementById('events');
+        status.textContent = 'Submitting...';
+        events.textContent = '';
+        fetch('http://localhost:8182/api/x/s', {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: command
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to submit command');
+                return res.text();
+            })
+            .then(uuid => {
+                status.textContent = 'Submitted. UUID: ' + uuid;
+                listenSSE(uuid);
+            })
+            .catch(err => {
+                status.textContent = 'Error: ' + err.message;
+            });
+    }
+
+    function listenSSE(uuid) {
+        const status = document.getElementById('status');
+        const events = document.getElementById('events');
+        const url = `http://localhost:8182/api/x/stream/${uuid}`;
+        const es = new EventSource(url);
+        es.onmessage = function(event) {
+            events.textContent = event.data + '\n';
+            try {
+                const data = JSON.parse(event.data);
+                if (data.status === 'completed' || data.status === 'failed') {
+                    status.textContent = 'Finished: ' + data.status;
+                    es.close();
+                } else {
+                    status.textContent = 'Processing...';
+                }
+            } catch (e) {
+                // ignore parse errors
+            }
+        };
+        es.onerror = function() {
+            status.textContent = 'SSE connection error or closed.';
+            es.close();
+        };
+    }
+</script>
+</body>
+</html>

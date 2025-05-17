@@ -674,6 +674,21 @@
                 <version>${autolink.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>io.ktor</groupId>
+                <artifactId>ktor-client-core</artifactId>
+                <version>${ktor.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.ktor</groupId>
+                <artifactId>ktor-client-cio</artifactId>
+                <version>${ktor.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.ktor</groupId>
+                <artifactId>ktor-serialization-kotlinx-json-jvm</artifactId>
+                <version>${ktor.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -723,6 +738,7 @@
     </dependencies>
 
     <properties>
+        <ktor.version>2.3.11</ktor.version>
         <springmockk.version>4.0.2</springmockk.version>
         <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
         <mockito-junit-jupiter.version>5.11.0</mockito-junit-jupiter.version>
