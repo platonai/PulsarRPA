@@ -44,10 +44,13 @@
             events.textContent += event.data + '\n';
             try {
                 const data = JSON.parse(event.data);
-                if (data.status === 'completed' || data.status === 'failed') {
-                    status.textContent = 'Finished: ' + data.status;
+                if (data.statusCode === 200) {
+                    status.textContent = 'Finished: OK';
                     es.close();
-                } else if (data.status === 'processing') {
+                } else if (data.statusCode === 500) {
+                    status.textContent = 'Finished: ERROR';
+                    es.close();
+                } else if (data.statusCode === 102) {
                     status.textContent = 'Processing...';
                 }
             } catch (e) {

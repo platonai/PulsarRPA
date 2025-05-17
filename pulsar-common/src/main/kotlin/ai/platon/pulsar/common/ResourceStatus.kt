@@ -1,5 +1,8 @@
 package ai.platon.pulsar.common
 
+import java.util.*
+
+
 /**
  * Keep consistent with standard http status.
  *
@@ -242,31 +245,38 @@ object ResourceStatus {
     /** `511 Network Authentication Required` (Additional HTTP Status Codes - RFC 6585)  */
     const val SC_NETWORK_AUTHENTICATION_REQUIRED: Int = 511
 
-    private val REASON_PHRASES = arrayOf(
-        arrayOfNulls(0),
-        arrayOfNulls(3),
-        arrayOfNulls(8),
-        arrayOfNulls(8),
-        arrayOfNulls(25),
-        arrayOfNulls<String>(8)
+    /** Reason phrases lookup table.  */
+    private val REASON_PHRASES: Array<Array<String?>?> = arrayOf(
+        null,
+        arrayOfNulls(4),  // 1xx
+        arrayOfNulls(27),  // 2xx
+        arrayOfNulls(9),  // 3xx
+        arrayOfNulls(52),  // 4xx
+        arrayOfNulls(12) // 5xx
     )
+
+    fun getReason(status: Int): String? {
+        if (status < 0 || status > 599) {
+            throw IllegalArgumentException("Unknown category for status code $status")
+        }
+
+        val category = status / 100
+        val subcode = status - 100 * category
+
+        var reason: String? = null
+        if ((REASON_PHRASES[category]?.size ?: 0) > subcode) {
+            reason = REASON_PHRASES[category]!![subcode]
+        }
+
+        return reason
+    }
 
     fun getStatusText(statusCode: Int): String {
         if (statusCode < 0) {
             throw IllegalArgumentException("status code may not be negative")
         }
 
-        val classIndex = statusCode / 100
-        val codeIndex = statusCode - classIndex * 100
-        return if (classIndex >= 1
-            && classIndex <= REASON_PHRASES.size - 1
-            && codeIndex >= 0
-            && codeIndex <= REASON_PHRASES[classIndex].size - 1
-        ) {
-            REASON_PHRASES[classIndex][codeIndex]!!
-        } else {
-            "unknown"
-        }
+        return getReason(statusCode) ?: "UNKNOWN"
     }
 
     /**
@@ -279,7 +289,7 @@ object ResourceStatus {
     private fun setReason(status: Int, reason: String) {
         val category = status / 100
         val subcode = status - 100 * category
-        REASON_PHRASES[category][subcode] = reason
+        REASON_PHRASES[category]!![subcode] = reason
     }
 
     init {

@@ -46,6 +46,13 @@ fun main() {
             if (line.startsWith("data:")) {
                 val json = line.removePrefix("data:").trim()
                 println("SSE Event: $json")
+                // Optionally, parse statusCode to determine completion
+                val codeRegex = "\"statusCode\"\\s*:\\s*(\\d+)".toRegex()
+                val code = codeRegex.find(json)?.groupValues?.get(1)?.toIntOrNull()
+                if (code == 200 || code == 500) {
+                    println("Stream finished with statusCode: $code")
+                    break
+                }
             }
         }
     }
