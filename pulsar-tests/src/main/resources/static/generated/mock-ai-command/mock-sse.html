@@ -24,11 +24,11 @@
         })
             .then(res => {
                 if (!res.ok) throw new Error('Failed to submit command');
-                return res.text();
+                return res.json();
             })
-            .then(uuid => {
-                status.textContent = 'Submitted. UUID: ' + uuid;
-                listenSSE(uuid);
+            .then(resp => {
+                status.textContent = 'Submitted. UUID: ' + resp.uuid;
+                listenSSE(resp.uuid);
             })
             .catch(err => {
                 status.textContent = 'Error: ' + err.message;
@@ -47,11 +47,11 @@
                 if (data.status === 'completed' || data.status === 'failed') {
                     status.textContent = 'Finished: ' + data.status;
                     es.close();
-                } else {
+                } else if (data.status === 'processing') {
                     status.textContent = 'Processing...';
                 }
             } catch (e) {
-                // ignore parse errors
+                status.textContent = 'Parse error: ' + e;
             }
         };
         es.onerror = function() {
@@ -62,3 +62,4 @@
 </script>
 </body>
 </html>
+

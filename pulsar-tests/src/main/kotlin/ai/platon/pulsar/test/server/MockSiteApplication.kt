@@ -14,8 +14,8 @@ import org.springframework.test.context.ContextConfiguration
 )
 @ImportResource("classpath:pulsar-beans/test-app-context.xml")
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
-class Application
+class MockSiteApplication
 
 fun main() {
-    runApplication<Application>()
+    runApplication<MockSiteApplication>()
 }

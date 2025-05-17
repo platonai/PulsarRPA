@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit
  * Test SSE with OkHttp for [MockAICommandController].
  * */
 fun main() {
+    val baseUrl = "http://localhost:8182"
     val client = OkHttpClient.Builder()
         .readTimeout(0, TimeUnit.MILLISECONDS) // Disable read timeout for SSE
         .build()
@@ -17,19 +18,24 @@ fun main() {
     // 1. Submit command
     val command = "Test command"
     val request = Request.Builder()
-        .url("http://localhost:8182/mock/api/ai/command")
+        .url("$baseUrl/mock/api/ai/command")
         .post(command.toRequestBody("text/plain".toMediaTypeOrNull()))
         .build()
 
-    val uuid = client.newCall(request).execute().use { response ->
+    val uuid: String
+    client.newCall(request).execute().use { response ->
         if (!response.isSuccessful) error("Unexpected code $response")
-        response.body?.string()?.trim() ?: error("No UUID returned")
+        val body = response.body?.string()?.trim() ?: error("No response body")
+        println("Submit response: $body")
+        // Parse uuid from ScrapeResponse JSON
+        val regex = "\"uuid\"\\s*:\\s*\"([^\"]+)\"".toRegex()
+        uuid = regex.find(body)?.groupValues?.get(1) ?: error("No UUID in response")
     }
     println("Submitted, UUID: $uuid")
 
     // 2. Connect to SSE stream
     val sseRequest = Request.Builder()
-        .url("http://localhost:8182/mock/api/ai/command/stream/$uuid")
+        .url("$baseUrl/mock/api/ai/command/stream/$uuid")
         .build()
 
     client.newCall(sseRequest).execute().use { response ->
@@ -38,7 +44,8 @@ fun main() {
         while (!source.exhausted()) {
             val line = source.readUtf8Line() ?: break
             if (line.startsWith("data:")) {
-                println("SSE Event: ${line.removePrefix("data:").trim()}")
+                val json = line.removePrefix("data:").trim()
+                println("SSE Event: $json")
             }
         }
     }
