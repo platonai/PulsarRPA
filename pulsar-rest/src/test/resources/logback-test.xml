@@ -15,9 +15,6 @@
     <!-- 彩色日志格式 -->
     <property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%.10t]){faint} %clr(%c{2}){cyan} %clr(-){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
 
-    <!-- Stop logback status INFO at the start -->
-    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
-
     <appender name="DRFA" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>${logging.dir}/${logging.file}</File>
         <encoder>
@@ -61,6 +58,9 @@
         <appender-ref ref="DRFA"/>
         <appender-ref ref="stdout"/>
     </root>
+
+    <!-- Stop logback status INFO at the start -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
 
     <logger name="ai.platon.pulsar" level="INFO"/>
     <logger name="ai.platon.pulsar.skeleton.crawl.fetch.privacy" level="INFO"/>
