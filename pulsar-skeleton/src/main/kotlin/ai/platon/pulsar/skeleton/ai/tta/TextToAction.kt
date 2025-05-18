@@ -39,7 +39,7 @@ class TextToAction(val conf: ImmutableConfig) {
     var pulsarSessionMessage: String
         private set
 
-    val webDriverFile = baseDir.resolve("WebDriver.kt")
+    val webDriverFile = baseDir.resolve("MiniWebDriver.kt")
     var webDriverSourceCode: String
         private set
     var webDriverMessage: String

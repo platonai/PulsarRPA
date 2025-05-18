@@ -35,7 +35,7 @@ override fun ${methodName}Async($parameters) = interopScope.future { $methodName
 
 fun main() {
     val gen = JvmCoroutineInteropCodeGen()
-    ResourceLoader.readAllLines("tools/WebDriver.kt.txt")
+    ResourceLoader.readAllLines("tools/MiniWebDriver.kt.txt")
         .map { it.trim() }
         .filter { it.contains("suspend fun ") }
         .map { gen.transform(it) }

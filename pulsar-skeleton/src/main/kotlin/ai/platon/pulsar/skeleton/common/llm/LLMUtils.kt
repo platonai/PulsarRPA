@@ -13,7 +13,7 @@ import kotlin.io.path.notExists
 object LLMUtils {
 
     fun copyWebDriverFile(dest: Path) {
-        val file = ProjectUtils.findFile("WebDriver.kt")
+        val file = ProjectUtils.findFile("MiniWebDriver.kt")
         if (file != null) {
             Files.copy(file, dest, StandardCopyOption.REPLACE_EXISTING)
             return
@@ -21,8 +21,8 @@ object LLMUtils {
 
         // If we can not find the file, copy it from github.com or gitee.com
         val webDriverURL =
-            "https://raw.githubusercontent.com/platonai/PulsarRPA/refs/heads/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/WebDriver.kt"
-        val webDriverURL2 = "https://gitee.com/platonai_galaxyeye/PulsarRPA/raw/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/WebDriver.kt"
+            "https://raw.githubusercontent.com/platonai/PulsarRPA/refs/heads/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/MiniWebDriver.kt"
+        val webDriverURL2 = "https://gitee.com/platonai_galaxyeye/PulsarRPA/raw/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/MiniWebDriver.kt"
         listOf(webDriverURL, webDriverURL2).forEach { url ->
             if (shouldCopyFile(dest)) {
                 Files.writeString(dest, URI(url).toURL().readText())
