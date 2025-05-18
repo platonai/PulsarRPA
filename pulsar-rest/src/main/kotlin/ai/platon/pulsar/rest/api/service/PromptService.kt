@@ -3,6 +3,7 @@ package ai.platon.pulsar.rest.api.service
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_INTERACTIVE_ELEMENTS_SELECTOR
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.JsonExtractor
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.URLUtils
@@ -25,6 +26,7 @@ import org.jsoup.select.NodeTraversor
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.atomic.AtomicReference
 
 @Service
@@ -37,6 +39,9 @@ class PromptService(
     companion object {
         const val MIN_USER_MESSAGE_LENGTH = 2
     }
+
+    val commandStatusCache = ConcurrentSkipListMap<String, PromptResponseL2>()
+    private val logger = getLogger(PromptService::class)
 
     fun chat(prompt: String): String {
         return session.chat(prompt).content
@@ -92,9 +97,12 @@ class PromptService(
         val processedRequest = request.replace(url, PLACEHOLDER_URL)
         val prompt = API_REQUEST_COMMAND_CONVERSION_TEMPLATE
             .replace(PLACEHOLDER_REQUEST, processedRequest)
-            .replace(PLACEHOLDER_URL, processedRequest)
 
-        val content = session.chat(prompt).content
+        var content = session.chat(prompt).content
+        if (content.isBlank()) {
+            return null
+        }
+        content = content.replace(PLACEHOLDER_URL, url)
 
         return JsonExtractor.extractJsonBlocks(content).firstOrNull()
     }
@@ -139,6 +147,19 @@ class PromptService(
         return session.chat(userMessage).content
     }
 
+    fun executeCommand(uuid: String, request: String): PromptResponseL2 {
+        val request2 = convertPromptToRequest(request)
+        val response2 = if (request2 != null) {
+            executeCommand(uuid, request2)
+        } else {
+            PromptResponseL2.failed(ResourceStatus.SC_BAD_REQUEST)
+        }
+
+        commandStatusCache[uuid] = response2
+
+        return response2
+    }
+
     /**
      * Executes a command based on the provided request string.
      *
@@ -149,15 +170,23 @@ class PromptService(
      * @param request The request string containing a URL and other parameters.
      * @return A PromptResponseL2 object containing the result of the command execution.
      * */
-    fun command(request: String): PromptResponseL2 {
+    fun executeCommand(request: String): PromptResponseL2 {
+        val uuid = UUID.randomUUID().toString()
         val request2 = convertPromptToRequest(request)
         val response2 = if (request2 != null) {
-            command(request2)
+            executeCommandNotCached(uuid, request2)
         } else {
-            PromptResponseL2.failed(ResourceStatus.SC_BAD_REQUEST)
+            PromptResponseL2.failed(uuid, ResourceStatus.SC_BAD_REQUEST)
         }
 
+        require(uuid == response2.uuid) { "UUID mismatch: $uuid != ${response2.uuid}" }
+        commandStatusCache[uuid] = response2
+
         return response2
+    }
+
+    fun executeCommand(request: PromptRequestL2): PromptResponseL2 {
+        return executeCommand("", request)
     }
 
     /**
@@ -169,32 +198,40 @@ class PromptService(
      * @param request The PromptRequestL2 object containing the URL and other parameters.
      * @return A PromptResponseL2 object containing the result of the command execution.
      * */
-    fun command(request: PromptRequestL2): PromptResponseL2 {
+    fun executeCommand(uuid: String, request: PromptRequestL2): PromptResponseL2 {
+        val response = executeCommandNotCached(uuid, request)
+        commandStatusCache[uuid] = response
+        return response
+    }
+
+    private fun executeCommandNotCached(uuid: String, request: PromptRequestL2): PromptResponseL2 {
         request.args = LoadOptions.mergeArgs(request.args, "-refresh")
         val (page, document) = loadService.loadDocument(request)
 
-        val response = PromptResponseL2()
-
         if (page.isNil) {
-            response.pageStatusCode = ResourceStatus.SC_EXPECTATION_FAILED
-            return response
+            return PromptResponseL2.failed(ResourceStatus.SC_EXPECTATION_FAILED)
         }
 
+        val response = PromptResponseL2(
+            uuid,
+            pageStatusCode = page.protocolStatus.minorCode,
+            pageContentBytes = page.originalContentLength.toInt()
+        )
         if (!page.protocolStatus.isSuccess) {
-            response.pageStatusCode = page.protocolStatus.minorCode
             return response
         }
 
         response.statusCode = doChat(page, document, request, response)
+        logger.info("Conversion with document ${document.baseURI} finished with status code ${response.statusCode}")
 
         val sql = request.xsql
         if (sql != null && ScrapeAPIUtils.isScrapeUDF(sql)) {
-            executeQuery(sql, response)
+            kotlin.runCatching { executeQuery(sql, response) }.onFailure { logger.warn("Failed to execute query", it) }
         }
 
-        response.uuid = UUID.randomUUID().toString()
-        response.pageStatusCode = page.protocolStatus.minorCode
-        response.pageContentBytes = page.originalContentLength.toInt()
+        if (uuid.isBlank()) {
+            response.uuid = UUID.randomUUID().toString()
+        }
         response.finishTime = Instant.now()
         response.isDone = true
 
@@ -210,7 +247,7 @@ class PromptService(
         var statusCode = ResourceStatus.SC_OK
 
         try {
-            doChat1(page, document, request, response)
+            conversionStepByStep(page, document, request, response)
         } catch (e: Exception) {
             statusCode = ResourceStatus.SC_EXPECTATION_FAILED
         }
@@ -218,7 +255,7 @@ class PromptService(
         return statusCode
     }
 
-    private fun doChat1(
+    private fun conversionStepByStep(
         page: WebPage,
         document: FeaturedDocument,
         request: PromptRequestL2,
@@ -241,10 +278,13 @@ class PromptService(
             if (pageSummaryPrompt != null) {
                 val message = pageSummaryPrompt.replace(PLACEHOLDER_PAGE_CONTENT, textContent)
                 response.pageSummary = session.chat(message).content
+                logger.info("Page summary: ${response.pageSummary}")
             }
+
             if (dataExtractionRules != null) {
                 val message = dataExtractionRules.replace(PLACEHOLDER_PAGE_CONTENT, textContent)
                 response.fields = session.chat(message).content
+                logger.info("Data extraction: ${response.fields}")
             }
         }
 
@@ -253,6 +293,7 @@ class PromptService(
             val finalRichText = richText ?: selectNthScreenRichText(screenNumber, document)
             val message = linkExtractionRules.replace(PLACEHOLDER_PAGE_CONTENT, finalRichText)
             response.links = session.chat(message).content
+            logger.info("Link extraction: ${response.links}")
         }
     }
 

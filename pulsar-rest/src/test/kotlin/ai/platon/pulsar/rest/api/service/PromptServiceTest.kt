@@ -77,7 +77,7 @@ class PromptServiceTest {
     }
 
     @Test
-    fun `test prompt conversion to request with cache`() {
+    fun `test convertAPIRequestCommandToJSON with cache`() {
         val url1 = "https://www.amazon.com/dp/B0C1H26C46"
         val url2 = "https://www.amazon.com/dp/B07PX3ZRJ6"
 
@@ -89,6 +89,7 @@ Page summary prompt: Provide a brief introduction of this product.
         """.trimIndent()
 
         val result1 = service.convertAPIRequestCommandToJSON(prompt1, url1)
+        assertNotNull(result1)
 
         val prompt2 = """
 Visit $url2
@@ -98,8 +99,12 @@ Page summary prompt: Provide a brief introduction of this product.
         """.trimIndent()
 
         val result2 = service.convertAPIRequestCommandToJSON(prompt2, url2)
+        assertNotNull(result2)
 
-        assertEquals(result2, result1)
+        val template1 = result1.replace(url1, "").replace(url2, "")
+        val template2 = result2.replace(url1, "").replace(url2, "")
+
+        assertEquals(template1, template2, "The prompt template is loaded from cache, so they should be the same")
     }
 
     @Test
@@ -174,7 +179,7 @@ Page summary prompt: Provide a brief introduction of this product.
             PRODUCT_DETAIL_URL,
             pageSummaryPrompt = "Give me the product name",
         )
-        val response = service.command(request)
+        val response = service.executeCommand(request)
         Assumptions.assumeTrue(response.pageStatusCode == 200)
         println(response.pageSummary)
 
@@ -190,7 +195,7 @@ Page summary prompt: Provide a brief introduction of this product.
             PRODUCT_DETAIL_URL,
             dataExtractionRules = "product name, ratings, price",
         )
-        val response = service.command(request)
+        val response = service.executeCommand(request)
         Assumptions.assumeTrue(response.pageStatusCode == 200)
         val fields = response.fields
         println(fields)
@@ -236,7 +241,7 @@ Page summary prompt: Provide a brief introduction of this product.
     @Test
     fun `test simple and clean command`() {
         val prompt = API_COMMAND_PROMPT1
-        val response = service.command(prompt)
+        val response = service.executeCommand(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(response))
         assertNotNull(response)
         Assumptions.assumeTrue(response.pageStatusCode == 200)
@@ -248,7 +253,7 @@ Page summary prompt: Provide a brief introduction of this product.
     @Test
     fun `test detailed and verbose command`() {
         val prompt = API_COMMAND_PROMPT3
-        val response = service.command(prompt)
+        val response = service.executeCommand(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(response))
         assertNotNull(response)
         Assumptions.assumeTrue(response.pageStatusCode == 200)

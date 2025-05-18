@@ -28,7 +28,7 @@ Use the following JSON format:
 
 ```json
 {
-  "url": "https://keep-me-unchanged.com",           // Keep the URL unchanged, the programmer will handle it
+  "url": "{PLACEHOLDER_URL}",                       // Keep the URL unchanged
   "pageSummaryPrompt": "Summarize or analyze...",   // (Optional) Natural-language prompt about the page content
   "dataExtractionRules": "Extract fields like...",  // (Optional) What structured information to extract from the page
   "linkExtractionRules": "Extract links like...",   // (Optional) What links to extract from the page
@@ -41,6 +41,7 @@ Use the following JSON format:
 
 Notes:
 
+- Keep the URL unchanged and be {PLACEHOLDER_URL}.
 - Handle vague or partial commands gracefully.
 - Normalize non-English input where possible.
 - If some fields are not mentioned, leave them out or set them to null.
