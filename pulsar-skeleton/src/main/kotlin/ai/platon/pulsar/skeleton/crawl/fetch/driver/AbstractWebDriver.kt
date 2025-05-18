@@ -294,8 +294,6 @@ abstract class AbstractWebDriver(
         val textContent = selectFirstTextOrNull(selector) ?: return ModelResponse.EMPTY
         val textContent0 = textContent.take(chatModel.settings.maximumLength)
 
-        println(textContent0)
-
         val prompt2 = "$prompt\n\n\nThere is the text content of the selected element:\n\n\n$textContent0"
 
         return chatModel.call(prompt2)

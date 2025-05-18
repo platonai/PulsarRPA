@@ -9,6 +9,7 @@ import dev.langchain4j.data.message.UserMessage
 import dev.langchain4j.model.chat.ChatLanguageModel
 import dev.langchain4j.model.output.FinishReason
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang3.StringUtils
 import org.ehcache.Cache
 import org.ehcache.CacheManager
 import org.ehcache.config.builders.CacheConfigurationBuilder
@@ -16,6 +17,8 @@ import org.ehcache.config.builders.CacheManagerBuilder
 import org.ehcache.config.builders.ExpiryPolicyBuilder
 import org.ehcache.config.builders.ResourcePoolsBuilder
 import org.jsoup.nodes.Element
+import java.io.IOException
+import java.io.InterruptedIOException
 import java.time.Duration
 
 open class ChatModelImpl(
@@ -88,9 +91,9 @@ open class ChatModelImpl(
             return ModelResponse("", ResponseState.OTHER)
         }
 
-        val userMessage1 = userMessage.take(settings.maximumLength)
+        val trimmedUserMessage = userMessage.take(settings.maximumLength).trim()
         // Generate a cache key based on the user and system messages
-        val cacheKey = DigestUtils.md5Hex("$userMessage1|$systemMessage")
+        val cacheKey = DigestUtils.md5Hex("$trimmedUserMessage|$systemMessage")
 
 
         // Check if the response is already cached
@@ -100,7 +103,12 @@ open class ChatModelImpl(
             return cachedResponse
         }
 
-        val um = UserMessage.userMessage(userMessage1)
+        val um = UserMessage.userMessage(trimmedUserMessage)
+
+        if (logger.isInfoEnabled) {
+            val log = StringUtils.abbreviate(trimmedUserMessage, 100).replace("\n", " ")
+            logger.info("▶ Chat - [len: {}] {}", trimmedUserMessage.length, log)
+        }
 
         val response = try {
             if (systemMessage.isBlank()) {
@@ -109,8 +117,19 @@ open class ChatModelImpl(
                 val sm = SystemMessage.systemMessage(systemMessage)
                 langchainModel.generate(um, sm)
             }
+        } catch (e: IOException) {
+            logger.info("IOException | {}", e.message)
+            return ModelResponse("", ResponseState.OTHER)
+        } catch (e: RuntimeException) {
+            if (e.cause is InterruptedIOException) {
+                logger.info("InterruptedIOException | {}", e.message)
+                return ModelResponse("", ResponseState.OTHER)
+            } else {
+                logger.warn("RuntimeException | {} | {}", langchainModel.javaClass.simpleName, e.message)
+                throw e
+            }
         } catch (e: Exception) {
-            logger.warn("Model call failure | {} | {}", langchainModel.javaClass.simpleName, e.message)
+            logger.warn("[Unexpected] Exception | {} | {}", langchainModel.javaClass.simpleName, e.message)
             return ModelResponse("", ResponseState.OTHER)
         }
 
@@ -126,6 +145,10 @@ open class ChatModelImpl(
         }
 
         val modelResponse = ModelResponse(response.content().text().trim(), state, tokenUsage)
+        if (logger.isInfoEnabled) {
+            val log = StringUtils.abbreviate(modelResponse.content, 100).replace("\n", " ")
+            logger.info("◀ Chat - token: {} | [len: {}] {}", modelResponse.tokenUsage.totalTokenCount, modelResponse.content.length, log)
+        }
 
         // Cache the response
         responseCache.put(cacheKey, modelResponse)
