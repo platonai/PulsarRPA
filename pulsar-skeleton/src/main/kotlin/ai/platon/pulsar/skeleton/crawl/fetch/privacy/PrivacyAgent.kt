@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.concurrent.ConcurrentPassiveExpiringSet
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.logging.ThrottlingLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.nio.file.Files
@@ -54,11 +55,7 @@ data class PrivacyAgent(
 
     companion object {
         private val logger = getLogger(this)
-
-        /**
-         * To prevent issuing too many reports.
-         * */
-        private val reportedBrowserTypes = ConcurrentPassiveExpiringSet<BrowserType>(ttl = Duration.ofMinutes(30))
+        private val throttlingLogger = ThrottlingLogger(logger)
 
         /**
          * The random privacy agent opens browser with a random data dir.
@@ -83,9 +80,7 @@ data class PrivacyAgent(
         }
 
         fun createSystemDefault(browserType: BrowserType): PrivacyAgent {
-            if (reportedBrowserTypes.add(browserType)) {
-                logger.info("You are creating a SYSTEM_DEFAULT browser context, force set max browser number to be 1")
-            }
+            throttlingLogger.info("You are creating a SYSTEM_DEFAULT browser context, force set max browser number to be 1")
             BrowserSettings.withBrowserContextMode(BrowserContextMode.SYSTEM_DEFAULT, browserType)
             require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
             require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("SystemDefaultPrivacyAgentGenerator"))
@@ -97,9 +92,7 @@ data class PrivacyAgent(
         }
 
         fun createDefault(browserType: BrowserType): PrivacyAgent {
-            if (reportedBrowserTypes.add(browserType)) {
-                logger.info("You are creating a DEFAULT browser context, force set max browser number to be 1")
-            }
+            throttlingLogger.info("You are creating a DEFAULT browser context, force set max browser number to be 1")
 
             BrowserSettings.withBrowserContextMode(BrowserContextMode.DEFAULT, browserType)
             require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
@@ -112,9 +105,7 @@ data class PrivacyAgent(
         }
 
         fun createPrototype(browserType: BrowserType): PrivacyAgent {
-            if (reportedBrowserTypes.add(browserType)) {
-                logger.info("You are creating a PROTOTYPE browser context, force set max browser number to be 1")
-            }
+            throttlingLogger.info("You are creating a PROTOTYPE browser context, force set max browser number to be 1")
 
             BrowserSettings.withBrowserContextMode(BrowserContextMode.PROTOTYPE, browserType)
             require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)

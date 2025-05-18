@@ -109,6 +109,8 @@ class TransportImpl : Transport {
             session.asyncRemote.sendText(message)
         } catch (e: IOException) {
             throw ChromeIOException("Failed to send message, caused by ${e.message}", e, isOpen)
+        } catch (e: IllegalStateException) {
+            throw ChromeIOException("Failed to send message, caused by ${e.message}", e, isOpen)
         }
     }
 
