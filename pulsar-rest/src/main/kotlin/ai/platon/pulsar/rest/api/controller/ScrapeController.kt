@@ -7,7 +7,10 @@ import ai.platon.pulsar.rest.api.service.ScrapeService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.context.ApplicationContext
 import org.springframework.http.MediaType
+import org.springframework.http.codec.ServerSentEvent
 import org.springframework.web.bind.annotation.*
+import reactor.core.publisher.Flux
+import java.util.concurrent.Executors
 
 @RestController
 @CrossOrigin
@@ -20,6 +23,8 @@ class ScrapeController(
     val applicationContext: ApplicationContext,
     val scrapeService: ScrapeService,
 ) {
+    private val executor = Executors.newWorkStealingPool()
+
     /**
      * @param sql The sql to execute
      * @return The response
@@ -61,5 +66,19 @@ class ScrapeController(
     ): ScrapeResponse {
         val request = ScrapeStatusRequest(uuid)
         return scrapeService.getStatus(request)
+    }
+
+    @GetMapping("/{id}/status", consumes = [MediaType.ALL_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun getStatus(
+        @PathVariable(value = "id") uuid: String,
+        httpRequest: HttpServletRequest,
+    ): ScrapeResponse {
+        val request = ScrapeStatusRequest(uuid)
+        return scrapeService.getStatus(request)
+    }
+
+    @GetMapping(value = ["/{id}/stream"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun streamEvents(@PathVariable id: String): Flux<ServerSentEvent<ScrapeResponse>> {
+        return scrapeService.streamEvents(id)
     }
 }

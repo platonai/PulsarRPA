@@ -48,10 +48,13 @@ data class ScrapeResponse(
     var pageContentBytes: Int = 0,
     var isDone: Boolean = false,
     var resultSet: List<Map<String, Any?>>? = null,
+
+    var event: String = "",
 ) {
     val status: String get() = ResourceStatus.getStatusText(statusCode)
     val pageStatus: String get() = ProtocolStatus.getMinorName(pageStatusCode)
     val createTime: Instant = Instant.now()
+    var lastModifiedTime: Instant? = null
     var finishTime: Instant? = null
 
     companion object {
@@ -66,6 +69,41 @@ data class ScrapeResponse(
                 pageStatusCode = ResourceStatus.SC_EXPECTATION_FAILED
             )
     }
+}
+
+fun ScrapeResponse.refresh(isDone: Boolean = false) {
+    lastModifiedTime = Instant.now()
+    this.isDone = isDone
+}
+
+fun ScrapeResponse.refresh(statusCode: Int) = refresh(statusCode, this.pageStatusCode, false)
+
+fun ScrapeResponse.refresh(statusCode: Int, pageStatusCode: Int, isDone: Boolean) {
+    lastModifiedTime = Instant.now()
+    this.statusCode = statusCode
+    this.pageStatusCode = pageStatusCode
+    this.isDone = isDone
+}
+
+fun ScrapeResponse.failed(statusCode: Int): ScrapeResponse {
+    // do not change pageStatusCode
+    refresh(statusCode, pageStatusCode, isDone = true)
+    return this
+}
+
+fun ScrapeResponse.refresh(event: String) {
+    this.event = event
+    this.lastModifiedTime = Instant.now()
+}
+
+fun ScrapeResponse.failed(statusCode: Int, pageStatusCode: Int): ScrapeResponse {
+    refresh(statusCode, pageStatusCode, isDone = true)
+    return this
+}
+
+fun ScrapeResponse.done() {
+    refresh(isDone = true)
+    finishTime = Instant.now()
 }
 
 data class ScrapeStatusRequest(

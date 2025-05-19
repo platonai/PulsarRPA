@@ -103,7 +103,7 @@ Find all links containing /dp/.
     let baseUrl = "http://localhost:8182/api/"
     let commandUrl = baseUrl + "/commands"
     let streamBaseUrl = commandUrl + "/{id}/stream"
-    let revisionUrl = baseUrl + "/commands/revisions"
+    let revisionUrl = baseUrl + "/command-revisions"
 
     function reviseCommand() {
         const commandInput = document.getElementById('commandInput');
@@ -142,7 +142,7 @@ Find all links containing /dp/.
                 return response.text();
             })
             .then(id => {
-                status.textContent = '✅ Submitted. UUID: ' + id;
+                status.textContent = '✅ Submitted. id: ' + id;
                 listenSSE(id);
             })
             .catch(err => {

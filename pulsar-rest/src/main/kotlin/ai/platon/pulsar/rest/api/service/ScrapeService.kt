@@ -6,14 +6,21 @@ import ai.platon.pulsar.rest.api.common.DegenerateXSQLScrapeHyperlink
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
 import ai.platon.pulsar.rest.api.common.ScrapeHyperlink
 import ai.platon.pulsar.rest.api.common.XSQLScrapeHyperlink
+import ai.platon.pulsar.rest.api.entities.CommandStatus
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
+import ai.platon.pulsar.rest.api.service.CommandService.Companion.FLOW_POLLING_INTERVAL
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarSession
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import org.apache.commons.collections4.MultiMapUtils
 import org.slf4j.LoggerFactory
+import org.springframework.http.codec.ServerSentEvent
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
+import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -33,6 +40,13 @@ class ScrapeService(
      * The response status map, the key is the status code, the value is the response's id
      * */
     private val responseStatusIndex = MultiMapUtils.newListValuedHashMap<Int, String>()
+
+    // Create a dedicated dispatcher for long-running command operations
+    private val scrapingDispatcher = Dispatchers.IO.limitedParallelism(10) // Adjust number based on your server capacity
+
+    private val scrapingScope: CoroutineScope = CoroutineScope(
+        scrapingDispatcher + SupervisorJob() + CoroutineName("scraping")
+    )
 
     /**
      * Execute a scrape task and wait until the execution is done,
@@ -73,6 +87,61 @@ class ScrapeService(
             ScrapeResponse(request.id, ResourceStatus.SC_NOT_FOUND, ProtocolStatusCodes.NOT_FOUND)
         }
     }
+
+
+
+
+
+
+
+
+
+    fun streamEvents(id: String): Flux<ServerSentEvent<ScrapeResponse>> {
+        return Flux.create<ScrapeResponse> { sink ->
+            val job = commandStatusFlow(id).onEach {
+                sink.next(it)
+                if (it.isDone) {
+                    sink.complete()
+                }
+            }.catch {
+                logger.error("Error in command status flow", it)
+                sink.error(it)
+            }.launchIn(scrapingScope)
+
+            sink.onDispose {
+                job.cancel()
+            }
+        }.map {
+            ServerSentEvent.builder(it).id(it.id!!).event(it.event).build()
+        }
+    }
+
+    fun commandStatusFlow(uuid: String): Flow<ScrapeResponse> = flow {
+        var lastModifiedTime = Instant.EPOCH
+        while (true) {
+            val status = responseCache[uuid] ?: ScrapeResponse.notFound(uuid)
+            if (lastModifiedTime != status.lastModifiedTime) {
+                emit(status)
+                lastModifiedTime = status.lastModifiedTime
+
+                if (status.isDone) {
+                    break
+                }
+            }
+
+            delay(FLOW_POLLING_INTERVAL)
+        }
+    }
+
+
+
+
+
+
+
+
+
+
 
     /**
      * Get the response count by status code
