@@ -6,6 +6,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public class Command {
+
     public static void main(String[] args) throws Exception {
         var command = """
                 Go to https://www.amazon.com/dp/B0C1H26C46

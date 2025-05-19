@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import os
 import re
 import requests
 import json
@@ -11,8 +12,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 # Default parameters
 SEEDS_FILE = "seeds.txt"
-BATCH_SIZE = 1
-MAX_URLS = 2
+BATCH_SIZE = 5
+MAX_URLS = 20
 BASE_URL = "http://localhost:8182/api/x/s"
 SSE_URL_TEMPLATE = "http://localhost:8182/api/x/{}/stream"
 TIMEOUT = 300  # 5 minutes timeout for SSE connections
@@ -30,10 +31,27 @@ SQL_TEMPLATE = """select
   str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
 from load_and_select('{url} -i 20s -njr 3', 'body');"""
 
+def find_seeds() -> str:
+    """
+    Find the seeds file in the current directory or its parent directories.
+    """
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    seeds_file = os.path.join(current_dir, SEEDS_FILE)
+    if os.path.exists(seeds_file):
+        return seeds_file
+    parent_dir = os.path.dirname(current_dir)
+    while parent_dir and parent_dir != current_dir:
+        seeds_file = os.path.join(parent_dir, SEEDS_FILE)
+        if os.path.exists(seeds_file):
+            return seeds_file
+        current_dir = parent_dir
+        parent_dir = os.path.dirname(current_dir)
+    return None
 
 def parse_args() -> argparse.Namespace:
+    seeds_path = find_seeds()
     parser = argparse.ArgumentParser(description="Async web scraping with SSE")
-    parser.add_argument("-f", dest="seeds_file", default=SEEDS_FILE, help="Seeds file path")
+    parser.add_argument("-f", dest="seeds_file", default=seeds_path, help="Seeds file path")
     parser.add_argument("-b", dest="batch_size", type=int, default=BATCH_SIZE, help="Batch size")
     parser.add_argument("-m", dest="max_urls", type=int, default=MAX_URLS, help="Maximum URLs to process")
     parser.add_argument("-t", dest="timeout", type=int, default=TIMEOUT, help="SSE connection timeout in seconds")
