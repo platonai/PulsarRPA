@@ -1,23 +1,13 @@
 package ai.platon.pulsar.rest.api.controller
 
-import ai.platon.pulsar.common.ResourceStatus
-import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
 import ai.platon.pulsar.rest.api.service.ScrapeService
 import jakarta.servlet.http.HttpServletRequest
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import org.springframework.context.ApplicationContext
 import org.springframework.http.MediaType
-import org.springframework.http.codec.ServerSentEvent
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 @RestController
 @CrossOrigin
@@ -30,8 +20,6 @@ class ScrapeController(
     val applicationContext: ApplicationContext,
     val scrapeService: ScrapeService,
 ) {
-    private val executor: ExecutorService = Executors.newCachedThreadPool()
-
     /**
      * @param sql The sql to execute
      * @return The response
@@ -66,41 +54,12 @@ class ScrapeController(
      * @param uuid The uuid of the task last submitted
      * @return The execution result
      * */
-    @Deprecated("Use getStatus instead")
-    @GetMapping("/status", consumes = [MediaType.ALL_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping("status", consumes = [MediaType.ALL_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
     fun status(
         @RequestParam(value = "uuid") uuid: String,
         httpRequest: HttpServletRequest,
     ): ScrapeResponse {
         val request = ScrapeStatusRequest(uuid)
         return scrapeService.getStatus(request)
-    }
-
-    @GetMapping("/{id}/status", consumes = [MediaType.ALL_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun getStatus(
-        @PathVariable(value = "id") uuid: String,
-        httpRequest: HttpServletRequest,
-    ): ScrapeResponse {
-        val request = ScrapeStatusRequest(uuid)
-        return scrapeService.getStatus(request)
-    }
-
-    @GetMapping(value = ["/{id}/stream"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-    fun streamResult(
-        @PathVariable id: String
-    ): SseEmitter {
-        val emitter = SseEmitter(0L)
-
-        executor.submit {
-            var task = scrapeService.getStatus(ScrapeStatusRequest(id))
-            while (!task.isDone) {
-                emitter.send(task)
-                sleepSeconds(1)
-                task = scrapeService.getStatus(ScrapeStatusRequest(id))
-            }
-            emitter.complete()
-        }
-
-        return emitter
     }
 }

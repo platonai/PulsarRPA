@@ -6,19 +6,16 @@ import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.entities.CommandRequest
-import ai.platon.pulsar.rest.api.entities.PromptRequest
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
-/**
- * [WARNING] Tests run: 14, Failures: 0, Errors: 0, Skipped: 4, Time elapsed: 111.2 s -- in ai.platon.pulsar.rest.api.service.PromptServiceTest
- * */
-@Tag("TimeConsumingTest")
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class CommandServiceTest {
@@ -38,7 +35,7 @@ class CommandServiceTest {
     }
 
     @Test
-    fun `test executeCommand without instructions`() {
+    fun `test executeCommand WITHOUT instructions`() {
         val request = CommandRequest(PRODUCT_DETAIL_URL)
         val status = commandService.executeCommand(request)
         val result = status.commandResult
