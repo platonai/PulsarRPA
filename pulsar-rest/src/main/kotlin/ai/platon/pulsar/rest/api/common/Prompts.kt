@@ -65,11 +65,6 @@ const val JSON_STRING_PLACEHOLDER = "{JSON_STRING}"
 const val CONVERT_RESPONSE_TO_MARKDOWN_PROMPT_TEMPLATE = """
 Convert the following JSON string into a well-structured Markdown document.
 
-## 🔧 JSON to Convert:
-
-```json
-{JSON_STRING}
-
 ## Output requirement
 
 The output must include:
@@ -86,5 +81,10 @@ Present the JSON content as structured Markdown sections:
 
 Include the original JSON string as a fenced code block **at the end** of the Markdown document.
 The JSON section name is **JSON representation**
+
+## 🔧 JSON to Convert:
+
+```json
+{JSON_STRING}
 
 """

@@ -44,7 +44,7 @@ class AiControllerTests : IntegrationTestBase() {
     }
 
     /**
-     * Test [AiController.chat]
+     * Test [AiController.conversationsBackward]
      * */
     @Test
     fun `When chat then LLM responses`() {
@@ -55,7 +55,7 @@ class AiControllerTests : IntegrationTestBase() {
     }
 
     /**
-     * Test [AiController.chatAboutPage]
+     * Test [AiController.chatAboutPageBackward]
      * */
     @Test
     fun `When chat about a page then result is not empty`() {
@@ -66,7 +66,7 @@ class AiControllerTests : IntegrationTestBase() {
     }
 
     /**
-     * Test [AiController.extractFieldsFromPage]
+     * Test [AiController.executeExtractionBackward]
      * */
     @Test
     fun `Test extracting fields from a page`() {

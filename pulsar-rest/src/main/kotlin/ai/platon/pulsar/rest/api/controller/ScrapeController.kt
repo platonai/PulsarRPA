@@ -66,6 +66,7 @@ class ScrapeController(
      * @param uuid The uuid of the task last submitted
      * @return The execution result
      * */
+    @Deprecated("Use getStatus instead")
     @GetMapping("/status", consumes = [MediaType.ALL_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
     fun status(
         @RequestParam(value = "uuid") uuid: String,
@@ -75,27 +76,27 @@ class ScrapeController(
         return scrapeService.getStatus(request)
     }
 
-    @GetMapping("/status/{uuid}", consumes = [MediaType.ALL_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun status2(
-        @PathVariable(value = "uuid") uuid: String,
+    @GetMapping("/{id}/status", consumes = [MediaType.ALL_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun getStatus(
+        @PathVariable(value = "id") uuid: String,
         httpRequest: HttpServletRequest,
     ): ScrapeResponse {
         val request = ScrapeStatusRequest(uuid)
         return scrapeService.getStatus(request)
     }
 
-    @GetMapping(value = ["/stream/{uuid}"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    @GetMapping(value = ["/{id}/stream"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
     fun streamResult(
-        @PathVariable uuid: String
+        @PathVariable id: String
     ): SseEmitter {
         val emitter = SseEmitter(0L)
 
         executor.submit {
-            var task = scrapeService.getStatus(ScrapeStatusRequest(uuid))
+            var task = scrapeService.getStatus(ScrapeStatusRequest(id))
             while (!task.isDone) {
                 emitter.send(task)
                 sleepSeconds(1)
-                task = scrapeService.getStatus(ScrapeStatusRequest(uuid))
+                task = scrapeService.getStatus(ScrapeStatusRequest(id))
             }
             emitter.complete()
         }

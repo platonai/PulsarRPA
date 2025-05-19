@@ -9,7 +9,6 @@ import ai.platon.pulsar.rest.api.common.XSQLScrapeHyperlink
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
-import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.apache.commons.collections4.MultiMapUtils
@@ -21,14 +20,15 @@ import java.util.concurrent.TimeoutException
 
 @Service
 class ScrapeService(
-    val session: PulsarSession,
-    val globalCacheFactory: GlobalCacheFactory,
+    val session: PulsarSession
 ) {
     private val logger = LoggerFactory.getLogger(ScrapeService::class.java)
+
     /**
      * The response cache, the key is the id, the value is the response
      * */
     private val responseCache = ConcurrentSkipListMap<String, ScrapeResponse>()
+
     /**
      * The response status map, the key is the status code, the value is the response's id
      * */

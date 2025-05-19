@@ -46,9 +46,9 @@ open class ScrapeControllerTestBase : IntegrationTestBase() {
     }
 
     @Test
-    fun greetingShouldReturnDefaultMessage() {
+    fun `When say hello then returns hello`() {
         assertThat(
-            restTemplate.getForObject("$baseUri/pulsar-system/hello", String::class.java)
+            restTemplate.getForObject("$baseUri/system/hello", String::class.java)
         ).contains("hello")
     }
 }

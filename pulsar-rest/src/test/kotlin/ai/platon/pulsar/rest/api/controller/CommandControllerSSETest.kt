@@ -24,7 +24,6 @@ class CommandControllerSSETest : ScrapeControllerTestBase() {
             "",
             pageSummaryPrompt = "Summarize the product.",
             mode = "async",
-            outputFormat = "json"
         )
 
         val id = restTemplate.postForObject("$baseUri/commands", request, String::class.java)
@@ -48,7 +47,6 @@ class CommandControllerSSETest : ScrapeControllerTestBase() {
             pageSummaryPrompt = "Summarize the product.",
             dataExtractionRules = "product name, ratings, price",
             mode = "async",
-            outputFormat = "json"
         )
 
         val id = restTemplate.postForObject("$baseUri/commands", request, String::class.java)

@@ -23,8 +23,8 @@ object ChatModelFactory {
         if (!isModelConfigured0(conf)) {
             if (!hasModel(conf)) {
                 val documentPath = "docs/config/llm/llm-config.md"
-                val message = "The LLM is not configured. Please review the documentation for configuration " +
-                        "instructions. $documentPath"
+                val message = "The LLM is not configured. Please review the documentation for " +
+                        "configuration instructions: $documentPath"
                 throttlingLogger.info(message)
             }
             return false

@@ -3,14 +3,13 @@ package ai.platon.pulsar.rest.api.entities
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
-import org.apache.commons.lang3.StringUtils
 import java.time.Instant
 import java.util.*
 
 /**
  * Request for chat
  *
- * @see [ai.platon.pulsar.rest.api.controller.AiController.chat]
+ * @see [ai.platon.pulsar.rest.api.controller.AiController.chatBackward]
  *
  * @property url The page url
  * @property prompt The prompt, e.g. "Tell me something about the page"
@@ -91,6 +90,7 @@ data class W3DocumentRequest(
  * @property onPageReadyActions Actions to perform when the document is fully loaded (e.g., "scroll down", "click button").
  * @property xsql An X-SQL query for structured data extraction, e.g.
  *              "select dom_first_text(dom, '#title') as title, llm_extract(dom, 'price') as price".
+ * @property mode The execution mode, either "sync" (synchronous) or "async" (asynchronous).
  */
 data class CommandRequest(
     var url: String,
@@ -103,9 +103,16 @@ data class CommandRequest(
     var onPageReadyActions: List<String>? = null,
     var xsql: String? = null,
     var mode: String = "sync", // "sync" | "async"
-    var outputFormat: String = "json", // "json" | "markdown"
 )
 
+/**
+ * Command result
+ *
+ * @property pageSummary The summary of the page.
+ * @property fields The extracted fields from the page.
+ * @property links The extracted links from the page.
+ * @property xsqlResultSet The result set from the X-SQL query.
+ */
 data class CommandResult(
     var pageSummary: String? = null,
     var fields: String? = null,
@@ -115,6 +122,14 @@ data class CommandResult(
     var xsqlResultSet: List<Map<String, Any?>>? = null,
 )
 
+/**
+ * Instruct result
+ *
+ * @property name The name of the instruction.
+ * @property statusCode The status code of the instruction result.
+ * @property result The result of the instruction.
+ * @property instruct The instruction text.
+ * */
 data class InstructResult(
     var name: String,
     var statusCode: Int = ResourceStatus.SC_CREATED,
@@ -133,6 +148,20 @@ data class InstructResult(
     }
 }
 
+/**
+ * Command status
+ *
+ * @property id The unique identifier for the command status.
+ * @property statusCode The HTTP status code representing the command status.
+ * @property event The event associated with the command status.
+ * @property isDone Indicates whether the command has been completed.
+ * @property pageStatusCode The HTTP status code representing the page status.
+ * @property pageContentBytes The size of the page content in bytes.
+ * @property message An optional message providing additional information about the command status.
+ * @property request The original command request associated with this status.
+ * @property commandResult The result of the command execution.
+ * @property instructResults A list of results from the instructions executed during the command.
+ * */
 data class CommandStatus(
     val id: String = UUID.randomUUID().toString(),
 
@@ -147,7 +176,7 @@ data class CommandStatus(
 
     var request: CommandRequest? = null,
     var commandResult: CommandResult? = null,
-    var instructResult: MutableList<InstructResult> = mutableListOf()
+    var instructResults: MutableList<InstructResult> = mutableListOf()
 ) {
     val status: String get() = ResourceStatus.getStatusText(statusCode)
     val pageStatus: String get() = ProtocolStatus.getStatusText(pageStatusCode)
@@ -208,7 +237,7 @@ fun CommandStatus.failed(statusCode: Int, pageStatusCode: Int): CommandStatus {
 }
 
 fun CommandStatus.addInstructResult(result: InstructResult) {
-    instructResult.add(result)
+    instructResults.add(result)
 
     val name = result.name
     val commandResult = ensureCommandResult()

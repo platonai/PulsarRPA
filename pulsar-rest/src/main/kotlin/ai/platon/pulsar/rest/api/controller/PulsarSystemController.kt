@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*
  * */
 @RestController
 @CrossOrigin
-@RequestMapping("pulsar-system")
+@RequestMapping("system")
 class PulsarSystemController {
 
     @Autowired

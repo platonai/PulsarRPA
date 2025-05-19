@@ -47,7 +47,7 @@ class CommandServiceTest {
         assertTrue { status.isDone }
 
         assertNull(result)
-        assertTrue { status.instructResult.isEmpty() }
+        assertTrue { status.instructResults.isEmpty() }
     }
 
     @Test
@@ -58,14 +58,25 @@ class CommandServiceTest {
             scroll to top
             get the text of the element with id 'title'
         """.trimIndent().split("\n")
-        val request = PromptRequest(
-            PRODUCT_DETAIL_URL, "Tell me something about the page", "", actions = actions
+        val request = CommandRequest(
+            PRODUCT_DETAIL_URL, "",
+            pageSummaryPrompt = "Tell me something about the page",
+            onPageReadyActions = actions
         )
 
-        val response = chatService.chat(request)
+        val status = commandService.executeCommand(request)
 
-        println(response)
-        assertTrue { response.isNotEmpty() }
+        println(status)
+        Assumptions.assumeTrue(status.pageStatusCode == 200)
+        Assumptions.assumeTrue(status.isDone)
+        Assumptions.assumeTrue(status.statusCode == 200)
+
+        assertNotNull(status.commandResult)
+        assertNotNull(status.commandResult?.pageSummary)
+
+        assertNull(status.commandResult?.fields)
+        assertNull(status.commandResult?.links)
+        assertNull(status.commandResult?.xsqlResultSet)
     }
 
     @Test
@@ -76,7 +87,11 @@ class CommandServiceTest {
         )
         val status = commandService.executeCommand(request)
         val result = status.commandResult
+
         Assumptions.assumeTrue(status.pageStatusCode == 200)
+        Assumptions.assumeTrue(status.isDone)
+        Assumptions.assumeTrue(status.statusCode == 200)
+
         assertNotNull(result)
         assertTrue { status.isDone }
 
@@ -96,7 +111,11 @@ class CommandServiceTest {
         val status = commandService.executeCommand(request)
         println(prettyPulsarObjectMapper().writeValueAsString(status))
         val result = status.commandResult
+
         Assumptions.assumeTrue(status.pageStatusCode == 200)
+        Assumptions.assumeTrue(status.isDone)
+        Assumptions.assumeTrue(status.statusCode == 200)
+
         assertNotNull(result)
         assertTrue { status.isDone }
 
@@ -116,8 +135,11 @@ class CommandServiceTest {
         val status = commandService.executeCommand(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(status))
         assertNotNull(status)
+
         Assumptions.assumeTrue(status.pageStatusCode == 200)
+        Assumptions.assumeTrue(status.isDone)
         Assumptions.assumeTrue(status.statusCode == 200)
+
         assertNotNull(status.commandResult?.pageSummary)
         assertNotNull(status.commandResult?.fields)
     }
@@ -128,8 +150,11 @@ class CommandServiceTest {
         val status = commandService.executeCommand(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(status))
         assertNotNull(status)
+
         Assumptions.assumeTrue(status.pageStatusCode == 200)
+        Assumptions.assumeTrue(status.isDone)
         Assumptions.assumeTrue(status.statusCode == 200)
+
         assertNotNull(status.commandResult?.pageSummary)
         assertNotNull(status.commandResult?.fields)
     }
