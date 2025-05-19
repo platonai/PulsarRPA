@@ -458,7 +458,7 @@ val Node.isVisible: Boolean
         return when {
             hasHiddenFlag || hasOverflowHiddenFlag -> false
             this is Element -> isVisibleElement(this)
-            this is TextNode -> isVisibleElement(parent())
+            this is TextNode -> isVisibleElement(bestElement)
             else -> true
         }
     }

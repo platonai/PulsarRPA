@@ -25,16 +25,28 @@ class MockAICommandController {
     fun submitCommand(@RequestBody command: String): ScrapeResponse {
         val uuid = UUID.randomUUID().toString()
         val response = ScrapeResponse()
-        response.uuid = uuid
+        response.id = uuid
         response.statusCode = ResourceStatus.SC_PROCESSING
         tasks[uuid] = response
         executor.submit { processCommand(uuid, command) }
         return response
     }
 
+    // Simulate command refine
+    @PostMapping(value = ["/refine"], consumes = [MediaType.TEXT_PLAIN_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun refineCommand(@RequestBody command: String): ScrapeResponse {
+        val uuid = UUID.randomUUID().toString()
+        val response = ScrapeResponse()
+        response.id = uuid
+        response.statusCode = ResourceStatus.SC_PROCESSING
+        tasks[uuid] = response
+        refineCommand(uuid, command)
+        return response
+    }
+
     // SSE 推送任务状态，返回 ScrapeResponse
     @GetMapping(value = ["/stream/{uuid}"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-    fun streamResult(@PathVariable uuid: String): SseEmitter {
+    fun streamResultForCommand(@PathVariable uuid: String): SseEmitter {
         val emitter = SseEmitter(0L) // 无超时
         executor.submit {
             try {
@@ -42,7 +54,7 @@ class MockAICommandController {
                     val resp = tasks[uuid]
                     if (resp == null) {
                         val errorResp = ScrapeResponse()
-                        errorResp.uuid = uuid
+                        errorResp.id = uuid
                         errorResp.statusCode = ResourceStatus.SC_INTERNAL_SERVER_ERROR
                         emitter.send(errorResp)
                         emitter.complete()
@@ -63,7 +75,7 @@ class MockAICommandController {
             } catch (e: Exception) {
                 try {
                     val errorResp = ScrapeResponse()
-                    errorResp.uuid = uuid
+                    errorResp.id = uuid
                     errorResp.statusCode = ResourceStatus.SC_INTERNAL_SERVER_ERROR
                     emitter.send(errorResp)
                 } catch (ignored: Exception) {}
@@ -71,6 +83,27 @@ class MockAICommandController {
             }
         }
         return emitter
+    }
+
+    // 模拟任务执行过程，更新 ScrapeResponse
+    private fun refineCommand(uuid: String, command: String) {
+        try {
+            Thread.sleep(5000)
+            val resp = tasks[uuid]
+            if (resp != null) {
+                resp.resultSet = listOf(
+                    mapOf(
+                        "refinedCommand" to "Refined:\n$command",
+                    )
+                )
+                resp.statusCode = ResourceStatus.SC_OK
+            }
+        } catch (e: Exception) {
+            val resp = tasks[uuid]
+            if (resp != null) {
+                resp.statusCode = ResourceStatus.SC_INTERNAL_SERVER_ERROR
+            }
+        }
     }
 
     // 模拟任务执行过程，更新 ScrapeResponse

@@ -15,36 +15,48 @@ const val PLACEHOLDER_REQUEST = "{PLACEHOLDER_REQUEST}"
 const val PLACEHOLDER_PAGE_CONTENT = "{PLACEHOLDER_PAGE_CONTENT}"
 
 const val API_REQUEST_COMMAND_CONVERSION_TEMPLATE = """
-Interpret the following spoken or loosely structured request and convert it into a well-formed JSON object 
-that describes how to interact with a web page.
+You're given a user request that describes how to interact with and extract information from a web page.
+Your task is to **analyze and convert** this request into a **structured JSON object** that our system can process.
 
-The input may contain informal, spoken, or multilingual instructions.
+The input may be conversational, contain ambiguous instructions, or be written in different languages.
 
-```text
-{PLACEHOLDER_REQUEST}
-```
-
-Use the following JSON format:
+Produce a JSON object with these possible fields:
 
 ```json
 {
-  "url": "{PLACEHOLDER_URL}",                       // Keep the URL unchanged
-  "pageSummaryPrompt": "Summarize or analyze...",   // (Optional) Natural-language prompt about the page content
-  "dataExtractionRules": "Extract fields like...",  // (Optional) What structured information to extract from the page
-  "linkExtractionRules": "Extract links like...",   // (Optional) What links to extract from the page
-  "onPageReadyActions": [                           // (Optional) Actions to perform after page load in the browser
+  "url": "{PLACEHOLDER_URL}",
+  "pageSummaryPrompt": "Instructions for summarizing the page...",
+  "dataExtractionRules": "Instructions for extracting specific fields...",
+  "linkExtractionRules": "https://.+",
+  "onPageReadyActions": [
     "scroll down",
     "click 'Sign In' button"
   ]
 }
 ```
 
-Notes:
+### 🔧 Guidelines:
 
-- Keep the URL unchanged and be {PLACEHOLDER_URL}.
-- Handle vague or partial commands gracefully.
-- Normalize non-English input where possible.
-- If some fields are not mentioned, leave them out or set them to null.
+* **Keep the URL placeholder** as `{PLACEHOLDER_URL}` exactly as shown.
+* Only include fields that are relevant to the user's request.
+* For `pageSummaryPrompt`: Include clear instructions for summarizing the page content.
+* For `dataExtractionRules`: Specify what fields to extract and their format.
+* For `linkExtractionRules`: Define a Kotlin-compatible regex pattern that matches exactly one valid URL.
+  * * Match the input's link extraction requirement.
+  * * Match only one full URL (not multiple in a string).
+  * * Be compatible with Kotlin's Regex class.
+  * * Support both HTTP and HTTPS schemes.
+  * * Optionally include path, query, and fragment.
+  * * Return only the pattern string (no explanation).
+
+* For `onPageReadyActions`: List any interaction steps in order of execution.
+* Convert vague requests into specific, actionable instructions.
+
+### 📥 Input:
+
+```text
+{PLACEHOLDER_REQUEST}
+```
 
 """
 

@@ -1,7 +1,9 @@
 package ai.platon.pulsar.persist
 
+import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
+import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes.INCOMPATIBLE_CODE_START
 import java.util.*
 
 class ProtocolStatus {
@@ -225,7 +227,6 @@ class ProtocolStatus {
             minorCodes[ProtocolStatusCodes.SCRIPT_TIMEOUT] = "ScriptTimeout"
         }
 
-        
         fun box(protocolStatus: GProtocolStatus): ProtocolStatus {
             return ProtocolStatus(protocolStatus)
         }
@@ -234,11 +235,21 @@ class ProtocolStatus {
             return majorCodes.getOrDefault(code.toShort(), "unknown")
         }
 
+        @Deprecated("Use getStatusText instead for consistency with ResourceStatus", ReplaceWith(expression = "getStatusText"))
         fun getMinorName(code: Int): String {
             return minorCodes.getOrDefault(code, "unknown")
         }
 
-        
+        /**
+         * Keep consistency with [ai.platon.pulsar.common.ResourceStatus]
+         * */
+        fun getStatusText(code: Int): String {
+            return when {
+                code < INCOMPATIBLE_CODE_START -> ResourceStatus.getStatusText(code)
+                else -> minorCodes.getOrDefault(code, "unknown")
+            }
+        }
+
         fun retry(scope: RetryScope?, reason: Any): ProtocolStatus {
             val reasonString = if (reason is Exception) {
                 reason.javaClass.simpleName

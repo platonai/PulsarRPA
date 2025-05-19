@@ -4,7 +4,7 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.rest.api.entities.PromptRequest
-import ai.platon.pulsar.rest.api.entities.PromptRequestL2
+import ai.platon.pulsar.rest.api.entities.CommandRequest
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,7 +52,7 @@ class LoadService {
         return page to document
     }
 
-    fun loadDocument(request: PromptRequestL2): Pair<WebPage, FeaturedDocument> {
+    fun loadDocument(request: CommandRequest): Pair<WebPage, FeaturedDocument> {
         val args = request.args ?: ""
         val options = session.options(args)
         val be = options.eventHandlers.browseEventHandlers

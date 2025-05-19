@@ -54,8 +54,9 @@ data class Website(val domain: String, val name: String)
 fun createLink(ele: Element, keepMetadata: Boolean = true, lazy: Boolean = false): Link {
     val link = Link()
 
-    if (!ele.tagName().equals("a", ignoreCase = true))
+    if (!ele.tagName().equals("a", ignoreCase = true)) {
         return link
+    }
 
     val image = ele.getElementsByTag("img").first()
     if (image != null) {
@@ -64,7 +65,7 @@ fun createLink(ele: Element, keepMetadata: Boolean = true, lazy: Boolean = false
 
     link.text = sniffLinkText(ele, image)
     val href = ele.absUrl("href")
-    if (!href.isNullOrBlank()) {
+    if (href.isNotBlank()) {
         link.attributes["href"] = href
     }
 

@@ -1,8 +1,5 @@
 package ai.platon.pulsar.common
 
-import java.util.*
-
-
 /**
  * Keep consistent with standard http status.
  *

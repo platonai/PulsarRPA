@@ -22,27 +22,25 @@ class ScrapeControllerSSETest : ScrapeControllerTestBase() {
         val url = requireNotNull(urls[pageType])
         val sql = requireNotNull(sqlTemplates[pageType]).createSQL(url)
 
-        val uuid = restTemplate.postForObject("$baseUri/x/s", sql, String::class.java)
-        println("UUID: $uuid")
-        assertNotNull(uuid)
+        val id = restTemplate.postForObject("$baseUri/x/s", sql, String::class.java)
+        println("id: $id")
+        assertNotNull(id)
 
-        receiveSSE(uuid)
+        receiveSSE(id)
     }
 
-    private fun receiveSSE(uuid: String) {
+    private fun receiveSSE(id: String) {
         val client = OkHttpClient.Builder()
             .readTimeout(0, TimeUnit.MILLISECONDS) // Disable read timeout for SSE
             .build()
 
         // 2. Connect to SSE stream
         val sseRequest = Request.Builder()
-            .url("$baseUri/x/stream/$uuid")
+            .url("$baseUri/x/stream/$id")
             .build()
 
         client.newCall(sseRequest).execute().body?.charStream()?.use { inputStream ->
-            val reader = BufferedReader(inputStream)
-
-            reader.lineSequence().forEach { line ->
+            BufferedReader(inputStream).lineSequence().forEach { line ->
                 if (line.startsWith("data:")) {
                     val data = line.removePrefix("data:").trim()
                     println("[${LocalTime.now()}] $data")

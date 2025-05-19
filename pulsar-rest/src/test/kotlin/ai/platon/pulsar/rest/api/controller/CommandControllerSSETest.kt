@@ -1,0 +1,81 @@
+package ai.platon.pulsar.rest.api.controller
+
+import ai.platon.pulsar.rest.api.entities.CommandRequest
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.joda.time.LocalTime
+import org.junit.jupiter.api.Test
+import java.io.BufferedReader
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertNotNull
+
+class CommandControllerSSETest : ScrapeControllerTestBase() {
+
+    /**
+     * Test [CommandController.submitCommand]
+     * Test [CommandController.streamEvents]
+     * */
+    @Test
+    fun `Test submitCommand with pageSummaryPrompt + SSE`() {
+        val pageType = "productDetailPage"
+        val url = requireNotNull(urls[pageType])
+
+        val request = CommandRequest(url,
+            "",
+            pageSummaryPrompt = "Summarize the product.",
+            mode = "async",
+            outputFormat = "json"
+        )
+
+        val id = restTemplate.postForObject("$baseUri/commands", request, String::class.java)
+        println("id: $id")
+        assertNotNull(id)
+
+        receiveSSE(id)
+    }
+
+    /**
+     * Test [CommandController.submitCommand]
+     * Test [CommandController.streamEvents]
+     * */
+    @Test
+    fun `Test submitCommand with pageSummaryPrompt, dataExtractionRules + SSE`() {
+        val pageType = "productDetailPage"
+        val url = requireNotNull(urls[pageType])
+
+        val request = CommandRequest(url,
+            "",
+            pageSummaryPrompt = "Summarize the product.",
+            dataExtractionRules = "product name, ratings, price",
+            mode = "async",
+            outputFormat = "json"
+        )
+
+        val id = restTemplate.postForObject("$baseUri/commands", request, String::class.java)
+        println("id: $id")
+        assertNotNull(id)
+
+        receiveSSE(id)
+    }
+
+    private fun receiveSSE(id: String) {
+        val client = OkHttpClient.Builder()
+            .readTimeout(0, TimeUnit.MILLISECONDS) // Disable read timeout for SSE
+            .build()
+
+        // 2. Connect to SSE stream
+        val sseRequest = Request.Builder()
+            .url("$baseUri/commands/$id/stream")
+            .build()
+
+        client.newCall(sseRequest).execute().body?.charStream()?.use { inputStream ->
+            BufferedReader(inputStream).lineSequence().forEach { line ->
+                if (line.startsWith("data:")) {
+                    val data = line.removePrefix("data:").trim()
+                    println("[${LocalTime.now()}] $data")
+                }
+            }
+        }
+    }
+}
+

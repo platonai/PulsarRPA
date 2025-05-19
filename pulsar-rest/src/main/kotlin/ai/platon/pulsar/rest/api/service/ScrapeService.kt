@@ -26,11 +26,11 @@ class ScrapeService(
 ) {
     private val logger = LoggerFactory.getLogger(ScrapeService::class.java)
     /**
-     * The response cache, the key is the uuid, the value is the response
+     * The response cache, the key is the id, the value is the response
      * */
     private val responseCache = ConcurrentSkipListMap<String, ScrapeResponse>()
     /**
-     * The response status map, the key is the status code, the value is the response's uuid
+     * The response status map, the key is the status code, the value is the response's id
      * */
     private val responseStatusIndex = MultiMapUtils.newListValuedHashMap<Int, String>()
 
@@ -59,7 +59,7 @@ class ScrapeService(
     fun submitJob(request: ScrapeRequest): String {
         val hyperlink = createScrapeHyperlink(request)
         responseCache[hyperlink.uuid] = hyperlink.response
-        hyperlink.response.uuid = hyperlink.uuid
+        hyperlink.response.id = hyperlink.uuid
         require(session is BasicPulsarSession)
         session.submit(hyperlink)
         return hyperlink.uuid
@@ -69,8 +69,8 @@ class ScrapeService(
      * Get the response
      * */
     fun getStatus(request: ScrapeStatusRequest): ScrapeResponse {
-        return responseCache.computeIfAbsent(request.uuid) {
-            ScrapeResponse(request.uuid, ResourceStatus.SC_NOT_FOUND, ProtocolStatusCodes.NOT_FOUND)
+        return responseCache.computeIfAbsent(request.id) {
+            ScrapeResponse(request.id, ResourceStatus.SC_NOT_FOUND, ProtocolStatusCodes.NOT_FOUND)
         }
     }
 

@@ -27,71 +27,38 @@ import ai.platon.pulsar.common.ResourceStatus
  * @author vincent
  */
 object ProtocolStatusCodes {
+
+    // The following codes are compatible with HTTP status codes
+    const val SC_OK: Int = ResourceStatus.SC_OK
+    const val SC_CREATED: Int = ResourceStatus.SC_CREATED
+    const val SC_MOVED_PERMANENTLY: Int = ResourceStatus.SC_MOVED_PERMANENTLY
+    const val SC_MOVED_TEMPORARILY: Int = ResourceStatus.SC_MOVED_TEMPORARILY
+    const val SC_NOT_MODIFIED: Int = ResourceStatus.SC_NOT_MODIFIED
+    const val SC_UNAUTHORIZED: Int = ResourceStatus.SC_UNAUTHORIZED
+    const val SC_NOT_FOUND: Int = ResourceStatus.SC_NOT_FOUND
+    const val SC_PRECONDITION_FAILED: Int = ResourceStatus.SC_PRECONDITION_FAILED
+    const val SC_REQUEST_TIMEOUT: Int = ResourceStatus.SC_REQUEST_TIMEOUT
+    const val SC_GONE: Int = ResourceStatus.SC_GONE
+
     //
-    // The following codes are compatible with HTTP status codes, close but may not equals to HTTP status code
-    // @see {https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
+    // The following codes are deprecated and keep for backward compatibility
     //
-    /**
-     * Resource is OK
-     */
+
     const val SUCCESS_OK: Int = ResourceStatus.SC_OK
-
-    /**
-     * Resource is created
-     */
     const val CREATED: Int = ResourceStatus.SC_CREATED
-
-    /**
-     * Resource has moved permanently. New url should be found in args.
-     */
     const val MOVED_PERMANENTLY: Int = ResourceStatus.SC_MOVED_PERMANENTLY
-
-    /**
-     * Resource has moved temporarily. New url should be found in args.
-     */
     const val MOVED_TEMPORARILY: Int = ResourceStatus.SC_MOVED_TEMPORARILY
-
-    /**
-     * Unchanged since the last fetch.
-     */
     const val NOT_MODIFIED: Int = ResourceStatus.SC_NOT_MODIFIED
-
-    /**
-     * Access denied - authorization required, but missing/incorrect.
-     */
     const val UNAUTHORIZED: Int = ResourceStatus.SC_UNAUTHORIZED
-
-    /**
-     * 404 Not Found
-     * The server can not find the requested resource. In the browser, this means the URL is not recognized.
-     * In an API, this can also mean that the endpoint is valid but the resource itself does not exist.
-     * Servers may also send this response instead of 403 to hide the existence of a resource from an unauthorized client.
-     * This response code is probably the most famous one due to its frequent occurrence on the web.
-     */
     const val NOT_FOUND: Int = ResourceStatus.SC_NOT_FOUND
-
-    /**
-     * The client has indicated preconditions in its headers which the server does not meet.
-     */
     const val PRECONDITION_FAILED: Int = ResourceStatus.SC_PRECONDITION_FAILED
-
-    /**
-     * Find the target host timed out.
-     */
     const val REQUEST_TIMEOUT: Int = ResourceStatus.SC_REQUEST_TIMEOUT
-
-    /**
-     * 410 Gone:
-     * This response is sent when the requested content has been permanently deleted from server,
-     * with no forwarding address. Clients are expected to remove their caches and links to the resource.
-     * The HTTP specification intends this status code to be used for "limited-time, promotional services".
-     * APIs should not feel compelled to indicate resources that have been deleted with this status code.
-     */
     const val GONE: Int = ResourceStatus.SC_GONE
 
     //
     // The following codes are NOT compatible with HTTP status codes
     //
+
     /**
      * Code >= `INCOMPATIBLE_CODE_START` are NOT compatible with HTTP status codes
      */

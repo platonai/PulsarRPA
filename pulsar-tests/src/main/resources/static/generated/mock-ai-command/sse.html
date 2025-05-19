@@ -80,23 +80,6 @@
 </head>
 <body>
 <div class="container">
-    <form id="llmConfigForm" style="background:#f4f7fa;border:1px solid #e0e6ed;border-radius:8px;padding:18px 18px 8px 18px;margin-bottom:24px;">
-        <h3 style="color:#2a5d9f;">🛠️ LLM Configuration</h3>
-        <div style="margin-bottom:10px;">
-            <label for="llmApiKey" style="display:inline-block;width:140px;">🔑 openai.api.key</label>
-            <input id="llmApiKey" type="text" style="width:320px;border-radius:6px;border:1px solid #bfc9d1;padding:6px;" placeholder="sk-..." />
-        </div>
-        <div style="margin-bottom:10px;">
-            <label for="llmModelName" style="display:inline-block;width:140px;">🧠 openai.model.name</label>
-            <input id="llmModelName" type="text" style="width:320px;border-radius:6px;border:1px solid #bfc9d1;padding:6px;" placeholder="gpt-4o" />
-        </div>
-        <div style="margin-bottom:10px;">
-            <label for="llmBaseUrl" style="display:inline-block;width:140px;">🌐 openai.base.url</label>
-            <input id="llmBaseUrl" type="text" style="width:320px;border-radius:6px;border:1px solid #bfc9d1;padding:6px;" placeholder="https://api.openai.com/v1" />
-        </div>
-        <button type="button" onclick="saveLlmConfig()" style="margin-top:6px;">💾 Save Config</button>
-        <span id="llmConfigStatus" style="margin-left:16px;color:#2a5d9f;"></span>
-    </form>
     <h2>🚀 Submit Command</h2>
     <label for="commandInput">🤖 What do you want me to do?</label>
     <textarea id="commandInput" rows="6" cols="60">
@@ -107,7 +90,8 @@ Summarize the product.
 Extract: product name, price, ratings.
 Find all links containing /dp/.
     </textarea><br>
-    <button onclick="submitCommand()">✨ Submit</button>
+    <button onclick="refineCommand()">✨ Refine</button>
+    <button onclick="submitCommand()" style="float: right;">🚀 Submit</button>
     <div id="status"></div>
     <pre id="events"></pre>
     <div id="finalResultContainer" style="display:none;margin-top:18px;">
@@ -116,6 +100,30 @@ Find all links containing /dp/.
     </div>
 </div>
 <script>
+    function refineCommand() {
+        const command = document.getElementById('commandInput').value.trim();
+        const status = document.getElementById('status');
+        const events = document.getElementById('events');
+        status.textContent = '⏳ Refining...';
+        events.textContent = '';
+        fetch('http://localhost:8182/mock/api/ai/command/refine', {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: command
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('❌ Failed to refine command');
+                return res.json();
+            })
+            .then(resp => {
+                status.textContent = '✅ Refined. UUID: ' + resp.uuid;
+                listenSSE(resp.uuid);
+            })
+            .catch(err => {
+                status.textContent = '❌ Error: ' + err.message;
+            });
+    }
+
     function submitCommand() {
         const command = document.getElementById('commandInput').value.trim();
         const status = document.getElementById('status');
@@ -141,6 +149,7 @@ Find all links containing /dp/.
     }
 
     function listenSSE(uuid) {
+        const commandInput = document.getElementById('commandInput');
         const status = document.getElementById('status');
         const events = document.getElementById('events');
         const finalResultContainer = document.getElementById('finalResultContainer');
@@ -158,7 +167,14 @@ Find all links containing /dp/.
                     status.textContent = 'Finished: OK';
                     es.close();
                     finalResultContainer.style.display = '';
-                    finalResult.textContent = JSON.stringify(data, null, 2);
+
+                    const refinedCommand = data['resultSet'][0]['refinedCommand'];
+                    if (refinedCommand) {
+                        commandInput.textContent = refinedCommand;
+                    } else {
+                        finalResult.textContent = JSON.stringify(data, null, 2);
+                    }
+
                 } else if (data.statusCode === 500) {
                     status.textContent = 'Finished: ERROR';
                     es.close();

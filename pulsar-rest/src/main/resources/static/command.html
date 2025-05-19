@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>MockAICommandController SSE Client</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f7f9fa;
+            color: #222;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 820px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 32px 28px 24px 28px;
+        }
+        h2 {
+            margin-top: 0;
+            color: #2a5d9f;
+            letter-spacing: 1px;
+        }
+        #commandInput {
+            width: 100%;
+            font-size: 0.95em;
+            border-radius: 8px;
+            border: 1px solid #bfc9d1;
+            padding: 10px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            background: #f4f7fa;
+            transition: border 0.2s;
+        }
+        #commandInput:focus {
+            border: 1.5px solid #2a5d9f;
+            outline: none;
+            background: #fff;
+        }
+        button {
+            background: linear-gradient(90deg, #2a5d9f 60%, #4e8ad1 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 28px;
+            font-size: 1.1em;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(42,93,159,0.08);
+            margin-bottom: 18px;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #1d3e6b 60%, #2a5d9f 100%);
+            box-shadow: 0 4px 16px rgba(42,93,159,0.13);
+        }
+        #status {
+            margin: 10px 0 8px 0;
+            font-weight: bold;
+            color: #2a5d9f;
+            min-height: 24px;
+        }
+        #events {
+            background: #f4f7fa;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 14px;
+            min-height: 120px;
+            font-size: 0.7em;
+            color: grey;
+            white-space: pre;
+            margin-top: 0;
+            box-sizing: border-box;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🚀 PulsarRPA Commander</h2>
+    <label for="commandInput">🤖 What do you want me to do?</label>
+    <textarea id="commandInput" rows="6" cols="60">
+Go to https://www.amazon.com/dp/B0C1H26C46
+After page load: scroll to the middle.
+
+Summarize the product.
+Extract: product name, price, ratings.
+Find all links containing /dp/.
+    </textarea><br>
+    <button onclick="reviseCommand()">✨ Refine</button>
+    <button onclick="submitCommand()" style="float: right;">🚀 Submit</button>
+    <div id="status"></div>
+    <pre id="events"></pre>
+    <div id="finalResultContainer" style="display:none;margin-top:18px;">
+        <h3 style="color:#2a5d9f;">🎯 Final Result</h3>
+        <pre id="finalResult" style="background:#f4f7fa;border:1px solid #e0e6ed;border-radius:8px;padding:14px;font-size:1em;color:#222;white-space:pre;overflow-x:auto;"></pre>
+    </div>
+</div>
+<script>
+    let baseUrl = "http://localhost:8182/api/"
+    let commandUrl = baseUrl + "/commands"
+    let streamBaseUrl = commandUrl + "/{id}/stream"
+    let revisionUrl = baseUrl + "/commands/revisions"
+
+    function reviseCommand() {
+        const commandInput = document.getElementById('commandInput');
+        const command = document.getElementById('commandInput').value.trim();
+        const status = document.getElementById('status');
+        const events = document.getElementById('events');
+        status.textContent = '⏳ Refining...';
+        events.textContent = '';
+        fetch(revisionUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: command
+        })
+            .then(res => res.text())
+            .then(text => {
+                commandInput.value = text;
+            })
+            .catch(err => {
+                status.textContent = '❌ Error: ' + err.message;
+            });
+    }
+
+    function submitCommand() {
+        const command = document.getElementById('commandInput').value.trim();
+        const status = document.getElementById('status');
+        const events = document.getElementById('events');
+        status.textContent = '⏳ Submitting...';
+        events.textContent = '';
+        fetch(commandUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: command
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('❌ Failed to submit command');
+                return response.text();
+            })
+            .then(id => {
+                status.textContent = '✅ Submitted. UUID: ' + id;
+                listenSSE(id);
+            })
+            .catch(err => {
+                status.textContent = '❌ Error: ' + err.message;
+            });
+    }
+
+    function listenSSE(id) {
+        const commandInput = document.getElementById('commandInput');
+        const status = document.getElementById('status');
+        const events = document.getElementById('events');
+        const finalResultContainer = document.getElementById('finalResultContainer');
+        const finalResult = document.getElementById('finalResult');
+
+        const url = streamBaseUrl.replace("{id}", id);
+        const es = new EventSource(url);
+        es.onmessage = function(event) {
+            let lines = events.textContent.split('\n').filter(Boolean);
+            lines.push(event.data);
+            if (lines.length > 5) lines = lines.slice(-5);
+            events.textContent = lines.join('\n') + '\n';
+            try {
+                const data = JSON.parse(event.data);
+                if (data.statusCode === 200) {
+                    status.textContent = 'Finished: OK';
+                    es.close();
+                    finalResultContainer.style.display = '';
+
+                    const refinedCommand = data['resultSet']?.[0]?.['refinedCommand'];
+                    if (refinedCommand) {
+                        commandInput.textContent = refinedCommand;
+                    } else {
+                        finalResult.textContent = JSON.stringify(data, null, 2);
+                    }
+                } else if (data.statusCode === 500) {
+                    status.textContent = 'Finished: ERROR';
+                    es.close();
+                } else if (data.statusCode === 102) {
+                    status.textContent = 'Processing...';
+                }
+            } catch (e) {
+                status.textContent = 'Parse error: ' + e;
+            }
+        };
+        es.onerror = function() {
+            status.textContent = 'SSE connection error or closed.';
+            es.close();
+        };
+    }
+</script>
+</body>
+</html>
