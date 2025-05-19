@@ -115,7 +115,7 @@ Visit amazon.com/dp/B0C1H26C46
 Page summary prompt: Provide a brief introduction of this product.
         """.trimIndent()
 
-        val request = conversationService.convertPromptToRequest(prompt)
+        val request = conversationService.convertSpokenCommandToCommandRequest(prompt)
         assertNull(request)
     }
 
@@ -152,7 +152,7 @@ Page summary prompt: Provide a brief introduction of this product.
     fun `test prompt conversion to request`() {
         val prompt = API_COMMAND_PROMPT1
 
-        val request = conversationService.convertPromptToRequest(prompt)
+        val request = conversationService.convertSpokenCommandToCommandRequest(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(request))
         assertNotNull(request)
         verifyPromptRequestL2(request)
@@ -162,7 +162,7 @@ Page summary prompt: Provide a brief introduction of this product.
     fun `test prompt conversion to request 2`() {
         val prompt = API_COMMAND_PROMPT2
 
-        val request = conversationService.convertPromptToRequest(prompt)
+        val request = conversationService.convertSpokenCommandToCommandRequest(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(request))
         assertNotNull(request)
         verifyPromptRequestL2(request)
@@ -172,7 +172,7 @@ Page summary prompt: Provide a brief introduction of this product.
     fun `test prompt conversion to request 3`() {
         val prompt = API_COMMAND_PROMPT3
 
-        val request = conversationService.convertPromptToRequest(prompt)
+        val request = conversationService.convertSpokenCommandToCommandRequest(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(request))
         assertNotNull(request)
         verifyPromptRequestL2(request)

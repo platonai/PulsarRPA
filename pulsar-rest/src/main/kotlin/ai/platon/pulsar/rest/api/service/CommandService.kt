@@ -115,7 +115,7 @@ class CommandService(
             return CommandStatus.failed(ResourceStatus.SC_BAD_REQUEST)
         }
 
-        val request2 = conversationService.convertPromptToRequest(request)
+        val request2 = conversationService.convertSpokenCommandToCommandRequest(request)
         val status = createCachedCommandStatus(request2)
         if (request2 == null) {
             status.failed(ResourceStatus.SC_EXPECTATION_FAILED)
@@ -247,7 +247,7 @@ class CommandService(
                 val result = InstructResult.ok("links", links.joinToString("\n"))
                 status.addInstructResult(result)
             }
-            logger.info("Use regex to extract links. {} {} links", linkExtractionRules, links.size)
+            logger.info("Use regex to extract links. /{}/ {} links", linkExtractionRules, links.size)
         }
     }
 

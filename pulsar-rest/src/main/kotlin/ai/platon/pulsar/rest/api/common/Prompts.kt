@@ -39,6 +39,7 @@ Produce a JSON object with these possible fields:
 
 * **Keep the URL placeholder** as `{PLACEHOLDER_URL}` exactly as shown.
 * Only include fields that are relevant to the user's request.
+* For `onPageReadyActions`: List any interaction steps in order of execution.
 * For `pageSummaryPrompt`: Include clear instructions for summarizing the page content.
 * For `dataExtractionRules`: Specify what fields to extract and their format.
 * For `linkExtractionRules`: Define a Kotlin-compatible regex pattern that matches exactly one valid URL.
@@ -48,8 +49,7 @@ Produce a JSON object with these possible fields:
   * * Support both HTTP and HTTPS schemes.
   * * Optionally include path, query, and fragment.
   * * Return only the pattern string (no explanation).
-
-* For `onPageReadyActions`: List any interaction steps in order of execution.
+  
 * Convert vague requests into specific, actionable instructions.
 
 ### 📥 Input:

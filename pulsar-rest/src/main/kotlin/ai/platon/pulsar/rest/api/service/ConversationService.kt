@@ -15,23 +15,6 @@ import org.springframework.stereotype.Service
 class ConversationService(
     val session: PulsarSession
 ) {
-    fun convertAPIRequestCommandToJSON(request: String, url: String): String? {
-        require(URLUtils.isStandard(url)) { "URL must not be blank" }
-
-        // Replace the URL in the request with a placeholder, so the result from the LLM can be cached.
-        val processedRequest = request.replace(url, PLACEHOLDER_URL)
-        val prompt = API_REQUEST_COMMAND_CONVERSION_TEMPLATE
-            .replace(PLACEHOLDER_REQUEST, processedRequest)
-
-        var content = session.chat(prompt).content
-        if (content.isBlank()) {
-            return null
-        }
-        content = content.replace(PLACEHOLDER_URL, url)
-
-        return JsonExtractor.extractJsonBlocks(content).firstOrNull()
-    }
-
     /**
      * Converts a request string into a PromptRequestL2 object.
      *
@@ -41,7 +24,7 @@ class ConversationService(
      * @param request The request string containing a URL.
      * @return A PromptRequestL2 object if a URL is found in the request string, null otherwise.
      * */
-    fun convertPromptToRequest(request: String): CommandRequest? {
+    fun convertSpokenCommandToCommandRequest(request: String): CommandRequest? {
         if (request.isBlank()) {
             return null
         }
@@ -60,6 +43,23 @@ class ConversationService(
         val request2: CommandRequest = pulsarObjectMapper().readValue(json)
         request2.url = url
         return request2
+    }
+
+    fun convertAPIRequestCommandToJSON(request: String, url: String): String? {
+        require(URLUtils.isStandard(url)) { "URL must not be blank" }
+
+        // Replace the URL in the request with a placeholder, so the result from the LLM can be cached.
+        val processedRequest = request.replace(url, PLACEHOLDER_URL)
+        val prompt = API_REQUEST_COMMAND_CONVERSION_TEMPLATE
+            .replace(PLACEHOLDER_REQUEST, processedRequest)
+
+        var content = session.chat(prompt).content
+        if (content.isBlank()) {
+            return null
+        }
+        content = content.replace(PLACEHOLDER_URL, url)
+
+        return JsonExtractor.extractJsonBlocks(content).firstOrNull()
     }
 
     fun convertResponseToMarkdown(jsonResponse: String): String {

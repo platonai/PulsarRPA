@@ -133,13 +133,12 @@ data class W3DocumentRequest(
 data class CommandRequest(
     var url: String,
     var args: String? = null,
-    var spokenLanguage: String? = null,
+    var onPageReadyActions: List<String>? = null,
     var pageSummaryPrompt: String? = null,
     var dataExtractionRules: String? = null,
     var linkExtractionRules: String? = null,
-    var richText: Boolean? = null,
-    var onPageReadyActions: List<String>? = null,
     var xsql: String? = null,
+    var richText: Boolean? = null,
     var mode: String = "sync", // "sync" | "async"
 )
 

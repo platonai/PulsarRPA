@@ -35,6 +35,26 @@ class CommandController(
         }
     }
 
+    // give me a method to submit command with spoken language, and i will translate the command to CommandRequest
+    // and serve it by submitCommand(CommandRequest)
+    @PostMapping("/spoken")
+    fun submitSpokenCommand(
+        @RequestBody spokenCommand: String,
+        @RequestParam(name = "mode", defaultValue = "sync") mode: String
+    ): ResponseEntity<Any> {
+        val request = commandService.conversationService.convertSpokenCommandToCommandRequest(spokenCommand)
+        if (request == null) {
+            return ResponseEntity.badRequest().body("Invalid spoken command: $spokenCommand")
+        }
+
+        request.mode = mode.lowercase()
+        return when (request.mode) {
+            "sync" -> ResponseEntity.ok(commandService.executeSync(request))
+            "async" -> ResponseEntity.ok(commandService.submitAsync(request))
+            else -> ResponseEntity.badRequest().body("Invalid mode: ${request.mode}")
+        }
+    }
+
     @GetMapping(value = ["/{id}/status"])
     fun getStatus(@PathVariable id: String): ResponseEntity<CommandStatus> {
         return ResponseEntity.ok(commandService.getStatus(id))
