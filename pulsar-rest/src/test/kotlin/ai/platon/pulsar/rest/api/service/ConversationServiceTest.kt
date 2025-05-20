@@ -77,7 +77,7 @@ class ConversationServiceTest {
     }
 
     @Test
-    fun `test convertAPIRequestCommandToJSON with cache`() {
+    fun `test convertPlainCommandToJSON with cache`() {
         val url1 = "https://www.amazon.com/dp/B0C1H26C46"
         val url2 = "https://www.amazon.com/dp/B07PX3ZRJ6"
 
@@ -88,7 +88,7 @@ Page summary prompt: Provide a brief introduction of this product.
 
         """.trimIndent()
 
-        val result1 = conversationService.convertAPIRequestCommandToJSON(prompt1, url1)
+        val result1 = conversationService.convertPlainCommandToJSON(prompt1, url1)
         assertNotNull(result1)
 
         val prompt2 = """
@@ -98,7 +98,7 @@ Page summary prompt: Provide a brief introduction of this product.
 
         """.trimIndent()
 
-        val result2 = conversationService.convertAPIRequestCommandToJSON(prompt2, url2)
+        val result2 = conversationService.convertPlainCommandToJSON(prompt2, url2)
         assertNotNull(result2)
 
         val template1 = result1.replace(url1, "").replace(url2, "")

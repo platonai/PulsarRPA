@@ -35,7 +35,7 @@ class ConversationService(
         }
         val url = urls.first()
 
-        val json = convertAPIRequestCommandToJSON(request, url)
+        val json = convertPlainCommandToJSON(request, url)
         if (json.isNullOrBlank()) {
             return null
         }
@@ -45,11 +45,11 @@ class ConversationService(
         return request2
     }
 
-    fun convertAPIRequestCommandToJSON(request: String, url: String): String? {
+    fun convertPlainCommandToJSON(plainCommand: String, url: String): String? {
         require(URLUtils.isStandard(url)) { "URL must not be blank" }
 
         // Replace the URL in the request with a placeholder, so the result from the LLM can be cached.
-        val processedRequest = request.replace(url, PLACEHOLDER_URL)
+        val processedRequest = plainCommand.replace(url, PLACEHOLDER_URL)
         val prompt = API_REQUEST_COMMAND_CONVERSION_TEMPLATE
             .replace(PLACEHOLDER_REQUEST, processedRequest)
 

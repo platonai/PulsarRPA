@@ -27,7 +27,7 @@ class PulsarSystemController {
     @GetMapping("report")
     fun report(): String {
         val sb = StringBuilder()
-        sb.appendLine("Pulsar system reporting")
+        sb.appendLine("Pulsar System Report")
         sb.appendLine(driverPoolManager.buildStatusString(true))
         sb.appendLine().appendLine()
         sb.appendLine(privacyManager.buildStatusString())

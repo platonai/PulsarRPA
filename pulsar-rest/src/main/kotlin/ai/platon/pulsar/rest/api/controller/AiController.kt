@@ -1,22 +1,23 @@
 package ai.platon.pulsar.rest.api.controller
 
-import ai.platon.pulsar.common.ResourceStatus
-import ai.platon.pulsar.rest.api.entities.PromptRequest
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import ai.platon.pulsar.rest.api.entities.CommandStatus
-import ai.platon.pulsar.rest.api.entities.ScrapeResponse
+import ai.platon.pulsar.rest.api.entities.PromptRequest
 import ai.platon.pulsar.rest.api.service.ChatService
 import ai.platon.pulsar.rest.api.service.CommandService
 import ai.platon.pulsar.rest.api.service.ConversationService
 import ai.platon.pulsar.rest.api.service.ExtractService
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+/**
+ *
+ * */
+@Deprecated("AiController is deprecated for now, please use CommandController/ConversationController/ExtractionController instead.")
 @RestController
 @CrossOrigin
 @RequestMapping(
@@ -120,13 +121,6 @@ class AiController(
         return commandStatusCache[id] ?: CommandStatus.notFound(id)
     }
 
-    @GetMapping(value = ["/commands/{id}/stream"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-    fun commandStatusStream(@PathVariable id: String): SseEmitter {
-        val emitter = SseEmitter(0L)
-        executor.submit { emitResponseUntilDone(id, emitter) }
-        return emitter
-    }
-
     @PostMapping("/extract")
     fun executeExtractionBackward(@RequestBody request: PromptRequest) = executeExtraction(request)
 
@@ -149,39 +143,4 @@ class AiController(
 
     @PostMapping("/chat-about")
     fun chatAboutPageBackward(@RequestBody request: PromptRequest) = conversationsAbout(request)
-
-    private fun emitResponseUntilDone(id: String, emitter: SseEmitter) {
-        try {
-            while (true) {
-                val resp = commandStatusCache[id]
-                if (resp == null) {
-                    val errorResp = ScrapeResponse()
-                    errorResp.id = id
-                    errorResp.statusCode = ResourceStatus.SC_INTERNAL_SERVER_ERROR
-                    emitter.send(errorResp)
-                    emitter.complete()
-                    return
-                }
-                when (resp.statusCode) {
-                    ResourceStatus.SC_OK, ResourceStatus.SC_INTERNAL_SERVER_ERROR -> {
-                        emitter.send(resp)
-                        emitter.complete()
-                        return
-                    }
-                    else -> {
-                        emitter.send(resp)
-                        Thread.sleep(1000)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            try {
-                val errorResp = ScrapeResponse()
-                errorResp.id = id
-                errorResp.statusCode = ResourceStatus.SC_INTERNAL_SERVER_ERROR
-                emitter.send(errorResp)
-            } catch (ignored: Exception) {}
-            emitter.completeWithError(e)
-        }
-    }
 }

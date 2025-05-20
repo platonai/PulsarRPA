@@ -37,8 +37,6 @@ class CommandController(
         }
     }
 
-    // give me a method to submit command with plain language, and i will translate the command to CommandRequest
-    // and serve it by submitCommand(CommandRequest)
     @PostMapping("/plain")
     fun submitPlainCommand(
         @RequestBody plainCommand: String,

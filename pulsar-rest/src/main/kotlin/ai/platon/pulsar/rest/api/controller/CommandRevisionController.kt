@@ -3,33 +3,14 @@ package ai.platon.pulsar.rest.api.controller
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.rest.api.common.COMMAND_REQUEST_TEMPLATE
+import ai.platon.pulsar.rest.api.common.PLACEHOLDER_JSON_VALUE
 import ai.platon.pulsar.rest.api.service.ChatService
 import ai.platon.pulsar.rest.api.service.ConversationService
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 
-@RestController
-@CrossOrigin
-@RequestMapping(
-    "command-revisions",
-    consumes = [MediaType.ALL_VALUE],
-    produces = [MediaType.APPLICATION_JSON_VALUE]
-)
-class CommandRevisionController(
-    private val chatService: ChatService,
-    private val conversationService: ConversationService,
-) {
-    @PostMapping(produces = [MediaType.TEXT_PLAIN_VALUE])
-    fun create(@RequestBody prompt: String): String {
-        var urls = LinkExtractors.fromText(prompt)
-        if (urls.isEmpty()) {
-            urls = setOf(AppConstants.EXAMPLE_URL)
-        }
-
-        val json = conversationService.convertAPIRequestCommandToJSON(prompt, urls.first()) ?: return prompt
-
-        val message = """
-Your task is to convert a JSON command into simple, numbered steps in plain language.
+const val COMMAND_REVISION_TEMPLATE = """
+    Your task is to convert a JSON command into simple, numbered steps in plain language.
 
 The JSON format looks like this:
 ```json
@@ -52,10 +33,32 @@ Example:
 
 JSON to convert:
 ```json
-$json
+$PLACEHOLDER_JSON_VALUE
 ```
 
-        """
+"""
+
+@RestController
+@CrossOrigin
+@RequestMapping(
+    "command-revisions",
+    consumes = [MediaType.ALL_VALUE],
+    produces = [MediaType.APPLICATION_JSON_VALUE]
+)
+class CommandRevisionController(
+    private val chatService: ChatService,
+    private val conversationService: ConversationService,
+) {
+    @PostMapping(produces = [MediaType.TEXT_PLAIN_VALUE])
+    fun create(@RequestBody prompt: String): String {
+        var urls = LinkExtractors.fromText(prompt)
+        if (urls.isEmpty()) {
+            urls = setOf(AppConstants.EXAMPLE_URL)
+        }
+
+        val json = conversationService.convertPlainCommandToJSON(prompt, urls.first()) ?: return prompt
+
+        val message = COMMAND_REVISION_TEMPLATE.replace(PLACEHOLDER_JSON_VALUE, json)
 
         return chatService.chat(message)
     }
