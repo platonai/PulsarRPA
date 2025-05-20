@@ -62,12 +62,19 @@ class CommandService(
     fun getResult(id: String) = commandStatusCache[id]?.commandResult
 
     fun streamEvents(id: String): Flux<ServerSentEvent<CommandStatus>> {
+        var doneCount = 0
         val handleFluxSink = { sink: FluxSink<CommandStatus> ->
             val job = commandStatusFlow(id).onEach {
                 sink.next(it)
+
                 if (it.isDone) {
-                    // The JavaScript client-side code expects the event to be open.
-                    // sink.complete()
+                    ++doneCount
+                }
+
+                if (doneCount >= 5) {
+                    // the client may not close the connection correctly
+                    // check the exact behavior when the underlying flow is finished
+                    sink.complete()
                 }
             }.catch {
                 logger.error("Error in command status flow", it)
@@ -80,8 +87,8 @@ class CommandService(
         }
 
         return Flux.create { sink -> handleFluxSink(sink) }.map {
-            // NOTE: [2025/5/20] JavaScript client-side code expects only JSON data, not the event ID or event name.
             // ServerSentEvent.builder(it).id(it.id).event(it.event).build()
+            // NOTE: [2025/5/20] JavaScript client-side code expects only JSON data, not the event ID or event name.
             ServerSentEvent.builder(it).build()
         }
     }

@@ -25,8 +25,12 @@ def main():
     url = f"http://localhost:8182/api/commands/{command_id}/stream"
     headers = {"Accept": "text/event-stream"}
 
+    # Create a requests response object with the headers
+    response = requests.get(url, headers=headers, stream=True)
+    print(response)
+
     # Process the SSE stream
-    client = sseclient.SSEClient(url, headers=headers)
+    client = sseclient.SSEClient(response)
     for event in client.events():
         if event.data:
             data = event.data.strip()

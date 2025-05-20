@@ -40,12 +40,6 @@ public class CommandSSE {
                     if (line.startsWith("data:")) {
                         String data = line.substring(5).trim();
                         System.out.println("SSE update: " + data);
-
-                        // Check if command has completed
-                        if (data.contains("\"status\":\"COMPLETED\"") ||
-                                data.contains("\"status\":\"FAILED\"")) {
-                            System.out.println("Command execution finished");
-                        }
                     }
                 });
     }

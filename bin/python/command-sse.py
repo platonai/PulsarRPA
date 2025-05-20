@@ -35,10 +35,5 @@ def main():
             data = event.data.strip()
             print(f"SSE update: {data}")
 
-            # Check if command has completed
-            if '"status":"COMPLETED"' in data or '"status":"FAILED"' in data:
-                print("Command execution finished")
-                break
-
 if __name__ == "__main__":
     main()
