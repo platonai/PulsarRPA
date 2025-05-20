@@ -14,7 +14,7 @@ def main():
 
     # Send command to server
     response = requests.post(
-        "http://localhost:8182/api/commands/spoken?mode=async",
+        "http://localhost:8182/api/commands/plain?mode=async",
         headers={"Content-Type": "text/plain"},
         data=command
     )

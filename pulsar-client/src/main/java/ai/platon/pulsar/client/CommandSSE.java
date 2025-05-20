@@ -18,7 +18,7 @@ public class CommandSSE {
 
         // Send command to server
         var request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8182/api/commands/spoken?mode=async"))
+                .uri(URI.create("http://localhost:8182/api/commands/plain?mode=async"))
                 .header("Content-Type", "text/plain")
                 .POST(HttpRequest.BodyPublishers.ofString(command))
                 .build();

@@ -18,7 +18,7 @@ public class Command {
                 """;
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8182/api/commands/spoken"))
+                .uri(URI.create("http://localhost:8182/api/commands/plain"))
                 .header("Content-Type", "text/plain")
                 .POST(HttpRequest.BodyPublishers.ofString(command)).build();
         String response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();

@@ -94,7 +94,7 @@ class AiController(
         consumes = [MediaType.TEXT_PLAIN_VALUE],
         produces = [MediaType.TEXT_MARKDOWN_VALUE]
     )
-    fun executeCommandWithSpokenLanguage(@RequestBody request: String): String {
+    fun executeCommandWithPlainLanguage(@RequestBody request: String): String {
         val response = commandService.executeCommand(request)
         return conversationService.convertResponseToMarkdown(response)
     }
@@ -104,7 +104,7 @@ class AiController(
         consumes = [MediaType.TEXT_PLAIN_VALUE],
         produces = [MediaType.TEXT_MARKDOWN_VALUE]
     )
-    fun executeCommandWithSpokenLanguageAsync(@RequestBody request: String): String {
+    fun executeCommandWithPlainLanguageAsync(@RequestBody request: String): String {
         val id = UUID.randomUUID().toString()
         commandStatusCache[id] = CommandStatus(id)
         executor.submit {
@@ -138,8 +138,8 @@ class AiController(
         consumes = [MediaType.TEXT_PLAIN_VALUE],
         produces = [MediaType.TEXT_MARKDOWN_VALUE]
     )
-    fun executeCommandWithSpokenLanguageBackward(@RequestBody request: String) =
-        executeCommandWithSpokenLanguage(request)
+    fun executeCommandWithPlainLanguageBackward(@RequestBody request: String) =
+        executeCommandWithPlainLanguage(request)
 
     @GetMapping("/chat")
     fun conversationsBackward(@RequestParam(value = "prompt") prompt: String) = conversations(prompt)

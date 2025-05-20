@@ -4,6 +4,7 @@ import ai.platon.pulsar.rest.api.entities.CommandRequest
 import ai.platon.pulsar.rest.api.entities.CommandResult
 import ai.platon.pulsar.rest.api.entities.CommandStatus
 import ai.platon.pulsar.rest.api.service.CommandService
+import ai.platon.pulsar.rest.api.service.ConversationService
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
@@ -18,6 +19,7 @@ import reactor.core.publisher.Flux
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class CommandController(
+    val conversationService: ConversationService,
     val commandService: CommandService,
 ) {
     /**
@@ -35,17 +37,15 @@ class CommandController(
         }
     }
 
-    // give me a method to submit command with spoken language, and i will translate the command to CommandRequest
+    // give me a method to submit command with plain language, and i will translate the command to CommandRequest
     // and serve it by submitCommand(CommandRequest)
-    @PostMapping("/spoken")
-    fun submitSpokenCommand(
-        @RequestBody spokenCommand: String,
-        @RequestParam(name = "mode", defaultValue = "sync") mode: String
+    @PostMapping("/plain")
+    fun submitPlainCommand(
+        @RequestBody plainCommand: String,
+        @RequestParam(name = "mode", defaultValue = "sync") mode: String,
     ): ResponseEntity<Any> {
-        val request = commandService.conversationService.convertSpokenCommandToCommandRequest(spokenCommand)
-        if (request == null) {
-            return ResponseEntity.badRequest().body("Invalid spoken command: $spokenCommand")
-        }
+        val request = conversationService.normalizePlainCommand(plainCommand)
+            ?: return ResponseEntity.badRequest().body("Invalid plain command: $plainCommand")
 
         request.mode = mode.lowercase()
         return when (request.mode) {

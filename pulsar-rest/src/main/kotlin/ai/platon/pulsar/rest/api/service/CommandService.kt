@@ -115,7 +115,7 @@ class CommandService(
             return CommandStatus.failed(ResourceStatus.SC_BAD_REQUEST)
         }
 
-        val request2 = conversationService.convertSpokenCommandToCommandRequest(request)
+        val request2 = conversationService.normalizePlainCommand(request)
         val status = createCachedCommandStatus(request2)
         if (request2 == null) {
             status.failed(ResourceStatus.SC_EXPECTATION_FAILED)

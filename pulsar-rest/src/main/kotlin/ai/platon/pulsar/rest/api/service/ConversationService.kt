@@ -24,7 +24,7 @@ class ConversationService(
      * @param request The request string containing a URL.
      * @return A PromptRequestL2 object if a URL is found in the request string, null otherwise.
      * */
-    fun convertSpokenCommandToCommandRequest(request: String): CommandRequest? {
+    fun normalizePlainCommand(request: String): CommandRequest? {
         if (request.isBlank()) {
             return null
         }

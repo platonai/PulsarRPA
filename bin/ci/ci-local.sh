@@ -18,7 +18,7 @@ cd "$AppHome" || exit
 
 # Configuration
 repoPath="$AppHome"                                  # 你的 Git 仓库路径
-buildScript="$AppHome/bin/build.sh"                 # 你的构建脚本
+buildScript="$AppHome/bin/build.sh"                  # 你的构建脚本
 
 # Enter the repository directory
 cd "$repoPath" || exit

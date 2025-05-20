@@ -14,15 +14,7 @@ const val PLACEHOLDER_REQUEST = "{PLACEHOLDER_REQUEST}"
 
 const val PLACEHOLDER_PAGE_CONTENT = "{PLACEHOLDER_PAGE_CONTENT}"
 
-const val API_REQUEST_COMMAND_CONVERSION_TEMPLATE = """
-You're given a user request that describes how to interact with and extract information from a web page.
-Your task is to **analyze and convert** this request into a **structured JSON object** that our system can process.
-
-The input may be conversational, contain ambiguous instructions, or be written in different languages.
-
-Produce a JSON object with these possible fields:
-
-```json
+const val COMMAND_REQUEST_TEMPLATE = """
 {
   "url": "{PLACEHOLDER_URL}",
   "pageSummaryPrompt": "Instructions for summarizing the page...",
@@ -33,6 +25,18 @@ Produce a JSON object with these possible fields:
     "click 'Sign In' button"
   ]
 }
+"""
+
+const val API_REQUEST_COMMAND_CONVERSION_TEMPLATE = """
+You're given a user request that describes how to interact with and extract information from a web page.
+Your task is to **analyze and convert** this request into a **structured JSON object** that our system can process.
+
+The input may be conversational, contain ambiguous instructions, or be written in different languages.
+
+Produce a JSON object with these possible fields:
+
+```json
+$COMMAND_REQUEST_TEMPLATE
 ```
 
 ### 🔧 Guidelines:

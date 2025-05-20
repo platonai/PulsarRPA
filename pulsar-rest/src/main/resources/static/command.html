@@ -100,9 +100,9 @@ Find all links containing /dp/.
     </div>
 </div>
 <script>
-    let baseUrl = "http://localhost:8182/api/"
-    let commandUrl = baseUrl + "/commands"
-    let streamBaseUrl = commandUrl + "/{id}/stream"
+    let baseUrl = "http://localhost:8182/api"
+    let commandUrl = baseUrl + "/commands/plain?mode=async"
+    let streamBaseUrl = baseUrl + "/commands/{id}/stream"
     let revisionUrl = baseUrl + "/command-revisions"
 
     function reviseCommand() {

@@ -1,6 +1,6 @@
 # Python Client
 
-## Spoken order
+## Plain command
 
 ```shell
 python command-sse.py
