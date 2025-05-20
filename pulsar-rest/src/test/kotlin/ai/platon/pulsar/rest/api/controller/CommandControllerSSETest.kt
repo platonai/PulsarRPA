@@ -58,7 +58,7 @@ class CommandControllerSSETest : ScrapeControllerTestBase() {
 
     private fun receiveSSE(id: String) {
         val client = OkHttpClient.Builder()
-            .readTimeout(0, TimeUnit.MILLISECONDS) // Disable read timeout for SSE
+            .readTimeout(3, TimeUnit.MILLISECONDS)
             .build()
 
         // 2. Connect to SSE stream
