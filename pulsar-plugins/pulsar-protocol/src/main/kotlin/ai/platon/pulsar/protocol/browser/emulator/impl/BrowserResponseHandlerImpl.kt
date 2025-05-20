@@ -149,7 +149,7 @@ open class BrowserResponseHandlerImpl(
             htmlIntegrity.isWrongProfile ->
                 ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity).also { wrongProfile.mark() }
             htmlIntegrity.isForbidden -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { bannedPages.mark() }
-            htmlIntegrity.isNotFound -> ProtocolStatus.failed(ProtocolStatusCodes.NOT_FOUND).also { notFoundPages.mark() }
+            htmlIntegrity.isNotFound -> ProtocolStatus.failed(ProtocolStatusCodes.SC_NOT_FOUND).also { notFoundPages.mark() }
             // must come after privacy context reset, PRIVACY_CONTEXT reset have the higher priority
             htmlIntegrity.isEmpty -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { emptyPages.mark() }
             htmlIntegrity.isSmall -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity).also {

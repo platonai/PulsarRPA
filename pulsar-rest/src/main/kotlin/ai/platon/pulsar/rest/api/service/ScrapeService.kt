@@ -84,7 +84,7 @@ class ScrapeService(
      * */
     fun getStatus(request: ScrapeStatusRequest): ScrapeResponse {
         return responseCache.computeIfAbsent(request.id) {
-            ScrapeResponse(request.id, ResourceStatus.SC_NOT_FOUND, ProtocolStatusCodes.NOT_FOUND)
+            ScrapeResponse(request.id, ResourceStatus.SC_NOT_FOUND, ProtocolStatusCodes.SC_NOT_FOUND)
         }
     }
 

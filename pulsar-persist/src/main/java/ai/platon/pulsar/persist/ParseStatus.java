@@ -26,7 +26,7 @@ public class ParseStatus implements ParseStatusCodes {
         majorCodes.put(SUCCESS, "success");
         majorCodes.put(FAILED, "failed");
 
-        minorCodes.put(SUCCESS_OK, "ok");
+        minorCodes.put(SC_OK, "ok");
         minorCodes.put(SUCCESS_REDIRECT, "redirect");
 
         minorCodes.put(FAILED_EXCEPTION, "exception");
@@ -120,7 +120,7 @@ public class ParseStatus implements ParseStatusCodes {
     }
 
     public void setSuccessOK() {
-        setCode(ParseStatus.SUCCESS, ParseStatus.SUCCESS_OK);
+        setCode(ParseStatus.SUCCESS, ParseStatus.SC_OK);
     }
 
     public void setFailed(int minorCode, String message) {

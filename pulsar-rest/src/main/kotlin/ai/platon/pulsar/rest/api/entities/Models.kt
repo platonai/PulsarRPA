@@ -44,7 +44,7 @@ data class ScrapeRequest(
 data class ScrapeResponse(
     var id: String? = null,
     var statusCode: Int = ResourceStatus.SC_CREATED,
-    var pageStatusCode: Int = ProtocolStatusCodes.CREATED,
+    var pageStatusCode: Int = ProtocolStatusCodes.SC_CREATED,
     var pageContentBytes: Int = 0,
     var isDone: Boolean = false,
     var resultSet: List<Map<String, Any?>>? = null,
@@ -190,7 +190,7 @@ data class InstructResult(
  *
  * @property id The unique identifier for the command status.
  * @property statusCode The HTTP status code representing the command status.
- * @property event The event associated with the command status.
+ * @property event The last event associated with the command status.
  * @property isDone Indicates whether the command has been completed.
  * @property pageStatusCode The HTTP status code representing the page status.
  * @property pageContentBytes The size of the page content in bytes.
@@ -206,7 +206,7 @@ data class CommandStatus(
     var event: String = "",
     var isDone: Boolean = false,
 
-    var pageStatusCode: Int = ProtocolStatusCodes.CREATED,
+    var pageStatusCode: Int = ProtocolStatusCodes.SC_CREATED,
     var pageContentBytes: Int = 0,
 
     var message: String? = null, // additional message, e.g. the action flow
