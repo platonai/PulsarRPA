@@ -92,8 +92,6 @@ class CommandService(
             delay(FLOW_POLLING_INTERVAL)
 
             val status = commandStatusCache[id] ?: CommandStatus.notFound(id)
-            println(status.message)
-
             if (status.refreshed(lastModifiedTime)) {
                 emit(status)
                 lastModifiedTime = status.lastModifiedTime
