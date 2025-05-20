@@ -159,7 +159,7 @@ class CommandService(
 
     private fun createCachedCommandStatus(request: CommandRequest? = null): CommandStatus {
         val status = CommandStatus()
-        status.request = request
+        // status.request = request
         commandStatusCache[status.id] = status
         status.refresh("created")
         return status
