@@ -55,6 +55,8 @@ jobs:
           
       - name: Run curl integration tests
         run: |
+          find bin/ -name "*.sh" -exec chmod +x {} \;
+          ./bin/test.sh || (echo "Integration test failed" && exit 1)
           ./bin/test.sh
           
       - name: Stop Docker container
