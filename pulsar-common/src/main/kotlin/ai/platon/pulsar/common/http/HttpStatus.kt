@@ -225,7 +225,7 @@ enum class HttpStatus(
      * `404 Not Found`.
      * @see [HTTP/1.1: Semantics and Content, section 6.5.4](https://tools.ietf.org/html/rfc7231.section-6.5.4)
      */
-    NOT_FOUND(404, Series.CLIENT_ERROR, "Not Found"),
+    SC_NOT_FOUND(404, Series.CLIENT_ERROR, "Not Found"),
 
     /**
      * `405 Method Not Allowed`.

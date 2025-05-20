@@ -3,69 +3,46 @@ package ai.platon.pulsar.external
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.logging.ThrottlingLogger
 import ai.platon.pulsar.common.warn
 import ai.platon.pulsar.external.impl.ChatModelImpl
-import dev.langchain4j.model.chat.ChatLanguageModel
 import dev.langchain4j.model.openai.OpenAiChatModel
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.reflect.KClass
 
 /**
- * The factory for creating models.
- *
- * * [Langchain4j Models](https://github.com/langchain4j/langchain4j/blob/main/docs/docs/integrations/language-models)
+ * The factory to create models.
  */
 object ChatModelFactory {
     private val logger = getLogger(this::class)
-    private val registeredModels = ConcurrentHashMap<String, ChatModel>()
-    private val configuredModels = ConcurrentHashMap<String, ChatModel>()
-
-    var logRequest = false
-    var logResponse = false
-    var maxRetries = 1
-    var timeout = Duration.ofSeconds(30)
+    private val throttlingLogger = ThrottlingLogger(logger, ttl = Duration.ofHours(4))
+    private val models = ConcurrentHashMap<String, ChatModel>()
 
     fun isModelConfigured(conf: ImmutableConfig): Boolean {
-        // deepseek official
-        val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
-        if (deepseekAPIKey != null) {
-            return true
+        if (!isModelConfigured0(conf)) {
+            if (!hasModel(conf)) {
+                val documentPath = "docs/config/llm/llm-config.md"
+                val message = "The LLM is not configured. Please review the documentation for " +
+                        "configuration instructions: $documentPath"
+                throttlingLogger.info(message)
+            }
+            return false
         }
 
-        val openaiAPIKey = conf["OPENAI_API_KEY"]
-        if (openaiAPIKey != null) {
-            return true
-        }
-
-        val provider = conf[LLM_PROVIDER]
-        val llm = conf[LLM_NAME]
-        val apiKey = conf[LLM_API_KEY]
-
-        return provider != null && llm != null && apiKey != null
+        return true
     }
 
-    fun hasRegisteredModel() = registeredModels.isNotEmpty()
-
-    fun hasConfiguredModel() = configuredModels.isNotEmpty()
-
-    fun hasModel(conf: ImmutableConfig) = hasRegisteredModel() || hasConfiguredModel()
+    fun hasModel(conf: ImmutableConfig) = isModelConfigured0(conf)
 
     /**
-     * Get or create a chat model.
+     * Create a default model.
      *
      * @return The created model.
      * @throws IllegalArgumentException If the configuration is not configured.
      */
     @Throws(IllegalArgumentException::class)
     fun getOrCreate(conf: ImmutableConfig): ChatModel {
-        var model = registeredModels.values.firstOrNull()
-        if (model != null) {
-            // registered
-            return model
-        }
-
         // Notice: all keys are transformed to dot.separated.kebab-case using KStrings.toDotSeparatedKebabCase(),
         // so the following keys are equal:
         // - DEEPSEEK_API_KEY, deepseek.apiKey, deepseek.api-key
@@ -75,9 +52,16 @@ object ChatModelFactory {
             return getOrCreate("deepseek", deepseekModelName, deepseekAPIKey, conf)
         }
 
+        val volcengineAPIKey = conf["VOLCENGINE_API_KEY"]
+        if (volcengineAPIKey != null) {
+            val volcengineModelName = conf["VOLCENGINE_MODEL_NAME"] ?: "doubao-1.5-pro-32k-250115"
+            val volcengineBaseURL = conf["VOLCENGINE_BASE_URL"] ?: "https://ark.cn-beijing.volces.com/api/v3"
+            return getOrCreateOpenAICompatibleModel(volcengineModelName, volcengineAPIKey, volcengineBaseURL, conf)
+        }
+
         val openaiAPIKey = conf["OPENAI_API_KEY"]
         if (openaiAPIKey != null) {
-            val openaiBaseURL = conf["OPENAI_BASE_URL"] ?: "https://api.openai.com/v1/chat/completions"
+            val openaiBaseURL = conf["OPENAI_BASE_URL"] ?: "https://api.openai.com/v1"
             val openaiModelName = conf["OPENAI_MODEL_NAME"] ?: "gpt-4o"
             return getOrCreateOpenAICompatibleModel(openaiModelName, openaiAPIKey, openaiBaseURL, conf)
         }
@@ -97,7 +81,9 @@ object ChatModelFactory {
      * @param modelName The name of model to create.
      * @param apiKey The API key to use.
      * @return The created model.
+     * @throws IllegalArgumentException If the configuration is not configured.
      */
+    @Throws(IllegalArgumentException::class)
     fun getOrCreate(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig) =
         getOrCreateModel0(provider, modelName, apiKey, conf)
 
@@ -107,93 +93,57 @@ object ChatModelFactory {
      * @return The created model.
      */
     fun getOrCreateOrNull(conf: ImmutableConfig): ChatModel? {
+        if (!isModelConfigured(conf)) {
+            return null
+        }
+
         return kotlin.runCatching { getOrCreate(conf) }
-            .onFailure { warn(this, it.message ?: "Failed to create chat model") }.getOrNull()
+            .onFailure { warn(this, it.message ?: "Failed to create chat model") }
+            .getOrNull()
     }
 
     fun getOrCreateOpenAICompatibleModel(
-        modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig
+        modelName: String,
+        apiKey: String,
+        baseUrl: String,
+        conf: ImmutableConfig
     ): ChatModel {
-        val key = createModelCacheKey(modelName, apiKey, baseUrl)
-        return configuredModels.computeIfAbsent(key) { createOpenAICompatibleModel0(modelName, apiKey, baseUrl, conf) }
+        val key = "$modelName:$apiKey:$baseUrl"
+        return models.computeIfAbsent(key) { createOpenAICompatibleModel0(modelName, apiKey, baseUrl, conf) }
     }
 
-    fun register(model: ChatModel): ChatModel {
-        val key = createModelCacheKey(model::class.qualifiedName.toString(), "MODEL_PROVIDED_API_KEY")
-        return configuredModels.computeIfAbsent(key) { model }
-    }
-
-    /**
-     * Langchain4j compatible model.
-     *
-     * Example:
-     *
-     * ```kotlin
-     * val langchain4jModel = OpenAiChatModel.builder()
-     * .apiKey(apiKey)
-     * .modelName("gpt-4o")
-     * .temperature(0.7)
-     * .build()
-     *
-     * val model = ChatModelFactory.register(langchain4jModel)
-     *
-     * // use the model
-     * val response = model.call("Hello, how are you?")
-     *
-     * // PulsarSession can use the model directly
-     * val response2 = session.chat("Hello, how are you?")
-     *
-     * ```
-     * */
-    fun register(model: ChatLanguageModel): ChatModel {
-        val key = createModelCacheKey(ChatLanguageModel::class)
-        return registeredModels.computeIfAbsent(key) { ChatModelImpl(model, ImmutableConfig()) }
-    }
-
-    /**
-     * Langchain4j compatible model
-     * */
-    fun getModelOrNull(modelClass: KClass<ChatLanguageModel>): ChatModel? {
-        val key = createModelCacheKey(modelClass)
-        return registeredModels[key]
-    }
-
-    fun getModelOrNull(modelName: String, apiKey: String): ChatModel? {
-        val key = createModelCacheKey(modelName, apiKey)
-        return configuredModels[key]
-    }
-
-    private fun createModelCacheKey(modelClass: KClass<ChatLanguageModel>): String {
-        return createModelCacheKey("", modelClass)
-    }
-
-    private fun createModelCacheKey(modelName: String, modelClass: KClass<ChatLanguageModel>): String {
-        return createModelCacheKey(
-            "$modelName:${modelClass.qualifiedName}",
-            "MODEL_PROVIDED_API_KEY"
-        )
-    }
-
-    private fun createModelCacheKey(modelName: String, model: ChatModel): String {
-        return createModelCacheKey(
-            "$modelName:${model::class.qualifiedName}",
-            "MODEL_PROVIDED_API_KEY"
-        )
-    }
-
-    private fun createModelCacheKey(modelName: String, apiKey: String, baseUrl: String? = null): String {
-        return if (baseUrl == null) {
-            "$modelName:$apiKey"
-        } else {
-            "$modelName:$apiKey:$baseUrl"
+    private fun isModelConfigured0(conf: ImmutableConfig): Boolean {
+        // deepseek official
+        val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
+        if (deepseekAPIKey != null) {
+            return true
         }
+
+        val volcengineAPIKey = conf["VOLCENGINE_API_KEY"]
+        if (volcengineAPIKey != null) {
+            return true
+        }
+
+        val openaiAPIKey = conf["OPENAI_API_KEY"]
+        if (openaiAPIKey != null) {
+            return true
+        }
+
+        val provider = conf[LLM_PROVIDER]
+        val llm = conf[LLM_NAME]
+        val apiKey = conf[LLM_API_KEY]
+
+        return provider != null && llm != null && apiKey != null
     }
 
     private fun getOrCreateModel0(
-        provider: String, modelName: String, apiKey: String, conf: ImmutableConfig
+        provider: String,
+        modelName: String,
+        apiKey: String,
+        conf: ImmutableConfig
     ): ChatModel {
-        val key = createModelCacheKey(modelName, apiKey)
-        return configuredModels.computeIfAbsent(key) { doCreateModel(provider, modelName, apiKey, conf) }
+        val key = "$modelName:$apiKey"
+        return models.computeIfAbsent(key) { doCreateModel(provider, modelName, apiKey, conf) }
     }
 
     private fun doCreateModel(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
@@ -214,23 +164,27 @@ object ChatModelFactory {
      * */
     private fun createBaiLianChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
         val baseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-        val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl(baseUrl).modelName(modelName)
-            .logRequests(logRequest)
-            .logResponses(logResponse)
-            .maxRetries(maxRetries)
-            .timeout(timeout)
+        val lm = OpenAiChatModel.builder()
+            .apiKey(apiKey)
+            .baseUrl(baseUrl)
+            .modelName(modelName)
+            .logRequests(false)
+            .logResponses(true)
+            .maxRetries(2)
+            .timeout(Duration.ofSeconds(60))
             .build()
+
+
 
         return ChatModelImpl(lm, conf)
     }
 
     private fun createZhipuChatModel(apiKey: String, conf: ImmutableConfig): ChatModel {
-        val lm = ZhipuAiChatModel.builder().apiKey(apiKey)
-            .logRequests(logRequest)
-            .logResponses(logResponse)
-            .maxRetries(maxRetries)
-            .readTimeout(timeout)
-            .writeTimeout(timeout)
+        val lm = ZhipuAiChatModel.builder()
+            .apiKey(apiKey)
+            .logRequests(true)
+            .logResponses(true)
+            .maxRetries(2)
             .build()
         return ChatModelImpl(lm, conf)
     }
@@ -241,11 +195,14 @@ object ChatModelFactory {
      * @see <a href='https://github.com/deepseek-ai/DeepSeek-V2/issues/18'>DeepSeek-V2 Issue 18</a>
      * */
     private fun createDeepSeekChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
-        val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl("https://api.deepseek.com/").modelName(modelName)
-            .logRequests(logRequest)
-            .logResponses(logResponse)
-            .maxRetries(maxRetries)
-            .timeout(timeout)
+        val lm = OpenAiChatModel.builder()
+            .apiKey(apiKey)
+            .baseUrl("https://api.deepseek.com/")
+            .modelName(modelName)
+            .logRequests(false)
+            .logResponses(true)
+            .maxRetries(2)
+            .timeout(Duration.ofSeconds(90))
             .build()
         return ChatModelImpl(lm, conf)
     }
@@ -256,12 +213,14 @@ object ChatModelFactory {
      * @see <a href='https://www.volcengine.com/docs/82379/1399008'>快速入门-调用模型服务</a>
      * */
     private fun createVolcengineChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
-        val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl("https://ark.cn-beijing.volces.com/api/v3")
+        val lm = OpenAiChatModel.builder()
+            .apiKey(apiKey)
+            .baseUrl("https://ark.cn-beijing.volces.com/api/v3")
             .modelName(modelName)
-            .logRequests(logRequest)
-            .logResponses(logResponse)
-            .maxRetries(maxRetries)
-            .timeout(timeout)
+            .logRequests(true)
+            .logResponses(true)
+            .maxRetries(2)
+            .timeout(Duration.ofSeconds(90))
             .build()
         return ChatModelImpl(lm, conf)
     }
@@ -274,11 +233,14 @@ object ChatModelFactory {
     private fun createOpenAICompatibleModel0(
         modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig
     ): ChatModel {
-        val lm = OpenAiChatModel.builder().apiKey(apiKey).baseUrl(baseUrl).modelName(modelName)
-            .logRequests(logRequest)
-            .logResponses(logResponse)
-            .maxRetries(maxRetries)
-            .timeout(timeout)
+        val lm = OpenAiChatModel.builder()
+            .apiKey(apiKey)
+            .baseUrl(baseUrl)
+            .modelName(modelName)
+            .logRequests(true)
+            .logResponses(true)
+            .maxRetries(2)
+            .timeout(Duration.ofSeconds(90))
             .build()
         return ChatModelImpl(lm, conf)
     }

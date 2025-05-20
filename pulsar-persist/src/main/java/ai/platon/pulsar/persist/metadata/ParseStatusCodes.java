@@ -19,7 +19,7 @@ public interface ParseStatusCodes {
 
     // Use different type for primary codes and secondary codes to make less errors
     // Secondary success codes:
-    int SUCCESS_OK = 0;
+    int SC_OK = 0;
 
     int SUCCESS_IGNORE = 1;
 

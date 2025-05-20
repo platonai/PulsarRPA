@@ -1,15 +1,15 @@
 package ai.platon.pulsar.tools
 
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
-import kotlinx.coroutines.runBlocking
 
-fun main() {
-    val driver = DefaultBrowserFactory().launchDefaultBrowser().newDriver()
+suspend fun main() {
+    val browser = DefaultBrowserFactory().launchPrototypeBrowser()
+    val driver = browser.newDriver()
 
-    runBlocking {
-        driver.navigateTo("about:blank")
-        driver.navigateTo("https://www.amazon.in")
-    }
+    driver.navigateTo("about:blank")
+    driver.navigateTo("https://www.amazon.in")
 
     readlnOrNull()
+
+    browser.close()
 }

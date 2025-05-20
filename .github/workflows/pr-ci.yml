@@ -55,7 +55,7 @@ jobs:
           
       - name: Run curl integration tests
         run: |
-          ./bin/scrape-async.sh
+          ./bin/test.sh
           
       - name: Stop Docker container
         if: always()

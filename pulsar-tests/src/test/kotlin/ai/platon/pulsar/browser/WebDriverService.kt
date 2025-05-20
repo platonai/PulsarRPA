@@ -9,13 +9,10 @@ import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.StringUtils
 import org.junit.jupiter.api.Assumptions.assumeTrue
 
-class WebDriverService(
-    val browserFactory: BrowserFactory
+open class WebDriverService(
+    val browserFactory: BrowserFactory,
+    val requiredPageSize: Int = 100
 ) {
-    companion object {
-        const val PAGE_SOURCE_MIN_LENGTH = 100
-    }
-
     fun runWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
         runBlocking {
             browserFactory.launchRandomTempBrowser().use {
@@ -25,7 +22,7 @@ class WebDriverService(
                     val pageSource = driver.pageSource()
                     val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
                     assumeTrue(
-                        { (pageSource?.length ?: 0) > PAGE_SOURCE_MIN_LENGTH },
+                        { (pageSource?.length ?: 0) > requiredPageSize },
                         "Page source is too small | $display"
                     )
 
@@ -43,7 +40,7 @@ class WebDriverService(
                 val pageSource = driver.pageSource()
                 val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
                 assumeTrue(
-                    { (pageSource?.length ?: 0) > PAGE_SOURCE_MIN_LENGTH },
+                    { (pageSource?.length ?: 0) > requiredPageSize },
                     "Page source is too small | $display"
                 )
 
@@ -98,10 +95,10 @@ class WebDriverService(
         }
     }
 
-    suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) {
+    open suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) {
         driver.navigateTo(url)
         driver.waitForSelector("body")
-        driver.waitForSelector("input[id]")
+//        driver.waitForSelector("input[id]")
 
         // make sure all metadata are available
         driver.evaluateDetail("__pulsar_utils__.waitForReady()")
@@ -118,10 +115,10 @@ class WebDriverService(
 
         val pageSource = driver.pageSource()
         val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
-        assumeTrue({ (pageSource?.length ?: 0) > PAGE_SOURCE_MIN_LENGTH }, "Page source is too small | $display")
+        assumeTrue({ (pageSource?.length ?: 0) > requiredPageSize }, "Page source is too small | $display")
     }
 
-    suspend fun openResource(url: String, driver: WebDriver, scrollCount: Int = 1) {
+    open suspend fun openResource(url: String, driver: WebDriver, scrollCount: Int = 1) {
         driver.navigateTo(url)
         driver.waitForNavigation()
         var n = scrollCount
@@ -130,5 +127,24 @@ class WebDriverService(
             delay(1000)
         }
         driver.scrollToTop()
+    }
+}
+
+open class FastWebDriverService(
+    browserFactory: BrowserFactory,
+    requiredPageSize: Int = 1
+) : WebDriverService(browserFactory, requiredPageSize) {
+    override suspend fun open(url: String, driver: WebDriver, scrollCount: Int) {
+        driver.navigateTo(url)
+        driver.delay(1000)
+
+        // make sure all metadata are available
+        driver.evaluateDetail("__pulsar_utils__.waitForReady()")
+        // make sure all metadata are available
+        driver.evaluateDetail("__pulsar_utils__.compute()")
+
+        val pageSource = driver.pageSource()
+        val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
+        assumeTrue({ (pageSource?.length ?: 0) > requiredPageSize }, "Page source is too small | $display")
     }
 }

@@ -23,7 +23,7 @@ import kotlin.reflect.KClass
 
 class FilterResult(
     majorCode: Short = NOTPARSED,
-    minorCode: Int = SUCCESS_OK,
+    minorCode: Int = SC_OK,
     message: String? = null
 ) : ParseStatus(majorCode, minorCode, message) {
     val filters = mutableListOf<KClass<out ParseFilter>>()
@@ -34,7 +34,7 @@ class FilterResult(
 
     companion object {
 
-        fun success(minorCode: Int = SUCCESS_OK): FilterResult {
+        fun success(minorCode: Int = SC_OK): FilterResult {
             return FilterResult(ParseStatusCodes.SUCCESS, minorCode)
         }
 

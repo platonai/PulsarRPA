@@ -2,7 +2,7 @@
 
 ## 📋 Configuration Sources
 
-PulsarRPA is a standard Spring Boot application and supports multiple configuration sources in order of precedence:
+PulsarRPA supports multiple configuration sources in order of precedence:
 
 1. 🔧 **Environment Variables**
 2. ⚙️ **JVM System Properties**
@@ -11,6 +11,30 @@ PulsarRPA is a standard Spring Boot application and supports multiple configurat
 ---
 
 ## 🔧 Configuration Methods
+
+### 📝 Spring Boot Configuration Files
+
+PulsarRPA supports Spring Boot-style configuration files.
+
+A sample `application.properties` is located at the project root. For privacy, consider renaming it to `application-private.properties`.
+
+#### For desktop usage:
+
+```properties
+# browser.context.mode=SYSTEM_DEFAULT # Optional: use your system's default browser profile
+deepseek.api.key=
+```
+
+#### [**Advanced**] For high-performance, parallel crawling:
+```properties
+proxy.rotation.url=https://your-proxy-provider.com/rotation-endpoint
+browser.context.mode=SEQUENTIAL
+browser.context.number=2
+browser.max.active.tabs=8
+browser.display.mode=HEADLESS
+```
+
+---
 
 ### 🌍 Environment Variables / JVM System Properties
 
@@ -22,7 +46,6 @@ For standard desktop usage:
 ```bash
 export DEEPSEEK_API_KEY=sk-yourdeepseekapikey
 ```
-* 🤖 [Switch to a Different LLM Provider](config/llm/llm-config.md)
 
 If you want to use your daily used browser profile (remember closed the browser first):
 ```bash
@@ -31,59 +54,20 @@ export BROWSER_CONTEXT_MODE=SYSTEM_DEFAULT
 
 For high-performance parallel crawling:
 
-**Linux/MaxOS:**
 ```bash
 export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 export BROWSER_CONTEXT_MODE=SEQUENTIAL
-export BROWSER_CONTEXT_NUMBER=4
+export BROWSER_CONTEXT_NUMBER=2
 export BROWSER_MAX_OPEN_TABS=8
 export BROWSER_DISPLAY_MODE=HEADLESS
 ```
-
-<details>
-<summary>Windows (PowerShell):</summary>
-
-```powershell
-$env:PROXY_ROTATION_URL = "https://your-proxy-provider.com/rotation-endpoint"
-$env:BROWSER_CONTEXT_MODE = "SEQUENTIAL"
-$env:BROWSER_CONTEXT_NUMBER = "4"
-$env:BROWSER_MAX_OPEN_TABS = "8"
-$env:BROWSER_DISPLAY_MODE = "HEADLESS"
-```
-</details>
 
 #### ☕ Example – JVM Arguments
 
 Set configuration via command-line JVM args:
 
 ```bash
--DDEEPSEEK_API_KEY=sk-yourdeepseekapikey
-```
-
----
-
-### 📝 Spring Boot Configuration Files
-
-PulsarRPA supports standard Spring Boot configuration files.
-
-Place your custom config in either the current directory (`.`) or the `./config` directory.
-
-Example: `application-private.properties`
-
-For desktop user:
-
-```properties
-# browser.context.mode=SYSTEM_DEFAULT
-deepseek.api.key=
-```
-
-For high performance, parallel crawling users:
-```properties
-proxy.rotation.url=https://your-proxy-provider.com/rotation-endpoint
-browser.context.mode=SEQUENTIAL
-browser.context.number=4
-browser.max.active.tabs=8
-browser.display.mode=HEADLESS
+-Ddeepseek.api.key=sk-yourdeepseekapikey
 ```
 
 ---
@@ -105,8 +89,7 @@ docker run -d -p 8182:8182 \
   galaxyeye88/pulsar-rpa:latest
 ```
 
-<details>
-<summary>Windows (PowerShell):</summary>
+**Windows (PowerShell):**
 
 ```powershell
 docker run -d -p 8182:8182 `
@@ -118,8 +101,6 @@ docker run -d -p 8182:8182 `
   -e BROWSER_DISPLAY_MODE=HEADLESS `
   galaxyeye88/pulsar-rpa:latest
 ```
-
-</details>
 
 > ⚠️ **Note**: Docker users may need to warm up the before crawling to avoid bot detection, 
 > for example, visit the home page and open some arbitrary pages.
@@ -134,21 +115,23 @@ docker run -d -p 8182:8182 `
 - **`browser.context.mode`** (`DEFAULT` | `SYSTEM_DEFAULT` | `PROTOTYPE` | `SEQUENTIAL` | `TEMPORARY`)  
   Defines how the user data directory is assigned for each browser instance.
 
-  - `DEFAULT`: Uses the default PulsarRPA-managed browser profile.
+  - `DEFAULT`: Uses the default PulsarRPA-managed user data directory.
   - `SYSTEM_DEFAULT`: Uses the system's default browser profile (e.g., your personal Chrome/Edge profile).
-  - `PROTOTYPE` **[Advanced]**: Uses a predefined prototype browser profile.
+  - `PROTOTYPE` **[Advanced]**: Uses a predefined prototype user data directory.
     - All `SEQUENTIAL` and `TEMPORARY` modes inherit from this prototype.
-  - `SEQUENTIAL` **[Advanced]**: Selects a browser profile from a managed pool to enable sequential isolation.
-  - `TEMPORARY` **[Advanced]**: Generates a new, isolated browser profile for each browser instance.
+  - `SEQUENTIAL` **[Advanced]**: Selects a user data directory from a managed pool to enable sequential isolation.
+  - `TEMPORARY` **[Advanced]**: Generates a new, isolated user data directory for each browser instance.
 
 * **`proxy.rotation.url`**
+  [**Advanced**] Only for `SEQUENTIAL` and `TEMPORARY` modes.
   Defines the URL provided by your proxy service.
   Each time the rotation URL is accessed, it should return a response containing one or more fresh proxy IPs.
+  Ask your proxy provider for such a URL.
 
 * **`browser.context.number`** *(default: 2)*
+  [**Advanced**] Only for `SEQUENTIAL` and `TEMPORARY` modes.
   Number of browser contexts (isolated, incognito-like sessions).
   Each context has its own cookies, local storage, and cache.
-  Increase this value to improve parallel execution and overall performance.
 
   > For `DEFAULT`, `SYSTEM_DEFAULT`, and `PROTOTYPE` browser contexts, this value is **1**.
 

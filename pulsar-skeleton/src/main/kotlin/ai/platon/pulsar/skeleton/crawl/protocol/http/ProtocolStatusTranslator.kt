@@ -32,7 +32,7 @@ object ProtocolStatusTranslator {
                 ProtocolStatus.failed(ProtocolStatusCodes.UNAUTHORIZED, ARG_HTTP_CODE, httpCode)
             }
             HttpStatus.SC_NOT_FOUND -> { // GONE
-                ProtocolStatus.failed(ProtocolStatusCodes.NOT_FOUND, ARG_HTTP_CODE, httpCode)
+                ProtocolStatus.failed(ProtocolStatusCodes.SC_NOT_FOUND, ARG_HTTP_CODE, httpCode)
             }
             HttpStatus.SC_REQUEST_TIMEOUT -> { // TIMEOUT
                 ProtocolStatus.failed(REQUEST_TIMEOUT, ARG_HTTP_CODE, httpCode)

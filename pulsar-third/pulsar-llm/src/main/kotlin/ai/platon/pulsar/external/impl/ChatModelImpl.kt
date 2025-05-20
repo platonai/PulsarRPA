@@ -1,17 +1,15 @@
 package ai.platon.pulsar.external.impl
 
-import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.*
-import dev.langchain4j.data.message.AiMessage
 import dev.langchain4j.data.message.SystemMessage
 import dev.langchain4j.data.message.UserMessage
 import dev.langchain4j.model.chat.ChatLanguageModel
 import dev.langchain4j.model.output.FinishReason
-import dev.langchain4j.model.output.Response
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang3.StringUtils
 import org.ehcache.Cache
 import org.ehcache.CacheManager
 import org.ehcache.config.builders.CacheConfigurationBuilder
@@ -19,17 +17,15 @@ import org.ehcache.config.builders.CacheManagerBuilder
 import org.ehcache.config.builders.ExpiryPolicyBuilder
 import org.ehcache.config.builders.ResourcePoolsBuilder
 import org.jsoup.nodes.Element
-import java.text.MessageFormat
+import java.io.IOException
+import java.io.InterruptedIOException
 import java.time.Duration
-import java.util.concurrent.atomic.AtomicInteger
 
 open class ChatModelImpl(
     private val langchainModel: ChatLanguageModel,
     private val conf: ImmutableConfig
 ) : ChatModel {
     private val logger = getLogger(this)
-
-    private val failureCounts = ConcurrentExpiringLRUCache<String, AtomicInteger>()
 
     private val cacheManager: CacheManager = CacheManagerBuilder.newCacheManagerBuilder()
         .withCache(
@@ -95,9 +91,9 @@ open class ChatModelImpl(
             return ModelResponse("", ResponseState.OTHER)
         }
 
-        val userMessage1 = userMessage.take(settings.maximumLength)
+        val trimmedUserMessage = userMessage.take(settings.maximumLength).trim()
         // Generate a cache key based on the user and system messages
-        val cacheKey = DigestUtils.md5Hex("$userMessage1|$systemMessage")
+        val cacheKey = DigestUtils.md5Hex("$trimmedUserMessage|$systemMessage")
 
 
         // Check if the response is already cached
@@ -107,9 +103,35 @@ open class ChatModelImpl(
             return cachedResponse
         }
 
-        val um = UserMessage.userMessage(userMessage1)
+        val um = UserMessage.userMessage(trimmedUserMessage)
 
-        val response = generateWithRetryOrNull(systemMessage, um) ?: return ModelResponse("", ResponseState.OTHER)
+        if (logger.isInfoEnabled) {
+            val log = StringUtils.abbreviate(trimmedUserMessage, 100).replace("\n", " ")
+            logger.info("▶ Chat - [len: {}] {}", trimmedUserMessage.length, log)
+        }
+
+        val response = try {
+            if (systemMessage.isBlank()) {
+                langchainModel.generate(um)
+            } else {
+                val sm = SystemMessage.systemMessage(systemMessage)
+                langchainModel.generate(um, sm)
+            }
+        } catch (e: IOException) {
+            logger.info("IOException | {}", e.message)
+            return ModelResponse("", ResponseState.OTHER)
+        } catch (e: RuntimeException) {
+            if (e.cause is InterruptedIOException) {
+                logger.info("InterruptedIOException | {}", e.message)
+                return ModelResponse("", ResponseState.OTHER)
+            } else {
+                logger.warn("RuntimeException | {} | {}", langchainModel.javaClass.simpleName, e.message)
+                throw e
+            }
+        } catch (e: Exception) {
+            logger.warn("[Unexpected] Exception | {} | {}", langchainModel.javaClass.simpleName, e.message)
+            return ModelResponse("", ResponseState.OTHER)
+        }
 
         val u = response.tokenUsage()
         val tokenUsage = TokenUsage(u.inputTokenCount(), u.outputTokenCount(), u.totalTokenCount())
@@ -123,59 +145,15 @@ open class ChatModelImpl(
         }
 
         val modelResponse = ModelResponse(response.content().text().trim(), state, tokenUsage)
+        if (logger.isInfoEnabled) {
+            val log = StringUtils.abbreviate(modelResponse.content, 100).replace("\n", " ")
+            logger.info("◀ Chat - token: {} | [len: {}] {}", modelResponse.tokenUsage.totalTokenCount, modelResponse.content.length, log)
+        }
 
         // Cache the response
         responseCache.put(cacheKey, modelResponse)
         logger.debug("Cached response for key: $cacheKey")
 
         return modelResponse
-    }
-
-    @Throws(RuntimeException::class)
-    private fun generateWithRetryOrNull(systemMessage: String, um: UserMessage): Response<AiMessage>? {
-        return try {
-            generateWithRetry(systemMessage, um)
-        } catch (e: RuntimeException) {
-            logger.warn("Model call failed after retries | ${e.message}")
-            null
-        }
-    }
-
-    @Throws(RuntimeException::class)
-    private fun generateWithRetry(systemMessage: String, um: UserMessage): Response<AiMessage>? {
-        var i = 0
-        val n = 3
-
-        while (i++ <= n) {
-            try {
-                return generate0(systemMessage, um)
-            } catch (e: RuntimeException) {
-                val modelClass = langchainModel.javaClass.simpleName
-                val messageDetails = MessageFormat.format("$i/$n | {0} | {1}", modelClass, e.message)
-                if (i < 3) {
-                    val message = "Model call failure, retrying..."
-                    val totalLogCount = failureCounts.computeIfAbsent(message) { AtomicInteger() }.incrementAndGet()
-                    if (totalLogCount < 20) {
-                        logger.info("{} {} | enable debug to show every failure", message, messageDetails)
-                    } else {
-                        logger.debug("[Verbose] {} {}", message, messageDetails)
-                    }
-                } else {
-                    throw RuntimeException("Model call failure, retry failed | $messageDetails")
-                }
-            }
-        }
-
-        throw RuntimeException("Model call failure")
-    }
-
-    @Throws(RuntimeException::class)
-    private fun generate0(systemMessage: String, um: UserMessage): Response<AiMessage>? {
-        return if (systemMessage.isBlank()) {
-            langchainModel.generate(um)
-        } else {
-            val sm = SystemMessage.systemMessage(systemMessage)
-            langchainModel.generate(um, sm)
-        }
     }
 }

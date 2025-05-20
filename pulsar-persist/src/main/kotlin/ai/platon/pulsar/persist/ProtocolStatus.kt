@@ -1,7 +1,9 @@
 package ai.platon.pulsar.persist
 
+import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
+import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes.INCOMPATIBLE_CODE_START
 import java.util.*
 
 class ProtocolStatus {
@@ -48,7 +50,7 @@ class ProtocolStatus {
          * the page displays "404 Not Found" or something similar,
          * the server should issue a 404 error code, but not guaranteed
          */
-        get() = minorCode == ProtocolStatusCodes.NOT_FOUND
+        get() = minorCode == ProtocolStatusCodes.SC_NOT_FOUND
 
     val isGone: Boolean
         get() = minorCode == ProtocolStatusCodes.GONE
@@ -176,13 +178,13 @@ class ProtocolStatus {
          */
         private const val FAILED: Short = 2
 
-        val STATUS_SUCCESS: ProtocolStatus = ProtocolStatus(SUCCESS, ProtocolStatusCodes.SUCCESS_OK)
+        val STATUS_SUCCESS: ProtocolStatus = ProtocolStatus(SUCCESS, ProtocolStatusCodes.SC_OK)
         val STATUS_NOTMODIFIED: ProtocolStatus = ProtocolStatus(SUCCESS, ProtocolStatusCodes.NOT_MODIFIED)
         val STATUS_NOTFETCHED: ProtocolStatus = ProtocolStatus(NOTFETCHED)
 
         val STATUS_PROTO_NOT_FOUND: ProtocolStatus = failed(ProtocolStatusCodes.PROTO_NOT_FOUND)
         val STATUS_ACCESS_DENIED: ProtocolStatus = failed(ProtocolStatusCodes.UNAUTHORIZED)
-        val STATUS_NOTFOUND: ProtocolStatus = failed(ProtocolStatusCodes.NOT_FOUND)
+        val STATUS_NOTFOUND: ProtocolStatus = failed(ProtocolStatusCodes.SC_NOT_FOUND)
 
         // NOTE:
         // What are the differences between a canceled page and a retry page?
@@ -198,7 +200,7 @@ class ProtocolStatus {
             majorCodes[SUCCESS] = "Success"
             majorCodes[FAILED] = "Failed"
 
-            minorCodes[ProtocolStatusCodes.SUCCESS_OK] = "OK"
+            minorCodes[ProtocolStatusCodes.SC_OK] = "OK"
             minorCodes[ProtocolStatusCodes.CREATED] = "Created"
             minorCodes[ProtocolStatusCodes.MOVED_PERMANENTLY] = "Moved"
             minorCodes[ProtocolStatusCodes.MOVED_TEMPORARILY] = "TempMoved"
@@ -206,7 +208,7 @@ class ProtocolStatus {
 
             minorCodes[ProtocolStatusCodes.PROTO_NOT_FOUND] = "ProtoNotFound"
             minorCodes[ProtocolStatusCodes.UNAUTHORIZED] = "AccessDenied"
-            minorCodes[ProtocolStatusCodes.NOT_FOUND] = "NotFound"
+            minorCodes[ProtocolStatusCodes.SC_NOT_FOUND] = "NotFound"
             minorCodes[ProtocolStatusCodes.PRECONDITION_FAILED] = "PreconditionFailed"
             minorCodes[ProtocolStatusCodes.REQUEST_TIMEOUT] = "RequestTimeout"
             minorCodes[ProtocolStatusCodes.GONE] = "Gone"
@@ -225,7 +227,6 @@ class ProtocolStatus {
             minorCodes[ProtocolStatusCodes.SCRIPT_TIMEOUT] = "ScriptTimeout"
         }
 
-        
         fun box(protocolStatus: GProtocolStatus): ProtocolStatus {
             return ProtocolStatus(protocolStatus)
         }
@@ -234,11 +235,21 @@ class ProtocolStatus {
             return majorCodes.getOrDefault(code.toShort(), "unknown")
         }
 
+        @Deprecated("Use getStatusText instead for consistency with ResourceStatus", ReplaceWith(expression = "getStatusText"))
         fun getMinorName(code: Int): String {
             return minorCodes.getOrDefault(code, "unknown")
         }
 
-        
+        /**
+         * Keep consistency with [ai.platon.pulsar.common.ResourceStatus]
+         * */
+        fun getStatusText(code: Int): String {
+            return when {
+                code < INCOMPATIBLE_CODE_START -> ResourceStatus.getStatusText(code)
+                else -> minorCodes.getOrDefault(code, "unknown")
+            }
+        }
+
         fun retry(scope: RetryScope?, reason: Any): ProtocolStatus {
             val reasonString = if (reason is Exception) {
                 reason.javaClass.simpleName
@@ -289,7 +300,7 @@ class ProtocolStatus {
         }
 
         fun fromMinor(minorCode: Int): ProtocolStatus {
-            return if (minorCode == ProtocolStatusCodes.SUCCESS_OK || minorCode == ProtocolStatusCodes.NOT_MODIFIED) {
+            return if (minorCode == ProtocolStatusCodes.SC_OK || minorCode == ProtocolStatusCodes.NOT_MODIFIED) {
                 STATUS_SUCCESS
             } else {
                 failed(minorCode)

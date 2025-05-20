@@ -44,7 +44,7 @@ internal class WebDriverDemo(private val session: PulsarSession = createSession(
             println("click $selector ...")
             driver.click(selector)
 
-            println("Using spoken language, tell the browser to click $selector ...")
+            println("Using plain language, tell the browser to click $selector ...")
             // Only works when LLM is configured
             session.instruct("scroll to middle", driver)
 

@@ -527,7 +527,7 @@ class SimpleCommandDispatcher {
     companion object {
         /**
          * Parses a function call from a text string into its components.
-         * 
+         *
          * Extracts the object name, function name, and argument list from a function call string.
          * Handles various formats of function calls, including with and without quotes.
          *
@@ -544,6 +544,8 @@ class SimpleCommandDispatcher {
          * driver.scrollToMiddle(0.4)
          * driver.mouseWheelUp(2, 200, 200)
          * ```
+         *
+         * @see <a href="https://github.com/Kotlin/grammar-tools">Kotlin Grammar Tools</a>
          *
          * @param input The function call string to parse.
          * @return A triple containing (objectName, functionName, argumentList), or null if the input is not a valid function call.

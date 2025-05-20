@@ -16,10 +16,12 @@ fun main() {
     // see https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint
     val apiKey = System.getProperty("llm.apiKey")
     PulsarSettings()
-        .withSPA() // enable Single Page Application mode, so the execution will not be timeout
-        .withLLMProvider("volcengine") // use volcengine as the LLM provider
-        .withLLMName("ep-20250218201413-f54pj") // the LLM name, you should change it to your own
-        // .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
+        .withLLMProvider("volcengine")
+        .withLLMName("ep-20250218132011-1234567890")
+        .withLLMAPIKey(apiKey)
+
+    // LLM configuration guide:
+    // https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/llm-config.md
 
     // Use the default browser for best experience
     // Enable Single Page Application mode to avoid timeout

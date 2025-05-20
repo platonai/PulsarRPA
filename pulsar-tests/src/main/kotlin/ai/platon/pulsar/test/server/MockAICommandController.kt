@@ -1,5 +1,7 @@
 package ai.platon.pulsar.test.server
 
+import ai.platon.pulsar.common.ResourceStatus
+import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
@@ -8,115 +10,115 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+/**
+ * Use mock-sse.html to test this controller.
+ * */
 @RestController
-@RequestMapping("ai/command")
+@RequestMapping("/mock/api/ai/command")
+@CrossOrigin
 class MockAICommandController {
     private val executor: ExecutorService = Executors.newCachedThreadPool()
-    private val tasks: MutableMap<String, TaskStatus> = ConcurrentHashMap()
+    private val tasks: MutableMap<String, ScrapeResponse> = ConcurrentHashMap()
 
-    // 模拟提交命令：返回 UUID
-    @PostMapping(consumes = [MediaType.TEXT_PLAIN_VALUE])
-    fun submitCommand(@RequestBody command: String): String {
+    // 模拟提交命令：返回 ScrapeResponse
+    @PostMapping(consumes = [MediaType.TEXT_PLAIN_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun submitCommand(@RequestBody command: String): ScrapeResponse {
         val uuid = UUID.randomUUID().toString()
-        val status = TaskStatus("processing", null, null)
-        tasks[uuid] = status
-
-        // 模拟后台异步执行任务
+        val response = ScrapeResponse()
+        response.id = uuid
+        response.statusCode = ResourceStatus.SC_PROCESSING
+        tasks[uuid] = response
         executor.submit { processCommand(uuid, command) }
-        return uuid
+        return response
     }
 
-    // SSE 推送任务状态
-    @GetMapping(value = ["/stream/{uuid}"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-    fun streamResult(@PathVariable uuid: String): SseEmitter {
-        val emitter = SseEmitter(0L) // 无超时
+    // Simulate command refine
+    @PostMapping(value = ["/refine"], consumes = [MediaType.TEXT_PLAIN_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun refineCommand(@RequestBody command: String): ScrapeResponse {
+        val uuid = UUID.randomUUID().toString()
+        val response = ScrapeResponse()
+        response.id = uuid
+        response.statusCode = ResourceStatus.SC_PROCESSING
+        tasks[uuid] = response
+        refineCommand(uuid, command)
+        return response
+    }
 
+    // SSE 推送任务状态，返回 ScrapeResponse
+    @GetMapping(value = ["/stream/{uuid}"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun streamResultForCommand(@PathVariable uuid: String): SseEmitter {
+        val emitter = SseEmitter(0L) // 无超时
         executor.submit {
             try {
                 while (true) {
-                    val task = tasks[uuid]
-                    if (task == null) {
-                        emitter.send(
-                            java.util.Map.of(
-                                "status",
-                                "failed",
-                                "error",
-                                "Task not found"
-                            )
-                        )
+                    val resp = tasks[uuid]
+                    if (resp == null) {
+                        val errorResp = ScrapeResponse()
+                        errorResp.id = uuid
+                        errorResp.statusCode = ResourceStatus.SC_INTERNAL_SERVER_ERROR
+                        emitter.send(errorResp)
                         emitter.complete()
                         return@submit
                     }
-
-                    if ("completed" == task.status) {
-                        emitter.send(
-                            java.util.Map.of(
-                                "status",
-                                "completed",
-                                "result",
-                                task.result
-                            )
-                        )
-                        emitter.complete()
-                        return@submit
-                    } else if ("failed" == task.status) {
-                        emitter.send(
-                            java.util.Map.of(
-                                "status",
-                                "failed",
-                                "error",
-                                task.error
-                            )
-                        )
-                        emitter.complete()
-                        return@submit
-                    } else {
-                        emitter.send(java.util.Map.of("status", "processing"))
-                        Thread.sleep(1000)
+                    when (resp.statusCode) {
+                        ResourceStatus.SC_OK, ResourceStatus.SC_INTERNAL_SERVER_ERROR -> {
+                            emitter.send(resp)
+                            emitter.complete()
+                            return@submit
+                        }
+                        else -> {
+                            emitter.send(resp)
+                            Thread.sleep(1000)
+                        }
                     }
                 }
             } catch (e: Exception) {
                 try {
-                    emitter.send(
-                        java.util.Map.of(
-                            "status",
-                            "failed",
-                            "error",
-                            e.message
-                        )
-                    )
-                } catch (ignored: Exception) {
-                }
+                    val errorResp = ScrapeResponse()
+                    errorResp.id = uuid
+                    errorResp.statusCode = ResourceStatus.SC_INTERNAL_SERVER_ERROR
+                    emitter.send(errorResp)
+                } catch (ignored: Exception) {}
                 emitter.completeWithError(e)
             }
         }
-
         return emitter
     }
 
-    // 模拟任务执行过程
-    private fun processCommand(uuid: String, command: String) {
+    // 模拟任务执行过程，更新 ScrapeResponse
+    private fun refineCommand(uuid: String, command: String) {
         try {
-            // 模拟耗时任务
             Thread.sleep(5000)
-
-            // 模拟执行结果
-            val result = mapOf(
-                "productName" to "Mock Product",
-                "price" to "$19.99",
-                "ratings" to "4.5 stars",
-                "summary" to "This is a mock summary of the product.",
-                "links" to listOf("/dp/B0C1H26C46", "/dp/B0C1234567")
-            )
-
-            tasks[uuid] = TaskStatus("completed", result, null)
+            val resp = tasks[uuid]
+            if (resp != null) {
+                resp.resultSet = listOf(
+                    mapOf(
+                        "refinedCommand" to "Refined:\n$command",
+                    )
+                )
+                resp.statusCode = ResourceStatus.SC_OK
+            }
         } catch (e: Exception) {
-            tasks[uuid] = TaskStatus("failed", null, e.message)
+            val resp = tasks[uuid]
+            if (resp != null) {
+                resp.statusCode = ResourceStatus.SC_INTERNAL_SERVER_ERROR
+            }
         }
     }
 
-    // 内部类表示任务状态
-    internal class TaskStatus(// processing, completed, failed
-        var status: String, var result: Map<String, Any>?, var error: String?
-    )
+    // 模拟任务执行过程，更新 ScrapeResponse
+    private fun processCommand(uuid: String, command: String) {
+        try {
+            Thread.sleep(5000)
+            val resp = tasks[uuid]
+            if (resp != null) {
+                resp.statusCode = ResourceStatus.SC_OK
+            }
+        } catch (e: Exception) {
+            val resp = tasks[uuid]
+            if (resp != null) {
+                resp.statusCode = ResourceStatus.SC_INTERNAL_SERVER_ERROR
+            }
+        }
+    }
 }

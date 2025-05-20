@@ -3,6 +3,7 @@ name: CI & Release
 on:
   push:
     branches:
+      - main
       - master
   # Allow manual workflow runs
   workflow_dispatch:
@@ -55,7 +56,7 @@ jobs:
 
       - name: Run curl integration tests
         run: |
-          ./bin/scrape-async.sh
+          ./bin/test.sh
 
       - name: Stop Docker container
         if: always()

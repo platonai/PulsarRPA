@@ -28,7 +28,7 @@ import kotlin.reflect.KClass
 
 class ParseResult constructor(
         majorCode: Short = NOTPARSED,
-        minorCode: Int = SUCCESS_OK,
+        minorCode: Int = SC_OK,
         message: String? = null
 ) : ParseStatus(majorCode, minorCode, message) {
     val hypeLinks = mutableSetOf<HyperlinkPersistable>()
@@ -42,7 +42,7 @@ class ParseResult constructor(
     companion object {
 
         fun success(document: FeaturedDocument): ParseResult {
-            return ParseResult(SUCCESS, SUCCESS_OK).also { it.document = document }
+            return ParseResult(SUCCESS, SC_OK).also { it.document = document }
         }
 
         fun failed(minorCode: Int, message: String?): ParseResult {

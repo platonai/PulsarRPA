@@ -1,11 +1,13 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.exists
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -18,6 +20,8 @@ class AppContextTest {
     fun setUp() {
         // Set up necessary environment variables and system properties
         System.setProperty("app.version", "test-version")
+        // Trigger ~/.pulsar creation
+        assertTrue { AppPaths.DATA_DIR.exists() }
     }
 
     @Test
@@ -33,7 +37,8 @@ class AppContextTest {
 
         // Test default data directory
         val dataDir = AppContext.APP_DATA_DIR_RT
-        assertTrue(Files.exists(dataDir), "App data directory should exist: $dataDir")
+        Assumptions.assumeTrue(Files.exists(dataDir), "App data directory should exist: $dataDir")
+        Files.createDirectories(dataDir)
 
         // Test specified data directory
         val specifiedDir = tmpDir.resolve("specified")

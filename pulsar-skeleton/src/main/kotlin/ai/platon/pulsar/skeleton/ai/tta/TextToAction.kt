@@ -39,7 +39,7 @@ class TextToAction(val conf: ImmutableConfig) {
     var pulsarSessionMessage: String
         private set
 
-    val webDriverFile = baseDir.resolve("WebDriver.kt")
+    val webDriverFile = baseDir.resolve("MiniWebDriver.kt")
     var webDriverSourceCode: String
         private set
     var webDriverMessage: String
@@ -53,11 +53,15 @@ class TextToAction(val conf: ImmutableConfig) {
         Files.createDirectories(baseDir)
 
         LLMUtils.copyWebDriverFile(webDriverFile)
-        webDriverSourceCode = Files.readString(webDriverFile)
+        webDriverSourceCode = Files.readAllLines(webDriverFile)
+            .filter { it.contains(" fun ") }
+            .joinToString("\n")
         webDriverMessage = WEB_DRIVER_MESSAGE_TEMPLATE.replace("{{webDriverSourceCode}}", webDriverSourceCode)
 
         LLMUtils.copyPulsarSessionFile(pulsarSessionFile)
-        pulsarSessionSourceCode = Files.readString(pulsarSessionFile)
+        pulsarSessionSourceCode = Files.readAllLines(pulsarSessionFile)
+            .filter { it.contains(" fun ") }
+            .joinToString("\n")
         pulsarSessionMessage = PULSAR_SESSION_MESSAGE_TEMPLATE.replace("{{pulsarSessionSourceCode}}", pulsarSessionSourceCode)
 
         actionInstructionMessage = webDriverSourceCode + pulsarSessionSourceCode
@@ -82,7 +86,9 @@ class TextToAction(val conf: ImmutableConfig) {
     fun chatAboutWebDriver(prompt: String): ModelResponse {
         val promptWithSystemMessage = """
             $webDriverMessage
+            
             $prompt
+            
         """.trimIndent()
 
         return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
@@ -93,7 +99,7 @@ class TextToAction(val conf: ImmutableConfig) {
      * */
     fun chatAboutPulsarSession(prompt: String): ModelResponse {
         val promptWithSystemMessage = """
-            $webDriverMessage
+            $pulsarSessionMessage
             $prompt
         """.trimIndent()
 
@@ -139,7 +145,6 @@ suspend fun llmGeneratedFunction(session: PulsarSession) {
 }
 ```
 
-
         """.trimIndent()
 
         val WEB_DRIVER_MESSAGE_TEMPLATE = """
@@ -157,8 +162,6 @@ suspend fun llmGeneratedFunction(driver: WebDriver) {
     // 你的代码
 }
 ```
-
-
         """.trimIndent()
     }
 }

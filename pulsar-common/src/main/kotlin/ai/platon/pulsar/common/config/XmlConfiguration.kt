@@ -2,7 +2,6 @@ package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.ResourceLoader.getURLOrNull
-import ai.platon.pulsar.common.config.XmlConfiguration.Companion.EXTERNAL_RESOURCE_BASE_DIR
 import ai.platon.pulsar.common.urls.URLUtils
 import com.ctc.wstx.io.StreamBootstrapper
 import com.ctc.wstx.io.SystemId
@@ -25,6 +24,7 @@ import javax.xml.stream.XMLStreamReader
 import kotlin.io.path.isReadable
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.reader
 
 /**
  * Configuration is a set of key/value pairs. Keys are always strings, values can be any type.
@@ -41,7 +41,6 @@ class XmlConfiguration(
 
     companion object {
         val DEFAULT_RESOURCES = mutableSetOf("pulsar-default.xml")
-        val EXTERNAL_RESOURCE_BASE_DIR = AppPaths.CONFIG_ENABLED_DIR
         private val ID_SUPPLIER = AtomicInteger()
     }
 
@@ -160,8 +159,9 @@ private class ConfigurationImpl(
 
         collectResourcePaths()
         resourceURIs.mapNotNull { URLUtils.getURLOrNull(it) }.forEach { addResource(it) }
-        if (loadDefaults && Files.isDirectory(EXTERNAL_RESOURCE_BASE_DIR)) {
-            addExternalResource(EXTERNAL_RESOURCE_BASE_DIR)
+        if (loadDefaults && Files.isDirectory(AppPaths.CONFIG_ENABLED_DIR)) {
+            addExternalResource(AppPaths.CONFIG_ENABLED_DIR)
+            loadExternalProperties(AppPaths.CONFIG_ENABLED_DIR)
         }
     }
 
@@ -169,12 +169,24 @@ private class ConfigurationImpl(
 
     fun addResource(path: Path) = addResourceObject(Resource(path))
 
+    @Deprecated("XML configuration will be deprecated")
     fun addExternalResource(baseDir: Path) {
         val externalResources = baseDir.listDirectoryEntries("*.xml").filter { it.isRegularFile() && it.isReadable() }
-        if (externalResources.isEmpty()) {
-            logger.info("You can add extra configuration files to the directory: {}", baseDir)
-        } else {
-            externalResources.onEach { logger.info("Found configuration: {}", it) }.forEach { addResource(it) }
+        externalResources.forEach { addResource(it) }
+    }
+
+    fun loadExternalProperties(baseDir: Path) {
+        val externalResources = baseDir.listDirectoryEntries("*.properties")
+        externalResources
+            .onEach { logger.info("Found properties file: {}", it) }
+            .forEach { loadFromPropertyFile(it) }
+    }
+
+    private fun loadFromPropertyFile(path: Path) {
+        try {
+            properties.load(path.reader())
+        } catch (e: IOException) {
+            logger.warn("Failed to load properties | {}", path)
         }
     }
 
@@ -223,7 +235,7 @@ private class ConfigurationImpl(
                 resourceURIs.add(realResource)
                 logger.info("Found configuration: {}", realResource)
             } else {
-                logger.info("Resource not find: $resourceName")
+                logger.debug("Resource not find: $resourceName")
             }
         }
     }
@@ -334,6 +346,7 @@ private class ConfigurationImpl(
                 val url = getURLOrNull(resource) ?: return null
                 parse(url)
             }
+
             is Path -> {
                 // a file resource
                 val file = File(resource.toUri().path).absoluteFile.takeIf { it.exists() } ?: return null

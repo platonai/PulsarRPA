@@ -145,6 +145,9 @@
         <appender-ref ref="Console"/>
     </root>
 
+    <!-- Stop logback status INFO at the start -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
     <logger name="ai.platon.exotic.amazon.crawl.boot.component.json" level="INFO" additivity="false">
         <appender-ref ref="JSON"/>
     </logger>

@@ -414,15 +414,9 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun getCookies(): List<Map<String, String>>
 
-    /**
-     * Deletes browser cookies with matching name.
-     *
-     * ```kotlin
-     * driver.deleteCookies("name")
-     * ```
-     *
-     * @param name Name of the cookies to remove.
-     */
+    @Deprecated("Use deleteCookies(name, url, domain, path) instead." +
+            "[deleteCookies] (3/5) | code: -32602, At least one of the url and domain needs to be specified",
+        ReplaceWith("driver.deleteCookies(name, url, domain, path)"))
     @Throws(WebDriverException::class)
     suspend fun deleteCookies(name: String)
 
@@ -432,6 +426,8 @@ interface WebDriver : Closeable {
      * ```kotlin
      * driver.deleteCookies("name", "https://www.example.com")
      * ```
+     *
+     * > NOTE: At least one of the url and domain needs to be specified
      *
      * @param name Name of the cookies to remove.
      * @param url If specified, deletes all the cookies with the given name where domain and path

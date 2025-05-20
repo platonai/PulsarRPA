@@ -26,9 +26,6 @@
     <property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%.10t]){faint} %clr(%c{2}){cyan} %clr(-){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
     <property name="DRFA_LOG_PATTERN" value="%d{HH:mm:ss.SSS} [%.10thread] %-5level %logger{26} - %msg%n"/>
 
-    <!-- Stop logback status INFO at the start -->
-    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
-
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
@@ -127,6 +124,9 @@
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="DRFA"/>
     </root>
+
+    <!-- Stop logback status INFO at the start -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
 
     <logger name="ai.platon.scent" level="INFO">
         <appender-ref ref="SERVER"/>

@@ -33,8 +33,14 @@
     </style>
 </head>
 <body>
-<h1>Submit AI Command</h1>
-<label for="commandInput">Command:</label><textarea id="commandInput" placeholder="Enter your command script here..."></textarea>
+<h1>Submit AI Command - Test MockAICommandController</h1>
+<label for="commandInput">Command:</label><textarea id="commandInput" placeholder="Enter your command script here...">Go to https://www.amazon.com/dp/B0C1H26C46
+After page load: scroll to the middle.
+
+Summarize the product.
+Extract: product name, price, ratings.
+Find all links containing /dp/.
+</textarea>
 <br />
 <button onclick="submitCommand()">Submit</button>
 <div id="status"></div>
@@ -73,14 +79,16 @@
 
         const interval = setInterval(async () => {
             try {
-                const response = await fetch(`http://localhost:8182/api/ai/command/${uuid}`);
-                if (!response.ok) throw new Error('Polling failed');
+                const response = await fetch(`http://localhost:8182/api/ai/command/stream/${uuid}`);
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
 
                 const data = await response.json();
+
                 if (data.status === 'completed') {
                     clearInterval(interval);
                     status.textContent = 'Completed';
-                    result.textContent = JSON.stringify(data.result, null, 2);
+                    // result.textContent = data.result;
+                    result.textContent = JSON.stringify(data, null, 2);
                 } else if (data.status === 'failed') {
                     clearInterval(interval);
                     status.textContent = 'Failed';
@@ -93,6 +101,7 @@
                 if (retry > 5) {
                     clearInterval(interval);
                     status.textContent = 'Polling failed too many times.';
+                    result.textContent = err.message;
                 }
             }
         }, 2000);

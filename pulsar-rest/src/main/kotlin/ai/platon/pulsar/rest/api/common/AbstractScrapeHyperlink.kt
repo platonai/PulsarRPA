@@ -44,7 +44,7 @@ abstract class AbstractScrapeHyperlink(
     open fun executeQuery(): ResultSet = executeQuery(request, response)
     
     open fun complete(page: WebPage) {
-        response.uuid = uuid
+        response.id = uuid
         response.isDone = true
         response.finishTime = Instant.now()
         
@@ -63,10 +63,10 @@ abstract class AbstractScrapeHyperlink(
             rs = executeQuery(sql.sql)
         } catch (e: JdbcSQLException) {
             response.statusCode = ResourceStatus.SC_EXPECTATION_FAILED
-            logger.warn("Failed to execute sql #${response.uuid}{}", e.brief())
+            logger.warn("Failed to execute sql #${response.id}{}", e.brief())
         } catch (e: Throwable) {
             response.statusCode = ResourceStatus.SC_EXPECTATION_FAILED
-            logger.warn("Failed to execute sql #${response.uuid}\n{}", e.brief())
+            logger.warn("Failed to execute sql #${response.id}\n{}", e.brief())
         }
         
         return rs
@@ -89,11 +89,11 @@ abstract class AbstractScrapeHyperlink(
                     val message = e.toString()
                     if (message.contains("Syntax error in SQL statement")) {
                         response.statusCode = ResourceStatus.SC_BAD_REQUEST
-                        logger.warn("Syntax error in SQL statement #${response.uuid}>>>\n{}\n<<<", e.sql)
+                        logger.warn("Syntax error in SQL statement #${response.id}>>>\n{}\n<<<", e.sql)
                     } else {
                         response.statusCode = ResourceStatus.SC_EXPECTATION_FAILED
                         if (AppContext.isActive) {
-                            logger.warn("Failed to execute scrape task #${response.uuid}", e)
+                            logger.warn("Failed to execute scrape task #${response.id}", e)
                         }
                     }
                 }

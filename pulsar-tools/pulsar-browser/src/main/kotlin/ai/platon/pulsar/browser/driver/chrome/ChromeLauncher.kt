@@ -198,6 +198,11 @@ class ChromeLauncher constructor(
             supervisorProcess = null
         }
 
+        if (Runtimes.hasOnlyHeadlessBrowser()) {
+            logger.info("The current environment has no GUI support, force to headless mode")
+            chromeOptions.headless = true
+        }
+
         val executable = supervisorProcess ?: "$chromeBinary"
         var arguments = if (supervisorProcess == null) chromeOptions.toList() else {
             options.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
@@ -331,6 +336,10 @@ Kill all Chrome processes and run the program again.
 ===============================================================================
 
                     """.trimIndent()
+
+//        Runtimes.listAllChromeProcesses().forEach {
+//            println(it)
+//        }
 
         logger.warn(message)
         return

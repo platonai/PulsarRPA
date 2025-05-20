@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnInterruptible
-import ai.platon.pulsar.common.warnUnexpected
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.WebPage
@@ -12,7 +11,7 @@ import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
-import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
+import ai.platon.pulsar.rest.api.entities.refresh
 import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultCrawlEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultLoadEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
@@ -32,24 +31,24 @@ open class XSQLScrapeHyperlink(
     ) : DefaultCrawlEventHandlers() {
         init {
             onWillLoad.addLast {
-                response.pageStatusCode = ResourceStatus.SC_PROCESSING
+                response.refresh("onWillLoad")
                 it
             }
             onLoaded.addLast { url, page ->
                 if (!hyperlink.isDone) {
                     hyperlink.complete(page ?: GoraWebPage.NIL)
                 }
+                response.refresh(isDone = true)
             }
         }
     }
-    
+
     class LoadEventHandlers(
         val hyperlink: XSQLScrapeHyperlink,
         val response: ScrapeResponse,
     ) : DefaultLoadEventHandlers() {
         init {
             onWillLoad.addLast {
-                response.pageStatusCode = ResourceStatus.SC_PROCESSING
                 null
             }
             onWillParseHTMLDocument.addLast { page ->
@@ -65,7 +64,7 @@ open class XSQLScrapeHyperlink(
                 hyperlink.extract(page, document)
             }
             onLoaded.addLast { page ->
-                //
+                response.refresh("onLoaded")
             }
         }
     }
@@ -80,6 +79,7 @@ open class XSQLScrapeHyperlink(
 
     open fun extract(page: WebPage, document: FeaturedDocument) {
         try {
+            response.refresh("extract")
             response.pageContentBytes = page.contentLength.toInt()
             response.pageStatusCode = page.protocolStatus.minorCode
 
@@ -97,9 +97,11 @@ open class XSQLScrapeHyperlink(
         if (!page.protocolStatus.isSuccess || page.contentLength == 0L || page.content == null) {
             logger.info("No content | {}", page.url)
             response.statusCode = ResourceStatus.SC_NO_CONTENT
+            response.refresh(ResourceStatus.SC_NO_CONTENT, ResourceStatus.SC_NO_CONTENT, false)
         }
 
         val rs = executeQuery(request, response)
         response.resultSet = ResultSetUtils.getTextEntitiesFromResultSet(rs)
+        response.refresh(ResourceStatus.SC_OK, page.protocolStatus.minorCode, false)
     }
 }

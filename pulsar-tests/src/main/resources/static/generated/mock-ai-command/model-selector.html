@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>LLM Provider Selector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 p-6">
+<div class="max-w-xl mx-auto bg-white shadow-lg rounded-2xl p-6 space-y-6">
+    <h1 class="text-2xl font-bold">🧠 LLM Provider Selector</h1>
+
+    <!-- Provider Selector -->
+    <div>
+        <label class="block font-medium mb-1">Provider</label>
+        <select id="provider" class="w-full border rounded p-2">
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic</option>
+            <option value="google">Google Gemini</option>
+            <option value="mistral">Mistral</option>
+            <option value="cohere">Cohere</option>
+        </select>
+    </div>
+
+    <!-- Model Selector -->
+    <div>
+        <label class="block font-medium mb-1">Model</label>
+        <select id="model" class="w-full border rounded p-2">
+            <!-- Will be filled dynamically -->
+        </select>
+    </div>
+
+    <!-- Prompt Input -->
+    <div>
+        <label class="block font-medium mb-1">Prompt</label>
+        <textarea id="prompt" rows="4" class="w-full border rounded p-2"></textarea>
+    </div>
+
+    <!-- Submit Button -->
+    <button id="submit" class="bg-blue-600 text-white rounded p-2 w-full hover:bg-blue-700">
+        Send to LLM
+    </button>
+
+    <!-- Response Display -->
+    <div id="response" class="bg-gray-100 p-4 rounded text-sm whitespace-pre-wrap"></div>
+</div>
+
+<script>
+    const providerToModels = {
+        openai: ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"],
+        anthropic: ["claude-3-opus", "claude-3-sonnet"],
+        google: ["gemini-1.5-pro", "gemini-1.0-pro"],
+        mistral: ["mistral-medium", "mistral-small"],
+        cohere: ["command-r", "command-r+"]
+    };
+
+    const providerSelect = document.getElementById("provider");
+    const modelSelect = document.getElementById("model");
+
+    function updateModelOptions() {
+        const provider = providerSelect.value;
+        const models = providerToModels[provider] || [];
+        modelSelect.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join("");
+    }
+
+    providerSelect.addEventListener("change", updateModelOptions);
+    updateModelOptions();
+
+    document.getElementById("submit").addEventListener("click", async () => {
+        const provider = providerSelect.value;
+        const model = modelSelect.value;
+        const prompt = document.getElementById("prompt").value;
+
+        const responseBox = document.getElementById("response");
+        responseBox.textContent = "⏳ Waiting for response...";
+
+        // 调用你的后端 API（这里是模拟）
+        try {
+            const res = await fetch("/api/llm", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ provider, model, prompt })
+            });
+            const data = await res.json();
+            responseBox.textContent = data.output || "✅ No output";
+        } catch (e) {
+            responseBox.textContent = "❌ Error: " + e.message;
+        }
+    });
+</script>
+</body>
+</html>

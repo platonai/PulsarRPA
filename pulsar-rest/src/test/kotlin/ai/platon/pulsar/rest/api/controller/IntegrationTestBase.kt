@@ -2,15 +2,12 @@ package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextConfiguration
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.rest.api.TestUtils
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.apache.hc.client5.http.classic.HttpClient
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.apache.hc.core5.util.Timeout
-import org.junit.jupiter.api.Assumptions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate

@@ -41,6 +41,9 @@ COPY --from=builder /build/app.jar app.jar
 # Expose port (documentation only)
 EXPOSE 8182
 
+# Create app data directory
+RUN mkdir -p ~/.pulsar/
+
 # Create non-root user and set directory permissions
 RUN addgroup --system --gid 1001 appuser && \
     adduser --system --uid 1001 --ingroup appuser appuser && \

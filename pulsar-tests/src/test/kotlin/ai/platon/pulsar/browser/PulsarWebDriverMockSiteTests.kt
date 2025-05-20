@@ -1,20 +1,14 @@
 package ai.platon.pulsar.browser
 
-import ai.platon.pulsar.browser.common.SimpleScriptConfuser.Companion.IDENTITY_NAME_MANGLER
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.js.JsUtils
-import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.persist.model.ActiveDOMMessage
-import ai.platon.pulsar.persist.model.ActiveDOMMetadata
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
 
 class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
+
+    override val webDriverService get() = FastWebDriverService(browserFactory)
 
     val text = "awesome AI enabled PulsarRPA!"
 
@@ -177,6 +171,45 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         val propValues = driver.selectPropertyValueAll(selector, propName)
         println(propValues)
         assertEquals(listOf(text, text, text), propValues)
+    }
+
+    @Test
+    fun `test deleteCookies`() = runWebDriverTest("$assetsPBaseURL/cookie.html", browser) { driver ->
+        var cookies = driver.getCookies()
+
+        println(cookies.toString())
+
+        assertTrue(cookies.toString()) { cookies.isNotEmpty() }
+        val cookie = cookies[0]
+        assertEquals("token", cookie["name"])
+        assertEquals("abc123", cookie["value"])
+        assertEquals("127.0.0.1", cookie["domain"])
+        assertEquals("/", cookie["path"])
+
+        driver.deleteCookies("token", url = assetsPBaseURL) // OK
+        // driver.deleteCookies("token", url = "$assetsPBaseURL/cookie.html") // OK
+
+        cookies = driver.getCookies()
+        assertTrue(cookies.toString()) { cookies.isEmpty() }
+    }
+
+    @Test
+    fun `test clearBrowserCookies`() = runWebDriverTest("$assetsPBaseURL/cookie.html", browser) { driver ->
+        var cookies = driver.getCookies()
+
+        println(cookies.toString())
+
+        assertTrue(cookies.toString()) { cookies.isNotEmpty() }
+        val cookie = cookies[0]
+        assertEquals("token", cookie["name"])
+        assertEquals("abc123", cookie["value"])
+        assertEquals("127.0.0.1", cookie["domain"])
+        assertEquals("/", cookie["path"])
+
+        driver.clearBrowserCookies()
+
+        cookies = driver.getCookies()
+        assertTrue(cookies.toString()) { cookies.isEmpty() }
     }
 
     @Test

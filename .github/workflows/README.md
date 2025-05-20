@@ -27,7 +27,7 @@ Features:
 
 ### 3. Release (`release.yml`)
 
-Triggered on tag pushes with the format `v*` (e.g., `v3.0.5`).
+Triggered on tag pushes with the format `v*` (e.g., `3.0.7`).
 
 Features:
 - Extracts version from the tag

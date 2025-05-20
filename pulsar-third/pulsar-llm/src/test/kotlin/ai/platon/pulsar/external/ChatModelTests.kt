@@ -28,7 +28,13 @@ class ChatModelTests {
         @JvmStatic
         fun checkConfiguration() {
             ChatModelTestBase.checkConfiguration()
+            model = ChatModelFactory.getOrCreate(conf)
         }
+    }
+
+    @BeforeTest
+    fun checkIfModelConfigured() {
+        Assumptions.assumeTrue(isModelConfigured, "Model is not configured")
     }
 
     @BeforeTest
@@ -53,8 +59,6 @@ class ChatModelTests {
     
     @Test
     fun `should generate answer from the partial content of a webpage`() {
-        if (!isModelConfigured) return
-        
         val text = productText
         val prompt = """
 以下我将提供一个典型电商网站的商品页面内容，找出商品标题、商品价格和评分，并且以以下格式输出：
@@ -81,8 +85,6 @@ class ChatModelTests {
     
     @Test
     fun `When ask LLM to analyze cluster then it responses with json`() {
-        if (!isModelConfigured) return
-        
         val response = model.call(clusterAnalysisPrompt)
         println(response.content)
         

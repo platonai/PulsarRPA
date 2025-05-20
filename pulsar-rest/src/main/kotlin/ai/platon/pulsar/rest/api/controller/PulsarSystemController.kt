@@ -1,19 +1,16 @@
 package ai.platon.pulsar.rest.api.controller
 
-import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyManager
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.CrossOrigin
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 /**
  * The controller to handle www resources
  * */
 @RestController
 @CrossOrigin
-@RequestMapping("api/pulsar-system")
+@RequestMapping("system")
 class PulsarSystemController {
 
     @Autowired
@@ -30,7 +27,7 @@ class PulsarSystemController {
     @GetMapping("report")
     fun report(): String {
         val sb = StringBuilder()
-        sb.appendLine("Pulsar system reporting")
+        sb.appendLine("Pulsar System Report")
         sb.appendLine(driverPoolManager.buildStatusString(true))
         sb.appendLine().appendLine()
         sb.appendLine(privacyManager.buildStatusString())

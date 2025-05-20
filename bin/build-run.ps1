@@ -3,7 +3,7 @@ $AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
 while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
     $AppHome = Split-Path -Parent $AppHome
 }
-cd $AppHome
+Set-Location $AppHome
 
 .\bin\build.ps1 $args
 

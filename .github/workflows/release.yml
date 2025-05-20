@@ -51,7 +51,7 @@ jobs:
         run: |
           docker run -d --rm --name pulsar-rpa-test -p 8182:8182 $IMAGE_NAME:$VERSION
           sleep 10  # Wait for Spring Boot to start
-          ./bin/scrape.sh
+          ./bin/test.sh
           docker stop pulsar-rpa-test || true
 
       - name: Create GitHub Release

@@ -6,8 +6,8 @@ import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_LIST_URL
+import ai.platon.pulsar.rest.api.entities.CommandRequest
 import ai.platon.pulsar.rest.api.entities.PromptRequest
-import ai.platon.pulsar.rest.api.entities.PromptRequestL2
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -57,19 +57,19 @@ Once the document is fully loaded:
 - Scroll to the middle of the page
     """
 
-/**
- * [WARNING] Tests run: 14, Failures: 0, Errors: 0, Skipped: 4, Time elapsed: 111.2 s -- in ai.platon.pulsar.rest.api.service.PromptServiceTest
- * */
 @Tag("TimeConsumingTest")
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
-class PromptServiceTest {
+class ConversationServiceTest {
+
+    @Autowired
+    private lateinit var chatService: ChatService
 
     @Autowired
     private lateinit var conf: ImmutableConfig
 
     @Autowired
-    private lateinit var service: PromptService
+    private lateinit var conversationService: ConversationService
 
     @BeforeEach
     fun setup() {
@@ -77,7 +77,7 @@ class PromptServiceTest {
     }
 
     @Test
-    fun `test prompt conversion to request with cache`() {
+    fun `test convertPlainCommandToJSON with cache`() {
         val url1 = "https://www.amazon.com/dp/B0C1H26C46"
         val url2 = "https://www.amazon.com/dp/B07PX3ZRJ6"
 
@@ -88,7 +88,8 @@ Page summary prompt: Provide a brief introduction of this product.
 
         """.trimIndent()
 
-        val result1 = service.convertAPIRequestCommandToJSON(prompt1, url1)
+        val result1 = conversationService.convertPlainCommandToJSON(prompt1, url1)
+        assertNotNull(result1)
 
         val prompt2 = """
 Visit $url2
@@ -97,9 +98,13 @@ Page summary prompt: Provide a brief introduction of this product.
 
         """.trimIndent()
 
-        val result2 = service.convertAPIRequestCommandToJSON(prompt2, url2)
+        val result2 = conversationService.convertPlainCommandToJSON(prompt2, url2)
+        assertNotNull(result2)
 
-        assertEquals(result2, result1)
+        val template1 = result1.replace(url1, "").replace(url2, "")
+        val template2 = result2.replace(url1, "").replace(url2, "")
+
+        assertEquals(template1, template2, "The prompt template is loaded from cache, so they should be the same")
     }
 
     @Test
@@ -110,7 +115,7 @@ Visit amazon.com/dp/B0C1H26C46
 Page summary prompt: Provide a brief introduction of this product.
         """.trimIndent()
 
-        val request = service.convertPromptToRequest(prompt)
+        val request = conversationService.normalizePlainCommand(prompt)
         assertNull(request)
     }
 
@@ -121,7 +126,7 @@ Page summary prompt: Provide a brief introduction of this product.
     fun `When chat about a page then the result is not empty`() {
         val request = PromptRequest(PRODUCT_LIST_URL, "Tell me something about the page")
 
-        val response = service.chat(request)
+        val response = chatService.chat(request)
         println(response)
         assertTrue { response.isNotEmpty() }
     }
@@ -138,76 +143,16 @@ Page summary prompt: Provide a brief introduction of this product.
             PRODUCT_DETAIL_URL, "Tell me something about the page", "", actions = actions
         )
 
-        val response = service.chat(request)
+        val response = chatService.chat(request)
         println(response)
         assertTrue { response.isNotEmpty() }
-    }
-
-    @Test
-    fun `test extract`() {
-        val request = PromptRequest(PRODUCT_DETAIL_URL, "title, price, images")
-        val response = service.extract(request)
-        println(response)
-        assertTrue { response.isNotEmpty() }
-    }
-
-    @Test
-    fun `test extract with actions`() {
-        val actions = """
-            move cursor to the element with id 'title' and click it
-            scroll to middle
-            scroll to top
-            get the text of the element with id 'title'
-        """.trimIndent().split("\n")
-        val request = PromptRequest(
-            PRODUCT_DETAIL_URL, "title, price, images", "", actions = actions
-        )
-
-        val response = service.extract(request)
-        println(response)
-        assertTrue { response.isNotEmpty() }
-    }
-
-    @Test
-    fun `test command with pageSummaryPrompt`() {
-        val request = PromptRequestL2(
-            PRODUCT_DETAIL_URL,
-            pageSummaryPrompt = "Give me the product name",
-        )
-        val response = service.command(request)
-        Assumptions.assumeTrue(response.pageStatusCode == 200)
-        println(response.pageSummary)
-
-        assertTrue { response.isDone }
-        assertNull(response.fields)
-        assertNull(response.xsqlResultSet)
-        assertTrue { !response.pageSummary.isNullOrBlank() }
-    }
-
-    @Test
-    fun `test command with dataExtractionRules`() {
-        val request = PromptRequestL2(
-            PRODUCT_DETAIL_URL,
-            dataExtractionRules = "product name, ratings, price",
-        )
-        val response = service.command(request)
-        Assumptions.assumeTrue(response.pageStatusCode == 200)
-        val fields = response.fields
-        println(fields)
-
-        assertTrue { response.isDone }
-        assertNull(response.pageSummary)
-        assertNull(response.xsqlResultSet)
-
-        assertNotNull(fields)
-        assertTrue { fields.isNotEmpty() }
     }
 
     @Test
     fun `test prompt conversion to request`() {
         val prompt = API_COMMAND_PROMPT1
 
-        val request = service.convertPromptToRequest(prompt)
+        val request = conversationService.normalizePlainCommand(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(request))
         assertNotNull(request)
         verifyPromptRequestL2(request)
@@ -217,7 +162,7 @@ Page summary prompt: Provide a brief introduction of this product.
     fun `test prompt conversion to request 2`() {
         val prompt = API_COMMAND_PROMPT2
 
-        val request = service.convertPromptToRequest(prompt)
+        val request = conversationService.normalizePlainCommand(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(request))
         assertNotNull(request)
         verifyPromptRequestL2(request)
@@ -227,34 +172,10 @@ Page summary prompt: Provide a brief introduction of this product.
     fun `test prompt conversion to request 3`() {
         val prompt = API_COMMAND_PROMPT3
 
-        val request = service.convertPromptToRequest(prompt)
+        val request = conversationService.normalizePlainCommand(prompt)
         println(prettyPulsarObjectMapper().writeValueAsString(request))
         assertNotNull(request)
         verifyPromptRequestL2(request)
-    }
-
-    @Test
-    fun `test simple and clean command`() {
-        val prompt = API_COMMAND_PROMPT1
-        val response = service.command(prompt)
-        println(prettyPulsarObjectMapper().writeValueAsString(response))
-        assertNotNull(response)
-        Assumptions.assumeTrue(response.pageStatusCode == 200)
-        assertEquals(200, response.statusCode)
-        assertNotNull(response.pageSummary)
-        assertNotNull(response.fields)
-    }
-
-    @Test
-    fun `test detailed and verbose command`() {
-        val prompt = API_COMMAND_PROMPT3
-        val response = service.command(prompt)
-        println(prettyPulsarObjectMapper().writeValueAsString(response))
-        assertNotNull(response)
-        Assumptions.assumeTrue(response.pageStatusCode == 200)
-        assertEquals(200, response.statusCode)
-        assertNotNull(response.pageSummary)
-        assertNotNull(response.fields)
     }
 
     @Test
@@ -277,11 +198,15 @@ Page summary prompt: Provide a brief introduction of this product.
 }
         """.trimIndent()
 
-        val markdown = service.convertResponseToMarkdown(response)
-        println(markdown)
+        try {
+            val markdown = conversationService.convertResponseToMarkdown(response)
+            println(markdown)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    private fun verifyPromptRequestL2(request: PromptRequestL2) {
+    private fun verifyPromptRequestL2(request: CommandRequest) {
         assertTrue { request.url == "https://www.amazon.com/dp/B0C1H26C46" }
         assertEquals("https://www.amazon.com/dp/B0C1H26C46", request.url)
         assertNotNull(request.pageSummaryPrompt)

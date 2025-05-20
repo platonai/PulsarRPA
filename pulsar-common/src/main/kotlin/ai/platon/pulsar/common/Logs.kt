@@ -128,6 +128,12 @@ fun warnUnexpected(target: Any, t: Throwable, message: String, vararg args: Any?
             return
         }
 
+        if (message.isBlank()) {
+            // We will suppress the message
+            logger.info("Unexpected exception, no user message provided", t)
+            return
+        }
+
         val message1 = """
 The exception was unexpected; refine the code to handle it appropriately.
         """.trimIndent()
@@ -192,3 +198,4 @@ fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) 
         logger?.warn(t.stringify())
     }
 }
+

@@ -1,9 +1,46 @@
-# 🤖 Additional LLM Configuration Options
+# 🤖 LLM Configuration
 
-## 🔌 Method 1: Configure with OpenAI-Compatible API
+## ⚙️ Method 1: Use `application.properties` or `application-private.properties`
 
-Use any OpenAI-compatible provider (e.g., DeepSeek, Moonshot, etc.) by setting environment variables at runtime:
+PulsarRPA supports Spring Boot–style property files. You can place your private config in:
 
+* `application.properties`
+* Or `application-private.properties` (recommended for sensitive data)
+
+### ✅ Sample Configuration
+
+#### 🔍 DeepSeek
+
+```properties
+deepseek.api.key=sk-your-deepseek-key
+```
+
+#### 📦 Doubao
+
+```properties
+volcengine.api.key=9cc8e998-4655-4g90-a54c-1234567890
+volcengine.model.name=doubao-1.5-pro-32k-250115
+volcengine.base.url=https://ark.cn-beijing.volces.com/api/v3
+```
+
+#### 🌐 OpenAI
+
+```properties
+openai.api.key=9cc8e998-4655-4g90-a54c-1234567890
+openai.model.name=gpt-4o
+openai.base.url=https://api.openai.com/v1
+```
+
+> ⚠️ **Note**: If you're not running a full Spring Boot application (e.g., CLI tool, unit test, native launch), 
+> you can place the properties file under `.pulsar/config/conf-enabled` to ensure it's picked up manually.
+
+---
+
+## 🔌 Method 2: Configure via Environment Variables
+
+You can configure it at runtime using JVM system properties:
+
+OpenAI-compatible API providers (e.g., DeepSeek, Moonshot, Doubao, etc.):
 ```bash
 java -DOPENAI_API_KEY=${OPENAI_API_KEY} \
      -DOPENAI_MODEL_NAME=${OPENAI_MODEL_NAME} \
@@ -23,52 +60,34 @@ java -DOPENAI_API_KEY=${OPENAI_API_KEY} `
 
 </details>
 
-### 🧩 Supported Environment Variables:
+### 🧩 Supported Environment Variables
 
-- `OPENAI_API_KEY` – Your API key.
-- `OPENAI_MODEL_NAME` – The model name (e.g., `gpt-4o`).
-- `OPENAI_BASE_URL` – Base URL for the API endpoint (optional if using default OpenAI).
+| Variable            | Description                                       |
+| ------------------- | ------------------------------------------------- |
+| `OPENAI_API_KEY`    | Your API key                                      |
+| `OPENAI_MODEL_NAME` | Model name (e.g., `gpt-4o`, `doubao-1.5-pro-32k`) |
+| `OPENAI_BASE_URL`   | API base URL (optional for default OpenAI)        |
 
-### Examples:
-
-#### **Doubao:**
-
-Run PulsarRPA:
+### Example: Doubao
 
 ```bash
 java -DOPENAI_API_KEY="9cc8e998-4655-4e90-a54c1-66659a524a97" \
-     -DOPENAI_MODEL_NAME="doubao-1-5-pro-32k-250115" \
+     -DOPENAI_MODEL_NAME="doubao-1.5-pro-32k-250115" \
      -DOPENAI_BASE_URL="https://ark.cn-beijing.volces.com/api/v3" \
      -jar PulsarRPA.jar
 ```
 
-The corresponding curl command:
+Corresponding curl example:
 
-```shell
-curl https://ark.cn-beijing.volces.com/api/v3/chat/completions \
+```bash
+curl https://ark.cn-beijing.volces.com/api/v3 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer 9cc8e998-4655-4e90-a54c1-66659a524a97" \
   -d '{
-    "model": "doubao-1-5-pro-256k-250115",
+    "model": "doubao-1.5-pro-256k-250115",
     "messages": [
-      {"role": "system","content": "你是人工智能助手."},
-      {"role": "user","content": "常见的十字花科植物有哪些？"}
+      {"role": "system", "content": "你是人工智能助手。"},
+      {"role": "user", "content": "常见的十字花科植物有哪些？"}
     ]
   }'
 ```
-
-## ⚙️ Method 2: XML Configuration
-
-To configure an LLM using XML, simply copy one of the provided configuration files into your PulsarRPA config directory.
-
-### 📋 Example Commands
-
-**Linux/macOS:**
-
-```shell
-cp docs/config/llm/template/pulsar-volcengine-deepseek.xml ~/.pulsar/config/conf-enabled
-```
-
-> 💡 **Note:** Don't forget to update the XML file with your own API keys and parameters!
-
----

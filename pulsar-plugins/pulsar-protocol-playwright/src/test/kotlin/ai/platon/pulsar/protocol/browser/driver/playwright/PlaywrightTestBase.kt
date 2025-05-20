@@ -30,6 +30,8 @@ open class PlaywrightTestBase {
         @JvmStatic
         @BeforeAll
         fun installPlaywright() {
+            Assumptions.assumeTrue(Runtimes.isGUIAvailable(), "Test playwright only in a GUI environment")
+
             try {
                 // 尝试安装 Playwright
                 // Runtimes.exec("npx playwright install")
@@ -43,8 +45,15 @@ open class PlaywrightTestBase {
         @JvmStatic
         @AfterAll
         fun cleanUp() {
-            playwright.close()
+            if (::playwright.isInitialized) {
+                playwright.close()
+            }
         }
+    }
+
+    @BeforeEach
+    fun checkIfGUIAvailable() {
+        Assumptions.assumeTrue(Runtimes.isGUIAvailable(), "Test playwright only in a GUI environment")
     }
 
     @BeforeEach

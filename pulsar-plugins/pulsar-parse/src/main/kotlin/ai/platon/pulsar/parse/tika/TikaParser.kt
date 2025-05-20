@@ -48,6 +48,6 @@ class TikaParser(
         metadata.names().forEach { name ->
             page.metadata.set(name, metadata.get(name))
         }
-        return ParseResult(ParseStatusCodes.SUCCESS, ParseStatusCodes.SUCCESS_OK)
+        return ParseResult(ParseStatusCodes.SUCCESS, ParseStatusCodes.SC_OK)
     }
 }

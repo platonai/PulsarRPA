@@ -1,6 +1,7 @@
 package ai.platon.pulsar.browser.common
 
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.BrowserContextMode
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
@@ -18,6 +19,8 @@ open class BrowserSettings constructor(
     val config: ImmutableConfig = ImmutableConfig()
 ) {
     companion object {
+        private val logger = getLogger(BrowserSettings::class)
+
         /**
          * The viewport size for browser to rendering all webpages.
          * */
@@ -233,6 +236,12 @@ open class BrowserSettings constructor(
          * */
         @JvmStatic
         fun withGUI(): Companion {
+            if (Runtimes.hasOnlyHeadlessBrowser()) {
+                logger.warn("The current environment has no GUI support, fallback to headless mode")
+                headless()
+                return BrowserSettings
+            }
+
             listOf(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
@@ -455,6 +464,11 @@ open class BrowserSettings constructor(
      * */
     val displayMode
         get() = when {
+            Runtimes.hasOnlyHeadlessBrowser() -> {
+                // force headless mode if there is no display
+                headless()
+                DisplayMode.HEADLESS
+            }
             config[BROWSER_DISPLAY_MODE] != null -> config.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS)
             else -> DisplayMode.GUI
         }

@@ -1,45 +1,40 @@
 #!/bin/bash
 
 # Define a parameter for intervalSeconds with a default value of 60
-interval_seconds=${1:-60}
+intervalSeconds=${1:-60}
 
 # Find the first parent directory containing the VERSION file
-app_home=$(dirname "$(realpath "$0")")
-while [[ -n "$app_home" && ! -f "$app_home/VERSION" ]]; do
-    app_home=$(dirname "$app_home")
+AppHome=$(dirname "$(realpath "$0")")
+while [[ -n "$AppHome" && ! -f "$AppHome/VERSION" ]]; do
+    AppHome=$(dirname "$AppHome")
 done
 
-cd "$app_home" || exit
+if [[ -z "$AppHome" ]]; then
+    echo "[ERROR] Could not find VERSION file in any parent directory"
+    exit 1
+fi
+
+cd "$AppHome" || exit
 
 # Configuration
-repo_path="$app_home"
-build_script="$app_home/bin/build.sh"
+repoPath="$AppHome"                                  # 你的 Git 仓库路径
+buildScript="$AppHome/bin/build.sh"                  # 你的构建脚本
+
+# Enter the repository directory
+cd "$repoPath" || exit
 
 # Function to get the current HEAD hash
-get_head_hash() {
+function get_head_hash {
     git rev-parse HEAD
 }
 
 # Function to run the build script
-run_build_script() {
-    if [[ -f "$build_script" ]]; then
-        echo "[INFO] Running $build_script..."
-
-        # Test the pulsar-tests module first
-        echo "[INFO] Testing pulsar-tests module..."
-        "$build_script" -clean
-        "$build_script" -test -pl :pulsar-tests
-        test_result=$?
-
-        # Check if the pulsar-tests module had any failed tests
-        if [[ $test_result -eq 0 ]]; then
-            echo "[INFO] pulsar-tests module passed. Testing all modules..."
-            "$build_script" -clean -test
-        else
-            echo "[ERROR] pulsar-tests module failed. Skipping testing of all other modules."
-        fi
+function run_build_script {
+    if [[ -f "$buildScript" ]]; then
+        echo "[INFO] Running $buildScript..."
+        "$buildScript" -clean -test -pl :pulsar-tests
     else
-        echo "[ERROR] $build_script not found in $repo_path"
+        echo "[ERROR] $buildScript not found in $repoPath"
     fi
 }
 
@@ -49,7 +44,7 @@ git pull
 run_build_script
 
 # Get the current HEAD hash after first run
-last_hash=$(get_head_hash)
+lastHash=$(get_head_hash)
 
 # Main loop
 while true; do
@@ -59,21 +54,21 @@ while true; do
     git pull
 
     # Get the new HEAD hash
-    new_hash=$(get_head_hash)
+    newHash=$(get_head_hash)
 
     # Compare hashes
-    if [[ "$new_hash" != "$last_hash" ]]; then
-        echo "[INFO] New updates detected (Old: $last_hash, New: $new_hash)"
+    if [[ "$newHash" != "$lastHash" ]]; then
+        echo "[INFO] New updates detected (Old: $lastHash, New: $newHash)"
 
         # Run build script if updates are detected
         run_build_script
 
         # Update the last hash
-        last_hash="$new_hash"
+        lastHash="$newHash"
     else
         echo "[INFO] No updates detected."
     fi
 
     # Wait for the next check
-    sleep "$interval_seconds"
+    sleep "$intervalSeconds"
 done

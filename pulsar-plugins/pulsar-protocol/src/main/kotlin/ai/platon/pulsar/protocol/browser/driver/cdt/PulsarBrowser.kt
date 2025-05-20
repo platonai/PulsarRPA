@@ -94,7 +94,8 @@ class PulsarBrowser(
 
             chrome.closeTab(tab)
         } catch (e: ChromeIOException) {
-            throw IllegalWebDriverStateException("closeTab", e)
+            logger.info("Failed to close tab | {}", e.message)
+            // throw IllegalWebDriverStateException("closeTab", e)
         } catch (e: ChromeServiceException) {
             throw WebDriverException("closeTab", e)
         }

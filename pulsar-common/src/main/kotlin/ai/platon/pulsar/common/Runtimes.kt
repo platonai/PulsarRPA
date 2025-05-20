@@ -1,24 +1,28 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.measure.ByteUnit
 import kotlinx.coroutines.delay
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
+import java.awt.GraphicsEnvironment
+import java.awt.HeadlessException
 import java.io.BufferedReader
 import java.io.File
-import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.file.*
 import java.time.Duration
-import java.util.*
 import java.util.concurrent.TimeUnit
+import javax.swing.JFrame
 import kotlin.random.Random
+
 
 /**
  * Runtime utility
  * */
 object Runtimes {
     private val logger = LoggerFactory.getLogger(Runtimes::class.java)
+    private val heavyOperationResultCache = ConcurrentExpiringLRUCache<String, Any>(ttl = Duration.ofSeconds(10))
 
     fun exec(name: String): List<String> {
         try {
@@ -59,6 +63,75 @@ object Runtimes {
 
     fun checkIfProcessRunning(pattern: String): Boolean {
         return countSystemProcess(pattern) > 0
+    }
+
+    fun listAllChromeProcesses(): List<String> {
+        return when {
+            SystemUtils.IS_OS_WINDOWS -> listAllChromeProcessesOnWindows()
+            SystemUtils.IS_OS_LINUX -> listAllChromeProcessesOnPosix()
+            SystemUtils.IS_OS_MAC -> listAllChromeProcessesOnPosix()
+            else -> listOf()
+        }
+    }
+
+    fun listAllChromeProcessesOnPosix(): List<String> {
+        if (!SystemUtils.IS_OS_LINUX) {
+            return listOf()
+        }
+
+        val result = mutableListOf<String>()
+        try {
+            // Command to list all Chrome processes
+            val command = "ps -ef | grep -i 'chrome' | grep -v 'grep'"
+
+            // Execute the command
+            val process = Runtime.getRuntime().exec(arrayOf("bash", "-c", command))
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+
+            // Read and print each line of the output
+            var line: String?
+            // println("Running Chrome Processes:")
+            while ((reader.readLine().also { line = it }) != null) {
+                line?.let { result.add(it) }
+            }
+
+            // Wait for the process to complete
+            process.waitFor()
+        } catch (e: java.lang.Exception) {
+            System.err.println("An error occurred: " + e.message)
+        }
+
+        return result
+    }
+
+    fun listAllChromeProcessesOnWindows(): List<String> {
+        if (!SystemUtils.IS_OS_WINDOWS) {
+            return listOf()
+        }
+
+        val result = mutableListOf<String>()
+        try {
+            // Command to list all Chrome processes
+            val command = "tasklist | findstr chrome && tasklist | findstr chromium"
+
+            // Execute the command
+            val process = Runtime.getRuntime().exec(arrayOf("cmd.exe", "/c", command))
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+
+            // Read and print each line of the output
+            var line: String?
+            // println("Running Chrome Processes:")
+            while ((reader.readLine().also { line = it }) != null) {
+                line?.let { result.add(it) }
+            }
+
+            // Wait for the process to complete
+            process.waitFor()
+        } catch (e: java.lang.Exception) {
+            System.err.println("An error occurred: " + e.message)
+        }
+
+        return result
     }
 
     fun destroyProcess(process: Process, shutdownWaitTime: Duration) {
@@ -125,12 +198,20 @@ object Runtimes {
         val info = process.info()
         val user = info.user().orElse("")
         val pid = process.pid()
-        val ppid = process.parent().orElseGet { null }?.pid()?.toString()?:"?"
+        val ppid = process.parent().orElseGet { null }?.pid()?.toString() ?: "?"
         val startTime = info.startInstant().orElse(null)
         val cpuDuration = info.totalCpuDuration()?.orElse(null)
         val cmdLine = info.commandLine().orElseGet { "" }
 
-        return String.format("%-8s %-6d %-6s %-25s %-10s %s", user, pid, ppid, startTime?:"", cpuDuration?:"", cmdLine)
+        return String.format(
+            "%-8s %-6d %-6s %-25s %-10s %s",
+            user,
+            pid,
+            ppid,
+            startTime ?: "",
+            cpuDuration ?: "",
+            cmdLine
+        )
     }
 
     fun deleteBrokenSymbolicLinks(symbolicLink: Path) {
@@ -162,6 +243,95 @@ object Runtimes {
         }
     }
 
+    fun isRunningInDocker(): Boolean {
+        return heavyOperationResultCache.computeIfAbsent("isRunningInDocker") { isRunningInDockerRT() } == true
+    }
+
+    /**
+     * Check if the current process is running in Docker
+     * */
+    fun isRunningInDockerRT(): Boolean {
+        // Check for /.dockerenv file
+        if (File("/.dockerenv").exists()) {
+            return true
+        }
+        // Check for 'docker' or 'kubepods' in /proc/1/cgroup
+        return try {
+            Files.readAllLines(Paths.get("/proc/1/cgroup")).any {
+                it.contains("docker") || it.contains("kubepods")
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    fun supportHeadedBrowser(): Boolean {
+        return heavyOperationResultCache.computeIfAbsent("supportHeadedChromium") { supportHeadedChromiumRT() } == true
+    }
+
+    fun supportHeadedChromiumRT(): Boolean {
+        return when {
+            isRunningInDocker() -> false
+            SystemUtils.IS_OS_WINDOWS -> true
+            SystemUtils.IS_OS_LINUX -> hasXGraphicalInterface()
+            else -> isGUIAvailable()
+        }
+    }
+
+    fun hasOnlyHeadlessBrowser(): Boolean {
+        return !supportHeadedBrowser()
+    }
+
+    fun isGUIAvailable(): Boolean {
+        return heavyOperationResultCache.computeIfAbsent("isGUIAvailable") { isGUIAvailableRT() } == true
+    }
+
+    fun isGUIAvailableRT(): Boolean {
+        // First check: Java headless mode
+        if (GraphicsEnvironment.isHeadless()) {
+            return false
+        }
+
+        // Third check: Try to create a Swing window (safe fallback)
+        return try {
+            JFrame().apply { isVisible = false; dispose() }
+            true
+        } catch (e: HeadlessException) {
+            false
+        } catch (e: Exception) {
+            false // In case of unexpected GUI-related errors
+        }
+    }
+
+    fun hasXGraphicalInterface(): Boolean {
+        // 方法 1: 检查 DISPLAY 环境变量
+        val display = System.getenv("DISPLAY")
+        if (!display.isNullOrEmpty()) {
+            logger.info("Detected DISPLAY environment variable: $display")
+            return true
+        }
+
+        // 方法 2: 检查 Xorg 是否安装
+        val xorgPath = File("/usr/bin/Xorg")
+        if (xorgPath.exists()) {
+            logger.info("Xorg is installed at: ${xorgPath.path}")
+            return true
+        }
+
+        // 方法 3: 检查常见桌面环境进程是否运行
+        val desktopProcesses = listOf("gnome-session", "kdeinit", "xfce4-session")
+        for (process in desktopProcesses) {
+            if (checkIfProcessRunning(process)) {
+                // println("Detected running desktop environment process: $process")
+                return true
+            }
+        }
+
+        // 如果所有检查都失败，则认为没有图形化界面
+        logger.info("No graphical interface detected.")
+        return false
+    }
+
     private fun totalSpaceOr0(store: FileStore) = store.runCatching { totalSpace }.getOrNull() ?: 0L
 
     private fun unallocatedSpaceOr0(store: FileStore) = store.runCatching { unallocatedSpace }.getOrNull() ?: 0L
@@ -179,50 +349,3 @@ object Runtimes {
     }
 }
 
-/**
- * The process launcher
- * */
-object ProcessLauncher {
-    private val log = LoggerFactory.getLogger(ProcessLauncher::class.java)
-
-    @Throws(IOException::class)
-    fun launch(executable: String, args: List<String>): Process {
-        val command = mutableListOf<String>().apply { add(executable); addAll(args) }
-        val processBuilder = ProcessBuilder()
-            .command(command)
-            .redirectErrorStream(true)
-            .redirectOutput(ProcessBuilder.Redirect.PIPE)
-
-        log.info("Launching process:\n{}", processBuilder.command().joinToString(" ") {
-            Strings.doubleQuoteIfContainsWhitespace(it)
-        })
-
-        return processBuilder.start()
-    }
-
-    /**
-     * Waits for DevTools server is up on chrome process.
-     *
-     * @param process Chrome process.
-     */
-    fun waitFor(process: Process): String {
-        val processOutput = StringBuilder()
-        val readLineThread = Thread {
-            BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
-                var line: String
-                while (reader.readLine().also { line = it } != null) {
-                    processOutput.appendLine(line)
-                }
-            }
-        }
-        readLineThread.start()
-
-        try {
-            readLineThread.join(Duration.ofMinutes(1).toMillis())
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-        }
-
-        return processOutput.toString()
-    }
-}

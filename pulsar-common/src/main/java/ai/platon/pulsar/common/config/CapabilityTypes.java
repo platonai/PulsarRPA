@@ -139,10 +139,6 @@ public interface CapabilityTypes {
      */
     String BROWSER_CONTEXT_NUMBER = "browser.context.number";
     /**
-     * The number of active privacy contexts.
-     */
-    String BROWSER_PROFILE_MODE = "browser.profile.mode";
-    /**
      * The minimal number of sequential privacy agents, the active privacy contexts is chosen from them.
      * */
     String MIN_SEQUENTIAL_PRIVACY_AGENT_NUMBER = "min.sequential.privacy.agent.number";
@@ -194,7 +190,6 @@ public interface CapabilityTypes {
      * */
     String BROWSER_INTERACT_SETTINGS = "browser.interact.settings";
     String BROWSER_DISPLAY_MODE = "browser.display.mode";
-    String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
     String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";
 
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";

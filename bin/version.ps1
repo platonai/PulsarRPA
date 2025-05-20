@@ -3,7 +3,6 @@ $AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
 while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
     $AppHome = Split-Path -Parent $AppHome
 }
-
 Set-Location $AppHome
 
 $VERSION = "v$(Get-Content "$AppHome/VERSION")"

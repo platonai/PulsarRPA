@@ -55,7 +55,7 @@ Find all links containing /dp/.
 
 ```bash
 # For Linux/macOS/Windows (with curl)
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.1.0/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.7/PulsarRPA.jar
 ```
 
 #### 🚀 Run
@@ -71,8 +71,9 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 <details>
 <summary>📂 Resources</summary>
 
-* 🟦 [GitHub Release Download](https://github.com/platonai/PulsarRPA/releases/download/v3.0.4/PulsarRPA.jar)
+* 🟦 [GitHub Release Download](https://github.com/platonai/PulsarRPA/releases/download/v3.0.7/PulsarRPA.jar)
 * 📁 [Mirror / Backup Download](http://static.platonai.cn/repo/ai/platon/pulsar/)
+* 🛠️ [LLM Configuration Guide](docs/config/llm/llm-config.md)
 * 🛠️ [Configuration Guide](docs/config.md)
 
 </details>
@@ -100,12 +101,20 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/p
 
 ## 🌟 For Beginners – Just Text, No Code!
 
-Use the `ai/command` API to perform actions and extract data using natural language instructions.
+Use the `commands` API to perform browser operations, extract web data, analyze websites, and more.
 
 ### 📥 Example Request (Text-based):
 
+WebUI: http://localhost:8182/api/command.html
+
+<img src="docs/images/commander-ui.png" alt="commander" width="500" />
+
+<details>
+<summary>REST API</summary>
+
+#### 📄 Plain-Text-Based Version:
 ```bash
-curl -X POST "http://localhost:8182/api/ai/command" \
+curl -X POST "http://localhost:8182/api/commands/plain" \
   -H "Content-Type: text/plain" \
   -d '
     Go to https://www.amazon.com/dp/B0C1H26C46
@@ -117,12 +126,10 @@ curl -X POST "http://localhost:8182/api/ai/command" \
   '
 ```
 
-### 📄 JSON-Based Version:
-
-<details>
+#### 📄 JSON-Based Version:
 
 ```bash
-curl -X POST "http://localhost:8182/api/ai/command" \
+curl -X POST "http://localhost:8182/api/commands" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://www.amazon.com/dp/B0C1H26C46",
@@ -142,7 +149,7 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 Harness the power of the `x/e` API for highly precise, flexible, and intelligent data extraction.
 
   ```bash
-  curl -X POST "http://localhost:8182/api/scrape/execute" -H "Content-Type: text/plain" -d "
+  curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
     llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
     dom_base_uri(dom) as url,
@@ -249,7 +256,9 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 ## 📜 Documents
 
 * 📖 [REST API Examples](docs/rest-api-examples.md)
+* 🛠️ [LLM Configuration Guide](docs/config/llm/llm-config.md)
 * 🛠️ [Configuration Guide](docs/config.md)
+* 📚 [Build from Source](docs/development/build.md)
 * 🧠 [Expert Guide](docs/advanced-guides.md)
 
 ---
@@ -265,6 +274,7 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 ```
 
 Each time the rotation URL is accessed, it should return a response containing one or more fresh proxy IPs.
+Ask your proxy provider for such a URL.
 
 </details>
 

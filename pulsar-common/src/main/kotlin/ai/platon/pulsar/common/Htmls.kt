@@ -67,7 +67,7 @@ enum class HtmlIntegrity {
      * The page displays "404 Not Found" or something similar,
      * the server should return a 404 error code, but not guaranteed
      * */
-    NOT_FOUND,
+    SC_NOT_FOUND,
     /**
      * The current chosen country is not correct.
      * */
@@ -107,7 +107,7 @@ enum class HtmlIntegrity {
     val isForbidden: Boolean get() = this == FORBIDDEN
     val isWrongProfile: Boolean get() = this == WRONG_DISTRICT || this == WRONG_COUNTRY || this == WRONG_LANG
     val isVerify: Boolean get() = this == VERIFY
-    val isNotFound: Boolean get() = this == NOT_FOUND
+    val isNotFound: Boolean get() = this == SC_NOT_FOUND
     val isSmall: Boolean get() = this == TOO_SMALL || this == TOO_SMALL_IN_HISTORY || this == TOO_SMALL_IN_BATCH
     val isOther get() = this == OTHER
 

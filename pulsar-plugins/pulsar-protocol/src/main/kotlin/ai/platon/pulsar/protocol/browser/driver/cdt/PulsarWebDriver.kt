@@ -16,6 +16,7 @@ import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
@@ -124,12 +125,15 @@ class PulsarWebDriver(
         return invokeOnPage("getCookies") { getCookies0() } ?: listOf()
     }
 
+    @Deprecated("Use deleteCookies(name, url, domain, path) instead." +
+            "[deleteCookies] (3/5) | code: -32602, At least one of the url and domain needs to be specified",
+        ReplaceWith("driver.deleteCookies(name, url, domain, path)"))
     override suspend fun deleteCookies(name: String) {
-        invokeOnPage("deleteCookies") { networkAPI?.deleteCookies(name) }
+        invokeOnPage("deleteCookies") { cdpDeleteCookies(name) }
     }
 
     override suspend fun deleteCookies(name: String, url: String?, domain: String?, path: String?) {
-        invokeOnPage("deleteCookies") { networkAPI?.deleteCookies(name, url, domain, path) }
+        invokeOnPage("deleteCookies") { cdpDeleteCookies(name, url, domain, path) }
     }
 
     override suspend fun clearBrowserCookies() {
@@ -876,10 +880,8 @@ class PulsarWebDriver(
     }
 
     private fun serialize(cookie: Cookie): Map<String, String> {
-        val mapper = jacksonObjectMapper()
-        val json = mapper.writeValueAsString(cookie)
-        val map: Map<String, String?> = mapper.readValue(json)
-        return map.filterValues { it != null }.mapValues { it.toString() }
+        val mapper = jacksonObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        return mapper.readValue(mapper.writeValueAsString(cookie))
     }
 
     private suspend fun <T> invokeOnPage(name: String, message: String? = null, action: suspend () -> T): T? {
@@ -928,6 +930,10 @@ class PulsarWebDriver(
 
     private fun isValidNodeId(nodeId: Int?): Boolean {
         return nodeId != null && nodeId > 0
+    }
+
+    private fun cdpDeleteCookies(name: String?, url: String? = null, domain: String? = null, path: String? = null) {
+        networkAPI?.deleteCookies(name, url, domain, path)
     }
 
     private fun createJsEvaluate(evaluate: Evaluate?): JsEvaluation? {
