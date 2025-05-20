@@ -101,12 +101,20 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/p
 
 ## 🌟 For Beginners – Just Text, No Code!
 
-Use the `ai/command` API to perform actions and extract data using natural language instructions.
+Use the `commands` API to perform browser operations, extract web data, analyze websites, and more.
 
 ### 📥 Example Request (Text-based):
 
+WebUI: http://localhost:8182/api/command.html
+
+<img src="docs/images/commander-ui.png" alt="commander" width="500" />
+
+<details>
+<summary>REST API</summary>
+
+#### 📄 Plain-Text-Based Version:
 ```bash
-curl -X POST "http://localhost:8182/api/ai/command" \
+curl -X POST "http://localhost:8182/api/commands/plain" \
   -H "Content-Type: text/plain" \
   -d '
     Go to https://www.amazon.com/dp/B0C1H26C46
@@ -118,12 +126,10 @@ curl -X POST "http://localhost:8182/api/ai/command" \
   '
 ```
 
-### 📄 JSON-Based Version:
-
-<details>
+#### 📄 JSON-Based Version:
 
 ```bash
-curl -X POST "http://localhost:8182/api/ai/command" \
+curl -X POST "http://localhost:8182/api/commands" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://www.amazon.com/dp/B0C1H26C46",
@@ -143,7 +149,7 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 Harness the power of the `x/e` API for highly precise, flexible, and intelligent data extraction.
 
   ```bash
-  curl -X POST "http://localhost:8182/api/scrape/execute" -H "Content-Type: text/plain" -d "
+  curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
     llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
     dom_base_uri(dom) as url,
