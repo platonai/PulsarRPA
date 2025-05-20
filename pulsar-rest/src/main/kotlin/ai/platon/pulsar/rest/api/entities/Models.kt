@@ -106,6 +106,11 @@ fun ScrapeResponse.done() {
     finishTime = Instant.now()
 }
 
+fun ScrapeResponse.refreshed(lastModifiedTime: Instant): Boolean {
+    val time = this.lastModifiedTime ?: return false
+    return time > lastModifiedTime
+}
+
 data class ScrapeStatusRequest(
     val id: String,
 )
@@ -297,4 +302,9 @@ fun CommandStatus.addInstructResult(result: InstructResult) {
 fun CommandStatus.done() {
     refresh(isDone = true)
     finishTime = Instant.now()
+}
+
+fun CommandStatus.refreshed(lastModifiedTime: Instant): Boolean {
+    val modifiedTime = this.lastModifiedTime ?: return false
+    return modifiedTime > lastModifiedTime
 }

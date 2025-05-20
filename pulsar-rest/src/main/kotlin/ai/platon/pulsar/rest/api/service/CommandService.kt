@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.*
 import org.springframework.http.codec.ServerSentEvent
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
+import reactor.core.publisher.FluxSink
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListMap
 
@@ -25,18 +26,15 @@ class CommandService(
     val session: PulsarSession,
     val loadService: LoadService,
     val conversationService: ConversationService,
-    val chatService: ChatService,
-    val extractService: ExtractService,
     val scrapeService: ScrapeService,
 ) {
     companion object {
         const val MIN_USER_MESSAGE_LENGTH = 2
-        const val FLOW_POLLING_INTERVAL = 500L // Shorter polling interval within the service
+        const val FLOW_POLLING_INTERVAL = 1000L
     }
 
     // TODO: use ehcache
     private val commandStatusCache = ConcurrentSkipListMap<String, CommandStatus>()
-    private val markdownResultCache = ConcurrentSkipListMap<String, CommandStatus>()
 
     // Create a dedicated dispatcher for long-running command operations
     private val commandDispatcher = Dispatchers.IO.limitedParallelism(10) // Adjust number based on your server capacity
@@ -64,11 +62,12 @@ class CommandService(
     fun getResult(id: String) = commandStatusCache[id]?.commandResult
 
     fun streamEvents(id: String): Flux<ServerSentEvent<CommandStatus>> {
-        return Flux.create<CommandStatus> { sink ->
+        val handleFluxSink = { sink: FluxSink<CommandStatus> ->
             val job = commandStatusFlow(id).onEach {
                 sink.next(it)
                 if (it.isDone) {
-                    sink.complete()
+                    // The JavaScript client-side code expects the event to be open.
+                    // sink.complete()
                 }
             }.catch {
                 logger.error("Error in command status flow", it)
@@ -78,26 +77,33 @@ class CommandService(
             sink.onDispose {
                 job.cancel()
             }
-        }.map {
-            ServerSentEvent.builder(it).id(it.id).event(it.event).build()
+        }
+
+        return Flux.create { sink -> handleFluxSink(sink) }.map {
+            // NOTE: [2025/5/20] JavaScript client-side code expects only JSON data, not the event ID or event name.
+            // ServerSentEvent.builder(it).id(it.id).event(it.event).build()
+            ServerSentEvent.builder(it).build()
         }
     }
 
-    fun commandStatusFlow(uuid: String): Flow<CommandStatus> = flow {
+    fun commandStatusFlow(id: String): Flow<CommandStatus> = flow {
         var lastModifiedTime = Instant.EPOCH
-        while (true) {
-            val status = commandStatusCache[uuid] ?: CommandStatus.notFound(uuid)
-            if (lastModifiedTime != status.lastModifiedTime) {
+        do {
+            delay(FLOW_POLLING_INTERVAL)
+
+            val status = commandStatusCache[id] ?: CommandStatus.notFound(id)
+            println(status.message)
+
+            if (status.refreshed(lastModifiedTime)) {
                 emit(status)
                 lastModifiedTime = status.lastModifiedTime
-
-                if (status.isDone) {
-                    break
-                }
             }
 
-            delay(FLOW_POLLING_INTERVAL)
-        }
+            if (status.isDone) {
+                // emit a final event, it's OK to emit a duplicate event
+                emit(status)
+            }
+        } while (!status.isDone)
     }
 
     /**
@@ -157,12 +163,11 @@ class CommandService(
         val status = CommandStatus()
         status.request = request
         commandStatusCache[status.id] = status
+        status.refresh("created")
         return status
     }
 
     private fun executeCommandStepByStep(request: CommandRequest, status: CommandStatus) {
-        status.refresh(ResourceStatus.SC_PROCESSING)
-
         request.args = LoadOptions.mergeArgs(request.args, "-refresh")
         val (page, document) = loadService.loadDocument(request)
 
@@ -177,13 +182,12 @@ class CommandService(
             return
         }
 
-        status.refresh(ResourceStatus.SC_PROCESSING)
         executeCommandStepByStep(page, document, request, status)
         logger.info("Finished executeCommandStepByStep | status {} | {}", status.status, document.baseURI)
 
-        status.refresh(ResourceStatus.SC_PROCESSING)
         val sql = request.xsql
         if (sql != null && ScrapeAPIUtils.isScrapeUDF(sql)) {
+            status.refresh(ResourceStatus.SC_PROCESSING)
             kotlin.runCatching { executeQuery(sql, status) }.onFailure { logger.warn("Failed to execute query", it) }
         }
 
@@ -221,8 +225,10 @@ class CommandService(
             if (textContent.isBlank()) {
                 if (document.body.numChars > 100) {
                     val path = document.export()
-                    logger.warn("Not textContent found on screen: {} but there are chars in body: {}, exported to {}",
-                        screenNumber, document.body.numChars, path.toUri())
+                    logger.warn(
+                        "Not textContent found on screen: {} but there are chars in body: {}, exported to {}",
+                        screenNumber, document.body.numChars, path.toUri()
+                    )
                 }
                 return
             }
@@ -247,7 +253,7 @@ class CommandService(
                 val result = InstructResult.ok("links", links.joinToString("\n"))
                 status.addInstructResult(result)
             }
-            logger.info("Use regex to extract links. /{}/ {} links", linkExtractionRules, links.size)
+            logger.info("Use regex to extract {} links: {}", links.size, linkExtractionRules)
         }
     }
 

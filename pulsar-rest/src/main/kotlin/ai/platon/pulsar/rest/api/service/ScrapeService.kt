@@ -6,10 +6,10 @@ import ai.platon.pulsar.rest.api.common.DegenerateXSQLScrapeHyperlink
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
 import ai.platon.pulsar.rest.api.common.ScrapeHyperlink
 import ai.platon.pulsar.rest.api.common.XSQLScrapeHyperlink
-import ai.platon.pulsar.rest.api.entities.CommandStatus
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
+import ai.platon.pulsar.rest.api.entities.refreshed
 import ai.platon.pulsar.rest.api.service.CommandService.Companion.FLOW_POLLING_INTERVAL
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -118,19 +118,20 @@ class ScrapeService(
 
     fun commandStatusFlow(uuid: String): Flow<ScrapeResponse> = flow {
         var lastModifiedTime = Instant.EPOCH
-        while (true) {
-            val status = responseCache[uuid] ?: ScrapeResponse.notFound(uuid)
-            if (lastModifiedTime != status.lastModifiedTime) {
-                emit(status)
-                lastModifiedTime = status.lastModifiedTime
+        do {
+            delay(FLOW_POLLING_INTERVAL)
 
-                if (status.isDone) {
-                    break
-                }
+            val status = responseCache[uuid] ?: ScrapeResponse.notFound(uuid)
+            if (status.isDone) {
+                emit(status)
+                return@flow
             }
 
-            delay(FLOW_POLLING_INTERVAL)
-        }
+            if (status.refreshed(lastModifiedTime)) {
+                emit(status)
+                lastModifiedTime = status.lastModifiedTime
+            }
+        } while (!status.isDone)
     }
 
 
