@@ -188,7 +188,7 @@ class CommandService(
         }
 
         executeCommandStepByStep(page, document, request, status)
-        logger.info("Finished executeCommandStepByStep | status {} | {}", status.status, document.baseURI)
+        logger.info("Finished executeCommandStepByStep | status: {} | {}", status.status, document.baseURI)
 
         val sql = request.xsql
         if (sql != null && ScrapeAPIUtils.isScrapeUDF(sql)) {

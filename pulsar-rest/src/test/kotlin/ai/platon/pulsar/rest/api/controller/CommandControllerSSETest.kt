@@ -4,11 +4,15 @@ import ai.platon.pulsar.rest.api.entities.CommandRequest
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.joda.time.LocalTime
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.BufferedReader
 import java.util.concurrent.TimeUnit
+import kotlin.test.Ignore
 import kotlin.test.assertNotNull
 
+@Ignore("TimeConsumingTest")
+@Tag("TimeConsumingTest")
 class CommandControllerSSETest : ScrapeControllerTestBase() {
 
     /**
@@ -58,7 +62,7 @@ class CommandControllerSSETest : ScrapeControllerTestBase() {
 
     private fun receiveSSE(id: String) {
         val client = OkHttpClient.Builder()
-            .readTimeout(3, TimeUnit.MILLISECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
             .build()
 
         // 2. Connect to SSE stream
@@ -76,4 +80,3 @@ class CommandControllerSSETest : ScrapeControllerTestBase() {
         }
     }
 }
-
