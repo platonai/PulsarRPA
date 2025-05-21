@@ -27,7 +27,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 ---
 
-Automate the browser and extract data at scale with simple text.
+Automate browsers, extract data, and analyze at scale using simple natural language commands.
 
 ```text
 Go to https://www.amazon.com/dp/B0C1H26C46
