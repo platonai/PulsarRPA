@@ -37,9 +37,13 @@ def main():
             print(f"SSE update: {data}")
 
             # Check if command has completed
-            if '"status":"COMPLETED"' in data or '"status":"FAILED"' in data:
-                print("Command execution finished")
-                break
+            if data.startswith("{"):
+                try:
+                    json_data = json.loads(data)
+                    isDone = json_data.get("isDone")
+                    if isDone:
+                        print("Command execution finished with error")
+                        break
 
 if __name__ == "__main__":
     main()

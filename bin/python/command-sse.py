@@ -27,6 +27,7 @@ def main():
 
     # Create a requests response object with the headers
     response = requests.get(url, headers=headers, stream=True)
+    print(response)
 
     # Process the SSE stream
     client = sseclient.SSEClient(response)
@@ -34,6 +35,15 @@ def main():
         if event.data:
             data = event.data.strip()
             print(f"SSE update: {data}")
+
+            # Check if command has completed
+            if data.startswith("{"):
+                try:
+                    json_data = json.loads(data)
+                    isDone = json_data.get("isDone")
+                    if isDone:
+                        print("Command execution finished with error")
+                        break
 
 if __name__ == "__main__":
     main()
