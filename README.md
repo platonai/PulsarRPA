@@ -1,8 +1,14 @@
 # 🤖 PulsarRPA
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/galaxyeye88/pulsar-rpa?style=flat-square)](https://hub.docker.com/r/galaxyeye88/pulsar-rpa)
+[![GitHub Stars](https://img.shields.io/github/stars/platonai/PulsarRPA?style=social)](https://github.com/platonai/PulsarRPA/stargazers)
 [![License: APACHE2](https://img.shields.io/badge/license-APACHE2-green?style=flat-square)](https://github.com/platonai/PulsarRPA/blob/main/LICENSE)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.8-brightgreen?style=flat-square)](https://spring.io/projects/spring-boot)
+[![Release](https://img.shields.io/github/v/release/platonai/PulsarRPA?style=flat-square)](https://github.com/platonai/PulsarRPA/releases)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/platonai/PulsarRPA/ci.yml?style=flat-square)](https://github.com/platonai/PulsarRPA/actions)
+[![Kotlin](https://img.shields.io/badge/language-Kotlin-blue?style=flat-square)](https://kotlinlang.org/)
+[![Java](https://img.shields.io/badge/language-Java-orange?style=flat-square)](https://www.oracle.com/java/technologies/)
+[![Python](https://img.shields.io/badge/language-Python-yellow?style=flat-square)](https://www.python.org/)
 
 ---
 
@@ -118,7 +124,7 @@ curl -X POST "http://localhost:8182/api/commands/plain" \
   -H "Content-Type: text/plain" \
   -d '
     Go to https://www.amazon.com/dp/B0C1H26C46
-    After page load: click #title, then scroll to the middle.
+    After page load: hover on #title, then scroll to the middle.
     
     Summarize the product.
     Extract: product name, price, ratings.
@@ -136,7 +142,7 @@ curl -X POST "http://localhost:8182/api/commands" \
     "pageSummaryPrompt": "Provide a brief introduction of this product.",
     "dataExtractionRules": "product name, price, and ratings",
     "linkExtractionRules": "all links containing `/dp/` on the page",
-    "onPageReadyActions": ["click #title", "scroll to the middle"]
+    "onPageReadyActions": ["hover on #title", "scroll to the middle"]
   }'
 ```
 
