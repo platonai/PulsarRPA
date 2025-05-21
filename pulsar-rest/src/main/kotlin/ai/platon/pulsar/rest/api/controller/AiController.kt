@@ -21,7 +21,7 @@ import java.util.concurrent.Executors
 @RestController
 @CrossOrigin
 @RequestMapping(
-    "ai",
+    "api/ai",
     consumes = [MediaType.ALL_VALUE],
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )

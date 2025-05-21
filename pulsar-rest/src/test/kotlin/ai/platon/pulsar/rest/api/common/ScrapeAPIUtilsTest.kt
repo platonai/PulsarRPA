@@ -5,6 +5,7 @@ import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import kotlin.test.Test
+import kotlin.test.assertFails
 import kotlin.test.assertNull
 
 class ScrapeAPIUtilsTest {
@@ -57,13 +58,22 @@ class ScrapeAPIUtilsTest {
     }
 
     @Test
-    fun `isScrapeUDF should return true when input contains allowed UDF and matches the regex`() {
+    fun `test isScrapeUDF with invalid SQLs`() {
         val result = isScrapeUDF("SELECT scrape FROM http://example.com")
         assertFalse(result)
     }
 
     @Test
-    fun `test ScrapeAPIUtils methods`() {
+    fun `test normalize`() {
+        val sql = "select dom_base_uri(dom) as uri from load_and_select('{url}', ':root')"
+
+        assertFails {
+            ScrapeAPIUtils.normalize(sql)
+        }
+    }
+
+    @Test
+    fun `test checkSql + extractConfiguredUrl`() {
         val sql = "select dom_base_uri(dom) as uri from load_and_select('{url}', ':root')"
         val request = ScrapeRequest(sql)
 

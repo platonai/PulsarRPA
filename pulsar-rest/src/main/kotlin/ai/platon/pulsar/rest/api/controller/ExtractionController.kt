@@ -13,7 +13,7 @@ import java.util.concurrent.Executors
 @RestController
 @CrossOrigin
 @RequestMapping(
-    "extractions",
+    "api/extractions",
     consumes = [MediaType.ALL_VALUE],
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
@@ -37,23 +37,23 @@ class ExtractionController(
         return uuid
     }
 
-    @GetMapping("/{uuid}")
-    fun extractionResult(@PathVariable uuid: String): String {
-        return extractionsCache[uuid] ?: "Extraction not found"
+    @GetMapping("/{id}")
+    fun extractionResult(@PathVariable id: String): String {
+        return extractionsCache[id] ?: "Extraction not found"
     }
 
-    @GetMapping("/{uuid}/status")
-    fun extractionStatus(@PathVariable uuid: String): String {
-        return extractionsCache[uuid] ?: "Extraction not found"
+    @GetMapping("/{id}/status")
+    fun extractionStatus(@PathVariable id: String): String {
+        return extractionsCache[id] ?: "Extraction not found"
     }
 
-    @GetMapping("/{uuid}/stream")
-    fun extractionStream(@PathVariable uuid: String): SseEmitter {
+    @GetMapping("/{id}/stream")
+    fun extractionStream(@PathVariable id: String): SseEmitter {
         val emitter = SseEmitter()
         executor.submit {
-            while (extractionsCache.containsKey(uuid)) {
+            while (extractionsCache.containsKey(id)) {
                 try {
-                    val result = extractionsCache[uuid]
+                    val result = extractionsCache[id]
                     if (result != null) {
                         emitter.send(result)
                     } else {

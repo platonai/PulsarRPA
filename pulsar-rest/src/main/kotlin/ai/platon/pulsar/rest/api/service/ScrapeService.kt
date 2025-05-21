@@ -154,6 +154,7 @@ class ScrapeService(
         }
     }
 
+    @Throws(IllegalStateException::class)
     private fun createScrapeHyperlink(request: ScrapeRequest): ScrapeHyperlink {
         val sql = request.sql
         val link = if (ScrapeAPIUtils.isScrapeUDF(sql)) {

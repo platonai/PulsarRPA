@@ -38,7 +38,7 @@ class ScrapeLegacyController(
      * */
     @PostMapping("s")
     fun submitJob(@RequestBody sql: String): String {
-        return scrapeService.submitJob(ScrapeRequest(sql)).uuid
+        return scrapeService.submitJob(ScrapeRequest(sql))
     }
 
     /**

@@ -41,7 +41,7 @@ $PLACEHOLDER_JSON_VALUE
 @RestController
 @CrossOrigin
 @RequestMapping(
-    "command-revisions",
+    "api/command-revisions",
     consumes = [MediaType.ALL_VALUE],
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )

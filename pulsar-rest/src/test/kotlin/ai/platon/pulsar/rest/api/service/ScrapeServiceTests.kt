@@ -93,7 +93,7 @@ class ScrapeServiceTests {
         val sql = "select dom_base_uri(dom) as uri from load_and_select('$productListURL -requireSize 1000', ':root')"
         val request = ScrapeRequest(sql)
 
-        val uuid = service.submitJob(request).uuid
+        val uuid = service.submitJob(request)
 
         assertTrue { uuid.isNotEmpty() }
         println(uuid)

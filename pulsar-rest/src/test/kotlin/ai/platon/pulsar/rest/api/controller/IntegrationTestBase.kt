@@ -40,6 +40,8 @@ class IntegrationTestBase {
 
     val baseUri get() = String.format("http://%s:%d/api", hostname, serverPort)
 
+    val scrapeTaskBaseUri get() = String.format("http://%s:%d/api/scrape/tasks", hostname, serverPort)
+
     @BeforeTest
     fun setup() {
         assertTrue("Session should be BasicPulsarSession, actual ${session.javaClass}") { session is BasicPulsarSession }

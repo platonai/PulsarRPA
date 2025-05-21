@@ -14,7 +14,7 @@ import java.util.concurrent.Executors
 @RestController
 @CrossOrigin
 @RequestMapping(
-    "conversations",
+    "api/conversations",
     consumes = [MediaType.ALL_VALUE],
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )

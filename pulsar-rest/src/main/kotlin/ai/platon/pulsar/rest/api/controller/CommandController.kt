@@ -14,7 +14,7 @@ import reactor.core.publisher.Flux
 @RestController
 @CrossOrigin
 @RequestMapping(
-    "commands",
+    "api/commands",
     consumes = [MediaType.ALL_VALUE],
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
