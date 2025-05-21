@@ -67,7 +67,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to Sonatype OSSRH
-        if: success()
+        if: ${{ success() && (secrets.SONATYPE_USERNAME != null && secrets.SONATYPE_PASSWORD != null) }}
         run: |
           ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests \
             -Dgpg.skip=true \
@@ -75,8 +75,8 @@ jobs:
             -Dossrh.password=${{ secrets.SONATYPE_PASSWORD }}
 
       - name: Push Docker image
-        if: success()
+        if: ${{ success() && secrets.DOCKER_PASSWORD != null && secrets.DOCKER_USERNAME != null }}
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker push $IMAGE_NAME:$VERSION
-          docker push $IMAGE_NAME:latest 
+          docker push $IMAGE_NAME:$VERSION || (echo "Failed to push version tag" && exit 1)
+          docker push $IMAGE_NAME:latest || (echo "Failed to push latest tag" && exit 1)
