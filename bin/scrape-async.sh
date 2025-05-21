@@ -9,7 +9,7 @@ MAX_ATTEMPTS=30
 DELAY_SECONDS=5
 MAX_URLS=20
 BASE_URL="http://localhost:8182/api/x/s"
-STATUS_URL_TEMPLATE="http://localhost:8182/api/x/status?uuid=%s"
+STATUS_URL_TEMPLATE="http://localhost:8182/api/x/status?id=%s"
 MAX_POLLING_TASKS=10
 
 SQL_TEMPLATE="select
@@ -58,35 +58,35 @@ submit_task() {
 }
 
 poll_tasks() {
-  local uuids=("${@}")
-  echo "First uuid: ${uuids[0]}, Total uuids: ${#uuids[@]}"
-  echo "${uuids[1]}"
-  echo "${uuids[2]}"
+  local ids=("${@}")
+  echo "First id: ${ids[0]}, Total ids: ${#ids[@]}"
+  echo "${ids[1]}"
+  echo "${ids[2]}"
 
   declare -A TASK_MAP
-  declare -a PENDING_TASKS=("${uuids[@]}")
+  declare -a PENDING_TASKS=("${ids[@]}")
 
-  for uuid in "${PENDING_TASKS[@]}"; do
-    TASK_MAP["$uuid"]=0
+  for id in "${PENDING_TASKS[@]}"; do
+    TASK_MAP["$id"]=0
   done
 
   for ((attempt=0; attempt<MAX_ATTEMPTS; attempt++)); do
     sleep "$DELAY_SECONDS"
-    local batch_uuids=("${PENDING_TASKS[@]:0:$MAX_POLLING_TASKS}")
+    local batch_ids=("${PENDING_TASKS[@]:0:$MAX_POLLING_TASKS}")
     local new_pending=()
-    for uuid in "${batch_uuids[@]}"; do
-      echo "[INFO] Polling for task $uuid..."
+    for id in "${batch_ids[@]}"; do
+      echo "[INFO] Polling for task $id..."
 
       local status_url
-      status_url=$(printf "$STATUS_URL_TEMPLATE" "$uuid")
+      status_url=$(printf "$STATUS_URL_TEMPLATE" "$id")
       local response
       response=$(curl -s --max-time 10 "$status_url" || echo "error")
       if [[ "$response" =~ completed|success|OK ]]; then
-        echo "[SUCCESS] Task $uuid completed."
+        echo "[SUCCESS] Task $id completed."
       else
-        TASK_MAP["$uuid"]=$((TASK_MAP["$uuid"]+1))
-        echo "[PENDING] Task $uuid still in progress (Attempt ${TASK_MAP["$uuid"]})."
-        new_pending+=("$uuid")
+        TASK_MAP["$id"]=$((TASK_MAP["$id"]+1))
+        echo "[PENDING] Task $id still in progress (Attempt ${TASK_MAP["$id"]})."
+        new_pending+=("$id")
       fi
     done
     PENDING_TASKS=("${new_pending[@]}")
@@ -99,27 +99,27 @@ poll_tasks() {
 
   if [[ ${#PENDING_TASKS[@]} -gt 0 ]]; then
     echo "[WARNING] Timeout reached. The following tasks are still pending:"
-    for uuid in "${PENDING_TASKS[@]}"; do
-      echo "$uuid"
+    for id in "${PENDING_TASKS[@]}"; do
+      echo "$id"
     done
   fi
 }
 
 process_batch() {
   local batch=("${@}")
-  local uuids=()
+  local ids=()
   for url in "${batch[@]}"; do
     if [[ ! "$url" =~ ^https?:// ]]; then
       echo "[WARNING] Invalid URL: $url"
       continue
     fi
-    local uuid
-    uuid=$(submit_task "$url")
-    echo "Submitted: $url -> Task UUID: $uuid"
-    uuids+=("$uuid")
+    local id
+    id=$(submit_task "$url")
+    echo "Submitted: $url -> Task ID: $id"
+    ids+=("$id")
   done
-  echo "[INFO] Started polling for ${#uuids[@]} tasks..."
-  poll_tasks "${uuids[@]}"
+  echo "[INFO] Started polling for ${#ids[@]} tasks..."
+  poll_tasks "${ids[@]}"
 }
 
 main() {
