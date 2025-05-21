@@ -3,6 +3,9 @@ package ai.platon.pulsar.skeleton.crawl.fetch.driver
 import ai.platon.pulsar.common.urls.Hyperlink
 import java.time.Duration
 
+/**
+ * Used for LLM to understand the web driver interface.
+ * */
 interface MiniWebDriver {
     /**
      * @param url URL to navigate page to.
