@@ -422,7 +422,8 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(): String? {
-        return invokeOnPage("outerHTML") { domAPI?.outerHTML }
+        // https://github.com/platonai/PulsarRPA/issues/107
+        return outerHTML(":root")
     }
 
     @Throws(WebDriverException::class)
