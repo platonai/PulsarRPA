@@ -2,7 +2,6 @@ package ai.platon.pulsar.external
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.XmlConfiguration
 import ai.platon.pulsar.dom.Documents
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll

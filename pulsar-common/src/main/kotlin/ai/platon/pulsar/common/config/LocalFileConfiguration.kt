@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.ResourceLoader.getURLOrNull
+import ai.platon.pulsar.common.code.ProjectUtils
 import ai.platon.pulsar.common.urls.URLUtils
 import com.ctc.wstx.io.StreamBootstrapper
 import com.ctc.wstx.io.SystemId
@@ -33,7 +34,7 @@ import kotlin.io.path.reader
  * @property extraResources The extra resources to load.
  * @property loadDefaults Whether to load the default resources.
  * */
-class XmlConfiguration(
+class LocalFileConfiguration(
     val profile: String = "",
     val extraResources: Iterable<String> = listOf(),
     private val loadDefaults: Boolean = true,
@@ -44,13 +45,13 @@ class XmlConfiguration(
         private val ID_SUPPLIER = AtomicInteger()
     }
 
-    private var impl: ConfigurationImpl? = null
+    private var impl: LocalFileConfigurationImpl? = null
 
     @get:Synchronized
-    private val assuredImplementation: ConfigurationImpl
+    private val assuredImplementation: LocalFileConfigurationImpl
         get() {
             if (impl == null) {
-                impl = ConfigurationImpl(profile, extraResources, loadDefaults)
+                impl = LocalFileConfigurationImpl(profile, extraResources, loadDefaults)
                 impl?.load()
             }
 
@@ -61,7 +62,7 @@ class XmlConfiguration(
 
     constructor(xmlPath: Path) : this("", listOf(xmlPath.toString()), false)
 
-    constructor(conf: XmlConfiguration) : this(conf.profile, conf.extraResources, conf.loadDefaults)
+    constructor(conf: LocalFileConfiguration) : this(conf.profile, conf.extraResources, conf.loadDefaults)
 
     /**
      * @param name property name.
@@ -137,7 +138,7 @@ class XmlConfiguration(
     override fun toString() = assuredImplementation.toString()
 }
 
-private class ConfigurationImpl(
+private class LocalFileConfigurationImpl(
     private val profile: String,
     private val extraResources: Iterable<String>,
     private val loadDefaults: Boolean,
@@ -162,6 +163,10 @@ private class ConfigurationImpl(
         if (loadDefaults && Files.isDirectory(AppPaths.CONFIG_ENABLED_DIR)) {
             addExternalResource(AppPaths.CONFIG_ENABLED_DIR)
             loadExternalProperties(AppPaths.CONFIG_ENABLED_DIR)
+
+            // search for properties files in the current working directory, which is the application was started
+            // keep consistent with spring's behavior
+            ProjectUtils.findProjectRootDir()?.let { loadExternalProperties(it) }
         }
     }
 
@@ -185,6 +190,9 @@ private class ConfigurationImpl(
     private fun loadFromPropertyFile(path: Path) {
         try {
             properties.load(path.reader())
+//            properties.stringPropertyNames().filter { it.contains("spring.") }.forEach {
+//                properties.remove(it)
+//            }
         } catch (e: IOException) {
             logger.warn("Failed to load properties | {}", path)
         }
@@ -226,7 +234,7 @@ private class ConfigurationImpl(
 
         resourceNames.addAll(extraResources)
         if (loadDefaults) {
-            resourceNames.addAll(XmlConfiguration.DEFAULT_RESOURCES)
+            resourceNames.addAll(LocalFileConfiguration.DEFAULT_RESOURCES)
         }
 
         for (resourceName in resourceNames) {
@@ -393,7 +401,7 @@ private class ConfigurationImpl(
     private class Parser(
         val reader: XMLStreamReader2,
         val wrapper: Resource,
-        val configurationImpl: ConfigurationImpl
+        val configurationImpl: LocalFileConfigurationImpl
     ) {
         private val name: String = wrapper.name
         private val nameSingletonArray: Array<String> = arrayOf(name)
