@@ -57,9 +57,9 @@ class LoadService {
         val options = session.options(args)
         val be = options.eventHandlers.browseEventHandlers
 
-//        request.actionsOnBrowserLaunched?.let { actions -> be.onBrowserLaunched.addLast { page, driver ->
-//            actions.forEach { driver.instruct(it) }
-//        } }
+        request.onBrowserLaunchedActions?.let { actions -> be.onBrowserLaunched.addLast { page, driver ->
+            actions.forEach { driver.instruct(it) }
+        } }
 
         request.onPageReadyActions?.let { actions -> be.onDocumentActuallyReady.addLast { page, driver ->
             actions.forEach { driver.instruct(it) }

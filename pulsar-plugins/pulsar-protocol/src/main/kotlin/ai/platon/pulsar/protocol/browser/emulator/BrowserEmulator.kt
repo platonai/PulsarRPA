@@ -28,6 +28,8 @@ enum class EmulateEvents {
     willInteract,
     didInteract,
     willCheckDocumentState,
+    documentFullyLoaded,
+    @Deprecated("Use documentFullyLoaded instead", ReplaceWith("documentFullyLoaded"))
     documentActuallyReady,
     willScroll,
     didScroll,
@@ -71,6 +73,9 @@ interface BrowserEmulator: EventEmitter<EmulateEvents>, AutoCloseable {
 
     suspend fun onWillCheckDocumentState(page: WebPage, driver: WebDriver)
 
+    suspend fun onDocumentFullyLoaded(page: WebPage, driver: WebDriver)
+
+    @Deprecated("Use onDocumentFullyLoaded instead", ReplaceWith("onDocumentFullyLoaded"))
     suspend fun onDocumentActuallyReady(page: WebPage, driver: WebDriver)
 
     suspend fun onWillScroll(page: WebPage, driver: WebDriver)
