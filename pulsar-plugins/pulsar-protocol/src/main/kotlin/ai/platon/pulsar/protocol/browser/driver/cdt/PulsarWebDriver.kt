@@ -81,6 +81,8 @@ class PulsarWebDriver(
     private var navigateUrl = chromeTab.url ?: ""
     private var credentials: Credentials? = null
 
+    var injectedScriptIdentifier: String? = null
+
     /**
      * Expose the underlying implementation, used for diagnosis purpose
      * */
@@ -864,7 +866,7 @@ class PulsarWebDriver(
         }
 
         val scripts = initScriptCache.joinToString("\n;\n\n\n;\n")
-        pageAPI?.addScriptToEvaluateOnNewDocument("\n;;\n$scripts\n;;\n")
+        injectedScriptIdentifier = pageAPI?.addScriptToEvaluateOnNewDocument("\n;;\n$scripts\n;;\n")
 
         if (logger.isTraceEnabled) {
             reportInjectedJs(scripts)
