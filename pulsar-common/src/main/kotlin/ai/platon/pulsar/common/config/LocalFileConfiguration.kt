@@ -198,9 +198,6 @@ private class LocalFileConfigurationImpl(
     private fun loadFromPropertyFile(path: Path) {
         try {
             properties.load(path.reader())
-//            properties.stringPropertyNames().filter { it.contains("spring.") }.forEach {
-//                properties.remove(it)
-//            }
         } catch (e: IOException) {
             logger.warn("Failed to load properties | {}", path)
         }
@@ -258,9 +255,6 @@ private class LocalFileConfigurationImpl(
 
     private fun findRealResource(profile: String, resourceName: String): URL? {
         val prefix = "config"
-//        val extension = resourceName.substringAfterLast(".")
-//        val nameWithoutExtension = resourceName.substringBeforeLast(".")
-
         val searchPaths = arrayOf(
             "$prefix/$resourceName"
         )
