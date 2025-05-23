@@ -81,7 +81,14 @@ poll_tasks() {
       status_url=$(printf "$STATUS_URL_TEMPLATE" "$id")
       local response
       response=$(curl -s --max-time 10 "$status_url" || echo "error")
-      if [[ "$response" =~ completed|success|OK ]]; then
+
+      if [[ "$attempt" -eq $((MAX_ATTEMPTS - 1)) ]]; then
+        echo "[DEBUG] Final attempt raw response for task $id: '$response'"
+      fi
+
+      # if there is a line contains "isDone" and "true", then the task is completed
+      if [[ "$response" =~ isDone.*true ]]; then
+        TASK_MAP["$id"]=0
         echo "[SUCCESS] Task $id completed."
       else
         TASK_MAP["$id"]=$((TASK_MAP["$id"]+1))
