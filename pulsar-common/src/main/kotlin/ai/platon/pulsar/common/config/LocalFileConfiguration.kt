@@ -22,10 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.xml.stream.XMLStreamConstants
 import javax.xml.stream.XMLStreamException
 import javax.xml.stream.XMLStreamReader
-import kotlin.io.path.isReadable
-import kotlin.io.path.isRegularFile
-import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.reader
+import kotlin.io.path.*
 
 /**
  * Configuration is a set of key/value pairs. Keys are always strings, values can be any type.
@@ -161,12 +158,19 @@ private class LocalFileConfigurationImpl(
         collectResourcePaths()
         resourceURIs.mapNotNull { URLUtils.getURLOrNull(it) }.forEach { addResource(it) }
         if (loadDefaults && Files.isDirectory(AppPaths.CONFIG_ENABLED_DIR)) {
-            addExternalResource(AppPaths.CONFIG_ENABLED_DIR)
-            loadExternalProperties(AppPaths.CONFIG_ENABLED_DIR)
+            // search for properties files in the ${project.baseDir} and ${project.baseDir}/config,
+            // keep consistent with spring's behavior, so even when we are not running a full Spring Boot application
+            // (e.g., CLI tool, unit test, or native launch),
+            // we can still load properties from these locations.
+            // https://github.com/platonai/PulsarRPA/issues/110
+            val projectRoot = ProjectUtils.findProjectRootDir()
+            if (projectRoot != null) {
+                loadExternalProperties(projectRoot)
+                loadExternalProperties(projectRoot.resolve("config"))
+            }
 
-            // search for properties files in the current working directory, which is the application was started
-            // keep consistent with spring's behavior
-            ProjectUtils.findProjectRootDir()?.let { loadExternalProperties(it) }
+            loadExternalProperties(AppPaths.CONFIG_ENABLED_DIR)
+            addExternalResource(AppPaths.CONFIG_ENABLED_DIR)
         }
     }
 
@@ -181,6 +185,10 @@ private class LocalFileConfigurationImpl(
     }
 
     fun loadExternalProperties(baseDir: Path) {
+        if (baseDir.notExists()) {
+            return
+        }
+
         val externalResources = baseDir.listDirectoryEntries("*.properties")
         externalResources
             .onEach { logger.info("Found properties file: {}", it) }
