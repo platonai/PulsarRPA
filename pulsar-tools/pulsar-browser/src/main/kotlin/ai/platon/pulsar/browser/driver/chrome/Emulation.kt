@@ -190,8 +190,6 @@ class Mouse(private val devTools: ChromeDevTools) {
      * @param y - Vertical position of the mouse.
      */
     suspend fun click(x: Double, y: Double, clickCount: Int = 1, delayMillis: Long = 500) {
-// println("click($x, $y, $clickCount, $delayMillis)")
-
         moveTo(x, y)
 
 //        down(x, y, clickCount)
@@ -237,7 +235,7 @@ class Mouse(private val devTools: ChromeDevTools) {
     }
 
     /**
-     * TODO: input.dispatchMouseEvent(MOUSE_MOVED) not work, the reason is unknown. Robot.mouseMove works.
+     * if input.dispatchMouseEvent(MOUSE_MOVED) not work, try Robot.mouseMove.
      * */
     private fun chromeMoveTo(x: Double, y: Double) {
         dispatchMouseEvent(

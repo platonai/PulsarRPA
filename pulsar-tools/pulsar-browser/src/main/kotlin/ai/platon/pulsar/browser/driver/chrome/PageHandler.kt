@@ -5,15 +5,16 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.math.geometric.OffsetD
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
 import com.github.kklisura.cdt.protocol.v2023.types.dom.Rect
 import com.github.kklisura.cdt.protocol.v2023.types.page.Navigate
 import com.github.kklisura.cdt.protocol.v2023.types.page.ReferrerPolicy
 import com.github.kklisura.cdt.protocol.v2023.types.page.TransitionType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.SerializationOptions
+import kotlinx.coroutines.delay
+import kotlin.random.Random
 
 class PageHandler(
     private val devTools: RemoteDevTools,
@@ -23,34 +24,34 @@ class PageHandler(
         // see org.w3c.dom.Node.ELEMENT_NODE
         const val ELEMENT_NODE = 1
     }
-    
+
     private val logger = getLogger(this)
-    
+
     private val isActive get() = AppContext.isActive && devTools.isOpen
     private val pageAPI get() = devTools.page.takeIf { isActive }
     private val domAPI get() = devTools.dom.takeIf { isActive }
     private val cssAPI get() = devTools.css.takeIf { isActive }
     private val runtime get() = devTools.runtime.takeIf { isActive }
-    
+
     val mouse = Mouse(devTools)
     val keyboard = Keyboard(devTools)
-    
+
     @Throws(ChromeDriverException::class)
-    fun navigate(@ParamName("url") url: String): Navigate? {
+    fun navigate(url: String): Navigate? {
         return pageAPI?.navigate(url)
     }
-    
+
     @Throws(ChromeDriverException::class)
     fun navigate(
-        @ParamName("url") url: String,
-        @Optional @ParamName("referrer") referrer: String? = null,
-        @Optional @ParamName("transitionType") transitionType: TransitionType? = null,
-        @Optional @ParamName("frameId") frameId: String? = null,
-        @Experimental @Optional @ParamName("referrerPolicy") referrerPolicy: ReferrerPolicy? = null
+        url: String,
+        referrer: String? = null,
+        transitionType: TransitionType? = null,
+        frameId: String? = null,
+        referrerPolicy: ReferrerPolicy? = null
     ): Navigate? {
         return pageAPI?.navigate(url, referrer, transitionType, frameId, referrerPolicy)
     }
-    
+
     /**
      * TODO: make sure the meaning of 0 node id
      * */
@@ -58,24 +59,24 @@ class PageHandler(
     fun querySelector(selector: String): Int? {
         return querySelectorOrNull(selector)
     }
-    
+
     @Throws(ChromeDriverException::class)
     fun querySelectorAll(selector: String): List<Int> {
         return invokeOnElement(selector) { nodeId ->
             domAPI?.querySelectorAll(nodeId, selector)
         } ?: listOf()
     }
-    
+
     @Throws(ChromeDriverException::class)
     fun getAttributes(selector: String): Map<String, String> {
         return invokeOnElement(selector) { nodeId ->
             domAPI?.getAttributes(nodeId)?.zipWithNext()?.toMap()
         } ?: emptyMap()
     }
-    
+
     @Throws(ChromeDriverException::class)
     fun getAttribute(selector: String, attrName: String) = invokeOnElement(selector) { getAttribute(it, attrName) }
-    
+
     @Throws(ChromeDriverException::class)
     fun getAttribute(nodeId: Int, attrName: String): String? {
         // `attributes`: n1, v1, n2, v2, n3, v3, ...
@@ -92,7 +93,7 @@ class PageHandler(
     fun setAttribute(nodeId: Int, attrName: String, attrValue: String) {
         domAPI?.setAttributeValue(nodeId, attrName, attrValue)
     }
-    
+
     /**
      * TODO: too many requests, need to optimize
      * RobustRPC - Too many RPC failures: selectAttributeAll (6/5) | DOM Error while querying
@@ -103,10 +104,10 @@ class PageHandler(
             .mapNotNull { getAttribute(it, attrName) }
             .toList()
     }
-    
+
     @Throws(ChromeDriverException::class)
     fun visible(selector: String) = predicateOnElement(selector) { visible(it) }
-    
+
     @Throws(ChromeDriverException::class)
     fun visible(nodeId: Int): Boolean {
         if (nodeId <= 0) {
@@ -130,7 +131,7 @@ class PageHandler(
 
         return isVisible
     }
-    
+
     /**
      * This method fetches an element with `selector` and focuses it. If there's no
      * element matching `selector`, the method returns 0.
@@ -146,17 +147,17 @@ class PageHandler(
     @Throws(ChromeDriverException::class)
     fun focusOnSelector(selector: String): Int {
         val rootId = domAPI?.document?.nodeId ?: return 0
-        
+
         val nodeId = domAPI?.querySelector(rootId, selector)
         if (nodeId == 0) {
             return 0
         }
 
         domAPI?.focus(nodeId, rootId, null)
-        
+
         return nodeId ?: 0
     }
-    
+
     @Throws(ChromeDriverException::class)
     fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Int? {
         val nodeId = querySelector(selector)
@@ -167,7 +168,7 @@ class PageHandler(
 
         return scrollIntoViewIfNeeded(nodeId, selector, rect)
     }
-    
+
     @Throws(ChromeDriverException::class)
     fun scrollIntoViewIfNeeded(nodeId: Int, selector: String? = null, rect: Rect? = null): Int? {
         try {
@@ -179,15 +180,17 @@ class PageHandler(
 
             domAPI?.scrollIntoViewIfNeeded(nodeId, node.backendNodeId, null, rect)
         } catch (e: ChromeRPCException) {
-            logger.debug("DOM.scrollIntoViewIfNeeded is not supported, fallback to Element.scrollIntoView | {} | {} | {}",
-                nodeId, e.message, selector)
+            logger.debug(
+                "DOM.scrollIntoViewIfNeeded is not supported, fallback to Element.scrollIntoView | {} | {} | {}",
+                nodeId, e.message, selector
+            )
             // Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
             evaluate("__pulsar_utils__.scrollIntoView('$selector')")
         }
 
         return nodeId
     }
-    
+
     /**
      * Evaluates expression on global object.
      *
@@ -248,6 +251,41 @@ class PageHandler(
         return evaluate?.result?.value
     }
 
+    suspend fun click(nodeId: Int) {
+        click(nodeId, 1)
+    }
+
+    suspend fun click(nodeId: Int, count: Int, position: String = "center") {
+        click0(nodeId, count, position)
+    }
+
+    suspend fun press(nodeId: Int, key: String, delay: Long) {
+        click(nodeId, 1)
+        keyboard.press(key, delay)
+    }
+
+    suspend fun type(nodeId: Int, text: String, delay: Long) {
+        click(nodeId, 1)
+        keyboard.type(text, delay)
+        delay(200)
+    }
+
+    suspend fun fill(nodeId: Int, text: String, delay: Long) {
+        val value = getAttribute(nodeId, "value")
+        if (value != null) {
+            // it's an input element, we should click on the right side of the element,
+            // so the cursor appears at the tail of the text
+            click(nodeId, 1, "right")
+            keyboard.delete(value.length, delay)
+            // ensure the input is empty
+            // page.setAttribute(nodeId, "value", "")
+        }
+
+        click(nodeId, 1)
+        // For fill, there is no delay between key presses
+        keyboard.type(text, 0)
+    }
+
     @Throws(ChromeDriverException::class)
     private fun querySelectorOrNull(selector: String): Int? {
         val rootId = domAPI?.document?.nodeId
@@ -255,24 +293,54 @@ class PageHandler(
             domAPI?.querySelector(rootId, selector)
         } else null
     }
-    
+
+    private suspend fun click0(nodeId: Int, count: Int, position: String = "center") {
+        val deltaX = 4.0 + Random.nextInt(4)
+        val deltaY = 4.0
+        val offset = OffsetD(deltaX, deltaY)
+        val minDeltaX = 2.0
+
+        val p = pageAPI
+        val d = domAPI
+        if (p == null || d == null) {
+            return
+        }
+
+        val clickableDOM = ClickableDOM(p, d, nodeId, offset)
+        val point = clickableDOM.clickablePoint().value ?: return
+        val box = clickableDOM.boundingBox()
+        val width = box?.width ?: 0.0
+        // if it's an input element, we should click on the right side of the element,
+        // so the cursor is at the tail of the text
+        var offsetX = when (position) {
+            "left" -> 0.0 + deltaX
+            "right" -> width - deltaX
+            else -> width / 2 + deltaX
+        }
+        offsetX = offsetX.coerceAtMost(width - minDeltaX).coerceAtLeast(minDeltaX)
+
+        point.x += offsetX
+
+        mouse.click(point.x, point.y, count, 200)
+    }
+
     @Throws(ChromeDriverException::class)
     private fun <T> invokeOnElement(selector: String, action: (Int) -> T): T? {
         val nodeId = querySelectorOrNull(selector)
         if (nodeId != null && nodeId > 0) {
             return action(nodeId)
         }
-        
+
         return null
     }
-    
+
     @Throws(ChromeDriverException::class)
     private fun predicateOnElement(selector: String, action: (Int) -> Boolean): Boolean {
         val nodeId = querySelectorOrNull(selector)
         if (nodeId != null && nodeId > 0) {
             return action(nodeId)
         }
-        
+
         return false
     }
 
