@@ -121,8 +121,10 @@ abstract class AbstractWebDriver(
 
     private val chatModel get() = ChatModelFactory.getOrCreateOrNull(config)
 
+    val createTime: Instant = Instant.now()
     var idleTimeout: Duration = Duration.ofMinutes(10)
     var lastActiveTime: Instant = Instant.now()
+    var closeTime: Instant? = null
     /**
      * Whether the driver is idle. The driver is idle if it is not working for a period of time.
      * */
@@ -692,6 +694,7 @@ abstract class AbstractWebDriver(
             return
         }
 
+        closeTime = Instant.now()
         state.set(State.QUIT)
         runCatching { runBlocking { stop() } }.onFailure { warnForClose(this, it) }
     }
