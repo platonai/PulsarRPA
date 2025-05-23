@@ -128,9 +128,10 @@ data class W3DocumentRequest(
  *
  * @property url The target page URL to process.
  * @property args Optional load arguments to customize page loading behavior.
+ * @property onBrowserLaunchedActions Actions to perform when the browser is launched (e.g., "clearBrowserCookies", "navigateTo").
+ * @property onPageReadyActions Actions to perform when the document is fully loaded (e.g., "scroll down", "click button").
  * @property pageSummaryPrompt A prompt to analyze or discuss the HTML structure of the page.
  * @property dataExtractionRules Specifications for extracting structured fields from the HTML content.
- * @property onPageReadyActions Actions to perform when the document is fully loaded (e.g., "scroll down", "click button").
  * @property xsql An X-SQL query for structured data extraction, e.g.
  *              "select dom_first_text(dom, '#title') as title, llm_extract(dom, 'price') as price".
  * @property mode The execution mode, either "sync" (synchronous) or "async" (asynchronous).
@@ -138,6 +139,7 @@ data class W3DocumentRequest(
 data class CommandRequest(
     var url: String,
     var args: String? = null,
+    var onBrowserLaunchedActions: List<String>? = null,
     var onPageReadyActions: List<String>? = null,
     var pageSummaryPrompt: String? = null,
     var dataExtractionRules: String? = null,

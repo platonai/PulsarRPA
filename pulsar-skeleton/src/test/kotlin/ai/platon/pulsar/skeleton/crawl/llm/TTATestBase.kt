@@ -2,7 +2,6 @@ package ai.platon.pulsar.skeleton.crawl.llm
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.XmlConfiguration
 import ai.platon.pulsar.external.ChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse

@@ -81,6 +81,8 @@ class PulsarWebDriver(
     private var navigateUrl = chromeTab.url ?: ""
     private var credentials: Credentials? = null
 
+    var injectedScriptIdentifier: String? = null
+
     /**
      * Expose the underlying implementation, used for diagnosis purpose
      * */
@@ -422,7 +424,8 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(): String? {
-        return invokeOnPage("outerHTML") { domAPI?.outerHTML }
+        // https://github.com/platonai/PulsarRPA/issues/107
+        return outerHTML(":root")
     }
 
     @Throws(WebDriverException::class)
@@ -863,7 +866,7 @@ class PulsarWebDriver(
         }
 
         val scripts = initScriptCache.joinToString("\n;\n\n\n;\n")
-        pageAPI?.addScriptToEvaluateOnNewDocument("\n;;\n$scripts\n;;\n")
+        injectedScriptIdentifier = pageAPI?.addScriptToEvaluateOnNewDocument("\n;;\n$scripts\n;;\n")
 
         if (logger.isTraceEnabled) {
             reportInjectedJs(scripts)

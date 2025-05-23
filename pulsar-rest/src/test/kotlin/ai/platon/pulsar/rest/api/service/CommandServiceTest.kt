@@ -48,7 +48,7 @@ class CommandServiceTest {
     }
 
     @Test
-    fun `test executeCommand with actions`() {
+    fun `test executeCommand with onPageReadyActions`() {
         val actions = """
             move cursor to the element with id 'title' and click it
             scroll to middle
@@ -59,6 +59,33 @@ class CommandServiceTest {
             PRODUCT_DETAIL_URL, "",
             pageSummaryPrompt = "Tell me something about the page",
             onPageReadyActions = actions
+        )
+
+        val status = commandService.executeCommand(request)
+
+        println(status)
+        Assumptions.assumeTrue(status.pageStatusCode == 200)
+        Assumptions.assumeTrue(status.isDone)
+        Assumptions.assumeTrue(status.statusCode == 200)
+
+        assertNotNull(status.commandResult)
+        assertNotNull(status.commandResult?.pageSummary)
+
+        assertNull(status.commandResult?.fields)
+        assertNull(status.commandResult?.links)
+        assertNull(status.commandResult?.xsqlResultSet)
+    }
+
+    @Test
+    fun `test executeCommand with onBrowserLaunchedActions`() {
+        val actions = """
+            clear cookies
+            goto origin url of $PRODUCT_DETAIL_URL
+        """.trimIndent().split("\n")
+        val request = CommandRequest(
+            PRODUCT_DETAIL_URL, "",
+            onBrowserLaunchedActions = actions,
+            pageSummaryPrompt = "Tell me something about the page",
         )
 
         val status = commandService.executeCommand(request)
