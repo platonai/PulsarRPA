@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "v*"
+  # Allow manual workflow runs
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: galaxyeye88/pulsar-rpa
