@@ -396,9 +396,6 @@ abstract class AbstractWebDriver(
         return result
     }
 
-
-
-
     @Throws(WebDriverException::class)
     override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
         val result = evaluate("__pulsar_utils__.selectFirstAttribute('$selector', '$attrName')")

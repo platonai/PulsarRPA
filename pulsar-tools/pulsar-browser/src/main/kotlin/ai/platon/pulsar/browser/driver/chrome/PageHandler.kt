@@ -1,5 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.ScriptConfuser
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
@@ -7,10 +8,14 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
+import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
 import com.github.kklisura.cdt.protocol.v2023.types.dom.Rect
 import com.github.kklisura.cdt.protocol.v2023.types.page.Navigate
 import com.github.kklisura.cdt.protocol.v2023.types.page.ReferrerPolicy
 import com.github.kklisura.cdt.protocol.v2023.types.page.TransitionType
+import com.github.kklisura.cdt.protocol.v2023.types.runtime.CallArgument
+import com.github.kklisura.cdt.protocol.v2023.types.runtime.CallFunctionOn
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.SerializationOptions
 import kotlinx.coroutines.delay
@@ -18,7 +23,7 @@ import kotlin.random.Random
 
 class PageHandler(
     private val devTools: RemoteDevTools,
-    private val confuser: ScriptConfuser,
+    private val settings: BrowserSettings,
 ) {
     companion object {
         // see org.w3c.dom.Node.ELEMENT_NODE
@@ -26,6 +31,8 @@ class PageHandler(
     }
 
     private val logger = getLogger(this)
+
+    private val confuser: ScriptConfuser = settings.confuser
 
     private val isActive get() = AppContext.isActive && devTools.isOpen
     private val pageAPI get() = devTools.page.takeIf { isActive }

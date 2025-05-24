@@ -374,6 +374,7 @@ interface WebDriver : Closeable {
      * page.
      *
      * TODO: distinguish pageSource and outerHTML
+     * - outerHTML is only for HTML document, while pageSource is for all documents.
      *
      * ```kotlin
      * val pageSource = driver.pageSource()

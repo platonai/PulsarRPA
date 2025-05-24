@@ -66,7 +66,7 @@ class PulsarWebDriver(
     private val emulationAPI get() = devTools.emulation.takeIf { isActive }
 
     private val rpc = RobustRPC(this)
-    private val page = PageHandler(devTools, settings.confuser)
+    private val page = PageHandler(devTools, settings)
     private val mouse get() = page.mouse.takeIf { isActive }
     private val keyboard get() = page.keyboard.takeIf { isActive }
     private val screenshot = Screenshot(page, devTools)
@@ -512,6 +512,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun pageSource(): String? {
+        // return invokeOnPage("pageSource") { pageAPI?.getResourceContent(null, url()) }
         return invokeOnPage("pageSource") { domAPI?.getOuterHTML(domAPI?.document?.nodeId, null, null) }
     }
 
