@@ -41,11 +41,12 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t pulsar-rpa-nightly:${{ github.sha }} -f Dockerfile .
+          echo "Building image pulsar-rpa-nightly:${{ env.VERSION }}"
+          docker build -t pulsar-rpa-nightly:${{ env.VERSION }} -f Dockerfile .
 
       - name: Start Docker container
         run: |
-          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 $IMAGE_NAME:$VERSION
+          docker run -d --rm --name pulsar-rpa-nightly -p 8182:8182 pulsar-rpa-nightly:${{ env.VERSION }}
           sleep 10  # Wait for Spring Boot to start
 
       - name: Run curl integration tests
@@ -55,7 +56,7 @@ jobs:
 
       - name: Stop Docker container
         if: always()
-        run: docker stop pulsar-rpa-test || true
+        run: docker stop pulsar-rpa-nightly || true
 
       - name: Slack Notification
         if: success()
