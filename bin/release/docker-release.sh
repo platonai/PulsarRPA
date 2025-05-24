@@ -41,9 +41,11 @@ if [ ! -f "$ROOT_DIR/pulsar-app/pulsar-master/target/PulsarRPA.jar" ]; then
 fi
 
 echo "🐳 Building Docker image: $IMAGE_NAME:$VERSION ..."
+echo "docker build -f $DOCKERFILE_NAME -t $IMAGE_NAME:$VERSION ."
 docker build -f $DOCKERFILE_NAME -t $IMAGE_NAME:$VERSION .
 
 echo "🏷️ Tagging as latest..."
+echo "docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:latest"
 docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:latest
 
 # ========== STEP 4: 推送 ==========
