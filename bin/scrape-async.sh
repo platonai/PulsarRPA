@@ -9,7 +9,7 @@ MAX_ATTEMPTS=30
 DELAY_SECONDS=5
 MAX_URLS=20
 BASE_URL="http://localhost:8182/api/x/s"
-STATUS_URL_TEMPLATE="http://localhost:8182/api/x/status?id=%s"
+STATUS_URL_TEMPLATE="http://localhost:8182/api/x/%s/status"
 MAX_POLLING_TASKS=10
 
 SQL_TEMPLATE="select
