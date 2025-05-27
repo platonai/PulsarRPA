@@ -2,6 +2,11 @@
 
 set -e
 
+# Run command-sse.sh integration test
+./bin/command-sse.sh \
+  || { echo "Integration test failed - command-sse.sh"; exit 1; } \
+  && echo "Integration test passed - command-sse.sh"
+
 # Run scrape.sh integration test
 ./bin/scrape.sh \
   || { echo "Integration test failed - scrape.sh"; exit 1; } \
