@@ -2,14 +2,6 @@
 
 set -e
 
-# 清理函数：在退出时删除 FIFO 并杀掉 curl 进程
-cleanup() {
-  [[ -p "$SSE_FIFO" ]] && rm -f "$SSE_FIFO"
-  [[ -f /tmp/command_sse_curl_pid.txt ]] && rm -f /tmp/command_sse_curl_pid.txt
-  [[ -n "$CURL_PID" ]] && kill "$CURL_PID" >/dev/null 2>&1 || true
-}
-trap cleanup EXIT INT TERM
-
 # 自然语言命令内容
 COMMAND='
 Go to https://www.amazon.com/dp/B0C1H26C46
@@ -48,6 +40,14 @@ curl -N --no-buffer -H "Accept: text/event-stream" "$SSE_URL" > "$SSE_FIFO" &
 CURL_PID=$!
 echo "$CURL_PID" > /tmp/command_sse_curl_pid.txt
 
+# 清理函数：在退出时删除 FIFO 并杀掉 curl 进程
+cleanup() {
+  [[ -p "$SSE_FIFO" ]] && rm -f "$SSE_FIFO"
+  [[ -f /tmp/command_sse_curl_pid.txt ]] && rm -f /tmp/command_sse_curl_pid.txt
+  [[ -n "$CURL_PID" ]] && kill "$CURL_PID" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT INT TERM
+
 # SSE 主循环
 isDone=0
 while read -r line; do
@@ -76,11 +76,5 @@ while read -r line; do
 done < "$SSE_FIFO"
 
 sleep 1 # 确保所有数据都已处理完毕
-
-if ps -p "$CURL_PID" >/dev/null 2>&1; then
-  kill "$CURL_PID"
-  wait "$CURL_PID"
-fi
-rm -f "$SSE_FIFO"
 
 echo "Finished command-sse.sh script."
