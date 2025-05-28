@@ -13,6 +13,7 @@ import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.lang3.StringUtils
 import java.io.IOException
 import java.net.URI
+import java.time.Instant
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -29,9 +30,9 @@ class TransportImpl : Transport {
     private val metrics = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
     private val meterRequests = metrics.meter("$metricsPrefix.requests")
     
-    val id = instanceSequencer.incrementAndGet()
+    val id = SEQUENCER.incrementAndGet()
     override val isOpen: Boolean get() = session.isOpen || !closed.get()
-    
+
     class DevToolsMessageHandler(val consumer: Consumer<String>) : MessageHandler.Whole<String> {
         override fun onMessage(message: String) {
             consumer.accept(message)
@@ -63,7 +64,7 @@ class TransportImpl : Transport {
                 webSocketService.onClose(session, closeReason)
                 tracer?.trace("Closing ws server {}", uri)
             }
-            
+
             override fun onError(session: Session, e: Throwable?) {
                 super.onError(session, e)
                 webSocketService.onError(session, e)
@@ -166,7 +167,7 @@ class TransportImpl : Transport {
     }
 
     companion object {
-        private val instanceSequencer = AtomicInteger()
+        private val SEQUENCER = AtomicInteger()
         
         val WEB_SOCKET_CONTAINER = DefaultWebSocketContainerFactory().wsContainer
         

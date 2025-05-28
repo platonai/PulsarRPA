@@ -7,6 +7,7 @@ import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
 import com.github.kklisura.cdt.protocol.v2023.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.v2023.support.types.EventListener
 import java.net.URI
+import java.time.Instant
 import java.util.concurrent.Future
 import java.util.function.Consumer
 
@@ -61,7 +62,11 @@ interface RemoteChrome: AutoCloseable {
 interface RemoteDevTools: ChromeDevTools, AutoCloseable {
 
     val isOpen: Boolean
-    
+
+    val lastSentTime: Instant?
+
+    val lastReceivedTime: Instant?
+
     @Throws(ChromeIOException::class, ChromeRPCException::class)
     operator fun <T> invoke(
             returnProperty: String?,

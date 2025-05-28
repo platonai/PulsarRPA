@@ -15,6 +15,7 @@ import kotlinx.coroutines.*
 import org.apache.commons.lang3.StringUtils
 import java.io.IOException
 import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.CountDownLatch
@@ -92,7 +93,13 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
     private val eventDispatcherScope = CoroutineScope(Dispatchers.Default) + CoroutineName("EventDispatcher")
     
     val isActive get() = !closed.get()
-    
+
+    /**
+     * The last time a message was received from the Chrome DevTools.
+     * */
+    var lastReceivedTime: Instant? = null
+        private set
+
     @Throws(JsonProcessingException::class)
     fun serialize(message: Any): String = OBJECT_MAPPER.writeValueAsString(message)
     
@@ -174,6 +181,8 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
     
     @Throws(ChromeRPCException::class, IOException::class)
     override fun accept(message: String) {
+        lastReceivedTime = Instant.now()
+
         tracer?.trace("◀ Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
         
         ChromeDevToolsImpl.numAccepts.inc()

@@ -128,9 +128,11 @@ class PulsarWebDriver(
         return invokeOnPage("getCookies") { getCookies0() } ?: listOf()
     }
 
-    @Deprecated("Use deleteCookies(name, url, domain, path) instead." +
-            "[deleteCookies] (3/5) | code: -32602, At least one of the url and domain needs to be specified",
-        ReplaceWith("driver.deleteCookies(name, url, domain, path)"))
+    @Deprecated(
+        "Use deleteCookies(name, url, domain, path) instead." +
+                "[deleteCookies] (3/5) | code: -32602, At least one of the url and domain needs to be specified",
+        ReplaceWith("driver.deleteCookies(name, url, domain, path)")
+    )
     override suspend fun deleteCookies(name: String) {
         invokeOnPage("deleteCookies") { cdpDeleteCookies(name) }
     }
@@ -201,6 +203,40 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun waitForPage(url: String, timeout: Duration): WebDriver? {
         return waitFor("waitForPage", timeout) { browser.findDriver(url) }
+    }
+
+    @ExperimentalApi
+    suspend fun waitForFunction(jsFunction: String) {
+
+    }
+
+    @ExperimentalApi
+    suspend fun waitForLoadState(loadState: String) {
+        val state = loadState.uppercase()
+        when (state) {
+            "LOAD" -> {
+                // Listen to the load event.
+            }
+            "DOMCONTENTLOADED" -> {
+                // Listen to the DOMContentLoaded event.
+            }
+            "NETWORKIDLE" -> {
+                // No network activity yet, this is not likely to appear.
+                // Just wait for 5 seconds for such case.
+                var n = timeout("networkIdle", Duration.ofSeconds(5)).seconds
+                while (n-- > 0 && devTools.lastReceivedTime == null) {
+                    delay(1000)
+                }
+
+                // Wait for the last received time to be expired.
+                var lastReceivedTime = devTools.lastReceivedTime ?: return
+                while (!DateTimes.isExpired(lastReceivedTime, Duration.ofSeconds(5))) {
+                    delay(1000)
+                    lastReceivedTime = devTools.lastReceivedTime ?: return
+                }
+            }
+            else -> throw ChromeDriverException("Unsupported load state: $loadState")
+        }
     }
 
     @Throws(WebDriverException::class)

@@ -8,6 +8,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
+import jdk.jfr.internal.EventWriterKey.block
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -77,15 +78,19 @@ class PulsarWebDriverExtensionTests : WebDriverTestBase() {
         }
     }, { _, driver ->
         val code = """console.log("Hello, Pulsar!");"""
-        val result = driver.evaluate(code)
+        driver.evaluate(code)
     })
 
     @Test
-    fun `test network onDataReceived`() = runEventTest({ devtools ->
+    fun `test network onDataReceived`() = runEventTest { devtools ->
         devtools.network.onDataReceived { data -> println(data.requestId + ": " + data.dataLength) }
-    }, { _, driver ->
+    }
 
-    })
+    private fun runEventTest(
+        init: suspend (ChromeDevTools) -> Unit
+    ) {
+        runEventTest(init) { _, _ -> }
+    }
 
     private fun runEventTest(
         init: suspend (ChromeDevTools) -> Unit,

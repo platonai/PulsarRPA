@@ -50,9 +50,18 @@ abstract class ChromeDevToolsImpl(
 
     private val closeLatch = CountDownLatch(1)
     private val closed = AtomicBoolean()
+    private var _lastSentTime: Instant? = null
+
     override val isOpen get() = !closed.get() && pageTransport.isOpen
 
     private val dispatcher = EventDispatcher()
+
+    override val lastSentTime: Instant? get() = _lastSentTime
+
+    /**
+     * The last time the DevTools has received a message.
+     * */
+    override val lastReceivedTime get() = dispatcher.lastReceivedTime
 
     init {
         browserTransport.addMessageHandler(dispatcher)
@@ -162,6 +171,7 @@ abstract class ChromeDevToolsImpl(
         } else {
             pageTransport.sendAsync(message)
         }
+        _lastSentTime = Instant.now()
 
         // await() blocks the current thread
         // 1. the current thread is optimized by Kotlin since this method is running within withContext(Dispatchers.IO)
