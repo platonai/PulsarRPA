@@ -88,7 +88,7 @@ class CommandService(
 
         return Flux.create { sink -> handleFluxSink(sink) }.map {
             // ServerSentEvent.builder(it).id(it.id).event(it.event).build()
-            // NOTE: [2025/5/20] JavaScript client-side code expects only JSON data, not the event ID or event name.
+            // NOTE: [2025/5/20] JavaScript client-side code expects only JSON data, not the event ID nor event name.
             ServerSentEvent.builder(it).build()
         }
     }
