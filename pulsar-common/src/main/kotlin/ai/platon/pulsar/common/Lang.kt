@@ -208,13 +208,6 @@ object ObjectConverter {
 /**
  * This annotation marks the API that is considered experimental.
  * The behavior of such API may be changed or the API may be removed completely in any further release.
- *
- * > Beware using the annotated API especially if you're developing a library, since your library might become binary incompatible
- * with the future versions of the standard library.
- *
- * Any usage of a declaration annotated with `@ExperimentalStdlibApi` must be accepted either by
- * annotating that usage with the [OptIn] annotation, e.g. `@OptIn(ExperimentalStdlibApi::class)`,
- * or by using the compiler argument `-Xopt-in=kotlin.ExperimentalStdlibApi`.
  */
 @Retention(AnnotationRetention.BINARY)
 @Target(

@@ -28,6 +28,7 @@ import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourceOptions
 import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
+import com.google.common.annotations.Beta
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import org.apache.commons.lang3.SystemUtils
@@ -193,27 +194,6 @@ class PulsarWebDriver(
             }
             elementExists
         }
-    }
-
-    @Throws(WebDriverException::class)
-    private suspend fun waitForNavigationExperimental(oldUrl: String, timeout: Duration): Duration {
-        val startTime = Instant.now()
-
-        try {
-            val channel = Channel<String>()
-
-            pageAPI?.onDocumentOpened {
-                val navigated = it.frame.url != oldUrl
-                // emit(Navigation)
-                channel.trySend("navigated")
-            }
-
-            channel.receive()
-        } catch (e: ChromeDriverException) {
-            rpc.handleChromeException(e, "waitForNavigation $timeout")
-        }
-
-        return timeout - DateTimes.elapsedTime(startTime)
     }
 
     @Throws(WebDriverException::class)
@@ -434,10 +414,6 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun clickablePoint(selector: String): PointD? {
-//        invokeOnElementOrNull(selector, "clickablePoint") { nodeId ->
-//            ClickableDOM.create(pageAPI, domAPI, nodeId)?.clickablePoint()?.value
-//        }
-
         try {
             return rpc.invokeDeferred("clickablePoint") {
                 val nodeId = page.scrollIntoViewIfNeeded(selector)
@@ -629,6 +605,52 @@ class PulsarWebDriver(
             throw ChromeIOException("Failed to enable CDT agents", e)
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+    @ExperimentalApi
+    @Throws(WebDriverException::class)
+    suspend fun waitForNavigationExperimental(oldUrl: String, timeout: Duration): Duration {
+        val startTime = Instant.now()
+
+        try {
+            val channel = Channel<String>()
+
+            pageAPI?.onDocumentOpened {
+                val navigated = it.frame.url != oldUrl
+                // emit(Navigation)
+                channel.trySend("navigated")
+            }
+
+            channel.receive()
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "waitForNavigation $timeout")
+        }
+
+        return timeout - DateTimes.elapsedTime(startTime)
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * Navigate to the page and inject scripts.
