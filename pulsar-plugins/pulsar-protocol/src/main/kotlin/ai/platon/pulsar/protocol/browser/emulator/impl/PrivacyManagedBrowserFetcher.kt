@@ -139,7 +139,9 @@ open class PrivacyManagedBrowserFetcher(
      * */
     @Throws(Exception::class)
     suspend fun fetchDeferred(task: FetchTask): Response {
-        // Specified driver is always used and ignore the privacy context
+        // - Specified driver is always used and ignore the privacy context
+        // - Only when the browser is specified, we can get a random driver, otherwise,
+        //   we will use the PrivacyManager to get a driver
         val driver = getWebDriver(task.page)
         if (driver != null) {
             return webdriverFetcher.fetchDeferred(task, driver).response
@@ -172,6 +174,12 @@ open class PrivacyManagedBrowserFetcher(
         }
     }
 
+    /**
+     * Get the web driver for the given page.
+     * * If the page has a specified web driver, it will be used.
+     * * If the page has a specified browser, a random web driver from that browser will be used.
+     * * If neither is specified, the PrivacyManager will be used to get a web driver.
+     * */
     private fun getWebDriver(page: WebPage): WebDriver? {
         val driver = getSpecifiedWebDriver(page)
         if (driver != null) {
@@ -179,6 +187,9 @@ open class PrivacyManagedBrowserFetcher(
         }
 
         val browser = getSpecifiedBrowser(page) ?: return null
+
+        // Only when the browser is specified, we can get a random driver, otherwise,
+        // we will use the PrivacyManager to get a driver
         return getRandomWebDriver(browser)
     }
 

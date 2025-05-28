@@ -127,6 +127,9 @@ open class InteractiveBrowserEmulator(
         on1(EmulateEvents.willCheckDocumentState) { page: WebPage, driver: WebDriver ->
             this.onWillCheckDocumentState(page, driver)
         }
+        on1(EmulateEvents.documentFullyLoaded) { page: WebPage, driver: WebDriver ->
+            this.onDocumentFullyLoaded(page, driver)
+        }
         on1(EmulateEvents.documentActuallyReady) { page: WebPage, driver: WebDriver ->
             this.onDocumentActuallyReady(page, driver)
         }
@@ -186,7 +189,14 @@ open class InteractiveBrowserEmulator(
         // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onWillCheckDocumentState?.invoke(page, driver)
     }
-    
+
+    override suspend fun onDocumentFullyLoaded(page: WebPage, driver: WebDriver) {
+        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDocumentFullyLoaded?.invoke(page, driver)
+        // The more specific handlers has the opportunity to override the result of more general handlers.
+        page.browseEventHandlers?.onDocumentFullyLoaded?.invoke(page, driver)
+    }
+
+    @Deprecated("Use onDocumentFullyLoaded instead", replaceWith = ReplaceWith("onDocumentFullyLoaded"))
     override suspend fun onDocumentActuallyReady(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDocumentActuallyReady?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
@@ -583,14 +593,16 @@ open class InteractiveBrowserEmulator(
         
         if (hasScript) {
             // Wait until the document is actually ready, or timeout.
-            waitForDocumentActuallyReady(task, result)
+            waitForDocumentFullyLoaded(task, result)
         }
 
         if (result.protocolStatus.isSuccess) {
             task.driver.navigateEntry.documentReadyTime = Instant.now()
+            emit1(EmulateEvents.documentFullyLoaded, page, driver)
+            // deprecated, will be removed in the future
             emit1(EmulateEvents.documentActuallyReady, page, driver)
         }
-        
+
         if (result.state.isContinue) {
             emit1(EmulateEvents.willScroll, page, driver)
             
@@ -635,12 +647,12 @@ open class InteractiveBrowserEmulator(
      * Wait until the document is actually ready, or timeout.
      * */
     @Throws(NavigateTaskCancellationException::class)
-    protected open suspend fun waitForDocumentActuallyReady(interactTask: InteractTask, result: InteractResult) {
+    protected open suspend fun waitForDocumentFullyLoaded(interactTask: InteractTask, result: InteractResult) {
         val page = interactTask.page
         val driver = interactTask.driver
         require(driver is AbstractWebDriver)
-        
-        waitForDocumentActuallyReady1(interactTask, result)
+
+        waitForDocumentFullyLoaded1(interactTask, result)
     }
     
     /**
@@ -676,7 +688,7 @@ open class InteractiveBrowserEmulator(
      * Wait until the document is actually ready, or timeout.
      * */
     @Throws(NavigateTaskCancellationException::class)
-    protected open suspend fun waitForDocumentActuallyReady1(interactTask: InteractTask, result: InteractResult) {
+    protected open suspend fun waitForDocumentFullyLoaded1(interactTask: InteractTask, result: InteractResult) {
         val driver = interactTask.driver
         require(driver is AbstractWebDriver)
 

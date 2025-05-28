@@ -7,7 +7,7 @@ $MAX_ATTEMPTS = 30
 $DELAY_SECONDS = 5
 $MAX_URLS = 20
 $BASE_URL = "http://localhost:8182/api/x/s"
-$STATUS_URL_TEMPLATE = "http://localhost:8182/api/x/status?uuid={0}"
+$STATUS_URL_TEMPLATE = "http://localhost:8182/api/x/{0}/status"
 $MAX_POLLING_TASKS = 10
 
 $SQL_TEMPLATE = @"
@@ -69,41 +69,41 @@ function Submit-Task {
 }
 
 function Poll-Tasks {
-    param ([array]$uuids)
+    param ([array]$ids)
 
-    Write-Host "First uuid: $($uuids[0]), Total uuids: $($uuids.Count)"
-    if ($uuids.Count -gt 1) { Write-Host "$($uuids[1])" }
-    if ($uuids.Count -gt 2) { Write-Host "$($uuids[2])" }
+    Write-Host "First id: $($ids[0]), Total ids: $($ids.Count)"
+    if ($ids.Count -gt 1) { Write-Host "$($ids[1])" }
+    if ($ids.Count -gt 2) { Write-Host "$($ids[2])" }
 
     $TASK_MAP = @{}
-    $PENDING_TASKS = $uuids.Clone()
+    $PENDING_TASKS = $ids.Clone()
 
-    foreach ($uuid in $PENDING_TASKS) {
-        $TASK_MAP[$uuid] = 0
+    foreach ($id in $PENDING_TASKS) {
+        $TASK_MAP[$id] = 0
     }
 
     for ($attempt = 0; $attempt -lt $MAX_ATTEMPTS; $attempt++) {
         Start-Sleep -Seconds $DELAY_SECONDS
-        $batch_uuids = $PENDING_TASKS[0..([Math]::Min($MAX_POLLING_TASKS-1, $PENDING_TASKS.Count-1))]
+        $batch_ids = $PENDING_TASKS[0..([Math]::Min($MAX_POLLING_TASKS-1, $PENDING_TASKS.Count-1))]
         $new_pending = @()
 
-        foreach ($uuid in $batch_uuids) {
-            Write-Host "[INFO] Polling for task $uuid..."
+        foreach ($id in $batch_ids) {
+            Write-Host "[INFO] Polling for task $id..."
 
-            $status_url = $STATUS_URL_TEMPLATE -f $uuid
+            $status_url = $STATUS_URL_TEMPLATE -f $id
             try {
                 $response = Invoke-RestMethod -Uri $status_url -TimeoutSec 10
                 if ($response -match "completed|success|OK") {
-                    Write-Host "[SUCCESS] Task $uuid completed."
+                    Write-Host "[SUCCESS] Task $id completed."
                 } else {
-                    $TASK_MAP[$uuid]++
-                    Write-Host "[PENDING] Task $uuid still in progress (Attempt $($TASK_MAP[$uuid]))."
-                    $new_pending += $uuid
+                    $TASK_MAP[$id]++
+                    Write-Host "[PENDING] Task $id still in progress (Attempt $($TASK_MAP[$id]))."
+                    $new_pending += $id
                 }
             } catch {
-                $TASK_MAP[$uuid]++
-                Write-Host "[PENDING] Task $uuid still in progress (Attempt $($TASK_MAP[$uuid]))."
-                $new_pending += $uuid
+                $TASK_MAP[$id]++
+                Write-Host "[PENDING] Task $id still in progress (Attempt $($TASK_MAP[$id]))."
+                $new_pending += $id
             }
         }
 
@@ -118,8 +118,8 @@ function Poll-Tasks {
 
     if ($PENDING_TASKS.Count -gt 0) {
         Write-Host "[WARNING] Timeout reached. The following tasks are still pending:"
-        foreach ($uuid in $PENDING_TASKS) {
-            Write-Host $uuid
+        foreach ($id in $PENDING_TASKS) {
+            Write-Host $id
         }
     }
 }
@@ -127,20 +127,20 @@ function Poll-Tasks {
 function Process-Batch {
     param ([array]$batch)
 
-    $uuids = @()
+    $ids = @()
     foreach ($url in $batch) {
         if ($url -notmatch '^https?://') {
             Write-Host "[WARNING] Invalid URL: $url"
             continue
         }
 
-        $uuid = Submit-Task -url $url
-        Write-Host "Submitted: $url -> Task UUID: $uuid"
-        $uuids += $uuid
+        $id = Submit-Task -url $url
+        Write-Host "Submitted: $url -> Task ID: $id"
+        $ids += $id
     }
 
-    Write-Host "[INFO] Started polling for $($uuids.Count) tasks..."
-    Poll-Tasks -uuids $uuids
+    Write-Host "[INFO] Started polling for $($ids.Count) tasks..."
+    Poll-Tasks -ids $ids
 }
 
 function Main {

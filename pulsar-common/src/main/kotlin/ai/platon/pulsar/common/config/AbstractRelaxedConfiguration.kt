@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.PropertyNameStyle
 import ai.platon.pulsar.common.SParser
-import ai.platon.pulsar.common.config.XmlConfiguration.Companion.DEFAULT_RESOURCES
+import ai.platon.pulsar.common.config.LocalFileConfiguration.Companion.DEFAULT_RESOURCES
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
 import org.springframework.core.env.get
@@ -34,15 +34,15 @@ import java.time.Instant
  *
  * @author vincent
  */
-abstract class RelaxedConfiguration {
-    protected val logger = LoggerFactory.getLogger(RelaxedConfiguration::class.java)
+abstract class AbstractRelaxedConfiguration {
+    protected val logger = LoggerFactory.getLogger(AbstractRelaxedConfiguration::class.java)
 
     private val resources = LinkedHashSet<String>()
     var name = "Configuration#" + hashCode()
     var profile = ""
         private set
 
-    protected val xmlConfiguration: XmlConfiguration
+    protected val localFileConfiguration: LocalFileConfiguration
 
     /**
      * Spring core is the first class dependency now.
@@ -54,25 +54,25 @@ abstract class RelaxedConfiguration {
         loadDefaults: Boolean = true,
         resources: Iterable<String> = DEFAULT_RESOURCES
     ) {
-        xmlConfiguration = XmlConfiguration(profile = profile, extraResources = resources, loadDefaults = loadDefaults)
+        localFileConfiguration = LocalFileConfiguration(profile = profile, extraResources = resources, loadDefaults = loadDefaults)
     }
 
-    constructor(conf: XmlConfiguration) {
-        this.xmlConfiguration = XmlConfiguration(conf)
+    constructor(conf: LocalFileConfiguration) {
+        this.localFileConfiguration = LocalFileConfiguration(conf)
     }
 
     /**
      * Return the underlying implementation
      */
-    fun unbox() = xmlConfiguration
+    fun unbox() = localFileConfiguration
 
     /**
      * The configured item size.
      */
-    fun size() = xmlConfiguration.size()
+    fun size() = localFileConfiguration.size()
 
     fun getUnrelaxed(name: String): String? {
-        return System.getProperty(name) ?: System.getenv(name) ?: environment?.get(name) ?: xmlConfiguration[name]
+        return System.getProperty(name) ?: System.getenv(name) ?: environment?.get(name) ?: localFileConfiguration[name]
     }
 
     /**
@@ -450,5 +450,5 @@ abstract class RelaxedConfiguration {
 
     private fun p(name: String) = SParser(get(name))
 
-    override fun toString() = "profile: <$profile> | $xmlConfiguration"
+    override fun toString() = "profile: <$profile> | $localFileConfiguration"
 }

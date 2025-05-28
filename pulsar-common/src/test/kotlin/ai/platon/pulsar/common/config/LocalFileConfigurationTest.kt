@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class XmlConfigurationTest {
+class LocalFileConfigurationTest {
 
-    private lateinit var config: XmlConfiguration
+    private lateinit var config: LocalFileConfiguration
 
     @BeforeEach
     fun setUp() {
-        config = XmlConfiguration(loadDefaults = false)
+        config = LocalFileConfiguration(loadDefaults = false)
     }
 
     @Test
@@ -144,8 +144,8 @@ class XmlConfigurationTest {
 
     @Test
     fun testIdIncrement() {
-        val config1 = XmlConfiguration()
-        val config2 = XmlConfiguration()
+        val config1 = LocalFileConfiguration()
+        val config2 = LocalFileConfiguration()
         assertTrue(config2.id > config1.id)
     }
 }

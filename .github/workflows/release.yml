@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "v*"
+  # Allow manual workflow runs
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: galaxyeye88/pulsar-rpa
@@ -12,6 +14,14 @@ jobs:
   build-and-release:
     runs-on: ubuntu-latest
     steps:
+      - name: Log in to Docker Hub
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+      - name: Test Sonatype login via API
+        run: |
+          curl -u "${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}" \
+          -X GET "https://oss.sonatype.org/service/local/status"
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -78,5 +88,5 @@ jobs:
         if: success()
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker push $IMAGE_NAME:$VERSION
-          docker push $IMAGE_NAME:latest 
+          docker push $IMAGE_NAME:$VERSION || (echo "Failed to push version tag" && exit 1)
+          docker push $IMAGE_NAME:latest || (echo "Failed to push latest tag" && exit 1)

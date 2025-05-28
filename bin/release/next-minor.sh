@@ -28,17 +28,26 @@ sed -i -e "s/<tag>v$VERSION<\/tag>/<tag>v$NEXT_VERSION<\/tag>/g" "$APP_HOME/pom.
 # pom.xml files
 find "$APP_HOME" -name 'pom.xml' -exec sed -i "s/$SNAPSHOT_VERSION/$NEXT_SNAPSHOT_VERSION/" {} \;
 
-# The following files contains the version number to upgrade
+# Files containing the version number to upgrade
 VERSION_AWARE_FILES=(
-  "$APP_HOME/README.adoc"
   "$APP_HOME/README.md"
-  "$APP_HOME/README-CN.adoc"
   "$APP_HOME/README-CN.md"
 )
-# replace version numbers to be the next numbers in files
+
+# Replace version numbers in files
 for F in "${VERSION_AWARE_FILES[@]}"; do
   if [ -e "$F" ]; then
-    sed -i "s/\b$PREFIX.[0-9]\{1,\}\b/$NEXT_VERSION/g" "$F";
+    # Replace SNAPSHOT versions
+    sed -i "s/$SNAPSHOT_VERSION/$NEXT_SNAPSHOT_VERSION/g" "$F"
+
+    # Replace version numbers in the format "x.y.z" where x.y is the prefix and z is the minor version number
+    sed -i "s/\b$PREFIX\.[0-9]\+\b/$NEXT_VERSION/g" "$F"
+
+    # Replace version numbers in paths like "download/v3.0.8/PulsarRPA.jar"
+    sed -i "s|\(/v$PREFIX\.[0-9]\+/\)|/v$NEXT_VERSION/|g" "$F"
+
+    # Replace version numbers prefixed with v like "v3.0.8"
+    sed -i "s/\bv$PREFIX\.[0-9]\+\b/v$NEXT_VERSION/g" "$F"
   fi
 done
 

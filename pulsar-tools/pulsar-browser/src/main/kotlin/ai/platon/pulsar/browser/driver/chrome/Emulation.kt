@@ -122,8 +122,6 @@ class ClickableDOM(
     }
 
     fun boundingBox(): RectD? {
-//        val box = dom.getBoxModel(nodeId, null, null)
-
         val box = dom.runCatching { getBoxModel(nodeId, null, null) }.getOrNull() ?: return null
 
         val quad = box.border.takeIf { it.isNotEmpty() } ?: return null

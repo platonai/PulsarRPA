@@ -31,9 +31,6 @@ openai.model.name=gpt-4o
 openai.base.url=https://api.openai.com/v1
 ```
 
-> ⚠️ **Note**: If you're not running a full Spring Boot application (e.g., CLI tool, unit test, native launch), 
-> you can place the properties file under `.pulsar/config/conf-enabled` to ensure it's picked up manually.
-
 ---
 
 ## 🔌 Method 2: Configure via Environment Variables

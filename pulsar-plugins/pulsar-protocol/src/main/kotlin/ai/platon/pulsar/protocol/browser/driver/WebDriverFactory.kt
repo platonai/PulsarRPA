@@ -27,22 +27,69 @@ open class WebDriverFactory constructor(
      * The number of drivers created.
      */
     private val numDrivers = AtomicInteger()
-    
+
+    /**
+     * Launch a browser.
+     */
+    @Deprecated("Use BrowserFactory.launchBrowser() instead", ReplaceWith("browserFactory.launchBrowser(browserId, conf)"))
+    @Throws(BrowserLaunchException::class)
+    fun launchBrowser(browserId: BrowserId, conf: MutableConfig = config.toMutableConfig()): Browser {
+        numDrivers.incrementAndGet()
+
+        logger.debug("Creating browser #{} | {}", numDrivers, browserId)
+
+        val browserType = browserId.browserType
+        val driverSettings = BrowserSettings(conf)
+        val capabilities = driverSettings.createGeneralOptions()
+        setProxy(capabilities, browserId.fingerprint.proxyURI)
+
+        return browserManager.launch(browserId, driverSettings, capabilities)
+    }
+
+    private fun setProxy(capabilities: MutableMap<String, Any>, proxyURI: URI?) {
+        if (proxyURI == null) {
+            return
+        }
+
+        capabilities["proxy"] = proxyURI
+    }
+
+
+
+
+
+
+
+
+    /********************************************************************************
+     * The code below are deprecated and will be removed in the future.
+     * ******************************************************************************/
+
+
+
+
+
+
+
+
     /**
      * Create a WebDriver.
      */
+    @Deprecated("Never used")
     @Throws(BrowserLaunchException::class)
     fun create(start: Boolean = true) = create(config.toVolatileConfig(), start)
     
     /**
      * Create a WebDriver.
      */
+    @Deprecated("Never used")
     @Throws(BrowserLaunchException::class)
     fun create(conf: VolatileConfig, start: Boolean = true) = create(BrowserId.RANDOM_TEMP, 0, conf, start)
     
     /**
      * Create a WebDriver.
      */
+    @Deprecated("Never used")
     @Throws(BrowserLaunchException::class)
     fun create(
         browserId: BrowserId,
@@ -59,25 +106,9 @@ open class WebDriverFactory constructor(
     fun launchTempBrowser() = launchBrowser(BrowserId.RANDOM_TEMP)
 
     /**
-     * Launch a browser.
-     */
-    @Throws(BrowserLaunchException::class)
-    fun launchBrowser(browserId: BrowserId, conf: MutableConfig = config.toMutableConfig()): Browser {
-        numDrivers.incrementAndGet()
-        
-        logger.debug("Creating browser #{} | {}", numDrivers, browserId)
-
-        val browserType = browserId.browserType
-        val driverSettings = BrowserSettings(conf)
-        val capabilities = driverSettings.createGeneralOptions()
-        setProxy(capabilities, browserId.fingerprint.proxyURI)
-
-        return browserManager.launch(browserId, driverSettings, capabilities)
-    }
-    
-    /**
      * Launch a [Browser] with a [WebDriver].
      */
+    @Deprecated("Never used")
     @Throws(BrowserLaunchException::class)
     private fun launchBrowserAndDriver(
         browserId: BrowserId, priority: Int, conf: VolatileConfig, start: Boolean = true
@@ -90,13 +121,5 @@ open class WebDriverFactory constructor(
         }
 
         return browser to driver
-    }
-
-    private fun setProxy(capabilities: MutableMap<String, Any>, proxyURI: URI?) {
-        if (proxyURI == null) {
-            return
-        }
-
-        capabilities["proxy"] = proxyURI
     }
 }

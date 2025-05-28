@@ -14,8 +14,17 @@ __pulsar_utils__.getConfig = function() {
 /**
  * @param scroll The count to scroll down
  * @return {Object|boolean}
+ * @deprecated Use {@code __pulsar_utils__.waitForDocumentFullyLoaded()} instead
  * */
 __pulsar_utils__.waitForReady = function(scroll = 3) {
+    return this.waitForDocumentFullyLoaded(scroll);
+};
+
+/**
+ * @param scroll The count to scroll down
+ * @return {Object|boolean}
+ * */
+__pulsar_utils__.waitForDocumentFullyLoaded = function(scroll = 3) {
     return this.checkStatus(scroll);
 };
 

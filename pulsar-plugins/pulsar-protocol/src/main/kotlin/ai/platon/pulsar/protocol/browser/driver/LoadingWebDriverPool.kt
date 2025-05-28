@@ -431,6 +431,7 @@ class LoadingWebDriverPool constructor(
         //  Launch a browser. If the browser with the id is already launched, return the existing one.
         val browser = _browser ?: driverFactory.launchBrowser(browserId, conf)
         check(browser.isActive)
+        // open a new tab about:blank
         val driver = browser.newDriver()
         
         _browser = browser

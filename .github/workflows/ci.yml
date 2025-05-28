@@ -1,4 +1,4 @@
-name: CI & Release
+name: CI
 
 on:
   push:
@@ -58,23 +58,7 @@ jobs:
         run: |
           find bin/ -name "*.sh" -exec chmod +x {} \;
           ./bin/test.sh || (echo "Integration test failed" && exit 1)
-          ./bin/test.sh
 
       - name: Stop Docker container
         if: always()
         run: docker stop pulsar-rpa-test || true
-
-      - name: Deploy to Sonatype OSSRH
-        if: success()
-        run: |
-          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests \
-            -Dgpg.skip=true \
-            -Dossrh.username=${{ secrets.SONATYPE_USERNAME }} \
-            -Dossrh.password=${{ secrets.SONATYPE_PASSWORD }}
-
-      - name: Push Docker image
-        if: success()
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker push $IMAGE_NAME:$VERSION
-          docker push $IMAGE_NAME:latest 

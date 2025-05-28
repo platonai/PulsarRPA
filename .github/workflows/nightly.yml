@@ -41,19 +41,25 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t pulsar-rpa-nightly:${{ github.sha }} -f Dockerfile .
+          echo "Building image pulsar-rpa-nightly:${{ env.VERSION }}"
+          docker build -t pulsar-rpa-nightly:${{ env.VERSION }} -f Dockerfile .
 
-      - name: Integration Test
+      - name: Start Docker container
         run: |
-          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 pulsar-rpa-nightly:${{ github.sha }}
-          echo "Waiting for service..."
-          sleep 10
+          docker run -d --rm --name pulsar-rpa-nightly -p 8182:8182 pulsar-rpa-nightly:${{ env.VERSION }}
+          sleep 10  # Wait for Spring Boot to start
+
+      - name: Run curl integration tests
+        run: |
           find bin/ -name "*.sh" -exec chmod +x {} \;
           ./bin/test.sh || (echo "Integration test failed" && exit 1)
-          docker stop pulsar-rpa-test || true
+
+      - name: Stop Docker container
+        if: always()
+        run: docker stop pulsar-rpa-nightly || true
 
       - name: Slack Notification
-        if: false
+        if: success()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
