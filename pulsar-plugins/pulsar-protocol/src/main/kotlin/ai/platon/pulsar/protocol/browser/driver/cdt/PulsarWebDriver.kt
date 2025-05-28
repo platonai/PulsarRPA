@@ -206,8 +206,24 @@ class PulsarWebDriver(
     }
 
     @ExperimentalApi
-    suspend fun waitForFunction(jsFunction: String) {
-
+    suspend fun waitForFunction(jsPredicate: String, timeout: Duration) {
+        try {
+            rpc.invokeDeferred("waitForFunction", 1) {
+                var n = timeout.seconds
+                var ready = false
+                while (n-- > 0 && !ready) {
+                    val r = evaluateValue(jsPredicate)
+                    if (r is Boolean && r) {
+                        ready = true
+                    } else if (r != null) {
+                        logger.warn("waitForFunction: should return a boolean, actually $r")
+                        break
+                    }
+                }
+            }
+        } catch (e: ChromeDriverException) {
+            rpc.handleChromeException(e, "waitForFunction")
+        }
     }
 
     @ExperimentalApi
