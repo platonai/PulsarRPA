@@ -28,9 +28,12 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 17
-          cache: maven
+          distribution: 'temurin'
+          java-version: '17'
+          server-id: ossrh
+          settings-path: ${{ github.workspace }}
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Extract version from tag
         id: tag
@@ -79,10 +82,10 @@ jobs:
       - name: Deploy to Sonatype OSSRH
         if: success()
         run: |
-          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests \
-            -Dgpg.skip=true \
-            -Dossrh.username=${{ secrets.SONATYPE_USERNAME }} \
-            -Dossrh.password=${{ secrets.SONATYPE_PASSWORD }}
+          ./mvnw clean deploy -Pplaton-release -Pplaton-deploy -DskipTests -B
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
 
       - name: Push Docker image
         if: success()
