@@ -57,15 +57,36 @@ java -DOPENAI_API_KEY=${OPENAI_API_KEY} `
 
 </details>
 
+The table formatting in the environment variables section can be improved for better readability. Let me update it with better structure, removing the empty cells and organizing it by provider.
+
+<!-- replace lines 60 to 72 -->
 ### 🧩 Supported Environment Variables
 
-| Variable            | Description                                       |
-| ------------------- | ------------------------------------------------- |
-| `OPENAI_API_KEY`    | Your API key                                      |
-| `OPENAI_MODEL_NAME` | Model name (e.g., `gpt-4o`, `doubao-1.5-pro-32k`) |
-| `OPENAI_BASE_URL`   | API base URL (optional for default OpenAI)        |
+#### DeepSeek
 
-### Example: Doubao
+| Variable              | Description                                               |
+|-----------------------|-----------------------------------------------------------|
+| `DEEPSEEK_API_KEY`    | DeepSeek API key                                          |
+| `DEEPSEEK_MODEL_NAME` | DeepSeek model name (optional, default: `deepseek-chat`)  |
+
+#### Doubao (VolcEngine)
+
+| Variable                | Description                                                                               |
+|------------------------|-------------------------------------------------------------------------------------------|
+| `VOLCENGINE_API_KEY`   | Your VolcEngine API key                                                                    |
+| `VOLCENGINE_MODEL_NAME`| VolcEngine model name (optional, default: `doubao-1.5-pro-32k-250115`)                    |
+| `VOLCENGINE_BASE_URL`  | VolcEngine API base URL (optional, default: `https://ark.cn-beijing.volces.com/api/v3`)   |
+
+#### OpenAI (and compatible providers)
+
+| Variable            | Description                                                              |
+|--------------------|--------------------------------------------------------------------------|
+| `OPENAI_API_KEY`    | Your API key                                                            |
+| `OPENAI_MODEL_NAME` | Model name (e.g., `gpt-4o`, `doubao-1.5-pro-32k`)                       |
+| `OPENAI_BASE_URL`   | API base URL (optional for default OpenAI, any compatible URL allowed)  |
+
+
+### Example: Doubao with OpenAI-compatible API
 
 ```bash
 java -DOPENAI_API_KEY="9cc8e998-4655-4e90-a54c1-66659a524a97" \

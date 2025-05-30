@@ -110,7 +110,7 @@ docker run -d -p 8182:8182 `
 ## ⚙️ Common Configuration Options
 
 * **`deepseek.api.key`**
-  Your DeepSeek API key.
+  Your DeepSeek API key. Check [LLM Configuration Guide](../docs/config/llm/llm-config.md) for more LLM providers.
 
 - **`browser.context.mode`** (`DEFAULT` | `SYSTEM_DEFAULT` | `PROTOTYPE` | `SEQUENTIAL` | `TEMPORARY`)  
   Defines how the user data directory is assigned for each browser instance.

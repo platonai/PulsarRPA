@@ -121,7 +121,15 @@ __pulsar_utils__.writeData = function() {
 };
 
 /**
- * Check if the document is ready to analyze.
+ * Check if the document is fully loaded.
+ * @returns {boolean|boolean}
+ */
+__pulsar_utils__.isFullyLoaded = function() {
+    return this.isActuallyReady();
+};
+
+/**
+ * Check if the document is fully loaded and ready to analyze.
  * A document is hardly be perfect ready in time, since it's very common there are very slow sub resources to wait for.
  * */
 __pulsar_utils__.isActuallyReady = function() {
