@@ -88,35 +88,25 @@ object Documents {
         return parse(path.toFile(), charsetName)
     }
 
-    // TODO: check the logic whether to support the no script version
-//    fun parse(file: File, charsetName: String, ignoreScript: Boolean): FeaturedDocument {
-//        return FeaturedDocument(DataUtil.load(file, charsetName, file.absolutePath, ignoreScript))
-//    }
-
     /**
      * Read an input stream, and parse it to a FeaturedDocument.
      *
-     * @param istream          input stream to read. Make sure to close it after parsing.
+     * @param stream          input stream to read. Make sure to close it after parsing.
      * @param charsetName (optional) character set of file contents. Set to `null` to determine from `http-equiv` meta tag, if
      * present, or fall back to `UTF-8` (which is often safe to do).
      * @param baseURI     The URL where the HTML was retrieved from, to resolve relative links against.
      * @return sane HTML
      * @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    fun parse(istream: InputStream, charsetName: String, baseURI: String): FeaturedDocument {
-        return FeaturedDocument(DataUtil.load(istream, charsetName, baseURI))
+    fun parse(stream: InputStream, charsetName: String, baseURI: String): FeaturedDocument {
+        return FeaturedDocument(DataUtil.load(stream, charsetName, baseURI))
     }
-
-    // TODO: check the logic whether to support the no script version
-//    fun parse(istream: InputStream, charsetName: String, baseURI: String, ignoreScript: Boolean): FeaturedDocument {
-//        return FeaturedDocument(DataUtil.load(istream, charsetName, baseURI, ignoreScript))
-//    }
 
     /**
      * Read an input stream, and parse it to a FeaturedDocument. You can provide an alternate parser, such as a simple XML
      * (non-HTML) parser.
      *
-     * @param istream          input stream to read. Make sure to close it after parsing.
+     * @param stream          input stream to read. Make sure to close it after parsing.
      * @param charsetName (optional) character set of file contents. Set to `null` to determine from `http-equiv` meta tag, if
      * present, or fall back to `UTF-8` (which is often safe to do).
      * @param baseURI     The URL where the HTML was retrieved from, to resolve relative links against.
@@ -124,8 +114,8 @@ object Documents {
      * @return sane HTML
      * @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    fun parse(istream: InputStream, charsetName: String, baseURI: String, parser: Parser): FeaturedDocument {
-        return FeaturedDocument(DataUtil.load(istream, charsetName, baseURI, parser))
+    fun parse(stream: InputStream, charsetName: String, baseURI: String, parser: Parser): FeaturedDocument {
+        return FeaturedDocument(DataUtil.load(stream, charsetName, baseURI, parser))
     }
 
     /**
@@ -152,7 +142,7 @@ object Documents {
     }
 
     /**
-     * Fetch a URL, and parse it as HTML. Provided for compatibility; in most cases use [.connect] instead.
+     * Fetch a URL, and parse it as HTML.
      *
      * The encoding character set is determined by the content-type header or http-equiv meta tag, or falls back to `UTF-8`.
      *
@@ -166,12 +156,14 @@ object Documents {
      * @throws IOException if a connection or read error occurs
      */
     fun parse(url: URL, timeoutMillis: Long): FeaturedDocument {
-        val con = HttpConnection.connect(url)
-        con.timeout(timeoutMillis.toInt())
-        return FeaturedDocument(con.get())
+        val jsoupConnection = HttpConnection.connect(url).timeout(timeoutMillis.toInt())
+        return FeaturedDocument(jsoupConnection.get())
     }
 
+    /**
+     * Fetch a URL, and parse it as HTML
+     * */
     fun parse(url: URL, timeout: Duration): FeaturedDocument {
-        return Documents.parse(url, timeout.toMillis())
+        return parse(url, timeout.toMillis())
     }
 }

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.skeleton.session
 
 import ai.platon.pulsar.common.CheckState
+import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.extractor.TextDocument
@@ -20,6 +21,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.common.annotations.Beta
 import org.jsoup.nodes.Element
+import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
@@ -519,19 +521,32 @@ interface PulsarSession : AutoCloseable {
      */
     suspend fun open(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage
     /**
-     * Connect a webpage to a webdriver.
+     * Connect a webpage to a webdriver. Once connected, this webdriver is the only driver to automate web pages.
      *
      * ```kotlin
+     * val driver = DefaultBrowserFactory().launchSystemDefaultBrowser().newDriver()
      * val page = session.connect(driver)
      * ```
      *
-     * @return The webpage connected to the webdriver or NIL
+     * @param driver The webdriver to connect
      */
-    @Beta
     fun connect(driver: WebDriver)
 
-    @Beta
+    /**
+     * Connect a webpage to a browser. Once connected, the browser is the only browser to automate web pages.
+     *
+     * ```kotlin
+     * val browser = DefaultBrowserFactory().launchSystemDefaultBrowser()
+     * val page = session.connect(driver)
+     * ```
+     *
+     * @param browser The browser to connect
+     * */
     fun connect(browser: Browser)
+
+    @Beta
+    @ExperimentalApi
+    fun connectOverCDP(cdpURL: URL)
 
     /**
      * Load an url.
@@ -1704,6 +1719,13 @@ interface PulsarSession : AutoCloseable {
      * @return The parsed HTML document
      */
     fun parse(page: WebPage, noCache: Boolean): FeaturedDocument
+    /**
+     * Parse a HTML string into an HTML document.
+     *
+     * @param html The HTML string to parse
+     * @param baseURI The base URI to resolve relative URLs
+     * */
+    fun parse(html: String, baseURI: String = ""): FeaturedDocument
     /**
      * Load or fetch a webpage and parse it into an HTML document
      *

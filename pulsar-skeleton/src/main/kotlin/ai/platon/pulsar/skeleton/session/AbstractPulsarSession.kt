@@ -6,12 +6,14 @@ import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.IllegalApplicationStateException
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.common.warnForClose
+import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
@@ -34,6 +36,7 @@ import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import org.xml.sax.InputSource
 import java.io.StringReader
+import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.time.Instant
@@ -203,6 +206,11 @@ abstract class AbstractPulsarSession(
 
     override fun connect(browser: Browser) { sessionConfig.putBean(browser) }
 
+    override fun connectOverCDP(cdpURL: URL) {
+        // val browser = DefaultBrowserFactory().connect(BrowserType.PULSAR_CHROME, port)
+        TODO()
+    }
+
     override fun load(url: String): WebPage = load(url, options())
     
     override fun load(url: String, args: String): WebPage = load(url, options(args))
@@ -347,7 +355,9 @@ abstract class AbstractPulsarSession(
     override fun parse(page: WebPage) = parse0(page, false)
     
     override fun parse(page: WebPage, noCache: Boolean) = parse0(page, noCache)
-    
+
+    override fun parse(html: String, baseURI: String) = Documents.parse(html, baseURI)
+
     override fun loadDocument(url: String) = parse(load(url))
     
     override fun loadDocument(url: String, args: String) = parse(load(url, args))
