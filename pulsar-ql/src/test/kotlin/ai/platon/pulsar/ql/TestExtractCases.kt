@@ -34,11 +34,4 @@ class TestExtractCases : TestBase() {
         val expr = "a[href~=item]"
         execute("SELECT * FROM LOAD_AND_GET_ANCHORS('$productIndexUrl -expires 1d', '$expr')")
     }
-
-    @Test
-    fun testAccumulateVividLinks() {
-        val session = context.createSession()
-        session.load("$productIndexUrl -i 1d")
-        println(WebPageFormatter(session.get(productIndexUrl)))
-    }
 }
