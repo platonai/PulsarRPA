@@ -51,7 +51,7 @@ jobs:
           ./mvnw clean install -DskipTests
 
       - name: Deploy to Sonatype OSSRH
-        if: success() && startsWith(github.ref, 'refs/tags/')
+        if: success()
         run: |
           ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B
 
