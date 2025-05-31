@@ -1,6 +1,9 @@
-name: Release
+name: Release Test
 
 on:
+  push:
+    branches:
+      - master
   # Allow manual workflow runs
   workflow_dispatch:
 
