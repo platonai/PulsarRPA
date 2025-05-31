@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "disabled-v*"
+      - "v*"
   # Allow manual workflow runs
   workflow_dispatch:
 
