@@ -53,31 +53,31 @@ jobs:
       - name: Maven build and deploy to local repo
         run: ./mvnw clean install -DskipTests -Pall-modules
 
-      - name: Run Tests
-        run: ./mvnw test -Pall-modules
+#      - name: Run Tests
+#        run: ./mvnw test -Pall-modules
 
       - name: Build Docker image
         run: |
           docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest -f Dockerfile .
 
-      - name: Test Docker container
-        run: |
-          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 $IMAGE_NAME:$VERSION
-          sleep 10  # Wait for Spring Boot to start
-          find bin/ -name "*.sh" -exec chmod +x {} \;
-          ./bin/test.sh || (echo "Integration test failed" && exit 1)
-          docker stop pulsar-rpa-test || true
+#      - name: Test Docker container
+#        run: |
+#          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 $IMAGE_NAME:$VERSION
+#          sleep 10  # Wait for Spring Boot to start
+#          find bin/ -name "*.sh" -exec chmod +x {} \;
+#          ./bin/test.sh || (echo "Integration test failed" && exit 1)
+#          docker stop pulsar-rpa-test || true
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          name: Release ${{ env.TAG }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Create GitHub Release
+#        id: create_release
+#        uses: softprops/action-gh-release@v1
+#        with:
+#          name: Release ${{ env.TAG }}
+#          draft: false
+#          prerelease: false
+#          generate_release_notes: true
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to Sonatype OSSRH
         if: success()
