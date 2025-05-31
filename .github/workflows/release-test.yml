@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - master
-  # Allow manual workflow runs
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -25,24 +26,24 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           server-id: ossrh
-          settings-path: ${{ github.workspace }}
+          server-username: SONATYPE_USERNAME
+          server-password: SONATYPE_PASSWORD
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+          cache: maven
 
       - name: Extract version from tag
         id: tag
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          VERSION=${TAG#v}
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "TAG=$TAG" >> $GITHUB_ENV
-
-      - name: Cache Maven packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            TAG=${GITHUB_REF#refs/tags/}
+            VERSION=${TAG#v}
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+            echo "TAG=$TAG" >> $GITHUB_ENV
+          else
+            echo "VERSION=development" >> $GITHUB_ENV
+            echo "TAG=latest" >> $GITHUB_ENV
+          fi
 
       - name: Maven build and deploy to local repo
         run: |
@@ -50,13 +51,11 @@ jobs:
           ./mvnw clean install -DskipTests
 
       - name: Deploy to Sonatype OSSRH
-        if: success()
+        if: success() && startsWith(github.ref, 'refs/tags/')
         run: |
-          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B \
-            -Dgpg.passphrase="${GPG_PASSPHRASE}" \
-            -s $GITHUB_WORKSPACE/settings.xml
+          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B
 
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
