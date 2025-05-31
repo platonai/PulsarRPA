@@ -47,7 +47,7 @@ jobs:
       - name: Maven build and deploy to local repo
         run: |
           chmod +x ./mvnw
-          ./mvnw clean install -DskipTests -Pplaton-release -Pplaton-deploy
+          ./mvnw clean install -DskipTests
 
       - name: Deploy to Sonatype OSSRH
         if: success()
