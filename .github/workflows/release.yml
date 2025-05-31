@@ -82,7 +82,7 @@ jobs:
       - name: Deploy to Sonatype OSSRH
         if: success()
         run: |
-          ./mvnw clean deploy -Pplaton-release -Pplaton-deploy -DskipTests -B \
+          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B \
             -Dgpg.passphrase="${GPG_PASSPHRASE}" \
             -Dossrh.username="${SONATYPE_USERNAME}" \
             -Dossrh.password="${SONATYPE_PASSWORD}"
