@@ -3,7 +3,7 @@ name: Release Test
 on:
   push:
     branches:
-      - master
+      - master-disabled
     tags:
       - 'v*'
   workflow_dispatch:
