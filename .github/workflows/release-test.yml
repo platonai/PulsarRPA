@@ -32,6 +32,9 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
           cache: 'maven'
 
+      - name: Display settings.xml
+        run: cat ~/.m2/settings.xml
+
       - name: Cache Maven wrapper
         uses: actions/cache@v3
         with:
@@ -60,8 +63,7 @@ jobs:
         if: success()
         run: |
           ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B \
-            -Dgpg.passphrase="${GPG_PASSPHRASE}" \
-            -s $GITHUB_WORKSPACE/settings.xml
+            -Dgpg.passphrase="${GPG_PASSPHRASE}"
 
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
