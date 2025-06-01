@@ -24,6 +24,13 @@ jobs:
             exit 1
           fi
 
+      - name: Check if GPG is working
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v4
 
