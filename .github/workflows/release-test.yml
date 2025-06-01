@@ -17,6 +17,13 @@ jobs:
           curl -u "${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}" \
           -X GET "https://oss.sonatype.org/service/local/status"
 
+      - name: Check if DEEPSEEK_API_KEY is set
+        run: |
+          if [ -z "${{ secrets.DEEPSEEK_API_KEY }}" ]; then
+            echo "DEEPSEEK_API_KEY is not set. Exiting."
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -29,7 +36,7 @@ jobs:
           server-username: SONATYPE_USERNAME
           server-password: SONATYPE_PASSWORD
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+          gpg-passphrase: GPG_PASSPHRASE
           cache: 'maven'
 
       - name: Display settings.xml
@@ -62,10 +69,9 @@ jobs:
       - name: Deploy to Sonatype OSSRH
         if: success()
         run: |
-          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B \
-            -Dgpg.passphrase="${GPG_PASSPHRASE}"
+          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B
 
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
