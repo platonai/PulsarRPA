@@ -9,6 +9,7 @@ on:
 
 env:
   IMAGE_NAME: galaxyeye88/pulsar-rpa
+  DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
 jobs:
   build-and-release:
@@ -72,7 +73,7 @@ jobs:
 
       - name: Test Docker container
         run: |
-          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 $IMAGE_NAME:$VERSION
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
           sleep 10  # Wait for Spring Boot to start
           find bin/ -name "*.sh" -exec chmod +x {} \;
           ./bin/test.sh || (echo "Integration test failed" && exit 1)
@@ -92,7 +93,7 @@ jobs:
       - name: Deploy to Sonatype OSSRH
         if: success() && startsWith(github.ref, 'refs/tags/')
         run: |
-          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B \
+          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -B \
             -Dgpg.passphrase="${GPG_PASSPHRASE}" \
             -s $GITHUB_WORKSPACE/settings.xml
         env:
