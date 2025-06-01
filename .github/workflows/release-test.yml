@@ -3,9 +3,9 @@ name: Release Test
 on:
   push:
     branches:
-      - master-disabled
+      - disabled-master
     tags:
-      - 'v*'
+      - 'disabled-v*'
   workflow_dispatch:
 
 jobs:
