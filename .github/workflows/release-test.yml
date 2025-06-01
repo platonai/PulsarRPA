@@ -30,7 +30,13 @@ jobs:
           server-password: SONATYPE_PASSWORD
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
-          cache: maven
+          cache: 'maven'
+
+      - name: Cache Maven wrapper
+        uses: actions/cache@v3
+        with:
+          path: .mvn/wrapper
+          key: ${{ runner.os }}-maven-wrapper-${{ hashFiles('**/maven-wrapper.properties') }}
 
       - name: Extract version from tag
         id: tag
@@ -51,10 +57,9 @@ jobs:
           ./mvnw clean install -DskipTests
 
       - name: Deploy to Sonatype OSSRH
-        if: success()
+        if: success() && startsWith(github.ref, 'refs/tags/')
         run: |
           ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B
-
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}

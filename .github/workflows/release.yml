@@ -31,9 +31,17 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           server-id: ossrh
-          settings-path: ${{ github.workspace }}
+          server-username: SONATYPE_USERNAME
+          server-password: SONATYPE_PASSWORD
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+          cache: 'maven'
+
+      - name: Cache Maven wrapper
+        uses: actions/cache@v3
+        with:
+          path: .mvn/wrapper
+          key: ${{ runner.os }}-maven-wrapper-${{ hashFiles('**/maven-wrapper.properties') }}
 
       - name: Extract version from tag
         id: tag
@@ -51,7 +59,9 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Maven build and deploy to local repo
-        run: ./mvnw clean install -DskipTests -Pall-modules
+        run: |
+          chmod +x ./mvnw
+          ./mvnw clean install -DskipTests
 
 #      - name: Run Tests
 #        run: ./mvnw test -Pall-modules
@@ -60,13 +70,13 @@ jobs:
         run: |
           docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest -f Dockerfile .
 
-#      - name: Test Docker container
-#        run: |
-#          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 $IMAGE_NAME:$VERSION
-#          sleep 10  # Wait for Spring Boot to start
-#          find bin/ -name "*.sh" -exec chmod +x {} \;
-#          ./bin/test.sh || (echo "Integration test failed" && exit 1)
-#          docker stop pulsar-rpa-test || true
+      - name: Test Docker container
+        run: |
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 $IMAGE_NAME:$VERSION
+          sleep 10  # Wait for Spring Boot to start
+          find bin/ -name "*.sh" -exec chmod +x {} \;
+          ./bin/test.sh || (echo "Integration test failed" && exit 1)
+          docker stop pulsar-rpa-test || true
 
 #      - name: Create GitHub Release
 #        id: create_release
@@ -80,17 +90,13 @@ jobs:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to Sonatype OSSRH
-        if: success()
+        if: success() && startsWith(github.ref, 'refs/tags/')
         run: |
-          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B \
-            -Dgpg.passphrase="${GPG_PASSPHRASE}" \
-            -Dossrh.username="${SONATYPE_USERNAME}" \
-            -Dossrh.password="${SONATYPE_PASSWORD}"
-
+          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Push Docker image
         if: success()
