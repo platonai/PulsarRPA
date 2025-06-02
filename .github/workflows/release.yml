@@ -47,7 +47,7 @@ jobs:
           gpg-passphrase: GPG_PASSPHRASE
           cache: 'maven'
 
-      - name: Display settings.xml
+      - name: Check settings.xml
         run: |
           cat ~/.m2/settings.xml
           # make sure the settings.xml is correctly configured
@@ -59,6 +59,11 @@ jobs:
             echo "settings.xml is not configured correctly for gpg-passphrase."
             exit 1
           fi
+
+      - name: Update Version
+        run: |
+          chmod +x bin/update-version.sh
+          bin/update-version.sh
 
       - name: Cache Maven wrapper
         uses: actions/cache@v3
