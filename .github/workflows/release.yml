@@ -9,7 +9,6 @@ on:
 
 env:
   IMAGE_NAME: galaxyeye88/pulsar-rpa
-  DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
 jobs:
   build-and-release:
@@ -80,14 +79,18 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest -f Dockerfile .
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
       - name: Test Docker container
         run: |
-          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 $IMAGE_NAME:$VERSION
           sleep 10  # Wait for Spring Boot to start
           find bin/ -name "*.sh" -exec chmod +x {} \;
           ./bin/test.sh || (echo "Integration test failed" && exit 1)
           docker stop pulsar-rpa-test || true
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
 #      - name: Create GitHub Release
 #        id: create_release
