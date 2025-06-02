@@ -265,7 +265,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.0.1</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -277,13 +276,10 @@
                         </executions>
                         <configuration>
                             <gpgArguments>
-<!--                                <arg>&#45;&#45;batch</arg>-->
-<!--                                <arg>&#45;&#45;yes</arg>-->
+                                <arg>--digest-algo=SHA512</arg>
                                 <arg>--pinentry-mode</arg>
                                 <arg>loopback</arg>
                             </gpgArguments>
-                            <!-- 明确告诉插件不要依赖 GPG Agent（避免某些系统默认启动 agent 导致失败） -->
-                            <useAgent>false</useAgent>
                         </configuration>
                     </plugin>
 
