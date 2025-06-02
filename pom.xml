@@ -277,9 +277,13 @@
                         <configuration>
                             <gpgArguments>
                                 <arg>--digest-algo=SHA512</arg>
+                                <arg>--batch</arg>
+                                <arg>--yes</arg>
                                 <arg>--pinentry-mode</arg>
                                 <arg>loopback</arg>
                             </gpgArguments>
+                            <!-- 明确告诉插件不要依赖 GPG Agent（避免某些系统默认启动 agent 导致失败） -->
+                            <useAgent>false</useAgent>
                         </configuration>
                     </plugin>
 
