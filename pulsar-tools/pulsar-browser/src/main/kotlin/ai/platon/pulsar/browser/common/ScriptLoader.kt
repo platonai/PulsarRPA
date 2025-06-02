@@ -136,6 +136,7 @@ open class ScriptLoader(
         ).also { jsInitParameters.putAll(it) }
         
         if (alwaysFalse()) {
+            jsInitParameters["ATTR_ELEMENT_NODE_DATA"] = AppConstants.PULSAR_ATTR_ELEMENT_NODE_DATA
             // might cause huge html size
             jsInitParameters["ATTR_COMPUTED_STYLE"] = AppConstants.PULSAR_ATTR_COMPUTED_STYLE
         }
