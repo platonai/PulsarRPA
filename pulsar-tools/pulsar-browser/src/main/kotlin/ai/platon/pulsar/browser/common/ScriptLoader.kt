@@ -132,7 +132,7 @@ open class ScriptLoader(
             "ATTR_ELEMENT_NODE_VI" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_VI,
             "ATTR_TEXT_NODE_VI" to AppConstants.PULSAR_ATTR_TEXT_NODE_VI,
 
-            "ATTR_ELEMENT_NODE_DATA" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_DATA
+//            "ATTR_ELEMENT_NODE_DATA" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_DATA
         ).also { jsInitParameters.putAll(it) }
         
         if (alwaysFalse()) {
