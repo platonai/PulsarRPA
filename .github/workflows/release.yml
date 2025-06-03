@@ -133,6 +133,8 @@ jobs:
             -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
             -Dossrh.username=${SONATYPE_USERNAME} \
             -Dossrh.password=${SONATYPE_PASSWORD} \
+            -DSONATYPE_USERNAME=${SONATYPE_USERNAME} \
+            -DSONATYPE_PASSWORD=${SONATYPE_PASSWORD} \
             -Dgpg.passphrase=${GPG_PASSPHRASE}
 
         env:
