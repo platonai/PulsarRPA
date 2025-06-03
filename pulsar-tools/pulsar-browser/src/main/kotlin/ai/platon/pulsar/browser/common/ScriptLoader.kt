@@ -17,6 +17,16 @@ open class ScriptLoader(
     companion object {
         private val logger = getLogger(this)
 
+        private val jsInitParameters: MutableMap<String, Any> = mutableMapOf()
+
+        /**
+         * addInitParameter("ATTR_ELEMENT_NODE_DATA", AppConstants.PULSAR_ATTR_ELEMENT_NODE_DATA)
+         * addInitParameter("ATTR_COMPUTED_STYLE", AppConstants.PULSAR_ATTR_COMPUTED_STYLE)
+         * */
+        fun addInitParameter(name: String, value: String) {
+            jsInitParameters[name] = value
+        }
+
         val RESOURCES = """
             stealth.js
             __pulsar_utils__.js
@@ -27,8 +37,6 @@ open class ScriptLoader(
         """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
     }
 
-    private val jsInitParameters: MutableMap<String, Any> = mutableMapOf()
-
     private val jsCache: MutableMap<String, String> = LinkedHashMap()
     /**
      * The javascript code to inject into the browser.
@@ -37,10 +45,6 @@ open class ScriptLoader(
 
     init {
         initDefaultJsParameters()
-    }
-
-    fun addInitParameter(name: String, value: String) {
-        jsInitParameters[name] = value
     }
 
     /**
@@ -130,15 +134,7 @@ open class ScriptLoader(
             "ATTR_OVERFLOW_HIDDEN" to AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN,
             "ATTR_OVERFLOW_VISIBLE" to AppConstants.PULSAR_ATTR_OVERFLOW_VISIBLE,
             "ATTR_ELEMENT_NODE_VI" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_VI,
-            "ATTR_TEXT_NODE_VI" to AppConstants.PULSAR_ATTR_TEXT_NODE_VI,
-
-//            "ATTR_ELEMENT_NODE_DATA" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_DATA
+            "ATTR_TEXT_NODE_VI" to AppConstants.PULSAR_ATTR_TEXT_NODE_VI
         ).also { jsInitParameters.putAll(it) }
-        
-        if (alwaysFalse()) {
-            jsInitParameters["ATTR_ELEMENT_NODE_DATA"] = AppConstants.PULSAR_ATTR_ELEMENT_NODE_DATA
-            // might cause huge html size
-            jsInitParameters["ATTR_COMPUTED_STYLE"] = AppConstants.PULSAR_ATTR_COMPUTED_STYLE
-        }
     }
 }
