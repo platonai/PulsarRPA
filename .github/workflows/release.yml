@@ -33,10 +33,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           server-id: ossrh
-          server-username: SONATYPE_USERNAME
-          server-password: SONATYPE_PASSWORD
+          server-username: ${{ secrets.OSSRH_USERNAME }}
+          server-password: ${{ secrets.OSSRH_PASSWORD }}
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: GPG_PASSPHRASE
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
           cache: 'maven'
 
       - name: Test Sonatype login via API
@@ -46,17 +46,17 @@ jobs:
 
       - name: Check settings.xml
         run: |
-          cat ~/.m2/settings.xml
-          # make sure the settings.xml is correctly configured
+          # Check if settings.xml is correctly configured (without exposing contents)
           if ! grep -q "<id>ossrh</id>" ~/.m2/settings.xml; then
             echo "settings.xml is not configured correctly for Sonatype OSSRH."
             exit 1
           fi
-          # Check if GPG configuration exists (using actual shell variable syntax)
+          # Check if GPG configuration exists
           if ! grep -q "<passphrase>\${env.GPG_PASSPHRASE}</passphrase>" ~/.m2/settings.xml; then
             echo "settings.xml is not configured correctly for gpg-passphrase."
             exit 1
           fi
+          echo "settings.xml configuration validated successfully"
 
       - name: Update Version
         run: |
@@ -89,8 +89,8 @@ jobs:
           chmod +x ./mvnw
           ./mvnw clean install -DskipTests
 
-#      - name: Run Tests
-#        run: ./mvnw test -Pall-modules
+      - name: Run Tests
+        run: ./mvnw test -Pall-modules
 
       - name: Build Docker image
         run: |
@@ -98,36 +98,65 @@ jobs:
 
       - name: Test Docker container
         run: |
-          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
-          sleep 10  # Wait for Spring Boot to start
+          # Start container
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 \
+            -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
+          
+          # Wait for container to be healthy
+          echo "Waiting for container to start..."
+          for i in {1..30}; do
+            if docker exec pulsar-rpa-test curl -f http://localhost:8182/actuator/health 2>/dev/null; then
+              echo "Container is healthy"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Container failed to start within 5 minutes"
+              docker logs pulsar-rpa-test
+              docker stop pulsar-rpa-test || true
+              exit 1
+            fi
+            sleep 10
+          done
+          
+          # Run integration tests
           find bin/ -name "*.sh" -exec chmod +x {} \;
-          ./bin/run-integration-test.sh || (echo "Integration test failed" && exit 1)
+          if ! ./bin/run-integration-test.sh; then
+            echo "Integration test failed"
+            docker logs pulsar-rpa-test
+            docker stop pulsar-rpa-test || true
+            exit 1
+          fi
+          
+          # Clean up
           docker stop pulsar-rpa-test || true
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
-#      - name: Create GitHub Release
-#        id: create_release
-#        uses: softprops/action-gh-release@v2
-#        with:
-#          name: Release ${{ env.TAG }}
-#          draft: false
-#          prerelease: false
-#          generate_release_notes: true
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ env.TAG }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to Sonatype OSSRH
         if: success() && startsWith(github.ref, 'refs/tags/')
         run: |
+          // I do not know which settings are correct, so I setting all of them
           ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B \
             -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
             -Dossrh.username=${SONATYPE_USERNAME} \
             -Dossrh.password=${SONATYPE_PASSWORD} \
+            -Dserver.username=${SONATYPE_USERNAME} \
+            -Dserver.password=${SONATYPE_PASSWORD} \
             -DSONATYPE_USERNAME=${SONATYPE_USERNAME} \
             -DSONATYPE_PASSWORD=${SONATYPE_PASSWORD} \
             -Dgpg.passphrase=${GPG_PASSPHRASE} \
-            -s $GITHUB_WORKSPACE/settings.xml
+            -s ~/.m2/settings.xml
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
