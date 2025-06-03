@@ -17,13 +17,8 @@ jobs:
   build-and-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Log in to Docker Hub
-        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-      - name: Test Sonatype login via API
-        run: |
-          curl -u "${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}" \
-          -X GET "https://oss.sonatype.org/service/local/status"
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Check if DEEPSEEK_API_KEY is set
         run: |
@@ -31,9 +26,6 @@ jobs:
             echo "DEEPSEEK_API_KEY is not set. Exiting."
             exit 1
           fi
-
-      - name: Checkout
-        uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -47,15 +39,21 @@ jobs:
           gpg-passphrase: GPG_PASSPHRASE
           cache: 'maven'
 
+      - name: Test Sonatype login via API
+        run: |
+          curl -u "${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}" \
+          -X GET "https://oss.sonatype.org/service/local/status"
+
       - name: Check settings.xml
         run: |
           cat ~/.m2/settings.xml
           # make sure the settings.xml is correctly configured
-          if (! grep -q "<id>ossrh</id>" ~/.m2/settings.xml); then
+          if ! grep -q "<id>ossrh</id>" ~/.m2/settings.xml; then
             echo "settings.xml is not configured correctly for Sonatype OSSRH."
             exit 1
           fi
-          if (! grep -q "<passphrase>${env.GPG_PASSPHRASE}</passphrase>" ~/.m2/settings.xml); then
+          # Check if GPG configuration exists (using actual shell variable syntax)
+          if ! grep -q "<passphrase>\${env.GPG_PASSPHRASE}</passphrase>" ~/.m2/settings.xml; then
             echo "settings.xml is not configured correctly for gpg-passphrase."
             exit 1
           fi
@@ -66,7 +64,7 @@ jobs:
           bin/release/update-versions.sh
 
       - name: Cache Maven wrapper
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .mvn/wrapper
           key: ${{ runner.os }}-maven-wrapper-${{ hashFiles('**/maven-wrapper.properties') }}
@@ -80,7 +78,7 @@ jobs:
           echo "TAG=$TAG" >> $GITHUB_ENV
 
       - name: Cache Maven packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
@@ -110,7 +108,7 @@ jobs:
 
 #      - name: Create GitHub Release
 #        id: create_release
-#        uses: softprops/action-gh-release@v1
+#        uses: softprops/action-gh-release@v2
 #        with:
 #          name: Release ${{ env.TAG }}
 #          draft: false
@@ -118,13 +116,6 @@ jobs:
 #          generate_release_notes: true
 #        env:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push Docker image
-        if: success()
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker push $IMAGE_NAME:$VERSION || (echo "Failed to push version tag" && exit 1)
-          docker push $IMAGE_NAME:latest || (echo "Failed to push latest tag" && exit 1)
 
       - name: Deploy to Sonatype OSSRH
         if: success() && startsWith(github.ref, 'refs/tags/')
@@ -135,10 +126,23 @@ jobs:
             -Dossrh.password=${SONATYPE_PASSWORD} \
             -DSONATYPE_USERNAME=${SONATYPE_USERNAME} \
             -DSONATYPE_PASSWORD=${SONATYPE_PASSWORD} \
-            -Dgpg.passphrase=${GPG_PASSPHRASE}
-
+            -Dgpg.passphrase=${GPG_PASSPHRASE} \
+            -s $GITHUB_WORKSPACE/settings.xml
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+      - name: Log in to Docker Hub
+        if: success()
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push Docker image
+        if: success()
+        run: |
+          docker push $IMAGE_NAME:$VERSION || (echo "Failed to push version tag" && exit 1)
+          docker push $IMAGE_NAME:latest || (echo "Failed to push latest tag" && exit 1)
