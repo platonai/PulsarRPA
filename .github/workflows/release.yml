@@ -132,20 +132,7 @@ jobs:
         run: |
           # Setting comprehensive Maven deploy parameters to ensure compatibility
           ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B \
-            -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
-            -Dossrh.username=${SONATYPE_USERNAME} \
-            -Dossrh.password=${SONATYPE_PASSWORD} \
-            -Dserver.username=${SONATYPE_USERNAME} \
-            -Dserver.password=${SONATYPE_PASSWORD} \
-            -DSONATYPE_USERNAME=${SONATYPE_USERNAME} \
-            -DSONATYPE_PASSWORD=${SONATYPE_PASSWORD} \
-            -Dgpg.passphrase=${GPG_PASSPHRASE} \
-            -s ~/.m2/settings.xml
-        env:
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+            -DDEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
 
       - name: Log in to Docker Hub
         if: success()
