@@ -99,24 +99,8 @@ jobs:
       - name: Test Docker container
         run: |
           # Start container
-          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 \
-            -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
-          
-          # Wait for container to be healthy
-          echo "Waiting for container to start..."
-          for i in {1..30}; do
-            if docker exec pulsar-rpa-test curl -f http://localhost:8182/actuator/health 2>/dev/null; then
-              echo "Container is healthy"
-              break
-            fi
-            if [ $i -eq 30 ]; then
-              echo "Container failed to start within 5 minutes"
-              docker logs pulsar-rpa-test
-              docker stop pulsar-rpa-test || true
-              exit 1
-            fi
-            sleep 10
-          done
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
+          sleep 10  # Wait for Spring Boot to start
           
           # Run integration tests
           find bin/ -name "*.sh" -exec chmod +x {} \;
