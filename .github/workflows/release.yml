@@ -52,7 +52,7 @@ jobs:
             exit 1
           fi
           # Check if GPG configuration exists
-          if ! grep -q "<passphrase>\${env.GPG_PASSPHRASE}</passphrase>" ~/.m2/settings.xml; then
+          if ! grep -q "<passphrase>.+</passphrase>" ~/.m2/settings.xml; then
             echo "settings.xml is not configured correctly for gpg-passphrase."
             exit 1
           fi
