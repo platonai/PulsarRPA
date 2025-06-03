@@ -33,8 +33,8 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           server-id: ossrh
-          server-username: ${{ secrets.OSSRH_USERNAME }}
-          server-password: ${{ secrets.OSSRH_PASSWORD }}
+          server-username: ${{ secrets.SONATYPE_USERNAME }}
+          server-password: ${{ secrets.SONATYPE_PASSWORD }}
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
           cache: 'maven'
@@ -51,8 +51,8 @@ jobs:
             echo "settings.xml is not configured correctly for Sonatype OSSRH."
             exit 1
           fi
-          # Check if GPG configuration exists
-          if ! grep -q "<passphrase>.+</passphrase>" ~/.m2/settings.xml; then
+          # Check if GPG configuration exists (using extended regex for any passphrase content)
+          if ! grep -E -q "<passphrase>.+</passphrase>" ~/.m2/settings.xml; then
             echo "settings.xml is not configured correctly for gpg-passphrase."
             exit 1
           fi
@@ -146,7 +146,7 @@ jobs:
       - name: Deploy to Sonatype OSSRH
         if: success() && startsWith(github.ref, 'refs/tags/')
         run: |
-          // I do not know which settings are correct, so I setting all of them
+          # Setting comprehensive Maven deploy parameters to ensure compatibility
           ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B \
             -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
             -Dossrh.username=${SONATYPE_USERNAME} \
