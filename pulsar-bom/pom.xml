@@ -23,7 +23,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
     <name>Pulsar BOM</name>
-    <version>3.0.8-SNAPSHOT</version>
+    <version>3.0.9-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -57,7 +57,7 @@
         <connection>scm:git:https://github.com/platonai/PulsarRPA.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/PulsarRPA.git</developerConnection>
         <url>https://github.com/platonai/PulsarRPA</url>
-        <tag>v3.0.8-SNAPSHOT</tag>
+        <tag>v3.0.9-SNAPSHOT</tag>
     </scm>
 
     <repositories>
