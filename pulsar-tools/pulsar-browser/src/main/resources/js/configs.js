@@ -9,6 +9,6 @@ const __pulsar_DEFAULT_CONFIGS = {
     "ATTR_OVERFLOW_VISIBLE": "_visible",
     "ATTR_ELEMENT_NODE_VI": "vi",
     "ATTR_TEXT_NODE_VI": "tv",
-    "ATTR_COMPUTED_STYLE": "cs", // deprecated
-    "ATTR_ELEMENT_NODE_DATA": "nd"
+    "ATTR_COMPUTED_STYLE": null,
+    "ATTR_ELEMENT_NODE_DATA": null
 };

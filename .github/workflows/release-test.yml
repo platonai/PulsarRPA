@@ -1,0 +1,84 @@
+name: Release Test
+
+on:
+  push:
+    branches:
+      - disabled-master
+    tags:
+      - 'disabled-v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Sonatype login via API
+        run: |
+          curl -u "${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}" \
+          -X GET "https://oss.sonatype.org/service/local/status"
+
+      - name: Check if DEEPSEEK_API_KEY is set
+        run: |
+          if [ -z "${{ secrets.DEEPSEEK_API_KEY }}" ]; then
+            echo "DEEPSEEK_API_KEY is not set. Exiting."
+            exit 1
+          fi
+
+      - name: Check if GPG is working
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          server-id: ossrh
+          server-username: SONATYPE_USERNAME
+          server-password: SONATYPE_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+          cache: 'maven'
+
+      - name: Display settings.xml
+        run: cat ~/.m2/settings.xml
+
+      - name: Cache Maven wrapper
+        uses: actions/cache@v3
+        with:
+          path: .mvn/wrapper
+          key: ${{ runner.os }}-maven-wrapper-${{ hashFiles('**/maven-wrapper.properties') }}
+
+      - name: Extract version from tag
+        id: tag
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            TAG=${GITHUB_REF#refs/tags/}
+            VERSION=${TAG#v}
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+            echo "TAG=$TAG" >> $GITHUB_ENV
+          else
+            echo "VERSION=development" >> $GITHUB_ENV
+            echo "TAG=latest" >> $GITHUB_ENV
+          fi
+
+      - name: Maven build and deploy to local repo
+        run: |
+          chmod +x ./mvnw
+          ./mvnw clean install -DskipTests
+
+      - name: Deploy to Sonatype OSSRH
+        if: success()
+        run: |
+          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B
+
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}

@@ -1,7 +1,10 @@
 package ai.platon.pulsar.browser.js
 
 import ai.platon.pulsar.browser.WebDriverTestBase
+import ai.platon.pulsar.browser.common.ScriptLoader
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
+import kotlinx.coroutines.runBlocking
 import kotlin.test.*
 
 /**
@@ -82,20 +85,31 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test JS selectAttributes`() = runWebDriverTest(testURL, browser) { driver ->
-        val expression = """__pulsar_utils__.selectAttributes('section')"""
+    fun `test JS selectAttributes`() {
+        val driver = browser.newDriver()
 
-        val result = driver.evaluateValue(expression)
-        println(result)
-        assertNotNull(result)
-        // println(result.javaClass.name)
-        assertEquals("java.util.ArrayList", result.javaClass.name)
-        assertTrue { result is List<*> }
-        require(result is List<*>)
+        runBlocking {
+            ScriptLoader.addInitParameter("ATTR_ELEMENT_NODE_DATA", AppConstants.PULSAR_ATTR_ELEMENT_NODE_DATA)
+            driver.browser.settings.scriptLoader.reload()
+            open(testURL, driver)
+
+            val config = driver.evaluateValue("__pulsar_CONFIGS")
+            println(config)
+
+            val expression = """__pulsar_utils__.selectAttributes('section')"""
+
+            val result = driver.evaluateValue(expression)
+            println(result)
+            assertNotNull(result)
+            // println(result.javaClass.name)
+            assertEquals("java.util.ArrayList", result.javaClass.name)
+            assertTrue { result is List<*> }
+            require(result is List<*>)
 //        assertEquals("nd", result[2])
 //        assertEquals("409.7 222 864 411.8|12|16,3,f", result[3])
-        // schema: ['color', 'background-color', 'font-size']
-        assertContains(result[3].toString(), "16,3,f")
+            // schema: ['color', 'background-color', 'font-size']
+            assertContains(result[3].toString(), "16,3,f")
+        }
     }
 
     @Test
