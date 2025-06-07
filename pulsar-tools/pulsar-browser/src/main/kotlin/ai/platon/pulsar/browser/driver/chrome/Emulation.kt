@@ -46,19 +46,21 @@ class ClickableDOM(
     val page: Page,
     val dom: DOM,
     val nodeId: Int,
+    val backendNodeId: Int? = null,
+    val objectId: String? = null,
     val offset: OffsetD? = null
 ) {
     companion object {
-        fun create(page: Page?, dom: DOM?, nodeId: Int?, offset: OffsetD? = null): ClickableDOM? {
+        fun create(page: Page?, dom: DOM?, nodeId: Int?, backendNodeId: Int? = null, objectId: String? = null, offset: OffsetD? = null): ClickableDOM? {
             if (nodeId == null || nodeId <= 0) return null
             if (page == null) return null
             if (dom == null) return null
-            return ClickableDOM(page, dom, nodeId, offset)
+            return ClickableDOM(page, dom, nodeId, backendNodeId, objectId, offset)
         }
     }
 
     fun clickablePoint(): DescriptiveResult<PointD> {
-        val contentQuads = kotlin.runCatching { dom.getContentQuads(nodeId, null, null) }.getOrNull()
+        val contentQuads = kotlin.runCatching { dom.getContentQuads(nodeId, backendNodeId, objectId) }.getOrNull()
         if (contentQuads == null) {
             // throw new Error('Node is either not clickable or not an HTMLElement');
             // return 'error:notvisible';
@@ -122,7 +124,7 @@ class ClickableDOM(
     }
 
     fun boundingBox(): RectD? {
-        val box = dom.runCatching { getBoxModel(nodeId, null, null) }.getOrNull() ?: return null
+        val box = dom.runCatching { getBoxModel(nodeId, backendNodeId, objectId) }.getOrNull() ?: return null
 
         val quad = box.border.takeIf { it.isNotEmpty() } ?: return null
 

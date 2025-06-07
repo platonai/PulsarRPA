@@ -55,7 +55,7 @@ Find all links containing /dp/.
         result.textContent = '';
 
         try {
-            const response = await fetch('http://localhost:8182/api/ai/command', {
+            const response = await fetch('http://localhost:8182/api/commands/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain' },
                 body: input
@@ -72,14 +72,14 @@ Find all links containing /dp/.
         }
     }
 
-    async function pollResult(uuid) {
+    async function pollResult(id) {
         const status = document.getElementById('status');
         const result = document.getElementById('result');
         let retry = 0;
 
         const interval = setInterval(async () => {
             try {
-                const response = await fetch(`http://localhost:8182/api/ai/command/stream/${uuid}`);
+                const response = await fetch(`http://localhost:8182/api/commands/${id}/stream`);
                 if (!response.ok) throw new Error(`HTTP error ${response.status}`);
 
                 const data = await response.json();

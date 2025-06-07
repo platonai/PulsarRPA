@@ -8,14 +8,11 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
+import com.github.kklisura.cdt.protocol.v2023.types.dom.Node
 import com.github.kklisura.cdt.protocol.v2023.types.dom.Rect
 import com.github.kklisura.cdt.protocol.v2023.types.page.Navigate
 import com.github.kklisura.cdt.protocol.v2023.types.page.ReferrerPolicy
 import com.github.kklisura.cdt.protocol.v2023.types.page.TransitionType
-import com.github.kklisura.cdt.protocol.v2023.types.runtime.CallArgument
-import com.github.kklisura.cdt.protocol.v2023.types.runtime.CallFunctionOn
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.SerializationOptions
 import kotlinx.coroutines.delay
@@ -63,7 +60,7 @@ class PageHandler(
      * TODO: make sure the meaning of 0 node id
      * */
     @Throws(ChromeDriverException::class)
-    fun querySelector(selector: String): Int? {
+    fun querySelector(selector: String): Node? {
         return querySelectorOrNull(selector)
     }
 
@@ -116,7 +113,7 @@ class PageHandler(
     fun visible(selector: String) = predicateOnElement(selector) { visible(it) }
 
     @Throws(ChromeDriverException::class)
-    fun visible(nodeId: Int): Boolean {
+    fun visible(nodeId: Int, backendNodeId: Int? = null, objectId: String? = null): Boolean {
         if (nodeId <= 0) {
             return false
         }
@@ -133,26 +130,15 @@ class PageHandler(
         }
 
         if (isVisible) {
-            isVisible = ClickableDOM.create(pageAPI, domAPI, nodeId)?.isVisible() ?: false
+            isVisible = ClickableDOM.create(pageAPI, domAPI, nodeId, backendNodeId, objectId)?.isVisible() ?: false
         }
 
         return isVisible
     }
 
-    /**
-     * This method fetches an element with `selector` and focuses it. If there's no
-     * element matching `selector`, the method returns 0.
-     *
-     * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
-     * of an element to focus. If there are multiple elements satisfying the
-     * selector, the first will be focused.
-     * @returns  NodeId which resolves when the element matching selector is
-     * successfully focused. returns 0 if there is no element
-     * matching selector.
-     */
+    @Deprecated("Use focusOnSelector instead")
     @Throws(ChromeDriverException::class)
-    fun focusOnSelector(selector: String): Int {
+    fun focusOnSelectorOld(selector: String): Int {
         val rootId = domAPI?.document?.nodeId ?: return 0
 
         val nodeId = domAPI?.querySelector(rootId, selector)
@@ -165,10 +151,35 @@ class PageHandler(
         return nodeId ?: 0
     }
 
+    /**
+     * Focuses on the first element matching the selector.
+     * */
     @Throws(ChromeDriverException::class)
-    fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Int? {
-        val nodeId = querySelector(selector)
-        if (nodeId == null || nodeId == 0) {
+    fun focusOnSelector(selector: String): Node? {
+        try {
+            val rootId = domAPI?.document?.nodeId ?: return null
+
+            val nodeId = domAPI?.querySelector(rootId, selector)
+            if (nodeId == 0) {
+                return null
+            }
+
+            val node = domAPI?.describeNode(nodeId, null, null, null, false)
+            domAPI?.focus(nodeId, rootId, null)
+
+            return node
+        } catch (e: Exception) {
+            logger.error("Failed to focus on selector: $selector", e)
+            return null
+        }
+    }
+
+    @Throws(ChromeDriverException::class)
+    fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Node? {
+        val node = querySelector(selector) ?: return null
+        val nodeId = node.nodeId
+        // If the nodeId is 0, it means the element was not found
+        if (nodeId == 0) {
             logger.info("No node found for selector: $selector")
             return null
         }
@@ -177,15 +188,17 @@ class PageHandler(
     }
 
     @Throws(ChromeDriverException::class)
-    fun scrollIntoViewIfNeeded(nodeId: Int, selector: String? = null, rect: Rect? = null): Int? {
+    fun scrollIntoViewIfNeededOld(
+        nodeId: Int, selector: String? = null, rect: Rect? = null, backendNodeId: Int? = null, objectId: String? = null
+    ): Int? {
         try {
-            val node = domAPI?.describeNode(nodeId, null, null, null, false)
+            val node = domAPI?.describeNode(nodeId, backendNodeId, objectId, null, false)
             if (node?.nodeType != ELEMENT_NODE) {
                 logger.info("Node is not of type HTMLElement | {}", selector ?: nodeId)
                 return null
             }
 
-            domAPI?.scrollIntoViewIfNeeded(nodeId, node.backendNodeId, null, rect)
+            domAPI?.scrollIntoViewIfNeeded(nodeId, node.backendNodeId, objectId, rect)
         } catch (e: ChromeRPCException) {
             logger.debug(
                 "DOM.scrollIntoViewIfNeeded is not supported, fallback to Element.scrollIntoView | {} | {} | {}",
@@ -196,6 +209,30 @@ class PageHandler(
         }
 
         return nodeId
+    }
+
+    @Throws(ChromeDriverException::class)
+    fun scrollIntoViewIfNeeded(
+        nodeId: Int, selector: String? = null, rect: Rect? = null, backendNodeId: Int? = null, objectId: String? = null
+    ): Node? {
+        try {
+            val node = domAPI?.describeNode(nodeId, backendNodeId, objectId, null, false)
+            if (node?.nodeType != ELEMENT_NODE) {
+                logger.info("Node is not of type HTMLElement | {}", selector ?: nodeId)
+                return null
+            }
+
+            domAPI?.scrollIntoViewIfNeeded(nodeId, node.backendNodeId, objectId, rect)
+
+            return node
+        } catch (e: ChromeRPCException) {
+            logger.debug("DOM.scrollIntoViewIfNeeded is not supported, fallback to Element.scrollIntoView | {} | {} | {}",
+                nodeId, e.message, selector)
+
+            // Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
+            evaluate("__pulsar_utils__.scrollIntoView('$selector')")
+            return null
+        }
     }
 
     /**
@@ -294,11 +331,16 @@ class PageHandler(
     }
 
     @Throws(ChromeDriverException::class)
-    private fun querySelectorOrNull(selector: String): Int? {
-        val rootId = domAPI?.document?.nodeId
-        return if (rootId != null && rootId > 0) {
-            domAPI?.querySelector(rootId, selector)
-        } else null
+    private fun querySelectorOrNull(selector: String): Node? {
+        val rootId = domAPI?.document?.nodeId ?: return null
+        // If the rootId is 0, it means the document is not available or not loaded
+        if (rootId == 0) {
+            logger.warn("Document root node is not available, cannot query selector: $selector")
+            return null
+        }
+
+        val nodeId = domAPI?.querySelector(rootId, selector) ?: return null
+        return cdpDescribeNode(nodeId)
     }
 
     private suspend fun click0(nodeId: Int, count: Int, position: String = "center") {
@@ -313,7 +355,8 @@ class PageHandler(
             return
         }
 
-        val clickableDOM = ClickableDOM(p, d, nodeId, offset)
+        val node = d.describeNode(nodeId, null, null, null, false)
+        val clickableDOM = ClickableDOM(p, d, nodeId, node.backendNodeId, objectId = null, offset = offset)
         val point = clickableDOM.clickablePoint().value ?: return
         val box = clickableDOM.boundingBox()
         val width = box?.width ?: 0.0
@@ -333,23 +376,39 @@ class PageHandler(
 
     @Throws(ChromeDriverException::class)
     private fun <T> invokeOnElement(selector: String, action: (Int) -> T): T? {
-        val nodeId = querySelectorOrNull(selector)
-        if (nodeId != null && nodeId > 0) {
-            return action(nodeId)
-        }
+        val node = querySelectorOrNull(selector) ?: return null
 
-        return null
+        return action(node.nodeId)
+    }
+
+    @Throws(ChromeDriverException::class)
+    private fun <T> invokeOnElement2(selector: String, action: (Node) -> T): T? {
+        val node = querySelectorOrNull(selector) ?: return null
+        return action(node)
     }
 
     @Throws(ChromeDriverException::class)
     private fun predicateOnElement(selector: String, action: (Int) -> Boolean): Boolean {
-        val nodeId = querySelectorOrNull(selector)
+        val nodeId = querySelectorOrNull(selector)?.nodeId
         if (nodeId != null && nodeId > 0) {
             return action(nodeId)
         }
 
         return false
     }
+
+    @Throws(ChromeDriverException::class)
+    private fun predicateOnElement2(selector: String, action: (Node) -> Boolean): Boolean {
+        val node = querySelectorOrNull(selector) ?: return false
+        return action(node)
+    }
+
+
+
+
+
+
+
 
     private fun cdpEvaluate(
         expression: String,
@@ -388,5 +447,11 @@ class PageHandler(
             null,
             serializationOptions
         )
+    }
+
+    private fun cdpDescribeNode(
+        nodeId: Int, backendNodeId: Int? = null, objectId: String? = null, depth: Int? = null, pierce: Boolean? = null
+    ): Node? {
+        return domAPI?.describeNode(nodeId, backendNodeId, objectId, depth, pierce)
     }
 }

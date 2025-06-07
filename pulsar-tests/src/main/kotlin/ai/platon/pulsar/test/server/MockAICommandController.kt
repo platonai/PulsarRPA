@@ -14,7 +14,7 @@ import java.util.concurrent.Executors
  * Use mock-sse.html to test this controller.
  * */
 @RestController
-@RequestMapping("/mock/api/ai/command")
+@RequestMapping("/mock/api/commands/")
 @CrossOrigin
 class MockAICommandController {
     private val executor: ExecutorService = Executors.newCachedThreadPool()

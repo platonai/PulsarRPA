@@ -4141,7 +4141,7 @@
   "authors": ["Ivan Pan (@hypotenuse)"],
   "notes": [{
     "name": "MDN Docs",
-    "href": "https://developer.mozilla.org/en-US/docs/Web/API/XDomainRequest"
+    "href": "https://developer.mozilla.org/en-US/docs/Web/api/scrape/tasksDomainRequest"
   }]
 }
 !*/

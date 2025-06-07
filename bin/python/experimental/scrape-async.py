@@ -9,8 +9,8 @@ BATCH_SIZE = 5
 MAX_ATTEMPTS = 30
 DELAY_SECONDS = 5
 MAX_URLS = 20
-BASE_URL = "http://localhost:8182/api/x/s"
-STATUS_URL_TEMPLATE = "http://localhost:8182/api/x/status?uuid={}"
+BASE_URL = "http://localhost:8182/api/scrape/tasks/submit"
+STATUS_URL_TEMPLATE = "http://localhost:8182/api/scrape/tasks/{}/status"
 MAX_POLLING_TASKS = 10
 
 SQL_TEMPLATE = """select

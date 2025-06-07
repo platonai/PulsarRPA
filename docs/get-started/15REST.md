@@ -28,7 +28,7 @@ bin/scrape.sh
 The bash script is quite simple; it just uses curl to post an X-SQL:
 
 ```shell
-curl -X POST --location "http://localhost:8182/api/scrape/execute" -H "Content-Type: text/plain" -d "
+curl -X POST --location "http://localhost:8182/api/scrape/tasks/execute" -H "Content-Type: text/plain" -d "
   select
       dom_base_uri(dom) as url,
       dom_first_text(dom, '#productTitle') as title,

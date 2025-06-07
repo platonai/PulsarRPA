@@ -14,6 +14,6 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46 -i 20s -njr 3', 'body
 
 rem echo %sql%
 
-curl.exe -X POST --location "http://localhost:8182/api/scrape/execute" -H "Content-Type: text/plain" -d "%sql%"
+curl.exe -X POST --location "http://localhost:8182/api/scrape/tasks/execute" -H "Content-Type: text/plain" -d "%sql%"
 
 @echo on

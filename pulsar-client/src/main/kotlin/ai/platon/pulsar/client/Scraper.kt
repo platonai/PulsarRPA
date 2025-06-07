@@ -23,7 +23,7 @@ fun main() {
     """
 
     val request = HttpRequest.newBuilder()
-        .uri(URI.create("http://localhost:8182/api/scrape/execute"))
+        .uri(URI.create("http://localhost:8182/api/scrape/tasks/execute"))
         .header("Content-Type", "text/plain")
         .POST(BodyPublishers.ofString(sql)).build()
     val response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString()).body()

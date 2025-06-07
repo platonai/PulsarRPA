@@ -106,7 +106,7 @@ Find all links containing /dp/.
         const events = document.getElementById('events');
         status.textContent = '⏳ Refining...';
         events.textContent = '';
-        fetch('http://localhost:8182/mock/api/ai/command/refine', {
+        fetch('http://localhost:8182/mock/api/commands/refine', {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: command
@@ -130,7 +130,7 @@ Find all links containing /dp/.
         const events = document.getElementById('events');
         status.textContent = '⏳ Submitting...';
         events.textContent = '';
-        fetch('http://localhost:8182/mock/api/ai/command', {
+        fetch('http://localhost:8182/mock/api/commands/', {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: command
@@ -154,7 +154,7 @@ Find all links containing /dp/.
         const events = document.getElementById('events');
         const finalResultContainer = document.getElementById('finalResultContainer');
         const finalResult = document.getElementById('finalResult');
-        const url = `http://localhost:8182/mock/api/ai/command/stream/${uuid}`;
+        const url = `http://localhost:8182/mock/api/commands/stream/${uuid}`;
         const es = new EventSource(url);
         es.onmessage = function(event) {
             let lines = events.textContent.split('\n').filter(Boolean);

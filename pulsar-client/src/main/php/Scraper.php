@@ -4,7 +4,7 @@
  * A simple scraper which just send an X-SQL request to the pulsar server and get the scrape result
  * */
 
-$url = "http://localhost:8182/api/scrape/execute";
+$url = "http://localhost:8182/api/scrape/tasks/execute";
 $sql = "select
             dom_first_text(dom, '#productTitle') as title,
             dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
