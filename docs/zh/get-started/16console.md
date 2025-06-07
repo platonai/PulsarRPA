@@ -23,7 +23,7 @@
 下载最新的可执行 jar 包：
 
 ```bash
-wget https://platonai.cn/pub/repo/ai/platon/exotic/exotic-standalone.jar
+wget https://static.platonai.cn/repo/ai/platon/exotic/exotic-standalone.jar
 ```
 
 从源代码构建：

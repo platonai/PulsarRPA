@@ -72,7 +72,7 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 <summary>📂 资源</summary>
 
 * 🟦 [GitHub发布下载](https://github.com/platonai/PulsarRPA/releases/download/v3.0.9/PulsarRPA.jar)
-* 📁 [镜像/备份下载](https://platonai.cn/pub/repo/ai/platon/pulsar/)
+* 📁 [镜像/备份下载](https://static.platonai.cn/repo/ai/platon/pulsar/)
 * 🛠️ [LLM配置指南](docs/config/llm/llm-config.md)
 * 🛠️ [配置指南](docs/config.md)
 
