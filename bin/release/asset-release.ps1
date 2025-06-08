@@ -75,7 +75,7 @@ try {
     $listResult = Invoke-Expression "ssh ${RemoteUser}@${RemoteHost} 'ls -l $RemoteBaseDir'"
 
     Write-Host "Done."
-    Write-Host "Assets are available at: http://static.platonai.cn/repo/ai/platon/pulsar/"
+    Write-Host "Assets are available at: https://static.platonai.cn/repo/ai/platon/pulsar/"
 }
 catch {
     Write-Error "Error: $_"
