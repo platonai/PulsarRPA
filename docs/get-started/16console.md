@@ -25,7 +25,7 @@ You can choose to directly download the executable jar package or build PulsarRP
 Download the latest executable jar package:
 
 ```bash
-wget http://static.platonai.cn/repo/ai/platon/exotic/exotic-standalone.jar
+wget https://static.platonai.cn/repo/ai/platon/exotic/exotic-standalone.jar
 ```
 
 Build from source code:

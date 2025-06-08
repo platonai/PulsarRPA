@@ -86,7 +86,7 @@ if [[ -f "$PULSAR_RPA_PATH" ]]; then
   fi
 
   echo "Done."
-  echo "Assets are available at: http://static.platonai.cn/repo/ai/platon/pulsar/"
+  echo "Assets are available at: https://static.platonai.cn/repo/ai/platon/pulsar/"
 else
   echo -e "\e[33mWarning: $PULSAR_RPA_PATH does not exist\e[0m" >&2
   exit 1

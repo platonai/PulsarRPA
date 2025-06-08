@@ -20,6 +20,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Correct Permissions
+        run: |
+          find bin/ -name "*.sh" | xargs chmod +x
+          chmod +x ./mvnw
+
+      - name: Update Version
+        run: |
+          chmod +x bin/release/update-versions.sh
+          bin/release/update-versions.sh
+
+      - name: Test Sonatype login via API
+        run: |
+          curl -u "${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}" \
+          -X GET "https://oss.sonatype.org/service/local/status"
+
       - name: Check if DEEPSEEK_API_KEY is set
         run: |
           if [ -z "${{ secrets.DEEPSEEK_API_KEY }}" ]; then
@@ -31,18 +46,12 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '11'
           server-id: ossrh
-          server-username: ${{ secrets.SONATYPE_USERNAME }}
-          server-password: ${{ secrets.SONATYPE_PASSWORD }}
+          server-username: SONATYPE_USERNAME
+          server-password: SONATYPE_PASSWORD
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          cache: 'maven'
-
-      - name: Test Sonatype login via API
-        run: |
-          curl -u "${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}" \
-          -X GET "https://oss.sonatype.org/service/local/status"
+          gpg-passphrase: GPG_PASSPHRASE
 
       - name: Check settings.xml
         run: |
@@ -57,11 +66,6 @@ jobs:
             exit 1
           fi
           echo "settings.xml configuration validated successfully"
-
-      - name: Update Version
-        run: |
-          chmod +x bin/release/update-versions.sh
-          bin/release/update-versions.sh
 
       - name: Cache Maven wrapper
         uses: actions/cache@v4
@@ -130,9 +134,21 @@ jobs:
       - name: Deploy to Sonatype OSSRH
         if: success() && startsWith(github.ref, 'refs/tags/')
         run: |
-          # Setting comprehensive Maven deploy parameters to ensure compatibility
-          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B \
-            -DDEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
+          echo "Deploying to Maven Central..."
+          ./bin/release/maven-deploy.sh
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            target/*.jar
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to Docker Hub
         if: success()
