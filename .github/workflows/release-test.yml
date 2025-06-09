@@ -17,13 +17,6 @@ jobs:
           curl -u "${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}" \
           -X GET "https://oss.sonatype.org/service/local/status"
 
-      - name: Check if DEEPSEEK_API_KEY is set
-        run: |
-          if [ -z "${{ secrets.DEEPSEEK_API_KEY }}" ]; then
-            echo "DEEPSEEK_API_KEY is not set. Exiting."
-            exit 1
-          fi
-
       - name: Check if GPG is working
         run: |
           echo "$GPG_PRIVATE_KEY" | gpg --batch --import
@@ -44,10 +37,6 @@ jobs:
           server-password: SONATYPE_PASSWORD
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: GPG_PASSPHRASE
-          cache: 'maven'
-
-      - name: Display settings.xml
-        run: cat ~/.m2/settings.xml
 
       - name: Cache Maven wrapper
         uses: actions/cache@v3
@@ -55,30 +44,14 @@ jobs:
           path: .mvn/wrapper
           key: ${{ runner.os }}-maven-wrapper-${{ hashFiles('**/maven-wrapper.properties') }}
 
-      - name: Extract version from tag
-        id: tag
-        run: |
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            TAG=${GITHUB_REF#refs/tags/}
-            VERSION=${TAG#v}
-            echo "VERSION=$VERSION" >> $GITHUB_ENV
-            echo "TAG=$TAG" >> $GITHUB_ENV
-          else
-            echo "VERSION=development" >> $GITHUB_ENV
-            echo "TAG=latest" >> $GITHUB_ENV
-          fi
-
-      - name: Maven build and deploy to local repo
-        run: |
-          chmod +x ./mvnw
-          ./mvnw clean install -DskipTests
-
       - name: Deploy to Sonatype OSSRH
         if: success()
         run: |
-          ./mvnw deploy -Prelease -Pdeploy -DskipTests -B
-
+          ./mvnw --batch-mode deploy -P deploy,release \
+              -DaltDeploymentRepository=ossrh::default::https://oss.sonatype.org/service/local/staging/deploy/maven2 \
+              -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" \
+              -DskipTests
         env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
