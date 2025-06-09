@@ -1,5 +1,14 @@
 #!/usr/bin/env pwsh
 
+# PowerShell script to create a release tag in a git repository based on the version in pom.xml
+
+# 🔍 Find the first parent directory containing the VERSION file
+$AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
+while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
+    $AppHome = Split-Path -Parent $AppHome
+}
+Set-Location $AppHome
+
 # Set error handling
 $ErrorActionPreference = "Stop"
 
