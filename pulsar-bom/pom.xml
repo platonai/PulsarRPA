@@ -139,6 +139,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven-source-plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -423,5 +424,6 @@
         <checksum-maven-plugin.version>1.11</checksum-maven-plugin.version>
         <license-maven-plugin.version>4.3</license-maven-plugin.version>
         <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
+        <dokka.version>1.9.10</dokka.version>
     </properties>
 </project>
