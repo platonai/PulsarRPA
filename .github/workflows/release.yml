@@ -33,11 +33,6 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: GPG_PASSPHRASE
 
-      - name: Import and Verify GPG Key
-        run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-          gpg --list-secret-keys --keyid-format LONG
-
       - name: Correct Permissions
         run: |
           find bin/ -name "*.sh" | xargs chmod +x
@@ -56,34 +51,6 @@ jobs:
           chmod +x bin/release/update-versions.sh
           bin/release/update-versions.sh
 
-      - name: Validate External Dependencies
-        run: |
-          # Test Sonatype connection
-          echo "=== Testing Sonatype Connection ==="
-          curl -f -u "${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}" \
-            -X GET "https://oss.sonatype.org/service/local/status"
-          
-          # Check required secrets
-          echo "=== Checking Required Secrets ==="
-          if [ -z "${{ secrets.DEEPSEEK_API_KEY }}" ]; then
-            echo "❌ DEEPSEEK_API_KEY is not set"
-            exit 1
-          fi
-          echo "✅ All required secrets are configured"
-
-      - name: Validate Maven Settings
-        run: |
-          echo "=== Validating Maven Settings ==="
-          if ! grep -q "<id>ossrh</id>" ~/.m2/settings.xml; then
-            echo "❌ settings.xml missing OSSRH configuration"
-            exit 1
-          fi
-          if ! grep -E "<passphrase>.+</passphrase>" ~/.m2/settings.xml; then
-            echo "❌ settings.xml missing GPG passphrase configuration"
-            exit 1
-          fi
-          echo "✅ Maven settings validation successful"
-
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
@@ -94,26 +61,6 @@ jobs:
       - name: Maven Build
         run: |
           ./mvnw clean install -DskipTests
-
-      - name: Test GPG Signing
-        run: |
-          echo "=== Testing GPG Signing ==="
-          # Test basic GPG functionality
-          echo "test signing" | gpg --clearsign --batch --yes --pinentry-mode loopback \
-            --passphrase "$GPG_PASSPHRASE"
-          
-          # Test Maven GPG plugin
-          ./mvnw package gpg:sign -DskipTests -q \
-            -Dgpg.passphrase="$GPG_PASSPHRASE" \
-            -Dgpg.batch=true \
-            -Dgpg.pinentry-mode=loopback
-          
-          # Verify signatures were created
-          echo "Generated signature files:"
-          find . -name "*.asc" -type f | head -10
-          echo "✅ GPG signing test successful"
-        env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Build Docker image
         run: |
@@ -139,17 +86,6 @@ jobs:
 #          docker stop pulsar-rpa-test || true
 #        env:
 #          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-
-      - name: Set up JDK 17 For Deployment
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          server-id: ossrh
-          server-username: SONATYPE_USERNAME
-          server-password: SONATYPE_PASSWORD
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: GPG_PASSPHRASE
 
       - name: Deploy to Sonatype OSSRH
         if: success() && startsWith(github.ref, 'refs/tags/')
