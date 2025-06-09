@@ -150,6 +150,8 @@ jobs:
             -Dgpg.passphrase="$GPG_PASSPHRASE" \
             -Dgpg.batch=true \
             -Dgpg.pinentry-mode=loopback \
+            -DrepositoryId=ossrh \
+            -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2 \
             --show-version --errors
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}

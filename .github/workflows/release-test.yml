@@ -44,13 +44,17 @@ jobs:
           path: .mvn/wrapper
           key: ${{ runner.os }}-maven-wrapper-${{ hashFiles('**/maven-wrapper.properties') }}
 
-      - name: Deploy to Sonatype OSSRH
+      - name: Deploy single JAR to Sonatype OSSRH
         if: success()
         run: |
-          ./mvnw --batch-mode deploy -P deploy,release \
-              -DaltDeploymentRepository=ossrh::default::https://oss.sonatype.org/service/local/staging/deploy/maven2 \
-              -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" \
-              -DskipTests
+          ./mvnw --batch-mode -pl pulsar-common -am package
+          jar_file=$(find pulsar-common/target -name 'pulsar-common-*.jar' | head -n 1)
+          ./mvnw --batch-mode deploy:deploy-file \
+            -Dfile="$jar_file" \
+            -DpomFile=pulsar-common/pom.xml \
+            -DrepositoryId=ossrh \
+            -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2 \
+            -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}"
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
