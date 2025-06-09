@@ -140,6 +140,15 @@ jobs:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
 
+      - name: Build PulsarRPA.jar
+        if: success()
+        run: |
+          echo "Building pulsar-app/pulsar-master ..."
+          cd "$APP_HOME/pulsar-app/pulsar-master" || exit
+          ./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true
+          echo "PulsarRPA.jar built successfully"
+          cd -
+
       - name: Create GitHub Release
         if: success()
         uses: softprops/action-gh-release@v2
