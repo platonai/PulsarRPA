@@ -165,8 +165,8 @@ jobs:
             echo "❌ OSSRH repository not configured in settings.xml"
             exit 1
           fi
-          if ! grep -q "<passphrase>.+</passphrase>" ~/.m2/settings.xml; then
-            echo "❌ GPG passphrase not configured in settings.xml"
+          if ! grep -E "<passphrase>.+</passphrase>" ~/.m2/settings.xml; then
+            echo "❌ settings.xml missing GPG passphrase configuration"
             exit 1
           fi
           echo "✅ settings.xml validation successful"
