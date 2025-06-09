@@ -5,6 +5,11 @@ on:
     branches:
       - main-disabled
       - master-disabled
+    paths-ignore:
+      - 'bin/**'
+      - 'docs/**'
+      - 'docker/**'
+      - '**.md'
   # Allow manual workflow runs
   workflow_dispatch:
 

@@ -107,6 +107,26 @@
                         <artifactId>bom-helper-maven-plugin</artifactId>
                         <version>0.4.0</version>
                     </plugin>
+                    <!-- Help maven-source-plugin works with kotlin -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.6.0</version>
+
+                        <executions>
+                            <execution>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/kotlin</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -115,11 +135,34 @@
 
             <build>
                 <plugins>
+
+                    <!-- GPG signing -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
                     <!-- We want to sign the artifact, the POM, and all attached artifacts -->
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.7.0</version>
+                        <version>${nexus-staging-maven-plugin.version}</version>
                         <configuration>
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
@@ -290,6 +333,19 @@
     </dependencyManagement>
 
     <properties>
-        <version.maven-gpg-plugin>3.1.0</version.maven-gpg-plugin>
+        <!-- Plugin versions -->
+        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
+        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
+        <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
+        <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
+        <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
+        <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
+        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
+        <nexus-staging-maven-plugin.version>1.7.0</nexus-staging-maven-plugin.version>
+        <checksum-maven-plugin.version>1.11</checksum-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
+        <license-maven-plugin.version>4.3</license-maven-plugin.version>
+        <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
     </properties>
 </project>

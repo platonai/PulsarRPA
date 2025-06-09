@@ -5,8 +5,10 @@ on:
     tags:
       - "v*"
     paths-ignore:
-      - '**.md'
+      - 'bin/**'
       - 'docs/**'
+      - 'docker/**'
+      - '**.md'
   # Allow manual workflow runs
   workflow_dispatch:
 
