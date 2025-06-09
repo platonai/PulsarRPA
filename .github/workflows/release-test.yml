@@ -47,9 +47,9 @@ jobs:
       - name: Deploy single JAR to Sonatype OSSRH
         if: success()
         run: |
-          ./mvnw --batch-mode -pl pulsar-common -am package
+          ./mvnw --batch-mode -pl pulsar-common -am package -DskipTests
           jar_file=$(find pulsar-common/target -name 'pulsar-common-*.jar' | head -n 1)
-          ./mvnw --batch-mode deploy:deploy-file \
+          ./mvnw --batch-mode deploy:deploy-file -P deploy,release -DskipTests \
             -Dfile="$jar_file" \
             -DpomFile=pulsar-common/pom.xml \
             -DrepositoryId=ossrh \
