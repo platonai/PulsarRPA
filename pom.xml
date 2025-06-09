@@ -130,12 +130,47 @@
             </modules>
         </profile>
 
+        <!-- Development profile -->
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <skipTests>false</skipTests>
+                <maven.javadoc.skip>true</maven.javadoc.skip>
+            </properties>
+        </profile>
+
+        <!-- CI profile -->
+        <profile>
+            <id>ci</id>
+            <properties>
+                <skipTests>false</skipTests>
+                <maven.test.failure.ignore>false</maven.test.failure.ignore>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>report-aggregate</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>report-aggregate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Release profile -->
         <profile>
             <id>platon-release</id>
-            <properties>
-                <platon-release-active>true</platon-release-active>
-            </properties>
-
             <build>
                 <plugins>
                     <plugin>
@@ -181,7 +216,7 @@
             </build>
         </profile>
 
-
+        <!-- Deployment profile -->
         <profile>
             <id>platon-deploy</id>
             <properties>
@@ -329,6 +364,7 @@
                 </plugins>
             </build>
         </profile>
+
         <profile>
             <id>OS-WIN</id>
             <activation>
