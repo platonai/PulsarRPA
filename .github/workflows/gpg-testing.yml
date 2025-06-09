@@ -2,10 +2,6 @@ name: Comprehensive GPG Testing
 
 on:
   workflow_dispatch:  # Manual trigger for testing
-  push:
-    paths:
-      - 'pom.xml'
-      - '.github/workflows/gpg-testing.yml'
 
 jobs:
   test-gpg-setup:

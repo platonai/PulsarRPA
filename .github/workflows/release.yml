@@ -132,12 +132,23 @@ jobs:
         if: success() && startsWith(github.ref, 'refs/tags/')
         run: |
           echo "Deploying to Maven Central..."
-          ./bin/release/maven-deploy.sh || (echo "Maven deploy failed" && exit 1)
+          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
+            -DaltDeploymentRepository=ossrh::default::https://oss.sonatype.org/service/local/staging/deploy/maven2 \
+            -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}"
 
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+
+      - name: Build PulsarRPA JAR
+        if: success()
+        run: |
+          ./mvnw package -rf :pulsar-master -pl pulsar-app/pulsar-master -DskipTests=true -Dmaven.javadoc.skip=true
+          if [ ! -f pulsar-app/pulsar-master/target/PulsarRPA.jar ]; then
+              echo "PulsarRPA.jar not found. Build failed."
+              exit 1
+          fi
 
       - name: Create GitHub Release
         if: success()
