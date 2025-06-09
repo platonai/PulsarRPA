@@ -63,7 +63,7 @@ jobs:
       - name: Test deployment simulation
         run: |
           # Test what would happen during deployment
-          mvn --batch-mode deploy -DskipTests -DaltDeploymentRepository=local::file:./target/staging \
+          mvn --batch-mode deploy -P deploy -DskipTests -DaltDeploymentRepository=local::file:./target/staging \
             -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}"
 
       - name: Upload test artifacts
