@@ -107,6 +107,28 @@
                         <artifactId>bom-helper-maven-plugin</artifactId>
                         <version>0.4.0</version>
                     </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>deploy</id>
+
+            <build>
+                <plugins>
+                    <!-- Attach sources -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
                     <!-- Help maven-source-plugin works with kotlin -->
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
@@ -127,57 +149,93 @@
                             </execution>
                         </executions>
                     </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>deploy</id>
-
-            <build>
-                <plugins>
-                    <!-- Attach sources -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>${maven-source-plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <!-- Generate Kotlin documentation -->
                     <plugin>
                         <groupId>org.jetbrains.dokka</groupId>
                         <artifactId>dokka-maven-plugin</artifactId>
                         <version>${dokka.version}</version>
                         <executions>
                             <execution>
+                                <!-- generate javadoc.jar before package gpg plugin can generate asc for it -->
                                 <phase>prepare-package</phase>
                                 <goals>
+                                    <goal>dokka</goal>
                                     <goal>javadocJar</goal>
                                 </goals>
                             </execution>
                         </executions>
                         <configuration>
-                            <sourceDirectories>
-                                <dir>${project.basedir}/src/main/kotlin</dir>
-                                <dir>${project.basedir}/src/main/java</dir>
-                            </sourceDirectories>
-                            <documentedVisibilities>
-                                <visibility>PUBLIC</visibility>
-                                <visibility>PROTECTED</visibility>
-                            </documentedVisibilities>
-                            <skipEmptyPackages>true</skipEmptyPackages>
-                            <reportUndocumented>false</reportUndocumented>
-                            <platform>jvm</platform>
+                            <!-- Set to true to skip dokka task, default: false -->
+                            <skip>false</skip>
+
+                            <!-- Use default or set to custom path to cache directory to enable package-list caching. -->
+                            <!-- When set to default, caches stored in $USER_HOME/.cache/dokka -->
+                            <cacheRoot>default</cacheRoot>
+
+                            <!-- Used for linking to JDK, default: 11 -->
                             <jdkVersion>11</jdkVersion>
+
+                            <!-- Do not output deprecated members, applies globally, can be overridden by packageOptions -->
+                            <skipDeprecated>true</skipDeprecated>
+                            <!-- Emit warnings about not documented members, applies globally, also can be overridden by packageOptions -->
+                            <reportUndocumented>true</reportUndocumented>
+                            <!-- Do not create index pages for empty packages -->
+                            <skipEmptyPackages>false</skipEmptyPackages>
+                            <includeNonPublic>false</includeNonPublic>
+
+                            <!-- Short form list of sourceRoots, by default, set to ${project.compileSourceRoots} -->
+                            <sourceDirectories>
+                                <dir>${project.basedir}/src/main/java</dir>
+                                <dir>${project.basedir}/src/main/kotlin</dir>
+                            </sourceDirectories>
+
+                            <!-- Disable linking to online kotlin-stdlib documentation  -->
+                            <noStdlibLink>false</noStdlibLink>
+                            <noJdkLink>false</noJdkLink>
+
+                            <!-- Allows to customize documentation generation options on a per-package basis -->
+                            <perPackageOptions>
+                                <packageOptions>
+                                    <!-- Will match kotlin and all sub-packages of it -->
+                                    <!-- <prefix>kotlin</prefix>-->
+
+                                    <!-- All options are optional, default values are below: -->
+                                    <skipDeprecated>false</skipDeprecated>
+                                    <!-- Emit warnings about not documented members  -->
+                                    <reportUndocumented>true</reportUndocumented>
+                                    <includeNonPublic>false</includeNonPublic>
+                                </packageOptions>
+                            </perPackageOptions>
                         </configuration>
                     </plugin>
+
+                    <!--                    &lt;!&ndash; Generate Kotlin documentation &ndash;&gt;-->
+                    <!--                    <plugin>-->
+                    <!--                        <groupId>org.jetbrains.dokka</groupId>-->
+                    <!--                        <artifactId>dokka-maven-plugin</artifactId>-->
+                    <!--                        <version>${dokka.version}</version>-->
+                    <!--                        <executions>-->
+                    <!--                            <execution>-->
+                    <!--                                <phase>prepare-package</phase>-->
+                    <!--                                <goals>-->
+                    <!--                                    <goal>javadocJar</goal>-->
+                    <!--                                </goals>-->
+                    <!--                            </execution>-->
+                    <!--                        </executions>-->
+                    <!--                        <configuration>-->
+                    <!--                            <sourceDirectories>-->
+                    <!--                                <dir>${project.basedir}/src/main/kotlin</dir>-->
+                    <!--                                <dir>${project.basedir}/src/main/java</dir>-->
+                    <!--                            </sourceDirectories>-->
+                    <!--                            <documentedVisibilities>-->
+                    <!--                                <visibility>PUBLIC</visibility>-->
+                    <!--                                <visibility>PROTECTED</visibility>-->
+                    <!--                            </documentedVisibilities>-->
+                    <!--                            <skipEmptyPackages>true</skipEmptyPackages>-->
+                    <!--                            <reportUndocumented>false</reportUndocumented>-->
+                    <!--                            <platform>jvm</platform>-->
+                    <!--                            <jdkVersion>11</jdkVersion>-->
+                    <!--                        </configuration>-->
+                    <!--                    </plugin>-->
 
                     <!-- GPG signing -->
                     <plugin>

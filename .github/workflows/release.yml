@@ -141,36 +141,6 @@ jobs:
 #        env:
 #          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
-      - name: Set up JDK 17 For Deployment
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          server-id: ossrh
-          server-username: SONATYPE_USERNAME
-          server-password: SONATYPE_PASSWORD
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: GPG_PASSPHRASE
-
-      - name: Check settings.xml
-        run: |
-          echo "=== Checking settings.xml ==="
-          cat ~/.m2/settings.xml || echo "settings.xml not found"
-          
-          if [ ! -f ~/.m2/settings.xml ]; then
-            echo "❌ settings.xml not found"
-            exit 1
-          fi
-          if ! grep -q "<id>ossrh</id>" ~/.m2/settings.xml; then
-            echo "❌ OSSRH repository not configured in settings.xml"
-            exit 1
-          fi
-          if ! grep -E "<passphrase>.+</passphrase>" ~/.m2/settings.xml; then
-            echo "❌ settings.xml missing GPG passphrase configuration"
-            exit 1
-          fi
-          echo "✅ settings.xml validation successful"
-
       - name: Deploy to Sonatype OSSRH
         if: success() && startsWith(github.ref, 'refs/tags/')
         run: |
