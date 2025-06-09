@@ -143,7 +143,7 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            target/*.jar
+            pulsar-app/pulsar-master/target/PulsarRPA.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
