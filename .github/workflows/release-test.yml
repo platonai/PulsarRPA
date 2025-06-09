@@ -76,7 +76,7 @@ jobs:
       - name: Deploy to Sonatype OSSRH
         if: success()
         run: |
-          ./mvnw deploy -Pplaton-release -Pplaton-deploy -DskipTests -B
+          ./mvnw deploy -Prelease -Pdeploy -DskipTests -B
 
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}

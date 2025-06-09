@@ -186,7 +186,7 @@ fi
 if [[ "$PRODUCTION_MODE" == true ]]; then
     # 4.1 Deploy artifact to Sonatype
     log "📦 Deploying artifact to Sonatype..."
-    if ! $APP_HOME/mvnw -Pplaton-deploy -Pplaton-release nexus-deploy-staged; then
+    if ! $APP_HOME/mvnw -P deploy,release nexus-deploy-staged; then
         echo "❌ Failed to deploy to Sonatype"
         exit 1
     fi

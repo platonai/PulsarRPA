@@ -79,28 +79,28 @@
     </distributionManagement>
 
     <profiles>
+        <!-- Release profile -->
         <profile>
-            <id>platon-release</id>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${version.maven-gpg-plugin}</version>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>${maven-release-plugin.version}</version>
                         <configuration>
-                            <gpgArguments>
-                                <arg>--digest-algo=SHA512</arg>
-                            </gpgArguments>
+                            <tagNameFormat>v@{project.version}</tagNameFormat>
+                            <releaseProfiles>deploy</releaseProfiles>
+                            <autoVersionSubmodules>true</autoVersionSubmodules>
+                            <preparationGoals>clean verify</preparationGoals>
+                            <completionGoals>clean</completionGoals>
+                            <goals>deploy nexus-staging:release</goals>
+                            <pushChanges>false</pushChanges>
+                            <localCheckout>true</localCheckout>
+                            <checkModificationExcludes>
+                                <checkModificationExclude>pom.xml</checkModificationExclude>
+                            </checkModificationExcludes>
                         </configuration>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
                     </plugin>
                     <plugin>
                         <groupId>com.commsen.maven</groupId>
@@ -111,7 +111,7 @@
             </build>
         </profile>
         <profile>
-            <id>platon-deploy</id>
+            <id>deploy</id>
 
             <build>
                 <plugins>

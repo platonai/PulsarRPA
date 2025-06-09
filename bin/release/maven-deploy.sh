@@ -61,9 +61,9 @@ if $CLEAN; then
 fi
 
 if $ENABLE_TEST; then
-  ./mvnw deploy -P platon-deploy,platon-release
+  ./mvnw deploy -P deploy,release
 else
-  ./mvnw deploy -P platon-deploy,platon-release -DskipTests
+  ./mvnw deploy -P deploy,release -DskipTests
 fi
 
 exitCode=$?

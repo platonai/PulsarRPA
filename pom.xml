@@ -170,7 +170,7 @@
 
         <!-- Release profile -->
         <profile>
-            <id>platon-release</id>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>
@@ -218,9 +218,9 @@
 
         <!-- Deployment profile -->
         <profile>
-            <id>platon-deploy</id>
+            <id>deploy</id>
             <properties>
-                <platon-deploy-active>true</platon-deploy-active>
+                <deploy-active>true</deploy-active>
             </properties>
             <modules>
                 <module>pulsar-common</module>
