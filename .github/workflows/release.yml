@@ -43,43 +43,6 @@ jobs:
           find bin/ -name "*.sh" | xargs chmod +x
           chmod +x ./mvnw
 
-      - name: Update Version
-        run: |
-          chmod +x bin/release/update-versions.sh
-          bin/release/update-versions.sh
-
-      - name: Test Sonatype login via API
-        run: |
-          curl -u "${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}" \
-          -X GET "https://oss.sonatype.org/service/local/status"
-
-      - name: Check if DEEPSEEK_API_KEY is set
-        run: |
-          if [ -z "${{ secrets.DEEPSEEK_API_KEY }}" ]; then
-            echo "DEEPSEEK_API_KEY is not set. Exiting."
-            exit 1
-          fi
-
-      - name: Check settings.xml
-        run: |
-          # Check if settings.xml is correctly configured (without exposing contents)
-          if ! grep -q "<id>ossrh</id>" ~/.m2/settings.xml; then
-            echo "settings.xml is not configured correctly for Sonatype OSSRH."
-            exit 1
-          fi
-          # Check if GPG configuration exists (using extended regex for any passphrase content)
-          if ! grep -E "<passphrase>.+</passphrase>" ~/.m2/settings.xml; then
-            echo "settings.xml is not configured correctly for gpg-passphrase."
-            exit 1
-          fi
-          echo "settings.xml configuration validated successfully"
-
-      - name: Cache Maven wrapper
-        uses: actions/cache@v4
-        with:
-          path: .mvn/wrapper
-          key: ${{ runner.os }}-maven-wrapper-${{ hashFiles('**/maven-wrapper.properties') }}
-
       - name: Extract version from tag
         id: tag
         run: |
@@ -88,6 +51,39 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "TAG=$TAG" >> $GITHUB_ENV
 
+      - name: Update Version
+        run: |
+          chmod +x bin/release/update-versions.sh
+          bin/release/update-versions.sh
+
+      - name: Validate External Dependencies
+        run: |
+          # Test Sonatype connection
+          echo "=== Testing Sonatype Connection ==="
+          curl -f -u "${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}" \
+            -X GET "https://oss.sonatype.org/service/local/status"
+          
+          # Check required secrets
+          echo "=== Checking Required Secrets ==="
+          if [ -z "${{ secrets.DEEPSEEK_API_KEY }}" ]; then
+            echo "❌ DEEPSEEK_API_KEY is not set"
+            exit 1
+          fi
+          echo "✅ All required secrets are configured"
+
+      - name: Validate Maven Settings
+        run: |
+          echo "=== Validating Maven Settings ==="
+          if ! grep -q "<id>ossrh</id>" ~/.m2/settings.xml; then
+            echo "❌ settings.xml missing OSSRH configuration"
+            exit 1
+          fi
+          if ! grep -E "<passphrase>.+</passphrase>" ~/.m2/settings.xml; then
+            echo "❌ settings.xml missing GPG passphrase configuration"
+            exit 1
+          fi
+          echo "✅ Maven settings validation successful"
+
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
@@ -95,17 +91,34 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Maven build and deploy to local repo
+      - name: Maven Build
         run: |
-          chmod +x ./mvnw
           ./mvnw clean install -DskipTests
 
-#      - name: Run Tests
-#        run: ./mvnw test -Pall-modules
+      - name: Test GPG Signing
+        run: |
+          echo "=== Testing GPG Signing ==="
+          # Test basic GPG functionality
+          echo "test signing" | gpg --clearsign --batch --yes --pinentry-mode loopback \
+            --passphrase "$GPG_PASSPHRASE"
+          
+          # Test Maven GPG plugin
+          ./mvnw package gpg:sign -DskipTests -q \
+            -Dgpg.passphrase="$GPG_PASSPHRASE" \
+            -Dgpg.batch=true \
+            -Dgpg.pinentry-mode=loopback
+          
+          # Verify signatures were created
+          echo "Generated signature files:"
+          find . -name "*.asc" -type f | head -10
+          echo "✅ GPG signing test successful"
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Build Docker image
         run: |
           docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest -f Dockerfile .
+      
 
 #      - name: Test Docker container
 #        if: success()
@@ -128,14 +141,16 @@ jobs:
 #        env:
 #          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
+
       - name: Deploy to Sonatype OSSRH
         if: success() && startsWith(github.ref, 'refs/tags/')
         run: |
-          echo "Deploying to Maven Central..."
+          echo "=== Deploying to Maven Central ==="
           ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
-            -DaltDeploymentRepository=ossrh::default::https://oss.sonatype.org/service/local/staging/deploy/maven2 \
-            -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}"
-
+            -Dgpg.passphrase="$GPG_PASSPHRASE" \
+            -Dgpg.batch=true \
+            -Dgpg.pinentry-mode=loopback \
+            --show-version --errors
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
@@ -144,11 +159,17 @@ jobs:
       - name: Build PulsarRPA JAR
         if: success()
         run: |
-          ./mvnw package -rf :pulsar-master -pl pulsar-app/pulsar-master -DskipTests=true -Dmaven.javadoc.skip=true
-          if [ ! -f pulsar-app/pulsar-master/target/PulsarRPA.jar ]; then
-              echo "PulsarRPA.jar not found. Build failed."
-              exit 1
+          echo "=== Building PulsarRPA JAR ==="
+          ./mvnw package -rf :pulsar-master -pl pulsar-app/pulsar-master \
+            -DskipTests=true -Dmaven.javadoc.skip=true
+          
+          JAR_PATH="pulsar-app/pulsar-master/target/PulsarRPA.jar"
+          if [ ! -f "$JAR_PATH" ]; then
+            echo "❌ PulsarRPA.jar not found at $JAR_PATH"
+            ls -la pulsar-app/pulsar-master/target/ || echo "Target directory not found"
+            exit 1
           fi
+          echo "✅ PulsarRPA.jar built successfully"
 
       - name: Create GitHub Release
         if: success()
@@ -163,15 +184,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Log in to Docker Hub
-        if: success()
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Push Docker image
+      - name: Push Docker Images
         if: success()
         run: |
-          docker push $IMAGE_NAME:$VERSION || (echo "Failed to push version tag" && exit 1)
-          docker push $IMAGE_NAME:latest || (echo "Failed to push latest tag" && exit 1)
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker push $IMAGE_NAME:$VERSION
+          docker push $IMAGE_NAME:latest

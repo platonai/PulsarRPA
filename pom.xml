@@ -151,9 +151,12 @@
             </properties>
             <build>
                 <plugins>
+                    <!--用于在 Maven 项目中收集和生成 Java 代码的测试覆盖率报告 -->
+                    <!-- instructions covered ratio is expected minimum is 0.70 -->
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco-maven-plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>report-aggregate</id>
@@ -163,6 +166,11 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+                            <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
+                            <skip>false</skip>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
