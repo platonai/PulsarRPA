@@ -66,26 +66,26 @@ jobs:
         run: |
           docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest -f Dockerfile .
 
-#      - name: Test Docker container
-#        if: success()
-#        run: |
-#          # Start container
-#          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
-#          sleep 10  # Wait for Spring Boot to start
-#
-#          # Run integration tests
-#          find bin/ -name "*.sh" -exec chmod +x {} \;
-#          if ! ./bin/run-integration-test.sh; then
-#            echo "Integration test failed"
-#            docker logs pulsar-rpa-test
-#            docker stop pulsar-rpa-test || true
-#            exit 1
-#          fi
-#
-#          # Clean up
-#          docker stop pulsar-rpa-test || true
-#        env:
-#          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      - name: Test Docker container
+        if: success()
+        run: |
+          # Start container
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
+          sleep 10  # Wait for Spring Boot to start
+
+          # Run integration tests
+          find bin/ -name "*.sh" -exec chmod +x {} \;
+          if ! ./bin/run-integration-test.sh; then
+            echo "Integration test failed"
+            docker logs pulsar-rpa-test
+            docker stop pulsar-rpa-test || true
+            exit 1
+          fi
+
+          # Clean up
+          docker stop pulsar-rpa-test || true
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
       - name: Deploy to Sonatype OSSRH
         if: success() && startsWith(github.ref, 'refs/tags/')
