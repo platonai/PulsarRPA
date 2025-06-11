@@ -32,11 +32,12 @@ on:
         type: boolean
 
 env:
-  IMAGE_NAME: galaxyeye88/pulsar-rpa
+  IMAGE_NAME: pulsar-rpa-test
 
 jobs:
-  build-test-release:
+  build-test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,11 +51,6 @@ jobs:
           java-version: 17
           cache: maven
 
-      - name: Read VERSION
-        id: version
-        run: |
-          echo "VERSION=$(head -n 1 VERSION)" >> $GITHUB_ENV
-
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
@@ -62,31 +58,91 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Maven build and deploy to local repo
+      - name: Read VERSION
+        id: version
+        run: |
+          VERSION=$(head -n 1 VERSION)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Maven build
         run: ./mvnw clean install -Pall-modules -DskipTests
 
-      - name: Run Tests
-        run: ./mvnw test -Pall-modules -DDEEPSEEK_API_KEY=${{ env.DEEPSEEK_API_KEY }}
+      - name: Run Unit Tests
+        if: ${{ !inputs.skip_tests }}
+        run: ./mvnw test -Pall-modules
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
-      - name: Build Docker image
+      - name: Build Docker image (local only)
         if: success()
         run: |
           docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest -f Dockerfile .
 
-      - name: Start Docker container
+      - name: Start Docker container for integration testing
         if: success()
         run: |
-          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
-          sleep 10  # Wait for Spring Boot to start
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 \
+            -e DEEPSEEK_API_KEY="${DEEPSEEK_API_KEY}" \
+            $IMAGE_NAME:$VERSION
+          
+          # Wait for service to be ready with timeout and health check
+          timeout=60
+          echo "Waiting for service to start..."
+          while [ $timeout -gt 0 ]; do
+            if curl -f -s http://localhost:8182/actuator/health 2>/dev/null || \
+               curl -f -s http://localhost:8182/health 2>/dev/null || \
+               curl -f -s http://localhost:8182/ 2>/dev/null; then
+              echo "✅ Service is ready!"
+              break
+            fi
+            echo "⏳ Waiting for service... ($timeout seconds remaining)"
+            sleep 2
+            timeout=$((timeout-2))
+          done
+          
+          if [ $timeout -le 0 ]; then
+            echo "❌ Service failed to start within timeout"
+            echo "=== Container logs ==="
+            docker logs pulsar-rpa-test
+            exit 1
+          fi
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
-      - name: Run curl integration tests
+      - name: Run integration tests
         if: success()
         run: |
           find bin/ -name "*.sh" -exec chmod +x {} \;
-          ./bin/run-integration-test.sh || (echo "Integration test failed" && exit 1)
+          ./bin/run-integration-test.sh
 
-      - name: Stop Docker container
+      - name: Container health check
+        if: success()
+        run: |
+          echo "=== Final container status ==="
+          docker ps -f name=pulsar-rpa-test
+          echo "=== Container resource usage ==="
+          docker stats --no-stream pulsar-rpa-test || true
+
+      - name: Cleanup Docker container
         if: always()
-        run: docker stop pulsar-rpa-test || true
+        run: |
+          docker stop pulsar-rpa-test || true
+          docker rmi $IMAGE_NAME:$VERSION $IMAGE_NAME:latest || true
+
+      - name: Debug information
+        if: ${{ failure() && inputs.debug_mode }}
+        run: |
+          echo "=== Container logs ==="
+          docker logs pulsar-rpa-test || true
+          echo "=== Docker images ==="
+          docker images
+          echo "=== Running containers ==="
+          docker ps -a
+          echo "=== Maven dependency tree ==="
+          ./mvnw dependency:tree -Pall-modules
+          echo "=== System resources ==="
+          df -h
+          free -h
+          echo "=== Java processes ==="
+          jps -v || true
