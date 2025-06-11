@@ -83,24 +83,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Create Docker Network
-      shell: bash
-      run: |
-        echo "::group::🌐 Network Setup"
-
-        # Check if network already exists
-        if docker network inspect "${{ inputs.network_name }}" > /dev/null 2>&1; then
-          echo "✅ Network '${{ inputs.network_name }}' already exists"
-        else
-          echo "🔧 Creating Docker network: ${{ inputs.network_name }}"
-          docker network create "${{ inputs.network_name }}" --driver bridge
-          echo "✅ Network '${{ inputs.network_name }}' created successfully"
-        fi
-
-        echo "📋 Network details:"
-        docker network inspect "${{ inputs.network_name }}" --format "{{.Name}}" || true
-
-        echo "::endgroup::"
 
     - name: Pre-Verification Setup
       shell: bash
