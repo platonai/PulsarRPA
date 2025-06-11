@@ -4,12 +4,14 @@ set -e
 
 # 自然语言命令内容
 COMMAND='
-Go to https://www.amazon.com/dp/B0C1H26C46
-After page load: scroll to the middle.
+    Go to https://www.amazon.com/dp/B0C1H26C46
 
-Summarize the product.
-Extract: product name, price, ratings.
-Find all links containing /dp/.
+    After browser launch: clear browser cookies.
+    After page load: scroll to the middle.
+
+    Summarize the product.
+    Extract: product name, price, ratings.
+    Find all links containing /dp/.
 '
 
 # API 接口

@@ -7,7 +7,9 @@ curl -X POST "http://localhost:8182/api/ai/command" \
   -H "Content-Type: text/plain" \
   -d '
     Go to https://www.amazon.com/dp/B0C1H26C46
-    After page load: click #title, then scroll to the middle.
+    
+    After browser launch: clear browser cookies.
+    After page load: scroll to the middle.
     
     Summarize the product.
     Extract: product name, price, ratings.
@@ -16,7 +18,6 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 ```
 
 返回示例：
-
 
 ```bash
 curl -X POST "http://localhost:8182/api/ai/command" \
