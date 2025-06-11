@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
 
   pulsar-rpa:
-    image: 'pulsar-rpa:latest'
+    image: 'galaxyeye88/pulsar-rpa:latest'
     container_name: 'pulsar-rpa'
     depends_on:
       mongodb:
