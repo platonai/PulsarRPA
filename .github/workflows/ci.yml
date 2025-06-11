@@ -10,6 +10,8 @@ on:
       - 'docs/**'
       - 'docker/**'
       - '**.md'
+    tags:
+      - 'v*-ci'  # Trigger on version tags like v1.0.0-ci
   # Allow manual workflow runs
   workflow_dispatch:
 
