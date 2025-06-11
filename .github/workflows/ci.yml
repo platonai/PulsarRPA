@@ -5,15 +5,9 @@ on:
     branches:
       - master
       - main
-    paths-ignore:
-      - '.github/**'
-      - 'bin/**'
-      - 'docs/**'
-      - 'docker/**'
-      - '**.md'
-      - '**.yaml'
-      - '**.yml'
-      - '**.properties'
+    paths:
+      - '*.java'
+      - '*.kt'
   workflow_dispatch:
     inputs:
       skip_tests:

@@ -26,10 +26,11 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apk add --no-cache curl chromium nss freetype freetype-dev harfbuzz ca-certificates ttf-freefont
 
 # Set Chromium environment variables
+# Ignore BROWSER_CONTEXT_NUMBER, BROWSER_MAX_OPEN_TABS if BROWSER_CONTEXT_MODE is set to DEFAULT
 ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC" \
     DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
     PROXY_ROTATION_URL=${PROXY_ROTATION_URL} \
-    BROWSER_CONTEXT_MODE=SEQUENTIAL \
+    BROWSER_CONTEXT_MODE=DEFAULT \
     BROWSER_CONTEXT_NUMBER=2 \
     BROWSER_MAX_OPEN_TABS=8 \
     BROWSER_DISPLAY_MODE=HEADLESS
