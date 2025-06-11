@@ -37,7 +37,7 @@ services:
       BROWSER_CONTEXT_NUMBER: 2
       BROWSER_MAX_OPEN_TABS: 8
       BROWSER_DISPLAY_MODE: HEADLESS
-      "gora.mongodb.servers": mongodb:27017  # Required by Gora, keep it exactly dot.separated.lowercase
+      GORA_MONGODB_SERVERS: mongodb:27017
       SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/pulsar-rpa
       SERVER_PORT: 8182
       SERVER_ADDRESS: 0.0.0.0
