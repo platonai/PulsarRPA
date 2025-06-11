@@ -3,12 +3,8 @@ name: Release
 on:
   push:
     tags:
-      - "v*"
-    paths-ignore:
-      - 'bin/**'
-      - 'docs/**'
-      - 'docker/**'
-      - '**.md'
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+"
   # Allow manual workflow runs
   workflow_dispatch:
 
