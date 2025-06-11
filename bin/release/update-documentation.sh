@@ -8,7 +8,16 @@ done
 cd "$APP_HOME"
 
 echo "Update documentation ..."
-echo "Changing version in documentation ..."
+
+echo "This script changes versions in documentation files to the current version."
+echo "This script should be run after the current version has been released "
+echo "and all the artifacts have been uploaded to the repository."
+
+# Ensure we are on the master branch
+if [[ "$(git rev-parse --abbrev-ref HEAD)" != "master" ]]; then
+  echo "You are not on the master branch. Please switch to the master branch before running this script."
+  exit 1
+fi
 
 SNAPSHOT_VERSION=$(head -n 1 "$APP_HOME/VERSION")
 VERSION=${SNAPSHOT_VERSION/-SNAPSHOT/}
