@@ -13,6 +13,10 @@ inputs:
     description: 'Docker compose file path (default: docker-compose.yml)'
     required: false
     default: 'docker-compose.yml'
+  services_to_start:
+    description: 'Comma-separated list of services to start (default: mongodb,redis)'
+    required: false
+    default: 'mongodb,redis'
   mongodb_container:
     description: 'MongoDB container name (default: mongodb)'
     required: false
@@ -79,6 +83,25 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Create Docker Network
+      shell: bash
+      run: |
+        echo "::group::🌐 Network Setup"
+
+        # Check if network already exists
+        if docker network inspect "${{ inputs.network_name }}" > /dev/null 2>&1; then
+          echo "✅ Network '${{ inputs.network_name }}' already exists"
+        else
+          echo "🔧 Creating Docker network: ${{ inputs.network_name }}"
+          docker network create "${{ inputs.network_name }}" --driver bridge
+          echo "✅ Network '${{ inputs.network_name }}' created successfully"
+        fi
+
+        echo "📋 Network details:"
+        docker network inspect "${{ inputs.network_name }}" --format "{{.Name}}" || true
+
+        echo "::endgroup::"
+
     - name: Pre-Verification Setup
       shell: bash
       run: |
@@ -113,20 +136,33 @@ runs:
       shell: bash
       run: |
         echo "::group::🚀 Starting Dependencies"
-         
-        echo "📋 Starting services from ${{ inputs.compose_file }}..."
         
-        # Start services with better error handling
-        if docker compose -f "${{ inputs.compose_file }}" up -d mongodb redis; then
+        services_input="${{ inputs.services_to_start }}"
+        compose_file="${{ inputs.compose_file }}"
+        
+        echo "📋 Starting services from $compose_file..."
+        echo "Services to start: $services_input"
+        
+        # Convert comma-separated to space-separated
+        services_list=$(echo "$services_input" | tr ',' ' ')
+        
+        echo "🚀 Executing: docker compose -f \"$compose_file\" up -d $services_list"
+        
+        # Start services with better error handling and capture output
+        if output=$(docker compose -f "$compose_file" up -d $services_list 2>&1); then
           echo "✅ Docker Compose services started successfully"
+          echo "$output"
         else
           echo "❌ Failed to start Docker Compose services"
           echo ""
-          echo "🔍 Debugging information:"
-          echo "Compose file content:"
-          cat "${{ inputs.compose_file }}" | head -50
+          echo "🔍 Docker Compose Error Output:"
+          echo "$output"
           echo ""
-          echo "Docker status:"
+          echo "🔍 Additional debugging information:"
+          echo "Compose file content (first 30 lines):"
+          cat "$compose_file" | head -30
+          echo ""
+          echo "Current Docker status:"
           docker ps -a
           exit 1
         fi
@@ -171,6 +207,7 @@ runs:
 
     - name: Wait for MongoDB
       id: mongodb-check
+      if: contains(inputs.services_to_start, 'mongodb')  # ✅ Only run if MongoDB is requested
       shell: bash
       run: |
         echo "::group::🍃 MongoDB Verification"
@@ -281,6 +318,7 @@ runs:
 
     - name: Wait for Redis
       id: redis-check
+      if: contains(inputs.services_to_start, 'redis')  # ✅ Only run if Redis is requested
       shell: bash
       run: |
         echo "::group::🔴 Redis Verification"
@@ -464,54 +502,39 @@ runs:
           connectivity_status="failed"
         fi
         
-        # Test Redis network connectivity from a test container
-        echo ""
-        echo "🔴 Testing Redis network connectivity..."
-        if docker run --rm --network "${{ inputs.network_name }}" \
-           redis:latest redis-cli -h "${{ inputs.redis_container }}" -p "${{ inputs.redis_port }}" \
-           ping > /dev/null 2>&1; then
-          echo "  ✅ Redis network connectivity verified"
-        else
-          echo "  ❌ Redis network connectivity failed"
-          connectivity_status="failed"
-        fi
+        # ✅ Only test Redis if it's in the services list
+        if [[ "${{ inputs.services_to_start }}" == *"redis"* ]]; then
+          echo ""
+          echo "🔴 Testing Redis network connectivity..."
+          if docker run --rm --network "${{ inputs.network_name }}" \
+             redis:latest redis-cli -h "${{ inputs.redis_container }}" -p "${{ inputs.redis_port }}" \
+             ping > /dev/null 2>&1; then
+            echo "  ✅ Redis network connectivity verified"
+          else
+            echo "  ❌ Redis network connectivity failed"
+            connectivity_status="failed"
+          fi
         
-        # Test cross-service connectivity (MongoDB from Redis container)
-        echo ""
-        echo "🔄 Testing cross-service connectivity..."
-        if docker exec "${{ inputs.redis_container }}" nc -z "${{ inputs.mongodb_container }}" "${{ inputs.mongodb_port }}" 2>/dev/null; then
-          echo "  ✅ Redis → MongoDB connectivity verified"
-        else
-          echo "  ⚠️ Redis → MongoDB connectivity failed (may be normal)"
-        fi
+          # Test cross-service connectivity only if both services are running
+          echo ""
+          echo "🔄 Testing cross-service connectivity..."
+          if docker exec "${{ inputs.redis_container }}" nc -z "${{ inputs.mongodb_container }}" "${{ inputs.mongodb_port }}" 2>/dev/null; then
+            echo "  ✅ Redis → MongoDB connectivity verified"
+          else
+            echo "  ⚠️ Redis → MongoDB connectivity failed (may be normal)"
+          fi
         
-        if docker exec "${{ inputs.mongodb_container }}" nc -z "${{ inputs.redis_container }}" "${{ inputs.redis_port }}" 2>/dev/null; then
-          echo "  ✅ MongoDB → Redis connectivity verified"
+          if docker exec "${{ inputs.mongodb_container }}" nc -z "${{ inputs.redis_container }}" "${{ inputs.redis_port }}" 2>/dev/null; then
+            echo "  ✅ MongoDB → Redis connectivity verified"
+          else
+            echo "  ⚠️ MongoDB → Redis connectivity failed (may be normal)"
+          fi
         else
-          echo "  ⚠️ MongoDB → Redis connectivity failed (may be normal)"
-        fi
-        
-        # DNS resolution test
-        echo ""
-        echo "🌐 Testing DNS resolution..."
-        if docker exec "${{ inputs.mongodb_container }}" nslookup "${{ inputs.redis_container }}" > /dev/null 2>&1; then
-          echo "  ✅ DNS resolution working (MongoDB can resolve Redis)"
-        else
-          echo "  ⚠️ DNS resolution test inconclusive"
+          echo ""
+          echo "ℹ️ Redis not requested - skipping Redis connectivity tests"
         fi
         
         echo "status=$connectivity_status" >> $GITHUB_OUTPUT
-        
-        if [ "$connectivity_status" == "failed" ]; then
-          echo ""
-          echo "❌ Network connectivity tests failed"
-          echo "🔍 Network diagnostic information:"
-          docker network inspect "${{ inputs.network_name }}" --format "{{json .}}" | jq '{Name: .Name, Driver: .Driver, Internal: .Internal, Containers: (.Containers | keys)}' || true
-        else
-          echo ""
-          echo "✅ Network connectivity tests passed"
-        fi
-        
         echo "::endgroup::"
 
     - name: Health Status Check
@@ -565,8 +588,16 @@ runs:
         
         echo "⏱️ Services startup summary:"
         echo "  - Total startup time: ${total_ready_time}s"
+        echo "  - Services requested: ${{ inputs.services_to_start }}"
         echo "  - MongoDB status: ${{ steps.mongodb-check.outputs.status }}"
-        echo "  - Redis status: ${{ steps.redis-check.outputs.status }}"
+        
+        # Only show Redis status if Redis was requested
+        if [[ "${{ inputs.services_to_start }}" == *"redis"* ]]; then
+          echo "  - Redis status: ${{ steps.redis-check.outputs.status || 'skipped' }}"
+        else
+          echo "  - Redis status: not requested"
+        fi
+        
         echo "  - Network verification: ${{ steps.network-connectivity.outputs.status || 'skipped' }}"
         
         # Show final service information
@@ -574,27 +605,45 @@ runs:
         echo "🌐 Final service configuration:"
         echo "  - Network: ${{ inputs.network_name }}"
         echo "  - MongoDB: ${{ inputs.mongodb_container }}:${{ inputs.mongodb_port }} (${{ steps.mongodb-check.outputs.ip_address }})"
-        echo "  - Redis: ${{ inputs.redis_container }}:${{ inputs.redis_port }} (${{ steps.redis-check.outputs.ip_address }})"
+        
+        # Only show Redis info if Redis was requested
+        if [[ "${{ inputs.services_to_start }}" == *"redis"* ]]; then
+          echo "  - Redis: ${{ inputs.redis_container }}:${{ inputs.redis_port }} (${{ steps.redis-check.outputs.ip_address || 'not started' }})"
+        fi
         
         # Show versions if available
         if [ -n "${{ steps.mongodb-check.outputs.version }}" ] && [ "${{ steps.mongodb-check.outputs.version }}" != "unknown" ]; then
           echo "  - MongoDB Version: ${{ steps.mongodb-check.outputs.version }}"
         fi
         
-        if [ -n "${{ steps.redis-check.outputs.version }}" ] && [ "${{ steps.redis-check.outputs.version }}" != "unknown" ]; then
+        if [[ "${{ inputs.services_to_start }}" == *"redis"* ]] && [ -n "${{ steps.redis-check.outputs.version }}" ] && [ "${{ steps.redis-check.outputs.version }}" != "unknown" ]; then
           echo "  - Redis Version: ${{ steps.redis-check.outputs.version }}"
         fi
         
-        # Final status
-        if [ "${{ steps.mongodb-check.outputs.status }}" = "ready" ] && [ "${{ steps.redis-check.outputs.status }}" = "ready" ]; then
-          echo ""
-          echo "🎉 All dependencies are ready!"
-          echo "✅ MongoDB and Redis are running and accessible"
+        # Final status - only check requested services
+        mongodb_ready="${{ steps.mongodb-check.outputs.status }}"
+        redis_ready="${{ steps.redis-check.outputs.status }}"
+        
+        if [ "$mongodb_ready" = "ready" ]; then
+          if [[ "${{ inputs.services_to_start }}" == *"redis"* ]]; then
+            if [ "$redis_ready" = "ready" ]; then
+              echo ""
+              echo "🎉 All requested dependencies are ready!"
+              echo "✅ MongoDB and Redis are running and accessible"
+            else
+              echo ""
+              echo "❌ Redis failed to start properly"
+            fi
+          else
+            echo ""
+            echo "🎉 MongoDB is ready!"
+            echo "✅ MongoDB is running and accessible"
+          fi
           echo "🌐 Network connectivity verified"
           echo "🚀 Ready for application deployment"
         else
           echo ""
-          echo "❌ Some dependencies failed to start properly"
+          echo "❌ MongoDB failed to start properly"
           echo "Please check the logs above for detailed error information"
         fi
         

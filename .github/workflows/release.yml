@@ -17,6 +17,7 @@ on:
         type: boolean
 
 env:
+  IMAGE_NAME: galaxyeye88/pulsar-rpa
   # Extract version from tag or input
   VERSION: ${{ github.ref_name || inputs.tag }}
   NETWORK_NAME: 'pulsarrpa_backend'
@@ -78,8 +79,9 @@ jobs:
       - name: Run Common Workflow Steps
         uses: ./.github/actions/complete-ci-cd-pipeline
         with:
-          image_name: galaxyeye88/pulsar-rpa
+          image_name: ${{ env.IMAGE_NAME }}
           network_name: ${{ env.NETWORK_NAME }}
+          services_to_start: 'mongodb'  # ✅ Only start MongoDB
           image_version: ${{ env.CLEAN_VERSION }}
           deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
           proxy_rotation_url: ${{ secrets.PROXY_ROTATION_URL }}

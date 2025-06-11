@@ -28,7 +28,7 @@ on:
         type: boolean
 
 env:
-  IMAGE_NAME: galaxyeye88/pulsar-rpa
+  IMAGE_NAME: pulsar-rpa
   NETWORK_NAME: 'pulsarrpa_backend'
   CONTAINER_NAME: 'pulsar-rpa-test'
 
@@ -49,6 +49,15 @@ jobs:
         uses: ./.github/actions/setup-environment
         with:
           java_version: '17'
+
+      - name: Verify Dependencies
+        id: deps
+        uses: ./.github/actions/verify-dependencies
+        with:
+          network_name: ${{ env.NETWORK_NAME }}
+          services_to_start: 'mongodb'  # ✅ Only start MongoDB
+          startup_timeout: '120'
+          verify_network_connectivity: 'true'
 
       - name: Maven Build
         id: build-maven

@@ -41,6 +41,10 @@ inputs:
   image_name:
     description: 'Docker image name (without registry/tag)'
     required: true
+  services_to_start:
+    description: 'Comma-separated list of services to start (default: mongodb,redis)'
+    required: false
+    default: 'mongodb,redis'
   image_registry:
     description: 'Docker registry (e.g., galaxyeye88)'
     required: false
@@ -210,6 +214,7 @@ runs:
       uses: ./.github/actions/verify-dependencies
       with:
         network_name: ${{ inputs.network_name }}
+        services_to_start: ${{ inputs.services_to_start }}
         startup_timeout: ${{ inputs.dependencies_startup_timeout }}
         verify_network_connectivity: ${{ inputs.verify_network_connectivity }}
 
