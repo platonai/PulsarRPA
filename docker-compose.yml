@@ -17,7 +17,7 @@ services:
       retries: 3
 
   proxy-hub:
-    image: 'proxy-hub:latest'
+    image: 'galaxyeye88/proxy-hub:latest'
     container_name: 'proxy-hub'
     ports:
       - '8192:8192'
