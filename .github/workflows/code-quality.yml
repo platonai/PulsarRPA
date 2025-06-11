@@ -9,6 +9,9 @@ on:
       - 'docs/**'
       - 'docker/**'
       - '**.md'
+      - '**.yaml'
+      - '**.yml'
+      - '**.properties'
   push:
     branches: [ main, master ]
     paths-ignore:
@@ -17,6 +20,9 @@ on:
       - 'docs/**'
       - 'docker/**'
       - '**.md'
+      - '**.yaml'
+      - '**.yml'
+      - '**.properties'
   # Allow manual workflow runs
   workflow_dispatch:
 
