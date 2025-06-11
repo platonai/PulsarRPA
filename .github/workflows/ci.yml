@@ -5,6 +5,11 @@ on:
     branches:
       - main
       - master
+    paths:
+      - "**.java"
+      - "**.kt"
+      - "**.py"
+      - "**.js"
     paths-ignore:
       - 'bin/**'
       - 'docs/**'
