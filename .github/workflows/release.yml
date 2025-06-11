@@ -92,6 +92,22 @@ jobs:
         if: always()
         run: docker stop pulsar-rpa-test || true
 
+      - name: Build PulsarRPA Executable JAR
+        if: success()
+        run: |
+          echo "=== Building PulsarRPA JAR ==="
+          ./mvnw package -rf :pulsar-master -pl pulsar-app/pulsar-master \
+            -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true \
+            -Dmaven.test.skip=true
+          
+          JAR_PATH="pulsar-app/pulsar-master/target/PulsarRPA.jar"
+          if [ ! -f "$JAR_PATH" ]; then
+            echo "❌ PulsarRPA.jar not found at $JAR_PATH"
+            ls -la pulsar-app/pulsar-master/target/ || echo "Target directory not found"
+            exit 1
+          fi
+          echo "✅ PulsarRPA.jar built successfully"
+
       - name: Deploy to Sonatype OSSRH
         if: success() && startsWith(github.ref, 'refs/tags/')
         run: |
@@ -107,21 +123,6 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-
-      - name: Build PulsarRPA JAR
-        if: success()
-        run: |
-          echo "=== Building PulsarRPA JAR ==="
-          ./mvnw package -rf :pulsar-master -pl pulsar-app/pulsar-master \
-            -DskipTests=true -Dmaven.javadoc.skip=true
-          
-          JAR_PATH="pulsar-app/pulsar-master/target/PulsarRPA.jar"
-          if [ ! -f "$JAR_PATH" ]; then
-            echo "❌ PulsarRPA.jar not found at $JAR_PATH"
-            ls -la pulsar-app/pulsar-master/target/ || echo "Target directory not found"
-            exit 1
-          fi
-          echo "✅ PulsarRPA.jar built successfully"
 
       - name: Create GitHub Release
         if: success()
