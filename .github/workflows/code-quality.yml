@@ -3,9 +3,16 @@ name: Code Quality
 on:
   pull_request:
     branches: [ main, master ]
-  push:
-    branches: [ main ]
     paths-ignore:
+      - '.github/**'
+      - 'bin/**'
+      - 'docs/**'
+      - 'docker/**'
+      - '**.md'
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '.github/**'
       - 'bin/**'
       - 'docs/**'
       - 'docker/**'

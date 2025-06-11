@@ -1,0 +1,458 @@
+name: Complete CI/CD Pipeline
+description: Full CI/CD pipeline for Java/Spring Boot applications with Docker, testing, and deployment
+author: platonai
+branding:
+  icon: 'layers'
+  color: 'blue'
+
+inputs:
+  # Environment Configuration
+  java_version:
+    description: 'Java version to use'
+    required: false
+    default: '17'
+
+  # Build Configuration
+  maven_profiles:
+    description: 'Maven profiles to activate'
+    required: false
+    default: 'all-modules'
+  skip_tests:
+    description: 'Skip unit tests during build'
+    required: false
+    default: 'false'
+  maven_timeout_minutes:
+    description: 'Maven build timeout in minutes'
+    required: false
+    default: '15'
+  test_timeout_minutes:
+    description: 'Test execution timeout in minutes'
+    required: false
+    default: '35'
+  test_excludes:
+    description: 'Test exclusion patterns'
+    required: false
+    default: '**ai/platon/scent/rest/api/integration**'
+
+  # Docker Configuration
+  network_name:
+    description: 'Docker network name'
+    required: true
+  image_name:
+    description: 'Docker image name (without registry/tag)'
+    required: true
+  image_registry:
+    description: 'Docker registry (e.g., galaxyeye88)'
+    required: false
+    default: ''
+  image_version:
+    description: 'Docker image version/tag'
+    required: false
+    default: 'latest'
+  docker_build_timeout:
+    description: 'Docker build timeout in minutes'
+    required: false
+    default: '20'
+
+  # Application Configuration
+  container_name:
+    description: 'Application container name'
+    required: false
+    default: 'app-test-container'
+  service_port:
+    description: 'Application service port'
+    required: false
+    default: '8182'
+  health_endpoint:
+    description: 'Health check endpoint'
+    required: false
+    default: '/actuator/health'
+  health_timeout_minutes:
+    description: 'Health check timeout in minutes'
+    required: false
+    default: '5'
+
+  # Dependencies Configuration
+  dependencies_startup_timeout:
+    description: 'Dependencies startup timeout in seconds'
+    required: false
+    default: '120'
+  verify_network_connectivity:
+    description: 'Verify network connectivity'
+    required: false
+    default: 'true'
+
+  # Integration Testing
+  integration_test_script:
+    description: 'Path to integration test script'
+    required: false
+    default: './bin/run-integration-test.sh'
+  integration_test_timeout:
+    description: 'Integration test timeout in seconds'
+    required: false
+    default: '600'
+
+  # Environment Variables
+  deepseek_api_key:
+    description: 'DeepSeek API key'
+    required: false
+    default: ''
+  proxy_rotation_url:
+    description: 'Proxy rotation URL'
+    required: false
+    default: ''
+  custom_env_vars:
+    description: 'Additional environment variables (JSON format)'
+    required: false
+    default: '{}'
+
+  # Pipeline Control
+  debug_mode:
+    description: 'Enable debug mode for detailed logging'
+    required: false
+    default: 'false'
+  cleanup_on_failure:
+    description: 'Cleanup resources on pipeline failure'
+    required: false
+    default: 'true'
+  cleanup_volumes:
+    description: 'Cleanup Docker volumes'
+    required: false
+    default: 'true'
+
+outputs:
+  # Build Outputs
+  pipeline_status:
+    description: 'Overall pipeline status (success/failure)'
+    value: ${{ steps.pipeline-summary.outputs.status }}
+  image_tag:
+    description: 'Built Docker image tag'
+    value: ${{ steps.build-docker.outputs.image_tag }}
+
+  # Test Results
+  unit_tests_status:
+    description: 'Unit tests status (passed/failed/skipped)'
+    value: ${{ steps.run-tests.outputs.test_status || 'skipped' }}
+  integration_tests_status:
+    description: 'Integration tests status (success/failed/skipped)'
+    value: ${{ steps.integration-tests.outputs.integration_status }}
+
+  # Application Status
+  health_check_status:
+    description: 'Health check status (healthy/unhealthy)'
+    value: ${{ steps.health-check.outputs.health_status }}
+  application_url:
+    description: 'Application URL'
+    value: 'http://localhost:${{ inputs.service_port }}'
+
+  # Infrastructure Status
+  mongodb_status:
+    description: 'MongoDB status'
+    value: ${{ steps.verify-deps.outputs.mongodb_status }}
+  redis_status:
+    description: 'Redis status'
+    value: ${{ steps.verify-deps.outputs.redis_status }}
+  network_name:
+    description: 'Docker network used'
+    value: ${{ steps.verify-deps.outputs.network_name || inputs.network_name }}
+
+  # Pipeline Metrics
+  build_duration:
+    description: 'Total build duration in seconds'
+    value: ${{ steps.pipeline-summary.outputs.duration }}
+  pipeline_start_time:
+    description: 'Pipeline start timestamp'
+    value: ${{ steps.init.outputs.start_time }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Pipeline Initialization
+      id: init
+      shell: bash
+      run: |
+        echo "::group::🚀 Pipeline Initialization"
+        
+        # Record start time
+        START_TIME=$(date +%s)
+        echo "start_time=$START_TIME" >> $GITHUB_OUTPUT
+        echo "PIPELINE_START_TIME=$START_TIME" >> $GITHUB_ENV
+        
+        echo "📋 Complete CI/CD Pipeline Configuration:"
+        echo "  - Java Version: ${{ inputs.java_version }}"
+        echo "  - Maven Profiles: ${{ inputs.maven_profiles }}"
+        echo "  - Skip Tests: ${{ inputs.skip_tests }}"
+        echo "  - Image: ${{ inputs.image_registry }}/${{ inputs.image_name }}:${{ inputs.image_version }}"
+        echo "  - Container: ${{ inputs.container_name }}"
+        echo "  - Network: ${{ inputs.network_name }}"
+        echo "  - Service Port: ${{ inputs.service_port }}"
+        echo "  - Debug Mode: ${{ inputs.debug_mode }}"
+        
+        # Set full image name
+        if [ -n "${{ inputs.image_registry }}" ]; then
+          FULL_IMAGE_NAME="${{ inputs.image_registry }}/${{ inputs.image_name }}"
+        else
+          FULL_IMAGE_NAME="${{ inputs.image_name }}"
+        fi
+        echo "FULL_IMAGE_NAME=$FULL_IMAGE_NAME" >> $GITHUB_ENV
+        
+        echo "🏁 Pipeline started at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+        echo "::endgroup::"
+
+    - name: Setup Environment
+      id: setup-env
+      uses: ./.github/actions/setup-environment
+      with:
+        java_version: ${{ inputs.java_version }}
+
+    - name: Verify Dependencies
+      id: verify-deps
+      uses: ./.github/actions/verify-dependencies
+      with:
+        network_name: ${{ inputs.network_name }}
+        startup_timeout: ${{ inputs.dependencies_startup_timeout }}
+        verify_network_connectivity: ${{ inputs.verify_network_connectivity }}
+
+    - name: Maven Build
+      id: build-maven
+      uses: ./.github/actions/maven-build
+      with:
+        maven_profiles: ${{ inputs.maven_profiles }}
+        skip_tests: ${{ inputs.skip_tests }}
+        timeout_minutes: ${{ inputs.maven_timeout_minutes }}
+
+    - name: Run Tests
+      id: run-tests
+      if: inputs.skip_tests != 'true'
+      uses: ./.github/actions/run-tests
+      with:
+        maven_profiles: ${{ inputs.maven_profiles }}
+        test_excludes: ${{ inputs.test_excludes }}
+        timeout_minutes: ${{ inputs.test_timeout_minutes }}
+
+    - name: Build Docker Image
+      id: build-docker
+      uses: ./.github/actions/docker-build
+      with:
+        image_name: ${{ inputs.image_name }}
+        version: ${{ inputs.image_version }}
+        timeout_minutes: ${{ inputs.docker_build_timeout }}
+
+    - name: Start Application
+      id: start-app
+      uses: ./.github/actions/start-application
+      with:
+        image_name: ${{ inputs.image_name }}
+        version: ${{ inputs.image_version }}
+        container_name: ${{ inputs.container_name }}
+        network_name: ${{ inputs.network_name }}
+        deepseek_api_key: ${{ inputs.deepseek_api_key }}
+        proxy_rotation_url: ${{ inputs.proxy_rotation_url }}
+
+    - name: Health Check
+      id: health-check
+      uses: ./.github/actions/health-check
+      with:
+        service_port: ${{ inputs.service_port }}
+        health_endpoint: ${{ inputs.health_endpoint }}
+        timeout_minutes: ${{ inputs.health_timeout_minutes }}
+        container_name: ${{ inputs.container_name }}
+
+    - name: Run Integration Tests
+      id: integration-tests
+      shell: bash
+      run: |
+        echo "::group::🧪 Integration Tests"
+        
+        SCRIPT_PATH="${{ inputs.integration_test_script }}"
+        TIMEOUT_SECONDS="${{ inputs.integration_test_timeout }}"
+        
+        if [ -f "$SCRIPT_PATH" ]; then
+          echo "✅ Found integration test script: $SCRIPT_PATH"
+          chmod +x "$SCRIPT_PATH"
+        
+          echo "🚀 Running integration tests..."
+          echo "📋 Configuration:"
+          echo "  - Application URL: http://localhost:${{ inputs.service_port }}"
+          echo "  - Network: ${{ inputs.network_name }}"
+          echo "  - Container: ${{ inputs.container_name }}"
+          echo "  - Timeout: ${TIMEOUT_SECONDS}s"
+          echo "  - Script: $SCRIPT_PATH"
+        
+          # Set environment variables for the test script
+          export APPLICATION_URL="http://localhost:${{ inputs.service_port }}"
+          export CONTAINER_NAME="${{ inputs.container_name }}"
+          export NETWORK_NAME="${{ inputs.network_name }}"
+        
+          # Run integration tests with timeout
+          if timeout "$TIMEOUT_SECONDS" "$SCRIPT_PATH"; then
+            echo "✅ Integration tests passed"
+            echo "integration_status=success" >> $GITHUB_OUTPUT
+          else
+            exit_code=$?
+            echo "❌ Integration tests failed (exit code: $exit_code)"
+        
+            if [ "${{ inputs.debug_mode }}" = "true" ]; then
+              echo ""
+              echo "🔍 Debug: Recent application logs:"
+              docker logs --tail 50 "${{ inputs.container_name }}" 2>&1 | sed 's/^/    /' || true
+        
+              echo ""
+              echo "🔍 Debug: Container status:"
+              docker ps -a --filter "name=${{ inputs.container_name }}" || true
+        
+              echo ""
+              echo "🔍 Debug: Network information:"
+              docker network ls | grep "${{ inputs.network_name }}" || true
+            fi
+        
+            echo "integration_status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+        else
+          echo "⚠️ Integration test script not found: $SCRIPT_PATH"
+          echo "Skipping integration tests..."
+          echo "integration_status=skipped" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Pipeline Summary
+      id: pipeline-summary
+      if: always()
+      shell: bash
+      run: |
+        echo "::group::📊 Pipeline Summary"
+        
+        # Calculate duration
+        END_TIME=$(date +%s)
+        DURATION=$((END_TIME - PIPELINE_START_TIME))
+        echo "duration=$DURATION" >> $GITHUB_OUTPUT
+        
+        # Determine overall status
+        FAILED_STEPS=""
+        OVERALL_STATUS="success"
+        
+        # Check each step
+        if [ "${{ steps.setup-env.outcome }}" = "failure" ]; then
+          FAILED_STEPS="$FAILED_STEPS Setup"
+          OVERALL_STATUS="failure"
+        fi
+        if [ "${{ steps.verify-deps.outcome }}" = "failure" ]; then
+          FAILED_STEPS="$FAILED_STEPS Dependencies"
+          OVERALL_STATUS="failure"
+        fi
+        if [ "${{ steps.build-maven.outcome }}" = "failure" ]; then
+          FAILED_STEPS="$FAILED_STEPS Maven-Build"
+          OVERALL_STATUS="failure"
+        fi
+        if [ "${{ steps.run-tests.outcome }}" = "failure" ]; then
+          FAILED_STEPS="$FAILED_STEPS Tests"
+          OVERALL_STATUS="failure"
+        fi
+        if [ "${{ steps.build-docker.outcome }}" = "failure" ]; then
+          FAILED_STEPS="$FAILED_STEPS Docker-Build"
+          OVERALL_STATUS="failure"
+        fi
+        if [ "${{ steps.start-app.outcome }}" = "failure" ]; then
+          FAILED_STEPS="$FAILED_STEPS Application"
+          OVERALL_STATUS="failure"
+        fi
+        if [ "${{ steps.health-check.outcome }}" = "failure" ]; then
+          FAILED_STEPS="$FAILED_STEPS Health-Check"
+          OVERALL_STATUS="failure"
+        fi
+        if [ "${{ steps.integration-tests.outcome }}" = "failure" ]; then
+          FAILED_STEPS="$FAILED_STEPS Integration-Tests"
+          OVERALL_STATUS="failure"
+        fi
+        
+        echo "status=$OVERALL_STATUS" >> $GITHUB_OUTPUT
+        
+        echo "🎯 Pipeline Results:"
+        echo "  - Overall Status: $OVERALL_STATUS"
+        echo "  - Duration: ${DURATION}s ($(date -d@$DURATION -u +%H:%M:%S))"
+        echo "  - Setup Environment: ${{ steps.setup-env.outcome }}"
+        echo "  - Verify Dependencies: ${{ steps.verify-deps.outcome }}"
+        echo "  - Maven Build: ${{ steps.build-maven.outcome }}"
+        echo "  - Unit Tests: ${{ steps.run-tests.outcome || 'skipped' }}"
+        echo "  - Docker Build: ${{ steps.build-docker.outcome }}"
+        echo "  - Start Application: ${{ steps.start-app.outcome }}"
+        echo "  - Health Check: ${{ steps.health-check.outcome }}"
+        echo "  - Integration Tests: ${{ steps.integration-tests.outcome || 'skipped' }}"
+        
+        if [ -n "$FAILED_STEPS" ]; then
+          echo ""
+          echo "❌ Failed Steps:$FAILED_STEPS"
+        fi
+        
+        echo ""
+        echo "🌐 Infrastructure:"
+        echo "  - Network: ${{ inputs.network_name }}"
+        echo "  - Container: ${{ inputs.container_name }}"
+        echo "  - Image: ${{ env.FULL_IMAGE_NAME }}:${{ inputs.image_version }}"
+        echo "  - Service URL: http://localhost:${{ inputs.service_port }}"
+        echo "  - MongoDB: ${{ steps.verify-deps.outputs.mongodb_status }}"
+        echo "  - Redis: ${{ steps.verify-deps.outputs.redis_status }}"
+        
+        echo ""
+        echo "📊 Test Results:"
+        echo "  - Unit Tests: ${{ steps.run-tests.outputs.test_status || 'skipped' }}"
+        echo "  - Integration Tests: ${{ steps.integration-tests.outputs.integration_status }}"
+        echo "  - Health Check: ${{ steps.health-check.outputs.health_status }}"
+        
+        echo ""
+        echo "📅 Pipeline Information:"
+        echo "  - Started: $(date -d@$PIPELINE_START_TIME -u +'%Y-%m-%d %H:%M:%S UTC')"
+        echo "  - Completed: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+        echo "  - Triggered by: ${{ github.actor }}"
+        echo "  - Commit: ${{ github.sha }}"
+        echo "  - Ref: ${{ github.ref }}"
+        
+        if [ "$OVERALL_STATUS" = "success" ]; then
+          echo ""
+          echo "🎉 Pipeline completed successfully!"
+        else
+          echo ""
+          echo "⚠️ Pipeline completed with failures"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Cleanup Resources
+      if: always() && (success() || inputs.cleanup_on_failure == 'true')
+      uses: ./.github/actions/cleanup-resources
+      with:
+        container_name: ${{ inputs.container_name }}
+        cleanup_compose: 'true'
+        cleanup_volumes: ${{ inputs.cleanup_volumes }}
+
+    - name: Debug Information
+      if: always() && inputs.debug_mode == 'true' && failure()
+      shell: bash
+      run: |
+        echo "::group::🔍 Debug Information"
+        
+        echo "📋 Debug Output for Failed Pipeline"
+        echo ""
+        
+        echo "🐳 Docker Status:"
+        docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}\t{{.Image}}" || true
+        
+        echo ""
+        echo "🌐 Network Status:"
+        docker network ls || true
+        
+        echo ""
+        echo "📦 Images:"
+        docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}" | head -10 || true
+        
+        echo ""
+        echo "💾 Disk Usage:"
+        df -h || true
+        
+        echo ""
+        echo "🔍 Application Logs (last 100 lines):"
+        docker logs --tail 100 "${{ inputs.container_name }}" 2>&1 | sed 's/^/    /' || echo "Could not retrieve application logs"
+        
+        echo "::endgroup::"

@@ -1,0 +1,79 @@
+name: Health Check
+description: Simple health check with retry logic
+author: platonai
+branding:
+  icon: 'heart'
+  color: 'red'
+
+inputs:
+  service_port:
+    description: 'Service port (default: 8182)'
+    required: false
+    default: '8182'
+  health_endpoint:
+    description: 'Health endpoint (default: /actuator/health)'
+    required: false
+    default: '/actuator/health'
+  timeout_minutes:
+    description: 'Timeout in minutes (default: 3)'
+    required: false
+    default: '3'
+  container_name:
+    description: 'Container name for logging'
+    required: false
+    default: 'app-container'
+
+outputs:
+  health_status:
+    description: 'Health status (healthy/failed)'
+    value: ${{ steps.check.outputs.status }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Wait and Check Health
+      id: check
+      shell: bash
+      run: |
+        echo "::group::❤️ Health Check"
+        
+        echo "🔍 Checking health at: http://localhost:${{ inputs.service_port }}${{ inputs.health_endpoint }}"
+        
+        # Initial wait
+        echo "⏳ Initial wait (10s)..."
+        sleep 10
+        
+        # Health check loop
+        timeout_seconds=$(( ${{ inputs.timeout_minutes }} * 60 ))
+        attempt=1
+        max_attempts=$((timeout_seconds / 5))
+        
+        while [ $attempt -le $max_attempts ]; do
+          echo "🔍 Attempt $attempt/$max_attempts"
+        
+          if curl -s -f "http://localhost:${{ inputs.service_port }}${{ inputs.health_endpoint }}" > /dev/null; then
+            echo "✅ Health check passed!"
+            echo "status=healthy" >> $GITHUB_OUTPUT
+            echo "::endgroup::"
+            exit 0
+          fi
+        
+          echo "⏳ Not ready yet, waiting 5s..."
+          sleep 5
+          ((attempt++))
+        done
+        
+        echo "❌ Health check failed after ${{ inputs.timeout_minutes }} minutes"
+        
+        # Show diagnostics
+        echo ""
+        echo "🔍 Container status:"
+        docker ps -a --filter "name=${{ inputs.container_name }}" || true
+        
+        echo ""
+        echo "📋 Container logs (last 10 lines):"
+        docker logs --tail 10 "${{ inputs.container_name }}" 2>&1 || true
+        
+        echo "status=failed" >> $GITHUB_OUTPUT
+        echo "::endgroup::"
+        exit 1

@@ -1,0 +1,231 @@
+name: Run Tests
+description: Execute Maven tests with configurable options and reporting
+author: platonai
+branding:
+  icon: 'check-square'
+  color: 'purple'
+
+inputs:
+  maven_profiles:
+    description: 'Maven profiles to activate (default: all-modules)'
+    required: false
+    default: 'all-modules'
+  test_excludes:
+    description: 'Test patterns to exclude (Surefire format)'
+    required: false
+    default: '**ai/platon/scent/rest/api/integration**'
+  test_includes:
+    description: 'Test patterns to include (Surefire format)'
+    required: false
+    default: ''
+  timeout_minutes:
+    description: 'Test timeout in minutes (default: 35)'
+    required: false
+    default: '35'
+  fail_fast:
+    description: 'Fail fast on first test failure (default: false)'
+    required: false
+    default: 'false'
+  parallel_tests:
+    description: 'Enable parallel test execution (default: false)'
+    required: false
+    default: 'false'
+  test_reports:
+    description: 'Generate test reports (default: true)'
+    required: false
+    default: 'true'
+
+outputs:
+  test_status:
+    description: 'Test execution status'
+    value: ${{ steps.run-tests.outputs.status }}
+  test_count:
+    description: 'Total number of tests executed'
+    value: ${{ steps.test-summary.outputs.test_count }}
+  failed_count:
+    description: 'Number of failed tests'
+    value: ${{ steps.test-summary.outputs.failed_count }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Pre-test Setup
+      shell: bash
+      run: |
+        echo "::group::Test Setup"
+        
+        # Ensure Maven wrapper is available
+        if [ ! -f "./mvnw" ] && ! command -v mvn &> /dev/null; then
+          echo "❌ Neither Maven wrapper nor system Maven found"
+          exit 1
+        fi
+        
+        MAVEN_CMD=$([ -f "./mvnw" ] && echo "./mvnw" || echo "mvn")
+        echo "MAVEN_CMD=$MAVEN_CMD" >> $GITHUB_ENV
+        
+        # Create test results directory
+        mkdir -p test-results
+        
+        echo "✅ Test environment prepared"
+        echo "::endgroup::"
+
+    - name: Run Tests
+      id: run-tests
+      shell: bash
+      run: |
+        echo "::group::Running Tests"
+        
+        start_time=$(date +%s)
+        
+        echo "🧪 Starting test execution..."
+        echo "📋 Test Configuration:"
+        echo "  - Profiles: ${{ inputs.maven_profiles }}"
+        echo "  - Excludes: ${{ inputs.test_excludes }}"
+        echo "  - Includes: ${{ inputs.test_includes }}"
+        echo "  - Timeout: ${{ inputs.timeout_minutes }} minutes"
+        echo "  - Fail Fast: ${{ inputs.fail_fast }}"
+        echo "  - Parallel: ${{ inputs.parallel_tests }}"
+        echo "  - Reports: ${{ inputs.test_reports }}"
+        
+        # Build test command
+        test_cmd="$MAVEN_CMD test"
+        
+        # Add profiles
+        if [ -n "${{ inputs.maven_profiles }}" ]; then
+          test_cmd="$test_cmd -P${{ inputs.maven_profiles }}"
+        fi
+        
+        # Add test excludes
+        if [ -n "${{ inputs.test_excludes }}" ]; then
+          test_cmd="$test_cmd -Dsurefire.excludes=${{ inputs.test_excludes }}"
+        fi
+        
+        # Add test includes
+        if [ -n "${{ inputs.test_includes }}" ]; then
+          test_cmd="$test_cmd -Dsurefire.includes=${{ inputs.test_includes }}"
+        fi
+        
+        # Add fail fast
+        if [ "${{ inputs.fail_fast }}" == "true" ]; then
+          test_cmd="$test_cmd -Dsurefire.skipAfterFailureCount=1"
+        fi
+        
+        # Add parallel execution
+        if [ "${{ inputs.parallel_tests }}" == "true" ]; then
+          test_cmd="$test_cmd -Dsurefire.parallel=methods -Dsurefire.threadCount=4"
+        fi
+        
+        # Add batch mode and other options
+        test_cmd="$test_cmd -B"
+        
+        echo "🚀 Executing: $test_cmd"
+        echo ""
+        
+        # Execute tests with timeout
+        timeout_seconds=$(( ${{ fromJSON(inputs.timeout_minutes) }} * 60 ))
+        
+        if timeout $timeout_seconds $test_cmd; then
+          end_time=$(date +%s)
+          test_time=$((end_time - start_time))
+          echo ""
+          echo "✅ Tests completed successfully in ${test_time} seconds"
+          echo "status=success" >> $GITHUB_OUTPUT
+        else
+          end_time=$(date +%s)
+          test_time=$((end_time - start_time))
+          echo ""
+          echo "❌ Tests failed or timed out after ${test_time} seconds"
+          echo "status=failed" >> $GITHUB_OUTPUT
+          
+          # Still continue to generate summary
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Test Summary
+      id: test-summary
+      if: always()
+      shell: bash
+      run: |
+        echo "::group::Test Summary"
+        
+        total_tests=0
+        failed_tests=0
+        passed_tests=0
+        skipped_tests=0
+        
+        # Parse Surefire reports
+        if find . -name "TEST-*.xml" -type f | head -1 > /dev/null 2>&1; then
+          echo "📊 Parsing test reports..."
+          
+          # Count tests from XML reports
+          for xml_file in $(find . -name "TEST-*.xml" -type f); do
+            if [ -f "$xml_file" ]; then
+              tests=$(grep -o 'tests="[0-9]*"' "$xml_file" | cut -d'"' -f2 || echo "0")
+              failures=$(grep -o 'failures="[0-9]*"' "$xml_file" | cut -d'"' -f2 || echo "0")
+              errors=$(grep -o 'errors="[0-9]*"' "$xml_file" | cut -d'"' -f2 || echo "0")
+              skipped=$(grep -o 'skipped="[0-9]*"' "$xml_file" | cut -d'"' -f2 || echo "0")
+              
+              total_tests=$((total_tests + tests))
+              failed_tests=$((failed_tests + failures + errors))
+              skipped_tests=$((skipped_tests + skipped))
+            fi
+          done
+          
+          passed_tests=$((total_tests - failed_tests - skipped_tests))
+          
+          echo "📈 Test Results:"
+          echo "  - Total Tests: $total_tests"
+          echo "  - Passed: $passed_tests"
+          echo "  - Failed: $failed_tests"
+          echo "  - Skipped: $skipped_tests"
+          
+          # Show failed tests
+          if [ $failed_tests -gt 0 ]; then
+            echo ""
+            echo "❌ Failed Tests:"
+            find . -name "TEST-*.xml" -type f -exec grep -l 'failures="[1-9]' {} \; -o \
+                 -name "TEST-*.xml" -type f -exec grep -l 'errors="[1-9]' {} \; | \
+              while read xml_file; do
+                test_class=$(basename "$xml_file" .xml | sed 's/TEST-//')
+                echo "  - $test_class"
+              done
+          fi
+          
+        else
+          echo "⚠️ No Surefire test reports found"
+          
+          # Try to get summary from Maven output (if available)
+          if [ -f maven-test-output.log ]; then
+            echo "📊 Parsing Maven output..."
+            total_tests=$(grep "Tests run:" maven-test-output.log | tail -1 | sed 's/.*Tests run: \([0-9]*\).*/\1/' || echo "0")
+            failed_tests=$(grep "Failures:" maven-test-output.log | tail -1 | sed 's/.*Failures: \([0-9]*\).*/\1/' || echo "0")
+          fi
+        fi
+        
+        # Set outputs
+        echo "test_count=$total_tests" >> $GITHUB_OUTPUT
+        echo "failed_count=$failed_tests" >> $GITHUB_OUTPUT
+        
+        # Generate test report summary
+        if [ "${{ inputs.test_reports }}" == "true" ]; then
+          echo ""
+          echo "📋 Test Report Locations:"
+          find . -name "surefire-reports" -type d | while read report_dir; do
+            echo "  - $report_dir"
+            ls -la "$report_dir" | head -5
+          done
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Upload Test Reports
+      if: always() && inputs.test_reports == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-reports-${{ github.run_id }}
+        path: |
+          **/target/surefire-reports/**
+          **/target/site/jacoco/**
+        retention-days: 7
+        if-no-files-found: warn

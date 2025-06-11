@@ -59,6 +59,7 @@ services:
 networks:
   backend:
     driver: bridge
+    name: pulsarrpa_backend
 
 volumes:
   mongodb_data:
