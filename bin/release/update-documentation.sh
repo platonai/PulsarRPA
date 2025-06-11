@@ -10,12 +10,6 @@ cd "$APP_HOME"
 echo "Update documentation ..."
 echo "Changing version in documentation ..."
 
-# Make sure we are not at master branch
-if [[ "$(git rev-parse --abbrev-ref HEAD)" == "master" ]]; then
-  echo "You are on the master branch. Please switch to a feature branch before running this script."
-  exit 1
-fi
-
 SNAPSHOT_VERSION=$(head -n 1 "$APP_HOME/VERSION")
 VERSION=${SNAPSHOT_VERSION/-SNAPSHOT/}
 PREFIX=$(echo "$VERSION" | cut -d'.' -f1,2)

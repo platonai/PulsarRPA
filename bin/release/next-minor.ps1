@@ -61,7 +61,7 @@ foreach ($F in $VERSION_AWARE_FILES)
         # Replace version numbers prefixed with v like "v3.0.8"
         ((Get-Content $F) -replace "\bv$PREFIX\.[0-9]+\b", "v$NEXT_VERSION") | Set-Content $F
 
-        # Restore version numbers in urls like "download/v3.0.8/PulsarRPA.jar" since the new version is not released yet
+        # Restore version numbers in urls like "download/v3.0.8/PulsarRPA.jar" since the new version has not been released yet
         ((Get-Content $F) -replace "(http.+/v$NEXT_VERSION/)", "/v$VERSION/") | Set-Content $F
     }
 }
