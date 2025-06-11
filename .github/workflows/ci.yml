@@ -14,6 +14,17 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+-ci.[0-9]+"  # Trigger on version tags like v1.0.0-ci.1
   # Allow manual workflow runs
   workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests'
+        required: false
+        default: false
+        type: boolean
+      debug_mode:
+        description: 'Enable debug mode'
+        required: false
+        default: false
+        type: boolean
 
 env:
   IMAGE_NAME: galaxyeye88/pulsar-rpa
@@ -47,21 +58,26 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Maven build and deploy to local repo
-        run: ./mvnw clean install -DskipTests -Pall-modules
+        run: ./mvnw clean install -Pall-modules -DskipTests
 
       - name: Run Tests
-        run: ./mvnw test -Pall-modules
+        run: ./mvnw test -Pall-modules -DDEEPSEEK_API_KEY=${{ env.DEEPSEEK_API_KEY }}
 
       - name: Build Docker image
+        if: success()
         run: |
           docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest -f Dockerfile .
 
       - name: Start Docker container
+        if: success()
         run: |
-          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 $IMAGE_NAME:$VERSION
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
           sleep 10  # Wait for Spring Boot to start
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
       - name: Run curl integration tests
+        if: success()
         run: |
           find bin/ -name "*.sh" -exec chmod +x {} \;
           ./bin/run-integration-test.sh || (echo "Integration test failed" && exit 1)

@@ -59,29 +59,27 @@ jobs:
           ./mvnw clean install -DskipTests
 
       - name: Build Docker image
+        if: success()
         run: |
           docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest -f Dockerfile .
 
-      - name: Test Docker container
+      - name: Start Docker container
         if: success()
         run: |
-          # Start container
           docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
           sleep 10  # Wait for Spring Boot to start
-
-          # Run integration tests
-          find bin/ -name "*.sh" -exec chmod +x {} \;
-          if ! ./bin/run-integration-test.sh; then
-            echo "Integration test failed"
-            docker logs pulsar-rpa-test
-            docker stop pulsar-rpa-test || true
-            exit 1
-          fi
-
-          # Clean up
-          docker stop pulsar-rpa-test || true
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+      - name: Run curl integration tests
+        if: success()
+        run: |
+          find bin/ -name "*.sh" -exec chmod +x {} \;
+          ./bin/run-integration-test.sh || (echo "Integration test failed" && exit 1)
+
+      - name: Stop Docker container
+        if: always()
+        run: docker stop pulsar-rpa-test || true
 
       - name: Deploy to Sonatype OSSRH
         if: success() && startsWith(github.ref, 'refs/tags/')
