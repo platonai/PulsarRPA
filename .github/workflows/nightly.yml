@@ -44,12 +44,17 @@ jobs:
           echo "Building image pulsar-rpa-nightly:${{ env.VERSION }}"
           docker build -t pulsar-rpa-nightly:${{ env.VERSION }} -f Dockerfile .
 
-      - name: Start Docker container
+      - name: Start Docker container for integration testing
+        if: success()
         run: |
-          docker run -d --rm --name pulsar-rpa-nightly -p 8182:8182 pulsar-rpa-nightly:${{ env.VERSION }}
-          sleep 10  # Wait for Spring Boot to start
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 \
+            -e DEEPSEEK_API_KEY="${DEEPSEEK_API_KEY}" \
+            $IMAGE_NAME:$VERSION
+          sleep 10  # Wait for the container to start
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
-      - name: Run curl integration tests
+      - name: Run integration tests
         run: |
           find bin/ -name "*.sh" -exec chmod +x {} \;
           ./bin/run-integration-test.sh || (echo "Integration test failed" && exit 1)
