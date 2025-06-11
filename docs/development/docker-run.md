@@ -114,9 +114,3 @@ docker run -d -p 8182:8182 -v /path/to/config:/app/config galaxyeye88/pulsar-rpa
 ### **12. 其他资源**
 - [Docker 官方文档](https://docs.docker.com/)
 - [Docker Hub - galaxyeye88/pulsar-rpa](https://hub.docker.com/r/galaxyeye88/pulsar-rpa)
-- [Docker 命令参考](https://docs.docker.com/engine/reference/commandline/docker/)
-- [Docker Compose 文档](https://docs.docker.com/compose/)
-- [Docker 网络配置](https://docs.docker.com/network/)
-- [Docker 持久化数据](https://docs.docker.com/storage/volumes/)
-- [Docker 环境变量](https://docs.docker.com/engine/reference/run/#env-environment-variables)
-- [Docker 镜像管理](https://docs.docker.com/engine/reference/commandline/images/)
