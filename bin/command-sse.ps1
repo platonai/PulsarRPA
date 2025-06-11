@@ -14,7 +14,11 @@ $ErrorActionPreference = "Stop"
 $COMMAND = @'
     Go to https://www.amazon.com/dp/B0C1H26C46
 
-    After browser launch: clear browser cookies.
+    After browser launch:
+      - clear browser cookies
+      - go to https://www.amazon.com/
+      - wait for 5 seconds
+      - click the first product link
     After page load: scroll to the middle.
 
     Summarize the product.
