@@ -6,6 +6,7 @@ on:
       - main
       - master
     paths-ignore:
+      - '.github/**'
       - 'bin/**'
       - 'docs/**'
       - 'docker/**'
