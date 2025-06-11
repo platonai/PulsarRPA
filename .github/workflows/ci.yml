@@ -3,15 +3,15 @@ name: CI
 on:
   push:
     branches:
-      - main-disabled
-      - master-disabled
+      - main
+      - master
     paths-ignore:
       - 'bin/**'
       - 'docs/**'
       - 'docker/**'
       - '**.md'
     tags:
-      - 'v*-ci'  # Trigger on version tags like v1.0.0-ci
+      - 'v*-ci.*'  # Trigger on version tags like v1.0.0-ci.1
   # Allow manual workflow runs
   workflow_dispatch:
 
