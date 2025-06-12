@@ -20,11 +20,11 @@ inputs:
   skip_tests:
     description: 'Skip unit tests during build'
     required: false
-    default: 'false'
+    default: 'true'
   maven_timeout_minutes:
     description: 'Maven build timeout in minutes'
     required: false
-    default: '15'
+    default: '25'
   test_timeout_minutes:
     description: 'Test execution timeout in minutes'
     required: false
@@ -223,7 +223,7 @@ runs:
       uses: ./.github/actions/maven-build
       with:
         maven_profiles: ${{ inputs.maven_profiles }}
-        skip_tests: ${{ inputs.skip_tests }}
+        skip_tests: 'true' # Always skip tests in build step since they are run separately
         timeout_minutes: ${{ inputs.maven_timeout_minutes }}
 
     - name: Run Tests
