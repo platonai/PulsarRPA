@@ -145,24 +145,31 @@ declare -a CURL_COMMANDS=(
 )
 
 # =============================================================================
-# CONFIGURATION AND SETUP
+# SECTION: GLOBAL CONFIGURATION AND INITIALIZATION
 # =============================================================================
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m' # No Color
+readonly DEFAULT_BASE_URL="http://localhost:8182"
+readonly TEST_RESULTS_DIR="./target/test-results"
+readonly TIMESTAMP="$(date '+%Y%m%d_%H%M%S')"
+readonly LOG_FILE="${TEST_RESULTS_DIR}/curl_tests_${TIMESTAMP}.log"
 
-# Test configuration
-PULSAR_BASE_URL="http://localhost:8182"
-TEST_RESULTS_DIR="./target/test-results"
-TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
-LOG_FILE="${TEST_RESULTS_DIR}/curl_tests_${TIMESTAMP}.log"
+# Colors
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly PURPLE='\033[0;35m'
+readonly CYAN='\033[0;36m'
+readonly BOLD='\033[1m'
+readonly NC='\033[0m'
+
+# Default options
+PULSAR_BASE_URL="$DEFAULT_BASE_URL"
+TIMEOUT_SECONDS=120
+FAST_MODE=false
+SKIP_SERVER_CHECK=false
+VERBOSE_MODE=false
+USER_NAME="platonai"
 
 # Counters
 TOTAL_TESTS=0
@@ -170,263 +177,199 @@ PASSED_TESTS=0
 FAILED_TESTS=0
 SKIPPED_TESTS=0
 
-# Test options
-TIMEOUT_SECONDS=120
-FAST_MODE=false
-SKIP_SERVER_CHECK=false
-VERBOSE_MODE=false
-
-# Create test results directory
+# Ensure results directory exists
 mkdir -p "$TEST_RESULTS_DIR"
 
 # =============================================================================
-# UTILITY FUNCTIONS
+# SECTION: UTILITY FUNCTIONS
 # =============================================================================
 
-# Logging function with timestamp
 log() {
-local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-echo -e "[$timestamp] $1" | tee -a "$LOG_FILE"
+  local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+  echo -e "[$timestamp] $1" | tee -a "$LOG_FILE"
 }
 
-# Verbose logging
 vlog() {
-if [[ "$VERBOSE_MODE" == "true" ]]; then
-log "${CYAN}[VERBOSE]${NC} $1"
-fi
+  [[ "$VERBOSE_MODE" == "true" ]] && log "${CYAN}[VERBOSE]${NC} $1"
 }
 
-# Progress indicator
 show_progress() {
-local current=$1
-local total=$2
-local percent=$(( current * 100 / total ))
-local filled=$(( percent / 2 ))
-local empty=$(( 50 - filled ))
-
-    printf "\r${BLUE}[PROGRESS]${NC} ["
-    printf "%*s" $filled | tr ' ' '='
-    printf "%*s" $empty | tr ' ' '-'
-    printf "] %d%% (%d/%d)" $percent $current $total
+  local current=$1
+  local total=$2
+  local percent=$(( current * 100 / total ))
+  local filled=$(( percent / 2 ))
+  local empty=$(( 50 - filled ))
+  printf "\r${BLUE}[PROGRESS]${NC} ["
+  printf "%*s" $filled | tr ' ' '='
+  printf "%*s" $empty | tr ' ' '-'
+  printf "] %d%% (%d/%d)" $percent $current $total
 }
 
-# Function to check if PulsarRPA is running
+substitute_urls() {
+  # Substitute localhost URL with configured base URL
+  local command="$1"
+  echo "$command" | sed "s|http://localhost:8182|$PULSAR_BASE_URL|g"
+}
+
 check_server() {
-log "${BLUE}[INFO]${NC} Checking PulsarRPA server at $PULSAR_BASE_URL..."
-
-    # Try health check first
-    if curl -s --connect-timeout 5 --max-time 10 "$PULSAR_BASE_URL/actuator/health" > /dev/null 2>&1; then
-        log "${GREEN}[SUCCESS]${NC} PulsarRPA server is healthy and responding"
-        return 0
-    fi
-
-    # Try basic connectivity
-    if curl -s --connect-timeout 5 --max-time 10 "$PULSAR_BASE_URL/" > /dev/null 2>&1; then
-        log "${YELLOW}[WARNING]${NC} Server responding but health check endpoint unavailable"
-        return 0
-    fi
-
+  log "${BLUE}[INFO]${NC} Checking PulsarRPA server at $PULSAR_BASE_URL..."
+  if curl -s --connect-timeout 5 --max-time 10 "$PULSAR_BASE_URL/actuator/health" >/dev/null 2>&1; then
+    log "${GREEN}[SUCCESS]${NC} PulsarRPA server is healthy and responding"
+    return 0
+  elif curl -s --connect-timeout 5 --max-time 10 "$PULSAR_BASE_URL/" >/dev/null 2>&1; then
+    log "${YELLOW}[WARNING]${NC} Server responding but health check endpoint unavailable"
+    return 0
+  else
     log "${RED}[ERROR]${NC} PulsarRPA server not accessible at $PULSAR_BASE_URL"
     log "${CYAN}[HINT]${NC} Start PulsarRPA with:"
     log "    ${BOLD}java -DDEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} -jar PulsarRPA.jar${NC}"
     return 1
+  fi
 }
 
-# Function to substitute URL placeholders
-substitute_urls() {
-local command="$1"
-echo "$command" | sed "s|http://localhost:8182|$PULSAR_BASE_URL|g"
-}
+# =============================================================================
+# SECTION: TEST EXECUTION FUNCTIONS
+# =============================================================================
 
-# Function to run a single curl test
 run_curl_test() {
-local test_name="$1"
-local curl_command="$2"
-local test_number=$3
+  local test_name="$1"
+  local curl_command="$2"
+  local test_number=$3
 
-    TOTAL_TESTS=$((TOTAL_TESTS + 1))
+  TOTAL_TESTS=$((TOTAL_TESTS + 1))
+  log ""
+  log "${PURPLE}[TEST $test_number/${#CURL_COMMANDS[@]}]${NC} ${BOLD}$test_name${NC}"
 
-    log ""
-    log "${PURPLE}[TEST $test_number/${#CURL_COMMANDS[@]}]${NC} ${BOLD}$test_name${NC}"
+  # Show command preview
+  if [[ "$VERBOSE_MODE" == "true" ]]; then
+    log "${CYAN}[COMMAND]${NC}"
+    echo "$curl_command"
+  else
+    local short_cmd=$(echo "$curl_command" | head -c 80 | tr '\n' ' ')
+    log "${CYAN}[COMMAND]${NC} $short_cmd..."
+  fi
 
-    # Show command preview
-    if [[ "$VERBOSE_MODE" == "true" ]]; then
-        log "${CYAN}[COMMAND]${NC}"
-        echo "$curl_command"
+  # Substitute URLs in command
+  local final_command=$(substitute_urls "$curl_command")
+  local full_command="$final_command --max-time $TIMEOUT_SECONDS -w '%{http_code}\\n%{time_total}\\n%{size_download}\\n%{url_effective}' -o response.txt -s"
+
+  vlog "Executing: $(echo "$full_command" | head -c 150)..."
+
+  # Temp files
+  local response_file
+  local error_file
+  response_file=$(mktemp)
+  error_file=$(mktemp)
+
+  # Execute the command
+  local start_time=$(date +%s)
+  if eval "$full_command" > "${response_file}.meta" 2>"$error_file"; then
+    local end_time=$(date +%s)
+    local duration=$((end_time - start_time))
+    local http_status=$(sed -n '1p' "${response_file}.meta" 2>/dev/null || echo "000")
+    local time_total=$(sed -n '2p' "${response_file}.meta" 2>/dev/null || echo "0.000")
+    local size_download=$(sed -n '3p' "${response_file}.meta" 2>/dev/null || echo "0")
+    local url_effective=$(sed -n '4p' "${response_file}.meta" 2>/dev/null || echo "N/A")
+
+    log "${BLUE}[RESPONSE]${NC} Status: $http_status | Time: ${time_total}s | Size: ${size_download}B | Duration: ${duration}s"
+
+    # Check success
+    if [[ "$http_status" =~ ^[23][0-9][0-9]$ ]]; then
+      log "${GREEN}[PASS]${NC} ✅ Test completed successfully"
+      PASSED_TESTS=$((PASSED_TESTS + 1))
+      cp "$response_file" "${TEST_RESULTS_DIR}/test_${test_number}_success.json" 2>/dev/null || true
+      if [[ "$size_download" -gt 0 && "$size_download" -lt 3000 ]]; then
+        local preview=$(head -c 250 "$response_file" 2>/dev/null | tr -d '\n\r' | sed 's/[[:space:]]\+/ /g')
+        [[ -n "$preview" && "$preview" != " " ]] && log "${CYAN}[PREVIEW]${NC} $preview..."
+      elif [[ "$size_download" -gt 3000 ]]; then
+        log "${CYAN}[INFO]${NC} Large response (${size_download}B) saved to results directory"
+      fi
     else
-        local short_cmd=$(echo "$curl_command" | head -c 80 | tr '\n' ' ')
-        log "${CYAN}[COMMAND]${NC} $short_cmd..."
+      log "${RED}[FAIL]${NC} ❌ HTTP Status: $http_status"
+      FAILED_TESTS=$((FAILED_TESTS + 1))
+      cp "$response_file" "${TEST_RESULTS_DIR}/test_${test_number}_error_${http_status}.txt" 2>/dev/null || true
+      if [[ -s "$response_file" ]]; then
+        local error_preview=$(head -c 200 "$response_file" 2>/dev/null | tr -d '\n\r')
+        log "${RED}[ERROR RESPONSE]${NC} $error_preview"
+      fi
+      if [[ -s "$error_file" ]]; then
+        local curl_error=$(head -c 200 "$error_file" 2>/dev/null | tr -d '\n\r')
+        log "${RED}[CURL ERROR]${NC} $curl_error"
+      fi
     fi
-
-    # Create temporary files
-    local response_file=$(mktemp)
-    local headers_file=$(mktemp)
-    local error_file=$(mktemp)
-
-    # Substitute URLs in command
-    local final_command=$(substitute_urls "$curl_command")
-
-    # Add curl monitoring options
-    local full_command="$final_command --max-time $TIMEOUT_SECONDS -w '%{http_code}\\n%{time_total}\\n%{size_download}\\n%{url_effective}' -D '$headers_file' -o '$response_file' -s"
-
-    vlog "Executing: $(echo "$full_command" | head -c 150)..."
-
-    # Execute the command
-    local start_time=$(date +%s)
-    if eval "$full_command" > "${response_file}.meta" 2>"$error_file"; then
-        local end_time=$(date +%s)
-        local duration=$((end_time - start_time))
-
-        # Parse response metadata
-        local http_status=$(sed -n '1p' "${response_file}.meta" 2>/dev/null || echo "000")
-        local time_total=$(sed -n '2p' "${response_file}.meta" 2>/dev/null || echo "0.000")
-        local size_download=$(sed -n '3p' "${response_file}.meta" 2>/dev/null || echo "0")
-        local url_effective=$(sed -n '4p' "${response_file}.meta" 2>/dev/null || echo "N/A")
-
-        log "${BLUE}[RESPONSE]${NC} Status: $http_status | Time: ${time_total}s | Size: ${size_download}B | Duration: ${duration}s"
-
-        # Check success (2xx or 3xx status codes)
-        if [[ "$http_status" =~ ^[23][0-9][0-9]$ ]]; then
-            log "${GREEN}[PASS]${NC} ✅ Test completed successfully"
-            PASSED_TESTS=$((PASSED_TESTS + 1))
-
-            # Save successful response
-            cp "$response_file" "${TEST_RESULTS_DIR}/test_${test_number}_success.json" 2>/dev/null || true
-
-            # Show response preview for reasonably sized responses
-            if [[ "$size_download" -gt 0 && "$size_download" -lt 3000 ]]; then
-                local preview=$(head -c 250 "$response_file" 2>/dev/null | tr -d '\n\r' | sed 's/[[:space:]]\+/ /g')
-                if [[ -n "$preview" && "$preview" != " " ]]; then
-                    log "${CYAN}[PREVIEW]${NC} $preview..."
-                fi
-            elif [[ "$size_download" -gt 3000 ]]; then
-                log "${CYAN}[INFO]${NC} Large response (${size_download}B) saved to results directory"
-            fi
-
-        else
-            log "${RED}[FAIL]${NC} ❌ HTTP Status: $http_status"
-            FAILED_TESTS=$((FAILED_TESTS + 1))
-
-            # Save error response
-            cp "$response_file" "${TEST_RESULTS_DIR}/test_${test_number}_error_${http_status}.txt" 2>/dev/null || true
-
-            # Show error details
-            if [[ -s "$response_file" ]]; then
-                local error_preview=$(head -c 200 "$response_file" 2>/dev/null | tr -d '\n\r')
-                log "${RED}[ERROR RESPONSE]${NC} $error_preview"
-            fi
-
-            if [[ -s "$error_file" ]]; then
-                local curl_error=$(head -c 200 "$error_file" 2>/dev/null | tr -d '\n\r')
-                log "${RED}[CURL ERROR]${NC} $curl_error"
-            fi
-        fi
-
-    else
-        log "${RED}[FAIL]${NC} ❌ Command execution failed"
-        FAILED_TESTS=$((FAILED_TESTS + 1))
-
-        # Save execution error details
-        {
-            echo "Command: $final_command"
-            echo "Error output:"
-            cat "$error_file" 2>/dev/null || echo "No error output available"
-        } > "${TEST_RESULTS_DIR}/test_${test_number}_exec_error.txt"
-
-        if [[ -s "$error_file" ]]; then
-            local exec_error=$(head -c 200 "$error_file" 2>/dev/null | tr -d '\n\r')
-            log "${RED}[EXECUTION ERROR]${NC} $exec_error"
-        fi
+  else
+    log "${RED}[FAIL]${NC} ❌ Command execution failed"
+    FAILED_TESTS=$((FAILED_TESTS + 1))
+    {
+      echo "Command: $final_command"
+      echo "Error output:"
+      cat "$error_file" 2>/dev/null || echo "No error output available"
+    } > "${TEST_RESULTS_DIR}/test_${test_number}_exec_error.txt"
+    if [[ -s "$error_file" ]]; then
+      local exec_error=$(head -c 200 "$error_file" 2>/dev/null | tr -d '\n\r')
+      log "${RED}[EXECUTION ERROR]${NC} $exec_error"
     fi
+  fi
 
-    # Cleanup temporary files
-    rm -f "$response_file" "$headers_file" "$error_file" "${response_file}.meta"
-
-    # Show progress (but not on last test)
-    if [[ $test_number -lt ${#CURL_COMMANDS[@]} ]]; then
-        show_progress $TOTAL_TESTS ${#CURL_COMMANDS[@]}
-    fi
+  rm -f "$response_file" "$error_file" "${response_file}.meta"
+  [[ $test_number -lt ${#CURL_COMMANDS[@]} ]] && show_progress $TOTAL_TESTS ${#CURL_COMMANDS[@]}
 }
 
-# Function to run all tests
 run_all_tests() {
-log "${BLUE}[INFO]${NC} ${BOLD}Starting test execution...${NC}"
-log "${BLUE}[INFO]${NC} Total commands to test: ${#CURL_COMMANDS[@]}"
-
-    local test_counter=0
-
-    for command_entry in "${CURL_COMMANDS[@]}"; do
-        test_counter=$((test_counter + 1))
-
-        # Skip commented out commands
-        if [[ "$command_entry" =~ ^[[:space:]]*# ]]; then
-            log "${YELLOW}[SKIP]${NC} Skipping commented command $test_counter"
-            SKIPPED_TESTS=$((SKIPPED_TESTS + 1))
-            continue
-        fi
-
-        # Parse command entry (format: "description|curl_command")
-        local description=$(echo "$command_entry" | cut -d'|' -f1)
-        local curl_command=$(echo "$command_entry" | cut -d'|' -f2-)
-
-        # Run the test
-        run_curl_test "$description" "$curl_command" "$test_counter"
-
-        # Small delay between tests unless in fast mode
-        if [[ "$FAST_MODE" == "false" ]]; then
-            sleep 1
-        fi
-    done
-
-    echo  # New line after progress bar
+  log "${BLUE}[INFO]${NC} ${BOLD}Starting test execution...${NC}"
+  log "${BLUE}[INFO]${NC} Total commands to test: ${#CURL_COMMANDS[@]}"
+  local test_counter=0
+  for command_entry in "${CURL_COMMANDS[@]}"; do
+    test_counter=$((test_counter + 1))
+    [[ "$command_entry" =~ ^[[:space:]]*# ]] && { log "${YELLOW}[SKIP]${NC} Skipping commented command $test_counter"; SKIPPED_TESTS=$((SKIPPED_TESTS + 1)); continue; }
+    local description=$(echo "$command_entry" | cut -d'|' -f1)
+    local curl_command=$(echo "$command_entry" | cut -d'|' -f2-)
+    run_curl_test "$description" "$curl_command" "$test_counter"
+    [[ "$FAST_MODE" == "false" ]] && sleep 1
+  done
+  echo
 }
 
-# Function to print test summary
 print_summary() {
-log ""
-log "=============================================="
-log "${BLUE}[FINAL SUMMARY]${NC} ${BOLD}Test Results${NC}"
-log "=============================================="
-log "${BLUE}Test Session:${NC} $(date '+%Y-%m-%d %H:%M:%S UTC')"
-log "${BLUE}User:${NC} platonai"
-log "${BLUE}Server:${NC} $PULSAR_BASE_URL"
-log "${BLUE}Total Commands:${NC} ${#CURL_COMMANDS[@]}"
-log "${BLUE}Tests Executed:${NC} $TOTAL_TESTS"
-log "${GREEN}Passed:${NC} $PASSED_TESTS"
-log "${RED}Failed:${NC} $FAILED_TESTS"
-log "${YELLOW}Skipped:${NC} $SKIPPED_TESTS"
-
-    if [[ $TOTAL_TESTS -gt 0 ]]; then
-        local success_rate=$(( PASSED_TESTS * 100 / TOTAL_TESTS ))
-        log "${BLUE}Success Rate:${NC} $success_rate%"
-    fi
-
-    log "${BLUE}Log File:${NC} $LOG_FILE"
-    log "${BLUE}Results Directory:${NC} $TEST_RESULTS_DIR"
-    log "=============================================="
-
-    # Final status
-    if [[ $TOTAL_TESTS -eq 0 ]]; then
-        log "${YELLOW}[INFO]${NC} No tests were executed"
-        exit 0
-    elif [[ $FAILED_TESTS -eq 0 ]]; then
-        log "${GREEN}[SUCCESS]${NC} All tests passed! 🎉"
-        exit 0
-    else
-        log "${YELLOW}[PARTIAL SUCCESS]${NC} Some tests failed. Check logs for details."
-        exit 1
-    fi
+  log ""
+  log "=============================================="
+  log "${BLUE}[FINAL SUMMARY]${NC} ${BOLD}Test Results${NC}"
+  log "=============================================="
+  log "${BLUE}Test Session:${NC} $(date '+%Y-%m-%d %H:%M:%S UTC')"
+  log "${BLUE}User:${NC} $USER_NAME"
+  log "${BLUE}Server:${NC} $PULSAR_BASE_URL"
+  log "${BLUE}Total Commands:${NC} ${#CURL_COMMANDS[@]}"
+  log "${BLUE}Tests Executed:${NC} $TOTAL_TESTS"
+  log "${GREEN}Passed:${NC} $PASSED_TESTS"
+  log "${RED}Failed:${NC} $FAILED_TESTS"
+  log "${YELLOW}Skipped:${NC} $SKIPPED_TESTS"
+  if [[ $TOTAL_TESTS -gt 0 ]]; then
+    local success_rate=$(( PASSED_TESTS * 100 / TOTAL_TESTS ))
+    log "${BLUE}Success Rate:${NC} $success_rate%"
+  fi
+  log "${BLUE}Log File:${NC} $LOG_FILE"
+  log "${BLUE}Results Directory:${NC} $TEST_RESULTS_DIR"
+  log "=============================================="
+  if [[ $TOTAL_TESTS -eq 0 ]]; then
+    log "${YELLOW}[INFO]${NC} No tests were executed"
+    exit 0
+  elif [[ $FAILED_TESTS -eq 0 ]]; then
+    log "${GREEN}[SUCCESS]${NC} All tests passed! 🎉"
+    exit 0
+  else
+    log "${YELLOW}[PARTIAL SUCCESS]${NC} Some tests failed. Check logs for details."
+    exit 1
+  fi
 }
 
-# Function to show usage
 usage() {
-cat << EOF
+  cat << EOF
 Usage: $0 [OPTIONS]
 
 Test curl commands from README.md against PulsarRPA server.
 
 OPTIONS:
--u, --url URL         PulsarRPA base URL (default: http://localhost:8182)
+-u, --url URL         PulsarRPA base URL (default: $DEFAULT_BASE_URL)
 -f, --fast            Fast mode - minimal delays between tests
 -s, --skip-server     Skip server connectivity check
 -t, --timeout SEC     Request timeout in seconds (default: 120)
@@ -444,83 +387,51 @@ REQUIREMENTS:
 - PulsarRPA server running (unless --skip-server)
 
 UPDATING COMMANDS:
-Edit the CURL_DESC_* and CURL_CMD_* variables to add/modify tests.
-Commands use Here-String format for better readability.
+Edit the CURL_COMMANDS array to add/modify tests.
 EOF
 }
 
 # =============================================================================
-# MAIN EXECUTION
+# SECTION: MAIN EXECUTION LOGIC
 # =============================================================================
 
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
-case $1 in
--u|--url)
-PULSAR_BASE_URL="$2"
-shift 2
-;;
--f|--fast)
-FAST_MODE=true
-shift
-;;
--s|--skip-server)
-SKIP_SERVER_CHECK=true
-shift
-;;
--t|--timeout)
-TIMEOUT_SECONDS="$2"
-shift 2
-;;
--v|--verbose)
-VERBOSE_MODE=true
-shift
-;;
--h|--help)
-usage
-exit 0
-;;
-*)
-echo "Unknown option: $1"
-usage
-exit 1
-;;
-esac
-done
-
-# Main execution function
-main() {
-log "${BLUE}[INFO]${NC} ${BOLD}PulsarRPA Curl Command Test Suite${NC}"
-log "${BLUE}[INFO]${NC} User: platonai"
-log "${BLUE}[INFO]${NC} Timestamp: 2025-06-11 17:29:59"
-log "${BLUE}[INFO]${NC} Server URL: $PULSAR_BASE_URL"
-log "${BLUE}[INFO]${NC} Timeout: ${TIMEOUT_SECONDS}s"
-log "${BLUE}[INFO]${NC} Fast Mode: $FAST_MODE"
-log "${BLUE}[INFO]${NC} Verbose Mode: $VERBOSE_MODE"
-
-    # Check prerequisites
-    if ! command -v curl &> /dev/null; then
-        log "${RED}[ERROR]${NC} curl command not found. Please install curl."
-        exit 1
-    fi
-
-    # Check server (unless skipped)
-    if [[ "$SKIP_SERVER_CHECK" != "true" ]]; then
-        if ! check_server; then
-            log "${YELLOW}[WARNING]${NC} Use --skip-server to bypass server check"
-            exit 1
-        fi
-    fi
-
-    # Run all tests
-    run_all_tests
-
-    # Print summary
-    print_summary
+parse_args() {
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+      -u|--url) PULSAR_BASE_URL="$2"; shift 2 ;;
+      -f|--fast) FAST_MODE=true; shift ;;
+      -s|--skip-server) SKIP_SERVER_CHECK=true; shift ;;
+      -t|--timeout) TIMEOUT_SECONDS="$2"; shift 2 ;;
+      -v|--verbose) VERBOSE_MODE=true; shift ;;
+      -h|--help) usage; exit 0 ;;
+      *) echo "Unknown option: $1"; usage; exit 1 ;;
+    esac
+  done
 }
 
-# Handle interruption
+main() {
+  log "${BLUE}[INFO]${NC} ${BOLD}PulsarRPA Curl Command Test Suite${NC}"
+  log "${BLUE}[INFO]${NC} User: $USER_NAME"
+  log "${BLUE}[INFO]${NC} Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
+  log "${BLUE}[INFO]${NC} Server URL: $PULSAR_BASE_URL"
+  log "${BLUE}[INFO]${NC} Timeout: ${TIMEOUT_SECONDS}s"
+  log "${BLUE}[INFO]${NC} Fast Mode: $FAST_MODE"
+  log "${BLUE}[INFO]${NC} Verbose Mode: $VERBOSE_MODE"
+  if ! command -v curl &> /dev/null; then
+    log "${RED}[ERROR]${NC} curl command not found. Please install curl."
+    exit 1
+  fi
+  if [[ "$SKIP_SERVER_CHECK" != "true" ]]; then
+    if ! check_server; then
+      log "${YELLOW}[WARNING]${NC} Use --skip-server to bypass server check"
+      exit 1
+    fi
+  fi
+  run_all_tests
+  print_summary
+}
+
 trap 'log "\n${YELLOW}[INFO]${NC} Tests interrupted by user"; exit 130' INT
 
-# Execute main function
-main "$@"
+parse_args "$@"
+main

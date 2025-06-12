@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# Find the first parent directory containing the VERSION file
+AppHome="$(dirname "$(readlink -f "$0")")"
+while [[ "$AppHome" != "/" && ! -f "$AppHome/VERSION" ]]; do
+    AppHome="$(dirname "$AppHome")"
+done
+cd "$AppHome" || exit 1
+
 set -e
 
 echo "===================================================================="

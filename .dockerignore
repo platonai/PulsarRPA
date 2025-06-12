@@ -4,8 +4,6 @@
 **/.idea/
 # 忽略所有 .vscode 目录
 **/.vscode/
-# 忽略所有 .mvn 目录
-**/.mvn/
 # 忽略所有 node_modules 目录
 **/node_modules/
 # 忽略所有日志文件
@@ -38,6 +36,7 @@ Dockerfile
 **/application-private.yml
 application-private.yml
 
+docker/pulsar-rpa-prod/Dockerfile
 docker/pulsar-rpa/Dockerfile
 
 !pulsar-app/pulsar-master/target/PulsarRPA.jar

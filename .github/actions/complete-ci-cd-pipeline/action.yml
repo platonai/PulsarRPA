@@ -32,7 +32,7 @@ inputs:
   test_excludes:
     description: 'Test exclusion patterns'
     required: false
-    default: '**ai/platon/scent/rest/api/integration**'
+    default: '**/rest/api/integration**'
 
   # Docker Configuration
   network_name:
@@ -70,7 +70,7 @@ inputs:
   health_endpoint:
     description: 'Health check endpoint'
     required: false
-    default: '/actuator/health' # TODO: will use /actuator/health by default
+    default: '/actuator/health'
   health_timeout_minutes:
     description: 'Health check timeout in minutes'
     required: false
