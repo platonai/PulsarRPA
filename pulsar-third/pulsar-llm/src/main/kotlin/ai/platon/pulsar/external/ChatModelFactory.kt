@@ -148,7 +148,7 @@ object ChatModelFactory {
     }
 
     private fun doCreateModel(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
-        logger.info("Creating LLM with provider and model name | {} {}", provider, modelName)
+        logger.info("Creating LLM with provider and model name | {} {} {}", provider, modelName, encodeSecretKey(apiKey))
 
         return when (provider) {
             "zhipu" -> createZhipuChatModel(apiKey, conf)
@@ -244,5 +244,18 @@ object ChatModelFactory {
             .timeout(Duration.ofSeconds(90))
             .build()
         return ChatModelImpl(lm, conf)
+    }
+
+    /**
+     * Replace characters in the secret key with asterisks except the latest 4 characters for logging.
+     * */
+    private fun encodeSecretKey(key: String): String {
+        return if (key.length <= 4) {
+            key.replace(Regex("."), "*")
+        } else {
+            val visiblePart = key.takeLast(4)
+            val hiddenPart = key.dropLast(4).replace(Regex("."), "*")
+            "$hiddenPart$visiblePart"
+        }
     }
 }
