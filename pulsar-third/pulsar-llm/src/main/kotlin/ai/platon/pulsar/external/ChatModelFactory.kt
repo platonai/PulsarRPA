@@ -9,6 +9,7 @@ import ai.platon.pulsar.external.impl.ChatModelImpl
 import dev.langchain4j.model.openai.OpenAiChatModel
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import java.time.Duration
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -19,9 +20,9 @@ object ChatModelFactory {
     private val throttlingLogger = ThrottlingLogger(logger, ttl = Duration.ofHours(4))
     private val models = ConcurrentHashMap<String, ChatModel>()
 
-    fun isModelConfigured(conf: ImmutableConfig): Boolean {
+    fun isModelConfigured(conf: ImmutableConfig, verbose: Boolean = true): Boolean {
         if (!isModelConfigured0(conf)) {
-            if (!hasModel(conf)) {
+            if (verbose && !hasModel(conf)) {
                 val documentPath = "docs/config/llm/llm-config.md"
                 val message = "The LLM is not configured. Please review the documentation for " +
                         "configuration instructions: $documentPath"
