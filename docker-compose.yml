@@ -17,7 +17,7 @@ services:
       retries: 3
 
   proxy-hub:
-    image: 'proxy-hub:latest'
+    image: 'galaxyeye88/proxy-hub:latest'
     container_name: 'proxy-hub'
     ports:
       - '8192:8192'
@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
 
   pulsar-rpa:
-    image: 'pulsar-rpa:latest'
+    image: 'galaxyeye88/pulsar-rpa:latest'
     container_name: 'pulsar-rpa'
     depends_on:
       mongodb:
@@ -33,7 +33,11 @@ services:
     environment:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
       PROXY_ROTATION_URL: ${PROXY_ROTATION_URL}
-      "gora.mongodb.servers": mongodb:27017  # Required by Gora, keep it exactly dot.separated.lowercase
+      BROWSER_CONTEXT_MODE: DEFAULT # Check documentation for other modes
+      BROWSER_CONTEXT_NUMBER: 2 # Ignore this if BROWSER_CONTEXT_MODE is set to DEFAULT
+      BROWSER_MAX_OPEN_TABS: 8  # Ignore this if BROWSER_CONTEXT_MODE is set to DEFAULT
+      BROWSER_DISPLAY_MODE: HEADLESS
+      GORA_MONGODB_SERVERS: mongodb:27017
       SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/pulsar-rpa
       SERVER_PORT: 8182
       SERVER_ADDRESS: 0.0.0.0
@@ -46,7 +50,7 @@ services:
         soft: 65535
         hard: 65535
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8182/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8182/api/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -55,6 +59,7 @@ services:
 networks:
   backend:
     driver: bridge
+    name: pulsarrpa_backend
 
 volumes:
   mongodb_data:

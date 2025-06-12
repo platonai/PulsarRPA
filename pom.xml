@@ -46,8 +46,29 @@
         <connection>scm:git:https://github.com/platonai/PulsarRPA.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/PulsarRPA.git</developerConnection>
         <url>https://github.com/platonai/PulsarRPA</url>
-        <tag>v3.1.0</tag>
+        <tag>HEAD</tag>
     </scm>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/platonai/PulsarRPA/issues</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>GitHub Actions</system>
+        <url>https://github.com/platonai/PulsarRPA/actions</url>
+    </ciManagement>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <repositories>
         <repository>
@@ -130,116 +151,85 @@
             </modules>
         </profile>
 
+        <!-- Development profile -->
         <profile>
-            <id>platon-release</id>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
-                <platon-release-active>true</platon-release-active>
+                <skipTests>false</skipTests>
+                <maven.javadoc.skip>true</maven.javadoc.skip>
             </properties>
+        </profile>
 
+        <!-- CI profile -->
+        <profile>
+            <id>ci</id>
+            <properties>
+                <skipTests>false</skipTests>
+                <maven.test.failure.ignore>false</maven.test.failure.ignore>
+            </properties>
             <build>
                 <plugins>
+                    <!--用于在 Maven 项目中收集和生成 Java 代码的测试覆盖率报告 -->
+                    <!-- instructions covered ratio is expected minimum is 0.70 -->
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>3.0.1</version>
-<!--                        <configuration>-->
-<!--                            <autoVersionSubmodules>true</autoVersionSubmodules>-->
-<!--                            <releaseVersion>${project.version}</releaseVersion>-->
-<!--                            <developmentVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.nextIncrementalVersion}-SNAPSHOT</developmentVersion>-->
-<!--                            <tagNameFormat>v@{project.version}</tagNameFormat>-->
-<!--                            <arguments>-DskipTests</arguments>-->
-<!--                        </configuration>-->
-                        <configuration>
-                            <tagNameFormat>v${project.parent.version}</tagNameFormat>
-                            <updateBranchVersions>false</updateBranchVersions>
-                        </configuration>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.jetbrains.dokka</groupId>
-                        <artifactId>dokka-maven-plugin</artifactId>
-                        <version>${dokka.version}</version>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco-maven-plugin.version}</version>
                         <executions>
                             <execution>
-                                <!-- generate javadoc.jar before package gpg plugin can generate asc for it -->
-                                <phase>prepare-package</phase>
+                                <id>report-aggregate</id>
+                                <phase>verify</phase>
                                 <goals>
-                                    <goal>dokka</goal>
-                                    <goal>javadocJar</goal>
+                                    <goal>report-aggregate</goal>
                                 </goals>
                             </execution>
                         </executions>
                         <configuration>
+                            <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+                            <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
                             <skip>false</skip>
-                            <cacheRoot>default</cacheRoot>
-
-                            <jdkVersion>11</jdkVersion>
-
-                            <!-- Do not output deprecated members, applies globally, can be overridden by packageOptions -->
-                            <skipDeprecated>true</skipDeprecated>
-                            <!-- Emit warnings about not documented members, applies globally, also can be overridden by packageOptions -->
-                            <reportUndocumented>true</reportUndocumented>
-                            <!-- Do not create index pages for empty packages -->
-                            <skipEmptyPackages>false</skipEmptyPackages>
-                            <includeNonPublic>false</includeNonPublic>
-
-                            <!-- Short form list of sourceRoots, by default, set to ${project.compileSourceRoots} -->
-                            <sourceDirectories>
-                                <dir>${project.basedir}/src/main/java</dir>
-                                <dir>${project.basedir}/src/main/kotlin</dir>
-                            </sourceDirectories>
-
-                            <!-- Disable linking to online kotlin-stdlib documentation  -->
-                            <noStdlibLink>false</noStdlibLink>
-
-                            <!-- Disable linking to online JDK documentation -->
-                            <noJdkLink>false</noJdkLink>
-
-                            <!-- Allows to customize documentation generation options on a per-package basis -->
-                            <perPackageOptions>
-                                <packageOptions>
-                                    <!-- Will match kotlin and all sub-packages of it -->
-                                    <!-- <prefix>kotlin</prefix>-->
-
-                                    <!-- All options are optional, default values are below: -->
-                                    <skipDeprecated>false</skipDeprecated>
-                                    <!-- Emit warnings about not documented members  -->
-                                    <reportUndocumented>true</reportUndocumented>
-                                    <includeNonPublic>false</includeNonPublic>
-                                </packageOptions>
-                            </perPackageOptions>
                         </configuration>
-                    </plugin>
-
-                    <!-- Help maven-source-plugin works with kotlin -->
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <version>3.6.0</version>
-
-                        <executions>
-                            <execution>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>add-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>src/main/kotlin</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
                     </plugin>
                 </plugins>
             </build>
         </profile>
 
-
+        <!-- Release profile -->
         <profile>
-            <id>platon-deploy</id>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>${maven-release-plugin.version}</version>
+                        <configuration>
+                            <tagNameFormat>v@{project.version}</tagNameFormat>
+                            <releaseProfiles>deploy</releaseProfiles>
+                            <autoVersionSubmodules>true</autoVersionSubmodules>
+                            <preparationGoals>clean verify</preparationGoals>
+                            <completionGoals>clean</completionGoals>
+                            <goals>deploy nexus-staging:release</goals>
+                            <pushChanges>false</pushChanges>
+                            <localCheckout>true</localCheckout>
+                            <checkModificationExcludes>
+                                <checkModificationExclude>pom.xml</checkModificationExclude>
+                            </checkModificationExcludes>
+                        </configuration>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Deployment profile -->
+        <profile>
+            <id>deploy</id>
             <properties>
-                <platon-deploy-active>true</platon-deploy-active>
+                <deploy-active>true</deploy-active>
             </properties>
             <modules>
                 <module>pulsar-common</module>
@@ -268,9 +258,139 @@
 
             <build>
                 <plugins>
+                    <!-- Attach sources -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Help maven-source-plugin works with kotlin -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.6.0</version>
+
+                        <executions>
+                            <execution>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/kotlin</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.jetbrains.dokka</groupId>
+                        <artifactId>dokka-maven-plugin</artifactId>
+                        <version>${dokka.version}</version>
+                        <executions>
+                            <execution>
+                                <!-- generate javadoc.jar before package gpg plugin can generate asc for it -->
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>dokka</goal>
+                                    <goal>javadocJar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <!-- Set to true to skip dokka task, default: false -->
+                            <skip>false</skip>
+
+                            <!-- Use default or set to custom path to cache directory to enable package-list caching. -->
+                            <!-- When set to default, caches stored in $USER_HOME/.cache/dokka -->
+                            <cacheRoot>default</cacheRoot>
+
+                            <!-- Used for linking to JDK, default: 11 -->
+                            <jdkVersion>11</jdkVersion>
+
+                            <!-- Do not output deprecated members, applies globally, can be overridden by packageOptions -->
+                            <skipDeprecated>true</skipDeprecated>
+                            <!-- Emit warnings about not documented members, applies globally, also can be overridden by packageOptions -->
+                            <reportUndocumented>true</reportUndocumented>
+                            <!-- Do not create index pages for empty packages -->
+                            <skipEmptyPackages>false</skipEmptyPackages>
+                            <includeNonPublic>false</includeNonPublic>
+
+                            <!-- Short form list of sourceRoots, by default, set to ${project.compileSourceRoots} -->
+                            <sourceDirectories>
+                                <dir>${project.basedir}/src/main/java</dir>
+                                <dir>${project.basedir}/src/main/kotlin</dir>
+                            </sourceDirectories>
+
+                            <!-- Disable linking to online kotlin-stdlib documentation  -->
+                            <noStdlibLink>false</noStdlibLink>
+                            <noJdkLink>false</noJdkLink>
+
+                            <!-- Allows to customize documentation generation options on a per-package basis -->
+                            <perPackageOptions>
+                                <packageOptions>
+                                    <!-- Will match kotlin and all sub-packages of it -->
+                                    <!-- <prefix>kotlin</prefix>-->
+
+                                    <!-- All options are optional, default values are below: -->
+                                    <skipDeprecated>false</skipDeprecated>
+                                    <!-- Emit warnings about not documented members  -->
+                                    <reportUndocumented>true</reportUndocumented>
+                                    <includeNonPublic>false</includeNonPublic>
+                                </packageOptions>
+                            </perPackageOptions>
+                        </configuration>
+                    </plugin>
+
+<!--                    &lt;!&ndash; Generate Kotlin documentation &ndash;&gt;-->
+<!--                    <plugin>-->
+<!--                        <groupId>org.jetbrains.dokka</groupId>-->
+<!--                        <artifactId>dokka-maven-plugin</artifactId>-->
+<!--                        <version>${dokka.version}</version>-->
+<!--                        <executions>-->
+<!--                            <execution>-->
+<!--                                <phase>prepare-package</phase>-->
+<!--                                <goals>-->
+<!--                                    <goal>javadocJar</goal>-->
+<!--                                </goals>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
+<!--                        <configuration>-->
+<!--                            <sourceDirectories>-->
+<!--                                <dir>${project.basedir}/src/main/kotlin</dir>-->
+<!--                                <dir>${project.basedir}/src/main/java</dir>-->
+<!--                            </sourceDirectories>-->
+<!--                            <documentedVisibilities>-->
+<!--                                <visibility>PUBLIC</visibility>-->
+<!--                                <visibility>PROTECTED</visibility>-->
+<!--                            </documentedVisibilities>-->
+<!--                            <skipEmptyPackages>true</skipEmptyPackages>-->
+<!--                            <reportUndocumented>false</reportUndocumented>-->
+<!--                            <platform>jvm</platform>-->
+<!--                            <jdkVersion>11</jdkVersion>-->
+<!--                        </configuration>-->
+<!--                    </plugin>-->
+
+                    <!-- GPG signing -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -280,34 +400,59 @@
                                 </goals>
                             </execution>
                         </executions>
+                    </plugin>
+
+                    <!-- Calculate checksums -->
+                    <plugin>
+                        <groupId>net.nicoulaj.maven.plugins</groupId>
+                        <artifactId>checksum-maven-plugin</artifactId>
+                        <version>${checksum-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>source-release-checksum</id>
+                                <goals>
+                                    <goal>files</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                         <configuration>
-                            <gpgArguments>
-                                <arg>--digest-algo=SHA512</arg>
-                                <arg>--batch</arg>
-                                <arg>--yes</arg>
-                                <arg>--pinentry-mode</arg>
-                                <arg>loopback</arg>
-                            </gpgArguments>
-                            <!-- 明确告诉插件不要依赖 GPG Agent（避免某些系统默认启动 agent 导致失败） -->
-                            <useAgent>false</useAgent>
+                            <algorithms>
+                                <algorithm>SHA-512</algorithm>
+                                <algorithm>SHA-256</algorithm>
+                            </algorithms>
+                            <csvSummary>false</csvSummary>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>${project.artifactId}-${project.version}-sources.jar</include>
+                                        <include>${project.artifactId}-${project.version}-javadoc.jar</include>
+                                        <include>${project.artifactId}-${project.version}.jar</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                            <failIfNoFiles>false</failIfNoFiles>
                         </configuration>
                     </plugin>
 
-                    <!-- We want to sign the artifact, the POM, and all attached artifacts -->
+                    <!-- Nexus staging -->
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.7.0</version>
+                        <version>${nexus-staging-maven-plugin.version}</version>
                         <configuration>
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                             <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                            <stagingProgressTimeoutMinutes>15</stagingProgressTimeoutMinutes>
+                            <stagingProgressPauseDurationSeconds>10</stagingProgressPauseDurationSeconds>
                         </configuration>
                         <extensions>true</extensions>
                     </plugin>
                 </plugins>
             </build>
         </profile>
+
         <profile>
             <id>OS-WIN</id>
             <activation>
@@ -769,6 +914,10 @@
     </dependencies>
 
     <properties>
+        <!-- Build properties -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <ktor.version>2.3.11</ktor.version>
         <springmockk.version>4.0.2</springmockk.version>
         <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>

@@ -18,6 +18,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_DISPLAY
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.logging.ThrottlingLogger
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
@@ -30,6 +31,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyContext
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent.Companion
 import com.google.common.annotations.Beta
 import org.slf4j.LoggerFactory
 
@@ -40,7 +42,8 @@ open class BrowserPrivacyContext(
     conf: ImmutableConfig,
     privacyAgent: PrivacyAgent
 ) : AbstractPrivacyContext(privacyAgent, conf) {
-    private val logger = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
+    private val logger = getLogger(BrowserPrivacyContext::class)
+    private val throttlingLogger = ThrottlingLogger(logger)
 
     val browserId = BrowserId(privacyAgent.contextDir, privacyAgent.fingerprint)
     val driverContext = WebDriverContext(browserId, driverPoolManager, conf)
@@ -232,7 +235,7 @@ open class BrowserPrivacyContext(
             proxyContext = ProxyContext.create(driverContext, proxyPoolManager0)
             coreMetrics?.proxies?.mark()
         } catch (e: ProxyException) {
-            logger.warn(e.brief("Failed to create proxy context - "))
+            throttlingLogger.warn(e.brief("Can not create proxy context - "))
         }
     }
 }

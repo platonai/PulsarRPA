@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>MockAICommandController SSE Client</title>
+    <title>PulsarCommander SSE Client</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -90,12 +90,14 @@
     <h2>🚀 PulsarRPA Commander</h2>
     <label for="commandInput">🤖 What do you want me to do?</label>
     <textarea id="commandInput" rows="6" cols="60">
-Go to https://www.amazon.com/dp/B0C1H26C46
-After page load: scroll to the middle.
+        Go to https://www.amazon.com/dp/B0C1H26C46
 
-Summarize the product.
-Extract: product name, price, ratings.
-Find all links containing /dp/.
+        After browser launch: clear browser cookies.
+        After page load: scroll to the middle.
+
+        Summarize the product.
+        Extract: product name, price, ratings.
+        Find all links containing /dp/.
     </textarea><br>
     <button id="reviseButton" onclick="reviseCommand()">✨ Refine</button>
     <button id="submitButton" onclick="submitCommand()" style="float: right;">🚀 Submit</button>

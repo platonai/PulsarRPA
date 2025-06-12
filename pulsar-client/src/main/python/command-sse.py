@@ -5,6 +5,8 @@ import sseclient
 def main():
     command = """
         Go to https://www.amazon.com/dp/B0C1H26C46
+
+        After browser launch: clear browser cookies.
         After page load: scroll to the middle.
 
         Summarize the product.

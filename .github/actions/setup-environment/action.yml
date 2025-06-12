@@ -1,0 +1,142 @@
+name: Setup Environment
+description: Setup Java, Maven, and basic dependencies for CI/CD pipeline
+author: platonai
+branding:
+  icon: 'settings'
+  color: 'blue'
+
+inputs:
+  java_version:
+    description: 'Java version to use (default: 17)'
+    required: false
+    default: '17'
+  enable_cache:
+    description: 'Enable Maven cache (default: true)'
+    required: false
+    default: 'true'
+
+outputs:
+  java_version:
+    description: 'Java version that was installed'
+    value: ${{ inputs.java_version }}
+  version:
+    description: 'Application version from VERSION file'
+    value: ${{ env.VERSION }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: ${{ inputs.java_version }}
+        cache: ${{ inputs.enable_cache == 'true' && 'maven' || '' }}
+
+    - name: Install Required Tools
+      shell: bash
+      run: |
+        echo "::group::Installing Required Tools"
+        
+        # Install jq for JSON parsing
+        if ! command -v jq &> /dev/null; then
+          echo "Installing jq..."
+          sudo apt-get update -qq
+          sudo apt-get install -y jq
+        else
+          echo "✅ jq already installed: $(jq --version)"
+        fi
+        
+        # Install timeout command if not available
+        if ! command -v timeout &> /dev/null; then
+          echo "Installing coreutils..."
+          sudo apt-get install -y coreutils
+        else
+          echo "✅ timeout command available"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Read Application Version
+      shell: bash
+      run: |
+        echo "::group::Reading Application Version"
+        
+        if [ -f VERSION ]; then
+          VERSION=$(head -n 1 VERSION | tr -d '\n\r\t ')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "✅ Found VERSION file: $VERSION"
+        else
+          # Try to extract version from pom.xml
+          if [ -f pom.xml ]; then
+            VERSION=$(grep -m1 '<version>' pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | tr -d '\n\r\t ')
+            if [ -n "$VERSION" ]; then
+              echo "VERSION=$VERSION" >> $GITHUB_ENV
+              echo "✅ Extracted version from pom.xml: $VERSION"
+            else
+              echo "⚠️ Could not extract version from pom.xml"
+            fi
+          else
+            echo "⚠️ No VERSION file or pom.xml found"
+          fi
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Cache Maven Dependencies
+      if: inputs.enable_cache == 'true'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.m2/wrapper
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml', '**/.mvn/wrapper/maven-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Setup Permissions
+      shell: bash
+      run: |
+        echo "::group::Setting up Permissions"
+        
+        # Set execute permissions for shell scripts
+        if [ -d "bin/" ]; then
+          find bin/ -name "*.sh" -exec chmod +x {} \;
+          echo "✅ Set execute permissions for $(find bin/ -name "*.sh" | wc -l) script(s) in bin/"
+        fi
+        
+        if [ -d "scripts/" ]; then
+          find scripts/ -name "*.sh" -exec chmod +x {} \;
+          echo "✅ Set execute permissions for $(find scripts/ -name "*.sh" | wc -l) script(s) in scripts/"
+        fi
+        
+        # Set execute permissions for Maven wrapper
+        if [ -f "./mvnw" ]; then
+          chmod +x ./mvnw
+          echo "✅ Set execute permissions for Maven wrapper"
+        fi
+        
+        # Set execute permissions for Gradle wrapper if exists
+        if [ -f "./gradlew" ]; then
+          chmod +x ./gradlew
+          echo "✅ Set execute permissions for Gradle wrapper"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Display Environment Info
+      shell: bash
+      run: |
+        echo "::group::Environment Information"
+        echo "🔧 Java Version: $(java -version 2>&1 | head -n 1)"
+        echo "🔧 Maven Version: $(./mvnw --version 2>/dev/null | head -n 1 || echo 'Maven wrapper not found')"
+        echo "🔧 Docker Version: $(docker --version 2>/dev/null || echo 'Docker not available')"
+        echo "🔧 Operating System: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
+        echo "🔧 Available Memory: $(free -h | grep '^Mem:' | awk '{print $2}')"
+        echo "🔧 Available Disk: $(df -h / | tail -1 | awk '{print $4}')"
+        echo "::endgroup::"

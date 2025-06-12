@@ -86,6 +86,31 @@ docker run -d -p 8182:8182 -v /path/on/host:/path/in/container galaxyeye88/pulsa
 docker inspect galaxyeye88/pulsar-rpa
 ```
 
----
+### **9. 运行时环境变量（可选）**
+如果需要设置环境变量（如 API 密钥），可以使用 `-e` 参数：
+```bash
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=your_api_key galaxyeye88/pulsar-rpa
+```
 
-通过以上步骤，你应该能够成功运行 `galaxyeye88/pulsar-rpa` 镜像并开启 `8182` 端口。
+### **10. 运行时配置文件（可选）**
+如果需要加载配置文件，可以使用 `-v` 挂载配置文件：
+```bash
+docker run -d -p 8182:8182 -v /path/to/config:/app/config galaxyeye88/pulsar-rpa
+```
+
+### **11. 其他注意事项**
+- 确保 Docker 已正确安装并运行。
+- 如果使用代理或 VPN，确保它们不会干扰 Docker 的网络连接。
+- 如果遇到端口冲突，可以选择其他未被占用的端口进行映射。
+- 如果需要在容器内运行特定命令或脚本，可以使用 `docker exec` 命令进入容器：
+    ```bash
+    docker exec -it <container_id> /bin/bash
+    ```
+    这将打开一个交互式终端，你可以在容器内执行命令。
+- 如果需要查看容器的资源使用情况，可以使用 `docker stats` 命令：
+    ```bash
+    docker stats <container_id>
+    ```
+### **12. 其他资源**
+- [Docker 官方文档](https://docs.docker.com/)
+- [Docker Hub - galaxyeye88/pulsar-rpa](https://hub.docker.com/r/galaxyeye88/pulsar-rpa)

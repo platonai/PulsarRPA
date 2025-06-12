@@ -64,9 +64,9 @@ if ($PerformClean) {
 }
 
 if ($SkipTests) {
-  & $MvnCmd deploy -P platon-deploy,platon-release -DskipTests
+  & $MvnCmd deploy -P deploy,release -DskipTests
 } else {
-  & $MvnCmd deploy -P platon-deploy,platon-release
+  & $MvnCmd deploy -P deploy,release
 }
 
 $exitCode =$LastExitCode
@@ -77,8 +77,8 @@ if ($exitCode -eq 0) {
 }
 
 # The following commands are commented out to avoid accidental execution
-# mvn nexus-staging:close -P platon-deploy
-# mvn nexus-staging:release -P platon-deploy
+# mvn nexus-staging:close -P deploy
+# mvn nexus-staging:release -P deploy
 
 # Build pulsar-app/pulsar-master but do not deploy the artifacts
 $PulsarAppPath = Join-Path $AppHome 'pulsar-app/pulsar-master'

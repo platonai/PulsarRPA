@@ -1,0 +1,45 @@
+name: Cleanup Resources
+description: Clean up Docker containers and services
+inputs:
+  container_name:
+    description: Container name to cleanup
+    required: false
+    default: 'app-test-container'
+  cleanup_compose:
+    description: Whether to cleanup docker-compose services
+    required: false
+    default: 'true'
+  cleanup_volumes:
+    description: Whether to cleanup volumes
+    required: false
+    default: 'true'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Cleanup Resources
+      shell: bash
+      run: |
+        echo "::group::Cleanup Resources"
+        
+        # Stop and remove test container
+        if docker ps -q -f name=${{ inputs.container_name }} | grep -q .; then
+          echo "🧹 Stopping test container: ${{ inputs.container_name }}"
+          docker stop ${{ inputs.container_name }} || true
+          docker rm ${{ inputs.container_name }} || true
+          echo "✅ Test container cleaned up"
+        fi
+        
+        # Stop Docker Compose services
+        if [ "${{ inputs.cleanup_compose }}" == "true" ]; then
+          echo "🧹 Stopping Docker Compose services..."
+          if [ "${{ inputs.cleanup_volumes }}" == "true" ]; then
+            docker compose down -v || true
+          else
+            docker compose down || true
+          fi
+          echo "✅ Docker Compose services stopped"
+        fi
+        
+        echo "✅ Cleanup completed"
+        echo "::endgroup::"

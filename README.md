@@ -31,6 +31,8 @@ Automate browsers, extract data, and analyze at scale using simple natural langu
 
 ```text
 Go to https://www.amazon.com/dp/B0C1H26C46
+
+After browser launch: clear browser cookies.
 After page load: scroll to the middle.
 
 Summarize the product.
@@ -124,7 +126,9 @@ curl -X POST "http://localhost:8182/api/commands/plain" \
   -H "Content-Type: text/plain" \
   -d '
     Go to https://www.amazon.com/dp/B0C1H26C46
-    After page load: hover on #title, then scroll to the middle.
+    
+    After browser launch: clear browser cookies.
+    After page load: scroll to the middle.
     
     Summarize the product.
     Extract: product name, price, ratings.
@@ -142,7 +146,7 @@ curl -X POST "http://localhost:8182/api/commands" \
     "pageSummaryPrompt": "Provide a brief introduction of this product.",
     "dataExtractionRules": "product name, price, and ratings",
     "linkExtractionRules": "all links containing `/dp/` on the page",
-    "onPageReadyActions": ["hover on #title", "scroll to the middle"]
+    "onPageReadyActions": ["click #title", "scroll to the middle"]
   }'
 ```
 
@@ -155,7 +159,7 @@ curl -X POST "http://localhost:8182/api/commands" \
 Harness the power of the `x/e` API for highly precise, flexible, and intelligent data extraction.
 
   ```bash
-  curl -X POST "http://localhost:8182/api/scrape/tasks/submit" -H "Content-Type: text/plain" -d "
+  curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
     llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
     dom_base_uri(dom) as url,

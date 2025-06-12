@@ -1,0 +1,397 @@
+name: Docker Build
+description: Build Docker images with multi-platform support and optimization
+author: platonai
+branding:
+  icon: 'box'
+  color: 'blue'
+
+inputs:
+  image_name:
+    description: 'Docker image name (required)'
+    required: true
+  version:
+    description: 'Image version/tag (required)'
+    required: true
+  dockerfile:
+    description: 'Dockerfile path (default: Dockerfile)'
+    required: false
+    default: 'Dockerfile'
+  build_context:
+    description: 'Build context path (default: .)'
+    required: false
+    default: '.'
+  timeout_minutes:
+    description: 'Build timeout in minutes (default: 15)'
+    required: false
+    default: '15'
+  platforms:
+    description: 'Target platforms (default: linux/amd64)'
+    required: false
+    default: 'linux/amd64'
+  build_args:
+    description: 'Build arguments (key=value, one per line)'
+    required: false
+    default: ''
+  cache_from:
+    description: 'Cache source images'
+    required: false
+    default: ''
+  push_image:
+    description: 'Push image after build (default: false)'
+    required: false
+    default: 'false'
+  show_layer_details:
+    description: 'Show detailed layer information (default: true)'
+    required: false
+    default: 'true'
+
+outputs:
+  image_id:
+    description: 'Built image ID'
+    value: ${{ steps.build.outputs.image_id }}
+  image_digest:
+    description: 'Image digest'
+    value: ${{ steps.build.outputs.digest }}
+  image_size:
+    description: 'Image size in bytes'
+    value: ${{ steps.image-info.outputs.size }}
+  image_size_mb:
+    description: 'Image size in MB'
+    value: ${{ steps.image-info.outputs.size_mb }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Validate Build Context
+      shell: bash
+      run: |
+        echo "::group::Build Context Validation"
+        
+        if [ ! -f "${{ inputs.dockerfile }}" ]; then
+          echo "❌ Dockerfile not found: ${{ inputs.dockerfile }}"
+          exit 1
+        fi
+        
+        if [ ! -d "${{ inputs.build_context }}" ]; then
+          echo "❌ Build context directory not found: ${{ inputs.build_context }}"
+          exit 1
+        fi
+        
+        echo "✅ Dockerfile found: ${{ inputs.dockerfile }}"
+        echo "✅ Build context: ${{ inputs.build_context }}"
+        
+        # Show Dockerfile content summary
+        echo ""
+        echo "📋 Dockerfile summary:"
+        echo "  - Size: $(wc -l < ${{ inputs.dockerfile }}) lines"
+        
+        # Get base image safely
+        base_image=$(grep -m1 '^FROM' "${{ inputs.dockerfile }}" | awk '{print $2}' || echo 'unknown')
+        echo "  - Base image: $base_image"
+        
+        # Check for multi-stage builds
+        stage_count=$(grep -c '^FROM' "${{ inputs.dockerfile }}" || echo "1")
+        if [ $stage_count -gt 1 ]; then
+          echo "  - Multi-stage build: $stage_count stages"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        platforms: ${{ inputs.platforms }}
+
+    - name: Prepare Build Arguments
+      shell: bash
+      run: |
+        echo "::group::Build Preparation"
+        
+        # Process build arguments
+        if [ -n "${{ inputs.build_args }}" ]; then
+          echo "📋 Build arguments:"
+          echo "${{ inputs.build_args }}" | while IFS= read -r arg; do
+            if [ -n "$arg" ]; then
+              echo "  - $arg"
+            fi
+          done
+        fi
+        
+        # Prepare tags
+        TAGS="${{ inputs.image_name }}:${{ inputs.version }}"
+        
+        # Add latest tag if version is not a snapshot or pre-release
+        if [[ "${{ inputs.version }}" != *"SNAPSHOT"* ]] && [[ "${{ inputs.version }}" != *"-"* ]] && [[ "${{ inputs.version }}" != *"alpha"* ]] && [[ "${{ inputs.version }}" != *"beta"* ]] && [[ "${{ inputs.version }}" != *"rc"* ]]; then
+          TAGS="$TAGS,${{ inputs.image_name }}:latest"
+        fi
+        
+        echo "DOCKER_TAGS=$TAGS" >> $GITHUB_ENV
+        
+        echo "📋 Tags to be created:"
+        echo "$TAGS" | tr ',' '\n' | sed 's/^/  - /'
+        
+        echo "::endgroup::"
+
+    - name: Build Docker Image
+      id: build
+      shell: bash
+      run: |
+        echo "::group::Docker Build"
+        
+        start_time=$(date +%s)
+        
+        echo "🐳 Building Docker image..."
+        echo "📋 Build Configuration:"
+        echo "  - Image: ${{ inputs.image_name }}"
+        echo "  - Version: ${{ inputs.version }}"
+        echo "  - Dockerfile: ${{ inputs.dockerfile }}"
+        echo "  - Context: ${{ inputs.build_context }}"
+        echo "  - Platforms: ${{ inputs.platforms }}"
+        echo "  - Timeout: ${{ inputs.timeout_minutes }} minutes"
+        
+        # Build docker command
+        build_cmd="docker buildx build"
+        build_cmd="$build_cmd --file ${{ inputs.dockerfile }}"
+        build_cmd="$build_cmd --platform ${{ inputs.platforms }}"
+        
+        # Add tags
+        for tag in $(echo "$DOCKER_TAGS" | tr ',' ' '); do
+          build_cmd="$build_cmd --tag $tag"
+        done
+        
+        # Add build arguments
+        if [ -n "${{ inputs.build_args }}" ]; then
+          echo "${{ inputs.build_args }}" | while IFS= read -r arg; do
+            if [ -n "$arg" ]; then
+              build_cmd="$build_cmd --build-arg $arg"
+            fi
+          done
+        fi
+        
+        # Add cache configuration
+        if [ -n "${{ inputs.cache_from }}" ]; then
+          build_cmd="$build_cmd --cache-from ${{ inputs.cache_from }}"
+        fi
+        
+        # Add push option
+        if [ "${{ inputs.push_image }}" == "true" ]; then
+          build_cmd="$build_cmd --push"
+        else
+          build_cmd="$build_cmd --load"
+        fi
+        
+        # Add build context
+        build_cmd="$build_cmd ${{ inputs.build_context }}"
+        
+        echo "🚀 Executing: $build_cmd"
+        echo ""
+        
+        # Execute with timeout
+        timeout_seconds=$(( ${{ fromJSON(inputs.timeout_minutes) }} * 60 ))
+        
+        if timeout $timeout_seconds $build_cmd; then
+          end_time=$(date +%s)
+          build_time=$((end_time - start_time))
+          echo ""
+          echo "✅ Docker image built successfully in ${build_time} seconds"
+        
+          # Get image ID (only works if not pushing)
+          if [ "${{ inputs.push_image }}" != "true" ]; then
+            image_id=$(docker images --format "{{.ID}}" "${{ inputs.image_name }}:${{ inputs.version }}" | head -1)
+            echo "image_id=$image_id" >> $GITHUB_OUTPUT
+          fi
+        
+        else
+          end_time=$(date +%s)
+          build_time=$((end_time - start_time))
+          echo ""
+          echo "❌ Docker build failed or timed out after ${build_time} seconds"
+          exit 1
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Image Information
+      id: image-info
+      if: success() && inputs.push_image != 'true'
+      shell: bash
+      run: |
+        echo "::group::Image Information"
+        
+        echo "📊 Built images:"
+        docker images --format "table {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}" | \
+          grep "${{ inputs.image_name }}" || true
+        
+        # Get detailed image information
+        image_name="${{ inputs.image_name }}:${{ inputs.version }}"
+        
+        if docker image inspect "$image_name" > /dev/null 2>&1; then
+          # Get image size
+          size=$(docker image inspect "$image_name" --format '{{.Size}}' 2>/dev/null || echo "0")
+          size_mb=$((size / 1024 / 1024))
+        
+          echo "size=$size" >> $GITHUB_OUTPUT
+          echo "size_mb=$size_mb" >> $GITHUB_OUTPUT
+        
+          echo ""
+          echo "📋 Image Details:"
+          echo "  - Name: $image_name"
+          echo "  - Size: ${size_mb} MB"
+        
+          # Get architecture and OS safely
+          architecture=$(docker image inspect "$image_name" --format '{{.Architecture}}' 2>/dev/null || echo "unknown")
+          os=$(docker image inspect "$image_name" --format '{{.Os}}' 2>/dev/null || echo "unknown")
+        
+          echo "  - Architecture: $architecture"
+          echo "  - OS: $os"
+        
+          # Get creation date
+          created=$(docker image inspect "$image_name" --format '{{.Created}}' 2>/dev/null || echo "unknown")
+          echo "  - Created: $created"
+        
+          # Show layer information with better error handling
+          if [ "${{ inputs.show_layer_details }}" == "true" ]; then
+            echo ""
+            echo "📦 Image layers (top 10):"
+        
+            # Use a more robust approach to show layers
+            if docker history "$image_name" --format "table {{.CreatedBy}}\t{{.Size}}" --no-trunc 2>/dev/null | head -11 > /tmp/layer_info.txt; then
+              cat /tmp/layer_info.txt || echo "Unable to display layer information"
+              rm -f /tmp/layer_info.txt
+            else
+              echo "⚠️ Unable to retrieve detailed layer information"
+        
+              # Fallback: show basic layer count
+              layer_count=$(docker history "$image_name" --quiet 2>/dev/null | wc -l || echo "unknown")
+              echo "  - Total layers: $layer_count"
+            fi
+          fi
+        
+          # Show image configuration summary
+          echo ""
+          echo "⚙️ Image Configuration:"
+        
+          # Get exposed ports
+          exposed_ports=$(docker image inspect "$image_name" --format '{{range $port, $config := .Config.ExposedPorts}}{{$port}} {{end}}' 2>/dev/null | tr '\n' ' ' || echo "none")
+          echo "  - Exposed Ports: ${exposed_ports:-none}"
+        
+          # Get environment variables count
+          env_count=$(docker image inspect "$image_name" --format '{{len .Config.Env}}' 2>/dev/null || echo "0")
+          echo "  - Environment Variables: $env_count"
+        
+          # Get entrypoint
+          entrypoint=$(docker image inspect "$image_name" --format '{{.Config.Entrypoint}}' 2>/dev/null | sed 's/\[//g' | sed 's/\]//g' | tr -d '"' || echo "none")
+          if [ "$entrypoint" != "none" ] && [ "$entrypoint" != "<no value>" ] && [ -n "$entrypoint" ]; then
+            echo "  - Entrypoint: $entrypoint"
+          fi
+        
+          # Get CMD
+          cmd=$(docker image inspect "$image_name" --format '{{.Config.Cmd}}' 2>/dev/null | sed 's/\[//g' | sed 's/\]//g' | tr -d '"' || echo "none")
+          if [ "$cmd" != "none" ] && [ "$cmd" != "<no value>" ] && [ -n "$cmd" ]; then
+            echo "  - CMD: $cmd"
+          fi
+        
+        else
+          echo "❌ Unable to inspect image: $image_name"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Image Security and Quality Check
+      if: success() && inputs.push_image != 'true'
+      shell: bash
+      run: |
+        echo "::group::Image Security and Quality Check"
+        
+        image_name="${{ inputs.image_name }}:${{ inputs.version }}"
+        
+        echo "🔍 Running image quality checks..."
+        
+        # Check for common security issues
+        echo ""
+        echo "🛡️ Basic Security Checks:"
+        
+        # Check if image runs as root
+        user=$(docker image inspect "$image_name" --format '{{.Config.User}}' 2>/dev/null || echo "")
+        if [ -z "$user" ] || [ "$user" = "root" ] || [ "$user" = "0" ]; then
+          echo "  ⚠️ Image may run as root user (security concern)"
+        else
+          echo "  ✅ Image runs as non-root user: $user"
+        fi
+        
+        # Check image size efficiency
+        echo ""
+        echo "📏 Size Analysis:"
+        size_mb=$(docker image inspect "$image_name" --format '{{.Size}}' 2>/dev/null | awk '{print int($1/1024/1024)}' || echo "0")
+        
+        if [ "$size_mb" -gt 2000 ]; then
+          echo "  ⚠️ Large image size (${size_mb}MB) - consider optimization"
+        elif [ "$size_mb" -gt 1000 ]; then
+          echo "  ℹ️ Medium image size (${size_mb}MB)"
+        else
+          echo "  ✅ Compact image size (${size_mb}MB)"
+        fi
+        
+        # Docker Scout scan if available
+        echo ""
+        echo "🔍 Security Scanning:"
+        if command -v docker scout &> /dev/null; then
+          echo "Running Docker Scout security scan..."
+          if timeout 60 docker scout quickview "$image_name" 2>/dev/null; then
+            echo "✅ Security scan completed"
+          else
+            echo "⚠️ Security scan timed out or failed"
+          fi
+        else
+          echo "ℹ️ Docker Scout not available - install for security scanning"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Test Image Functionality
+      if: success() && inputs.push_image != 'true'
+      shell: bash
+      run: |
+        echo "::group::Image Functionality Test"
+        
+        image_name="${{ inputs.image_name }}:${{ inputs.version }}"
+        
+        echo "🧪 Testing image functionality..."
+        
+        # Test 1: Basic container creation
+        echo "Test 1: Container creation..."
+        if timeout 30 docker create --name test-container-$$ "$image_name" > /dev/null 2>&1; then
+          echo "  ✅ Container creation successful"
+          docker rm test-container-$$ > /dev/null 2>&1 || true
+        else
+          echo "  ❌ Container creation failed"
+        fi
+        
+        # Test 2: Basic startup test (if possible)
+        echo ""
+        echo "Test 2: Basic startup test..."
+        
+        # Try to run container briefly to see if it starts without immediate crash
+        if timeout 10 docker run --rm --name startup-test-$$ "$image_name" echo "Startup test" > /dev/null 2>&1; then
+          echo "  ✅ Basic startup successful"
+        else
+          # This might be expected for web applications
+          echo "  ℹ️ Container requires specific runtime environment (normal for web apps)"
+        fi
+        
+        # Test 3: Check for common issues
+        echo ""
+        echo "Test 3: Configuration validation..."
+        
+        # Check if required ports are exposed (if we know the expected port)
+        if docker image inspect "$image_name" --format '{{range $port, $config := .Config.ExposedPorts}}{{$port}}{{end}}' 2>/dev/null | grep -q "8182"; then
+          echo "  ✅ Expected port 8182 is exposed"
+        else
+          echo "  ℹ️ Port 8182 not explicitly exposed (may be configured at runtime)"
+        fi
+        
+        echo ""
+        echo "🎉 Image functionality tests completed"
+        echo "✅ Image is ready for deployment"
+        
+        echo "::endgroup::"

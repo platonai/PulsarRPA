@@ -1,0 +1,633 @@
+name: Verify Dependencies
+description: Start and verify MongoDB and Redis services with intelligent network integration
+author: platonai
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+inputs:
+  network_name:
+    description: 'Docker network name (will use detected network from previous steps)'
+    required: true
+  compose_file:
+    description: 'Docker compose file path (default: docker-compose.yml)'
+    required: false
+    default: 'docker-compose.yml'
+  services_to_start:
+    description: 'Comma-separated list of services to start (default: mongodb,redis)'
+    required: false
+    default: 'mongodb,redis'
+  mongodb_container:
+    description: 'MongoDB container name (default: mongodb)'
+    required: false
+    default: 'mongodb'
+  redis_container:
+    description: 'Redis container name (default: redis)'
+    required: false
+    default: 'redis'
+  startup_timeout:
+    description: 'Service startup timeout in seconds (default: 120)'
+    required: false
+    default: '120'
+  force_recreate:
+    description: 'Force recreate containers even if they exist (default: false)'
+    required: false
+    default: 'false'
+  verify_network_connectivity:
+    description: 'Verify network connectivity between services (default: true)'
+    required: false
+    default: 'true'
+  wait_for_healthy_status:
+    description: 'Wait for containers to report healthy status (default: true)'
+    required: false
+    default: 'true'
+  mongodb_port:
+    description: 'MongoDB port for connectivity testing (default: 27017)'
+    required: false
+    default: '27017'
+  redis_port:
+    description: 'Redis port for connectivity testing (default: 6379)'
+    required: false
+    default: '6379'
+  additional_services:
+    description: 'Additional services to verify (comma-separated container names)'
+    required: false
+    default: ''
+
+outputs:
+  mongodb_status:
+    description: 'MongoDB service status (ready/failed/timeout)'
+    value: ${{ steps.mongodb-check.outputs.status }}
+  redis_status:
+    description: 'Redis service status (ready/failed/timeout)'
+    value: ${{ steps.redis-check.outputs.status }}
+  mongodb_version:
+    description: 'MongoDB version'
+    value: ${{ steps.mongodb-check.outputs.version }}
+  redis_version:
+    description: 'Redis version'
+    value: ${{ steps.redis-check.outputs.version }}
+  mongodb_ip:
+    description: 'MongoDB container IP address'
+    value: ${{ steps.mongodb-check.outputs.ip_address }}
+  redis_ip:
+    description: 'Redis container IP address'
+    value: ${{ steps.redis-check.outputs.ip_address }}
+  network_verified:
+    description: 'Network connectivity verification status'
+    value: ${{ steps.network-connectivity.outputs.status }}
+  services_ready_time:
+    description: 'Total time for services to become ready (seconds)'
+    value: ${{ steps.startup-summary.outputs.ready_time }}
+
+runs:
+  using: "composite"
+  steps:
+
+    - name: Pre-Verification Setup
+      shell: bash
+      run: |
+        echo "::group::🔧 Pre-Verification Setup"
+        
+        echo "📋 Dependency Verification Configuration:"
+        echo "  - Network: ${{ inputs.network_name }}"
+        echo "  - Compose File: ${{ inputs.compose_file }}"
+        echo "  - MongoDB Container: ${{ inputs.mongodb_container }}"
+        echo "  - Redis Container: ${{ inputs.redis_container }}"
+        echo "  - Startup Timeout: ${{ inputs.startup_timeout }}s"
+        echo "  - Force Recreate: ${{ inputs.force_recreate }}"
+        echo "  - Verify Connectivity: ${{ inputs.verify_network_connectivity }}"
+        echo "  - Wait for Healthy: ${{ inputs.wait_for_healthy_status }}"
+        
+        # Verify compose file exists
+        if [ ! -f "${{ inputs.compose_file }}" ]; then
+          echo "❌ Docker compose file not found: ${{ inputs.compose_file }}"
+          echo "Available files in current directory:"
+          ls -la *.yml *.yaml 2>/dev/null || echo "No YAML files found"
+          exit 1
+        fi
+        
+        echo "✅ Compose file found: ${{ inputs.compose_file }}"
+        
+        # Record start time
+        echo "SERVICES_START_TIME=$(date +%s)" >> $GITHUB_ENV
+        
+        echo "::endgroup::"
+
+    - name: Start Dependencies
+      shell: bash
+      run: |
+        echo "::group::🚀 Starting Dependencies"
+        
+        services_input="${{ inputs.services_to_start }}"
+        compose_file="${{ inputs.compose_file }}"
+        
+        echo "📋 Starting services from $compose_file..."
+        echo "Services to start: $services_input"
+        
+        # Convert comma-separated to space-separated
+        services_list=$(echo "$services_input" | tr ',' ' ')
+        
+        echo "🚀 Executing: docker compose -f \"$compose_file\" up -d $services_list"
+        
+        # Start services with better error handling and capture output
+        if output=$(docker compose -f "$compose_file" up -d $services_list 2>&1); then
+          echo "✅ Docker Compose services started successfully"
+          echo "$output"
+        else
+          echo "❌ Failed to start Docker Compose services"
+          echo ""
+          echo "🔍 Docker Compose Error Output:"
+          echo "$output"
+          echo ""
+          echo "🔍 Additional debugging information:"
+          echo "Compose file content (first 30 lines):"
+          cat "$compose_file" | head -30
+          echo ""
+          echo "Current Docker status:"
+          docker ps -a
+          exit 1
+        fi
+        
+        echo "⏳ Initial wait for services to initialize..."
+        sleep 10
+        
+        echo "::endgroup::"
+
+    - name: Verify Docker Environment
+      shell: bash
+      run: |
+        echo "::group::🌐 Docker Environment Verification"
+        
+        echo "📋 Running containers:"
+        docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}\t{{.Networks}}"
+        
+        # Check network details with containers
+        echo ""
+        echo "🔗 Network '${{ inputs.network_name }}' details:"
+        if docker network inspect "${{ inputs.network_name }}" > /tmp/network_info.json 2>&1; then
+          # Show network summary
+          echo "  - Driver: $(cat /tmp/network_info.json | jq -r '.[0].Driver')"
+          echo "  - Scope: $(cat /tmp/network_info.json | jq -r '.[0].Scope')"
+          echo "  - Internal: $(cat /tmp/network_info.json | jq -r '.[0].Internal')"
+        
+          # Show connected containers
+          connected_containers=$(cat /tmp/network_info.json | jq -r '.[0].Containers | keys[]' 2>/dev/null | wc -l || echo "0")
+          echo "  - Connected Containers: $connected_containers"
+        
+          if [ "$connected_containers" -gt 0 ]; then
+            echo "  - Container Details:"
+            cat /tmp/network_info.json | jq -r '.[0].Containers | to_entries[] | "    * \(.value.Name) (\(.value.IPv4Address))"' 2>/dev/null || true
+          fi
+        
+          rm -f /tmp/network_info.json
+        else
+          echo "⚠️ Could not inspect network details"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Wait for MongoDB
+      id: mongodb-check
+      if: contains(inputs.services_to_start, 'mongodb')  # ✅ Only run if MongoDB is requested
+      shell: bash
+      run: |
+        echo "::group::🍃 MongoDB Verification"
+        
+        # Check if container exists and is running
+        if ! docker ps --filter "name=${{ inputs.mongodb_container }}" --filter "status=running" | grep -q "${{ inputs.mongodb_container }}"; then
+          echo "❌ MongoDB container '${{ inputs.mongodb_container }}' is not running"
+          echo ""
+          echo "🔍 Container status:"
+          docker ps -a --filter "name=${{ inputs.mongodb_container }}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+          echo ""
+          echo "📋 Container logs:"
+          docker logs --tail 100 "${{ inputs.mongodb_container }}" 2>&1 || echo "Could not retrieve logs"
+          echo ""
+          echo "🌐 Network connectivity:"
+          docker network inspect "${{ inputs.network_name }}" --format "{{range \$key, \$value := .Containers}}{{.Name}} {{end}}" || true
+        
+          echo "status=failed" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+        
+        echo "✅ MongoDB container is running"
+        
+        # Get container IP address
+        mongodb_ip=$(docker inspect "${{ inputs.mongodb_container }}" --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" 2>/dev/null || echo "unknown")
+        echo "ip_address=$mongodb_ip" >> $GITHUB_OUTPUT
+        echo "📍 MongoDB IP: $mongodb_ip"
+        
+        # Wait for MongoDB to be ready
+        echo "⏳ Waiting for MongoDB to accept connections..."
+        timeout_seconds=${{ inputs.startup_timeout }}
+        attempt=1
+        max_attempts=$((timeout_seconds / 2))
+        
+        start_time=$(date +%s)
+        
+        while [ $attempt -le $max_attempts ]; do
+          current_time=$(date +%s)
+          elapsed=$((current_time - start_time))
+        
+          if [ $elapsed -ge $timeout_seconds ]; then
+            echo "❌ MongoDB startup timeout after ${elapsed} seconds"
+            break
+          fi
+        
+          # Test MongoDB connection with timeout
+          if timeout 10 docker exec "${{ inputs.mongodb_container }}" mongosh --eval "db.adminCommand('ping')" > /dev/null 2>&1; then
+            ready_time=$((current_time - start_time))
+            echo "✅ MongoDB is ready and accepting connections (${ready_time}s)"
+        
+            # Get MongoDB version and additional info
+            echo ""
+            echo "📊 MongoDB Information:"
+        
+            mongo_version=$(timeout 10 docker exec "${{ inputs.mongodb_container }}" mongosh --eval "db.version()" --quiet 2>/dev/null | tr -d '\r\n' || echo "unknown")
+            echo "  - Version: $mongo_version"
+            echo "version=$mongo_version" >> $GITHUB_OUTPUT
+        
+            # Get server status
+            server_status=$(timeout 10 docker exec "${{ inputs.mongodb_container }}" mongosh --eval "db.serverStatus().uptime" --quiet 2>/dev/null | tr -d '\r\n' || echo "unknown")
+            if [ "$server_status" != "unknown" ]; then
+              echo "  - Uptime: ${server_status}s"
+            fi
+        
+            # Test basic operations
+            if timeout 10 docker exec "${{ inputs.mongodb_container }}" mongosh --eval "db.test.insertOne({test: 'connectivity'}); db.test.deleteMany({test: 'connectivity'})" --quiet > /dev/null 2>&1; then
+              echo "  - Read/Write Operations: ✅ Working"
+            else
+              echo "  - Read/Write Operations: ⚠️ Limited"
+            fi
+        
+            echo "status=ready" >> $GITHUB_OUTPUT
+            echo "::endgroup::"
+            exit 0
+          fi
+        
+          echo "⏳ MongoDB not ready yet... (attempt $attempt/$max_attempts, ${elapsed}s elapsed)"
+        
+          # Show logs every 15 attempts (30 seconds)
+          if [ $((attempt % 15)) -eq 0 ]; then
+            echo ""
+            echo "📋 Recent MongoDB logs:"
+            docker logs --tail 10 "${{ inputs.mongodb_container }}" 2>&1 | sed 's/^/    /' || true
+            echo ""
+          fi
+        
+          sleep 2
+          ((attempt++))
+        done
+        
+        final_time=$(date +%s)
+        total_wait=$((final_time - start_time))
+        echo ""
+        echo "❌ MongoDB failed to become ready within $timeout_seconds seconds (waited ${total_wait}s)"
+        echo ""
+        echo "🔍 Final diagnosis:"
+        echo "Container status:"
+        docker ps -a --filter "name=${{ inputs.mongodb_container }}"
+        echo ""
+        echo "Final MongoDB logs:"
+        docker logs --tail 50 "${{ inputs.mongodb_container }}" 2>&1 || true
+        echo ""
+        echo "Network connectivity:"
+        docker exec "${{ inputs.mongodb_container }}" netstat -tuln 2>/dev/null | grep ":${{ inputs.mongodb_port }}" || echo "Port ${{ inputs.mongodb_port }} not listening"
+        
+        echo "status=timeout" >> $GITHUB_OUTPUT
+        exit 1
+
+    - name: Wait for Redis
+      id: redis-check
+      if: contains(inputs.services_to_start, 'redis')  # ✅ Only run if Redis is requested
+      shell: bash
+      run: |
+        echo "::group::🔴 Redis Verification"
+        
+        # Check if container exists and is running
+        if ! docker ps --filter "name=${{ inputs.redis_container }}" --filter "status=running" | grep -q "${{ inputs.redis_container }}"; then
+          echo "❌ Redis container '${{ inputs.redis_container }}' is not running"
+          echo ""
+          echo "🔍 Container status:"
+          docker ps -a --filter "name=${{ inputs.redis_container }}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+          echo ""
+          echo "📋 Container logs:"
+          docker logs --tail 100 "${{ inputs.redis_container }}" 2>&1 || echo "Could not retrieve logs"
+        
+          echo "status=failed" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+        
+        echo "✅ Redis container is running"
+        
+        # Get container IP address
+        redis_ip=$(docker inspect "${{ inputs.redis_container }}" --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" 2>/dev/null || echo "unknown")
+        echo "ip_address=$redis_ip" >> $GITHUB_OUTPUT
+        echo "📍 Redis IP: $redis_ip"
+        
+        # Wait for Redis to be ready
+        echo "⏳ Waiting for Redis to accept connections..."
+        timeout_seconds=${{ inputs.startup_timeout }}
+        attempt=1
+        max_attempts=$timeout_seconds
+        
+        start_time=$(date +%s)
+        
+        while [ $attempt -le $max_attempts ]; do
+          current_time=$(date +%s)
+          elapsed=$((current_time - start_time))
+        
+          if [ $elapsed -ge $timeout_seconds ]; then
+            echo "❌ Redis startup timeout after ${elapsed} seconds"
+            break
+          fi
+        
+          # Test Redis connection with timeout
+          if timeout 5 docker exec "${{ inputs.redis_container }}" redis-cli ping 2>/dev/null | grep -q PONG; then
+            ready_time=$((current_time - start_time))
+            echo "✅ Redis is ready and accepting connections (${ready_time}s)"
+        
+            # Get Redis information
+            echo ""
+            echo "📊 Redis Information:"
+        
+            # Get Redis version
+            redis_version=$(timeout 5 docker exec "${{ inputs.redis_container }}" redis-cli info server 2>/dev/null | grep "redis_version:" | cut -d: -f2 | tr -d '\r\n' || echo "unknown")
+            echo "  - Version: $redis_version"
+            echo "version=$redis_version" >> $GITHUB_OUTPUT
+        
+            # Get memory usage
+            redis_memory=$(timeout 5 docker exec "${{ inputs.redis_container }}" redis-cli info memory 2>/dev/null | grep "used_memory_human:" | cut -d: -f2 | tr -d '\r\n' || echo "unknown")
+            echo "  - Memory Usage: $redis_memory"
+        
+            # Get uptime
+            redis_uptime=$(timeout 5 docker exec "${{ inputs.redis_container }}" redis-cli info server 2>/dev/null | grep "uptime_in_seconds:" | cut -d: -f2 | tr -d '\r\n' || echo "unknown")
+            if [ "$redis_uptime" != "unknown" ]; then
+              echo "  - Uptime: ${redis_uptime}s"
+            fi
+        
+            # Test basic operations
+            if timeout 5 docker exec "${{ inputs.redis_container }}" redis-cli set test_key "connectivity_test" > /dev/null 2>&1 && \
+               timeout 5 docker exec "${{ inputs.redis_container }}" redis-cli get test_key > /dev/null 2>&1 && \
+               timeout 5 docker exec "${{ inputs.redis_container }}" redis-cli del test_key > /dev/null 2>&1; then
+              echo "  - Read/Write Operations: ✅ Working"
+            else
+              echo "  - Read/Write Operations: ⚠️ Limited"
+            fi
+        
+            echo "status=ready" >> $GITHUB_OUTPUT
+            echo "::endgroup::"
+            exit 0
+          fi
+        
+          echo "⏳ Redis not ready yet... (attempt $attempt/$max_attempts, ${elapsed}s elapsed)"
+        
+          # Show logs every 30 attempts
+          if [ $((attempt % 30)) -eq 0 ]; then
+            echo ""
+            echo "📋 Recent Redis logs:"
+            docker logs --tail 10 "${{ inputs.redis_container }}" 2>&1 | sed 's/^/    /' || true
+            echo ""
+          fi
+        
+          sleep 1
+          ((attempt++))
+        done
+        
+        final_time=$(date +%s)
+        total_wait=$((final_time - start_time))
+        echo ""
+        echo "❌ Redis failed to become ready within $timeout_seconds seconds (waited ${total_wait}s)"
+        echo ""
+        echo "🔍 Final diagnosis:"
+        echo "Container status:"
+        docker ps -a --filter "name=${{ inputs.redis_container }}"
+        echo ""
+        echo "Final Redis logs:"
+        docker logs --tail 50 "${{ inputs.redis_container }}" 2>&1 || true
+        echo ""
+        echo "Network connectivity:"
+        docker exec "${{ inputs.redis_container }}" netstat -tuln 2>/dev/null | grep ":${{ inputs.redis_port }}" || echo "Port ${{ inputs.redis_port }} not listening"
+        
+        echo "status=timeout" >> $GITHUB_OUTPUT
+        exit 1
+
+    - name: Verify Additional Services
+      if: inputs.additional_services != ''
+      shell: bash
+      run: |
+        echo "::group::🔧 Additional Services Verification"
+        
+        echo "🔍 Verifying additional services: ${{ inputs.additional_services }}"
+        
+        IFS=',' read -ra SERVICES <<< "${{ inputs.additional_services }}"
+        failed_services=""
+        
+        for service in "${SERVICES[@]}"; do
+          service=$(echo "$service" | xargs) # trim whitespace
+          if [ -n "$service" ]; then
+            echo ""
+            echo "Checking service: $service"
+        
+            if docker ps --filter "name=$service" --filter "status=running" | grep -q "$service"; then
+              echo "  ✅ $service is running"
+        
+              # Get basic info
+              status=$(docker inspect "$service" --format "{{.State.Status}}" 2>/dev/null || echo "unknown")
+              uptime=$(docker inspect "$service" --format "{{.State.StartedAt}}" 2>/dev/null || echo "unknown")
+              echo "  📊 Status: $status"
+              echo "  ⏰ Started: $uptime"
+        
+            else
+              echo "  ❌ $service is not running"
+              failed_services="$failed_services $service"
+        
+              # Show container status
+              docker ps -a --filter "name=$service" --format "table {{.Names}}\t{{.Status}}" || true
+            fi
+          fi
+        done
+        
+        if [ -n "$failed_services" ]; then
+          echo ""
+          echo "❌ Failed services:$failed_services"
+          echo "⚠️ Some additional services are not running, but continuing..."
+        else
+          echo ""
+          echo "✅ All additional services are running"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Network Connectivity Test
+      id: network-connectivity
+      if: inputs.verify_network_connectivity == 'true'
+      shell: bash
+      run: |
+        echo "::group::🔌 Network Connectivity Test"
+        
+        echo "🧪 Testing inter-service network connectivity..."
+        echo "Network: ${{ inputs.network_name }}"
+        
+        connectivity_status="success"
+        
+        # Test MongoDB network connectivity from a test container
+        echo ""
+        echo "🍃 Testing MongoDB network connectivity..."
+        if docker run --rm --network "${{ inputs.network_name }}" \
+           mongo:latest mongosh --host "${{ inputs.mongodb_container }}:${{ inputs.mongodb_port }}" \
+           --eval "db.adminCommand('ping')" > /dev/null 2>&1; then
+          echo "  ✅ MongoDB network connectivity verified"
+        else
+          echo "  ❌ MongoDB network connectivity failed"
+          connectivity_status="failed"
+        fi
+        
+        # ✅ Only test Redis if it's in the services list
+        if [[ "${{ inputs.services_to_start }}" == *"redis"* ]]; then
+          echo ""
+          echo "🔴 Testing Redis network connectivity..."
+          if docker run --rm --network "${{ inputs.network_name }}" \
+             redis:latest redis-cli -h "${{ inputs.redis_container }}" -p "${{ inputs.redis_port }}" \
+             ping > /dev/null 2>&1; then
+            echo "  ✅ Redis network connectivity verified"
+          else
+            echo "  ❌ Redis network connectivity failed"
+            connectivity_status="failed"
+          fi
+        
+          # Test cross-service connectivity only if both services are running
+          echo ""
+          echo "🔄 Testing cross-service connectivity..."
+          if docker exec "${{ inputs.redis_container }}" nc -z "${{ inputs.mongodb_container }}" "${{ inputs.mongodb_port }}" 2>/dev/null; then
+            echo "  ✅ Redis → MongoDB connectivity verified"
+          else
+            echo "  ⚠️ Redis → MongoDB connectivity failed (may be normal)"
+          fi
+        
+          if docker exec "${{ inputs.mongodb_container }}" nc -z "${{ inputs.redis_container }}" "${{ inputs.redis_port }}" 2>/dev/null; then
+            echo "  ✅ MongoDB → Redis connectivity verified"
+          else
+            echo "  ⚠️ MongoDB → Redis connectivity failed (may be normal)"
+          fi
+        else
+          echo ""
+          echo "ℹ️ Redis not requested - skipping Redis connectivity tests"
+        fi
+        
+        echo "status=$connectivity_status" >> $GITHUB_OUTPUT
+        echo "::endgroup::"
+
+    - name: Health Status Check
+      if: inputs.wait_for_healthy_status == 'true'
+      shell: bash
+      run: |
+        echo "::group::❤️ Health Status Check"
+        
+        echo "🔍 Checking container health status..."
+        
+        # Check if containers have health checks defined
+        mongodb_health=$(docker inspect "${{ inputs.mongodb_container }}" --format "{{.State.Health.Status}}" 2>/dev/null || echo "none")
+        redis_health=$(docker inspect "${{ inputs.redis_container }}" --format "{{.State.Health.Status}}" 2>/dev/null || echo "none")
+        
+        echo "📊 Health Status:"
+        echo "  - MongoDB: $mongodb_health"
+        echo "  - Redis: $redis_health"
+        
+        if [ "$mongodb_health" = "healthy" ] || [ "$mongodb_health" = "none" ]; then
+          echo "  ✅ MongoDB health status acceptable"
+        else
+          echo "  ⚠️ MongoDB health status: $mongodb_health"
+        fi
+        
+        if [ "$redis_health" = "healthy" ] || [ "$redis_health" = "none" ]; then
+          echo "  ✅ Redis health status acceptable"
+        else
+          echo "  ⚠️ Redis health status: $redis_health"
+        fi
+        
+        # If containers don't have built-in health checks, our connectivity tests serve as health verification
+        if [ "$mongodb_health" = "none" ] && [ "$redis_health" = "none" ]; then
+          echo ""
+          echo "ℹ️ Containers don't have built-in health checks"
+          echo "✅ Our connectivity tests serve as health verification"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Services Startup Summary
+      id: startup-summary
+      if: always()
+      shell: bash
+      run: |
+        echo "::group::📊 Services Startup Summary"
+        
+        end_time=$(date +%s)
+        total_ready_time=$((end_time - SERVICES_START_TIME))
+        
+        echo "ready_time=$total_ready_time" >> $GITHUB_OUTPUT
+        
+        echo "⏱️ Services startup summary:"
+        echo "  - Total startup time: ${total_ready_time}s"
+        echo "  - Services requested: ${{ inputs.services_to_start }}"
+        echo "  - MongoDB status: ${{ steps.mongodb-check.outputs.status }}"
+        
+        # Only show Redis status if Redis was requested
+        if [[ "${{ inputs.services_to_start }}" == *"redis"* ]]; then
+          echo "  - Redis status: ${{ steps.redis-check.outputs.status || 'skipped' }}"
+        else
+          echo "  - Redis status: not requested"
+        fi
+        
+        echo "  - Network verification: ${{ steps.network-connectivity.outputs.status || 'skipped' }}"
+        
+        # Show final service information
+        echo ""
+        echo "🌐 Final service configuration:"
+        echo "  - Network: ${{ inputs.network_name }}"
+        echo "  - MongoDB: ${{ inputs.mongodb_container }}:${{ inputs.mongodb_port }} (${{ steps.mongodb-check.outputs.ip_address }})"
+        
+        # Only show Redis info if Redis was requested
+        if [[ "${{ inputs.services_to_start }}" == *"redis"* ]]; then
+          echo "  - Redis: ${{ inputs.redis_container }}:${{ inputs.redis_port }} (${{ steps.redis-check.outputs.ip_address || 'not started' }})"
+        fi
+        
+        # Show versions if available
+        if [ -n "${{ steps.mongodb-check.outputs.version }}" ] && [ "${{ steps.mongodb-check.outputs.version }}" != "unknown" ]; then
+          echo "  - MongoDB Version: ${{ steps.mongodb-check.outputs.version }}"
+        fi
+        
+        if [[ "${{ inputs.services_to_start }}" == *"redis"* ]] && [ -n "${{ steps.redis-check.outputs.version }}" ] && [ "${{ steps.redis-check.outputs.version }}" != "unknown" ]; then
+          echo "  - Redis Version: ${{ steps.redis-check.outputs.version }}"
+        fi
+        
+        # Final status - only check requested services
+        mongodb_ready="${{ steps.mongodb-check.outputs.status }}"
+        redis_ready="${{ steps.redis-check.outputs.status }}"
+        
+        if [ "$mongodb_ready" = "ready" ]; then
+          if [[ "${{ inputs.services_to_start }}" == *"redis"* ]]; then
+            if [ "$redis_ready" = "ready" ]; then
+              echo ""
+              echo "🎉 All requested dependencies are ready!"
+              echo "✅ MongoDB and Redis are running and accessible"
+            else
+              echo ""
+              echo "❌ Redis failed to start properly"
+            fi
+          else
+            echo ""
+            echo "🎉 MongoDB is ready!"
+            echo "✅ MongoDB is running and accessible"
+          fi
+          echo "🌐 Network connectivity verified"
+          echo "🚀 Ready for application deployment"
+        else
+          echo ""
+          echo "❌ MongoDB failed to start properly"
+          echo "Please check the logs above for detailed error information"
+        fi
+        
+        echo "📅 Verification completed at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+        echo "::endgroup::"

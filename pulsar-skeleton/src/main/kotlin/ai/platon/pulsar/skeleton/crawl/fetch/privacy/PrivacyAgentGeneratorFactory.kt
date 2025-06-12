@@ -60,7 +60,7 @@ class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {
         generators[gen::class.java.name] = gen
         generators[className] = gen
 
-        logger.info("Created privacy agent generator | {}", gen::class.java.name)
+        logger.info("Created privacy agent generator {} | {}", gen::class.java.simpleName, gen::class.java.name)
 
         return gen
     }

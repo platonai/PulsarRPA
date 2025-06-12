@@ -3,13 +3,19 @@
 # Find the first parent directory that contains a pom.xml file
 APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
 while [[ "$APP_HOME" != "/" ]]; do
-  if [[ -f "$APP_HOME/pom.xml" ]]; then
+  if [[ -f "$APP_HOME/VERSION" ]]; then
     break
   fi
   APP_HOME=$(dirname "$APP_HOME")
 done
 
 cd "$APP_HOME" || exit
+
+# Make sure we are not at master branch
+if [[ "$(git rev-parse --abbrev-ref HEAD)" == "master" ]]; then
+  echo "You are on the master branch. Please switch to a feature branch before running this script."
+  exit 1
+fi
 
 SNAPSHOT_VERSION=$(head -n 1 "$APP_HOME/VERSION")
 VERSION=${SNAPSHOT_VERSION//"-SNAPSHOT"/""}
@@ -43,11 +49,11 @@ for F in "${VERSION_AWARE_FILES[@]}"; do
     # Replace version numbers in the format "x.y.z" where x.y is the prefix and z is the minor version number
     sed -i "s/\b$PREFIX\.[0-9]\+\b/$NEXT_VERSION/g" "$F"
 
-    # Replace version numbers in paths like "download/v3.0.8/PulsarRPA.jar"
-    sed -i "s|\(/v$PREFIX\.[0-9]\+/\)|/v$NEXT_VERSION/|g" "$F"
-
     # Replace version numbers prefixed with v like "v3.0.8"
     sed -i "s/\bv$PREFIX\.[0-9]\+\b/v$NEXT_VERSION/g" "$F"
+
+    # Restore version numbers in urls like "download/v3.0.8/PulsarRPA.jar" since the new version has not been released yet
+    sed -i "s|http\?://[^/]*/v$NEXT_VERSION/|/v$VERSION/|g" "$F"
   fi
 done
 

@@ -26,11 +26,11 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apk add --no-cache curl chromium nss freetype freetype-dev harfbuzz ca-certificates ttf-freefont
 
 # Set Chromium environment variables
-ENV CHROME_BIN=/usr/bin/chromium-browser \
-    CHROME_PATH=/usr/lib/chromium/ \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
-    JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC" \
-    BROWSER_CONTEXT_MODE=SEQUENTIAL \
+# Ignore BROWSER_CONTEXT_NUMBER, BROWSER_MAX_OPEN_TABS if BROWSER_CONTEXT_MODE is set to DEFAULT
+ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC" \
+    DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
+    PROXY_ROTATION_URL=${PROXY_ROTATION_URL} \
+    BROWSER_CONTEXT_MODE=DEFAULT \
     BROWSER_CONTEXT_NUMBER=2 \
     BROWSER_MAX_OPEN_TABS=8 \
     BROWSER_DISPLAY_MODE=HEADLESS
@@ -56,5 +56,4 @@ USER appuser
 LABEL maintainer="Vincent Zhang <ivincent.zhang@gmail.com>" \
       description="PulsarRPA: An AI-Enabled, Super-Fast, Thread-Safe Browser Automation Solution! 💖"
 
-# Startup command with dynamic port configuration
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
