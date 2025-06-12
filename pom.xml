@@ -655,6 +655,7 @@
                 <version>${surefire.version}</version>
                 <configuration>
                     <excludedGroups>TimeConsumingTest,ExternalServiceTest</excludedGroups>
+
                 </configuration>
 
                 <dependencies>

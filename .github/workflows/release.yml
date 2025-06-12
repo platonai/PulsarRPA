@@ -79,7 +79,7 @@ jobs:
       - name: Run Common Workflow Steps
         uses: ./.github/actions/complete-ci-cd-pipeline
         with:
-          image_name: galaxyeye88/pulsar-rpa-pro
+          image_name: galaxyeye88/pulsar-rpa
           network_name: ${{ env.NETWORK_NAME }}
           image_version: ${{ env.CLEAN_VERSION }}
           deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}

@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: pulsar-rpa-pro
+  IMAGE_NAME: pulsar-rpa
   NETWORK_NAME: 'pulsarrpa_backend'
-  CONTAINER_NAME: 'pulsar-rpa-pro-test'
+  CONTAINER_NAME: 'pulsar-rpa-test'
 
 jobs:
   nightly-build:
@@ -56,7 +56,7 @@ jobs:
         id: build
         uses: ./.github/actions/docker-build
         with:
-          image_name: 'pulsar-rpa-pro'
+          image_name: 'pulsar-rpa'
           version: ${{ github.sha }}
           timeout_minutes: '20'
 
@@ -64,7 +64,7 @@ jobs:
         id: app
         uses: ./.github/actions/start-application
         with:
-          image_name: 'pulsar-rpa-pro'
+          image_name: 'pulsar-rpa'
           version: ${{ github.sha }}
           container_name: ${{ env.CONTAINER_NAME }}
           network_name: ${{ env.NETWORK_NAME }}
@@ -130,7 +130,7 @@ jobs:
           echo "🌐 Infrastructure:"
           echo "  - Network: ${{ env.NETWORK_NAME }}"
           echo "  - Container: ${{ env.CONTAINER_NAME }}"
-          echo "  - Image: pulsar-rpa-pro:${{ github.sha }}"
+          echo "  - Image: pulsar-rpa:${{ github.sha }}"
           echo "  - MongoDB: ${{ steps.deps.outputs.mongodb_status }}"
           echo "  - Redis: ${{ steps.deps.outputs.redis_status }}"
           
