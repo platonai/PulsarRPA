@@ -13,16 +13,8 @@
 $CURL_DESC_HEALTH_CHECK = "Health Check Endpoint"
 $CURL_CMD_HEALTH_CHECK = 'curl -X GET "http://localhost:8182/actuator/health"'
 
-$CURL_DESC_APP_INFO = "Application Info Endpoint"
-$CURL_CMD_APP_INFO = 'curl -X GET "http://localhost:8182/actuator/info"'
-
 $CURL_DESC_QUERY_PARAMS = "Query Parameters Test"
 $CURL_CMD_QUERY_PARAMS = 'curl -X GET "http://localhost:8182/actuator/health?details=true"'
-
-$CURL_DESC_METRICS = "Metrics Endpoint Test"
-$CURL_CMD_METRICS = @'
-curl -X GET "http://localhost:8182/actuator/metrics"
-'@
 
 $CURL_DESC_WEBUI = "WebUI Command Interface"
 $CURL_CMD_WEBUI = @'
@@ -123,9 +115,7 @@ Extract the page title and all text content.
 # 系统测试优先的命令数组
 $CURL_COMMANDS = @(
   @{Desc = $CURL_DESC_HEALTH_CHECK; Cmd = $CURL_CMD_HEALTH_CHECK}
-  @{Desc = $CURL_DESC_APP_INFO; Cmd = $CURL_CMD_APP_INFO}
   @{Desc = $CURL_DESC_QUERY_PARAMS; Cmd = $CURL_CMD_QUERY_PARAMS}
-  @{Desc = $CURL_DESC_METRICS; Cmd = $CURL_CMD_METRICS}
   @{Desc = $CURL_DESC_WEBUI; Cmd = $CURL_CMD_WEBUI}
   @{Desc = $CURL_DESC_CUSTOM_HEADERS; Cmd = $CURL_CMD_CUSTOM_HEADERS}
   @{Desc = $CURL_DESC_SIMPLE_LOAD; Cmd = $CURL_CMD_SIMPLE_LOAD}

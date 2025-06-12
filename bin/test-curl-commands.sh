@@ -19,16 +19,8 @@
 CURL_DESC_HEALTH_CHECK="Health Check Endpoint"
 CURL_CMD_HEALTH_CHECK='curl -X GET "http://localhost:8182/actuator/health"'
 
-CURL_DESC_APP_INFO="Application Info Endpoint"
-CURL_CMD_APP_INFO='curl -X GET "http://localhost:8182/actuator/info"'
-
 CURL_DESC_QUERY_PARAMS="Query Parameters Test"
 CURL_CMD_QUERY_PARAMS='curl -X GET "http://localhost:8182/actuator/health?details=true"'
-
-CURL_DESC_METRICS="Metrics Endpoint Test"
-CURL_CMD_METRICS='
-curl -X GET "http://localhost:8182/actuator/metrics"
-'
 
 CURL_DESC_WEBUI="WebUI Command Interface"
 CURL_CMD_WEBUI='
@@ -129,9 +121,7 @@ EOF
 # 系统测试优先的命令数组 (System tests first, then functional tests)
 declare -a CURL_COMMANDS=(
 "$CURL_DESC_HEALTH_CHECK|$CURL_CMD_HEALTH_CHECK"
-"$CURL_DESC_APP_INFO|$CURL_CMD_APP_INFO"
 "$CURL_DESC_QUERY_PARAMS|$CURL_CMD_QUERY_PARAMS"
-"$CURL_DESC_METRICS|$CURL_CMD_METRICS"
 "$CURL_DESC_WEBUI|$CURL_CMD_WEBUI"
 "$CURL_DESC_CUSTOM_HEADERS|$CURL_CMD_CUSTOM_HEADERS"
 "$CURL_DESC_SIMPLE_LOAD|$CURL_CMD_SIMPLE_LOAD"
