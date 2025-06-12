@@ -50,7 +50,7 @@ services:
         soft: 65535
         hard: 65535
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8182/api/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8182/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3

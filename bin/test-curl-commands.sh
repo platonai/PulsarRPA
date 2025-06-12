@@ -17,17 +17,17 @@
 
 # System Health Checks (Quick tests first)
 CURL_DESC_HEALTH_CHECK="Health Check Endpoint"
-CURL_CMD_HEALTH_CHECK='curl -X GET "http://localhost:8182/api/actuator/health"'
+CURL_CMD_HEALTH_CHECK='curl -X GET "http://localhost:8182/actuator/health"'
 
 CURL_DESC_APP_INFO="Application Info Endpoint"
-CURL_CMD_APP_INFO='curl -X GET "http://localhost:8182/api/actuator/info"'
+CURL_CMD_APP_INFO='curl -X GET "http://localhost:8182/actuator/info"'
 
 CURL_DESC_QUERY_PARAMS="Query Parameters Test"
-CURL_CMD_QUERY_PARAMS='curl -X GET "http://localhost:8182/api/actuator/health?details=true"'
+CURL_CMD_QUERY_PARAMS='curl -X GET "http://localhost:8182/actuator/health?details=true"'
 
 CURL_DESC_METRICS="Metrics Endpoint Test"
 CURL_CMD_METRICS='
-curl -X GET "http://localhost:8182/api/actuator/metrics"
+curl -X GET "http://localhost:8182/actuator/metrics"
 '
 
 CURL_DESC_WEBUI="WebUI Command Interface"
@@ -37,7 +37,7 @@ curl -X GET "http://localhost:8182/api/command.html"
 
 CURL_DESC_CUSTOM_HEADERS="Custom Headers Test"
 read -r -d '' CURL_CMD_CUSTOM_HEADERS << 'EOF'
-curl -X GET "http://localhost:8182/api/actuator/health" -H "Accept: application/json" -H "User-Agent: PulsarRPA-Test-Suite/1.0"
+curl -X GET "http://localhost:8182/actuator/health" -H "Accept: application/json" -H "User-Agent: PulsarRPA-Test-Suite/1.0"
 EOF
 
 # Simple Data Extraction Tests

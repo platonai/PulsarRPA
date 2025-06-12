@@ -24,9 +24,9 @@ on:
         type: boolean
 
 env:
-  IMAGE_NAME: pulsar-rpa
+  IMAGE_NAME: pulsar-rpa-pro
   NETWORK_NAME: 'pulsarrpa_backend'
-  CONTAINER_NAME: 'pulsar-rpa-test'
+  CONTAINER_NAME: 'pulsar-rpa-pro-test'
 
 jobs:
   ci-build:
@@ -51,7 +51,7 @@ jobs:
         uses: ./.github/actions/verify-dependencies
         with:
           network_name: ${{ env.NETWORK_NAME }}
-          services_to_start: 'mongodb'  # ✅ Only start MongoDB
+          services_to_start: 'mongodb,redis'
           startup_timeout: '120'
           verify_network_connectivity: 'true'
 
@@ -69,14 +69,14 @@ jobs:
         uses: ./.github/actions/run-tests
         with:
           maven_profiles: 'all-modules'
-          test_excludes: '**ai/platon/pulsar/rest/api/integration**'
+          test_excludes: '**ai/platon/scent/rest/api/integration**'
           timeout_minutes: '35'
 
       - name: Build Docker Image
         id: build
         uses: ./.github/actions/docker-build
         with:
-          image_name: 'pulsar-rpa'
+          image_name: 'pulsar-rpa-pro'
           version: ${{ github.sha }}
           timeout_minutes: '20'
 
@@ -84,7 +84,7 @@ jobs:
         id: app
         uses: ./.github/actions/start-application
         with:
-          image_name: 'pulsar-rpa'
+          image_name: 'pulsar-rpa-pro'
           version: ${{ github.sha }}
           container_name: ${{ env.CONTAINER_NAME }}
           network_name: ${{ env.NETWORK_NAME }}
@@ -150,7 +150,7 @@ jobs:
           echo "🌐 Infrastructure:"
           echo "  - Network: ${{ env.NETWORK_NAME }}"
           echo "  - Container: ${{ env.CONTAINER_NAME }}"
-          echo "  - Image: pulsar-rpa:${{ github.sha }}"
+          echo "  - Image: pulsar-rpa-pro:${{ github.sha }}"
           echo "  - MongoDB: ${{ steps.deps.outputs.mongodb_status }}"
           echo "  - Redis: ${{ steps.deps.outputs.redis_status }}"
           

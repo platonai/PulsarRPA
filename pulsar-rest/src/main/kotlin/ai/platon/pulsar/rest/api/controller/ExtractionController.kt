@@ -13,7 +13,7 @@ import java.util.concurrent.Executors
 @RestController
 @CrossOrigin
 @RequestMapping(
-    "extractions",
+    "api/extractions",
     consumes = [MediaType.ALL_VALUE],
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )

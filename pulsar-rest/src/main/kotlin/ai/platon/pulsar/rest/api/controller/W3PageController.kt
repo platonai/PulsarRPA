@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*
  * */
 @RestController
 @CrossOrigin
-@RequestMapping("w3page")
+@RequestMapping("api/w3page")
 class W3PageController {
 
     @Autowired
