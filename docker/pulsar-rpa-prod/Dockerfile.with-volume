@@ -1,4 +1,4 @@
-# Stage 1: Build stage
+# Stage 1: Build stage with volume mount support
 FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
 
 # Set working directory
@@ -11,8 +11,9 @@ COPY .mvn ./.mvn
 COPY bin ./bin
 COPY . .
 
-# Build the application with Maven cache mount
-RUN --mount=type=cache,target=/root/.m2 bin/build.sh
+# Build the application
+# Note: Use volume mount when building: -v ~/.m2:/root/.m2
+RUN bin/build.sh
 
 # Copy JAR for use in the next stage with better error handling
 RUN JAR_FILE=$(find . -name "PulsarRPA*.jar" -type f | head -n 1) && \
@@ -88,4 +89,4 @@ LABEL maintainer="Vincent Zhang <ivincent.zhang@gmail.com>" \
       org.opencontainers.image.source="https://github.com/platonai/PulsarRPA" \
       org.opencontainers.image.documentation="https://github.com/platonai/PulsarRPA/blob/master/README.md"
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"] 
