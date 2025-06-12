@@ -84,7 +84,7 @@ jobs:
           image_version: ${{ env.CLEAN_VERSION }}
           deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
           proxy_rotation_url: ${{ secrets.PROXY_ROTATION_URL }}
-          services_to_start: 'mongodb,redis'
+          services_to_start: 'mongodb'
 
       - name: Build Production JAR
         run: |

@@ -51,7 +51,7 @@ jobs:
         uses: ./.github/actions/verify-dependencies
         with:
           network_name: ${{ env.NETWORK_NAME }}
-          services_to_start: 'mongodb,redis'
+          services_to_start: 'mongodb'
           startup_timeout: '120'
           verify_network_connectivity: 'true'
 
