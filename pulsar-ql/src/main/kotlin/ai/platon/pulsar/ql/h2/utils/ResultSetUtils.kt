@@ -316,7 +316,6 @@ object ResultSetUtils {
             else -> record[columnName] = resultSet.getString(i)
         }
     }
-
     /**
      * A simple method to extract url from a sql's from clause, for example,
      * extract `https://jd.com/` from the following sql:
@@ -324,22 +323,22 @@ object ResultSetUtils {
      * > select dom_first_text(dom, '#container'), dom_first_text(dom, '.price')
      * > from load_and_select('https://jd.com/', ':root body');
      *
-     * TODO: use a simple SQL parser
+     * Supports both single and double quotes, handles basic escaping.
      *
      * @param sql The sql to extract an url from
      * @return The url extracted from the sql, null if no such url
-     * */
+     */
     fun extractUrlFromFromClause(sql: String): String? {
         val len = sql.length
         var i = 0
-        var j = 0
-        // find the last 'from'
+
+        // Find the last 'from' keyword
         i = sql.lastIndexOf("from", ignoreCase = true)
         if (i <= 0 || i >= len) {
             return null
         }
 
-        // find "(" in from clause "from load_and_select('https:"
+        // Find opening parenthesis in from clause
         while (i < len && sql[i] != '(') {
             ++i
         }
@@ -347,25 +346,50 @@ object ResultSetUtils {
             return null
         }
 
-        // find the first single quote
-        while (sql[i] != '\'' && i < len) {
+        // Find the first quote (single or double)
+        while (i < len && sql[i] != '\'' && sql[i] != '"') {
             ++i
         }
-        // the start of the url
-        ++i
         if (i >= len) {
             return null
         }
 
-        // find the second single quote
-        j = i + 1
-        while (sql[j] != '\'' && i < len) {
-            ++j
-        }
-        if (j == len) {
+        val quoteChar = sql[i]  // Remember which quote type we found
+        ++i  // Move past opening quote
+        if (i >= len) {
             return null
         }
 
-        return sql.substring(i, j)
+        // Find matching closing quote, handling basic escaping
+        val urlBuilder = StringBuilder()
+        while (i < len) {
+            val char = sql[i]
+
+            when {
+                char == '\\' && i + 1 < len -> {
+                    // Handle escaped characters
+                    urlBuilder.append(sql[i + 1])
+                    i += 2
+                }
+                char == quoteChar -> {
+                    // Found closing quote
+                    val url = urlBuilder.toString()
+                    return if (isValidUrl(url)) url else null
+                }
+                else -> {
+                    urlBuilder.append(char)
+                    ++i
+                }
+            }
+        }
+
+        return null  // No closing quote found
+    }
+
+    /**
+     * Basic URL validation - checks if string looks like a URL
+     */
+    private fun isValidUrl(url: String): Boolean {
+        return url.matches(Regex("^https?://.*"))
     }
 }

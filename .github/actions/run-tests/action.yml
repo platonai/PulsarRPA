@@ -184,12 +184,15 @@ runs:
           if [ $failed_tests -gt 0 ]; then
             echo ""
             echo "❌ Failed Tests:"
-            find . -name "TEST-*.xml" -type f -exec grep -l 'failures="[1-9]' {} \; -o \
-                 -name "TEST-*.xml" -type f -exec grep -l 'errors="[1-9]' {} \; | \
+            # Avoid broken pipe error by not mixing -o with -exec and piping into while-read
+            find . -name "TEST-*.xml" -type f \
+              -exec grep -l 'failures="[1-9]' {} \; \
+              -exec grep -l 'errors="[1-9]' {} \; 2>/dev/null | \
+              sort | uniq | \
               while read xml_file; do
                 test_class=$(basename "$xml_file" .xml | sed 's/TEST-//')
                 echo "  - $test_class"
-              done
+              done || true
           fi
           
         else
@@ -213,7 +216,7 @@ runs:
           echo "📋 Test Report Locations:"
           find . -name "surefire-reports" -type d | while read report_dir; do
             echo "  - $report_dir"
-            ls -la "$report_dir" | head -5
+            ls -la "$report_dir" | head -5 || true
           done
         fi
         

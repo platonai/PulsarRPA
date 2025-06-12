@@ -121,10 +121,8 @@ WebUI: http://localhost:8182/api/command.html
 <summary>REST API</summary>
 
 #### 📄 Plain-Text-Based Version:
-```bash
-curl -X POST "http://localhost:8182/api/commands/plain" \
-  -H "Content-Type: text/plain" \
-  -d '
+```shell
+curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/plain" -d '
     Go to https://www.amazon.com/dp/B0C1H26C46
     
     After browser launch: clear browser cookies.
@@ -139,9 +137,7 @@ curl -X POST "http://localhost:8182/api/commands/plain" \
 #### 📄 JSON-Based Version:
 
 ```bash
-curl -X POST "http://localhost:8182/api/commands" \
-  -H "Content-Type: application/json" \
-  -d '{
+curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
     "url": "https://www.amazon.com/dp/B0C1H26C46",
     "pageSummaryPrompt": "Provide a brief introduction of this product.",
     "dataExtractionRules": "product name, price, and ratings",

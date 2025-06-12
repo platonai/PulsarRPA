@@ -115,3 +115,5 @@ application-private.yml
 /**/application-private.properties
 application-private.properties
 
+/bin/test-results/
+/test-results/

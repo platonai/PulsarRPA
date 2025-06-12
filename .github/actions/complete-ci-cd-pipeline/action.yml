@@ -70,7 +70,7 @@ inputs:
   health_endpoint:
     description: 'Health check endpoint'
     required: false
-    default: '/api/actuator/health' # TODO: will use /actuator/health by default
+    default: '/actuator/health' # TODO: will use /actuator/health by default
   health_timeout_minutes:
     description: 'Health check timeout in minutes'
     required: false

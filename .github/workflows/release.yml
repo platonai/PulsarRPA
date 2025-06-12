@@ -3,7 +3,8 @@ name: Build & Release JAR
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+'
   workflow_dispatch:
     inputs:
       tag:
@@ -17,7 +18,6 @@ on:
         type: boolean
 
 env:
-  IMAGE_NAME: galaxyeye88/pulsar-rpa
   # Extract version from tag or input
   VERSION: ${{ github.ref_name || inputs.tag }}
   NETWORK_NAME: 'pulsarrpa_backend'
@@ -79,12 +79,12 @@ jobs:
       - name: Run Common Workflow Steps
         uses: ./.github/actions/complete-ci-cd-pipeline
         with:
-          image_name: ${{ env.IMAGE_NAME }}
+          image_name: galaxyeye88/pulsar-rpa
           network_name: ${{ env.NETWORK_NAME }}
-          services_to_start: 'mongodb'  # ✅ Only start MongoDB
           image_version: ${{ env.CLEAN_VERSION }}
           deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
           proxy_rotation_url: ${{ secrets.PROXY_ROTATION_URL }}
+          services_to_start: 'mongodb,redis'
 
       - name: Build Production JAR
         run: |
@@ -236,12 +236,6 @@ jobs:
           make_latest: ${{ !contains(env.VERSION, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update Documentation
-        if: success()
-        run: |
-          echo "Updating documentation..."
-          ./bin/release/update-documentation.sh
 
       - name: Verify Release
         run: |
