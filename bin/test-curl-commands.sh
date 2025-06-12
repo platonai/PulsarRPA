@@ -32,7 +32,7 @@ curl -X GET "http://localhost:8182/actuator/metrics"
 
 CURL_DESC_WEBUI="WebUI Command Interface"
 CURL_CMD_WEBUI='
-curl -X GET "http://localhost:8182/api/command.html"
+curl -X GET "http://localhost:8182/command.html"
 '
 
 CURL_DESC_CUSTOM_HEADERS="Custom Headers Test"

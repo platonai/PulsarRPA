@@ -105,7 +105,7 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/p
 
 ### 📥 示例请求（基于文本）：
 
-WebUI: http://localhost:8182/api/command.html
+WebUI: http://localhost:8182/command.html
 
 <img src="docs/images/commander-ui.png" alt="commander" width="500" />
 
