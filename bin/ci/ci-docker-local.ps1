@@ -14,11 +14,11 @@ param(
 )
 
 # Find the first parent directory containing the VERSION file
-$AppHome = Split-Path -Parent (Resolve-Path $MyInvocation.MyCommand.Path)
-while ($AppHome -ne [System.IO.Path]::GetPathRoot($AppHome) -and -not (Test-Path (Join-Path $AppHome "VERSION"))) {
+$AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
+while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
     $AppHome = Split-Path -Parent $AppHome
 }
-Set-Location $AppHome -ErrorAction Stop
+Set-Location $AppHome
 
 # Set PowerShell encoding for UTF-8 support
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
