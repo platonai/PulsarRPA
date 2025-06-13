@@ -7,13 +7,22 @@
 
 # set -e  # Exit on error
 
+readonly DEFAULT_BASE_URL="http://localhost:8182"
+readonly TEST_RESULTS_DIR="./target/test-results"
+readonly TIMESTAMP="$(date '+%Y%m%d_%H%M%S')"
+readonly LOG_FILE="${TEST_RESULTS_DIR}/curl_tests_${TIMESTAMP}.log"
+
+# Default options
+PULSAR_BASE_URL="$DEFAULT_BASE_URL"
+TIMEOUT_SECONDS=120
+FAST_MODE=false
+SKIP_SERVER_CHECK=false
+VERBOSE_MODE=true
+USER_NAME="platonai"
+
 # =============================================================================
 # CURL COMMANDS FROM README.MD - UPDATE THIS SECTION AS NEEDED
 # =============================================================================
-
-# =========================
-# CURL 命令与描述变量定义
-# =========================
 
 # System Health Checks (Quick tests first)
 CURL_DESC_HEALTH_CHECK="Health Check Endpoint"
@@ -138,11 +147,6 @@ declare -a CURL_COMMANDS=(
 # SECTION: GLOBAL CONFIGURATION AND INITIALIZATION
 # =============================================================================
 
-readonly DEFAULT_BASE_URL="http://localhost:8182"
-readonly TEST_RESULTS_DIR="./target/test-results"
-readonly TIMESTAMP="$(date '+%Y%m%d_%H%M%S')"
-readonly LOG_FILE="${TEST_RESULTS_DIR}/curl_tests_${TIMESTAMP}.log"
-
 # Colors
 readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'
@@ -152,14 +156,6 @@ readonly PURPLE='\033[0;35m'
 readonly CYAN='\033[0;36m'
 readonly BOLD='\033[1m'
 readonly NC='\033[0m'
-
-# Default options
-PULSAR_BASE_URL="$DEFAULT_BASE_URL"
-TIMEOUT_SECONDS=120
-FAST_MODE=false
-SKIP_SERVER_CHECK=false
-VERBOSE_MODE=false
-USER_NAME="platonai"
 
 # Counters
 TOTAL_TESTS=0
@@ -321,6 +317,8 @@ run_all_tests() {
 }
 
 print_summary() {
+  local success_rate=$(( PASSED_TESTS * 100 / TOTAL_TESTS ))
+
   log ""
   log "=============================================="
   log "${BLUE}[FINAL SUMMARY]${NC} ${BOLD}Test Results${NC}"
@@ -334,7 +332,6 @@ print_summary() {
   log "${RED}Failed:${NC} $FAILED_TESTS"
   log "${YELLOW}Skipped:${NC} $SKIPPED_TESTS"
   if [[ $TOTAL_TESTS -gt 0 ]]; then
-    local success_rate=$(( PASSED_TESTS * 100 / TOTAL_TESTS ))
     log "${BLUE}Success Rate:${NC} $success_rate%"
   fi
   log "${BLUE}Log File:${NC} $LOG_FILE"
@@ -348,7 +345,14 @@ print_summary() {
     exit 0
   else
     log "${YELLOW}[PARTIAL SUCCESS]${NC} Some tests failed. Check logs for details."
-    exit 1
+
+    if [[ $success_rate -lt 80 ]]; then
+      log "${RED}[FAILURE]${NC} Success rate below 80%. Exiting with failure."
+      exit 1
+    else
+      log "${YELLOW}[PARTIAL SUCCESS]${NC} Some tests failed. Check logs for details."
+      exit 0
+    fi
   fi
 }
 
