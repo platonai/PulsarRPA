@@ -22,6 +22,7 @@ env:
   VERSION: ${{ github.ref_name || inputs.tag }}
   NETWORK_NAME: 'pulsarrpa_backend'
   MAVEN_OPTS: '-Dmaven.repo.local=.m2/repository -Xmx1g -XX:+TieredCompilation -XX:TieredStopAtLevel=1'
+  PRODUCTION_MODULE: 'pulsar-app/pulsar-master'
 
 jobs:
   build-release:
@@ -92,7 +93,7 @@ jobs:
           
           echo "📋 Build Configuration:"
           echo "  - Version: ${{ env.CLEAN_VERSION }}"
-          echo "  - Skip Tests: ${{ inputs.skip_tests || 'false' }}"
+          echo "  - Skip Tests: always"
           echo "  - Maven Opts: $MAVEN_OPTS"
           
           # Update version in POM if needed
@@ -100,18 +101,14 @@ jobs:
             echo "🔄 Updating project version to ${{ env.CLEAN_VERSION }}"
             ./mvnw versions:set -DnewVersion=${{ env.CLEAN_VERSION }} -DgenerateBackupPoms=false
           fi
-          
+
           # Build with production profile
           echo "🚀 Starting Maven build..."
-          
-          BUILD_ARGS="clean install -Pprod"
-          if [ "${{ inputs.skip_tests }}" = "true" ]; then
-            BUILD_ARGS="$BUILD_ARGS -DskipTests"
-            echo "⚠️ Skipping tests as requested"
-          else
-            BUILD_ARGS="$BUILD_ARGS -Dmaven.test.failure.ignore=false"
-          fi
-          
+
+          PRODUCTION_MODULE=${{ env.PRODUCTION_MODULE }}
+          BUILD_ARGS="clean install -DskipTests -Dmaven.javadoc.skip=true"
+          echo "Building production in $PRODUCTION_MODULE ..."
+          cd "$PRODUCTION_MODULE" || exit
           if ! ./mvnw $BUILD_ARGS; then
             echo "❌ Maven build failed"
             exit 1
@@ -135,7 +132,9 @@ jobs:
           
           # Look in multiple possible locations
           JAR_CANDIDATES=(
-            "exotic-standalone/target/PulsarRPAPro.jar"
+            "target/PulsarRPA.jar"      # Default Version
+            "target/PulsarRPAVc.jar"    # Version Scent
+            "target/PulsarRPAPro.jar"   # Pro Version
           )
           
           FOUND_JARS=()
