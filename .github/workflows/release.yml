@@ -84,7 +84,7 @@ jobs:
           image_version: ${{ env.CLEAN_VERSION }}
           deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
           proxy_rotation_url: ${{ secrets.PROXY_ROTATION_URL }}
-#          skip_tests: ${{ inputs.skip_tests }}
+          #          skip_tests: ${{ inputs.skip_tests }}
           skip_tests: 'true'
           services_to_start: 'mongodb'
 
@@ -92,12 +92,29 @@ jobs:
         run: |
           echo "::group::🏗️ Building Production JAR"
           
-          # If the production JAR exists, skip the build
-          if [ -f "${{ env.PRODUCTION_MODULE }}/target/${{ env.PRODUCTION_JAR_NAMES }}" ]; then
-              echo "✅ Production JAR already exists, skipping build."
-              echo "uberjar_file=${{ env.PRODUCTION_JAR_NAMES }}" >> $GITHUB_OUTPUT
-              echo "uberjar_path=${{ env.PRODUCTION_MODULE }}/target/${{ env.PRODUCTION_JAR_NAMES }}" >> $GITHUB_OUTPUT
-              exit 0
+          # If any production JAR exists, skip the build
+          JAR_NAMES_STR="${{ env.PRODUCTION_JAR_NAMES }}"
+          JAR_NAMES_STR="${JAR_NAMES_STR// /}"  # Remove all spaces
+          IFS=',' read -ra JAR_NAMES <<< "$JAR_NAMES_STR"
+          
+          EXISTING_JAR=""
+          EXISTING_JAR_PATH=""
+          
+          for jar_name in "${JAR_NAMES[@]}"; do
+          jar_path="${{ env.PRODUCTION_MODULE }}/target/${jar_name}"
+            if [ -f "$jar_path" ]; then
+              echo "✅ Production JAR already exists: $jar_name"
+              EXISTING_JAR="$jar_name"
+              EXISTING_JAR_PATH="$jar_path"
+              break
+            fi
+          done
+          
+          if [ -n "$EXISTING_JAR" ]; then
+            echo "Skipping build, using existing JAR: $EXISTING_JAR"
+            echo "uberjar_file=$EXISTING_JAR" >> $GITHUB_OUTPUT
+            echo "uberjar_path=$EXISTING_JAR_PATH" >> $GITHUB_OUTPUT
+            exit 0
           fi
 
           echo "📋 Build Configuration:"
