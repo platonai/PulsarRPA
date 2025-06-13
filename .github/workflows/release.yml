@@ -93,7 +93,7 @@ jobs:
           
           echo "📋 Build Configuration:"
           echo "  - Version: ${{ env.CLEAN_VERSION }}"
-          echo "  - Skip Tests: always (since tested in previous step)"
+          echo "  - Skip Tests: always (tests handled in previous step)"
           echo "  - Maven Opts: $MAVEN_OPTS"
           echo "  - Production Module: ${{ env.PRODUCTION_MODULE }}"
           echo "  - Target JARs: ${{ env.PRODUCTION_JAR_NAMES }}"
@@ -111,7 +111,7 @@ jobs:
             ./mvnw versions:set -DnewVersion=${{ env.CLEAN_VERSION }} -DgenerateBackupPoms=false
           fi
 
-          # Build arguments - always skip tests since they ran in previous step
+          # Build arguments - always skip tests since they were handled in previous step
           BUILD_ARGS="clean install -Dmaven.javadoc.skip=true -DskipTests"
           
           echo "🚀 Starting Maven build with args: $BUILD_ARGS"
