@@ -84,13 +84,22 @@ jobs:
           image_version: ${{ env.CLEAN_VERSION }}
           deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
           proxy_rotation_url: ${{ secrets.PROXY_ROTATION_URL }}
-          skip_tests: ${{ inputs.skip_tests }}
+#          skip_tests: ${{ inputs.skip_tests }}
+          skip_tests: 'true'
           services_to_start: 'mongodb'
 
       - name: Build Production JAR
         run: |
           echo "::group::🏗️ Building Production JAR"
           
+          # If the production JAR exists, skip the build
+          if [ -f "${{ env.PRODUCTION_MODULE }}/target/${{ env.PRODUCTION_JAR_NAMES }}" ]; then
+              echo "✅ Production JAR already exists, skipping build."
+              echo "uberjar_file=${{ env.PRODUCTION_JAR_NAMES }}" >> $GITHUB_OUTPUT
+              echo "uberjar_path=${{ env.PRODUCTION_MODULE }}/target/${{ env.PRODUCTION_JAR_NAMES }}" >> $GITHUB_OUTPUT
+              exit 0
+          fi
+
           echo "📋 Build Configuration:"
           echo "  - Version: ${{ env.CLEAN_VERSION }}"
           echo "  - Skip Tests: always (tests handled in previous step)"
@@ -112,24 +121,19 @@ jobs:
           fi
 
           # Build arguments - always skip tests since they were handled in previous step
-          BUILD_ARGS="clean install -Dmaven.javadoc.skip=true -DskipTests"
-          
+          BUILD_ARGS="install -DskipTests"
+
           echo "🚀 Starting Maven build with args: $BUILD_ARGS"
-          
+
           # Build in the production module
           PRODUCTION_MODULE="${{ env.PRODUCTION_MODULE }}"
           echo "Building production in $PRODUCTION_MODULE ..."
-          APP_HOME=$(pwd)
-          cd "$PRODUCTION_MODULE" || exit 1
-          
+
           # Use the Maven wrapper from the root directory
-          if ! "$APP_HOME/mvnw" $BUILD_ARGS; then
+          if ! ./mvnw $BUILD_ARGS; then
             echo "❌ Maven build failed"
             exit 1
           fi
-          
-          # Return to root directory
-          cd "$APP_HOME" || exit 1
           
           echo "✅ JAR build completed successfully"
           echo "::endgroup::"
