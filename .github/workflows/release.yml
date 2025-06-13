@@ -18,7 +18,6 @@ on:
         type: boolean
 
 env:
-  # Extract version from tag or input
   VERSION: ${{ github.ref_name || inputs.tag }}
   NETWORK_NAME: 'pulsarrpa_backend'
   MAVEN_OPTS: '-Dmaven.repo.local=.m2/repository -Xmx1g -XX:+TieredCompilation -XX:TieredStopAtLevel=1'
@@ -37,10 +36,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for proper versioning
+          fetch-depth: 0
 
-      # Cache dependencies for faster builds
       - name: Cache Maven dependencies
+        id: cache
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
@@ -54,7 +53,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Validate version format
       - name: Validate Version Format
         run: |
           echo "::group::🔍 Version Validation"
@@ -70,7 +68,6 @@ jobs:
           
           echo "✅ Version format is valid"
           
-          # Set clean version without 'v' prefix
           CLEAN_VERSION="${VERSION#v}"
           echo "CLEAN_VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
           echo "Clean version: $CLEAN_VERSION"
@@ -96,17 +93,25 @@ jobs:
           echo "  - Skip Tests: always"
           echo "  - Maven Opts: $MAVEN_OPTS"
           
+          # Check if Maven wrapper exists
+          if [ ! -f "./mvnw" ]; then
+            echo "❌ Maven wrapper (mvnw) not found in root directory"
+            exit 1
+          fi
+          
           # Update version in POM if needed
-          if [ "${{ env.CLEAN_VERSION }}" != "$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)" ]; then
-            echo "🔄 Updating project version to ${{ env.CLEAN_VERSION }}"
+          CURRENT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+          if [ "${{ env.CLEAN_VERSION }}" != "$CURRENT_VERSION" ]; then
+            echo "🔄 Updating project version from $CURRENT_VERSION to ${{ env.CLEAN_VERSION }}"
             ./mvnw versions:set -DnewVersion=${{ env.CLEAN_VERSION }} -DgenerateBackupPoms=false
           fi
 
-          # Build with production profile
-          echo "🚀 Starting Maven build..."
-
+          # Build arguments
+          BUILD_ARGS="clean install -Dmaven.javadoc.skip=true -DskipTests"
+          
+          echo "🚀 Starting Maven build with args: $BUILD_ARGS"
+          
           PRODUCTION_MODULE=${{ env.PRODUCTION_MODULE }}
-          BUILD_ARGS="clean install -DskipTests -Dmaven.javadoc.skip=true"
           echo "Building production in $PRODUCTION_MODULE ..."
           cd "$PRODUCTION_MODULE" || exit
           if ! ./mvnw $BUILD_ARGS; then
@@ -114,12 +119,10 @@ jobs:
             exit 1
           fi
           
+          # Return to root directory
+          cd - || exit 1
+          
           echo "✅ JAR build completed successfully"
-          
-          # Show repository location
-          REPO_PATH=$(./mvnw help:evaluate -Dexpression=settings.localRepository -q -DforceStdout)
-          echo "📦 Local repository: $REPO_PATH"
-          
           echo "::endgroup::"
 
       - name: Find and Validate JAR
@@ -127,10 +130,9 @@ jobs:
         run: |
           echo "::group::📦 JAR Discovery and Validation"
           
-          # Find the executable JAR
           echo "🔍 Searching for executable JAR files..."
           
-          # Look in multiple possible locations
+          # Updated search patterns to match actual build structure
           JAR_CANDIDATES=(
             "target/PulsarRPA.jar"      # Default Version
             "target/PulsarRPAVc.jar"    # Version Scent
@@ -161,7 +163,7 @@ jobs:
           MAX_SIZE=0
           
           for jar in "${FOUND_JARS[@]}"; do
-            size=$(stat -f%z "$jar" 2>/dev/null || stat -c%s "$jar" 2>/dev/null || echo 0)
+            size=$(stat -c%s "$jar" 2>/dev/null || echo 0)
             echo "📄 Found: $(basename "$jar") (${size} bytes)"
             if [ "$size" -gt "$MAX_SIZE" ]; then
               MAX_SIZE=$size
@@ -176,7 +178,6 @@ jobs:
           echo "📍 Path: $UBERJAR_PATH"
           echo "📏 Size: $MAX_SIZE bytes ($(numfmt --to=iec --suffix=B $MAX_SIZE))"
 
-          # Set outputs
           echo "uberjar_file=$UBERJAR_FILE" >> $GITHUB_OUTPUT
           echo "uberjar_path=$UBERJAR_PATH" >> $GITHUB_OUTPUT
           
@@ -187,7 +188,6 @@ jobs:
         run: |
           echo "::group::📝 Generating Release Notes"
           
-          # Get commits since last tag
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           
           if [ -n "$PREV_TAG" ]; then
@@ -198,13 +198,14 @@ jobs:
             CHANGELOG=$(git log --pretty=format:"- %s (%h)" HEAD~10..HEAD)
           fi
           
-          # Create release notes
+          JAR_SIZE=$(stat -c%s "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null || echo 0)
+          
           cat > release_notes.md << EOF
           ## Release ${{ env.VERSION }}
           
           ### 📦 Artifacts
           - **JAR File**: \`${{ steps.get_uberjar.outputs.uberjar_file }}\`
-          - **Size**: $(numfmt --to=iec --suffix=B $(stat -f%z "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null || stat -c%s "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null))
+          - **Size**: $(numfmt --to=iec --suffix=B $JAR_SIZE)
           - **Java Version**: 17+
           
           ### 🔄 Changes
@@ -220,7 +221,6 @@ jobs:
           
           echo "Generated release notes:"
           cat release_notes.md
-          
           echo "::endgroup::"
 
       - name: Upload JAR to GitHub Release
@@ -240,12 +240,14 @@ jobs:
         run: |
           echo "::group::✅ Release Verification"
           
+          JAR_SIZE=$(stat -c%s "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null || echo 0)
+          
           echo "🎉 Release ${{ env.VERSION }} created successfully!"
           echo ""
           echo "📦 Release Details:"
           echo "  - Tag: ${{ env.VERSION }}"
           echo "  - JAR: ${{ steps.get_uberjar.outputs.uberjar_file }}"
-          echo "  - Size: $(numfmt --to=iec --suffix=B $(stat -f%z "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null || stat -c%s "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null))"
+          echo "  - Size: $(numfmt --to=iec --suffix=B $JAR_SIZE)"
           echo "  - Prerelease: ${{ contains(env.VERSION, '-') }}"
           echo ""
           echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ env.VERSION }}"
@@ -266,8 +268,8 @@ jobs:
           echo "🗑️ Cleaning up temporary files..."
           rm -f release_notes.md
           
-          # Clean Maven target if cache is not used
-          if [ "${{ hashFiles('**/pom.xml') }}" != "${{ steps.cache.outputs.cache-hit && 'cached' || 'no-cache' }}" ]; then
+          # Clean Maven target if cache was not hit
+          if [ "${{ steps.cache.outputs.cache-hit }}" != "true" ]; then
             echo "🧽 Cleaning Maven artifacts..."
             ./mvnw clean 2>/dev/null || true
           fi
