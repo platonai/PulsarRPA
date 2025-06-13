@@ -88,10 +88,13 @@ jobs:
         run: |
           echo "::group::🏗️ Building Production JAR"
           
+          SKIP_TESTS="${{ inputs.skip_tests || 'true' }}"
+          
           echo "📋 Build Configuration:"
           echo "  - Version: ${{ env.CLEAN_VERSION }}"
           echo "  - Skip Tests: always"
           echo "  - Maven Opts: $MAVEN_OPTS"
+          echo "  - Production Module: ${{ env.PRODUCTION_MODULE }}"
           
           # Check if Maven wrapper exists
           if [ ! -f "./mvnw" ]; then
@@ -111,7 +114,8 @@ jobs:
           
           echo "🚀 Starting Maven build with args: $BUILD_ARGS"
           
-          PRODUCTION_MODULE=${{ env.PRODUCTION_MODULE }}
+          # Build in the production module
+          PRODUCTION_MODULE="${{ env.PRODUCTION_MODULE }}"
           echo "Building production in $PRODUCTION_MODULE ..."
           cd "$PRODUCTION_MODULE" || exit
           if ! ./mvnw $BUILD_ARGS; then
@@ -134,18 +138,20 @@ jobs:
           
           # Updated search patterns to match actual build structure
           JAR_CANDIDATES=(
-            "target/PulsarRPA.jar"      # Default Version
-            "target/PulsarRPAVc.jar"    # Version Scent
-            "target/PulsarRPAPro.jar"   # Pro Version
+            "${{ env.PRODUCTION_MODULE }}/target/PulsarRPA.jar"      # Default Version
+            "${{ env.PRODUCTION_MODULE }}/target/PulsarRPAVc.jar"    # Version Scent
+            "${{ env.PRODUCTION_MODULE }}/target/PulsarRPAPro.jar"   # Pro Version
+            "${{ env.PRODUCTION_MODULE }}/*/target/PulsarRPA*.jar"   # Subdirectories
+            "target/PulsarRPA*.jar"                                  # Root target
           )
           
           FOUND_JARS=()
           for pattern in "${JAR_CANDIDATES[@]}"; do
-            while IFS= read -r -d '' jar; do
+            for jar in $pattern; do
               if [ -f "$jar" ] && [[ ! "$jar" =~ (sources|javadoc|original)\.jar$ ]]; then
                 FOUND_JARS+=("$jar")
               fi
-            done < <(find . -path "$pattern" -print0 2>/dev/null)
+            done
           done
           
           if [ ${#FOUND_JARS[@]} -eq 0 ]; then
@@ -184,7 +190,6 @@ jobs:
           echo "::endgroup::"
 
       - name: Create Release Notes
-        id: release_notes
         run: |
           echo "::group::📝 Generating Release Notes"
           
