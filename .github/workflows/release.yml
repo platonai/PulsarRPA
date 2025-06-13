@@ -22,6 +22,8 @@ env:
   NETWORK_NAME: 'pulsarrpa_backend'
   MAVEN_OPTS: '-Dmaven.repo.local=.m2/repository -Xmx1g -XX:+TieredCompilation -XX:TieredStopAtLevel=1'
   PRODUCTION_MODULE: 'pulsar-app/pulsar-master'
+  PRODUCTION_JAR_NAMES: 'PulsarRPA.jar,PulsarRPAVc.jar,PulsarRPAPro.jar'
+  PRODUCTION_MODULES: 'pulsar-app/pulsar-master,exotic-standalone,scent-app/PulsarRPAVC' # reserved for future use
 
 jobs:
   build-release:
@@ -82,6 +84,7 @@ jobs:
           image_version: ${{ env.CLEAN_VERSION }}
           deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
           proxy_rotation_url: ${{ secrets.PROXY_ROTATION_URL }}
+          skip_tests: ${{ inputs.skip_tests }}
           services_to_start: 'mongodb'
 
       - name: Build Production JAR
@@ -90,9 +93,10 @@ jobs:
           
           echo "📋 Build Configuration:"
           echo "  - Version: ${{ env.CLEAN_VERSION }}"
-          echo "  - Skip Tests: always (since tested just now)"
+          echo "  - Skip Tests: always (since tested in previous step)"
           echo "  - Maven Opts: $MAVEN_OPTS"
           echo "  - Production Module: ${{ env.PRODUCTION_MODULE }}"
+          echo "  - Target JARs: ${{ env.PRODUCTION_JAR_NAMES }}"
           
           # Check if Maven wrapper exists
           if [ ! -f "./mvnw" ]; then
@@ -107,7 +111,7 @@ jobs:
             ./mvnw versions:set -DnewVersion=${{ env.CLEAN_VERSION }} -DgenerateBackupPoms=false
           fi
 
-          # Build arguments
+          # Build arguments - always skip tests since they ran in previous step
           BUILD_ARGS="clean install -Dmaven.javadoc.skip=true -DskipTests"
           
           echo "🚀 Starting Maven build with args: $BUILD_ARGS"
@@ -137,43 +141,50 @@ jobs:
           
           echo "🔍 Searching for executable JAR files..."
           
-          # Search patterns for JAR files
-          JAR_CANDIDATES=(
-            "${{ env.PRODUCTION_MODULE }}/target/PulsarRPA.jar"
-            "${{ env.PRODUCTION_MODULE }}/target/PulsarRPAVc.jar"
-            "${{ env.PRODUCTION_MODULE }}/target/PulsarRPAPro.jar"
-            "${{ env.PRODUCTION_MODULE }}/exotic-standalone/target/PulsarRPA*.jar"
-            "${{ env.PRODUCTION_MODULE }}/*/target/PulsarRPA*.jar"
-          )
+          # Parse JAR names from environment variable (remove spaces)
+          JAR_NAMES_STR="${{ env.PRODUCTION_JAR_NAMES }}"
+          JAR_NAMES_STR="${JAR_NAMES_STR// /}"  # Remove all spaces
+          IFS=',' read -ra JAR_NAMES <<< "$JAR_NAMES_STR"
+          
+          echo "Target JAR names:"
+          for name in "${JAR_NAMES[@]}"; do
+            echo "  - $name"
+          done
+          
+          JAR_CANDIDATES=()
+          for name in "${JAR_NAMES[@]}"; do
+            JAR_CANDIDATES+=("${{ env.PRODUCTION_MODULE }}/target/${name}")
+          done
           
           FOUND_JARS=()
+          
+          # Direct file checks first
           for pattern in "${JAR_CANDIDATES[@]}"; do
-            # Use find instead of shell globbing for better pattern matching
-            while IFS= read -r -d '' jar; do
-              if [ -f "$jar" ] && [[ ! "$jar" =~ (sources|javadoc|original)\.jar$ ]]; then
-                FOUND_JARS+=("$jar")
-              fi
-            done < <(find . -path "$pattern" -print0 2>/dev/null)
+            if [ -f "$pattern" ] && [[ ! "$pattern" =~ (sources|javadoc|original)\.jar$ ]]; then
+              FOUND_JARS+=("$pattern")
+            fi
           done
           
-          # Also try shell globbing as fallback
-          for pattern in "${JAR_CANDIDATES[@]}"; do
-            for jar in $pattern; do
-              if [ -f "$jar" ] && [[ ! "$jar" =~ (sources|javadoc|original)\.jar$ ]]; then
-                # Check if not already in array
-                if [[ ! " ${FOUND_JARS[@]} " =~ " ${jar} " ]]; then
+          # If no direct matches, try find command
+          if [ ${#FOUND_JARS[@]} -eq 0 ]; then
+            for pattern in "${JAR_CANDIDATES[@]}"; do
+              while IFS= read -r -d '' jar; do
+                if [ -f "$jar" ] && [[ ! "$jar" =~ (sources|javadoc|original)\.jar$ ]]; then
                   FOUND_JARS+=("$jar")
                 fi
-              fi
+              done < <(find . -path "$pattern" -print0 2>/dev/null)
             done
-          done
+          fi
           
           if [ ${#FOUND_JARS[@]} -eq 0 ]; then
             echo "❌ No executable JAR found!"
             echo "Searched patterns:"
             printf '  - %s\n' "${JAR_CANDIDATES[@]}"
             echo ""
-            echo "Available files in target directories:"
+            echo "Available files in ${{ env.PRODUCTION_MODULE }}/target/:"
+            ls -la "${{ env.PRODUCTION_MODULE }}/target/" || echo "Target directory not found"
+            echo ""
+            echo "All JAR files in target directories:"
             find . -name target -type d -exec find {} -name "*.jar" \; 2>/dev/null || true
             exit 1
           fi
