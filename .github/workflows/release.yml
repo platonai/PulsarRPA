@@ -12,7 +12,12 @@ on:
         required: true
         type: string
       skip_tests:
-        description: 'Skip tests during build'
+        description: 'Skip unit tests during build'
+        required: false
+        default: false
+        type: boolean
+      skip_integration_tests:
+        description: 'Skip integration tests during build'
         required: false
         default: false
         type: boolean
@@ -21,9 +26,7 @@ env:
   VERSION: ${{ github.ref_name || inputs.tag }}
   NETWORK_NAME: 'pulsarrpa_backend'
   MAVEN_OPTS: '-Dmaven.repo.local=.m2/repository -Xmx1g -XX:+TieredCompilation -XX:TieredStopAtLevel=1'
-  PRODUCTION_MODULE: 'pulsar-app/pulsar-master'
-  PRODUCTION_JAR_NAMES: 'PulsarRPA.jar,PulsarRPAVc.jar,PulsarRPAPro.jar'
-  PRODUCTION_MODULES: 'pulsar-app/pulsar-master,exotic-standalone,scent-app/PulsarRPAVC' # reserved for future use
+  PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-master/target/PulsarRPA.jar'
 
 jobs:
   build-release:
@@ -84,45 +87,38 @@ jobs:
           image_version: ${{ env.CLEAN_VERSION }}
           deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
           proxy_rotation_url: ${{ secrets.PROXY_ROTATION_URL }}
-          #          skip_tests: ${{ inputs.skip_tests }}
-          skip_tests: 'true'
+          skip_tests: ${{ inputs.skip_tests }}
+          skip_integration_tests: ${{ inputs.skip_integration_tests }}
           services_to_start: 'mongodb'
 
       - name: Build Production JAR
         run: |
           echo "::group::🏗️ Building Production JAR"
           
-          # If any production JAR exists, skip the build
-          JAR_NAMES_STR="${{ env.PRODUCTION_JAR_NAMES }}"
-          JAR_NAMES_STR="${JAR_NAMES_STR// /}"  # Remove all spaces
-          IFS=',' read -ra JAR_NAMES <<< "$JAR_NAMES_STR"
+          # Check if the production JAR already exists
+          PRODUCTION_JAR_PATH="${{ env.PRODUCTION_JAR_PATH }}"
           
-          EXISTING_JAR=""
-          EXISTING_JAR_PATH=""
+          if [ -f "$PRODUCTION_JAR_PATH" ]; then
+              echo "✅ Production JAR already exists at: $PRODUCTION_JAR_PATH"
           
-          for jar_name in "${JAR_NAMES[@]}"; do
-          jar_path="${{ env.PRODUCTION_MODULE }}/target/${jar_name}"
-            if [ -f "$jar_path" ]; then
-              echo "✅ Production JAR already exists: $jar_name"
-              EXISTING_JAR="$jar_name"
-              EXISTING_JAR_PATH="$jar_path"
-              break
-            fi
-          done
-          
-          if [ -n "$EXISTING_JAR" ]; then
-            echo "Skipping build, using existing JAR: $EXISTING_JAR"
-            echo "uberjar_file=$EXISTING_JAR" >> $GITHUB_OUTPUT
-            echo "uberjar_path=$EXISTING_JAR_PATH" >> $GITHUB_OUTPUT
-            exit 0
+              # Verify the JAR is not empty
+              JAR_SIZE=$(stat -c%s "$PRODUCTION_JAR_PATH" 2>/dev/null || echo 0)
+              if [ "$JAR_SIZE" -eq 0 ]; then
+                  echo "⚠️ Warning: Existing JAR is empty, proceeding with build"
+              else
+                  echo "📏 JAR Size: $(numfmt --to=iec --suffix=B $JAR_SIZE)"
+                  echo "Skipping build, using existing JAR"
+                  echo "::endgroup::"
+                  exit 0
+              fi
           fi
 
+          echo "🔍 Production JAR not found at: $PRODUCTION_JAR_PATH"
           echo "📋 Build Configuration:"
           echo "  - Version: ${{ env.CLEAN_VERSION }}"
           echo "  - Skip Tests: always (tests handled in previous step)"
           echo "  - Maven Opts: $MAVEN_OPTS"
-          echo "  - Production Module: ${{ env.PRODUCTION_MODULE }}"
-          echo "  - Target JARs: ${{ env.PRODUCTION_JAR_NAMES }}"
+          echo "  - Target JAR Path: $PRODUCTION_JAR_PATH"
           
           # Check if Maven wrapper exists
           if [ ! -f "./mvnw" ]; then
@@ -142,17 +138,23 @@ jobs:
 
           echo "🚀 Starting Maven build with args: $BUILD_ARGS"
 
-          # Build in the production module
-          PRODUCTION_MODULE="${{ env.PRODUCTION_MODULE }}"
-          echo "Building production in $PRODUCTION_MODULE ..."
-
           # Use the Maven wrapper from the root directory
           if ! ./mvnw $BUILD_ARGS; then
             echo "❌ Maven build failed"
             exit 1
           fi
           
+          # Verify the JAR was created
+          if [ ! -f "$PRODUCTION_JAR_PATH" ]; then
+            echo "❌ Expected JAR not found after build: $PRODUCTION_JAR_PATH"
+            echo "Available files in target directory:"
+            TARGET_DIR=$(dirname "$PRODUCTION_JAR_PATH")
+            ls -la "$TARGET_DIR" 2>/dev/null || echo "Target directory not found: $TARGET_DIR"
+            exit 1
+          fi
+          
           echo "✅ JAR build completed successfully"
+          echo "✅ Production JAR created at: $PRODUCTION_JAR_PATH"
           echo "::endgroup::"
 
       - name: Find and Validate JAR
@@ -160,78 +162,49 @@ jobs:
         run: |
           echo "::group::📦 JAR Discovery and Validation"
           
-          echo "🔍 Searching for executable JAR files..."
+          PRODUCTION_JAR_PATH="${{ env.PRODUCTION_JAR_PATH }}"
           
-          # Parse JAR names from environment variable (remove spaces)
-          JAR_NAMES_STR="${{ env.PRODUCTION_JAR_NAMES }}"
-          JAR_NAMES_STR="${JAR_NAMES_STR// /}"  # Remove all spaces
-          IFS=',' read -ra JAR_NAMES <<< "$JAR_NAMES_STR"
+          echo "🔍 Checking for production JAR at: $PRODUCTION_JAR_PATH"
           
-          echo "Target JAR names:"
-          for name in "${JAR_NAMES[@]}"; do
-            echo "  - $name"
-          done
-          
-          JAR_CANDIDATES=()
-          for name in "${JAR_NAMES[@]}"; do
-            JAR_CANDIDATES+=("${{ env.PRODUCTION_MODULE }}/target/${name}")
-          done
-          
-          FOUND_JARS=()
-          
-          # Direct file checks first
-          for pattern in "${JAR_CANDIDATES[@]}"; do
-            if [ -f "$pattern" ] && [[ ! "$pattern" =~ (sources|javadoc|original)\.jar$ ]]; then
-              FOUND_JARS+=("$pattern")
-            fi
-          done
-          
-          # If no direct matches, try find command
-          if [ ${#FOUND_JARS[@]} -eq 0 ]; then
-            for pattern in "${JAR_CANDIDATES[@]}"; do
-              while IFS= read -r -d '' jar; do
-                if [ -f "$jar" ] && [[ ! "$jar" =~ (sources|javadoc|original)\.jar$ ]]; then
-                  FOUND_JARS+=("$jar")
-                fi
-              done < <(find . -path "$pattern" -print0 2>/dev/null)
-            done
-          fi
-          
-          if [ ${#FOUND_JARS[@]} -eq 0 ]; then
-            echo "❌ No executable JAR found!"
-            echo "Searched patterns:"
-            printf '  - %s\n' "${JAR_CANDIDATES[@]}"
+          if [ ! -f "$PRODUCTION_JAR_PATH" ]; then
+            echo "❌ Production JAR not found at expected path: $PRODUCTION_JAR_PATH"
             echo ""
-            echo "Available files in ${{ env.PRODUCTION_MODULE }}/target/:"
-            ls -la "${{ env.PRODUCTION_MODULE }}/target/" || echo "Target directory not found"
+            echo "Available files in target directory:"
+            TARGET_DIR=$(dirname "$PRODUCTION_JAR_PATH")
+            ls -la "$TARGET_DIR" 2>/dev/null || echo "Target directory not found: $TARGET_DIR"
             echo ""
-            echo "All JAR files in target directories:"
-            find . -name target -type d -exec find {} -name "*.jar" \; 2>/dev/null || true
+            echo "All JAR files in project:"
+            find . -name "*.jar" -type f 2>/dev/null || true
             exit 1
           fi
           
-          # Select the largest JAR (likely the uber jar)
-          UBERJAR_PATH=""
-          MAX_SIZE=0
+          # Validate JAR is not empty and appears to be executable
+          JAR_SIZE=$(stat -c%s "$PRODUCTION_JAR_PATH" 2>/dev/null || echo 0)
+          if [ "$JAR_SIZE" -eq 0 ]; then
+            echo "❌ Production JAR is empty: $PRODUCTION_JAR_PATH"
+            exit 1
+          fi
           
-          for jar in "${FOUND_JARS[@]}"; do
-            size=$(stat -c%s "$jar" 2>/dev/null || echo 0)
-            echo "📄 Found: $(basename "$jar") (${size} bytes)"
-            if [ "$size" -gt "$MAX_SIZE" ]; then
-              MAX_SIZE=$size
-              UBERJAR_PATH="$jar"
+          # Extract JAR filename from path
+          PRODUCTION_JAR_NAME=$(basename "$PRODUCTION_JAR_PATH")
+          
+          echo "✅ Production JAR validated successfully"
+          echo "📍 Path: $PRODUCTION_JAR_PATH"
+          echo "📄 Name: $PRODUCTION_JAR_NAME"
+          echo "📏 Size: $(numfmt --to=iec --suffix=B $JAR_SIZE)"
+          
+          # Verify it's a valid JAR file
+          if command -v file >/dev/null 2>&1; then
+            FILE_TYPE=$(file "$PRODUCTION_JAR_PATH")
+            echo "📋 File Type: $FILE_TYPE"
+          
+            if [[ ! "$FILE_TYPE" == *"Java"* ]] && [[ ! "$FILE_TYPE" == *"archive"* ]]; then
+              echo "⚠️ Warning: File may not be a valid JAR archive"
             fi
-          done
-          
-          UBERJAR_FILE=$(basename "$UBERJAR_PATH")
-          
-          echo ""
-          echo "✅ Selected JAR: $UBERJAR_FILE"
-          echo "📍 Path: $UBERJAR_PATH"
-          echo "📏 Size: $MAX_SIZE bytes ($(numfmt --to=iec --suffix=B $MAX_SIZE))"
+          fi
 
-          echo "uberjar_file=$UBERJAR_FILE" >> $GITHUB_OUTPUT
-          echo "uberjar_path=$UBERJAR_PATH" >> $GITHUB_OUTPUT
+          echo "uberjar_file=$PRODUCTION_JAR_NAME" >> $GITHUB_OUTPUT
+          echo "uberjar_path=$PRODUCTION_JAR_PATH" >> $GITHUB_OUTPUT
           
           echo "::endgroup::"
 
@@ -298,6 +271,7 @@ jobs:
           echo "📦 Release Details:"
           echo "  - Tag: ${{ env.VERSION }}"
           echo "  - JAR: ${{ steps.get_uberjar.outputs.uberjar_file }}"
+          echo "  - Path: ${{ env.PRODUCTION_JAR_PATH }}"
           echo "  - Size: $(numfmt --to=iec --suffix=B $JAR_SIZE)"
           echo "  - Prerelease: ${{ contains(env.VERSION, '-') }}"
           echo ""
@@ -336,6 +310,7 @@ jobs:
           echo "🏗️ Build Results:"
           echo "  - Status: ${{ job.status }}"
           echo "  - Version: ${{ env.VERSION }}"
+          echo "  - JAR Path: ${{ env.PRODUCTION_JAR_PATH }}"
           
           if [ "${{ job.status }}" = "success" ]; then
             echo "  - JAR: ${{ steps.get_uberjar.outputs.uberjar_file }}"

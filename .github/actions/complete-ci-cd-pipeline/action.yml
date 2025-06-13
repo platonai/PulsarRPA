@@ -21,6 +21,11 @@ inputs:
     description: 'Skip unit tests during build'
     required: false
     default: 'true'
+  skip_integration_tests:
+    description: 'Skip integration tests during build'
+    required: false
+    default: false
+    type: boolean
   maven_timeout_minutes:
     description: 'Maven build timeout in minutes'
     required: false
@@ -186,6 +191,7 @@ runs:
         echo "  - Java Version: ${{ inputs.java_version }}"
         echo "  - Maven Profiles: ${{ inputs.maven_profiles }}"
         echo "  - Skip Tests: ${{ inputs.skip_tests }}"
+        echo "  - Skip Integration Tests: ${{ inputs.skip_integration_tests }}"
         echo "  - Image: ${{ inputs.image_registry }}/${{ inputs.image_name }}:${{ inputs.image_version }}"
         echo "  - Container: ${{ inputs.container_name }}"
         echo "  - Network: ${{ inputs.network_name }}"
@@ -265,6 +271,7 @@ runs:
 
     - name: Run Integration Tests
       id: integration-tests
+      if: inputs.skip_integration_tests != 'true'
       shell: bash
       run: |
         echo "::group::🧪 Integration Tests"
