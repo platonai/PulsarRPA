@@ -19,6 +19,12 @@ on:
 
 env:
   IMAGE_NAME: galaxyeye88/pulsar-rpa
+  PRODUCTION_JAR_MODULE_NAME: 'pulsar-master'
+  PRODUCTION_JAR_MODULE_PATH: 'pulsar-app/pulsar-master'
+  PRODUCTION_JAR_NAME: 'PulsarRPA.jar'
+  PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-master/target/PulsarRPA.jar'
+  DRAFT: true
+  PRERELEASE: true
 
 jobs:
   build-and-release:
@@ -32,11 +38,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          server-id: ossrh
-          server-username: SONATYPE_USERNAME
-          server-password: SONATYPE_PASSWORD
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: GPG_PASSPHRASE
 
       - name: Correct Permissions
         run: |
@@ -53,7 +54,6 @@ jobs:
 
       - name: Update Version
         run: |
-          chmod +x bin/release/update-versions.sh
           bin/release/update-versions.sh
 
       - name: Cache Maven packages
@@ -65,7 +65,7 @@ jobs:
 
       - name: Maven Build
         run: |
-          ./mvnw clean install -DskipTests
+          ./mvnw clean install -DskipTests -Pall-modules
 
       - name: Build Docker image
         run: |
@@ -92,47 +92,35 @@ jobs:
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
-      - name: Deploy to Sonatype OSSRH
-        if: success() && startsWith(github.ref, 'refs/tags/')
-        run: |
-          echo "=== Deploying to Maven Central ==="
-          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
-            -Dgpg.passphrase="$GPG_PASSPHRASE" \
-            -Dgpg.batch=true \
-            -Dgpg.pinentry-mode=loopback \
-            -DrepositoryId=ossrh \
-            -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2 \
-            --show-version --errors
-        env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-
       - name: Build PulsarRPA JAR
         if: success()
         run: |
+          JAR_PATH=${{ env.PRODUCTION_JAR_PATH }}
+          JAR_NAME=${{ env.PRODUCTION_JAR_NAME }}
+          MODULE_NAME=${{ env.PRODUCTION_JAR_MODULE_NAME }}
+          MODULE_PATH=${{ env.PRODUCTION_JAR_MODULE_PATH }}
+
           echo "=== Building PulsarRPA JAR ==="
-          ./mvnw package -rf :pulsar-master -pl pulsar-app/pulsar-master \
-            -DskipTests=true -Dmaven.javadoc.skip=true
-          
-          JAR_PATH="pulsar-app/pulsar-master/target/PulsarRPA.jar"
+          ./mvnw package -rf :$MODULE_NAME -pl ${MODULE_PATH} -DskipTests=true -Dmaven.javadoc.skip=true
+
           if [ ! -f "$JAR_PATH" ]; then
-            echo "❌ PulsarRPA.jar not found at $JAR_PATH"
-            ls -la pulsar-app/pulsar-master/target/ || echo "Target directory not found"
+            echo "❌ $JAR_NAME.jar not found at $JAR_PATH"
+            echo "All created jars: "
+            find . -name "$JAR_NAME.jar" -print
             exit 1
           fi
-          echo "✅ PulsarRPA.jar built successfully"
+          echo "✅ $JAR_NAME.jar built successfully"
 
       - name: Create GitHub Release
         if: success()
         uses: softprops/action-gh-release@v2
         with:
-          name: Release ${{ env.TAG }}
-          draft: false
-          prerelease: false
+          name: v${{ env.TAG }}
+          draft: ${{ env.DRAFT }}
+          prerelease: ${{ env.PRERELEASE }}
           generate_release_notes: true
           files: |
-            pulsar-app/pulsar-master/target/PulsarRPA.jar
+            ${{ env.PRODUCTION_JAR_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
