@@ -251,7 +251,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.get_uberjar.outputs.uberjar_path }}
-          name: Release ${{ env.VERSION }}
+          name: v${{ env.VERSION }}
           body_path: release_notes.md
           draft: false
           prerelease: ${{ contains(env.VERSION, '-') }}
