@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class ScrapeLegacyControllerTests : IntegrationTestBase() {
+class ScrapeControllerV30xTests : IntegrationTestBase() {
 
     val urls = mapOf(
         "productListPage" to "https://www.amazon.com/b?node=1292115011",
@@ -53,8 +53,8 @@ class ScrapeLegacyControllerTests : IntegrationTestBase() {
     }
 
     /**
-     * Test [ScrapeLegacyController.submitJob]
-     * Test [ScrapeLegacyController.status]
+     * Test [ScrapeControllerV30x.submitJob]
+     * Test [ScrapeControllerV30x.status]
      * */
     @Test
     fun `Test extracting product list page with X-SQL`() {
@@ -70,8 +70,8 @@ class ScrapeLegacyControllerTests : IntegrationTestBase() {
     }
 
     /**
-     * Test [ScrapeLegacyController.submitJob]
-     * Test [ScrapeLegacyController.status]
+     * Test [ScrapeControllerV30x.submitJob]
+     * Test [ScrapeControllerV30x.status]
      * Test [LLMFunctions.extract]
      * */
     @Test

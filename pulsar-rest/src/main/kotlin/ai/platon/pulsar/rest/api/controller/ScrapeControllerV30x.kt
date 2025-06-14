@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @CrossOrigin
 @RequestMapping(
-    "api/scrape/tasks",
+    "api/x",
     consumes = [MediaType.ALL_VALUE],
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
-class ScrapeLegacyController(
+class ScrapeControllerV30x(
     val applicationContext: ApplicationContext,
     val scrapeService: ScrapeService,
 ) {
