@@ -1,4 +1,4 @@
-name: Build & Release JAR
+name: Release
 
 on:
   push:
@@ -12,314 +12,126 @@ on:
         required: true
         type: string
       skip_tests:
-        description: 'Skip unit tests during build'
-        required: false
-        default: false
-        type: boolean
-      skip_integration_tests:
-        description: 'Skip integration tests during build'
+        description: 'Skip tests during build'
         required: false
         default: false
         type: boolean
 
 env:
-  VERSION: ${{ github.ref_name || inputs.tag }}
-  NETWORK_NAME: 'pulsarrpa_backend'
-  MAVEN_OPTS: '-Dmaven.repo.local=.m2/repository -Xmx1g -XX:+TieredCompilation -XX:TieredStopAtLevel=1'
+  IMAGE_NAME: galaxyeye88/pulsar-rpa
+  PRODUCTION_JAR_MODULE_NAME: 'pulsar-master'
+  PRODUCTION_JAR_MODULE_PATH: 'pulsar-app/pulsar-master'
+  PRODUCTION_JAR_NAME: 'PulsarRPA.jar'
   PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-master/target/PulsarRPA.jar'
+  DRAFT: true
+  PRERELEASE: true
 
 jobs:
-  build-release:
+  build-and-release:
     runs-on: ubuntu-latest
-
-    outputs:
-      jar_name: ${{ steps.get_uberjar.outputs.uberjar_file }}
-      jar_path: ${{ steps.get_uberjar.outputs.uberjar_path }}
-      version: ${{ env.VERSION }}
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Cache Maven dependencies
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
-      - name: Set up JDK
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
           distribution: 'temurin'
+          java-version: '17'
 
-      - name: Validate Version Format
+      - name: Correct Permissions
         run: |
-          echo "::group::🔍 Version Validation"
-          
-          VERSION="${{ env.VERSION }}"
-          echo "Validating version: $VERSION"
-          
-          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
-            echo "❌ Invalid version format: $VERSION"
-            echo "Expected format: v1.0.0 or v1.0.0-alpha.1"
-            exit 1
-          fi
-          
-          echo "✅ Version format is valid"
-          
-          CLEAN_VERSION="${VERSION#v}"
-          echo "CLEAN_VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
-          echo "Clean version: $CLEAN_VERSION"
-          
-          echo "::endgroup::"
+          find bin/ -name "*.sh" | xargs chmod +x
+          chmod +x ./mvnw
 
-      - name: Run Common Workflow Steps
-        uses: ./.github/actions/complete-ci-cd-pipeline
+      - name: Extract version from tag
+        id: tag
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Update Version
+        run: |
+          bin/release/update-versions.sh
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
         with:
-          image_name: galaxyeye88/pulsar-rpa
-          network_name: ${{ env.NETWORK_NAME }}
-          image_version: ${{ env.CLEAN_VERSION }}
-          deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
-          proxy_rotation_url: ${{ secrets.PROXY_ROTATION_URL }}
-          skip_tests: ${{ inputs.skip_tests }}
-          skip_integration_tests: ${{ inputs.skip_integration_tests }}
-          services_to_start: 'mongodb'
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
 
-      - name: Build Production JAR
+      - name: Maven Build
         run: |
-          echo "::group::🏗️ Building Production JAR"
-          
-          # Check if the production JAR already exists
-          PRODUCTION_JAR_PATH="${{ env.PRODUCTION_JAR_PATH }}"
-          
-          if [ -f "$PRODUCTION_JAR_PATH" ]; then
-              echo "✅ Production JAR already exists at: $PRODUCTION_JAR_PATH"
-          
-              # Verify the JAR is not empty
-              JAR_SIZE=$(stat -c%s "$PRODUCTION_JAR_PATH" 2>/dev/null || echo 0)
-              if [ "$JAR_SIZE" -eq 0 ]; then
-                  echo "⚠️ Warning: Existing JAR is empty, proceeding with build"
-              else
-                  echo "📏 JAR Size: $(numfmt --to=iec --suffix=B $JAR_SIZE)"
-                  echo "Skipping build, using existing JAR"
-                  echo "::endgroup::"
-                  exit 0
-              fi
-          fi
+          ./mvnw clean install -DskipTests -Pall-modules
 
-          echo "🔍 Production JAR not found at: $PRODUCTION_JAR_PATH"
-          echo "📋 Build Configuration:"
-          echo "  - Version: ${{ env.CLEAN_VERSION }}"
-          echo "  - Skip Tests: always (tests handled in previous step)"
-          echo "  - Maven Opts: $MAVEN_OPTS"
-          echo "  - Target JAR Path: $PRODUCTION_JAR_PATH"
-          
-          # Check if Maven wrapper exists
-          if [ ! -f "./mvnw" ]; then
-            echo "❌ Maven wrapper (mvnw) not found in root directory"
-            exit 1
-          fi
-          
-          # Update version in POM if needed
-          CURRENT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
-          if [ "${{ env.CLEAN_VERSION }}" != "$CURRENT_VERSION" ]; then
-            echo "🔄 Updating project version from $CURRENT_VERSION to ${{ env.CLEAN_VERSION }}"
-            ./mvnw versions:set -DnewVersion=${{ env.CLEAN_VERSION }} -DgenerateBackupPoms=false
-          fi
-
-          # Build arguments - always skip tests since they were handled in previous step
-          BUILD_ARGS="install -DskipTests"
-
-          echo "🚀 Starting Maven build with args: $BUILD_ARGS"
-
-          # Use the Maven wrapper from the root directory
-          if ! ./mvnw $BUILD_ARGS; then
-            echo "❌ Maven build failed"
-            exit 1
-          fi
-          
-          # Verify the JAR was created
-          if [ ! -f "$PRODUCTION_JAR_PATH" ]; then
-            echo "❌ Expected JAR not found after build: $PRODUCTION_JAR_PATH"
-            echo "Available files in target directory:"
-            TARGET_DIR=$(dirname "$PRODUCTION_JAR_PATH")
-            ls -la "$TARGET_DIR" 2>/dev/null || echo "Target directory not found: $TARGET_DIR"
-            exit 1
-          fi
-          
-          echo "✅ JAR build completed successfully"
-          echo "✅ Production JAR created at: $PRODUCTION_JAR_PATH"
-          echo "::endgroup::"
-
-      - name: Find and Validate JAR
-        id: get_uberjar
+      - name: Build Docker image
         run: |
-          echo "::group::📦 JAR Discovery and Validation"
-          
-          PRODUCTION_JAR_PATH="${{ env.PRODUCTION_JAR_PATH }}"
-          
-          echo "🔍 Checking for production JAR at: $PRODUCTION_JAR_PATH"
-          
-          if [ ! -f "$PRODUCTION_JAR_PATH" ]; then
-            echo "❌ Production JAR not found at expected path: $PRODUCTION_JAR_PATH"
-            echo ""
-            echo "Available files in target directory:"
-            TARGET_DIR=$(dirname "$PRODUCTION_JAR_PATH")
-            ls -la "$TARGET_DIR" 2>/dev/null || echo "Target directory not found: $TARGET_DIR"
-            echo ""
-            echo "All JAR files in project:"
-            find . -name "*.jar" -type f 2>/dev/null || true
-            exit 1
-          fi
-          
-          # Validate JAR is not empty and appears to be executable
-          JAR_SIZE=$(stat -c%s "$PRODUCTION_JAR_PATH" 2>/dev/null || echo 0)
-          if [ "$JAR_SIZE" -eq 0 ]; then
-            echo "❌ Production JAR is empty: $PRODUCTION_JAR_PATH"
-            exit 1
-          fi
-          
-          # Extract JAR filename from path
-          PRODUCTION_JAR_NAME=$(basename "$PRODUCTION_JAR_PATH")
-          
-          echo "✅ Production JAR validated successfully"
-          echo "📍 Path: $PRODUCTION_JAR_PATH"
-          echo "📄 Name: $PRODUCTION_JAR_NAME"
-          echo "📏 Size: $(numfmt --to=iec --suffix=B $JAR_SIZE)"
-          
-          # Verify it's a valid JAR file
-          if command -v file >/dev/null 2>&1; then
-            FILE_TYPE=$(file "$PRODUCTION_JAR_PATH")
-            echo "📋 File Type: $FILE_TYPE"
-          
-            if [[ ! "$FILE_TYPE" == *"Java"* ]] && [[ ! "$FILE_TYPE" == *"archive"* ]]; then
-              echo "⚠️ Warning: File may not be a valid JAR archive"
-            fi
-          fi
+          docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest -f Dockerfile .
 
-          echo "uberjar_file=$PRODUCTION_JAR_NAME" >> $GITHUB_OUTPUT
-          echo "uberjar_path=$PRODUCTION_JAR_PATH" >> $GITHUB_OUTPUT
-          
-          echo "::endgroup::"
-
-      - name: Create Release Notes
+      - name: Test Docker container
+        if: success()
         run: |
-          echo "::group::📝 Generating Release Notes"
-          
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          
-          if [ -n "$PREV_TAG" ]; then
-            echo "📋 Changes since $PREV_TAG:"
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$PREV_TAG"..HEAD)
-          else
-            echo "📋 Initial release changes:"
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" HEAD~10..HEAD)
-          fi
-          
-          JAR_SIZE=$(stat -c%s "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null || echo 0)
-          
-          cat > release_notes.md << EOF
-          ## Release ${{ env.VERSION }}
-          
-          ### 📦 Artifacts
-          - **JAR File**: \`${{ steps.get_uberjar.outputs.uberjar_file }}\`
-          - **Size**: $(numfmt --to=iec --suffix=B $JAR_SIZE)
-          - **Java Version**: 17+
-          
-          ### 🔄 Changes
-          $CHANGELOG
-          
-          ### 🚀 Usage
-          \`\`\`bash
-          java -jar ${{ steps.get_uberjar.outputs.uberjar_file }}
-          \`\`\`
-          
-          Built on $(date -u +'%Y-%m-%d %H:%M:%S UTC')
-          EOF
-          
-          echo "Generated release notes:"
-          cat release_notes.md
-          echo "::endgroup::"
+          # Start container
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
+          sleep 10  # Wait for Spring Boot to start
 
-      - name: Upload JAR to GitHub Release
+          # Run integration tests
+          find bin/ -name "*.sh" -exec chmod +x {} \;
+          if ! ./bin/run-integration-test.sh; then
+            echo "Integration test failed"
+            docker logs pulsar-rpa-test
+            docker stop pulsar-rpa-test || true
+            exit 1
+          fi
+
+          # Clean up
+          docker stop pulsar-rpa-test || true
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+      - name: Build PulsarRPA JAR
+        if: success()
+        run: |
+          JAR_PATH=${{ env.PRODUCTION_JAR_PATH }}
+          JAR_NAME=${{ env.PRODUCTION_JAR_NAME }}
+          MODULE_NAME=${{ env.PRODUCTION_JAR_MODULE_NAME }}
+          MODULE_PATH=${{ env.PRODUCTION_JAR_MODULE_PATH }}
+
+          echo "=== Building PulsarRPA JAR ==="
+          ./mvnw package -rf :$MODULE_NAME -pl ${MODULE_PATH} -DskipTests=true -Dmaven.javadoc.skip=true
+
+          if [ ! -f "$JAR_PATH" ]; then
+            echo "❌ $JAR_NAME.jar not found at $JAR_PATH"
+            echo "All created jars: "
+            find . -name "$JAR_NAME.jar" -print
+            exit 1
+          fi
+          echo "✅ $JAR_NAME.jar built successfully"
+
+      - name: Create GitHub Release
+        if: success()
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ steps.get_uberjar.outputs.uberjar_path }}
-          name: v${{ env.VERSION }}
-          body_path: release_notes.md
-          draft: false
-          prerelease: ${{ contains(env.VERSION, '-') }}
+          name: v${{ env.TAG }}
+          draft: ${{ env.DRAFT }}
+          prerelease: ${{ env.PRERELEASE }}
           generate_release_notes: true
-          make_latest: ${{ !contains(env.VERSION, '-') }}
+          files: |
+            ${{ env.PRODUCTION_JAR_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify Release
+      - name: Push Docker Images
+        if: success()
         run: |
-          echo "::group::✅ Release Verification"
-          
-          JAR_SIZE=$(stat -c%s "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null || echo 0)
-          
-          echo "🎉 Release ${{ env.VERSION }} created successfully!"
-          echo ""
-          echo "📦 Release Details:"
-          echo "  - Tag: ${{ env.VERSION }}"
-          echo "  - JAR: ${{ steps.get_uberjar.outputs.uberjar_file }}"
-          echo "  - Path: ${{ env.PRODUCTION_JAR_PATH }}"
-          echo "  - Size: $(numfmt --to=iec --suffix=B $JAR_SIZE)"
-          echo "  - Prerelease: ${{ contains(env.VERSION, '-') }}"
-          echo ""
-          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ env.VERSION }}"
-          echo ""
-          echo "📥 Download Command:"
-          echo "wget https://github.com/${{ github.repository }}/releases/download/${{ env.VERSION }}/${{ steps.get_uberjar.outputs.uberjar_file }}"
-          
-          echo "::endgroup::"
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker push $IMAGE_NAME:$VERSION
+          docker push $IMAGE_NAME:latest
 
-      - name: Cleanup Resources
-        if: always()
+      - name: Update Documents
+        if: success()
         run: |
-          echo "::group::🧹 Cleanup"
-          
-          echo "🐳 Stopping Docker containers..."
-          docker compose down --remove-orphans --volumes 2>/dev/null || true
-          
-          echo "🗑️ Cleaning up temporary files..."
-          rm -f release_notes.md
-          
-          # Clean Maven target if cache was not hit
-          if [ "${{ steps.cache.outputs.cache-hit }}" != "true" ]; then
-            echo "🧽 Cleaning Maven artifacts..."
-            ./mvnw clean 2>/dev/null || true
-          fi
-          
-          echo "✅ Cleanup completed"
-          echo "::endgroup::"
-
-      - name: Post-build Summary
-        if: always()
-        run: |
-          echo "::group::📊 Build Summary"
-          
-          echo "🏗️ Build Results:"
-          echo "  - Status: ${{ job.status }}"
-          echo "  - Version: ${{ env.VERSION }}"
-          echo "  - JAR Path: ${{ env.PRODUCTION_JAR_PATH }}"
-          
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "  - JAR: ${{ steps.get_uberjar.outputs.uberjar_file }}"
-            echo "  - Release: ✅ Created"
-          else
-            echo "  - Release: ❌ Failed"
-          fi
-          
-          echo ""
-          echo "📅 Completed: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-          
-          echo "::endgroup::"
+          bin/release/update-documentation.sh

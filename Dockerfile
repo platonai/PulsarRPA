@@ -4,13 +4,25 @@ FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
 # Set working directory
 WORKDIR /build
 
-# Copy project, use .dockerignore to control which files to copy
-COPY pulsar-app .
+# Copy project files (use .dockerignore to control which files to copy)
+COPY pom.xml ./
+COPY VERSION ./
+COPY mvnw ./
+COPY .mvn ./.mvn
+COPY bin ./bin
+COPY . .
 
-RUN ls -l
+RUN ls -la && ls -la bin && find . -name "*.sh" -exec chmod +x {} \;
 
-# Copy JAR for use in the next stage
-RUN cp $(find . -type f -name PulsarRPA.jar | head -n 1) /build/app.jar
+# Build the application with Maven cache mount
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -Dmaven.javadoc.skip=true -B -V && \
+    echo "Build completed successfully"
+
+# Copy JAR for use in the next stage with better error handling
+RUN JAR_FILE=$(find . -name "PulsarRPA*.jar" -type f | head -n 1) && \
+    test -n "$JAR_FILE" || (echo "ERROR: PulsarRPA JAR file not found" && exit 1) && \
+    cp "$JAR_FILE" /build/app.jar && \
+    echo "Successfully copied JAR: $JAR_FILE"
 
 # Stage 2: Run stage
 FROM eclipse-temurin:21-jre-alpine AS runner
@@ -22,8 +34,19 @@ WORKDIR /app
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Install Chromium and necessary dependencies
-RUN apk add --no-cache curl chromium nss freetype freetype-dev harfbuzz ca-certificates ttf-freefont dbus
+# Install Chromium and necessary dependencies with security updates
+RUN apk update && apk upgrade && \
+    apk add --no-cache \
+    curl \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    dbus && \
+    rm -rf /var/cache/apk/*
 
 # Set Chromium environment variables
 # Ignore BROWSER_CONTEXT_NUMBER, BROWSER_MAX_OPEN_TABS if BROWSER_CONTEXT_MODE is set to DEFAULT
