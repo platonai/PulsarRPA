@@ -43,6 +43,7 @@ services:
       SERVER_ADDRESS: 0.0.0.0
     ports:
       - '8182:8182'
+    command: ["mongod", "--bind_ip_all"]
     networks:
       - backend
     ulimits:
