@@ -8,7 +8,6 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
-import jdk.jfr.internal.EventWriterKey.block
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach

@@ -31,18 +31,17 @@ class Screenshot(
     }
 
     fun captureScreenshot(selector: String): String? {
-        val nodeId = pageHandler.querySelector(selector)
-        if (nodeId == null || nodeId <= 0) {
+        val node = pageHandler.querySelector(selector) ?: return null
+        if (node.nodeId <= 0) {
             logger.info("No such element <{}>", selector)
             return null
         }
 
-//        val vi = pageHandler.firstAttr(selector, "vi")
         val vi: String? = null
         return if (vi != null) {
-            captureScreenshotWithVi(nodeId, selector, vi)
+            captureScreenshotWithVi(node.nodeId, selector, vi)
         } else {
-            captureScreenshotWithoutVi(nodeId, selector)
+            captureScreenshotWithoutVi(node.nodeId, selector)
         }
     }
 
