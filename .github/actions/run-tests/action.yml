@@ -13,7 +13,7 @@ inputs:
   test_excludes:
     description: 'Test patterns to exclude (Surefire format)'
     required: false
-    default: '**ai/platon/scent/rest/api/integration**'
+    default: '**api/integration**'
   test_includes:
     description: 'Test patterns to include (Surefire format)'
     required: false

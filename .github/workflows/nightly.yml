@@ -31,7 +31,7 @@ jobs:
         uses: ./.github/actions/verify-dependencies
         with:
           network_name: ${{ env.NETWORK_NAME }}
-          services_to_start: 'mongodb,redis'  # ✅ Only start MongoDB
+          services_to_start: 'mongodb'  # ✅ Only start MongoDB
           startup_timeout: '120'
           verify_network_connectivity: 'true'
 
@@ -49,7 +49,7 @@ jobs:
         uses: ./.github/actions/run-tests
         with:
           maven_profiles: 'all-modules'
-          test_excludes: '**ai/platon/scent/rest/api/integration**'
+          test_excludes: '**api/integration**'
           timeout_minutes: '35'
 
       - name: Build Docker Image

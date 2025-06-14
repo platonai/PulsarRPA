@@ -19,6 +19,11 @@ class PulsarSystemController {
     @Autowired
     lateinit var privacyManager: AbstractPrivacyManager
 
+    @GetMapping("health")
+    fun health(): Map<String, String> {
+        return mapOf("status" to "UP")
+    }
+
     @GetMapping("hello")
     fun hello(): String {
         return "hello"

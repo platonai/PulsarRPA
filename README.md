@@ -113,7 +113,7 @@ Use the `commands` API to perform browser operations, extract web data, analyze 
 
 ### 📥 Example Request (Text-based):
 
-WebUI: http://localhost:8182/api/command.html
+WebUI: http://localhost:8182/command.html
 
 <img src="docs/images/commander-ui.png" alt="commander" width="500" />
 

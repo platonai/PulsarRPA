@@ -11,13 +11,6 @@ while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
 }
 Set-Location $AppHome
 
-if ($null -eq $AppHome) {
-    Write-Error "Could not find VERSION file in any parent directory"
-    exit 1
-}
-
-Set-Location $AppHome
-
 $MvnCmd = Join-Path $AppHome '.\mvnw.cmd'
 
 $Version=(Get-Content "$AppHome/VERSION" -TotalCount 1) -replace "-SNAPSHOT", ""

@@ -40,7 +40,7 @@ class PulsarApplication {
         val baseURL = URLUtils.buildServerUrl("localhost", port, contextPath)
             .replace("/api", "") // Ensure the URL is correct even if the API is upgraded
             .trimEnd('/')
-        val frontendURL = "$baseURL/api/command.html"
+        val frontendURL = "$baseURL/command.html"
         val commandEndpoint = "$baseURL/api/commands/plain"
         val scrapingEndpoint = "$baseURL/api/x/e"
 
