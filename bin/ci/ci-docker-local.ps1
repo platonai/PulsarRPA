@@ -21,7 +21,7 @@ param(
 
     [switch]$SkipTests = $false,
     [switch]$Verbose = $true,
-    [switch]$UseCache = $false,
+    [switch]$UseCache = $true,
     [switch]$SkipBuild = $false,
     [switch]$CleanUp = $true
 )
