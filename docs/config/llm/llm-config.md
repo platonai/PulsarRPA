@@ -89,7 +89,7 @@ The table formatting in the environment variables section can be improved for be
 ### Example: Doubao with OpenAI-compatible API
 
 ```bash
-java -DOPENAI_API_KEY="9cc8e998-4655-4e90-a54c1-66659a524a97" \
+java -DOPENAI_API_KEY="9cc8e998-4655-4e90-a54c1-12345abcdefg" \
      -DOPENAI_MODEL_NAME="doubao-1.5-pro-32k-250115" \
      -DOPENAI_BASE_URL="https://ark.cn-beijing.volces.com/api/v3" \
      -jar PulsarRPA.jar
@@ -100,7 +100,7 @@ Corresponding curl example:
 ```bash
 curl https://ark.cn-beijing.volces.com/api/v3 \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer 9cc8e998-4655-4e90-a54c1-66659a524a97" \
+  -H "Authorization: Bearer 9cc8e998-4655-4e90-a54c1-12345abcdefg" \
   -d '{
     "model": "doubao-1.5-pro-256k-250115",
     "messages": [

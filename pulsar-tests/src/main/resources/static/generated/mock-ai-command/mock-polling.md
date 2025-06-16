@@ -24,9 +24,10 @@ curl -X POST "http://localhost:8182/api/commands/" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://www.amazon.com/dp/B0C1H26C46",
+    "onBrowserLaunchedActions": ["clear browser cookies"],
+    "onPageReadyActions": ["click #title", "scroll to the middle"],
     "pageSummaryPrompt": "Provide a brief introduction of this product.",
     "dataExtractionRules": "product name, price, and ratings",
-    "linkExtractionRules": "all links containing `/dp/` on the page",
-    "onPageReadyActions": ["click #title", "scroll to the middle"]
+    "linkExtractionRules": "all links containing `/dp/` on the page"
   }'
 ```

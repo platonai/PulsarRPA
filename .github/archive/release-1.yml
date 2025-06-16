@@ -213,7 +213,7 @@ jobs:
           
           ### 🚀 Usage
           \`\`\`bash
-          java -jar ${{ steps.get_uberjar.outputs.uberjar_file }}
+          java -DDEEPSEEK_API_KEY=`${DEEPSEEK_API_KEY} -jar ${{ steps.get_uberjar.outputs.uberjar_file }}
           \`\`\`
           
           Built on $(date -u +'%Y-%m-%d %H:%M:%S UTC')

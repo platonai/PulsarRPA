@@ -50,7 +50,8 @@ object ChatModelFactory {
         val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
         if (deepseekAPIKey != null) {
             val deepseekModelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
-            return getOrCreate("deepseek", deepseekModelName, deepseekAPIKey, conf)
+            val deepseekBaseURL = conf["DEEPSEEK_BASE_URL"] ?: "https://api.deepseek.com/"
+            return getOrCreateOpenAICompatibleModel(deepseekModelName, deepseekAPIKey, deepseekBaseURL, conf)
         }
 
         val volcengineAPIKey = conf["VOLCENGINE_API_KEY"]
@@ -104,10 +105,7 @@ object ChatModelFactory {
     }
 
     fun getOrCreateOpenAICompatibleModel(
-        modelName: String,
-        apiKey: String,
-        baseUrl: String,
-        conf: ImmutableConfig
+        modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig
     ): ChatModel {
         val key = "$modelName:$apiKey:$baseUrl"
         return models.computeIfAbsent(key) { createOpenAICompatibleModel0(modelName, apiKey, baseUrl, conf) }
@@ -137,12 +135,7 @@ object ChatModelFactory {
         return provider != null && llm != null && apiKey != null
     }
 
-    private fun getOrCreateModel0(
-        provider: String,
-        modelName: String,
-        apiKey: String,
-        conf: ImmutableConfig
-    ): ChatModel {
+    private fun getOrCreateModel0(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
         val key = "$modelName:$apiKey"
         return models.computeIfAbsent(key) { doCreateModel(provider, modelName, apiKey, conf) }
     }

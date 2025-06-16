@@ -43,6 +43,18 @@ class ChatModelTests {
     }
 
     @Test
+    fun `introduce model`() {
+        val prompt = "introduce yourself, what can you do for me?"
+        val response = model.call(prompt)
+        println(response.content)
+
+        assertTrue { response.tokenUsage.inputTokenCount > 0 }
+        assertTrue { response.tokenUsage.outputTokenCount > 0 }
+        assertTrue { response.tokenUsage.totalTokenCount > 0 }
+        assertTrue { response.state == ResponseState.STOP }
+    }
+
+    @Test
     fun `should generate answer and return token usage and finish reason stop`() {
         val document = Documents.parse(productHtml, url)
         

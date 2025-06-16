@@ -19,6 +19,7 @@ $COMMAND_REQUEST_TEMPLATE
 
 Guidelines:
 - Start with "Visit [url]"
+- Convert each action in "onBrowserLaunchedActions" to a separate step
 - Convert each action in "onPageReadyActions" to a separate step
 - Add steps for summarizing, data extraction, and link collection if specified
 - Use clear, concise numbered instructions

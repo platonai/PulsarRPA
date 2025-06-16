@@ -19,13 +19,18 @@ const val PLACEHOLDER_JSON_VALUE = "{PLACEHOLDER_JSON_VALUE}"
 const val COMMAND_REQUEST_TEMPLATE = """
 {
   "url": "{PLACEHOLDER_URL}",
-  "pageSummaryPrompt": "Instructions for summarizing the page...",
-  "dataExtractionRules": "Instructions for extracting specific fields...",
-  "linkExtractionRules": "https://.+",
+  "onBrowserLaunchedActions": [
+    "clear browser cookies",
+    "navigate to the home page",
+    "click a random link"
+  ],
   "onPageReadyActions": [
     "scroll down",
     "click 'Sign In' button"
-  ]
+  ],
+  "pageSummaryPrompt": "Instructions for summarizing the page...",
+  "dataExtractionRules": "Instructions for extracting specific fields...",
+  "linkExtractionRules": "https://.+"
 }
 """
 
@@ -45,6 +50,7 @@ $COMMAND_REQUEST_TEMPLATE
 
 * **Keep the URL placeholder** as `{PLACEHOLDER_URL}` exactly as shown.
 * Only include fields that are relevant to the user's request.
+* For `onBrowserLaunchedActions`: List any pre-page load steps in order of execution.
 * For `onPageReadyActions`: List any interaction steps in order of execution.
 * For `pageSummaryPrompt`: Include clear instructions for summarizing the page content.
 * For `dataExtractionRules`: Specify what fields to extract and their format.
@@ -91,6 +97,7 @@ The JSON section name is **JSON representation**
 ## 🔧 JSON to Convert:
 
 ```json
-{JSON_STRING}
+$JSON_STRING_PLACEHOLDER
+```
 
 """
