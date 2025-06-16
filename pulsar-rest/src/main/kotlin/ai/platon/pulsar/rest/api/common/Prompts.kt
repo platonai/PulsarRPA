@@ -12,11 +12,15 @@ const val PLACEHOLDER_URL = "{PLACEHOLDER_URL}"
 
 const val PLACEHOLDER_REQUEST = "{PLACEHOLDER_REQUEST}"
 
+const val PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE = "{PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE}"
+
+const val PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE = "{PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE}"
+
 const val PLACEHOLDER_PAGE_CONTENT = "{PLACEHOLDER_PAGE_CONTENT}"
 
 const val PLACEHOLDER_JSON_VALUE = "{PLACEHOLDER_JSON_VALUE}"
 
-const val COMMAND_REQUEST_TEMPLATE = """
+const val REQUEST_JSON_COMMAND_TEMPLATE = """
 {
   "url": "{PLACEHOLDER_URL}",
   "onBrowserLaunchedActions": [
@@ -30,11 +34,11 @@ const val COMMAND_REQUEST_TEMPLATE = """
   ],
   "pageSummaryPrompt": "Instructions for summarizing the page...",
   "dataExtractionRules": "Instructions for extracting specific fields...",
-  "linkExtractionRules": "https://.+"
+  "linkExtractionRules": "Instructions for extracting links, for example: links containing /dp/",
 }
 """
 
-const val API_REQUEST_COMMAND_CONVERSION_TEMPLATE = """
+const val API_REQUEST_PLAIN_COMMAND_TEMPLATE = """
 You're given a user request that describes how to interact with and extract information from a web page.
 Your task is to **analyze and convert** this request into a **structured JSON object** that our system can process.
 
@@ -43,7 +47,7 @@ The input may be conversational, contain ambiguous instructions, or be written i
 Produce a JSON object with these possible fields:
 
 ```json
-$COMMAND_REQUEST_TEMPLATE
+{PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE}
 ```
 
 ### 🔧 Guidelines:
@@ -60,19 +64,20 @@ $COMMAND_REQUEST_TEMPLATE
   * * Be compatible with Kotlin's Regex class.
   * * Support both HTTP and HTTPS schemes.
   * * Optionally include path, query, and fragment.
-  * * Return only the pattern string (no explanation).
-  
+  * * Start with a prefix "Regex: " and then provide the regex pattern, for example: `Regex: https?://[\\w.-]+(?:/[\\w.-]*)*`
+  * * Return only the pattern string and the "Regex: " prefix (no explanation).
+
 * Convert vague requests into specific, actionable instructions.
 
 ### 📥 Input:
 
 ```text
-{PLACEHOLDER_REQUEST}
+{PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE}
 ```
 
 """
 
-const val JSON_STRING_PLACEHOLDER = "{JSON_STRING}"
+const val PLACEHOLDER_JSON_STRING = "{PLACEHOLDER_JSON_STRING}"
 
 const val CONVERT_RESPONSE_TO_MARKDOWN_PROMPT_TEMPLATE = """
 Convert the following JSON string into a well-structured Markdown document.
@@ -97,7 +102,7 @@ The JSON section name is **JSON representation**
 ## 🔧 JSON to Convert:
 
 ```json
-$JSON_STRING_PLACEHOLDER
+{PLACEHOLDER_JSON_STRING}
 ```
 
 """
