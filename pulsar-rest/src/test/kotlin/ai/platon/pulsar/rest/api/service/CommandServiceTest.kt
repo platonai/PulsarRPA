@@ -154,6 +154,60 @@ class CommandServiceTest {
     }
 
     @Test
+    fun `test executeCommand with linkExtractionRules`() {
+        val request = CommandRequest(
+            PRODUCT_DETAIL_URL,
+            linkExtractionRules = "links containing /dp/"
+        )
+        val status = commandService.executeCommand(request)
+        println(prettyPulsarObjectMapper().writeValueAsString(status))
+        val result = status.commandResult
+
+        Assumptions.assumeTrue(status.pageStatusCode == 200)
+        Assumptions.assumeTrue(status.isDone)
+        Assumptions.assumeTrue(status.statusCode == 200)
+
+        assertNotNull(result)
+        assertTrue { status.isDone }
+
+        val links = result.links
+        println(links)
+
+        assertNull(result.pageSummary)
+        assertNull(result.xsqlResultSet)
+
+        assertNotNull(links)
+        assertTrue { links.isNotEmpty() }
+    }
+
+    @Test
+    fun `test executeCommand with linkExtractionRules in regex`() {
+        val request = CommandRequest(
+            PRODUCT_DETAIL_URL,
+            linkExtractionRules = "Regex: https://www.amazon.com/dp/\\w+"
+        )
+        val status = commandService.executeCommand(request)
+        println(prettyPulsarObjectMapper().writeValueAsString(status))
+        val result = status.commandResult
+
+        Assumptions.assumeTrue(status.pageStatusCode == 200)
+        Assumptions.assumeTrue(status.isDone)
+        Assumptions.assumeTrue(status.statusCode == 200)
+
+        assertNotNull(result)
+        assertTrue { status.isDone }
+
+        val links = result.links
+        println(links)
+
+        assertNull(result.pageSummary)
+        assertNull(result.xsqlResultSet)
+
+        assertNotNull(links)
+        assertTrue { links.isNotEmpty() }
+    }
+
+    @Test
     fun `test executeCommand with simple and clean command`() {
         val prompt = API_COMMAND_PROMPT1
         val status = commandService.executeCommand(prompt)

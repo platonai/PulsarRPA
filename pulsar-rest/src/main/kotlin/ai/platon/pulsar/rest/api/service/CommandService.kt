@@ -8,7 +8,7 @@ import ai.platon.pulsar.dom.nodes.node.ext.numChars
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.rest.api.common.DomUtils
 import ai.platon.pulsar.rest.api.common.PLACEHOLDER_PAGE_CONTENT
-import ai.platon.pulsar.rest.api.common.PromptUtils
+import ai.platon.pulsar.rest.api.common.RestAPIPromptUtils
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
 import ai.platon.pulsar.rest.api.entities.*
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -215,8 +215,8 @@ class CommandService(
         // the 0-based screen number, 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
         val screenNumber = page.activeDOMMetadata?.screenNumber ?: 0f
 
-        val pageSummaryPrompt = PromptUtils.normalizePageSummaryPrompt(request.pageSummaryPrompt)
-        val dataExtractionRules = PromptUtils.normalizeDataExtractionRules(request.dataExtractionRules)
+        val pageSummaryPrompt = RestAPIPromptUtils.normalizePageSummaryPrompt(request.pageSummaryPrompt)
+        val dataExtractionRules = RestAPIPromptUtils.normalizeDataExtractionRules(request.dataExtractionRules)
         var richText: String? = null
         var textContent: String? = null
         if (pageSummaryPrompt != null || dataExtractionRules != null) {
@@ -253,21 +253,27 @@ class CommandService(
             }
         }
 
-        var linkExtractionRules = PromptUtils.normalizeLinkExtractionRules(request.linkExtractionRules)
+        var linkExtractionRules = RestAPIPromptUtils.normalizeLinkExtractionRules(request.linkExtractionRules)
         if (linkExtractionRules != null) {
             if (!linkExtractionRules.startsWith("Regex:")) {
-                val prompt = PromptUtils.normalizeLinkExtractionRules(linkExtractionRules) ?: return
-                linkExtractionRules = session.chat(prompt).content
+                val prompt = RestAPIPromptUtils.normalizeLinkExtractionRules(linkExtractionRules) ?: return
+                linkExtractionRules = chatWithLLM(prompt)
             }
 
-            val regex = PromptUtils.normalizeLinkExtractionRegex(linkExtractionRules) ?: return
+            if (!linkExtractionRules.startsWith("Regex:")) {
+                logger.warn("Link extraction rules must start with 'Regex:', but got: {}", linkExtractionRules)
+                return
+            }
 
-            val links = DomUtils.selectNthScreenLinks(document).filter { it.matches(regex) }
+            val regex = RestAPIPromptUtils.normalizeLinkExtractionRegex(linkExtractionRules) ?: return
+
+            val allLinks = DomUtils.selectNthScreenLinks(document)
+            val links = allLinks.filter { it.matches(regex) }
             if (links.isNotEmpty()) {
                 val result = InstructResult.ok("links", links, "list")
                 status.addInstructResult(result)
             }
-            logger.info("Use regex to extract {} links: {}", links.size, linkExtractionRules)
+            logger.info("Extracted {}/{} links using regex {}", links.size, allLinks.size, regex)
         }
     }
 
@@ -276,15 +282,18 @@ class CommandService(
         resultType: String = "string",
         mappingFunction: (String) -> Any = { it.trim() }
     ) {
-        val result = try {
-            val content = session.chat(instruct).content
-            InstructResult.ok(name, mappingFunction(content), resultType)
-        } catch (e: Exception) {
-            logger.warn("Failed to perform instruct: $instruct", e)
-            InstructResult.failed(name)
-        }
-
+        val content = chatWithLLM(instruct)
+        val result = InstructResult.ok(name, mappingFunction(content), resultType)
         status.addInstructResult(result)
+    }
+
+    private fun chatWithLLM(instruct: String): String {
+        try {
+            return session.chat(instruct).content
+        } catch (e: Exception) {
+            logger.error("Failed to chat with LLM for instruct: $instruct", e)
+            return ""
+        }
     }
 
     private fun executeQuery(sql: String, status: CommandStatus) {

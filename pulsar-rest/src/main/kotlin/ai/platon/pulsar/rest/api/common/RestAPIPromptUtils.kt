@@ -2,7 +2,7 @@ package ai.platon.pulsar.rest.api.common
 
 import ai.platon.pulsar.rest.api.service.CommandService.Companion.MIN_USER_MESSAGE_LENGTH
 
-object PromptUtils {
+object RestAPIPromptUtils {
 
     fun normalizePageSummaryPrompt(message: String?): String? {
         val message2 = normalizeUserMessage(message) ?: return null
@@ -37,6 +37,10 @@ object PromptUtils {
     }
 
     fun normalizeLinkExtractionRules(urlDescription: String?): String? {
+        if (true == urlDescription?.startsWith("Regex:")) {
+            return urlDescription
+        }
+
         val description = normalizeUserMessage(urlDescription) ?: return null
         if (description.isBlank()) {
             return null

@@ -5,12 +5,21 @@ const val SYSTEM_PROMPT = """
 """
 
 const val DEFAULT_INTRODUCE = """
-    I am PulsarRPA, what can I do for you?
+Hi, I am PulsarRPA, 
+
+💖 PulsarRPA: The AI-Powered, Lightning-Fast Browser Automation Solution! 💖
+
+✨ Key Capabilities:
+* 🤖 AI Integration with LLMs – Smarter automation powered by large language models.
+* ⚡ Ultra-Fast Automation – Coroutine-safe browser automation concurrency, spider-level crawling performance.
+* 🧠 Web Understanding – Deep comprehension of dynamic web content.
+* 📊 Data Extraction APIs – Powerful tools to extract structured data effortlessly.
+
+What can I do for you today?
+
 """
 
 const val PLACEHOLDER_URL = "{PLACEHOLDER_URL}"
-
-const val PLACEHOLDER_REQUEST = "{PLACEHOLDER_REQUEST}"
 
 const val PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE = "{PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE}"
 
@@ -19,6 +28,10 @@ const val PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE = "{PLACEHOLDER_REQUEST_JSON
 const val PLACEHOLDER_PAGE_CONTENT = "{PLACEHOLDER_PAGE_CONTENT}"
 
 const val PLACEHOLDER_JSON_VALUE = "{PLACEHOLDER_JSON_VALUE}"
+
+const val PLACEHOLDER_JSON_STRING = "{PLACEHOLDER_JSON_STRING}"
+
+const val PLACEHOLDER_URL_DESCRIPTION = "{PLACEHOLDER_URL_DESCRIPTION}"
 
 const val REQUEST_JSON_COMMAND_TEMPLATE = """
 {
@@ -77,8 +90,6 @@ Produce a JSON object with these possible fields:
 
 """
 
-const val PLACEHOLDER_JSON_STRING = "{PLACEHOLDER_JSON_STRING}"
-
 const val CONVERT_RESPONSE_TO_MARKDOWN_PROMPT = """
 Convert the following JSON string into a well-structured Markdown document.
 
@@ -107,9 +118,6 @@ The JSON section name is **JSON representation**
 
 """
 
-const val PLACEHOLDER_URL_DESCRIPTION = "{PLACEHOLDER_URL_DESCRIPTION}"
-const val PLACEHOLDER_REGEX = "{PLACEHOLDER_REGEX}"
-
 const val CONVERT_URL_DESCRIPTION_TO_REGEX_PROMPT = """
 Convert the following URL description into a Kotlin-compatible regex pattern that matches exactly one valid URL.
 
@@ -127,6 +135,49 @@ Convert the following URL description into a Kotlin-compatible regex pattern tha
 
 ```text
 {PLACEHOLDER_URL_DESCRIPTION}
+```
+
+### 📤 Output Example (text inside code block):
+
+```text
+Regex: https?://[\\w.-]+(?:/[\\w.-]*)*
+```
+
+"""
+
+
+const val COMMAND_REVISION_TEMPLATE = """
+Your task is to convert a JSON command into simple, numbered steps in plain language.
+
+The JSON format looks like this:
+
+```json-text
+{REQUEST_JSON_COMMAND_TEMPLATE}
+```
+
+Guidelines:
+- Start with "Visit [url]"
+- Convert each action in "onBrowserLaunchedActions" to a separate step
+- Convert each action in "onPageReadyActions" to a separate step
+- Add steps for summarizing, data extraction, and link collection if specified
+- Use clear, concise numbered instructions
+
+Example:
+1. Visit https://example.com
+2. When browser launched:
+   1. Clear browser cookies
+   2. Visit the home page
+   3. Click a random link
+2. When page ready:
+   1. Scroll down
+   2. Click the "Add to Cart" button
+3. Summarize the page content
+4. Extract product name, price, ratings
+5. Collect all product links
+
+JSON to convert:
+```json-text
+{PLACEHOLDER_JSON_VALUE}
 ```
 
 """
