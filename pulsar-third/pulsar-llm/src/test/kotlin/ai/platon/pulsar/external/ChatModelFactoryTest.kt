@@ -31,7 +31,7 @@ class ChatModelFactoryTest {
     fun `doubao API should be compatible with OpenAI API`() {
         System.setProperty("OPENAI_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3")
         System.setProperty("OPENAI_MODEL_NAME", "doubao-1-5-pro-32k-250115")
-        System.setProperty("OPENAI_API_KEY", "9cc8e998-4655-4e90-a54c1-66659a524a97")
+        System.setProperty("OPENAI_API_KEY", "9cc8e998-4655-4e90-a54c1-12345abcdefg")
 
         val conf = ImmutableConfig()
         val model = ChatModelFactory.getOrCreate(conf)
