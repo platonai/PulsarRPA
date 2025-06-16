@@ -115,7 +115,7 @@ jobs:
         if: success()
         uses: softprops/action-gh-release@v2
         with:
-          name: v${{ env.TAG }}
+          name: ${{ env.TAG }}
           draft: ${{ env.DRAFT }}
           prerelease: ${{ env.PRERELEASE }}
           generate_release_notes: true
