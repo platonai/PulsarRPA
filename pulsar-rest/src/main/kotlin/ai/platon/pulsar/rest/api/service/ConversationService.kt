@@ -50,7 +50,7 @@ class ConversationService(
 
         // Replace the URL in the request with a placeholder, so the result from the LLM can be cached.
         val processedRequest = plainCommand.replace(url, PLACEHOLDER_URL)
-        val prompt = API_REQUEST_PLAIN_COMMAND_TEMPLATE
+        val prompt = API_REQUEST_PLAIN_COMMAND_CONVERSION_PROMPT
             .replace(PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE, REQUEST_JSON_COMMAND_TEMPLATE)
             .replace(PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE, processedRequest)
 
@@ -64,7 +64,7 @@ class ConversationService(
     }
 
     fun convertResponseToMarkdown(jsonResponse: String): String {
-        val userMessage = CONVERT_RESPONSE_TO_MARKDOWN_PROMPT_TEMPLATE.replace(PLACEHOLDER_JSON_STRING, jsonResponse)
+        val userMessage = CONVERT_RESPONSE_TO_MARKDOWN_PROMPT.replace(PLACEHOLDER_JSON_STRING, jsonResponse)
         return session.chat(userMessage).content
     }
 

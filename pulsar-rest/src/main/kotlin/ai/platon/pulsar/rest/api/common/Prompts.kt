@@ -38,7 +38,7 @@ const val REQUEST_JSON_COMMAND_TEMPLATE = """
 }
 """
 
-const val API_REQUEST_PLAIN_COMMAND_TEMPLATE = """
+const val API_REQUEST_PLAIN_COMMAND_CONVERSION_PROMPT = """
 You're given a user request that describes how to interact with and extract information from a web page.
 Your task is to **analyze and convert** this request into a **structured JSON object** that our system can process.
 
@@ -79,7 +79,7 @@ Produce a JSON object with these possible fields:
 
 const val PLACEHOLDER_JSON_STRING = "{PLACEHOLDER_JSON_STRING}"
 
-const val CONVERT_RESPONSE_TO_MARKDOWN_PROMPT_TEMPLATE = """
+const val CONVERT_RESPONSE_TO_MARKDOWN_PROMPT = """
 Convert the following JSON string into a well-structured Markdown document.
 
 ## Output requirement
@@ -103,6 +103,30 @@ The JSON section name is **JSON representation**
 
 ```json
 {PLACEHOLDER_JSON_STRING}
+```
+
+"""
+
+const val PLACEHOLDER_URL_DESCRIPTION = "{PLACEHOLDER_URL_DESCRIPTION}"
+const val PLACEHOLDER_REGEX = "{PLACEHOLDER_REGEX}"
+
+const val CONVERT_URL_DESCRIPTION_TO_REGEX_PROMPT = """
+Convert the following URL description into a Kotlin-compatible regex pattern that matches exactly one valid URL.
+
+### 🔧 Guidelines:
+* Match only one full URL (not multiple in a string).
+* Be compatible with Kotlin's Regex class.
+* Support both HTTP and HTTPS schemes.
+* Optionally include path, query, and fragment.
+* The output should be a JSON object with a single key "regex" and the value as the regex pattern.
+* If you cannot convert the description into a regex pattern, return an empty string.
+* Start with a prefix "Regex: " and then provide the regex pattern, for example: `Regex: https?://[\\w.-]+(?:/[\\w.-]*)*`
+* Return only the pattern string and the "Regex: " prefix (no explanation).
+
+### 📥 Input:
+
+```text
+{PLACEHOLDER_URL_DESCRIPTION}
 ```
 
 """

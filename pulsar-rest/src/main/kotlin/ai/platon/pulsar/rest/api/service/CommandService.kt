@@ -11,7 +11,6 @@ import ai.platon.pulsar.rest.api.common.PLACEHOLDER_PAGE_CONTENT
 import ai.platon.pulsar.rest.api.common.PromptUtils
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
 import ai.platon.pulsar.rest.api.entities.*
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -204,13 +203,13 @@ class CommandService(
         page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus
     ) {
         try {
-            executeCommandStepByStep0(page, document, request, status)
+            doExecuteCommandStepByStep(page, document, request, status)
         } catch (e: Exception) {
             status.failed(ResourceStatus.SC_EXPECTATION_FAILED)
         }
     }
 
-    private fun executeCommandStepByStep0(
+    private fun doExecuteCommandStepByStep(
         page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus
     ) {
         // the 0-based screen number, 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
@@ -254,9 +253,16 @@ class CommandService(
             }
         }
 
-        val linkExtractionRules = PromptUtils.normalizeLinkExtractionRules(request.linkExtractionRules)
+        var linkExtractionRules = PromptUtils.normalizeLinkExtractionRules(request.linkExtractionRules)
         if (linkExtractionRules != null) {
-            val links = DomUtils.selectNthScreenLinks(document).filter { it.matches(linkExtractionRules) }
+            if (!linkExtractionRules.startsWith("Regex:")) {
+                val prompt = PromptUtils.normalizeLinkExtractionRules(linkExtractionRules) ?: return
+                linkExtractionRules = session.chat(prompt).content
+            }
+
+            val regex = PromptUtils.normalizeLinkExtractionRegex(linkExtractionRules) ?: return
+
+            val links = DomUtils.selectNthScreenLinks(document).filter { it.matches(regex) }
             if (links.isNotEmpty()) {
                 val result = InstructResult.ok("links", links, "list")
                 status.addInstructResult(result)

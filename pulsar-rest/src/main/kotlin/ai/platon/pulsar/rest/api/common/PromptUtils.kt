@@ -36,9 +36,20 @@ object PromptUtils {
         return "$message2\n$suffix"
     }
 
-    fun normalizeLinkExtractionRules(message: String?): Regex? {
-        val message2 = normalizeUserMessage(message) ?: return null
+    fun normalizeLinkExtractionRules(urlDescription: String?): String? {
+        val description = normalizeUserMessage(urlDescription) ?: return null
+        if (description.isBlank()) {
+            return null
+        }
+
+        return CONVERT_URL_DESCRIPTION_TO_REGEX_PROMPT
+            .replace(PLACEHOLDER_URL_DESCRIPTION, description)
+    }
+
+    fun normalizeLinkExtractionRegex(message: String?): Regex? {
+        var message2 = normalizeUserMessage(message) ?: return null
         return try {
+            message2 = message2.removePrefix("Regex:").trim()
             message2.toRegex()
         } catch (e: IllegalArgumentException) {
             null

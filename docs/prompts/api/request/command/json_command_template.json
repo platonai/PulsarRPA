@@ -1,0 +1,15 @@
+{
+  "url": "{PLACEHOLDER_URL}",
+  "onBrowserLaunchedActions": [
+    "clear browser cookies",
+    "navigate to the home page",
+    "click a random link"
+  ],
+  "onPageReadyActions": [
+    "scroll down",
+    "click 'Sign In' button"
+  ],
+  "pageSummaryPrompt": "Instructions for summarizing the page...",
+  "dataExtractionRules": "Instructions for extracting specific fields...",
+  "linkExtractionRules": "Instructions for extracting links, for example: links containing /dp/",
+}
