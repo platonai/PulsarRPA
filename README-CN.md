@@ -133,10 +133,11 @@ curl -X POST "http://localhost:8182/api/commands" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://www.amazon.com/dp/B0C1H26C46",
+    "onBrowserLaunchedActions": ["清除浏览器 cookie", "访问网站首页", "随机点击一个链接"],
+    "onPageReadyActions": ["点击#title", "滚动到中间"],
     "pageSummaryPrompt": "提供该产品的简要介绍。",
     "dataExtractionRules": "产品名称、价格和评分",
-    "linkExtractionRules": "页面上所有包含`/dp/`的链接",
-    "onPageReadyActions": ["点击#title", "滚动到中间"]
+    "linkExtractionRules": "页面上所有包含`/dp/`的链接"
   }'
 ```
 

@@ -101,10 +101,15 @@ Invoke-WebRequest -Uri "http://localhost:8182/api/ai/command" `
   -Headers @{ "Content-Type" = "application/json" } `
   -Body '{
     "url": "https://www.amazon.com/dp/B0C1H26C46",
+    "onBrowserLaunchedActions": [
+      "clear browser cookies",
+      "navigate to the home page",
+      "click a random link"
+    ],
+    "onPageReadyActions": ["click #title", "scroll to the middle"],
     "pageSummaryPrompt": "Provide a brief introduction of this product.",
     "dataExtractionRules": "product name, price, and ratings",
-    "linkExtractionRules": "all links containing `/dp/` on the page",
-    "onPageReadyActions": ["click #title", "scroll to the middle"]
+    "linkExtractionRules": "all links containing `/dp/` on the page"
   }'
 ```
 

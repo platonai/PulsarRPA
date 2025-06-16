@@ -9,6 +9,7 @@
   "request" : {
     "url" : "https://www.amazon.com/dp/B0C1H26C46",
     "args" : "-refresh",
+    "onBrowserReadyActions" : [ "clear browser cookies" ],
     "onPageReadyActions" : [ "scroll to the middle" ],
     "pageSummaryPrompt" : "Summarize the product on the page.",
     "dataExtractionRules" : "Extract the product name as a string, the price as a number or string representing a monetary value, and the ratings as a number or string representing the rating value.",
