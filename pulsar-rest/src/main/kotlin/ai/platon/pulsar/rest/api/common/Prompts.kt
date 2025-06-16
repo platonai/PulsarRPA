@@ -97,6 +97,7 @@ The JSON section name is **JSON representation**
 ## 🔧 JSON to Convert:
 
 ```json
-{JSON_STRING}
+$JSON_STRING_PLACEHOLDER
+```
 
 """
