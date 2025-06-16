@@ -3,15 +3,25 @@ package ai.platon.pulsar.rest.api.controller
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.rest.api.TestUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 open class ScrapeControllerTestBase : IntegrationTestBase() {
 
-    val urls = mapOf(
-        "productListPage" to "https://www.amazon.com/b?node=1292115011",
-        "productDetailPage" to "https://www.amazon.com/dp/B0C1H26C46"
-    )
+    companion object {
+        val urls = mapOf(
+            "productListPage" to "https://www.amazon.com/b?node=1292115011",
+            "productDetailPage" to "https://www.amazon.com/dp/B0C1H26C46"
+        )
+
+        @JvmStatic
+        @BeforeAll
+        fun `Ensure resources are prepared`() {
+            TestUtils.ensurePage(requireNotNull(urls["productListPage"]))
+            TestUtils.ensurePage(requireNotNull(urls["productDetailPage"]))
+        }
+    }
 
     val sqlTemplates = mapOf(
         "productListPage" to """
@@ -37,12 +47,6 @@ open class ScrapeControllerTestBase : IntegrationTestBase() {
 
     @BeforeEach
     fun setUp() {
-    }
-
-    @BeforeEach
-    fun `Ensure resources are prepared`() {
-        TestUtils.ensurePage(requireNotNull(urls["productListPage"]))
-        TestUtils.ensurePage(requireNotNull(urls["productDetailPage"]))
     }
 
     @Test
