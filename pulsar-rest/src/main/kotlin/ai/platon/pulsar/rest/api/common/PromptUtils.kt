@@ -1,6 +1,5 @@
 package ai.platon.pulsar.rest.api.common
 
-import ai.platon.pulsar.common.serialize.json.JsonExtractor
 import ai.platon.pulsar.rest.api.service.CommandService.Companion.MIN_USER_MESSAGE_LENGTH
 
 object PromptUtils {

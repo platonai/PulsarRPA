@@ -1,8 +1,10 @@
 package ai.platon.pulsar.rest.api.entities
 
 import ai.platon.pulsar.common.ResourceStatus
+import ai.platon.pulsar.common.serialize.json.FlatJSONExtractor
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import java.time.Instant
 import java.util.*
 
@@ -147,7 +149,20 @@ data class CommandRequest(
     var xsql: String? = null,
     var richText: Boolean? = null,
     var mode: String = "sync", // "sync" | "async"
-)
+) {
+    fun hasAction(): Boolean {
+        return !onBrowserLaunchedActions.isNullOrEmpty() || !onPageReadyActions.isNullOrEmpty()
+    }
+
+    fun enhanceArgs(): String {
+        var args = this.args ?: ""
+        if (hasAction()) {
+            args += LoadOptions.mergeArgs(args, "-refresh")
+        }
+        this.args = args
+        return args
+    }
+}
 
 /**
  * Command result
@@ -159,10 +174,10 @@ data class CommandRequest(
  */
 data class CommandResult(
     var pageSummary: String? = null,
-    var fields: String? = null,
-    var links: String? = null,
-//    var fields: List<String>? = null,
-//    var links: List<String>? = null,
+//    var fields: String? = null,
+//    var links: String? = null,
+    var fields: Map<String, String>? = null,
+    var links: List<String>? = null,
     var xsqlResultSet: List<Map<String, Any?>>? = null,
 )
 
@@ -172,18 +187,20 @@ data class CommandResult(
  * @property name The name of the instruction.
  * @property statusCode The status code of the instruction result.
  * @property result The result of the instruction.
+ * @property resultType The json type of the result, e.g. "string", "number", "boolean", "array", "object".
  * @property instruct The instruction text.
  * */
 data class InstructResult(
     var name: String,
     var statusCode: Int = ResourceStatus.SC_CREATED,
-    var result: String? = null,
+    var result: Any? = null,
+    var resultType: String? = null,
     var instruct: String? = null,
 ) {
     companion object {
 
-        fun ok(name: String, result: String): InstructResult {
-            return InstructResult(name, ResourceStatus.SC_OK, result = result)
+        fun ok(name: String, result: Any, resultType: String = "string"): InstructResult {
+            return InstructResult(name, ResourceStatus.SC_OK, result = result, resultType = resultType)
         }
 
         fun failed(name: String, statusCode: Int = ResourceStatus.SC_EXPECTATION_FAILED): InstructResult {
@@ -287,15 +304,15 @@ fun CommandStatus.addInstructResult(result: InstructResult) {
     val commandResult = ensureCommandResult()
     when (name) {
         "pageSummary" -> {
-            commandResult.pageSummary = result.result
+            commandResult.pageSummary = result.result?.toString()
         }
 
         "fields" -> {
-            commandResult.fields = result.result
+            commandResult.fields = result.result as? Map<String, String>?
         }
 
         "links" -> {
-            commandResult.links = result.result
+            commandResult.links = result.result as? List<String>?
         }
     }
     refresh(result.name)

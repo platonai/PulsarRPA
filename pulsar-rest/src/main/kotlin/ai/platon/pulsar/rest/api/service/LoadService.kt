@@ -53,7 +53,7 @@ class LoadService {
     }
 
     fun loadDocument(request: CommandRequest): Pair<WebPage, FeaturedDocument> {
-        val args = request.args ?: ""
+        val args = request.enhanceArgs()
         val options = session.options(args)
         val be = options.eventHandlers.browseEventHandlers
 

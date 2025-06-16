@@ -2,6 +2,7 @@ package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.serialize.json.FlatJSONExtractor
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.nodes.node.ext.numChars
 import ai.platon.pulsar.persist.WebPage
@@ -172,8 +173,8 @@ class CommandService(
         return status
     }
 
-    private fun executeCommandStepByStep(request: CommandRequest, status: CommandStatus) {
-        request.args = LoadOptions.mergeArgs(request.args, "-refresh")
+    internal fun executeCommandStepByStep(request: CommandRequest, status: CommandStatus) {
+        request.enhanceArgs()
         val (page, document) = loadService.loadDocument(request)
 
         if (page.isNil) {
@@ -246,7 +247,9 @@ class CommandService(
 
             if (dataExtractionRules != null) {
                 val instruct = dataExtractionRules.replace(PLACEHOLDER_PAGE_CONTENT, textContent)
-                performInstruct("fields", instruct, status)
+                performInstruct("fields", instruct, status, "map") { content ->
+                    FlatJSONExtractor.extract(content)
+                }
                 logger.info("fields: {}", status.commandResult?.fields)
             }
         }
@@ -255,17 +258,21 @@ class CommandService(
         if (linkExtractionRules != null) {
             val links = DomUtils.selectNthScreenLinks(document).filter { it.matches(linkExtractionRules) }
             if (links.isNotEmpty()) {
-                val result = InstructResult.ok("links", links.joinToString("\n"))
+                val result = InstructResult.ok("links", links, "list")
                 status.addInstructResult(result)
             }
             logger.info("Use regex to extract {} links: {}", links.size, linkExtractionRules)
         }
     }
 
-    private fun performInstruct(name: String, instruct: String, status: CommandStatus) {
+    private fun performInstruct(
+        name: String, instruct: String, status: CommandStatus,
+        resultType: String = "string",
+        mappingFunction: (String) -> Any = { it.trim() }
+    ) {
         val result = try {
             val content = session.chat(instruct).content
-            InstructResult.ok(name, content)
+            InstructResult.ok(name, mappingFunction(content), resultType)
         } catch (e: Exception) {
             logger.warn("Failed to perform instruct: $instruct", e)
             InstructResult.failed(name)

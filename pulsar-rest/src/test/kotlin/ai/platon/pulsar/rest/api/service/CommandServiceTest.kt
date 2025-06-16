@@ -130,7 +130,7 @@ class CommandServiceTest {
     fun `test executeCommand with dataExtractionRules`() {
         val request = CommandRequest(
             PRODUCT_DETAIL_URL,
-            dataExtractionRules = "product name, ratings, price",
+            dataExtractionRules = "product name, ratings, price"
         )
         val status = commandService.executeCommand(request)
         println(prettyPulsarObjectMapper().writeValueAsString(status))

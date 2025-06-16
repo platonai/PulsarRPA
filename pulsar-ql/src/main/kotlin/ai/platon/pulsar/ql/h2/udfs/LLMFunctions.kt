@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.serialize.json.JsonExtractor
+import ai.platon.pulsar.common.serialize.json.JSONExtractor
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.ql.common.annotation.UDFGroup
 import ai.platon.pulsar.ql.common.annotation.UDFunction
@@ -69,7 +69,7 @@ object LLMFunctions {
         val prompt = LLM_UDF_EXTRACT_PROMPT.replace(DATA_EXTRACTION_RULES_PLACEHOLDER, dataExtractionRules)
         val content = session.chat(domContent, prompt).content
 
-        val jsonBlocks = JsonExtractor.extractJsonBlocks(content)
+        val jsonBlocks = JSONExtractor.extractJsonBlocks(content)
         if (jsonBlocks.isEmpty()) {
             if (llmFailureWarnings.get() % 50 == 0) {
                 logger.warn("{}th failure to extract a JSON from LLM's response | {}", llmFailureWarnings.get().inc(), content)

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.common.serialize.json.JsonExtractor
+import ai.platon.pulsar.common.serialize.json.JSONExtractor
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.rest.api.common.*
@@ -59,7 +59,7 @@ class ConversationService(
         }
         content = content.replace(PLACEHOLDER_URL, url)
 
-        return JsonExtractor.extractJsonBlocks(content).firstOrNull()
+        return JSONExtractor.extractJsonBlocks(content).firstOrNull()
     }
 
     fun convertResponseToMarkdown(jsonResponse: String): String {
