@@ -20,6 +20,10 @@ open class PulsarBrowserLauncher: BrowserLauncher {
         return PulsarBrowser(port, settings = settings)
     }
 
+    override fun connectOverCDP(endpointURL: String, settings: BrowserSettings): Browser {
+        return PulsarBrowser(endpointURL, settings = settings)
+    }
+
     @Throws(BrowserLaunchException::class)
     override fun launch(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions

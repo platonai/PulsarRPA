@@ -10,8 +10,27 @@ import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 interface BrowserFactory {
     /**
      * Connect to a browser instance, the browser instance should be open with Chrome devtools open.
+     *
+     * @param browserType The type of the browser to connect to, e.g. `BrowserType.PULSAR_CHROME`.
+     * @param port The port on which the browser is listening for CDP connections.
+     * @return The newly created `Browser` instance.
+     * @throws BrowserUnavailableException If the connection fails or the context cannot be created.
      * */
+    @Throws(BrowserLaunchException::class)
     fun connect(browserType: BrowserType, port: Int, settings: BrowserSettings = BrowserSettings()): Browser
+
+    /**
+     * Connects to an existing Chromium browser instance via CDP and creates a new context for PulsarRPA.
+     *
+     * @param browserType The type of the browser, e.g. `BrowserType.PULSAR_CHROME`.
+     * @param endpointURL The CDP WebSocket or HTTP endpoint, e.g.:
+     *  `http://localhost:9222/` or
+     *  `ws://127.0.0.1:9222/devtools/browser/387adf4a-243f-4051-a181-46798f4a46f4`
+     * @return The newly created `BrowserContext`
+     * @throws BrowserUnavailableException If the connection fails or the context cannot be created.
+     */
+    @Throws(BrowserLaunchException::class)
+    fun connectOverCDP(browserType: BrowserType, endpointURL: String, settings: BrowserSettings = BrowserSettings()): Browser
 
     /**
      * Launch the system default browser, the system default browser is your daily used browser.

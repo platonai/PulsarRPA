@@ -21,7 +21,7 @@ abstract class AbstractBrowser(
         val DEFAULT_USER_AGENT = "PulsarRPA Robot/1.0"
     }
 
-    private val logger = getLogger(this)
+    private val logger = getLogger(AbstractBrowser::class)
 
     /**
      * All drivers, including the recovered drivers and the reused drivers.

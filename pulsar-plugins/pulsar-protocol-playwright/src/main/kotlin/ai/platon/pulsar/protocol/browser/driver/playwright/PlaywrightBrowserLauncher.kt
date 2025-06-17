@@ -22,6 +22,16 @@ class PlaywrightBrowserLauncher : BrowserLauncher {
         }
     }
 
+    override fun connectOverCDP(endpointURL: String, settings: BrowserSettings): Browser {
+        val browserId = BrowserId(PrivacyContext.RANDOM_TEMP_CONTEXT_DIR, BrowserType.PLAYWRIGHT_CHROME)
+        try {
+            val browserContext = PlaywrightBrowser.connectOverCDP(endpointURL)
+            return PlaywrightBrowser(browserId, browserContext, settings)
+        } catch (e: Exception) {
+            throw BrowserLaunchException("Failed to launch browser | $browserId", e)
+        }
+    }
+
     @Throws(BrowserLaunchException::class)
     override fun launch(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions

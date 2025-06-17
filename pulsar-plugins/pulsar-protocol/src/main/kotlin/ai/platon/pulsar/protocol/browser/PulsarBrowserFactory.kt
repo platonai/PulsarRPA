@@ -36,6 +36,10 @@ class PulsarBrowserFactory : BrowserFactory {
     override fun connect(browserType: BrowserType, port: Int, settings: BrowserSettings): Browser =
         launcher.connect(port, settings)
 
+    override fun connectOverCDP(
+        browserType: BrowserType, endpointURL: String, settings: BrowserSettings
+    ): Browser = launcher.connectOverCDP(endpointURL, settings)
+
     /**
      * Launch the system default browser, the system default browser is your daily used browser.
      * */

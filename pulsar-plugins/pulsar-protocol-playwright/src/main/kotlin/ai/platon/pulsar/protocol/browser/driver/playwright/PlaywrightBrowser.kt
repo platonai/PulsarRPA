@@ -26,11 +26,25 @@ class PlaywrightBrowser(
     companion object {
         private val playwright by lazy { Playwright.create() }
 
+        /**
+         * Connects to an existing Chromium browser instance via CDP and creates a new context for PulsarRPA.
+         *
+         * @param endpointURL The CDP WebSocket or HTTP endpoint, e.g.:
+         *  `http://localhost:9222/` or
+         *  `ws://127.0.0.1:9222/devtools/browser/387adf4a-243f-4051-a181-46798f4a46f4`
+         * @return The newly created `BrowserContext`
+         * @throws BrowserUnavailableException If the connection fails or the context cannot be created.
+         */
+        @Throws(BrowserUnavailableException::class)
+        fun connectOverCDP(endpointURL: String): BrowserContext {
+            return playwright.chromium()
+                .connectOverCDP(endpointURL)
+                .newContext() ?: throw BrowserUnavailableException("Failed to connectOverCDP | $endpointURL")
+        }
+
         @Throws(BrowserUnavailableException::class)
         fun connectOverCDP(port: Int): BrowserContext {
-            return playwright.chromium()
-                .connectOverCDP("http://localhost:$port/")
-                .newContext() ?: throw BrowserUnavailableException("Failed to create browser context")
+            return connectOverCDP("http://localhost:$port/")
         }
 
         @Throws(BrowserUnavailableException::class)

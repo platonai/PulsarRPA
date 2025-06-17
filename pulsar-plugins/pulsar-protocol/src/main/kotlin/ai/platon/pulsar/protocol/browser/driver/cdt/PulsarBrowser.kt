@@ -48,6 +48,9 @@ class PulsarBrowser(
         launcher?.let { PulsarContexts.registerClosable(it, Int.MIN_VALUE) }
     }
 
+    constructor(url: String, settings: BrowserSettings = BrowserSettings()) :
+            this(BrowserId.RANDOM_TEMP, ChromeImpl.create(url), settings, null)
+
     constructor(port: Int, settings: BrowserSettings = BrowserSettings()) :
             this(BrowserId.RANDOM_TEMP, ChromeImpl(port = port), settings, null)
 

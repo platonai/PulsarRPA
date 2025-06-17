@@ -34,6 +34,17 @@ class ChromeImpl(
         const val ACTIVATE_TAB = "json/activate"
         const val CLOSE_TAB = "json/close"
         const val VERSION = "json/version"
+
+        fun create(url: String): ChromeImpl {
+            val uri = URI.create(url)
+            return ChromeImpl(uri.host ?: LOCALHOST, uri.port, createWebSocketServiceFactory())
+        }
+
+        private fun createWebSocketServiceFactory() = object : WebSocketServiceFactory {
+            override fun createWebSocketService(wsUrl: String): Transport {
+                return TransportImpl.create(URI.create(wsUrl))
+            }
+        }
     }
     
     enum class HttpMethod {
@@ -57,12 +68,8 @@ class ChromeImpl(
      * The Chrome version.
      * */
     override val version get() = _version.value
-    
-    constructor(host: String, port: Int) : this(host, port, object : WebSocketServiceFactory {
-        override fun createWebSocketService(wsUrl: String): Transport {
-            return TransportImpl.create(URI.create(wsUrl))
-        }
-    })
+
+    constructor(host: String, port: Int) : this(host, port, createWebSocketServiceFactory())
     
     constructor(port: Int) : this(LOCALHOST, port)
     
