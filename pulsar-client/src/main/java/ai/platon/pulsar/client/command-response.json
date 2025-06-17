@@ -13,7 +13,7 @@
     "onPageReadyActions" : [ "scroll to the middle" ],
     "pageSummaryPrompt" : "Summarize the product on the page.",
     "dataExtractionRules" : "Extract the product name as a string, the price as a number or string representing a monetary value, and the ratings as a number or string representing the rating value.",
-    "linkExtractionRules" : "https?://[^\\s]*?/dp/[^\\s]*",
+    "uriExtractionRules" : "https?://[^\\s]*?/dp/[^\\s]*",
     "xsql" : null,
     "richText" : null,
     "mode" : "sync"

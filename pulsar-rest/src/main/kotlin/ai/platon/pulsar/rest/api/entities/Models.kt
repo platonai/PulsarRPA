@@ -134,6 +134,7 @@ data class W3DocumentRequest(
  * @property onPageReadyActions Actions to perform when the document is fully loaded (e.g., "scroll down", "click button").
  * @property pageSummaryPrompt A prompt to analyze or discuss the HTML structure of the page.
  * @property dataExtractionRules Specifications for extracting structured fields from the HTML content.
+ * @property uriExtractionRules A regex pattern to extract specific URIs from the page, e.g. "links containing /dp/".
  * @property xsql An X-SQL query for structured data extraction, e.g.
  *              "select dom_first_text(dom, '#title') as title, llm_extract(dom, 'price') as price".
  * @property mode The execution mode, either "sync" (synchronous) or "async" (asynchronous).
@@ -145,6 +146,8 @@ data class CommandRequest(
     var onPageReadyActions: List<String>? = null,
     var pageSummaryPrompt: String? = null,
     var dataExtractionRules: String? = null,
+    var uriExtractionRules: String? = null,
+    @Deprecated("Use uriExtractionRules instead")
     var linkExtractionRules: String? = null,
     var xsql: String? = null,
     var richText: Boolean? = null,

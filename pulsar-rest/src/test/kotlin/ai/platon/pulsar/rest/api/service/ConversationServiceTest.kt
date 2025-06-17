@@ -211,7 +211,7 @@ Page summary prompt: Provide a brief introduction of this product.
         assertEquals("https://www.amazon.com/dp/B0C1H26C46", request.url)
         assertNotNull(request.pageSummaryPrompt)
         assertNotNull(request.dataExtractionRules)
-        assertNotNull(request.linkExtractionRules)
+        assertNotNull(request.uriExtractionRules)
         assertNotNull(request.onPageReadyActions)
     }
 }

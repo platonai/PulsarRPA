@@ -137,7 +137,7 @@ curl -X POST "http://localhost:8182/api/commands" \
     "onPageReadyActions": ["点击#title", "滚动到中间"],
     "pageSummaryPrompt": "提供该产品的简要介绍。",
     "dataExtractionRules": "产品名称、价格和评分",
-    "linkExtractionRules": "页面上所有包含`/dp/`的链接"
+    "uriExtractionRules": "页面上所有包含`/dp/`的链接"
   }'
 ```
 

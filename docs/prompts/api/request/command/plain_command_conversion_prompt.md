@@ -17,13 +17,13 @@ Produce a JSON object with these possible fields:
 * For `onPageReadyActions`: List any interaction steps in order of execution.
 * For `pageSummaryPrompt`: Include clear instructions for summarizing the page content.
 * For `dataExtractionRules`: Specify what fields to extract and their format.
-* For `linkExtractionRules`: Define a Kotlin-compatible regex pattern that matches exactly one valid URL.
-    * * Match the input's link extraction requirement.
-    * * Match only one full URL (not multiple in a string).
+* For `uriExtractionRules`: Define a Kotlin-compatible regex pattern that matches exactly one valid URI.
+    * * Match the input's uri extraction requirement.
+    * * Match only one full URI (not multiple in a string).
     * * Be compatible with Kotlin's Regex class.
     * * Support both HTTP and HTTPS schemes.
     * * Optionally include path, query, and fragment.
-    * * Start with a prefix "Regex: " and then provide the regex pattern, for example: `Regex: https?://[\\w.-]+(?:/[\\w.-]*)*`
+    * * Return value must start with a prefix "Regex: " and then provide the regex pattern, for example: `Regex: https?://[\\w.-]+(?:/[\\w.-]*)*`
     * * Return only the pattern string and the "Regex: " prefix (no explanation).
 
 * Convert vague requests into specific, actionable instructions.

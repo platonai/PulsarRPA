@@ -47,7 +47,7 @@ const val REQUEST_JSON_COMMAND_TEMPLATE = """
   ],
   "pageSummaryPrompt": "Instructions for summarizing the page...",
   "dataExtractionRules": "Instructions for extracting specific fields...",
-  "linkExtractionRules": "Instructions for extracting links, for example: links containing /dp/",
+  "uriExtractionRules": "Instructions for extracting uris, for example: links containing /dp/",
 }
 """
 
@@ -71,14 +71,14 @@ Produce a JSON object with these possible fields:
 * For `onPageReadyActions`: List any interaction steps in order of execution.
 * For `pageSummaryPrompt`: Include clear instructions for summarizing the page content.
 * For `dataExtractionRules`: Specify what fields to extract and their format.
-* For `linkExtractionRules`: Define a Kotlin-compatible regex pattern that matches exactly one valid URL.
-  * * Match the input's link extraction requirement.
-  * * Match only one full URL (not multiple in a string).
-  * * Be compatible with Kotlin's Regex class.
-  * * Support both HTTP and HTTPS schemes.
-  * * Optionally include path, query, and fragment.
-  * * Start with a prefix "Regex: " and then provide the regex pattern, for example: `Regex: https?://[\\w.-]+(?:/[\\w.-]*)*`
-  * * Return only the pattern string and the "Regex: " prefix (no explanation).
+* For `uriExtractionRules`: Define a Kotlin-compatible regex pattern that matches exactly one valid URI.
+    * * Match the input's uri extraction requirement.
+    * * Match only one full URI (not multiple in a string).
+    * * Be compatible with Kotlin's Regex class.
+    * * Support both HTTP and HTTPS schemes.
+    * * Optionally include path, query, and fragment.
+    * * Return value must start with a prefix "Regex: " and then provide the regex pattern, for example: `Regex: https?://[\\w.-]+(?:/[\\w.-]*)*`
+    * * Return only the pattern string and the "Regex: " prefix (no explanation).
 
 * Convert vague requests into specific, actionable instructions.
 
@@ -119,7 +119,7 @@ The JSON section name is **JSON representation**
 """
 
 const val CONVERT_URL_DESCRIPTION_TO_REGEX_PROMPT = """
-Convert the following URL description into a Kotlin-compatible regex pattern that matches exactly one valid URL.
+Convert the following URI description into a Kotlin-compatible regex pattern that matches exactly one valid URI.
 
 ### 🔧 Guidelines:
 * Match only one full URL (not multiple in a string).

@@ -253,27 +253,28 @@ class CommandService(
             }
         }
 
-        var linkExtractionRules = RestAPIPromptUtils.normalizeLinkExtractionRules(request.linkExtractionRules)
-        if (linkExtractionRules != null) {
-            if (!linkExtractionRules.startsWith("Regex:")) {
-                val prompt = RestAPIPromptUtils.normalizeLinkExtractionRules(linkExtractionRules) ?: return
-                linkExtractionRules = chatWithLLM(prompt)
+        var uriExtractionRules = request.uriExtractionRules ?: request.linkExtractionRules
+        uriExtractionRules = RestAPIPromptUtils.normalizeURIExtractionRules(uriExtractionRules)
+        if (uriExtractionRules != null) {
+            if (!uriExtractionRules.startsWith("Regex:")) {
+                val prompt = RestAPIPromptUtils.normalizeURIExtractionRules(uriExtractionRules) ?: return
+                uriExtractionRules = chatWithLLM(prompt)
+                if (!uriExtractionRules.startsWith("Regex:")) {
+                    logger.warn("Link extraction rules must start with 'Regex:', but got: {}", uriExtractionRules)
+                    return
+                }
             }
 
-            if (!linkExtractionRules.startsWith("Regex:")) {
-                logger.warn("Link extraction rules must start with 'Regex:', but got: {}", linkExtractionRules)
-                return
-            }
+            val regex = RestAPIPromptUtils.normalizeURIExtractionRegex(uriExtractionRules) ?: return
 
-            val regex = RestAPIPromptUtils.normalizeLinkExtractionRegex(linkExtractionRules) ?: return
-
-            val allLinks = DomUtils.selectNthScreenLinks(document)
-            val links = allLinks.filter { it.matches(regex) }
-            if (links.isNotEmpty()) {
-                val result = InstructResult.ok("links", links, "list")
+            val allURIs = DomUtils.selectURIs(document).map { it.toString() }
+            val uris = allURIs.filter { it.matches(regex) }
+            if (uris.isNotEmpty()) {
+                val result = InstructResult.ok("links", uris, "list")
                 status.addInstructResult(result)
             }
-            logger.info("Extracted {}/{} links using regex {}", links.size, allLinks.size, regex)
+
+            logger.info("Extracted {}/{} uris using regex {}", uris.size, allURIs.size, regex)
         }
     }
 

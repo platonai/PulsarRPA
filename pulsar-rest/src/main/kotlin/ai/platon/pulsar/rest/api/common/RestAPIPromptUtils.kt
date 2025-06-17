@@ -36,7 +36,7 @@ object RestAPIPromptUtils {
         return "$message2\n$suffix"
     }
 
-    fun normalizeLinkExtractionRules(urlDescription: String?): String? {
+    fun normalizeURIExtractionRules(urlDescription: String?): String? {
         if (true == urlDescription?.startsWith("Regex:")) {
             return urlDescription
         }
@@ -50,7 +50,7 @@ object RestAPIPromptUtils {
             .replace(PLACEHOLDER_URL_DESCRIPTION, description)
     }
 
-    fun normalizeLinkExtractionRegex(message: String?): Regex? {
+    fun normalizeURIExtractionRegex(message: String?): Regex? {
         var message2 = normalizeUserMessage(message) ?: return null
         return try {
             message2 = message2.removePrefix("Regex:").trim()
@@ -65,7 +65,7 @@ object RestAPIPromptUtils {
      *
      * deprecated, the link extraction rules should be a regex pattern
      * */
-    fun normalizeLinkExtractionRulesDeprecated(message: String?): String? {
+    fun normalizeURIExtractionRulesDeprecated(message: String?): String? {
         val message2 = normalizeUserMessage(message) ?: return null
 
         val suffix = """

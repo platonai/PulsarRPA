@@ -11,5 +11,5 @@
   ],
   "pageSummaryPrompt": "Instructions for summarizing the page...",
   "dataExtractionRules": "Instructions for extracting specific fields...",
-  "linkExtractionRules": "Instructions for extracting links, for example: links containing /dp/",
+  "uriExtractionRules": "Instructions for extracting uris, for example: links containing /dp/"
 }

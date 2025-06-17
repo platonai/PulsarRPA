@@ -154,10 +154,10 @@ class CommandServiceTest {
     }
 
     @Test
-    fun `test executeCommand with linkExtractionRules`() {
+    fun `test executeCommand with uriExtractionRules`() {
         val request = CommandRequest(
             PRODUCT_DETAIL_URL,
-            linkExtractionRules = "links containing /dp/"
+            uriExtractionRules = "links containing /dp/"
         )
         val status = commandService.executeCommand(request)
         println(prettyPulsarObjectMapper().writeValueAsString(status))
@@ -181,10 +181,10 @@ class CommandServiceTest {
     }
 
     @Test
-    fun `test executeCommand with linkExtractionRules in regex`() {
+    fun `test executeCommand with uriExtractionRules in regex`() {
         val request = CommandRequest(
             PRODUCT_DETAIL_URL,
-            linkExtractionRules = "Regex: https://www.amazon.com/dp/\\w+"
+            uriExtractionRules = "Regex: https://www.amazon.com/dp/\\w+"
         )
         val status = commandService.executeCommand(request)
         println(prettyPulsarObjectMapper().writeValueAsString(status))
