@@ -92,7 +92,7 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
 "onPageReadyActions": ["click #title", "scroll to the middle"],
 "pageSummaryPrompt": "Provide a brief introduction of this product.",
 "dataExtractionRules": "product name, price, and ratings",
-"linkExtractionRules": "all links containing /dp/ on the page"
+"uriExtractionRules": "all links containing /dp/ on the page"
 }'
 '@
 

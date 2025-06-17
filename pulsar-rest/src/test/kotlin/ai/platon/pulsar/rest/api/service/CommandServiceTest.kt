@@ -130,7 +130,7 @@ class CommandServiceTest {
     fun `test executeCommand with dataExtractionRules`() {
         val request = CommandRequest(
             PRODUCT_DETAIL_URL,
-            dataExtractionRules = "product name, ratings, price",
+            dataExtractionRules = "product name, ratings, price"
         )
         val status = commandService.executeCommand(request)
         println(prettyPulsarObjectMapper().writeValueAsString(status))
@@ -151,6 +151,64 @@ class CommandServiceTest {
 
         assertNotNull(fields)
         assertTrue { fields.isNotEmpty() }
+    }
+
+    @Test
+    fun `test executeCommand with uriExtractionRules`() {
+        val testURL = "https://www.amazon.com/-/zh/ap/register?openid.pape.max_auth_age=0&openid.return_to=https://www.amazon.com/dp/B0C1H26C46/?_encoding=UTF8&ref_=nav_newcust&openid.identity=http://specs.openid.net/auth/2.0/identifier_select&openid.assoc_handle=usflex&openid.mode=checkid_setup&openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select&openid.ns=http://specs.openid.net/auth/2.0"
+        val testRegex = "https?://.+/dp/[\\w]+.*".toRegex()
+        assertTrue { testURL.matches(testRegex) }
+
+        val request = CommandRequest(
+            PRODUCT_DETAIL_URL,
+            uriExtractionRules = "links containing /dp/"
+        )
+        val status = commandService.executeCommand(request)
+        println(prettyPulsarObjectMapper().writeValueAsString(status))
+        val result = status.commandResult
+
+        Assumptions.assumeTrue(status.pageStatusCode == 200)
+        Assumptions.assumeTrue(status.isDone)
+        Assumptions.assumeTrue(status.statusCode == 200)
+
+        assertNotNull(result)
+        assertTrue { status.isDone }
+
+        val links = result.links
+        println(links)
+
+        assertNull(result.pageSummary)
+        assertNull(result.xsqlResultSet)
+
+        assertNotNull(links)
+        assertTrue { links.isNotEmpty() }
+    }
+
+    @Test
+    fun `test executeCommand with uriExtractionRules in regex`() {
+        val request = CommandRequest(
+            PRODUCT_DETAIL_URL,
+            uriExtractionRules = "Regex: https://www.amazon.com/dp/\\w+"
+        )
+        val status = commandService.executeCommand(request)
+        println(prettyPulsarObjectMapper().writeValueAsString(status))
+        val result = status.commandResult
+
+        Assumptions.assumeTrue(status.pageStatusCode == 200)
+        Assumptions.assumeTrue(status.isDone)
+        Assumptions.assumeTrue(status.statusCode == 200)
+
+        assertNotNull(result)
+        assertTrue { status.isDone }
+
+        val links = result.links
+        println(links)
+
+        assertNull(result.pageSummary)
+        assertNull(result.xsqlResultSet)
+
+        assertNotNull(links)
+        assertTrue { links.isNotEmpty() }
     }
 
     @Test

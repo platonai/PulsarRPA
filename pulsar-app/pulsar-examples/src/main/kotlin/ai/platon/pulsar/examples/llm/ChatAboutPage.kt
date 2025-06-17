@@ -7,19 +7,6 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
  * Demonstrates chat with a webpage.
  * */
 fun main() {
-    // !!! IMPORTANT !!!
-    // CHANGE TO YOUR OWN LLM NAME AND API KEY
-    //
-    // see https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint
-    val apiKey = System.getProperty("llm.apiKey")
-    PulsarSettings()
-        .withLLMProvider("volcengine")
-        .withLLMName("ep-20250218132011-1234567890")
-        .withLLMAPIKey(apiKey)
-
-    // LLM configuration guide:
-    // https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/llm-config.md
-
     // Use the default browser which has an isolated profile
     PulsarSettings().withDefaultBrowser()
     // Create a pulsar session

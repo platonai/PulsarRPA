@@ -1,16 +1,18 @@
 package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.common.ResourceStatus
+import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.serialize.json.FlatJSONExtractor
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.dom.UriExtractor
 import ai.platon.pulsar.dom.nodes.node.ext.numChars
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.rest.api.common.DomUtils
 import ai.platon.pulsar.rest.api.common.PLACEHOLDER_PAGE_CONTENT
-import ai.platon.pulsar.rest.api.common.PromptUtils
+import ai.platon.pulsar.rest.api.common.RestAPIPromptUtils
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
 import ai.platon.pulsar.rest.api.entities.*
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -172,8 +174,8 @@ class CommandService(
         return status
     }
 
-    private fun executeCommandStepByStep(request: CommandRequest, status: CommandStatus) {
-        request.args = LoadOptions.mergeArgs(request.args, "-refresh")
+    internal fun executeCommandStepByStep(request: CommandRequest, status: CommandStatus) {
+        request.enhanceArgs()
         val (page, document) = loadService.loadDocument(request)
 
         if (page.isNil) {
@@ -203,20 +205,20 @@ class CommandService(
         page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus
     ) {
         try {
-            executeCommandStepByStep0(page, document, request, status)
+            doExecuteCommandStepByStep(page, document, request, status)
         } catch (e: Exception) {
             status.failed(ResourceStatus.SC_EXPECTATION_FAILED)
         }
     }
 
-    private fun executeCommandStepByStep0(
+    private fun doExecuteCommandStepByStep(
         page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus
     ) {
         // the 0-based screen number, 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
         val screenNumber = page.activeDOMMetadata?.screenNumber ?: 0f
 
-        val pageSummaryPrompt = PromptUtils.normalizePageSummaryPrompt(request.pageSummaryPrompt)
-        val dataExtractionRules = PromptUtils.normalizeDataExtractionRules(request.dataExtractionRules)
+        val pageSummaryPrompt = RestAPIPromptUtils.normalizePageSummaryPrompt(request.pageSummaryPrompt)
+        val dataExtractionRules = RestAPIPromptUtils.normalizeDataExtractionRules(request.dataExtractionRules)
         var richText: String? = null
         var textContent: String? = null
         if (pageSummaryPrompt != null || dataExtractionRules != null) {
@@ -239,39 +241,62 @@ class CommandService(
             }
 
             if (pageSummaryPrompt != null) {
-                val instruct = pageSummaryPrompt.replace(PLACEHOLDER_PAGE_CONTENT, textContent)
+                val instruct = PromptTemplate(pageSummaryPrompt, mapOf(PLACEHOLDER_PAGE_CONTENT to textContent)).render()
                 performInstruct("pageSummary", instruct, status)
                 logger.info("pageSummary: {}", status.commandResult?.pageSummary)
             }
 
             if (dataExtractionRules != null) {
-                val instruct = dataExtractionRules.replace(PLACEHOLDER_PAGE_CONTENT, textContent)
-                performInstruct("fields", instruct, status)
+                val instruct = PromptTemplate(dataExtractionRules, mapOf(PLACEHOLDER_PAGE_CONTENT to textContent)).render()
+                performInstruct("fields", instruct, status, "map") { content ->
+                    FlatJSONExtractor.extract(content)
+                }
                 logger.info("fields: {}", status.commandResult?.fields)
             }
         }
 
-        val linkExtractionRules = PromptUtils.normalizeLinkExtractionRules(request.linkExtractionRules)
-        if (linkExtractionRules != null) {
-            val links = DomUtils.selectNthScreenLinks(document).filter { it.matches(linkExtractionRules) }
-            if (links.isNotEmpty()) {
-                val result = InstructResult.ok("links", links.joinToString("\n"))
+        var uriExtractionRules = request.uriExtractionRules ?: request.linkExtractionRules
+        uriExtractionRules = RestAPIPromptUtils.normalizeURIExtractionRules(uriExtractionRules)
+        if (uriExtractionRules != null) {
+            if (!uriExtractionRules.startsWith("Regex:")) {
+                val prompt = RestAPIPromptUtils.normalizeURIExtractionRules(uriExtractionRules) ?: return
+                uriExtractionRules = chatWithLLM(prompt)
+                if (!uriExtractionRules.startsWith("Regex:")) {
+                    logger.warn("Link extraction rules must start with 'Regex:', but got: {}", uriExtractionRules)
+                    return
+                }
+            }
+
+            val regex = RestAPIPromptUtils.normalizeURIExtractionRegex(uriExtractionRules) ?: return
+
+            val allURIs = UriExtractor().extractAllUris(document, document.baseURI)
+            val uris = allURIs.filter { it.matches(regex) }
+            if (uris.isNotEmpty()) {
+                val result = InstructResult.ok("links", uris, "list")
                 status.addInstructResult(result)
             }
-            logger.info("Use regex to extract {} links: {}", links.size, linkExtractionRules)
+
+            logger.info("Extracted {}/{} uris using regex >>>{}<<<", uris.size, allURIs.size, regex)
         }
     }
 
-    private fun performInstruct(name: String, instruct: String, status: CommandStatus) {
-        val result = try {
-            val content = session.chat(instruct).content
-            InstructResult.ok(name, content)
-        } catch (e: Exception) {
-            logger.warn("Failed to perform instruct: $instruct", e)
-            InstructResult.failed(name)
-        }
-
+    private fun performInstruct(
+        name: String, instruct: String, status: CommandStatus,
+        resultType: String = "string",
+        mappingFunction: (String) -> Any = { it.trim() }
+    ) {
+        val content = chatWithLLM(instruct)
+        val result = InstructResult.ok(name, mappingFunction(content), resultType)
         status.addInstructResult(result)
+    }
+
+    private fun chatWithLLM(instruct: String): String {
+        try {
+            return session.chat(instruct).content
+        } catch (e: Exception) {
+            logger.error("Failed to chat with LLM for instruct: $instruct", e)
+            return ""
+        }
     }
 
     private fun executeQuery(sql: String, status: CommandStatus) {

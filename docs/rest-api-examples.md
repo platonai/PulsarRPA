@@ -87,7 +87,7 @@ curl -X POST "http://localhost:8182/api/commands/" \
     "url": "https://www.amazon.com/dp/B0C1H26C46",
     "pageSummaryPrompt": "Provide a brief introduction of this product.",
     "dataExtractionRules": "product name, price, and ratings",
-    "linkExtractionRules": "all links containing `/dp/` on the page",
+    "uriExtractionRules": "all links containing `/dp/` on the page",
     "onPageReadyActions": ["click #title", "scroll to the middle"]
   }'
 ```
@@ -109,7 +109,7 @@ Invoke-WebRequest -Uri "http://localhost:8182/api/commands/" `
     "onPageReadyActions": ["click #title", "scroll to the middle"],
     "pageSummaryPrompt": "Provide a brief introduction of this product.",
     "dataExtractionRules": "product name, price, and ratings",
-    "linkExtractionRules": "all links containing `/dp/` on the page"
+    "uriExtractionRules": "all links containing `/dp/` on the page"
   }'
 ```
 

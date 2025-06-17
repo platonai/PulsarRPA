@@ -3,14 +3,13 @@ package ai.platon.pulsar.rest.api.common
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_INTERACTIVE_ELEMENTS_SELECTOR
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.dom.model.createLink
 import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
-import org.apache.commons.lang3.StringUtils
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
 import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
+import java.net.URI
 import java.util.concurrent.atomic.AtomicReference
 
 object DomUtils {
@@ -91,7 +90,7 @@ object DomUtils {
         return sb.toString()
     }
 
-    fun selectNthScreenLinks(document: FeaturedDocument): Set<String> {
+    fun selectLinks(document: FeaturedDocument): Set<String> {
         val links = mutableSetOf<String>()
         document.body.forEachElement { ele ->
             if (ele.isAnchor) {
@@ -105,7 +104,7 @@ object DomUtils {
         return links
     }
 
-    fun selectNthScreenLinks(screenNumber: Float, document: FeaturedDocument, regex: String): String {
+    fun selectLinks(screenNumber: Float, document: FeaturedDocument, regex: String): String {
         val pattern = regex.toRegex()
         val sb = StringBuilder()
         document.body.forEachElement { ele ->

@@ -1,9 +1,9 @@
 package ai.platon.pulsar.rest.api.common
 
-import ai.platon.pulsar.common.serialize.json.JsonExtractor
+import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.rest.api.service.CommandService.Companion.MIN_USER_MESSAGE_LENGTH
 
-object PromptUtils {
+object RestAPIPromptUtils {
 
     fun normalizePageSummaryPrompt(message: String?): String? {
         val message2 = normalizeUserMessage(message) ?: return null
@@ -37,9 +37,26 @@ object PromptUtils {
         return "$message2\n$suffix"
     }
 
-    fun normalizeLinkExtractionRules(message: String?): Regex? {
-        val message2 = normalizeUserMessage(message) ?: return null
+    fun normalizeURIExtractionRules(urlDescription: String?): String? {
+        if (true == urlDescription?.startsWith("Regex:")) {
+            return urlDescription
+        }
+
+        val description = normalizeUserMessage(urlDescription) ?: return null
+        if (description.isBlank()) {
+            return null
+        }
+
+        return PromptTemplate(
+            template = CONVERT_URI_DESCRIPTION_TO_REGEX_PROMPT,
+            variables = mapOf(PLACEHOLDER_URI_DESCRIPTION to description)
+        ).render()
+    }
+
+    fun normalizeURIExtractionRegex(message: String?): Regex? {
+        var message2 = normalizeUserMessage(message) ?: return null
         return try {
+            message2 = message2.removePrefix("Regex:").trim()
             message2.toRegex()
         } catch (e: IllegalArgumentException) {
             null
@@ -51,7 +68,7 @@ object PromptUtils {
      *
      * deprecated, the link extraction rules should be a regex pattern
      * */
-    fun normalizeLinkExtractionRulesDeprecated(message: String?): String? {
+    fun normalizeURIExtractionRulesDeprecated(message: String?): String? {
         val message2 = normalizeUserMessage(message) ?: return null
 
         val suffix = """
