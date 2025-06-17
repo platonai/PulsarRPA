@@ -95,13 +95,11 @@
             <artifactId>spring-context</artifactId>
         </dependency>
 
-        <!-- TODO: try to remove spring-boot dependency -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot</artifactId>
         </dependency>
 
-        <!-- TODO: try to remove spring-boot-starter dependency -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>

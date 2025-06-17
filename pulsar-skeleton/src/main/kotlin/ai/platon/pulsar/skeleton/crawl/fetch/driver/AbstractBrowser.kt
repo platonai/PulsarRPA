@@ -34,11 +34,6 @@ abstract class AbstractBrowser(
     private val closed = AtomicBoolean()
     protected var lastActiveTime = Instant.now()
 
-    /**
-     * The process id of the browser.
-     * */
-    var pid: Int = TODO()
-
     override val instanceId: Int = SEQUENCER.incrementAndGet()
 
     override val userAgent get() = DEFAULT_USER_AGENT

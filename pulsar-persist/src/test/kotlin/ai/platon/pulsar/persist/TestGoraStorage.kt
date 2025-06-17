@@ -137,10 +137,7 @@ class TestGoraStorage {
         assertNotNull(page)
         assertEquals("", page.links[i].toString())
     }
-    
-    /**
-     * TODO: We can not clear an array, HBase keeps unchanged
-     */
+
     @Test
     fun testClearNestedSimpleArray() {
         if (store is MemStore) {
@@ -173,10 +170,7 @@ class TestGoraStorage {
         assertNotNull(page)
         assertEquals(3, page.links.size.toLong())
     }
-    
-    /**
-     * TODO: We can not clear an array, HBase keeps unchanged
-     */
+
     @Test
     fun testUpdateNestedComplexArray() {
         if (store is MemStore) {

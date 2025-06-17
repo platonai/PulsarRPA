@@ -99,7 +99,6 @@ class WebDb(
      */
     @Throws(WebDBException::class)
     fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage? {
-        // TODO: consider the design again whether we need normalize the url here
         val (url, key) = URLUtils.normalizedUrlAndKey(originalUrl, norm)
 
         val page = getOrNull0(originalUrl, norm, fields)
@@ -240,7 +239,6 @@ class WebDb(
     @Throws(WebDBException::class)
     fun scan(urlBase: String): Iterator<WebPage> {
         val query = dataStore.newQuery()
-        // TODO: key range does not working in MongoStore
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
 
         val result = dataStore.execute(query)
@@ -286,7 +284,6 @@ class WebDb(
         val query = dataStore.newQuery()
 
         query.filter = filter
-        // TODO: key range does not working in MongoStore
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
@@ -313,7 +310,6 @@ class WebDb(
             endKey = endKey.replace("\\\\uFFFF".toRegex(), UNICODE_LAST_CODE_POINT.toString())
         }
 
-        // TODO: key range does not working in MongoStore
         goraQuery.startKey = startKey
         goraQuery.endKey = endKey
         val batchId = query.batchId
@@ -341,7 +337,6 @@ class WebDb(
         } catch (e: IllegalStateException) {
             logger.warn(e.message)
         } catch (e: Exception) {
-            // TODO: Embedded MongoDB fails to shutdown gracefully #5487
             // see https://github.com/spring-projects/spring-boot/issues/5487
             logger.error(e.stringify())
             throw WebDBException("Failed to flush", e)

@@ -87,7 +87,6 @@
             <artifactId>gson</artifactId>
         </dependency>
 
-        <!-- Perl5Pattern, text process, required by ProtocolHeaders, TODO: try to remove this dependency -->
         <dependency>
             <groupId>oro</groupId>
             <artifactId>oro</artifactId>
