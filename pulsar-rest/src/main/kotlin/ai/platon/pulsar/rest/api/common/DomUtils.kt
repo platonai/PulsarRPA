@@ -104,19 +104,6 @@ object DomUtils {
         return links
     }
 
-    fun selectURIs(document: FeaturedDocument): Set<URI> {
-        val uris = mutableSetOf<String>()
-        val attrNames = listOf("abs:href", "abs:src", "data-href", "data-src")
-
-        document.body.forEachElement { ele ->
-            attrNames.map { ele.attr(it) }
-                .filter { it.isNotBlank() }
-                .forEach { uris.add(it) }
-        }
-
-        return uris.mapNotNullTo(mutableSetOf()) { kotlin.runCatching { URI.create(it) }.getOrNull() }
-    }
-
     fun selectLinks(screenNumber: Float, document: FeaturedDocument, regex: String): String {
         val pattern = regex.toRegex()
         val sb = StringBuilder()

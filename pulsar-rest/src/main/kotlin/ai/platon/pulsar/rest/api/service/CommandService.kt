@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.FlatJSONExtractor
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.dom.UriExtractor
 import ai.platon.pulsar.dom.nodes.node.ext.numChars
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.rest.api.common.DomUtils
@@ -267,7 +268,7 @@ class CommandService(
 
             val regex = RestAPIPromptUtils.normalizeURIExtractionRegex(uriExtractionRules) ?: return
 
-            val allURIs = DomUtils.selectURIs(document).map { it.toString() }
+            val allURIs = UriExtractor().extractAllUris(document)
             val uris = allURIs.filter { it.matches(regex) }
             if (uris.isNotEmpty()) {
                 val result = InstructResult.ok("links", uris, "list")
