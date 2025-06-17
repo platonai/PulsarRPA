@@ -1,6 +1,7 @@
 package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.common.ResourceStatus
+import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.FlatJSONExtractor
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -240,13 +241,13 @@ class CommandService(
             }
 
             if (pageSummaryPrompt != null) {
-                val instruct = pageSummaryPrompt.replace(PLACEHOLDER_PAGE_CONTENT, textContent)
+                val instruct = PromptTemplate(pageSummaryPrompt, mapOf(PLACEHOLDER_PAGE_CONTENT to textContent)).render()
                 performInstruct("pageSummary", instruct, status)
                 logger.info("pageSummary: {}", status.commandResult?.pageSummary)
             }
 
             if (dataExtractionRules != null) {
-                val instruct = dataExtractionRules.replace(PLACEHOLDER_PAGE_CONTENT, textContent)
+                val instruct = PromptTemplate(dataExtractionRules, mapOf(PLACEHOLDER_PAGE_CONTENT to textContent)).render()
                 performInstruct("fields", instruct, status, "map") { content ->
                     FlatJSONExtractor.extract(content)
                 }
