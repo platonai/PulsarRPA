@@ -71,58 +71,58 @@ jobs:
         run: |
           docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest -f Dockerfile .
 
-#      - name: Test Docker container
-#        if: success()
-#        run: |
-#          # Start container
-#          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
-#          sleep 10  # Wait for Spring Boot to start
-#
-#          # Run integration tests
-#          find bin/ -name "*.sh" -exec chmod +x {} \;
-#          if ! ./bin/run-integration-test.sh; then
-#            echo "Integration test failed"
-#            docker logs pulsar-rpa-test
-#            docker stop pulsar-rpa-test || true
-#            exit 1
-#          fi
-#
-#          # Clean up
-#          docker stop pulsar-rpa-test || true
-#        env:
-#          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      - name: Test Docker container
+        if: success()
+        run: |
+          # Start container
+          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
+          sleep 10  # Wait for Spring Boot to start
 
-#      - name: Build PulsarRPA JAR
-#        if: success()
-#        run: |
-#          JAR_PATH=${{ env.PRODUCTION_JAR_PATH }}
-#          JAR_NAME=${{ env.PRODUCTION_JAR_NAME }}
-#          MODULE_NAME=${{ env.PRODUCTION_JAR_MODULE_NAME }}
-#          MODULE_PATH=${{ env.PRODUCTION_JAR_MODULE_PATH }}
-#
-#          echo "=== Building PulsarRPA JAR ==="
-#          ./mvnw package -rf :$MODULE_NAME -pl ${MODULE_PATH} -DskipTests=true -Dmaven.javadoc.skip=true
-#
-#          if [ ! -f "$JAR_PATH" ]; then
-#            echo "❌ $JAR_NAME.jar not found at $JAR_PATH"
-#            echo "All created jars: "
-#            find . -name "$JAR_NAME.jar" -print
-#            exit 1
-#          fi
-#          echo "✅ $JAR_NAME.jar built successfully"
+          # Run integration tests
+          find bin/ -name "*.sh" -exec chmod +x {} \;
+          if ! ./bin/run-integration-test.sh; then
+            echo "Integration test failed"
+            docker logs pulsar-rpa-test
+            docker stop pulsar-rpa-test || true
+            exit 1
+          fi
 
-#      - name: Create GitHub Release
-#        if: success()
-#        uses: softprops/action-gh-release@v2
-#        with:
-#          name: ${{ env.TAG }}
-#          draft: ${{ env.DRAFT }}
-#          prerelease: ${{ env.PRERELEASE }}
-#          generate_release_notes: true
-#          files: |
-#            ${{ env.PRODUCTION_JAR_PATH }}
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Clean up
+          docker stop pulsar-rpa-test || true
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+      - name: Build PulsarRPA JAR
+        if: success()
+        run: |
+          JAR_PATH=${{ env.PRODUCTION_JAR_PATH }}
+          JAR_NAME=${{ env.PRODUCTION_JAR_NAME }}
+          MODULE_NAME=${{ env.PRODUCTION_JAR_MODULE_NAME }}
+          MODULE_PATH=${{ env.PRODUCTION_JAR_MODULE_PATH }}
+
+          echo "=== Building PulsarRPA JAR ==="
+          ./mvnw package -rf :$MODULE_NAME -pl ${MODULE_PATH} -DskipTests=true -Dmaven.javadoc.skip=true
+
+          if [ ! -f "$JAR_PATH" ]; then
+            echo "❌ $JAR_NAME.jar not found at $JAR_PATH"
+            echo "All created jars: "
+            find . -name "$JAR_NAME.jar" -print
+            exit 1
+          fi
+          echo "✅ $JAR_NAME.jar built successfully"
+
+      - name: Create GitHub Release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ env.TAG }}
+          draft: ${{ env.DRAFT }}
+          prerelease: ${{ env.PRERELEASE }}
+          generate_release_notes: true
+          files: |
+            ${{ env.PRODUCTION_JAR_PATH }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push Docker Images to Docker Hub
         if: success()
