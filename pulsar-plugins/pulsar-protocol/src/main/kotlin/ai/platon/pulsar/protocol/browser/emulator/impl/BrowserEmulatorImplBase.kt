@@ -319,7 +319,7 @@ abstract class BrowserEmulatorImplBase(
         val path = AppFiles.export(status, pageSource, page)
         
         if (SystemUtils.IS_OS_WINDOWS) {
-            // TODO: Issue 16 - https://github.com/platonai/PulsarRPA/issues/16
+            // Issue 16 - https://github.com/platonai/PulsarRPA/issues/16
             // Not a good idea to create symbolic link on Windows, it requires administrator privilege
         } else {
             createSymbolicLink(path, page)

@@ -120,9 +120,6 @@ class BatchFetchComponent(
                 .map { getProtocolOutput(protocol, it, it.page) }
     }
 
-    /**
-     * TODO: add to fetch queue instead of invoke new threads
-     * */
     private fun manualParallelFetchAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         val size = Iterables.size(urls)
         coreMetrics?.markFetchTaskStart(size)

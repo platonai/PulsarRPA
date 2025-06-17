@@ -558,7 +558,6 @@ open class MultiPrivacyContextManager(
 
         val status = result.response.protocolStatus
         when {
-            // TODO: review all retries and cancels
 //            status.isRetry(RetryScope.PRIVACY) -> logPrivacyLeakWarning(privacyContext, result)
             status.isRetry -> logPrivacyLeakWarning(privacyContext, result)
             status.isSuccess -> metrics.successes.mark()

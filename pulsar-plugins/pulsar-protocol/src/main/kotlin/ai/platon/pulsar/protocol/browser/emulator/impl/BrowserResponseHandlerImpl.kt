@@ -94,7 +94,6 @@ open class BrowserResponseHandlerImpl(
      * Normalize the page source.
      *
      * The browser has already converted source code to be UTF-8, so we replace the charset meta tags to be UTF-8.
-     * TODO: or we insert a new metadata to indicate the charset
      */
     override fun normalizePageSource(url: String, pageSource: String): StringBuilder {
         val sb = HtmlUtils.replaceHTMLCharset(pageSource, charsetPattern, "UTF-8")

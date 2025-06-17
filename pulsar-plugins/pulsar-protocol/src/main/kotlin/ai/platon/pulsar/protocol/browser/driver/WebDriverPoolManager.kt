@@ -174,8 +174,6 @@ open class WebDriverPoolManager(
         run(WebDriverTask(BrowserId.DEFAULT, task.page, task.priority, browseFun))
 
     /**
-     * TODO: consider pro-actor model instead
-     *
      * reactor: tell me if you can do this job
      * pro-actor: here is a job, tell me if you finished it
      *

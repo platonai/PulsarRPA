@@ -96,7 +96,6 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     @Synchronized
     fun getSession(sessionInterface: SessionInterface): SQLSession {
         val h2session = sessionInterface as Session
-        // TODO: or just use hash code so no need to modify h2database to expose serialId
         return sqlContext.getSession(h2session.serialId)
     }
 

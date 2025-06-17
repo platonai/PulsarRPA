@@ -111,7 +111,6 @@ class PlaywrightDriver(
         }
 
         // pageAPI?.onDocumentOpened { entry.mainRequestCookies = getCookies0() }
-        // TODO: not working
         // pageAPI?.onWindowOpen { onWindowOpen(it) }
         // pageAPI?.onFrameAttached {  }
 //        pageAPI?.onDomContentEventFired {  }

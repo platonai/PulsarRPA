@@ -262,7 +262,6 @@ open class InteractiveBrowserEmulator(
         require(driver is AbstractWebDriver)
         
         // page.lastBrowser is used by AppFiles.export, so it has to be set before export
-        // TODO: page should not be modified in browser phase, it should only be updated using PageDatum
         task.page.lastBrowser = driver.browserType
         
         if (task.page.options.isDead()) {

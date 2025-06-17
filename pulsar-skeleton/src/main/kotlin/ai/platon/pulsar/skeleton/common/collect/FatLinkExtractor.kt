@@ -85,15 +85,6 @@ class FatLinkExtractor(
     }
 
     fun createFatLink(seed: NormURL, denyList: Collection<UrlAware>): PageFatLink? {
-        // TODO: we can use an event handler to extract links
-//        val handler = object: HtmlDocumentHandler() {
-//            override val name = CapabilityTypes.FETCH_AFTER_EXTRACT_HANDLER
-//            override fun invoke(page: WebPage, document: FeaturedDocument) {
-//
-//            }
-//        }
-//        seed.options.volatileConfig?.putBean(handler.name, handler)
-
         val page = session.load(seed)
         if (!page.protocolStatus.isSuccess) {
             ++counters.badSeeds
@@ -217,17 +208,7 @@ class FatLinkExtractor(
             .toList()
     }
 
-    /**
-     * TODO: the logic is different from the one in LoadComponent
-     * */
     fun shouldFetchVividPage(url: String, expires: Duration, now: Instant): Boolean {
-//        if (text != null) {
-//            val createdAt = DateTimes.parseInstant(text.substringAfter(" createdAt: "), Instant.EPOCH)
-//            if (Duration.between(createdAt, now).toHours() <= 24) {
-//                return true
-//            }
-//        }
-
         val p = webDb.getOrNull(url)
         return when {
             p == null -> {

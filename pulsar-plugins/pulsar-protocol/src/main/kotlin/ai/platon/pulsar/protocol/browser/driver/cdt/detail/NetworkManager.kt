@@ -219,10 +219,7 @@ internal class NetworkManager(
                 redirectChain = request.redirectChain
             }
         }
-        
-        // TODO: add a frame manager
-        val frame = event.frameId
-        
+
         require(requestId == event.requestId) { "Inconsistent request id: <${event.requestId}> <- <$requestId>" }
         val allowInterception = userRequestInterceptionEnabled
         val request = CDPRequest(driver, requestId, event.request, fetchRequestId, allowInterception, redirectChain)

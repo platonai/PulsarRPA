@@ -751,7 +751,6 @@ abstract class AbstractWebDriver(
         if (proxy != null && URLUtils.isStandard(proxy)) {
             val u = URLUtils.getURLOrNull(proxy)
             if (u != null) {
-                // TODO: sock proxy support
                 session.proxy(u.host, u.port)
             }
         }
