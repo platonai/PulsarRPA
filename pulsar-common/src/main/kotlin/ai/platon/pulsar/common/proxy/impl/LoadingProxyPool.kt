@@ -40,7 +40,6 @@ class LoadingProxyPool(
             }
 
             // Block until timeout, thread interrupted or an available proxy entry returns
-            // TODO: no need to block, just try to get a item from the queue
             proxy = poll0()
         }
 

@@ -59,8 +59,6 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
     }
 
     /**
-     * TODO: easy to misuse, especially when we emit a non-suspend event in a suspend function
-     *
      * In the following example, emit1 is misused, should be emit
      * suspend fun navigateTo(entry: NavigateEntry) {
      *   browser.emit1(BrowserEvents.willNavigate, entry)

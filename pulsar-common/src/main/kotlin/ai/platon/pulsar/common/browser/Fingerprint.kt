@@ -117,9 +117,6 @@ data class Fingerprint(
 
     override fun hashCode() = toString().hashCode()
 
-    /**
-     * TODO: review the equality logic
-     * */
     override fun equals(other: Any?): Boolean {
         return other is Fingerprint && listOf(
             browserType to other.browserType,

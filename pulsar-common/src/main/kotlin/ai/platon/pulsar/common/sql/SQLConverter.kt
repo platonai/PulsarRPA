@@ -17,7 +17,7 @@ object SQLConverter {
         val prefix = "drop table if exists `$tableName`;\ncreate table `$tableName`(\n" +
                 "    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',"
         val postfix = "\n) DEFAULT CHARSET=utf8mb4 COMMENT='auto created table from x-sql';"
-        // TODO: define primary key
+
         return extractSQL.split("\n")
             .asSequence()
             .mapNotNull { it.trim().takeIf { it.isNotBlank() } }

@@ -313,7 +313,7 @@ val Node.isNil get() = this === NILNode
 
 /**
  * The owner document of the node.
- * TODO: should not call ownerDocument.extension, which is a recursive call
+ * > NOTE: should not call ownerDocument.extension, which is a recursive call
  * */
 val Node.ownerDocument get() = Objects.requireNonNull(extension.ownerDocumentNode) as Document
 
@@ -554,8 +554,6 @@ val Node.isCurrencyUnit get() = isShortText && cleanText in arrayOf("¥", "$")
  * */
 val Node.isNumeric get() = isMediumText && StringUtils.isNumeric(cleanText)
 
-// TODO: "isShortText" should be in -2147483648 to 2147483647, it's mapped to java.lang.Integer.
-// TODO: detect all SQL types
 /**
  * Whether the node is a regular text node and the text is an integer number.
  * */

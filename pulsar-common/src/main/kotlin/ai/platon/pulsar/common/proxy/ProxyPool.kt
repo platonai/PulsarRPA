@@ -60,7 +60,7 @@ open class ProxyPool(conf: ImmutableConfig) : AutoCloseable {
             try {
                 return freeProxies.poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS)
             } catch (e: ProxyRetryException) {
-                // TODO: never happens
+                logger.warn("Failed to take a proxy, retrying... | {}", e.toString())
                 sleepSeconds(1)
             }
         }

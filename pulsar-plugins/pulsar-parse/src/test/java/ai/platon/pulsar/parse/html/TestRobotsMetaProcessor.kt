@@ -10,9 +10,6 @@ import java.io.ByteArrayInputStream
 import java.net.URL
 import kotlin.test.*
 
-/**
- * TODO: Test failed
- */
 @Ignore("Failed")
 @ContextConfiguration(locations = ["classpath:/test-context/parse-beans.xml"])
 class TestRobotsMetaProcessor {

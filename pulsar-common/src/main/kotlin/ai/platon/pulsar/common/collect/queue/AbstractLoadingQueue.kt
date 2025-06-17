@@ -121,7 +121,6 @@ abstract class AbstractLoadingQueue(
     override fun addAll(urls: Collection<UrlAware>): Boolean {
         if (urls.size > freeSlots) {
             val n = freeSlots
-            // TODO: can be optimized
             super.addAll(urls.take(n))
             overflow(urls.drop(n))
         } else {

@@ -137,10 +137,7 @@ data class NodeFeature(
     val toEntry = FeatureEntry(key, value)
 
     val isFloat: Boolean get() = scale > 0
-    
-    /**
-     * TODO: avoid object
-     * */
+
     companion object {
         /*
          * affect _sep

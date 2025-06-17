@@ -317,8 +317,6 @@ fun Node.forEachMatching(predicate: (Node) -> Boolean, action: (Node) -> Unit) {
 
 /**
  * Apply an action to each descendant node.
- *
- * TODO: consider remove includeRoot parameter
  * */
 fun Node.forEachElement(includeRoot: Boolean = false, action: (Element) -> Unit) {
     NodeTraversor.traverse({ node, _->

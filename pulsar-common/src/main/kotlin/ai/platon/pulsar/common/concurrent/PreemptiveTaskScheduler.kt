@@ -26,9 +26,6 @@ class ManagementTask(
     override val priority: Int = 1
 ) : Task()
 
-/**
- * TODO: Test required
- * */
 class PreemptiveTaskScheduler {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val taskChannel = Channel<Task>(UNLIMITED)

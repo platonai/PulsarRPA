@@ -27,7 +27,6 @@ class ProxyPoolManagerFactory(
         synchronized(ProxyPoolManagerFactory::class) {
             val clazz = getClass(conf)
             return proxyPoolManagers.computeIfAbsent(clazz.name) {
-                // TODO: bad manner to construct the object
                 clazz.constructors.first { it.parameters.size == 2 }.newInstance(proxyPool, conf) as ProxyPoolManager
             }
         }

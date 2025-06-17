@@ -269,10 +269,6 @@ fun Node.firstAttributeOrNull(query: String, attrName: String) = selectFirstAttr
 
 fun Node.firstAttributeOptional(query: String, attrName: String) = selectFirstAttributeOptional(query, attrName)
 
-/**
- * TODO: experimental
- * TODO: may not as efficient as Node.collectIfTo since very call of e.nextElementSibling() generate a new element list
- * */
 inline fun <C : MutableCollection<Element>> Element.collectIfTo(destination: C, crossinline filter: (Element) -> Boolean): C {
     ElementTraversor.traverse(this) { if (filter(it)) { destination.add(it) } }
     return destination
