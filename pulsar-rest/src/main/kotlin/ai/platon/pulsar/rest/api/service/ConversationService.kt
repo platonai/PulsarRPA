@@ -57,7 +57,8 @@ class ConversationService(
             variables = mapOf(
                 PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE to REQUEST_JSON_COMMAND_TEMPLATE,
                 PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE to processedRequest
-            )
+            ),
+            reservedVariables = listOf(PLACEHOLDER_URL)
         ).render()
 
         var content = session.chat(prompt).content
