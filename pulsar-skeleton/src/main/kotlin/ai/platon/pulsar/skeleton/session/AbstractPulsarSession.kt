@@ -206,11 +206,6 @@ abstract class AbstractPulsarSession(
 
     override fun connect(browser: Browser) { sessionConfig.putBean(browser) }
 
-    override fun connectOverCDP(cdpURL: URL) {
-        // val browser = DefaultBrowserFactory().connect(BrowserType.PULSAR_CHROME, port)
-        TODO()
-    }
-
     override fun load(url: String): WebPage = load(url, options())
     
     override fun load(url: String, args: String): WebPage = load(url, options(args))

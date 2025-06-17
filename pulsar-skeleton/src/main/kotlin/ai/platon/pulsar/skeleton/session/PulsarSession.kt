@@ -544,10 +544,6 @@ interface PulsarSession : AutoCloseable {
      * */
     fun connect(browser: Browser)
 
-    @Beta
-    @ExperimentalApi
-    fun connectOverCDP(cdpURL: URL)
-
     /**
      * Load an url.
      *
