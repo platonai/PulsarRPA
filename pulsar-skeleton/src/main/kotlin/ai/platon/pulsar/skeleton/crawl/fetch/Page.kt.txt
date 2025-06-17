@@ -1,0 +1,269 @@
+/**
+ * Page 提供了与浏览器中单个标签页或 Chromium 中的扩展后台页面交互的方法。
+ * 一个浏览器实例可能有多个 Page 实例。
+ */
+interface Page {
+
+    /**
+     * 根据名称或URL查找框架
+     */
+    fun frame(frameSelector: String): Frame?
+    fun frame(frameSelector: Map<String, Any>): Frame?
+
+    /**
+     * 设置默认的导航超时时间(毫秒)
+     */
+    fun setDefaultNavigationTimeout(timeout: Int)
+
+    /**
+     * 设置默认的操作超时时间(毫秒)
+     */
+    fun setDefaultTimeout(timeout: Int)
+
+    /**
+     * 等待元素出现在DOM中
+     */
+    suspend fun waitForSelector(selector: String, options: Map<String, Any>? = null): ElementHandle?
+
+    /**
+     * 触发元素上的事件
+     */
+    suspend fun dispatchEvent(selector: String, type: String, eventInit: Any? = null, options: Map<String, Any>? = null)
+
+    /**
+     * 执行JavaScript并返回句柄
+     */
+    suspend fun evaluateHandle(pageFunction: String, arg: Any? = null): JSHandle
+
+    /**
+     * 在页面上下文中执行JavaScript
+     */
+    suspend fun evaluate(pageFunction: String, arg: Any? = null): Any
+
+    /**
+     * 添加脚本标签到页面
+     */
+    suspend fun addScriptTag(options: Map<String, String>): ElementHandle
+
+    /**
+     * 添加样式标签到页面
+     */
+    suspend fun addStyleTag(options: Map<String, String>): ElementHandle
+
+    /**
+     * 暴露函数给页面
+     */
+    suspend fun exposeFunction(name: String, callback: Function<Any, Any>)
+
+    /**
+     * 设置额外的HTTP头部
+     */
+    suspend fun setExtraHTTPHeaders(headers: Map<String, String>)
+
+    /**
+     * 获取当前页面的URL
+     */
+    fun url(): String
+
+    /**
+     * 获取页面的HTML内容
+     */
+    suspend fun content(): String
+
+    /**
+     * 设置页面的HTML内容
+     */
+    suspend fun setContent(html: String, options: Map<String, Any>? = null)
+
+    /**
+     * 导航到指定URL
+     */
+    suspend fun goto(url: String, options: Map<String, Any>? = null): Response?
+
+    /**
+     * 重新加载页面
+     */
+    suspend fun reload(options: Map<String, Any>? = null): Response?
+
+    /**
+     * 等待页面加载状态
+     */
+    suspend fun waitForLoadState(state: String? = null, options: Map<String, Any>? = null)
+
+    /**
+     * 等待页面导航完成
+     */
+    suspend fun waitForNavigation(options: Map<String, Any>? = null): Response?
+
+    /**
+     * 等待URL匹配指定模式
+     */
+    suspend fun waitForURL(url: Any, options: Map<String, Any>? = null)
+
+    /**
+     * 等待特定的请求
+     */
+    suspend fun waitForRequest(urlOrPredicate: Any, options: Map<String, Any>? = null): Request
+
+    /**
+     * 等待特定的响应
+     */
+    suspend fun waitForResponse(urlOrPredicate: Any, options: Map<String, Any>? = null): Response
+
+    /**
+     * 等待特定事件触发
+     */
+    suspend fun waitForEvent(event: String, optionsOrPredicate: Any? = null): Any
+
+    /**
+     * 返回上一页
+     */
+    suspend fun goBack(options: Map<String, Any>? = null): Response?
+
+    /**
+     * 前进到下一页
+     */
+    suspend fun goForward(options: Map<String, Any>? = null): Response?
+
+    /**
+     * 模拟媒体特性
+     */
+    suspend fun emulateMedia(options: Map<String, Any>? = null)
+
+    /**
+     * 设置视口大小
+     */
+    suspend fun setViewportSize(viewportSize: Map<String, Int>)
+
+    /**
+     * 获取当前视口大小
+     */
+    fun viewportSize(): Map<String, Int>?
+
+    /**
+     * 添加初始化脚本
+     */
+    suspend fun addInitScript(script: Any, arg: Any? = null)
+
+    /**
+     * 设置路由处理
+     */
+    suspend fun route(url: Any, handler: (Route, Request) -> Any)
+
+    /**
+     * 从HAR文件路由请求
+     */
+    suspend fun routeFromHAR(har: String, options: Map<String, Any>? = null)
+
+    /**
+     * 拦截WebSocket连接
+     */
+    suspend fun routeWebSocket(url: Any, handler: (WebSocketRoute) -> Any)
+
+    /**
+     * 取消所有路由
+     */
+    suspend fun unrouteAll(options: Map<String, Any>? = null)
+
+    /**
+     * 取消特定路由
+     */
+    suspend fun unroute(url: Any, handler: ((Route, Request) -> Any)? = null)
+
+    /**
+     * 截取页面截图
+     */
+    suspend fun screenshot(options: Map<String, Any>? = null): ByteArray
+
+    /**
+     * 获取页面标题
+     */
+    suspend fun title(): String
+
+    /**
+     * 将页面带到前台
+     */
+    suspend fun bringToFront()
+
+    /**
+     * 关闭页面
+     */
+    suspend fun close(options: Map<String, Any>? = null)
+
+    /**
+     * 页面是否已关闭
+     */
+    fun isClosed(): Boolean
+
+    /**
+     * 点击元素
+     */
+    suspend fun click(selector: String, options: Map<String, Any>? = null)
+
+    /**
+     * 选择器定位器
+     */
+    fun locator(selector: String, options: Map<String, Any>? = null): Locator
+
+    /**
+     * 按ID查找
+     */
+    fun getByTestId(testId: String): Locator
+
+    /**
+     * 按文本查找
+     */
+    fun getByText(text: Any, options: Map<String, Any>? = null): Locator
+
+    /**
+     * 键盘对象
+     */
+    val keyboard: Keyboard
+
+    /**
+     * 鼠标对象
+     */
+    val mouse: Mouse
+
+    /**
+     * 触摸屏对象
+     */
+    val touchscreen: Touchscreen
+
+    /**
+     * 生成PDF文件
+     */
+    suspend fun pdf(options: Map<String, Any>? = null): ByteArray
+    
+    /**
+     * 销毁资源
+     */
+    suspend fun dispose()
+    
+    /**
+     * 页面事件订阅
+     */
+    fun on(event: String, handler: (Any) -> Unit)
+    fun once(event: String, handler: (Any) -> Unit)
+    fun off(event: String, handler: (Any) -> Unit)
+    
+    /**
+     * 辅助功能支持
+     */
+    val accessibility: Accessibility
+    
+    /**
+     * 代码覆盖率工具
+     */
+    val coverage: Coverage
+    
+    /**
+     * API请求上下文
+     */
+    val request: APIRequestContext
+    
+    /**
+     * 时钟控制
+     */
+    val clock: Clock
+}
