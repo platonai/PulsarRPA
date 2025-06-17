@@ -16,6 +16,7 @@
  */
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.AppPaths.md5Hex
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import org.apache.commons.lang3.SystemUtils
@@ -108,8 +109,7 @@ class TestAppPaths {
         
         path = AppPaths.SCRIPT_DIR
         
-        path2 = AppPaths.getTmp(path.toString(), filename)
-        // TODO: fix me: assertTrue(path2.startsWith(AppPaths.TMP_DIR))
+        path2 = AppPaths.getTmpDirectory(path.toString(), filename)
         // assertTrue(path2.startsWith(AppPaths.TMP_DIR), "$path -> $path2")
         
         assertTrue(path2.startsWith(AppPaths.PROC_TMP_DIR), "$path -> $path2")
@@ -133,7 +133,7 @@ class TestAppPaths {
         while(i++ < n) {
             val filename = "" + Random.nextInt(10) + ".htm"
             val url = AppConstants.EXAMPLE_URL + "/$filename"
-            val path = AppPaths.getTmp(AppPaths.fromUri(url))
+            val path = AppPaths.getTmpDirectory(AppPaths.fromUri(url))
             Files.writeString(path, "test")
             
             val link = AppPaths.uniqueSymbolicLinkForUri(url)
@@ -186,32 +186,32 @@ class TestAppPaths {
     
     @Test
     fun testGetTmp() {
-        val path = AppPaths.getTmp("first", "second", "third")
+        val path = AppPaths.getTmpDirectory("first", "second", "third")
         assertEquals(Paths.get(AppPaths.TMP_DIR.toString(), "first/second/third"), path)
     }
     
     @Test
     fun testGetRandomTmp() {
-        val path = AppPaths.getRandomTmp("prefix-", ".suffix")
+        val path = AppPaths.getRandomTmpDirectory("prefix-", ".suffix")
         assertTrue(path.startsWith(AppPaths.TMP_DIR))
         assertTrue(path.toString().endsWith(".suffix"))
     }
     
     @Test
     fun testGetProcTmp() {
-        val path = AppPaths.getProcTmp("first", "second", "third")
+        val path = AppPaths.getProcTmpDirectory("first", "second", "third")
         assertEquals(Paths.get(AppPaths.PROC_TMP_DIR.toString(), "first/second/third"), path)
     }
     
     @Test
     fun testGetProcTmpTmp() {
-        val path = AppPaths.getProcTmpTmp("first", "second", "third")
+        val path = AppPaths.getProcTmpTmpDirectory("first", "second", "third")
         assertEquals(Paths.get(AppPaths.PROC_TMP_DIR.resolve("tmp").toString(), "first/second/third"), path)
     }
     
     @Test
     fun testGetRandomProcTmpTmp() {
-        val path = AppPaths.getRandomProcTmpTmp("prefix-", ".suffix")
+        val path = AppPaths.getRandomProcTmpTmpDirectory("prefix-", ".suffix")
         assertTrue(path.startsWith(AppPaths.PROC_TMP_DIR.resolve("tmp")))
         assertTrue(path.toString().endsWith(".suffix"))
     }
@@ -233,7 +233,7 @@ class TestAppPaths {
     @Test
     fun testFileId() {
         val uri = "http://example.com/test"
-        val fileId = AppPaths.fileId(uri)
+        val fileId = md5Hex(uri)
         assertEquals("44739ab8292f3d29beb6975ac3207e46", fileId)
     }
     

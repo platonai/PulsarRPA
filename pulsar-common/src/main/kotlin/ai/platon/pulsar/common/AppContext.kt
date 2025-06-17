@@ -137,7 +137,6 @@ object AppContext {
     val state = AtomicReference(State.NEW)
     /**
      * The application is active, it can serve and can be terminated.
-     * TODO: consider a more flexible way to manage the state.
      * */
     val isActive get() = state.get().ordinal < State.TERMINATING.ordinal
     /**

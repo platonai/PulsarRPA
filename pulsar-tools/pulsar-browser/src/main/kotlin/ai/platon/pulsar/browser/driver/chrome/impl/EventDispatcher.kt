@@ -23,9 +23,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Consumer
 
-/**
- * TODO: use kotlinx.coroutines channels instead of CountDownLatch
- * */
 class InvocationFuture(val returnProperty: String? = null) {
     var result: JsonNode? = null
     var isSuccess = false
@@ -40,8 +37,6 @@ class InvocationFuture(val returnProperty: String? = null) {
     /**
      * Causes the current thread to wait until the latch has counted down to
      * zero, unless the thread is interrupted, or the specified waiting time elapses.
-     *
-     * TODO: this method blocks the current thread, so it should not used in a coroutine
      * */
     @Throws(InterruptedException::class)
     fun await(timeout: Duration) = await(timeout.toMillis(), TimeUnit.MILLISECONDS)
@@ -49,8 +44,6 @@ class InvocationFuture(val returnProperty: String? = null) {
     /**
      * Causes the current thread to wait until the latch has counted down to
      * zero, unless the thread is interrupted, or the specified waiting time elapses.
-     *
-     * TODO: this method blocks the current thread, so it should not used in a coroutine
      * */
     @Throws(InterruptedException::class)
     fun await(timeout: Long, timeUnit: TimeUnit): Boolean {

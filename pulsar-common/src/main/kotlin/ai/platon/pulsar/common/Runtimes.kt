@@ -39,7 +39,6 @@ object Runtimes {
         val command = when {
             SystemUtils.IS_OS_WINDOWS -> "where $executable"
             SystemUtils.IS_OS_LINUX -> "whereis $executable"
-            // TODO: more OS support
             else -> "whereis $executable"
         }
 
@@ -55,7 +54,6 @@ object Runtimes {
         val command = when {
             SystemUtils.IS_OS_WINDOWS -> "tasklist /NH"
             SystemUtils.IS_OS_LINUX -> "ps -ef"
-            // TODO: more OS support
             else -> "ps -ef"
         }
         return exec(command).count { it.contains(namePattern.toRegex()) }
@@ -163,7 +161,6 @@ object Runtimes {
         } else if (SystemUtils.IS_OS_LINUX) {
             exec("kill -9 $pid")
         } else {
-            // TODO: more OS support
             exec("kill -9 $pid")
         }
     }
@@ -216,12 +213,11 @@ object Runtimes {
 
     fun deleteBrokenSymbolicLinks(symbolicLink: Path) {
         if (SystemUtils.IS_OS_WINDOWS) {
-            // TODO: use command line
             Files.deleteIfExists(symbolicLink)
         } else if (SystemUtils.IS_OS_LINUX) {
             exec("find -L $symbolicLink -type l -delete")
         } else {
-            // TODO: more OS support
+            logger.warn("Unsupported operating system for deleting symbolic links: ${SystemUtils.OS_NAME}")
         }
     }
 

@@ -209,8 +209,8 @@ class TestString {
             "1b关注全球华人健康",
             "a关注全球华人健康"
         )
-        for (text in noChineseTexts) { // TODO: noChineseTexts assertion failed
-// assertFalse(text, StringUtil.isChinese(text));
+        for (text in noChineseTexts) {
+            // assertFalse(text, StringUtil.isChinese(text));
         }
         val mainlyChineseTexts = arrayOf(
             "1234关注全球华人健康关注全球华人健康",

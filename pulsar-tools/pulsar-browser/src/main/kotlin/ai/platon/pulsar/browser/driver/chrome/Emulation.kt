@@ -133,8 +133,6 @@ class ClickableDOM(
         val width = arrayOf(quad[0], quad[2], quad[4], quad[6]).maxOrNull()!! - x
         val height = arrayOf(quad[1], quad[3], quad[5], quad[7]).maxOrNull()!! - y
 
-        // TODO: handle iframes
-
         return RectD(x, y, width, height)
     }
 

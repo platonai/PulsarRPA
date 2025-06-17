@@ -72,8 +72,6 @@ abstract class ChromeDevToolsImpl(
      * Invokes a remote method and returns the result.
      * The method is blocking and will wait for the response.
      *
-     * TODO: use non-blocking version
-     *
      * @param returnProperty The property to return from the response.
      * @param clazz The class of the return type.
      * @param <T> The return type.
@@ -88,7 +86,6 @@ abstract class ChromeDevToolsImpl(
         try {
             return invoke0(returnProperty, clazz, null, methodInvocation)
         }  catch (e: ChromeIOException) {
-            // TODO: if the connection is lost, we should close the browser and restart it
             throw ChromeRPCException("Web socket connection lost", e)
         } catch (e: InterruptedException) {
             logger.warn("Interrupted while invoke ${clazz::javaClass.name}.${methodInvocation.method}")
@@ -102,8 +99,6 @@ abstract class ChromeDevToolsImpl(
     /**
      * Invokes a remote method and returns the result.
      * The method is blocking and will wait for the response.
-     *
-     * TODO: use non-blocking version
      *
      * @param returnProperty The property to return from the response.
      * @param clazz The class of the return type.

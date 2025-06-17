@@ -56,9 +56,6 @@ class PageHandler(
         return pageAPI?.navigate(url, referrer, transitionType, frameId, referrerPolicy)
     }
 
-    /**
-     * TODO: make sure the meaning of 0 node id
-     * */
     @Throws(ChromeDriverException::class)
     fun querySelector(selector: String): Node? {
         return querySelectorOrNull(selector)
@@ -96,17 +93,6 @@ class PageHandler(
     @Throws(ChromeDriverException::class)
     fun setAttribute(nodeId: Int, attrName: String, attrValue: String) {
         domAPI?.setAttributeValue(nodeId, attrName, attrValue)
-    }
-
-    /**
-     * TODO: too many requests, need to optimize
-     * RobustRPC - Too many RPC failures: selectAttributeAll (6/5) | DOM Error while querying
-     * */
-    @Throws(ChromeDriverException::class)
-    fun getAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
-        return querySelectorAll(selector).asSequence().drop(start).take(limit)
-            .mapNotNull { getAttribute(it, attrName) }
-            .toList()
     }
 
     @Throws(ChromeDriverException::class)

@@ -164,7 +164,6 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
             return 0
         }
 
-        // TODO: Can we avoid the new TreeSet?
         val elements = TreeSet(elementSet())
         if (v < elements.first()) {
             return 0 // less than first value

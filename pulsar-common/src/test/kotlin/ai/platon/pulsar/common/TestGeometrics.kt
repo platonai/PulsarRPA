@@ -35,9 +35,6 @@ class TestGeometrics {
         println(r.str2)
     }
 
-    /**
-     * TODO: Test failed
-     * */
     @Ignore("TODO: Test failed")
     @Test
     fun testCollinear() {

@@ -233,7 +233,6 @@ object AppPaths {
      * $env:Temp/pulsar-$env:USERNAME/
      * ```
      *
-     * TODO: fix me: assertTrue(path2.startsWith(AppPaths.TMP_DIR))
      * ```kotlin
      * assertTrue(path2.startsWith(AppPaths.TMP_DIR), "$path -> $path2")
      * ```
@@ -263,7 +262,7 @@ object AppPaths {
     fun getRandomTmpDirectory(prefix: String = "", suffix: String = ""): Path =
         getTmpDirectory(prefix, RandomStringUtils.randomAlphabetic(18), suffix)
 
-    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getRandomTmpDirectory(first, *more)" ))
+    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getRandomTmpDirectory(prefix, suffix)" ))
     fun getRandomTmp(prefix: String = "", suffix: String = "") = getRandomTmpDirectory(prefix, suffix)
 
     /**

@@ -51,7 +51,7 @@ class TestRuntimes {
 
         Runtimes.deleteBrokenSymbolicLinks(tmp)
         if (SystemUtils.IS_OS_WINDOWS) {
-            // TODO: what happens on windows
+            // Not supported on Windows
         } else {
             assertFalse { Files.isSymbolicLink(symbolicPath) }
         }
