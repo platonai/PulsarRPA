@@ -359,7 +359,6 @@ open class PulsarWebDriverRealSiteTests : WebDriverTestBase() {
     
     @Test
     fun testDragAndHold() = runWebDriverTest(walmartUrl, browser) { driver ->
-        // TODO: FIXME: dragAndHold not working on walmart.com
         val result = driver.evaluate("__pulsar_utils__.doForAllFrames('HOLD', 'ME')")
         println(result)
     }

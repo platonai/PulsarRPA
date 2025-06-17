@@ -412,7 +412,7 @@ open class StreamingCrawler(
                     return@runCrawlLoopWhileActive
                 } else {
                     // if urls is ConcurrentLoadingIterable
-                    // TODO: the line below can be removed
+                    // the line below can be removed
                     (urls.iterator() as? ConcurrentLoadingIterable.LoadingIterator)?.tryLoad()
                 }
             }

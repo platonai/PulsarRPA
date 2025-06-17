@@ -95,8 +95,6 @@ interface PrivacyContext: AutoCloseable {
     /**
      * Check whether the privacy context is active.
      *
-     * TODO: check and distinct from [isReady] in use cases.
-     *
      * An active privacy context has to meet the following requirements:
      * 1. not closed
      * 2. not leaked

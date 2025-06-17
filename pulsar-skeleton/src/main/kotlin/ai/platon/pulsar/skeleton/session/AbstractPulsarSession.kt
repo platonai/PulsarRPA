@@ -621,8 +621,6 @@ abstract class AbstractPulsarSession(
      *
      * If the loading is not a read-only-loading, which might modify the page status, or the loading have event handlers,
      * in such cases, we must render the page in the browser again.
-     *
-     * TODO: handle the session cache and the FetchComponent cache
      * */
     private fun createPageWithCachedCoreOrNull(normURL: NormURL): WebPage? {
         if (!normURL.options.readonly) {

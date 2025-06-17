@@ -28,7 +28,6 @@ import kotlin.test.assertTrue
  * ```
  *
  * It seems that await() never returns, and the test cases are blocked.
- * TODO: Investigate the root cause of the issue.
  *
  * Environment:
  * Ubuntu 13.3.0-6ubuntu2~24.04

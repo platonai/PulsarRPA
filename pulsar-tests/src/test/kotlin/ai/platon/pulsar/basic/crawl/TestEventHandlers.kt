@@ -20,7 +20,6 @@ import kotlin.test.assertTrue
  * ```
  *
  * It seems that await() never returns, and the test cases are blocked.
- * TODO: Investigate the root cause of the issue.
  */
 @Tag("BatchTestFailed")
 @Ignore("BatchTestFailed, run this test separately and investigate the root cause of the issue")

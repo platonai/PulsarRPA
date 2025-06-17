@@ -373,7 +373,6 @@ interface WebDriver : Closeable {
      * example, by Javascript) there is no guarantee that the returned text is that of the modified
      * page.
      *
-     * TODO: distinguish pageSource and outerHTML
      * - outerHTML is only for HTML document, while pageSource is for all documents.
      *
      * ```kotlin
@@ -446,7 +445,6 @@ interface WebDriver : Closeable {
      * driver.clearBrowserCookies()
      * ```
      *
-     * TODO: consider only use driver.browser.clearCookies()
      * @see Browser.clearCookies
      * */
     @Throws(WebDriverException::class)

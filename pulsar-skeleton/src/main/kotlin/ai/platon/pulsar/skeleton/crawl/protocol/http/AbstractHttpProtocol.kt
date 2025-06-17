@@ -109,7 +109,7 @@ abstract class AbstractHttpProtocol : Protocol {
             }
 
             try {
-                // TODO: FETCH_PROTOCOL does not work if the response is a ForwardingResponse
+                // NOTE: FETCH_PROTOCOL does not work if the response is a ForwardingResponse
                 // Fetch the response and determine if a retry is necessary
                 response = getResponse(page, false)
                 retry = response == null || shouldRetry(response)
@@ -212,7 +212,7 @@ abstract class AbstractHttpProtocol : Protocol {
         } else {
             Duration.between(startTime, Instant.now())
         }
-        // TODO: update in FetchComponent?
+        // update in FetchComponent?
         page.metadata[Name.RESPONSE_TIME] = elapsedTime.toString()
     }
 

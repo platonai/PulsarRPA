@@ -45,7 +45,7 @@ class SessionLoadTests: TestBase() {
      * ```
      *
      * It seems that await() never returns, and the test cases are blocked.
-     * TODO: Investigate the root cause of the issue.
+     *
      *
      * Environment:
      * Ubuntu 13.3.0-6ubuntu2~24.04
@@ -97,11 +97,11 @@ class SessionLoadTests: TestBase() {
      * ```
      *
      * It seems that await() never returns, and the test cases are blocked.
-     * TODO: Investigate the root cause of the issue.
      *
      * Environment:
      * Ubuntu 13.3.0-6ubuntu2~24.04
-     * openjdk version "21.0.6" 2025-01-21     */
+     * openjdk version "21.0.6" 2025-01-21
+     * */
     @Tag("BatchTestFailed")
     @Ignore("BatchTestFailed, run this test separately and investigate the root cause of the issue")
     @Test

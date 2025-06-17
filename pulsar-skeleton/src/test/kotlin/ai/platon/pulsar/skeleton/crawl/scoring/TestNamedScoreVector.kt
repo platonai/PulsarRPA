@@ -26,7 +26,7 @@ class TestNamedScoreVector {
     }
 
     @Test
-    @Ignore("TODO: Failed")
+    @Ignore("Test failed")
     fun testPriority() {
         for (i in 0 until score.size()) {
             assertEquals(i.toLong(), score[i].priority.toLong(), "${i}th")
