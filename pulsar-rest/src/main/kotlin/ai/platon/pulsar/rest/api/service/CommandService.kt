@@ -268,14 +268,14 @@ class CommandService(
 
             val regex = RestAPIPromptUtils.normalizeURIExtractionRegex(uriExtractionRules) ?: return
 
-            val allURIs = UriExtractor().extractAllUris(document)
+            val allURIs = UriExtractor().extractAllUris(document, document.baseURI)
             val uris = allURIs.filter { it.matches(regex) }
             if (uris.isNotEmpty()) {
                 val result = InstructResult.ok("links", uris, "list")
                 status.addInstructResult(result)
             }
 
-            logger.info("Extracted {}/{} uris using regex {}", uris.size, allURIs.size, regex)
+            logger.info("Extracted {}/{} uris using regex >>>{}<<<", uris.size, allURIs.size, regex)
         }
     }
 

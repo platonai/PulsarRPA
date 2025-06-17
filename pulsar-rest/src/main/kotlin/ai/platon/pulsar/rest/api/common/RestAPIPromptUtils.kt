@@ -46,8 +46,8 @@ object RestAPIPromptUtils {
             return null
         }
 
-        return CONVERT_URL_DESCRIPTION_TO_REGEX_PROMPT
-            .replace(PLACEHOLDER_URL_DESCRIPTION, description)
+        return CONVERT_URI_DESCRIPTION_TO_REGEX_PROMPT
+            .replace(PLACEHOLDER_URI_DESCRIPTION, description)
     }
 
     fun normalizeURIExtractionRegex(message: String?): Regex? {

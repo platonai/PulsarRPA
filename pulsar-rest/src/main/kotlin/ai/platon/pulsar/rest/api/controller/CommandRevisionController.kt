@@ -2,10 +2,7 @@ package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.rest.api.common.COMMAND_REVISION_TEMPLATE
-import ai.platon.pulsar.rest.api.common.PLACEHOLDER_JSON_VALUE
-import ai.platon.pulsar.rest.api.common.PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE
-import ai.platon.pulsar.rest.api.common.REQUEST_JSON_COMMAND_TEMPLATE
+import ai.platon.pulsar.rest.api.common.*
 import ai.platon.pulsar.rest.api.service.ChatService
 import ai.platon.pulsar.rest.api.service.ConversationService
 import org.springframework.http.MediaType
@@ -33,6 +30,7 @@ class CommandRevisionController(
 
         val message = COMMAND_REVISION_TEMPLATE
             .replace(PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE, REQUEST_JSON_COMMAND_TEMPLATE)
+            .replace(PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE, REQUEST_PLAIN_COMMAND_TEMPLATE)
             .replace(PLACEHOLDER_JSON_VALUE, json)
 
         return chatService.chat(message)

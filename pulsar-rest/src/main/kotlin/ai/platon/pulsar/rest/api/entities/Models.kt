@@ -158,10 +158,13 @@ data class CommandRequest(
     }
 
     fun enhanceArgs(): String {
-        var args = this.args ?: ""
-        if (hasAction()) {
-            args += LoadOptions.mergeArgs(args, "-refresh")
+        val minimalSize = 100 // minimal page size required
+        val args = if (hasAction()) {
+            LoadOptions.mergeArgs(this.args, "-refresh -requireSize $minimalSize")
+        } else {
+            LoadOptions.mergeArgs(this.args, "-requireSize $minimalSize")
         }
+
         this.args = args
         return args
     }

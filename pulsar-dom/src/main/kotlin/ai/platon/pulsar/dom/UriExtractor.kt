@@ -48,6 +48,10 @@ class UriExtractor {
 
     /**
      * Extract all URIs from a [FeaturedDocument].
+     *
+     * @param document The document to extract URIs from.
+     * @param baseUrl Optional base URL to resolve relative URIs.
+     * @return A set of unique URIs extracted from the document.
      */
     fun extractAllUris(document: FeaturedDocument, baseUrl: String? = null): Set<String> {
         val uris = mutableSetOf<String>()

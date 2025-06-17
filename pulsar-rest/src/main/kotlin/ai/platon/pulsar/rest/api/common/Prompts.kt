@@ -1,44 +1,53 @@
 package ai.platon.pulsar.rest.api.common
 
 const val SYSTEM_PROMPT = """
-    
+You are PulsarRPA Assistant, an AI-powered web automation and data extraction specialist.
+Your role is to help users automate browser interactions and extract structured data from web pages.
 """
 
 const val DEFAULT_INTRODUCE = """
-Hi, I am PulsarRPA, 
+Hi, I am PulsarRPA! 
 
 💖 PulsarRPA: The AI-Powered, Lightning-Fast Browser Automation Solution! 💖
 
 ✨ Key Capabilities:
-* 🤖 AI Integration with LLMs – Smarter automation powered by large language models.
-* ⚡ Ultra-Fast Automation – Coroutine-safe browser automation concurrency, spider-level crawling performance.
-* 🧠 Web Understanding – Deep comprehension of dynamic web content.
-* 📊 Data Extraction APIs – Powerful tools to extract structured data effortlessly.
+* 🤖 AI Integration with LLMs – Smarter automation powered by large language models
+* ⚡ Ultra-Fast Automation – Coroutine-safe browser automation with spider-level crawling performance
+* 🧠 Web Understanding – Deep comprehension of dynamic web content
+* 📊 Data Extraction APIs – Powerful tools to extract structured data effortlessly
 
 What can I do for you today?
-
 """
 
+// Placeholder constants
 const val PLACEHOLDER_URL = "{PLACEHOLDER_URL}"
-
 const val PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE = "{PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE}"
-
 const val PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE = "{PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE}"
-
 const val PLACEHOLDER_PAGE_CONTENT = "{PLACEHOLDER_PAGE_CONTENT}"
-
 const val PLACEHOLDER_JSON_VALUE = "{PLACEHOLDER_JSON_VALUE}"
-
 const val PLACEHOLDER_JSON_STRING = "{PLACEHOLDER_JSON_STRING}"
+const val PLACEHOLDER_URI_DESCRIPTION = "{PLACEHOLDER_URI_DESCRIPTION}"
 
-const val PLACEHOLDER_URL_DESCRIPTION = "{PLACEHOLDER_URL_DESCRIPTION}"
+const val REQUEST_PLAIN_COMMAND_TEMPLATE = """
+1. Visit https://example.com
+2. When browser launches:
+   a. Clear browser cookies
+   b. Navigate to the home page
+   c. Click a random link
+3. When page is ready:
+   a. Scroll down
+   b. Click the "Sign In" button
+4. Summarize the page content
+5. Extract specified data fields
+6. Collect matching URIs/links
+"""
 
 const val REQUEST_JSON_COMMAND_TEMPLATE = """
 {
   "url": "{PLACEHOLDER_URL}",
   "onBrowserLaunchedActions": [
     "clear browser cookies",
-    "navigate to the home page",
+    "navigate to the home page", 
     "click a random link"
   ],
   "onPageReadyActions": [
@@ -47,137 +56,149 @@ const val REQUEST_JSON_COMMAND_TEMPLATE = """
   ],
   "pageSummaryPrompt": "Instructions for summarizing the page...",
   "dataExtractionRules": "Instructions for extracting specific fields...",
-  "uriExtractionRules": "Instructions for extracting uris, for example: links containing /dp/",
+  "uriExtractionRules": "Instructions for extracting URIs, for example: links containing /dp/"
 }
 """
 
 const val API_REQUEST_PLAIN_COMMAND_CONVERSION_PROMPT = """
-You're given a user request that describes how to interact with and extract information from a web page.
-Your task is to **analyze and convert** this request into a **structured JSON object** that our system can process.
+Convert a natural language web automation request into a structured JSON configuration for automated browser interaction and data extraction.
 
-The input may be conversational, contain ambiguous instructions, or be written in different languages.
+### 🎯 Task:
+Transform the user's conversational instructions into a precise JSON object that defines browser automation workflow, page interactions, and data extraction requirements.
 
-Produce a JSON object with these possible fields:
+### 📋 JSON Structure:
+Use this template with only the fields relevant to the request:
 
 ```json
 {PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE}
 ```
 
-### 🔧 Guidelines:
+### 🔧 Field Guidelines:
 
-* **Keep the URL placeholder** as `{PLACEHOLDER_URL}` exactly as shown.
-* Only include fields that are relevant to the user's request.
-* For `onBrowserLaunchedActions`: List any pre-page load steps in order of execution.
-* For `onPageReadyActions`: List any interaction steps in order of execution.
-* For `pageSummaryPrompt`: Include clear instructions for summarizing the page content.
-* For `dataExtractionRules`: Specify what fields to extract and their format.
-* For `uriExtractionRules`: Define a Kotlin-compatible regex pattern that matches exactly one valid URI.
-    * * Match the input's uri extraction requirement.
-    * * Match only one full URI (not multiple in a string).
-    * * Be compatible with Kotlin's Regex class.
-    * * Support both HTTP and HTTPS schemes.
-    * * Optionally include path, query, and fragment.
-    * * Return value must start with a prefix "Regex: " and then provide the regex pattern, for example: `Regex: https?://[\\w.-]+(?:/[\\w.-]*)*`
-    * * Return only the pattern string and the "Regex: " prefix (no explanation).
+**Required Fields:**
+* `url`: Always preserve as `{PLACEHOLDER_URL}` - do not modify this placeholder
 
-* Convert vague requests into specific, actionable instructions.
+**Optional Fields (include only if relevant):**
+* `onBrowserLaunchedActions`: Pre-navigation setup actions (cookies, authentication, etc.)
+  - Execute in the specified order before loading the target page
+  - Common actions: cookie management, login, navigation setup
+  
+* `onPageReadyActions`: Page interaction steps after initial load
+  - Execute in the specified order once the page is fully loaded
+  - Common actions: clicking, scrolling, form filling, waiting
+  
+* `pageSummaryPrompt`: Natural language instructions for page content summarization
+  - Be specific about what aspects to focus on
+  - Include desired output format or structure
+  
+* `dataExtractionRules`: Structured data extraction specifications
+  - Define exact field names and expected formats
+  - Specify selectors, patterns, or identification methods
+  
+* `uriExtractionRules`: Natural language instructions to extract URIs from the page
+  - Will be converted into regex patterns automatically
+  - Example: "extract all product links containing '/dp/'"
 
-### 📥 Input:
+### ⚡ Conversion Rules:
+* **Specificity**: Convert vague instructions into concrete, executable actions
+* **Order**: Sequence actions logically (setup → navigation → interaction → extraction)
+* **Clarity**: Use precise language that eliminates ambiguity
+* **Relevance**: Only include fields that address the user's actual requirements
+* **Actionability**: Every instruction should be directly executable by automation
+
+### 🌐 Language Support:
+Process requests in any language and output JSON with English field values.
+
+### 📥 User Request:
 
 ```text
 {PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE}
 ```
 
+### 📤 Expected Output:
+Return only the JSON object - no explanations or additional text.
 """
 
 const val CONVERT_RESPONSE_TO_MARKDOWN_PROMPT = """
 Convert the following JSON string into a well-structured Markdown document.
 
-## Output requirement
+### 🎯 Output Requirements:
 
 The output must include:
 
-### 🧾 Human-Readable Explanation
-
+#### 🧾 Human-Readable Explanation
 Present the JSON content as structured Markdown sections:
 
-1. **Page Summary** — A brief summary of the page content.
-2. **Fields** — A list of extracted key-value pairs from the page.
-3. **Links** — A list of extracted links.
+1. **Page Summary** — A brief summary of the page content
+2. **Extracted Data** — Key-value pairs extracted from the page (if any)
+3. **Extracted Links** — List of URIs/links found on the page (if any)
 
-### 📦 JSON representation
+#### 📦 JSON Representation
+Include the original JSON string as a fenced code block at the end of the document.
 
-Include the original JSON string as a fenced code block **at the end** of the Markdown document.
-The JSON section name is **JSON representation**
-
-## 🔧 JSON to Convert:
+### 🔧 JSON to Convert:
 
 ```json
 {PLACEHOLDER_JSON_STRING}
 ```
-
 """
 
-const val CONVERT_URL_DESCRIPTION_TO_REGEX_PROMPT = """
+const val CONVERT_URI_DESCRIPTION_TO_REGEX_PROMPT = """
 Convert the following URI description into a Kotlin-compatible regex pattern that matches exactly one valid URI.
 
-### 🔧 Guidelines:
-* Match only one full URL (not multiple in a string).
-* Be compatible with Kotlin's Regex class.
-* Support both HTTP and HTTPS schemes.
-* Optionally include path, query, and fragment.
-* The output should be a JSON object with a single key "regex" and the value as the regex pattern.
-* If you cannot convert the description into a regex pattern, return an empty string.
-* Start with a prefix "Regex: " and then provide the regex pattern, for example: `Regex: https?://[\\w.-]+(?:/[\\w.-]*)*`
-* Return only the pattern string and the "Regex: " prefix (no explanation).
+### 🎯 Objective:
+Generate a precise regex pattern that captures URIs based on the provided description.
 
-### 📥 Input:
+### 🔧 Requirements:
+* **Single Match**: Pattern must match exactly one complete URI (not partial matches or multiple URIs in text)
+* **Kotlin Compatibility**: Must work with Kotlin's `Regex` class and standard regex engine
+* **Exact Matching**: Pattern should precisely match the URI format described in the input
+* **Complete URI**: Match the entire URI from start to end (use anchors if needed)
+
+### 📋 Output Format:
+* Start with the exact prefix: `Regex: `
+* Follow with the regex pattern only
+* No explanations, comments, or additional text
+* Pattern should be ready to use in `Regex("your_pattern")`
+
+### ⚠️ Important Notes:
+* Escape special regex characters appropriately for Kotlin
+* Consider URI components: scheme, authority, path, query, fragment
+* Ensure the pattern is neither too restrictive nor too permissive
+* Test mentally against common URI variations if applicable
+
+### 📥 Input Description:
 
 ```text
-{PLACEHOLDER_URL_DESCRIPTION}
+{PLACEHOLDER_URI_DESCRIPTION}
 ```
-
-### 📤 Output Example (text inside code block):
-
-```text
-Regex: https?://[\\w.-]+(?:/[\\w.-]*)*
-```
-
 """
 
-
 const val COMMAND_REVISION_TEMPLATE = """
-Your task is to convert a JSON command into simple, numbered steps in plain language.
+Convert a JSON automation command into clear, numbered steps in plain language.
 
-The JSON format looks like this:
+### 🎯 Task:
+Transform the structured JSON command into human-readable instructions that explain what the automation will do.
 
-```json-text
-{REQUEST_JSON_COMMAND_TEMPLATE}
+### 🔧 Guidelines:
+* Start with "Visit [url]"
+* Convert each action in "onBrowserLaunchedActions" to numbered sub-steps under "When browser launches:"
+* Convert each action in "onPageReadyActions" to numbered sub-steps under "When page is ready:"
+* Add steps for page summarization, data extraction, and link collection if specified
+* Use clear, concise numbered instructions
+* Maintain logical action sequence
+
+### 📋 Example Output Format:
+```
+{PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE}
 ```
 
-Guidelines:
-- Start with "Visit [url]"
-- Convert each action in "onBrowserLaunchedActions" to a separate step
-- Convert each action in "onPageReadyActions" to a separate step
-- Add steps for summarizing, data extraction, and link collection if specified
-- Use clear, concise numbered instructions
+### 📥 JSON Command to Convert:
 
-Example:
-1. Visit https://example.com
-2. When browser launched:
-   1. Clear browser cookies
-   2. Visit the home page
-   3. Click a random link
-2. When page ready:
-   1. Scroll down
-   2. Click the "Add to Cart" button
-3. Summarize the page content
-4. Extract product name, price, ratings
-5. Collect all product links
-
-JSON to convert:
-```json-text
+```json
 {PLACEHOLDER_JSON_VALUE}
 ```
 
+### 📤 Expected Output:
+Return only the numbered steps - no explanations or additional text.
 """
