@@ -75,7 +75,16 @@ open class WebDriverContext(
      * 3. the browser is not in closed pool nor in retired pool
      * */
     open val isActive: Boolean get() {
-        return !closed.get() && AppContext.isActive && driverPoolManager.hasPossibility(browserId)
+        val active = !closed.get() && AppContext.isActive && driverPoolManager.hasPossibility(browserId)
+
+        if (!active) {
+            val state = mapOf("closed" to closed.get(),
+                "appActive" to AppContext.isActive,
+                "hasPossibility" to driverPoolManager.hasPossibility(browserId))
+            logger.info("WebDriverContext is not active | $state | ${browserId.display} | ${browserId.contextDir}")
+        }
+
+        return active
     }
     /**
      * Check if the driver context is retired.
@@ -89,6 +98,18 @@ open class WebDriverContext(
             val isDriverPoolReady = driverPoolManager.isReady && driverPoolManager.hasDriverPromise(browserId)
             return isActive && isDriverPoolReady
         }
+
+    val state: Map<String, Any>
+        get() = mapOf(
+            "browserId" to browserId,
+            "isActive" to isActive,
+            "isRetired" to isRetired,
+            "isReady" to isReady,
+            "runningTasks" to runningTasks.size,
+            "numGlobalRunningTasks" to numGlobalRunningTasks.get(),
+            "globalTasksCount" to globalTasks.count,
+            "globalFinishedTasksCount" to globalFinishedTasks.count
+        )
 
     /**
      * Run a web driver task.

@@ -108,11 +108,31 @@ abstract class AbstractPrivacyContext(
 
     override val isGood get() = meterSuccesses.meanRate >= minimumThroughput
 
-    override val isLeaked get() = !privacyAgent.isPermanent && privacyLeakWarnings.get() >= maximumWarnings
+    override val isLeaked: Boolean get() {
+        val leaked = !privacyAgent.isPermanent && privacyLeakWarnings.get() >= maximumWarnings
+        if (leaked) {
+            logger.warn("Privacy context is leaked: #{} | {} | warnings: {}", id, display, privacyLeakWarnings.get())
+        }
+        return leaked
+    }
 
     override val isRetired get() = retired
 
-    override val isActive get() = !isLeaked && !isRetired && !isClosed
+    override val isActive: Boolean get() {
+        val active = !isClosed && !isLeaked && !isRetired
+
+        if (!active) {
+            val state = listOf(
+                "closed" to isClosed,
+                "leaked" to isLeaked,
+                "retired" to isRetired
+            ).filter { it.second }.joinToString(", ") { it.first }
+
+            logger.info("Privacy context is not active: {} | #{} | {}", state, id, display)
+        }
+
+        return active
+    }
 
     override val isClosed get() = closed.get()
 

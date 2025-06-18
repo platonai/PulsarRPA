@@ -43,7 +43,13 @@ class ConcurrentStatefulDriverPoolPool {
     @Synchronized
     fun hasNoPossibility(browserId: BrowserId): Boolean {
         reassessClosedBrowserId(browserId)
-        return closedDriverPools.contains(browserId) || retiredDriverPools.containsKey(browserId)
+        val result = closedDriverPools.contains(browserId) || retiredDriverPools.containsKey(browserId)
+
+        if (result) {
+            logger.info("Browser can not offer any drivers, will be closed (hasNoPossibility) | {}", browserId)
+        }
+
+        return result
     }
     /**
      * Check if the browser has possibility to provide a webdriver for new tasks.

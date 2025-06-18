@@ -53,14 +53,26 @@ open class BrowserPrivacyContext(
 
     override val isRetired: Boolean
         get() {
-            return retired || proxyContext?.isRetired == true || driverContext.isRetired
+            val doRetired = retired || proxyContext?.isRetired == true || driverContext.isRetired
+
+            if (doRetired) {
+                logger.info("Privacy context is retired | {} | {}", state, browserId.display)
+            }
+
+            return doRetired
         }
 
     override val isActive: Boolean
         get() {
             val isProxyContextActive = proxyContext == null || proxyContext?.isActive == true
             val isDriverContextActive = driverContext.isActive
-            return isProxyContextActive && isDriverContextActive && super.isActive
+            val active = isProxyContextActive && isDriverContextActive && super.isActive
+
+            if (!active) {
+                logger.info("Privacy context is not active | {} | {}", state, browserId.display)
+            }
+
+            return active
         }
 
     override val isReady: Boolean
@@ -71,6 +83,20 @@ open class BrowserPrivacyContext(
         }
 
     override val isFullCapacity: Boolean get() = driverPoolManager.isFullCapacity(browserId)
+
+    val state: Map<String, Any>
+        get() = mapOf(
+            "id" to id,
+            "browserId" to browserId,
+            "proxyEntry" to (proxyEntry?.toString() ?: "null"),
+            "isActive" to isActive,
+            "isReady" to isReady,
+            "isFullCapacity" to isFullCapacity,
+            "isRetired" to isRetired,
+            "isIdle" to isIdle,
+            "isUnderLoaded" to isUnderLoaded,
+            "isLeaked" to isLeaked
+        )
 
     @Throws(ProxyVendorException::class, IllegalStateException::class)
     override suspend fun open(url: String): FetchResult {
