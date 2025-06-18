@@ -61,7 +61,7 @@ $systemTemp = [System.IO.Path]::GetTempPath()
 $userTemp = $env:LOCALAPPDATA + "\Temp"
 
 # Define patterns to match
-$patterns = @('tomcat', 'chrome', 'test')
+$patterns = @('tomcat', 'chrome', 'test', 'pkg-', '.jar', 'koltin', '.tmp', '.ps', '.ps1')
 
 Write-Host "Starting targeted temporary file cleanup..." -ForegroundColor Cyan
 Write-Host "Will only remove items containing: $($patterns -join ', ')" -ForegroundColor Cyan
