@@ -17,7 +17,7 @@ $version = $SNAPSHOT_VERSION -replace "-SNAPSHOT", ""
 
 $parts = $version -split "\."
 $PREFIX = $parts[0] + "." + $parts[1]
-$pattern = "^$PREFIX\.[0-9]+-ci\.[0-9]+$"
+$pattern = "^v$PREFIX\.[0-9]+-ci\.[0-9]+$"
 
 # Get all matching tags and sort them by version and ci number
 $tags = git tag --list | Where-Object { $_ -match "^$pattern$" }
