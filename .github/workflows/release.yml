@@ -18,7 +18,8 @@ on:
         type: boolean
 
 env:
-  IMAGE_NAME: galaxyeye88/pulsar-rpa
+  IMAGE_NAME: pulsar-rpa
+  DOCKER_USERNAME: galaxyeye88
   PRODUCTION_JAR_MODULE_NAME: 'pulsar-master'
   PRODUCTION_JAR_MODULE_PATH: 'pulsar-app/pulsar-master'
   PRODUCTION_JAR_NAME: 'PulsarRPA.jar'
@@ -265,8 +266,8 @@ jobs:
         if: success()
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker push $IMAGE_NAME:$VERSION
-          docker push $IMAGE_NAME:latest
+          docker push $DOCKER_USERNAME/$IMAGE_NAME:$VERSION
+          docker push $DOCKER_USERNAME/$IMAGE_NAME:latest
 
       - name: Push Docker Images to Github Container Registry
         if: success()
