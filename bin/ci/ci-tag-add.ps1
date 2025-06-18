@@ -13,27 +13,16 @@ Set-Location $AppHome
 
 # Get version information
 $SNAPSHOT_VERSION = Get-Content "$AppHome\VERSION" -TotalCount 1
-$VERSION = $SNAPSHOT_VERSION -replace "-SNAPSHOT", ""
+$version = $SNAPSHOT_VERSION -replace "-SNAPSHOT", ""
 
-$parts = $VERSION -split "\."
+$parts = $version -split "\."
 $PREFIX = $parts[0] + "." + $parts[1]
 $pattern = "^$PREFIX\.[0-9]+-ci\.[0-9]+$"
 
 # Get all matching tags and sort them by version and ci number
 $tags = git tag --list | Where-Object { $_ -match "^$pattern$" }
 if (-not $tags) {
-    # No matching tags, use VERSION file
-    if (Test-Path "VERSION") {
-        $version = Get-Content "VERSION" | Out-String
-        $version = $version.Trim()
-        if ($version.EndsWith("-SNAPSHOT")) {
-            $version = $version.Substring(0, $version.Length - 9)
-        }
-    } else {
-        Write-Error "No tags found and VERSION file does not exist."
-        exit 1
-    }
-    $newTag = "$version-ci.1"
+    $newTag = "v$version-ci.1"
     Write-Host "No existing tags found. Creating new tag: $newTag"
     git tag $newTag
     git push $remote $newTag
