@@ -73,7 +73,7 @@ echo $env:DEEPSEEK_API_KEY # 确保设置了大语言模型API密钥
 java -DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
 ```
 
-> 🔍 **提示：** 确保在环境中设置了 `DEEPSEEK_API_KEY`，否则AI功能将不可用。
+> 🔍 **提示：** 确保在环境中设置了 `DEEPSEEK_API_KEY` 或者其他提供商的 API KEY，否则AI功能将不可用。
 
 ---
 
