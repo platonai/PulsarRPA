@@ -76,7 +76,7 @@ open class BrowserPrivacyContext(
                     "leaked" to isLeaked
                 ).map { it.first to if (it.second) "✓" else "✗" }
                     .joinToString(",") { it.first + ":" + it.second }
-                throttlingLogger.info("Privacy context is retired | {} | #{} {}", state, id, browserId.display)
+                throttlingLogger.info("Privacy context is retired | {}", state)
             }
 
             return doRetired
@@ -98,7 +98,7 @@ open class BrowserPrivacyContext(
                     "leaked" to isLeaked
                 ).map { it.first to if (it.second) "✓" else "✗" }
                     .joinToString(",") { it.first + ":" + it.second }
-                throttlingLogger.info("Privacy context is not active | {} | #{} {}", state, id, browserId.display)
+                throttlingLogger.info("Privacy context is not active | {}", state)
             }
 
             return active

@@ -162,12 +162,20 @@ abstract class AbstractPrivacyContext(
         )
     }
 
-    override val readableState: String get() {
-        return state.entries.filter { it.value == true }.joinToString(",") { it.key }
-    }
+    override val readableState: String get() = formatState()
 
     init {
         globalMetrics.contexts.mark()
+    }
+
+    fun formatState(): String {
+        val booleanStates = state.entries.filter { it.value is Boolean }.filter { it.value == true }
+            .sortedBy { it.key }
+            .joinToString(",") { it.key }
+        val otherStates = state.entries.filter { it.value !is Boolean }
+            .sortedBy { it.key }
+            .joinToString(",") { "${it.key}:${it.value}" }
+        return "{$booleanStates,$otherStates}"
     }
 
     abstract override fun promisedWebDriverCount(): Int

@@ -1,10 +1,12 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.logging.ThrottlingLogger
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import com.google.common.annotations.Beta
+import java.time.Duration
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.ConcurrentSkipListSet
 
@@ -13,6 +15,7 @@ import java.util.concurrent.ConcurrentSkipListSet
  * */
 class ConcurrentStatefulDriverPoolPool {
     private val logger = getLogger(this)
+    private val throttlingLogger = ThrottlingLogger(logger, ttl = Duration.ofMinutes(3))
 
     private val _workingDriverPools = ConcurrentSkipListMap<BrowserId, LoadingWebDriverPool>()
     private val _retiredDriverPools = ConcurrentSkipListMap<BrowserId, LoadingWebDriverPool>()
@@ -46,7 +49,7 @@ class ConcurrentStatefulDriverPoolPool {
         val result = closedDriverPools.contains(browserId) || retiredDriverPools.containsKey(browserId)
 
         if (result) {
-            logger.info("Browser can not offer any drivers, will be closed (hasNoPossibility) | {}", browserId)
+            throttlingLogger.info("Browser can not offer any drivers, will be closed (hasNoPossibility) | {}", browserId)
         }
 
         return result
