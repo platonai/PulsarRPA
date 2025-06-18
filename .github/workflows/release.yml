@@ -99,13 +99,12 @@ jobs:
 
       - name: Build Docker image
         run: |
-          # Build with build args for better caching
           docker build \
             --build-arg VERSION=${{ env.VERSION }} \
             --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
             --build-arg VCS_REF=${{ github.sha }} \
-            -t $IMAGE_NAME:${{ env.VERSION }} \
-            -t $IMAGE_NAME:latest \
+            -t ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }} \
+            -t ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest \
             -f Dockerfile .
 
       - name: Start Docker container for testing
@@ -126,7 +125,7 @@ jobs:
             --health-interval=10s \
             --health-timeout=5s \
             --health-retries=5 \
-            $IMAGE_NAME:${{ env.VERSION }}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
 
           # Wait for container to be healthy
           echo "⏳ Waiting for container to be healthy..."
