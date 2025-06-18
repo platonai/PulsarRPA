@@ -1,8 +1,7 @@
 #!/usr/bin/env pwsh
 
 param(
-    [string]$remote = "origin",
-    [string]$pattern = "v[0-9]+.[0-9]+.[0-9]+-ci.[0-9]+"
+    [string]$remote = "origin"
 )
 
 # Find the first parent directory containing the VERSION file
@@ -11,6 +10,14 @@ while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
     $AppHome = Split-Path -Parent $AppHome
 }
 Set-Location $AppHome
+
+# Get version information
+$SNAPSHOT_VERSION = Get-Content "$AppHome\VERSION" -TotalCount 1
+$VERSION = $SNAPSHOT_VERSION -replace "-SNAPSHOT", ""
+
+$parts = $VERSION -split "\."
+$PREFIX = $parts[0] + "." + $parts[1]
+$pattern = "^$PREFIX\.[0-9]+-ci\.[0-9]+$"
 
 # Get all matching tags and sort them by version and ci number
 $tags = git tag --list | Where-Object { $_ -match "^$pattern$" }
