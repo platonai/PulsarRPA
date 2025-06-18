@@ -11,6 +11,7 @@ import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The factory to create models.
@@ -20,13 +21,69 @@ object ChatModelFactory {
     private val throttlingLogger = ThrottlingLogger(logger, ttl = Duration.ofHours(4))
     private val models = ConcurrentHashMap<String, ChatModel>()
 
+    private val llmGuideReported = AtomicBoolean(false)
+    const val DOCUMENT_PATH = "https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/llm-config.md"
+    const val LLM_GUIDE =
+"""
+The LLM is not configured, the LLM feature is disabled.
+
+Simple guide to configure LLM:
+
+### Linux/MacOS
+
+Make sure the environment variable is set:
+
+```bash
+echo ${'$'}DEEPSEEK_API_KEY # make sure the environment variable is set
+```
+
+Run PulsarRPA with the environment variable:
+
+```bash
+java -DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+```
+
+Or run PulsarRPA with Docker:
+
+```bash
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
+```
+
+### Windows
+
+Make sure the environment variable is set:
+
+```powershell
+echo ${'$'}env:DEEPSEEK_API_KEY
+```
+
+Run PulsarRPA with the environment variable:
+
+```powershell
+java -DEEPSEEK_API_KEY=${'$'}env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
+```
+
+Or run PulsarRPA with Docker:
+
+```powershell
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${'$'}env:DEEPSEEK_API_KEY galaxyeye88/pulsar-rpa:latest
+```
+
+For more details, please refer to the [LLM configuration documentation]($DOCUMENT_PATH)
+"""
+
     fun isModelConfigured(conf: ImmutableConfig, verbose: Boolean = true): Boolean {
         if (!isModelConfigured0(conf)) {
             if (verbose && !hasModel(conf)) {
-                val documentPath = "docs/config/llm/llm-config.md"
-                val message = "The LLM is not configured. Please review the documentation for " +
-                        "configuration instructions: $documentPath"
-                throttlingLogger.info(message)
+                if (llmGuideReported.get()) {
+                    val message = "The LLM is not configured, the LLM feature is disabled. " +
+                            "See docs/config/llm/llm-config.md for more details."
+                    throttlingLogger.info(message)
+                }
+
+                if (llmGuideReported.compareAndSet(false, true)) {
+                    throttlingLogger.info(LLM_GUIDE)
+                }
             }
             return false
         }
