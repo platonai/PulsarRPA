@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # 🔍 Find the first parent directory containing the VERSION file
-APP_HOME=$(dirname $(readlink -f $0))
-while [ ! -f "$APP_HOME/VERSION" ] && [ "$APP_HOME" != "/" ]; do
+APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
+while [[ ! -f "$APP_HOME/VERSION" && "$APP_HOME" != "/" ]]; do
   APP_HOME=$(dirname "$APP_HOME")
 done
-cd "$APP_HOME" || exit 1
+[[ -f "$APP_HOME/VERSION" ]] && cd "$APP_HOME" || exit
 
 echo "🔄 Updating PulsarRPA documentation..."
 echo "📅 Current Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
