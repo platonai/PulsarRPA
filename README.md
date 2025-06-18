@@ -57,13 +57,19 @@ Find all links containing /dp/.
 
 ```bash
 # For Linux/macOS/Windows (with curl)
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.11/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.10/PulsarRPA.jar
 ```
 
 #### 🚀 Run
 
 ```bash
+echo $DEEPSEEK_API_KEY
 java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+```
+
+```powershell
+echo $env:DEEPSEEK_API_KEY
+java -DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
 ```
 
 > 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` is set in your environment, or AI features will not be available.
@@ -73,7 +79,7 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 <details>
 <summary>📂 Resources</summary>
 
-* 🟦 [GitHub Release Download](https://github.com/platonai/PulsarRPA/releases/download/v3.0.11/PulsarRPA.jar)
+* 🟦 [GitHub Release Download](https://github.com/platonai/PulsarRPA/releases/download/v3.0.10/PulsarRPA.jar)
 * 📁 [Mirror / Backup Download](https://static.platonai.cn/repo/ai/platon/pulsar/)
 * 🛠️ [LLM Configuration Guide](docs/config/llm/llm-config.md)
 * 🛠️ [Configuration Guide](docs/config.md)
@@ -94,7 +100,13 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 <details>
 
 ```shell
+echo $DEEPSEEK_API_KEY
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
+```
+
+```powershell
+echo $env:DEEPSEEK_API_KEY
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY galaxyeye88/pulsar-rpa:latest
 ```
 
 </details>

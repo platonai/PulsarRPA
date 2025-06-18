@@ -55,13 +55,19 @@
 
 ```bash
 # 适用于Linux/macOS/Windows(使用curl)
-curl -L -o PulsarRPA.jar /v3.0.11/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.10/PulsarRPA.jar
 ```
 
 #### 🚀 运行
 
 ```bash
+echo $DEEPSEEK_API_KEY
 java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+```
+
+```powershell
+echo $env:DEEPSEEK_API_KEY
+java -DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
 ```
 
 > 🔍 **提示：** 确保在环境中设置了`DEEPSEEK_API_KEY`，否则AI功能将不可用。
@@ -92,7 +98,13 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 <details>
 
 ```shell
+echo $DEEPSEEK_API_KEY
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
+```
+
+```powershell
+echo $env:DEEPSEEK_API_KEY
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY galaxyeye88/pulsar-rpa:latest
 ```
 
 </details>

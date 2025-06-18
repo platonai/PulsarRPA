@@ -44,6 +44,10 @@ object ChatModelFactory {
      */
     @Throws(IllegalArgumentException::class)
     fun getOrCreate(conf: ImmutableConfig): ChatModel {
+        if (!isModelConfigured(conf, verbose = false)) {
+            throw IllegalArgumentException("The LLM is not configured, see docs/config/llm/llm-config.md")
+        }
+
         // Notice: all keys are transformed to dot.separated.kebab-case using KStrings.toDotSeparatedKebabCase(),
         // so the following keys are equal:
         // - DEEPSEEK_API_KEY, deepseek.apiKey, deepseek.api-key
@@ -112,27 +116,29 @@ object ChatModelFactory {
     }
 
     private fun isModelConfigured0(conf: ImmutableConfig): Boolean {
-        // deepseek official
-        val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
-        if (deepseekAPIKey != null) {
-            return true
+        val minKeyLen = 5
+
+        // 按顺序检查所有可能的API密钥配置
+        val apiKeyConfigs = listOf(
+            "DEEPSEEK_API_KEY",
+            "VOLCENGINE_API_KEY",
+            "OPENAI_API_KEY"
+        )
+
+        // 如果任何一个主流API密钥配置有效，直接返回true
+        apiKeyConfigs.forEach { keyName ->
+            val apiKey = conf[keyName] ?: ""
+            if (apiKey.length > minKeyLen) {
+                return true
+            }
         }
 
-        val volcengineAPIKey = conf["VOLCENGINE_API_KEY"]
-        if (volcengineAPIKey != null) {
-            return true
-        }
-
-        val openaiAPIKey = conf["OPENAI_API_KEY"]
-        if (openaiAPIKey != null) {
-            return true
-        }
-
+        // 检查传统配置方式
         val provider = conf[LLM_PROVIDER]
         val llm = conf[LLM_NAME]
-        val apiKey = conf[LLM_API_KEY]
+        val apiKey = conf[LLM_API_KEY] ?: ""
 
-        return provider != null && llm != null && apiKey != null
+        return provider != null && llm != null && apiKey.length > minKeyLen
     }
 
     private fun getOrCreateModel0(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
