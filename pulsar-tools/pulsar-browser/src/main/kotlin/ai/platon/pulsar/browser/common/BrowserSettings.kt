@@ -194,15 +194,6 @@ open class BrowserSettings constructor(
 // withTemporaryBrowser 系列
 // ────────────────────────────────────────────────────────────────────────────────
 
-        @JvmStatic
-        fun withTemporaryBrowser(): Companion = withTemporaryBrowserInternal(BrowserType.PULSAR_CHROME)
-
-        @Deprecated("Use withBrowserContextMode instead, this method will be a private method",
-            ReplaceWith("withBrowserContextMode(contextMode, browserType)"))
-        fun withTemporaryBrowser(browserType: BrowserType): Companion {
-            return withTemporaryBrowserInternal(browserType)
-        }
-
         private fun withTemporaryBrowserInternal(browserType: BrowserType): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.RandomPrivacyAgentGenerator"
             System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
