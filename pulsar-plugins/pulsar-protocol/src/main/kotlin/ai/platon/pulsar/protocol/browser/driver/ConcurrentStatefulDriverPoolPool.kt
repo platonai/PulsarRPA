@@ -49,9 +49,9 @@ class ConcurrentStatefulDriverPoolPool {
         val result = closedDriverPools.contains(browserId) || retiredDriverPools.containsKey(browserId)
 
         if (result) {
-            val driverClosed = closedDriverPools.contains(browserId)
-            val driverRetired = retiredDriverPools.containsKey(browserId)
-            val state = listOf("driverClosed" to driverClosed, "driverRetired" to driverRetired)
+            val driverPoolClosed = closedDriverPools.contains(browserId)
+            val driverPoolRetired = retiredDriverPools.containsKey(browserId)
+            val state = listOf("closed" to driverPoolClosed, "retired" to driverPoolRetired)
                 .filter { it.second }
                 .joinToString(",") { it.first }
             throttlingLogger.info("Browser can not offer any drivers, will be closed (hasNoPossibility) | {} | {}", state, browserId)
