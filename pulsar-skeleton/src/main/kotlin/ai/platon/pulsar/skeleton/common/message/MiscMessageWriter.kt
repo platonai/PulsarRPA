@@ -28,20 +28,4 @@ class MiscMessageWriter: MultiSinkWriter() {
     fun debugLongUrls(report: String) {
         write(report, "urls-long.txt")
     }
-
-    fun reportFetchSchedule(page: WebPage, verbose: Boolean) {
-        var report = FetchStatusFormatter(page).toString()
-        if (verbose) {
-            report = page.referrer + " -> " + page.url + "\n" + report
-            report += "\n" + page + "\n\n"
-        }
-
-        val prefix = if (verbose) "verbose-" else ""
-        val category = page.pageCategory.name.lowercase(Locale.getDefault())
-        write(report, prefix + "fetch-schedule-$category.txt")
-    }
-
-    fun reportBadModifiedTime(report: String) {
-        write(report, "bad-modified-urls.txt")
-    }
 }

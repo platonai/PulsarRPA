@@ -91,7 +91,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
         return true
     }
 
-    fun hasModel(conf: ImmutableConfig) = isModelConfigured0(conf)
+    fun hasModel(conf: ImmutableConfig) = isModelConfigured(conf)
 
     /**
      * Create a default model.
