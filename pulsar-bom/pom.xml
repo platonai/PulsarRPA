@@ -57,7 +57,7 @@
         <connection>scm:git:https://github.com/platonai/PulsarRPA.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/PulsarRPA.git</developerConnection>
         <url>https://github.com/platonai/PulsarRPA</url>
-        <tag>v3.0.11-SNAPSHOT</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <repositories>
