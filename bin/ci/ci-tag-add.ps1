@@ -35,7 +35,7 @@ if (-not $tags) {
 $latestTag = $tags | Sort-Object {
     # Extract version and CI number for sorting
     if ($_ -match "^v(\d+)\.(\d+)\.(\d+)-ci\.(\d+)$") {
-        return [int]$matches[1]*1000000 + [int]$matches[2]*1000 + [int]$matches[3]*10 + [int]$matches[4]
+        return [int]$matches[1]*1000000 + [int]$matches[2]*10000 + [int]$matches[3]*100 + [int]$matches[4]
     }
     return 0
 } -Descending | Select-Object -First 1
