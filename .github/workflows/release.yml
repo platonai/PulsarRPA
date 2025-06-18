@@ -19,6 +19,8 @@ on:
 
 env:
   IMAGE_NAME: pulsar-rpa
+  CONTAINER_NAME: pulsar-rpa
+  NETWORK_NAME: 'pulsarrpa_backend'
   DOCKER_USERNAME: galaxyeye88
   PRODUCTION_JAR_MODULE_NAME: 'pulsar-master'
   PRODUCTION_JAR_MODULE_PATH: 'pulsar-app/pulsar-master'
@@ -49,7 +51,6 @@ jobs:
       - name: Extract version from tag
         id: tag
         run: |
-          # Your current version doesn't handle workflow_dispatch properly
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             TAG="${{ github.event.inputs.tag }}"
           else
@@ -57,7 +58,6 @@ jobs:
           fi
           VERSION=${TAG#v}
           
-          # Missing version validation
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
             echo "❌ Invalid version format: $VERSION"
             exit 1
@@ -98,7 +98,7 @@ jobs:
             -t $IMAGE_NAME:latest \
             -f Dockerfile .
 
-      - name: Test Docker container
+      - name: Start Docker container
         if: success() && github.event.inputs.skip_tests != 'true'
         run: |
           echo "🧪 Testing Docker container..."
@@ -129,7 +129,7 @@ jobs:
           application_url: 'http://localhost:8182'
           network_name: ${{ env.NETWORK_NAME }}
           container_name: ${{ env.CONTAINER_NAME }}
-          timeout_seconds: '1200'
+          timeout_seconds: '600'
 
       - name: Build PulsarRPA JAR
         if: success()
@@ -187,46 +187,14 @@ jobs:
           echo "::endgroup::"
 
       - name: Create Release Notes
-        run: |
-          echo "::group::📝 Generating Release Notes"
-          
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          
-          if [ -n "$PREV_TAG" ]; then
-            echo "📋 Changes since $PREV_TAG:"
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$PREV_TAG"..HEAD)
-          else
-            echo "📋 Initial release changes:"
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" HEAD~10..HEAD)
-          fi
-          
-          JAR_SIZE=$(stat -c%s "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null || echo 0)
-          
-          cat > release_notes.md << EOF
-          ## Release ${{ env.VERSION }}
-          
-          ### 📦 Artifacts
-          - **JAR File**: \`${{ steps.get_uberjar.outputs.uberjar_file }}\`
-          - **Size**: $(numfmt --to=iec --suffix=B $JAR_SIZE)
-          - **Java Version**: 17+
-          
-          ### 🔄 Changes
-          $CHANGELOG
-          
-          ### 🚀 Usage
-          \`\`\`bash
-          # LLM features enabled
-          java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar ${{ steps.get_uberjar.outputs.uberjar_file }}
-          # No LLM features
-          java -jar ${{ steps.get_uberjar.outputs.uberjar_file }}
-          \`\`\`
-          
-          Built on $(date -u +'%Y-%m-%d %H:%M:%S UTC')
-          EOF
-          
-          echo "Generated release notes:"
-          cat release_notes.md
-          echo "::endgroup::"
+        uses: ./.github/actions/create-release-notes
+        id: release-notes
+        with:
+          version: ${{ env.VERSION }}
+          jar_name: ${{ steps.get_uberjar.outputs.uberjar_file }}
+          jar_path: ${{ steps.get_uberjar.outputs.uberjar_path }}
+          java_version: ${{ env.JAVA_VERSION }}+
+          output_file: release_notes.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

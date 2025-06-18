@@ -1,0 +1,84 @@
+name: 'Create Release Notes'
+description: 'Generates comprehensive release notes from git history'
+inputs:
+  version:
+    description: 'The current version being released'
+    required: true
+  jar_name:
+    description: 'Name of the JAR file artifact'
+    required: true
+  jar_path:
+    description: 'Full path to the JAR file'
+    required: true
+  java_version:
+    description: 'Required Java version for running the JAR'
+    required: false
+    default: '17+'
+  output_file:
+    description: 'Path where the release notes will be written'
+    required: false
+    default: 'release_notes.md'
+
+outputs:
+  release_notes_path:
+    description: 'Path to the generated release notes file'
+    value: ${{ steps.create-notes.outputs.release_notes_path }}
+  changelog:
+    description: 'Generated changelog content'
+    value: ${{ steps.create-notes.outputs.changelog }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Generate Release Notes
+      id: create-notes
+      shell: bash
+      run: |
+        echo "::group::📝 Generating Release Notes"
+        
+        PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        CHANGELOG=""
+        
+        if [ -n "$PREV_TAG" ]; then
+          echo "📋 Changes since $PREV_TAG:"
+          CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$PREV_TAG"..HEAD)
+        else
+          echo "📋 Initial release changes:"
+          CHANGELOG=$(git log --pretty=format:"- %s (%h)" HEAD~10..HEAD)
+        fi
+        
+        # Escape content for GitHub Actions output
+        CHANGELOG_ESCAPED="${CHANGELOG//'%'/'%25'}"
+        CHANGELOG_ESCAPED="${CHANGELOG_ESCAPED//$'\n'/'%0A'}"
+        CHANGELOG_ESCAPED="${CHANGELOG_ESCAPED//$'\r'/'%0D'}"
+        echo "changelog=$CHANGELOG_ESCAPED" >> $GITHUB_OUTPUT
+        
+        JAR_SIZE=$(stat -c%s "${{ inputs.jar_path }}" 2>/dev/null || echo 0)
+        
+        cat > ${{ inputs.output_file }} << EOF
+        ## Release ${{ inputs.version }}
+        
+        ### 📦 Artifacts
+        - **JAR File**: \`${{ inputs.jar_name }}\`
+        - **Size**: $(numfmt --to=iec --suffix=B $JAR_SIZE)
+        - **Java Version**: ${{ inputs.java_version }}
+        
+        ### 🔄 Changes
+        $CHANGELOG
+        
+        ### 🚀 Usage
+        \`\`\`bash
+        # LLM features enabled
+        java -DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} -jar ${{ inputs.jar_name }}
+        # No LLM features
+        java -jar ${{ inputs.jar_name }}
+        \`\`\`
+        
+        Built on $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+        EOF
+        
+        echo "release_notes_path=${{ inputs.output_file }}" >> $GITHUB_OUTPUT
+        
+        echo "Generated release notes:"
+        cat ${{ inputs.output_file }}
+        echo "::endgroup::"
