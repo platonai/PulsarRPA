@@ -78,7 +78,7 @@ public class GoraStorage {
             DataStore<K, V> dataStore = DataStoreFactory.createDataStore(dataStoreClass,
                     keyClass, persistentClass, conf, goraProperties, schema);
 
-            patchGoraMongoServers(conf);
+            // patchGoraMongoServers(conf);
 
             dataStores.put(realSchema, dataStore);
 
@@ -117,7 +117,7 @@ public class GoraStorage {
      * Patches the MongoDB servers configuration for Gora.
      * Enable environment variable or system property `GORA_MONGODB_SERVERS`
      * */
-    private static void patchGoraMongoServers(org.apache.hadoop.conf.Configuration conf) throws GoraException {
+    static void patchGoraMongoServers(org.apache.hadoop.conf.Configuration conf) throws GoraException {
         // Keep this assertion to remind us the real property name
         assert("gora.mongodb.servers".equals(MongoStoreParameters.PROP_MONGO_SERVERS));
 
