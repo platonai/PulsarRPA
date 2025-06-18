@@ -116,20 +116,19 @@ jobs:
           # Wait for container to be healthy
           echo "⏳ Waiting for container to be healthy..."
           timeout 120s bash -c 'until docker inspect --format="{{.State.Health.Status}}" pulsar-rpa-test | grep -q "healthy"; do sleep 5; done'
-
-          # Run integration tests
-          find bin/ -name "*.sh" -exec chmod +x {} \;
-          if ! timeout 300s ./bin/run-integration-test.sh; then
-            echo "❌ Integration test failed"
-            docker logs pulsar-rpa-test
-            docker stop pulsar-rpa-test || true
-            exit 1
-          fi
-
-          # Clean up
-          docker stop pulsar-rpa-test || true
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+      - name: Run Integration Tests
+        id: integration-tests
+        if: success()
+        uses: ./.github/actions/run-integration-tests
+        with:
+          script_path: './bin/run-integration-test.sh'
+          application_url: 'http://localhost:8182'
+          network_name: ${{ env.NETWORK_NAME }}
+          container_name: ${{ env.CONTAINER_NAME }}
+          timeout_seconds: '1200'
 
       - name: Build PulsarRPA JAR
         if: success()
@@ -282,3 +281,11 @@ jobs:
         if: success()
         run: |
           bin/release/update-documentation.sh
+
+      - name: Cleanup Resources
+        if: always()
+        uses: ./.github/actions/cleanup-resources
+        with:
+          container_name: ${{ env.CONTAINER_NAME }}
+          cleanup_compose: 'false'
+          cleanup_volumes: 'false'
