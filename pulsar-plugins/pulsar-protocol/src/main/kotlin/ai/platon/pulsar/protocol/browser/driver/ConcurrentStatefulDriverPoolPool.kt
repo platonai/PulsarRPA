@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentSkipListSet
  * */
 class ConcurrentStatefulDriverPoolPool {
     private val logger = getLogger(this)
-    private val throttlingLogger = ThrottlingLogger(logger, ttl = Duration.ofMinutes(3))
+    private val throttlingLogger = ThrottlingLogger(logger, ttl = Duration.ofMinutes(5))
 
     private val _workingDriverPools = ConcurrentSkipListMap<BrowserId, LoadingWebDriverPool>()
     private val _retiredDriverPools = ConcurrentSkipListMap<BrowserId, LoadingWebDriverPool>()
@@ -49,7 +49,12 @@ class ConcurrentStatefulDriverPoolPool {
         val result = closedDriverPools.contains(browserId) || retiredDriverPools.containsKey(browserId)
 
         if (result) {
-            throttlingLogger.info("Browser can not offer any drivers, will be closed (hasNoPossibility) | {}", browserId)
+            val driverClosed = closedDriverPools.contains(browserId)
+            val driverRetired = retiredDriverPools.containsKey(browserId)
+            val state = listOf("driverClosed" to driverClosed, "driverRetired" to driverRetired)
+                .filter { it.second }
+                .joinToString(",") { it.first }
+            throttlingLogger.info("Browser can not offer any drivers, will be closed (hasNoPossibility) | {} | {}", state, browserId)
         }
 
         return result
