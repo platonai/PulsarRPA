@@ -23,8 +23,8 @@ env:
   PRODUCTION_JAR_MODULE_PATH: 'pulsar-app/pulsar-master'
   PRODUCTION_JAR_NAME: 'PulsarRPA.jar'
   PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-master/target/PulsarRPA.jar'
-  DRAFT: true
-  PRERELEASE: true
+  JAVA_VERSION: '17'
+  MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
 
 jobs:
   build-and-release:
@@ -33,11 +33,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
 
       - name: Correct Permissions
         run: |
@@ -47,10 +48,23 @@ jobs:
       - name: Extract version from tag
         id: tag
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
+          # Your current version doesn't handle workflow_dispatch properly
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG=${GITHUB_REF#refs/tags/}
+          fi
           VERSION=${TAG#v}
+          
+          # Missing version validation
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "❌ Invalid version format: $VERSION"
+            exit 1
+          fi
+          
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "IS_PRERELEASE=${{ contains(VERSION, '-') }}" >> $GITHUB_ENV  # Dynamic prerelease detection
 
       - name: Update Version
         run: |
@@ -65,23 +79,48 @@ jobs:
 
       - name: Maven Build
         run: |
-          ./mvnw clean install -DskipTests -Pall-modules
+          SKIP_TESTS_FLAG=""
+          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
+            SKIP_TESTS_FLAG="-DskipTests"
+          fi
+          
+          ./mvnw clean install $SKIP_TESTS_FLAG -Pall-modules --batch-mode --show-version
 
       - name: Build Docker image
         run: |
-          docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest -f Dockerfile .
+          # Build with build args for better caching
+          docker build \
+            --build-arg VERSION=${{ env.VERSION }} \
+            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+            --build-arg VCS_REF=${{ github.sha }} \
+            -t $IMAGE_NAME:${{ env.VERSION }} \
+            -t $IMAGE_NAME:latest \
+            -f Dockerfile .
 
       - name: Test Docker container
-        if: success()
+        if: success() && github.event.inputs.skip_tests != 'true'
         run: |
-          # Start container
-          docker run -d --rm --name pulsar-rpa-test -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} $IMAGE_NAME:$VERSION
-          sleep 10  # Wait for Spring Boot to start
+          echo "🧪 Testing Docker container..."
+          
+          # Start container with health check
+          docker run -d --rm \
+            --name pulsar-rpa-test \
+            -p 8182:8182 \
+            -e DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }} \
+            --health-cmd="curl -f http://localhost:8182/actuator/health || exit 1" \
+            --health-interval=10s \
+            --health-timeout=5s \
+            --health-retries=3 \
+            $IMAGE_NAME:${{ env.VERSION }}
+
+          # Wait for container to be healthy
+          echo "⏳ Waiting for container to be healthy..."
+          timeout 120s bash -c 'until docker inspect --format="{{.State.Health.Status}}" pulsar-rpa-test | grep -q "healthy"; do sleep 5; done'
 
           # Run integration tests
           find bin/ -name "*.sh" -exec chmod +x {} \;
-          if ! ./bin/run-integration-test.sh; then
-            echo "Integration test failed"
+          if ! timeout 300s ./bin/run-integration-test.sh; then
+            echo "❌ Integration test failed"
             docker logs pulsar-rpa-test
             docker stop pulsar-rpa-test || true
             exit 1
@@ -111,18 +150,117 @@ jobs:
           fi
           echo "✅ $JAR_NAME.jar built successfully"
 
-      - name: Create GitHub Release
+      - name: Find and Validate JAR
+        id: get_uberjar
         if: success()
+        run: |
+          JAR_PATH=${{ env.PRODUCTION_JAR_PATH }}
+          JAR_NAME=${{ env.PRODUCTION_JAR_NAME }}
+
+          echo "::group::📦 JAR Discovery and Validation"
+
+          FOUND_JARS=("$JAR_PATH")
+
+          # Select the largest JAR (likely the uber jar)
+          UBERJAR_PATH=""
+          MAX_SIZE=0
+          
+          for jar in "${FOUND_JARS[@]}"; do
+            size=$(stat -c%s "$jar" 2>/dev/null || echo 0)
+            echo "📄 Found: $(basename "$jar") (${size} bytes)"
+            if [ "$size" -gt "$MAX_SIZE" ]; then
+              MAX_SIZE=$size
+              UBERJAR_PATH="$jar"
+            fi
+          done
+          
+          UBERJAR_FILE=$(basename "$UBERJAR_PATH")
+          
+          echo ""
+          echo "✅ Selected JAR: $UBERJAR_FILE"
+          echo "📍 Path: $UBERJAR_PATH"
+          echo "📏 Size: $MAX_SIZE bytes ($(numfmt --to=iec --suffix=B $MAX_SIZE))"
+
+          echo "uberjar_file=$UBERJAR_FILE" >> $GITHUB_OUTPUT
+          echo "uberjar_path=$UBERJAR_PATH" >> $GITHUB_OUTPUT
+          
+          echo "::endgroup::"
+
+      - name: Create Release Notes
+        run: |
+          echo "::group::📝 Generating Release Notes"
+          
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -n "$PREV_TAG" ]; then
+            echo "📋 Changes since $PREV_TAG:"
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$PREV_TAG"..HEAD)
+          else
+            echo "📋 Initial release changes:"
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" HEAD~10..HEAD)
+          fi
+          
+          JAR_SIZE=$(stat -c%s "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null || echo 0)
+          
+          cat > release_notes.md << EOF
+          ## Release ${{ env.VERSION }}
+          
+          ### 📦 Artifacts
+          - **JAR File**: \`${{ steps.get_uberjar.outputs.uberjar_file }}\`
+          - **Size**: $(numfmt --to=iec --suffix=B $JAR_SIZE)
+          - **Java Version**: 17+
+          
+          ### 🔄 Changes
+          $CHANGELOG
+          
+          ### 🚀 Usage
+          \`\`\`bash
+          # LLM features enabled
+          java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar ${{ steps.get_uberjar.outputs.uberjar_file }}
+          # No LLM features
+          java -jar ${{ steps.get_uberjar.outputs.uberjar_file }}
+          \`\`\`
+          
+          Built on $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+          EOF
+          
+          echo "Generated release notes:"
+          cat release_notes.md
+          echo "::endgroup::"
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          files: ${{ steps.get_uberjar.outputs.uberjar_path }}
           name: ${{ env.TAG }}
-          draft: ${{ env.DRAFT }}
-          prerelease: ${{ env.PRERELEASE }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ env.IS_PRERELEASE }}
           generate_release_notes: true
-          files: |
-            ${{ env.PRODUCTION_JAR_PATH }}
+          make_latest: ${{ env.IS_PRERELEASE == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Release
+        run: |
+          echo "::group::✅ Release Verification"
+          
+          JAR_SIZE=$(stat -c%s "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null || echo 0)
+          
+          echo "🎉 Release ${{ env.VERSION }} created successfully!"
+          echo ""
+          echo "📦 Release Details:"
+          echo "  - Tag: ${{ env.VERSION }}"
+          echo "  - JAR: ${{ steps.get_uberjar.outputs.uberjar_file }}"
+          echo "  - Size: $(numfmt --to=iec --suffix=B $JAR_SIZE)"
+          echo "  - Prerelease: ${{ contains(env.VERSION, '-') }}"
+          echo ""
+          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ env.VERSION }}"
+          echo ""
+          echo "📥 Download Command:"
+          echo "wget https://github.com/${{ github.repository }}/releases/download/${{ env.VERSION }}/${{ steps.get_uberjar.outputs.uberjar_file }}"
+          
+          echo "::endgroup::"
 
       - name: Push Docker Images to Docker Hub
         if: success()

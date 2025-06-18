@@ -11,13 +11,6 @@ echo "🔄 Updating PulsarRPA documentation..."
 echo "📅 Current Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 echo "👤 User: $USER"
 
-# Ensure we are on the master branch
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-if [[ "$CURRENT_BRANCH" != "master" ]]; then
-  echo "❌ Error: You are on branch '$CURRENT_BRANCH'. Please switch to 'master' branch."
-  exit 1
-fi
-
 # Check if VERSION file exists
 if [ ! -f "$APP_HOME/VERSION" ]; then
   echo "❌ Error: VERSION file not found in $APP_HOME"
@@ -93,3 +86,7 @@ echo "📤 To commit and push changes:"
 echo "   git add ${UPDATED_FILES[*]}"
 echo "   git commit -m 'docs: update documentation for version v$VERSION'"
 echo "   git push origin master"
+
+git add "${UPDATED_FILES[*]}"
+git commit -m "docs: update documentation for version v$VERSION"
+git push
