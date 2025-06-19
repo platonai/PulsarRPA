@@ -69,7 +69,7 @@ jobs:
         uses: ./.github/actions/run-tests
         with:
           maven_profiles: 'all-modules'
-          test_excludes: '**api/integration**'
+          test_excludes: '**integration**'
           timeout_minutes: '35'
 
       - name: Build Docker Image

@@ -13,7 +13,7 @@ inputs:
   test_excludes:
     description: 'Test patterns to exclude (Surefire format)'
     required: false
-    default: '**api/integration**'
+    default: '**integration**'
   test_includes:
     description: 'Test patterns to include (Surefire format)'
     required: false
