@@ -72,6 +72,13 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${'$'}env:DEEPSEEK_API_KEY galaxy
 For more details, please refer to the [LLM configuration documentation]($DOCUMENT_PATH)
 """
 
+    /**
+     * Check if the model is configured.
+     *
+     * @param conf The configuration to check.
+     * @param verbose Whether to log a message if the model is not configured.
+     * @return True if the model is configured, false otherwise.
+     */
     fun isModelConfigured(conf: ImmutableConfig, verbose: Boolean = true): Boolean {
         if (!isModelConfigured0(conf)) {
             if (verbose && !hasModel(conf)) {
@@ -91,7 +98,15 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
         return true
     }
 
-    fun hasModel(conf: ImmutableConfig) = isModelConfigured(conf)
+    /**
+     * Check if the model is configured.
+     *
+     * @param conf The configuration to check.
+     * @return True if the model is configured, false otherwise.
+     */
+    fun hasModel(conf: ImmutableConfig): Boolean {
+        return isModelConfigured0(conf)
+    }
 
     /**
      * Create a default model.
