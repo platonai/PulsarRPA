@@ -45,6 +45,12 @@ outputs:
   failed_count:
     description: 'Number of failed tests'
     value: ${{ steps.test-summary.outputs.failed_count }}
+  passed_count:
+    description: 'Number of passed tests'
+    value: ${{ steps.test-summary.outputs.passed_count }}
+  skipped_count:
+    description: 'Number of skipped tests'
+    value: ${{ steps.test-summary.outputs.skipped_count }}
 
 runs:
   using: "composite"
@@ -209,6 +215,8 @@ runs:
         # Set outputs
         echo "test_count=$total_tests" >> $GITHUB_OUTPUT
         echo "failed_count=$failed_tests" >> $GITHUB_OUTPUT
+        echo "passed_count=$passed_tests" >> $GITHUB_OUTPUT
+        echo "skipped_count=$skipped_tests" >> $GITHUB_OUTPUT
         
         # Generate test report summary
         if [ "${{ inputs.test_reports }}" == "true" ]; then

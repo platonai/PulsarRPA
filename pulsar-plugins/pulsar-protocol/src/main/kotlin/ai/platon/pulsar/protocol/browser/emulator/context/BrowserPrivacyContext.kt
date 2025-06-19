@@ -61,48 +61,9 @@ open class BrowserPrivacyContext(
         private set
     val proxyEntry get() = proxyContext?.proxyEntry
 
-    override val isRetired: Boolean
-        get() {
-            val doRetired = isRetired0
+    override val isRetired: Boolean get() = isRetired0
 
-            if (doRetired) {
-                val state = listOf(
-                    "ready" to isReady,
-                    "fullCapacity" to isFullCapacity,
-                    "proxyContextActive" to (proxyContext?.isActive ?: false),
-                    "proxyContextRetired" to (proxyContext?.isRetired ?: false),
-                    "driverContextActive" to driverContext.isActive,
-                    "driverContextRetired" to driverContext.isRetired,
-                    "leaked" to isLeaked
-                ).map { it.first to if (it.second) "✓" else "✗" }
-                    .joinToString(",") { it.first + ":" + it.second }
-                throttlingLogger.info("Privacy context is retired | {}", state)
-            }
-
-            return doRetired
-        }
-
-    override val isActive: Boolean
-        get() {
-            val active = isActive0
-
-            if (!active) {
-                val state = listOf(
-                    "ready" to isReady,
-                    "fullCapacity" to isFullCapacity,
-                    "retired" to isRetired0,
-                    "proxyContextRetired" to (proxyContext?.isRetired ?: false),
-                    "driverContextRetired" to driverContext.isRetired,
-                    "proxyContextActive" to (proxyContext?.isActive ?: false),
-                    "driverContextActive" to driverContext.isActive,
-                    "leaked" to isLeaked
-                ).map { it.first to if (it.second) "✓" else "✗" }
-                    .joinToString(",") { it.first + ":" + it.second }
-                throttlingLogger.info("Privacy context is not active | {}", state)
-            }
-
-            return active
-        }
+    override val isActive: Boolean get() = isActive0
 
     override val isReady: Boolean
         get() {
@@ -118,7 +79,6 @@ open class BrowserPrivacyContext(
             "id" to id,
             "browser" to browserId.display,
             "proxyEntry" to proxyEntry,
-            "isReady" to isReady,
             "isActive" to isActive0,
             "isFullCapacity" to isFullCapacity,
             "isRetired" to isRetired0

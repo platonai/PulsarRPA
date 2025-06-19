@@ -81,7 +81,6 @@ open class WebDriverContext(
 
         if (!active) {
             val state = listOf("closed" to closed.get(),
-                "appActive" to AppContext.isActive,
                 "hasPossibility" to driverPoolManager.hasPossibility(browserId)
             ).map { it.first to if (it.second) "✓" else "✗" }
                 .joinToString(",") { it.first + ":" + it.second }

@@ -80,6 +80,8 @@ jobs:
             echo "📊 Test Results:"
             echo "  - Total Tests: ${{ steps.run-tests.outputs.test_count }}"
             echo "  - Failed Tests: ${{ steps.run-tests.outputs.failed_count }}"
+            echo "  - Passed Tests: ${{ steps.run-tests.outputs.passed_count }}"
+            echo "  - Skipped Tests: ${{ steps.run-tests.outputs.skipped_count }}"
             exit 1
           else
             echo "✅ All tests passed successfully"

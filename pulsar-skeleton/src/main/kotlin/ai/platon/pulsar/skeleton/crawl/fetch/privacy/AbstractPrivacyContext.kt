@@ -135,19 +135,11 @@ abstract class AbstractPrivacyContext(
 
     override val isRetired get() = retired
 
-    override val isActive: Boolean get() {
-        val active = isActive0
-
-        if (!active) {
-            throttlingLogger.info("Privacy context is not active | {}", state)
-        }
-
-        return active
-    }
+    override val isActive: Boolean get() = isActive0
 
     override val isClosed get() = closed.get()
 
-    override val isReady get() = hasWebDriverPromise() && isActive
+    override val isReady get() = hasWebDriverPromise() && isActive0
 
     override val isFullCapacity = false
 
@@ -156,7 +148,7 @@ abstract class AbstractPrivacyContext(
     override val state: Map<String, Any?> get() {
         return mapOf(
             "id" to id, "seq" to seq, "display" to display, "startTime" to startTime,
-            "closed" to isClosed, "leaked" to isLeaked, "active" to isActive,
+            "closed" to isClosed, "leaked" to isLeaked, "active" to isActive0,
             "highFailure" to isHighFailureRate, "idle" to isIdle, "good" to isGood,
             "ready" to isReady, "retired" to isRetired
         )
