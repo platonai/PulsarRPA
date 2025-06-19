@@ -60,9 +60,12 @@ runs:
           exit 1
         fi
         
-        # Clean version (remove v prefix if present)
+        # Clean version
+        # remove v prefix if present
         VERSION=$(echo "$VERSION" | sed 's/^v//')
-        
+        # Remove -SNAPSHOT suffix if present
+        VERSION=$(echo "$VERSION" | sed 's/-SNAPSHOT$//')
+
         # Validate version format
         if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
           echo "❌ Error: Invalid version format: $VERSION"
