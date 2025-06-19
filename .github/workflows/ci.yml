@@ -64,7 +64,7 @@ jobs:
           timeout_minutes: '15'
 
       - name: Run Tests
-        id: tests
+        id: run-tests
         if: inputs.skip_tests != true
         uses: ./.github/actions/run-tests
         with:
