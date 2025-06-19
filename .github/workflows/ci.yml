@@ -72,6 +72,20 @@ jobs:
           test_excludes: '**integration**'
           timeout_minutes: '35'
 
+      - name: Check Test Status
+        if: always()
+        run: |
+          if [ "${{ steps.run-tests.outputs.test_status }}" != "success" ]; then
+            echo "❌ Tests failed with status: ${{ steps.run-tests.outputs.test_status }}"
+            echo "📊 Test Results:"
+            echo "  - Total Tests: ${{ steps.run-tests.outputs.test_count }}"
+            echo "  - Failed Tests: ${{ steps.run-tests.outputs.failed_count }}"
+            exit 1
+          else
+            echo "✅ All tests passed successfully"
+            echo "📊 Test Results: ${{ steps.run-tests.outputs.test_count }} tests passed"
+          fi
+
       - name: Build Docker Image
         id: build
         uses: ./.github/actions/docker-build
