@@ -273,3 +273,5 @@ jobs:
           files: '["README.md", "README-CN.md"]'
           commit_message: 'docs: update version references to v{version}'
           push_changes: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

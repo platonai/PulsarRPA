@@ -44,7 +44,7 @@ runs:
       id: update-docs
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ github.token }}  # ADD THIS LINE
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         set -euo pipefail
         
