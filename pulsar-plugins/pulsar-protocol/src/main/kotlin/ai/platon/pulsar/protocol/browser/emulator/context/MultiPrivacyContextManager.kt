@@ -211,6 +211,7 @@ open class MultiPrivacyContextManager(
      *
      * @param fingerprint The fingerprint of this privacy context.
      * @return A privacy context which is promised to be ready.
+     * @throws PrivacyException if no ready privacy context is available
      * */
     @Throws(PrivacyException::class)
     override fun tryGetNextReadyPrivacyContext(
@@ -247,6 +248,7 @@ open class MultiPrivacyContextManager(
      *
      * @param fingerprint The fingerprint of this privacy context.
      * @return A privacy context which is promised to be ready.
+     * @throws PrivacyException if no ready privacy context is available
      * */
     @Throws(PrivacyException::class)
     override fun tryGetNextUnderLoadedPrivacyContext(
@@ -270,7 +272,11 @@ open class MultiPrivacyContextManager(
                 getOrCreate(privacyAgent)
             }
 
-            return tryGetNextUnderLoadedPrivacyContext()
+            try {
+                return tryGetNextUnderLoadedPrivacyContext()
+            } catch (e: NoSuchElementException) {
+                throw PrivacyException("No under-loaded privacy context available", e)
+            }
         }
     }
 
@@ -355,7 +361,9 @@ open class MultiPrivacyContextManager(
      * to serve new tasks.
      *
      * @return A privacy context which is promised to be ready to serve a new task.
+     * @throws NoSuchElementException if no under-loaded privacy context is available
      * */
+    @Throws(NoSuchElementException::class)
     private fun tryGetNextUnderLoadedPrivacyContext(): PrivacyContext {
         var n = temporaryContexts.size
 
