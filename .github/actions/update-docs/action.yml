@@ -43,6 +43,8 @@ runs:
     - name: Update Documentation
       id: update-docs
       shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}  # ADD THIS LINE
       run: |
         set -euo pipefail
         
@@ -191,7 +193,9 @@ runs:
           git config --global user.email "${GITHUB_ACTOR:-github-actions}@users.noreply.github.com"
         
           # Add, commit and push changes
-          git add -- "${UPDATED_FILES[@]}"
+          for file in "${UPDATED_FILES[@]}"; do
+            git add -- "$file"
+          done
           git commit -m "$COMMIT_MSG"
           git push
         

@@ -17,6 +17,9 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: write  # Required for the update-docs action to push commits
+
 env:
   IMAGE_NAME: pulsar-rpa
   CONTAINER_NAME: pulsar-rpa
@@ -264,6 +267,7 @@ jobs:
 
       - name: Update Documentation
         uses: ./.github/actions/update-docs
+        if: success()
         with:
           version: ${{ env.VERSION }}
           files: '["README.md", "README-CN.md"]'
