@@ -74,7 +74,7 @@ class UriExtractor {
         URI_ATTRIBUTES.forEach { (tagName, attributes) ->
             document.select(tagName).forEach { element ->
                 attributes.forEach { attr ->
-                    element.attr(attr)?.takeIf { it.isNotBlank() }?.let { value ->
+                    element.attr(attr).takeIf { it.isNotBlank() }?.let { value ->
                         if (attr == "srcset") {
                             parseSrcset(value).forEach { uri -> uris.add(uri) }
                         } else {
@@ -89,14 +89,14 @@ class UriExtractor {
     private fun extractFromCss(document: FeaturedDocument, uris: MutableSet<String>) {
         // Extract from inline style attributes
         document.select("[style]").forEach { element ->
-            element.attr("style")?.let { style ->
+            element.attr("style").let { style ->
                 extractUrisFromCss(style).forEach { uri -> uris.add(uri) }
             }
         }
 
         // Extract from <style> tags
         document.select("style").forEach { styleElement ->
-            styleElement.data()?.let { cssContent ->
+            styleElement.data().let { cssContent ->
                 extractUrisFromCss(cssContent).forEach { uri -> uris.add(uri) }
             }
         }

@@ -64,13 +64,29 @@ jobs:
           timeout_minutes: '15'
 
       - name: Run Tests
-        id: tests
+        id: run-tests
         if: inputs.skip_tests != true
         uses: ./.github/actions/run-tests
         with:
           maven_profiles: 'all-modules'
-          test_excludes: '**api/integration**'
+          test_excludes: '**integration**'
           timeout_minutes: '35'
+
+      - name: Check Test Status
+        if: always()
+        run: |
+          if [ "${{ steps.run-tests.outputs.test_status }}" != "success" ]; then
+            echo "❌ Tests failed with status: ${{ steps.run-tests.outputs.test_status }}"
+            echo "📊 Test Results:"
+            echo "  - Total Tests: ${{ steps.run-tests.outputs.test_count }}"
+            echo "  - Failed Tests: ${{ steps.run-tests.outputs.failed_count }}"
+            echo "  - Passed Tests: ${{ steps.run-tests.outputs.passed_count }}"
+            echo "  - Skipped Tests: ${{ steps.run-tests.outputs.skipped_count }}"
+            exit 1
+          else
+            echo "✅ All tests passed successfully"
+            echo "📊 Test Results: ${{ steps.run-tests.outputs.passed_count }} tests passed"
+          fi
 
       - name: Build Docker Image
         id: build

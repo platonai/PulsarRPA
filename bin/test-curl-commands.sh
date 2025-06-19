@@ -244,7 +244,7 @@ run_curl_test() {
   local final_command=$(substitute_urls "$curl_command")
   local full_command="$final_command --max-time $TIMEOUT_SECONDS -w '%{http_code}\\n%{time_total}\\n%{size_download}\\n%{url_effective}' -o response.txt -s"
 
-  vlog "Executing: $(echo "$full_command" | head -c 150)..."
+  vlog "Executing: \n$(echo "$full_command" | head -c 1500)"
 
   # Temp files
   local response_file

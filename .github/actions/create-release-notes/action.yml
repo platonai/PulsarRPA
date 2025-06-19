@@ -1,0 +1,109 @@
+name: 'Create Release Notes'
+description: 'Generate comprehensive release notes'
+inputs:
+  version:
+    description: 'Release version'
+    required: true
+  jar_name:
+    description: 'JAR file name'
+    required: true
+  jar_path:
+    description: 'JAR file path'
+    required: true
+  java_version:
+    description: 'Java version requirement'
+    required: true
+  output_file:
+    description: 'Output file name'
+    required: true
+    default: 'release_notes.md'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Generate Release Notes
+      shell: bash
+      run: |
+        echo "📝 Generating release notes..."
+        
+        # Get previous tag for changelog
+        PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        
+        # Get JAR size
+        JAR_SIZE=$(stat -c%s "${{ inputs.jar_path }}" 2>/dev/null || echo 0)
+        JAR_SIZE_HUMAN=$(numfmt --to=iec --suffix=B $JAR_SIZE)
+        
+        # Get commit count and contributors
+        if [ -n "$PREV_TAG" ]; then
+          COMMIT_COUNT=$(git rev-list --count "$PREV_TAG"..HEAD 2>/dev/null || echo "0")
+          CHANGELOG=$(git log --pretty=format:"- %s ([%h](https://github.com/${{ github.repository }}/commit/%H))" "$PREV_TAG"..HEAD)
+          CHANGELOG_LINK="[${PREV_TAG}...v${{ inputs.version }}](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${{ inputs.version }})"
+        else
+          COMMIT_COUNT=$(git rev-list --count HEAD~10..HEAD 2>/dev/null || echo "0")
+          CHANGELOG=$(git log --pretty=format:"- %s ([%h](https://github.com/${{ github.repository }}/commit/%H))" HEAD~10..HEAD)
+          CHANGELOG_LINK="Initial release"
+        fi
+        
+        CONTRIBUTOR_COUNT=$(git shortlog -sn ${PREV_TAG:+$PREV_TAG..}HEAD | wc -l)
+        BUILD_DATE=$(date -u +'%Y-%m-%d %H:%M:%S UTC')
+        
+        # Create release notes
+        cat > ${{ inputs.output_file }} << EOF
+        # 🚀 PulsarRPA v${{ inputs.version }} Release Notes
+
+        **Release Date:** $BUILD_DATE  
+        **Java Version:** ${{ inputs.java_version }}
+        **Built by:** @${{ github.actor }}
+
+        ---
+
+        ## 📦 Release Highlights
+
+        ### 📊 Release Statistics
+        | Metric | Value |
+        |--------|-------|
+        | 📁 **JAR Size** | $JAR_SIZE_HUMAN |
+        | 📝 **Commits** | $COMMIT_COUNT |
+        | 👥 **Contributors** | $CONTRIBUTOR_COUNT |
+        | 🏗️ **Build Date** | $BUILD_DATE |
+
+        ### 🔄 Changes Since Last Release
+        $CHANGELOG
+
+        ---
+
+        ## 🚀 Quick Start
+
+        ### 📥 Download & Run
+        \`\`\`bash
+        # Download
+        wget https://github.com/${{ github.repository }}/releases/download/v${{ inputs.version }}/${{ inputs.jar_name }}
+
+        # Run with AI features
+        java -DDEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} -jar ${{ inputs.jar_name }}
+
+        # Run basic features
+        java -jar ${{ inputs.jar_name }}
+        \`\`\`
+
+        ### 🐳 Docker
+        \`\`\`bash
+        # Docker Hub
+        docker pull galaxyeye88/pulsar-rpa:${{ inputs.version }}
+        docker run -p 8182:8182 -e DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:${{ inputs.version }}
+
+        # GitHub Container Registry
+        docker pull ghcr.io/${{ github.repository_owner }}/pulsar-rpa:${{ inputs.version }}
+        \`\`\`
+
+        ---
+
+        ## 📄 Full Changelog
+        $CHANGELOG_LINK
+
+        ---
+
+        *Built with ❤️ by the PulsarRPA team*
+        EOF
+        
+        echo "✅ Release notes generated: ${{ inputs.output_file }}"

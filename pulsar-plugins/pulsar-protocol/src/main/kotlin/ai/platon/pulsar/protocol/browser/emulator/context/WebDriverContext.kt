@@ -17,6 +17,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.logging.ThrottlingLogger
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_FAST_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_SAFE_CLOSE_TIME_OUT
@@ -57,7 +58,8 @@ open class WebDriverContext(
         }
     }
 
-    private val logger = LoggerFactory.getLogger(WebDriverContext::class.java)!!
+    private val logger = LoggerFactory.getLogger(WebDriverContext::class.java)
+    private val throttlingLogger = ThrottlingLogger(logger)
     private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
     private val lock = ReentrantLock()
     private val notBusy = lock.newCondition()
@@ -75,7 +77,17 @@ open class WebDriverContext(
      * 3. the browser is not in closed pool nor in retired pool
      * */
     open val isActive: Boolean get() {
-        return !closed.get() && AppContext.isActive && driverPoolManager.hasPossibility(browserId)
+        val active = !closed.get() && AppContext.isActive && driverPoolManager.hasPossibility(browserId)
+
+        if (!active) {
+            val state = listOf("closed" to closed.get(),
+                "hasPossibility" to driverPoolManager.hasPossibility(browserId)
+            ).map { it.first to if (it.second) "✓" else "✗" }
+                .joinToString(",") { it.first + ":" + it.second }
+            throttlingLogger.info("WebDriverContext is not active | $state | ${browserId.contextDir}")
+        }
+
+        return active
     }
     /**
      * Check if the driver context is retired.
@@ -89,6 +101,18 @@ open class WebDriverContext(
             val isDriverPoolReady = driverPoolManager.isReady && driverPoolManager.hasDriverPromise(browserId)
             return isActive && isDriverPoolReady
         }
+
+    val state: Map<String, Any>
+        get() = mapOf(
+            "browserId" to browserId,
+            "isActive" to isActive,
+            "isRetired" to isRetired,
+            "isReady" to isReady,
+            "runningTasks" to runningTasks.size,
+            "numGlobalRunningTasks" to numGlobalRunningTasks.get(),
+            "globalTasksCount" to globalTasks.count,
+            "globalFinishedTasksCount" to globalFinishedTasks.count
+        )
 
     /**
      * Run a web driver task.

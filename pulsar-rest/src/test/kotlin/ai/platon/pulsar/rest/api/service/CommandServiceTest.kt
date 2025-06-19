@@ -1,6 +1,8 @@
 package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
+import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.common.browser.BrowserContextMode
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
@@ -21,9 +23,6 @@ import kotlin.test.assertTrue
 class CommandServiceTest {
 
     @Autowired
-    private lateinit var chatService: ChatService
-
-    @Autowired
     private lateinit var conf: ImmutableConfig
 
     @Autowired
@@ -32,6 +31,7 @@ class CommandServiceTest {
     @BeforeEach
     fun setup() {
         Assumptions.assumeTrue(ChatModelFactory.isModelConfigured(conf))
+        BrowserSettings.withBrowserContextMode(BrowserContextMode.TEMPORARY)
     }
 
     @Test

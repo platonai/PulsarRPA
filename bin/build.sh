@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Find the first parent directory containing the VERSION file
-AppHome=$(dirname "$(readlink -f "$0")")
-while [[ "$AppHome" != "/" && ! -f "$AppHome/VERSION" ]]; do
-  AppHome=$(dirname "$AppHome")
+# Find the first parent directory that contains a VERSION file
+APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
+while [[ ! -f "$APP_HOME/VERSION" && "$APP_HOME" != "/" ]]; do
+  APP_HOME=$(dirname "$APP_HOME")
 done
-cd "$AppHome" || exit
+[[ -f "$APP_HOME/VERSION" ]] && cd "$APP_HOME" || exit
 
 function printUsage {
   echo "Usage: build.sh [-clean|-test]"

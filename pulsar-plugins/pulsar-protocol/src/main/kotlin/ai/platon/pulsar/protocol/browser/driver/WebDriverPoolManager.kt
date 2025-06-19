@@ -167,15 +167,6 @@ open class WebDriverPoolManager(
     fun isRetiredPool(browserId: BrowserId) = driverPoolPool.isRetiredPool(browserId)
 
     /**
-     * Run the task using the default browser.
-     * */
-    @Throws(WebDriverException::class, WebDriverPoolException::class)
-    suspend fun run(task: FetchTask, browseFun: suspend (driver: WebDriver) -> FetchResult?) =
-        run(WebDriverTask(BrowserId.DEFAULT, task.page, task.priority, browseFun))
-
-    /**
-     * TODO: consider pro-actor model instead
-     *
      * reactor: tell me if you can do this job
      * pro-actor: here is a job, tell me if you finished it
      *

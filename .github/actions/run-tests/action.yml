@@ -13,7 +13,7 @@ inputs:
   test_excludes:
     description: 'Test patterns to exclude (Surefire format)'
     required: false
-    default: '**api/integration**'
+    default: '**integration**'
   test_includes:
     description: 'Test patterns to include (Surefire format)'
     required: false
@@ -45,6 +45,12 @@ outputs:
   failed_count:
     description: 'Number of failed tests'
     value: ${{ steps.test-summary.outputs.failed_count }}
+  passed_count:
+    description: 'Number of passed tests'
+    value: ${{ steps.test-summary.outputs.passed_count }}
+  skipped_count:
+    description: 'Number of skipped tests'
+    value: ${{ steps.test-summary.outputs.skipped_count }}
 
 runs:
   using: "composite"
@@ -154,12 +160,15 @@ runs:
         passed_tests=0
         skipped_tests=0
         
-        # Parse Surefire reports
-        if find . -name "TEST-*.xml" -type f | head -1 > /dev/null 2>&1; then
+        # Parse Surefire reports - using a more reliable way to check for test files
+        TEST_FILES_EXIST=0
+        find . -name "TEST-*.xml" -type f -print -quit | grep -q . && TEST_FILES_EXIST=1
+        
+        if [ $TEST_FILES_EXIST -eq 1 ]; then
           echo "📊 Parsing test reports..."
           
-          # Count tests from XML reports
-          for xml_file in $(find . -name "TEST-*.xml" -type f); do
+          # Count tests from XML reports - using a safer approach
+          while IFS= read -r xml_file; do
             if [ -f "$xml_file" ]; then
               tests=$(grep -o 'tests="[0-9]*"' "$xml_file" | cut -d'"' -f2 || echo "0")
               failures=$(grep -o 'failures="[0-9]*"' "$xml_file" | cut -d'"' -f2 || echo "0")
@@ -170,7 +179,7 @@ runs:
               failed_tests=$((failed_tests + failures + errors))
               skipped_tests=$((skipped_tests + skipped))
             fi
-          done
+          done < <(find . -name "TEST-*.xml" -type f)
           
           passed_tests=$((total_tests - failed_tests - skipped_tests))
           
@@ -184,15 +193,24 @@ runs:
           if [ $failed_tests -gt 0 ]; then
             echo ""
             echo "❌ Failed Tests:"
-            # Avoid broken pipe error by not mixing -o with -exec and piping into while-read
-            find . -name "TEST-*.xml" -type f \
-              -exec grep -l 'failures="[1-9]' {} \; \
-              -exec grep -l 'errors="[1-9]' {} \; 2>/dev/null | \
-              sort | uniq | \
-              while read xml_file; do
+            
+            # Store files in a temporary file to avoid pipe issues
+            tmp_failed_files=$(mktemp)
+            
+            # Find files with failures or errors
+            find . -name "TEST-*.xml" -type f -exec grep -l 'failures="[1-9]' {} \; 2>/dev/null > "$tmp_failed_files" || true
+            find . -name "TEST-*.xml" -type f -exec grep -l 'errors="[1-9]' {} \; 2>/dev/null >> "$tmp_failed_files" || true
+            
+            # Process each file
+            if [ -s "$tmp_failed_files" ]; then
+              sort "$tmp_failed_files" | uniq | while read -r xml_file; do
                 test_class=$(basename "$xml_file" .xml | sed 's/TEST-//')
                 echo "  - $test_class"
-              done || true
+              done
+            fi
+            
+            # Clean up
+            rm -f "$tmp_failed_files"
           fi
           
         else
@@ -209,6 +227,8 @@ runs:
         # Set outputs
         echo "test_count=$total_tests" >> $GITHUB_OUTPUT
         echo "failed_count=$failed_tests" >> $GITHUB_OUTPUT
+        echo "passed_count=$passed_tests" >> $GITHUB_OUTPUT
+        echo "skipped_count=$skipped_tests" >> $GITHUB_OUTPUT
         
         # Generate test report summary
         if [ "${{ inputs.test_reports }}" == "true" ]; then

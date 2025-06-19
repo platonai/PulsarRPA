@@ -12,13 +12,6 @@ Write-Host "🔄 Updating PulsarRPA documentation..."
 Write-Host "📅 Current Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')"
 Write-Host "👤 User: $env:USERNAME"
 
-# 确保在 master 分支
-$CURRENT_BRANCH = git rev-parse --abbrev-ref HEAD
-if ($CURRENT_BRANCH -ne "master") {
-    Write-Host "❌ Error: You are on branch '$CURRENT_BRANCH'. Please switch to 'master' branch."
-    exit 1
-}
-
 # 检查 VERSION 文件是否存在
 if (!(Test-Path "$APP_HOME/VERSION")) {
     Write-Host "❌ Error: VERSION file not found in $APP_HOME"
