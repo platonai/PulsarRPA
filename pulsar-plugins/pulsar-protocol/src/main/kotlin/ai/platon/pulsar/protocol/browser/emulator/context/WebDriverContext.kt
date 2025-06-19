@@ -17,6 +17,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.logging.ThrottlingLogger
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_FAST_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_SAFE_CLOSE_TIME_OUT
@@ -57,7 +58,8 @@ open class WebDriverContext(
         }
     }
 
-    private val logger = LoggerFactory.getLogger(WebDriverContext::class.java)!!
+    private val logger = LoggerFactory.getLogger(WebDriverContext::class.java)
+    private val throttlingLogger = ThrottlingLogger(logger)
     private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
     private val lock = ReentrantLock()
     private val notBusy = lock.newCondition()
@@ -78,10 +80,12 @@ open class WebDriverContext(
         val active = !closed.get() && AppContext.isActive && driverPoolManager.hasPossibility(browserId)
 
         if (!active) {
-            val state = mapOf("closed" to closed.get(),
+            val state = listOf("closed" to closed.get(),
                 "appActive" to AppContext.isActive,
-                "hasPossibility" to driverPoolManager.hasPossibility(browserId))
-            logger.info("WebDriverContext is not active | $state | ${browserId.display} | ${browserId.contextDir}")
+                "hasPossibility" to driverPoolManager.hasPossibility(browserId)
+            ).map { it.first to if (it.second) "✓" else "✗" }
+                .joinToString(",") { it.first + ":" + it.second }
+            throttlingLogger.info("WebDriverContext is not active | $state | ${browserId.contextDir}")
         }
 
         return active
