@@ -30,6 +30,12 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
+      - name: Setup Environment
+        id: setup
+        uses: ./.github/actions/setup-environment
+        with:
+          java_version: '17'
+
       - name: Update Documentation
         uses: ./.github/actions/update-docs
         if: success()
