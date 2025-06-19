@@ -168,10 +168,22 @@ runs:
         echo "   - Files skipped: $SKIPPED_COUNT"
         
         # Export outputs
-        UPDATED_FILES_JSON=$(printf '%s\n' "${UPDATED_FILES[@]}" | jq -R . | jq -s .)
-        echo "updated_files=$UPDATED_FILES_JSON" >> $GITHUB_OUTPUT
+        if [ ${#UPDATED_FILES[@]} -eq 0 ]; then
+          # 空数组的情况下输出空JSON数组
+          echo "updated_files=[]" >> $GITHUB_OUTPUT
+          echo "changes_made=false" >> $GITHUB_OUTPUT
+        else
+          # 将文件路径数组转换为正确的JSON格式
+          # 注意：使用JSON序列化来避免特殊字符和格式问题
+          
+          # 方法1：使用简单的JSON输出方式，避免格式问题
+          echo "changes_made=true" >> $GITHUB_OUTPUT
+          echo "updated_files<<EOF" >> $GITHUB_OUTPUT
+          echo "$(printf '%s\n' "${UPDATED_FILES[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')" >> $GITHUB_OUTPUT 
+          echo "EOF" >> $GITHUB_OUTPUT
+        fi
+        
         echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "changes_made=$([ ${#UPDATED_FILES[@]} -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
         
         if [ ${#UPDATED_FILES[@]} -eq 0 ]; then
           echo "ℹ️  No files were updated."
