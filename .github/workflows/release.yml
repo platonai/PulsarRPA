@@ -274,4 +274,5 @@ jobs:
           commit_message: 'docs: update version references to v{version}'
           push_changes: 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 传递令牌给Action
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || github.token }}
