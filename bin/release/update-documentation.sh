@@ -87,6 +87,6 @@ echo "   git add ${UPDATED_FILES[*]}"
 echo "   git commit -m 'docs: update documentation for version v$VERSION'"
 echo "   git push origin master"
 
-git add "${UPDATED_FILES[*]}"
+git add -- "${UPDATED_FILES[@]}"
 git commit -m "docs: update documentation for version v$VERSION"
 git push

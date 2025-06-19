@@ -263,15 +263,9 @@ jobs:
           docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Update Documentation
-        if: success()
-        run: |
-          bin/release/update-documentation.sh
-
-      - name: Cleanup Resources
-        if: always()
-        uses: ./.github/actions/cleanup-resources
+        uses: ./.github/actions/update-docs
         with:
-          container_name: ${{ env.CONTAINER_NAME }}
-          network_name: ${{ env.NETWORK_NAME }}
-          cleanup_compose: 'false'
-          cleanup_volumes: 'false'
+          version: ${{ env.VERSION }}
+          files: '["README.md", "README-CN.md"]'
+          commit_message: 'docs: update version references to v{version}'
+          push_changes: 'true'
