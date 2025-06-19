@@ -62,13 +62,15 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 
 #### 🚀 Run
 
+Linux/MacOS:
 ```bash
-echo $DEEPSEEK_API_KEY # Set your DeepSeek API key
+echo $DEEPSEEK_API_KEY # make sure LLM api key is set
 java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 ```
 
+Windows:
 ```powershell
-echo $env:DEEPSEEK_API_KEY # Set your DeepSeek API key
+echo $env:DEEPSEEK_API_KEY # make sure LLM api key is set
 java -DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
 ```
 
@@ -99,13 +101,15 @@ java -DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
 
 <details>
 
+Linux/MacOS:
 ```shell
-echo $DEEPSEEK_API_KEY # Set your DeepSeek API key
+echo $DEEPSEEK_API_KEY # make sure LLM api key is set
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
 ```
 
+Windows:
 ```powershell
-echo $env:DEEPSEEK_API_KEY # Set your DeepSeek API key
+echo $env:DEEPSEEK_API_KEY # make sure LLM api key is set
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY galaxyeye88/pulsar-rpa:latest
 ```
 
