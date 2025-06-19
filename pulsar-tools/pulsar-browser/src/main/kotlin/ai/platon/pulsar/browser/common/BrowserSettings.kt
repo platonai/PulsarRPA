@@ -65,8 +65,9 @@ open class BrowserSettings constructor(
         @JvmStatic
         fun overrideBrowserContextMode(conf: ImmutableConfig): Companion {
             val modeString = conf[BROWSER_CONTEXT_MODE]?.uppercase()
+            val browserType = conf.getEnum(BROWSER_TYPE, BrowserType.DEFAULT)
             val mode = BrowserContextMode.fromString(modeString)
-            return withBrowserContextMode(mode)
+            return withBrowserContextMode(mode, browserType)
         }
 
         @JvmStatic
@@ -74,6 +75,8 @@ open class BrowserSettings constructor(
 
         @JvmStatic
         fun withBrowserContextMode(contextMode: BrowserContextMode, browserType: BrowserType): Companion {
+            System.setProperty(BROWSER_CONTEXT_MODE, contextMode.name)
+
             when (contextMode) {
                 BrowserContextMode.SYSTEM_DEFAULT -> {
                     withSystemDefaultBrowserInternal(browserType)
