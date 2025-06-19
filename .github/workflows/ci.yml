@@ -85,7 +85,7 @@ jobs:
             exit 1
           else
             echo "✅ All tests passed successfully"
-            echo "📊 Test Results: ${{ steps.run-tests.outputs.test_count }} tests passed"
+            echo "📊 Test Results: ${{ steps.run-tests.outputs.passed_count }} tests passed"
           fi
 
       - name: Build Docker Image
