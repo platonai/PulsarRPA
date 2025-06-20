@@ -23,7 +23,7 @@ Generate a practical, flexible regex pattern for matching URIs based on the prov
 * Consider internationalized domain names and modern URI patterns
 * Prefer capturing valid URIs over rejecting edge cases
 * Prefer start with, contains, ends with
-* Prefer numeric-alphabetical matching over word boundaries
+* Prefer numeric-alphabetical matching over word boundaries, unless explicitly required
 
 ### 💡 Flexibility Guidelines:
 * Allow optional components where practical (e.g., www prefix, trailing slashes)
