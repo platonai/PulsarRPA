@@ -242,7 +242,7 @@ run_curl_test() {
 
   # Substitute URLs in command
   local final_command=$(substitute_urls "$curl_command")
-  local full_command="$final_command --max-time $TIMEOUT_SECONDS -w '%{http_code}\\n%{time_total}\\n%{size_download}\\n%{url_effective}' -o response.txt -s"
+  local full_command="$final_command --max-time $TIMEOUT_SECONDS -w '%{http_code}\\n%{time_total}\\n%{size_download}\\n%{url_effective}\\n%{content_type}' -o response.txt -s"
 
   vlog "Executing: \n$(echo "$full_command" | head -c 1500)"
 
@@ -261,6 +261,7 @@ run_curl_test() {
     local time_total=$(sed -n '2p' "${response_file}.meta" 2>/dev/null || echo "0.000")
     local size_download=$(sed -n '3p' "${response_file}.meta" 2>/dev/null || echo "0")
     local url_effective=$(sed -n '4p' "${response_file}.meta" 2>/dev/null || echo "N/A")
+    local content_type=$(sed -n '5p' "${response_file}.meta" 2>/dev/null || echo "text/plain")
 
     log "${BLUE}[RESPONSE]${NC} Status: $http_status | Time: ${time_total}s | Size: ${size_download}B | Duration: ${duration}s"
 
@@ -269,20 +270,41 @@ run_curl_test() {
       log "${GREEN}[PASS]${NC} ✅ Test completed successfully"
       PASSED_TESTS=$((PASSED_TESTS + 1))
       cp "$response_file" "${TEST_RESULTS_DIR}/test_${test_number}_success.json" 2>/dev/null || true
-      if [[ "$size_download" -gt 0 && "$size_download" -lt 3000 ]]; then
-        local preview=$(head -c 250 "$response_file" 2>/dev/null | tr -d '\n\r' | sed 's/[[:space:]]\+/ /g')
-        [[ -n "$preview" && "$preview" != " " ]] && log "${CYAN}[PREVIEW]${NC} $preview..."
-      elif [[ "$size_download" -gt 3000 ]]; then
-        log "${CYAN}[INFO]${NC} Large response (${size_download}B) saved to results directory"
+
+      # Get and show response brief for successful tests
+      if [[ "$size_download" -gt 0 ]]; then
+        # Source the extract_response_brief function if available
+        if [[ -f "./extract_response_brief.sh" ]]; then
+          source "./extract_response_brief.sh"
+          local response_brief=$(extract_response_brief "response.txt" "$content_type" "$size_download")
+          log "${CYAN}[RESPONSE BRIEF]${NC} $response_brief"
+        else
+          # Fallback if extract_response_brief.sh is not available
+          if [[ "$size_download" -lt 3000 ]]; then
+            local preview=$(head -c 250 "$response_file" 2>/dev/null | tr -d '\n\r' | sed 's/[[:space:]]\+/ /g')
+            [[ -n "$preview" && "$preview" != " " ]] && log "${CYAN}[PREVIEW]${NC} $preview..."
+          else
+            log "${CYAN}[INFO]${NC} Large response (${size_download}B) saved to results directory"
+          fi
+        fi
       fi
     else
       log "${RED}[FAIL]${NC} ❌ HTTP Status: $http_status"
       FAILED_TESTS=$((FAILED_TESTS + 1))
       cp "$response_file" "${TEST_RESULTS_DIR}/test_${test_number}_error_${http_status}.txt" 2>/dev/null || true
+
       if [[ -s "$response_file" ]]; then
-        local error_preview=$(head -c 200 "$response_file" 2>/dev/null | tr -d '\n\r')
-        log "${RED}[ERROR RESPONSE]${NC} $error_preview"
+        # Get brief for error responses too
+        if [[ -f "./extract_response_brief.sh" ]]; then
+          source "./extract_response_brief.sh"
+          local response_brief=$(extract_response_brief "response.txt" "$content_type" "$size_download")
+          log "${RED}[ERROR RESPONSE]${NC} $response_brief"
+        else
+          local error_preview=$(head -c 200 "$response_file" 2>/dev/null | tr -d '\n\r')
+          log "${RED}[ERROR RESPONSE]${NC} $error_preview"
+        fi
       fi
+
       if [[ -s "$error_file" ]]; then
         local curl_error=$(head -c 200 "$error_file" 2>/dev/null | tr -d '\n\r')
         log "${RED}[CURL ERROR]${NC} $curl_error"
@@ -434,3 +456,4 @@ trap 'log "\n${YELLOW}[INFO]${NC} Tests interrupted by user"; exit 130' INT
 
 parse_args "$@"
 main
+
