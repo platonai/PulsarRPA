@@ -143,7 +143,7 @@ jobs:
         if: success() && github.event.inputs.skip_tests != 'true'
         uses: ./.github/actions/run-integration-tests
         with:
-          script_path: './bin/run-integration-test.sh'
+          script_path: './bin/tests/run-integration-test.sh'
           application_url: 'http://localhost:8182'
           network_name: ${{ env.NETWORK_NAME }}
           container_name: ${{ env.CONTAINER_NAME }}
