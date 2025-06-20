@@ -1,7 +1,9 @@
 package ai.platon.pulsar.rest.api.service
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
+import ai.platon.pulsar.common.alwaysFalse
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.FlatJSONExtractor
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -20,8 +22,10 @@ import org.springframework.http.codec.ServerSentEvent
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.FluxSink
+import java.nio.file.Files
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListMap
+import kotlin.io.path.writeText
 
 @Service
 class CommandService(
@@ -270,6 +274,14 @@ class CommandService(
             val regex = RestAPIPromptUtils.normalizeURIExtractionRegex(uriExtractionRules) ?: return
 
             val allURIs = UriExtractor().extractAllUris(document, document.baseURI)
+
+            if (alwaysFalse()) {
+                val allURIText = allURIs.joinToString("\n")
+                val path = AppPaths.getProcTmpTmpDirectory("command").resolve("uris.txt")
+                Files.createDirectories(path.parent)
+                path.writeText(allURIText)
+            }
+
             val uris = allURIs.filter { it.matches(regex) }
             if (uris.isNotEmpty()) {
                 val result = InstructResult.ok("links", uris, "list")

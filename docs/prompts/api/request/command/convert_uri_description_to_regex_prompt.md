@@ -1,7 +1,8 @@
 Convert the following URI description into a Kotlin-compatible regex pattern that matches valid URIs.
 
 ### Objective
-Generate a practical, flexible regex pattern for matching URIs based on the provided description, prioritizing real-world usability over strict precision.
+Generate a practical, flexible regex pattern for matching URIs based on the provided description, prioritizing 
+real-world usability over strict precision.
 
 ### 🔧 Requirements:
 * **Single Match**: Pattern must match exactly one complete URI (not partial matches or multiple URIs in text)
@@ -18,12 +19,11 @@ Generate a practical, flexible regex pattern for matching URIs based on the prov
 
 ### ⚠️ Important Notes:
 * Escape special regex characters appropriately for Kotlin
-* Consider URI components: scheme, authority, path, query, fragment
+* No need to match the uri prefix since the input will always be a complete URI
 * Allow for reasonable flexibility in path structures and parameters
-* Consider internationalized domain names and modern URI patterns
 * Prefer capturing valid URIs over rejecting edge cases
-* Prefer start with, contains, ends with
-* Prefer numeric-alphabetical matching over word boundaries, unless explicitly required
+* Prefer starts with, contains, ends with
+* Prefer .+ matching over word boundaries, unless explicitly required
 
 ### 💡 Flexibility Guidelines:
 * Allow optional components where practical (e.g., www prefix, trailing slashes)
