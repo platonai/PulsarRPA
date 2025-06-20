@@ -1,6 +1,7 @@
 package ai.platon.pulsar.rest.api.common
 
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
+import ai.platon.pulsar.common.ai.llm.PromptTemplateLoader
 import ai.platon.pulsar.rest.api.service.CommandService.Companion.MIN_USER_MESSAGE_LENGTH
 
 object RestAPIPromptUtils {
@@ -47,10 +48,12 @@ object RestAPIPromptUtils {
             return null
         }
 
-        return PromptTemplate(
-            template = CONVERT_URI_DESCRIPTION_TO_REGEX_PROMPT,
+        val resource = "docs/prompts/api/request/command/convert_uri_description_to_regex_prompt.md"
+        return PromptTemplateLoader(
+            resource,
+            fallbackTemplate = CONVERT_URI_DESCRIPTION_TO_REGEX_PROMPT,
             variables = mapOf(PLACEHOLDER_URI_DESCRIPTION to description)
-        ).render()
+        ).load().render()
     }
 
     fun normalizeURIExtractionRegex(message: String?): Regex? {

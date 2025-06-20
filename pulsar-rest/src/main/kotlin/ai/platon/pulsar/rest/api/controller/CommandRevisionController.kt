@@ -1,7 +1,7 @@
 package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.common.ai.llm.PromptTemplate
+import ai.platon.pulsar.common.ai.llm.PromptTemplateLoader
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.rest.api.common.*
 import ai.platon.pulsar.rest.api.service.ChatService
@@ -29,14 +29,17 @@ class CommandRevisionController(
 
         val json = conversationService.convertPlainCommandToJSON(prompt, urls.first()) ?: return prompt
 
-        val message = PromptTemplate(
-            template = COMMAND_REVISION_TEMPLATE,
+        val resource = "docs/prompts/api/request/command/command_revision_template.md"
+        val message = PromptTemplateLoader(
+            resource,
+            fallbackTemplate = COMMAND_REVISION_TEMPLATE,
             variables = mapOf(
                 PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE to REQUEST_JSON_COMMAND_TEMPLATE,
                 PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE to REQUEST_PLAIN_COMMAND_TEMPLATE,
                 PLACEHOLDER_JSON_VALUE to json
             )
-        ).render()
+        ).load().render()
+
         return chatService.chat(message)
     }
 }
