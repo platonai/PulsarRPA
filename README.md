@@ -201,8 +201,6 @@ The extracted data example:
 
 PulsarRPA visits web pages in parallel at coroutine speed, extracts data efficiency while minimizing resource consumption.
 
-[View Kotlin Code](https://github.com/platonai/PulsarRPA/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
-
 <details>
 
 ```kotlin
@@ -217,9 +215,14 @@ val links =
 
 session.submitAll(links)
 ```
+
+📝 Example: [View Kotlin Code](https://github.com/platonai/PulsarRPA/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
+
 </details>
 
 ### 🎮 Browser Control:
+
+PulsarRPA implements coroutine-safe browser control.
 
 <details>
 
@@ -243,7 +246,9 @@ session.open(url, eventHandlers)
 
 ---
 
-### 🤖 Complete Robotic Process Automation Capabilities:
+### 🤖 Robotic Process Automation Capabilities:
+
+PulsarRPA provides flexible robotic process automation capabilities.
 
 <details>
 
@@ -270,6 +275,8 @@ session.load(url, options)
 ---
 
 ### 🔍 Complex Data Extraction with X-SQL:
+
+PulsarRPA provides X-SQL for complex data extraction.
 
 <details>
 

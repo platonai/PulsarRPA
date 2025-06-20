@@ -201,8 +201,6 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
 
 PulsarRPA 以协程速度并行访问网页，高效提取数据的同时最小化资源消耗。
 
-[View Kotlin Code](https://github.com/platonai/PulsarRPA/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
-
 <details>
 
 ```kotlin
@@ -217,9 +215,14 @@ val links =
 
 session.submitAll(links)
 ```
+
+📝 Example: [View Kotlin Code](https://github.com/platonai/PulsarRPA/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
+
 </details>
 
 ### 🎮 浏览器控制：
+
+PulsarRPA 实现了协程安全的浏览器控制。
 
 <details>
 
@@ -243,7 +246,9 @@ session.open(url, eventHandlers)
 
 ---
 
-### 🤖 完整机器人流程自动化能力：
+### 🤖 机器人流程自动化能力：
+
+PulsarRPA 提供灵活的机器人流程自动化。
 
 <details>
 
@@ -270,6 +275,8 @@ session.load(url, options)
 ---
 
 ### 🔍 使用X-SQL进行复杂数据提取：
+
+PulsarRPA 提供 X-SQL 进行复杂数据提取。
 
 <details>
 
