@@ -13,16 +13,12 @@ param(
     [string]$pattern = "v[0-9]+.[0-9]+.[0-9]+-ci.[0-9]+"
 )
 
-function Find-AppHome {
-    $dir = (Get-Item -Path $MyInvocation.MyCommand.Path).Directory
-    while ($null -ne $dir -and !(Test-Path "$dir/VERSION")) {
-        $dir = $dir.Parent
-    }
-    if (!$dir) {
-        throw "VERSION file not found in any parent directory."
-    }
-    return $dir
+# Find the first parent directory containing the VERSION file
+$AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
+while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
+    $AppHome = Split-Path -Parent $AppHome
 }
+Set-Location $AppHome
 
 function Get-MatchingTags {
     param([string]$pattern)
@@ -61,7 +57,4 @@ function Confirm-And-Remove-CITags {
     }
 }
 
-# MAIN EXECUTION
-$AppHome = Find-AppHome
-Set-Location $AppHome
 Confirm-And-Remove-CITags -pattern $pattern -remote $remote
