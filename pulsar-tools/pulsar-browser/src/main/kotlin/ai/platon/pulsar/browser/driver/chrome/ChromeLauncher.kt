@@ -31,7 +31,7 @@ import kotlin.time.toJavaDuration
  * The chrome launcher
  * */
 class ChromeLauncher constructor(
-    val userDataDir: Path = BrowserFiles.computeNextSequentialContextDir(),
+    val userDataDir: Path,
     val options: LauncherOptions = LauncherOptions(),
     private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry()
 ) : AutoCloseable {
@@ -110,12 +110,12 @@ class ChromeLauncher constructor(
      * */
     fun destroyForcibly() {
         try {
-            Files.deleteIfExists(portPath)
             val pid = Files.readAllLines(pidPath).firstOrNull { it.isNotBlank() }?.toIntOrNull() ?: 0
             if (pid > 0) {
                 logger.warn("Destroy chrome launcher forcibly, pid: {} | {}", pid, userDataDir)
                 Runtimes.destroyProcessForcibly(pid)
             }
+            Files.deleteIfExists(portPath)
         } catch (e: NoSuchFileException) {
             logger.warn("NoSuchFileException | {}", e.message)
         } catch (e: IOException) {

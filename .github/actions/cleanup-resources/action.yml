@@ -5,6 +5,10 @@ inputs:
     description: Container name to cleanup
     required: false
     default: 'app-test-container'
+  network_name:
+    description: Network name to cleanup
+    required: false
+    default: 'app_network'
   cleanup_compose:
     description: Whether to cleanup docker-compose services
     required: false
@@ -39,6 +43,13 @@ runs:
             docker compose down || true
           fi
           echo "✅ Docker Compose services stopped"
+        fi
+        
+        # Remove Docker network
+        if docker network ls | grep -q ${{ inputs.network_name }}; then
+          echo "🧹 Removing Docker network: ${{ inputs.network_name }}"
+          docker network rm ${{ inputs.network_name }} || true
+          echo "✅ Docker network removed"
         fi
         
         echo "✅ Cleanup completed"

@@ -11,9 +11,11 @@ import ai.platon.pulsar.persist.gora.GoraStorage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.mongo.MongoDBUtils
 import org.apache.commons.lang3.SystemUtils
-import org.apache.gora.mongodb.store.MongoStoreParameters
+import org.apache.gora.mongodb.store.MongoStoreParameters.PROP_MONGO_SERVERS
 import org.apache.gora.persistency.Persistent
 import org.apache.gora.store.DataStore
+import org.apache.gora.util.GoraException
+import org.apache.hadoop.conf.Configuration
 import org.slf4j.LoggerFactory
 
 /**
@@ -78,7 +80,8 @@ class DataStorageFactory(conf: ImmutableConfig) {
                 return specified
             }
 
-            val mongoServers = conf.get(MongoStoreParameters.PROP_MONGO_SERVERS)
+            patchGoraMongoServersConfig(conf)
+            val mongoServers = conf.get(PROP_MONGO_SERVERS)
             if (mongoServers != null) {
                 return MONGO_STORE_CLASS
             }
@@ -120,8 +123,37 @@ class DataStorageFactory(conf: ImmutableConfig) {
             return Class.forName(detectDataStoreClassName(conf)) as Class<out DataStore<K, V>>
         }
 
+        /**
+         * Patches the MongoDB servers configuration for Gora.
+         * Enable environment variable or system property `GORA_MONGODB_SERVERS`
+         */
+        @Throws(GoraException::class)
+        fun patchGoraMongoServersConfig(conf: Configuration) {
+            // Keep this assertion to remind us the real property name
+            require("gora.mongodb.servers" == PROP_MONGO_SERVERS)
+
+            var servers = System.getProperty("GORA_MONGODB_SERVERS")
+            if (servers == null) {
+                servers = System.getenv("GORA_MONGODB_SERVERS")
+            }
+            if (servers == null) {
+                servers = System.getProperty(PROP_MONGO_SERVERS)
+            }
+            if (servers == null) {
+                servers = System.getenv(PROP_MONGO_SERVERS)
+            }
+            if (servers == null) {
+                servers = conf[PROP_MONGO_SERVERS]
+            }
+
+            if (servers != null) {
+                GoraStorage.goraProperties.setProperty(PROP_MONGO_SERVERS, servers)
+                conf[PROP_MONGO_SERVERS] = servers
+            }
+        }
+        
         private fun checkIfMongoClientAvailable(conf: HadoopConfiguration): Boolean {
-            val mongoServers = conf.get(MongoStoreParameters.PROP_MONGO_SERVERS)
+            val mongoServers = conf.get(PROP_MONGO_SERVERS)
             if (mongoServers != null) {
                 return MongoDBUtils.isMongoReachable(mongoServers)
             }

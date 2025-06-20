@@ -4,6 +4,7 @@ import org.junit.jupiter.api.*
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.*
 import org.slf4j.Logger
+import org.slf4j.helpers.MessageFormatter
 import java.time.Duration
 
 class ThrottlingLoggerTest {
@@ -44,7 +45,7 @@ class ThrottlingLoggerTest {
 
     @Test
     fun `should count suppressed messages when enabled`() {
-        val format = "Configuration reload failed: %s"
+        val format = "Configuration reload failed: {}"
         val args = arrayOf("timeout")
 
         logger.info(format, *args)
@@ -52,7 +53,7 @@ class ThrottlingLoggerTest {
         logger.info(format, *args)
 
         val counts = logger.getSuppressedCounts()
-        val key = String.format(format, *args)
+        val key = MessageFormatter.arrayFormat(format, args).message
 
         Assertions.assertTrue(counts?.containsKey(key) == true)
         Assertions.assertEquals(2, counts?.get(key))
@@ -60,7 +61,7 @@ class ThrottlingLoggerTest {
 
     @Test
     fun `should reset suppression count and cache`() {
-        val format = "Error processing request: %s"
+        val format = "Error processing request: {}"
         val args = arrayOf("404")
 
         logger.info(format, *args)
@@ -74,7 +75,7 @@ class ThrottlingLoggerTest {
     @Test
     fun `should log error with exception and throttle correctly`() {
         val throwable = RuntimeException("Database connection failed")
-        val format = "Failed to connect to %s"
+        val format = "Failed to connect to {}"
         val args = arrayOf("main-db")
 
         logger.error(throwable, format, *args)

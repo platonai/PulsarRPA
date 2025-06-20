@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # 🔍 Find the first parent directory containing the VERSION file
-APP_HOME=$(dirname $(readlink -f $0))
-while [ ! -f "$APP_HOME/VERSION" ] && [ "$APP_HOME" != "/" ]; do
+APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
+while [[ ! -f "$APP_HOME/VERSION" && "$APP_HOME" != "/" ]]; do
   APP_HOME=$(dirname "$APP_HOME")
 done
-cd "$APP_HOME"
+[[ -f "$APP_HOME/VERSION" ]] && cd "$APP_HOME" || exit
 
 echo "Deploy the project ..."
 echo "Changing version ..."
@@ -15,7 +15,7 @@ VERSION=${SNAPSHOT_VERSION/-SNAPSHOT/}
 echo "$VERSION" > "$APP_HOME/VERSION"
 
 # Replace SNAPSHOT version with the release version
-for FILE_PATTERN in 'llm-config.md' 'README-CN.md' 'pom.xml'; do
+for FILE_PATTERN in 'pom.xml' 'llm-config.md' 'README.md' 'README-CN.md'; do
   find "$APP_HOME" -maxdepth 3 -name "$FILE_PATTERN" -type f | while read FILE; do
     sed -i "s/$SNAPSHOT_VERSION/$VERSION/g" "$FILE"
   done

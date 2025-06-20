@@ -31,9 +31,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyContext
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent.Companion
 import com.google.common.annotations.Beta
-import org.slf4j.LoggerFactory
 
 open class BrowserPrivacyContext(
     val proxyPoolManager: ProxyPoolManager? = null,
@@ -45,23 +43,27 @@ open class BrowserPrivacyContext(
     private val logger = getLogger(BrowserPrivacyContext::class)
     private val throttlingLogger = ThrottlingLogger(logger)
 
+    private val isActive0: Boolean get() {
+        val isProxyContextActive = proxyContext == null || proxyContext?.isActive == true
+        val isDriverContextActive = driverContext.isActive
+        return isProxyContextActive && isDriverContextActive && super.isActive
+    }
+
+    private val isRetired0: Boolean
+        get() {
+            val doRetired = retired || proxyContext?.isRetired == true || driverContext.isRetired
+            return doRetired
+        }
+
     val browserId = BrowserId(privacyAgent.contextDir, privacyAgent.fingerprint)
     val driverContext = WebDriverContext(browserId, driverPoolManager, conf)
     var proxyContext: ProxyContext? = null
         private set
     val proxyEntry get() = proxyContext?.proxyEntry
 
-    override val isRetired: Boolean
-        get() {
-            return retired || proxyContext?.isRetired == true || driverContext.isRetired
-        }
+    override val isRetired: Boolean get() = isRetired0
 
-    override val isActive: Boolean
-        get() {
-            val isProxyContextActive = proxyContext == null || proxyContext?.isActive == true
-            val isDriverContextActive = driverContext.isActive
-            return isProxyContextActive && isDriverContextActive && super.isActive
-        }
+    override val isActive: Boolean get() = isActive0
 
     override val isReady: Boolean
         get() {
@@ -71,6 +73,16 @@ open class BrowserPrivacyContext(
         }
 
     override val isFullCapacity: Boolean get() = driverPoolManager.isFullCapacity(browserId)
+
+    override val state: Map<String, Any?>
+        get() = mapOf(
+            "id" to id,
+            "browser" to browserId.display,
+            "proxyEntry" to proxyEntry,
+            "isActive" to isActive0,
+            "isFullCapacity" to isFullCapacity,
+            "isRetired" to isRetired0
+        ) + super.state
 
     @Throws(ProxyVendorException::class, IllegalStateException::class)
     override suspend fun open(url: String): FetchResult {

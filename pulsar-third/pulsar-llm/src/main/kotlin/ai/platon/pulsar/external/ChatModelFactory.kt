@@ -11,6 +11,7 @@ import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The factory to create models.
@@ -20,13 +21,76 @@ object ChatModelFactory {
     private val throttlingLogger = ThrottlingLogger(logger, ttl = Duration.ofHours(4))
     private val models = ConcurrentHashMap<String, ChatModel>()
 
+    private val llmGuideReported = AtomicBoolean(false)
+    const val DOCUMENT_PATH = "https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/llm-config.md"
+    const val LLM_GUIDE =
+"""
+The LLM is not configured, the LLM feature is disabled.
+
+Simple guide to configure LLM:
+
+### Linux/MacOS
+
+Make sure the environment variable is set:
+
+```bash
+echo ${'$'}DEEPSEEK_API_KEY # make sure the environment variable is set
+```
+
+Run PulsarRPA with the environment variable:
+
+```bash
+java -DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+```
+
+Or run PulsarRPA with Docker:
+
+```bash
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
+```
+
+### Windows
+
+Make sure the environment variable is set:
+
+```powershell
+echo ${'$'}env:DEEPSEEK_API_KEY
+```
+
+Run PulsarRPA with the environment variable:
+
+```powershell
+java -DEEPSEEK_API_KEY=${'$'}env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
+```
+
+Or run PulsarRPA with Docker:
+
+```powershell
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${'$'}env:DEEPSEEK_API_KEY galaxyeye88/pulsar-rpa:latest
+```
+
+For more details, please refer to the [LLM configuration documentation]($DOCUMENT_PATH)
+"""
+
+    /**
+     * Check if the model is configured.
+     *
+     * @param conf The configuration to check.
+     * @param verbose Whether to log a message if the model is not configured.
+     * @return True if the model is configured, false otherwise.
+     */
     fun isModelConfigured(conf: ImmutableConfig, verbose: Boolean = true): Boolean {
         if (!isModelConfigured0(conf)) {
             if (verbose && !hasModel(conf)) {
-                val documentPath = "docs/config/llm/llm-config.md"
-                val message = "The LLM is not configured. Please review the documentation for " +
-                        "configuration instructions: $documentPath"
-                throttlingLogger.info(message)
+                if (llmGuideReported.get()) {
+                    val message = "The LLM is not configured, the LLM feature is disabled. " +
+                            "See docs/config/llm/llm-config.md for more details."
+                    throttlingLogger.info(message)
+                }
+
+                if (llmGuideReported.compareAndSet(false, true)) {
+                    throttlingLogger.info(LLM_GUIDE)
+                }
             }
             return false
         }
@@ -34,7 +98,15 @@ object ChatModelFactory {
         return true
     }
 
-    fun hasModel(conf: ImmutableConfig) = isModelConfigured0(conf)
+    /**
+     * Check if the model is configured.
+     *
+     * @param conf The configuration to check.
+     * @return True if the model is configured, false otherwise.
+     */
+    fun hasModel(conf: ImmutableConfig): Boolean {
+        return isModelConfigured0(conf)
+    }
 
     /**
      * Create a default model.
@@ -44,6 +116,10 @@ object ChatModelFactory {
      */
     @Throws(IllegalArgumentException::class)
     fun getOrCreate(conf: ImmutableConfig): ChatModel {
+        if (!isModelConfigured(conf, verbose = false)) {
+            throw IllegalArgumentException("The LLM is not configured, see docs/config/llm/llm-config.md")
+        }
+
         // Notice: all keys are transformed to dot.separated.kebab-case using KStrings.toDotSeparatedKebabCase(),
         // so the following keys are equal:
         // - DEEPSEEK_API_KEY, deepseek.apiKey, deepseek.api-key
@@ -112,27 +188,29 @@ object ChatModelFactory {
     }
 
     private fun isModelConfigured0(conf: ImmutableConfig): Boolean {
-        // deepseek official
-        val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
-        if (deepseekAPIKey != null) {
-            return true
+        val minKeyLen = 5
+
+        // 按顺序检查所有可能的API密钥配置
+        val apiKeyConfigs = listOf(
+            "DEEPSEEK_API_KEY",
+            "VOLCENGINE_API_KEY",
+            "OPENAI_API_KEY"
+        )
+
+        // 如果任何一个主流API密钥配置有效，直接返回true
+        apiKeyConfigs.forEach { keyName ->
+            val apiKey = conf[keyName] ?: ""
+            if (apiKey.length > minKeyLen) {
+                return true
+            }
         }
 
-        val volcengineAPIKey = conf["VOLCENGINE_API_KEY"]
-        if (volcengineAPIKey != null) {
-            return true
-        }
-
-        val openaiAPIKey = conf["OPENAI_API_KEY"]
-        if (openaiAPIKey != null) {
-            return true
-        }
-
+        // 检查传统配置方式
         val provider = conf[LLM_PROVIDER]
         val llm = conf[LLM_NAME]
-        val apiKey = conf[LLM_API_KEY]
+        val apiKey = conf[LLM_API_KEY] ?: ""
 
-        return provider != null && llm != null && apiKey != null
+        return provider != null && llm != null && apiKey.length > minKeyLen
     }
 
     private fun getOrCreateModel0(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {

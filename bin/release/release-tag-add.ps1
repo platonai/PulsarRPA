@@ -5,10 +5,11 @@ param(
 )
 
 # Find VERSION file
-$AppHome = (Get-Item $MyInvocation.MyCommand.Path).Directory
-while ($AppHome -and !(Test-Path "$AppHome/VERSION")) {
-    $AppHome = $AppHome.Parent
+$AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
+while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
+    $AppHome = Split-Path -Parent $AppHome
 }
+Set-Location $AppHome
 
 if (!$AppHome) {
     Write-Error "VERSION file not found"

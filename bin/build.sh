@@ -1,91 +1,77 @@
 #!/bin/bash
 
-# Usage: ./build.sh [-clean] [-test]
+# Find the first parent directory that contains a VERSION file
+APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
+while [[ ! -f "$APP_HOME/VERSION" && "$APP_HOME" != "/" ]]; do
+  APP_HOME=$(dirname "$APP_HOME")
+done
+[[ -f "$APP_HOME/VERSION" ]] && cd "$APP_HOME" || exit
 
-# Function to print usage and exit
-print_usage() {
-    echo "Usage: $0 [-clean|-test]"
-    exit 1
+function printUsage {
+  echo "Usage: build.sh [-clean|-test]"
+  exit 1
 }
 
-# Find the first parent directory containing the VERSION file
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APP_HOME="$SCRIPT_DIR"
-
-while [[ -n "$APP_HOME" && ! -f "$APP_HOME/VERSION" ]]; do
-    APP_HOME=$(dirname "$APP_HOME")
-done
-
-cd "$APP_HOME" || { echo "Failed to change to directory: $APP_HOME"; exit 1; }
-
 # Maven command and options
-MVN_CMD="$APP_HOME/mvnw"
+MvnCmd="./mvnw"
 
 # Initialize flags and additional arguments
-PERFORM_CLEAN=false
-SKIP_TESTS=true
+PerformClean=false
+SkipTests=true
 
-MVN_OPTIONS=()
-ADDITIONAL_MVN_ARGS=()
+MvnOptions=()
+AdditionalMvnArgs=()
 
 # Parse command-line arguments
-for arg in "$@"; do
-    case "$arg" in
-        -clean)
-            PERFORM_CLEAN=true
-            ;;
-        -t|-test)
-            SKIP_TESTS=false
-            ;;
-        -h|--help|"-help")
-            print_usage
-            ;;
-        -*)
-            ADDITIONAL_MVN_ARGS+=("$arg")
-            ;;
-        *)
-            ADDITIONAL_MVN_ARGS+=("$arg")
-            ;;
-    esac
+for Arg in "$@"; do
+  case $Arg in
+    -clean)
+      PerformClean=true
+      ;;
+    -t|-test)
+      SkipTests=false
+      ;;
+    -h|-help|--help)
+      printUsage
+      ;;
+    -*|--*)
+      printUsage
+      ;;
+    *)
+      AdditionalMvnArgs+=("$Arg")
+      ;;
+  esac
 done
 
 # Conditionally add Maven options based on flags
-if [ "$PERFORM_CLEAN" = true ]; then
-    MVN_OPTIONS+=("clean")
+if $PerformClean; then
+  MvnOptions+=("clean")
 fi
 
-if [ "$SKIP_TESTS" = true ]; then
-    ADDITIONAL_MVN_ARGS+=("-DskipTests")
+if $SkipTests; then
+  AdditionalMvnArgs+=("-DskipTests")
 fi
-
-# Add common options
-MVN_OPTIONS+=("install")
-ADDITIONAL_MVN_ARGS+=("-Pall-modules")
-
-# Combine all options
-MVN_OPTIONS+=("${ADDITIONAL_MVN_ARGS[@]}")
 
 # Function to execute Maven command in a given directory
-invoke_maven_build() {
-    local directory="$1"
-    shift
-    local options=("$@")
+function invokeMavenBuild {
+  local Directory=$1
+  shift
+  local MvnOptions=("$@")
 
-    cd "$directory" || { echo "Failed to enter directory: $directory"; return 1; }
+  pushd "$Directory" > /dev/null || return
 
-    # Execute Maven wrapper with options
-    "$MVN_CMD" "${options[@]}"
-    local exit_code=$?
+  $MvnCmd "${MvnOptions[@]}"
 
-    if [ $exit_code -ne 0 ]; then
-        echo "Maven command failed in $directory" >&2
-    fi
+  if [[ $? -ne 0 ]]; then
+    echo "Warning: Maven command failed in $Directory"
+  fi
 
-    cd - > /dev/null
-    return $exit_code
+  popd > /dev/null || return
 }
 
-# Run the Maven build
-invoke_maven_build "$APP_HOME" "${MVN_OPTIONS[@]}"
+# Execute Maven package in the application home directory
+MvnOptions+=("install")
+AdditionalMvnArgs+=("-Pall-modules")
 
-exit $?
+MvnOptions+=("${AdditionalMvnArgs[@]}")
+invokeMavenBuild "$AppHome" "${MvnOptions[@]}"

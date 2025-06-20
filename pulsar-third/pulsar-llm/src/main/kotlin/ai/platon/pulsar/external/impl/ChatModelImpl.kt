@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.*
+import ai.platon.pulsar.external.logging.ChatModelLogger
 import dev.langchain4j.data.message.SystemMessage
 import dev.langchain4j.data.message.UserMessage
 import dev.langchain4j.model.chat.ChatLanguageModel
@@ -25,7 +26,9 @@ open class ChatModelImpl(
     private val langchainModel: ChatLanguageModel,
     private val conf: ImmutableConfig
 ) : ChatModel {
-    private val logger = getLogger(this)
+    private val logger = getLogger(ChatModelImpl::class)
+
+    private val llmResponseCacheTTL = conf.getLong("llm.response.cache.ttl", 600L) // Default to 10 minutes if not set
 
     private val cacheManager: CacheManager = CacheManagerBuilder.newCacheManagerBuilder()
         .withCache(
@@ -34,7 +37,7 @@ open class ChatModelImpl(
                 String::class.java,
                 ModelResponse::class.java,
                 ResourcePoolsBuilder.heap(1000) // Maximum entries in cache
-            ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(10))) // TTL: 60 minutes
+            ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds(llmResponseCacheTTL))) // TTL: 60 minutes
         )
         .build(true)
 
@@ -95,13 +98,15 @@ open class ChatModelImpl(
         // Generate a cache key based on the user and system messages
         val cacheKey = DigestUtils.md5Hex("$trimmedUserMessage|$systemMessage")
 
-
         // Check if the response is already cached
         val cachedResponse = responseCache.get(cacheKey)
         if (cachedResponse != null) {
             logger.debug("Returning cached response for key: $cacheKey")
             return cachedResponse
         }
+
+        // 记录请求
+        val requestId = ChatModelLogger.logRequest(trimmedUserMessage, systemMessage)
 
         val um = UserMessage.userMessage(trimmedUserMessage)
 
@@ -119,18 +124,24 @@ open class ChatModelImpl(
             }
         } catch (e: IOException) {
             logger.info("IOException | {}", e.message)
-            return ModelResponse("", ResponseState.OTHER)
+            return ModelResponse("", ResponseState.OTHER).also {
+                ChatModelLogger.logResponse(requestId, it)
+            }
         } catch (e: RuntimeException) {
             if (e.cause is InterruptedIOException) {
                 logger.info("InterruptedIOException | {}", e.message)
-                return ModelResponse("", ResponseState.OTHER)
+                return ModelResponse("", ResponseState.OTHER).also {
+                    ChatModelLogger.logResponse(requestId, it)
+                }
             } else {
                 logger.warn("RuntimeException | {} | {}", langchainModel.javaClass.simpleName, e.message)
                 throw e
             }
         } catch (e: Exception) {
             logger.warn("[Unexpected] Exception | {} | {}", langchainModel.javaClass.simpleName, e.message)
-            return ModelResponse("", ResponseState.OTHER)
+            return ModelResponse("", ResponseState.OTHER).also {
+                ChatModelLogger.logResponse(requestId, it)
+            }
         }
 
         val u = response.tokenUsage()
@@ -149,6 +160,9 @@ open class ChatModelImpl(
             val log = StringUtils.abbreviate(modelResponse.content, 100).replace("\n", " ")
             logger.info("◀ Chat - token: {} | [len: {}] {}", modelResponse.tokenUsage.totalTokenCount, modelResponse.content.length, log)
         }
+
+        // 记录响应
+        ChatModelLogger.logResponse(requestId, modelResponse)
 
         // Cache the response
         responseCache.put(cacheKey, modelResponse)

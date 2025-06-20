@@ -27,7 +27,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 ---
 
-Automate browsers, extract data, and analyze at scale using simple natural language commands.
+Automate the browser and extract data at scale with simple text.
 
 ```text
 Go to https://www.amazon.com/dp/B0C1H26C46
@@ -143,7 +143,7 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
     "onPageReadyActions": ["scroll to the middle"],
     "pageSummaryPrompt": "Provide a brief introduction of this product.",
     "dataExtractionRules": "product name, price, and ratings",
-    "linkExtractionRules": "all links containing `/dp/` on the page"
+    "uriExtractionRules": "all links containing `/dp/` on the page"
   }'
 ```
 

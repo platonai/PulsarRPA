@@ -22,12 +22,14 @@ jobs:
 
       - name: Setup Environment
         id: setup
+        if: success()
         uses: ./.github/actions/setup-environment
         with:
           java_version: '17'
 
       - name: Verify Dependencies
         id: deps
+        if: success()
         uses: ./.github/actions/verify-dependencies
         with:
           network_name: ${{ env.NETWORK_NAME }}
@@ -37,6 +39,7 @@ jobs:
 
       - name: Maven Build
         id: build-maven
+        if: success()
         uses: ./.github/actions/maven-build
         with:
           maven_profiles: 'all-modules'
@@ -44,16 +47,31 @@ jobs:
           timeout_minutes: '15'
 
       - name: Run Tests
-        id: tests
-        if: inputs.skip_tests != true
+        id: run-tests
+        if: success() && inputs.skip_tests != true
         uses: ./.github/actions/run-tests
         with:
           maven_profiles: 'all-modules'
-          test_excludes: '**api/integration**'
+          test_excludes: '**integration**'
           timeout_minutes: '35'
+
+      - name: Check Test Status
+        if: always()
+        run: |
+          if [ "${{ steps.run-tests.outputs.test_status }}" != "success" ]; then
+            echo "❌ Tests failed with status: ${{ steps.run-tests.outputs.test_status }}"
+            echo "📊 Test Results:"
+            echo "  - Total Tests: ${{ steps.run-tests.outputs.test_count }}"
+            echo "  - Failed Tests: ${{ steps.run-tests.outputs.failed_count }}"
+            exit 1
+          else
+            echo "✅ All tests passed successfully"
+            echo "📊 Test Results: ${{ steps.run-tests.outputs.test_count }} tests passed"
+          fi
 
       - name: Build Docker Image
         id: build
+        if: success()
         uses: ./.github/actions/docker-build
         with:
           image_name: 'pulsar-rpa'
@@ -62,6 +80,7 @@ jobs:
 
       - name: Start Application
         id: app
+        if: success()
         uses: ./.github/actions/start-application
         with:
           image_name: 'pulsar-rpa'
@@ -73,6 +92,7 @@ jobs:
 
       - name: Health Check
         id: health
+        if: success()
         uses: ./.github/actions/health-check
         with:
           service_port: '8182'
@@ -81,34 +101,14 @@ jobs:
 
       - name: Run Integration Tests
         id: integration-tests
-        shell: bash
-        run: |
-          echo "::group::🧪 Integration Tests"
-          
-          if [ -f "./bin/run-integration-test.sh" ]; then
-            echo "✅ Found integration test script"
-            chmod +x ./bin/run-integration-test.sh
-          
-            echo "🚀 Running integration tests..."
-            echo "Application URL: http://localhost:8182"
-            echo "Network: ${{ env.NETWORK_NAME }}"
-            echo "Container: ${{ env.CONTAINER_NAME }}"
-          
-            if timeout 600 ./bin/run-integration-test.sh; then
-              echo "✅ Integration tests passed"
-              echo "integration_status=success" >> $GITHUB_OUTPUT
-            else
-              echo "❌ Integration tests failed"
-              echo "integration_status=failed" >> $GITHUB_OUTPUT
-              exit 1
-            fi
-          else
-            echo "⚠️ Integration test script not found: ./bin/run-integration-test.sh"
-            echo "Skipping integration tests..."
-            echo "integration_status=skipped" >> $GITHUB_OUTPUT
-          fi
-          
-          echo "::endgroup::"
+        if: success()
+        uses: ./.github/actions/run-integration-tests
+        with:
+          script_path: './bin/run-integration-test.sh'
+          application_url: 'http://localhost:8182'
+          network_name: ${{ env.NETWORK_NAME }}
+          container_name: ${{ env.CONTAINER_NAME }}
+          timeout_seconds: '1200'
 
       - name: Pipeline Summary
         if: always()

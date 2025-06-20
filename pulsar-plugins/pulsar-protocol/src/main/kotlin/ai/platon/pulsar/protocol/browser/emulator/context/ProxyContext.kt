@@ -122,6 +122,17 @@ open class ProxyContext(
         val isProxyReady = proxyEntry == null || proxyEntry?.isReady == true
         return isProxyReady && !isRetired && isActive
     }
+    val state: Map<String, Any> get() {
+        return mapOf(
+            "proxyEntry" to (proxyEntry ?: "<no proxy>"),
+            "isRetired" to isRetired,
+            "isActive" to isActive,
+            "isReady" to isReady,
+            "numProxyAbsence" to numProxyAbsence.get(),
+            "numRunningTasks" to numRunningTasks.get(),
+            "maxAllowedProxyAbsence" to maxAllowedProxyAbsence
+        )
+    }
 
     init {
         maxAllowedProxyAbsence = conf.getInt(CapabilityTypes.PROXY_MAX_ALLOWED_PROXY_ABSENCE, 10)

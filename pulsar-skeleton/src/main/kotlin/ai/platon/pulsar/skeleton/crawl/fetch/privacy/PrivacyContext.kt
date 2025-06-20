@@ -146,6 +146,10 @@ interface PrivacyContext: AutoCloseable {
     /**
      * Get the readable privacy context state.
      * */
+    val state: Map<String, Any?>
+    /**
+     * Get the readable privacy context state.
+     * */
     val readableState: String
     /**
      * Build the privacy context status string.

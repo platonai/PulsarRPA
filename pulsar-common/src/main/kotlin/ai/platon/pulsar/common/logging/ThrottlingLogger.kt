@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.logging
 
 import ai.platon.pulsar.common.concurrent.ConcurrentPassiveExpiringSet
 import org.slf4j.Logger
+import org.slf4j.helpers.MessageFormatter
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -21,7 +22,7 @@ class ThrottlingLogger(
      * Logs a formatted message at the specified level if it hasn't been logged in the last [ttl].
      */
     fun logIfNotExpired(format: String, args: Array<out Any?>, logLevel: (String) -> Unit) {
-        val message = String.format(format, *args)
+        val message = MessageFormatter.arrayFormat(format, args).message
         if (!expiringMessageCache.contains(message)) {
             expiringMessageCache.add(message)
             logLevel(message)

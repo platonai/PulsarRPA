@@ -37,7 +37,7 @@ inputs:
   test_excludes:
     description: 'Test exclusion patterns'
     required: false
-    default: '**/rest/api/integration**'
+    default: '**integration**'
 
   # Docker Configuration
   network_name:

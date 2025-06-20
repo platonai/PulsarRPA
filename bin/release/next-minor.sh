@@ -1,15 +1,11 @@
 #bin
 
-# Find the first parent directory that contains a pom.xml file
+# Find the first parent directory that contains a VERSION file
 APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
-while [[ "$APP_HOME" != "/" ]]; do
-  if [[ -f "$APP_HOME/VERSION" ]]; then
-    break
-  fi
+while [[ ! -f "$APP_HOME/VERSION" && "$APP_HOME" != "/" ]]; do
   APP_HOME=$(dirname "$APP_HOME")
 done
-
-cd "$APP_HOME" || exit
+[[ -f "$APP_HOME/VERSION" ]] && cd "$APP_HOME" || exit
 
 # Make sure we are not at master branch
 if [[ "$(git rev-parse --abbrev-ref HEAD)" == "master" ]]; then

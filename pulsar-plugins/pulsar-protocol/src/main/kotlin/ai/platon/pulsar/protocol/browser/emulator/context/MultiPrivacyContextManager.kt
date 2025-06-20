@@ -21,6 +21,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.PopularEmoji
+import ai.platon.pulsar.common.logging.ThrottlingLogger
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.proxy.ProxyVendorException
 import ai.platon.pulsar.persist.AbstractWebPage
@@ -71,6 +72,7 @@ open class MultiPrivacyContextManager(
 
     private val logger = getLogger(MultiPrivacyContextManager::class)
     private val tracer = logger.takeIf { it.isTraceEnabled }
+    private val throttlingLogger = ThrottlingLogger(logger)
     private var numTasksAtLastReportTime = 0L
     private val allowedPrivacyContextCount: Int get() {
         // PRIVACY_CONTEXT_NUMBER is deprecated, use BROWSER_CONTEXT_NUMBER instead
@@ -211,6 +213,7 @@ open class MultiPrivacyContextManager(
      *
      * @param fingerprint The fingerprint of this privacy context.
      * @return A privacy context which is promised to be ready.
+     * @throws PrivacyException if no ready privacy context is available
      * */
     @Throws(PrivacyException::class)
     override fun tryGetNextReadyPrivacyContext(
@@ -247,6 +250,7 @@ open class MultiPrivacyContextManager(
      *
      * @param fingerprint The fingerprint of this privacy context.
      * @return A privacy context which is promised to be ready.
+     * @throws PrivacyException if no ready privacy context is available
      * */
     @Throws(PrivacyException::class)
     override fun tryGetNextUnderLoadedPrivacyContext(
@@ -270,7 +274,11 @@ open class MultiPrivacyContextManager(
                 getOrCreate(privacyAgent)
             }
 
-            return tryGetNextUnderLoadedPrivacyContext()
+            try {
+                return tryGetNextUnderLoadedPrivacyContext()
+            } catch (e: NoSuchElementException) {
+                throw PrivacyException("No under-loaded privacy context available", e)
+            }
         }
     }
 
@@ -355,7 +363,9 @@ open class MultiPrivacyContextManager(
      * to serve new tasks.
      *
      * @return A privacy context which is promised to be ready to serve a new task.
+     * @throws NoSuchElementException if no under-loaded privacy context is available
      * */
+    @Throws(NoSuchElementException::class)
     private fun tryGetNextUnderLoadedPrivacyContext(): PrivacyContext {
         var n = temporaryContexts.size
 
@@ -546,7 +556,7 @@ open class MultiPrivacyContextManager(
      * */
     private fun updatePrivacyContext(privacyContext: AbstractPrivacyContext, result: FetchResult) {
         if (!privacyContext.isActive) {
-            tracePrivacyContextInactive(privacyContext, result)
+            reportPrivacyContextInactive(privacyContext, result)
             return
         }
 
@@ -589,11 +599,11 @@ open class MultiPrivacyContextManager(
         }
     }
 
-    private fun tracePrivacyContextInactive(privacyContext: AbstractPrivacyContext, result: FetchResult) {
-        tracer?.trace(
-            "{}. Context {}/#{} is not active | {} | {}",
+    private fun reportPrivacyContextInactive(privacyContext: AbstractPrivacyContext, result: FetchResult) {
+        throttlingLogger.info(
+            "{}. Context {}/#{} is not active | {} | {} | {}",
             result.task.id, privacyContext.seq, privacyContext.privacyLeakWarnings,
-            result.status, result.task.url
+            result.status, privacyContext.readableState, result.task.url
         )
     }
 

@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.logging.ThrottlingLogger
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.common.proxy.ProxyVendorException
 import ai.platon.pulsar.common.readable
@@ -28,23 +29,25 @@ abstract class AbstractPrivacyContext(
 ) : PrivacyContext, Comparable<PrivacyContext> {
     companion object {
         private val SEQUENCER = AtomicInteger()
-        
+
         val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT: Duration = Duration.ofMinutes(30)
 
         val globalMetrics by lazy { PrivacyContextMetrics() }
     }
 
     private val logger = LoggerFactory.getLogger(PrivacyContext::class.java)
-    
+    private val throttlingLogger = ThrottlingLogger(logger)
+
     var webdriverFetcher: WebDriverFetcher? = null
-    
+
     override val id get() = privacyAgent.id
     val seq = SEQUENCER.incrementAndGet()
     override val display get() = privacyAgent.display
     val baseDir get() = privacyAgent.contextDir
 
     protected val numRunningTasks = AtomicInteger()
-    val minimumThroughput = if (privacyAgent.isPermanent) 0f else conf.getFloat(CapabilityTypes.PRIVACY_CONTEXT_MIN_THROUGHPUT, 0.3f)
+    val minimumThroughput =
+        if (privacyAgent.isPermanent) 0f else conf.getFloat(CapabilityTypes.PRIVACY_CONTEXT_MIN_THROUGHPUT, 0.3f)
     val maximumWarnings = if (privacyAgent.isPermanent) 100000 else conf.getInt(CapabilityTypes.PRIVACY_MAX_WARNINGS, 8)
     val minorWarningFactor = conf.getInt(CapabilityTypes.PRIVACY_MINOR_WARNING_FACTOR, 5)
     val privacyLeakWarnings = AtomicInteger()
@@ -58,25 +61,30 @@ abstract class AbstractPrivacyContext(
     val meterSmallPages = registry.meter(this, "$SEQUENCER$sms", "smallPages")
     val smallPageRate get() = 1.0 * meterSmallPages.count / meterTasks.count.coerceAtLeast(1)
     val successRate = meterSuccesses.count.toFloat() / meterTasks.count
+
     /**
      * The rate of failures. Failure rate is meaningless when there are few tasks.
      * */
     override val failureRate get() = 1 - successRate
     val failureRateThreshold = conf.getFloat(CapabilityTypes.PRIVACY_CONTEXT_FAILURE_RATE_THRESHOLD, 0.6f)
+
     /**
      * Check if failure rate is too high.
      * High failure rate make sense only when there are many tasks.
      * */
     override val isHighFailureRate get() = meterTasks.count > 100 && failureRate > failureRateThreshold
+
     /**
      * The start time of the privacy context.
      * */
     val startTime = Instant.now()
+
     /**
      * The last active time of the privacy context.
      * */
     var lastActiveTime = Instant.now()
         private set
+
     /**
      * The elapsed time of the privacy context since it's started.
      * */
@@ -87,6 +95,15 @@ abstract class AbstractPrivacyContext(
     private val privacyContextIdleTimeout
         get() = conf.getDuration(CapabilityTypes.PRIVACY_CONTEXT_IDLE_TIMEOUT, PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT)
     private val idleTimeout: Duration get() = privacyContextIdleTimeout.coerceAtLeast(fetchTaskTimeout)
+
+    private val isLeaked0: Boolean get() {
+        return !privacyAgent.isPermanent && privacyLeakWarnings.get() >= maximumWarnings
+    }
+
+    private val isActive0: Boolean get() {
+        return !isClosed && !isLeaked && !isRetired
+    }
+
     /**
      * The privacy context is retired, and should be closed soon.
      * */
@@ -108,30 +125,49 @@ abstract class AbstractPrivacyContext(
 
     override val isGood get() = meterSuccesses.meanRate >= minimumThroughput
 
-    override val isLeaked get() = !privacyAgent.isPermanent && privacyLeakWarnings.get() >= maximumWarnings
+    override val isLeaked: Boolean get() {
+        val leaked = isLeaked0
+        if (leaked) {
+            throttlingLogger.warn("Privacy context is leaked | {}", state)
+        }
+        return leaked
+    }
 
     override val isRetired get() = retired
 
-    override val isActive get() = !isLeaked && !isRetired && !isClosed
+    override val isActive: Boolean get() = isActive0
 
     override val isClosed get() = closed.get()
 
-    override val isReady get() = hasWebDriverPromise() && isActive
+    override val isReady get() = hasWebDriverPromise() && isActive0
 
     override val isFullCapacity = false
 
     override val isUnderLoaded get() = !isFullCapacity
 
-    override val readableState: String get() {
-        return listOf(
-            "closed" to isClosed, "leaked" to isLeaked, "active" to isActive,
+    override val state: Map<String, Any?> get() {
+        return mapOf(
+            "id" to id, "seq" to seq, "display" to display, "startTime" to startTime,
+            "closed" to isClosed, "leaked" to isLeaked, "active" to isActive0,
             "highFailure" to isHighFailureRate, "idle" to isIdle, "good" to isGood,
             "ready" to isReady, "retired" to isRetired
-        ).filter { it.second }.joinToString(",") { it.first }
+        )
     }
+
+    override val readableState: String get() = formatState()
 
     init {
         globalMetrics.contexts.mark()
+    }
+
+    fun formatState(): String {
+        val booleanStates = state.entries.filter { it.value is Boolean }.filter { it.value == true }
+            .sortedBy { it.key }
+            .joinToString(",") { it.key }
+        val otherStates = state.entries.filter { it.value !is Boolean }
+            .sortedBy { it.key }
+            .joinToString(",") { "${it.key}:${it.value}" }
+        return "{$booleanStates,$otherStates}"
     }
 
     abstract override fun promisedWebDriverCount(): Int
@@ -200,12 +236,12 @@ abstract class AbstractPrivacyContext(
      * Open an url in the privacy context.
      * */
     abstract override suspend fun open(url: String): FetchResult
-    
+
     /**
      * Open an url in the privacy context, with the specified options.
      * */
     abstract override suspend fun open(url: String, options: LoadOptions): FetchResult
-    
+
     /**
      * Open an url in the privacy context, with the specified fetch function.
      * */
@@ -214,7 +250,7 @@ abstract class AbstractPrivacyContext(
         val task = FetchTask.create(url, conf.toVolatileConfig())
         return run(task, fetchFun)
     }
-    
+
     /**
      * Run a task in the privacy context, with the specified fetch function.
      *
