@@ -197,6 +197,28 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
 
 ## 👨‍💻 专家用户 - 原生API：功能强大！
 
+### 🚀 超快速页面访问和数据提取：
+
+PulsarRPA 以协程速度并行访问网页，高效提取数据的同时最小化资源消耗。
+
+[View Kotlin Code](https://github.com/platonai/PulsarRPA/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
+
+<details>
+
+```kotlin
+val args = "-refresh -dropContent -interactLevel fastest"
+val resource = "seeds/amazon/best-sellers/leaf-categories.txt"
+val links =
+    LinkExtractors.fromResource(resource).asSequence().map { ListenableHyperlink(it, "", args = args) }.onEach {
+        it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
+            driver.addBlockedURLs(blockingUrls)
+        }
+    }.toList()
+
+session.submitAll(links)
+```
+</details>
+
 ### 🎮 浏览器控制：
 
 <details>

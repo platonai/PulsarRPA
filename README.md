@@ -197,6 +197,28 @@ The extracted data example:
 
 ## 👨‍💻 For Experts - Native API: Powerful!
 
+### 🚀 Superfast Page Visiting and Data Extraction:
+
+PulsarRPA visits web pages in parallel at coroutine speed, extracts data efficiency while minimizing resource consumption.
+
+[View Kotlin Code](https://github.com/platonai/PulsarRPA/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
+
+<details>
+
+```kotlin
+val args = "-refresh -dropContent -interactLevel fastest"
+val resource = "seeds/amazon/best-sellers/leaf-categories.txt"
+val links =
+    LinkExtractors.fromResource(resource).asSequence().map { ListenableHyperlink(it, "", args = args) }.onEach {
+        it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
+            driver.addBlockedURLs(blockingUrls)
+        }
+    }.toList()
+
+session.submitAll(links)
+```
+</details>
+
 ### 🎮 Browser Control:
 
 <details>
