@@ -4,10 +4,10 @@ param(
     [string]$remote = "origin"
 )
 
-# Find the first parent directory containing the VERSION file
+# 🔍 Find the first parent directory containing the VERSION file
 $AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
 while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
-    $AppHome = Split-Path -Parent $AppHome
+  $AppHome = Split-Path -Parent $AppHome
 }
 Set-Location $AppHome
 
