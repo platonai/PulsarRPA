@@ -2,50 +2,48 @@
 
 ## 🔌 Method 1: Configure via Environment Variables
 
-You can configure it at runtime using JVM system properties:
+You can configure the API key at runtime using JVM system properties.
 
-### Built-in LLM Providers
+---
 
-### Examples
+### 🌐 Built-in LLM Providers
 
-Linux/macOS:
+* DeepSeek
+* Doubao (VolcEngine)
+* OpenAI (and compatible providers)
+
+---
+
+### 📦 Examples
+
+#### 💻 Linux / macOS:
 
 ```bash
 export DEEPSEEK_API_KEY="sk-your-deepseek-key"
 java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
-```
+````
 
-Windows:
+#### 🪟 Windows (PowerShell):
 
-```powershell
-$env:DEEPSEEK_API_KEY="sk-your-deepseek-key" # Environment Variable
-java -DDEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
-```
-
-
-
-### OpenAI-compatible API providers (e.g., DeepSeek, Doubao, etc.):
-
-```bash
-java -DOPENAI_API_KEY=${OPENAI_API_KEY} \
-     -DOPENAI_MODEL_NAME=${OPENAI_MODEL_NAME} \
-     -DOPENAI_BASE_URL=${OPENAI_BASE_URL} \
-     -jar PulsarRPA.jar
-```
-
-<details>
-<summary>💡 PowerShell Version</summary>
+✅ **Option 1: Using Local (Script-Only) Variable**
 
 ```powershell
-java -DOPENAI_API_KEY=${OPENAI_API_KEY} `
-     -DOPENAI_MODEL_NAME=${OPENAI_MODEL_NAME} `
-     -DOPENAI_BASE_URL=${OPENAI_BASE_URL} `
-     -jar PulsarRPA.jar
+$DEEPSEEK_API_KEY = "sk-your-deepseek-key"
+java -D"DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY" -jar PulsarRPA.jar
 ```
 
-</details>
+⚠️ This sets a PowerShell *local variable*, which works **only inside PowerShell**, and is passed correctly because Java gets the interpolated string from PowerShell.
 
-## ⚙️ Method 2: Use `application.properties` or `application-private.properties`
+✅ **Option 2: Using Environment Variable (System-Wide)**
+
+```powershell
+$env:DEEPSEEK_API_KEY = "sk-your-deepseek-key"
+java -D"DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY" -jar PulsarRPA.jar
+```
+
+---
+
+## ⚙️ Method 2: Use Spring Boot Configuration Files
 
 PulsarRPA supports Spring Boot–style property files. You can place your private config in:
 
@@ -78,16 +76,35 @@ openai.base.url=https://api.openai.com/v1
 
 ---
 
-### 🧩 Supported Environment Variables
+## 🧩 Supported Configurations
 
-#### DeepSeek
+PulsarRPA follows **Spring Boot configuration rules**, which means you can use configuration keys in two equivalent formats:
+
+## 🔑 Key Format Equivalence
+
+**Important**: The following formats are **identical** and interchangeable:
+
+| Environment Variable Format | Properties File Format | Description |
+|----------------------------|----------------------|-------------|
+| `DEEPSEEK_API_KEY` | `deepseek.api.key` | DeepSeek API key |
+| `VOLCENGINE_API_KEY` | `volcengine.api.key` | VolcEngine (Doubao) API key |
+| `OPENAI_API_KEY` | `openai.api.key` | OpenAI API key |
+| `BROWSER_CONTEXT_MODE` | `browser.context.mode` | Browser context mode |
+| `BROWSER_MAX_OPEN_TABS` | `browser.max.active.tabs` | Max browser tabs |
+| `PROXY_ROTATION_URL` | `proxy.rotation.url` | Proxy rotation endpoint |
+
+> 💡 **Spring Boot Convention**: Environment variables use `UPPER_CASE_WITH_UNDERSCORES` while properties files use `lower.case.with.dots`. Both formats reference the same configuration value.
+
+---
+
+### DeepSeek
 
 | Variable              | Description                                               |
 |-----------------------|-----------------------------------------------------------|
 | `DEEPSEEK_API_KEY`    | DeepSeek API key                                          |
 | `DEEPSEEK_MODEL_NAME` | DeepSeek model name (optional, default: `deepseek-chat`)  |
 
-#### Doubao (VolcEngine)
+### Doubao (VolcEngine)
 
 | Variable                | Description                                                                               |
 |------------------------|-------------------------------------------------------------------------------------------|
@@ -95,7 +112,7 @@ openai.base.url=https://api.openai.com/v1
 | `VOLCENGINE_MODEL_NAME`| VolcEngine model name (optional, default: `doubao-1.5-pro-32k-250115`)                    |
 | `VOLCENGINE_BASE_URL`  | VolcEngine API base URL (optional, default: `https://ark.cn-beijing.volces.com/api/v3`)   |
 
-#### OpenAI (and compatible providers)
+### OpenAI (and compatible providers)
 
 | Variable            | Description                                                              |
 |--------------------|--------------------------------------------------------------------------|
