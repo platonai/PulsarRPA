@@ -54,9 +54,7 @@
 
 #### 🧩 下载
 
-
-```bash
-# Linux/macOS/Windows（使用 curl）
+```shell
 curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.12/PulsarRPA.jar
 ```
 
@@ -64,10 +62,12 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 
 ```shell
 echo $DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
-java -D"EEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
+java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 ```
 
 > 🔍 **提示：** 确保在环境中设置了 `DEEPSEEK_API_KEY` 或者其他提供商的 API KEY，否则AI功能将不可用。
+
+> 🔍 **提示:** Windows系统下, `$DEEPSEEK_API_KEY` 和 `$env:DEEPSEEK_API_KEY` 是不同的环境变量。
 
 ---
 
@@ -132,7 +132,7 @@ curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/p
 
 #### 📄 JSON版本：
 
-```bash
+```shell
 curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
     "url": "https://www.amazon.com/dp/B0C1H26C46",
     "onBrowserLaunchedActions": ["清除浏览器cookies"],
@@ -151,7 +151,7 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
 
 利用 `x/e` API 的强大功能，实现高精度、灵活且智能的数据提取。
 
-  ```bash
+  ```shell
   curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
     llm_extract(dom, '产品名称、价格、评分') as llm_extracted_data,

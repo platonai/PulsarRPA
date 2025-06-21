@@ -55,19 +55,20 @@ Find all links containing /dp/.
 
 #### 🧩 Download
 
-```bash
-# For Linux/macOS/Windows (with curl)
+```shell
 curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.12/PulsarRPA.jar
 ```
 
 #### 🚀 Run
 
-```bash
+```shell
 echo $DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
-java -D"EEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
+java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 ```
 
 > 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` or other LLM API key is set in your environment, or AI features will not be available.
+
+> 🔍 **Tip:** On Windows, `$DEEPSEEK_API_KEY` and `$env:DEEPSEEK_API_KEY` are different.
 
 ---
 
@@ -94,7 +95,6 @@ java -D"EEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 
 <details>
 
-Linux/MacOS:
 ```shell
 echo $DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
@@ -132,7 +132,7 @@ curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/p
 
 #### 📄 JSON-Based Version:
 
-```bash
+```shell
 curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
     "url": "https://www.amazon.com/dp/B0C1H26C46",
     "onBrowserLaunchedActions": ["clear browser cookies"],
@@ -151,7 +151,7 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
 
 Harness the power of the `x/e` API for highly precise, flexible, and intelligent data extraction.
 
-  ```bash
+  ```shell
   curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
     llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
