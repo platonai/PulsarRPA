@@ -62,16 +62,9 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 
 #### 🚀 Run
 
-Linux/MacOS:
 ```bash
-echo $DEEPSEEK_API_KEY # make sure LLM api key is set
-java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
-```
-
-Windows:
-```powershell
-echo $env:DEEPSEEK_API_KEY # make sure LLM api key is set
-java -DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
+echo $DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+java -D"EEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 ```
 
 > 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` or other LLM API key is set in your environment, or AI features will not be available.
@@ -103,16 +96,9 @@ java -DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
 
 Linux/MacOS:
 ```shell
-echo $DEEPSEEK_API_KEY # make sure LLM api key is set
+echo $DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
 ```
-
-Windows:
-```powershell
-echo $env:DEEPSEEK_API_KEY # make sure LLM api key is set
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY galaxyeye88/pulsar-rpa:latest
-```
-
 </details>
 
 ---
@@ -122,6 +108,7 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY galaxyeye88
 Use the `commands` API to perform browser operations, extract web data, analyze websites, and more.
 
 ### 📥 Example Request (Text-based):
+
 
 WebUI: http://localhost:8182/command.html
 
@@ -197,7 +184,32 @@ The extracted data example:
 
 ## 👨‍💻 For Experts - Native API: Powerful!
 
+### 🚀 Superfast Page Visiting and Data Extraction:
+
+PulsarRPA visits web pages in parallel at coroutine speed, extracts data efficiency while minimizing resource consumption.
+
+<details>
+
+```kotlin
+val args = "-refresh -dropContent -interactLevel fastest"
+val resource = "seeds/amazon/best-sellers/leaf-categories.txt"
+val links =
+    LinkExtractors.fromResource(resource).asSequence().map { ListenableHyperlink(it, "", args = args) }.onEach {
+        it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
+            driver.addBlockedURLs(blockingUrls)
+        }
+    }.toList()
+
+session.submitAll(links)
+```
+
+📝 Example: [View Kotlin Code](https://github.com/platonai/PulsarRPA/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
+
+</details>
+
 ### 🎮 Browser Control:
+
+PulsarRPA implements coroutine-safe browser control.
 
 <details>
 
@@ -221,7 +233,9 @@ session.open(url, eventHandlers)
 
 ---
 
-### 🤖 Complete Robotic Process Automation Capabilities:
+### 🤖 Robotic Process Automation Capabilities:
+
+PulsarRPA provides flexible robotic process automation capabilities.
 
 <details>
 
@@ -248,6 +262,8 @@ session.load(url, options)
 ---
 
 ### 🔍 Complex Data Extraction with X-SQL:
+
+PulsarRPA provides X-SQL for complex data extraction.
 
 <details>
 

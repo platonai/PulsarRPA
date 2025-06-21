@@ -54,7 +54,6 @@
 
 #### 🧩 下载
 
-
 ```bash
 # Linux/macOS/Windows（使用 curl）
 curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.12/PulsarRPA.jar
@@ -62,16 +61,9 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 
 #### 🚀 运行
 
-Linux/MacOS：
-```bash
-echo $DEEPSEEK_API_KEY # 确保设置了大语言模型API密钥
-java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
-```
-
-Windows：
-```powershell
-echo $env:DEEPSEEK_API_KEY # 确保设置了大语言模型API密钥
-java -DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
+```shell
+echo $DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+java -D"EEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 ```
 
 > 🔍 **提示：** 确保在环境中设置了 `DEEPSEEK_API_KEY` 或者其他提供商的 API KEY，否则AI功能将不可用。
@@ -101,16 +93,9 @@ java -DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
 
 <details>
 
-Linux/MacOS：
 ```shell
-echo $DEEPSEEK_API_KEY # 确保设置了大语言模型API密钥
+echo $DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
-```
-
-Windows：
-```powershell
-echo $env:DEEPSEEK_API_KEY # 确保设置了大语言模型API密钥
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY galaxyeye88/pulsar-rpa:latest
 ```
 
 </details>
@@ -197,7 +182,32 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
 
 ## 👨‍💻 专家用户 - 原生API：功能强大！
 
+### 🚀 超快速页面访问和数据提取：
+
+PulsarRPA 以协程速度并行访问网页，高效提取数据的同时最小化资源消耗。
+
+<details>
+
+```kotlin
+val args = "-refresh -dropContent -interactLevel fastest"
+val resource = "seeds/amazon/best-sellers/leaf-categories.txt"
+val links =
+    LinkExtractors.fromResource(resource).asSequence().map { ListenableHyperlink(it, "", args = args) }.onEach {
+        it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
+            driver.addBlockedURLs(blockingUrls)
+        }
+    }.toList()
+
+session.submitAll(links)
+```
+
+📝 Example: [View Kotlin Code](https://github.com/platonai/PulsarRPA/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
+
+</details>
+
 ### 🎮 浏览器控制：
+
+PulsarRPA 实现了协程安全的浏览器控制。
 
 <details>
 
@@ -221,7 +231,9 @@ session.open(url, eventHandlers)
 
 ---
 
-### 🤖 完整机器人流程自动化能力：
+### 🤖 机器人流程自动化能力：
+
+PulsarRPA 提供灵活的机器人流程自动化。
 
 <details>
 
@@ -248,6 +260,8 @@ session.load(url, options)
 ---
 
 ### 🔍 使用X-SQL进行复杂数据提取：
+
+PulsarRPA 提供 X-SQL 进行复杂数据提取。
 
 <details>
 
