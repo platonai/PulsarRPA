@@ -1,6 +1,51 @@
 # 🤖 LLM Configuration
 
-## ⚙️ Method 1: Use `application.properties` or `application-private.properties`
+## 🔌 Method 1: Configure via Environment Variables
+
+You can configure it at runtime using JVM system properties:
+
+### Built-in LLM Providers
+
+### Examples
+
+Linux/macOS:
+
+```bash
+export DEEPSEEK_API_KEY="sk-your-deepseek-key"
+java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+```
+
+Windows:
+
+```powershell
+$env:DEEPSEEK_API_KEY="sk-your-deepseek-key" # Environment Variable
+java -DDEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
+```
+
+
+
+### OpenAI-compatible API providers (e.g., DeepSeek, Doubao, etc.):
+
+```bash
+java -DOPENAI_API_KEY=${OPENAI_API_KEY} \
+     -DOPENAI_MODEL_NAME=${OPENAI_MODEL_NAME} \
+     -DOPENAI_BASE_URL=${OPENAI_BASE_URL} \
+     -jar PulsarRPA.jar
+```
+
+<details>
+<summary>💡 PowerShell Version</summary>
+
+```powershell
+java -DOPENAI_API_KEY=${OPENAI_API_KEY} `
+     -DOPENAI_MODEL_NAME=${OPENAI_MODEL_NAME} `
+     -DOPENAI_BASE_URL=${OPENAI_BASE_URL} `
+     -jar PulsarRPA.jar
+```
+
+</details>
+
+## ⚙️ Method 2: Use `application.properties` or `application-private.properties`
 
 PulsarRPA supports Spring Boot–style property files. You can place your private config in:
 
@@ -33,33 +78,6 @@ openai.base.url=https://api.openai.com/v1
 
 ---
 
-## 🔌 Method 2: Configure via Environment Variables
-
-You can configure it at runtime using JVM system properties:
-
-OpenAI-compatible API providers (e.g., DeepSeek, Moonshot, Doubao, etc.):
-```bash
-java -DOPENAI_API_KEY=${OPENAI_API_KEY} \
-     -DOPENAI_MODEL_NAME=${OPENAI_MODEL_NAME} \
-     -DOPENAI_BASE_URL=${OPENAI_BASE_URL} \
-     -jar PulsarRPA.jar
-```
-
-<details>
-<summary>💡 PowerShell Version</summary>
-
-```powershell
-java -DOPENAI_API_KEY=${OPENAI_API_KEY} `
-     -DOPENAI_MODEL_NAME=${OPENAI_MODEL_NAME} `
-     -DOPENAI_BASE_URL=${OPENAI_BASE_URL} `
-     -jar PulsarRPA.jar
-```
-
-</details>
-
-The table formatting in the environment variables section can be improved for better readability. Let me update it with better structure, removing the empty cells and organizing it by provider.
-
-<!-- replace lines 60 to 72 -->
 ### 🧩 Supported Environment Variables
 
 #### DeepSeek

@@ -67,7 +67,7 @@ java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 
 > 🔍 **提示：** 确保在环境中设置了 `DEEPSEEK_API_KEY` 或者其他提供商的 API KEY，否则AI功能将不可用。
 
-> 🔍 **提示:** Windows系统下, `$DEEPSEEK_API_KEY` 和 `$env:DEEPSEEK_API_KEY` 是不同的环境变量。
+> 🔍 **提示:** Windows系统下, `$DEEPSEEK_API_KEY` 和 `$env:DEEPSEEK_API_KEY` 均可使用，但他们是不同的变量。
 
 ---
 

@@ -44,7 +44,6 @@ Find all links containing /dp/.
 📺 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
-
 ---
 
 # 🚀 Quick Start Guide
@@ -68,7 +67,7 @@ java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 
 > 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` or other LLM API key is set in your environment, or AI features will not be available.
 
-> 🔍 **Tip:** On Windows, `$DEEPSEEK_API_KEY` and `$env:DEEPSEEK_API_KEY` are different.
+> 🔍 **Tip:** On Windows, both `$DEEPSEEK_API_KEY` and `$env:DEEPSEEK_API_KEY` works, but they are different variables.
 
 ---
 
