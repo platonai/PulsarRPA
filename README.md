@@ -184,7 +184,8 @@ The extracted data example:
 
 ### 🚀 Superfast Page Visiting and Data Extraction:
 
-PulsarRPA visits web pages in parallel at coroutine speed, extracts data efficiency while minimizing resource consumption.
+PulsarRPA enables high-speed parallel web scraping with coroutine-based concurrency, delivering efficient data extraction 
+while minimizing resource overhead.
 
 <details>
 
