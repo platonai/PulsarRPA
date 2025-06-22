@@ -29,12 +29,11 @@ class ChatModelFactoryTest {
      * */
     @org.junit.jupiter.api.Test
     fun `doubao API should be compatible with OpenAI API`() {
-        System.setProperty("OPENAI_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3")
-        System.setProperty("OPENAI_MODEL_NAME", "doubao-1-5-pro-32k-250115")
-        System.setProperty("OPENAI_API_KEY", "9cc8e998-4655-4e90-a54c1-12345abcdefg")
-
+        val modelName = "doubao-1-5-pro-32k-250115"
+        val apiKey = "9cc8e998-4655-4e90-a54c1-12345abcdefg"
+        val baseUrl = "https://ark.cn-beijing.volces.com/api/v3"
         val conf = ImmutableConfig()
-        val model = ChatModelFactory.getOrCreate(conf)
+        val model = ChatModelFactory.getOrCreateOpenAICompatibleModel(modelName, apiKey, baseUrl, conf)
         assertNotNull(model)
         assertIs<ChatModelImpl>(model)
 
