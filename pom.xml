@@ -655,7 +655,9 @@
                 <version>${surefire.version}</version>
                 <configuration>
                     <excludedGroups>TimeConsumingTest,ExternalServiceTest</excludedGroups>
-
+                    <!-- All tests are in the same JVM process -->
+                    <forkCount>1</forkCount>
+                    <reuseForks>true</reuseForks>
                 </configuration>
 
                 <dependencies>
