@@ -61,26 +61,29 @@ Find all links containing /dp/.
 
 #### 🧩 Download
 
-```bash
-# For Linux/macOS/Windows (with curl)
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.1.0/PulsarRPA.jar
+```shell
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.12/PulsarRPA.jar
 ```
 
 #### 🚀 Run
 
-```bash
-java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+```shell
+# make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+echo $DEEPSEEK_API_KEY
+java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 ```
 
-> 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` is set in your environment, or AI features will not be available.
+> 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` or other LLM API key is set in your environment, or AI features will not be available.
+
+> 🔍 **Tip:** On Windows, `$DEEPSEEK_API_KEY` and `$env:DEEPSEEK_API_KEY` are different.
 
 ---
 
 <details>
 <summary>📂 Resources</summary>
 
-* 🟦 [GitHub Release Download](https://github.com/platonai/PulsarRPA/releases/download/v3.1.0/PulsarRPA.jar)
-* 📁 [Mirror / Backup Download](http://static.platonai.cn/repo/ai/platon/pulsar/)
+* 🟦 [GitHub Release Download](https://github.com/platonai/PulsarRPA/releases/download/v3.0.12/PulsarRPA.jar)
+* 📁 [Mirror / Backup Download](https://static.platonai.cn/repo/ai/platon/pulsar/)
 * 🛠️ [LLM Configuration Guide](docs/config/llm/llm-config.md)
 * 🛠️ [Configuration Guide](docs/config.md)
 
@@ -100,9 +103,10 @@ java -DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 <details>
 
 ```shell
+# make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+echo $DEEPSEEK_API_KEY
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
 ```
-
 </details>
 
 ---
@@ -136,7 +140,7 @@ curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/p
 
 #### 📄 JSON-Based Version:
 
-```bash
+```shell
 curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
     "url": "https://www.amazon.com/dp/B0C1H26C46",
     "onBrowserLaunchedActions": ["clear browser cookies"],
@@ -155,7 +159,7 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
 
 Harness the power of the `x/e` API for highly precise, flexible, and intelligent data extraction.
 
-  ```bash
+  ```shell
   curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
     llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
@@ -187,7 +191,32 @@ The extracted data example:
 
 ## 👨‍💻 For Experts - Native API: Powerful!
 
+### 🚀 Superfast Page Visiting and Data Extraction:
+
+PulsarRPA visits web pages in parallel at coroutine speed, extracts data efficiency while minimizing resource consumption.
+
+<details>
+
+```kotlin
+val args = "-refresh -dropContent -interactLevel fastest"
+val resource = "seeds/amazon/best-sellers/leaf-categories.txt"
+val links =
+    LinkExtractors.fromResource(resource).asSequence().map { ListenableHyperlink(it, "", args = args) }.onEach {
+        it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
+            driver.addBlockedURLs(blockingUrls)
+        }
+    }.toList()
+
+session.submitAll(links)
+```
+
+📝 Example: [View Kotlin Code](https://github.com/platonai/PulsarRPA/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
+
+</details>
+
 ### 🎮 Browser Control:
+
+PulsarRPA implements coroutine-safe browser control.
 
 <details>
 
@@ -211,7 +240,9 @@ session.open(url, eventHandlers)
 
 ---
 
-### 🤖 Complete Robotic Process Automation Capabilities:
+### 🤖 Robotic Process Automation Capabilities:
+
+PulsarRPA provides flexible robotic process automation capabilities.
 
 <details>
 
@@ -238,6 +269,8 @@ session.load(url, options)
 ---
 
 ### 🔍 Complex Data Extraction with X-SQL:
+
+PulsarRPA provides X-SQL for complex data extraction.
 
 <details>
 
