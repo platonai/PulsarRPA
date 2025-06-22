@@ -24,10 +24,12 @@ data class JsEvaluation(
  * The webpage navigation history.
  * */
 class NavigateHistory {
+    private val _history = Collections.synchronizedList(ArrayList<NavigateEntry>())
+
     /**
      * Navigate history is small, so search is very fast in a list.
      * */
-    val history: Queue<NavigateEntry> = ConcurrentLinkedQueue()
+    val history: List<NavigateEntry> get() = _history
 
     /**
      *
@@ -53,19 +55,19 @@ class NavigateHistory {
     fun findAll(urlRegex: Regex) = history.filter { it.url.matches(urlRegex) }
 
     fun add(entry: NavigateEntry) {
-        history.add(entry)
+        _history.add(entry)
     }
 
     fun removeAll(url: String) {
-        history.removeAll { it.url == url }
+        _history.removeAll { it.url == url }
     }
 
     fun removeAll(urlRegex: Regex) {
-        history.removeAll { it.url.matches(urlRegex) }
+        _history.removeAll { it.url.matches(urlRegex) }
     }
 
     fun clear() {
-        history.clear()
+        _history.clear()
     }
 }
 
