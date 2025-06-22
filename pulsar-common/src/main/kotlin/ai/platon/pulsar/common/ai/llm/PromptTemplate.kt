@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.ai.llm
 
-class PromptTemplate(
+open class PromptTemplate(
     val template: String,
     val variables: Map<String, Any> = emptyMap(),
     val reservedVariables: List<String> = emptyList(),
@@ -40,3 +40,4 @@ class PromptTemplate(
         return result
     }
 }
+

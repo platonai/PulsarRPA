@@ -4,10 +4,10 @@ param(
     [string]$remote = "origin"
 )
 
-# Find the first parent directory containing the VERSION file
+# 🔍 Find the first parent directory containing the VERSION file
 $AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
 while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
-    $AppHome = Split-Path -Parent $AppHome
+  $AppHome = Split-Path -Parent $AppHome
 }
 Set-Location $AppHome
 
@@ -17,7 +17,7 @@ $version = $SNAPSHOT_VERSION -replace "-SNAPSHOT", ""
 
 $parts = $version -split "\."
 $PREFIX = $parts[0] + "." + $parts[1]
-$pattern = "^v$PREFIX\.[0-9]+-ci\.[0-9]+$"
+$pattern = "^v$version-ci\.[0-9]+$"
 
 # Get all matching tags and sort them by version and ci number
 $tags = git tag --list | Where-Object { $_ -match "^$pattern$" }

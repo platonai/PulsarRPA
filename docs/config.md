@@ -43,17 +43,32 @@ You can configure PulsarRPA using either OS environment variables or JVM system 
 #### 💻 Example - OS environment variables
 
 For standard desktop usage:
+
+Linux/MacOS
 ```bash
 export DEEPSEEK_API_KEY=sk-yourdeepseekapikey
 ```
 
+Windows (PowerShell)
+```powershell
+$env:DEEPSEEK_API_KEY = "sk-yourdeepseekapikey"
+```
+
 If you want to use your daily used browser profile (remember closed the browser first):
+
+Linux/MacOS
 ```bash
 export BROWSER_CONTEXT_MODE=SYSTEM_DEFAULT
 ```
 
+Windows (PowerShell)
+```powershell
+$env:BROWSER_CONTEXT_MODE = "SYSTEM_DEFAULT"
+```
+
 For high-performance parallel crawling:
 
+Linux/MacOS
 ```bash
 export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 export BROWSER_CONTEXT_MODE=SEQUENTIAL
@@ -62,11 +77,20 @@ export BROWSER_MAX_OPEN_TABS=8
 export BROWSER_DISPLAY_MODE=HEADLESS
 ```
 
+Windows (PowerShell)
+```powershell
+$env:PROXY_ROTATION_URL = "https://your-proxy-provider.com/rotation-endpoint"
+$env:BROWSER_CONTEXT_MODE = "SEQUENTIAL"
+$env:BROWSER_CONTEXT_NUMBER = 2
+$env:BROWSER_MAX_OPEN_TABS = 8
+$env:BROWSER_DISPLAY_MODE = "HEADLESS"
+```
+
 #### ☕ Example – JVM Arguments
 
 Set configuration via command-line JVM args:
 
-```bash
+```
 -Ddeepseek.api.key=sk-yourdeepseekapikey
 ```
 

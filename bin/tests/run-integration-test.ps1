@@ -13,7 +13,7 @@ $ErrorActionPreference = "Stop"
 Write-Host "====================================================================" -ForegroundColor Cyan
 Write-Host "[TEST 1/4] Running command-sse.ps1 integration test..." -ForegroundColor Yellow
 Write-Host "--------------------------------------------------------------------" -ForegroundColor Gray
-& ./bin/command-sse.ps1
+& $AppHome/bin/command-sse.ps1
 if ($LASTEXITCODE -eq 0) {
     Write-Host "[PASS] Integration test command-sse.ps1 completed successfully" -ForegroundColor Green
 } else {
@@ -24,7 +24,7 @@ Write-Host "====================================================================
 
 Write-Host "[TEST 2/4] Running scrape.ps1 integration test..." -ForegroundColor Yellow
 Write-Host "--------------------------------------------------------------------" -ForegroundColor Gray
-& ./bin/scrape.ps1
+& $AppHome/bin/scrape.ps1
 if ($LASTEXITCODE -eq 0) {
     Write-Host "[PASS] Integration test scrape.ps1 completed successfully" -ForegroundColor Green
 } else {
@@ -37,7 +37,7 @@ Write-Host "[TEST 3/4] Running scrape-async.ps1 integration test with parameters
 Write-Host "      - Seeds file: ./bin/seeds.txt" -ForegroundColor Gray
 Write-Host "      - Max concurrent tasks: 10" -ForegroundColor Gray
 Write-Host "--------------------------------------------------------------------" -ForegroundColor Gray
-& ./bin/scrape-async.ps1 -f ./bin/seeds.txt -m 10
+& $AppHome/bin/scrape-async.ps1 -f ./bin/seeds.txt -m 10
 if ($LASTEXITCODE -eq 0) {
     Write-Host "[PASS] Integration test scrape-async.ps1 completed successfully" -ForegroundColor Green
 } else {
@@ -48,7 +48,7 @@ Write-Host "====================================================================
 
 Write-Host "[TEST 4/4] Running test-curl-commands.ps1 integration test" -ForegroundColor Yellow
 Write-Host "--------------------------------------------------------------------" -ForegroundColor Gray
-& ./bin/test-curl-commands.ps1
+& $AppHome/bin/tests/test-curl-commands.ps1
 if ($LASTEXITCODE -eq 0) {
     Write-Host "[PASS] Integration test test-curl-commands.ps1 completed successfully" -ForegroundColor Green
 } else {

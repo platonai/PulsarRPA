@@ -2,6 +2,7 @@ package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
+import ai.platon.pulsar.common.ai.llm.PromptTemplateLoader
 import ai.platon.pulsar.common.serialize.json.JSONExtractor
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.URLUtils
@@ -52,14 +53,16 @@ class ConversationService(
         // Replace the URL in the request with a placeholder, so the result from the LLM can be cached.
         val processedRequest = plainCommand.replace(url, PLACEHOLDER_URL)
 
-        val prompt = PromptTemplate(
-            template = API_REQUEST_PLAIN_COMMAND_CONVERSION_PROMPT,
+        val resource = "docs/prompts/api/request/command/api_request_plain_command_conversion_prompt.md"
+        val prompt = PromptTemplateLoader(
+            resource,
+            fallbackTemplate = API_REQUEST_PLAIN_COMMAND_CONVERSION_PROMPT,
             variables = mapOf(
                 PLACEHOLDER_REQUEST_JSON_COMMAND_TEMPLATE to REQUEST_JSON_COMMAND_TEMPLATE,
                 PLACEHOLDER_REQUEST_PLAIN_COMMAND_TEMPLATE to processedRequest
             ),
             reservedVariables = listOf(PLACEHOLDER_URL)
-        ).render()
+        ).load().render()
 
         var content = session.chat(prompt).content
         if (content.isBlank()) {
@@ -71,8 +74,12 @@ class ConversationService(
         return JSONExtractor.extractJsonBlocks(content).firstOrNull()
     }
 
+    val resource = "docs/prompts/api/request/command/convert_response_to_markdown_prompt.md"
     fun convertResponseToMarkdown(jsonResponse: String): String {
-        val userMessage = PromptTemplate(CONVERT_RESPONSE_TO_MARKDOWN_PROMPT, mapOf(PLACEHOLDER_JSON_STRING to jsonResponse)).render()
+        val userMessage = PromptTemplateLoader(resource,
+            CONVERT_RESPONSE_TO_MARKDOWN_PROMPT,
+            mapOf(PLACEHOLDER_JSON_STRING to jsonResponse)
+        ).load().render()
         return session.chat(userMessage).content
     }
 

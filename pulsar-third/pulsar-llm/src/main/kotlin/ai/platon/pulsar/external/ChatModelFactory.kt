@@ -33,40 +33,20 @@ Simple guide to configure LLM:
 
 Make sure the environment variable is set:
 
-```bash
-echo ${'$'}DEEPSEEK_API_KEY # make sure the environment variable is set
+```shell
+echo ${'$'}DEEPSEEK_API_KEY # make sure the environment variable is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
 ```
 
 Run PulsarRPA with the environment variable:
 
-```bash
-java -DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+```shell
+java -D"EEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 ```
 
 Or run PulsarRPA with Docker:
 
-```bash
+```shell
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
-```
-
-### Windows
-
-Make sure the environment variable is set:
-
-```powershell
-echo ${'$'}env:DEEPSEEK_API_KEY
-```
-
-Run PulsarRPA with the environment variable:
-
-```powershell
-java -DEEPSEEK_API_KEY=${'$'}env:DEEPSEEK_API_KEY -jar PulsarRPA.jar
-```
-
-Or run PulsarRPA with Docker:
-
-```powershell
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${'$'}env:DEEPSEEK_API_KEY galaxyeye88/pulsar-rpa:latest
 ```
 
 For more details, please refer to the [LLM configuration documentation]($DOCUMENT_PATH)
