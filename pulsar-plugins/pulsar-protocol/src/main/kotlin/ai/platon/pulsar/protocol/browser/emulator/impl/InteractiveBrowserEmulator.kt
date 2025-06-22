@@ -708,7 +708,6 @@ open class InteractiveBrowserEmulator(
         var message: Any? = null
         try {
             var msg: Any? = null
-            // TODO: while driver.isWorking
             while ((msg == null || msg == false) && i++ < maxRound && isActive && !fetchTask.isCanceled) {
                 msg = evaluate(interactTask, expression)
 

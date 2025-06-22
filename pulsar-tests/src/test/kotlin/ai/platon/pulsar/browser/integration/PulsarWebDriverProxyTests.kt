@@ -1,5 +1,6 @@
-package ai.platon.pulsar.browser
+package ai.platon.pulsar.browser.integration
 
+import ai.platon.pulsar.browser.WebDriverTestBase
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.proxy.ProxyEntry
