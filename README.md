@@ -61,7 +61,8 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 #### 🚀 Run
 
 ```shell
-echo $DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+# make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+echo $DEEPSEEK_API_KEY
 java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 ```
 
@@ -95,7 +96,8 @@ java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 <details>
 
 ```shell
-echo $DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+# make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+echo $DEEPSEEK_API_KEY
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
 ```
 </details>
