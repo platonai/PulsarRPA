@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import java.util.concurrent.Executors
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class LoadingWebDriverPoolTest {
     private val config = ImmutableConfig()
@@ -33,6 +34,8 @@ class LoadingWebDriverPoolTest {
 
     @BeforeEach
     fun setup() {
+        assertTrue { seeds.isNotEmpty() }
+
         browserId = if (checkPlaywrightAvailable()) {
             BrowserId.createRandomTemp(BrowserType.PLAYWRIGHT_CHROME)
         } else {
