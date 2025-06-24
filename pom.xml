@@ -21,7 +21,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>3.0.12-SNAPSHOT</version>
+    <version>3.0.13-SNAPSHOT</version>
 
     <name>Pulsar RPA</name>
     <description>Engage and automate web interactions at scale.</description>
@@ -172,7 +172,7 @@
             </properties>
             <build>
                 <plugins>
-                    <!--用于在 Maven 项目中收集和生成 Java 代码的测试覆盖率报告 -->
+                    <!--用于�?Maven 项目中收集和生成 Java 代码的测试覆盖率报告 -->
                     <!-- instructions covered ratio is expected minimum is 0.70 -->
                     <plugin>
                         <groupId>org.jacoco</groupId>

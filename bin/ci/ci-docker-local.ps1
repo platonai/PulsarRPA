@@ -356,8 +356,8 @@ function Invoke-IntegrationTests {
     Write-Host "🧪 Running integration tests..." -ForegroundColor Green
 
     $testScript = $null
-    if (Test-Path "bin/run-integration-test.ps1") {
-        $testScript = "bin/run-integration-test.ps1"
+    if (Test-Path "bin/tests/run-integration-test.ps1") {
+        $testScript = "bin/tests/run-integration-test.ps1"
     } elseif (Test-Path "bin/run-integration-test.sh") {
         $testScript = "bin/run-integration-test.sh"
     } else {

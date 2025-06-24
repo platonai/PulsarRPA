@@ -121,16 +121,16 @@ jobs:
         run: |
           echo "::group::🧪 Integration Tests"
           
-          if [ -f "./bin/run-integration-test.sh" ]; then
+          if [ -f "./bin/tests/run-integration-test.sh" ]; then
             echo "✅ Found integration test script"
-            chmod +x ./bin/run-integration-test.sh
+            chmod +x ./bin/tests/run-integration-test.sh
           
             echo "🚀 Running integration tests..."
             echo "Application URL: http://localhost:8182"
             echo "Network: ${{ env.NETWORK_NAME }}"
             echo "Container: ${{ env.CONTAINER_NAME }}"
           
-            if timeout 600 ./bin/run-integration-test.sh; then
+            if timeout 600 ./bin/tests/run-integration-test.sh; then
               echo "✅ Integration tests passed"
               echo "integration_status=success" >> $GITHUB_OUTPUT
             else
@@ -139,7 +139,7 @@ jobs:
               exit 1
             fi
           else
-            echo "⚠️ Integration test script not found: ./bin/run-integration-test.sh"
+            echo "⚠️ Integration test script not found: ./bin/tests/run-integration-test.sh"
             echo "Skipping integration tests..."
             echo "integration_status=skipped" >> $GITHUB_OUTPUT
           fi

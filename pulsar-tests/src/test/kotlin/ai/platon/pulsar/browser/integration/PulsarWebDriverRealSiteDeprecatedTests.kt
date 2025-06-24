@@ -1,27 +1,7 @@
-package ai.platon.pulsar.browser
+package ai.platon.pulsar.browser.integration
 
-import ai.platon.pulsar.browser.common.SimpleScriptConfuser.Companion.IDENTITY_NAME_MANGLER
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.emoji.PopularEmoji
-import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
-import ai.platon.pulsar.persist.model.ActiveDOMMessage
-import ai.platon.pulsar.persist.model.ActiveDOMMetadata
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
-import com.fasterxml.jackson.module.kotlin.readValue
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Tag
-import java.io.IOException
-import java.net.Proxy
-import java.nio.file.Path
-import java.text.MessageFormat
-import java.time.Duration
 import java.util.*
 import kotlin.test.*
 

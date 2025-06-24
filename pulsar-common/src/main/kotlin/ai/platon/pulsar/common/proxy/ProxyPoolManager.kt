@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_ROTATION_URL
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.urls.URLUtils
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
@@ -93,8 +94,7 @@ open class ProxyPoolManager(
     companion object {
         fun isProxyEnabled(conf: ImmutableConfig): Boolean {
             val proxyRotationURL = conf[PROXY_ROTATION_URL]
-
-            return proxyRotationURL != null
+            return URLUtils.isStandard(proxyRotationURL)
         }
     }
 }

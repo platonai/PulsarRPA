@@ -78,8 +78,6 @@ public class GoraStorage {
             DataStore<K, V> dataStore = DataStoreFactory.createDataStore(dataStoreClass,
                     keyClass, persistentClass, conf, goraProperties, schema);
 
-            // patchGoraMongoServers(conf);
-
             dataStores.put(realSchema, dataStore);
 
             String className = dataStore.getClass().getName();
@@ -111,41 +109,5 @@ public class GoraStorage {
             }
         });
         dataStores.clear();
-    }
-
-    /**
-     * Patches the MongoDB servers configuration for Gora.
-     * Enable environment variable or system property `GORA_MONGODB_SERVERS`
-     * */
-    static void patchGoraMongoServers(org.apache.hadoop.conf.Configuration conf) throws GoraException {
-        // Keep this assertion to remind us the real property name
-        assert("gora.mongodb.servers".equals(MongoStoreParameters.PROP_MONGO_SERVERS));
-
-        var servers = System.getProperty("GORA_MONGODB_SERVERS");
-        if (servers == null) {
-            servers = System.getenv("GORA_MONGODB_SERVERS");
-        }
-        if (servers == null) {
-            servers = System.getProperty("gora.mongodb.servers");
-        }
-        if (servers == null) {
-            servers = System.getenv("gora.mongodb.servers");
-        }
-        if (servers == null) {
-            servers = conf.get("gora.mongodb.servers");
-        }
-        if (servers == null) {
-            // Fallback to the default value in properties
-            servers = goraProperties.getProperty("gora.mongodb.servers");
-        }
-
-        if (servers == null) {
-            throw new GoraException("MongoDB servers not specified, please set the property 'gora.mongodb.servers'");
-        }
-
-        logger.info("Using MongoDB servers: {}", servers);
-
-        goraProperties.setProperty("gora.mongodb.servers", servers);
-        conf.set("gora.mongodb.servers", servers);
     }
 }

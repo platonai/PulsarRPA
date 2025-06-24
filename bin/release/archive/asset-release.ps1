@@ -1,3 +1,5 @@
+#!/usr/bin/env pwsh
+
 param(
     [string]$RemoteUser = "vincent",
     [string]$RemoteHost = "platonai.cn",
