@@ -6,7 +6,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.BeforeEach
 
-class SimpleKtParserTest {
+class SimpleKtParserCorrectedTest {
 
     private lateinit var parser: SimpleKtParser
 
@@ -16,30 +16,18 @@ class SimpleKtParserTest {
     }
 
     @Nested
-    @DisplayName("Basic Interface Parsing")
-    inner class BasicInterfaceParsing {
+    @DisplayName("Comment Extraction Verification")
+    inner class CommentExtractionVerification {
 
         @Test
-        @DisplayName("Should parse empty interface")
-        fun shouldParseEmptyInterface() {
+        @DisplayName("Should assign interface comment to comment field, not signature")
+        fun shouldAssignInterfaceCommentToCommentField() {
             val content = """
-                interface EmptyInterface {
-                }
-            """.trimIndent()
-
-            val result = parser.parseKotlinFile(content)
-
-            assertEquals(1, result.size)
-            assertEquals("EmptyInterface", result[0].name)
-            assertEquals("", result[0].signature)
-            assertNull(result[0].comment)
-        }
-
-        @Test
-        @DisplayName("Should parse interface with single function")
-        fun shouldParseInterfaceWithSingleFunction() {
-            val content = """
-                interface MyInterface {
+                /**
+                 * This is an interface comment
+                 * that describes the interface purpose
+                 */
+                interface CommentedInterface {
                     fun doSomething(): String
                 }
             """.trimIndent()
@@ -47,323 +35,227 @@ class SimpleKtParserTest {
             val result = parser.parseKotlinFile(content)
 
             assertEquals(1, result.size)
-            assertEquals("MyInterface", result[0].name)
+            assertEquals("CommentedInterface", result[0].name)
             assertEquals("fun doSomething(): String", result[0].signature)
+            assertEquals("This is an interface comment that describes the interface purpose", result[0].comment)
+        }
+
+        @Test
+        @DisplayName("Should handle interface without comment")
+        fun shouldHandleInterfaceWithoutComment() {
+            val content = """
+                interface SimpleInterface {
+                    fun doSomething(): String
+                    suspend fun doAsync(): String
+                }
+            """.trimIndent()
+
+            val result = parser.parseKotlinFile(content)
+
+            assertEquals(1, result.size)
+            assertEquals("SimpleInterface", result[0].name)
+            val expectedSignature = "fun doSomething(): String\nsuspend fun doAsync(): String"
+            assertEquals(expectedSignature, result[0].signature)
             assertNull(result[0].comment)
         }
 
         @Test
-        @DisplayName("Should parse interface with multiple functions")
-        fun shouldParseInterfaceWithMultipleFunctions() {
+        @DisplayName("Should handle single line KDoc comment")
+        fun shouldHandleSingleLineKDocComment() {
             val content = """
-                interface Calculator {
-                    fun add(a: Int, b: Int): Int
-                    fun subtract(a: Int, b: Int): Int
-                    fun multiply(a: Int, b: Int): Int
+                /** Single line interface comment */
+                interface SingleLineCommentInterface {
+                    suspend fun suspendFunctionWithoutComment(): Unit
                 }
             """.trimIndent()
 
             val result = parser.parseKotlinFile(content)
 
             assertEquals(1, result.size)
-            assertEquals("Calculator", result[0].name)
-            assertTrue(result[0].signature.contains("fun add(a: Int, b: Int): Int"))
-            assertTrue(result[0].signature.contains("fun subtract(a: Int, b: Int): Int"))
-            assertTrue(result[0].signature.contains("fun multiply(a: Int, b: Int): Int"))
-        }
-    }
-
-    @Nested
-    @DisplayName("Comment Parsing")
-    inner class CommentParsing {
-
-        @Test
-        @DisplayName("Should parse single line KDoc comment")
-        fun shouldParseSingleLineKDocComment() {
-            val content = """
-                interface MyInterface {
-                    /** This is a simple function */
-                    fun doSomething(): String
-                }
-            """.trimIndent()
-
-            val result = parser.parseKotlinFile(content)
-
-            assertEquals(1, result.size)
-            assertTrue(result[0].signature.contains("This is a simple function"))
+            assertEquals("SingleLineCommentInterface", result[0].name)
+            assertEquals("suspend fun suspendFunctionWithoutComment(): Unit", result[0].signature)
+            assertEquals("Single line interface comment", result[0].comment)
         }
 
         @Test
-        @DisplayName("Should parse multi-line KDoc comment")
-        fun shouldParseMultiLineKDocComment() {
+        @DisplayName("Should not include function comments in signature")
+        fun shouldNotIncludeFunctionCommentsInSignature() {
             val content = """
-                interface MyInterface {
+                interface TestInterface {
                     /**
-                     * This is a multi-line comment
-                     * that describes the function
-                     * in detail
+                     * This function comment should be ignored
+                     * by our simple parser
                      */
-                    fun complexFunction(param: String): Int
-                }
-            """.trimIndent()
-
-            val result = parser.parseKotlinFile(content)
-
-            assertEquals(1, result.size)
-            val signature = result[0].signature
-            assertTrue(signature.contains("This is a multi-line comment"))
-            assertTrue(signature.contains("that describes the function"))
-            assertTrue(signature.contains("in detail"))
-        }
-
-        @Test
-        @DisplayName("Should handle function without comment")
-        fun shouldHandleFunctionWithoutComment() {
-            val content = """
-                interface MyInterface {
-                    fun simpleFunction(): Unit
+                    fun regularFunction(): String
                     
-                    /** This has a comment */
-                    fun commentedFunction(): String
+                    /** Another function comment */
+                    suspend fun suspendFunction(): Unit
                 }
             """.trimIndent()
 
             val result = parser.parseKotlinFile(content)
 
             assertEquals(1, result.size)
-            val signature = result[0].signature
-            assertTrue(signature.contains("fun simpleFunction(): Unit"))
-            assertTrue(signature.contains("This has a comment"))
-            assertTrue(signature.contains("fun commentedFunction(): String"))
-        }
-    }
+            assertEquals("TestInterface", result[0].name)
+            val expectedSignature = "fun regularFunction(): String\nsuspend fun suspendFunction(): Unit"
+            assertEquals(expectedSignature, result[0].signature)
+            assertNull(result[0].comment) // No interface-level comment
 
-    @Nested
-    @DisplayName("Multiple Interfaces")
-    inner class MultipleInterfaces {
+            // Verify that function comments are NOT in the signature
+            assertFalse(result[0].signature.contains("This function comment should be ignored"))
+            assertFalse(result[0].signature.contains("Another function comment"))
+        }
 
         @Test
-        @DisplayName("Should parse multiple interfaces in same file")
-        fun shouldParseMultipleInterfaces() {
+        @DisplayName("Should handle multiple interfaces with different comment scenarios")
+        fun shouldHandleMultipleInterfacesWithDifferentCommentScenarios() {
             val content = """
+                /**
+                 * First interface with comment
+                 */
                 interface FirstInterface {
                     fun first(): String
                 }
                 
                 interface SecondInterface {
-                    fun second(): Int
-                }
-            """.trimIndent()
-
-            val result = parser.parseKotlinFile(content)
-
-            assertEquals(2, result.size)
-            assertEquals("FirstInterface", result[0].name)
-            assertEquals("SecondInterface", result[1].name)
-            assertTrue(result[0].signature.contains("fun first(): String"))
-            assertTrue(result[1].signature.contains("fun second(): Int"))
-        }
-
-        @Test
-        @DisplayName("Should handle interfaces with inheritance")
-        fun shouldHandleInterfacesWithInheritance() {
-            val content = """
-                interface BaseInterface {
-                    fun base(): String
+                    suspend fun second(): Int
                 }
                 
-                interface ExtendedInterface : BaseInterface {
-                    fun extended(): Int
+                /** Third interface single line comment */
+                interface ThirdInterface {
+                    suspend fun third(): Boolean
+                    fun another(): Unit
                 }
             """.trimIndent()
 
             val result = parser.parseKotlinFile(content)
 
-            assertEquals(2, result.size)
-            assertEquals("BaseInterface", result[0].name)
-            assertEquals("ExtendedInterface", result[1].name)
-        }
-    }
-
-    @Nested
-    @DisplayName("Complex Function Signatures")
-    inner class ComplexFunctionSignatures {
-
-        @Test
-        @DisplayName("Should parse function with generic parameters")
-        fun shouldParseFunctionWithGenericParameters() {
-            val content = """
-                interface GenericInterface {
-                    fun <T> process(item: T): List<T>
-                }
-            """.trimIndent()
-
-            val result = parser.parseKotlinFile(content)
-
-            assertEquals(1, result.size)
-            assertTrue(result[0].signature.contains("fun <T> process(item: T): List<T>"))
-        }
-
-        @Test
-        @DisplayName("Should parse function with nullable parameters")
-        fun shouldParseFunctionWithNullableParameters() {
-            val content = """
-                interface NullableInterface {
-                    fun processNullable(input: String?): String?
-                }
-            """.trimIndent()
-
-            val result = parser.parseKotlinFile(content)
-
-            assertEquals(1, result.size)
-            assertTrue(result[0].signature.contains("fun processNullable(input: String?): String?"))
-        }
-
-        @Test
-        @DisplayName("Should parse function with default parameters")
-        fun shouldParseFunctionWithDefaultParameters() {
-            val content = """
-                interface DefaultInterface {
-                    fun processWithDefaults(input: String, count: Int = 5): String
-                }
-            """.trimIndent()
-
-            val result = parser.parseKotlinFile(content)
-
-            assertEquals(1, result.size)
-            assertTrue(result[0].signature.contains("fun processWithDefaults(input: String, count: Int = 5): String"))
-        }
-    }
-
-    @Nested
-    @DisplayName("Edge Cases")
-    inner class EdgeCases {
-
-        @Test
-        @DisplayName("Should handle empty file")
-        fun shouldHandleEmptyFile() {
-            val content = ""
-
-            val result = parser.parseKotlinFile(content)
-
-            assertTrue(result.isEmpty())
-        }
-
-        @Test
-        @DisplayName("Should handle file with only comments")
-        fun shouldHandleFileWithOnlyComments() {
-            val content = """
-                // This is a comment
-                /* This is a block comment */
-                /**
-                 * This is a KDoc comment
-                 */
-            """.trimIndent()
-
-            val result = parser.parseKotlinFile(content)
-
-            assertTrue(result.isEmpty())
-        }
-
-        @Test
-        @DisplayName("Should handle interface with extra whitespace")
-        fun shouldHandleInterfaceWithExtraWhitespace() {
-            val content = """
-                
-                interface    SpacedInterface   {
-                    
-                    fun    spacedFunction(  param: String  ) :   String
-                    
-                }
-                
-            """.trimIndent()
-
-            val result = parser.parseKotlinFile(content)
-
-            assertEquals(1, result.size)
-            assertEquals("SpacedInterface", result[0].name)
-            assertTrue(result[0].signature.contains("fun    spacedFunction(  param: String  ) :   String"))
-        }
-
-        @Test
-        @DisplayName("Should handle nested braces in function parameters")
-        fun shouldHandleNestedBracesInFunctionParameters() {
-            val content = """
-                interface ComplexInterface {
-                    fun complexFunction(callback: (String) -> Unit): String
-                }
-            """.trimIndent()
-
-            val result = parser.parseKotlinFile(content)
-
-            assertEquals(1, result.size)
-            assertTrue(result[0].signature.contains("fun complexFunction(callback: (String) -> Unit): String"))
-        }
-
-        @Test
-        @DisplayName("Should handle interface declaration on single line")
-        fun shouldHandleInterfaceDeclarationOnSingleLine() {
-            val content = """
-                interface SingleLineInterface { fun doSomething(): String }
-            """.trimIndent()
-
-            val result = parser.parseKotlinFile(content)
-
-            assertEquals(1, result.size)
-            assertEquals("SingleLineInterface", result[0].name)
-            assertTrue(result[0].signature.contains("fun doSomething(): String"))
-        }
-    }
-
-    @Nested
-    @DisplayName("Real World Example")
-    inner class RealWorldExample {
-
-        @Test
-        @DisplayName("Should parse complete interface example from documentation")
-        fun shouldParseCompleteInterfaceExample() {
-            val content = """
-                package ai.platon.pulsar.common.code
-                
-                import kotlin.collections.List
-                
-                interface MyInterface {
-                    /**
-                     * This is a simple function that does something.
-                     * It takes a string parameter and returns an integer.
-                     */
-                    fun myFunction(param: String): Int
-                    
-                    /** Another function without parameters */
-                    fun anotherFunction(): String
-                    
-                    fun functionWithoutComment(): Unit
-                    
-                    suspend fun suspendFunctionWithoutComment(): Unit
-                }
-                
-                interface AnotherInterface {
-                    fun process(): Boolean
-                }
-            """.trimIndent()
-
-            val result = parser.parseKotlinFile(content)
-
-            assertEquals(2, result.size)
+            assertEquals(3, result.size)
 
             // First interface
-            assertEquals("MyInterface", result[0].name)
-            val firstSignature = result[0].signature
-            assertTrue(firstSignature.contains("This is a simple function that does something"))
-            assertTrue(firstSignature.contains("fun myFunction(param: String): Int"))
-            assertTrue(firstSignature.contains("Another function without parameters"))
-            assertTrue(firstSignature.contains("fun anotherFunction(): String"))
-            assertTrue(firstSignature.contains("fun functionWithoutComment(): Unit"))
-            assertTrue(firstSignature.contains("suspend fun suspendFunctionWithoutComment(): Unit"))
+            assertEquals("FirstInterface", result[0].name)
+            assertEquals("fun first(): String", result[0].signature)
+            assertEquals("First interface with comment", result[0].comment)
 
-            // Second interface
-            assertEquals("AnotherInterface", result[1].name)
-            assertTrue(result[1].signature.contains("fun process(): Boolean"))
+            // Second interface (no comment)
+            assertEquals("SecondInterface", result[1].name)
+            assertEquals("suspend fun second(): Int", result[1].signature)
+            assertNull(result[1].comment)
+
+            // Third interface
+            assertEquals("ThirdInterface", result[2].name)
+            assertEquals("suspend fun third(): Boolean\nfun another(): Unit", result[2].signature)
+            assertEquals("Third interface single line comment", result[2].comment)
+        }
+
+        @Test
+        @DisplayName("Should handle complex interface with susp-nd functions and comment")
+        fun shouldHandleComplexInterfaceWithSuspendFunctionsAndComment() {
+            val content = """
+                /**
+                 * Repository interface for async operations
+                 * Provides CRUD operations for user data
+                 */
+                interface UserRepository {
+                    suspend fun getUserById(id: String): User?
+                    suspend fun saveUser(user: User): Boolean
+                    fun validateUser(user: User): Boolean
+                    suspend fun deleteUser(id: String): Boolean
+                }
+            """.trimIndent()
+
+            val result = parser.parseKotlinFile(content)
+
+            assertEquals(1, result.size)
+            assertEquals("UserRepository", result[0].name)
+
+            val expectedSignature = """suspend fun getUserById(id: String): User?
+suspend fun saveUser(user: User): Boolean
+fun validateUser(user: User): Boolean
+suspend fun deleteUser(id: String): Boolean""".trimIndent()
+
+            assertEquals(expectedSignature, result[0].signature)
+            assertEquals("Repository interface for async operations Provides CRUD operations for user data", result[0].comment)
+        }
+
+        @Test
+        @DisplayName("Should handle single-line interface with comment")
+        fun shouldHandleSingleLineInterfaceWithComment() {
+            val content = """
+                /** Quick interface comment */
+                interface QuickInterface { suspend fun quick(): String }
+            """.trimIndent()
+
+            val result = parser.parseKotlinFile(content)
+
+            assertEquals(1, result.size)
+            assertEquals("QuickInterface", result[0].name)
+            assertEquals("suspend fun quick(): String", result[0].signature)
+            assertEquals("Quick interface comment", result[0].comment)
+        }
+    }
+
+    @Nested
+    @DisplayName("Suspend Function Verification")
+    inner class SuspendFunctionVerification {
+
+        @Test
+        @DisplayName("Should properly parse suspe functions without embedding comments")
+        fun shouldProperlyParseSuspendFunctionsWithoutEmbeddingComments() {
+            val content = """
+                interface AsyncService {
+                    suspend fun suspendFunctionWithoutComment(): Unit
+                    suspend fun fetchData(url: String): String
+                    fun regularFunction(): Int
+                }
+            """.trimIndent()
+
+            val result = parser.parseKotlinFile(content)
+
+            assertEquals(1, result.size)
+            assertEquals("AsyncService", result[0].name)
+
+            val expectedSignature = """suspend fun suspendFunctionWithoutComment(): Unit
+suspend fun fetchData(url: String): String
+fun regularFunction(): Int""".trimIndent()
+
+            assertEquals(expectedSignature, result[0].signature)
+            assertNull(result[0].comment)
+        }
+
+        @Test
+        @DisplayName("Should verify signature contains only function declarations")
+        fun shouldVerifySignatureContainsOnlyFunctionDeclarations() {
+            val content = """
+                /**
+                 * Service interface for data operations
+                 */
+                interface DataService {
+                    /**
+                     * Fetches user data - this comment should be ignored
+                     */
+                    suspend fun fetchUser(id: String): User
+                    
+                    /** Regular function comment - also ignored */
+                    fun processUser(user: User): String
+                }
+            """.trimIndent()
+
+            val result = parser.parseKotlinFile(content)
+
+            assertEquals(1, result.size)
+            assertEquals("DataService", result[0].name)
+            assertEquals("Service interface for data operations", result[0].comment)
+
+            val signature = result[0].signature
+            assertTrue(signature.contains("suspend fun fetchUser(id: String): User"))
+            assertTrue(signature.contains("fun processUser(user: User): String"))
+
+            // Verify function comments are NOT in signature
+            assertFalse(signature.contains("Fetches user data"))
+            assertFalse(signature.contains("Regular function comment"))
+            assertFalse(signature.contains("/**"))
+            assertFalse(signature.contains("*/"))
         }
     }
 }

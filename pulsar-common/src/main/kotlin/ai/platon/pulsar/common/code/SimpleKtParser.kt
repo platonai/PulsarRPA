@@ -15,8 +15,6 @@ class SimpleKtParser {
      *     * This is a simple function that does something.
      *     */
      *    fun myFunction(param: String): Int
-     *
-     *    suspend fun suspendFunction(): String
      * }
      * ```
      *
@@ -28,8 +26,9 @@ class SimpleKtParser {
         val lines = fileContent.lines()
 
         var currentInterfaceName: String? = null
+        var currentInterfaceComment: String? = null
         var currentFunctions = mutableListOf<String>()
-        var currentComment: StringBuilder? = null
+        var pendingComment: StringBuilder? = null
         var insideInterface = false
         var insideComment = false
         var braceCount = 0
@@ -42,14 +41,14 @@ class SimpleKtParser {
                 // Start of multi-line comment
                 trimmedLine.startsWith("/**") -> {
                     insideComment = true
-                    currentComment = StringBuilder()
+                    pendingComment = StringBuilder()
                     val commentContent = trimmedLine.substringAfter("/**").substringBefore("*/")
                     if (trimmedLine.contains("*/")) {
                         // Single line comment
-                        currentComment?.append(commentContent.trim())
+                        pendingComment?.append(commentContent.trim())
                         insideComment = false
                     } else {
-                        currentComment?.append(commentContent.trim())
+                        pendingComment?.append(commentContent.trim())
                     }
                 }
 
@@ -57,10 +56,10 @@ class SimpleKtParser {
                 insideComment && trimmedLine.contains("*/") -> {
                     val commentContent = trimmedLine.substringBefore("*/").removePrefix("*").trim()
                     if (commentContent.isNotEmpty()) {
-                        if (currentComment?.isNotEmpty() == true) {
-                            currentComment?.append(" ")
+                        if (pendingComment?.isNotEmpty() == true) {
+                            pendingComment?.append(" ")
                         }
-                        currentComment?.append(commentContent)
+                        pendingComment?.append(commentContent)
                     }
                     insideComment = false
                 }
@@ -69,16 +68,19 @@ class SimpleKtParser {
                 insideComment -> {
                     val commentContent = trimmedLine.removePrefix("*").trim()
                     if (commentContent.isNotEmpty()) {
-                        if (currentComment?.isNotEmpty() == true) {
-                            currentComment?.append(" ")
+                        if (pendingComment?.isNotEmpty() == true) {
+                            pendingComment?.append(" ")
                         }
-                        currentComment?.append(commentContent)
+                        pendingComment?.append(commentContent)
                     }
                 }
 
                 // Interface declaration
                 trimmedLine.startsWith("interface ") -> {
                     currentInterfaceName = extractInterfaceName(trimmedLine)
+                    // Assign pending comment to interface (if any)
+                    currentInterfaceComment = pendingComment?.toString()
+                    pendingComment = null
                     insideInterface = true
                     currentFunctions.clear()
 
@@ -87,12 +89,7 @@ class SimpleKtParser {
                         // Single line interface like: interface Test { fun test(): String }
                         val functionPart = trimmedLine.substringAfter("{").substringBeforeLast("}")
                         if (isFunctionDeclaration(functionPart.trim())) {
-                            val functionSignature = if (currentComment?.isNotEmpty() == true) {
-                                "/**\n * ${currentComment}\n */\n${functionPart.trim()}"
-                            } else {
-                                functionPart.trim()
-                            }
-                            currentFunctions.add(functionSignature)
+                            currentFunctions.add(functionPart.trim())
                         }
 
                         // Complete the interface immediately
@@ -101,13 +98,13 @@ class SimpleKtParser {
                         } else {
                             ""
                         }
-                        interfaceDescs.add(KtInterfaceDesc(currentInterfaceName!!, signature, null))
+                        interfaceDescs.add(KtInterfaceDesc(currentInterfaceName!!, signature, currentInterfaceComment))
 
                         // Reset state
                         currentInterfaceName = null
+                        currentInterfaceComment = null
                         currentFunctions.clear()
                         insideInterface = false
-                        currentComment = null
                         braceCount = 0
                     } else {
                         // Multi-line interface, initialize brace count
@@ -117,13 +114,10 @@ class SimpleKtParser {
 
                 // Function declaration inside interface (including suspend functions)
                 insideInterface && isFunctionDeclaration(trimmedLine) && currentInterfaceName != null -> {
-                    val functionSignature = if (currentComment?.isNotEmpty() == true) {
-                        "/**\n * ${currentComment}\n */\n$trimmedLine"
-                    } else {
-                        trimmedLine
-                    }
-                    currentFunctions.add(functionSignature)
-                    currentComment = null
+                    // Just add the function signature, not the comment
+                    currentFunctions.add(trimmedLine)
+                    // Clear pending comment as it was for this function (we don't store per-function comments in this simple parser)
+                    pendingComment = null
                 }
 
                 // Count braces to track interface scope (multi-line interfaces)
@@ -138,13 +132,13 @@ class SimpleKtParser {
                         } else {
                             ""
                         }
-                        interfaceDescs.add(KtInterfaceDesc(currentInterfaceName!!, signature, null))
+                        interfaceDescs.add(KtInterfaceDesc(currentInterfaceName!!, signature, currentInterfaceComment))
 
                         // Reset state
                         currentInterfaceName = null
+                        currentInterfaceComment = null
                         currentFunctions.clear()
                         insideInterface = false
-                        currentComment = null
                         braceCount = 0
                     }
                 }
