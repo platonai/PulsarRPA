@@ -338,6 +338,8 @@ class SimpleKtParserTest {
                     fun anotherFunction(): String
                     
                     fun functionWithoutComment(): Unit
+                    
+                    suspend fun suspendFunctionWithoutComment(): Unit
                 }
                 
                 interface AnotherInterface {
@@ -357,6 +359,7 @@ class SimpleKtParserTest {
             assertTrue(firstSignature.contains("Another function without parameters"))
             assertTrue(firstSignature.contains("fun anotherFunction(): String"))
             assertTrue(firstSignature.contains("fun functionWithoutComment(): Unit"))
+            assertTrue(firstSignature.contains("suspend fun suspendFunctionWithoutComment(): Unit"))
 
             // Second interface
             assertEquals("AnotherInterface", result[1].name)

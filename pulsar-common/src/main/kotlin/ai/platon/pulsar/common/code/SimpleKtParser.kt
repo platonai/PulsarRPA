@@ -15,6 +15,8 @@ class SimpleKtParser {
      *     * This is a simple function that does something.
      *     */
      *    fun myFunction(param: String): Int
+     *
+     *    suspend fun suspendFunction(): String
      * }
      * ```
      *
@@ -84,7 +86,7 @@ class SimpleKtParser {
                     if (trimmedLine.contains("{") && trimmedLine.contains("}")) {
                         // Single line interface like: interface Test { fun test(): String }
                         val functionPart = trimmedLine.substringAfter("{").substringBeforeLast("}")
-                        if (functionPart.trim().startsWith("fun ")) {
+                        if (isFunctionDeclaration(functionPart.trim())) {
                             val functionSignature = if (currentComment?.isNotEmpty() == true) {
                                 "/**\n * ${currentComment}\n */\n${functionPart.trim()}"
                             } else {
@@ -113,8 +115,8 @@ class SimpleKtParser {
                     }
                 }
 
-                // Function declaration inside interface (multi-line interfaces)
-                insideInterface && trimmedLine.startsWith("fun ") && currentInterfaceName != null -> {
+                // Function declaration inside interface (including suspend functions)
+                insideInterface && isFunctionDeclaration(trimmedLine) && currentInterfaceName != null -> {
                     val functionSignature = if (currentComment?.isNotEmpty() == true) {
                         "/**\n * ${currentComment}\n */\n$trimmedLine"
                     } else {
@@ -157,5 +159,22 @@ class SimpleKtParser {
             .substringBefore("{")
             .substringBefore(":")  // Handle inheritance
             .trim()
+    }
+
+    /**
+     * Checks if a line contains a function declaration (including suspend functions).
+     * Supports:
+     * - Regular functions: fun myFunction()
+     * - Suspend functions: suspend fun myFunction()
+     * - Generic functions: fun <T> myFunction()
+     * - Suspend generic functions: suspend fun <T> myFunction()
+     */
+    private fun isFunctionDeclaration(line: String): Boolean {
+        val trimmed = line.trim()
+        return trimmed.startsWith("fun ") ||
+                trimmed.startsWith("suspend fun ") ||
+                trimmed.contains(Regex("^suspend\\s+fun\\s+")) ||
+                trimmed.contains(Regex("^fun\\s+<.*>\\s+")) ||
+                trimmed.contains(Regex("^suspend\\s+fun\\s+<.*>\\s+"))
     }
 }
