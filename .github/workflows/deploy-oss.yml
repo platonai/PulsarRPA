@@ -100,7 +100,7 @@ jobs:
           ./mvnw clean install $SKIP_TESTS_FLAG -Pall-modules --batch-mode --show-version
 
       - name: Deploy to Sonatype OSSRH
-        if: success() && startsWith(github.ref, 'refs/tags/')
+        if: success()
         run: |
           echo "=== Deploying to Maven Central ==="
           ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
