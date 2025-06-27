@@ -16,6 +16,11 @@ on:
         required: false
         default: true
         type: boolean
+      debug:
+        description: 'Enable debug mode for additional logging'
+        required: false
+        default: false
+        type: boolean
 
 permissions: write-all
 
@@ -120,6 +125,7 @@ jobs:
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Debug Maven settings
+        if: ${{ debug }}
         run: |
           echo "=== Checking Maven settings.xml ==="
           if [ -f ~/.m2/settings.xml ]; then
