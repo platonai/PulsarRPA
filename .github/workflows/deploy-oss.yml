@@ -14,7 +14,7 @@ on:
       skip_tests:
         description: 'Skip tests during build'
         required: false
-        default: false
+        default: true
         type: boolean
 
 permissions: write-all
@@ -109,6 +109,32 @@ jobs:
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
           gpgconf --kill gpg-agent
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
+          server-username: ${{ secrets.SONATYPE_USERNAME }}
+          server-password: ${{ secrets.SONATYPE_PASSWORD }}
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Debug Maven settings
+        run: |
+          echo "=== Checking Maven settings.xml ==="
+          if [ -f ~/.m2/settings.xml ]; then
+            echo "settings.xml exists at ~/.m2/settings.xml"
+            # Print settings.xml but mask sensitive data
+            sed 's/<password>.*<\/password>/<password>***<\/password>/g' ~/.m2/settings.xml
+          else
+            echo "❌ settings.xml not found at ~/.m2/settings.xml"
+          fi
+          
+          echo "=== Maven settings locations ==="
+          ls -la ~/.m2/ || echo "~/.m2/ directory not found"
 
       - name: Deploy to Sonatype OSSRH
         if: success()
