@@ -1,0 +1,130 @@
+name: Deploy OOS
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: true
+        type: string
+      skip_tests:
+        description: 'Skip tests during build'
+        required: false
+        default: false
+        type: boolean
+
+permissions: write-all
+
+env:
+  IMAGE_NAME: pulsar-rpa
+  CONTAINER_NAME: pulsar-rpa
+  NETWORK_NAME: 'pulsarrpa_backend'
+  DOCKER_USERNAME: galaxyeye88
+  PRODUCTION_JAR_MODULE_NAME: 'pulsar-master'
+  PRODUCTION_JAR_MODULE_PATH: 'pulsar-app/pulsar-master'
+  PRODUCTION_JAR_NAME: 'PulsarRPA.jar'
+  PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-master/target/PulsarRPA.jar'
+  JAVA_VERSION: '17'
+  MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Correct Permissions
+        run: |
+          find bin/ -name "*.sh" | xargs chmod +x
+          chmod +x ./mvnw
+
+      - name: Extract version from tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG=${GITHUB_REF#refs/tags/}
+          fi
+          VERSION=${TAG#v}
+          
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "❌ Invalid version format: $VERSION"
+            exit 1
+          fi
+          
+          # Dynamic prerelease detection
+          IS_PRERELEASE="false"
+          if [[ "$VERSION" == *"-"* ]]; then
+            IS_PRERELEASE="true"
+          fi
+          
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
+
+      - name: Update Version
+        run: |
+          bin/release/update-versions.sh
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Maven Build
+        run: |
+          SKIP_TESTS_FLAG=""
+          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
+            SKIP_TESTS_FLAG="-DskipTests"
+          fi
+          
+          ./mvnw clean install $SKIP_TESTS_FLAG -Pall-modules --batch-mode --show-version
+
+      - name: Deploy to Sonatype OSSRH
+        if: success() && startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "=== Deploying to Maven Central ==="
+          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
+            -Dgpg.passphrase="$GPG_PASSPHRASE" \
+            -Dgpg.batch=true \
+            -Dgpg.pinentry-mode=loopback \
+            -DrepositoryId=ossrh \
+            -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2 \
+            -Dossrh.username=$SONATYPE_USERNAME \
+            -Dossrh.password=$SONATYPE_PASSWORD \
+            --show-version --errors
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+
+      - name: Update Documentation
+        uses: ./.github/actions/update-docs
+        if: success()
+        with:
+          version: ${{ env.VERSION }}
+          files: '["README.md", "README-CN.md"]'
+          commit_message: 'docs: update version references to v{version}'
+          push_changes: 'true'
+        env:
+          # 传递令牌给Action
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || github.token }}
