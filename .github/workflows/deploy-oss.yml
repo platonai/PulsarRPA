@@ -116,15 +116,3 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-
-      - name: Update Documentation
-        uses: ./.github/actions/update-docs
-        if: success()
-        with:
-          version: ${{ env.VERSION }}
-          files: '["README.md", "README-CN.md"]'
-          commit_message: 'docs: update version references to v{version}'
-          push_changes: 'true'
-        env:
-          # 传递令牌给Action
-          GITHUB_TOKEN: ${{ secrets.GH_PAT || github.token }}
