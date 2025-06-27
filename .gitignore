@@ -117,3 +117,4 @@ application-private.properties
 
 /bin/test-results/
 /test-results/
+/release_notes.md
