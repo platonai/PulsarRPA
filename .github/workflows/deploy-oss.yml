@@ -48,10 +48,10 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
-          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
+          server-id: 'ossrh'
           server-username: ${{ secrets.SONATYPE_USERNAME }}
           server-password: ${{ secrets.SONATYPE_PASSWORD }}
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Correct Permissions
@@ -104,26 +104,10 @@ jobs:
           
           ./mvnw clean install $SKIP_TESTS_FLAG -Pall-modules --batch-mode --show-version
 
-      - name: Import GPG key
-        run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          gpgconf --kill gpg-agent
-
       - name: Deploy to Sonatype OSSRH
         if: success()
         run: |
           echo "=== Deploying to Maven Central ==="
-          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
-            -Dgpg.passphrase="$GPG_PASSPHRASE" \
-            -Dgpg.batch=true \
-            -Dgpg.pinentry-mode=loopback \
-            -DrepositoryId=ossrh \
-            -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2 \
-            -Dossrh.username=$SONATYPE_USERNAME \
-            -Dossrh.password=$SONATYPE_PASSWORD \
-            --show-version --errors
+          ./mvnw --batch-mode deploy -P deploy,release -DskipTests --show-version --errors
         env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
