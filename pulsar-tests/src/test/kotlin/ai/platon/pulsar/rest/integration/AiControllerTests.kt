@@ -25,7 +25,7 @@ class AiControllerTests : IntegrationTestBase() {
     fun testChat(prompt: String, url: String) {
         println("Chat about webpage $url")
         val request = PromptRequest(url, prompt)
-        val response = restTemplate.postForObject("$baseUri/ai/chat", request, String::class.java)
+        val response = restTemplate.postForObject("$baseUri/api/ai/chat", request, String::class.java)
         println(response)
         assertTrue { response.isNotBlank() }
     }
@@ -36,7 +36,7 @@ class AiControllerTests : IntegrationTestBase() {
     fun testExtract(prompt: String, url: String) {
         println("Extracting fields from $url")
         val request = PromptRequest(url, prompt)
-        val response = restTemplate.postForObject("$baseUri/ai/extract", request, String::class.java)
+        val response = restTemplate.postForObject("$baseUri/api/ai/extract", request, String::class.java)
         println(response)
         assertTrue { response.isNotBlank() }
     }

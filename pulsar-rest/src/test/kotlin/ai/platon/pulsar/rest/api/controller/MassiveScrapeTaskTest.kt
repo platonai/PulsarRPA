@@ -83,12 +83,12 @@ class MassiveScrapeTaskTest : IntegrationTestBase() {
             .toList()
 
         val tasks = sqls.associateBy { sql ->
-            restTemplate.postForObject("$baseUri/x/s", sql.sql, String::class.java)
+            restTemplate.postForObject("$baseUri/api/x/s", sql.sql, String::class.java)
         }
 
         var round = 0
         while (++round < MAX_ROUNDS && AppContext.isActive && !Thread.interrupted()) {
-            val count = restTemplate.getForObject("$baseUri/x/c?status={status}", Int::class.java, ResourceStatus.SC_OK)
+            val count = restTemplate.getForObject("$baseUri/api/x/c?status={status}", Int::class.java, ResourceStatus.SC_OK)
             logger.info("Total $count finished tasks")
 
             if (count == TEST_FILE_COUNT) {

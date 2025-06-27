@@ -1,7 +1,7 @@
-package ai.platon.pulsar.rest.api.controller
+package ai.platon.pulsar.rest.integration
 
 import ai.platon.pulsar.common.sql.SQLTemplate
-import ai.platon.pulsar.rest.api.TestUtils
+import ai.platon.pulsar.test.TestHelper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -18,8 +18,8 @@ open class ScrapeControllerTestBase : IntegrationTestBase() {
         @JvmStatic
         @BeforeAll
         fun `Ensure resources are prepared`() {
-            TestUtils.ensurePage(requireNotNull(urls["productListPage"]))
-            TestUtils.ensurePage(requireNotNull(urls["productDetailPage"]))
+            TestHelper.ensurePage(requireNotNull(urls["productListPage"]))
+            TestHelper.ensurePage(requireNotNull(urls["productDetailPage"]))
         }
     }
 

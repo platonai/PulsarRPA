@@ -56,7 +56,7 @@ class IntegrationTestBase {
      * */
     fun scrape(url: String): ScrapeResponse? {
         val sql = "select dom_base_uri(dom) as url from load_and_select('$url', ':root')"
-        return restTemplate.postForObject("$baseUri/x/e", sql, ScrapeResponse::class.java)
+        return restTemplate.postForObject("$baseUri/api/x/e", sql, ScrapeResponse::class.java)
     }
 
     /**
@@ -64,7 +64,7 @@ class IntegrationTestBase {
      * */
     fun llmScrape(url: String): ScrapeResponse? {
         val sql = "select llm_extract(dom, 'Title, Price, Description') as llm_extracted_fields from load_and_select('$url', 'body')"
-        val uuid = restTemplate.postForObject("$baseUri/x/s", sql, String::class.java)
+        val uuid = restTemplate.postForObject("$baseUri/api/x/s", sql, String::class.java)
 
         return await(uuid, url)
     }
@@ -73,10 +73,10 @@ class IntegrationTestBase {
         var tick = 0
         val timeout = 60
 
-        var response: ScrapeResponse = restTemplate.getForObject("$baseUri/x/status?uuid=$uuid", ScrapeResponse::class.java)
+        var response: ScrapeResponse = restTemplate.getForObject("$baseUri/api/x/status?uuid=$uuid", ScrapeResponse::class.java)
         while (!response.isDone && ++tick < timeout) {
             sleepSeconds(1)
-            response = restTemplate.getForObject("$baseUri/x/status?uuid=$uuid", ScrapeResponse::class.java)
+            response = restTemplate.getForObject("$baseUri/api/x/status?uuid=$uuid", ScrapeResponse::class.java)
         }
 
         return response
