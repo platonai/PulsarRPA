@@ -4,7 +4,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-tools</artifactId>
-        <version>3.0.13-SNAPSHOT</version>
+        <version>3.0.14-SNAPSHOT</version>
     </parent>
 
     <name>Pulsar Browser</name>

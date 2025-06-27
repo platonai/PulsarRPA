@@ -21,7 +21,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>3.0.13-SNAPSHOT</version>
+    <version>3.0.14-SNAPSHOT</version>
 
     <name>Pulsar RPA</name>
     <description>Engage and automate web interactions at scale.</description>
