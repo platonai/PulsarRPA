@@ -14,10 +14,8 @@ on:
       skip_tests:
         description: 'Skip tests during build'
         required: false
-        default: false
+        default: true
         type: boolean
-
-permissions: write-all
 
 env:
   IMAGE_NAME: pulsar-rpa
@@ -103,6 +101,16 @@ jobs:
           fi
           
           ./mvnw clean install $SKIP_TESTS_FLAG -Pall-modules --batch-mode --show-version
+
+      - name: Configure GPG for non-interactive use
+        run: |
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+          echo "use-agent" >> ~/.gnupg/gpg.conf
+          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          gpgconf --kill gpg-agent
+          gpgconf --launch gpg-agent
 
       - name: Deploy to Sonatype OSSRH
         if: success()
