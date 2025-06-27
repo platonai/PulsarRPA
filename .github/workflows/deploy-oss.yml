@@ -99,6 +99,12 @@ jobs:
           
           ./mvnw clean install $SKIP_TESTS_FLAG -Pall-modules --batch-mode --show-version
 
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          gpgconf --kill gpg-agent
+
       - name: Deploy to Sonatype OSSRH
         if: success()
         run: |
