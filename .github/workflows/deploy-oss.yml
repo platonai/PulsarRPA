@@ -50,11 +50,6 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
-          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
-          server-username: ${{ secrets.SONATYPE_USERNAME }}
-          server-password: ${{ secrets.SONATYPE_PASSWORD }}
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Correct Permissions
         run: |
@@ -112,7 +107,7 @@ jobs:
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
           gpgconf --kill gpg-agent
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
+      - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
