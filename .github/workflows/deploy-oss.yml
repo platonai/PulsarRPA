@@ -14,8 +14,10 @@ on:
       skip_tests:
         description: 'Skip tests during build'
         required: false
-        default: true
+        default: false
         type: boolean
+
+permissions: write-all
 
 env:
   IMAGE_NAME: pulsar-rpa
@@ -46,10 +48,10 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
-          server-id: 'ossrh'
+          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
           server-username: ${{ secrets.SONATYPE_USERNAME }}
           server-password: ${{ secrets.SONATYPE_PASSWORD }}
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Correct Permissions
@@ -102,20 +104,26 @@ jobs:
           
           ./mvnw clean install $SKIP_TESTS_FLAG -Pall-modules --batch-mode --show-version
 
-      - name: Configure GPG for non-interactive use
+      - name: Import GPG key
         run: |
-          mkdir -p ~/.gnupg
-          chmod 700 ~/.gnupg
-          echo "use-agent" >> ~/.gnupg/gpg.conf
-          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
           gpgconf --kill gpg-agent
-          gpgconf --launch gpg-agent
 
       - name: Deploy to Sonatype OSSRH
         if: success()
         run: |
           echo "=== Deploying to Maven Central ==="
-          ./mvnw --batch-mode deploy -P deploy,release -DskipTests --show-version --errors
+          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
+            -Dgpg.passphrase="$GPG_PASSPHRASE" \
+            -Dgpg.batch=true \
+            -Dgpg.pinentry-mode=loopback \
+            -DrepositoryId=ossrh \
+            -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2 \
+            -Dossrh.username=$SONATYPE_USERNAME \
+            -Dossrh.password=$SONATYPE_PASSWORD \
+            --show-version --errors
         env:
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
