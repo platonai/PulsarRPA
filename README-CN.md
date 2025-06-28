@@ -6,56 +6,56 @@
 
 ---
 
-[English](README.md) | 简体中�?| [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
+[English](README.md) | 简体中�?| [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
 
 ## 🌟 项目介绍
 
-💖 **PulsarRPA：AI驱动的闪电级浏览器自动化解决方案�?* 💖
+💖 **PulsarRPA：AI驱动的闪电级浏览器自动化解决方案�?* 💖
 
-### �?核心能力�?
+### �?核心能力�?
 
-- 🤖 **AI集成与大语言模型** �?由大语言模型驱动的智能自动化
-- �?**超高速自动化** �?协程安全的浏览器并发自动化，爬虫级性能表现
-- 🧠 **网页理解能力** �?深度理解动态网页内�?
-- 📊 **数据提取API** �?强大的结构化数据提取工具
+- 🤖 **AI集成与大语言模型** �?由大语言模型驱动的智能自动化
+- �?**超高速自动化** �?协程安全的浏览器并发自动化，爬虫级性能表现
+- 🧠 **网页理解能力** �?深度理解动态网页内�?
+- 📊 **数据提取API** �?强大的结构化数据提取工具
 
 ---
 
-通过简单的文本描述，实现大规模浏览器自动化和数据提取�?
+通过简单的文本描述，实现大规模浏览器自动化和数据提取�?
 
 ```text
 访问 https://www.amazon.com/dp/B0C1H26C46
 
 浏览器启动后：清除浏览器cookies
-页面加载后：滚动到页面中�?
+页面加载后：滚动到页面中�?
 
 总结产品信息
-提取：产品名称、价格、评�?
-查找所有包�?/dp/ 的链�?
+提取：产品名称、价格、评�?
+查找所有包�?/dp/ 的链�?
 ```
 
 ---
 
 ## 🎥 演示视频
 
-🔥 Bilibili�?
+🔥 Bilibili�?
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
-🎬 YouTube�?
+🎬 YouTube�?
 [![观看视频](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
 
 ---
 
-# 🚀 快速开始指�?
+# 🚀 快速开始指�?
 
 ## ▶️ 运行 PulsarRPA
 
-### 📦 运行可执行JAR�?�?最佳体�?
+### 📦 运行可执行JAR�?�?最佳体�?
 
 #### 🧩 下载
 
 ```shell
-curl -L -o PulsarRPA.jar /v3.0.13/PulsarRPA.jar
+curl -L -o PulsarRPA.jar /v3.0.15/PulsarRPA.jar
 ```
 
 #### 🚀 运行
@@ -66,23 +66,23 @@ echo $DEEPSEEK_API_KEY
 java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 ```
 
-> 🔍 **提示�?* 确保在环境中设置�?`DEEPSEEK_API_KEY` 或者其他提供商�?API KEY，否则AI功能将不可用�?
+> 🔍 **提示�?* 确保在环境中设置�?`DEEPSEEK_API_KEY` 或者其他提供商�?API KEY，否则AI功能将不可用�?
 
-> 🔍 **提示:** Windows系统�? `$DEEPSEEK_API_KEY` �?`$env:DEEPSEEK_API_KEY` 均可使用，但他们是不同的变量�?
+> 🔍 **提示:** Windows系统�? `$DEEPSEEK_API_KEY` �?`$env:DEEPSEEK_API_KEY` 均可使用，但他们是不同的变量�?
 
 ---
 
 <details>
 <summary>📂 资源下载</summary>
 
-* 🟦 [GitHub发布下载](/v3.0.13/PulsarRPA.jar)
+* 🟦 [GitHub发布下载](/v3.0.15/PulsarRPA.jar)
 * 📁 [镜像/备份下载](https://static.platonai.cn/repo/ai/platon/pulsar/)
-* 🛠�?[大语言模型配置指南](docs/config/llm/llm-config.md)
-* 🛠�?[配置指南](docs/config.md)
+* 🛠�?[大语言模型配置指南](docs/config/llm/llm-config.md)
+* 🛠�?[配置指南](docs/config.md)
 
 </details>
 
-### �?使用IDE运行
+### �?使用IDE运行
 
 <details>
 
@@ -105,11 +105,11 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/p
 
 ---
 
-## 🌟 新手入门 �?纯文本描述，无需编程�?
+## 🌟 新手入门 �?纯文本描述，无需编程�?
 
-使用 `commands` API 执行浏览器操作、提取网页数据、分析网站等功能�?
+使用 `commands` API 执行浏览器操作、提取网页数据、分析网站等功能�?
 
-### 📥 示例请求（基于文本描述）�?
+### 📥 示例请求（基于文本描述）�?
 
 网页界面：http://localhost:8182/command.html
 
@@ -124,39 +124,39 @@ curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/p
     访问 https://www.amazon.com/dp/B0C1H26C46
     
     浏览器启动后：清除浏览器cookies
-    页面加载后：滚动到页面中�?
+    页面加载后：滚动到页面中�?
     
     总结产品信息
-    提取：产品名称、价格、评�?
-    查找所有包�?/dp/ 的链�?
+    提取：产品名称、价格、评�?
+    查找所有包�?/dp/ 的链�?
   '
 ```
 
-#### 📄 JSON版本�?
+#### 📄 JSON版本�?
 
 ```shell
 curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
     "url": "https://www.amazon.com/dp/B0C1H26C46",
     "onBrowserLaunchedActions": ["清除浏览器cookies"],
-    "onPageReadyActions": ["滚动到页面中�?],
-    "pageSummaryPrompt": "提供这个产品的简要介�?,
+    "onPageReadyActions": ["滚动到页面中�?],
+    "pageSummaryPrompt": "提供这个产品的简要介�?,
     "dataExtractionRules": "产品名称、价格和评分",
-    "uriExtractionRules": "页面上所有包�?`/dp/` 的链�?
+    "uriExtractionRules": "页面上所有包�?`/dp/` 的链�?
   }'
 ```
 
-💡 **提示�?* 您不需要填写每个字�?�?只需填写您需要的内容�?
+💡 **提示�?* 您不需要填写每个字�?�?只需填写您需要的内容�?
 
 </details>
 
-## 🎓 进阶用户 �?大语言模型 + X-SQL：精确、灵活、强�?
+## 🎓 进阶用户 �?大语言模型 + X-SQL：精确、灵活、强�?
 
-利用 `x/e` API 的强大功能，实现高精度、灵活且智能的数据提取�?
+利用 `x/e` API 的强大功能，实现高精度、灵活且智能的数据提取�?
 
   ```shell
   curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
-    llm_extract(dom, '产品名称、价格、评�?) as llm_extracted_data,
+    llm_extract(dom, '产品名称、价格、评�?) as llm_extracted_data,
     dom_base_uri(dom) as url,
     dom_first_text(dom, '#productTitle') as title,
     dom_first_slim_html(dom, 'img:expr(width > 400)') as img
@@ -164,7 +164,7 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
   "
   ```
 
-提取数据示例�?
+提取数据示例�?
 
 ```json
 {
@@ -183,11 +183,11 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
 
 ---
 
-## 👨‍�?专家用户 - 原生API：功能强大！
+## 👨‍�?专家用户 - 原生API：功能强大！
 
-### 🚀 超快速页面访问和数据提取�?
+### 🚀 超快速页面访问和数据提取�?
 
-PulsarRPA 以协程速度并行访问网页，高效提取数据的同时最小化资源消耗�?
+PulsarRPA 以协程速度并行访问网页，高效提取数据的同时最小化资源消耗�?
 
 <details>
 
@@ -210,16 +210,16 @@ session.submitAll(links)
 
 ### 🎮 浏览器控制：
 
-PulsarRPA 实现了协程安全的浏览器控制�?
+PulsarRPA 实现了协程安全的浏览器控制�?
 
 <details>
 
 ```kotlin
 val prompts = """
-将鼠标移动到id�?title'的元素并点击
-滚动到页面中�?
-滚动到页面顶�?
-获取id�?title'的元素文�?
+将鼠标移动到id�?title'的元素并点击
+滚动到页面中�?
+滚动到页面顶�?
+获取id�?title'的元素文�?
 """
 
 val eventHandlers = DefaultPageEventHandlers()
@@ -234,9 +234,9 @@ session.open(url, eventHandlers)
 
 ---
 
-### 🤖 机器人流程自动化能力�?
+### 🤖 机器人流程自动化能力�?
 
-PulsarRPA 提供灵活的机器人流程自动化�?
+PulsarRPA 提供灵活的机器人流程自动化�?
 
 <details>
 
@@ -262,15 +262,15 @@ session.load(url, options)
 
 ---
 
-### 🔍 使用X-SQL进行复杂数据提取�?
+### 🔍 使用X-SQL进行复杂数据提取�?
 
-PulsarRPA 提供 X-SQL 进行复杂数据提取�?
+PulsarRPA 提供 X-SQL 进行复杂数据提取�?
 
 <details>
 
 ```sql
 select
-    llm_extract(dom, '产品名称、价格、评分、评分数�?) as llm_extracted_data,
+    llm_extract(dom, '产品名称、价格、评分、评分数�?) as llm_extracted_data,
     dom_first_text(dom, '#productTitle') as title,
     dom_first_text(dom, '#bylineInfo') as brand,
     dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
@@ -279,7 +279,7 @@ select
 from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body');
 ```
 
-📚 示例代码�?
+📚 示例代码�?
 * [亚马逊产品页面抓取（100+字段）](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [全部亚马逊页面类型抓取](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
@@ -290,35 +290,35 @@ from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body
 ## 📜 文档
 
 * 📖 [REST API示例](docs/rest-api-examples.md)
-* 🛠�?[大语言模型配置指南](docs/config/llm/llm-config.md)
-* 🛠�?[配置指南](docs/config.md)
+* 🛠�?[大语言模型配置指南](docs/config/llm/llm-config.md)
+* 🛠�?[配置指南](docs/config.md)
 * 📚 [从源码构建](docs/development/build.md)
 * 🧠 [专家指南](docs/advanced-guides.md)
 
 ---
 
-## 🔧 代理服务�?- 解锁网站访问
+## 🔧 代理服务�?- 解锁网站访问
 
 <details>
 
-设置环境变量 PROXY_ROTATION_URL 为您的代理服务提供的URL�?
+设置环境变量 PROXY_ROTATION_URL 为您的代理服务提供的URL�?
 
 ```shell
 export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 ```
 
-每次访问轮换URL时，它应该返回包含一个或多个新鲜代理IP的响应�?
-请向您的代理服务提供商询问此类URL�?
+每次访问轮换URL时，它应该返回包含一个或多个新鲜代理IP的响应�?
+请向您的代理服务提供商询问此类URL�?
 
 </details>
 
 ---
 
-## �?功能特�?
+## �?功能特�?
 
-🕷�?**网络爬虫**
-- 可扩展爬�?
-- 浏览器渲�?
+🕷�?**网络爬虫**
+- 可扩展爬�?
+- 浏览器渲�?
 - AJAX数据提取
 
 🤖 **AI驱动**
@@ -328,19 +328,19 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 
 🧠 **大语言模型集成**
 - 自然语言网页内容分析
-- 直观的内容描�?
+- 直观的内容描�?
 
-🎯 **文本转操�?*
+🎯 **文本转操�?*
 - 简单语言命令
 - 直观的浏览器控制
 
 🤖 **机器人流程自动化能力**
-- 类人任务自动�?
+- 类人任务自动�?
 - 单页应用程序爬取支持
 - 高级工作流自动化
 
-🛠�?**开发者友�?*
-- 一行代码数据提�?
+🛠�?**开发者友�?*
+- 一行代码数据提�?
 - 类SQL查询接口
 - 简单API集成
 
@@ -349,30 +349,30 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 - 内容挖掘能力
 - 网络商业智能
 
-🛡�?**反爬虫保�?*
-- 高级隐身技�?
+🛡�?**反爬虫保�?*
+- 高级隐身技�?
 - IP轮换
-- 隐私上下文管�?
+- 隐私上下文管�?
 
-�?**高性能**
+�?**高性能**
 - 并行页面渲染
 - 高效处理
-- 抗阻塞设�?
+- 抗阻塞设�?
 
 💰 **成本效益**
 - 每天100,000+页面
-- 最低硬件要�?
+- 最低硬件要�?
 - 资源高效运行
 
-�?**质量保证**
+�?**质量保证**
 - 智能重试机制
 - 精确调度
 - 完整生命周期管理
 
-🌐 **可扩展�?*
-- 完全分布式架�?
-- 大规模处理能�?
-- 企业级就�?
+🌐 **可扩展�?*
+- 完全分布式架�?
+- 大规模处理能�?
+- 企业级就�?
 
 📦 **存储选项**
 - 本地文件系统
@@ -394,5 +394,5 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 - 🌍 官网：[platon.ai](https://platon.ai)
 
 <div style="display: flex;">
-  <img src="docs/images/wechat-author.png" width="300" height="365" alt="微信二维�? />
+  <img src="docs/images/wechat-author.png" width="300" height="365" alt="微信二维�? />
 </div>
