@@ -29,18 +29,18 @@ const val PLACEHOLDER_JSON_STRING = "{PLACEHOLDER_JSON_STRING}"
 const val PLACEHOLDER_URI_DESCRIPTION = "{PLACEHOLDER_URI_DESCRIPTION}"
 
 const val REQUEST_PLAIN_COMMAND_TEMPLATE = """
-1. Visit https://example.com
+1. Go to https://example.com
 2. When browser launches:
    a. Clear browser cookies
    b. Navigate to the home page
    c. Click a random link
 3. When page is ready:
-   a. Scroll down
-   b. Click the "Sign In" button
+   a. Scroll to the middle of the page
+   b. Scroll to the top of the page
 4. Summarize the page content
 5. Extract specified data fields
 6. Collect matching URIs/links
-7. X-SQL query: select dom_base_uri(dom) as url from load_and_select(@url, ':root')
+7. X-SQL query: select dom_first_text(dom, 'title') as title from load_and_select(@url, ':root')
 """
 
 const val REQUEST_JSON_COMMAND_TEMPLATE = """
@@ -52,13 +52,13 @@ const val REQUEST_JSON_COMMAND_TEMPLATE = """
     "click a random link"
   ],
   "onPageReadyActions": [
-    "scroll down",
-    "click 'Sign In' button"
+    "scroll to the middle of the page",
+    "scroll to the top of the page"
   ],
   "pageSummaryPrompt": "Instructions for summarizing the page...",
   "dataExtractionRules": "Instructions for extracting specific fields...",
   "uriExtractionRules": "Instructions for extracting URIs, for example: links containing /dp/",
-  "xsql": "select dom_base_uri(dom) as url from load_and_select(@url, ':root')"
+  "xsql": "select dom_first_text(dom, 'title') as title from load_and_select(@url, ':root')"
 }
 """
 

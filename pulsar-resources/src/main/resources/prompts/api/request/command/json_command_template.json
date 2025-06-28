@@ -12,5 +12,5 @@
   "pageSummaryPrompt": "Instructions for summarizing the page...",
   "dataExtractionRules": "Instructions for extracting specific fields...",
   "uriExtractionRules": "Instructions for extracting URIs, for example: links containing /dp/",
-  "xsql": "select dom_base_uri(dom) as url from load_and_select(@url, ':root')"
+  "xsql": "select dom_first_text(dom, 'title') as title from load_and_select(@url, ':root')"
 }

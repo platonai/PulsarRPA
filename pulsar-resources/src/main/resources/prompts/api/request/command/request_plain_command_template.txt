@@ -9,4 +9,4 @@
 4. Summarize the page content
 5. Extract specified data fields
 6. Collect matching URIs/links
-7. X-SQL query: select dom_base_uri(dom) as url from load_and_select(@url, ':root')
+7. X-SQL query: select dom_first_text(dom, 'title') as title from load_and_select(@url, ':root')
