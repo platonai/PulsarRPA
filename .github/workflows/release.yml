@@ -30,6 +30,8 @@ env:
   PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-master/target/PulsarRPA.jar'
   JAVA_VERSION: '17'
   MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
+  MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+  MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
 
 jobs:
   build-and-release:
@@ -42,12 +44,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
+      - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
+          server-id: 'ossrh'
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Correct Permissions
         run: |
@@ -264,18 +271,16 @@ jobs:
           docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
           docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
 
-#      - name: Deploy to Sonatype OSSRH
-#        if: success() && startsWith(github.ref, 'refs/tags/')
-#        run: |
-#          echo "=== Deploying to Maven Central ==="
-#          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
-#            -Dgpg.passphrase="$GPG_PASSPHRASE" \
-#            -Dgpg.batch=true \
-#            -Dgpg.pinentry-mode=loopback \
-#            -DrepositoryId=ossrh \
-#            -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2 \
-#            --show-version --errors
-#        env:
-#          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-#          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-#          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+      - name: Deploy to Sonatype OSSRH
+        if: success()
+        run: |
+          echo "=== Deploying to Maven Central ==="
+          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
+            -Dgpg.passphrase="$GPG_PASSPHRASE" \
+            -Dgpg.batch=true \
+            -Dgpg.pinentry-mode=loopback \
+            --show-version --errors
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
