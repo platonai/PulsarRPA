@@ -126,12 +126,10 @@ class TestString {
     fun testReplaceInURL() {
         val url = "https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/PulsarRPA.jar"
         val expectedURL = "https://github.com/platonai/PulsarRPA/releases/download/v3.0.15/PulsarRPA.jar"
-        val regex = "https?:.+(v\\d+\\.\\d+\\.\\d+).+".toRegex()
+        val versionRegex = "v\\d+\\.\\d+\\.\\d+".toRegex()
         val replacement = "v3.0.15"
 
-        val newURL = regex.replace(url) { matchResult ->
-            url.replace(matchResult.groupValues[1], replacement)
-        }
+        val newURL = versionRegex.replace(url, replacement)
 
         assertEquals(expectedURL, newURL)
     }
