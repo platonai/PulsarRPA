@@ -7,7 +7,7 @@ class PromptTemplateLoaderTest {
 
     @Test
     fun testLoadPromptTemplate() {
-        val resource = "docs/prompts/api/request/command/command_revision_template.md"
+        val resource = "prompts/api/request/command/command_revision_template.md"
 
         val template = PromptTemplateLoader(
             resource,

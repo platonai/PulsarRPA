@@ -48,7 +48,7 @@ object RestAPIPromptUtils {
             return null
         }
 
-        val resource = "docs/prompts/api/request/command/convert_uri_description_to_regex_prompt.md"
+        val resource = "prompts/api/request/command/convert_uri_description_to_regex_prompt.md"
         return PromptTemplateLoader(
             resource,
             fallbackTemplate = CONVERT_URI_DESCRIPTION_TO_REGEX_PROMPT,

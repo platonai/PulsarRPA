@@ -185,7 +185,7 @@ class CommandServiceTest {
     }
 
     @Test
-    fun `test executeCommand with X-SQL`() {
+    fun `test translate plain command to CommandRequest with X-SQL`() {
         val request = CommandRequest(
             PRODUCT_DETAIL_URL,
             xsql = """

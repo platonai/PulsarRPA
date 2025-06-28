@@ -53,7 +53,7 @@ class ConversationService(
         // Replace the URL in the request with a placeholder, so the result from the LLM can be cached.
         val processedRequest = plainCommand.replace(url, PLACEHOLDER_URL)
 
-        val resource = "docs/prompts/api/request/command/api_request_plain_command_conversion_prompt.md"
+        val resource = "prompts/api/request/command/api_request_plain_command_conversion_prompt.md"
         val prompt = PromptTemplateLoader(
             resource,
             fallbackTemplate = API_REQUEST_PLAIN_COMMAND_CONVERSION_PROMPT,
@@ -74,7 +74,7 @@ class ConversationService(
         return JSONExtractor.extractJsonBlocks(content).firstOrNull()
     }
 
-    val resource = "docs/prompts/api/request/command/convert_response_to_markdown_prompt.md"
+    val resource = "prompts/api/request/command/convert_response_to_markdown_prompt.md"
     fun convertResponseToMarkdown(jsonResponse: String): String {
         val userMessage = PromptTemplateLoader(resource,
             CONVERT_RESPONSE_TO_MARKDOWN_PROMPT,
