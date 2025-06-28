@@ -56,7 +56,7 @@ Find all links containing /dp/.
 #### 🧩 Download
 
 ```shell
-curl -L -o PulsarRPA.jar /v3.0.14/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/PulsarRPA.jar
 ```
 
 #### 🚀 Run
@@ -69,14 +69,14 @@ java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 
 > 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` or other LLM API key is set in your environment, or AI features will not be available.
 
-> 🔍 **Tip:** On Windows, both `$DEEPSEEK_API_KEY` and `$env:DEEPSEEK_API_KEY` can be used, but they are different variables.
+> 🔍 **Tip:** Windows PowerShell syntax: `$env:DEEPSEEK_API_KEY` (environment variable) vs `$DEEPSEEK_API_KEY` (script variable).
 
 ---
 
 <details>
 <summary>📂 Resources</summary>
 
-* 🟦 [GitHub Release Download](/v3.0.14/PulsarRPA.jar)
+* 🟦 [GitHub Release Download](https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/PulsarRPA.jar)
 * 📁 [Mirror / Backup Download](https://static.platonai.cn/repo/ai/platon/pulsar/)
 * 🛠️ [LLM Configuration Guide](docs/config/llm/llm-config.md)
 * 🛠️ [Configuration Guide](docs/config.md)

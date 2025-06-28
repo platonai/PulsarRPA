@@ -56,14 +56,11 @@ foreach ($F in $VERSION_AWARE_FILES)
         # Replace SNAPSHOT versions
         ((Get-Content $F) -replace $SNAPSHOT_VERSION, $NEXT_SNAPSHOT_VERSION) | Set-Content $F
 
-        # Replace version numbers in the format "x.y.z" where x.y is the prefix and z is the minor version number
-        ((Get-Content $F) -replace "\b$PREFIX\.[0-9]+\b", $NEXT_VERSION) | Set-Content $F
+        # Replace any version numbers with v prefix that match pattern v[0-9]+.[0-9]+.[0-9]+ to v$VERSION
+        ((Get-Content $F) -replace "v[0-9]+\.[0-9]+\.[0-9]+", "v$NEXT_VERSION") | Set-Content $F
 
-        # Replace version numbers prefixed with v like "v3.0.8"
-        ((Get-Content $F) -replace "\bv$PREFIX\.[0-9]+\b", "v$NEXT_VERSION") | Set-Content $F
-
-        # Restore version numbers in urls like "download/v3.0.8/PulsarRPA.jar" since the new version has not been released yet
-        ((Get-Content $F) -replace "(http.+/v$NEXT_VERSION/)", "/v$VERSION/") | Set-Content $F
+        # Restore version numbers in urls like "https://github.com/platonai/PulsarRPA/releases/download/v3.0.8/PulsarRPA.jar" since the new version has not been released yet
+        ((Get-Content $F) -replace "http.+/(v$VERSION)/", "/v$VERSION/") | Set-Content $F
     }
 }
 

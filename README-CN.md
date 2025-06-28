@@ -6,97 +6,97 @@
 
 ---
 
-[English](README.md) | 简体中�?| [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
+English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
 
-## 🌟 项目介绍
+## 🌟 简介
 
-💖 **PulsarRPA：AI驱动的闪电级浏览器自动化解决方案�?* 💖
+💖 **PulsarRPA：AI 驱动的极速浏览器自动化解决方案！** 💖
 
-### �?核心能力�?
+### ✨ 主要功能：
 
-- 🤖 **AI集成与大语言模型** �?由大语言模型驱动的智能自动化
-- �?**超高速自动化** �?协程安全的浏览器并发自动化，爬虫级性能表现
-- 🧠 **网页理解能力** �?深度理解动态网页内�?
-- 📊 **数据提取API** �?强大的结构化数据提取工具
+- 🤖 **AI 大模型集成** —— 由大语言模型驱动的智能自动化。
+- ⚡ **超快自动化** —— 协程安全的浏览器自动化并发，爬虫级抓取性能。
+- 🧠 **网页理解能力** —— 深度理解动态网页内容。
+- 📊 **数据提取 API** —— 轻松提取结构化数据的强大工具。
 
 ---
 
-通过简单的文本描述，实现大规模浏览器自动化和数据提取�?
+用简单的文本批量自动化浏览器并提取数据。
 
 ```text
-访问 https://www.amazon.com/dp/B0C1H26C46
+前往 https://www.amazon.com/dp/B0C1H26C46
 
-浏览器启动后：清除浏览器cookies
-页面加载后：滚动到页面中�?
+浏览器启动后：清除浏览器 Cookie。
+页面加载后：滚动到页面中部。
 
-总结产品信息
-提取：产品名称、价格、评�?
-查找所有包�?/dp/ 的链�?
+总结该商品。
+提取：商品名称、价格、评分。
+查找所有包含 /dp/ 的链接。
 ```
 
 ---
 
 ## 🎥 演示视频
 
-🔥 Bilibili�?
-[https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
-
-🎬 YouTube�?
+🎬 YouTube:
 [![观看视频](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
+
+📺 Bilibili:
+[https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
 ---
 
-# 🚀 快速开始指�?
+# 🚀 快速开始指南
 
 ## ▶️ 运行 PulsarRPA
 
-### 📦 运行可执行JAR�?�?最佳体�?
+### 📦 运行可执行 JAR —— 推荐体验
 
 #### 🧩 下载
 
 ```shell
-curl -L -o PulsarRPA.jar /v3.0.15/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/PulsarRPA.jar
 ```
 
 #### 🚀 运行
 
 ```shell
-# make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+# 请确保已设置 LLM API 密钥。也支持 VOLCENGINE_API_KEY/OPENAI_API_KEY。
 echo $DEEPSEEK_API_KEY
 java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 ```
 
-> 🔍 **提示�?* 确保在环境中设置�?`DEEPSEEK_API_KEY` 或者其他提供商�?API KEY，否则AI功能将不可用�?
+> 🔍 **提示：** 请确保环境变量中已设置 `DEEPSEEK_API_KEY` 或其他 LLM API 密钥，否则 AI 功能不可用。
 
-> 🔍 **提示:** Windows系统�? `$DEEPSEEK_API_KEY` �?`$env:DEEPSEEK_API_KEY` 均可使用，但他们是不同的变量�?
+> 🔍 **Tip:** Windows PowerShell syntax: `$env:DEEPSEEK_API_KEY` (environment variable) vs `$DEEPSEEK_API_KEY` (script variable).
 
 ---
 
 <details>
-<summary>📂 资源下载</summary>
+<summary>📂 资源</summary>
 
-* 🟦 [GitHub发布下载](/v3.0.15/PulsarRPA.jar)
+* 🟦 [GitHub Release 下载](https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/PulsarRPA.jar)
 * 📁 [镜像/备份下载](https://static.platonai.cn/repo/ai/platon/pulsar/)
-* 🛠�?[大语言模型配置指南](docs/config/llm/llm-config.md)
-* 🛠�?[配置指南](docs/config.md)
+* 🛠️ [LLM 配置指南](docs/config/llm/llm-config.md)
+* 🛠️ [通用配置指南](docs/config.md)
 
 </details>
 
-### �?使用IDE运行
+### ▶ 使用 IDE 运行
 
 <details>
 
-- 在IDE中打开项目
+- 用你的 IDE 打开项目
 - 运行 `ai.platon.pulsar.app.PulsarApplicationKt` 主类
 
 </details>
 
-### 🐳 Docker用户
+### 🐳 Docker 用户
 
 <details>
 
 ```shell
-# make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+# 请确保已设置 LLM API 密钥。也支持 VOLCENGINE_API_KEY/OPENAI_API_KEY。
 echo $DEEPSEEK_API_KEY
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
 ```
