@@ -90,14 +90,14 @@
     <h2>🚀 PulsarRPA Commander</h2>
     <label for="commandInput">🤖 What do you want me to do?</label>
     <textarea id="commandInput" rows="6" cols="60">
-        Go to https://www.amazon.com/dp/B0C1H26C46
+Go to https://www.amazon.com/dp/B0C1H26C46
 
-        After browser launch: clear browser cookies.
-        After page load: scroll to the middle.
+After browser launch: clear browser cookies.
+After page load: scroll to the middle.
 
-        Summarize the product.
-        Extract: product name, price, ratings.
-        Find all links containing /dp/.
+Summarize the product.
+Extract: product name, price, ratings.
+Find all links containing /dp/.
     </textarea><br>
     <button id="reviseButton" onclick="reviseCommand()">✨ Refine</button>
     <button id="submitButton" onclick="submitCommand()" style="float: right;">🚀 Submit</button>
@@ -172,6 +172,7 @@
             status.textContent = '❌ Error in SSE listener: ' + e.message;
         }
     }
+
     function listenSSE0(id) {
         const status = document.getElementById('status');
         const events = document.getElementById('events');
