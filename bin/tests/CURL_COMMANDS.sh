@@ -138,7 +138,7 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
 "pageSummaryPrompt": "Provide a brief introduction of this product.",
 "dataExtractionRules": "product name, price, and ratings",
 "uriExtractionRules": "all links containing /dp/ on the page",
-"xql": "select dom_first_text(dom, 'title') as title from load_and_select(@url, 'body');"
+"xql": "select dom_first_text(dom, '\''title'\'') as title from load_and_select(@url, '\''body'\'');"
 }'
 EOF
 
@@ -156,14 +156,14 @@ Extract: product name, price, ratings.
 Find all links containing /dp/.
 
 X-SQL:
-```sql
+\`\`\`sql
 select
 llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
 dom_base_uri(dom) as url,
 dom_first_text(dom, '#productTitle') as title,
 dom_first_slim_html(dom, 'img:expr(width > 400)') as img
 from load_and_select(@url, 'body');
-```
+\`\`\`
 "
 EOF
 
@@ -209,7 +209,7 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
   "pageSummaryPrompt": "Instructions for summarizing the page...",
   "dataExtractionRules": "Instructions for extracting specific fields...",
   "uriExtractionRules": "Instructions for extracting URIs, for example: links containing /dp/",
-  "xsql": "select dom_first_text(dom, 'title') as title from load_and_select(@url, ':root')"
+  "xsql": "select dom_first_text(dom, '\''title'\'') as title from load_and_select(@url, '\'':root'\'')"
 }'
 EOF
 
