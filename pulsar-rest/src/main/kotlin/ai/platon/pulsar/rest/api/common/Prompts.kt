@@ -40,6 +40,7 @@ const val REQUEST_PLAIN_COMMAND_TEMPLATE = """
 4. Summarize the page content
 5. Extract specified data fields
 6. Collect matching URIs/links
+7. X-SQL query: select dom_base_uri(dom) as url from load_and_select(@url, ':root')
 """
 
 const val REQUEST_JSON_COMMAND_TEMPLATE = """
@@ -56,7 +57,8 @@ const val REQUEST_JSON_COMMAND_TEMPLATE = """
   ],
   "pageSummaryPrompt": "Instructions for summarizing the page...",
   "dataExtractionRules": "Instructions for extracting specific fields...",
-  "uriExtractionRules": "Instructions for extracting URIs, for example: links containing /dp/"
+  "uriExtractionRules": "Instructions for extracting URIs, for example: links containing /dp/",
+  "xsql": "select dom_base_uri(dom) as url from load_and_select(@url, ':root')"
 }
 """
 
@@ -98,6 +100,10 @@ Use this template with only the fields relevant to the request:
 * `uriExtractionRules`: Natural language instructions to extract URIs from the page
   - Will be converted into regex patterns automatically
   - Example: "extract all product links containing '/dp/'"
+
+* `xsql`: X-SQL query to run on the page's DOM
+    - Use for advanced data extraction or processing
+    - Should be a valid X-SQL query string
 
 ### ⚡ Conversion Rules:
 * **Specificity**: Convert vague instructions into concrete, executable actions

@@ -6,6 +6,8 @@ import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.alwaysFalse
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.FlatJSONExtractor
+import ai.platon.pulsar.common.sql.SQLTemplate
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.UriExtractor
 import ai.platon.pulsar.dom.nodes.node.ext.numChars
@@ -179,6 +181,9 @@ class CommandService(
     }
 
     internal fun executeCommandStepByStep(request: CommandRequest, status: CommandStatus) {
+        val url = request.url
+        require(URLUtils.isStandard(url)) { "Invalid URL: $url" }
+
         request.enhanceArgs()
         val (page, document) = loadService.loadDocument(request)
 
@@ -196,9 +201,10 @@ class CommandService(
         executeCommandStepByStep(page, document, request, status)
         logger.info("Finished executeCommandStepByStep | status: {} | {}", status.status, document.baseURI)
 
-        val sql = request.xsql
-        if (sql != null && ScrapeAPIUtils.isScrapeUDF(sql)) {
+        val sqlTemplate = request.xsql
+        if (sqlTemplate != null && ScrapeAPIUtils.isScrapeUDF(sqlTemplate)) {
             status.refresh(ResourceStatus.SC_PROCESSING)
+            val sql = SQLTemplate(sqlTemplate).createSQL(url)
             kotlin.runCatching { executeQuery(sql, status) }.onFailure { logger.warn("Failed to execute query", it) }
         }
 

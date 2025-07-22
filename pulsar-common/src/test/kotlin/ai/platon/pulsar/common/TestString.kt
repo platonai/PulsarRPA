@@ -123,6 +123,18 @@ class TestString {
     }
 
     @Test
+    fun testReplaceInURL() {
+        val url = "https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/PulsarRPA.jar"
+        val expectedURL = "https://github.com/platonai/PulsarRPA/releases/download/v3.0.15/PulsarRPA.jar"
+        val versionRegex = "v\\d+\\.\\d+\\.\\d+".toRegex()
+        val replacement = "v3.0.15"
+
+        val newURL = versionRegex.replace(url, replacement)
+
+        assertEquals(expectedURL, newURL)
+    }
+
+    @Test
     fun testAvailableCharsets() {
         var charsets = Charset.availableCharsets().values.stream()
             .map { obj: Charset -> obj.name() }

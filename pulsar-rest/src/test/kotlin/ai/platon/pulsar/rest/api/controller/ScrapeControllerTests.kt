@@ -20,12 +20,25 @@ open class ScrapeControllerTests : ScrapeControllerTestBase() {
      * Test [ScrapeController.submitJob]
      * */
     @Test
+    fun `Test extracting product list page with X-SQL sync`() {
+        val pageType = "productListPage"
+        val url = requireNotNull(urls[pageType])
+        val sql = requireNotNull(sqlTemplates[pageType]).createSQL(url)
+
+        val response = restTemplate.postForObject("$baseUri/api/x/e", sql, ScrapeResponse::class.java)
+        println(response)
+    }
+
+    /**
+     * Test [ScrapeController.submitJob]
+     * */
+    @Test
     fun `Test extracting product list page with X-SQL`() {
         val pageType = "productListPage"
         val url = requireNotNull(urls[pageType])
         val sql = requireNotNull(sqlTemplates[pageType]).createSQL(url)
 
-        val uuid = restTemplate.postForObject("$baseUri/x/s", sql, String::class.java)
+        val uuid = restTemplate.postForObject("$baseUri/api/x/s", sql, String::class.java)
         println("UUID: $uuid")
         assertNotNull(uuid)
 
@@ -42,7 +55,7 @@ open class ScrapeControllerTests : ScrapeControllerTestBase() {
         val url = requireNotNull(urls[pageType])
         val sql = requireNotNull(sqlTemplates[pageType]).createSQL(url)
 
-        val uuid = restTemplate.postForObject("$baseUri/x/s", sql, String::class.java)
+        val uuid = restTemplate.postForObject("$baseUri/api/x/s", sql, String::class.java)
         println("UUID: $uuid")
         assertNotNull(uuid)
 
@@ -56,7 +69,7 @@ open class ScrapeControllerTests : ScrapeControllerTestBase() {
         while (records == null && ++tick < timeout) {
             sleepSeconds(1)
 
-            val response = restTemplate.getForObject("$baseUri/x/status?uuid=$uuid", ScrapeResponse::class.java)
+            val response = restTemplate.getForObject("$baseUri/api/x/status?uuid=$uuid", ScrapeResponse::class.java)
 
             if (tick % 10 == 0) {
                 println(pulsarObjectMapper().writeValueAsString(response))
@@ -82,7 +95,7 @@ open class ScrapeControllerTests : ScrapeControllerTestBase() {
         // wait for callback
         sleepSeconds(3)
 
-        val response = restTemplate.getForObject("$baseUri/x/a/status?uuid=$uuid", ScrapeResponse::class.java)
+        val response = restTemplate.getForObject("$baseUri/api/x/a/status?uuid=$uuid", ScrapeResponse::class.java)
         println("Final scrape task status: ")
         println(pulsarObjectMapper().writeValueAsString(response))
 

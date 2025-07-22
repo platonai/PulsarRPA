@@ -77,6 +77,83 @@ class ConversationServiceTest {
     }
 
     @Test
+    fun `test prompt conversion to request`() {
+        val prompt = API_COMMAND_PROMPT1
+
+        val request = conversationService.normalizePlainCommand(prompt)
+        println(prettyPulsarObjectMapper().writeValueAsString(request))
+        assertNotNull(request)
+        verifyPromptRequestL2(request)
+    }
+
+    @Test
+    fun `test prompt conversion to request 2`() {
+        val prompt = API_COMMAND_PROMPT2
+
+        val request = conversationService.normalizePlainCommand(prompt)
+        println(prettyPulsarObjectMapper().writeValueAsString(request))
+        assertNotNull(request)
+        verifyPromptRequestL2(request)
+    }
+
+    @Test
+    fun `test convertPlainCommandToJSON with X-SQL`() {
+        val url1 = "https://www.amazon.com/dp/B0C1H26C46"
+        val url2 = "https://www.amazon.com/dp/B07PX3ZRJ6"
+
+        val commandTemplate = """
+Go to {PLACEHOLDER_URL}
+
+After browser launch: clear browser cookies, and then go to the home page.
+After page load: scroll to the middle, and then scroll to the top.
+
+Summarize the product.
+Extract: product name, price, ratings.
+Find all links containing /dp/.
+
+X-SQL:
+```sql
+select
+  dom_base_uri(dom) as url,
+  dom_first_text(dom, '#productTitle') as title,
+  str_substring_after(dom_first_href(dom, '#wayfinding-breadcrumbs_container ul li:last-child a'), 'node=') as category,
+  dom_first_slim_html(dom, '#bylineInfo') as brand,
+  cast(dom_all_slim_htmls(dom, '#imageBlock img') as varchar) as gallery,
+  dom_first_slim_html(dom, '#landingImage, #imgTagWrapperId img, #imageBlock img:expr(width > 400)') as img,
+  dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
+  dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
+  str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
+from load_and_select(@url, 'body');
+```
+        """.trimIndent()
+
+        val prompt1 = commandTemplate.replace("{PLACEHOLDER_URL}", url1)
+
+        val result1 = conversationService.convertPlainCommandToJSON(prompt1, url1)
+        assertNotNull(result1)
+
+        val prompt2 = commandTemplate.replace("{PLACEHOLDER_URL}", url2)
+
+        val result2 = conversationService.convertPlainCommandToJSON(prompt2, url2)
+        assertNotNull(result2)
+
+        val template1 = result1.replace(url1, "").replace(url2, "")
+        val template2 = result2.replace(url1, "").replace(url2, "")
+
+        assertEquals(template1, template2, "The prompt template is loaded from cache, so they should be the same")
+    }
+
+    @Test
+    fun `test prompt conversion to request 3`() {
+        val prompt = API_COMMAND_PROMPT3
+
+        val request = conversationService.normalizePlainCommand(prompt)
+        println(prettyPulsarObjectMapper().writeValueAsString(request))
+        assertNotNull(request)
+        verifyPromptRequestL2(request)
+    }
+
+    @Test
     fun `test convertPlainCommandToJSON with cache`() {
         val url1 = "https://www.amazon.com/dp/B0C1H26C46"
         val url2 = "https://www.amazon.com/dp/B07PX3ZRJ6"
@@ -110,7 +187,7 @@ Page summary prompt: Provide a brief introduction of this product.
     @Test
     fun `test prompt conversion without URL`() {
         val prompt = """
-Visit amazon.com/dp/B0C1H26C46
+Go to amazon.com/dp/B0C1H26C46
 
 Page summary prompt: Provide a brief introduction of this product.
         """.trimIndent()
@@ -146,36 +223,6 @@ Page summary prompt: Provide a brief introduction of this product.
         val response = chatService.chat(request)
         println(response)
         assertTrue { response.isNotEmpty() }
-    }
-
-    @Test
-    fun `test prompt conversion to request`() {
-        val prompt = API_COMMAND_PROMPT1
-
-        val request = conversationService.normalizePlainCommand(prompt)
-        println(prettyPulsarObjectMapper().writeValueAsString(request))
-        assertNotNull(request)
-        verifyPromptRequestL2(request)
-    }
-
-    @Test
-    fun `test prompt conversion to request 2`() {
-        val prompt = API_COMMAND_PROMPT2
-
-        val request = conversationService.normalizePlainCommand(prompt)
-        println(prettyPulsarObjectMapper().writeValueAsString(request))
-        assertNotNull(request)
-        verifyPromptRequestL2(request)
-    }
-
-    @Test
-    fun `test prompt conversion to request 3`() {
-        val prompt = API_COMMAND_PROMPT3
-
-        val request = conversationService.normalizePlainCommand(prompt)
-        println(prettyPulsarObjectMapper().writeValueAsString(request))
-        assertNotNull(request)
-        verifyPromptRequestL2(request)
     }
 
     @Test

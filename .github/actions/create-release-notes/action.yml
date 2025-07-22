@@ -78,32 +78,33 @@ runs:
         
         #### 🧩 Download
         
-        ```bash
+        
+        \`\`\`bash
         curl -L -o ${{ inputs.jar_name }} https://github.com/${{ github.repository }}/releases/download/v${{ inputs.version }}/${{ inputs.jar_name }}
-        ```
+        \`\`\`
         
         #### 🚀 Run
         
-        ```shell
-        echo $DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
-        java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
-        ```
+        \`\`\`shell
+        echo \$DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+        java -D"DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
+        \`\`\`
         
         > 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` or other LLM API key is set in your environment, or AI features will not be available.
         
-        > 🔍 **Tip:** On Windows, both `$DEEPSEEK_API_KEY` and `$env:DEEPSEEK_API_KEY` works, but they are different variables.
+        > 🔍 **Tip:** On Windows, both `\$DEEPSEEK_API_KEY` and `\$env:DEEPSEEK_API_KEY` works, but they are different variables.
         ### 🐳 Docker
 
-        ```shell
+        \`\`\`shell
         # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
-        echo $DEEPSEEK_API_KEY
-        docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:${{ inputs.version }}
-        ```
+        echo \$DEEPSEEK_API_KEY
+        docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:${{ inputs.version }}
+        \`\`\`
 
         GitHub Container Registry:
-        ```shell
+        \`\`\`shell
         docker pull ghcr.io/${{ github.repository_owner }}/pulsar-rpa:${{ inputs.version }}
-        ```
+        \`\`\`
         ---
 
         ## 📄 Full Changelog

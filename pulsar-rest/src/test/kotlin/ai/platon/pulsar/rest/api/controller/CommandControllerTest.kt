@@ -1,11 +1,14 @@
 package ai.platon.pulsar.rest.api.controller
 
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
+import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import ai.platon.pulsar.rest.api.entities.CommandStatus
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class CommandControllerTest : ScrapeControllerTestBase() {
 
@@ -23,7 +26,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
             mode = "sync",
         )
 
-        val status = restTemplate.postForObject("$baseUri/commands", request, CommandStatus::class.java)
+        val status = restTemplate.postForObject("$baseUri/api/commands", request, CommandStatus::class.java)
 
         println(status)
         Assumptions.assumeTrue(status.pageStatusCode == 200)
@@ -54,7 +57,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
             mode = "sync",
         )
 
-        val status = restTemplate.postForObject("$baseUri/commands", request, CommandStatus::class.java)
+        val status = restTemplate.postForObject("$baseUri/api/commands", request, CommandStatus::class.java)
 
         println(status)
         Assumptions.assumeTrue(status.pageStatusCode == 200)
@@ -68,5 +71,27 @@ class CommandControllerTest : ScrapeControllerTestBase() {
         assertNull(status.commandResult?.links)
         assertNull(status.commandResult?.xsqlResultSet)
     }
-}
 
+    @Test
+    fun `test executeCommand with X-SQL + sync mode`() {
+        val sqlTemplate = sqlTemplates["productDetailPage"]!!.template
+        val request = CommandRequest(
+            PRODUCT_DETAIL_URL,
+            xsql = sqlTemplate,
+            mode = "sync",
+        )
+        val status = restTemplate.postForObject("$baseUri/api/commands", request, CommandStatus::class.java)
+        println(prettyPulsarObjectMapper().writeValueAsString(status))
+        val result = status.commandResult
+
+        Assumptions.assumeTrue(status.pageStatusCode == 200)
+        Assumptions.assumeTrue(status.isDone)
+        Assumptions.assumeTrue(status.statusCode == 200)
+
+        assertNotNull(result)
+        assertTrue { status.isDone }
+
+        assertNull(result.pageSummary)
+        assertNotNull(result.xsqlResultSet)
+    }
+}

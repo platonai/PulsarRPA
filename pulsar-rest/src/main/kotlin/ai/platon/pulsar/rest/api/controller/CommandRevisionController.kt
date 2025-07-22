@@ -29,7 +29,7 @@ class CommandRevisionController(
 
         val json = conversationService.convertPlainCommandToJSON(prompt, urls.first()) ?: return prompt
 
-        val resource = "docs/prompts/api/request/command/command_revision_template.md"
+        val resource = "prompts/api/request/command/command_revision_template.md"
         val message = PromptTemplateLoader(
             resource,
             fallbackTemplate = COMMAND_REVISION_TEMPLATE,

@@ -258,7 +258,7 @@ function Run-CurlTest {
     Log "[COMMAND]" -ForegroundColor Cyan
     Write-Host $CurlCommand
   } else {
-    $shortCmd = $CurlCommand.Substring(0, [Math]::Min(80, $CurlCommand.Length)).Replace("`n", " ").Replace("`r", "")
+    $shortCmd = $CurlCommand.Substring(0, [Math]::Min(200, $CurlCommand.Length)).Replace("`n", " ").Replace("`r", "")
     Log "[COMMAND] $shortCmd..." -ForegroundColor Cyan
   }
 
@@ -269,7 +269,7 @@ function Run-CurlTest {
   $metaFile = [System.IO.Path]::GetTempFileName()
 
   $fullCommand = "$finalCommand --max-time $TIMEOUT_SECONDS -w '%{http_code}`n%{time_total}`n%{size_download}`n%{url_effective}' -o `"$responseFile`" -s"
-  VLog "Executing: $($fullCommand.Substring(0, [Math]::Min(150, $fullCommand.Length)))..."
+  VLog "Executing: $($fullCommand.Substring(0, [Math]::Min(200, $fullCommand.Length)))..."
 
   # 执行命令
   $startTime = Get-Date
@@ -310,7 +310,7 @@ function Run-CurlTest {
       Copy-Item -Path $responseFile -Destination "$TEST_RESULTS_DIR/test_${TestNumber}_success.json" -ErrorAction SilentlyContinue
 
       if ([int]$sizeDownload -gt 0 -and [int]$sizeDownload -lt 3000) {
-        $preview = (Get-Content -Path $responseFile -Raw -ErrorAction SilentlyContinue).Substring(0, [Math]::Min(250, (Get-Content -Path $responseFile -Raw -ErrorAction SilentlyContinue).Length))
+        $preview = (Get-Content -Path $responseFile -Raw -ErrorAction SilentlyContinue).Substring(0, [Math]::Min(500, (Get-Content -Path $responseFile -Raw -ErrorAction SilentlyContinue).Length))
         if ($preview -and $preview -ne " ") {
           $preview = $preview -replace "[\r\n]", "" -replace "\s+", " "
           Log "[PREVIEW] $preview..." -ForegroundColor Cyan

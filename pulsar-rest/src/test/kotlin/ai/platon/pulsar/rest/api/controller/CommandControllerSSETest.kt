@@ -30,7 +30,7 @@ class CommandControllerSSETest : ScrapeControllerTestBase() {
             mode = "async",
         )
 
-        val id = restTemplate.postForObject("$baseUri/commands", request, String::class.java)
+        val id = restTemplate.postForObject("$baseUri/api/commands", request, String::class.java)
         println("id: $id")
         assertNotNull(id)
 
@@ -53,7 +53,7 @@ class CommandControllerSSETest : ScrapeControllerTestBase() {
             mode = "async",
         )
 
-        val id = restTemplate.postForObject("$baseUri/commands", request, String::class.java)
+        val id = restTemplate.postForObject("$baseUri/api/commands", request, String::class.java)
         println("id: $id")
         assertNotNull(id)
 
@@ -67,7 +67,7 @@ class CommandControllerSSETest : ScrapeControllerTestBase() {
 
         // 2. Connect to SSE stream
         val sseRequest = Request.Builder()
-            .url("$baseUri/commands/$id/stream")
+            .url("$baseUri/api/commands/$id/stream")
             .build()
 
         client.newCall(sseRequest).execute().body?.charStream()?.use { inputStream ->

@@ -49,7 +49,7 @@ class AiControllerTests : IntegrationTestBase() {
     @Test
     fun `When chat then LLM responses`() {
         val prompt = "生命、宇宙以及任何事情的终极答案是什么？"
-        val response = restTemplate.getForObject("$baseUri/ai/chat?prompt={prompt}", String::class.java, prompt)
+        val response = restTemplate.getForObject("$baseUri/api/ai/chat?prompt={prompt}", String::class.java, prompt)
         println(response)
         assertTrue { response.isNotBlank() }
     }
@@ -60,7 +60,7 @@ class AiControllerTests : IntegrationTestBase() {
     @Test
     fun `When chat about a page then result is not empty`() {
         val request = PromptRequest(indexUrl, "Tell me about something about this page")
-        val response = restTemplate.postForObject("$baseUri/ai/chat-about", request, String::class.java)
+        val response = restTemplate.postForObject("$baseUri/api/ai/chat-about", request, String::class.java)
         println(response)
         assertTrue { response.isNotBlank() }
     }
@@ -71,7 +71,7 @@ class AiControllerTests : IntegrationTestBase() {
     @Test
     fun `Test extracting fields from a page`() {
         val request = PromptRequest(productUrl, "title, price, brand")
-        val response = restTemplate.postForObject("$baseUri/ai/extract", request, String::class.java)
+        val response = restTemplate.postForObject("$baseUri/api/ai/extract", request, String::class.java)
         println(response)
         assertTrue { response.isNotBlank() }
     }
@@ -89,7 +89,7 @@ class AiControllerTests : IntegrationTestBase() {
             get the text of the element with id 'title'
         """.trimIndent().split("\n")
         val request = PromptRequest(productUrl, "title, price, brand", actions = actions)
-        val response = restTemplate.postForObject("$baseUri/ai/extract", request, String::class.java)
+        val response = restTemplate.postForObject("$baseUri/api/ai/extract", request, String::class.java)
 
         println(response)
 

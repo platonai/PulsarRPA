@@ -1,0 +1,144 @@
+name: Deploy OOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: true
+        type: string
+      skip_tests:
+        description: 'Skip tests during build'
+        required: false
+        default: true
+        type: boolean
+
+permissions: write-all
+
+env:
+  IMAGE_NAME: pulsar-rpa
+  CONTAINER_NAME: pulsar-rpa
+  NETWORK_NAME: 'pulsarrpa_backend'
+  DOCKER_USERNAME: galaxyeye88
+  PRODUCTION_JAR_MODULE_NAME: 'pulsar-master'
+  PRODUCTION_JAR_MODULE_PATH: 'pulsar-app/pulsar-master'
+  PRODUCTION_JAR_NAME: 'PulsarRPA.jar'
+  PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-master/target/PulsarRPA.jar'
+  JAVA_VERSION: '17'
+  MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
+  MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+  MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Correct Permissions
+        run: |
+          find bin/ -name "*.sh" | xargs chmod +x
+          chmod +x ./mvnw
+
+      - name: Extract version from tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG=${GITHUB_REF#refs/tags/}
+          fi
+          VERSION=${TAG#v}
+          
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "❌ Invalid version format: $VERSION"
+            exit 1
+          fi
+          
+          # Dynamic prerelease detection
+          IS_PRERELEASE="false"
+          if [[ "$VERSION" == *"-"* ]]; then
+            IS_PRERELEASE="true"
+          fi
+          
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
+
+      - name: Update Version
+        run: |
+          bin/release/update-versions.sh
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Maven Build
+        run: |
+          SKIP_TESTS_FLAG=""
+          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
+            SKIP_TESTS_FLAG="-DskipTests"
+          fi
+          
+          ./mvnw clean install $SKIP_TESTS_FLAG -Pall-modules --batch-mode --show-version
+
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          gpgconf --kill gpg-agent
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Debug Maven settings
+        run: |
+          echo "=== Checking Maven settings.xml ==="
+          if [ -f ~/.m2/settings.xml ]; then
+            echo "settings.xml exists at ~/.m2/settings.xml"
+            # Print settings.xml but mask sensitive data
+            sed 's/<password>.*<\/password>/<password>***<\/password>/g' ~/.m2/settings.xml
+          else
+            echo "❌ settings.xml not found at ~/.m2/settings.xml"
+          fi
+          
+          echo "=== Maven settings locations ==="
+          ls -la ~/.m2/ || echo "~/.m2/ directory not found"
+
+      - name: Deploy to Sonatype OSSRH
+        if: success()
+        run: |
+          echo "=== Deploying to Maven Central ==="
+          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
+            -Dgpg.passphrase="$GPG_PASSPHRASE" \
+            -Dgpg.batch=true \
+            -Dgpg.pinentry-mode=loopback \
+            --show-version --errors
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}

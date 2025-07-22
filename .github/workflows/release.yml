@@ -17,8 +17,7 @@ on:
         default: false
         type: boolean
 
-permissions:
-  contents: write  # Required for the update-docs action to push commits
+permissions: write-all
 
 env:
   IMAGE_NAME: pulsar-rpa
@@ -31,6 +30,8 @@ env:
   PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-master/target/PulsarRPA.jar'
   JAVA_VERSION: '17'
   MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
+  MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+  MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
 
 jobs:
   build-and-release:
@@ -43,7 +44,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
+      - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -265,30 +266,28 @@ jobs:
           docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
           docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
 
+      - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
       - name: Deploy to Sonatype OSSRH
-        if: success() && startsWith(github.ref, 'refs/tags/')
+        if: success()
         run: |
           echo "=== Deploying to Maven Central ==="
           ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
             -Dgpg.passphrase="$GPG_PASSPHRASE" \
             -Dgpg.batch=true \
             -Dgpg.pinentry-mode=loopback \
-            -DrepositoryId=ossrh \
-            -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2 \
             --show-version --errors
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-
-      - name: Update Documentation
-        uses: ./.github/actions/update-docs
-        if: success()
-        with:
-          version: ${{ env.VERSION }}
-          files: '["README.md", "README-CN.md"]'
-          commit_message: 'docs: update version references to v{version}'
-          push_changes: 'true'
-        env:
-          # 传递令牌给Action
-          GITHUB_TOKEN: ${{ secrets.GH_PAT || github.token }}
+          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}

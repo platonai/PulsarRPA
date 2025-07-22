@@ -1,0 +1,12 @@
+1. Visit https://example.com
+2. When browser launches:
+   a. Clear browser cookies
+   b. Navigate to the home page
+   c. Click a random link
+3. When page is ready:
+   a. Scroll down
+   b. Click the "Sign In" button
+4. Summarize the page content
+5. Extract specified data fields
+6. Collect matching URIs/links
+7. X-SQL query: select dom_base_uri(dom) as url from load_and_select(@url, ':root')

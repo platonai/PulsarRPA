@@ -20,133 +20,10 @@ SKIP_SERVER_CHECK=false
 VERBOSE_MODE=true
 USER_NAME="platonai"
 
-# =============================================================================
-# CURL COMMANDS FROM README.MD - UPDATE THIS SECTION AS NEEDED
-# =============================================================================
-
-# System Health Checks (Quick tests first)
-CURL_DESC_HEALTH_CHECK="Health Check Endpoint"
-CURL_CMD_HEALTH_CHECK='curl -X GET "http://localhost:8182/actuator/health"'
-
-CURL_DESC_QUERY_PARAMS="Query Parameters Test"
-CURL_CMD_QUERY_PARAMS='curl -X GET "http://localhost:8182/actuator/health?details=true"'
-
-CURL_DESC_WEBUI="WebUI Command Interface"
-CURL_CMD_WEBUI='
-curl -X GET "http://localhost:8182/command.html"
-'
-
-CURL_DESC_CUSTOM_HEADERS="Custom Headers Test"
-read -r -d '' CURL_CMD_CUSTOM_HEADERS << 'EOF'
-curl -X GET "http://localhost:8182/actuator/health" -H "Accept: application/json" -H "User-Agent: PulsarRPA-Test-Suite/1.0"
-EOF
-
-# Simple Data Extraction Tests
-CURL_DESC_SIMPLE_LOAD="Simple Page Load Test"
-read -r -d '' CURL_CMD_SIMPLE_LOAD << 'EOF'
-curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
-select
-dom_base_uri(dom) as url,
-dom_first_text(dom, 'title') as page_title
-from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
-"
-EOF
-
-CURL_DESC_HTML_PARSE="HTML Parsing Test"
-read -r -d '' CURL_CMD_HTML_PARSE << 'EOF'
-curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
-select
-dom_first_text(dom, 'h1') as heading,
-dom_all_texts(dom, 'p') as paragraphs
-from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
-"
-EOF
-
-CURL_DESC_COMPLEX_XSQL="Complex X-SQL Query"
-read -r -d '' CURL_CMD_COMPLEX_XSQL << 'EOF'
-curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
-select
-dom_first_text(dom, 'title') as page_title,
-dom_first_text(dom, 'h1,h2') as main_heading,
-dom_base_uri(dom) as base_url
-from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
-"
-EOF
-
-CURL_DESC_FORM_DATA="Form Data Test"
-read -r -d '' CURL_CMD_FORM_DATA << 'EOF'
-curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
-select dom_first_text(dom, 'title') as title from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
-"
-EOF
-
-# Advanced API Tests (Longer running)
-CURL_DESC_PLAIN_API="Plain Text Command API - Amazon Product"
-read -r -d '' CURL_CMD_PLAIN_API << 'EOF'
-curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/plain" -d "
-Go to https://www.amazon.com/dp/B0C1H26C46
-
-After browser launch: clear browser cookies.
-After page load: scroll to the middle.
-
-Summarize the product.
-Extract: product name, price, ratings.
-Find all links containing /dp/.
-"
-EOF
-
-CURL_DESC_JSON_API="JSON Command API - Amazon Product"
-read -r -d '' CURL_CMD_JSON_API << 'EOF'
-curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
-"url": "https://www.amazon.com/dp/B0C1H26C46",
-"onBrowserLaunchedActions": [
-  "clear browser cookies",
-  "navigate to the home page",
-  "click a random link"
-],
-"onPageReadyActions": ["click #title", "scroll to the middle"],
-"pageSummaryPrompt": "Provide a brief introduction of this product.",
-"dataExtractionRules": "product name, price, and ratings",
-"uriExtractionRules": "all links containing /dp/ on the page"
-}'
-EOF
-
-CURL_DESC_XSQL_LLM="X-SQL API - LLM Data Extraction"
-read -r -d '' CURL_CMD_XSQL_LLM << 'EOF'
-curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
-select
-llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
-dom_base_uri(dom) as url,
-dom_first_text(dom, '#productTitle') as title,
-dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
-"
-EOF
-
-CURL_DESC_ASYNC_MODE="Async Command Mode Test"
-read -r -d '' CURL_CMD_ASYNC_MODE << 'EOF'
-curl -X POST "http://localhost:8182/api/commands/plain?mode=async" -H "Content-Type: text/plain" -d "
-Go to https://www.amazon.com/dp/B0C1H26C46
-
-Extract the page title and all text content.
-"
-EOF
-
-# 系统测试优先的命令数组 (System tests first, then functional tests)
-declare -a CURL_COMMANDS=(
-"$CURL_DESC_HEALTH_CHECK|$CURL_CMD_HEALTH_CHECK"
-"$CURL_DESC_QUERY_PARAMS|$CURL_CMD_QUERY_PARAMS"
-"$CURL_DESC_WEBUI|$CURL_CMD_WEBUI"
-"$CURL_DESC_CUSTOM_HEADERS|$CURL_CMD_CUSTOM_HEADERS"
-"$CURL_DESC_SIMPLE_LOAD|$CURL_CMD_SIMPLE_LOAD"
-"$CURL_DESC_HTML_PARSE|$CURL_CMD_HTML_PARSE"
-"$CURL_DESC_COMPLEX_XSQL|$CURL_CMD_COMPLEX_XSQL"
-"$CURL_DESC_FORM_DATA|$CURL_CMD_FORM_DATA"
-"$CURL_DESC_ASYNC_MODE|$CURL_CMD_ASYNC_MODE"
-"$CURL_DESC_PLAIN_API|$CURL_CMD_PLAIN_API"
-"$CURL_DESC_JSON_API|$CURL_CMD_JSON_API"
-"$CURL_DESC_XSQL_LLM|$CURL_CMD_XSQL_LLM"
-)
+source "$(dirname "$0")/CURL_COMMANDS.sh" || {
+  echo "Error: Could not source CURL_COMMANDS.sh. Ensure it exists in the same directory."
+  exit 1
+}
 
 # =============================================================================
 # SECTION: GLOBAL CONFIGURATION AND INITIALIZATION
@@ -222,6 +99,87 @@ check_server() {
 # SECTION: TEST EXECUTION FUNCTIONS
 # =============================================================================
 
+# Execute a curl command with appropriate parameters and return results
+execute_curl_command() {
+  local curl_command="$1"
+  local timeout="$2"
+  local response_file="$3"
+  local error_file="$4"
+
+  local final_command=$(substitute_urls "$curl_command")
+  local full_command="$final_command --max-time $timeout -w '%{http_code}\\n%{time_total}\\n%{size_download}\\n%{url_effective}\\n%{content_type}' -o $response_file -s"
+
+  vlog "Executing: \n$(echo "$full_command" | head -c 2000)"
+
+  eval "$full_command" > "${response_file}.meta" 2>"$error_file"
+  return $?
+}
+
+# Process successful responses
+process_success_response() {
+  local response_file="$1"
+  local test_number="$2"
+  local content_type="$3"
+  local size_download="$4"
+  local size_download_mb=$(( size_download / 1024 / 1024 ))
+
+  local target="${TEST_RESULTS_DIR}/test_${test_number}_response.json"
+  cp "$response_file" "$target" 2>/dev/null || true
+
+  # Get and show response brief for successful tests
+  if [[ "$size_download" -gt 0 ]]; then
+      # Fallback if extract_response_brief.sh is not available
+      if [[ "$size_download_mb" -lt 1 ]]; then
+#        local preview=$(head -c 250 "$response_file" 2>/dev/null | tr -d '\n\r' | sed 's/[[:space:]]\+/ /g')
+        local preview=$(head -c 500 "$response_file" 2>/dev/null)
+        [[ -n "$preview" && "$preview" != " " ]] && log "${CYAN}[PREVIEW]${NC} $preview..."
+      else
+        log "${CYAN}[INFO]${NC} Large response (${size_download}B) saved to results directory"
+      fi
+  fi
+}
+
+# Process error responses with HTTP status codes
+process_error_response() {
+  local response_file="$1"
+  local error_file="$2"
+  local test_number="$3"
+  local http_status="$4"
+  local content_type="$5"
+  local size_download="$6"
+
+  cp "$response_file" "${TEST_RESULTS_DIR}/test_${test_number}_error_${http_status}.txt" 2>/dev/null || true
+
+  if [[ -s "$response_file" ]]; then
+    local error_preview=$(head -c 2000 "$response_file" 2>/dev/null | tr -d '\n\r')
+    log "${RED}[ERROR RESPONSE]${NC} $error_preview"
+  fi
+
+  if [[ -s "$error_file" ]]; then
+    local curl_error=$(head -c 2000 "$error_file" 2>/dev/null | tr -d '\n\r')
+    log "${RED}[CURL ERROR]${NC} $curl_error"
+  fi
+}
+
+# Process command execution errors
+process_execution_error() {
+  local error_file="$1"
+  local test_number="$2"
+  local final_command="$3"
+
+  {
+    echo "Command: $final_command"
+    echo "Error output:"
+    cat "$error_file" 2>/dev/null || echo "No error output available"
+  } > "${TEST_RESULTS_DIR}/test_${test_number}_exec_error.txt"
+
+  if [[ -s "$error_file" ]]; then
+    local exec_error=$(head -c 2000 "$error_file" 2>/dev/null | tr -d '\n\r')
+    log "${RED}[EXECUTION ERROR]${NC} $exec_error"
+  fi
+}
+
+# Main function to run a curl test
 run_curl_test() {
   local test_name="$1"
   local curl_command="$2"
@@ -236,15 +194,9 @@ run_curl_test() {
     log "${CYAN}[COMMAND]${NC}"
     echo "$curl_command"
   else
-    local short_cmd=$(echo "$curl_command" | head -c 80 | tr '\n' ' ')
+    local short_cmd=$(echo "$curl_command" | head -c 200 | tr '\n' ' ')
     log "${CYAN}[COMMAND]${NC} $short_cmd..."
   fi
-
-  # Substitute URLs in command
-  local final_command=$(substitute_urls "$curl_command")
-  local full_command="$final_command --max-time $TIMEOUT_SECONDS -w '%{http_code}\\n%{time_total}\\n%{size_download}\\n%{url_effective}\\n%{content_type}' -o response.txt -s"
-
-  vlog "Executing: \n$(echo "$full_command" | head -c 1500)"
 
   # Temp files
   local response_file
@@ -254,7 +206,7 @@ run_curl_test() {
 
   # Execute the command
   local start_time=$(date +%s)
-  if eval "$full_command" > "${response_file}.meta" 2>"$error_file"; then
+  if execute_curl_command "$curl_command" "$TIMEOUT_SECONDS" "$response_file" "$error_file"; then
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
     local http_status=$(sed -n '1p' "${response_file}.meta" 2>/dev/null || echo "000")
@@ -269,59 +221,16 @@ run_curl_test() {
     if [[ "$http_status" =~ ^[23][0-9][0-9]$ ]]; then
       log "${GREEN}[PASS]${NC} ✅ Test completed successfully"
       PASSED_TESTS=$((PASSED_TESTS + 1))
-      cp "$response_file" "${TEST_RESULTS_DIR}/test_${test_number}_success.json" 2>/dev/null || true
-
-      # Get and show response brief for successful tests
-      if [[ "$size_download" -gt 0 ]]; then
-        # Source the extract_response_brief function if available
-        if [[ -f "./extract_response_brief.sh" ]]; then
-          source "./extract_response_brief.sh"
-          local response_brief=$(extract_response_brief "response.txt" "$content_type" "$size_download")
-          log "${CYAN}[RESPONSE BRIEF]${NC} $response_brief"
-        else
-          # Fallback if extract_response_brief.sh is not available
-          if [[ "$size_download" -lt 3000 ]]; then
-            local preview=$(head -c 250 "$response_file" 2>/dev/null | tr -d '\n\r' | sed 's/[[:space:]]\+/ /g')
-            [[ -n "$preview" && "$preview" != " " ]] && log "${CYAN}[PREVIEW]${NC} $preview..."
-          else
-            log "${CYAN}[INFO]${NC} Large response (${size_download}B) saved to results directory"
-          fi
-        fi
-      fi
+      process_success_response "$response_file" "$test_number" "$content_type" "$size_download"
     else
       log "${RED}[FAIL]${NC} ❌ HTTP Status: $http_status"
       FAILED_TESTS=$((FAILED_TESTS + 1))
-      cp "$response_file" "${TEST_RESULTS_DIR}/test_${test_number}_error_${http_status}.txt" 2>/dev/null || true
-
-      if [[ -s "$response_file" ]]; then
-        # Get brief for error responses too
-        if [[ -f "./extract_response_brief.sh" ]]; then
-          source "./extract_response_brief.sh"
-          local response_brief=$(extract_response_brief "response.txt" "$content_type" "$size_download")
-          log "${RED}[ERROR RESPONSE]${NC} $response_brief"
-        else
-          local error_preview=$(head -c 200 "$response_file" 2>/dev/null | tr -d '\n\r')
-          log "${RED}[ERROR RESPONSE]${NC} $error_preview"
-        fi
-      fi
-
-      if [[ -s "$error_file" ]]; then
-        local curl_error=$(head -c 200 "$error_file" 2>/dev/null | tr -d '\n\r')
-        log "${RED}[CURL ERROR]${NC} $curl_error"
-      fi
+      process_error_response "$response_file" "$error_file" "$test_number" "$http_status" "$content_type" "$size_download"
     fi
   else
     log "${RED}[FAIL]${NC} ❌ Command execution failed"
     FAILED_TESTS=$((FAILED_TESTS + 1))
-    {
-      echo "Command: $final_command"
-      echo "Error output:"
-      cat "$error_file" 2>/dev/null || echo "No error output available"
-    } > "${TEST_RESULTS_DIR}/test_${test_number}_exec_error.txt"
-    if [[ -s "$error_file" ]]; then
-      local exec_error=$(head -c 200 "$error_file" 2>/dev/null | tr -d '\n\r')
-      log "${RED}[EXECUTION ERROR]${NC} $exec_error"
-    fi
+    process_execution_error "$error_file" "$test_number" "$(substitute_urls "$curl_command")"
   fi
 
   rm -f "$response_file" "$error_file" "${response_file}.meta"
@@ -338,6 +247,7 @@ run_all_tests() {
     local description=$(echo "$command_entry" | cut -d'|' -f1)
     local curl_command=$(echo "$command_entry" | cut -d'|' -f2-)
     run_curl_test "$description" "$curl_command" "$test_counter"
+    echo -n " "
     [[ "$FAST_MODE" == "false" ]] && sleep 1
   done
   echo
