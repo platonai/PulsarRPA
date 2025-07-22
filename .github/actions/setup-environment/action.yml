@@ -104,8 +104,9 @@ runs:
       run: |
         echo "::group::Setting up Permissions"
         
-        # Set execute permissions for shell scripts
+        # Convert line endings to Unix format and set execute permissions
         if [ -d "bin/" ]; then
+          find bin/ -name "*.sh" -exec dos2unix {} \;
           find bin/ -name "*.sh" -exec chmod +x {} \;
           echo "✅ Set execute permissions for $(find bin/ -name "*.sh" | wc -l) script(s) in bin/"
         fi
