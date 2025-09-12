@@ -37,7 +37,6 @@ import java.time.Instant
 abstract class AbstractRelaxedConfiguration {
     protected val logger = LoggerFactory.getLogger(AbstractRelaxedConfiguration::class.java)
 
-    private val resources = LinkedHashSet<String>()
     var name = "Configuration#" + hashCode()
     var profile = ""
         private set
@@ -45,7 +44,7 @@ abstract class AbstractRelaxedConfiguration {
     protected val localFileConfiguration: LocalFileConfiguration
 
     /**
-     * Spring core is the first class dependency now.
+     * Spring core is the first-class dependency now.
      */
     var environment: Environment? = null
 

@@ -1,16 +1,14 @@
 package ai.platon.pulsar.external
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.impl.ChatModelImpl
 import org.junit.jupiter.api.Assertions.assertNotNull
-import kotlin.test.assertFails
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class ChatModelFactoryTest {
-    companion object {
-    }
-
     /**
      *
      * ```shell
@@ -29,26 +27,24 @@ class ChatModelFactoryTest {
      * */
     @org.junit.jupiter.api.Test
     fun `doubao API should be compatible with OpenAI API`() {
-        System.setProperty("OPENAI_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3")
-        System.setProperty("OPENAI_MODEL_NAME", "doubao-1-5-pro-32k-250115")
-        System.setProperty("OPENAI_API_KEY", "9cc8e998-4655-4e90-a54c1-12345abcdefg")
+        val provider = "volcengine"
+        val baseURL = "https://ark.cn-beijing.volces.com/api/v3"
+        val modelName = "doubao-1-5-pro-32k-250115"
+        val apiKey = "9cc8e99889-4655-4e90-a54c1-12345abcdefg"
 
         val conf = ImmutableConfig()
-        val model = ChatModelFactory.getOrCreate(conf)
+        val model = ChatModelFactory.getOrCreate(provider, modelName, apiKey, conf)
         assertNotNull(model)
         assertIs<ChatModelImpl>(model)
 
         try {
-            val response = model.call("This is a fake API key so you must fail")
-
-            // will throw a Exception with message like:
-            // {"error":{"code":"AuthenticationError","message":"The API key in the request is missing or invalid. Request id: xxx","param":"","type":"Unauthorized"}}
-
-            println("Response: >>>$response<<<")
-            // assertTrue { listOf("error", "fail").any { response.content.contains(it) } }
-            assertTrue { response.state == ResponseState.OTHER }
+            // This is a fake API key so you must fail
+            val response = model.call("Give me the answer only for 100+1=?")
+            assertFalse(prettyPulsarObjectMapper().writeValueAsString(response)) {
+                response.content.contains("101")
+            }
         } catch (e: Exception) {
-            assertTrue { listOf("error", "invalid", "missing", "Unauthorized", "fail", "not found", "not exist", "not support", "not available", "not configured", "not supported", "not found", "not exist", "not support", "not available", "not configured", "not supported")
+            assertTrue(e.message) { listOf("error", "invalid", "missing", "Unauthorized", "fail", "not found", "not exist", "not support", "not available", "not configured", "not supported", "not found", "not exist", "not support", "not available", "not configured", "not supported")
                 .any { e.toString().contains(it, ignoreCase = true) } }
         }
     }
