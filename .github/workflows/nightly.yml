@@ -9,7 +9,7 @@ on:
 
 env:
   IMAGE_NAME: browser4
-  NETWORK_NAME: 'pulsarrpa_backend'
+  NETWORK_NAME: 'browser4_backend'
   CONTAINER_NAME: 'browser4-test'
 
 jobs:
