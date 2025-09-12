@@ -29,7 +29,7 @@ class WebDb(
     companion object {
         val dbGetCount = AtomicLong()
         val accumulateGetNanos = AtomicLong()
-        val dbContinousFailureCount = AtomicLong()
+        val dbContinuousFailureCount = AtomicLong()
         val dbGetAveMillis get() = TimeUnit.MILLISECONDS.convert(
             accumulateGetNanos.get(),  TimeUnit.NANOSECONDS) / dbGetCount.get().coerceAtLeast(1)
 
@@ -267,8 +267,7 @@ class WebDb(
     @Throws(WebDBException::class)
     fun scan(urlBase: String, fields: Array<String>): Iterator<WebPage> {
         val query = dataStore.newQuery()
-        // TODO: key range does not working in MongoStore
-        query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
+
         query.setFields(*fields)
 
         val result = dataStore.execute(query)
@@ -286,8 +285,6 @@ class WebDb(
         val query = dataStore.newQuery()
 
         query.filter = filter
-        // TODO: key range does not working in MongoStore
-        query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
         val result = dataStore.execute(query)
@@ -303,25 +300,6 @@ class WebDb(
     @Throws(WebDBException::class)
     fun query(query: DbQuery): Iterator<WebPage> {
         val goraQuery = dataStore.newQuery()
-
-        val startKey = query.startUrl?.let { reverseUrlOrNull(it) }
-        var endKey = query.endUrl?.let { reverseUrlOrNull(it) }
-
-        // The placeholder is used to mark the last character, it's required for serialization, especially for json format
-        if (endKey != null) {
-            endKey = endKey.replace("\\uFFFF".toRegex(), UNICODE_LAST_CODE_POINT.toString())
-            endKey = endKey.replace("\\\\uFFFF".toRegex(), UNICODE_LAST_CODE_POINT.toString())
-        }
-
-        // TODO: key range does not working in MongoStore
-        goraQuery.startKey = startKey
-        goraQuery.endKey = endKey
-        val batchId = query.batchId
-        if (batchId == null && query.filterNullBatchId) {
-            goraQuery.filter = createBatchIdFilter(query.batchId, query.filterIfMissing)
-        } else if (batchId != null) {
-            goraQuery.filter = createBatchIdFilter(query.batchId, query.filterIfMissing)
-        }
 
         goraQuery.setFields(*prepareFields(query.fields))
 
@@ -411,20 +389,16 @@ class WebDb(
     
     @Throws(WebDBException::class)
     private fun <T : Any> performDSAction(name: String, url: String? = null, action: () -> T): T {
-//        if (!AppContext.isActive) {
-//            throw IllegalApplicationContextStateException("")
-//        }
-
         try {
-            return action().also { dbContinousFailureCount.decrementAndGet() }
+            return action().also { dbContinuousFailureCount.decrementAndGet() }
         } catch (e: Exception) {
             var message = "Data storage failure | [$name]"
             if (url.isNullOrBlank()) {
                 message = "$message | $url"
             }
 
-            dbContinousFailureCount.incrementAndGet()
-            if (dbContinousFailureCount.get() < 5) {
+            dbContinuousFailureCount.incrementAndGet()
+            if (dbContinuousFailureCount.get() < 5) {
                 logger.warn(e.stringify("$message - "))
             } else {
                 logger.warn(e.brief("$message - "))

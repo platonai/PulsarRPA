@@ -17,26 +17,9 @@
 package ai.platon.pulsar.persist.gora.db
 
 class DbQuery(
-    /**
-     * Utf8 is an optimized string
-     * */
-    var batchId: CharSequence? = null,
-    /**
-     * The start URL to query webpages.
-     * TODO: startUrl does not working in MongoStore
-     * */
-    var startUrl: String? = null,
-    /**
-     * The end URL to query webpages.
-     * TODO: endUrl does not working in MongoStore
-     * */
-    var endUrl: String? = null,
     var start: Long = 0L,
     var limit: Long = 100L,
     var fields: HashSet<String> = HashSet(),
     var filterIfMissing: Boolean = false,
     var filterNullBatchId: Boolean = false
-) {
-    // private var batchId = Utf8(AppConstants.ALL_BATCHES)
-//    var urlFilter = "+."
-}
+)
