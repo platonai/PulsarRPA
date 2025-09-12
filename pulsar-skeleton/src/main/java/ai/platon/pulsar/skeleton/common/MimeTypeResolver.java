@@ -44,13 +44,13 @@ public final class MimeTypeResolver {
     private static final Logger logger = LoggerFactory.getLogger(MimeTypeResolver.class.getName());
 
     /* our Tika mime type registry */
-    private MimeTypes mimeTypes;
+    private final MimeTypes mimeTypes;
 
     private TikaConfig tikaConfig;
     /* the tika detectors */
     private final Tika tika = new Tika();
     /* whether magic should be employed or not */
-    private boolean mimeMagic;
+    private final boolean mimeMagic;
 
     public MimeTypeResolver(ImmutableConfig conf) {
         ObjectCache objectCache = ObjectCache.get(conf);

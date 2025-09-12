@@ -20,27 +20,24 @@ package ai.platon.pulsar.skeleton.signature;
 import ai.platon.pulsar.persist.WebPage;
 import org.apache.hadoop.io.MD5Hash;
 
-/**
- * Default implementation of a page signature. It calculates an MD5 hash of the
- * textual content of a page. In case there is no signature, it calculates a hash
- * from the page's fetched content.
- */
 public class TextMD5Signature extends Signature {
 
     public static int GOOD_CONTENT_TEXT_LENGTH = 2000;
 
-    private Signature fallback = new MD5Signature();
+    private final Signature fallback = new MD5Signature();
 
     /**
-     * We need calculate signature using a more clean signature content, eg, extracted by signature-persist
+     * We need to calculate signature using a more clean signature content, eg, extracted by signature-persist
      * */
     @Override
     public byte[] calculate(WebPage page) {
         String text = page.getContentText();
+        assert text != null;
         if (text.isEmpty() || text.length() < GOOD_CONTENT_TEXT_LENGTH) {
             text = page.getPageText();
         }
 
+        assert text != null;
         if (text.isEmpty()) {
             return fallback.calculate(page);
         }
