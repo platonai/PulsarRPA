@@ -46,7 +46,7 @@ java -D"EEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY}" -jar Browser4.jar
 Or run Browser4 with Docker:
 
 ```shell
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY} galaxyeye88/browser4:latest
 ```
 
 For more details, please refer to the [LLM configuration documentation]($DOCUMENT_PATH)

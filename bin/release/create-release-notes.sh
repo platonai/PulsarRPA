@@ -91,12 +91,12 @@ java -D"DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY}" -jar Browser4.jar
 \`\`\`shell
 # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
 echo \$DEEPSEEK_API_KEY
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:${VERSION}
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} galaxyeye88/browser4:${VERSION}
 \`\`\`
 
 GitHub Container Registry:
 \`\`\`shell
-docker pull ghcr.io/${REPO_OWNER}/pulsar-rpa:${VERSION}
+docker pull ghcr.io/${REPO_OWNER}/browser4:${VERSION}
 \`\`\`
 ---
 

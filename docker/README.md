@@ -3,7 +3,7 @@
 ## 🛠️ Build Local Development Image
 
 ```bash
-docker build -t pulsar-rpa-dev .
+docker build -t browser4-dev .
 ````
 
 ## 🏠 Run Local Docker Image
@@ -11,7 +11,7 @@ docker build -t pulsar-rpa-dev .
 ```bash
 docker run -p 8182:8182 \
   -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
-  pulsar-rpa-dev:latest
+  browser4-dev:latest
 ```
 
 > 💡 Please make sure you have set `DEEPSEEK_API_KEY` environment.
@@ -38,7 +38,7 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 ```bash
 docker run -d -p 8182:8182 \
   -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
-  galaxyeye88/pulsar-rpa:latest
+  galaxyeye88/browser4:latest
 ```
 
 ## ⚙️ Run with Docker Compose

@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: pulsar-rpa
+  IMAGE_NAME: browser4
   NETWORK_NAME: 'pulsarrpa_backend'
-  CONTAINER_NAME: 'pulsar-rpa-test'
+  CONTAINER_NAME: 'browser4-test'
 
 jobs:
   nightly-build:
@@ -74,7 +74,7 @@ jobs:
         if: success()
         uses: ./.github/actions/docker-build
         with:
-          image_name: 'pulsar-rpa'
+          image_name: 'browser4'
           version: ${{ github.sha }}
           timeout_minutes: '20'
 
@@ -83,7 +83,7 @@ jobs:
         if: success()
         uses: ./.github/actions/start-application
         with:
-          image_name: 'pulsar-rpa'
+          image_name: 'browser4'
           version: ${{ github.sha }}
           container_name: ${{ env.CONTAINER_NAME }}
           network_name: ${{ env.NETWORK_NAME }}
@@ -130,7 +130,7 @@ jobs:
           echo "🌐 Infrastructure:"
           echo "  - Network: ${{ env.NETWORK_NAME }}"
           echo "  - Container: ${{ env.CONTAINER_NAME }}"
-          echo "  - Image: pulsar-rpa:${{ github.sha }}"
+          echo "  - Image: browser4:${{ github.sha }}"
           echo "  - MongoDB: ${{ steps.deps.outputs.mongodb_status }}"
           echo "  - Redis: ${{ steps.deps.outputs.redis_status }}"
           

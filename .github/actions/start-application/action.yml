@@ -144,7 +144,7 @@ runs:
         run_cmd="$run_cmd -e DEEPSEEK_API_KEY=${{ inputs.deepseek_api_key }}"
         run_cmd="$run_cmd -e PROXY_ROTATION_URL=${{ inputs.proxy_rotation_url }}"
         run_cmd="$run_cmd -e gora.mongodb.servers=mongodb:27017"
-        run_cmd="$run_cmd -e SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/pulsar-rpa"
+        run_cmd="$run_cmd -e SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/browser4"
         run_cmd="$run_cmd -e SPRING_DATA_REDIS_HOST=redis"
         run_cmd="$run_cmd -e SPRING_DATA_REDIS_PORT=6379"
         run_cmd="$run_cmd -e BROWSER_DISPLAY_MODE=HEADLESS"

@@ -38,7 +38,7 @@ Dockerfile
 **/application-private.yml
 application-private.yml
 
-docker/pulsar-rpa-prod/Dockerfile
-docker/pulsar-rpa/Dockerfile
+docker/browser4-prod/Dockerfile
+docker/browser4/Dockerfile
 
 !pulsar-app/pulsar-browser4/target/Browser4.jar

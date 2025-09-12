@@ -19,7 +19,7 @@ This document explains different methods to reuse your host's Maven repository w
 
 # Or manually:
 export DOCKER_BUILDKIT=1
-docker build -t pulsar-rpa:latest -f docker/pulsar-rpa-prod/Dockerfile .
+docker build -t browser4:latest -f docker/browser4-prod/Dockerfile .
 ```
 
 **How it works:**
@@ -49,7 +49,7 @@ docker build -t pulsar-rpa:latest -f docker/pulsar-rpa-prod/Dockerfile .
 ./build-with-volume.sh
 
 # Or manually:
-docker build -v ~/.m2:/root/.m2 -t pulsar-rpa:volume -f Dockerfile.with-volume .
+docker build -v ~/.m2:/root/.m2 -t browser4:volume -f Dockerfile.with-volume .
 ```
 
 ### Windows (with repository at `D:\Users\pereg\.m2`):
@@ -61,7 +61,7 @@ docker build -v ~/.m2:/root/.m2 -t pulsar-rpa:volume -f Dockerfile.with-volume .
 build-with-volume-windows.cmd
 
 # Or manually:
-docker build -v "D:/Users/pereg/.m2:/root/.m2" -t pulsar-rpa:windows-volume -f Dockerfile.with-volume .
+docker build -v "D:/Users/pereg/.m2:/root/.m2" -t browser4:windows-volume -f Dockerfile.with-volume .
 ```
 
 **Note for Windows users:**
@@ -111,10 +111,10 @@ docker build -v "D:/Users/pereg/.m2:/root/.m2" -t pulsar-rpa:windows-volume -f D
 ```yaml
 version: '3.8'
 services:
-  pulsar-rpa:
+  browser4:
     build:
       context: .
-      dockerfile: docker/pulsar-rpa-prod/Dockerfile
+      dockerfile: docker/browser4-prod/Dockerfile
       cache_from:
         - maven:3.9.9-eclipse-temurin-21-alpine
     environment:

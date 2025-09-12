@@ -122,7 +122,7 @@ docker run -d -p 8182:8182 \
   -e LLM_PROVIDER=volcengine \
   -e LLM_NAME=${YOUR-MODEL_NAME} \
   -e LLM_API_KEY=${YOUR-LLM_API_KEY} \
-  galaxyeye88/pulsar-rpa:latest
+  galaxyeye88/browser4:latest
 ```
 
 ---

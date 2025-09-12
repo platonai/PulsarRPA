@@ -16,8 +16,8 @@ on:
 permissions: write-all
 
 env:
-  IMAGE_NAME: pulsar-rpa
-  CONTAINER_NAME: pulsar-rpa
+  IMAGE_NAME: browser4
+  CONTAINER_NAME: browser4
   NETWORK_NAME: 'pulsarrpa_backend'
   DOCKER_USERNAME: galaxyeye88
   PRODUCTION_JAR_MODULE_NAME: 'pulsar-browser4'

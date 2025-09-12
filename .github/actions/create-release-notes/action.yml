@@ -98,12 +98,12 @@ runs:
         \`\`\`shell
         # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
         echo \$DEEPSEEK_API_KEY
-        docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:${{ inputs.version }}
+        docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} galaxyeye88/browser4:${{ inputs.version }}
         \`\`\`
 
         GitHub Container Registry:
         \`\`\`shell
-        docker pull ghcr.io/${{ github.repository_owner }}/pulsar-rpa:${{ inputs.version }}
+        docker pull ghcr.io/${{ github.repository_owner }}/browser4:${{ inputs.version }}
         \`\`\`
         ---
 

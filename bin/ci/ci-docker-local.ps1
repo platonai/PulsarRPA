@@ -6,9 +6,9 @@ param(
     [ValidateScript({Test-Path $_ -PathType Leaf})]
     [string]$Dockerfile = $env:DOCKERFILE ?? "Dockerfile",
 
-    [string]$ImageName = $env:IMAGE_NAME ?? "galaxyeye88/pulsar-rpa",
+    [string]$ImageName = $env:IMAGE_NAME ?? "galaxyeye88/browser4",
 
-    [string]$ContainerName = $env:CONTAINER_NAME ?? "pulsar-rpa",
+    [string]$ContainerName = $env:CONTAINER_NAME ?? "browser4",
 
     [ValidateRange(1024, 65535)]
     [int]$Port = $(if ($env:PORT -and [int]::TryParse($env:PORT, [ref]$null)) { [int]$env:PORT } else { 8182 }),

@@ -36,8 +36,8 @@ try {
 
     docker build `
         --progress=plain `
-        -t pulsar-rpa:buildkit-cache `
-        -f docker/pulsar-rpa-prod/Dockerfile `
+        -t browser4:buildkit-cache `
+        -f docker/browser4-prod/Dockerfile `
         .
 
     if ($LASTEXITCODE -eq 0) {

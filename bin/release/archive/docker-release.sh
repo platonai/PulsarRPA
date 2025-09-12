@@ -4,7 +4,7 @@ set -e
 set -o pipefail
 
 # ========== CONFIG ==========
-IMAGE_NAME="galaxyeye88/pulsar-rpa"
+IMAGE_NAME="galaxyeye88/browser4"
 ROOT_DIR=""
 
 # ========== STEP 1: 查找项目根目录 ==========
