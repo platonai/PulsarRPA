@@ -1,16 +1,16 @@
-# 🤖 PulsarRPA
+# 🤖 Browser4
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/galaxyeye88/pulsar-rpa?style=flat-square)](https://hub.docker.com/r/galaxyeye88/pulsar-rpa)
-[![License: APACHE2](https://img.shields.io/badge/license-APACHE2-green?style=flat-square)](https://github.com/platonai/PulsarRPA/blob/main/LICENSE)
+[![License: APACHE2](https://img.shields.io/badge/license-APACHE2-green?style=flat-square)](https://github.com/platonai/Browser4/blob/main/LICENSE)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.8-brightgreen?style=flat-square)](https://spring.io/projects/spring-boot)
 
 ---
 
-English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
+English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/Browser4)
 
 ## 🌟 Introduction
 
-💖 **PulsarRPA: The AI-Powered, Lightning-Fast Browser Automation Solution!** 💖
+💖 **Browser4: a lightning-fast, coroutine-safe browser for your AI** 💖
 
 ### ✨ Key Capabilities:
 
@@ -56,7 +56,7 @@ Find all links containing /dp/.
 #### 🧩 Download
 
 ```shell
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/PulsarRPA.jar
+curl -L -o Browser4.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/PulsarRPA.jar
 ```
 
 #### 🚀 Run
@@ -64,7 +64,7 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 ```shell
 # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
 echo $DEEPSEEK_API_KEY
-java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
+java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar Browser4.jar
 ```
 
 > 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` or other LLM API key is set in your environment, or AI features will not be available.
@@ -187,7 +187,7 @@ The extracted data example:
 
 ### 🚀 Superfast Page Visiting and Data Extraction:
 
-PulsarRPA enables high-speed parallel web scraping with coroutine-based concurrency, delivering efficient data extraction
+Browser4 enables high-speed parallel web scraping with coroutine-based concurrency, delivering efficient data extraction
 while minimizing resource overhead.
 
 <details>
@@ -211,7 +211,7 @@ session.submitAll(links)
 
 ### 🎮 Browser Control:
 
-PulsarRPA implements coroutine-safe browser control.
+Browser4 implements coroutine-safe browser control.
 
 <details>
 
@@ -237,7 +237,7 @@ session.open(url, eventHandlers)
 
 ### 🤖 Robotic Process Automation Capabilities:
 
-PulsarRPA provides flexible robotic process automation capabilities.
+Browser4 provides flexible robotic process automation capabilities.
 
 <details>
 
@@ -265,7 +265,7 @@ session.load(url, options)
 
 ### 🔍 Complex Data Extraction with X-SQL:
 
-PulsarRPA provides X-SQL for complex data extraction.
+Browser4 provides X-SQL for complex data extraction.
 
 <details>
 
