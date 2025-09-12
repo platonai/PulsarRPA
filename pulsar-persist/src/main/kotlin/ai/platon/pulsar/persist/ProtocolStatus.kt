@@ -307,8 +307,8 @@ class ProtocolStatus {
             }
         }
 
-        fun isTimeout(protocalStatus: ProtocolStatus): Boolean {
-            val code = protocalStatus.minorCode
+        fun isTimeout(protocolStatus: ProtocolStatus): Boolean {
+            val code = protocolStatus.minorCode
             return isTimeout(code)
         }
 
