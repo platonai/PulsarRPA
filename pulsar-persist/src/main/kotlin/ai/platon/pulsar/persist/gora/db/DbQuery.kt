@@ -19,7 +19,5 @@ package ai.platon.pulsar.persist.gora.db
 class DbQuery(
     var start: Long = 0L,
     var limit: Long = 100L,
-    var fields: HashSet<String> = HashSet(),
-    var filterIfMissing: Boolean = false,
-    var filterNullBatchId: Boolean = false
+    var fields: HashSet<String> = HashSet()
 )
