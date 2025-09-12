@@ -17,8 +17,8 @@
         <version>4.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>pulsar-master</artifactId>
-    <name>Pulsar Master</name>
+    <artifactId>pulsar-browser4</artifactId>
+    <name>Pulsar Browser4</name>
 
     <dependencies>
         <dependency>
@@ -43,7 +43,7 @@
 
     <build>
         <defaultGoal>package</defaultGoal>
-        <finalName>PulsarRPA</finalName>
+        <finalName>Browser4</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

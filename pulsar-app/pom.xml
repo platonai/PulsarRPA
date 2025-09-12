@@ -27,7 +27,7 @@
     </build>
 
     <modules>
-        <module>pulsar-master</module>
+        <module>pulsar-browser4</module>
         <module>pulsar-examples</module>
     </modules>
 </project>

@@ -20,10 +20,10 @@ env:
   CONTAINER_NAME: pulsar-rpa
   NETWORK_NAME: 'pulsarrpa_backend'
   DOCKER_USERNAME: galaxyeye88
-  PRODUCTION_JAR_MODULE_NAME: 'pulsar-master'
-  PRODUCTION_JAR_MODULE_PATH: 'pulsar-app/pulsar-master'
+  PRODUCTION_JAR_MODULE_NAME: 'pulsar-browser4'
+  PRODUCTION_JAR_MODULE_PATH: 'pulsar-app/pulsar-browser4'
   PRODUCTION_JAR_NAME: 'PulsarRPA.jar'
-  PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-master/target/PulsarRPA.jar'
+  PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-browser4/target/PulsarRPA.jar'
   JAVA_VERSION: '17'
   MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
   MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}

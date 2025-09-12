@@ -6,7 +6,7 @@ MVNW="$APP_HOME"/mvnw
 
 "$BIN"/build.sh "$@"
 
-SERVER_HOME=$APP_HOME/pulsar-app/pulsar-master
+SERVER_HOME=$APP_HOME/pulsar-app/pulsar-browser4
 cd "$SERVER_HOME" || exit
 
 "$BIN"/tools/install-depends.sh

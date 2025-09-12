@@ -17,17 +17,17 @@ $MvnCmd = Join-Path $AppHome '.\mvnw.cmd'
 
 $Version=(Get-Content "$AppHome/VERSION" -TotalCount 1) -replace "-SNAPSHOT", ""
 
-# If pulsar-app/pulsar-master/target/PulsarRPA.jar exists, copy it to remote
-$PulsarRPAPath = "$AppHome/pulsar-app/pulsar-master/target/PulsarRPA.jar"
+# If pulsar-app/pulsar-browser4/target/PulsarRPA.jar exists, copy it to remote
+$PulsarRPAPath = "$AppHome/pulsar-app/pulsar-browser4/target/PulsarRPA.jar"
 
 if (Test-Path $PulsarRPAPath) {
     Write-Host "PulsarRPA.jar exists"
 } else {
     Write-Warning "PulsarRPA.jar does not exist"
 
-    # Build pulsar-app/pulsar-master
+    # Build pulsar-app/pulsar-browser4
     Set-Location $AppHome/pulsar-app
-    & $MvnCmd -pl pulsar-master clean package -DskipTests
+    & $MvnCmd -pl pulsar-browser4 clean package -DskipTests
     Set-Location $AppHome
 }
 

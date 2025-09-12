@@ -18,7 +18,7 @@ fi
 
 UBERJAR="$APP_HOME"/target/PulsarRPA.jar
 if [ ! -f "$UBERJAR" ]; then
-  SERVER_HOME=$APP_HOME/pulsar-app/pulsar-master
+  SERVER_HOME=$APP_HOME/pulsar-app/pulsar-browser4
   cp "$SERVER_HOME"/target/PulsarRPA.jar "$UBERJAR"
 fi
 

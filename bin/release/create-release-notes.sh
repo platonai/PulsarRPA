@@ -9,7 +9,7 @@ done
 
 VERSION=$(head -n 1 "$APP_HOME/VERSION" | tr -d '\r\n' | tr -d '[:space:]')
 UBERJAR_FILE="PulsarRPA.jar"
-UBERJAR_PATH=$(find pulsar-app/pulsar-master -name $UBERJAR_FILE | head -n 1)
+UBERJAR_PATH=$(find pulsar-app/pulsar-browser4 -name $UBERJAR_FILE | head -n 1)
 JAVA_VERSION="17+"
 OUTPUT_FILE="release_notes.md"
 REPO_URL=$(git config --get remote.origin.url | sed 's/\.git$//' | sed 's|git@github.com:|https://github.com/|')

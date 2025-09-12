@@ -43,8 +43,8 @@ cd "$APP_HOME" || exit 1
 
 VERSION=$(head -n 1 "$APP_HOME/VERSION" | sed 's/-SNAPSHOT//')
 
-# If pulsar-app/pulsar-master/target/PulsarRPA.jar exists, copy it to remote
-PULSAR_RPA_PATH="$APP_HOME/pulsar-app/pulsar-master/target/PulsarRPA.jar"
+# If pulsar-app/pulsar-browser4/target/PulsarRPA.jar exists, copy it to remote
+PULSAR_RPA_PATH="$APP_HOME/pulsar-app/pulsar-browser4/target/PulsarRPA.jar"
 if [[ -f "$PULSAR_RPA_PATH" ]]; then
   DESTINATION_PATH="${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}PulsarRPA-${VERSION}.jar"
 

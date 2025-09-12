@@ -54,8 +54,8 @@
     </developers>
 
     <scm>
-        <connection>scm:git:https://github.com/platonai/PulsarRPA.git</connection>
-        <developerConnection>scm:git:https://github.com/platonai/PulsarRPA.git</developerConnection>
+        <connection>scm:git:https://github.com/platonai/browser4.git</connection>
+        <developerConnection>scm:git:https://github.com/platonai/browser4.git</developerConnection>
         <url>https://github.com/platonai/PulsarRPA</url>
         <tag>HEAD</tag>
     </scm>

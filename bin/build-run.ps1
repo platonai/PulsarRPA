@@ -9,7 +9,7 @@ Set-Location $AppHome
 
 .\bin\build.ps1 $args
 
-$SERVER_HOME = Join-Path $AppHome "pulsar-app\pulsar-master"
+$SERVER_HOME = Join-Path $AppHome "pulsar-app\pulsar-browser4"
 Set-Location $SERVER_HOME
 
 ../../mvnw spring-boot:run

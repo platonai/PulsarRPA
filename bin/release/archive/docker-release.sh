@@ -34,8 +34,8 @@ cd "$ROOT_DIR"
 
 DOCKERFILE_NAME="$ROOT_DIR/Dockerfile"
 
-# If pulsar-app/pulsar-master/target/PulsarRPA.jar is not found, build it first
-if [ ! -f "$ROOT_DIR/pulsar-app/pulsar-master/target/PulsarRPA.jar" ]; then
+# If pulsar-app/pulsar-browser4/target/PulsarRPA.jar is not found, build it first
+if [ ! -f "$ROOT_DIR/pulsar-app/pulsar-browser4/target/PulsarRPA.jar" ]; then
   echo "❌ PulsarRPA.jar not found. Please build it first."
   exit 1
 fi
