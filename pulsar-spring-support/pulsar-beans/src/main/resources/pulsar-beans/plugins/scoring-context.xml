@@ -7,12 +7,4 @@
 
     <import resource="../common-context.xml"/>
 
-    <bean id="scoringFilters" class="ai.platon.pulsar.skeleton.crawl.scoring.ScoringFilters">
-        <constructor-arg>
-            <list>
-            </list>
-        </constructor-arg>
-        <constructor-arg ref="conf"/>
-    </bean>
-
 </beans>
