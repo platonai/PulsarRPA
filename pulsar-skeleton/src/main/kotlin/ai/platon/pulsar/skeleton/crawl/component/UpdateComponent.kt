@@ -9,7 +9,6 @@ import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.crawl.schedule.DefaultFetchSchedule
 import ai.platon.pulsar.skeleton.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.skeleton.crawl.schedule.ModifyInfo
-import ai.platon.pulsar.skeleton.crawl.scoring.ScoringFilters
 import java.time.Instant
 
 /**
@@ -18,11 +17,10 @@ import java.time.Instant
 class UpdateComponent(
     val webDb: WebDb,
     val fetchSchedule: FetchSchedule,
-    val scoringFilters: ScoringFilters? = null,
     val messageWriter: MiscMessageWriter? = null,
     val conf: ImmutableConfig,
 ) : Parameterized {
-    constructor(webDb: WebDb, conf: ImmutableConfig) : this(webDb, DefaultFetchSchedule(conf), null, null, conf)
+    constructor(webDb: WebDb, conf: ImmutableConfig) : this(webDb, DefaultFetchSchedule(conf), null, conf)
 
     fun updateFetchSchedule(page: WebPage) {
         val m = handleModifiedTime(page)
