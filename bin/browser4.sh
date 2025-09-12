@@ -2,16 +2,12 @@
 
 set -e
 
-# Find the first parent directory that contains a pom.xml file
+# Find the first parent directory that contains a VERSION file
 APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
-while [[ "$APP_HOME" != "/" ]]; do
-  if [[ -f "$APP_HOME/pom.xml" ]]; then
-    break
-  fi
+while [[ ! -f "$APP_HOME/VERSION" && "$APP_HOME" != "/" ]]; do
   APP_HOME=$(dirname "$APP_HOME")
 done
-
-cd "$APP_HOME" || exit
+[[ -f "$APP_HOME/VERSION" ]] && cd "$APP_HOME" || exit
 
 # find out chrome version
 CHROME_VERSION="$(google-chrome -version | head -n1 | awk -F '[. ]' '{print $3}')"

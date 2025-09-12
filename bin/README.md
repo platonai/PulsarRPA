@@ -8,13 +8,13 @@ Build the project.
 
 Build and run the project.
 
+## browser4.ps1, browser4.sh
+
+Start the Browser4 server.
+
 ## command-sse.ps1, command-sse.sh
 
 SSE client to connect to the server.
-
-## pulsar.ps1, pulsar.sh
-
-Start the Browser4 server.
 
 ## run-integration-tests.ps1, run-integration-tests.sh
 
