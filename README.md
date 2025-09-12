@@ -49,7 +49,7 @@ Find all links containing /dp/.
 
 # 🚀 Quick Start Guide
 
-## ▶️ Run PulsarRPA
+## ▶️ Run Browser4
 
 ### 📦 Run the Executable JAR — Best Experience
 
