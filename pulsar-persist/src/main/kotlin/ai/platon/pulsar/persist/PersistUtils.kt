@@ -14,7 +14,6 @@ object PersistUtils {
      */
     fun u8(value: String?): Utf8? {
         if (value == null) {
-            // TODO: return new Utf8.EMPTY?
             return null
         }
         return Utf8(value)

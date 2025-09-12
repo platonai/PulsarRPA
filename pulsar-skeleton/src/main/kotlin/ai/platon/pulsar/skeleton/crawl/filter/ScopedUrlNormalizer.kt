@@ -7,9 +7,6 @@ typealias NaiveUrlNormalizer = ai.platon.pulsar.common.urls.preprocess.UrlNormal
  * for this scope will be used.
  */
 const val SCOPE_DEFAULT: String = "default"
-const val SCOPE_GENERATE = "generate"
-const val SCOPE_INJECT = "inject"
-const val SCOPE_FETCH = "fetch"
 
 /**
  * Interface used to convert URLs to normal form and optionally perform
