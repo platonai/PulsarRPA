@@ -266,28 +266,28 @@ jobs:
           docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
           docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: ${{ env.JAVA_VERSION }}
-          cache: maven
-          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
-
-      - name: Deploy to Sonatype OSSRH
-        if: success()
-        run: |
-          echo "=== Deploying to Maven Central ==="
-          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
-            -Dgpg.passphrase="$GPG_PASSPHRASE" \
-            -Dgpg.batch=true \
-            -Dgpg.pinentry-mode=loopback \
-            --show-version --errors
-        env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+#      - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
+#        uses: actions/setup-java@v4
+#        with:
+#          distribution: 'temurin'
+#          java-version: ${{ env.JAVA_VERSION }}
+#          cache: maven
+#          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
+#          server-username: MAVEN_USERNAME
+#          server-password: MAVEN_PASSWORD
+#          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
+#          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+#
+#      - name: Deploy to Sonatype OSSRH
+#        if: success()
+#        run: |
+#          echo "=== Deploying to Maven Central ==="
+#          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
+#            -Dgpg.passphrase="$GPG_PASSPHRASE" \
+#            -Dgpg.batch=true \
+#            -Dgpg.pinentry-mode=loopback \
+#            --show-version --errors
+#        env:
+#          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+#          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+#          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
