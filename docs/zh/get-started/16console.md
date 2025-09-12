@@ -30,7 +30,7 @@ wget https://static.platonai.cn/repo/ai/platon/exotic/exotic-standalone.jar
 
 ```bash
 git clone https://github.com/platonai/PulsarRPAPro.git
-cd PulsarRPARPAPro
+cd PulsarRPAPro
 mvn clean && mvn
 cd exotic-standalone/target/
 ```

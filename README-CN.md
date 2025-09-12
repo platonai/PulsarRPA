@@ -187,7 +187,7 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
 
 ### 🚀 超快页面访问和数据提取:
 
-PulsarRPA通过基于协程的并发实现高速并行网页抓取，在最小化资源开销的同时提供高效的数据提取。
+Browser4 通过基于协程的并发实现高速并行网页抓取，在最小化资源开销的同时提供高效的数据提取。
 
 <details>
 
@@ -210,7 +210,7 @@ session.submitAll(links)
 
 ### 🎮 浏览器控制:
 
-PulsarRPA实现了协程安全的浏览器控制。
+Browser4 实现了协程安全的浏览器控制。
 
 <details>
 
@@ -236,7 +236,7 @@ session.open(url, eventHandlers)
 
 ### 🤖 机器人流程自动化能力:
 
-PulsarRPA提供灵活的机器人流程自动化能力。
+Browser4 提供灵活的机器人流程自动化能力。
 
 <details>
 
@@ -264,7 +264,7 @@ session.load(url, options)
 
 ### 🔍 使用X-SQL进行复杂数据提取:
 
-PulsarRPA提供X-SQL用于复杂数据提取。
+Browser4 提供X-SQL用于复杂数据提取。
 
 <details>
 
