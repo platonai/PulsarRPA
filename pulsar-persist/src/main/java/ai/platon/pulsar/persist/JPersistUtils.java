@@ -15,7 +15,6 @@ public class JPersistUtils {
     @Nullable
     public static Utf8 u8(@Nullable String value) {
         if (value == null) {
-            // TODO: return new Utf8.EMPTY?
             return null;
         }
         return new Utf8(value);
