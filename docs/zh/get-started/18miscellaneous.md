@@ -41,8 +41,8 @@ BrowserSettings.withSystemDefaultBrowser().withGUI().withSPA()
 Concepts
 ==
 
-要释放 PulsarRPA 的全部潜能并应对最复杂的数据抓取任务，对其核心概念的扎实理解至关重要。通过掌握这些基本原理，您将能够使用 PulsarRPA 作为从网络中提取有价值信息的强大工具。
+要释放 Browser4 的全部潜能并应对最复杂的数据抓取任务，对其核心概念的扎实理解至关重要。通过掌握这些基本原理，您将能够使用 Browser4 作为从网络中提取有价值信息的强大工具。
 
-[PulsarRPA 概念](../concepts.md)
+[Browser4 概念](../concepts.md)
 
 [上一篇](16console.md) [主页](1home.md)

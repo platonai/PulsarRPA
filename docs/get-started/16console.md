@@ -6,8 +6,8 @@ Console
 [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro), [Chinese mirror](https://gitee.com/platonai_galaxyeye/PulsarRPAPro), includes:
 
 - A **command-line tool** that can directly execute web data collection tasks from the command line without the need to open an IDE to write code.
-- A **Web console** that facilitates the management of PulsarRPA services and writing SQL to access the Web and extract data.
-- An upgraded PulsarRPA server where we can write SQL on the client side to access the Web and extract data.
+- A **Web console** that facilitates the management of Browser4 services and writing SQL to access the Web and extract data.
+- An upgraded Browser4 server where we can write SQL on the client side to access the Web and extract data.
 - A mini-program based on self-supervised machine learning for automatic information extraction, where the AI algorithm identifies all fields on the detail page with over 95% of fields having an accuracy of over 99%.
 - A mini-program based on self-supervised machine learning that automatically learns and outputs all collection rules.
 - A set of data collection examples from top-tier sites.

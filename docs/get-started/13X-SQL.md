@@ -2,13 +2,13 @@ X-SQL
 =
 [Prev](12massive-crawling.md) [Home](1home.md) [Next](14AI-extraction.md)
 
-PulsarRPA has developed X-SQL to directly query the internet and convert web pages into tables and charts. X-SQL extends SQL to manage web data, including web crawling, data collection, data extraction, web content mining, web BI, and more.
+Browser4 has developed X-SQL to directly query the internet and convert web pages into tables and charts. X-SQL extends SQL to manage web data, including web crawling, data collection, data extraction, web content mining, web BI, and more.
 
-When PulsarRPA runs as a REST service, X-SQL can be used to collect web pages or directly query the internet anytime, anywhere, without opening an IDE, just like an upgraded version of Google and Baidu.
+When Browser4 runs as a REST service, X-SQL can be used to collect web pages or directly query the internet anytime, anywhere, without opening an IDE, just like an upgraded version of Google and Baidu.
 
 Now, in large-scale data collection projects, all [extraction rules](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/) ([Chinese mirror](https://gitee.com/platonai_galaxyeye/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/)) are written in X-SQL, with data type conversion and data cleaning also handled by the powerful X-SQL inline processing. The experience of writing X-SQL for data collection projects is as simple and efficient as traditional CRUD projects. A good example is [x-asin.sql](https://github.com/platonai/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql) ([Chinese mirror](https://gitee.com/platonai_galaxyeye/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)), which extracts more than 70 fields from each product page.
 
-[Exotic Amazon](https://github.com/platonai/exotic-amazon) ([Chinese mirror](https://gitee.com/platonai_galaxyeye/exotic-amazon)) is a complete solution for collecting the entire amazon.com website, ready to use out of the box, covering most data types on Amazon, and it will be permanently provided for free and open source. Thanks to the comprehensive web data management infrastructure provided by PulsarRPA, the entire solution consists of no more than 3500 lines of Kotlin code and less than 700 lines of X-SQL to extract over 650 fields.
+[Exotic Amazon](https://github.com/platonai/exotic-amazon) ([Chinese mirror](https://gitee.com/platonai_galaxyeye/exotic-amazon)) is a complete solution for collecting the entire amazon.com website, ready to use out of the box, covering most data types on Amazon, and it will be permanently provided for free and open source. Thanks to the comprehensive web data management infrastructure provided by Browser4, the entire solution consists of no more than 3500 lines of Kotlin code and less than 700 lines of X-SQL to extract over 650 fields.
 
 This course introduces the basic concepts, basic usage, and the most common SQL functions of X-SQL.
 
@@ -35,7 +35,7 @@ Complete code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pu
 
 ## Language Introduction
 
-X-SQL is based on the H2 database, and PulsarRPA mainly extends the H2 database by registering UDFs, but it also does other extensions.
+X-SQL is based on the H2 database, and Browser4 mainly extends the H2 database by registering UDFs, but it also does other extensions.
 
 Each X-SQL function has a namespace, for example:
 

@@ -51,13 +51,13 @@ A typical web page section
     <img width="80%" src=https://pica.zhimg.com/80/v2-d10694d76cfa5cf148a67c1576ca8f29_1440w.jpg?source=d16d100b   alt="auto extracted data"/>
 </div>
 
-Data extracted using PulsarRPA's auto extraction technology
+Data extracted using Browser4's auto extraction technology
 
 <div style="text-align: center">
     <img width="80%" src=https://pic3.zhimg.com/80/v2-ffe172327bbac5bbc5b43f1ae9d54864_1440w.jpg?source=d16d100b   alt="auto extracted chart"/>
 </div>
 
-Using PulsarRPA's auto extraction technology and SQL to fully automate the transformation of the internet into charts
+Using Browser4's auto extraction technology and SQL to fully automate the transformation of the internet into charts
 
 **References:**
 

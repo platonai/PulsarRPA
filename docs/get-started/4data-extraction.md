@@ -3,9 +3,9 @@ Data Extraction
 
 [Prev](3load-options.md) [Home](1home.md) [Next](5URL.md)
 
-PulsarRPA uses [jsoup](https://jsoup.org/) to extract data from HTML documents. Jsoup parses HTML into a DOM that mirrors modern browsers. Check out [selector-syntax](https://jsoup.org/cookbook/extracting-data/selector-syntax) for all supported CSS selectors, and [here](https://www.w3school.com.cn/cssref/css_selectors.asp) for a detailed table of standard CSS selectors in Chinese.
+Browser4 uses [jsoup](https://jsoup.org/) to extract data from HTML documents. Jsoup parses HTML into a DOM that mirrors modern browsers. Check out [selector-syntax](https://jsoup.org/cookbook/extracting-data/selector-syntax) for all supported CSS selectors, and [here](https://www.w3school.com.cn/cssref/css_selectors.asp) for a detailed table of standard CSS selectors in Chinese.
 
-Modern web page source codes change very frequently, but the web page "looks" not much different, to ensure a consistent user experience. At this time, examining web page elements from visual features is particularly effective. To better view web pages from visual and numerical features, PulsarRPA extends CSS to solve the most complex real-world problems.
+Modern web page source codes change very frequently, but the web page "looks" not much different, to ensure a consistent user experience. At this time, examining web page elements from visual features is particularly effective. To better view web pages from visual and numerical features, Browser4 extends CSS to solve the most complex real-world problems.
 
 First, prepare a document:
 
@@ -43,13 +43,13 @@ val resultLinks = document.select("h3.r > a")
 val bsr = document.select("th:contains(Best Sellers Rank) ~ td")
 ```
 
-PulsarRPA extends CSS and Jsoup to solve complex real-world problems:
+Browser4 extends CSS and Jsoup to solve complex real-world problems:
 
-1. PulsarRPA calculates numerical features for each Node in the DOM.
-2. PulsarRPA extends CSS syntax to support mathematical operations in CSS queries.
-3. PulsarRPA provides a set of practical methods to simplify and enhance DOM operations.
+1. Browser4 calculates numerical features for each Node in the DOM.
+2. Browser4 extends CSS syntax to support mathematical operations in CSS queries.
+3. Browser4 provides a set of practical methods to simplify and enhance DOM operations.
 
-To make up for the shortcomings of existing CSS expressions, PulsarRPA extends CSS expressions by introducing the **:expr(expresson)** pseudo-selector, allowing us to perform mathematical operations in CSS.
+To make up for the shortcomings of existing CSS expressions, Browser4 extends CSS expressions by introducing the **:expr(expresson)** pseudo-selector, allowing us to perform mathematical operations in CSS.
 
 For example:
 
@@ -77,7 +77,7 @@ val expr = "img == 1 && width > 400 && width < 500 && height > 400 && height < 5
 val elements = doc.select("div:expr($expr)")
 ```
 
-Currently, PulsarRPA supports the following numerical features:
+Currently, Browser4 supports the following numerical features:
 
 ```
 top,       // the top coordinate in pixel of the element
@@ -124,7 +124,7 @@ The table below lists the standard operators.
 | &&      | The and operator                      |
 | \|\|    | The or operator                       |
 
-In the professional version of PulsarRPA, we will introduce more interesting numerical features to support machine learning and [artificial intelligence](https://zhuanlan.zhihu.com/p/576098111), such as features related to topological structures.
+In the professional version of Browser4, we will introduce more interesting numerical features to support machine learning and [artificial intelligence](https://zhuanlan.zhihu.com/p/576098111), such as features related to topological structures.
 
 In the [X-SQL](13X-SQL.md) chapter, we will详细介绍如何在 X-SQL 中使用 CSS 选择器来选择元素及其属性。一个综合性较强的真实案例是 [x-asin.sql](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)（[国内镜像](https://gitee.com/platonai_galaxyeye/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)），它使用了各种各样的 CSS 选择器来解决最复杂的电商网页数据提取问题，下面是一些片段：
 

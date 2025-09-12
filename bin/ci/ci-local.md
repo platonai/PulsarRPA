@@ -1,4 +1,4 @@
-为了实现每分钟检查 Git 仓库是否有更新，并在有更新时运行 [build.sh](file://D:\workspace\PulsarRPA\PulsarRPA-3.0.x\bin\build.sh) 脚本，你可以使用以下 PowerShell 脚本。
+为了实现每分钟检查 Git 仓库是否有更新，并在有更新时运行 [build.sh](bin\build.sh) 脚本，你可以使用以下 PowerShell 脚本。
 
 ---
 
@@ -6,7 +6,7 @@
 
 1. **每分钟执行一次 Git Pull**
 2. **检查是否有更新（通过比较 HEAD 的哈希值）**
-3. **如果有更新，运行 [build.sh](file://D:\workspace\PulsarRPA\PulsarRPA-3.0.x\bin\build.sh)**
+3. **如果有更新，运行 [build.sh](bin\build.sh)**
 
 ---
 
@@ -16,7 +16,7 @@
 #!/usr/bin/env pwsh
 
 # Configuration
-$repoPath = "D:\workspace\PulsarRPA\PulsarRPA-3.0.x"  # 你的 Git 仓库路径
+$repoPath = "Browser4-3.0.x"  # 你的 Git 仓库路径
 $buildScript = "build.sh"                             # 你的构建脚本
 $intervalSeconds = 60                                 # 检查间隔（秒）
 
@@ -85,7 +85,7 @@ while ($true) {
 1. **保存脚本**：将上述脚本保存为 `git-pull-and-build.ps1`。
 2. **修改配置**：
     - 将 `$repoPath` 设置为你的 Git 仓库路径。
-    - 将 `$buildScript` 设置为你的构建脚本（如 [build.sh](file://D:\workspace\PulsarRPA\PulsarRPA-3.0.x\bin\build.sh)）。
+    - 将 `$buildScript` 设置为你的构建脚本（如 [build.sh](bin\build.sh)）。
 3. **运行脚本**：
    ```powershell
    pwsh .\git-pull-and-build.ps1
@@ -113,7 +113,7 @@ while ($true) {
 ### ✅ 注意事项
 
 1. **确保 Git 已安装**：脚本依赖 Git 命令行工具。
-2. **确保 [build.sh](file://D:\workspace\PulsarRPA\PulsarRPA-3.0.x\bin\build.sh) 可执行**：如果 [build.sh](file://D:\workspace\PulsarRPA\PulsarRPA-3.0.x\bin\build.sh) 是 Bash 脚本，确保它已赋予执行权限：
+2. **确保 [build.sh](bin\build.sh) 可执行**：如果 [build.sh](bin\build.sh) 是 Bash 脚本，确保它已赋予执行权限：
    ```bash
    chmod +x build.sh
    ```
@@ -133,7 +133,7 @@ while ($true) {
   Start-Process pwsh -ArgumentList ".\git-pull-and-build.ps1" -NoNewWindow -RedirectStandardOutput "log.txt"
   ```
 
-- **错误处理**：捕获并处理 `git pull` 或 [build.sh](file://D:\workspace\PulsarRPA\PulsarRPA-3.0.x\bin\build.sh) 的错误。
+- **错误处理**：捕获并处理 `git pull` 或 [build.sh](bin\build.sh) 的错误。
 - **通知**：在有更新时发送通知（如邮件或桌面通知）。
 
 ---

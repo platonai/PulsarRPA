@@ -6,9 +6,9 @@ Massive Crawling
 > "Bad programmers worry about code. Good programmers worry about data structures and their relationships."
 > -- Linus Torvalds
 
-Massively extracting Web data is very challenging. **Websites frequently change and are becoming increasingly complex, which means that collected Web data is often inaccurate or incomplete**. [PulsarRPA](https://github.com/platonai/PulsarRPA) has developed a series of cutting-edge technologies to address these issues.
+Massively extracting Web data is very challenging. **Websites frequently change and are becoming increasingly complex, which means that collected Web data is often inaccurate or incomplete**. [Browser4](https://github.com/platonai/Browser4) has developed a series of cutting-edge technologies to address these issues.
 
-PulsarRPA has designed a set of data structures to handle the problem of URL pools. This allows PulsarRPA not only to handle millions of URLs simultaneously but also to accurately define the behavior of these URLs.
+Browser4 has designed a set of data structures to handle the problem of URL pools. This allows Browser4 not only to handle millions of URLs simultaneously but also to accurately define the behavior of these URLs.
 
 When running continuous crawling, URLs are added to [URLPool](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt). URLPool contains various carefully designed [URLCache](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlCache.kt) to meet different needs, such as priority tasks, delayed tasks, deadlines, external loading, and so on.
 
@@ -22,7 +22,7 @@ BrowserSettings.maxBrowsers(5).maxOpenTabs(15).headless()
 
 This article demonstrates how to meet different crawling requirements through different URLCache.
 
-First, create a PulsarRPA session and prepare a batch of test URLs:
+First, create a Browser4 session and prepare a batch of test URLs:
 
 ```kotlin
 val session = PulsarContexts.createSession()

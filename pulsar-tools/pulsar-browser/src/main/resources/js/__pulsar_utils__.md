@@ -1,4 +1,4 @@
-以下是对 [__pulsar_utils__.js](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-tools\pulsar-browser\src\main\resources\js\__pulsar_utils__.js) 文件的代码审查（Code Review）建议，涵盖可读性、性能、可维护性、潜在问题和改进建议等方面。
+以下是对 [__pulsar_utils__.js](file://D:\workspace\Browser4\Browser4-3.x\pulsar-tools\pulsar-browser\src\main\resources\js\__pulsar_utils__.js) 文件的代码审查（Code Review）建议，涵盖可读性、性能、可维护性、潜在问题和改进建议等方面。
 
 ---
 
@@ -31,7 +31,7 @@ window.__pulsar_utils__ = __pulsar_utils__
 - 建议统一使用命名空间模式（如 `window.__pulsar_.utils`），并尽快移除 `__pulsar_utils__` 全局变量。
 
 ### 2. **性能隐患**
-- 大量使用 [querySelectorAll()](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-tools\pulsar-browser\src\main\kotlin\ai\platon\pulsar\browser\driver\chrome\PageHandler.kt#L62-L67) + `Array.from().map()`，在大型页面中可能造成性能下降。
+- 大量使用 [querySelectorAll()](file://D:\workspace\Browser4\Browser4-3.x\pulsar-tools\pulsar-browser\src\main\kotlin\ai\platon\pulsar\browser\driver\chrome\PageHandler.kt#L62-L67) + `Array.from().map()`，在大型页面中可能造成性能下降。
 - 尤其是 `getVisibleTextContent()` 中对所有元素进行遍历，建议加入提前剪枝或限制层级。
 
 ### 3. **DOM 操作频繁**
@@ -39,12 +39,12 @@ window.__pulsar_utils__ = __pulsar_utils__
 - 可以考虑使用 DocumentFragment 或虚拟节点来优化。
 
 ### 4. **部分方法重复/冗余**
-- [firstText()](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-dom\src\main\kotlin\ai\platon\pulsar\dom\model\PageEntity.kt#L129-L129) 和 [selectFirstText()](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-dom\src\main\kotlin\ai\platon\pulsar\dom\FeaturedDocument.kt#L495-L497) 功能完全相同，前者已标记为废弃但未删除。
-- 类似地，[allTexts()](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-ql\src\main\kotlin\ai\platon\pulsar\ql\h2\udfs\DomSelectFunctions.kt#L46-L50) 与 [selectTextAll()](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-dom\src\main\kotlin\ai\platon\pulsar\dom\FeaturedDocument.kt#L483-L485) 也是重复。
+- [firstText()](file://D:\workspace\Browser4\Browser4-3.x\pulsar-dom\src\main\kotlin\ai\platon\pulsar\dom\model\PageEntity.kt#L129-L129) 和 [selectFirstText()](file://D:\workspace\Browser4\Browser4-3.x\pulsar-dom\src\main\kotlin\ai\platon\pulsar\dom\FeaturedDocument.kt#L495-L497) 功能完全相同，前者已标记为废弃但未删除。
+- 类似地，[allTexts()](file://D:\workspace\Browser4\Browser4-3.x\pulsar-ql\src\main\kotlin\ai\platon\pulsar\ql\h2\udfs\DomSelectFunctions.kt#L46-L50) 与 [selectTextAll()](file://D:\workspace\Browser4\Browser4-3.x\pulsar-dom\src\main\kotlin\ai\platon\pulsar\dom\FeaturedDocument.kt#L483-L485) 也是重复。
 
 ### 5. **属性设置与获取方式不一致**
-- [setAttribute](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-tools\pulsar-browser\src\main\kotlin\ai\platon\pulsar\browser\driver\chrome\PageHandler.kt#L91-L94), [setAttributeAll](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-skeleton\src\main\kotlin\ai\platon\pulsar\skeleton\crawl\fetch\driver\WebDriver.kt#L1191-L1192), [selectFirstAttribute](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-dom\src\main\kotlin\ai\platon\pulsar\dom\FeaturedDocument.kt#L539-L541), [selectAttributeAll](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-skeleton\src\main\kotlin\ai\platon\pulsar\skeleton\crawl\fetch\driver\WebDriver.kt#L1163-L1164) 等方法命名风格统一，但有些地方直接使用 `element[propName]` 设置属性，容易混淆。
-- 建议统一使用 [setAttribute](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-tools\pulsar-browser\src\main\kotlin\ai\platon\pulsar\browser\driver\chrome\PageHandler.kt#L91-L94) / [getAttribute](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-tools\pulsar-browser\src\main\kotlin\ai\platon\pulsar\browser\driver\chrome\PageHandler.kt#L79-L89)，除非明确需要访问 DOM 属性而非 HTML 属性。
+- [setAttribute](file://D:\workspace\Browser4\Browser4-3.x\pulsar-tools\pulsar-browser\src\main\kotlin\ai\platon\pulsar\browser\driver\chrome\PageHandler.kt#L91-L94), [setAttributeAll](file://D:\workspace\Browser4\Browser4-3.x\pulsar-skeleton\src\main\kotlin\ai\platon\pulsar\skeleton\crawl\fetch\driver\WebDriver.kt#L1191-L1192), [selectFirstAttribute](file://D:\workspace\Browser4\Browser4-3.x\pulsar-dom\src\main\kotlin\ai\platon\pulsar\dom\FeaturedDocument.kt#L539-L541), [selectAttributeAll](file://D:\workspace\Browser4\Browser4-3.x\pulsar-skeleton\src\main\kotlin\ai\platon\pulsar\skeleton\crawl\fetch\driver\WebDriver.kt#L1163-L1164) 等方法命名风格统一，但有些地方直接使用 `element[propName]` 设置属性，容易混淆。
+- 建议统一使用 [setAttribute](file://D:\workspace\Browser4\Browser4-3.x\pulsar-tools\pulsar-browser\src\main\kotlin\ai\platon\pulsar\browser\driver\chrome\PageHandler.kt#L91-L94) / [getAttribute](file://D:\workspace\Browser4\Browser4-3.x\pulsar-tools\pulsar-browser\src\main\kotlin\ai\platon\pulsar\browser\driver\chrome\PageHandler.kt#L79-L89)，除非明确需要访问 DOM 属性而非 HTML 属性。
 
 ### 6. **缺少类型校验**
 - 虽然有 JSDoc，但 JS 是动态语言，建议增加运行时类型校验，防止非法参数传入导致崩溃。
@@ -77,7 +77,7 @@ window.__pulsar_utils__ = __pulsar_utils__
 
 以下功能可以考虑抽离成独立库：
 
-1. **DOM 遍历器 [__pulsar_NodeTraversor](file://D:\workspace\PulsarRPA\PulsarRPA-3.x\pulsar-tools\pulsar-browser\src\main\resources\js\node_traversor.js#L11-L20)**
+1. **DOM 遍历器 [__pulsar_NodeTraversor](file://D:\workspace\Browser4\Browser4-3.x\pulsar-tools\pulsar-browser\src\main\resources\js\node_traversor.js#L11-L20)**
 2. **DOMRect 格式化工具**
 3. **颜色转换工具（RGB -> HEX）**
 4. **文本内容清理与合并工具**

@@ -3,7 +3,7 @@ Basic Usage
 
 Prev [Home](1home.md) [Next](3load-options.md)
 
-In a nutshell, PulsarRPA is all about **correctly implementing two methods: loading web pages and extracting data**. To achieve this goal, PulsarRPA has written and refined nearly a million lines of code, developing a range of cutting-edge technologies.
+In a nutshell, Browser4 is all about **correctly implementing two methods: loading web pages and extracting data**. To achieve this goal, Browser4 has written and refined nearly a million lines of code, developing a range of cutting-edge technologies.
 
 **Loading Web Pages:**
 
@@ -28,7 +28,7 @@ In a nutshell, PulsarRPA is all about **correctly implementing two methods: load
 3. Correctly load and extract data in extremely complex application scenarios.
 4. Other auxiliary methods around loading and extracting.
 
-PulsarRPA implements the **web as a database** paradigm, treating the external web like an internal database. If the required data is not in local storage, or the existing version does not meet analysis needs, the system will collect the latest version of the data from the internet.
+Browser4 implements the **web as a database** paradigm, treating the external web like an internal database. If the required data is not in local storage, or the existing version does not meet analysis needs, the system will collect the latest version of the data from the internet.
 
 This course introduces the basic APIs for loading and extracting data, which appear in PulsarSession. PulsarSession provides a rich set of APIs to cover all needs of the "load-parse-extract" process.
 

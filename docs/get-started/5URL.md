@@ -2,11 +2,11 @@ URL
 =
 [Prev](4data-extraction.md) [Home](1home.md) [Next](6Java-style-async.md)
 
-In PulsarRPA, each task is defined as some form of URL, which often appears with a loading argument to finely control a collection task, such as data expiration, basic data requirements, task deadlines, task retries, etc. In most cases, a data collection task can be uniquely determined by the form of *URL-arguments*, so it can be easily copied, managed, stored, transferred, parallelized, and used for communication.
+In Browser4, each task is defined as some form of URL, which often appears with a loading argument to finely control a collection task, such as data expiration, basic data requirements, task deadlines, task retries, etc. In most cases, a data collection task can be uniquely determined by the form of *URL-arguments*, so it can be easily copied, managed, stored, transferred, parallelized, and used for communication.
 
 ## URLs
 
-A Uniform Resource Locator (URL), commonly known as a web address, is a reference to a network resource that specifies its location on a computer network and the mechanism for retrieving it. URLs in PulsarRPA carry additional information for describing data collection tasks and come in several basic forms:
+A Uniform Resource Locator (URL), commonly known as a web address, is a reference to a network resource that specifies its location on a computer network and the mechanism for retrieving it. URLs in Browser4 carry additional information for describing data collection tasks and come in several basic forms:
 
 - A [NormURL](/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormURL.kt)
 - A String
@@ -36,7 +36,7 @@ Finally, [DegenerateUrl](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/
 
 ## Hyperlinks
 
-A [hyperlink](https://en.wikipedia.org/wiki/Hyperlink), or simply a link, specifically refers to a reference to data on the Web, usually containing a URL, text, and a set of attributes that users can follow by clicking or tapping. [Hyperlinks in PulsarRPA](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) are like ordinary hyperlinks but with additional information to describe tasks.
+A [hyperlink](https://en.wikipedia.org/wiki/Hyperlink), or simply a link, specifically refers to a reference to data on the Web, usually containing a URL, text, and a set of attributes that users can follow by clicking or tapping. [Hyperlinks in Browser4](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) are like ordinary hyperlinks but with additional information to describe tasks.
 
 Pulsar predefines several hyperlinks:
 

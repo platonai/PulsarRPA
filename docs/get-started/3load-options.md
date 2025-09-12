@@ -3,7 +3,7 @@ Load Options
 
 [Prev](2basic-usage.md) [Home](1home.md) [Next](4data-extraction.md)
 
-PulsarRPA uses simple load options to precisely describe a collection task, such as data lifecycle, page quality requirements, task deadlines, task retries, etc. In most cases, a data collection task can be uniquely determined by URL arguments in the form of text, making it easy to copy, manage, store, transmit, parallelize, and communicate.
+Browser4 uses simple load options to precisely describe a collection task, such as data lifecycle, page quality requirements, task deadlines, task retries, etc. In most cases, a data collection task can be uniquely determined by URL arguments in the form of text, making it easy to copy, manage, store, transmit, parallelize, and communicate.
 
 Starting with PulsarSession:
 
@@ -30,7 +30,7 @@ var page = session.load(url, "-expires 10s")
 page = session.load(url, "-i 10s")
 ```
 
-A link may actually become invalid, for example, when a product on an e-commerce website is removed. However, the link may become effective again later, such as when the product is restocked. By default, PulsarRPA marks a link as "Gone" after detecting it as invalid 3 times and will no longer collect that link.
+A link may actually become invalid, for example, when a product on an e-commerce website is removed. However, the link may become effective again later, such as when the product is restocked. By default, Browser4 marks a link as "Gone" after detecting it as invalid 3 times and will no longer collect that link.
 
 The `-ignoreFailure` option is used to ignore the "Gone" status:
 
@@ -98,7 +98,7 @@ The `-storeContent` option is used to choose whether to save web page content.
 page = session.load(url, "-storeContent")
 ```
 
-PulsarRPA provides a comprehensive retry mechanism to ensure that the collected pages meet the analysis requirements.
+Browser4 provides a comprehensive retry mechanism to ensure that the collected pages meet the analysis requirements.
 
 Due to the increasing complexity of modern web pages, the collected pages may be incomplete:
 

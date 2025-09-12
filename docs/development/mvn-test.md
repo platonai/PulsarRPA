@@ -1,8 +1,8 @@
-我来介绍Maven项目中`mvn test`的进程控制机制。让我先搜索一下您的PulsarRPA项目中相关的配置和实现。根据我对 PulsarRPA 项目的分析，我将为您详细介绍 Maven 项目中 `mvn test` 的进程控制机制：
+我来介绍Maven项目中`mvn test`的进程控制机制。让我先搜索一下您的PulsarRPA项目中相关的配置和实现。根据我对 Browser4 项目的分析，我将为您详细介绍 Maven 项目中 `mvn test` 的进程控制机制：
 
 ## Maven Test 进程控制概述
 
-PulsarRPA 项目使用 Maven Surefire 插件来管理测试进程的执行，该插件提供了丰富的进程控制功能。
+Browser4 项目使用 Maven Surefire 插件来管理测试进程的执行，该插件提供了丰富的进程控制功能。
 
 ### 1. Surefire 插件配置
 
@@ -189,4 +189,4 @@ mvn test -Dtest=YourTestClass
 mvn test -Dtest='!*IntegrationTest'
 ```
 
-这个进程控制系统为 PulsarRPA 项目提供了灵活的测试执行策略，既支持快速开发迭代，也满足了 CI/CD 环境的严格测试要求。
+这个进程控制系统为 Browser4 项目提供了灵活的测试执行策略，既支持快速开发迭代，也满足了 CI/CD 环境的严格测试要求。

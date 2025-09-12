@@ -23,7 +23,7 @@ The right data extraction method for you should also address practical concerns 
 * Whether you need homogeneous or heterogeneous structured data
 * Whether you need data from a single site, a range of sites, or from across the whole web
 
-Since websites are becoming more and more complex, nowadays, the only way to scrape websites at scale is to render every page in a real browser. It's really hard to write a distributed browser rendering engine. Actually, PulsarRPA is the only open source solution for a distributed browser rendering engine.
+Since websites are becoming more and more complex, nowadays, the only way to scrape websites at scale is to render every page in a real browser. It's really hard to write a distributed browser rendering engine. Actually, Browser4 is the only open source solution for a distributed browser rendering engine.
 
 ## How to scrape a million product pages from an e-comm website a day?
 
@@ -33,7 +33,7 @@ Here is a complete solution to scrape amazon.com at scale: link:https://github.c
 
 ## How to scrape pages behind a login?
 
-It's fair simple to sign in a website before scraping in PulsarRPA:
+It's fair simple to sign in a website before scraping in Browser4:
 
 ```kotlin
 val options = session.options(args)

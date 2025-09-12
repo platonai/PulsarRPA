@@ -3,13 +3,13 @@ REST Service
 
 [Prev](14AI-extraction.md) [Home](1home.md) [Next](16console.md)
 
-When PulsarRPA runs as a REST service, X-SQL can be used to scrape webpages or to query web data directly at any time, from anywhere, without opening an IDE.
+When Browser4 runs as a REST service, X-SQL can be used to scrape webpages or to query web data directly at any time, from anywhere, without opening an IDE.
 
 ## Build from Source
 
 ```
-git clone https://github.com/platonai/PulsarRPA.git
-cd PulsarRPA && bin/build-run.sh
+git clone https://github.com/platonai/Browser4.git
+cd Browser4 && bin/build-run.sh
 ```
 For Chinese developers, we strongly suggest you to follow [this](/bin/tools/maven/maven-settings.md) instruction to accelerate the building process.
 

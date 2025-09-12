@@ -1,8 +1,8 @@
-# 🛠️ PulsarRPA Configuration Guide
+# 🛠️ Browser4 Configuration Guide
 
 ## 📋 Configuration Sources
 
-PulsarRPA supports multiple configuration sources in order of precedence:
+Browser4 supports multiple configuration sources in order of precedence:
 
 1. 🔧 **Environment Variables**
 2. ⚙️ **JVM System Properties**
@@ -14,7 +14,7 @@ PulsarRPA supports multiple configuration sources in order of precedence:
 
 ### 📝 Spring Boot Configuration Files
 
-PulsarRPA supports Spring Boot-style configuration files.
+Browser4 supports Spring Boot-style configuration files.
 
 A sample `application.properties` is located at the project root. For privacy, consider renaming it to `application-private.properties`.
 
@@ -38,7 +38,7 @@ browser.display.mode=HEADLESS
 
 ### 🌍 Environment Variables / JVM System Properties
 
-You can configure PulsarRPA using either OS environment variables or JVM system properties.
+You can configure Browser4 using either OS environment variables or JVM system properties.
 
 #### 💻 Example - OS environment variables
 
@@ -139,7 +139,7 @@ docker run -d -p 8182:8182 `
 - **`browser.context.mode`** (`DEFAULT` | `SYSTEM_DEFAULT` | `PROTOTYPE` | `SEQUENTIAL` | `TEMPORARY`)  
   Defines how the user data directory is assigned for each browser instance.
 
-  - `DEFAULT`: Uses the default PulsarRPA-managed user data directory.
+  - `DEFAULT`: Uses the default Browser4-managed user data directory.
   - `SYSTEM_DEFAULT`: Uses the system's default browser profile (e.g., your personal Chrome/Edge profile).
   - `PROTOTYPE` **[Advanced]**: Uses a predefined prototype user data directory.
     - All `SEQUENTIAL` and `TEMPORARY` modes inherit from this prototype.
@@ -175,7 +175,7 @@ docker run -d -p 8182:8182 `
 
 | Mode           | Description                                                                 | User Data Directory Behavior                             | Use Case            |
 |----------------|-----------------------------------------------------------------------------|-----------------------------------------------------------|---------------------|
-| `DEFAULT`      | Uses the PulsarRPA-managed default profile.                                 | Shared across Pulsar sessions (not your system browser).  | General purpose     |
+| `DEFAULT`      | Uses the Browser4-managed default profile.                                 | Shared across Pulsar sessions (not your system browser).  | General purpose     |
 | `SYSTEM_DEFAULT` | Uses the system browser's default profile.                                | Shares your daily-used browser profile.                   | For quick integration or debugging with real session data |
 | `PROTOTYPE` ⚠️ | **[Advanced]** Uses a predefined prototype profile.                         | Acts as the base for `SEQUENTIAL` and `TEMPORARY`.        | Controlled state inheritance |
 | `SEQUENTIAL` ⚠️ | **[Advanced]** Picks a profile from a pool sequentially.                   | Rotates through a pool of pre-initialized directories.     | Avoid session reuse in batch runs |

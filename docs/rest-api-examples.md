@@ -1,4 +1,4 @@
-# 🤖 PulsarRPA - REST API Examples
+# 🤖 Browser4 - REST API Examples
 
 ## 💬 For Beginners – Perform Actions & Extract Data
 

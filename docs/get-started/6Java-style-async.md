@@ -3,7 +3,7 @@ Java-style Asynchronous Programming
 
 [Prev](5URL.md) [Home](1home.md) [Next](7Kotlin-style-async.md)
 
-PulsarRPA's rich API allows us to solve the "load-parse-extract" process with just one line of code in most of our programming scenarios. This article introduces how to use Java-style asynchronous programming to solve the problem of batch web page collection.
+Browser4's rich API allows us to solve the "load-parse-extract" process with just one line of code in most of our programming scenarios. This article introduces how to use Java-style asynchronous programming to solve the problem of batch web page collection.
 
 ```kotlin
 object JvmAsync {

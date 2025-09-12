@@ -1,14 +1,14 @@
-# PulsarRPA - 高级用法
+# Browser4 - 高级用法
 
-# 🧮 通过可执行 jar 使用 PulsarRPA
+# 🧮 通过可执行 jar 使用 Browser4
 
-我们发布了一个基于 PulsarRPA 的独立可执行 jar，它包括：
+我们发布了一个基于 Browser4 的独立可执行 jar，它包括：
 
 - 顶尖站点的数据采集示例。
 - 基于自监督机器学习自动进行信息提取的小程序，AI 算法可以识别详情页的所有字段，字段精确度达到 99% 以上。
 - 基于自监督机器学习自动学习并输出所有采集规则的小程序。
 - 可以直接从命令行执行网页数据采集任务，无需编写代码。
-- 升级的 PulsarRPA 服务器，可以向服务器发送 SQL 语句来采集 Web 数据。
+- 升级的 Browser4 服务器，可以向服务器发送 SQL 语句来采集 Web 数据。
 - 一个 Web UI，可以编写 SQL 语句并通过它发送到服务器。
 
 下载 [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro#download) 并使用以下命令行探索其能力：
@@ -17,9 +17,9 @@
 java -jar PulsarRPAPro.jar
 ```
 
-# 🎁 将 PulsarRPA 用作软件库
+# 🎁 将 Browser4 用作软件库
 
-要利用 PulsarRPA 的强大功能，最简单的方法是将其作为库添加到您的项目中。
+要利用 Browser4 的强大功能，最简单的方法是将其作为库添加到您的项目中。
 
 使用 Maven 时，可以在 `pom.xml` 文件中添加以下依赖：
 
@@ -44,15 +44,15 @@ implementation("ai.platon.pulsar:pulsar-bom:VERSION")
 
 点击 [基本用法](docs/get-started/2basic-usage.md) 查看详情。
 
-# 🌐 将 PulsarRPA 作为 REST 服务运行
+# 🌐 将 Browser4 作为 REST 服务运行
 
-当 PulsarRPA 作为 REST 服务运行时，X-SQL 可用于随时随地抓取网页或直接查询 Web 数据，无需打开 IDE。
+当 Browser4 作为 REST 服务运行时，X-SQL 可用于随时随地抓取网页或直接查询 Web 数据，无需打开 IDE。
 
 ## 从源代码构建
 
 ```shell
-git clone https://github.com/platonai/PulsarRPA.git 
-cd PulsarRPA && bin/build-run.sh
+git clone https://github.com/platonai/Browser4.git 
+cd Browser4 && bin/build-run.sh
 ```
 
 对于国内开发者，我们强烈建议您按照 [这个](https://github.com/platonai/pulsar/blob/master/bin/tools/maven/maven-settings.md) 指导来加速构建。
@@ -94,7 +94,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 
 # 📖 循序渐进的课程
 
-我们提供了一个循序渐进的示例课程，帮助您逐步了解和掌握 PulsarRPA 的使用：
+我们提供了一个循序渐进的示例课程，帮助您逐步了解和掌握 Browser4 的使用：
 
 1. [Home](docs/zh/get-started/1home.md)
 2. [Basic Usage](docs/zh/get-started/2basic-usage.md)
@@ -117,7 +117,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 
 # 📊 日志和指标
 
-PulsarRPA 精心设计了日志和指标子系统，以记录系统中发生的每一个事件。通过 PulsarRPA 的日志系统，您可以轻松地了解系统中发生的每一件事情，
+Browser4 精心设计了日志和指标子系统，以记录系统中发生的每一个事件。通过 Browser4 的日志系统，您可以轻松地了解系统中发生的每一件事情，
 判断系统运行是否健康，以及成功获取了多少页面、重试了多少页面、使用了多少代理 IP 等信息。
 
 通过观察几个简单的符号，您可以快速了解整个系统的状态：💯 💔 🗙 ⚡ 💿 🔃 🤺。以下是一组典型的页面加载日志。要了解如何阅读日志，
@@ -139,11 +139,11 @@ PulsarRPA 精心设计了日志和指标子系统，以记录系统中发生的�
 - java 和 jar 必须在 PATH 中
 - Google Chrome 90+
 
-PulsarRPA 已在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进行了测试，任何其他满足要求的操作系统也应该可以正常工作。
+Browser4 已在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进行了测试，任何其他满足要求的操作系统也应该可以正常工作。
 
 # 🛸 高级主题
 
-如果您对 PulsarRPA 的高级主题感兴趣，可以查看 [advanced topics](/docs/faq/advanced-topics.md) 以获取以下问题的答案：
+如果您对 Browser4 的高级主题感兴趣，可以查看 [advanced topics](/docs/faq/advanced-topics.md) 以获取以下问题的答案：
 
 - 大规模网络爬虫有什么困难？
 - 如何每天从电子商务网站上抓取一百万个产品页面？
@@ -168,15 +168,15 @@ PulsarRPA 已在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上�
 
 # 🆚 同其他方案的对比
 
-PulsarRPA 在 “主要特性” 部分中提到的特性都得到了良好的支持，而其他解决方案可能不支持或者支持不好。您可以点击 [solution comparison](docs/faq/solution-comparison.md) 查看以下问题的答案：
+Browser4 在 “主要特性” 部分中提到的特性都得到了良好的支持，而其他解决方案可能不支持或者支持不好。您可以点击 [solution comparison](docs/faq/solution-comparison.md) 查看以下问题的答案：
 
-- PulsarRPA vs selenium/puppeteer/playwright
-- PulsarRPA vs nutch
-- PulsarRPA vs scrapy+splash
+- Browser4 vs selenium/puppeteer/playwright
+- Browser4 vs nutch
+- Browser4 vs scrapy+splash
 
 # 🤓 技术细节
 
-如果您对 PulsarRPA 的技术细节感兴趣，可以查看 [technical details](docs/faq/technical-details.md) 以获取以下问题的答案：
+如果您对 Browser4 的技术细节感兴趣，可以查看 [technical details](docs/faq/technical-details.md) 以获取以下问题的答案：
 
 - 如何轮换我的 IP 地址？
 - 如何隐藏我的机器人不被检测到？

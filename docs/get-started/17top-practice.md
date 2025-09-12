@@ -7,7 +7,7 @@ Top Project Practice
 
 The methods and processes for data collection of other e-commerce platforms are basically similar. You can modify and adjust the business logic based on this project, and its infrastructure solves all the difficulties faced by large-scale data collection.
 
-Thanks to the comprehensive Web data management infrastructure provided by PulsarRPA, the entire solution consists of no more than 3500 lines of Kotlin code and less than 700 lines of X-SQL to extract more than 650 fields.
+Thanks to the comprehensive Web data management infrastructure provided by Browser4, the entire solution consists of no more than 3500 lines of Kotlin code and less than 700 lines of X-SQL to extract more than 650 fields.
 
 ## Data Introduction
 

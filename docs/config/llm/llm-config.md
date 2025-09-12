@@ -20,7 +20,7 @@ You can configure the API key at runtime using JVM system properties.
 
 ```bash
 export DEEPSEEK_API_KEY="sk-your-deepseek-key"
-java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
+java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar Browser4.jar
 ````
 
 #### 🪟 Windows (PowerShell):
@@ -29,7 +29,7 @@ java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar PulsarRPA.jar
 
 ```powershell
 $DEEPSEEK_API_KEY = "sk-your-deepseek-key"
-java -D"DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY" -jar PulsarRPA.jar
+java -D"DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY" -jar Browser4.jar
 ```
 
 ⚠️ This sets a PowerShell *local variable*, which works **only inside PowerShell**, and is passed correctly because Java gets the interpolated string from PowerShell.
@@ -38,14 +38,14 @@ java -D"DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY" -jar PulsarRPA.jar
 
 ```powershell
 $env:DEEPSEEK_API_KEY = "sk-your-deepseek-key"
-java -D"DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY" -jar PulsarRPA.jar
+java -D"DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY" -jar Browser4.jar
 ```
 
 ---
 
 ## ⚙️ Method 2: Use Spring Boot Configuration Files
 
-PulsarRPA supports Spring Boot–style property files. You can place your private config in:
+Browser4 supports Spring Boot–style property files. You can place your private config in:
 
 * `application.properties`
 * Or `application-private.properties` (recommended for sensitive data)
@@ -78,7 +78,7 @@ openai.base.url=https://api.openai.com/v1
 
 ## 🧩 Supported Configurations
 
-PulsarRPA follows **Spring Boot configuration rules**, which means you can use configuration keys in two equivalent formats:
+Browser4 follows **Spring Boot configuration rules**, which means you can use configuration keys in two equivalent formats:
 
 ## 🔑 Key Format Equivalence
 
@@ -127,7 +127,7 @@ PulsarRPA follows **Spring Boot configuration rules**, which means you can use c
 java -DOPENAI_API_KEY="9cc8e998-4655-4e90-a54c1-12345abcdefg" \
      -DOPENAI_MODEL_NAME="doubao-1.5-pro-32k-250115" \
      -DOPENAI_BASE_URL="https://ark.cn-beijing.volces.com/api/v3" \
-     -jar PulsarRPA.jar
+     -jar Browser4.jar
 ```
 
 Corresponding curl example:

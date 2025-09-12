@@ -1,4 +1,4 @@
-# 🤖 PulsarRPA
+# 🤖 Browser4
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/galaxyeye88/pulsar-rpa?style=flat-square)](https://hub.docker.com/r/galaxyeye88/pulsar-rpa)
 [![License: APACHE2](https://img.shields.io/badge/license-APACHE2-green?style=flat-square)](https://github.com/platonai/PulsarRPA/blob/main/LICENSE)
@@ -6,11 +6,11 @@
 
 ---
 
-[English](README.md) | 简体中文 | [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
+[English](README.md) | 简体中文 | [中国镜像](https://gitee.com/platonai_galaxyeye/browser4)
 
 ## 🌟 介绍
 
-💖 **PulsarRPA: 由AI驱动的超快浏览器自动化解决方案!** 💖
+💖 **Browser4: 为AI而生的超快浏览器自动化解决方案!** 💖
 
 ### ✨ 核心能力:
 
@@ -49,14 +49,14 @@
 
 # 🚀 快速开始指南
 
-## ▶️ 运行 PulsarRPA
+## ▶️ 运行 Browser4
 
 ### 📦 运行可执行JAR — 最佳体验
 
 #### 🧩 下载
 
 ```shell
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/PulsarRPA.jar
+curl -L -o Browser4.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/Browser4.jar
 ```
 
 #### 🚀 运行
@@ -64,7 +64,7 @@ curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download
 ```shell
 # 确保设置了LLM API密钥。支持VOLCENGINE_API_KEY/OPENAI_API_KEY等
 echo $DEEPSEEK_API_KEY
-java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
+java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar Browser4.jar
 ```
 
 > 🔍 **提示:** 确保已在环境中设置`DEEPSEEK_API_KEY`或其他LLM API密钥，否则AI功能将不可用。
@@ -76,7 +76,7 @@ java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 <details>
 <summary>📂 资源</summary>
 
-* 🟦 [GitHub Release 下载](https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/PulsarRPA.jar)
+* 🟦 [GitHub Release 下载](https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/Browser4.jar)
 * 📁 [镜像/备份下载](https://static.platonai.cn/repo/ai/platon/pulsar/)
 * 🛠️ [LLM配置指南](docs/config/llm/llm-config.md)
 * 🛠️ [配置指南](docs/config.md)

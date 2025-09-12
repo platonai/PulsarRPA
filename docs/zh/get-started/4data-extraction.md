@@ -1,9 +1,9 @@
 数据提取
 =
 
-PulsarRPA 使用 [jsoup](https://jsoup.org/) 从 HTML 文档中提取数据。 Jsoup 将 HTML 解析为与现代浏览器相同的 DOM。查看 [selector-syntax](https://jsoup.org/cookbook/extracting-data/selector-syntax) 以查阅所有受支持的 CSS 选择器，[这里](https://www.w3school.com.cn/cssref/css_selectors.asp) 也有一份中文版标准 CSS 选择器的详细表格。
+Browser4 使用 [jsoup](https://jsoup.org/) 从 HTML 文档中提取数据。 Jsoup 将 HTML 解析为与现代浏览器相同的 DOM。查看 [selector-syntax](https://jsoup.org/cookbook/extracting-data/selector-syntax) 以查阅所有受支持的 CSS 选择器，[这里](https://www.w3school.com.cn/cssref/css_selectors.asp) 也有一份中文版标准 CSS 选择器的详细表格。
 
-现代网页源代码变化非常频繁，但是网页“看上去”不会变太多，以保证一致的用户体验。这时候，从视觉特征去审视网页元素就特别有效。为了更好地从视觉特征和数字特征来看待网页，PulsarRPA 扩展了 CSS，来解决最复杂的现实问题。
+现代网页源代码变化非常频繁，但是网页“看上去”不会变太多，以保证一致的用户体验。这时候，从视觉特征去审视网页元素就特别有效。为了更好地从视觉特征和数字特征来看待网页，Browser4 扩展了 CSS，来解决最复杂的现实问题。
 
 首先准备一个文档：
 
@@ -41,13 +41,13 @@ val resultLinks = document.select("h3.r > a")
 val bsr = document.select("th:contains(Best Sellers Rank) ~ td")
 ```
 
-PulsarRPA 扩展了 CSS 和 Jsoup，来解决复杂的现实问题：
+Browser4 扩展了 CSS 和 Jsoup，来解决复杂的现实问题：
 
-1. PulsarRPA 为 DOM 的每个 Node 计算了数值特征
-2. PulsarRPA 扩展了 CSS 语法，来支持在 CSS 查询中使用数学运算
-3. PulsarRPA 提供了一批实用方法来简化和增强 DOM 操作
+1. Browser4 为 DOM 的每个 Node 计算了数值特征
+2. Browser4 扩展了 CSS 语法，来支持在 CSS 查询中使用数学运算
+3. Browser4 提供了一批实用方法来简化和增强 DOM 操作
 
-为了弥补现有 CSS 表达式的不足，PulsarRPA 扩展了 CSS 表达式，引入了 **:expr(expresson)** 伪选择器，使得我们可以在 CSS 中做数学运算。
+为了弥补现有 CSS 表达式的不足，Browser4 扩展了 CSS 表达式，引入了 **:expr(expresson)** 伪选择器，使得我们可以在 CSS 中做数学运算。
 
 譬如：
 
@@ -75,7 +75,7 @@ val expr = "img == 1 && width > 400 && width < 500 && height > 400 && height < 5
 val elements = doc.select("div:expr($expr)")
 ```
 
-目前，PulsarRPA 支持以下数值特征：
+目前，Browser4 支持以下数值特征：
 
 ```
 top,       // the top coordinate in pixel of the element
@@ -122,7 +122,7 @@ txt_dns    // text node density
 | &&     | The and operator                    |
 | \|\|   | The or operator                     |
 
-在 PulsarRPA 专业版中，我们将会引入更多有趣的数值特征来支持机器学习和[人工智能](https://zhuanlan.zhihu.com/p/576098111)，譬如拓扑结构相关的特征。
+在 Browser4 专业版中，我们将会引入更多有趣的数值特征来支持机器学习和[人工智能](https://zhuanlan.zhihu.com/p/576098111)，譬如拓扑结构相关的特征。
 
  在 [X-SQL](13X-SQL.md) 章节，我们将会详细介绍如何在 X-SQL 中使用 CSS 选择器来选择元素及其属性。一个综合性较强的真实案例是 [x-asin.sql](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)（[国内镜像](https://gitee.com/platonai_galaxyeye/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)），它使用了各种各样的 CSS 选择器来解决最复杂的电商网页数据提取问题，下面是一些片段：
 

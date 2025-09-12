@@ -1,9 +1,9 @@
-# PulsarRPA Concepts
+# Browser4 Concepts
 
 English | [简体中文](/docs/zh/concepts.md)
 
-To unlock the full potential of PulsarRPA and tackle even the most complex data scraping tasks, a solid understanding of its core concepts is essential. By grasping these fundamental principles, you'll be equipped to wield PulsarRPA as a powerful tool for extracting valuable information from the web.
-Let's delve into the key concepts that form the foundation of your data scraping journey with PulsarRPA:
+To unlock the full potential of Browser4 and tackle even the most complex data scraping tasks, a solid understanding of its core concepts is essential. By grasping these fundamental principles, you'll be equipped to wield Browser4 as a powerful tool for extracting valuable information from the web.
+Let's delve into the key concepts that form the foundation of your data scraping journey with Browser4:
 
 ## Core Concepts
 
@@ -13,9 +13,9 @@ Web scraping, web harvesting, or web data extraction is the process of extractin
 ### Network As A Database
 The Internet, especially the World Wide Web (WWW), is the largest database in the world. However, extracting data from the Web has never been easy.
 
-PulsarRPA treats the network as a database. For each web page, PulsarRPA first checks the local storage. If it does not exist, has expired, or any other fetch condition is triggered, Pulsar retrieves it from the Web.
+Browser4 treats the network as a database. For each web page, Browser4 first checks the local storage. If it does not exist, has expired, or any other fetch condition is triggered, Pulsar retrieves it from the Web.
 
-PulsarRPA has SQL support, so we can turn the Web into tables and charts using simple SQL queries, and we can also query the Web using SQL directly.
+Browser4 has SQL support, so we can turn the Web into tables and charts using simple SQL queries, and we can also query the Web using SQL directly.
 
 ### Auto Extract
 Web data extraction has evolved over the last three decades from using statistical methods to more advanced machine learning methods. Machine learning techniques are much preferred nowadays due to demand for time-to-market, developer productivity, and cost concerns. Using our cutting-edge technology, the entire end-to-end Web data extraction lifecycle is automated without any manual intervention.
@@ -25,7 +25,7 @@ We provided a preview project to show how to use our world-leading machine learn
 You can also use PulsarRPAPro as an intelligent CSS selector generator. The generated CSS selectors can be used in any traditional scraping systems to extract data from web pages.
 
 ### Browser Rendering
-Although PulsarRPA supports various web scraping methods, browser rendering is the primary way PulsarRPA scrapes web pages.
+Although Browser4 supports various web scraping methods, browser rendering is the primary way Browser4 scrapes web pages.
 
 Browser rendering means every web page is opened by a real browser to ensure all fields on the web page are present correctly.
 
@@ -139,9 +139,9 @@ The main methods include:
 
 A Uniform Resource Locator (URL), commonly referred to as a web address, is a reference to a web resource that specifies its location on a computer network and a mechanism for retrieving it.
 
-A URL in PulsarRPA is a normal URL with extra information to describe a task. Every task in PulsarRPA is defined as some form of URL.
+A URL in Browser4 is a normal URL with extra information to describe a task. Every task in Browser4 is defined as some form of URL.
 
-There are several basic forms of URLs in PulsarRPA:
+There are several basic forms of URLs in Browser4:
 
 - A `NormURL`.
 - A String.
@@ -194,8 +194,8 @@ Finally, `DegenerateUrl` is, in fact, not a link; it is designed as an interface
 
 Hyperlinks, commonly referred to as links, are references to data on the Web, typically containing a URL, text, and a set of attributes, which users can follow by clicking or tapping.
 
-Hyperlinks in PulsarRPA are similar to standard hyperlinks but include additional information describing the task.
-PulsarRPA predefines several hyperlinks:
+Hyperlinks in Browser4 are similar to standard hyperlinks but include additional information describing the task.
+Browser4 predefines several hyperlinks:
 
 `ParsableHyperlink` is a convenient abstraction for executing a get-parse task within a continuous crawling job:
 
@@ -327,7 +327,7 @@ For information on all available event handlers, refer to EventHandlerUsage.
 
 ### X-SQL
 
-PulsarRPA supports the Network As A Database paradigm, and we have developed X-SQL to query the Web directly and convert webpages into tables and charts.
+Browser4 supports the Network As A Database paradigm, and we have developed X-SQL to query the Web directly and convert webpages into tables and charts.
 
 For a detailed introduction and function descriptions about X-SQL, refer to X-SQL.
 
@@ -345,7 +345,7 @@ During continuous crawls, a crawl loop is initiated to continuously visit URLs f
 
 ### Privacy Context
 
-One of the biggest challenges in web scraping tasks is maintaining bot stealth. For web scraping tasks, it's crucial that the website cannot discern whether a visit is from a human or a bot. If a page visit is suspected by the website, known as a privacy leak, the privacy context must be discarded, and PulsarRPA will visit the page in a different privacy context.
+One of the biggest challenges in web scraping tasks is maintaining bot stealth. For web scraping tasks, it's crucial that the website cannot discern whether a visit is from a human or a bot. If a page visit is suspected by the website, known as a privacy leak, the privacy context must be discarded, and Browser4 will visit the page in a different privacy context.
 
 ### Proxy Management
 
@@ -357,4 +357,4 @@ When a browser is programmed to access a webpage, the website may detect that th
 
 ### Backend Storage
 
-PulsarRPA supports a variety of backend storage solutions to meet our customers' urgent needs, such as Local File System, MongoDB, HBase, Gora, and so on. is a URL, so the crawl loop can accept and execute any type of task.
+Browser4 supports a variety of backend storage solutions to meet our customers' urgent needs, such as Local File System, MongoDB, HBase, Gora, and so on. is a URL, so the crawl loop can accept and execute any type of task.

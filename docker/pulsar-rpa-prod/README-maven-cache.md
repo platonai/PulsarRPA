@@ -1,6 +1,6 @@
 # Maven Repository Reuse in Docker Builds
 
-This document explains different methods to reuse your host's Maven repository when building PulsarRPA Docker images, which significantly speeds up builds by avoiding re-downloading dependencies.
+This document explains different methods to reuse your host's Maven repository when building Browser4 Docker images, which significantly speeds up builds by avoiding re-downloading dependencies.
 
 ## 🚀 Method 1: BuildKit Cache Mount (Recommended)
 

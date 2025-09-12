@@ -1,4 +1,4 @@
-# PulsarRPA Build & Test Guide
+# Browser4 Build & Test Guide
 
 This document provides instructions for building the project and running tests on different platforms.
 

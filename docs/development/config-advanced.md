@@ -1,10 +1,10 @@
 # 🛠️ Pulsar Advanced Configuration Guide
 
-> 💡 **Note:** For PulsarRPA developers only.
+> 💡 **Note:** For Browser4 developers only.
 
 ## 📋 Configuration Sources
 
-PulsarRPA loads configuration in the following order of precedence:
+Browser4 loads configuration in the following order of precedence:
 
 1. 🔧 Java Environment Variables
 2. ⚙️ Java System Properties

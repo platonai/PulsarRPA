@@ -1,11 +1,11 @@
 URL
 =
 
-在 PulsarRPA 中，每个任务都被定义为某种形式的 URL，这些 URL 往往和一个加载参数一起出现，来精细控制一个采集任务，譬如数据过期，数据基本要求，任务截止日期，任务重试等。绝大多数情况下，一个数据采集任务可以用 **url arguments** 的形式来唯一确定，因此它可以很轻松地被拷贝、管理、存储、传输、并行化，以及沟通交流。
+在 Browser4 中，每个任务都被定义为某种形式的 URL，这些 URL 往往和一个加载参数一起出现，来精细控制一个采集任务，譬如数据过期，数据基本要求，任务截止日期，任务重试等。绝大多数情况下，一个数据采集任务可以用 **url arguments** 的形式来唯一确定，因此它可以很轻松地被拷贝、管理、存储、传输、并行化，以及沟通交流。
 
 ## URLs
 
-统一资源定位符(URL)，俗称网址，是对网络资源的引用，指定其在计算机网络上的位置和检索它的机制。PulsarRPA 中的 URL 带有描述数据采集任务的额外信息，有几种基本形式：
+统一资源定位符(URL)，俗称网址，是对网络资源的引用，指定其在计算机网络上的位置和检索它的机制。Browser4 中的 URL 带有描述数据采集任务的额外信息，有几种基本形式：
 
 - A [NormURL](/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormURL.kt)
 - A String
@@ -35,9 +35,9 @@ UrlAware 提供了更复杂的控制来描述采集任务，是所有 Hyperlink 
 
 ## Hyperlinks
 
-[超链接](https://en.wikipedia.org/wiki/Hyperlink)，或简称为链接，特指 Web 上对数据的引用，通常包含一个 URL，一个文本和一组属性，用户可以通过单击或点击来跟随它。[PulsarRPA 中的 Hyperlink](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) 如同普通超链接，但带有描述任务的额外信息。
+[超链接](https://en.wikipedia.org/wiki/Hyperlink)，或简称为链接，特指 Web 上对数据的引用，通常包含一个 URL，一个文本和一组属性，用户可以通过单击或点击来跟随它。[Browser4 中的 Hyperlink](/pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt) 如同普通超链接，但带有描述任务的额外信息。
 
-PulsarRPA 预定义了几个超链接：
+Browser4 预定义了几个超链接：
 
 **ParsableHyperlink** 是在连续采集作业中执行 **获取-解析** 任务的一种便捷抽象：
 

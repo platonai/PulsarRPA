@@ -24,7 +24,7 @@ select
 from load_and_select('https://www.amazon.com/dp/B0C1H26C46   -i 1d -njr 3', 'body');
 ```
 
-PulsarRPA primarily extends the functionality of the H2 database by registering User-Defined Functions (UDFs) and making other enhancements.
+Browser4 primarily extends the functionality of the H2 database by registering User-Defined Functions (UDFs) and making other enhancements.
 
 Each X-SQL function belongs to a specific namespace, as illustrated below:
 

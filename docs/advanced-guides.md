@@ -1,8 +1,8 @@
-# PulsarRPA - Advanced Usage
+# Browser4 - Advanced Usage
 
-## 🎁 PulsarRPA as a java library
+## 🎁 Browser4 as a java library
 
-The simplest way to leverage the power of PulsarRPA is to add it to your project as a library.
+The simplest way to leverage the power of Browser4 is to add it to your project as a library.
 
 Maven:
 
@@ -30,15 +30,15 @@ Start your own large-scale web crawling projects based on our commercial-grade o
 
 Check the [Step-by-Step Course](#-step-by-step-course) for more details.
 
-# 🌐 PulsarRPA as a REST Service
+# 🌐 Browser4 as a REST Service
 
-When PulsarRPA runs as a REST service, X-SQL can be used to scrape webpages or to query web data directly at any time, from anywhere, without opening an IDE.
+When Browser4 runs as a REST service, X-SQL can be used to scrape webpages or to query web data directly at any time, from anywhere, without opening an IDE.
 
 ## Build from Source
 
 ```shell
-git clone https://github.com/platonai/PulsarRPA.git
-cd PulsarRPA && bin/build-run.sh
+git clone https://github.com/platonai/Browser4.git
+cd Browser4 && bin/build-run.sh
 ```
 
 For Chinese developers, we strongly suggest you to follow [this](/bin/tools/maven/maven-settings.md) instruction to accelerate the building process.
@@ -110,7 +110,7 @@ We have a step-by-step course by example:
 
 # 📊 Logs & Metrics
 
-PulsarRPA has carefully designed the logging and metrics subsystem to record every event that occurs in the system. PulsarRPA logs the status for every load execution, providing a clear and comprehensive overview of system performance. This detailed logging allows for quick assessment of the system’s health and efficiency. It answers key questions such as: Is the system operating smoothly? How many pages have been successfully retrieved? How many attempts were made to reload pages? And how many proxy IP addresses have been utilized? This information is invaluable for monitoring and troubleshooting purposes, ensuring that any issues can be promptly identified and addressed.
+Browser4 has carefully designed the logging and metrics subsystem to record every event that occurs in the system. Browser4 logs the status for every load execution, providing a clear and comprehensive overview of system performance. This detailed logging allows for quick assessment of the system’s health and efficiency. It answers key questions such as: Is the system operating smoothly? How many pages have been successfully retrieved? How many attempts were made to reload pages? And how many proxy IP addresses have been utilized? This information is invaluable for monitoring and troubleshooting purposes, ensuring that any issues can be promptly identified and addressed.
 
 By focusing on a concise set of indicators, you can unlock a deeper understanding of the system’s overall condition: 💯 💔 🗙  ?💿 🔃 🤺.
 
@@ -131,7 +131,7 @@ Typical page loading logs are shown below. Check the [log-format](log-format.md)
 - Latest Google Chrome
 - [Optional] MongoDB started
 
-PulsarRPA is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 7, Windows 11, WSL, and any other operating system that meets the requirements should work as well.
+Browser4 is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 7, Windows 11, WSL, and any other operating system that meets the requirements should work as well.
 
 # 🛸 Advanced Topics
 
@@ -160,13 +160,13 @@ Check the [advanced topics](faq/advanced-topics.md) to find out the answers for 
 
 # 🆚 Compare with Other Solutions
 
-In general, the features mentioned in the Feature section are well-supported by PulsarRPA, but other solutions do not.
+In general, the features mentioned in the Feature section are well-supported by Browser4, but other solutions do not.
 
 Check the [solution comparison](faq/solution-comparison.md) to see the detailed comparison to the other solutions:
 
-- PulsarRPA vs selenium/puppeteer/playwright
-- PulsarRPA vs nutch
-- PulsarRPA vs scrapy+splash
+- Browser4 vs selenium/puppeteer/playwright
+- Browser4 vs nutch
+- Browser4 vs scrapy+splash
 
 # 🤓 Technical Details
 

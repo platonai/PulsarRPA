@@ -43,13 +43,13 @@ java -jar exotic-standalone*.jar arrange https://www.hua.com/flower/
     <img width="80%" src=https://pica.zhimg.com/80/v2-d10694d76cfa5cf148a67c1576ca8f29_1440w.jpg?source=d16d100b  alt="auto extracted data"/>
 </div>
 
-使用 PulsarRPA 的自动提取技术提取的数据
+使用 Browser4 的自动提取技术提取的数据
 
 <div style="text-align: center">
     <img width="80%" src=https://pic3.zhimg.com/80/v2-ffe172327bbac5bbc5b43f1ae9d54864_1440w.jpg?source=d16d100b  alt="auto extracted chart"/>
 </div>
 
-使用 PulsarRPA 的自动提取技术和 SQL 完全自动将互联网转变为图表
+使用 Browser4 的自动提取技术和 SQL 完全自动将互联网转变为图表
 
 **参考文献：**
 

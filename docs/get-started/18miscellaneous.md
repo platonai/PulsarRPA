@@ -44,9 +44,9 @@ A privacy agent is an identifier that ensures distinct identities for website vi
 Concepts
 ==
 
-To unlock the full potential of PulsarRPA and tackle even the most complex data scraping tasks, a solid understanding of its core concepts is essential. By grasping these fundamental principles, you'll be equipped to wield PulsarRPA as a powerful tool for extracting valuable information from the web.
+To unlock the full potential of Browser4 and tackle even the most complex data scraping tasks, a solid understanding of its core concepts is essential. By grasping these fundamental principles, you'll be equipped to wield Browser4 as a powerful tool for extracting valuable information from the web.
 
-[PulsarRPA Concepts](/docs/concepts.md).
+[Browser4 Concepts](/docs/concepts.md).
 
 ------
 

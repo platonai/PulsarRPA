@@ -1,8 +1,8 @@
-# PulsarRPA log format explained
+# Browser4 log format explained
 
-PulsarRPA has carefully designed the logging and metrics subsystem to record every event that occurs in the system. This document explains the format of typical logs.
+Browser4 has carefully designed the logging and metrics subsystem to record every event that occurs in the system. This document explains the format of typical logs.
 
-PulsarRPA splits all logs into several separate files:
+Browser4 splits all logs into several separate files:
 
 ```
 logs/pulsar.log    - the default logs

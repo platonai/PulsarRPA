@@ -7,7 +7,7 @@ Web data collection is very challenging, as websites often change and become inc
 
 Tools like Scrapy and requests are becoming less and less suitable for modern web pages. Against this backdrop, browser automation technology, along with RPA technology, is the solution to the problem. It replaces manual web page visits, performing the same actions as a human to collect all the data that humans can see.
 
-PulsarRPA includes an RPA subsystem to implement web interactions: scrolling, typing, screen capture, mouse drag and drop, clicking, etc. This subsystem is similar to well-known technologies like selenium, playwright, and puppeteer, but optimizes all actions, such as more realistic simulation operations, better execution performance, better parallelism, better fault tolerance, and so on.
+Browser4 includes an RPA subsystem to implement web interactions: scrolling, typing, screen capture, mouse drag and drop, clicking, etc. This subsystem is similar to well-known technologies like selenium, playwright, and puppeteer, but optimizes all actions, such as more realistic simulation operations, better execution performance, better parallelism, better fault tolerance, and so on.
 
 The most complex data collection projects often require complex interactions with web pages. For this, we provide a simple yet powerful API. The following is a typical RPA code snippet that is **essential** for collecting data from top e-commerce websites.
 

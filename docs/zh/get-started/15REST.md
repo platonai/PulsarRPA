@@ -1,7 +1,7 @@
 REST 服务
 =
 
-当 PulsarRPA 作为 REST 服务运行时，X-SQL 可用于随时随地采集网页或直接查询 Web 数据，无需打开 IDE。它就像是升级版的 Google 搜索框：将关键词查询升级为 SQL 查询。
+当 Browser4 作为 REST 服务运行时，X-SQL 可用于随时随地采集网页或直接查询 Web 数据，无需打开 IDE。它就像是升级版的 Google 搜索框：将关键词查询升级为 SQL 查询。
 
 示例：
 

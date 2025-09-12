@@ -16,7 +16,7 @@ docker run -p 8182:8182 \
 
 > 💡 Please make sure you have set `DEEPSEEK_API_KEY` environment.
 
-## ✅ Test PulsarRPA API
+## ✅ Test Browser4 API
 
 ```bash
 curl -X POST "http://localhost:8182/api/ai/command" \

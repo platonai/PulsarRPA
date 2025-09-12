@@ -67,7 +67,7 @@ scheme      host      port    path         query     fragment
 
 ### 1. Absolute URLs
 ```html
-<a href="https://github.com/platonai/PulsarRPA">Full URL</a>
+<a href="https://github.com/platonai/Browser4">Full URL</a>
 ```
 
 ### 2. Relative URLs (still URLs)
