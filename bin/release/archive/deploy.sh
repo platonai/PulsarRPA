@@ -1,5 +1,5 @@
 #!/bin/bash
-# 🚀 PulsarRPA Deployment Script
+# 🚀 Browser4 Deployment Script
 # This script handles the deployment process including local testing and production deployment
 # Usage: ./deploy.sh [-v|--verbose] [-t|--test] [-p|--production]
 

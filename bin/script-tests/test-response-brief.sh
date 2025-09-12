@@ -83,7 +83,7 @@ run_test "Complex JSON Object" \
 '{
   "data": {
     "product": {
-      "name": "PulsarRPA Pro Edition",
+      "name": "Browser4 Pro Edition",
       "price": "$299.99",
       "version": "3.0.12",
       "features": ["Web Scraping", "RPA", "Browser Automation"]

@@ -10,7 +10,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
 
     override val webDriverService get() = FastWebDriverService(browserFactory)
 
-    val text = "awesome AI enabled PulsarRPA!"
+    val text = "awesome AI enabled Browser4!"
 
     @Test
     fun `test evaluate that returns primitive values`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->

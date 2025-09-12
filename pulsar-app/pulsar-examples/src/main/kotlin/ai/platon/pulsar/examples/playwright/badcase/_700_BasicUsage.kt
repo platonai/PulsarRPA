@@ -7,7 +7,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 
 /**
- * Demonstrates the very basic usage of PulsarRPA.
+ * Demonstrates the very basic usage of Browser4.
  * */
 fun main() {
     println("This is a bad case. Playwright is not threadsafe nor coroutine safe")

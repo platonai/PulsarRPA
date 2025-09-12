@@ -131,7 +131,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <!-- The logging provider PulsarRPA application uses -->
+        <!-- The logging provider Browser4 application uses -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>

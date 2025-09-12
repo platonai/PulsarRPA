@@ -80,17 +80,17 @@ substitute_urls() {
 }
 
 check_server() {
-  log "${BLUE}[INFO]${NC} Checking PulsarRPA server at $PULSAR_BASE_URL..."
+  log "${BLUE}[INFO]${NC} Checking Browser4 server at $PULSAR_BASE_URL..."
   if curl -s --connect-timeout 5 --max-time 10 "$PULSAR_BASE_URL/actuator/health" >/dev/null 2>&1; then
-    log "${GREEN}[SUCCESS]${NC} PulsarRPA server is healthy and responding"
+    log "${GREEN}[SUCCESS]${NC} Browser4 server is healthy and responding"
     return 0
   elif curl -s --connect-timeout 5 --max-time 10 "$PULSAR_BASE_URL/" >/dev/null 2>&1; then
     log "${YELLOW}[WARNING]${NC} Server responding but health check endpoint unavailable"
     return 0
   else
-    log "${RED}[ERROR]${NC} PulsarRPA server not accessible at $PULSAR_BASE_URL"
-    log "${CYAN}[HINT]${NC} Start PulsarRPA with:"
-    log "    ${BOLD}java -DDEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} -jar PulsarRPA.jar${NC}"
+    log "${RED}[ERROR]${NC} Browser4 server not accessible at $PULSAR_BASE_URL"
+    log "${CYAN}[HINT]${NC} Start Browser4 with:"
+    log "    ${BOLD}java -DDEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} -jar Browser4.jar${NC}"
     return 1
   fi
 }
@@ -297,10 +297,10 @@ usage() {
   cat << EOF
 Usage: $0 [OPTIONS]
 
-Test curl commands from README.md against PulsarRPA server.
+Test curl commands from README.md against Browser4 server.
 
 OPTIONS:
--u, --url URL         PulsarRPA base URL (default: $DEFAULT_BASE_URL)
+-u, --url URL         Browser4 base URL (default: $DEFAULT_BASE_URL)
 -f, --fast            Fast mode - minimal delays between tests
 -s, --skip-server     Skip server connectivity check
 -t, --timeout SEC     Request timeout in seconds (default: 120)
@@ -315,7 +315,7 @@ $0 --skip-server --verbose      # Skip server check with verbose output
 
 REQUIREMENTS:
 - curl command available
-- PulsarRPA server running (unless --skip-server)
+- Browser4 server running (unless --skip-server)
 
 UPDATING COMMANDS:
 Edit the CURL_COMMANDS array to add/modify tests.
@@ -341,7 +341,7 @@ parse_args() {
 }
 
 main() {
-  log "${BLUE}[INFO]${NC} ${BOLD}PulsarRPA Curl Command Test Suite${NC}"
+  log "${BLUE}[INFO]${NC} ${BOLD}Browser4 Curl Command Test Suite${NC}"
   log "${BLUE}[INFO]${NC} User: $USER_NAME"
   log "${BLUE}[INFO]${NC} Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
   log "${BLUE}[INFO]${NC} Server URL: $PULSAR_BASE_URL"

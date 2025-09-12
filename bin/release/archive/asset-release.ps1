@@ -17,13 +17,13 @@ $MvnCmd = Join-Path $AppHome '.\mvnw.cmd'
 
 $Version=(Get-Content "$AppHome/VERSION" -TotalCount 1) -replace "-SNAPSHOT", ""
 
-# If pulsar-app/pulsar-browser4/target/PulsarRPA.jar exists, copy it to remote
-$PulsarRPAPath = "$AppHome/pulsar-app/pulsar-browser4/target/PulsarRPA.jar"
+# If pulsar-app/pulsar-browser4/target/Browser4.jar exists, copy it to remote
+$PulsarRPAPath = "$AppHome/pulsar-app/pulsar-browser4/target/Browser4.jar"
 
 if (Test-Path $PulsarRPAPath) {
-    Write-Host "PulsarRPA.jar exists"
+    Write-Host "Browser4.jar exists"
 } else {
-    Write-Warning "PulsarRPA.jar does not exist"
+    Write-Warning "Browser4.jar does not exist"
 
     # Build pulsar-app/pulsar-browser4
     Set-Location $AppHome/pulsar-app
@@ -31,8 +31,8 @@ if (Test-Path $PulsarRPAPath) {
     Set-Location $AppHome
 }
 
-$VersionedJarRemoteFullPath = "${RemoteBaseDir}PulsarRPA-${Version}.jar"
-$JarRemoteFullPath = "${RemoteBaseDir}PulsarRPA.jar"
+$VersionedJarRemoteFullPath = "${RemoteBaseDir}Browser4-${Version}.jar"
+$JarRemoteFullPath = "${RemoteBaseDir}Browser4.jar"
 $DestinationPath = "${RemoteUser}@${RemoteHost}:$VersionedJarRemoteFullPath"
 
 Write-Host "Copying $PulsarRPAPath to $DestinationPath..."

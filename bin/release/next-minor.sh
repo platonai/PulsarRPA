@@ -48,7 +48,7 @@ for F in "${VERSION_AWARE_FILES[@]}"; do
     # Replace version numbers prefixed with v like "v3.0.8"
     sed -i "s/\bv$PREFIX\.[0-9]\+\b/v$NEXT_VERSION/g" "$F"
 
-    # Restore version numbers in urls like "download/v3.0.8/PulsarRPA.jar" since the new version has not been released yet
+    # Restore version numbers in urls like "download/v3.0.8/Browser4.jar" since the new version has not been released yet
     sed -i "s|http\?://[^/]*/v$NEXT_VERSION/|/v$VERSION/|g" "$F"
   fi
 done

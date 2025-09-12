@@ -49,7 +49,7 @@ runs:
         
         # Create release notes
         cat > ${{ inputs.output_file }} << EOF
-        # 🚀 PulsarRPA v${{ inputs.version }} Release Notes
+        # 🚀 Browser4 v${{ inputs.version }} Release Notes
 
         **Release Date:** $BUILD_DATE  
         **Java Version:** ${{ inputs.java_version }}
@@ -87,7 +87,7 @@ runs:
         
         \`\`\`shell
         echo \$DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
-        java -D"DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
+        java -D"DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY}" -jar Browser4.jar
         \`\`\`
         
         > 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` or other LLM API key is set in your environment, or AI features will not be available.
@@ -112,7 +112,7 @@ runs:
 
         ---
 
-        *Built with ❤️ by the PulsarRPA team*
+        *Built with ❤️ by the Browser4 team*
         EOF
         
         echo "✅ Release notes generated: ${{ inputs.output_file }}"

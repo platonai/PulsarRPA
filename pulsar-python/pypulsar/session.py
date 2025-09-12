@@ -53,7 +53,7 @@ class PageEventHandler:
 
 class PulsarSession:
     """
-    Main entry point for PulsarRPA functionality.
+    Main entry point for Browser4 functionality.
     """
 
     _gateway: ClassVar[Optional[JavaGateway]] = None
@@ -70,7 +70,7 @@ class PulsarSession:
 
     def load(self, url: str, event_handler: Optional[PageEventHandler] = None):
         """
-        Load a URL using the PulsarRPA's API.
+        Load a URL using the Browser4's API.
         Optionally register a callback function for page load events.
 
         Args:

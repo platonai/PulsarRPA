@@ -12,7 +12,7 @@ enum class BrowserType {
     NATIVE,
 
     /**
-     * The PulsarRPA's browser implementation which is superfast.
+     * The Browser4's browser implementation which is superfast.
      * */
     PULSAR_CHROME,
 

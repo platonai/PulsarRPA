@@ -26,8 +26,8 @@ env:
   DOCKER_USERNAME: galaxyeye88
   PRODUCTION_JAR_MODULE_NAME: 'pulsar-browser4'
   PRODUCTION_JAR_MODULE_PATH: 'pulsar-app/pulsar-browser4'
-  PRODUCTION_JAR_NAME: 'PulsarRPA.jar'
-  PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-browser4/target/PulsarRPA.jar'
+  PRODUCTION_JAR_NAME: 'Browser4.jar'
+  PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-browser4/target/Browser4.jar'
   JAVA_VERSION: '17'
   MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
   MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
@@ -150,7 +150,7 @@ jobs:
           container_name: ${{ env.CONTAINER_NAME }}
           timeout_seconds: '600'
 
-      - name: Build PulsarRPA JAR
+      - name: Build Browser4 JAR
         if: success()
         run: |
           JAR_PATH=${{ env.PRODUCTION_JAR_PATH }}
@@ -158,7 +158,7 @@ jobs:
           MODULE_NAME=${{ env.PRODUCTION_JAR_MODULE_NAME }}
           MODULE_PATH=${{ env.PRODUCTION_JAR_MODULE_PATH }}
 
-          echo "=== Building PulsarRPA JAR ==="
+          echo "=== Building Browser4 JAR ==="
           ./mvnw package -rf :$MODULE_NAME -pl ${MODULE_PATH} -DskipTests=true -Dmaven.javadoc.skip=true
 
           if [ ! -f "$JAR_PATH" ]; then
@@ -215,7 +215,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.get_uberjar.outputs.uberjar_path }}
-          name: "🚀 PulsarRPA ${{ env.VERSION }}"
+          name: "🚀 Browser4 ${{ env.VERSION }}"
           body_path: release_notes.md
           tag_name: ${{ env.TAG }}
           draft: false

@@ -75,7 +75,7 @@ import java.util.concurrent.CompletableFuture
  * initially check local storage for the required page. If the page exists locally and meets the necessary criteria,
  * it is retrieved from the local storage; otherwise, the page is fetched from the internet.
  *
- * To load a page, PulsarRPA follows these steps:
+ * To load a page, Browser4 follows these steps:
  *
  * 1. Check the local storage for the required page.
  * 2. If the page exists in local storage and meets the specified criteria (such as being up-to-date or valid),

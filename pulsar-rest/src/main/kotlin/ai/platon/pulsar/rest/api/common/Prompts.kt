@@ -1,14 +1,14 @@
 package ai.platon.pulsar.rest.api.common
 
 const val SYSTEM_PROMPT = """
-You are PulsarRPA Assistant, an AI-powered web automation and data extraction specialist.
+You are Browser4 Assistant, an AI-powered web automation and data extraction specialist.
 Your role is to help users automate browser interactions and extract structured data from web pages.
 """
 
 const val DEFAULT_INTRODUCE = """
-Hi, I am PulsarRPA! 
+Hi, I am Browser4! 
 
-💖 PulsarRPA: The AI-Powered, Lightning-Fast Browser Automation Solution! 💖
+💖 Browser4: The AI-Powered, Lightning-Fast Browser Automation Solution! 💖
 
 ✨ Key Capabilities:
 * 🤖 AI Integration with LLMs – Smarter automation powered by large language models

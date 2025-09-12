@@ -8,7 +8,7 @@ done
 [[ -f "$APP_HOME/VERSION" ]] && cd "$APP_HOME" || exit
 
 VERSION=$(head -n 1 "$APP_HOME/VERSION" | tr -d '\r\n' | tr -d '[:space:]')
-UBERJAR_FILE="PulsarRPA.jar"
+UBERJAR_FILE="Browser4.jar"
 UBERJAR_PATH=$(find pulsar-app/pulsar-browser4 -name $UBERJAR_FILE | head -n 1)
 JAVA_VERSION="17+"
 OUTPUT_FILE="release_notes.md"
@@ -42,7 +42,7 @@ BUILD_DATE=$(date -u +'%Y-%m-%d %H:%M:%S UTC')
 
 # Create release notes
 cat > $OUTPUT_FILE << EOF
-# 🚀 PulsarRPA v${VERSION} Release Notes
+# 🚀 Browser4 v${VERSION} Release Notes
 
 **Release Date:** $BUILD_DATE
 **Java Version:** $JAVA_VERSION
@@ -79,7 +79,7 @@ curl -L -o ${UBERJAR_FILE} ${REPO_URL}/releases/download/v${VERSION}/${UBERJAR_F
 
 \`\`\`shell
 echo \$DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
-java -D"DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
+java -D"DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY}" -jar Browser4.jar
 \`\`\`
 
 > 🔍 **Tip:** Make sure \`DEEPSEEK_API_KEY\` or other LLM API key is set in your environment, or AI features will not be available.
@@ -105,7 +105,7 @@ $CHANGELOG_LINK
 
 ---
 
-*Built with ❤️ by the PulsarRPA team*
+*Built with ❤️ by the Browser4 team*
 EOF
 
 echo "✅ Release notes generated: $OUTPUT_FILE"

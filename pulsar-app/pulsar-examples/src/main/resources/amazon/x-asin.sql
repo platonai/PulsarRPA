@@ -238,7 +238,7 @@ select
     -- all feature names defined by amazon
     dom_all_attrs(dom, '*[data-feature-name]', 'data-feature-name') as `amazon_feature_names`,
 
-    -- dom features calculated by PulsarRPA
+    -- dom features calculated by Browser4
     dom_ch(dom_owner_body(dom)) as `pulsar_num_chars`,
     dom_a(dom_owner_body(dom)) as `pulsar_num_links`,
     dom_img(dom_owner_body(dom)) as `pulsar_num_imgs`,

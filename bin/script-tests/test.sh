@@ -2,7 +2,7 @@
 
 JAR_NAME=${{ env.PRODUCTION_JAR_NAME }}
 
-echo "=== Building PulsarRPA JAR ==="
+echo "=== Building Browser4 JAR ==="
 ./mvnw package -rf :"$JAR_NAME" -pl scent-app/scent-"$JAR_NAME" \
   -DskipTests=true -Dmaven.javadoc.skip=true
 

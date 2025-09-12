@@ -7,7 +7,7 @@ while [[ ! -f "$APP_HOME/VERSION" && "$APP_HOME" != "/" ]]; do
 done
 [[ -f "$APP_HOME/VERSION" ]] && cd "$APP_HOME" || exit
 
-echo "🔄 Updating PulsarRPA documentation..."
+echo "🔄 Updating Browser4 documentation..."
 echo "📅 Current Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 echo "👤 User: $USER"
 

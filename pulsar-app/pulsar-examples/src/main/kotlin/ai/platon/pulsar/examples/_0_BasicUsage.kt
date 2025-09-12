@@ -6,7 +6,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 
 /**
- * Demonstrates the very basic usage of PulsarRPA.
+ * Demonstrates the very basic usage of Browser4.
  * */
 fun main() {
     // Use the default browser which has an isolated profile.

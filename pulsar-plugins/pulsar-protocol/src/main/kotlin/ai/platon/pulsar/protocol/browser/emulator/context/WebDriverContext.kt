@@ -174,7 +174,7 @@ open class WebDriverContext(
         val b = driver?.browser ?: this.browser
 
         val reason = when {
-            !AppContext.isActive -> "PulsarRPA is shutting down"
+            !AppContext.isActive -> "Browser4 is shutting down"
             e is BrowserUnavailableException -> "BrowserUnavailableException"
             else -> "IllegalWebDriverStateException"
         }

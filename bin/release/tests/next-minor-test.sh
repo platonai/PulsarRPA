@@ -3,7 +3,7 @@ VERSION="3.0.8"
 NEXT_VERSION="3.1.0"
 
 test_cases=(
-  "Download from http://example.com/v3.1.0/PulsarRPA.jar"
+  "Download from http://example.com/v3.1.0/Browser4.jar"
   "Get it at https://releases.example.com/v3.1.0/installer.exe"
   "Download http://cdn.example.com/v3.1.0/app.zip or https://mirror.site.com/v3.1.0/app.zip"
   "Available at https://downloads.github.com/releases/v3.1.0/binary.tar.gz"

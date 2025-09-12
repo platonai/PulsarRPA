@@ -86,7 +86,7 @@ class PulsarApplication {
             )
         }
 
-        logger.info("Welcome to PulsarRPA! \n{}", help)
+        logger.info("Welcome to Browser4! \n{}", help)
     }
 }
 

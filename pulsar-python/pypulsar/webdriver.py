@@ -14,7 +14,7 @@ from py4j.java_gateway import JavaGateway, JVMView
 
 class WebDriver:
     """
-    Main entry point for PulsarRPA functionality.
+    Main entry point for Browser4 functionality.
     """
 
     _gateway: ClassVar[Optional[JavaGateway]] = None

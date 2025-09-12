@@ -16,6 +16,6 @@
  */
 
 /**
- * Persist layer of the PulsarRPA system.
+ * Persist layer of the Browser4 system.
  */
 package ai.platon.pulsar.persist;

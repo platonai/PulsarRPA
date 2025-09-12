@@ -37,13 +37,13 @@ Make sure the environment variable is set:
 echo ${'$'}DEEPSEEK_API_KEY # make sure the environment variable is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
 ```
 
-Run PulsarRPA with the environment variable:
+Run Browser4 with the environment variable:
 
 ```shell
-java -D"EEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
+java -D"EEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY}" -jar Browser4.jar
 ```
 
-Or run PulsarRPA with Docker:
+Or run Browser4 with Docker:
 
 ```shell
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest

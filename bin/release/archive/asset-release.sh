@@ -43,10 +43,10 @@ cd "$APP_HOME" || exit 1
 
 VERSION=$(head -n 1 "$APP_HOME/VERSION" | sed 's/-SNAPSHOT//')
 
-# If pulsar-app/pulsar-browser4/target/PulsarRPA.jar exists, copy it to remote
-PULSAR_RPA_PATH="$APP_HOME/pulsar-app/pulsar-browser4/target/PulsarRPA.jar"
+# If pulsar-app/pulsar-browser4/target/Browser4.jar exists, copy it to remote
+PULSAR_RPA_PATH="$APP_HOME/pulsar-app/pulsar-browser4/target/Browser4.jar"
 if [[ -f "$PULSAR_RPA_PATH" ]]; then
-  DESTINATION_PATH="${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}PulsarRPA-${VERSION}.jar"
+  DESTINATION_PATH="${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}Browser4-${VERSION}.jar"
 
   echo "Copying $PULSAR_RPA_PATH to $DESTINATION_PATH..."
 
@@ -71,7 +71,7 @@ if [[ -f "$PULSAR_RPA_PATH" ]]; then
   echo -e "\e[32mFile copied successfully to $DESTINATION_PATH\e[0m"
 
   # Create a symbolic link to the latest version
-  if ! ssh "${REMOTE_USER}@${REMOTE_HOST}" "cd ${REMOTE_PATH} && ln -sf PulsarRPA-${VERSION}.jar PulsarRPA.jar"; then
+  if ! ssh "${REMOTE_USER}@${REMOTE_HOST}" "cd ${REMOTE_PATH} && ln -sf Browser4-${VERSION}.jar Browser4.jar"; then
     echo "Error: Failed to create symbolic link" >&2
     exit 1
   fi

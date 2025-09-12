@@ -18,7 +18,7 @@ abstract class AbstractBrowser(
 ): Browser, AutoCloseable, AbstractEventEmitter<BrowserEvents>() {
     companion object {
         protected val SEQUENCER = AtomicInteger()
-        val DEFAULT_USER_AGENT = "PulsarRPA Robot/1.0"
+        val DEFAULT_USER_AGENT = "Browser4 Robot/1.0"
     }
 
     private val logger = getLogger(this)

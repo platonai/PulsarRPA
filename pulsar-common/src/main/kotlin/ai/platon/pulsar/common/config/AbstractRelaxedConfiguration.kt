@@ -78,7 +78,7 @@ abstract class AbstractRelaxedConfiguration {
     /**
      * Retrieves the value of the given property name, or `null` if it does not exist.
      *
-     * PulsarRPA supports relaxed binding rules, so the provided name does not need to exactly match
+     * Browser4 supports relaxed binding rules, so the provided name does not need to exactly match
      * the underlying property name in the environment or Spring context.
      *
      * This is particularly useful for:
@@ -87,7 +87,7 @@ abstract class AbstractRelaxedConfiguration {
      *
      * Property lookup is case-insensitive and tolerant of naming style differences.
      *
-     * PulsarRPA resolves properties from multiple sources in the following order:
+     * Browser4 resolves properties from multiple sources in the following order:
      *
      * 1. 🔧 Java Environment Variables
      * 2. ⚙️ Java System Properties

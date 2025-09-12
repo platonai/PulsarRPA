@@ -442,7 +442,7 @@ open class InteractiveBrowserEmulator(
         val httpCode = driver.mainResponseStatus
         val finalProtocolStatus =
             if (httpCode < 0 || interactResult.protocolStatus.minorCode >= ProtocolStatusCodes.INCOMPATIBLE_CODE_START) {
-                // PulsarRPA status
+                // Browser4 status
                 interactResult.protocolStatus
             } else {
                 // HTTP status

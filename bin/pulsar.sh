@@ -16,10 +16,10 @@ if [[ "$CHROME_VERSION" == "" ]]; then
   exit
 fi
 
-UBERJAR="$APP_HOME"/target/PulsarRPA.jar
+UBERJAR="$APP_HOME"/target/Browser4.jar
 if [ ! -f "$UBERJAR" ]; then
   SERVER_HOME=$APP_HOME/pulsar-app/pulsar-browser4
-  cp "$SERVER_HOME"/target/PulsarRPA.jar "$UBERJAR"
+  cp "$SERVER_HOME"/target/Browser4.jar "$UBERJAR"
 fi
 
 java -jar "$UBERJAR"

@@ -19,8 +19,8 @@ RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -Dmaven.ja
     echo "Build completed successfully"
 
 # Copy JAR for use in the next stage with better error handling
-RUN JAR_FILE=$(find . -name "PulsarRPA*.jar" -type f | head -n 1) && \
-    test -n "$JAR_FILE" || (echo "ERROR: PulsarRPA JAR file not found" && exit 1) && \
+RUN JAR_FILE=$(find . -name "Browser4*.jar" -type f | head -n 1) && \
+    test -n "$JAR_FILE" || (echo "ERROR: Browser4 JAR file not found" && exit 1) && \
     cp "$JAR_FILE" /build/app.jar && \
     echo "Successfully copied JAR: $JAR_FILE"
 
@@ -77,6 +77,6 @@ USER appuser
 
 # Add build arguments
 LABEL maintainer="Vincent Zhang <ivincent.zhang@gmail.com>" \
-      description="PulsarRPA: An AI-Enabled, Super-Fast, Thread-Safe Browser Automation Solution! 💖"
+      description="Browser4: An AI-Enabled, Super-Fast, Thread-Safe Browser Automation Solution! 💖"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

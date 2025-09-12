@@ -289,7 +289,7 @@ open class BrowserSettings constructor(
                 throw IllegalArgumentException("The number of browser contexts has to be greater than 0")
             }
             if (n > 50) {
-                System.err.println("PulsarRPA: The number of browser contexts is too large, it may cause out of disk space")
+                System.err.println("Browser4: The number of browser contexts is too large, it may cause out of disk space")
             }
 
             // PRIVACY_CONTEXT_NUMBER is deprecated, use BROWSER_CONTEXT_NUMBER instead
@@ -513,7 +513,7 @@ open class BrowserSettings constructor(
     /**
      * Page load strategy.
      *
-     * PulsarRPA checks document ready using javascript so just set the strategy to be none.
+     * Browser4 checks document ready using javascript so just set the strategy to be none.
      *
      * @see <a href='https://blog.knoldus.com/page-loading-strategy-in-the-selenium-webdriver/'>
      *     Page Loading Strategy</a>

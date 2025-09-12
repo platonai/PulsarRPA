@@ -23,7 +23,7 @@ curl -X GET "http://localhost:8182/command.html"
 
 $CURL_DESC_CUSTOM_HEADERS = "Custom Headers Test"
 $CURL_CMD_CUSTOM_HEADERS = @'
-curl -X GET "http://localhost:8182/actuator/health" -H "Accept: application/json" -H "User-Agent: PulsarRPA-Test-Suite/1.0"
+curl -X GET "http://localhost:8182/actuator/health" -H "Accept: application/json" -H "User-Agent: Browser4-Test-Suite/1.0"
 '@
 
 # Simple Data Extraction Tests
@@ -214,12 +214,12 @@ function Substitute-Urls {
 }
 
 function Check-Server {
-  Log "[INFO] Checking PulsarRPA server at $PULSAR_BASE_URL..." -ForegroundColor Blue
+  Log "[INFO] Checking Browser4 server at $PULSAR_BASE_URL..." -ForegroundColor Blue
 
   try {
     $response = Invoke-WebRequest -Uri "$PULSAR_BASE_URL/actuator/health" -TimeoutSec 5 -ErrorAction SilentlyContinue
     if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 300) {
-      Log "[SUCCESS] PulsarRPA server is healthy and responding" -ForegroundColor Green
+      Log "[SUCCESS] Browser4 server is healthy and responding" -ForegroundColor Green
       return $true
     }
   } catch {}
@@ -232,9 +232,9 @@ function Check-Server {
     }
   } catch {}
 
-  Log "[ERROR] PulsarRPA server not accessible at $PULSAR_BASE_URL" -ForegroundColor Red
-  Log "[HINT] Start PulsarRPA with:" -ForegroundColor Cyan
-  Log "    java -DDEEPSEEK_API_KEY=`${DEEPSEEK_API_KEY} -jar PulsarRPA.jar" -ForegroundColor White
+  Log "[ERROR] Browser4 server not accessible at $PULSAR_BASE_URL" -ForegroundColor Red
+  Log "[HINT] Start Browser4 with:" -ForegroundColor Cyan
+  Log "    java -DDEEPSEEK_API_KEY=`${DEEPSEEK_API_KEY} -jar Browser4.jar" -ForegroundColor White
   return $false
 }
 
@@ -415,10 +415,10 @@ function Usage {
   @"
 Usage: $($MyInvocation.MyCommand.Name) [OPTIONS]
 
-Test curl commands from README.md against PulsarRPA server.
+Test curl commands from README.md against Browser4 server.
 
 OPTIONS:
--u, --url URL         PulsarRPA base URL (default: $DEFAULT_BASE_URL)
+-u, --url URL         Browser4 base URL (default: $DEFAULT_BASE_URL)
 -f, --fast            Fast mode - minimal delays between tests
 -s, --skip-server     Skip server connectivity check
 -t, --timeout SEC     Request timeout in seconds (default: 120)
@@ -433,7 +433,7 @@ $($MyInvocation.MyCommand.Name) -s -v                        # Skip server check
 
 REQUIREMENTS:
 - curl command available
-- PulsarRPA server running (unless --skip-server)
+- Browser4 server running (unless --skip-server)
 
 UPDATING COMMANDS:
 Edit the CURL_COMMANDS array to add/modify tests.
@@ -474,7 +474,7 @@ function Parse-Args {
 }
 
 function Main {
-  Log "[INFO] PulsarRPA Curl Command Test Suite" -ForegroundColor Blue
+  Log "[INFO] Browser4 Curl Command Test Suite" -ForegroundColor Blue
   Log "[INFO] User: $USER_NAME" -ForegroundColor Blue
   Log "[INFO] Timestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Blue
   Log "[INFO] Server URL: $PULSAR_BASE_URL" -ForegroundColor Blue

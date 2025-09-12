@@ -391,7 +391,7 @@ function Invoke-IntegrationTests {
 try {
     $scriptStartTime = Get-Date
 
-    Write-Host "🚀 PulsarRPA Docker CI Local Testing" -ForegroundColor Magenta
+    Write-Host "🚀 Browser4 Docker CI Local Testing" -ForegroundColor Magenta
     Write-Host "================================================" -ForegroundColor Gray
 
     # Step 1: Show configuration and validate prerequisites

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Building PulsarRPA with Maven cache reuse..."
+echo "Building Browser4 with Maven cache reuse..."
 
 # Enable BuildKit for cache mount support
 export DOCKER_BUILDKIT=1

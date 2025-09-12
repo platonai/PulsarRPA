@@ -10,7 +10,7 @@ Set-Location $AppHome
 # 设置 PowerShell 编码以支持中文输出
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-Write-Host "正在使用 BuildKit 缓存挂载构建 PulsarRPA..." -ForegroundColor Cyan
+Write-Host "正在使用 BuildKit 缓存挂载构建 Browser4..." -ForegroundColor Cyan
 
 # 获取 Windows Maven 仓库路径 (仅用于信息显示)
 try {

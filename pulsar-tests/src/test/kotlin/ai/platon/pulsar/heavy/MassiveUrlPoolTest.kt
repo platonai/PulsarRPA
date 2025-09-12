@@ -6,11 +6,11 @@ import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import kotlin.test.Test
 
 /**
- * Test the performance of PulsarRPA, every test url will be a local file, so the performance is not affected by network latency.
+ * Test the performance of Browser4, every test url will be a local file, so the performance is not affected by network latency.
  *
  * The test first generate 10000 temporary files in the local file system, and then run the test.
  *
- * Notice: before we load the local files using PulsarRPA, we have to transform the paths using [URLUtils.pathToLocalURL].
+ * Notice: before we load the local files using Browser4, we have to transform the paths using [URLUtils.pathToLocalURL].
  * */
 class MassiveUrlPoolTest: MassiveTestBase() {
 

@@ -30,7 +30,7 @@ public class GoraStorage {
      * See org.apache.gora.mongodb.store.MongoStoreParameters#load for property loading details:
      * 1. Loads from the `gora.properties` file.
      * 2. If `gora.mongodb.override_hadoop_configuration` is false, uses properties from the Hadoop configuration.
-     * 3. In PulsarRPA, the `gora.properties` file is located at `pulsar-persist/src/main/resources/gora.properties`
+     * 3. In Browser4, the `gora.properties` file is located at `pulsar-persist/src/main/resources/gora.properties`
      */
     public static Properties goraProperties = DataStoreFactory.createProps();
     /**

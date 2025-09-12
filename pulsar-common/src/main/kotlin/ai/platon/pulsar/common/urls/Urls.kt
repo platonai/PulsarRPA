@@ -30,7 +30,7 @@ interface CallableDegenerateUrl: DegenerateUrl {
  * a more complicated object, such as a query to a database or to a search engine.
  *
  * In java, a [URL] object represents a URL.
- * In PulsarRPA, a [UrlAware] object represents a URL with extra information telling the system
+ * In Browser4, a [UrlAware] object represents a URL with extra information telling the system
  * how to fetch it.
  * */
 interface UrlAware {

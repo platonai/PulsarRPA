@@ -16,8 +16,8 @@ COPY . .
 RUN bin/build.sh
 
 # Copy JAR for use in the next stage with better error handling
-RUN JAR_FILE=$(find . -name "PulsarRPA*.jar" -type f | head -n 1) && \
-    test -n "$JAR_FILE" || (echo "ERROR: PulsarRPA JAR file not found" && exit 1) && \
+RUN JAR_FILE=$(find . -name "Browser4*.jar" -type f | head -n 1) && \
+    test -n "$JAR_FILE" || (echo "ERROR: Browser4 JAR file not found" && exit 1) && \
     cp "$JAR_FILE" /build/app.jar && \
     echo "Successfully copied JAR: $JAR_FILE"
 
@@ -85,8 +85,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 
 # Add comprehensive labels
 LABEL maintainer="Vincent Zhang <ivincent.zhang@gmail.com>" \
-      description="PulsarRPA: An AI-Enabled, Super-Fast, Thread-Safe Browser Automation Solution! 💖" \
-      org.opencontainers.image.source="https://github.com/platonai/PulsarRPA" \
+      description="Browser4: An AI-Enabled, Super-Fast, Thread-Safe Browser Automation Solution! 💖" \
+      org.opencontainers.image.source="https://github.com/platonai/Browser4" \
       org.opencontainers.image.documentation="https://github.com/platonai/browser4/blob/master/README.md"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"] 

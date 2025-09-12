@@ -8,7 +8,7 @@ while (!(Test-Path "$APP_HOME/VERSION") -and ($APP_HOME -ne "/")) {
 }
 Set-Location $APP_HOME
 
-Write-Host "🔄 Updating PulsarRPA documentation..."
+Write-Host "🔄 Updating Browser4 documentation..."
 Write-Host "📅 Current Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')"
 Write-Host "👤 User: $env:USERNAME"
 

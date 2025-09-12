@@ -10,7 +10,7 @@ import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 
 /**
- * Demonstrates various URLs in PulsarRPA.
+ * Demonstrates various URLs in Browser4.
  * */
 fun main() {
     // Use the default browser which has an isolated profile.

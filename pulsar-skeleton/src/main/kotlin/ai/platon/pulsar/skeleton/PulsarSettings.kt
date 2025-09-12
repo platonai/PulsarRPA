@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.browser.InteractLevel
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 
 /**
- * The [PulsarSettings] class defines a convenient interface to control the behavior of PulsarRPA.
+ * The [PulsarSettings] class defines a convenient interface to control the behavior of Browser4.
  *
  * For example, to run multiple temporary browsers in headless mode, which is usually used in the spider scenario,
  * you can use the following code:
@@ -55,13 +55,13 @@ open class PulsarSettings {
     }
 
     /**
-     * Use the system's default Chrome browser, so PulsarRPA visits websites just like you do.
+     * Use the system's default Chrome browser, so Browser4 visits websites just like you do.
      * Any change to the browser will be kept.
      * */
     fun withSystemDefaultBrowser() = withBrowserContextMode(BrowserContextMode.DEFAULT, BrowserType.DEFAULT)
 
     /**
-     * Use the system's default browser with the given type, so PulsarRPA visits websites just like you do.
+     * Use the system's default browser with the given type, so Browser4 visits websites just like you do.
      * Any change to the browser will be kept.
      * */
     fun withSystemDefaultBrowser(browserType: BrowserType): PulsarSettings {
@@ -301,7 +301,7 @@ open class PulsarSettings {
     }
 
     /**
-     * Sets the Large Language Model (LLM) provider for the PulsarRPA settings.
+     * Sets the Large Language Model (LLM) provider for the Browser4 settings.
      *
      * This function allows specifying the LLM provider to be used. The provider must be a non-null string.
      *
@@ -327,7 +327,7 @@ open class PulsarSettings {
     }
 
     /**
-     * Sets the Large Language Model (LLM) provider for the PulsarRPA settings.
+     * Sets the Large Language Model (LLM) provider for the Browser4 settings.
      *
      * This function allows specifying the LLM provider to be used. The provider must be a non-null string.
      *
@@ -357,7 +357,7 @@ open class PulsarSettings {
     }
 
     /**
-     * Sets the Large Language Model (LLM) name for the PulsarRPA settings.
+     * Sets the Large Language Model (LLM) name for the Browser4 settings.
      *
      * Supported LLM providers include:
      * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
@@ -385,7 +385,7 @@ open class PulsarSettings {
     }
 
     /**
-     * Sets the Large Language Model (LLM) API key for the PulsarRPA settings.
+     * Sets the Large Language Model (LLM) API key for the Browser4 settings.
      *
      * Supported LLM providers include:
      * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>

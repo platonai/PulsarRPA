@@ -18,7 +18,7 @@ curl -X GET "http://localhost:8182/command.html"
 
 CURL_DESC_CUSTOM_HEADERS="Custom Headers Test"
 read -r -d '' CURL_CMD_CUSTOM_HEADERS << 'EOF'
-curl -X GET "http://localhost:8182/actuator/health" -H "Accept: application/json" -H "User-Agent: PulsarRPA-Test-Suite/1.0"
+curl -X GET "http://localhost:8182/actuator/health" -H "Accept: application/json" -H "User-Agent: Browser4-Test-Suite/1.0"
 EOF
 
 # Simple Data Extraction Tests

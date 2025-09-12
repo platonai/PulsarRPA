@@ -35,7 +35,7 @@ import java.time.Duration
  * For web scraping tasks, the website should have no idea whether a visit is
  * from a human being or a bot. Once a page visit is suspected by the website,
  * which we call a privacy leak, the privacy context has to be dropped,
- * and PulsarRPA will visit the page in another privacy context.
+ * and Browser4 will visit the page in another privacy context.
  * */
 interface PrivacyContext: AutoCloseable {
     /**

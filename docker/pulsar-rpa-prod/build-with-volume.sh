@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Building PulsarRPA with host Maven repository volume mount..."
+echo "Building Browser4 with host Maven repository volume mount..."
 
 # Build with volume mount - mounts host's ~/.m2 directory
 docker build \

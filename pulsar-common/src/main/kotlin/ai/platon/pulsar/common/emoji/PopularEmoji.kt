@@ -3,7 +3,7 @@
 package ai.platon.pulsar.common.emoji
 
 /**
- * Popular Emojis used by PulsarRPA.
+ * Popular Emojis used by Browser4.
  *
  * @see [Emoji Frequency](https://home.unicode.org/emoji/emoji-frequency/)
  * @see [Emoji data](https://unicode.org/Public/emoji/1.0/emoji-data.txt)
