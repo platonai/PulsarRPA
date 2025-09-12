@@ -21,8 +21,8 @@ object LLMUtils {
 
         // If we can not find the file, copy it from github.com or gitee.com
         val webDriverURL =
-            "https://raw.githubusercontent.com/platonai/PulsarRPA/refs/heads/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/MiniWebDriver.kt"
-        val webDriverURL2 = "https://gitee.com/platonai_galaxyeye/PulsarRPA/raw/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/MiniWebDriver.kt"
+            "https://raw.githubusercontent.com/platonai/browser4/refs/heads/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/MiniWebDriver.kt"
+        val webDriverURL2 = "https://gitee.com/platonai_galaxyeye/browser4/raw/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/MiniWebDriver.kt"
         listOf(webDriverURL, webDriverURL2).forEach { url ->
             if (shouldCopyFile(dest)) {
                 Files.writeString(dest, URI(url).toURL().readText())
@@ -39,8 +39,8 @@ object LLMUtils {
 
         // If we can not find the file, copy it from github.com or gitee.com
         val webDriverURL =
-            "https://raw.githubusercontent.com/platonai/PulsarRPA/refs/heads/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/session/PulsarSession.kt"
-        val webDriverURL2 = "https://gitee.com/platonai_galaxyeye/PulsarRPA/raw/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/session/PulsarSession.kt"
+            "https://raw.githubusercontent.com/platonai/browser4/refs/heads/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/session/PulsarSession.kt"
+        val webDriverURL2 = "https://gitee.com/platonai_galaxyeye/browser4/raw/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/session/PulsarSession.kt"
         listOf(webDriverURL, webDriverURL2).forEach { url ->
             if (shouldCopyFile(dest)) {
                 Files.writeString(dest, URI(url).toURL().readText())

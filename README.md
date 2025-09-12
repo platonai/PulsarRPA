@@ -1,7 +1,7 @@
 # 🤖 Browser4
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/galaxyeye88/pulsar-rpa?style=flat-square)](https://hub.docker.com/r/galaxyeye88/pulsar-rpa)
-[![License: APACHE2](https://img.shields.io/badge/license-APACHE2-green?style=flat-square)](https://github.com/platonai/PulsarRPA/blob/main/LICENSE)
+[![License: APACHE2](https://img.shields.io/badge/license-APACHE2-green?style=flat-square)](https://github.com/platonai/browser4/blob/main/LICENSE)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.8-brightgreen?style=flat-square)](https://spring.io/projects/spring-boot)
 
 ---
@@ -56,7 +56,7 @@ Find all links containing /dp/.
 #### 🧩 Download
 
 ```shell
-curl -L -o Browser4.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/Browser4.jar
+curl -L -o Browser4.jar https://github.com/platonai/browser4/releases/download/v3.0.14/Browser4.jar
 ```
 
 #### 🚀 Run
@@ -76,7 +76,7 @@ java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar Browser4.jar
 <details>
 <summary>📂 Resources</summary>
 
-* 🟦 [GitHub Release Download](https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/Browser4.jar)
+* 🟦 [GitHub Release Download](https://github.com/platonai/browser4/releases/download/v3.0.14/Browser4.jar)
 * 📁 [Mirror / Backup Download](https://static.platonai.cn/repo/ai/platon/pulsar/)
 * 🛠️ [LLM Configuration Guide](docs/config/llm/llm-config.md)
 * 🛠️ [Configuration Guide](docs/config.md)
@@ -205,7 +205,7 @@ val links =
 session.submitAll(links)
 ```
 
-📝 Example: [View Kotlin Code](https://github.com/platonai/PulsarRPA/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
+📝 Example: [View Kotlin Code](https://github.com/platonai/browser4/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
 
 </details>
 

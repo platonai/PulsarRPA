@@ -424,7 +424,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(): String? {
-        // https://github.com/platonai/PulsarRPA/issues/107
+        // https://github.com/platonai/browser4/issues/107
         return outerHTML(":root")
     }
 

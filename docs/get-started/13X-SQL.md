@@ -31,7 +31,7 @@ select
 }
 ```
 
-Complete code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt), [Chinese mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt).
+Complete code: [kotlin](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt), [Chinese mirror](https://gitee.com/platonai_galaxyeye/browser4/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt).
 
 ## Language Introduction
 
@@ -159,7 +159,7 @@ from
 
 ## String Functions
 
-Most string functions are automatically converted from org.apache.commons.lang3.StringUtils through programming. You can find the UDF definitions in the following file: [StringFunctions](/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt) ([Chinese mirror](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt)), and all string functions are in the namespace STR.
+Most string functions are automatically converted from org.apache.commons.lang3.StringUtils through programming. You can find the UDF definitions in the following file: [StringFunctions](/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt) ([Chinese mirror](https://gitee.com/platonai_galaxyeye/browser4/blob/1.10.x/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt)), and all string functions are in the namespace STR.
 
 ### STR_SUBSTRING_AFTER
 

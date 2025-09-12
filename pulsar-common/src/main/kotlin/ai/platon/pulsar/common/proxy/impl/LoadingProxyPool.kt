@@ -63,7 +63,7 @@ class LoadingProxyPool(
 
     @Throws(ProxyException::class)
     private fun load() {
-        // synchronize proxyLoader to fix issue 41: https://github.com/platonai/PulsarRPA/issues/41
+        // synchronize proxyLoader to fix issue 41: https://github.com/platonai/browser4/issues/41
         val loadedProxies = synchronized(proxyLoader) {
             proxyLoader.updateProxies(Duration.ZERO)
         }

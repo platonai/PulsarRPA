@@ -162,7 +162,7 @@ private class LocalFileConfigurationImpl(
             // keep consistent with spring's behavior, so even when we are not running a full Spring Boot application
             // (e.g., CLI tool, unit test, or native launch),
             // we can still load properties from these locations.
-            // https://github.com/platonai/PulsarRPA/issues/110
+            // https://github.com/platonai/browser4/issues/110
             val projectRoot = ProjectUtils.findProjectRootDir()
             if (projectRoot != null) {
                 loadExternalProperties(projectRoot)

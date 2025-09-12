@@ -11,7 +11,7 @@ fun main() {
     val resource = ResourceLoader.getURLOrNull("avro/webpage.avsc")!!
     
     // Remove prefix to correct malformed path on Windows:
-    // Illegal char <:> at index 2: /D:/workspace/PulsarRPA/pulsar-persist/target/classes/avro/webpage.avsc
+    // Illegal char <:> at index 2: /D:/workspace/browser4/pulsar-persist/target/classes/avro/webpage.avsc
     val path = resource.toURI().path.removePrefix("/")
     
     val inputPath = Paths.get(path)

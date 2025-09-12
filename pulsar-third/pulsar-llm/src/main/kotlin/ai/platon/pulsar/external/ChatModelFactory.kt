@@ -22,7 +22,7 @@ object ChatModelFactory {
     private val models = ConcurrentHashMap<String, ChatModel>()
 
     private val llmGuideReported = AtomicBoolean(false)
-    const val DOCUMENT_PATH = "https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/llm-config.md"
+    const val DOCUMENT_PATH = "https://github.com/platonai/browser4/blob/master/docs/config/llm/llm-config.md"
     const val LLM_GUIDE =
 """
 The LLM is not configured, the LLM feature is disabled.
@@ -124,7 +124,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
             return getOrCreateOpenAICompatibleModel(openaiModelName, openaiAPIKey, openaiBaseURL, conf)
         }
 
-        val documentPath = "https://github.com/platonai/PulsarRPA/blob/master/docs/config/llm/llm-config-advanced.md"
+        val documentPath = "https://github.com/platonai/browser4/blob/master/docs/config/llm/llm-config-advanced.md"
         val provider = requireNotNull(conf[LLM_PROVIDER]) { "$LLM_PROVIDER is not set, see $documentPath" }
         val modelName = requireNotNull(conf[LLM_NAME]) { "$LLM_NAME is not set, see $documentPath" }
         val apiKey = requireNotNull(conf[LLM_API_KEY]) { "$LLM_API_KEY is not set, see $documentPath" }

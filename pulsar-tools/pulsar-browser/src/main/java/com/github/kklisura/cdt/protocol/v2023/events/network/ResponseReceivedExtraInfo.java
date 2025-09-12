@@ -51,7 +51,7 @@ public class ResponseReceivedExtraInfo {
 
   /**
    * CDP upgraded and failed to serialize ResponseReceivedExtraInfo since Google Chrome 127. #74
-   * @see <a href="https://github.com/platonai/PulsarRPA/issues/74">CDP upgraded and failed to serialize ResponseReceivedExtraInfo since Google Chrome 127</a>
+   * @see <a href="https://github.com/platonai/browser4/issues/74">CDP upgraded and failed to serialize ResponseReceivedExtraInfo since Google Chrome 127</a>
    * */
 //  @Optional private String cookiePartitionKey;
 

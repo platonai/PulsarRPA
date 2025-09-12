@@ -87,6 +87,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 LABEL maintainer="Vincent Zhang <ivincent.zhang@gmail.com>" \
       description="PulsarRPA: An AI-Enabled, Super-Fast, Thread-Safe Browser Automation Solution! 💖" \
       org.opencontainers.image.source="https://github.com/platonai/PulsarRPA" \
-      org.opencontainers.image.documentation="https://github.com/platonai/PulsarRPA/blob/master/README.md"
+      org.opencontainers.image.documentation="https://github.com/platonai/browser4/blob/master/README.md"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"] 

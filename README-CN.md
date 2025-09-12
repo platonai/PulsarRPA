@@ -1,7 +1,7 @@
 # 🤖 Browser4
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/galaxyeye88/pulsar-rpa?style=flat-square)](https://hub.docker.com/r/galaxyeye88/pulsar-rpa)
-[![License: APACHE2](https://img.shields.io/badge/license-APACHE2-green?style=flat-square)](https://github.com/platonai/PulsarRPA/blob/main/LICENSE)
+[![License: APACHE2](https://img.shields.io/badge/license-APACHE2-green?style=flat-square)](https://github.com/platonai/browser4/blob/main/LICENSE)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.8-brightgreen?style=flat-square)](https://spring.io/projects/spring-boot)
 
 ---
@@ -56,7 +56,7 @@
 #### 🧩 下载
 
 ```shell
-curl -L -o Browser4.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/Browser4.jar
+curl -L -o Browser4.jar https://github.com/platonai/browser4/releases/download/v3.0.14/Browser4.jar
 ```
 
 #### 🚀 运行
@@ -76,7 +76,7 @@ java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar Browser4.jar
 <details>
 <summary>📂 资源</summary>
 
-* 🟦 [GitHub Release 下载](https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/Browser4.jar)
+* 🟦 [GitHub Release 下载](https://github.com/platonai/browser4/releases/download/v3.0.14/Browser4.jar)
 * 📁 [镜像/备份下载](https://static.platonai.cn/repo/ai/platon/pulsar/)
 * 🛠️ [LLM配置指南](docs/config/llm/llm-config.md)
 * 🛠️ [配置指南](docs/config.md)
@@ -204,7 +204,7 @@ val links =
 session.submitAll(links)
 ```
 
-📝 示例: [查看Kotlin代码](https://github.com/platonai/PulsarRPA/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
+📝 示例: [查看Kotlin代码](https://github.com/platonai/browser4/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
 
 </details>
 

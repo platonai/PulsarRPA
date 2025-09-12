@@ -402,7 +402,7 @@ Kill all Chrome processes and run the program again.
                         .filter { Files.isSymbolicLink(it) && !Files.exists(it) }
                         .forEach { Files.delete(it) }
 
-                    // ISSUE#29: https://github.com/platonai/PulsarRPA/issues/29
+                    // ISSUE#29: https://github.com/platonai/browser4/issues/29
                     // Failed to copy chrome data dir when there is a SingletonSocket symbol link
                     val fileFilter = FileFilter { !Files.isSymbolicLink(it.toPath()) }
 

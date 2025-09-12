@@ -150,7 +150,7 @@ var pages = session.loadOutPages(url, "-expires 10s" +
 )
 ```
 
-本课程提供了[完整代码](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt)。
+本课程提供了[完整代码](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/browser4/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt)。
 
 ------
 

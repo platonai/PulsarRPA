@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # cron
-# */10 * * * * ~/workspace/PulsarRPA/update_and_build.sh >> ~/workspace/PulsarRPA/cron.log 2>&1
+# */10 * * * * ~/workspace/browser4/update_and_build.sh >> ~/workspace/browser4/cron.log 2>&1
 
 # 获取当前脚本所在的目录
 AppHome="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

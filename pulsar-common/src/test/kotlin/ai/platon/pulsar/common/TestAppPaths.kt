@@ -122,7 +122,7 @@ class TestAppPaths {
     /**
      * Ensure a symbolic link can be created.
      *
-     * @see <a href='https://github.com/platonai/PulsarRPA/issues/20'>
+     * @see <a href='https://github.com/platonai/browser4/issues/20'>
      *     #20 Failed to create symbolic link when export webpage on Windows 11</a>
      * */
     @Test
