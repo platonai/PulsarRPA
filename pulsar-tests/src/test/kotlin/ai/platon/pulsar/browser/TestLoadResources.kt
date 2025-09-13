@@ -49,7 +49,6 @@ class TestLoadResources: WebDriverTestBase() {
     @Test
     fun testLoadResource2() = runWebDriverTest(browser) { driver ->
         val resourceUrl = robotsUrl
-//        val resourceUrl = "https://www.amazon.com/robots.txt"
         val referrer = URLUtils.getOrigin(resourceUrl)
         driver.navigateTo(referrer)
         driver.waitForNavigation()
@@ -60,9 +59,8 @@ class TestLoadResources: WebDriverTestBase() {
         assertNotNull(headers)
         assertNotNull(body)
 
-        println(body)
+        // println(body)
 
-//        println(body)
         assertContains(body, "Disallow", ignoreCase = true,
             message = "Disallow should be in body: >>>\n${StringUtils.abbreviateMiddle(body, "...", 100)}\n<<<")
 

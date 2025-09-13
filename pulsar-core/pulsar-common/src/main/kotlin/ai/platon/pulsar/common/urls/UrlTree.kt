@@ -58,6 +58,5 @@ class UrlTree() {
 
     fun print() {
         root.print()
-        // commonRoot.print()
     }
 }
