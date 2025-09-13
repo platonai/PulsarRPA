@@ -11,7 +11,7 @@ Starting with PulsarSession:
 // Create a pulsar session
 val session = PulsarContexts.createSession()
 // The main URL we are working with
-val url = "https://www.amazon.com/dp/B0C1H26C46"
+val url = "https://www.amazon.com/dp/B0FFTT2J6N"
 ```
 
 The most common requirement is to specify the page expiration time. If the required page is already stored locally and not expired, the local version will be returned.

@@ -9,7 +9,7 @@ object TestHelper {
 
     const val PRODUCT_LIST_URL = "https://www.amazon.com/b?node=1292115011"
 
-    const val PRODUCT_DETAIL_URL = "https://www.amazon.com/dp/B0C1H26C46"
+    const val PRODUCT_DETAIL_URL = "https://www.amazon.com/dp/B0FFTT2J6N"
 
     fun ensurePage(url: String) {
         val pageRequirement = { page: WebPage -> page.protocolStatus.isSuccess && page.persistedContentLength > 8000 }

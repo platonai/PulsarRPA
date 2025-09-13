@@ -41,8 +41,8 @@ interface WebPage : Comparable<WebPage> {
 
     /**
      * The key associated with the web page, typically used for indexing or identification purposes.
-     * The key is defined as the reserved url, for example, the key for page "https://www.amazon.com/dp/B0C1H26C46"
-     * is "uk.co.amazon.www:https/dp/B0C1H26C46".
+     * The key is defined as the reserved url, for example, the key for page "https://www.amazon.com/dp/B0FFTT2J6N"
+     * is "uk.co.amazon.www:https/dp/B0FFTT2J6N".
      */
     val key: String
 
@@ -51,7 +51,7 @@ interface WebPage : Comparable<WebPage> {
      * where it extracted from.
      * For example, the href can be extracted from an HTML page:
      * ```html
-     * <a href='https://www.amazon.com/dp/B0C1H26C46?th=1'>Huawei P60 ...</a>
+     * <a href='https://www.amazon.com/dp/B0FFTT2J6N?th=1'>Huawei P60 ...</a>
      * ```
      */
     var href: String?

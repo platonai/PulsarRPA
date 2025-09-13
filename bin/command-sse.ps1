@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 
 # 自然语言命令内容
 $COMMAND = @'
-    Go to https://www.amazon.com/dp/B0C1H26C46
+    Go to https://www.amazon.com/dp/B0FFTT2J6N
 
     After browser launch:
       - clear browser cookies

@@ -14,9 +14,9 @@ import kotlin.test.assertTrue
 class ChatModelTests {
 
     companion object {
-        private val url = "https://www.amazon.com/dp/B0C1H26C46"
+        private val url = "https://www.amazon.com/dp/B0FFTT2J6N"
         private val args = "-requireSize 200000"
-        private val productHtml = ResourceLoader.readString("pages/amazon/B0C1H26C46.original.htm")
+        private val productHtml = ResourceLoader.readString("pages/amazon/B0FFTT2J6N.original.htm")
         private val productText = ResourceLoader.readString("prompts/product.txt")
         private val clusterAnalysisPrompt = ResourceLoader.readString("prompts/data-expert/fulltext/prompt.p1723107189.6.remarkable.txt")
         private val conf = ImmutableConfig(loadDefaults = true)

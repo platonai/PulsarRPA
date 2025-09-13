@@ -53,7 +53,7 @@ class WebDriverTestBase : TestBase() {
     protected val logger = getLogger(this)
     protected val warnUpUrl = "https://www.amazon.com/"
     protected val originUrl = "https://www.amazon.com/"
-    protected val productUrl = "https://www.amazon.com/dp/B0C1H26C46"
+    protected val productUrl = "https://www.amazon.com/dp/B0FFTT2J6N"
     protected val resourceUrl2 = "https://www.amazon.com/robots.txt"
 
     protected val baseURL get() = "http://127.0.0.1:$port"

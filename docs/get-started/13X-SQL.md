@@ -24,7 +24,7 @@ select
       dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
       dom_first_text(dom, '#acrCustomerReviewText') as ratings,
       str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body');
+  from load_and_select('https://www.amazon.com/dp/B0FFTT2J6N  -i 1s -njr 3', 'body');
             """
     val rs = context.executeQuery(sql)
     println(ResultSetFormatter(rs, withHeader = true))
@@ -86,7 +86,7 @@ Load a page and select elements, returning a ResultSet. The resulting ResultSet 
 select
     dom_base_uri(dom)
 from
-    load_and_select('https://www.amazon.com/dp/B0C1H26C46',  'body', 1, 10)
+    load_and_select('https://www.amazon.com/dp/B0FFTT2J6N',  'body', 1, 10)
 ```
 
 ### DOM Functions
@@ -104,7 +104,7 @@ Returns the URI of the HTML document.
 **Example:**
 
 ```sql
-select dom_base_uri(dom) from load_and_select('https://www.amazon.com/dp/B0C1H26C46',  'body')
+select dom_base_uri(dom) from load_and_select('https://www.amazon.com/dp/B0FFTT2J6N',  'body')
 ```
 
 ## DOM Selection Functions
@@ -175,7 +175,7 @@ Example:
 select
     str_substring_after(dom_first_text(dom, '#price'), '$') as Price
 from
-    load_and_select('https://www.amazon.com/dp/B0C1H26C46',  'body');
+    load_and_select('https://www.amazon.com/dp/B0FFTT2J6N',  'body');
 ```
 
 ------

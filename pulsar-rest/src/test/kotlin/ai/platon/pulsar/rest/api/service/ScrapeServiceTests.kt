@@ -27,7 +27,7 @@ class ScrapeServiceTests {
 
     private val productListURL = "https://www.amazon.com/b?node=1292115011"
 
-    private val productDetailURL = "https://www.amazon.com/dp/B0C1H26C46"
+    private val productDetailURL = "https://www.amazon.com/dp/B0FFTT2J6N"
 
     @Autowired
     private lateinit var config: ImmutableConfig

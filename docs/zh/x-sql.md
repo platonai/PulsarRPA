@@ -21,7 +21,7 @@ select
   dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
   dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
   str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-from load_and_select('https://www.amazon.com/dp/B0C1H26C46   -i 1d -njr 3', 'body');
+from load_and_select('https://www.amazon.com/dp/B0FFTT2J6N   -i 1d -njr 3', 'body');
 ```
 
 PulsarRPA主要通过注册UDF来扩展H2数据库，但它也进行了其他扩展。
@@ -75,7 +75,7 @@ LOAD_AND_SELECT(url [, cssSelector [, offset [, limit]]])
 select
   dom_base_uri(dom)
 from
-  load_and_select('https://www.amazon.com/dp/B0C1H26C46',  'body', 1, 10)
+  load_and_select('https://www.amazon.com/dp/B0FFTT2J6N',  'body', 1, 10)
 ```
 
 ## DOM函数
@@ -97,7 +97,7 @@ DOM_BASE_URI(dom)
 示例：
 
 ```sql
-select dom_base_uri(dom) from load_and_select('https://www.amazon.com/dp/B0C1H26C46',  'body')
+select dom_base_uri(dom) from load_and_select('https://www.amazon.com/dp/B0FFTT2J6N',  'body')
 ```
 
 ## DOM选择函数
@@ -178,6 +178,6 @@ STR_SUBSTRING_AFTER(str, separator)
 select
   str_substring_after(dom_first_text(dom, '#price'), '$') as Price
 from
-  load_and_select('https://www.amazon.com/dp/B0C1H26C46',  'body');
+  load_and_select('https://www.amazon.com/dp/B0FFTT2J6N',  'body');
 ```
 

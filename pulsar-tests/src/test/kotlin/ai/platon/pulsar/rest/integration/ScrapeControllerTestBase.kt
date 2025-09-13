@@ -12,7 +12,7 @@ open class ScrapeControllerTestBase : IntegrationTestBase() {
     companion object {
         val urls = mapOf(
             "productListPage" to "https://www.amazon.com/b?node=1292115011",
-            "productDetailPage" to "https://www.amazon.com/dp/B0C1H26C46"
+            "productDetailPage" to "https://www.amazon.com/dp/B0FFTT2J6N"
         )
 
         @JvmStatic
