@@ -9,14 +9,39 @@ import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.rest.api.common.*
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import ai.platon.pulsar.rest.api.entities.CommandStatus
+import ai.platon.pulsar.rest.api.entities.PromptRequest
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Service
 
 @Service
 class ConversationService(
-    val session: PulsarSession
+    val session: PulsarSession,
+    val loadService: LoadService,
 ) {
+
+    fun chat(prompt: String): String {
+        return session.chat(prompt).content
+    }
+
+    fun chat(request: PromptRequest): String {
+        request.args = LoadOptions.mergeArgs(request.args, "-refresh")
+        val (page, document) = loadService.loadDocument(request)
+
+        val prompt = request.prompt
+        if (prompt.isNullOrBlank()) {
+            return DEFAULT_INTRODUCE
+        }
+
+        return if (page.protocolStatus.isSuccess) {
+            session.chat(prompt, document.text).content
+        } else {
+            // Throw?
+            page.protocolStatus.toString()
+        }
+    }
+
     /**
      * Converts a request string into a PromptRequestL2 object.
      *

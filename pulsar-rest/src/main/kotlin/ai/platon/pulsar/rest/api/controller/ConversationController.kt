@@ -1,7 +1,6 @@
 package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.rest.api.entities.PromptRequest
-import ai.platon.pulsar.rest.api.service.ChatService
 import ai.platon.pulsar.rest.api.service.ConversationService
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
@@ -19,28 +18,28 @@ import java.util.concurrent.Executors
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class ConversationController(
-    val chatService: ChatService
+    val conversationService: ConversationService
 ) {
     private val conversationsCache = ConcurrentSkipListMap<String, String>()
     private val executor: ExecutorService = Executors.newCachedThreadPool()
 
     @GetMapping("")
     fun conversations(@RequestParam(value = "prompt") prompt: String): String {
-        return chatService.chat(prompt)
+        return conversationService.chat(prompt)
     }
 
     @GetMapping("/async")
     fun conversationsAsync(@RequestParam(value = "prompt") prompt: String): String {
         val id = UUID.randomUUID().toString()
         executor.submit {
-            conversationsCache[id] = chatService.chat(prompt)
+            conversationsCache[id] = conversationService.chat(prompt)
         }
         return id
     }
 
     @PostMapping("")
     fun conversationsPost(@RequestBody prompt: String): String {
-        return chatService.chat(prompt)
+        return conversationService.chat(prompt)
     }
 
     // async version
@@ -48,21 +47,21 @@ class ConversationController(
     fun conversationsPostAsync(@RequestBody prompt: String): String {
         val id = UUID.randomUUID().toString()
         executor.submit {
-            conversationsCache[id] = chatService.chat(prompt)
+            conversationsCache[id] = conversationService.chat(prompt)
         }
         return id
     }
 
     @PostMapping("/about")
     fun conversationsAbout(@RequestBody request: PromptRequest): String {
-        return chatService.chat(request)
+        return conversationService.chat(request)
     }
 
     @PostMapping("/about/async")
     fun conversationsAboutAsync(@RequestBody request: PromptRequest): String {
         val id = UUID.randomUUID().toString()
         executor.submit {
-            conversationsCache[id] = chatService.chat(request)
+            conversationsCache[id] = conversationService.chat(request)
         }
         return id
     }

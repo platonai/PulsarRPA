@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.ai.llm.PromptTemplateLoader
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.rest.api.common.*
-import ai.platon.pulsar.rest.api.service.ChatService
 import ai.platon.pulsar.rest.api.service.ConversationService
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.*
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class CommandRevisionController(
-    private val chatService: ChatService,
     private val conversationService: ConversationService,
 ) {
     @PostMapping(produces = [MediaType.TEXT_PLAIN_VALUE])
@@ -40,6 +38,6 @@ class CommandRevisionController(
             )
         ).load().render()
 
-        return chatService.chat(message)
+        return conversationService.chat(message)
     }
 }
