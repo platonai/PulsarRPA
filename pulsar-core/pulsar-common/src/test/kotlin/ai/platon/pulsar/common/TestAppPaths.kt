@@ -186,7 +186,7 @@ class TestAppPaths {
     
     @Test
     fun testGetTmp() {
-        val path = AppPaths.getTmp("first", "second", "third")
+        val path = AppPaths.getTmpDirectory("first", "second", "third")
         assertEquals(Paths.get(AppPaths.TMP_DIR.toString(), "first/second/third"), path)
     }
     
@@ -205,13 +205,13 @@ class TestAppPaths {
     
     @Test
     fun testGetProcTmpTmp() {
-        val path = AppPaths.getProcTmpTmp("first", "second", "third")
+        val path = AppPaths.getProcTmpTmpDirectory("first", "second", "third")
         assertEquals(Paths.get(AppPaths.PROC_TMP_DIR.resolve("tmp").toString(), "first/second/third"), path)
     }
     
     @Test
     fun testGetRandomProcTmpTmp() {
-        val path = AppPaths.getRandomProcTmpTmp("prefix-", ".suffix")
+        val path = AppPaths.getRandomProcTmpTmpDirectory("prefix-", ".suffix")
         assertTrue(path.startsWith(AppPaths.PROC_TMP_DIR.resolve("tmp")))
         assertTrue(path.toString().endsWith(".suffix"))
     }

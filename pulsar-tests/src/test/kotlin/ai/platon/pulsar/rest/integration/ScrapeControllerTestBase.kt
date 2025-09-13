@@ -10,16 +10,10 @@ import org.junit.jupiter.api.Test
 open class ScrapeControllerTestBase : IntegrationTestBase() {
 
     companion object {
-        val urls = mapOf(
-            "productListPage" to "https://www.amazon.com/b?node=1292115011",
-            "productDetailPage" to "https://www.amazon.com/dp/B0FFTT2J6N"
-        )
-
         @JvmStatic
         @BeforeAll
         fun `Ensure resources are prepared`() {
-            TestHelper.ensurePage(requireNotNull(urls["productListPage"]))
-            TestHelper.ensurePage(requireNotNull(urls["productDetailPage"]))
+            TestHelper.ensurePages()
         }
     }
 
