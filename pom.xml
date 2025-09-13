@@ -89,20 +89,10 @@
     <!-- Default active modules. The main goal is to allow the user to run PulsarApplication
      with a single click in the IDE right after opening the project. -->
     <modules>
-        <module>pulsar-resources</module>
-        <module>pulsar-common</module>
-        <module>pulsar-persist</module>
-        <module>pulsar-dom</module>
+        <module>pulsar-core</module>
         <module>pulsar-third</module>
         <module>pulsar-tools</module>
-        <module>pulsar-skeleton</module>
 
-        <module>pulsar-ql-common</module>
-        <module>pulsar-ql</module>
-
-        <module>pulsar-plugins</module>
-
-        <module>pulsar-spring-support</module>
         <module>pulsar-rest</module>
 
         <module>pulsar-client</module>
@@ -117,19 +107,10 @@
             <!-- Deprecated, keep it just for backward compatibility, we will remove this profile in the further -->
             <id>all-modules</id>
             <modules>
-                <module>pulsar-common</module>
-                <module>pulsar-persist</module>
+                <module>pulsar-core</module>
                 <module>pulsar-third</module>
-                <module>pulsar-skeleton</module>
-                <module>pulsar-resources</module>
-                <module>pulsar-dom</module>
-                <module>pulsar-plugins</module>
 
                 <module>pulsar-tools</module>
-                <module>pulsar-ql-common</module>
-                <module>pulsar-ql</module>
-
-                <module>pulsar-spring-support</module>
                 <module>pulsar-rest</module>
 
                 <module>pulsar-tests</module>
@@ -139,15 +120,6 @@
                 <module>pulsar-app</module>
 
                 <module>pulsar-bom</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>dev-plugins</id>
-
-            <modules>
-                <module>pulsar-skeleton</module>
-                <module>pulsar-plugins</module>
             </modules>
         </profile>
 
@@ -232,19 +204,10 @@
                 <deploy-active>true</deploy-active>
             </properties>
             <modules>
-                <module>pulsar-common</module>
-                <module>pulsar-persist</module>
+                <module>pulsar-core</module>
                 <module>pulsar-third</module>
-                <module>pulsar-skeleton</module>
-                <module>pulsar-resources</module>
-                <module>pulsar-dom</module>
-                <module>pulsar-plugins</module>
 
                 <module>pulsar-tools</module>
-                <module>pulsar-ql-common</module>
-                <module>pulsar-ql</module>
-
-                <module>pulsar-spring-support</module>
                 <module>pulsar-rest</module>
 
                 <module>pulsar-tests</module>
@@ -350,35 +313,6 @@
                             </perPackageOptions>
                         </configuration>
                     </plugin>
-
-<!--                    &lt;!&ndash; Generate Kotlin documentation &ndash;&gt;-->
-<!--                    <plugin>-->
-<!--                        <groupId>org.jetbrains.dokka</groupId>-->
-<!--                        <artifactId>dokka-maven-plugin</artifactId>-->
-<!--                        <version>${dokka.version}</version>-->
-<!--                        <executions>-->
-<!--                            <execution>-->
-<!--                                <phase>prepare-package</phase>-->
-<!--                                <goals>-->
-<!--                                    <goal>javadocJar</goal>-->
-<!--                                </goals>-->
-<!--                            </execution>-->
-<!--                        </executions>-->
-<!--                        <configuration>-->
-<!--                            <sourceDirectories>-->
-<!--                                <dir>${project.basedir}/src/main/kotlin</dir>-->
-<!--                                <dir>${project.basedir}/src/main/java</dir>-->
-<!--                            </sourceDirectories>-->
-<!--                            <documentedVisibilities>-->
-<!--                                <visibility>PUBLIC</visibility>-->
-<!--                                <visibility>PROTECTED</visibility>-->
-<!--                            </documentedVisibilities>-->
-<!--                            <skipEmptyPackages>true</skipEmptyPackages>-->
-<!--                            <reportUndocumented>false</reportUndocumented>-->
-<!--                            <platform>jvm</platform>-->
-<!--                            <jdkVersion>11</jdkVersion>-->
-<!--                        </configuration>-->
-<!--                    </plugin>-->
 
                     <!-- GPG signing -->
                     <plugin>
