@@ -63,9 +63,6 @@ Once the document is fully loaded:
 class ConversationServiceTest {
 
     @Autowired
-    private lateinit var chatService: ChatService
-
-    @Autowired
     private lateinit var conf: ImmutableConfig
 
     @Autowired
@@ -203,7 +200,7 @@ Page summary prompt: Provide a brief introduction of this product.
     fun `When chat about a page then the result is not empty`() {
         val request = PromptRequest(PRODUCT_LIST_URL, "Tell me something about the page")
 
-        val response = chatService.chat(request)
+        val response = conversationService.chat(request)
         println(response)
         assertTrue { response.isNotEmpty() }
     }
@@ -220,7 +217,7 @@ Page summary prompt: Provide a brief introduction of this product.
             PRODUCT_DETAIL_URL, "Tell me something about the page", "", actions = actions
         )
 
-        val response = chatService.chat(request)
+        val response = conversationService.chat(request)
         println(response)
         assertTrue { response.isNotEmpty() }
     }
