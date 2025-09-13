@@ -147,8 +147,6 @@ data class CommandRequest(
     var pageSummaryPrompt: String? = null,
     var dataExtractionRules: String? = null,
     var uriExtractionRules: String? = null,
-    @Deprecated("Use uriExtractionRules instead")
-    var linkExtractionRules: String? = null,
     var xsql: String? = null,
     var richText: Boolean? = null,
     var mode: String = "sync", // "sync" | "async"

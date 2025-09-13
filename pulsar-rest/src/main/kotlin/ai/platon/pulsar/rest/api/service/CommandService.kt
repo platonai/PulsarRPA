@@ -265,7 +265,7 @@ class CommandService(
             }
         }
 
-        var uriExtractionRules = request.uriExtractionRules ?: request.linkExtractionRules
+        var uriExtractionRules = request.uriExtractionRules
         uriExtractionRules = RestAPIPromptUtils.normalizeURIExtractionRules(uriExtractionRules)
         if (uriExtractionRules != null) {
             if (!uriExtractionRules.startsWith("Regex:")) {
