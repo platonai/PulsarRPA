@@ -16,10 +16,10 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.event.EventEmitter
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 
 enum class EmulateEvents {
@@ -29,8 +29,6 @@ enum class EmulateEvents {
     didInteract,
     willCheckDocumentState,
     documentFullyLoaded,
-    @Deprecated("Use documentFullyLoaded instead", ReplaceWith("documentFullyLoaded"))
-    documentActuallyReady,
     willScroll,
     didScroll,
     documentSteady,
@@ -74,9 +72,6 @@ interface BrowserEmulator: EventEmitter<EmulateEvents>, AutoCloseable {
     suspend fun onWillCheckDocumentState(page: WebPage, driver: WebDriver)
 
     suspend fun onDocumentFullyLoaded(page: WebPage, driver: WebDriver)
-
-    @Deprecated("Use onDocumentFullyLoaded instead", ReplaceWith("onDocumentFullyLoaded"))
-    suspend fun onDocumentActuallyReady(page: WebPage, driver: WebDriver)
 
     suspend fun onWillScroll(page: WebPage, driver: WebDriver)
 

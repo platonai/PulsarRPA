@@ -69,8 +69,8 @@ class PrintFlowEventHandlers: DefaultPageEventHandlers() {
             onWillCheckDocumentState.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. browse - onWillCheckDocumentState")
             }
-            onDocumentActuallyReady.addLast { page: WebPage, driver: WebDriver ->
-                println("$seq. browse - onDocumentActuallyReady")
+            onDocumentFullyLoaded.addLast { page: WebPage, driver: WebDriver ->
+                println("$seq. browse - onDocumentFullyLoaded")
             }
             onWillScroll.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. browse - onWillScroll")
@@ -145,7 +145,7 @@ fun main() {
 8. browse - onNavigated
 9. browse - onWillNavigate
 10. browse - onWillCheckDocumentState
-11. browse - onDocumentActuallyReady
+11. browse - onDocumentFullyLoaded
 12. browse - onWillScroll
 13. browse - onDidScroll
 14. browse - onDocumentSteady

@@ -59,7 +59,7 @@ class SearchAgent {
         val be = options.eventHandlers.browseEventHandlers
         val le = options.eventHandlers.loadEventHandlers
 
-        be.onDocumentActuallyReady.addLast { page, driver ->
+        be.onDocumentFullyLoaded.addLast { page, driver ->
             driver.scrollTo("ol#b_results li:nth-child(3) h2")
             driver.scrollTo("ol#b_results li:nth-child(5) h2")
             driver.scrollTo("ol#b_results li:nth-child(8) h2")
@@ -95,7 +95,7 @@ class SearchAgent {
         val be = options.eventHandlers.browseEventHandlers
         val le = options.eventHandlers.loadEventHandlers
 
-        be.onDocumentActuallyReady.addLast { page, driver ->
+        be.onDocumentFullyLoaded.addLast { page, driver ->
             driver.scrollTo("h3:nth-child(3)")
             driver.scrollTo("h3:nth-child(5)")
             driver.scrollTo("h3:nth-child(8)")

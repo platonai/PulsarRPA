@@ -58,8 +58,6 @@ abstract class AbstractBrowseEventHandlers(
 
     override val onWillCheckDocumentState: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
     override val onDocumentFullyLoaded: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
-    @Deprecated("Use onDocumentFullyReady instead", replaceWith = ReplaceWith("onDocumentFullyReady"))
-    override val onDocumentActuallyReady: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
 
     override val onDocumentSteady: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
 
@@ -85,7 +83,6 @@ abstract class AbstractBrowseEventHandlers(
 
         onWillCheckDocumentState.addLast(other.onWillCheckDocumentState)
         onDocumentFullyLoaded.addLast(other.onDocumentFullyLoaded)
-        onDocumentActuallyReady.addLast(other.onDocumentActuallyReady)
 
         onWillScroll.addLast(other.onWillScroll)
         onDidScroll.addLast(other.onDidScroll)

@@ -223,7 +223,7 @@ val prompts = """
 """
 
 val eventHandlers = DefaultPageEventHandlers()
-eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page: Page, driver: WebDriver ->
+eventHandlers.browseEventHandlers.onDocumentFullyLoaded.addLast { page: Page, driver: WebDriver ->
     val result = session.instruct(prompts, driver)
 }
 session.open(url, eventHandlers)

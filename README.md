@@ -224,7 +224,7 @@ get the text of the element with id 'title'
 """
 
 val eventHandlers = DefaultPageEventHandlers()
-eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
+eventHandlers.browseEventHandlers.onDocumentFullyLoaded.addLast { page, driver ->
     val result = session.instruct(prompts, driver)
 }
 session.open(url, eventHandlers)
