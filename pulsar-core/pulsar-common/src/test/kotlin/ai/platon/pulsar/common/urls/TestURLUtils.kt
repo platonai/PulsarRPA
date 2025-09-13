@@ -71,12 +71,15 @@ class TestURLUtils {
         val url = "https://www.amazon.com/s?k=sleep&i=amazonfresh&bbn=10329849011&page=2&qid=1609388361&ref=sr_pg_2"
         val stripedUrl = "https://www.amazon.com/s?k=sleep&i=amazonfresh"
 
-        assertTrue { "10329849011" in URLUtils.keepQueryParameters(url, "bbn") }
+        var kept = URLUtils.keepQueryParameters(url, "bbn")
+        assertTrue(kept) { "10329849011" in kept }
 
-        assertTrue { "page" in URLUtils.keepQueryParameters(url, "page") }
-        assertTrue { "bbn" !in URLUtils.keepQueryParameters(url, "page") }
+        kept = URLUtils.keepQueryParameters(url, "page")
+        assertTrue(kept) { "page" in kept }
+        assertTrue(kept) { "bbn" !in kept }
 
-        assertEquals(stripedUrl, URLUtils.keepQueryParameters(url, "k", "i"))
+        kept = URLUtils.keepQueryParameters(url, "k", "i")
+        assertEquals(stripedUrl, kept)
     }
 
     companion object {
