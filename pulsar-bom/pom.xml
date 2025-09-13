@@ -208,35 +208,6 @@
                         </configuration>
                     </plugin>
 
-                    <!--                    &lt;!&ndash; Generate Kotlin documentation &ndash;&gt;-->
-                    <!--                    <plugin>-->
-                    <!--                        <groupId>org.jetbrains.dokka</groupId>-->
-                    <!--                        <artifactId>dokka-maven-plugin</artifactId>-->
-                    <!--                        <version>${dokka.version}</version>-->
-                    <!--                        <executions>-->
-                    <!--                            <execution>-->
-                    <!--                                <phase>prepare-package</phase>-->
-                    <!--                                <goals>-->
-                    <!--                                    <goal>javadocJar</goal>-->
-                    <!--                                </goals>-->
-                    <!--                            </execution>-->
-                    <!--                        </executions>-->
-                    <!--                        <configuration>-->
-                    <!--                            <sourceDirectories>-->
-                    <!--                                <dir>${project.basedir}/src/main/kotlin</dir>-->
-                    <!--                                <dir>${project.basedir}/src/main/java</dir>-->
-                    <!--                            </sourceDirectories>-->
-                    <!--                            <documentedVisibilities>-->
-                    <!--                                <visibility>PUBLIC</visibility>-->
-                    <!--                                <visibility>PROTECTED</visibility>-->
-                    <!--                            </documentedVisibilities>-->
-                    <!--                            <skipEmptyPackages>true</skipEmptyPackages>-->
-                    <!--                            <reportUndocumented>false</reportUndocumented>-->
-                    <!--                            <platform>jvm</platform>-->
-                    <!--                            <jdkVersion>11</jdkVersion>-->
-                    <!--                        </configuration>-->
-                    <!--                    </plugin>-->
-
                     <!-- GPG signing -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
