@@ -146,9 +146,6 @@ interface BrowseEventHandlers {
      * */
     val onDocumentFullyLoaded: WebPageWebDriverEventHandler
 
-    @Deprecated("Use onDocumentFullyReady instead", ReplaceWith("onDocumentFullyReady"))
-    val onDocumentActuallyReady: WebPageWebDriverEventHandler
-
     /**
      * Fire when we are about to perform scrolling on the page.
      * */
@@ -166,7 +163,7 @@ interface BrowseEventHandlers {
      * clicking a button, filling a form, and so on.
      *
      * The event is fired after the completion of the following actions:
-     * onDocumentActuallyReady, onWillScroll, onDidScroll
+     * onDocumentFullyLoaded, onWillScroll, onDidScroll
      *
      * The event is fired before the following actions:
      * onWillComputeFeature, onFeatureComputed, onDidInteract, onWillStopTab, onTabStopped

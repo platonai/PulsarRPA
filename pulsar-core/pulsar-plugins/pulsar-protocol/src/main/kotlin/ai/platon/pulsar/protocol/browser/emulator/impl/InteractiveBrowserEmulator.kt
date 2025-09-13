@@ -130,9 +130,6 @@ open class InteractiveBrowserEmulator(
         on1(EmulateEvents.documentFullyLoaded) { page: WebPage, driver: WebDriver ->
             this.onDocumentFullyLoaded(page, driver)
         }
-        on1(EmulateEvents.documentActuallyReady) { page: WebPage, driver: WebDriver ->
-            this.onDocumentActuallyReady(page, driver)
-        }
         on1(EmulateEvents.willScroll) { page: WebPage, driver: WebDriver ->
             this.onWillScroll(page, driver)
         }
@@ -192,17 +189,9 @@ open class InteractiveBrowserEmulator(
 
     override suspend fun onDocumentFullyLoaded(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDocumentFullyLoaded?.invoke(page, driver)
-        // The more specific handlers has the opportunity to override the result of more general handlers.
         page.browseEventHandlers?.onDocumentFullyLoaded?.invoke(page, driver)
     }
 
-    @Deprecated("Use onDocumentFullyLoaded instead", replaceWith = ReplaceWith("onDocumentFullyLoaded"))
-    override suspend fun onDocumentActuallyReady(page: WebPage, driver: WebDriver) {
-        GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onDocumentActuallyReady?.invoke(page, driver)
-        // The more specific handlers has the opportunity to override the result of more general handlers.
-        page.browseEventHandlers?.onDocumentActuallyReady?.invoke(page, driver)
-    }
-    
     override suspend fun onWillScroll(page: WebPage, driver: WebDriver) {
         GlobalEventHandlers.pageEventHandlers?.browseEventHandlers?.onWillScroll?.invoke(page, driver)
         // The more specific handlers has the opportunity to override the result of more general handlers.
@@ -599,8 +588,6 @@ open class InteractiveBrowserEmulator(
         if (result.protocolStatus.isSuccess) {
             task.driver.navigateEntry.documentReadyTime = Instant.now()
             emit1(EmulateEvents.documentFullyLoaded, page, driver)
-            // deprecated, will be removed in the future
-            emit1(EmulateEvents.documentActuallyReady, page, driver)
         }
 
         if (result.state.isContinue) {

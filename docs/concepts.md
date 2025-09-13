@@ -111,7 +111,7 @@ When fetching webpages using a real browser, we may need to interact with the pa
 
 ```kotlin
 val options = session.options(args)
-options.eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page, driver ->
+options.eventHandlers.browseEventHandlers.onDocumentFullyLoaded.addLast { page, driver ->
     driver.scrollDown()
 }
 session.load(url, options)

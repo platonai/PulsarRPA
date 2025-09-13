@@ -32,7 +32,7 @@ class MassiveUrlPoolTest: MassiveTestBase() {
         val le = link.eventHandlers.loadEventHandlers
         val be = link.eventHandlers.browseEventHandlers
 
-        be.onDocumentActuallyReady.addLast { page, driver ->
+        be.onDocumentFullyLoaded.addLast { page, driver ->
             val text = driver.selectFirstTextOrNull("body")
             text
         }

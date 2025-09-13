@@ -56,7 +56,7 @@
 #### 🧩 下载
 
 ```shell
-curl -L -o Browser4.jar https://github.com/platonai/browser4/releases/download/v3.0.14/Browser4.jar
+curl -L -o Browser4.jar https://github.com/platonai/browser4/releases/download/v4.0.0/Browser4.jar
 ```
 
 #### 🚀 运行
@@ -76,7 +76,7 @@ java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar Browser4.jar
 <details>
 <summary>📂 资源</summary>
 
-* 🟦 [GitHub Release 下载](https://github.com/platonai/browser4/releases/download/v3.0.14/Browser4.jar)
+* 🟦 [GitHub Release 下载](https://github.com/platonai/browser4/releases/download/v4.0.0/Browser4.jar)
 * 📁 [镜像/备份下载](https://static.platonai.cn/repo/ai/platon/pulsar/)
 * 🛠️ [LLM配置指南](docs/config/llm/llm-config.md)
 * 🛠️ [配置指南](docs/config.md)
@@ -223,7 +223,7 @@ val prompts = """
 """
 
 val eventHandlers = DefaultPageEventHandlers()
-eventHandlers.browseEventHandlers.onDocumentActuallyReady.addLast { page: Page, driver: WebDriver ->
+eventHandlers.browseEventHandlers.onDocumentFullyLoaded.addLast { page: Page, driver: WebDriver ->
     val result = session.instruct(prompts, driver)
 }
 session.open(url, eventHandlers)

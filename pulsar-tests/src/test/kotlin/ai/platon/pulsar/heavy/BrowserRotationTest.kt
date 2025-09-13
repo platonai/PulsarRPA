@@ -91,7 +91,7 @@ class BrowserRotationTest : MassiveTestBase() {
             null
         }
 
-        be.onDocumentActuallyReady.addLast { page, driver ->
+        be.onDocumentFullyLoaded.addLast { page, driver ->
             val text = driver.selectFirstTextOrNull("body")
             // check text
             delay(3000)

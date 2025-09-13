@@ -24,7 +24,7 @@ internal class RPACrawler(private val session: PulsarSession = createSession()) 
 
         val be = options.eventHandlers.browseEventHandlers
 
-        be.onDocumentActuallyReady.addLast { page, driver ->
+        be.onDocumentFullyLoaded.addLast { page, driver ->
             fieldSelectors.values.forEach { interact(it, driver) }
         }
 

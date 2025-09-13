@@ -41,7 +41,7 @@ class LoadService {
 
         val actions = request.actions
         if (actions != null) {
-            be.onDocumentActuallyReady.addLast { page, driver ->
+            be.onDocumentFullyLoaded.addLast { page, driver ->
                 actions.forEach { driver.instruct(it) }
             }
         }
@@ -61,8 +61,7 @@ class LoadService {
             actions.forEach { driver.instruct(it) }
         } }
 
-        // TODO: use be.onDocumentFullyLoaded instead
-        request.onPageReadyActions?.let { actions -> be.onDocumentActuallyReady.addLast { page, driver ->
+        request.onPageReadyActions?.let { actions -> be.onDocumentFullyLoaded.addLast { page, driver ->
             actions.forEach { driver.instruct(it) }
         } }
 
