@@ -22,7 +22,7 @@
     <name>Pulsar Common</name>
 
     <dependencies>
-        <!-- Spring core is the first class dependency now -->
+        <!-- Spring core is the first-class dependency now -->
         <!-- Requires Environment -->
         <dependency>
             <groupId>org.springframework</groupId>

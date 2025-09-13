@@ -98,7 +98,8 @@
         <module>pulsar-client</module>
         <module>pulsar-tests</module>
 
-        <module>pulsar-app</module>
+        <module>pulsar-examples</module>
+        <module>pulsar-browser4</module>
     </modules>
 
     <profiles>
@@ -117,7 +118,6 @@
                 <module>pulsar-all</module>
 
                 <module>pulsar-client</module>
-                <module>pulsar-app</module>
 
                 <module>pulsar-bom</module>
             </modules>
@@ -214,9 +214,11 @@
                 <module>pulsar-all</module>
 
                 <module>pulsar-client</module>
-                <module>pulsar-app</module>
 
                 <module>pulsar-bom</module>
+
+                <module>pulsar-examples</module>
+                <module>pulsar-browser4</module>
             </modules>
 
             <build>
