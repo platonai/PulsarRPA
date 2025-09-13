@@ -26,7 +26,7 @@ import kotlin.reflect.KClass
  * [PulsarContext] consists of a set of highly customizable components that provide
  * the core set of interfaces of the system and is used to create [PulsarSession].
  */
-interface PulsarContext: AutoCloseable {
+interface PulsarContext: java.lang.AutoCloseable {
 
     /**
      * The context id
@@ -97,7 +97,7 @@ interface PulsarContext: AutoCloseable {
      * @param closable The object to close
      * @param priority The priority of the object, the higher the priority, the earlier the object is closed
      * */
-    fun registerClosable(closable: AutoCloseable, priority: Int = 0)
+    fun registerClosable(closable: java.lang.AutoCloseable, priority: Int = 0)
 
     /**
      * Normalize an url, the url can be in one of the following forms:
