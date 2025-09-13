@@ -66,7 +66,7 @@ class NetworkResourceResponse(
     val success: Boolean = false,
     val netError: Int = 0,
     val netErrorName: String = "",
-    /** Request not made */
+    /** Request isn't made */
     val httpStatusCode: Int = 0,
     val stream: String? = null,
     val headers: Map<String, Any>? = null,
