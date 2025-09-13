@@ -56,7 +56,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>ai.platon.pulsar.app.PulsarApplicationKt</mainClass>
+                    <mainClass>ai.platon.pulsar.app.Browser4ApplicationKt</mainClass>
                     <addResources>true</addResources>
                     <executable>true</executable>
                 </configuration>
