@@ -104,25 +104,6 @@
 
     <profiles>
 
-        <profile>
-            <!-- Deprecated, keep it just for backward compatibility, we will remove this profile in the further -->
-            <id>all-modules</id>
-            <modules>
-                <module>pulsar-core</module>
-                <module>pulsar-third</module>
-
-                <module>pulsar-tools</module>
-                <module>pulsar-rest</module>
-
-                <module>pulsar-tests</module>
-                <module>pulsar-all</module>
-
-                <module>pulsar-client</module>
-
-                <module>pulsar-bom</module>
-            </modules>
-        </profile>
-
         <!-- Development profile -->
         <profile>
             <id>dev</id>
@@ -144,8 +125,8 @@
             </properties>
             <build>
                 <plugins>
-                    <!--用于�?Maven 项目中收集和生成 Java 代码的测试覆盖率报告 -->
-                    <!-- instructions covered ratio is expected minimum is 0.70 -->
+                    <!--用于 Maven 项目中收集和生成 Java 代码的测试覆盖率报告 -->
+                    <!-- instruction covered ratio is expected minimum is 0.70 -->
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
@@ -272,10 +253,10 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <!-- Set to true to skip dokka task, default: false -->
+                            <!-- Set to true to skip a dokka task, default: false -->
                             <skip>false</skip>
 
-                            <!-- Use default or set to custom path to cache directory to enable package-list caching. -->
+                            <!-- Use default or set to a custom path to cache directory to enable package-list caching. -->
                             <!-- When set to default, caches stored in $USER_HOME/.cache/dokka -->
                             <cacheRoot>default</cacheRoot>
 
