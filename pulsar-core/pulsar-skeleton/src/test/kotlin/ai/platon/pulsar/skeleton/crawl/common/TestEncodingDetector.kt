@@ -68,7 +68,7 @@ class TestEncodingDetector {
         detector.autoDetectClues(page, true)
         detector.addClue("windows-1254", "sniffed")
         encoding = detector.guessEncoding(page, "utf-8")
-        assertEquals("windows-1254", encoding.toLowerCase())
+        assertEquals("windows-1254", encoding.lowercase())
         // enable autodetection
         conf.setInt(EncodingDetector.MIN_CONFIDENCE_KEY, 50)
         page = GoraWebPage.newWebPage(url, conf)
@@ -80,6 +80,6 @@ class TestEncodingDetector {
         detector.autoDetectClues(page, true)
         detector.addClue("utf-32", "sniffed")
         encoding = detector.guessEncoding(page, "utf-8")
-        assertEquals("utf-8", encoding.toLowerCase())
+        assertEquals("utf-8", encoding.lowercase())
     }
 }
