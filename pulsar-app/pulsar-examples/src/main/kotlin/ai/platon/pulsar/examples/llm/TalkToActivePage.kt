@@ -10,7 +10,7 @@ import java.time.OffsetDateTime
  * Demonstrates talking to the active webpage.
  * */
 fun main() {
-    // Use the default browser for best experience
+    // Use the default browser for the best experience
     // Enable Single Page Application mode to avoid timeout
     PulsarSettings().withDefaultBrowser().withSPA()
 

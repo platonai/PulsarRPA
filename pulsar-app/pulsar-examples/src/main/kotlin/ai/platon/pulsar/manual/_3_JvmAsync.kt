@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples
+package ai.platon.pulsar.manual
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.dom.FeaturedDocument

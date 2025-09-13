@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples
+package ai.platon.pulsar.manual
 
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
@@ -105,7 +105,7 @@ internal class WebDriverDemo(private val session: PulsarSession = createSession(
 }
 
 /**
- * Demonstrates how to use web driver to interact with the page.
+ * Demonstrates how to use a web driver to interact with the page.
  * */
 fun main() {
     // Set the system to work with single page applications (SPA)

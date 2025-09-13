@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples
+package ai.platon.pulsar.manual
 
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.common.options.LoadOptions

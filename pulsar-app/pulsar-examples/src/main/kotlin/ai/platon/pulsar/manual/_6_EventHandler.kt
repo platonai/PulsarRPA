@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples
+package ai.platon.pulsar.manual
 
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument

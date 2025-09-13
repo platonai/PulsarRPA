@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples
+package ai.platon.pulsar.manual
 
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.ql.context.SQLContexts
