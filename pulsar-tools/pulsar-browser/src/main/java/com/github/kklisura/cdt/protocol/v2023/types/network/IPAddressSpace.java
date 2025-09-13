@@ -23,7 +23,10 @@ package com.github.kklisura.cdt.protocol.v2023.types.network;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public enum IPAddressSpace {
-  @JsonProperty("Local")
+//  @JsonProperty("Local")
+//  LOCAL,
+  // vincent, 2025/9/13 - protocol upgraded
+  @JsonProperty("Loopback")
   LOCAL,
   @JsonProperty("Private")
   PRIVATE,
