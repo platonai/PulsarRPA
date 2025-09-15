@@ -161,6 +161,10 @@ interface PulsarSession : AutoCloseable {
      * */
     val id: Int
     /**
+     * Check if the session is active.
+     * */
+    val isActive: Boolean
+    /**
      * The pulsar context which is used to create this session.
      * */
     val context: PulsarContext

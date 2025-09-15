@@ -82,14 +82,14 @@ abstract class AbstractPulsarSession(
     override val display get() = "$id"
     
     private val closed = AtomicBoolean()
-    val isActive get() = !closed.get() && context.isActive
-    
+    override val isActive get() = !closed.get() && context.isActive
+
     private val dataCache = ConcurrentHashMap<String, Any>()
     private var enablePDCache = true
     override val globalCache get() = context.globalCache
     override val pageCache get() = globalCache.pageCache
     override val documentCache get() = globalCache.documentCache
-    
+
     private val contextOrNull get() = if (isActive) context else null
     private val globalCacheFactoryOrNull get() = contextOrNull?.globalCacheFactory
     private val pageCacheOrNull get() = globalCacheFactoryOrNull?.globalCache?.pageCache
@@ -123,7 +123,7 @@ abstract class AbstractPulsarSession(
         }
         return normalize(opts)
     }
-    
+
     override fun property(name: String): String? {
         return sessionConfig[name] ?: unmodifiedConfig[name]
     }

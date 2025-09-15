@@ -54,12 +54,6 @@ interface PulsarContext: java.lang.AutoCloseable {
     val globalCache: GlobalCache
 
     /**
-     * The url pool to fetch
-     * */
-    @Deprecated("Use globalCache.urlPool instead", ReplaceWith("globalCache.urlPool"))
-    val crawlPool: UrlPool
-
-    /**
      * The main loops
      * */
     val crawlLoops: CrawlLoops

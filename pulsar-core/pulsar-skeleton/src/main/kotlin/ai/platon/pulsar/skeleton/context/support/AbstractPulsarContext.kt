@@ -155,10 +155,7 @@ abstract class AbstractPulsarContext(
     open val loadComponent: LoadComponent get() = getBean()
     
     override val globalCache: GlobalCache get() = globalCacheFactory.globalCache
-    
-    @Deprecated("Use globalCache.urlPool instead", replaceWith = ReplaceWith("globalCache.urlPool"))
-    override val crawlPool: UrlPool get() = globalCache.urlPool
-    
+
     override val crawlLoops: CrawlLoops get() = getBean()
     
     /**
