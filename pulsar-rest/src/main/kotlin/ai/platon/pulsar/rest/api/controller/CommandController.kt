@@ -44,20 +44,20 @@ class CommandController(
      * Execute a command with plain text input and output.
      *
      * @param plainCommand The plain text command
-     * @param sync Whether to execute the command synchronously
-     * @param mode The execution mode, e.g., "sync" or "async"
+     * @param async Whether to execute the command asynchronously
+     * @param mode The execution mode, e.g., "sync" or "async". (Deprecated: use [async] instead)
      * @return Command response
      * */
     @PostMapping("/plain")
     fun submitPlainCommand(
         @RequestBody plainCommand: String,
-        @RequestParam(name = "sync") sync: Boolean? = null,
+        @RequestParam(name = "async") async: Boolean? = null,
         @RequestParam(name = "mode") mode: String? = null,
     ): ResponseEntity<Any> {
         val request = conversationService.normalizePlainCommand(plainCommand)
             ?: return ResponseEntity.badRequest().body("Invalid plain command: $plainCommand")
 
-        val async = request.async ?: (mode?.lowercase() == "async")
+        val async = async ?: (mode?.lowercase() == "async")
         request.mode = mode?.lowercase()
         request.async = async
 
