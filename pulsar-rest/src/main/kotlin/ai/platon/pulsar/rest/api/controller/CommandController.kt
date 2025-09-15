@@ -28,7 +28,7 @@ class CommandController(
      * @param request The structured command request
      * @return Structured command response
      * */
-    @PostMapping
+    @PostMapping("/")
     fun submitCommand(@RequestBody request: CommandRequest): ResponseEntity<Any> {
         val async = request.async ?: (request.mode?.lowercase() == "async")
 

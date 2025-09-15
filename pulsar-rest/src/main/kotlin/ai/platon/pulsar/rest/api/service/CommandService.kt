@@ -192,13 +192,20 @@ class CommandService(
             return
         }
 
+        executeCommandStepByStep(page, document, request, status)
+    }
+
+    internal fun executeCommandStepByStep(page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus) {
+        val url = request.url
+        require(URLUtils.isStandard(url)) { "Invalid URL: $url" }
+
         status.pageStatusCode = page.protocolStatus.minorCode
         status.pageContentBytes = page.originalContentLength.toInt()
         if (!page.protocolStatus.isSuccess) {
             return
         }
 
-        executeCommandStepByStep(page, document, request, status)
+        doExecuteCommandStepByStep(page, document, request, status)
         logger.info("Finished executeCommandStepByStep | status: {} | {}", status.status, document.baseURI)
 
         val sqlTemplate = request.xsql
@@ -211,17 +218,17 @@ class CommandService(
         status.refresh(ResourceStatus.SC_OK)
     }
 
-    private fun executeCommandStepByStep(
+    private fun doExecuteCommandStepByStep(
         page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus
     ) {
         try {
-            doExecuteCommandStepByStep(page, document, request, status)
+            doExecuteCommandStepByStep2(page, document, request, status)
         } catch (e: Exception) {
             status.failed(ResourceStatus.SC_EXPECTATION_FAILED)
         }
     }
 
-    private fun doExecuteCommandStepByStep(
+    private fun doExecuteCommandStepByStep2(
         page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus
     ) {
         // the 0-based screen number, 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.

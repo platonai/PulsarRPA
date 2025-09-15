@@ -136,7 +136,6 @@ data class W3DocumentRequest(
  * @property uriExtractionRules A regex pattern to extract specific URIs from the page, e.g. "links containing /dp/".
  * @property xsql An X-SQL query for structured data extraction, e.g. "select dom_first_text(dom, '#title') as title, llm_extract(dom, 'price') as price".
  * @property richText Whether to retain rich text formatting in the extracted content.
- * @property spa Indicates if the target page is a Single Page Application (SPA).
  * @property async If true, the command is executed asynchronous; otherwise, it's synchronously.
  * @property mode The execution mode, either "sync" or "async", default to "sync". (Deprecated: use [async] instead)
  */
@@ -145,15 +144,16 @@ data class CommandRequest(
     var args: String? = null,
     var onBrowserLaunchedActions: List<String>? = null,
     var onPageReadyActions: List<String>? = null,
+    var actions: List<String>? = null,
     var pageSummaryPrompt: String? = null,
     var dataExtractionRules: String? = null,
     var uriExtractionRules: String? = null,
     var xsql: String? = null,
     var richText: Boolean? = null,
-    var spa: Boolean? = null,
     var async: Boolean? = null,
     @Deprecated("Use async instead")
     var mode: String? = null, // "sync" or "async", default to "sync"
+    var id: String? = null,
 ) {
     fun hasAction(): Boolean {
         return !onBrowserLaunchedActions.isNullOrEmpty() || !onPageReadyActions.isNullOrEmpty()
@@ -335,3 +335,22 @@ fun CommandStatus.refreshed(lastModifiedTime: Instant): Boolean {
     val modifiedTime = this.lastModifiedTime ?: return false
     return modifiedTime > lastModifiedTime
 }
+
+data class NavigateRequest(
+    var url: String,
+)
+
+data class ActRequest(
+    var id: String,
+    var act: String,
+    val xsql: String? = null,
+)
+
+data class ExtractRequest(
+    var id: String,
+    var prompt: String
+)
+
+data class ScreenshotRequest(
+    var id: String
+)

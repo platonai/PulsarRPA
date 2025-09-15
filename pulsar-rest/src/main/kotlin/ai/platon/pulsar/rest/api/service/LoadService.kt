@@ -57,10 +57,6 @@ class LoadService {
         val args = request.enhanceArgs()
         val options = session.options(args)
 
-        if (request.spa == true) {
-            PulsarSettings().withSPA()
-        }
-
         val be = options.eventHandlers.browseEventHandlers
 
         request.onBrowserLaunchedActions?.let { actions -> be.onBrowserLaunched.addLast { page, driver ->
