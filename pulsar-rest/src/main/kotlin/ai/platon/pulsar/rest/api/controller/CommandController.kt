@@ -30,27 +30,43 @@ class CommandController(
      * */
     @PostMapping
     fun submitCommand(@RequestBody request: CommandRequest): ResponseEntity<Any> {
-        return when (request.mode) {
-            "sync" -> ResponseEntity.ok(commandService.executeSync(request))
-            "async" -> ResponseEntity.ok(commandService.submitAsync(request))
-            else -> ResponseEntity.badRequest().body("Invalid mode: ${request.mode}")
+        val async = request.async ?: (request.mode?.lowercase() == "async")
+
+        val response = when {
+            async -> commandService.submitAsync(request)
+            else -> commandService.executeSync(request)
         }
+
+        return ResponseEntity.ok(response)
     }
 
+    /**
+     * Execute a command with plain text input and output.
+     *
+     * @param plainCommand The plain text command
+     * @param sync Whether to execute the command synchronously
+     * @param mode The execution mode, e.g., "sync" or "async"
+     * @return Command response
+     * */
     @PostMapping("/plain")
     fun submitPlainCommand(
         @RequestBody plainCommand: String,
-        @RequestParam(name = "mode", defaultValue = "sync") mode: String,
+        @RequestParam(name = "sync") sync: Boolean? = null,
+        @RequestParam(name = "mode") mode: String? = null,
     ): ResponseEntity<Any> {
         val request = conversationService.normalizePlainCommand(plainCommand)
             ?: return ResponseEntity.badRequest().body("Invalid plain command: $plainCommand")
 
-        request.mode = mode.lowercase()
-        return when (request.mode) {
-            "sync" -> ResponseEntity.ok(commandService.executeSync(request))
-            "async" -> ResponseEntity.ok(commandService.submitAsync(request))
-            else -> ResponseEntity.badRequest().body("Invalid mode: ${request.mode}")
+        val async = request.async ?: (mode?.lowercase() == "async")
+        request.mode = mode?.lowercase()
+        request.async = async
+
+        val response = when {
+            async -> commandService.submitAsync(request)
+            else -> commandService.executeSync(request)
         }
+
+        return ResponseEntity.ok(response)
     }
 
     @GetMapping(value = ["/{id}/status"])
