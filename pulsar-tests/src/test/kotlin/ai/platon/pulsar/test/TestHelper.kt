@@ -9,7 +9,7 @@ object TestHelper {
 
     const val PRODUCT_LIST_URL = "https://www.amazon.com/b?node=1292115011"
 
-    const val PRODUCT_DETAIL_URL = "https://www.amazon.com/dp/B0FFTT2J6N"
+    const val PRODUCT_DETAIL_URL = "https://www.amazon.com/dp/B08PP5MSVB"
 
     val productURLs = mapOf(
         "productListPage" to PRODUCT_LIST_URL,

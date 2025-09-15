@@ -111,7 +111,7 @@ fun main() {
     // Set the system to work with single page applications (SPA)
     PulsarSettings().withDefaultBrowser().withSPA()
 
-    val url = "https://www.amazon.com/dp/B0FFTT2J6N"
+    val url = "https://www.amazon.com/dp/B08PP5MSVB"
     val args = "-refresh -parse"
     val session = createSession()
     val crawler = WebDriverDemo(session)

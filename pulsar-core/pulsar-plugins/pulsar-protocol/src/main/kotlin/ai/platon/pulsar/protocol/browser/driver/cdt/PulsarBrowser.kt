@@ -289,13 +289,8 @@ class PulsarBrowser(
         val pageLoadTimeout = settings.interactSettings.pageLoadTimeout
         val seconds = if (AppSystemInfo.isSystemOverCriticalLoad) 15L else pageLoadTimeout.seconds
         val unmanagedTabTimeout = Duration.ofSeconds(seconds)
-        val isIdle =
-            { driver: AbstractWebDriver ->
-                Duration.between(
-                    driver.lastActiveTime,
-                    Instant.now()
-                ) > unmanagedTabTimeout
-            }
+        val isIdle = { driver: AbstractWebDriver ->
+            Duration.between(driver.lastActiveTime, Instant.now()) > unmanagedTabTimeout }
         val unmanagedTimeoutDrivers = chromeDrivers.filter { it.isRecovered && !it.isReused && isIdle(it) }
         if (unmanagedTimeoutDrivers.isNotEmpty()) {
             logger.debug("Closing {} unmanaged drivers", unmanagedTimeoutDrivers.size)

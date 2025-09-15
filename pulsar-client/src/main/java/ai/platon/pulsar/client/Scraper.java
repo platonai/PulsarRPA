@@ -20,7 +20,7 @@ select
     array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,
     dom_base_uri(dom) as `baseUri`
 from
-    load_and_select('https://www.amazon.com/dp/B0FFTT2J6N', ':root')
+    load_and_select('https://www.amazon.com/dp/B08PP5MSVB', ':root')
 """;
 
         HttpRequest request = HttpRequest.newBuilder()

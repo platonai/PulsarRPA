@@ -12,7 +12,7 @@ $sql = "select
             array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as categories,
             dom_base_uri(dom) as baseUri
         from
-            load_and_select('https://www.amazon.com/dp/B0FFTT2J6N', ':root')";
+            load_and_select('https://www.amazon.com/dp/B08PP5MSVB', ':root')";
 
 $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/plain'));

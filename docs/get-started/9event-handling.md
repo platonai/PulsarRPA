@@ -122,7 +122,7 @@ The entry point for the call is as follows:
 fun main() {
     BrowserSettings.withSystemDefaultBrowser()
     
-    val url = "https://www.amazon.com/dp/B0FFTT2J6N"
+    val url = "https://www.amazon.com/dp/B08PP5MSVB"
     val session = PulsarContexts.createSession()
     val link = ListenableHyperlink(url, "", args = "-refresh -parse", event = PrintFlowEventHandlers())
     

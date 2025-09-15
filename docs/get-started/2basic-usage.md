@@ -60,7 +60,7 @@ Let's see how common usage looks like. First, create a Pulsar session, where all
 
 ```kotlin
 val session = PulsarContexts.createSession()
-val url = "https://www.amazon.com/dp/B0FFTT2J6N"
+val url = "https://www.amazon.com/dp/B08PP5MSVB"
 ```
 
 The fundamental idea and method is load(), which first tries to load the web page from local storage. If the required page does not exist, has expired, or does not meet other requirements, it fetches the page from the Internet:

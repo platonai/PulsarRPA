@@ -498,8 +498,6 @@ open class InteractiveBrowserEmulator(
             return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         }
 
-        // if the webpage is connected to the webdriver, do not interact
-
         val interactTask = InteractTask(task, settings, driver)
         
         val result = try {
