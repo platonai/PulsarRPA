@@ -522,20 +522,30 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     suspend fun open(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage
-    /**
-     * Connect a webpage to a webdriver.
-     *
-     * ```kotlin
-     * val page = session.connect(driver)
-     * ```
-     *
-     * @return The webpage connected to the webdriver or NIL
-     */
+
     @Beta
+    @Deprecated("Use bindDriver instead", replaceWith = ReplaceWith("bindDriver(driver)"))
     fun connect(driver: WebDriver)
 
     @Beta
+    @Deprecated("Use bindBrowser instead", replaceWith = ReplaceWith("bindBrowser(browser)"))
     fun connect(browser: Browser)
+    /**
+     * Bind a webdriver to the session.
+     *
+     * ```kotlin
+     * session.bindDriver(driver)
+     * ```
+     */
+    fun bindDriver(driver: WebDriver)
+    /**
+     * Bind a webdriver to the session.
+     *
+     * ```kotlin
+     * session.bindDriver(driver)
+     * ```
+     */
+    fun bindBrowser(browser: Browser)
 
     /**
      * Load an url.

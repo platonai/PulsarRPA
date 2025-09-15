@@ -199,9 +199,15 @@ abstract class AbstractPulsarSession(
     override suspend fun open(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage =
         context.open(url, driver, options("-refresh", eventHandlers))
 
+    @Deprecated("Use bindDriver instead", replaceWith = ReplaceWith("bindDriver(driver)"))
     override fun connect(driver: WebDriver) { sessionConfig.putBean(driver) }
 
+    @Deprecated("Use bindBrowser instead", replaceWith = ReplaceWith("bindBrowser(browser)"))
     override fun connect(browser: Browser) { sessionConfig.putBean(browser) }
+
+    override fun bindDriver(driver: WebDriver) { sessionConfig.putBean(driver) }
+
+    override fun bindBrowser(browser: Browser) { sessionConfig.putBean(browser) }
 
     override fun load(url: String): WebPage = load(url, options())
     
@@ -240,7 +246,7 @@ abstract class AbstractPulsarSession(
         
         return createPageWithCachedCoreOrNull(url) ?: loadAndCacheDeferred(url)
     }
-    
+
     override fun loadAll(urls: Iterable<String>) = loadAll(urls, options())
     
     override fun loadAll(urls: Iterable<String>, args: String) = loadAll(urls, options(args))
