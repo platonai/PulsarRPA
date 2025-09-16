@@ -25,7 +25,9 @@ import java.time.Instant
  * 3. 📝 Spring Boot Environment (REST API only)
  * 4. 📁 Configuration files in `${PULSAR_DATA_HOME}/config/conf-enabled`
  *
- * Rules:
+ * Spring boot configuration order: command-line args > system properties > environment variables > config files.
+ *
+ * Naming conversions:
  * - When setting a property: names are normalized to `dot.separated.kebab-case`, e.g. server.servlet.context-path.
  * - When getting a property: three formats are checked in order:
  *   - Original name (`unRelaxedName.Any-Case`)
