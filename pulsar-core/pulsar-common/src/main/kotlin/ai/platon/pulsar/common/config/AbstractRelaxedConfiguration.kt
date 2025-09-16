@@ -25,7 +25,8 @@ import java.time.Instant
  *   2) Java system properties
  *   3) OS environment variables
  *   4) Spring config files (`application.properties`/`application.yml`)
- *   5) in-memory/local overrides
+ *   5) local config files under `${PULSAR_DATA_HOME}/config/conf-enabled`
+ *   6) in-memory/local overrides
  * - Without Spring `Environment`:
  *   1) Java system properties
  *   2) OS environment variables
