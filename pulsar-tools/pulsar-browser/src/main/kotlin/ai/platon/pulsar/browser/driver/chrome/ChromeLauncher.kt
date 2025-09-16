@@ -16,11 +16,14 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import java.io.*
+import java.net.Socket
 import java.nio.channels.FileChannel
 import java.nio.channels.FileLockInterruptionException
 import java.nio.channels.OverlappingFileLockException
 import java.nio.charset.Charset
 import java.nio.file.*
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
 import kotlin.io.path.deleteIfExists
@@ -77,14 +80,114 @@ class ChromeLauncher constructor(
      */
     @Throws(ChromeLaunchException::class)
     fun launch(chromeBinaryPath: Path, options: ChromeOptions): RemoteChrome {
+        // Check if there's already a Chrome process using this userDataDir
+        val existingPort = checkExistingChromeProcess()
+        if (existingPort > 0) {
+            logger.info("Found existing Chrome process on port: {} for userDataDir: {}", existingPort, userDataDir)
+            return ChromeImpl(existingPort)
+        }
+
         // Attempt to prepare the user data directory
         prepareUserDataDir()
 
         // Launch the Chrome process with the specified binary path, user data directory, and options.
+        val startTime = System.currentTimeMillis()
         val port = launchChromeProcess(chromeBinaryPath, userDataDir, options)
+        val launchDuration = System.currentTimeMillis() - startTime
+
+        // Generate launch report
+        generateLaunchReport(chromeBinaryPath, options, port, launchDuration)
 
         // Return a new instance of ChromeImpl initialized with port
         return ChromeImpl(port)
+    }
+
+    /**
+     * Checks if there's an existing Chrome process using the port specified in the port file.
+     * This method provides robust port file management by validating both the port and process status.
+     *
+     * @return The port number if an existing Chrome process is found, 0 otherwise.
+     */
+    private fun checkExistingChromeProcess(): Int {
+        if (!portPath.exists()) {
+            return 0
+        }
+
+        return try {
+            val portContent = Files.readString(portPath).trim()
+            val port = portContent.toIntOrNull() ?: return cleanupInvalidPortFile()
+
+            // Port must be greater than 0 to be valid
+            if (port <= 0) {
+                return cleanupInvalidPortFile()
+            }
+
+            // Verify that the port is actually in use and the process is alive
+            if (isPortInUse(port) && isProcessAlive()) {
+                logger.info("Found valid existing Chrome process on port: {}", port)
+                port
+            } else {
+                logger.warn("Found port file but process is not alive, cleaning up invalid state")
+                cleanupInvalidPortFile()
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to read existing port file: {}, cleaning up", e.message)
+            cleanupInvalidPortFile()
+        }
+    }
+
+    /**
+     * Checks if the given port is in use by attempting to connect to it.
+     *
+     * @param port The port number to check.
+     * @return True if the port is in use, false otherwise.
+     */
+    private fun isPortInUse(port: Int): Boolean {
+        return try {
+            Socket("localhost", port).use {
+                true // Successfully connected, port is in use
+            }
+        } catch (e: Exception) {
+            false // Failed to connect, port is not in use
+        }
+    }
+
+    /**
+     * Checks if the Chrome process recorded in the PID file is still alive.
+     *
+     * @return True if the process is alive, false otherwise.
+     */
+    private fun isProcessAlive(): Boolean {
+        if (!pidPath.exists()) {
+            return false
+        }
+
+        return try {
+            val pidContent = Files.readString(pidPath).trim()
+            val pid = pidContent.toLongOrNull() ?: return false
+
+            // Check if process with this PID is still running
+            Runtimes.isProcessAlive(pid)
+        } catch (e: Exception) {
+            logger.debug("Failed to check process alive status: {}", e.message)
+            false
+        }
+    }
+
+    /**
+     * Cleans up invalid port and PID files when the associated process is no longer alive.
+     *
+     * @return Always returns 0 to indicate no valid port was found.
+     */
+    private fun cleanupInvalidPortFile(): Int {
+        try {
+            portPath.deleteIfExists()
+            pidPath.deleteIfExists()
+            logger.debug("Cleaned up invalid port and PID files for userDataDir: {}", userDataDir)
+        } catch (e: Exception) {
+            logger.warn("Failed to cleanup invalid files: {}", e.message)
+        }
+        return 0
     }
 
     /**
@@ -220,7 +323,11 @@ class ChromeLauncher constructor(
 
         return try {
             Files.createDirectories(portPath.parent)
-            portPath.deleteIfExists()
+
+            // Clean up any existing invalid port files before creating new ones
+            cleanupInvalidPortFile()
+
+            // Create port file with "0" to indicate process is starting
             Files.writeString(portPath, "0", StandardOpenOption.CREATE)
 
             shutdownHookRegistry.register(shutdownHookThread)
@@ -228,7 +335,7 @@ class ChromeLauncher constructor(
 
             val p = process ?: throw ChromeLaunchException("Failed to start chrome process")
 
-            // write a pid file to indicate the process is alive
+            // Write PID file to indicate the process is alive
             Files.writeString(pidPath, p.pid().toString(), StandardOpenOption.CREATE)
 
             val port = waitForDevToolsServer(p)
@@ -436,6 +543,206 @@ Kill all Chrome processes and run the program again.
             if (Files.exists(source)) {
                 // Files.copy(prototypeUserDataDir.resolve(it), target, StandardCopyOption.REPLACE_EXISTING)
             }
+        }
+    }
+
+    /**
+     * Generates a comprehensive launch report after Chrome launch.
+     *
+     * @param chromeBinaryPath The path to the Chrome binary executable.
+     * @param options The Chrome options used when launching the Chrome process.
+     * @param port The port on which the DevTools is listening.
+     * @param launchDuration The duration of the Chrome launch in milliseconds.
+     */
+    private fun generateLaunchReport(chromeBinaryPath: Path, options: ChromeOptions, port: Int, launchDuration: Long) {
+        try {
+            val reportData = buildLaunchReportData(chromeBinaryPath, options, port, launchDuration)
+
+            // Write to both console and file
+            val textReport = formatTextReport(reportData)
+            logger.info("Chrome Launch Report:\n{}", textReport)
+
+            // Write JSON report to file
+            val reportPath = userDataDir.resolveSibling("chrome-launch-report.json")
+            val jsonReport = formatJsonReport(reportData)
+            Files.writeString(reportPath, jsonReport, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+
+            logger.debug("Chrome launch report saved to: {}", reportPath)
+        } catch (e: Exception) {
+            logger.warn("Failed to generate launch report: {}", e.message)
+        }
+    }
+
+    /**
+     * Builds comprehensive launch report data.
+     */
+    private fun buildLaunchReportData(chromeBinaryPath: Path, options: ChromeOptions, port: Int, launchDuration: Long): Map<String, Any> {
+        val currentProcess = process
+        val reportData = mutableMapOf<String, Any>()
+
+        // Launch information
+        val launchInfo = mutableMapOf<String, Any>()
+        launchInfo["timestamp"] = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        launchInfo["launchDuration"] = "${launchDuration}ms"
+        launchInfo["devToolsPort"] = port
+        launchInfo["userDataDirectory"] = userDataDir.toString()
+        launchInfo["chromeBinary"] = chromeBinaryPath.toString()
+        reportData["launchInfo"] = launchInfo
+
+        // Process information
+        val processInfo = mutableMapOf<String, Any>()
+        processInfo["pid"] = currentProcess?.pid() ?: 0
+        processInfo["isAlive"] = currentProcess?.isAlive() ?: false
+        processInfo["supervisorProcess"] = this.options.supervisorProcess ?: "none"
+        reportData["processInfo"] = processInfo
+
+        // Chrome options
+        val chromeOptionsInfo = mutableMapOf<String, Any>()
+        chromeOptionsInfo["headless"] = options.headless
+        chromeOptionsInfo["arguments"] = options.toList()
+        chromeOptionsInfo["isSystemDefaultBrowser"] = userDataDir.startsWith(AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER)
+        reportData["chromeOptions"] = chromeOptionsInfo
+
+        // System information
+        val systemInfo = mutableMapOf<String, Any>()
+
+        // Operating system info
+        val osInfo = mutableMapOf<String, Any>()
+        osInfo["name"] = System.getProperty("os.name")
+        osInfo["version"] = System.getProperty("os.version")
+        osInfo["arch"] = System.getProperty("os.arch")
+        osInfo["isWindows"] = SystemUtils.IS_OS_WINDOWS
+        osInfo["hasGuiSupport"] = !Runtimes.hasOnlyHeadlessBrowser()
+        systemInfo["os"] = osInfo
+
+        // JVM information
+        val jvmInfo = mutableMapOf<String, Any>()
+        jvmInfo["version"] = System.getProperty("java.version")
+        jvmInfo["vendor"] = System.getProperty("java.vendor")
+        jvmInfo["home"] = System.getProperty("java.home")
+        jvmInfo["maxMemory"] = "${Runtime.getRuntime().maxMemory() / 1024 / 1024}MB"
+        jvmInfo["totalMemory"] = "${Runtime.getRuntime().totalMemory() / 1024 / 1024}MB"
+        jvmInfo["freeMemory"] = "${Runtime.getRuntime().freeMemory() / 1024 / 1024}MB"
+        systemInfo["jvm"] = jvmInfo
+
+        // Encoding information
+        val encodingInfo = mutableMapOf<String, Any>()
+        encodingInfo["fileEncoding"] = System.getProperty("file.encoding")
+        encodingInfo["charset"] = if (SystemUtils.IS_OS_WINDOWS) "GBK" else "UTF-8"
+        systemInfo["encoding"] = encodingInfo
+
+        reportData["systemInfo"] = systemInfo
+
+        // File system information
+        val fileSystemInfo = mutableMapOf<String, Any>()
+        fileSystemInfo["portFilePath"] = portPath.toString()
+        fileSystemInfo["pidFilePath"] = pidPath.toString()
+        fileSystemInfo["userDataDirExists"] = Files.exists(userDataDir)
+        fileSystemInfo["userDataDirSize"] = getUserDataDirSize()
+        reportData["fileSystem"] = fileSystemInfo
+
+        // Performance information
+        val performanceInfo = mutableMapOf<String, Any>()
+        performanceInfo["startupWaitTime"] = this.options.startupWaitTime.toString()
+        performanceInfo["shutdownWaitTime"] = this.options.shutdownWaitTime.toString()
+        performanceInfo["threadWaitTime"] = this.options.threadWaitTime.toString()
+        performanceInfo["systemChromeProcessCount"] = Runtimes.countSystemProcess("chrome")
+        reportData["performance"] = performanceInfo
+
+        return reportData
+    }
+
+    /**
+     * Formats the report data as human-readable text.
+     */
+    private fun formatTextReport(data: Map<String, Any>): String {
+        val report = StringBuilder()
+        report.appendLine("Chrome Launch Report")
+        report.appendLine("=".repeat(50))
+
+        val launchInfo = data["launchInfo"] as Map<String, Any>
+        report.appendLine("Launch Time: ${launchInfo["timestamp"]}")
+        report.appendLine("Duration: ${launchInfo["launchDuration"]}")
+        report.appendLine("DevTools Port: ${launchInfo["devToolsPort"]}")
+        report.appendLine("Chrome Binary: ${launchInfo["chromeBinary"]}")
+        report.appendLine("User Data Dir: ${launchInfo["userDataDirectory"]}")
+
+        val processInfo = data["processInfo"] as Map<String, Any>
+        report.appendLine("Process ID: ${processInfo["pid"]}")
+        report.appendLine("Process Alive: ${processInfo["isAlive"]}")
+
+        val chromeOptions = data["chromeOptions"] as Map<String, Any>
+        report.appendLine("Headless Mode: ${chromeOptions["headless"]}")
+        val args = chromeOptions["arguments"] as List<String>
+        report.appendLine("Arguments: ${args.joinToString(" ")}")
+
+        report.appendLine("=".repeat(50))
+        return report.toString()
+    }
+
+    /**
+     * Formats the report data as JSON.
+     */
+    private fun formatJsonReport(data: Map<String, Any>): String {
+        return buildString {
+            appendLine("{")
+            data.entries.forEachIndexed { index, (key, value) ->
+                append("  \"$key\": ")
+                appendJsonValue(value, 1)
+                if (index < data.size - 1) append(",")
+                appendLine()
+            }
+            append("}")
+        }
+    }
+
+    /**
+     * Helper method to append JSON values with proper formatting.
+     */
+    private fun StringBuilder.appendJsonValue(value: Any?, indent: Int = 0) {
+        val indentStr = "  ".repeat(indent)
+        when (value) {
+            null -> append("null")
+            is String -> append("\"$value\"")
+            is Number, is Boolean -> append(value.toString())
+            is Map<*, *> -> {
+                appendLine("{")
+                value.entries.forEachIndexed { index, (k, v) ->
+                    append("$indentStr  \"$k\": ")
+                    appendJsonValue(v, indent + 1)
+                    if (index < value.size - 1) append(",")
+                    appendLine()
+                }
+                append("$indentStr}")
+            }
+            is List<*> -> {
+                append("[")
+                value.forEachIndexed { index, item ->
+                    if (index > 0) append(", ")
+                    appendJsonValue(item, indent)
+                }
+                append("]")
+            }
+            else -> append("\"$value\"")
+        }
+    }
+
+    /**
+     * Gets the size of the user data directory.
+     */
+    private fun getUserDataDirSize(): String {
+        return try {
+            if (Files.exists(userDataDir)) {
+                val size = Files.walk(userDataDir)
+                    .filter { Files.isRegularFile(it) }
+                    .mapToLong { Files.size(it) }
+                    .sum()
+                "${size / 1024 / 1024}MB"
+            } else {
+                "0MB"
+            }
+        } catch (e: Exception) {
+            "unknown"
         }
     }
 }

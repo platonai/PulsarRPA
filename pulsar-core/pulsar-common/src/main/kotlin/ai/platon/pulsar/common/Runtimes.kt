@@ -347,5 +347,59 @@ object Runtimes {
 
         logger.debug("Exit | {}", info)
     }
-}
 
+    /**
+     * Checks if a process with the given PID is currently alive/running.
+     *
+     * @param pid The process ID to check
+     * @return true if the process is alive, false otherwise
+     */
+    fun isProcessAlive(pid: Long): Boolean {
+        if (pid <= 0) {
+            return false
+        }
+
+        return try {
+            // Use Java 9+ ProcessHandle API for cross-platform process checking
+            val processHandle = ProcessHandle.of(pid)
+            processHandle.isPresent && processHandle.get().isAlive
+        } catch (e: Exception) {
+            // Fallback to system commands if ProcessHandle fails
+            try {
+                isProcessAliveByCommand(pid)
+            } catch (fallbackException: Exception) {
+                logger.debug("Failed to check process alive status for PID {}: {}", pid, fallbackException.message)
+                false
+            }
+        }
+    }
+
+    /**
+     * Fallback method to check if a process is alive using system commands.
+     *
+     * @param pid The process ID to check
+     * @return true if the process is alive, false otherwise
+     */
+    private fun isProcessAliveByCommand(pid: Long): Boolean {
+        val command = when {
+            SystemUtils.IS_OS_WINDOWS -> "tasklist /FI \"PID eq $pid\" /NH"
+            SystemUtils.IS_OS_LINUX || SystemUtils.IS_OS_MAC -> "ps -p $pid"
+            else -> "ps -p $pid" // Default to POSIX command
+        }
+
+        return try {
+            val result = exec(command)
+            if (SystemUtils.IS_OS_WINDOWS) {
+                // On Windows, if process exists, tasklist will return a line with the process info
+                result.any { it.contains(pid.toString()) }
+            } else {
+                // On Unix-like systems, ps will return the process info if it exists
+                // The first line is usually the header, so we check if there's more than just the header
+                result.size > 1
+            }
+        } catch (e: Exception) {
+            logger.debug("Failed to execute command to check process {}: {}", pid, e.message)
+            false
+        }
+    }
+}
