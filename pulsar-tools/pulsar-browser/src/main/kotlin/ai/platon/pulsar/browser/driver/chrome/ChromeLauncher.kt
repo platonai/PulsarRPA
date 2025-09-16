@@ -13,6 +13,7 @@ import ai.platon.pulsar.common.browser.Browsers
 import ai.platon.pulsar.common.concurrent.RuntimeShutdownHookRegistry
 import ai.platon.pulsar.common.concurrent.ShutdownHookRegistry
 import org.apache.commons.io.FileUtils
+import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import java.io.*
 import java.nio.channels.FileChannel
@@ -263,22 +264,23 @@ class ChromeLauncher constructor(
     private fun waitForDevToolsServer(process: Process): Int {
         var port = 0
         val processOutput = StringBuilder()
+        val charset = if (SystemUtils.IS_OS_WINDOWS) Charset.forName("GBK") else Charsets.UTF_8
         val readLineThread = Thread {
-            BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
+            BufferedReader(InputStreamReader(process.inputStream, charset)).use { reader ->
                 // Wait for DevTools listening line and extract port number.
-//                var line: String? = reader.readLine()
-                var line: String? = String(reader.readLine().toByteArray(Charset.defaultCharset()))
+                var line: String? = reader.readLine()
                 while (line != null) {
                     if (line.isNotBlank()) {
+                        // If chrome launched successfully, the output is like the following:
+                        // 2025-09-16 23:16:03.247  INFO [Thread-2] a.p.p.b.d.c.ChromeLauncher - [output] - DevTools listening on ws://127.0.0.1:50658/devtools/browser/ab3ec7cd-f800-4cc7-9ea1-7d3563e30d7c
                         logger.info("[output] - $line")
+                        val matcher = DEVTOOLS_LISTENING_LINE_PATTERN.matcher(line)
+                        if (matcher.find()) {
+                            port = matcher.group(1).toInt()
+                            break
+                        }
+                        processOutput.appendLine(line)
                     }
-
-                    val matcher = DEVTOOLS_LISTENING_LINE_PATTERN.matcher(line)
-                    if (matcher.find()) {
-                        port = matcher.group(1).toInt()
-                        break
-                    }
-                    processOutput.appendLine(line)
 
                     line = reader.readLine()
                 }
