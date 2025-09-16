@@ -19,20 +19,27 @@ import java.time.Instant
  * - `context-path` binds to `contextPath`
  * - `PORT` binds to `port`
  *
+ * ## Property Source Precedence
+ *
+ * ### When Spring Boot Environment is available:
+ * Properties are retrieved using Spring Boot's standard mechanism with the following precedence:
+ * 1. 🎯 Command-line arguments
+ * 2. ⚙️ Java System Properties
+ * 3. 🌍 Java Environment Variables
+ * 4. 📄 Spring Config Files (application.properties/yml)
+ *
+ * ### When Spring Boot Environment is NOT available:
  * Properties are retrieved from the following sources in order of precedence:
  * 1. ⚙️ Java System Properties
- * 2. 🔧 Java Environment Variables
- * 3. 📝 Spring Boot Environment (REST API only)
- * 4. 📁 Configuration files in `${PULSAR_DATA_HOME}/config/conf-enabled`
+ * 2. 🌍 Java Environment Variables
+ * 3. 📁 Configuration files in `${PULSAR_DATA_HOME}/config/conf-enabled`
  *
- * Spring boot configuration order: command-line args > system properties > environment variables > config files.
- *
- * Naming conversions:
- * - When setting a property: names are normalized to `dot.separated.kebab-case`, e.g. server.servlet.context-path.
- * - When getting a property: three formats are checked in order:
- *   - Original name (`unRelaxedName.Any-Case`)
- *   - Kebab-case with dots (`dot.separated.kebab.case`)
- *   - Upper case with underscores (`UNDERSCORE_SEPARATED_UPPER_CASE`)
+ * ## Naming Conventions
+ * - **Setting properties**: Names are normalized to `dot.separated.kebab-case` (e.g., `server.servlet.context-path`)
+ * - **Getting properties**: Three formats are checked in order:
+ *   1. Original name (`unRelaxedName.Any-Case`)
+ *   2. Kebab-case with dots (`dot.separated.kebab-case`)
+ *   3. Upper case with underscores (`UNDERSCORE_SEPARATED_UPPER_CASE`)
  *
  * @author vincent
  */
@@ -72,8 +79,24 @@ abstract class AbstractRelaxedConfiguration {
      */
     fun size() = localFileConfiguration.size()
 
+    /**
+     * Retrieves a property value using the exact name provided, without applying relaxed binding rules.
+     *
+     * This method checks property sources in the following order:
+     * 1. Spring Environment (if available)
+     * 2. Java System Properties
+     * 3. Java Environment Variables
+     * 4. Local file configuration
+     *
+     * @param name The exact property name to look up
+     * @return The property value, or null if not found
+     * */
     fun getUnrelaxed(name: String): String? {
-        return System.getProperty(name) ?: System.getenv(name) ?: environment?.get(name) ?: localFileConfiguration[name]
+        return if (environment != null) {
+            environment?.getProperty(name)
+        } else {
+            System.getProperty(name) ?: System.getenv(name) ?: localFileConfiguration[name]
+        }
     }
 
     /**
