@@ -1,7 +1,6 @@
 package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.common.ResourceStatus
-import ai.platon.pulsar.common.catastrophicError
 import ai.platon.pulsar.common.warnUnexpected
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.H2SQLContext
@@ -14,8 +13,6 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import kotlinx.coroutines.runBlocking
-import org.springframework.http.HttpStatus
-import org.springframework.http.HttpStatusCode
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -44,6 +41,7 @@ class SinglePageApplicationController(
 ) {
     private var browser: Browser? = null
     private val browserLock = ReentrantLock()
+    private var isInitialized = false // 添加初始化标志
 
     /**
      * Initialize Browser4 for SPA rendering and perform a simple health check.
@@ -66,7 +64,16 @@ class SinglePageApplicationController(
                 // Use a real browser for SPA rendering
                 PulsarSettings().withDefaultBrowser()
 
-                if (browser == null) {
+                // 如果已经初始化过，直接返回健康状态
+                if (isInitialized && browser != null) {
+                    return mapOf(
+                        "status" to "healthy",
+                        "message" to "Browser4 already initialized"
+                    )
+                }
+
+                // 只有在未初始化时才进行初始化
+                if (!isInitialized) {
                     val options = session.options("-refresh")
                     options.eventHandlers.browseEventHandlers.onBrowserLaunched.addLast { _, driver ->
                         ensureBrowser(driver.browser)
@@ -76,6 +83,7 @@ class SinglePageApplicationController(
                     val html = document.html
 
                     if (html.length > 1_000 && html.contains("<input .+百度一下.+>".toRegex())) {
+                        isInitialized = true // 标记为已初始化
                         return mapOf(
                             "status" to "initialized",
                             "message" to "Browser4 initialized successfully"
@@ -91,7 +99,7 @@ class SinglePageApplicationController(
                 warnUnexpected(this, e, "Failed to initialize Browser4")
                 return mapOf(
                     "status" to "error",
-                    "message" to "Failed to initialize Browser4"
+                    "message" to "Failed to initialize Browser4: ${e.message}"
                 )
             }
         }
