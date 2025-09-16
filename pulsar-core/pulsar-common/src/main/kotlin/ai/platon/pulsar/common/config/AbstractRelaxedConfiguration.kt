@@ -12,34 +12,29 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * A configuration class that supports relaxed property binding rules.
+ * Configuration with relaxed property binding across Spring `Environment`, JVM system properties,
+ * OS environment variables, and local config files.
  *
- * Relaxed property matching allows for flexible mapping between environment variables,
- * system properties, and bean property names. For example:
- * - `context-path` binds to `contextPath`
- * - `PORT` binds to `port`
+ * Relaxed matching allows different naming styles to resolve to the same key, for example:
+ * - `context-path` → `contextPath`
+ * - `PORT` → `port`
  *
- * ## Property Source Precedence
+ * Property source precedence:
+ * - With Spring `Environment`:
+ *   1) command-line arguments
+ *   2) Java system properties
+ *   3) OS environment variables
+ *   4) Spring config files (`application.properties`/`application.yml`)
+ *   5) in-memory/local overrides
+ * - Without Spring `Environment`:
+ *   1) Java system properties
+ *   2) OS environment variables
+ *   3) local config files under `${PULSAR_DATA_HOME}/config/conf-enabled`
+ *   4) in-memory/local overrides
  *
- * ### When Spring Boot Environment is available:
- * Properties are retrieved using Spring Boot's standard mechanism with the following precedence:
- * 1. 🎯 Command-line arguments
- * 2. ⚙️ Java System Properties
- * 3. 🌍 Java Environment Variables
- * 4. 📄 Spring Config Files (application.properties/yml)
- *
- * ### When Spring Boot Environment is NOT available:
- * Properties are retrieved from the following sources in order of precedence:
- * 1. ⚙️ Java System Properties
- * 2. 🌍 Java Environment Variables
- * 3. 📁 Configuration files in `${PULSAR_DATA_HOME}/config/conf-enabled`
- *
- * ## Naming Conventions
- * - **Setting properties**: Names are normalized to `dot.separated.kebab-case` (e.g., `server.servlet.context-path`)
- * - **Getting properties**: Three formats are checked in order:
- *   1. Original name (`unRelaxedName.Any-Case`)
- *   2. Kebab-case with dots (`dot.separated.kebab-case`)
- *   3. Upper case with underscores (`UNDERSCORE_SEPARATED_UPPER_CASE`)
+ * Naming conventions:
+ * - Set: keys normalized to `dot.separated.kebab-case` (e.g., `server.servlet.context-path`).
+ * - Get: lookup order is original name, `dot.separated.kebab-case`, then `UNDERSCORE_SEPARATED_UPPER_CASE`.
  *
  * @author vincent
  */
@@ -93,7 +88,7 @@ abstract class AbstractRelaxedConfiguration {
      * */
     fun getUnrelaxed(name: String): String? {
         return if (environment != null) {
-            environment?.getProperty(name)
+            environment?.getProperty(name) ?: localFileConfiguration[name]
         } else {
             System.getProperty(name) ?: System.getenv(name) ?: localFileConfiguration[name]
         }
