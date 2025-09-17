@@ -21,8 +21,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ChromeImpl(
-    var host: String = LOCALHOST,
-    var port: Int = 0,
+    override var host: String = LOCALHOST,
+    override var port: Int = 0,
     var wss: WebSocketServiceFactory
 ) : RemoteChrome {
     companion object {

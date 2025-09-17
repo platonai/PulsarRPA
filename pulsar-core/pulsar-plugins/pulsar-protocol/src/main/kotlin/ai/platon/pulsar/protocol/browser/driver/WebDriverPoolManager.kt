@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 open class WebDriverPoolManager(
     val browserManager: BrowserManager,
-    val driverFactory: WebDriverFactory,
+    val browserFactory: BrowserFactory,
     val immutableConfig: ImmutableConfig,
     val suppressMetrics: Boolean = false,
 ) : Parameterized, PreemptChannelSupport("WebDriverPoolManager"), AutoCloseable {
@@ -251,7 +251,7 @@ open class WebDriverPoolManager(
     fun createUnmanagedDriverPool(
         browserId: BrowserId, priority: Int = 0,
     ): LoadingWebDriverPool {
-        return LoadingWebDriverPool(browserId, priority, this, driverFactory, immutableConfig)
+        return LoadingWebDriverPool(browserId, priority, this, browserFactory, immutableConfig)
     }
 
     /**

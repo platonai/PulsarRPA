@@ -29,7 +29,7 @@ class LoadingWebDriverPool constructor(
     val browserId: BrowserId,
     val priority: Int = 0,
     val driverPoolManager: WebDriverPoolManager,
-    val driverFactory: WebDriverFactory,
+    val browserFactory: BrowserFactory,
     val immutableConfig: ImmutableConfig
 ) : AutoCloseable {
     companion object {
@@ -368,7 +368,7 @@ class LoadingWebDriverPool constructor(
      * */
     @Throws(BrowserLaunchException::class)
     private fun resourceSafeCreateDriverIfNecessary(priority: Int, conf: MutableConfig) {
-        synchronized(driverFactory) {
+        synchronized(browserFactory) {
             if (!isActive) {
                 return
             }
@@ -429,7 +429,8 @@ class LoadingWebDriverPool constructor(
         logger.debug("Launch browser and new driver | {}", browserId)
 
         //  Launch a browser. If the browser with the id is already launched, return the existing one.
-        val browser = _browser ?: driverFactory.launchBrowser(browserId, conf)
+        val browser = _browser ?: browserFactory.launch(browserId)
+        // val browser = _browser ?: driverFactory.launchBrowser(browserId, conf)
         check(browser.isActive)
         // open a new tab about:blank
         val driver = browser.newDriver()

@@ -37,6 +37,10 @@ interface RemoteChrome: AutoCloseable {
     
     val version: ChromeVersion
 
+    val host: String
+
+    val port: Int
+
     fun canConnect(): Boolean
     
     @Throws(ChromeServiceException::class)

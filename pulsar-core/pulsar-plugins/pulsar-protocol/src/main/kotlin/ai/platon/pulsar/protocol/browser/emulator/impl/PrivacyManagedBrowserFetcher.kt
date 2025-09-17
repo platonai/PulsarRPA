@@ -21,10 +21,13 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.protocol.browser.DefaultBrowserManager
 import ai.platon.pulsar.protocol.browser.emulator.AbstractBrowserFetcher
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator
 import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
 import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
+import ai.platon.pulsar.protocol.browser.impl.BrowserManager
+import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
 import ai.platon.pulsar.skeleton.common.persist.ext.browseEventHandlers
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
@@ -103,6 +106,8 @@ open class BrowserWebDriverFetcher(
  * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 open class PrivacyManagedBrowserFetcher(
+    val browserManager: BrowserManager,
+    val browserFactory: BrowserFactory,
     override val privacyManager: BrowserPrivacyManager,
     override val browserEmulator: BrowserEmulator,
     override val conf: ImmutableConfig,

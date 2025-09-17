@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * A factory to create WebDriver.
  */
+@Deprecated("Use BrowserFactory instead")
 open class WebDriverFactory constructor(
     val browserManager: BrowserManager,
     private val config: ImmutableConfig,
@@ -52,74 +53,5 @@ open class WebDriverFactory constructor(
         }
 
         capabilities["proxy"] = proxyURI
-    }
-
-
-
-
-
-
-
-
-    /********************************************************************************
-     * The code below are deprecated and will be removed in the future.
-     * ******************************************************************************/
-
-
-
-
-
-
-
-
-    /**
-     * Create a WebDriver.
-     */
-    @Deprecated("Never used")
-    @Throws(BrowserLaunchException::class)
-    fun create(start: Boolean = true) = create(config.toVolatileConfig(), start)
-    
-    /**
-     * Create a WebDriver.
-     */
-    @Deprecated("Never used")
-    @Throws(BrowserLaunchException::class)
-    fun create(conf: VolatileConfig, start: Boolean = true) = create(BrowserId.RANDOM_TEMP, 0, conf, start)
-    
-    /**
-     * Create a WebDriver.
-     */
-    @Deprecated("Never used")
-    @Throws(BrowserLaunchException::class)
-    fun create(
-        browserId: BrowserId,
-        priority: Int,
-        conf: VolatileConfig,
-        start: Boolean
-    ) = launchBrowserAndDriver(browserId, priority, conf, start).second
-
-    /**
-     * Launch a browser with a random fingerprint.
-     */
-    @Deprecated("Use BrowserFactory.launchRandomTempBrowser() instead", ReplaceWith("browserFactory.launchRandomTempBrowser()"))
-    @Throws(BrowserLaunchException::class)
-    fun launchTempBrowser() = launchBrowser(BrowserId.RANDOM_TEMP)
-
-    /**
-     * Launch a [Browser] with a [WebDriver].
-     */
-    @Deprecated("Never used")
-    @Throws(BrowserLaunchException::class)
-    private fun launchBrowserAndDriver(
-        browserId: BrowserId, priority: Int, conf: VolatileConfig, start: Boolean = true
-    ): Pair<Browser, WebDriver> {
-        val browser = launchBrowser(browserId, conf)
-        val driver = browser.newDriver() as AbstractWebDriver
-
-        if (start) {
-            driver.startWork()
-        }
-
-        return browser to driver
     }
 }
