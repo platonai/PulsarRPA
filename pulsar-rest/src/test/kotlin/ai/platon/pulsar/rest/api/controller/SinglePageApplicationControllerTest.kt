@@ -1,14 +1,16 @@
 package ai.platon.pulsar.rest.api.controller
 
+import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.entities.*
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.*
 
-class SinglePageApplicationControllerTest : ScrapeControllerTestBase() {
+class SinglePageApplicationControllerTest : IntegrationTestBase() {
 
     fun init() {
         val typeRef = object : ParameterizedTypeReference<Map<String, String>>() {}
@@ -35,7 +37,9 @@ class SinglePageApplicationControllerTest : ScrapeControllerTestBase() {
     }
 
     @BeforeEach
-    fun `init SPA`() {
+    fun `init Single Page Application`() {
+        Assumptions.assumeTrue { ChatModelFactory.isModelConfigured(session.unmodifiedConfig) }
+
         init()
         navigateToProductPage()
     }

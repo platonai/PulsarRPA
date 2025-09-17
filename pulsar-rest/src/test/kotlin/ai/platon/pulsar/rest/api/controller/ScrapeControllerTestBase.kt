@@ -11,15 +11,15 @@ open class ScrapeControllerTestBase : IntegrationTestBase() {
 
     companion object {
         val urls = mapOf(
-            "productListPage" to "https://www.amazon.com/b?node=1292115011",
-            "productDetailPage" to "https://www.amazon.com/dp/B08PP5MSVB"
+            "productListPage" to TestUtils.PRODUCT_LIST_URL,
+            "productDetailPage" to TestUtils.PRODUCT_DETAIL_URL
         )
 
         @JvmStatic
         @BeforeAll
         fun `Ensure resources are prepared`() {
-            TestUtils.ensurePage(requireNotNull(urls["productListPage"]))
-            TestUtils.ensurePage(requireNotNull(urls["productDetailPage"]))
+//            TestUtils.ensurePage(requireNotNull(TestUtils.PRODUCT_LIST_URL))
+//            TestUtils.ensurePage(requireNotNull(TestUtils.PRODUCT_DETAIL_URL))
         }
     }
 

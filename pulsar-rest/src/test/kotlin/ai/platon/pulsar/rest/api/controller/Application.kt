@@ -9,7 +9,9 @@ import org.springframework.test.context.ContextConfiguration
 
 @SpringBootApplication
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
-@EntityScan("ai.platon.pulsar.rest.api.entities")
-@ComponentScan("ai.platon.pulsar.rest.api")
+@ComponentScan(
+    "ai.platon.pulsar.boot.autoconfigure",
+    "ai.platon.pulsar.rest.api"
+)
 @ImportResource("classpath:rest-beans/app-context.xml")
 class Application

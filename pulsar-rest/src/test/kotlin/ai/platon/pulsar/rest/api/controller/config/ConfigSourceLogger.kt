@@ -15,7 +15,7 @@ class ConfigSourceLogger(private val env: ConfigurableEnvironment) {
 
         println("=== Spring Boot Property Sources ===")
         env.propertySources.forEach { ps ->
-            println("Source: ${ps.name}")
+            println("Source: ${ps.name} ${ps.source}")
         }
     }
 }

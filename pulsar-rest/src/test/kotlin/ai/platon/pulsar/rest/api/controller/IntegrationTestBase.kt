@@ -22,7 +22,10 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import kotlin.test.BeforeTest
 import kotlin.test.assertTrue
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    classes = [Application::class],
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
 @Import(PulsarContextConfiguration::class)
 class IntegrationTestBase {
 
