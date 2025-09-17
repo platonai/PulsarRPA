@@ -12,6 +12,7 @@ import ai.platon.pulsar.common.browser.BrowserFiles.PORT_FILE_NAME
 import ai.platon.pulsar.common.browser.Browsers
 import ai.platon.pulsar.common.concurrent.RuntimeShutdownHookRegistry
 import ai.platon.pulsar.common.concurrent.ShutdownHookRegistry
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
@@ -327,6 +328,9 @@ class ChromeLauncher constructor(
             // Clean up any existing invalid port files before creating new ones
             cleanupInvalidPortFile()
 
+            // --- Write launch arguments to file ---
+            writeLaunchArgumentsToFile(executable, arguments)
+
             // Create port file with "0" to indicate process is starting
             Files.writeString(portPath, "0", StandardOpenOption.CREATE)
 
@@ -567,7 +571,15 @@ Kill all Chrome processes and run the program again.
             val jsonReport = formatJsonReport(reportData)
             Files.writeString(reportPath, jsonReport, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
 
+            // --- Write launch history ---
+            val launchHistoryDir = userDataDir.resolve("launch-history")
+            Files.createDirectories(launchHistoryDir)
+            val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS"))
+            val historyFile = launchHistoryDir.resolve("chrome-launch-report-$timestamp.json")
+            Files.writeString(historyFile, jsonReport, StandardOpenOption.CREATE_NEW)
+
             logger.debug("Chrome launch report saved to: {}", reportPath)
+            logger.debug("Chrome launch history saved to: {}", historyFile)
         } catch (e: Exception) {
             logger.warn("Failed to generate launch report: {}", e.message)
         }
@@ -684,47 +696,7 @@ Kill all Chrome processes and run the program again.
      * Formats the report data as JSON.
      */
     private fun formatJsonReport(data: Map<String, Any>): String {
-        return buildString {
-            appendLine("{")
-            data.entries.forEachIndexed { index, (key, value) ->
-                append("  \"$key\": ")
-                appendJsonValue(value, 1)
-                if (index < data.size - 1) append(",")
-                appendLine()
-            }
-            append("}")
-        }
-    }
-
-    /**
-     * Helper method to append JSON values with proper formatting.
-     */
-    private fun StringBuilder.appendJsonValue(value: Any?, indent: Int = 0) {
-        val indentStr = "  ".repeat(indent)
-        when (value) {
-            null -> append("null")
-            is String -> append("\"$value\"")
-            is Number, is Boolean -> append(value.toString())
-            is Map<*, *> -> {
-                appendLine("{")
-                value.entries.forEachIndexed { index, (k, v) ->
-                    append("$indentStr  \"$k\": ")
-                    appendJsonValue(v, indent + 1)
-                    if (index < value.size - 1) append(",")
-                    appendLine()
-                }
-                append("$indentStr}")
-            }
-            is List<*> -> {
-                append("[")
-                value.forEachIndexed { index, item ->
-                    if (index > 0) append(", ")
-                    appendJsonValue(item, indent)
-                }
-                append("]")
-            }
-            else -> append("\"$value\"")
-        }
+        return prettyPulsarObjectMapper().writeValueAsString(data)
     }
 
     /**
@@ -743,6 +715,31 @@ Kill all Chrome processes and run the program again.
             }
         } catch (e: Exception) {
             "unknown"
+        }
+    }
+
+    /**
+     * Writes the launch arguments to a separate file, with each argument on its own line.
+     *
+     * @param executable The chrome executable path.
+     * @param arguments The list of arguments used to launch chrome.
+     */
+    private fun writeLaunchArgumentsToFile(executable: String, arguments: List<String>) {
+        return try {
+            val argsFile = userDataDir.resolveSibling("chrome-launch-arguments.txt")
+            Files.writeString(argsFile, "", StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+
+            // Write the executable path
+            Files.writeString(argsFile, "$executable", StandardOpenOption.APPEND)
+
+            // Write each argument on a new line
+            arguments.forEach { arg ->
+                Files.writeString(argsFile, "\n$arg", StandardOpenOption.APPEND)
+            }
+
+            logger.info("Chrome launch arguments saved to: {}", argsFile)
+        } catch (e: Exception) {
+            logger.warn("Failed to write launch arguments to file: {}", e.message)
         }
     }
 }
