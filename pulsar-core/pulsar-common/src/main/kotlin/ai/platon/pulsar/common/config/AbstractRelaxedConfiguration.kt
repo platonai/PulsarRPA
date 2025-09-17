@@ -2,10 +2,9 @@ package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.PropertyNameStyle
 import ai.platon.pulsar.common.SParser
-import ai.platon.pulsar.common.config.LocalFileConfiguration.Companion.DEFAULT_RESOURCES
+import ai.platon.pulsar.common.config.MultiSourceProperties.Companion.DEFAULT_RESOURCES
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
-import org.springframework.core.env.get
 import java.io.InputStream
 import java.nio.file.Path
 import java.time.Duration
@@ -21,17 +20,18 @@ import java.time.Instant
  *
  * Property source precedence:
  * - With Spring `Environment`:
- *   1) command-line arguments
+ *   1) in-memory/local overrides
+ *   2) command-line arguments
+ *   3) Java system properties
+ *   4) OS environment variables
+ *   5) Spring config files (`application.properties`/`application.yml`)
+ *   6) in-memory/local overrides
+ *   7) local config files under `${PULSAR_DATA_HOME}/config/conf-enabled`
+ * - Without Spring `Environment`:
+ *   1) in-memory/local overrides
  *   2) Java system properties
  *   3) OS environment variables
- *   4) Spring config files (`application.properties`/`application.yml`)
- *   5) local config files under `${PULSAR_DATA_HOME}/config/conf-enabled`
- *   6) in-memory/local overrides
- * - Without Spring `Environment`:
- *   1) Java system properties
- *   2) OS environment variables
- *   3) local config files under `${PULSAR_DATA_HOME}/config/conf-enabled`
- *   4) in-memory/local overrides
+ *   4) local config files under `${PULSAR_DATA_HOME}/config/conf-enabled`
  *
  * Naming conventions:
  * - Set: keys normalized to `dot.separated.kebab-case` (e.g., `server.servlet.context-path`).
@@ -46,7 +46,7 @@ abstract class AbstractRelaxedConfiguration {
     var profile = ""
         private set
 
-    protected val localFileConfiguration: LocalFileConfiguration
+    private val multiSourceProperties: MultiSourceProperties
 
     /**
      * Spring core is the first-class dependency now.
@@ -58,22 +58,94 @@ abstract class AbstractRelaxedConfiguration {
         loadDefaults: Boolean = true,
         resources: Iterable<String> = DEFAULT_RESOURCES
     ) {
-        localFileConfiguration = LocalFileConfiguration(profile = profile, extraResources = resources, loadDefaults = loadDefaults)
+        multiSourceProperties = MultiSourceProperties(extraResources = resources, loadDefaults = loadDefaults)
     }
 
-    constructor(conf: LocalFileConfiguration) {
-        this.localFileConfiguration = LocalFileConfiguration(conf)
+    constructor(conf: MultiSourceProperties) {
+        this.multiSourceProperties = MultiSourceProperties(conf)
     }
 
     /**
      * Return the underlying implementation
      */
-    fun unbox() = localFileConfiguration
+    fun unbox() = multiSourceProperties
 
     /**
      * The configured item size.
      */
-    fun size() = localFileConfiguration.size()
+    fun size() = multiSourceProperties.size()
+
+    /**
+     * Generates all possible naming variants for a given property name to support relaxed binding.
+     * This includes:
+     * - Original name (as-is)
+     * - Kebab-case (e.g., serverPort → server-port)
+     * - Upper underscore case (e.g., serverPort → SERVERPORT)
+     * - Camel case conversion from kebab (e.g., server-port → serverPort)
+     */
+    private fun getPropertyNameVariants(name: String): Set<String> {
+        val variants = mutableSetOf<String>()
+        val trimmedName = name.trim()
+
+        // Add original name
+        variants.add(trimmedName)
+
+        // Add kebab-case variant
+        val kebabName = PropertyNameStyle.toDotSeparatedKebabCase(trimmedName)
+        variants.add(kebabName)
+
+        // Add upper underscore variant
+        val upperUnderscoreName = PropertyNameStyle.toUpperUnderscoreCase(trimmedName)
+        variants.add(upperUnderscoreName)
+
+        // Add camel case variant (convert from kebab-case)
+        val camelName = PropertyNameStyle.kebabToCamelCase(trimmedName)
+        variants.add(camelName)
+
+        return variants
+    }
+
+    /**
+     * @param name property name.
+     * @param value property value.
+     */
+    protected open operator fun set(name: String, value: String?) {
+        val variants = getPropertyNameVariants(name)
+
+        // Remove all variants to ensure complete removal
+        variants.forEach { variant ->
+            if (value != null) {
+                multiSourceProperties[variant] = value
+            } else {
+                unset(name)
+            }
+        }
+
+//        val kebabName = PropertyNameStyle.toDotSeparatedKebabCase(name)
+//        if (value != null) {
+//            multiSourceProperties[kebabName] = value
+//        } else {
+//            unset(kebabName)
+//        }
+    }
+
+    protected open fun unset(name: String) {
+        val variants = getPropertyNameVariants(name)
+
+        // Remove all variants to ensure complete removal
+        variants.forEach { variant ->
+            multiSourceProperties.unset(variant)
+        }
+    }
+
+    protected open fun clear() {
+        multiSourceProperties.clear()
+    }
+
+    protected open fun reset(conf: MultiSourceProperties) {
+        multiSourceProperties.reload()
+        conf.iterator().forEach { (key, value) -> set(key, value) }
+    }
 
     /**
      * Retrieves a property value using the exact name provided, without applying relaxed binding rules.
@@ -88,10 +160,15 @@ abstract class AbstractRelaxedConfiguration {
      * @return The property value, or null if not found
      * */
     fun getUnrelaxed(name: String): String? {
+        val value = multiSourceProperties.getVolatile(name)
+        if (value != null) {
+            return value
+        }
+
         return if (environment != null) {
-            environment?.getProperty(name) ?: localFileConfiguration[name]
+            environment?.getProperty(name) ?: multiSourceProperties.getPermanent(name)
         } else {
-            System.getProperty(name) ?: System.getenv(name) ?: localFileConfiguration[name]
+            System.getProperty(name) ?: System.getenv(name) ?: multiSourceProperties.getPermanent(name)
         }
     }
 
@@ -118,18 +195,8 @@ abstract class AbstractRelaxedConfiguration {
      * @return The resolved property value, or `null` if not found in any format.
      */
     open operator fun get(name: String): String? {
-        // Try the name as-is
-        var value = getUnrelaxed(name.trim())
-        if (value != null) return value
-
-        // Try kebab-case (e.g., contextPath → context-path)
-        val kebabName = PropertyNameStyle.toDotSeparatedKebabCase(name)
-        value = getUnrelaxed(kebabName)
-        if (value != null) return value
-
-        // Try upper snake case (e.g., contextPath → CONTEXT_PATH)
-        val upperUnderscoreName = PropertyNameStyle.toUpperUnderscoreCase(name)
-        return getUnrelaxed(upperUnderscoreName)
+        val variants = getPropertyNameVariants(name)
+        return variants.firstNotNullOfOrNull { variant -> getUnrelaxed(variant) }
     }
 
     /**
@@ -470,5 +537,5 @@ abstract class AbstractRelaxedConfiguration {
 
     private fun p(name: String) = SParser(get(name))
 
-    override fun toString() = "profile: <$profile> | $localFileConfiguration"
+    override fun toString() = "profile: <$profile> | $multiSourceProperties"
 }

@@ -1,5 +1,7 @@
 package ai.platon.pulsar.common
 
+import java.util.Locale
+
 object PropertyNameStyle {
     /**
      * Converts environment variable names to Spring Boot property format.
@@ -68,5 +70,36 @@ object PropertyNameStyle {
             .replace(Regex("[.\\s]+"), "_")              // . 空格 → _
             .replace(Regex("-+"), "")                   // remove any dashes (-)
             .uppercase()                                                   // convert to uppercase
+    }
+
+    /**
+     * Converts kebab-case, underscore_case or dotted.names to lower camelCase.
+     *
+     * Examples:
+     * - spring -> spring
+     * - spring.profiles.active -> springProfilesActive
+     * - SPRING_PROFILES_ACTIVE -> springProfilesActive
+     *
+     * Notes:
+     * - Treats '-', '_', and '.' as separators (multiple in a row are collapsed).
+     * - Ignores empty segments.
+     */
+    fun kebabToCamelCase(input: String): String {
+        val parts = input.trim()
+            .split(Regex("[-_.]+"))
+            .filter { it.isNotEmpty() }
+
+        if (parts.size < 2) return input.trim()
+
+        val first = parts.first().lowercase(Locale.ROOT)
+        val rest = parts.drop(1).map { part ->
+            val lower = part.lowercase(Locale.ROOT)
+            lower.replaceFirstChar { ch -> ch.titlecase(Locale.ROOT) }
+        }
+
+        return buildString {
+            append(first)
+            rest.forEach { append(it) }
+        }
     }
 }

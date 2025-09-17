@@ -1,17 +1,16 @@
 package ai.platon.pulsar.common.config
 
-import ai.platon.pulsar.common.PropertyNameStyle
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class LocalFileConfigurationTest {
+class MultiSourcePropertiesTest {
 
-    private lateinit var config: LocalFileConfiguration
+    private lateinit var config: MultiSourceProperties
 
     @BeforeEach
     fun setUp() {
-        config = LocalFileConfiguration(loadDefaults = false)
+        config = MultiSourceProperties(loadDefaults = false)
     }
 
     @Test
@@ -27,43 +26,26 @@ class LocalFileConfigurationTest {
 
         var key = "kebab.mock.Key"
         config[key] = "testValue2"
-        assertEquals("testValue2", config["KEBAB_MOCK_KEY"])
+        assertEquals("testValue2", config[key])
         config.unset(key)
         assertNull(config[key])
 
         key = "kebab.mock-Key"
         config[key] = "testValue3"
-        assertEquals("testValue3", config["KEBAB_MOCK-KEY"])
-        assertEquals("testValue3", config["KEBAB_mock-key"])
-        assertEquals("testValue3", config["KEBAB.mock-key"])
-        assertEquals("testValue3", config["kebab.mock-key"])
-        assertEquals("ke-bab.mock-key", PropertyNameStyle.toDotSeparatedKebabCase("keBab.mock-key"))
-        assertNotEquals("testValue3", config["keBab.mock-key"])
+        assertEquals("testValue3", config[key])
         config.unset(key)
         assertNull(config[key])
 
         key = "kebab.mockkey"
         config[key] = "testValue4"
-        assertEquals("kebab.mockkey", PropertyNameStyle.toDotSeparatedKebabCase("KEBAB_MOCKKEY"))
-        assertEquals("kebab.mock.key", PropertyNameStyle.toDotSeparatedKebabCase("KEBAB_MOCK_KEY"))
-        assertNull(config["KEBAB_MOCK_KEY"])
-        assertNotEquals("testValue4", config["KEBAB_MOCK_KEY"])
+        assertEquals("testValue4", config[key])
         config.unset(key)
         assertNull(config[key])
-
-
 
         key = "llm.apiKey"
         val value = "YOUR-API-KEY"
         config[key] = value
-        assertEquals(value, config["llm.apiKey"])
-        assertEquals(value, config["llm.api-Key"])
-        // assertEquals(value, config["LLM_API_KEY"])
-
-        assertNull(config["llm.api.Key"])
-        assertNull(config["llm.api.key"])
-        assertNull(config["LLM_API_KEY"])
-
+        assertEquals(value, config[key])
         config.unset(key)
         assertNull(config[key])
     }
@@ -144,8 +126,8 @@ class LocalFileConfigurationTest {
 
     @Test
     fun testIdIncrement() {
-        val config1 = LocalFileConfiguration()
-        val config2 = LocalFileConfiguration()
+        val config1 = MultiSourceProperties()
+        val config2 = MultiSourceProperties()
         assertTrue(config2.id > config1.id)
     }
 }

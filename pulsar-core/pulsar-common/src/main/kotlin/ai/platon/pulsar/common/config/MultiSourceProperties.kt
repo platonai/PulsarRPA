@@ -27,12 +27,10 @@ import kotlin.io.path.*
 /**
  * Configuration is a set of key/value pairs. Keys are always strings, values can be any type.
  *
- * @property profile The profile of the configuration.
  * @property extraResources The extra resources to load.
  * @property loadDefaults Whether to load the default resources.
  * */
-class LocalFileConfiguration(
-    val profile: String = "",
+class MultiSourceProperties(
     val extraResources: Iterable<String> = listOf(),
     private val loadDefaults: Boolean = true,
 ) : Iterable<Map.Entry<String, String?>> {
@@ -42,47 +40,53 @@ class LocalFileConfiguration(
         private val ID_SUPPLIER = AtomicInteger()
     }
 
-    private var impl: LocalFileConfigurationImpl? = null
+    private var volatileProperties = Properties()
 
+    private var configResourcesImpl: PropertyResourceLoader? = null
     @get:Synchronized
-    private val assuredImplementation: LocalFileConfigurationImpl
+    private val loadedProperties: PropertyResourceLoader
         get() {
-            if (impl == null) {
-                impl = LocalFileConfigurationImpl(profile, extraResources, loadDefaults)
-                impl?.load()
+            if (configResourcesImpl == null) {
+                configResourcesImpl = PropertyResourceLoader(extraResources, loadDefaults)
+                configResourcesImpl?.load()
             }
 
-            return impl!!
+            return configResourcesImpl!!
         }
 
     val id = ID_SUPPLIER.incrementAndGet()
 
-    constructor(xmlPath: Path) : this("", listOf(xmlPath.toString()), false)
+    constructor(xmlPath: Path) : this(listOf(xmlPath.toString()), false)
 
-    constructor(conf: LocalFileConfiguration) : this(conf.profile, conf.extraResources, conf.loadDefaults)
+    constructor(conf: MultiSourceProperties) : this(conf.extraResources, conf.loadDefaults)
 
     /**
      * @param name property name.
      * @param value property value.
      */
     operator fun set(name: String, value: String?) {
-        val actualKey = PropertyNameStyle.toDotSeparatedKebabCase(name)
-
         if (value == null) {
-            unset(actualKey)
+            unset(name)
         } else {
-            assuredImplementation[actualKey] = value
+            volatileProperties[name] = value
         }
     }
 
     fun unset(name: String) {
-        val actualKey = PropertyNameStyle.toDotSeparatedKebabCase(name)
-        assuredImplementation.remove(actualKey)
+        val removed = volatileProperties.remove(name)
+        loadedProperties.remove(name)
     }
 
     operator fun get(name: String): String? {
-        val actualKey = PropertyNameStyle.toDotSeparatedKebabCase(name)
-        return assuredImplementation[actualKey]?.toString()
+        return getVolatile(name) ?: getPermanent(name)
+    }
+
+    fun getVolatile(name: String): String? {
+        return volatileProperties[name]?.toString()
+    }
+
+    fun getPermanent(name: String): String? {
+        return loadedProperties[name]?.toString()
     }
 
     fun get(name: String, defaultValue: String): String {
@@ -104,18 +108,20 @@ class LocalFileConfiguration(
      *
      * @return number of keys in the configuration.
      */
-    fun size() = assuredImplementation.size()
+    fun size() = volatileProperties.size + loadedProperties.size()
 
     /**
      * Clears all keys from the configuration.
      */
     fun clear() {
-        impl = null
+        volatileProperties.clear()
+        configResourcesImpl = null
     }
 
     @Synchronized
     fun reload() {
-        impl = null // trigger reload
+        volatileProperties = Properties()
+        configResourcesImpl = null // trigger reload
     }
 
     override fun iterator(): Iterator<Map.Entry<String, String>> {
@@ -124,19 +130,26 @@ class LocalFileConfiguration(
         // we could replace properties with a Map<String,String> and get rid of this
         // code.
         val result: MutableMap<String, String> = HashMap()
-        for ((key, value) in assuredImplementation.properties) {
-            if (key is String && value is String) {
-                result[key] = value
+
+        for ((key, value) in loadedProperties.properties) {
+            if (key is String) {
+                result[key] = value.toString()
             }
         }
+
+        for ((key, value) in volatileProperties) {
+            if (key is String) {
+                result[key] = value.toString()
+            }
+        }
+
         return result.entries.iterator()
     }
 
-    override fun toString() = assuredImplementation.toString()
+    override fun toString() = loadedProperties.toString()
 }
 
-private class LocalFileConfigurationImpl(
-    private val profile: String,
+private class PropertyResourceLoader(
     private val extraResources: Iterable<String>,
     private val loadDefaults: Boolean,
 ) {
@@ -198,7 +211,7 @@ private class LocalFileConfigurationImpl(
     private fun loadFromPropertyFile(path: Path) {
         try {
             properties.load(path.reader())
-        } catch (e: IOException) {
+        } catch (_: IOException) {
             logger.warn("Failed to load properties | {}", path)
         }
     }
@@ -210,19 +223,20 @@ private class LocalFileConfigurationImpl(
      * strings for property keys and values. The value returned is the
      * result of the {@code Hashtable} call to {@code put}.
      *
-     * @param key the key to be placed into this property list.
+     * @param name the name to be placed into this property list.
      * @param value the value corresponding to {@code key}.
      * @return     the previous value of the specified key in this property
      *             list, or {@code null} if it did not have one.
      * @see #getProperty
      */
     operator fun set(name: String, value: String): Any? {
-        val actualKey = PropertyNameStyle.toDotSeparatedKebabCase(name)
-        val oldValue = properties.setProperty(actualKey, value)
+        val oldValue = properties.setProperty(name, value)
         return oldValue
     }
 
-    fun remove(name: String) = properties.remove(name)
+    fun remove(name: String) {
+        properties.remove(name)
+    }
 
     fun size() = properties.size
 
@@ -233,17 +247,13 @@ private class LocalFileConfigurationImpl(
     }
 
     private fun collectResourcePaths() {
-        if (profile.isNotEmpty()) {
-            set(CapabilityTypes.PROFILE_KEY, profile)
-        }
-
         resourceNames.addAll(extraResources)
         if (loadDefaults) {
-            resourceNames.addAll(LocalFileConfiguration.DEFAULT_RESOURCES)
+            resourceNames.addAll(MultiSourceProperties.DEFAULT_RESOURCES)
         }
 
         for (resourceName in resourceNames) {
-            val realResource = findRealResource(profile, resourceName)?.toString()
+            val realResource = findRealResource(resourceName)?.toString()
             if (realResource != null && realResource !in resourceURIs) {
                 resourceURIs.add(realResource)
                 logger.info("Found configuration: {}", realResource)
@@ -253,7 +263,7 @@ private class LocalFileConfigurationImpl(
         }
     }
 
-    private fun findRealResource(profile: String, resourceName: String): URL? {
+    private fun findRealResource(resourceName: String): URL? {
         val prefix = "config"
         val searchPaths = arrayOf(
             "$prefix/$resourceName"
@@ -332,8 +342,8 @@ private class LocalFileConfigurationImpl(
     }
 
     private fun loadProperty(
-        properties: Properties, name: String, key: String,
-        value: String?, finalParameter: Boolean, source: Array<String>?
+        properties: Properties, @Suppress("UNUSED_PARAMETER") name: String, key: String,
+        value: String?, @Suppress("UNUSED_PARAMETER") finalParameter: Boolean, @Suppress("UNUSED_PARAMETER") source: Array<String>?
     ) {
         // @see https://docs.spring.io/spring-boot/reference/features/external-config.html
         val actualKey = PropertyNameStyle.toDotSeparatedKebabCase(key)
@@ -347,7 +357,7 @@ private class LocalFileConfigurationImpl(
     }
 
     @Throws(XMLStreamException::class, IOException::class)
-    internal fun getStreamReader(wrapper: Resource): XMLStreamReader2? {
+    fun getStreamReader(wrapper: Resource): XMLStreamReader2? {
         val resource = wrapper.resource
         return when (resource) {
             is URL -> parse(resource) as XMLStreamReader2?
@@ -403,7 +413,7 @@ private class LocalFileConfigurationImpl(
     private class Parser(
         val reader: XMLStreamReader2,
         val wrapper: Resource,
-        val configurationImpl: LocalFileConfigurationImpl
+        val configurationImpl: PropertyResourceLoader
     ) {
         private val name: String = wrapper.name
         private val nameSingletonArray: Array<String> = arrayOf(name)
@@ -502,9 +512,9 @@ private class LocalFileConfigurationImpl(
                         // Included resources are relative to the current resource
                         var baseFile = try {
                             File(URI(name))
-                        } catch (e: IllegalArgumentException) {
+                        } catch (_: IllegalArgumentException) {
                             File(name)
-                        } catch (e: URISyntaxException) {
+                        } catch (_: URISyntaxException) {
                             File(name)
                         }
                         baseFile = baseFile.parentFile

@@ -1,6 +1,5 @@
-package ai.platon.pulsar.common.conf
+package ai.platon.pulsar.common.config
 
-import ai.platon.pulsar.common.config.MutableConfig
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

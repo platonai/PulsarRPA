@@ -22,7 +22,7 @@ open class ImmutableConfig : AbstractRelaxedConfiguration {
         resources: Iterable<String> = mutableSetOf()
     ): super(profile, loadDefaults, resources)
 
-    constructor(conf: LocalFileConfiguration) : super(conf)
+    constructor(conf: MultiSourceProperties) : super(conf)
 
     constructor(conf: ImmutableConfig) : super(conf.unbox()) {
         this.environment = conf.environment
