@@ -15,6 +15,11 @@ interface Browser: AutoCloseable {
      * The browser instance id
      * */
     val instanceId: Int
+
+    val host: String
+
+    val port: Int
+
     /**
      * The user agent. A user agent is a string that a browser sends to each website you visit.
      * It's created when the browser first connected to the remote browser.

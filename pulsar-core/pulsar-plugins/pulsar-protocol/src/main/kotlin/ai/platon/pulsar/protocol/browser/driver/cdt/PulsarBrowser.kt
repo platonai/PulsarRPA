@@ -36,15 +36,15 @@ class PulsarBrowser(
 
     private val reuseRecoveredDriver get() = conf.getBoolean(BROWSER_REUSE_RECOVERED_DRIVERS, false)
 
-    val host: String get() = chrome.host
+    override val host: String get() = chrome.host
 
-    val port: Int get() = chrome.port
+    override val port: Int get() = chrome.port
 
     override val isConnected: Boolean get() = isActive && chrome.canConnect()
 
     override val isActive get() = super.isActive && chrome.isActive
 
-    override val userAgent get() = chrome.version.userAgent ?: "Invalid user agent"
+    override val userAgent get() = chrome.version.userAgent ?: DEFAULT_USER_AGENT
 
     init {
         // It's safe to register multiple times, the manager will be closed only once, and the browsers

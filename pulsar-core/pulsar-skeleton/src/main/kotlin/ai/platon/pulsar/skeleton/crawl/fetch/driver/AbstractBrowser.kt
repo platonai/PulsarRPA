@@ -36,6 +36,10 @@ abstract class AbstractBrowser(
 
     override val instanceId: Int = SEQUENCER.incrementAndGet()
 
+    override val host = "localhost"
+
+    override val port = 0
+
     override val userAgent get() = DEFAULT_USER_AGENT
 
     var userAgentOverride = getRandomUserAgentOrNull()
