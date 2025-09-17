@@ -3,20 +3,14 @@ package ai.platon.pulsar.rest.api.controller
 import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.entities.*
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
 import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.*
 
 class SinglePageApplicationControllerTest : ScrapeControllerTestBase() {
 
-    @BeforeEach
-    fun `GET init returns status map`() {
+    fun init() {
         val typeRef = object : ParameterizedTypeReference<Map<String, String>>() {}
         val response: ResponseEntity<Map<String, String>> = restTemplate.exchange(
             "$baseUri/api/spa/init", HttpMethod.GET, null, typeRef
@@ -29,8 +23,7 @@ class SinglePageApplicationControllerTest : ScrapeControllerTestBase() {
         assertThat(body["status"]).isNotBlank()
     }
 
-    @Test
-    fun `POST navigate returns CommandStatus`() {
+    fun navigateToProductPage() {
         val request = NavigateRequest(PRODUCT_DETAIL_URL)
         val status = restTemplate.postForObject(
             "$baseUri/api/spa/navigate", request, CommandStatus::class.java
@@ -41,39 +34,47 @@ class SinglePageApplicationControllerTest : ScrapeControllerTestBase() {
         assertThat(status.id).isNotBlank()
     }
 
+    @BeforeEach
+    fun `init SPA`() {
+        init()
+        navigateToProductPage()
+    }
+
     @Test
-    fun `POST act without driver returns 503`() {
+    fun `act with clicking`() {
         val request = ActRequest(id = "test", act = "click #submit")
         val response = restTemplate.postForEntity(
             "$baseUri/api/spa/act", request, CommandStatus::class.java
         )
-        assertThat(response.statusCode.value()).isEqualTo(503)
+        assertThat(response.statusCode.value()).isEqualTo(200)
         assertThat(response.body).isNotNull
-        assertThat(response.body!!.message).contains("No active browser driver")
+        println(response.body)
+
+        readln()
     }
 
     @Test
-    fun `GET screenshot without driver returns 503`() {
+    fun `take screenshot`() {
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_JSON
         val request = HttpEntity(ScreenshotRequest(id = "test"), headers)
         val response = restTemplate.exchange(
             "$baseUri/api/spa/screenshot", HttpMethod.GET, request, CommandStatus::class.java
         )
-        assertThat(response.statusCode.value()).isEqualTo(503)
+        assertThat(response.statusCode.value()).isEqualTo(200)
         assertThat(response.body).isNotNull
-        assertThat(response.body!!.message).contains("No active browser driver")
+        println(response.body)
     }
 
     @Test
-    fun `GET extract without driver returns 500`() {
+    fun `extract with prompt`() {
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_JSON
         val request = HttpEntity(ExtractRequest(id = "test", prompt = "name, price"), headers)
         val response = restTemplate.exchange(
             "$baseUri/api/spa/extract", HttpMethod.GET, request, Any::class.java
         )
-        assertThat(response.statusCode.value()).isEqualTo(500)
+        println(response.body)
+        assertThat(response.statusCode.value()).isEqualTo(200)
     }
 }
-

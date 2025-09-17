@@ -21,6 +21,14 @@ class PulsarBrowserFactory : BrowserFactory {
     /**
      * Launch a browser with the given browser id, the browser id is used to identify the browser instance.
      * */
+    @Throws(BrowserLaunchException::class)
+    override fun launch(
+        browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
+    ): Browser = launcher.launch(browserId, launcherOptions, launchOptions)
+
+    /**
+     * Launch a browser with the given browser id, the browser id is used to identify the browser instance.
+     * */
     override fun launch(browserId: BrowserId): Browser {
         require(browserId.browserType == browserType) { "Browser type should be $browserType" }
 
@@ -70,12 +78,4 @@ class PulsarBrowserFactory : BrowserFactory {
     @Throws(BrowserLaunchException::class)
     override fun launchRandomTempBrowser(): Browser =
         launcher.launch(BrowserId.RANDOM_TEMP, LauncherOptions(), ChromeOptions())
-
-    /**
-     * Launch a browser with the given browser id, the browser id is used to identify the browser instance.
-     * */
-    @Throws(BrowserLaunchException::class)
-    fun launch(
-        browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
-    ): Browser = launcher.launch(browserId, launcherOptions, launchOptions)
 }

@@ -1,6 +1,8 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
+import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 
@@ -48,4 +50,12 @@ interface BrowserFactory {
      * */
     @Throws(BrowserLaunchException::class)
     fun launchRandomTempBrowser(): Browser
+
+    /**
+     * Launch a browser with the given browser id, the browser id is used to identify the browser instance.
+     * */
+    @Throws(BrowserLaunchException::class)
+    fun launch(
+        browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
+    ): Browser
 }

@@ -10,14 +10,6 @@ import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 abstract class AbstractBrowserFactory : BrowserFactory {
 
     /**
-     * Launch a browser with the given browser id, the browser id is used to identify the browser instance.
-     * */
-    @Throws(BrowserLaunchException::class)
-    abstract fun launch(
-        browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
-    ): Browser
-
-    /**
      * Launch the system default browser, the system default browser is your daily used browser.
      * */
     @Throws(BrowserLaunchException::class)
