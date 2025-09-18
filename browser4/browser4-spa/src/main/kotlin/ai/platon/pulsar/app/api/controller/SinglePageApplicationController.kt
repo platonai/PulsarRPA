@@ -72,9 +72,6 @@ class SinglePageApplicationController(
                 require(session.context is H2SQLContext)
                 require(session.isActive)
 
-                // Use a real browser for SPA rendering
-                PulsarSettings().withDefaultBrowser()
-
                 // 如果已经初始化过，直接返回健康状态
                 if (isInitialized && browser != null) {
                     return mapOf(
