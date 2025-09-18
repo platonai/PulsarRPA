@@ -45,7 +45,7 @@ class LoadingWebDriverPoolTest {
     @AfterEach
     fun tearDown() {
         pool.close()
-        pool.driverPoolManager.close()
+        poolManager.close()
     }
 
     @Test
