@@ -78,17 +78,17 @@ class Browser4Application {
         return ServerUrls(
             navigateEndpoint = "$baseURL/navigate",
             actEndpoint = "$baseURL/act",
-            screenshotEndpoint = "$baseURL/snapshot",
+            screenshotEndpoint = "$baseURL/screenshot",
             extractEndpoint = "$baseURL/extract/",
         )
     }
 
     private fun buildHelpMessage(llmHelp: String, urls: ServerUrls): String {
         val message = """
-1. navigate to a page
-2. act on a page
-3. take screenshot
-4. extract data from the page
+1. navigate to a page - ${urls.navigateEndpoint}
+2. act on a page - ${urls.actEndpoint}
+3. take screenshot - ${urls.screenshotEndpoint}
+4. extract data from the page - ${urls.extractEndpoint}
         """.trimIndent()
 
         return message
