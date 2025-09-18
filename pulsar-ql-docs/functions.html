@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulsar QL Functions Reference</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">Pulsar QL</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="functions.html">Functions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#examples">Examples</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid mt-5 pt-4">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 sidebar">
+                <div class="position-sticky pt-4">
+                    <div class="sidebar-section">
+                        <h5>Function Categories</h5>
+                        <ul class="nav flex-column">
+                            <li class="nav-item"><a class="nav-link" href="#dom-functions">DOM Functions</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#string-functions">String Functions</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#array-functions">Array Functions</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#datetime-functions">DateTime Functions</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#metadata-functions">Metadata Functions</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#common-functions">Common Functions</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <h1 class="h2 mb-4">Functions Reference</h1>
+
+                <section id="dom-functions" class="mb-5">
+                    <h2 class="section-title">DOM Functions</h2>
+                    <p class="section-description">HTML/XML document manipulation and web scraping functions</p>
+
+                    <div class="function-category">
+                        <h4>Document Loading and Parsing</h4>
+                        <div class="function-list">
+                            <div class="function-item">
+                                <h5>DOM.load(url)</h5>
+                                <p>Load page from database cache or fetch from web if not cached/expired.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT DOM.load('https://example.com');</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>DOM.fetch(url)</h5>
+                                <p>Fetch page immediately from web, bypassing cache.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT DOM.fetch('https://example.com');</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>DOM.parse(html)</h5>
+                                <p>Parse HTML content string into DOM document.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT DOM.parse('<html><body>Hello</body></html>');</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4>Element Selection</h4>
+                        <div class="function-list">
+                            <div class="function-item">
+                                <h5>DOM.select(dom, cssQuery)</h5>
+                                <p>Select all elements matching CSS selector.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT DOM.select(dom, 'div.content');</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>DOM.selectFirst(dom, cssQuery)</h5>
+                                <p>Select first element matching CSS selector.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT DOM.selectFirst(dom, 'title');</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>DOM.selectNth(dom, cssQuery, n)</h5>
+                                <p>Select nth element matching CSS selector.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT DOM.selectNth(dom, 'p', 2);</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4>Content Extraction</h4>
+                        <div class="function-list">
+                            <div class="function-item">
+                                <h5>DOM.text(dom)</h5>
+                                <p>Extract text content from element.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT DOM.text(DOM.selectFirst(dom, 'h1'));</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>DOM.attr(dom, attrName)</h5>
+                                <p>Get element attribute value.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT DOM.attr(DOM.selectFirst(dom, 'a'), 'href');</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>DOM.hrefs(dom)</h5>
+                                <p>Extract all link hrefs from document.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT DOM.hrefs(dom) as all_links;</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="string-functions" class="mb-5">
+                    <h2 class="section-title">String Functions</h2>
+                    <p class="section-description">Text processing, validation, and manipulation functions</p>
+
+                    <div class="function-category">
+                        <h4>String Validation</h4>
+                        <div class="function-list">
+                            <div class="function-item">
+                                <h5>STR.isNumeric(text)</h5>
+                                <p>Check if string contains only numeric characters (0-9).</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT STR.isNumeric('12345'); -- returns true</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>STR.isAlpha(text)</h5>
+                                <p>Check if string contains only alphabetic characters.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT STR.isAlpha('hello'); -- returns true</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>STR.isEmpty(text)</h5>
+                                <p>Check if string is null or empty.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT STR.isEmpty(''); -- returns true</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4>String Manipulation</h4>
+                        <div class="function-list">
+                            <div class="function-item">
+                                <h5>STR.capitalize(text)</h5>
+                                <p>Capitalize first character of string.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT STR.capitalize('hello'); -- returns 'Hello'</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>STR.substring(text, start, end)</h5>
+                                <p>Extract substring from string.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT STR.substring('hello world', 0, 5); -- returns 'hello'</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>STR.replace(text, search, replacement)</h5>
+                                <p>Replace occurrences of substring.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT STR.replace('hello world', 'world', 'universe');</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="array-functions" class="mb-5">
+                    <h2 class="section-title">Array Functions</h2>
+                    <p class="section-description">Array manipulation and utility operations</p>
+
+                    <div class="function-category">
+                        <div class="function-list">
+                            <div class="function-item">
+                                <h5>ARRAY.joinToString(array, separator)</h5>
+                                <p>Join array elements into string with separator.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT ARRAY.joinToString(makeArray('a', 'b', 'c'), ','); -- returns 'a,b,c'</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>ARRAY.firstNotBlank(array)</h5>
+                                <p>Find first non-blank string value in array.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT ARRAY.firstNotBlank(makeArray('', '  ', 'hello')); -- returns 'hello'</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>ARRAY.firstNotEmpty(array)</h5>
+                                <p>Find first non-empty string value in array.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT ARRAY.firstNotEmpty(makeArray('', 'hello', 'world')); -- returns 'hello'</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="datetime-functions" class="mb-5">
+                    <h2 class="section-title">DateTime Functions</h2>
+                    <p class="section-description">Date and time extraction and formatting</p>
+
+                    <div class="function-category">
+                        <div class="function-list">
+                            <div class="function-item">
+                                <h5>TIME.firstDateTime(text, pattern)</h5>
+                                <p>Extract first datetime from text using pattern.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT TIME.firstDateTime('Meeting: 2023-12-25 14:30:00');</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>TIME.firstMysqlDateTime(text)</h5>
+                                <p>Extract MySQL-formatted datetime from text.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT TIME.firstMysqlDateTime('Created at 2023-12-25 14:30:00');</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="metadata-functions" class="mb-5">
+                    <h2 class="section-title">Metadata Functions</h2>
+                    <p class="section-description">Web page metadata and information retrieval</p>
+
+                    <div class="function-category">
+                        <div class="function-list">
+                            <div class="function-item">
+                                <h5>META.get(url)</h5>
+                                <p>Load and format web page metadata as string.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT META.get('https://example.com');</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="common-functions" class="mb-5">
+                    <h2 class="section-title">Common Functions</h2>
+                    <p class="section-description">Utility functions for URLs, regex, and data conversion</p>
+
+                    <div class="function-category">
+                        <div class="function-list">
+                            <div class="function-item">
+                                <h5>getTopPrivateDomain(url)</h5>
+                                <p>Extract top private domain from URL.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT getTopPrivateDomain('https://www.example.com/path'); -- returns 'example.com'</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>re1(text, regex, group)</h5>
+                                <p>Extract regex capturing group from text.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT re1('Price: $99.99', '\$([0-9.]+)'); -- returns '99.99'</code></pre>
+                                </div>
+                            </div>
+                            <div class="function-item">
+                                <h5>formatTimestamp(timestamp, format)</h5>
+                                <p>Format timestamp to readable date string.</p>
+                                <div class="function-example">
+                                    <pre><code class="language-sql">SELECT formatTimestamp('1640995200000', 'yyyy-MM-dd'); -- returns '2022-01-01'</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-light py-4">
+        <div class="container text-center">
+            <p>&copy; 2024 Pulsar AI. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM Functions - Pulsar QL Documentation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">Pulsar QL</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="functions.html">Functions</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="dom-functions.html">DOM Functions</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid mt-5 pt-4">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 sidebar">
+                <div class="position-sticky pt-4">
+                    <div class="sidebar-section">
+                        <h5>DOM Function Categories</h5>
+                        <ul class="nav flex-column">
+                            <li class="nav-item"><a class="nav-link" href="#document-loading">Document Loading</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#element-selection">Element Selection</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#content-extraction">Content Extraction</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#attribute-functions">Attribute Functions</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#navigation-functions">Navigation Functions</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#validation-functions">Validation Functions</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#utility-functions">Utility Functions</a></li>
+                        </ul>
+                    </div>                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <h1 class="h2 mb-4">DOM Functions Reference</h1>
+                <p class="lead mb-4">Comprehensive HTML/XML document manipulation functions for web scraping and data extraction.</p>
+
+                <section id="document-loading" class="mb-5">
+                    <h2 class="section-title">Document Loading and Parsing</h2>
+                    <p class="section-description">Functions for loading web pages and parsing HTML content</p>
+
+                    <div class="function-item">
+                        <h5>DOM.load(url)</h5>
+                        <p><strong>Description:</strong> Load a web page from database cache or fetch it from the web if not cached or expired. This function implements intelligent page loading with caching strategies.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>url</code> (String): The URL to load (supports Pulsar URL configuration syntax)</li>
+                        </ul>
+                        <p><strong>Returns:</strong> ValueDom containing the parsed document, or ValueDom.NIL on failure</p>
+                        <div class="function-example">
+                            <h6>Basic Usage:</h6>
+                            <pre><code class="language-sql">-- Load a web page and return DOM document
+SELECT DOM.load('https://example.com');
+
+-- Load page and extract title
+SELECT DOM.text(DOM.selectFirst(DOM.load('https://news.site.com/article'), 'h1'));
+
+-- Load multiple pages
+SELECT url, DOM.load(url) as document
+FROM (
+  SELECT 'https://site1.com' as url UNION ALL
+  SELECT 'https://site2.com' as url UNION ALL
+  SELECT 'https://site3.com' as url
+) pages;</code></pre>
+                        </div>
+                        <div class="function-usage">
+                            <h6>Use Cases:</h6>
+                            <ul>
+                                <li>Web scraping with intelligent caching</li>
+                                <li>Batch processing of web pages</li>
+                                <li>Building data extraction pipelines</li>
+                                <li>Automated content analysis</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.fetch(url)</h5>
+                        <p><strong>Description:</strong> Fetch a web page immediately from the web, bypassing cache and forcing fresh content.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>url</code> (String): The URL to fetch (supports Pulsar URL configuration syntax)</li>
+                        </ul>
+                        <p><strong>Returns:</strong> ValueDom containing the parsed document, or ValueDom.NIL on failure</p>
+                        <div class="function-example">
+                            <h6>Basic Usage:</h6>
+                            <pre><code class="language-sql">-- Fetch a page fresh from the web
+SELECT DOM.fetch('https://example.com');
+
+-- Compare cached vs fresh content
+SELECT
+  'cached' as source,
+  DOM.text(DOM.selectFirst(DOM.load('https://example.com'), 'title')) as title
+UNION ALL
+SELECT
+  'fresh' as source,
+  DOM.text(DOM.selectFirst(DOM.fetch('https://example.com'), 'title')) as title;</code></pre>
+                        </div>
+                        <div class="function-usage">
+                            <h6>Use Cases:</h6>
+                            <ul>
+                                <li>Getting real-time data that changes frequently</li>
+                                <li>Bypassing stale cache entries</li>
+                                <li>Testing website changes immediately</li>
+                                <li>Breaking news or live data extraction</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.parse(html)</h5>
+                        <p><strong>Description:</strong> Parse HTML content string into DOM document.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>html</code> (String): HTML content to parse</li>
+                        </ul>
+                        <p><strong>Returns:</strong> ValueDom containing the parsed document</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Parse HTML content
+SELECT DOM.parse('<html><body><h1>Hello World</h1></body></html>');
+
+-- Parse and extract content
+SELECT DOM.text(DOM.selectFirst(DOM.parse('<div><p>Test content</p></div>'), 'p'));</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.isNil(dom)</h5>
+                        <p><strong>Description:</strong> Check if a DOM element is null or invalid (represents a nil value).</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element to test</li>
+                        </ul>
+                        <p><strong>Returns:</strong> Boolean - true if DOM is nil/invalid, false otherwise</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Check if page load was successful
+SELECT DOM.isNil(DOM.load('https://invalid-url.com')) as load_failed;
+
+-- Use in conditional logic
+SELECT
+  CASE
+    WHEN DOM.isNil(dom) THEN 'Failed to load'
+    ELSE 'Load successful'
+  END as status
+FROM (
+  SELECT DOM.load('https://example.com') as dom
+) t;</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="element-selection" class="mb-5">
+                    <h2 class="section-title">Element Selection</h2>
+                    <p class="section-description">Functions for selecting elements using CSS selectors</p>
+
+                    <div class="function-item">
+                        <h5>DOM.select(dom, cssQuery)</h5>
+                        <p><strong>Description:</strong> Select all elements matching CSS selector and return as array.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM document to search in</li>
+                            <li><code>cssQuery</code> (String): CSS selector query</li>
+                        </ul>
+                        <p><strong>Returns:</strong> ValueArray containing all matching elements</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Select all paragraph elements
+SELECT DOM.select(dom, 'p');
+
+-- Select elements by class
+SELECT DOM.select(dom, 'div.content');
+
+-- Select elements by ID
+SELECT DOM.select(dom, '#main-content');
+
+-- Complex selectors
+SELECT DOM.select(dom, 'div.article h2.title');</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.selectFirst(dom, cssQuery)</h5>
+                        <p><strong>Description:</strong> Select first element matching CSS selector.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM document to search in</li>
+                            <li><code>cssQuery</code> (String): CSS selector query</li>
+                        </ul>
+                        <p><strong>Returns:</strong> ValueDom containing the first matching element</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Select page title
+SELECT DOM.selectFirst(dom, 'title');
+
+-- Select main heading
+SELECT DOM.selectFirst(dom, 'h1');
+
+-- Select first link
+SELECT DOM.selectFirst(dom, 'a');
+
+-- Select by ID
+SELECT DOM.selectFirst(dom, '#header');</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.selectNth(dom, cssQuery, n)</h5>
+                        <p><strong>Description:</strong> Select nth element (0-indexed) matching CSS selector.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM document to search in</li>
+                            <li><code>cssQuery</code> (String): CSS selector query</li>
+                            <li><code>n</code> (Integer): Index of element to select (0-based)</li>
+                        </ul>
+                        <p><strong>Returns:</strong> ValueDom containing the nth matching element</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Select second paragraph
+SELECT DOM.selectNth(dom, 'p', 1);
+
+-- Select third list item
+SELECT DOM.selectNth(dom, 'li', 2);
+
+-- Select first table row (excluding header)
+SELECT DOM.selectNth(dom, 'tr', 1);</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="content-extraction" class="mb-5">
+                    <h2 class="section-title">Content Extraction</h2>
+                    <p class="section-description">Functions for extracting text content and data from DOM elements</p>
+
+                    <div class="function-item">
+                        <h5>DOM.text(dom, truncate)</h5>
+                        <p><strong>Description:</strong> Extract text content from element and all its descendants.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element</li>
+                            <li><code>truncate</code> (Integer, optional): Maximum length of text to return (default: Int.MAX_VALUE)</li>
+                        </ul>
+                        <p><strong>Returns:</strong> String containing the text content</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Extract text from element
+SELECT DOM.text(DOM.selectFirst(dom, 'h1'));
+
+-- Extract with truncation
+SELECT DOM.text(DOM.selectFirst(dom, 'div.content'), 100);
+
+-- Extract all text from page
+SELECT DOM.text(dom);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.ownText(dom)</h5>
+                        <p><strong>Description:</strong> Extract only the direct text content of the element, excluding text from child elements.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element</li>
+                        </ul>
+                        <p><strong>Returns:</strong> String containing only the element's own text</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Extract only direct text (excludes child element text)
+SELECT DOM.ownText(DOM.selectFirst(dom, 'div'));
+
+-- Compare with DOM.text() to see difference
+SELECT
+  DOM.text(DOM.selectFirst(dom, 'div')) as all_text,
+  DOM.ownText(DOM.selectFirst(dom, 'div')) as own_text;</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.wholeText(dom)</h5>
+                        <p><strong>Description:</strong> Extract unnormalized text content including whitespace and line breaks.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element</li>
+                        </ul>
+                        <p><strong>Returns:</strong> String containing unnormalized text content</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Extract text with preserved formatting
+SELECT DOM.wholeText(DOM.selectFirst(dom, 'pre'));
+
+-- Extract from code blocks
+SELECT DOM.wholeText(DOM.selectFirst(dom, 'code'));</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="attribute-functions" class="mb-5">
+                    <h2 class="section-title">Attribute Functions</h2>
+                    <p class="section-description">Functions for extracting element attributes and properties</p>
+
+                    <div class="function-item">
+                        <h5>DOM.attr(dom, attrName)</h5>
+                        <p><strong>Description:</strong> Get the value of the specified attribute from a DOM element.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element</li>
+                            <li><code>attrName</code> (String): Name of the attribute to retrieve</li>
+                        </ul>
+                        <p><strong>Returns:</strong> String containing the attribute value, or empty string if attribute doesn't exist</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Extract href from link
+SELECT DOM.attr(DOM.selectFirst(dom, 'a.main-link'), 'href');
+
+-- Extract image source
+SELECT DOM.attr(DOM.selectFirst(dom, 'img.logo'), 'src');
+
+-- Extract class attribute
+SELECT DOM.attr(DOM.selectFirst(dom, 'div.content'), 'class');
+
+-- Extract custom data attributes
+SELECT DOM.attr(DOM.selectFirst(dom, 'div[data-product-id]'), 'data-product-id');</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.hrefs(dom)</h5>
+                        <p><strong>Description:</strong> Extract all link hrefs from document.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM document</li>
+                        </ul>
+                        <p><strong>Returns:</strong> ValueArray containing all link hrefs</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Extract all links from page
+SELECT DOM.hrefs(dom) as all_links;
+
+-- Count total links
+SELECT ARRAY.length(DOM.hrefs(dom)) as link_count;
+
+-- Extract only external links
+SELECT link
+FROM UNNEST(DOM.hrefs(dom)) as links(link)
+WHERE link NOT LIKE 'javascript:%'
+  AND link NOT LIKE '#%';</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.hasAttr(dom, attrName)</h5>
+                        <p><strong>Description:</strong> Check if element has the specified attribute.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element</li>
+                            <li><code>attrName</code> (String): Name of the attribute to check</li>
+                        </ul>
+                        <p><strong>Returns:</strong> Boolean indicating if attribute exists</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Check if link has href attribute
+SELECT DOM.hasAttr(DOM.selectFirst(dom, 'a'), 'href');
+
+-- Check if image has alt text
+SELECT DOM.hasAttr(DOM.selectFirst(dom, 'img'), 'alt');
+
+-- Filter elements with specific attributes
+SELECT element
+FROM UNNEST(DOM.select(dom, 'img')) as images(element)
+WHERE DOM.hasAttr(element, 'alt');</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="navigation-functions" class="mb-5">
+                    <h2 class="section-title">Navigation Functions</h2>
+                    <p class="section-description">Functions for navigating the DOM tree structure</p>
+
+                    <div class="function-item">
+                        <h5>DOM.parent(dom)</h5>
+                        <p><strong>Description:</strong> Get the parent element of the specified DOM element.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element</li>
+                        </ul>
+                        <p><strong>Returns:</strong> ValueDom containing the parent element</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Navigate to parent element
+SELECT DOM.text(DOM.parent(DOM.selectFirst(dom, 'p')));
+
+-- Get parent's tag name
+SELECT DOM.tagName(DOM.parent(DOM.selectFirst(dom, 'span')));</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.children(dom)</h5>
+                        <p><strong>Description:</strong> Get all child elements of the specified DOM element.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element</li>
+                        </ul>
+                        <p><strong>Returns:</strong> ValueArray containing all child elements</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Get all child elements
+SELECT DOM.children(DOM.selectFirst(dom, 'div.container'));
+
+-- Process each child element
+SELECT DOM.text(child) as child_text
+FROM UNNEST(DOM.children(DOM.selectFirst(dom, 'ul'))) as children(child);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.siblingIndex(dom)</h5>
+                        <p><strong>Description:</strong> Get the index of the element among its siblings.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element</li>
+                        </ul>
+                        <p><strong>Returns:</strong> Integer representing the sibling index (0-based)</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Get sibling index
+SELECT DOM.siblingIndex(DOM.selectFirst(dom, 'li:nth-child(3)'));
+
+-- Find position in list
+SELECT
+  DOM.text(item) as item_text,
+  DOM.siblingIndex(item) + 1 as position
+FROM UNNEST(DOM.select(dom, 'li')) as items(item);</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="validation-functions" class="mb-5">
+                    <h2 class="section-title">Validation Functions</h2>
+                    <p class="section-description">Functions for validating DOM elements and their properties</p>
+
+                    <div class="function-item">
+                        <h5>DOM.hasText(dom)</h5>
+                        <p><strong>Description:</strong> Check if element has any text content (including whitespace).</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element</li>
+                        </ul>
+                        <p><strong>Returns:</strong> Boolean indicating if element has text content</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Check if elements have text content
+SELECT DOM.hasText(DOM.selectFirst(dom, 'div'));
+
+-- Filter elements with content
+SELECT element
+FROM UNNEST(DOM.select(dom, 'p')) as paragraphs(element)
+WHERE DOM.hasText(element) = true;</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.isNotNil(dom)</h5>
+                        <p><strong>Description:</strong> Check if DOM element is valid and not null. This is the opposite of DOM.isNil().</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element</li>
+                        </ul>
+                        <p><strong>Returns:</strong> Boolean - true if DOM is valid, false if nil</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Validate successful page load
+SELECT DOM.isNotNil(DOM.load('https://example.com')) as load_success;
+
+-- Use in WHERE clause
+SELECT DOM.text(DOM.selectFirst(dom, 'title')) as title
+FROM (
+  SELECT DOM.load('https://example.com') as dom
+) t
+WHERE DOM.isNotNil(dom) = true;</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="utility-functions" class="mb-5">
+                    <h2 class="section-title">Utility Functions</h2>
+                    <p class="section-description">Additional utility functions for DOM manipulation</p>
+
+                    <div class="function-item">
+                        <h5>DOM.tagName(dom)</h5>
+                        <p><strong>Description:</strong> Get the tag name of the element.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element</li>
+                        </ul>
+                        <p><strong>Returns:</strong> String containing the tag name (e.g., "div", "p", "a")</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Get tag names of elements
+SELECT DOM.tagName(DOM.selectFirst(dom, 'div'));
+
+-- Analyze element types
+SELECT
+  DOM.tagName(element) as tag,
+  COUNT(*) as count
+FROM UNNEST(DOM.select(dom, '*')) as elements(element)
+GROUP BY DOM.tagName(element);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="function-item">
+                        <h5>DOM.html(dom)</h5>
+                        <p><strong>Description:</strong> Get the inner HTML content of the element.</p>
+                        <p><strong>Parameters:</strong></p>
+                        <ul>
+                            <li><code>dom</code> (ValueDom): The DOM element</li>
+                        </ul>
+                        <p><strong>Returns:</strong> String containing the inner HTML</p>
+                        <div class="function-example">
+                            <pre><code class="language-sql">-- Extract HTML content
+SELECT DOM.html(DOM.selectFirst(dom, 'div.content'));
+
+-- Extract HTML from specific element
+SELECT DOM.html(DOM.selectFirst(dom, 'table')) as table_html;</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="alert alert-info mt-5">
+                    <h5>💡 Tips for Using DOM Functions</h5>
+                    <ul>
+                        <li><strong>Error Handling:</strong> Always check if DOM operations were successful using <code>DOM.isNil()</code> or <code>DOM.isNotNil()</code></li>
+                        <li><strong>Performance:</strong> Use <code>DOM.load()</code> for cached access and <code>DOM.fetch()</code> when fresh data is needed</li>
+                        <li><strong>CSS Selectors:</strong> Use specific selectors for better performance and accuracy</li>
+                        <li><strong>Text vs Own Text:</strong> Use <code>DOM.text()</code> for all text content and <code>DOM.ownText()</code> for direct text only</li>
+                        <li><strong>Validation:</strong> Always validate that elements exist before extracting data</li>
+                    </ul>
+                </div>
+            </main>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-light py-4">
+        <div class="container text-center">
+            <p>&copy; 2024 Pulsar AI. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
