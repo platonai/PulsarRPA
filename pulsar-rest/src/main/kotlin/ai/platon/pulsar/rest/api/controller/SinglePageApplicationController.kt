@@ -9,6 +9,7 @@ import ai.platon.pulsar.rest.api.entities.*
 import ai.platon.pulsar.rest.api.service.CommandService
 import ai.platon.pulsar.rest.api.service.ConversationService
 import ai.platon.pulsar.skeleton.PulsarSettings
+import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -40,6 +41,7 @@ class SinglePageApplicationController(
     val commandService: CommandService,
 ) {
     private var browser: Browser? = null
+    private var activeDriver: WebDriver? = null
     private val browserLock = ReentrantLock()
     private var isInitialized = false // 添加初始化标志
 
@@ -76,7 +78,7 @@ class SinglePageApplicationController(
                 if (!isInitialized) {
                     val options = session.options("-refresh")
                     options.eventHandlers.browseEventHandlers.onBrowserLaunched.addLast { _, driver ->
-                        ensureBrowser(driver.browser)
+                        bindWebDriver(driver)
                     }
                     val page = session.load("https://www.baidu.com/", options)
                     val document = session.parse(page)
@@ -115,8 +117,14 @@ class SinglePageApplicationController(
     fun navigate(@RequestBody request: NavigateRequest): ResponseEntity<Any> {
         val command = CommandRequest(
             url = request.url,
+            args = "-refresh"
         )
-        val response = commandService.executeSync(command)
+
+        val eventHandlers = PageEventHandlersFactory.create()
+        eventHandlers.browseEventHandlers.onBrowserLaunched.addLast { _, driver ->
+            bindWebDriver(driver)
+        }
+        val response = commandService.executeSync(command, eventHandlers)
         return ResponseEntity.ok(response)
     }
 
@@ -130,18 +138,28 @@ class SinglePageApplicationController(
     fun act(@RequestBody request: ActRequest): ResponseEntity<Any> {
         val driver = getActiveDriver()
         if (driver == null) {
-            val status = CommandStatus.failed(ai.platon.pulsar.common.ResourceStatus.SC_SERVICE_UNAVAILABLE)
+            val status = CommandStatus.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
             status.message = "No active browser driver. Initialize via /api/spa/init and navigate first."
             return ResponseEntity.status(status.statusCode).body(status)
         }
 
         return try {
-            runBlocking { driver.instruct(request.act) }
+            runBlocking {
+
+
+                println("Request: $request")
+                println(driver.currentUrl())
+
+
+
+                driver.bringToFront()
+                driver.instruct(request.act)
+            }
             ResponseEntity.ok("")
         } catch (e: Throwable) {
             warnUnexpected(this, e, "Failed to execute act on current page")
             val status = CommandStatus.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
-            status.message = e.message ?: "Failed to act"
+            status.message = e.message ?: "Failed to act | ${request.act}"
             ResponseEntity.status(status.statusCode).body(status)
         }
     }
@@ -214,9 +232,13 @@ class SinglePageApplicationController(
      */
     private fun getActiveDriver(): WebDriver? {
         return browserLock.withLock {
+            if (activeDriver != null) {
+                return activeDriver
+            }
+
             val driver = browser?.drivers?.values?.lastOrNull()
             if (driver != null) {
-                session.bindDriver(driver)
+                bindWebDriver(driver)
             }
             driver
         }
@@ -231,12 +253,14 @@ class SinglePageApplicationController(
      * Side effects
      * - Binds the browser into the session and stores it to the controller state.
      */
-    private fun ensureBrowser(browser: Browser) {
-        require(browser.settings.isSPA) { "The browser is not configured for SPA rendering" }
+    private fun bindWebDriver(driver: WebDriver) {
+        require(driver.browser.settings.isSPA) { "The browser is not configured for SPA rendering" }
 
         browserLock.withLock {
-            session.bindBrowser(browser)
-            this.browser = browser
+            session.bindBrowser(driver.browser)
+            session.bindDriver(driver)
+            this.browser = driver.browser
+            this.activeDriver = driver
         }
     }
 }

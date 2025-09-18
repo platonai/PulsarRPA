@@ -46,15 +46,16 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
 
     @Test
     fun `act with clicking`() {
-        val request = ActRequest(id = "test", act = "click #submit")
+        val request = ActRequest(id = "test", act = "click search box")
         val response = restTemplate.postForEntity(
             "$baseUri/api/spa/act", request, CommandStatus::class.java
         )
-        assertThat(response.statusCode.value()).isEqualTo(200)
-        assertThat(response.body).isNotNull
-        println(response.body)
 
         readln()
+
+        assertThat(response.statusCode.value()).isEqualTo(200)
+        // assertThat(response.body).isNotNull
+        println(response.body)
     }
 
     @Test

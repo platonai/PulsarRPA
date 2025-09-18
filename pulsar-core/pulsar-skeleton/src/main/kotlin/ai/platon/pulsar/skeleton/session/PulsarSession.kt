@@ -228,9 +228,9 @@ interface PulsarSession : AutoCloseable {
      * */
     fun options(args: String = ""): LoadOptions
     /**
-     * Create a new [LoadOptions] object with [args] and [event].
+     * Create a new [LoadOptions] object with [args] and [eventHandlers].
      * */
-    fun options(args: String = "", event: PageEventHandlers?): LoadOptions
+    fun options(args: String = "", eventHandlers: PageEventHandlers?): LoadOptions
     /**
      * Create a new [LoadOptions] object with [options].
      * */
@@ -539,10 +539,10 @@ interface PulsarSession : AutoCloseable {
      */
     fun bindDriver(driver: WebDriver)
     /**
-     * Bind a webdriver to the session.
+     * Bind a browser to the session.
      *
      * ```kotlin
-     * session.bindDriver(driver)
+     * session.bindBrowser(driver)
      * ```
      */
     fun bindBrowser(browser: Browser)

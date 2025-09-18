@@ -5,6 +5,7 @@ import ai.platon.pulsar.rest.api.entities.CommandResult
 import ai.platon.pulsar.rest.api.entities.CommandStatus
 import ai.platon.pulsar.rest.api.service.CommandService
 import ai.platon.pulsar.rest.api.service.ConversationService
+import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
@@ -32,9 +33,10 @@ class CommandController(
     fun submitCommand(@RequestBody request: CommandRequest): ResponseEntity<Any> {
         val async = request.async ?: (request.mode?.lowercase() == "async")
 
+        val eventHandlers = PageEventHandlersFactory.create()
         val response = when {
-            async -> commandService.submitAsync(request)
-            else -> commandService.executeSync(request)
+            async -> commandService.submitAsync(request, eventHandlers)
+            else -> commandService.executeSync(request, eventHandlers)
         }
 
         return ResponseEntity.ok(response)
@@ -61,9 +63,10 @@ class CommandController(
         request.mode = mode?.lowercase()
         request.async = async
 
+        val eventHandlers = PageEventHandlersFactory.create()
         val response = when {
-            async -> commandService.submitAsync(request)
-            else -> commandService.executeSync(request)
+            async -> commandService.submitAsync(request, eventHandlers)
+            else -> commandService.executeSync(request, eventHandlers)
         }
 
         return ResponseEntity.ok(response)

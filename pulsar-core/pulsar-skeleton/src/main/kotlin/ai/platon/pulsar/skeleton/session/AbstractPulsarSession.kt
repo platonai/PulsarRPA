@@ -116,10 +116,10 @@ abstract class AbstractPulsarSession(
 
     override fun options(args: String) = options(args, null)
 
-    override fun options(args: String, event: PageEventHandlers?): LoadOptions {
+    override fun options(args: String, eventHandlers: PageEventHandlers?): LoadOptions {
         val opts = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
-        if (event != null) {
-            opts.rawEvent = event
+        if (eventHandlers != null) {
+            opts.rawEvent = eventHandlers
         }
         return normalize(opts)
     }
@@ -205,7 +205,10 @@ abstract class AbstractPulsarSession(
     @Deprecated("Use bindBrowser instead", replaceWith = ReplaceWith("bindBrowser(browser)"))
     override fun connect(browser: Browser) { sessionConfig.putBean(browser) }
 
-    override fun bindDriver(driver: WebDriver) { sessionConfig.putBean(driver) }
+    override fun bindDriver(driver: WebDriver) {
+        sessionConfig.putBean(driver)
+        bindBrowser(driver.browser)
+    }
 
     override fun bindBrowser(browser: Browser) { sessionConfig.putBean(browser) }
 

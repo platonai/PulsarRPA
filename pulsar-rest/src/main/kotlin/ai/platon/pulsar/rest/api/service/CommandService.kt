@@ -17,6 +17,8 @@ import ai.platon.pulsar.rest.api.common.PLACEHOLDER_PAGE_CONTENT
 import ai.platon.pulsar.rest.api.common.RestAPIPromptUtils
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
 import ai.platon.pulsar.rest.api.entities.*
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
+import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -53,15 +55,15 @@ class CommandService(
 
     private val logger = getLogger(CommandService::class)
 
-    fun executeSync(request: CommandRequest): CommandStatus {
+    fun executeSync(request: CommandRequest, eventHandlers: PageEventHandlers): CommandStatus {
         val status = createCachedCommandStatus(request)
-        executeCommand(request, status)
+        executeCommand(request, status, eventHandlers)
         return status
     }
 
-    fun submitAsync(request: CommandRequest): String {
+    fun submitAsync(request: CommandRequest, eventHandlers: PageEventHandlers): String {
         val status = createCachedCommandStatus(request)
-        commanderScope.launch { executeCommand(request, status) }
+        commanderScope.launch { executeCommand(request, status, eventHandlers) }
         return status.id
     }
 
@@ -141,12 +143,15 @@ class CommandService(
             return status
         }
 
-        return executeCommand(request2, status)
+        val eventHandlers = PageEventHandlersFactory.create()
+        return executeCommand(request2, status, eventHandlers)
     }
 
     fun executeCommand(request: CommandRequest): CommandStatus {
         val status = createCachedCommandStatus(request)
-        executeCommand(request, status)
+
+        val eventHandlers = PageEventHandlersFactory.create()
+        executeCommand(request, status, eventHandlers)
         return status
     }
 
@@ -159,10 +164,14 @@ class CommandService(
      * @param request The PromptRequestL2 object containing the URL and other parameters.
      * @return A PromptResponseL2 object containing the result of the command execution.
      * */
-    fun executeCommand(request: CommandRequest, status: CommandStatus): CommandStatus {
+    fun executeCommand(
+        request: CommandRequest,
+        status: CommandStatus,
+        eventHandlers: PageEventHandlers
+    ): CommandStatus {
         try {
             status.refresh(ResourceStatus.SC_PROCESSING)
-            executeCommandStepByStep(request, status)
+            executeCommandStepByStep(request, status, eventHandlers)
         } catch (e: Exception) {
             status.failed(ResourceStatus.SC_EXPECTATION_FAILED)
         } finally {
@@ -180,12 +189,12 @@ class CommandService(
         return status
     }
 
-    internal fun executeCommandStepByStep(request: CommandRequest, status: CommandStatus) {
+    internal fun executeCommandStepByStep(request: CommandRequest, status: CommandStatus, eventHandlers: PageEventHandlers) {
         val url = request.url
         require(URLUtils.isStandard(url)) { "Invalid URL: $url" }
 
         request.enhanceArgs()
-        val (page, document) = loadService.loadDocument(request)
+        val (page, document) = loadService.loadDocument(request, eventHandlers)
 
         if (page.isNil) {
             status.failed(ResourceStatus.SC_EXPECTATION_FAILED)

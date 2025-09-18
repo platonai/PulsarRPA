@@ -6,6 +6,7 @@ import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import ai.platon.pulsar.rest.api.entities.PromptRequest
 import ai.platon.pulsar.skeleton.PulsarSettings
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,9 +54,9 @@ class LoadService {
         return page to document
     }
 
-    fun loadDocument(request: CommandRequest): Pair<WebPage, FeaturedDocument> {
+    fun loadDocument(request: CommandRequest, eventHandlers: PageEventHandlers): Pair<WebPage, FeaturedDocument> {
         val args = request.enhanceArgs()
-        val options = session.options(args)
+        val options = session.options(args, eventHandlers)
 
         val be = options.eventHandlers.browseEventHandlers
 
