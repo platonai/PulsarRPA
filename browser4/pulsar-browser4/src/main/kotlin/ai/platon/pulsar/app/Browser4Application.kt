@@ -9,13 +9,18 @@ import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.autoconfigure.domain.EntityScan
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.ImportResource
 
 @SpringBootApplication
 @ImportResource("classpath:pulsar-beans/app-context.xml")
-@ComponentScan("ai.platon.pulsar.rest.api")
+@ComponentScan(
+    "ai.platon.pulsar.boot.autoconfigure",
+    "ai.platon.pulsar.rest.api",
+    "ai.platon.pulsar.app.api",
+)
 class Browser4Application {
     private val logger = getLogger(Browser4Application::class)
 

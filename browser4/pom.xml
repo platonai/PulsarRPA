@@ -23,7 +23,6 @@
     <name>Browser4</name>
 
     <modules>
-        <module>pulsar-rest</module>
         <module>pulsar-browser4</module>
     </modules>
 </project>

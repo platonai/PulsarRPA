@@ -90,6 +90,7 @@
      with a single click in the IDE right after opening the project. -->
     <modules>
         <module>pulsar-core</module>
+        <module>pulsar-rest</module>
         <module>pulsar-client</module>
         <module>pulsar-tests</module>
         <module>pulsar-examples</module>

@@ -1,11 +1,15 @@
-package ai.platon.pulsar.rest.api.controller
+package ai.platon.pulsar.app.api.controller
 
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.warnUnexpected
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.H2SQLContext
-import ai.platon.pulsar.ql.h2.H2SQLSession
-import ai.platon.pulsar.rest.api.entities.*
+import ai.platon.pulsar.rest.api.entities.ActRequest
+import ai.platon.pulsar.rest.api.entities.CommandRequest
+import ai.platon.pulsar.rest.api.entities.CommandStatus
+import ai.platon.pulsar.rest.api.entities.ExtractRequest
+import ai.platon.pulsar.rest.api.entities.NavigateRequest
+import ai.platon.pulsar.rest.api.entities.ScreenshotRequest
 import ai.platon.pulsar.rest.api.service.CommandService
 import ai.platon.pulsar.rest.api.service.ConversationService
 import ai.platon.pulsar.skeleton.PulsarSettings
@@ -16,7 +20,12 @@ import ai.platon.pulsar.skeleton.session.PulsarSession
 import kotlinx.coroutines.runBlocking
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -49,8 +58,8 @@ class SinglePageApplicationController(
      * Initialize Browser4 for SPA rendering and perform a simple health check.
      *
      * Steps
-     * 1) Validate that the [session] is an active [H2SQLSession] with [H2SQLContext].
-     * 2) Ensure a real browser is configured via [PulsarSettings.withDefaultBrowser].
+     * 1) Validate that the [session] is an active [ai.platon.pulsar.ql.h2.H2SQLSession] with [ai.platon.pulsar.ql.context.H2SQLContext].
+     * 2) Ensure a real browser is configured via [ai.platon.pulsar.skeleton.PulsarSettings.withDefaultBrowser].
      * 3) If this is the first initialization, attach a launch handler to capture the browser instance,
      *    then load Baidu and check the rendered HTML for a known marker.
      *
@@ -120,7 +129,7 @@ class SinglePageApplicationController(
             args = "-refresh"
         )
 
-        val eventHandlers = PageEventHandlersFactory.create()
+        val eventHandlers = PageEventHandlersFactory.Companion.create()
         eventHandlers.browseEventHandlers.onBrowserLaunched.addLast { _, driver ->
         }
 
@@ -142,7 +151,7 @@ class SinglePageApplicationController(
     fun act(@RequestBody request: ActRequest): ResponseEntity<Any> {
         val driver = getActiveDriver()
         if (driver == null) {
-            val status = CommandStatus.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
+            val status = CommandStatus.Companion.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
             status.message = "No active browser driver. Initialize via /api/spa/init and navigate first."
             return ResponseEntity.status(status.statusCode).body(status)
         }
@@ -162,7 +171,7 @@ class SinglePageApplicationController(
             ResponseEntity.ok("")
         } catch (e: Throwable) {
             warnUnexpected(this, e, "Failed to execute act on current page")
-            val status = CommandStatus.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
+            val status = CommandStatus.Companion.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
             status.message = e.message ?: "Failed to act | ${request.act}"
             ResponseEntity.status(status.statusCode).body(status)
         }
@@ -178,7 +187,7 @@ class SinglePageApplicationController(
     fun screenshot(@RequestBody request: ScreenshotRequest): ResponseEntity<Any> {
         val driver = getActiveDriver()
         if (driver == null) {
-            val status = CommandStatus.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
+            val status = CommandStatus.Companion.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
             status.message = "No active browser driver. Initialize via /api/spa/init and navigate first."
             return ResponseEntity.status(status.statusCode).body(status)
         }
@@ -192,7 +201,7 @@ class SinglePageApplicationController(
             ResponseEntity.ok(screenshot)
         } catch (e: Throwable) {
             warnUnexpected(this, e, "Failed to capture screenshot from current page")
-            val status = CommandStatus.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
+            val status = CommandStatus.Companion.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
             status.message = e.message ?: "Failed to capture screenshot"
             ResponseEntity.status(status.statusCode).body(status)
         }
@@ -202,7 +211,7 @@ class SinglePageApplicationController(
      * Extract data from the current page using the provided prompt/rules.
      *
      * Steps:
-     * - Open the current URL with the active driver to obtain a [WebPage].
+     * - Open the current URL with the active driver to obtain a [ai.platon.pulsar.persist.WebPage].
      * - Parse the page, then execute a step-by-step command with dataExtractionRules.
      *
      * @param request The extraction request including the prompt/rules.

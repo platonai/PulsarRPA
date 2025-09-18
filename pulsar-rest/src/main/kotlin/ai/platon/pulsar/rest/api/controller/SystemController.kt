@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @CrossOrigin
 @RequestMapping("api/system")
-class PulsarSystemController {
+class SystemController {
 
     @Autowired
     lateinit var driverPoolManager: WebDriverPoolManager
