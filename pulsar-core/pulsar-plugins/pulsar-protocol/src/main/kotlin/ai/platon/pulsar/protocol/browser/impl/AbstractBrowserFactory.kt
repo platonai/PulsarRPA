@@ -1,13 +1,45 @@
 package ai.platon.pulsar.protocol.browser.impl
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 
-abstract class AbstractBrowserFactory : BrowserFactory {
+abstract class AbstractBrowserFactory(
+    override val conf: ImmutableConfig,
+    override val settings: BrowserSettings = BrowserSettings(conf),
+) : BrowserFactory {
+
+    /**
+     * Launch a browser with the given browser id, the browser id is used to identify the browser instance.
+     * */
+    override fun launch(browserId: BrowserId) = launch(browserId, settings)
+
+    /**
+     * Launch the system default browser, the system default browser is your daily used browser.
+     * */
+    @Throws(BrowserLaunchException::class)
+    override fun launch(browserId: BrowserId, settings: BrowserSettings): Browser {
+        val launcherOptions = LauncherOptions(settings)
+        if (settings.isSupervised) {
+            launcherOptions.supervisorProcess = settings.supervisorProcess
+            launcherOptions.supervisorProcessArgs.addAll(settings.supervisorProcessArgs)
+        }
+
+        val capabilities = mutableMapOf<String, Any>()
+        val proxyURI = browserId.fingerprint.proxyURI
+        if (proxyURI != null) {
+            capabilities["proxy"] = proxyURI
+        }
+
+        val launchOptions = settings.createChromeOptions(capabilities)
+
+        return launch(browserId, launcherOptions, launchOptions)
+    }
 
     /**
      * Launch the system default browser, the system default browser is your daily used browser.

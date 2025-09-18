@@ -4,19 +4,29 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.protocol.browser.impl.AbstractBrowserFactory
 import ai.platon.pulsar.protocol.browser.impl.PulsarBrowserLauncher
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 
 /**
  * A factory to create browser instances.
  * */
-class PulsarBrowserFactory : BrowserFactory {
+class PulsarBrowserFactory(
+    conf: ImmutableConfig,
+    settings: BrowserSettings = BrowserSettings(conf),
+) : AbstractBrowserFactory(conf, settings) {
     private val launcher = PulsarBrowserLauncher()
 
     val browserType = BrowserType.PULSAR_CHROME
+
+    /**
+     * Connect to a browser instance, the browser instance should be open with Chrome devtools open.
+     * */
+    override fun connect(browserType: BrowserType, port: Int, settings: BrowserSettings): Browser =
+        launcher.connect(port, settings)
 
     /**
      * Launch a browser with the given browser id, the browser id is used to identify the browser instance.
@@ -24,25 +34,12 @@ class PulsarBrowserFactory : BrowserFactory {
     @Throws(BrowserLaunchException::class)
     override fun launch(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
-    ): Browser = launcher.launch(browserId, launcherOptions, launchOptions)
+    ): Browser {
+        require(browserId.browserType == browserType) {
+            "Browser type mismatch, expected $browserType, actual ${browserId.browserType}" }
 
-    /**
-     * Launch a browser with the given browser id, the browser id is used to identify the browser instance.
-     * */
-    override fun launch(browserId: BrowserId): Browser {
-        require(browserId.browserType == browserType) { "Browser type should be $browserType" }
-
-        val launcherOptions = LauncherOptions()
-        val chromeOptions = ChromeOptions()
-
-        return launcher.launch(browserId, launcherOptions, chromeOptions)
+        return launcher.launch(browserId, launcherOptions, launchOptions)
     }
-
-    /**
-     * Connect to a browser instance, the browser instance should be open with Chrome devtools open.
-     * */
-    override fun connect(browserType: BrowserType, port: Int, settings: BrowserSettings): Browser =
-        launcher.connect(port, settings)
 
     /**
      * Launch the system default browser, the system default browser is your daily used browser.

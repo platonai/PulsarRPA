@@ -33,19 +33,19 @@ open class BrowserManager(
     /**
      * Launch a browser. If the browser with the id is already launched, return the existing one.
      * */
-    @Throws(BrowserLaunchException::class)
-    fun launch(browserId: BrowserId, browserSettings: BrowserSettings, capabilities: Map<String, Any>): Browser {
-        registerAsClosableIfNecessary()
-
-        val launcherOptions = LauncherOptions(browserSettings)
-        if (browserSettings.isSupervised) {
-            launcherOptions.supervisorProcess = browserSettings.supervisorProcess
-            launcherOptions.supervisorProcessArgs.addAll(browserSettings.supervisorProcessArgs)
-        }
-
-        val launchOptions = browserSettings.createChromeOptions(capabilities)
-        return launchIfAbsent(browserId, launcherOptions, launchOptions)
-    }
+//    @Throws(BrowserLaunchException::class)
+//    fun launch(browserId: BrowserId, settings: BrowserSettings, capabilities: Map<String, Any>): Browser {
+//        registerAsClosableIfNecessary()
+//
+//        val launcherOptions = LauncherOptions(settings)
+//        if (settings.isSupervised) {
+//            launcherOptions.supervisorProcess = settings.supervisorProcess
+//            launcherOptions.supervisorProcessArgs.addAll(settings.supervisorProcessArgs)
+//        }
+//
+//        val launchOptions = settings.createChromeOptions(capabilities)
+//        return launchIfAbsent(browserId, launcherOptions, launchOptions)
+//    }
 
     /**
      * Find an existing browser by id.
@@ -151,29 +151,33 @@ open class BrowserManager(
         }
     }
 
-    @Throws(BrowserLaunchException::class)
-    private fun launchIfAbsent(
-        browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
-    ): Browser {
-        val browser = _browsers[browserId]
-        if (browser != null) {
-            return browser
-        }
-
-        synchronized(browserFactory) {
-            val browser1 = browserFactory.launch(browserId, launcherOptions, launchOptions)
-            _browsers[browserId] = browser1
-            historicalBrowsers.add(browser1)
-
-            return browser1
-        }
-    }
-
-    private fun registerAsClosableIfNecessary() {
-        if (registered.compareAndSet(false, true)) {
-            // Actually, it's safe to register multiple times, the manager will be closed only once, and the browsers
-            // will be closed in the manager's close function.
-            PulsarContexts.registerClosable(this, -100)
-        }
-    }
+//    @Throws(BrowserLaunchException::class)
+//    private fun launchIfAbsent(
+//        browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
+//    ): Browser {
+//        synchronized(browserFactory) {
+//            if (closed.get()) {
+//                throw BrowserLaunchException("The browser manager has been closed, this should be caused by the application closing")
+//            }
+//
+//            val browser = _browsers[browserId]
+//            if (browser != null) {
+//                return browser
+//            }
+//
+//            val browser1 = browserFactory.launch(browserId, launcherOptions, launchOptions)
+//            _browsers[browserId] = browser1
+//            historicalBrowsers.add(browser1)
+//
+//            return browser1
+//        }
+//    }
+//
+//    private fun registerAsClosableIfNecessary() {
+//        if (registered.compareAndSet(false, true)) {
+//            // Actually, it's safe to register multiple times, the manager will be closed only once, and the browsers
+//            // will be closed in the manager's close function.
+//            PulsarContexts.registerClosable(this, -100)
+//        }
+//    }
 }

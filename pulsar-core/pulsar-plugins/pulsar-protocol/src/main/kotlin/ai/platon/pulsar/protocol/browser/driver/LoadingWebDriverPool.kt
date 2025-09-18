@@ -242,8 +242,8 @@ class LoadingWebDriverPool constructor(
      * */
     @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
     suspend fun poll(priority: Int, conf: MutableConfig, event: BrowseEventHandlers?, page: WebPage): WebDriver {
-        val driverSettings = BrowserSettings(conf)
-        val timeout = driverSettings.pollingDriverTimeout
+        val settings = driverPoolManager.browserFactory.settings
+        val timeout = settings.pollingDriverTimeout
 
         // NOTE: concurrency note - if multiple threads come to the code snippet,
         // only one goes to pollWithEvents, others wait in poll
@@ -428,8 +428,10 @@ class LoadingWebDriverPool constructor(
     private fun computeBrowserAndDriver0(conf: MutableConfig): WebDriver {
         logger.debug("Launch browser and new driver | {}", browserId)
 
+        // Use BrowserFactory's default settings
+        val settings = driverPoolManager.browserFactory.settings
         //  Launch a browser. If the browser with the id is already launched, return the existing one.
-        val browser = _browser ?: browserFactory.launch(browserId)
+        val browser = _browser ?: browserFactory.launch(browserId, settings)
         // val browser = _browser ?: driverFactory.launchBrowser(browserId, conf)
         check(browser.isActive)
         // open a new tab about:blank
