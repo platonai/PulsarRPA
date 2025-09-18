@@ -1,6 +1,5 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_OPEN_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -9,6 +8,7 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
+import ai.platon.pulsar.protocol.browser.impl.BrowserManager
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.BrowseEventHandlers
@@ -27,8 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class LoadingWebDriverPool constructor(
     val browserId: BrowserId,
-    val priority: Int = 0,
-    val driverPoolManager: WebDriverPoolManager,
+    val browserManager: BrowserManager,
     val browserFactory: BrowserFactory,
     val immutableConfig: ImmutableConfig
 ) : AutoCloseable {
@@ -61,7 +60,7 @@ class LoadingWebDriverPool constructor(
     /**
      * The consistent stateful driver
      * */
-    private val statefulDriverPool = ConcurrentStatefulDriverPool(driverPoolManager.browserManager, capacity)
+    private val statefulDriverPool = ConcurrentStatefulDriverPool(browserManager, capacity)
     
     /**
      * Standby drivers and working drivers
@@ -188,19 +187,7 @@ class LoadingWebDriverPool constructor(
         
         override fun toString() = format(false)
     }
-    
-    /**
-     * Allocate [capacity] drivers
-     * */
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
-    fun allocate(conf: VolatileConfig) {
-        repeat(capacity) {
-            runCatching { put(poll(priority, conf, POLLING_TIMEOUT.seconds, TimeUnit.SECONDS)) }.onFailure {
-                warnInterruptible(this, it)
-            }
-        }
-    }
-    
+
     /**
      * Retrieves and removes the head of this free driver queue,
      * or returns {@code null} if there is no free drivers.
@@ -212,10 +199,7 @@ class LoadingWebDriverPool constructor(
     
     @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun poll(conf: VolatileConfig): WebDriver = poll(0, conf, POLLING_TIMEOUT.seconds, TimeUnit.SECONDS)
-    
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
-    fun poll(conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver = poll(0, conf, timeout, unit)
-    
+
     @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class, InterruptedException::class)
     fun poll(priority: Int, conf: MutableConfig, timeout: Duration): WebDriver {
         return poll(priority, conf, timeout.seconds, TimeUnit.SECONDS)
@@ -242,7 +226,7 @@ class LoadingWebDriverPool constructor(
      * */
     @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
     suspend fun poll(priority: Int, conf: MutableConfig, event: BrowseEventHandlers?, page: WebPage): WebDriver {
-        val settings = driverPoolManager.browserFactory.settings
+        val settings = browserFactory.settings
         val timeout = settings.pollingDriverTimeout
 
         // NOTE: concurrency note - if multiple threads come to the code snippet,
@@ -429,7 +413,7 @@ class LoadingWebDriverPool constructor(
         logger.debug("Launch browser and new driver | {}", browserId)
 
         // Use BrowserFactory's default settings
-        val settings = driverPoolManager.browserFactory.settings
+        val settings = browserFactory.settings
         //  Launch a browser. If the browser with the id is already launched, return the existing one.
         val browser = _browser ?: browserFactory.launch(browserId, settings)
         // val browser = _browser ?: driverFactory.launchBrowser(browserId, conf)

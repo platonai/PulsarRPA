@@ -248,10 +248,8 @@ open class WebDriverPoolManager(
     /**
      * Create a driver pool, but the driver pool is not added to [workingDriverPools].
      * */
-    fun createUnmanagedDriverPool(
-        browserId: BrowserId, priority: Int = 0,
-    ): LoadingWebDriverPool {
-        return LoadingWebDriverPool(browserId, priority, this, browserFactory, immutableConfig)
+    fun createUnmanagedDriverPool(browserId: BrowserId): LoadingWebDriverPool {
+        return LoadingWebDriverPool(browserId, browserManager, browserFactory, immutableConfig)
     }
 
     /**
@@ -486,7 +484,7 @@ open class WebDriverPoolManager(
         // taking a browser id in a list in sequence, in which case, driver pools are return
         // one by one in sequence.
         //
-        val driverPool = driverPoolPool.computeIfAbsent(browserId) { createUnmanagedDriverPool(browserId, priority) }
+        val driverPool = driverPoolPool.computeIfAbsent(browserId) { createUnmanagedDriverPool(browserId) }
         
         if (!driverPool.isActive) {
             val message = "$driverPool | $browserId"
