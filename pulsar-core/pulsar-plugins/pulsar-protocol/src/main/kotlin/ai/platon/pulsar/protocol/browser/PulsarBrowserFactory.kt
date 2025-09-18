@@ -15,7 +15,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
  * A factory to create browser instances.
  * */
 class PulsarBrowserFactory(
-    conf: ImmutableConfig,
+    conf: ImmutableConfig = ImmutableConfig(),
     settings: BrowserSettings = BrowserSettings(conf),
 ) : AbstractBrowserFactory(conf, settings) {
     private val launcher = PulsarBrowserLauncher()
