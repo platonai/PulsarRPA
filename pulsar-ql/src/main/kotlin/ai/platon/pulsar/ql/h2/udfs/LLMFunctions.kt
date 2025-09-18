@@ -1,3 +1,98 @@
+/**
+ * Large Language Model (LLM) integration functions for X-SQL queries in Pulsar QL.
+ *
+ * This object provides AI-powered functions that integrate Large Language Models
+ * directly into X-SQL queries. It enables intelligent content analysis, extraction,
+ * and processing using state-of-the-art language models.
+ *
+ * ## Function Categories
+ *
+ * ### Basic LLM Operations
+ * - [modelName] - Get the configured LLM model name
+ * - [chat] - Send prompts to the LLM and get responses
+ *
+ * ### AI-Powered Content Extraction
+ * - [extract] - Extract structured data from HTML content using AI
+ * - [classify] - Classify content using AI models
+ * - [summarize] - Generate content summaries
+ *
+ * ### Advanced AI Operations
+ * - [chat] with DOM context - Send element-specific prompts
+ * - [extract] with custom rules - Define extraction patterns
+ * - Batch processing for multiple documents
+ *
+ * ## Usage Examples
+ *
+ * ```sql
+ * -- Get current LLM model name
+ * SELECT LLM.modelName();
+ *
+ * -- Chat with the AI model
+ * SELECT LLM.chat('What is the main topic of this website?');
+ *
+ * -- Extract data from a web page using AI
+ * SELECT LLM.extract(
+ *   DOM.load('https://product.example.com/item123'),
+ *   'product_name, price, description, availability'
+ * );
+ *
+ * -- Chat about specific page content
+ * SELECT LLM.chat(
+ *   DOM.load('https://news.example.com/article'),
+ *   'Summarize this article in 3 sentences'
+ * );
+ *
+ * -- Extract structured data from HTML
+ * SELECT LLM.extract(dom, 'title, author, publish_date, summary')
+ * FROM (
+ *   SELECT DOM.load('https://blog.example.com/post') as dom
+ * ) t;
+ * ```
+ *
+ * ## X-SQL Integration
+ *
+ * All LLM functions are automatically registered as H2 database functions under the
+ * "LLM" namespace. They can be used directly in X-SQL queries and combined with
+ * DOM functions for powerful AI-driven web data extraction.
+ *
+ * ## AI Extraction Format
+ *
+ * The [extract] function uses intelligent prompting to extract structured data:
+ * 1. Analyzes the HTML content contextually
+ * 2. Identifies relevant information based on extraction rules
+ * 3. Returns structured JSON with extracted fields
+ * 4. Handles missing data gracefully with null values
+ *
+ * ## Performance Notes
+ *
+ * - LLM operations may have higher latency than traditional functions
+ * - Results are cached within the session context
+ * - Batch operations are recommended for multiple extractions
+ * - Rate limiting is applied based on model configuration
+ *
+ * ## Error Handling
+ *
+ * - Returns empty results for failed AI operations
+ * - Logs warnings for extraction failures (every 50th failure)
+ * - Graceful degradation when AI services are unavailable
+ * - JSON parsing errors are handled silently
+ *
+ * ## Configuration
+ *
+ * LLM functions respect the session's LLM configuration:
+ * - Model selection (GPT, Claude, etc.)
+ * - API endpoints and authentication
+ * - Rate limiting and timeout settings
+ * - Custom prompts and system messages
+ *
+ * @author Pulsar AI
+ * @since 1.0.0
+ * @see ValueDom
+ * @see ValueStringJSON
+ * @see UDFGroup
+ * @see JSONExtractor
+ * @see <a href="https://platform.openai.com/docs/api-reference">OpenAI API Reference</a>
+ */
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.getLogger

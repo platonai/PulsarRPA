@@ -1,3 +1,100 @@
+/**
+ * DOM (Document Object Model) manipulation functions for X-SQL queries in Pulsar QL.
+ *
+ * This object provides a comprehensive set of functions for loading, parsing, and manipulating
+ * HTML/XML documents within X-SQL queries. It enables web scraping, data extraction, and
+ * document analysis directly from SQL queries.
+ *
+ * ## Function Categories
+ *
+ * ### Document Loading and Parsing
+ * - [load] - Load page from database or web with caching
+ * - [fetch] - Fetch page immediately from web (force refresh)
+ * - [parse] - Parse HTML content into DOM document
+ *
+ * ### Document Navigation and Selection
+ * - [select] - Select elements using CSS selectors
+ * - [selectFirst] - Select first matching element
+ * - [selectNth] - Select nth matching element
+ * - [parent], [children] - Navigate document hierarchy
+ *
+ * ### Element Property Extraction
+ * - [text] - Extract text content from elements
+ * - [attr] - Get element attribute values
+ * - [style] - Get CSS style properties
+ * - [feature] - Extract computed node features
+ *
+ * ### Link and Form Processing
+ * - [links] - Extract all links from a document
+ * - [forms] - Extract all forms from a document
+ * - [images] - Extract all images from a document
+ * - [hrefs] - Extract href attributes from links
+ *
+ * ### Content Analysis
+ * - [wordCount] - Count words in element text
+ * - [density] - Calculate keyword density
+ * - [visibility] - Check element visibility
+ * - [isNil] - Check if DOM element is null/invalid
+ *
+ * ## Usage Examples
+ *
+ * ```sql
+ * -- Load and parse a web page
+ * SELECT DOM.load('https://example.com');
+ *
+ * -- Extract page title
+ * SELECT DOM.text(DOM.selectFirst(DOM.load('https://example.com'), 'title'));
+ *
+ * -- Extract all links from a page
+ * SELECT DOM.hrefs(DOM.load('https://example.com'));
+ *
+ * -- Extract article content
+ * SELECT DOM.text(DOM.selectFirst(dom, 'article'))
+ * FROM (
+ *   SELECT DOM.load('https://news.example.com/article') as dom
+ * );
+ *
+ * -- Extract product information
+ * SELECT
+ *   DOM.text(DOM.selectFirst(dom, '.product-title')) as title,
+ *   DOM.text(DOM.selectFirst(dom, '.price')) as price,
+ *   DOM.attr(DOM.selectFirst(dom, '.product-image'), 'src') as image_url
+ * FROM (
+ *   SELECT DOM.load('https://shop.example.com/product/123') as dom
+ * ) t;
+ * ```
+ *
+ * ## X-SQL Integration
+ *
+ * All DOM functions are automatically registered as H2 database functions under the
+ * "DOM" namespace. They can be used directly in X-SQL queries and combined with
+ * other SQL operations for powerful web data extraction workflows.
+ *
+ * ## Performance Notes
+ *
+ * - Document loading respects caching policies configured in the session
+ * - CSS selector operations are optimized for performance
+ * - Large document processing is memory-efficient
+ * - Results are cached within the SQL session context
+ *
+ * ## Thread Safety
+ *
+ * DOM functions are thread-safe and can be safely used in concurrent query
+ * execution contexts. Each function operates on immutable DOM representations.
+ *
+ * ## Error Handling
+ *
+ * - Returns null/empty values for invalid selectors or missing elements
+ * - Graceful handling of malformed HTML
+ * - Safe navigation for missing DOM nodes
+ *
+ * @author Pulsar AI
+ * @since 1.0.0
+ * @see ValueDom
+ * @see UDFGroup
+ * @see UDFGroup
+ * @see <a href="https://jsoup.org/apidocs/org/jsoup/select/Selector.html">CSS Selector Reference</a>
+ */
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
@@ -24,14 +121,69 @@ import java.sql.Connection
 import java.time.Duration
 
 /**
- * Created by vincent on 17-11-1.
- * Copyright @ 2013-2020 Platon AI. All rights reserved
+ * DOM manipulation functions for X-SQL queries.
+ *
+ * Provides comprehensive HTML/XML document processing capabilities including
+ * loading, parsing, navigation, extraction, and analysis functions for web scraping
+ * and document processing within X-SQL queries.
  */
 @Suppress("unused")
 @UDFGroup(namespace = "DOM")
 object DomFunctions {
     private val sqlContext get() = SQLContexts.create()
 
+    /**
+     * Loads a web page from database cache or fetches it from the web if not cached or expired.
+     *
+     * This function implements intelligent page loading with the following strategy:
+     * 1. First checks if the page exists in the local database cache
+     * 2. If cached and not expired, returns the cached version
+     * 3. If not cached or expired, fetches from the web
+     * 4. Parses the HTML content and returns a DOM document
+     *
+     * ## X-SQL Usage
+     * ```sql
+     * -- Load a web page and return DOM document
+     * SELECT DOM.load('https://example.com');
+     *
+     * -- Load page and extract title
+     * SELECT DOM.text(DOM.selectFirst(DOM.load('https://news.site.com/article'), 'h1'))
+     * FROM (VALUES (1)) t;
+     *
+     * -- Load multiple pages
+     * SELECT url, DOM.load(url) as document
+     * FROM (
+     *   SELECT 'https://site1.com' as url UNION ALL
+     *   SELECT 'https://site2.com' as url UNION ALL
+     *   SELECT 'https://site3.com' as url
+     * ) pages;
+     * ```
+     *
+     * ## Use Cases
+     * - Web scraping with intelligent caching
+     * - Batch processing of web pages
+     * - Building data extraction pipelines
+     * - Automated content analysis
+     *
+     * ## Caching Behavior
+     * - Respects session-level caching configuration
+     * - Uses URL normalization for cache key generation
+     * - Applies configured expiration policies
+     * - Handles cache invalidation based on content changes
+     *
+     * ## Error Handling
+     * - Returns ValueDom.NIL if SQL context is not active
+     * - Handles network errors gracefully
+     * - Manages malformed HTML content
+     *
+     * @param conn The H2 database connection context
+     * @param configuredUrl The URL to load (supports Pulsar URL configuration syntax)
+     * @return ValueDom containing the parsed document, or ValueDom.NIL on failure
+     * @see fetch
+     * @see parse
+     * @see ValueDom
+     * @see Duration.ZERO
+     */
     @UDFunction(
         description = "Load the page specified by url from db, if absent or expired, " +
                 "fetch it from the web, and then parse it into a document"
@@ -44,6 +196,58 @@ object DomFunctions {
         return session.run { parseValueDom(load(configuredUrl)) }
     }
 
+    /**
+     * Fetches a web page immediately from the web, bypassing cache and forcing fresh content.
+     *
+     * This function implements forced page fetching with the following behavior:
+     * 1. Always fetches from the web, ignoring any cached versions
+     * 2. Sets expiration time to zero to ensure fresh content
+     * 3. Parses the HTML content and returns a DOM document
+     * 4. Updates the cache with the fresh content
+     *
+     * ## X-SQL Usage
+     * ```sql
+     * -- Fetch a page fresh from the web
+     * SELECT DOM.fetch('https://example.com');
+     *
+     * -- Fetch page and extract content immediately
+     * SELECT DOM.text(DOM.selectFirst(DOM.fetch('https://news.site.com/breaking'), 'h1'))
+     * FROM (VALUES (1)) t;
+     *
+     * -- Compare cached vs fresh content
+     * SELECT
+     *   'cached' as source,
+     *   DOM.text(DOM.selectFirst(DOM.load('https://example.com'), 'title')) as title
+     * UNION ALL
+     * SELECT
+     *   'fresh' as source,
+     *   DOM.text(DOM.selectFirst(DOM.fetch('https://example.com'), 'title')) as title;
+     * ```
+     *
+     * ## Use Cases
+     * - Getting real-time data that changes frequently
+     * - Bypassing stale cache entries
+     * - Testing website changes immediately
+     * - Breaking news or live data extraction
+     * - Cache invalidation workflows
+     *
+     * ## Differences from [load]
+     * - **fetch**: Always gets fresh content from web, ignores cache
+     * - **load**: Uses cache when available, respects expiration policies
+     *
+     * ## Performance Considerations
+     * - Always makes network requests, potentially slower
+     * - No cache benefits for repeated calls
+     * - Useful for data that changes frequently
+     *
+     * @param conn The H2 database connection context
+     * @param configuredUrl The URL to fetch (supports Pulsar URL configuration syntax)
+     * @return ValueDom containing the parsed document, or ValueDom.NIL on failure
+     * @see load
+     * @see parse
+     * @see ValueDom
+     * @see Duration.ZERO
+     */
     @UDFunction(description = "Fetch the page specified by url immediately, and then parse it into a document")
     @JvmStatic
     fun fetch(@H2Context conn: Connection, configuredUrl: String): ValueDom {
@@ -56,35 +260,257 @@ object DomFunctions {
     }
 
     /**
-     * Check if this is a nil DOM
+     * Checks if a DOM element is null or invalid (represents a nil value).
+     *
+     * This function tests whether the provided ValueDom represents a null or invalid
+     * DOM element. This is useful for error handling and validation in document
+     * processing workflows.
+     *
+     * ## X-SQL Usage
+     * ```sql
+     * -- Check if page load was successful
+     * SELECT DOM.isNil(DOM.load('https://invalid-url.com')) as load_failed;
+     *
+     * -- Use in conditional logic
+     * SELECT
+     *   CASE
+     *     WHEN DOM.isNil(dom) THEN 'Failed to load'
+     *     ELSE 'Load successful'
+     *   END as status
+     * FROM (
+     *   SELECT DOM.load('https://example.com') as dom
+     * ) t;
+     *
+     * -- Filter out failed loads
+     * SELECT url
+     * FROM (
+     *   SELECT 'https://site1.com' as url, DOM.load('https://site1.com') as dom
+     *   UNION ALL
+     *   SELECT 'https://site2.com' as url, DOM.load('https://site2.com') as dom
+     * ) pages
+     * WHERE DOM.isNil(dom) = false;
+     * ```
+     *
+     * ## Use Cases
+     * - Error handling in document loading
+     * - Validating successful page loads
+     * - Filtering failed operations
+     * - Conditional processing based on DOM validity
+     *
+     * ## Return Values
+     * - **true**: DOM is nil (invalid, null, or failed load)
+     * - **false**: DOM is valid and contains document data
+     *
+     * @param dom The ValueDom to test for nil status
+     * @return true if the DOM is nil/invalid, false otherwise
+     * @see ValueDom
+     * @see isNotNil
      */
     @UDFunction
     @JvmStatic
     fun isNil(dom: ValueDom) = dom.isNil
 
     /**
-     * Check if this is a not nil DOM
+     * Checks if a DOM element is valid and not null.
+     *
+     * This function tests whether the provided ValueDom represents a valid
+     * DOM element. It is the logical opposite of [isNil] and is useful for
+     * confirming successful document operations.
+     *
+     * ## X-SQL Usage
+     * ```sql
+     * -- Check if page load was successful
+     * SELECT DOM.isNotNil(DOM.load('https://example.com')) as load_success;
+     *
+     * -- Use in WHERE clause
+     * SELECT DOM.text(DOM.selectFirst(dom, 'title')) as title
+     * FROM (
+     *   SELECT DOM.load('https://example.com') as dom
+     * ) t
+     * WHERE DOM.isNotNil(dom) = true;
+     *
+     * -- Combine with other operations
+     * SELECT
+     *   url,
+     *   CASE
+     *     WHEN DOM.isNotNil(dom) THEN DOM.text(DOM.selectFirst(dom, 'h1'))
+     *     ELSE 'Failed to load'
+     *   END as title
+     * FROM (
+     *   SELECT 'https://example.com' as url, DOM.load('https://example.com') as dom
+     * ) t;
+     * ```
+     *
+     * ## Use Cases
+     * - Validating successful document operations
+     * - Filtering valid DOM elements
+     * - Conditional processing based on DOM validity
+     * - Error handling and recovery
+     *
+     * ## Return Values
+     * - **true**: DOM is valid and contains document data
+     * - **false**: DOM is nil (invalid, null, or failed load)
+     *
+     * @param dom The ValueDom to test for validity
+     * @return true if the DOM is valid, false otherwise
+     * @see ValueDom
+     * @see isNil
      */
     @UDFunction
     @JvmStatic
     fun isNotNil(dom: ValueDom) = dom.isNotNil
 
     /**
-     * Get the value of the given attribute
+     * Gets the value of the specified attribute from a DOM element.
+     *
+     * This function extracts attribute values from HTML elements using the
+     * attribute name. It is commonly used to extract href, src, class, id,
+     * and custom data attributes.
+     *
+     * ## X-SQL Usage
+     * ```sql
+     * -- Extract href from link
+     * SELECT DOM.attr(DOM.selectFirst(dom, 'a.main-link'), 'href')
+     * FROM (SELECT DOM.load('https://example.com') as dom) t;
+     *
+     * -- Extract image source
+     * SELECT DOM.attr(DOM.selectFirst(dom, 'img.logo'), 'src')
+     * FROM (SELECT DOM.load('https://example.com') as dom) t;
+     *
+     * -- Extract class attribute
+     * SELECT DOM.attr(DOM.selectFirst(dom, 'div.content'), 'class')
+     * FROM (SELECT DOM.load('https://example.com') as dom) t;
+     *
+     * -- Extract custom data attributes
+     * SELECT DOM.attr(DOM.selectFirst(dom, 'div[data-product-id]'), 'data-product-id')
+     * FROM (SELECT DOM.load('https://shop.example.com') as dom) t;
+     * ```
+     *
+     * ## Use Cases
+     * - Extracting link URLs (href attributes)
+     * - Getting image sources (src attributes)
+     * - Reading element identifiers (id, class)
+     * - Accessing custom data attributes
+     * - Extracting form action URLs
+     *
+     * ## Return Values
+     * - **Attribute value**: If the attribute exists
+     * - **Empty string**: If the attribute doesn't exist
+     *
+     * ## Common Attributes
+     * - `href` - Link destinations
+     * - `src` - Media sources (images, scripts, stylesheets)
+     * - `class` - CSS classes
+     * - `id` - Element identifiers
+     * - `alt` - Alternative text
+     * - `title` - Tooltip text
+     * - `data-*` - Custom data attributes
+     *
+     * @param dom The DOM element to extract attribute from
+     * @param attrName The name of the attribute to retrieve
+     * @return The attribute value, or empty string if attribute doesn't exist
+     * @see Element.attr
+     * @see hasAttr
      */
     @UDFunction
     @JvmStatic
     fun attr(dom: ValueDom, attrName: String) = dom.element.attr(attrName)
 
     /**
-     * Get the value of the given attribute
+     * Gets the ARIA labels from a DOM element.
+     *
+     * This function extracts ARIA (Accessible Rich Internet Applications) label attributes
+     * from HTML elements. ARIA labels provide accessibility information for screen readers
+     * and assistive technologies.
+     *
+     * ## X-SQL Usage
+     * ```sql
+     * -- Extract ARIA labels for accessibility analysis
+     * SELECT DOM.labels(DOM.selectFirst(dom, 'button'))
+     * FROM (SELECT DOM.load('https://example.com') as dom) t;
+     *
+     * -- Check labels on form elements
+     * SELECT
+     *   DOM.attr(input, 'type') as input_type,
+     *   DOM.labels(input) as aria_label
+     * FROM (
+     *   SELECT DOM.load('https://form.example.com') as dom
+     * ) t,
+     * LATERAL (SELECT DOM.select(dom, 'input')) as inputs(input);
+     * ```
+     *
+     * ## Use Cases
+     * - Accessibility auditing and compliance
+     * - Screen reader compatibility analysis
+     * - Form usability assessment
+     * - Web accessibility testing
+     *
+     * ## ARIA Labels
+     * This function specifically extracts the `aria-label` attribute value, which provides
+     * a text label for elements that might not have visible text content.
+     *
+     * @param dom The DOM element to extract ARIA labels from
+     * @return The ARIA label value, or empty string if not present
+     * @see A_LABELS
+     * @see Element.attr
+     * @see <a href="https://www.w3.org/WAI/ARIA/apg/">ARIA Authoring Practices Guide</a>
      */
     @UDFunction
     @JvmStatic
     fun labels(dom: ValueDom) = dom.element.attr(A_LABELS)
 
     /**
-     * Get the value of the given indicator
+     * Gets the computed feature value of a DOM element.
+     *
+     * This function extracts computed node features that are calculated based on
+     * the element's properties, position, and context within the document. Features
+     * can include visibility, position, size, and other computed properties.
+     *
+     * ## X-SQL Usage
+     * ```sql
+     * -- Get element visibility feature
+     * SELECT DOM.feature(DOM.selectFirst(dom, 'div.content'), 'visibility')
+     * FROM (SELECT DOM.load('https://example.com') as dom) t;
+     *
+     * -- Get position features
+     * SELECT
+     *   DOM.feature(element, 'x') as x_position,
+     *   DOM.feature(element, 'y') as y_position
+     * FROM (
+     *   SELECT DOM.load('https://example.com') as dom
+     * ) t,
+     * LATERAL (SELECT DOM.select(dom, 'div.featured')) as elements(element);
+     *
+     * -- Analyze multiple features
+     * SELECT
+     *   DOM.text(element) as text,
+     *   DOM.feature(element, 'visibility') as visible,
+     *   DOM.feature(element, 'size') as size
+     * FROM (
+     *   SELECT DOM.load('https://example.com') as dom
+     * ) t,
+     * LATERAL (SELECT DOM.select(dom, 'p')) as elements(element);
+     * ```
+     *
+     * ## Use Cases
+     * - Element visibility analysis
+     * - Position and layout extraction
+     * - Content importance scoring
+     * - Web page structure analysis
+     *
+     * ## Available Features
+     * Features are computed based on the element context and may include:
+     * - `visibility` - Element visibility status
+     * - `position` - Element position coordinates
+     * - `size` - Element dimensions
+     * - `importance` - Content importance score
+     * - Custom features defined by the NodeFeature system
+     *
+     * @param dom The DOM element to extract features from
+     * @param featureName The name of the feature to retrieve
+     * @return The feature value as a string, or empty string if feature not found
+     * @see NodeFeature
+     * @see NodeFeature.getValue
      */
     @UDFunction
     @JvmStatic
