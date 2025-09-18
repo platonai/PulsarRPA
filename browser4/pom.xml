@@ -23,6 +23,7 @@
     <name>Browser4</name>
 
     <modules>
-        <module>pulsar-browser4</module>
+        <module>browser4-spa</module>
+        <module>browser4-crawler</module>
     </modules>
 </project>
