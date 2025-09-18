@@ -6,6 +6,10 @@
 
 ---
 
+> **⚠️ 授权声明：本项目采用双重授权模式。主项目遵循 Apache License 2.0，`pulsar-rest` 模块采用 GNU AGPL v3。详情见 LICENSE 及 pulsar-rest/LICENSE。**
+
+---
+
 [English](README.md) | 简体中文 | [中国镜像](https://gitee.com/platonai_galaxyeye/browser4)
 
 ## 🌟 介绍
