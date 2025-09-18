@@ -122,7 +122,11 @@ class SinglePageApplicationController(
 
         val eventHandlers = PageEventHandlersFactory.create()
         eventHandlers.browseEventHandlers.onBrowserLaunched.addLast { _, driver ->
+        }
+
+        eventHandlers.browseEventHandlers.onWillNavigate.addLast { _, driver ->
             bindWebDriver(driver)
+            driver.bringToFront()
         }
         val response = commandService.executeSync(command, eventHandlers)
         return ResponseEntity.ok(response)
@@ -180,7 +184,11 @@ class SinglePageApplicationController(
         }
 
         return try {
-            val screenshot = runBlocking { driver.captureScreenshot() }
+            val screenshot = runBlocking {
+                driver.bringToFront()
+                driver.captureScreenshot()
+            }
+
             ResponseEntity.ok(screenshot)
         } catch (e: Throwable) {
             warnUnexpected(this, e, "Failed to capture screenshot from current page")
