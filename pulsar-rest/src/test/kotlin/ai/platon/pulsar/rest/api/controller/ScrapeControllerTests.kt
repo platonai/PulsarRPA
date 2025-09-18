@@ -3,16 +3,11 @@ package ai.platon.pulsar.rest.api.controller
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.h2.udfs.LLMFunctions
-import ai.platon.pulsar.rest.api.TestUtils
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
-import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assumptions
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 open class ScrapeControllerTests : ScrapeControllerTestBase() {
 

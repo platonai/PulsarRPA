@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.rest.api.TestUtils
+import ai.platon.pulsar.rest.api.TestHelper
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
 import org.junit.jupiter.api.Assumptions
@@ -37,8 +37,8 @@ class ScrapeServiceTests {
 
     @BeforeEach
     fun `Ensure resources are prepared`() {
-        TestUtils.ensurePage(productListURL)
-        TestUtils.ensurePage(productDetailURL)
+        TestHelper.ensurePage(productListURL)
+        TestHelper.ensurePage(productDetailURL)
     }
 
     /**

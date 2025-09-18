@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.browser.BrowserContextMode
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
+import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach

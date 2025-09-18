@@ -1,7 +1,7 @@
 package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
-import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
+import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import ai.platon.pulsar.rest.api.entities.CommandStatus
 import org.junit.jupiter.api.Assumptions

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.api
+package ai.platon.pulsar.app.api
 
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.context.PulsarContexts
@@ -6,10 +6,6 @@ import org.junit.jupiter.api.Assumptions
 
 object TestHelper {
     val session = PulsarContexts.getOrCreateSession()
-
-    const val PRODUCT_LIST_URL = "https://www.amazon.com/b?node=1292115011"
-
-    const val PRODUCT_DETAIL_URL = "https://www.amazon.com/dp/B08PP5MSVB"
 
     fun ensurePage(url: String) {
         val pageRequirement = { page: WebPage -> page.protocolStatus.isSuccess && page.persistedContentLength > 8000 }

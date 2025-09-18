@@ -1,7 +1,7 @@
 package ai.platon.pulsar.rest.api.common
 
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
-import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
+import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull

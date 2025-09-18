@@ -1,8 +1,8 @@
 package ai.platon.pulsar.app.api.controller
 
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.entities.*
+import ai.platon.pulsar.test.BasicTestHelper
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assumptions
@@ -27,7 +27,7 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
     }
 
     fun navigateToProductPage() {
-        val request = NavigateRequest(PRODUCT_DETAIL_URL)
+        val request = NavigateRequest(BasicTestHelper.PRODUCT_DETAIL_URL)
         val status = restTemplate.postForObject(
             "$baseUri/api/spa/navigate", request, CommandStatus::class.java
         )

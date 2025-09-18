@@ -3,7 +3,7 @@ package ai.platon.pulsar.rest.api.service
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
+import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.entities.PromptRequest
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
