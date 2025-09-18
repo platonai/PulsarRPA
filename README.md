@@ -6,7 +6,7 @@
 
 ---
 
-> **⚠️ License Notice: This project uses dual licensing. The main project is licensed under Apache License 2.0. The `pulsar-rest` module is licensed under GNU AGPL v3. See LICENSE and pulsar-rest/LICENSE for details.**
+> **⚠️ License Notice: This project uses dual licensing. The main project is licensed under Apache License 2.0. The `browser4` module is licensed under GNU AGPL v3. See LICENSE and browser4/LICENSE for details.**
 
 English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/Browser4)
 

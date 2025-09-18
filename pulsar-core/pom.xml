@@ -27,13 +27,15 @@
     </build>
 
     <modules>
+        <module>pulsar-resources</module>
         <module>pulsar-common</module>
         <module>pulsar-dom</module>
         <module>pulsar-persist</module>
         <module>pulsar-plugins</module>
         <module>pulsar-ql-common</module>
         <module>pulsar-ql</module>
-        <module>pulsar-resources</module>
+        <module>pulsar-third</module>
+        <module>pulsar-tools</module>
         <module>pulsar-skeleton</module>
         <module>pulsar-spring-support</module>
     </modules>

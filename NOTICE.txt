@@ -10,7 +10,7 @@ Please refer to the LICENSE file in the root directory for the Apache 2.0 licens
 中文：
 本项目采用双重开源协议：
 - 主项目（除特殊说明外）遵循 Apache License 2.0。
-- `pulsar-rest` 模块采用 GNU AGPL v3 协议。
+- `browser4` 模块采用 GNU AGPL v3 协议。
 
-详情请参见根目录下的 LICENSE 文件和 pulsar-rest 目录下的 LICENSE 文件。
+详情请参见根目录下的 LICENSE 文件和 browser4 目录下的 LICENSE 文件。
 
