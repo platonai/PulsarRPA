@@ -572,7 +572,7 @@ Kill all Chrome processes and run the program again.
             Files.writeString(reportPath, jsonReport, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
 
             // --- Write launch history ---
-            val launchHistoryDir = userDataDir.resolve("launch-history")
+            val launchHistoryDir = userDataDir.resolveSibling("history")
             Files.createDirectories(launchHistoryDir)
             val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS"))
             val historyFile = launchHistoryDir.resolve("chrome-launch-report-$timestamp.json")
