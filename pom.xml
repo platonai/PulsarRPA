@@ -92,14 +92,11 @@
         <module>pulsar-core</module>
         <module>pulsar-third</module>
         <module>pulsar-tools</module>
-
-        <module>pulsar-rest</module>
-
         <module>pulsar-client</module>
         <module>pulsar-tests</module>
-
         <module>pulsar-examples</module>
-        <module>pulsar-browser4</module>
+
+        <module>browser4</module>
     </modules>
 
     <profiles>
@@ -189,7 +186,6 @@
                 <module>pulsar-third</module>
 
                 <module>pulsar-tools</module>
-                <module>pulsar-rest</module>
 
                 <module>pulsar-tests</module>
                 <module>pulsar-all</module>
@@ -199,7 +195,8 @@
                 <module>pulsar-bom</module>
 
                 <module>pulsar-examples</module>
-                <module>pulsar-browser4</module>
+
+                <module>browser4</module>
             </modules>
 
             <build>
