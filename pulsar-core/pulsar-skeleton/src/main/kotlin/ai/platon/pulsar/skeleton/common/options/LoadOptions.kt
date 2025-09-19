@@ -7,8 +7,6 @@ import ai.platon.pulsar.common.browser.InteractLevel
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.skeleton.common.ApiPublic
@@ -395,10 +393,10 @@ open class LoadOptions constructor(
      * by simulating scroll events. Higher values trigger more dynamic content loading.
      */
     @Parameter(
-        names = ["-sc", "-scrollCount", "--scroll-count"],
+        names = ["-sc", "-autoScrollCount", "--auto-scroll-count", "-scrollCount", "--scroll-count"],
         description = "The count to scroll down after a page being opened in a browser"
     )
-    var scrollCount = InteractSettings.DEFAULT.scrollCount
+    var autoScrollCount = InteractSettings.DEFAULT.autoScrollCount
     
     /**
      * Time interval between successive scroll actions.
@@ -478,14 +476,14 @@ open class LoadOptions constructor(
     /**
      * Number of scroll actions for item detail pages.
      * 
-     * Works identically to [scrollCount] but applies only to item pages.
+     * Works identically to [autoScrollCount] but applies only to item pages.
      * Controls how thoroughly dynamic content is loaded on item detail pages.
      */
     @Parameter(
         names = ["-isc", "-itemScrollCount", "--item-scroll-count"],
         description = "The same as scrollCount, but only works for item pages"
     )
-    var itemScrollCount = scrollCount
+    var itemScrollCount = autoScrollCount
     
     /**
      * Time interval between scrolls for item detail pages.
@@ -983,7 +981,7 @@ open class LoadOptions constructor(
     open fun itemOptions2MajorOptions() {
         // Apply item options to major options
         expires = itemExpires
-        scrollCount = itemScrollCount
+        autoScrollCount = itemScrollCount
         scriptTimeout = itemScriptTimeout
         scrollInterval = itemScrollInterval
         pageLoadTimeout = itemPageLoadTimeout
@@ -1064,7 +1062,7 @@ open class LoadOptions constructor(
 
         val interactSettings = InteractSettings.create(interactLevel)
 
-        if (!isDefault("scrollCount")) interactSettings.scrollCount = scrollCount
+        if (!isDefault("scrollCount")) interactSettings.autoScrollCount = autoScrollCount
         if (!isDefault("scrollInterval")) interactSettings.scrollInterval = scrollInterval
         if (!isDefault("scriptTimeout")) interactSettings.scriptTimeout = scriptTimeout
         if (!isDefault("pageLoadTimeout")) interactSettings.pageLoadTimeout = pageLoadTimeout

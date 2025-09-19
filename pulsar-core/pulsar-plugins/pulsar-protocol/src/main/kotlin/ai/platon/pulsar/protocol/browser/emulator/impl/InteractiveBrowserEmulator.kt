@@ -680,7 +680,7 @@ open class InteractiveBrowserEmulator(
         var status = ProtocolStatus.STATUS_SUCCESS
         val scriptTimeout = interactTask.interactSettings.scriptTimeout
         val fetchTask = interactTask.navigateTask.fetchTask
-        val scrollCount = interactTask.interactSettings.scrollCount
+        val scrollCount = interactTask.interactSettings.autoScrollCount
 
         val initialScroll = if (scrollCount > 0) 5 else 0
         val delayMillis = 500L * 2
@@ -738,7 +738,7 @@ open class InteractiveBrowserEmulator(
         val expressions = buildScrollExpressions(interactTask)
 
         val interactSettings = interactTask.interactSettings
-        if (interactSettings.scrollCount > 0) {
+        if (interactSettings.autoScrollCount > 0) {
             // some website shows lazy content only when the page is in the front.
             val bringToFront = interactTask.interactSettings.bringToFront
             val scrollInterval = interactSettings.scrollInterval.toMillis()
@@ -775,7 +775,7 @@ open class InteractiveBrowserEmulator(
             .map { "__pulsar_utils__.scrollToMiddle($it)" }
             .toMutableList()
 
-        val scrollCount = interactSettings.scrollCount
+        val scrollCount = interactSettings.autoScrollCount
 
         if (scrollCount <= 0) {
             return expressions

@@ -132,19 +132,6 @@ class SinglePageApplicationController(
         PulsarSettings().withDefaultBrowser()
             .withInteractSettings(InteractSettings.DEFAULT.noScroll())
 
-//        val command = CommandRequest(
-//            url = request.url,
-//            args = "-refresh"
-//        )
-//
-//        val eventHandlers = PageEventHandlersFactory.create()
-//        eventHandlers.browseEventHandlers.onBrowserLaunched.addLast { _, driver ->
-//        }
-//
-//        eventHandlers.browseEventHandlers.onWillNavigate.addLast { _, driver ->
-//        }
-
-        // val response = commandService.executeSync(command, eventHandlers)
         runBlocking {
             driver.bringToFront()
             driver.navigateTo(request.url)
