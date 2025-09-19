@@ -1,5 +1,6 @@
 package ai.platon.pulsar.app.api.controller
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.entities.*
 import ai.platon.pulsar.test.BasicTestHelper
@@ -13,6 +14,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.*
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class SinglePageApplicationControllerTest : IntegrationTestBase() {
@@ -68,14 +71,24 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
     fun `take screenshot`() {
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_JSON
+        headers.accept = listOf(MediaType.IMAGE_JPEG)
         val request = HttpEntity(ScreenshotRequest(id = "test"), headers)
         val response = restTemplate.exchange(
-            "$baseUri/api/spa/screenshot", HttpMethod.GET, request, CommandStatus::class.java
+            "$baseUri/api/spa/screenshot", HttpMethod.GET, request, ByteArray::class.java
         )
 
         assertThat(response.statusCode.value()).isEqualTo(200)
-        Assertions.assertThat(response.body).isNotNull
-        println(response.body)
+        assertThat(response.body).isNotNull
+        assertThat(response.body!!.size).isGreaterThan(0)
+        println("Screenshot captured successfully, size: ${response.body!!.size} bytes")
+
+        val exportPath = AppPaths.getRandomProcTmpTmpPath("screenshot-", ".jpg")
+        Files.write(exportPath, response.body!!, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+        println("Screenshot saved to: $exportPath")
+
+        // Verify the file was created and has content
+        assertThat(Files.exists(exportPath)).isTrue()
+        assertThat(Files.size(exportPath)).isEqualTo(response.body!!.size.toLong())
     }
 
     @Order(40)

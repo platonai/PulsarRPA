@@ -16,6 +16,7 @@
  */
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import org.apache.commons.lang3.SystemUtils
@@ -210,8 +211,8 @@ class TestAppPaths {
     }
     
     @Test
-    fun testGetRandomProcTmpTmp() {
-        val path = AppPaths.getRandomProcTmpTmpDirectory("prefix-", ".suffix")
+    fun testGetRandomProcTmpTmpPath() {
+        val path = AppPaths.getRandomProcTmpTmpPath("prefix-", ".suffix")
         assertTrue(path.startsWith(AppPaths.PROC_TMP_DIR.resolve("tmp")))
         assertTrue(path.toString().endsWith(".suffix"))
     }

@@ -299,11 +299,8 @@ object AppPaths {
      * @param suffix the suffix of the directory name
      * @return the path in the process's temporary directory
      * */
-    fun getRandomProcTmpTmpDirectory(prefix: String = "", suffix: String = ""): Path =
+    fun getRandomProcTmpTmpPath(prefix: String = "", suffix: String = ""): Path =
         getProcTmpTmpDirectory(prefix + RandomStringUtils.randomAlphabetic(18) + suffix)
-
-    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getRandomProcTmpTmpDirectory(prefix, suffix)" ))
-    fun getRandomProcTmpTmp(prefix: String = "", suffix: String = "") = getRandomProcTmpTmpDirectory(prefix, suffix)
 
     fun getContextGroupDir(group: String) = CONTEXT_GROUP_BASE_DIR.resolve(group)
 

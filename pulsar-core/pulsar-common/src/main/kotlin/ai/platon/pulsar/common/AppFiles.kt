@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.CONFIG_AVAILABLE_DIR
 import ai.platon.pulsar.common.AppPaths.CONFIG_ENABLED_DIR
 import org.apache.commons.io.FileUtils
@@ -53,7 +54,7 @@ object AppFiles {
      */
     @Throws(IOException::class)
     fun createTempFile(prefix: String, suffix: String = ""): Path {
-        val path = AppPaths.getRandomProcTmpTmp(prefix, suffix)
+        val path = AppPaths.getRandomProcTmpTmpPath(prefix, suffix)
         // This method works as if the CREATE, TRUNCATE_EXISTING, and WRITE options are present. In other words,
         // it opens the file for writing, creating the file if it doesn't exist, or initially truncating an existing
         // regular-file to a size of 0.

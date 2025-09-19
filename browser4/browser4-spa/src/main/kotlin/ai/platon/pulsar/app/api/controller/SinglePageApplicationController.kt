@@ -4,12 +4,7 @@ import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.warnUnexpected
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.H2SQLContext
-import ai.platon.pulsar.rest.api.entities.ActRequest
-import ai.platon.pulsar.rest.api.entities.CommandRequest
-import ai.platon.pulsar.rest.api.entities.CommandStatus
-import ai.platon.pulsar.rest.api.entities.ExtractRequest
-import ai.platon.pulsar.rest.api.entities.NavigateRequest
-import ai.platon.pulsar.rest.api.entities.ScreenshotRequest
+import ai.platon.pulsar.rest.api.entities.*
 import ai.platon.pulsar.rest.api.service.CommandService
 import ai.platon.pulsar.rest.api.service.ConversationService
 import ai.platon.pulsar.skeleton.PulsarSettings
@@ -20,12 +15,8 @@ import ai.platon.pulsar.skeleton.session.PulsarSession
 import kotlinx.coroutines.runBlocking
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.CrossOrigin
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -176,7 +167,7 @@ class SinglePageApplicationController(
             ResponseEntity.ok(status)
         } catch (e: Throwable) {
             warnUnexpected(this, e, "Failed to execute act on current page")
-            val status = CommandStatus.Companion.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
+            val status = CommandStatus.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
             status.message = e.message ?: "Failed to act | ${request.act}"
             ResponseEntity.status(status.statusCode).body(status)
         }
@@ -186,9 +177,9 @@ class SinglePageApplicationController(
      * Capture a screenshot of the current page.
      *
      * @param request Screenshot options (reserved for future use).
-     * @return 200 OK with screenshot payload; 500 if no active driver is present.
+     * @return 200 OK with JPEG image data in binary format; 500 if no active driver is present.
      */
-    @GetMapping("/screenshot")
+    @GetMapping("/screenshot", produces = [MediaType.IMAGE_JPEG_VALUE])
     fun screenshot(@RequestBody request: ScreenshotRequest): ResponseEntity<Any> {
         val driver = getActiveDriver()
         if (driver == null) {
@@ -198,20 +189,18 @@ class SinglePageApplicationController(
         }
 
         return try {
-            val screenshot = runBlocking {
+            val screenshotBase64 = runBlocking {
                 driver.bringToFront()
                 driver.captureScreenshot()
             }
 
-            val status = CommandStatus(
-                "",
-                event = "screenshot",
-                isDone = true,
-                message = "screenshot",
-                statusCode = ResourceStatus.SC_OK,
-                pageStatusCode = ResourceStatus.SC_OK
-            )
-            ResponseEntity.ok(status)
+            if (screenshotBase64 == null) {
+                return ResponseEntity.status(ResourceStatus.SC_INTERNAL_SERVER_ERROR).body("Failed to capture screenshot.")
+            }
+
+            // Decode base64 to bytes and return raw JPEG data
+            val jpegBytes = Base64.getDecoder().decode(screenshotBase64)
+            ResponseEntity.ok(jpegBytes)
         } catch (e: Throwable) {
             warnUnexpected(this, e, "Failed to capture screenshot from current page")
             val status = CommandStatus.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
