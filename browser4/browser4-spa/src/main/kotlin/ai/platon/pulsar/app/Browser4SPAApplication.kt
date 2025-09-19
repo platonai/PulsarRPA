@@ -105,7 +105,7 @@ class Browser4Application {
 fun main(args: Array<String>) {
     runApplication<Browser4Application>(*args) {
         addInitializers(PulsarContextInitializer())
-        setAdditionalProfiles("master", "private")
+        setAdditionalProfiles("spa")
         setLogStartupInfo(true)
     }
 }
