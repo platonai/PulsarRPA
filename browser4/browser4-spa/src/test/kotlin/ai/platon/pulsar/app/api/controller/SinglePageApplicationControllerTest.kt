@@ -33,24 +33,25 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
         assertThat(body["status"]).isNotBlank()
     }
 
-    fun navigateToProductPage() {
-        val request = NavigateRequest(BasicTestHelper.PRODUCT_DETAIL_URL)
-        val status = restTemplate.postForObject(
-            "$baseUri/api/spa/navigate", request, CommandStatus::class.java
-        )
-        Assertions.assertThat(status).isNotNull
-        // Execution is synchronous; status should be marked done even if page load fails
-        assertThat(status!!.isDone).isTrue()
-        assertThat(status.id).isNotBlank()
-    }
-
-    @Order(10)
     @BeforeEach
     fun `init Single Page Application`() {
         Assumptions.assumeTrue { ChatModelFactory.isModelConfigured(session.unmodifiedConfig) }
 
         init()
-        navigateToProductPage()
+    }
+
+    @Order(10)
+    @Test
+    fun `navigate to product page`() {
+        val request = NavigateRequest(BasicTestHelper.PRODUCT_DETAIL_URL)
+        val response = restTemplate.postForObject(
+            "$baseUri/api/spa/navigate", request, String::class.java
+        )
+        Assertions.assertThat(response).isNotNull
+        // Execution is synchronous; status should be marked done even if page load fails
+//        assertThat(status!!.isDone).isTrue()
+//        assertThat(status.id).isNotBlank()
+        assertThat(response).isEqualTo("success")
     }
 
     @Order(20)
