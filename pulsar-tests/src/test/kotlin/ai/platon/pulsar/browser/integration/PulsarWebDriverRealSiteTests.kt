@@ -38,6 +38,8 @@ open class PulsarWebDriverRealSiteTests : WebDriverTestBase() {
 
     @BeforeTest
     fun setup() {
+        logger.warn("Tests may fall because of page layout changing")
+
         session.globalCache.resetCaches()
     }
 
@@ -327,27 +329,27 @@ open class PulsarWebDriverRealSiteTests : WebDriverTestBase() {
         val pageSource = driver.pageSource()
         assertNotNull(pageSource)
         assertTrue { pageSource.contains(asin) }
-        
+
         val paths = mutableListOf<Path>()
         fieldSelectors.entries.take(3).forEach { (name, selector) ->
             val screenshot = driver.runCatching { captureScreenshot(selector) }
                 .onFailure { logger.info("Failed to captureScreenshot | $name - $selector") }
                 .getOrNull()
-            
+
             if (screenshot != null) {
                 val path = exportScreenshot("$name.jpg", screenshot)
                 paths.add(path)
                 delay(1000)
             }
         }
-        
+
         if (paths.isNotEmpty()) {
             println(String.format("%d screenshots are saved | %s", paths.size, paths[0].parent))
         }
-        
+
         // assertTrue { paths.isNotEmpty() }
     }
-    
+
     @Test
     fun testDragAndHold() = runWebDriverTest(walmartUrl, browser) { driver ->
         // TODO: FIXME: dragAndHold not working on walmart.com
