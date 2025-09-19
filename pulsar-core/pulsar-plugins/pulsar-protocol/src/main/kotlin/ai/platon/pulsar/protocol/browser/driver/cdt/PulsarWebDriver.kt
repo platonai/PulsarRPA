@@ -475,7 +475,7 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun captureScreenshot(): String? {
         return try {
-            rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
+            // rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
             rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot() }
         } catch (e: ChromeDriverException) {
             rpc.handleChromeException(e, "captureScreenshot")

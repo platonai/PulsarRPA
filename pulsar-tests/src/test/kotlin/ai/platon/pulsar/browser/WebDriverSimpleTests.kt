@@ -2,6 +2,7 @@ package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.test.BasicTestHelper
 import kotlinx.coroutines.delay
 import kotlin.test.Test
 
@@ -11,8 +12,9 @@ import kotlin.test.Test
  */
 class WebDriverSimpleTests: WebDriverTestBase() {
     private val url = "https://www.amazon.com/"
-    private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
-    private val productURL = "https://www.amazon.com/dp/B08PP5MSVB?th=1"
+    // private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
+    private val url2 = BasicTestHelper.PRODUCT_LIST_URL
+    private val productURL = BasicTestHelper.PRODUCT_DETAIL_URL
 
     @Test
     fun testScrollDown() {
