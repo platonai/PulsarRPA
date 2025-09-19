@@ -7,10 +7,14 @@ import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.MethodOrderer
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.*
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class SinglePageApplicationControllerTest : IntegrationTestBase() {
 
     fun init() {
@@ -37,6 +41,7 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
         assertThat(status.id).isNotBlank()
     }
 
+    @Order(10)
     @BeforeEach
     fun `init Single Page Application`() {
         Assumptions.assumeTrue { ChatModelFactory.isModelConfigured(session.unmodifiedConfig) }
@@ -45,6 +50,7 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
         navigateToProductPage()
     }
 
+    @Order(20)
     @Test
     fun `act with clicking`() {
         val request = ActRequest(id = "test", act = "click search box")
@@ -52,13 +58,12 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
             "$baseUri/api/spa/act", request, CommandStatus::class.java
         )
 
-        readln()
-
         assertThat(response.statusCode.value()).isEqualTo(200)
         // assertThat(response.body).isNotNull
         println(response.body)
     }
 
+    @Order(30)
     @Test
     fun `take screenshot`() {
         val headers = HttpHeaders()
@@ -67,11 +72,13 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
         val response = restTemplate.exchange(
             "$baseUri/api/spa/screenshot", HttpMethod.GET, request, CommandStatus::class.java
         )
+
         assertThat(response.statusCode.value()).isEqualTo(200)
         Assertions.assertThat(response.body).isNotNull
         println(response.body)
     }
 
+    @Order(40)
     @Test
     fun `extract with prompt`() {
         val headers = HttpHeaders()

@@ -72,6 +72,9 @@ class SinglePageApplicationController(
                 require(session.context is H2SQLContext)
                 require(session.isActive)
 
+                // Use a real browser for SPA rendering
+                PulsarSettings().withDefaultBrowser()
+
                 // 如果已经初始化过，直接返回健康状态
                 if (isInitialized && browser != null) {
                     return mapOf(
@@ -121,12 +124,15 @@ class SinglePageApplicationController(
      */
     @PostMapping("/navigate")
     fun navigate(@RequestBody request: NavigateRequest): ResponseEntity<Any> {
+        // Use a real browser for SPA rendering
+        PulsarSettings().withDefaultBrowser()
+
         val command = CommandRequest(
             url = request.url,
             args = "-refresh"
         )
 
-        val eventHandlers = PageEventHandlersFactory.Companion.create()
+        val eventHandlers = PageEventHandlersFactory.create()
         eventHandlers.browseEventHandlers.onBrowserLaunched.addLast { _, driver ->
         }
 
@@ -148,24 +154,26 @@ class SinglePageApplicationController(
     fun act(@RequestBody request: ActRequest): ResponseEntity<Any> {
         val driver = getActiveDriver()
         if (driver == null) {
-            val status = CommandStatus.Companion.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
+            val status = CommandStatus.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
             status.message = "No active browser driver. Initialize via /api/spa/init and navigate first."
             return ResponseEntity.status(status.statusCode).body(status)
         }
 
         return try {
             runBlocking {
-
-
-                println("Request: $request")
-                println(driver.currentUrl())
-
-
-
                 driver.bringToFront()
                 driver.instruct(request.act)
             }
-            ResponseEntity.ok("")
+
+            val status = CommandStatus(
+                "",
+                event = "act",
+                isDone = true,
+                message = request.act,
+                statusCode = ResourceStatus.SC_OK,
+                pageStatusCode = ResourceStatus.SC_OK
+            )
+            ResponseEntity.ok(status)
         } catch (e: Throwable) {
             warnUnexpected(this, e, "Failed to execute act on current page")
             val status = CommandStatus.Companion.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
@@ -184,7 +192,7 @@ class SinglePageApplicationController(
     fun screenshot(@RequestBody request: ScreenshotRequest): ResponseEntity<Any> {
         val driver = getActiveDriver()
         if (driver == null) {
-            val status = CommandStatus.Companion.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
+            val status = CommandStatus.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
             status.message = "No active browser driver. Initialize via /api/spa/init and navigate first."
             return ResponseEntity.status(status.statusCode).body(status)
         }
@@ -195,10 +203,18 @@ class SinglePageApplicationController(
                 driver.captureScreenshot()
             }
 
-            ResponseEntity.ok(screenshot)
+            val status = CommandStatus(
+                "",
+                event = "screenshot",
+                isDone = true,
+                message = "screenshot",
+                statusCode = ResourceStatus.SC_OK,
+                pageStatusCode = ResourceStatus.SC_OK
+            )
+            ResponseEntity.ok(status)
         } catch (e: Throwable) {
             warnUnexpected(this, e, "Failed to capture screenshot from current page")
-            val status = CommandStatus.Companion.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
+            val status = CommandStatus.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
             status.message = e.message ?: "Failed to capture screenshot"
             ResponseEntity.status(status.statusCode).body(status)
         }
