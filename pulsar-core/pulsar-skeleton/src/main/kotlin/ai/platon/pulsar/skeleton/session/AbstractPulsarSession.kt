@@ -209,12 +209,6 @@ abstract class AbstractPulsarSession(
         return context.attach(normURL, driver)
     }
 
-    @Deprecated("Use bindDriver instead", replaceWith = ReplaceWith("bindDriver(driver)"))
-    override fun connect(driver: WebDriver) { sessionConfig.putBean(driver) }
-
-    @Deprecated("Use bindBrowser instead", replaceWith = ReplaceWith("bindBrowser(browser)"))
-    override fun connect(browser: Browser) { sessionConfig.putBean(browser) }
-
     override fun bindDriver(driver: WebDriver) {
         sessionConfig.putBean(driver)
         bindBrowser(driver.browser)

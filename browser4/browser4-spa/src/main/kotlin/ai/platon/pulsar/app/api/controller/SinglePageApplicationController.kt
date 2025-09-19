@@ -236,7 +236,7 @@ class SinglePageApplicationController(
         val status = CommandStatus()
 
         runBlocking {
-            val url = driver.url()
+            val url = driver.currentUrl()
             val page: WebPage = session.attach(url, driver)
             val document = session.parse(page)
             val command = CommandRequest(
