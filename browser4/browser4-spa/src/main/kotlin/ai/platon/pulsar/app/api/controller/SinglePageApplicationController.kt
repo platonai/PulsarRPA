@@ -236,9 +236,14 @@ class SinglePageApplicationController(
         val status = CommandStatus()
 
         runBlocking {
-            val page: WebPage = session.open(driver.currentUrl(), driver)
+            val url = driver.url()
+            val page: WebPage = session.attach(url, driver)
             val document = session.parse(page)
-            val command = CommandRequest(url = page.url, dataExtractionRules = request.prompt)
+            val command = CommandRequest(
+                url = page.url,
+                dataExtractionRules = request.prompt,
+                xsql = request.xsql,
+            )
             commandService.executeCommandStepByStep(
                 page,
                 document,

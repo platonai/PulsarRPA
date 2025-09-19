@@ -340,6 +340,10 @@ abstract class AbstractPulsarContext(
         return abnormalPage ?: loadComponent.open(normURL, driver)
     }
 
+    override suspend fun attach(normURL: NormURL, driver: WebDriver): WebPage {
+        return abnormalPage ?: loadComponent.attach(normURL, driver)
+    }
+
     /**
      * Load a page with specified options, see [LoadOptions] for all options.
      *

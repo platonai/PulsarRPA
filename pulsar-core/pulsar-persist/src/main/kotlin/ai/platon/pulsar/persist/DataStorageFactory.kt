@@ -86,15 +86,12 @@ class DataStorageFactory(conf: ImmutableConfig) {
                 return MONGO_STORE_CLASS
             }
 
-            val isDistributedFs = conf["fs.defaultFS", ""].startsWith("hdfs://")
             var dataStoreClass = when {
                 SystemUtils.IS_OS_WINDOWS -> when {
                     Runtimes.checkIfProcessRunning(".*mongod.exe .+") -> MONGO_STORE_CLASS
                     else -> FILE_BACKEND_STORE_CLASS
                 }
                 SystemUtils.IS_OS_LINUX -> when {
-                    isDistributedFs -> HBASE_STORE_CLASS
-                    Runtimes.checkIfProcessRunning(".+HMaster.+") -> HBASE_STORE_CLASS
                     Runtimes.checkIfProcessRunning(".+/usr/bin/mongod .+") -> MONGO_STORE_CLASS
                     else -> FILE_BACKEND_STORE_CLASS
                 }

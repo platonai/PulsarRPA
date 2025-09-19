@@ -199,6 +199,16 @@ abstract class AbstractPulsarSession(
     override suspend fun open(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage =
         context.open(url, driver, options("-refresh", eventHandlers))
 
+    override suspend fun attach(url: String, driver: WebDriver): WebPage {
+        val normURL = normalize(url)
+        return context.attach(normURL, driver)
+    }
+
+    override suspend fun attach(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage {
+        val normURL = normalize(url, options(eventHandlers = eventHandlers))
+        return context.attach(normURL, driver)
+    }
+
     @Deprecated("Use bindDriver instead", replaceWith = ReplaceWith("bindDriver(driver)"))
     override fun connect(driver: WebDriver) { sessionConfig.putBean(driver) }
 

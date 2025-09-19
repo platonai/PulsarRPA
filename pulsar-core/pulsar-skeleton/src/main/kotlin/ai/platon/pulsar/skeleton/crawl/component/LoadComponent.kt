@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.VAR_ATTACH
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
@@ -56,7 +57,7 @@ class LoadComponent(
 ) : AutoCloseable {
     companion object {
         private const val VAR_REFRESH = "refresh"
-        private const val VAR_CONNECT = "connect"
+
         val pageCacheHits = AtomicLong()
         val dbGetCount = AtomicLong()
 
@@ -132,6 +133,16 @@ class LoadComponent(
         val state = page.getVar(VAR_REFRESH)
         require(state is CheckState)
 
+        page.putBean(driver)
+        loadNormalURLWithEventHandlersDeferred(normURL, page)
+        return page
+    }
+
+    suspend fun attach(normURL: NormURL, driver: WebDriver): WebPage {
+        val page = createPageShell(normURL)
+        require(page is AbstractWebPage)
+
+        page.setVar(VAR_ATTACH, "attach")
         page.putBean(driver)
         loadNormalURLWithEventHandlersDeferred(normURL, page)
         return page
@@ -376,7 +387,7 @@ class LoadComponent(
     private suspend fun fetchContentIfNecessaryDeferred(normURL: NormURL, page: WebPage) {
         require(page is AbstractWebPage)
         when {
-            page.hasVar(VAR_CONNECT) -> fetchContentDeferred(page, normURL)
+            page.hasVar(VAR_ATTACH) -> fetchContentDeferred(page, normURL)
             page.removeVar(VAR_REFRESH) != null -> fetchContentDeferred(page, normURL)
         }
     }

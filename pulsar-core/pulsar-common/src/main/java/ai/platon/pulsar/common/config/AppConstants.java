@@ -29,18 +29,9 @@ public interface AppConstants {
 
     String YES_STRING = "y";
 
-    String ALL_BATCHES = "all";
-
-    /**
-     * The first non-null Unicode character is U+0001, which is the Start of Heading (SOH) character.
-     * @link <a href="https://en.wikipedia.org/wiki/UTF-8">UTF-8</a>
-     * */
-    Character UNICODE_FIRST_CODE_POINT = '\u0001';
-    /**
-     * The last Unicode character in the Unicode standard is U+10FFFF, which is the highest code point in Unicode.
-     * @link <a href="https://en.wikipedia.org/wiki/UTF-8">UTF-8</a>
-     * */
-    Character UNICODE_LAST_CODE_POINT = '\uFFFF';
+    String VAR_REFRESH = "refresh";
+    String VAR_CONNECT = "connect";
+    String VAR_ATTACH = "attach";
 
     /**
      * An example of the shortest url
@@ -62,10 +53,6 @@ public interface AppConstants {
      * The url of the nil page
      * */
     String NIL_PAGE_URL = INTERNAL_URL_PREFIX + "/nil";
-    /**
-     * The url of the top page
-     * */
-    String URL_TRACKER_HOME_URL = INTERNAL_URL_PREFIX + "/url/tracker";
 
     /**
      * Storage
@@ -74,7 +61,6 @@ public interface AppConstants {
     /** A minimal file backend store */
     String FILE_BACKEND_STORE_CLASS = "ai.platon.pulsar.persist.gora.FileBackendPageStore";
     String MONGO_STORE_CLASS = "org.apache.gora.mongodb.store.MongoStore";
-    String HBASE_STORE_CLASS = "org.apache.gora.hbase.store.HBaseStore";
     // schema version 1.10.x
 //    String WEBPAGE_SCHEMA = "webpage110";
     /**
@@ -103,8 +89,6 @@ public interface AppConstants {
     String CMD_PROXY_POOL_DUMP = "dump-proxy-pool";
 
     String CMD_PROXY_FORCE_IDLE = "IPS-force-idle";
-    String CMD_PROXY_RECONNECT = "IPS-reconnect";
-    String CMD_PROXY_DISCONNECT = "IPS-disconnect";
 
     /**
      * Browser

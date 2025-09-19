@@ -18,6 +18,7 @@ package ai.platon.pulsar.protocol.browser.emulator.impl
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.VAR_ATTACH
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.persist.AbstractWebPage
@@ -416,13 +417,13 @@ open class InteractiveBrowserEmulator(
         require(driver is AbstractWebDriver)
 
         val browserSettings = driver.browser.settings
-        // TODO: a better flag to specify whether to connect or navigate
+        // TODO: a better flag to specify whether to attach or navigate
         val page = fetchTask.page
         require(page is AbstractWebPage)
-        val connect = page.hasVar("connect")
-        val interactResult = if (connect) {
+        val attach = page.hasVar(VAR_ATTACH) || page.hasVar("connect")
+        val interactResult = if (attach) {
             driver.ignoreDOMFeatures = true
-            connect(navigateTask, driver, browserSettings)
+            switchTo(navigateTask, driver, browserSettings)
         } else {
             navigateAndInteract(navigateTask, driver, browserSettings)
         }
@@ -516,7 +517,7 @@ open class InteractiveBrowserEmulator(
     }
 
     @Throws(NavigateTaskCancellationException::class, WebDriverException::class)
-    private suspend fun connect(
+    private suspend fun switchTo(
         task: NavigateTask,
         driver: WebDriver,
         settings: BrowserSettings,

@@ -343,12 +343,12 @@ data class NavigateRequest(
 data class ActRequest(
     var id: String,
     var act: String,
-    val xsql: String? = null,
 )
 
 data class ExtractRequest(
     var id: String,
-    var prompt: String
+    var prompt: String,
+    val xsql: String? = null,
 )
 
 data class ScreenshotRequest(

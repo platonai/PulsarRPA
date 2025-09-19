@@ -523,6 +523,17 @@ interface PulsarSession : AutoCloseable {
      */
     suspend fun open(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage
 
+    /**
+     * Attach a webpage to the given webdriver. This method is very like open(), but no url navigation.
+     *
+     * ```kotlin
+     * val page = session.attach(driver)
+     * ```
+     */
+    suspend fun attach(url: String, driver: WebDriver): WebPage
+
+    suspend fun attach(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage
+
     @Beta
     @Deprecated("Use bindDriver instead", replaceWith = ReplaceWith("bindDriver(driver)"))
     fun connect(driver: WebDriver)
