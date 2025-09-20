@@ -212,8 +212,7 @@ data class InteractSettings(
         return pulsarObjectMapper().writeValueAsString(this)
     }
 
-    companion object {
-        private val OBJECT_CACHE = ConcurrentHashMap<String, InteractSettings>()
+    object Builder {
 
         /**
          * Interaction behavior to visit pages at fastest speed.
@@ -289,16 +288,25 @@ data class InteractSettings(
             bringToFront = true,
             initScrollPositions = "0.3,0.75,0.3,0.5,0.75"
         )
+    }
+
+    companion object {
+        private val OBJECT_CACHE = ConcurrentHashMap<String, InteractSettings>()
+
+        /**
+         * Default interaction behavior.
+         * */
+        val DEFAULT get() = Builder.DEFAULT
 
         fun create(level: InteractLevel): InteractSettings {
             return when  (level) {
-                InteractLevel.FASTEST -> FASTEST
-                InteractLevel.FASTER -> FASTER
-                InteractLevel.FAST -> FAST
-                InteractLevel.DEFAULT -> DEFAULT
-                InteractLevel.GOOD_DATA -> GOOD_DATA
-                InteractLevel.BETTER_DATA -> BETTER_DATA
-                InteractLevel.BEST_DATA -> BEST_DATA
+                InteractLevel.FASTEST -> Builder.FASTEST
+                InteractLevel.FASTER -> Builder.FASTER
+                InteractLevel.FAST -> Builder.FAST
+                InteractLevel.DEFAULT -> Builder.DEFAULT
+                InteractLevel.GOOD_DATA -> Builder.GOOD_DATA
+                InteractLevel.BETTER_DATA -> Builder.BETTER_DATA
+                InteractLevel.BEST_DATA -> Builder.BEST_DATA
             }
         }
 
