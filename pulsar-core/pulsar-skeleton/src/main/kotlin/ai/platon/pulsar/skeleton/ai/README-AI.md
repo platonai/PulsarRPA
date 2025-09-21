@@ -7,15 +7,6 @@ Its main job is to **translate user’s natural language command into a callable
 
 ---
 
-## 🛠 Environment
-
-* **Project type:** multimodular **Maven** project
-* **Language:** Kotlin (primary)
-* **Build tool:** Use `mvnw` (Maven wrapper) from the project root
-* **System adaptation:** Detect **OS environment first** to select best-suited tools
-
----
-
 ## 📌 Main Responsibilities
 
 1. **Action Translation**
