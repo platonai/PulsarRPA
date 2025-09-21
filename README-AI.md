@@ -18,7 +18,7 @@ and **CI/CD integration**.
 
 ---
 
-## 2. 📖 General Coding Guidelines
+## 2. 📖 General Guidelines
 
 - Prefer **data classes** for DTOs and state holders
 - Keep functions **small and single-responsibility**

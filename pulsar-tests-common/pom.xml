@@ -42,15 +42,23 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!--
-        If your build relies on dependency management support from Spring Boot, you should not import
-        the junit-bom in your build script since that will result in duplicate
-        (and potentially conflicting) management of JUnit dependencies.
-        see https://junit.org/junit5/docs/current/user-guide/#running-tests-build-spring-boot
-         -->
+        <!-- JSON Kotlin module for catalog loading -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+        </dependency>
+
+        <!-- Existing test starter -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
