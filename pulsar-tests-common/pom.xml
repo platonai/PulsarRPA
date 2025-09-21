@@ -17,30 +17,19 @@
         <version>4.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>pulsar-tests</artifactId>
-    <name>Pulsar Tests</name>
+    <artifactId>pulsar-tests-common</artifactId>
+    <name>Pulsar Tests Common</name>
 
     <dependencies>
-        <!-- Internal Dependencies -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-persist</artifactId>
+            <artifactId>pulsar-common</artifactId>
         </dependency>
+
+        <!-- Kotlin test -->
         <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-beans</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-boot</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-ql</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-rest</artifactId>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test-junit5</artifactId>
         </dependency>
 
         <dependency>
@@ -51,12 +40,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-tests-common</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <!--

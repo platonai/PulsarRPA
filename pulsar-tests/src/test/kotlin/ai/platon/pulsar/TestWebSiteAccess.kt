@@ -46,27 +46,27 @@ class TestWebSiteAccess : TestBase() {
     protected val mockAmazonProductUrl get() = "$generatedMockAmazonBaseURL/product/index.html"
 
     /**
-     * @see [ai.platon.pulsar.test.server.MockSiteController.text]
+     * @see [ai.platon.pulsar.test.mock2.server.MockSiteController.text]
      * */
     protected val plainTextUrl get() = "$baseURL/text"
     /**
-     * @see [ai.platon.pulsar.test.server.MockSiteController.csv]
+     * @see [ai.platon.pulsar.test.mock2.server.MockSiteController.csv]
      * */
     protected val csvTextUrl get() = "$baseURL/csv"
     /**
-     * @see [ai.platon.pulsar.test.server.MockSiteController.json]
+     * @see [ai.platon.pulsar.test.mock2.server.MockSiteController.json]
      * */
     protected val jsonUrl get() = "$baseURL/json"
     /**
-     * @see [ai.platon.pulsar.test.server.MockSiteController.robots]
+     * @see [ai.platon.pulsar.test.mock2.server.MockSiteController.robots]
      * */
     protected val robotsUrl get() = "$baseURL/robots.txt"
     /**
-     * @see [ai.platon.pulsar.test.server.MockSiteController.amazonHome]
+     * @see [ai.platon.pulsar.test.mock2.server.MockSiteController.amazonHome]
      * */
     protected val amazonHomeCopyUrl get() = "$baseURL/amazon/home.htm"
     /**
-     * @see [ai.platon.pulsar.test.server.MockSiteController.amazonProduct]
+     * @see [ai.platon.pulsar.test.mock2.server.MockSiteController.amazonProduct]
      * */
     protected val amazonProductCopyUrl get() = "$baseURL/amazon/product.htm"
 

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.test.server
+package ai.platon.pulsar.test.mock2.server
 
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse

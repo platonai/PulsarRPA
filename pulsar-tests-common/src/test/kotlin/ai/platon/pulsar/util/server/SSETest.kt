@@ -7,7 +7,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
 /**
- * Test SSE with OkHttp for [ai.platon.pulsar.test.mock2.server.MockAICommandController].
+ * Test SSE with OkHttp for [ai.platon.pulsar.test.server.MockAICommandController].
  * */
 fun main() {
     val baseUrl = "http://localhost:8182"
