@@ -1,7 +1,7 @@
 package ai.platon.pulsar.tta
 
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
-import ai.platon.pulsar.test.server.Application
+import ai.platon.pulsar.util.server.Application
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag

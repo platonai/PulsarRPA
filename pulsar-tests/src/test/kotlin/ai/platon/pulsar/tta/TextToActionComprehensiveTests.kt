@@ -1,9 +1,8 @@
 package ai.platon.pulsar.tta
 
-import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
-import ai.platon.pulsar.test.server.Application
+import ai.platon.pulsar.util.server.Application
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.e2e
+package ai.platon.pulsar.integration.proxy
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.NetUtil

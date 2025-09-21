@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.integration
+package ai.platon.pulsar.integration.rest
 
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.test.BasicTestHelper

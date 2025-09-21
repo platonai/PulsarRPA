@@ -1,4 +1,4 @@
-package ai.platon.pulsar.test
+package ai.platon.pulsar.util
 
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.context.PulsarContexts

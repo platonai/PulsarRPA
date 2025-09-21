@@ -1,4 +1,4 @@
-package ai.platon.pulsar.basic.rest
+package ai.platon.pulsar.integration.rest.smoke
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -7,7 +7,7 @@ import org.springframework.boot.test.web.server.LocalServerPort
 import kotlin.test.Test
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class RestTest {
+class IntegrationSmokeTest {
     @LocalServerPort
     val port = 0
     

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.test.server
+package ai.platon.pulsar.util.server
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import org.springframework.boot.autoconfigure.SpringBootApplication

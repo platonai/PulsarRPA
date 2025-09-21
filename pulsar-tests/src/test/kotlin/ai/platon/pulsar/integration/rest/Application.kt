@@ -1,8 +1,6 @@
-package ai.platon.pulsar.rest.integration
+package ai.platon.pulsar.integration.rest
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
-import ai.platon.pulsar.common.config.ImmutableConfig
-import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.domain.EntityScan
 import org.springframework.context.annotation.ComponentScan

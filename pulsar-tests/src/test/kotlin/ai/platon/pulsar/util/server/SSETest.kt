@@ -1,4 +1,4 @@
-package ai.platon.pulsar.test.server
+package ai.platon.pulsar.util.server
 
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -7,7 +7,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
 /**
- * Test SSE with OkHttp for [MockAICommandController].
+ * Test SSE with OkHttp for [ai.platon.pulsar.test.server.MockAICommandController].
  * */
 fun main() {
     val baseUrl = "http://localhost:8182"

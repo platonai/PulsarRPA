@@ -1,10 +1,8 @@
-package ai.platon.pulsar.rest.integration
+package ai.platon.pulsar.integration.rest
 
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextConfiguration
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -12,7 +10,6 @@ import org.apache.hc.client5.http.classic.HttpClient
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.apache.hc.core5.util.Timeout
-import org.apache.http.HttpStatus
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -23,7 +20,6 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.client.ClientHttpRequestFactory
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import kotlin.test.BeforeTest
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

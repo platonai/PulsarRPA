@@ -17,7 +17,7 @@ import java.util.*
 import kotlin.test.*
 
 @Tag("TimeConsumingTest")
-open class PulsarWebDriverRealSiteTests : WebDriverTestBase() {
+open class PulsarWebDriverE2ETest : WebDriverTestBase() {
 
     private val fieldSelectors = mapOf(
         "01productTitle" to "#productTitle",
