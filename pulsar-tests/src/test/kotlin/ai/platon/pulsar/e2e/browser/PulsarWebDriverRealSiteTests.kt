@@ -1,6 +1,6 @@
-package ai.platon.pulsar.browser.integration
+package ai.platon.pulsar.e2e.browser
 
-import ai.platon.pulsar.browser.WebDriverTestBase
+import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper

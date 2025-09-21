@@ -1,5 +1,6 @@
-package ai.platon.pulsar.skeleton.crawl.llm
+package ai.platon.pulsar.tta
 
+import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.ChatModel
@@ -9,9 +10,8 @@ import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
-import kotlin.test.assertNull
 
-open class TTATestBase {
+class TextToActionTestBase: WebDriverTestBase() {
 
     companion object {
         val session = PulsarContexts.getOrCreateSession()
@@ -26,8 +26,6 @@ open class TTATestBase {
         @BeforeAll
         @JvmStatic
         fun checkConfiguration() {
-            assertNull(conf.environment)
-
             if (isModelConfigured) {
                 model = ChatModelFactory.getOrCreate(conf)
                 val response = model.call("这是一个测试，来测试你是否工作正常。计算11的平方，仅返回数字。")

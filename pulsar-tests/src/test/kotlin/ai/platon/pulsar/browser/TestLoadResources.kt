@@ -1,5 +1,6 @@
 package ai.platon.pulsar.browser
 
+import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.urls.URLUtils
 import org.apache.commons.lang3.StringUtils

@@ -1,6 +1,6 @@
-package ai.platon.pulsar.browser.integration
+package ai.platon.pulsar.e2e
 
-import ai.platon.pulsar.browser.WebDriverTestBase
+import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.proxy.ProxyEntry
@@ -28,7 +28,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
     // val ipTestUrl = "https://ip.tool.chinaz.com/"
     // val ipTestUrl = "https://whatismyipaddress.com/"
     val ipTestUrl = "https://www.baidu.com/"
-    val browserId = BrowserId.RANDOM_TEMP
+    val browserId = BrowserId.Companion.RANDOM_TEMP
 
     @BeforeEach
     fun setupBrowserContext() {
@@ -38,7 +38,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
     @BeforeEach
     fun checkProxyHub() {
         Assumptions.assumeTrue(NetUtil.testHttpNetwork(proxyHubUrl))
-        System.setProperty(ProxyHubLoader.PROXY_HUB_URL, proxyHubUrl)
+        System.setProperty(ProxyHubLoader.Companion.PROXY_HUB_URL, proxyHubUrl)
 
         proxyLoader.loadProxies().toCollection(proxies)
         println(proxies)
@@ -49,7 +49,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
 
     @AfterTest
     fun tearDown() {
-        kotlin.runCatching { FileUtils.deleteDirectory(browserId.userDataDir.toFile()) }.onFailure { println(it.brief()) }
+        runCatching { FileUtils.deleteDirectory(browserId.userDataDir.toFile()) }.onFailure { println(it.brief()) }
     }
 
     @Test
@@ -62,7 +62,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
         assertTrue { navigateEntry.documentTransferred }
         assertTrue { navigateEntry.networkRequestCount.get() > 0 }
         assertTrue { navigateEntry.networkResponseCount.get() > 0 }
-        
+
         require(driver is AbstractWebDriver)
         assertEquals(200, driver.mainResponseStatus)
         assertTrue { driver.mainResponseStatus == 200 }
@@ -89,7 +89,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
             return
         }
 
-        val browserId = BrowserId.RANDOM_TEMP
+        val browserId = BrowserId.Companion.RANDOM_TEMP
         browserId.setProxy(proxyEntry)
 
         val browser = browserFactory.launch(browserId)

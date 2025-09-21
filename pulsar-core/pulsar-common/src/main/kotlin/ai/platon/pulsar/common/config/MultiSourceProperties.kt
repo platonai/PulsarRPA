@@ -18,11 +18,11 @@ class MultiSourceProperties(
     companion object {
         val DEFAULT_RESOURCES = mutableSetOf("pulsar-default.xml")
         private val ID_SUPPLIER = AtomicInteger()
-        private var globalLoadedProperties: LocalResourceProperties? = null
     }
 
     private var volatileProperties = Properties()
 
+    private var globalLoadedProperties: LocalResourceProperties? = null
     private val loadedProperties: LocalResourceProperties
         get() {
             synchronized(MultiSourceProperties::class.java) {

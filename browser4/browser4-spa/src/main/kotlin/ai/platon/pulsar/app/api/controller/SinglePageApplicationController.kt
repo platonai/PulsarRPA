@@ -39,7 +39,6 @@ import kotlin.concurrent.withLock
 )
 class SinglePageApplicationController(
     val session: PulsarSession,
-    val conversationService: ConversationService,
     val commandService: CommandService,
 ) {
     private val logger = getLogger(SinglePageApplicationController::class)
@@ -85,7 +84,7 @@ class SinglePageApplicationController(
                     }
 
                     val url = "https://www.baidu.com/"
-                    logger.info("Goto $url to initialize ...")
+                    logger.info("Verify $url to initialize ...")
                     val page = session.load(url, options)
                     val document = session.parse(page)
                     val html = document.html
@@ -130,7 +129,7 @@ class SinglePageApplicationController(
 
         // Use a real browser for SPA rendering
         PulsarSettings().withDefaultBrowser()
-            .withInteractSettings(InteractSettings.DEFAULT.noScroll())
+            .withInteractSettings(InteractSettings.Builder.DEFAULT.noScroll())
 
         runBlocking {
             driver.bringToFront()

@@ -1,8 +1,6 @@
-package ai.platon.pulsar.browser.integration
+package ai.platon.pulsar.e2e.browser
 
-import ai.platon.pulsar.common.*
 import org.junit.jupiter.api.Tag
-import java.util.*
 import kotlin.test.*
 
 @Ignore("Tests deprecated, they are not reliable")

@@ -1,9 +1,8 @@
-package ai.platon.pulsar.browser
+package ai.platon.pulsar
 
+import ai.platon.pulsar.browser.WebDriverService
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.persist.model.ActiveDOMMetadata
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
@@ -13,14 +12,9 @@ import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import kotlin.test.assertNotNull
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class WebDriverTestBase : TestBase() {
+class WebDriverTestBase : TestWebSiteAccess() {
 
     companion object {
         val browserFactory = DefaultBrowserFactory()
@@ -40,62 +34,7 @@ class WebDriverTestBase : TestBase() {
         }
     }
 
-    @Value("\${server.port}")
-    val port: Int = 0
-
-//    @Value("\${server.servlet.context-path}")
-//    val contextPath: String = "/api"
-
-    @Autowired
-    lateinit var restTemplate: TestRestTemplate
-
     open val webDriverService get() = WebDriverService(browserFactory)
-
-    protected val logger = getLogger(this)
-    protected val warnUpUrl = "https://www.amazon.com/"
-    protected val originUrl = "https://www.amazon.com/"
-    protected val productUrl = "https://www.amazon.com/dp/B08PP5MSVB"
-    protected val resourceUrl2 = "https://www.amazon.com/robots.txt"
-
-    protected val baseURL get() = "http://127.0.0.1:$port"
-
-    protected val assetsBaseURL get() = "http://127.0.0.1:$port/assets"
-
-    protected val assetsPBaseURL get() = "http://127.0.0.1:$port/assets-p"
-
-    protected val generatedAssetsBaseURL get() = "http://127.0.0.1:$port/generated"
-
-    protected val interactiveUrl get() = "$generatedAssetsBaseURL/interactive-1.html"
-
-    protected val multiScreensInteractiveUrl get() = "$generatedAssetsBaseURL/interactive-screens.html"
-
-    /**
-     * @see [ai.platon.pulsar.test.server.MockSiteController.text]
-     * */
-    protected val plainTextUrl get() = "$baseURL/text"
-    /**
-     * @see [ai.platon.pulsar.test.server.MockSiteController.csv]
-     * */
-    protected val csvTextUrl get() = "$baseURL/csv"
-    /**
-     * @see [ai.platon.pulsar.test.server.MockSiteController.json]
-     * */
-    protected val jsonUrl get() = "$baseURL/json"
-    /**
-     * @see [ai.platon.pulsar.test.server.MockSiteController.robots]
-     * */
-    protected val robotsUrl get() = "$baseURL/robots.txt"
-    /**
-     * @see [ai.platon.pulsar.test.server.MockSiteController.amazonHome]
-     * */
-    protected val mockAmazonHomeUrl get() = "$baseURL/amazon/home.htm"
-    /**
-     * @see [ai.platon.pulsar.test.server.MockSiteController.amazonProduct]
-     * */
-    protected val mockAmazonProductUrl get() = "$baseURL/amazon/product.htm"
-
-    protected val walmartUrl = "https://www.walmart.com/ip/584284401"
-    protected val asin get() = productUrl.substringAfterLast("/dp/")
 
     protected val expressions = """
             typeof(window)
