@@ -1,6 +1,5 @@
 package ai.platon.pulsar
 
-import ai.platon.pulsar.TestBase
 import ai.platon.pulsar.common.getLogger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -20,9 +19,12 @@ class TestWebSiteAccess : TestBase() {
     lateinit var restTemplate: TestRestTemplate
 
     protected val logger = getLogger(this)
+//    protected val warnUpUrl = "https://www.amazon.com/"
+
     protected val warnUpUrl = "https://www.amazon.com/"
-    protected val originUrl = "https://www.amazon.com/"
-    protected val productUrl = "https://www.amazon.com/dp/B08PP5MSVB"
+    protected val e2eOriginUrl = "https://www.amazon.com/"
+    protected val e2eProductUrl = "https://www.amazon.com/dp/B08PP5MSVB"
+
     protected val resourceUrl2 = "https://www.amazon.com/robots.txt"
 
     protected val baseURL get() = "http://127.0.0.1:$port"
@@ -41,6 +43,10 @@ class TestWebSiteAccess : TestBase() {
     protected val interactiveUrl4 get() = "$generatedAssetsBaseURL/interactive-4.html"
 
     protected val multiScreensInteractiveUrl get() = "$generatedAssetsBaseURL/interactive-screens.html"
+
+    protected val generatedMockAmazonBaseURL get() = "$generatedAssetsBaseURL/mock-amazon"
+    protected val mockAmazonListUrl get() = "$generatedMockAmazonBaseURL/list"
+    protected val mockAmazonProductUrl get() = "$generatedMockAmazonBaseURL/product"
 
     /**
      * @see [ai.platon.pulsar.test.server.MockSiteController.text]
@@ -61,13 +67,13 @@ class TestWebSiteAccess : TestBase() {
     /**
      * @see [ai.platon.pulsar.test.server.MockSiteController.amazonHome]
      * */
-    protected val mockAmazonHomeUrl get() = "$baseURL/amazon/home.htm"
+    protected val amazonHomeCopyUrl get() = "$baseURL/amazon/home.htm"
     /**
      * @see [ai.platon.pulsar.test.server.MockSiteController.amazonProduct]
      * */
-    protected val mockAmazonProductUrl get() = "$baseURL/amazon/product.htm"
+    protected val amazonProductCopyUrl get() = "$baseURL/amazon/product.htm"
 
     protected val walmartUrl = "https://www.walmart.com/ip/584284401"
 
-    protected val asin get() = productUrl.substringAfterLast("/dp/")
+    protected val asin get() = e2eProductUrl.substringAfterLast("/dp/")
 }

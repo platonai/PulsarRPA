@@ -50,7 +50,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
 
     @Test
     fun `When navigate to a HTML page then the navigate state are correct`() = runWebDriverTest(browser) { driver ->
-        open(productUrl, driver, 1)
+        open(e2eProductUrl, driver, 1)
 
         val navigateEntry = driver.navigateEntry
         assertTrue("Expect documentTransferred") { navigateEntry.documentTransferred }
@@ -67,7 +67,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     }
 
     @Test
-    fun `when open a HTML page then script is injected`() = runWebDriverTest(originUrl, browser) { driver ->
+    fun `when open a HTML page then script is injected`() = runWebDriverTest(e2eOriginUrl, browser) { driver ->
         var detail = driver.evaluateDetail("typeof(window)")
         println(detail)
         // assertNotNull(detail?.value)
@@ -93,7 +93,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     }
 
     @Test
-    fun `open a HTML page and compute metadata`() = runWebDriverTest(originUrl, browser) { driver ->
+    fun `open a HTML page and compute metadata`() = runWebDriverTest(e2eOriginUrl, browser) { driver ->
         driver.evaluate("__pulsar_utils__.scrollToMiddle()")
         var detail = driver.evaluateDetail("__pulsar_utils__.compute()")
         println(detail)
@@ -106,7 +106,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         val message = ActiveDOMMessage.fromJson(data)
         val urls = message.urls
         assertNotNull(urls)
-        assertEquals(originUrl, urls.URL)
+        assertEquals(e2eOriginUrl, urls.URL)
 
         val metadata = message.metadata
         assertNotNull(metadata)
@@ -122,7 +122,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
 
     @Test
     fun test_selectAttributeAll() = runWebDriverTest(browser) { driver ->
-        driver.navigateTo(productUrl)
+        driver.navigateTo(e2eProductUrl)
         
         val selector = "body a[href]"
         driver.waitForSelector(selector)
@@ -144,7 +144,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     
     @Test
     fun testClickTextMatches() = runWebDriverTest(browser) { driver ->
-        open(productUrl, driver, 1)
+        open(e2eProductUrl, driver, 1)
 //        driver.waitForSelector("a[href*=stores]")
         driver.waitForSelector("a[href*=HUAWEI]")
 
@@ -163,12 +163,12 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         assumeTrue { (pageSource?.length ?: 0) > 1000 }
         assumeTrue { pageSource?.contains("HUAWEI", ignoreCase = true) == true }
 
-        assertNotEquals(productUrl, currentUrl)
+        assertNotEquals(e2eProductUrl, currentUrl)
         // assertContains(currentUrl, "HUAWEI", ignoreCase = true)
     }
     
     @Test
-    fun testClickNthAnchor() = runWebDriverTest(originUrl, browser) { driver ->
+    fun testClickNthAnchor() = runWebDriverTest(e2eOriginUrl, browser) { driver ->
         driver.clickNthAnchor(100, "body")
 //        println(href)
         
@@ -178,7 +178,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     }
     
     @Test
-    fun testMouseMove() = runWebDriverTest(originUrl, browser) { driver ->
+    fun testMouseMove() = runWebDriverTest(e2eOriginUrl, browser) { driver ->
         repeat(10) { i ->
             val x = 100.0 + 2 * i
             val y = 100.0 + 3 * i
@@ -190,7 +190,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     }
     
     @Test
-    fun testMouseWheel() = runWebDriverTest(originUrl, browser) { driver ->
+    fun testMouseWheel() = runWebDriverTest(e2eOriginUrl, browser) { driver ->
         driver.mouseWheelDown(5)
         val box = driver.boundingBox("body")
         println(box)
@@ -208,7 +208,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     
     @Test
     fun testKeyPress() = runWebDriverTest(browser) { driver ->
-        driver.navigateTo(productUrl)
+        driver.navigateTo(e2eProductUrl)
         driver.waitForSelector("#productTitle")
         
         assertTrue { driver.exists("#productTitle") }
@@ -261,12 +261,12 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         // TODO: FIXME: enter seems not working
         driver.press(selector, "Enter")
         driver.waitForNavigation()
-        assertTrue { driver.currentUrl() != productUrl }
+        assertTrue { driver.currentUrl() != e2eProductUrl }
     }
     
     @Test
     fun testTypeText() = runWebDriverTest(browser) { driver ->
-        driver.navigateTo(productUrl)
+        driver.navigateTo(e2eProductUrl)
         driver.waitForSelector("#productTitle")
         
         assertTrue { driver.exists("#productTitle") }
@@ -323,7 +323,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     }
 
     @Test
-    fun testCaptureScreenshot() = runWebDriverTest(productUrl, browser) { driver ->
+    fun testCaptureScreenshot() = runWebDriverTest(e2eProductUrl, browser) { driver ->
         driver.waitForSelector("#productTitle")
         assertTrue { driver.exists("body") }
         val pageSource = driver.pageSource()
@@ -358,7 +358,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     }
     
     @Test
-    fun `When call queryClientRects then return client rects`() = runWebDriverTest(productUrl, browser) { driver ->
+    fun `When call queryClientRects then return client rects`() = runWebDriverTest(e2eProductUrl, browser) { driver ->
         driver.mouseWheelDown(5)
         val box = driver.boundingBox("body")
         // RectD(x=0.0, y=-600.0, width=1912.0, height=10538.828125)
