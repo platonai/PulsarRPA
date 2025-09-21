@@ -12,9 +12,6 @@ class TestWebSiteAccess : TestBase() {
     @Value("\${server.port}")
     val port: Int = 0
 
-//    @Value("\${server.servlet.context-path}")
-//    val contextPath: String = "/api"
-
     @Autowired
     lateinit var restTemplate: TestRestTemplate
 
@@ -45,8 +42,8 @@ class TestWebSiteAccess : TestBase() {
     protected val multiScreensInteractiveUrl get() = "$generatedAssetsBaseURL/interactive-screens.html"
 
     protected val generatedMockAmazonBaseURL get() = "$generatedAssetsBaseURL/mock-amazon"
-    protected val mockAmazonListUrl get() = "$generatedMockAmazonBaseURL/list"
-    protected val mockAmazonProductUrl get() = "$generatedMockAmazonBaseURL/product"
+    protected val mockAmazonListUrl get() = "$generatedMockAmazonBaseURL/list/index.html"
+    protected val mockAmazonProductUrl get() = "$generatedMockAmazonBaseURL/product/index.html"
 
     /**
      * @see [ai.platon.pulsar.test.server.MockSiteController.text]

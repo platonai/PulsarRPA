@@ -16,7 +16,7 @@ open class BrowserSettings constructor(
     /**
      * The configuration.
      * */
-    val config: ImmutableConfig = ImmutableConfig()
+    val config: ImmutableConfig = ImmutableConfig(loadDefaults = true)
 ) {
     companion object {
         private val logger = getLogger(BrowserSettings::class)

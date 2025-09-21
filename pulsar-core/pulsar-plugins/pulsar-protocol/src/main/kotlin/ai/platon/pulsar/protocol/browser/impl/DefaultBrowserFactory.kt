@@ -12,7 +12,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLauncher
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 
 class DefaultBrowserFactory(
-    conf: ImmutableConfig = ImmutableConfig(),
+    conf: ImmutableConfig = ImmutableConfig(loadDefaults = true),
     settings: BrowserSettings = BrowserSettings(conf)
 ) : AbstractBrowserFactory(conf, settings) {
     private val launchers = mapOf(
