@@ -3,10 +3,9 @@ package ai.platon.pulsar.test.server.ec
 import org.springframework.stereotype.Service
 
 @Service
-class CatalogService(private val catalogIndex: CatalogIndex) {
-    fun allCategories(): List<Category> = catalogIndex.catalog.categories
-    fun getCategory(id: String): Category? = catalogIndex.categoryMap[id]
-    fun getProductsByCategory(id: String): List<Product> = catalogIndex.productsByCategory[id].orEmpty().sortedBy { it.id }
-    fun getProduct(id: String): Product? = catalogIndex.productMap[id]
+class CatalogService(private val catalogLoader: CatalogLoader) {
+    fun allCategories(): List<Category> = catalogLoader.allCategories()
+    fun getCategory(id: String): Category? = catalogLoader.getCategory(id)
+    fun getProductsByCategory(id: String): List<Product> = catalogLoader.getProductsByCategory(id).sortedBy { it.id }
+    fun getProduct(id: String): Product? = catalogLoader.getProduct(id)
 }
-

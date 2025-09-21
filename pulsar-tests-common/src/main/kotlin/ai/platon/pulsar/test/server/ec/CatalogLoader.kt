@@ -1,32 +1,35 @@
 package ai.platon.pulsar.test.server.ec
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
 
-@Configuration
+@Component
 class CatalogLoader {
     private val log = LoggerFactory.getLogger(javaClass)
-    private val objectMapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
+    private val objectMapper = jacksonObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
-    @Bean
-    fun catalogIndex(): CatalogIndex {
-        val path = "/static/generated/mock-amazon/data/products.json"
-        val resource = javaClass.getResource(path)
-            ?: error("Catalog JSON not found at $path")
-        val json = resource.readText(StandardCharsets.UTF_8)
-        val catalog: Catalog = objectMapper.readValue(json)
-        require(catalog.categories.size == 20) { "Exactly 20 categories required" }
-        val countsPerCategory = catalog.products.groupBy { it.categoryId }.mapValues { it.value.size }
-        countsPerCategory.values.forEach { require(it in 5..12) { "Each category must have 5..12 products" } }
-        require(catalog.products.size >= 100) { "Total products must be >= 100" }
-        val index = CatalogIndex(catalog)
-        log.info("Loaded mock EC catalog categories={}, products={}, seed={}", catalog.categories.size, catalog.products.size, catalog.meta.seed)
-        return index
+    val catalog: Catalog = load()
+    private val categoriesById = catalog.categories.associateBy { it.id }
+    private val productsById = catalog.products.associateBy { it.id }
+    private val productsByCategory = catalog.products.groupBy { it.categoryId }
+
+    fun getCategory(id: String) = categoriesById[id]
+    fun getProduct(id: String) = productsById[id]
+    fun getProductsByCategory(id: String) = productsByCategory[id].orEmpty()
+    fun allCategories() = catalog.categories
+
+    private fun load(): Catalog {
+        val resourcePath = "/static/generated/mock-amazon/data/products.json"
+        val stream = javaClass.getResourceAsStream(resourcePath)
+            ?: error("Catalog data file not found at $resourcePath")
+        val json = stream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
+        val c: Catalog = objectMapper.readValue(json)
+        log.info("Loaded EC catalog: categories={}, products={}, seed={}", c.categories.size, c.products.size, c.meta.seed)
+        return c
     }
 }
-

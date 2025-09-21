@@ -2,7 +2,7 @@
 
 ## Prerequisite
 
-Read `README-AI.md` in the project root for a high level understanding of the project.
+Read `README-AI.md` in the project root to guide your actions.
 
 ## Purpose
 Implement a fully dynamic mock ecommerce website served under the `/ec` path using `MockSiteApplication.kt`. 
@@ -80,7 +80,7 @@ Load once at application start; keep immutable in memory.
 - Category list: `/pulsar-tests-common/src/main/resources/static/generated/mock-amazon/list/index.html`
 - Product page: `/pulsar-tests-common/src/main/resources/static/generated/mock-amazon/product/index.html`
 
-You may duplicate / adapt them, but keep them minimal and semantic. Inject dynamic sections via simple string replacement or a light template helper.
+Keep layout, javascript and css exactly the same with the template, only product data changes.
 
 ## Rendering Requirements
 ### Common
