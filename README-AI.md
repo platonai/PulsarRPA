@@ -108,39 +108,178 @@ project-root/
 
 ## 7. 🧪 Testing Rules
 
-- **Test Module**: Integration tests and E2E tests are centralized in `pulsar-tests/` module
-  - Test website: Inherit from `TestWebSiteAccess` to start the test website
-  - Test webpages: Located in `pulsar-tests/src/main/resources/static`
-  - Test webdriver: Inherit from `WebDriverTestBase` to create webdrivers for testing
-- **Test Naming Rules**:
-  - Test files: `<ClassName>Tests.kt` or `<ClassName>Test.kt`
-  - Method names: Use backticks for descriptive test names (e.g., `` `When ask to click a button then generate correct WebDriver action code`() ``)
-  - Integration tests can use `<ClassName>IT.kt` pattern
-- **Test Annotations**:
-  - Use `@Tag("ExternalServiceTest")` for tests requiring external services
-  - Use `@Tag("TimeConsumingTest")` for long-running tests
-- **Coverage Expectations**:
-  - **JaCoCo** configured for CI profile with minimum 70% instruction coverage
-  - **Unit tests**: Focus on core logic and utilities
-  - **Integration tests**: Critical paths and REST API endpoints
-  - **E2E tests**: AI → WebDriver command correctness and browser automation
+### 7.1 🏗️ Test Architecture & Structure
 
----
+- **Test Module Organization**:
+  - **`pulsar-tests/`**: Centralized integration tests and E2E tests
+  - **`pulsar-tests-common/`**: Shared test utilities and base classes
+  - **Individual modules**: Unit tests within each module under `src/test/kotlin/`
 
-## 8. ⚙️ CI/CD Integration
+- **Test Base Classes**:
+  - **`TestBase`**: Fundamental test configuration and Spring context
+  - **`TestWebSiteAccess`**: Inherit for tests requiring test website access
+  - **`WebDriverTestBase`**: Inherit for WebDriver-based automation tests
+  - **Test website resources**: Located in `pulsar-tests/src/main/resources/static/`
 
-- **Pipeline**: GitHub Actions
-- **Workflow**:
-1. Detect version from `VERSION` file
-2. Build with `./mvnw clean install`
-3. Run unit + integration tests
-4. Build Docker image → Run integration/E2E validation
-5. If all pass:
-   - Deploy artifacts to Sonatype
-   - Push Docker images to registry
-- **Quality Gates**:
-- Lint check (`ktlint`, `detekt`) must pass
-- Tests must succeed (no flaky tests allowed)
-- Minimum coverage enforced in CI
+### 7.2 📝 Test Naming & Organization
 
----
+- **File Naming Conventions**:
+  ```
+  Unit tests:        <ClassName>Test.kt
+  Integration tests: <ClassName>IT.kt or <ClassName>Tests.kt
+  E2E tests:         <ClassName>E2ETest.kt
+  ```
+
+- **Method Naming**: Use descriptive backtick names following BDD style:
+  ```kotlin
+  @Test
+  fun `Given valid user input When processing request Then return expected result`()
+  
+  @Test
+  fun `When ask to click a button then generate correct WebDriver action code`()
+  ```
+
+- **Package Structure**: Mirror main source packages under `src/test/kotlin/`
+
+### 7.3 🏷️ Test Categorization & Annotations
+
+- **Test Categories**:
+  ```kotlin
+  @Tag("UnitTest")           // Fast, isolated unit tests
+  @Tag("IntegrationTest")    // Tests with external dependencies
+  @Tag("E2ETest")           // End-to-end browser automation tests
+  @Tag("ExternalServiceTest") // Tests requiring external services (LLM, APIs)
+  @Tag("TimeConsumingTest")  // Long-running tests (>30 seconds)
+  @Tag("HeavyTest")         // Resource-intensive tests
+  @Tag("SmokeTest")         // Critical path validation tests
+  ```
+
+- **Spring Test Configuration**:
+  ```kotlin
+  @SpringBootTest(classes = [Application::class], 
+                  webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+  ```
+
+### 7.4 🎯 Test Types & Strategies
+
+- **Unit Tests** (70% of test suite):
+  - **Scope**: Individual classes, pure functions, utilities
+  - **Focus**: Core logic, data transformations, algorithms
+  - **Isolation**: No external dependencies, use mocks/stubs
+  - **Speed**: < 100ms per test
+  
+- **Integration Tests** (25% of test suite):
+  - **Scope**: Module interactions, database operations, Spring context
+  - **Focus**: Component integration, configuration validation
+  - **Dependencies**: Real Spring context, test databases
+  - **Speed**: < 5 seconds per test
+
+- **E2E Tests** (5% of test suite):
+  - **Scope**: Full user workflows, browser automation
+  - **Focus**: AI → WebDriver command correctness, UI interactions
+  - **Dependencies**: Real browsers, test websites
+  - **Speed**: < 30 seconds per test
+
+### 7.5 🔧 Configuration & Environment
+
+- **Property Binding**: Spring-style relaxed binding support
+  ```
+  first-name ≈ first_name ≈ firstName ≈ first.name
+  server.port ≈ SERVER_PORT
+  ```
+
+- **Environment Consistency**: 
+  - Behavior identical with/without Spring `Environment`
+  - Test profiles: `test`, `integration`, `e2e`
+  - Separate test configurations for different test types
+
+- **Test Data Management**:
+  ```
+  src/test/resources/
+  ├── application-test.properties    # Test-specific configuration
+  ├── test-data/                     # Static test datasets
+  ├── fixtures/                      # Test fixtures and samples
+  └── static/                        # Test web pages and assets
+  ```
+
+### 7.6 🎭 Mocking & Test Doubles
+
+- **Mocking Strategy**:
+  - **Unit tests**: Mock external dependencies extensively
+  - **Integration tests**: Real Spring beans, mock external services only
+  - **E2E tests**: Minimize mocking, use real systems where possible
+
+- **Recommended Libraries**:
+  ```kotlin
+  // Kotlin-friendly mocking
+  @MockK lateinit var mockService: ExternalService
+  
+  // Spring Boot test slices
+  @WebMvcTest(Controller::class)
+  @DataJpaTest
+  @JsonTest
+  ```
+
+### 7.7 📊 Performance & Load Testing
+
+- **Performance Test Guidelines**:
+  - **Benchmark tests**: Use `@Tag("BenchmarkTest")` for performance regression detection
+  - **Load tests**: Simulate realistic user loads for critical paths
+  - **Memory tests**: Validate memory usage patterns for large datasets
+
+- **Test Timeouts**:
+  ```kotlin
+  @Test
+  @Timeout(value = 30, unit = TimeUnit.SECONDS)
+  fun `Heavy operation completes within time limit`()
+  ```
+
+### 7.8 📈 Coverage & Quality Expectations
+
+- **Coverage Targets**:
+  - **Overall**: Minimum 70% instruction coverage (JaCoCo)
+  - **Core modules**: 80%+ coverage for business logic
+  - **Utilities**: 90%+ coverage for reusable components
+  - **Controllers**: 85%+ coverage including error paths
+
+- **Quality Metrics**:
+  - **Code coverage**: Enforced in CI pipeline
+  - **Test execution time**: Total test suite < 10 minutes
+  - **Flaky test tolerance**: Zero tolerance for flaky tests
+  - **Test maintenance**: Regular cleanup of obsolete tests
+
+### 7.9 🚀 CI/CD Integration
+
+- **Test Execution Phases**:
+  1. **Unit tests**: Run on every commit
+  2. **Integration tests**: Run on PR and main branch
+  3. **E2E tests**: Run nightly and before releases
+  4. **Performance tests**: Run weekly and before major releases
+
+- **Parallel Execution**:
+  ```xml
+  <!-- Maven Surefire configuration -->
+  <parallel>methods</parallel>
+  <threadCount>4</threadCount>
+  <perCoreThreadCount>true</perCoreThreadCount>
+  ```
+
+- **Test Reporting**:
+  - JUnit XML reports for CI integration
+  - JaCoCo coverage reports published to CI
+  - Failed test artifacts preserved for debugging
+
+### 7.10 🛠️ Testing Tools & Utilities
+
+- **Core Testing Stack**:
+  - **JUnit 5**: Primary testing framework
+  - **Mockk**: Kotlin-native mocking library
+  - **Spring Boot Test**: Integration testing support
+  - **Selenium WebDriver**: Browser automation
+  - **TestContainers**: Integration testing with real services
+
+- **Custom Test Utilities**:
+  - **WebDriver factories**: Standardized browser setup
+  - **Test data builders**: Fluent test data creation
+  - **Assertion helpers**: Domain-specific validations
+  - **Test fixtures**: Reusable test scenarios

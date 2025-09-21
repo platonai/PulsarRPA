@@ -92,6 +92,7 @@
         <module>pulsar-core</module>
         <module>pulsar-rest</module>
         <module>pulsar-client</module>
+        <module>pulsar-tests-common</module>
         <module>pulsar-tests</module>
         <module>pulsar-examples</module>
 
@@ -182,17 +183,12 @@
             </properties>
             <modules>
                 <module>pulsar-core</module>
-                <module>pulsar-third</module>
 
-                <module>pulsar-tools</module>
-
+                <module>pulsar-tests-common</module>
                 <module>pulsar-tests</module>
                 <module>pulsar-all</module>
-
                 <module>pulsar-client</module>
-
                 <module>pulsar-bom</module>
-
                 <module>pulsar-examples</module>
 
                 <module>browser4</module>
