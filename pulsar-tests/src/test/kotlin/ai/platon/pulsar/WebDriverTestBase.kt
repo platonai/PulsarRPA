@@ -3,6 +3,7 @@ package ai.platon.pulsar
 import ai.platon.pulsar.browser.WebDriverService
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.persist.model.ActiveDOMMetadata
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
@@ -17,7 +18,8 @@ import kotlin.test.assertNotNull
 class WebDriverTestBase : TestWebSiteAccess() {
 
     companion object {
-        val browserFactory = DefaultBrowserFactory()
+        val defaultConf = ImmutableConfig(loadDefaults = true)
+        val browserFactory = DefaultBrowserFactory(defaultConf)
         lateinit var browser: Browser
 
         @JvmStatic

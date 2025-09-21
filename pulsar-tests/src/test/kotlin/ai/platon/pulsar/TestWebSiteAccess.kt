@@ -12,9 +12,6 @@ class TestWebSiteAccess : TestBase() {
     @Value("\${server.port}")
     val port: Int = 0
 
-//    @Value("\${server.servlet.context-path}")
-//    val contextPath: String = "/api"
-
     @Autowired
     lateinit var restTemplate: TestRestTemplate
 

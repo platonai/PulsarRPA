@@ -109,8 +109,9 @@ project-root/
 ## 7. 🧪 Testing Rules
 
 - **Test Module**: Integration tests and E2E tests are centralized in `pulsar-tests/` module
-  - Test website: Inherit from `WebDriverTestBase` to start the test website
+  - Test website: Inherit from `TestWebSiteAccess` to start the test website
   - Test webpages: Located in `pulsar-tests/src/main/resources/static`
+  - Test webdriver: Inherit from `WebDriverTestBase` to create webdrivers for testing
 - **Test Naming Rules**:
   - Test files: `<ClassName>Tests.kt` or `<ClassName>Test.kt`
   - Method names: Use backticks for descriptive test names (e.g., `` `When ask to click a button then generate correct WebDriver action code`() ``)

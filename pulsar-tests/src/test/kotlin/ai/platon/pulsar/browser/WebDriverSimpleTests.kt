@@ -19,7 +19,7 @@ class WebDriverSimpleTests: WebDriverTestBase() {
 
     @Test
     fun testScrollDown() {
-        runWebDriverTest(browser) { driver -> visit(mockAmazonHomeUrl, driver) }
+        runWebDriverTest(browser) { driver -> visit(mockAmazonProductUrl, driver) }
     }
 
     @Test
