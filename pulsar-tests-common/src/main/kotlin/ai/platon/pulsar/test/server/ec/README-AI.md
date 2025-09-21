@@ -80,7 +80,7 @@ Load once at application start; keep immutable in memory.
 - Category list: `/pulsar-tests-common/src/main/resources/static/generated/mock-amazon/list/index.html`
 - Product page: `/pulsar-tests-common/src/main/resources/static/generated/mock-amazon/product/index.html`
 
-Keep layout, javascript and css exactly the same with the template, only product data changes.
+> **CRITICAL REQUIREMENT: DO NOT ALTER THE TEMPLATE LAYOUT, EXISTING JAVASCRIPT, OR CSS—ONLY INJECT DYNAMIC PRODUCT DATA INTO PLACEHOLDERS.**
 
 ## Rendering Requirements
 ### Common
