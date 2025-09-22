@@ -2,7 +2,7 @@ package ai.platon.pulsar.tta
 
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
-import ai.platon.pulsar.util.server.Application
+import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
  * Testing all key requirements from coder.md guideline
  */
 @Tag("ExternalServiceTest")
-@SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     private lateinit var textToAction: TextToAction

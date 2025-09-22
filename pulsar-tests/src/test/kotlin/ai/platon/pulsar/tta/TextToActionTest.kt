@@ -1,8 +1,7 @@
 package ai.platon.pulsar.tta
 
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
-import ai.platon.pulsar.util.server.Application
-import kotlinx.coroutines.runBlocking
+import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -15,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest
  * Testing real behavior without mocks
  */
 @Tag("ExternalServiceTest")
-@SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionTest: TextToActionTestBase() {
 
     private lateinit var textToAction: TextToAction

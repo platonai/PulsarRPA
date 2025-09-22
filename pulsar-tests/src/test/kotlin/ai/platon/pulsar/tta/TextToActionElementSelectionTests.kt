@@ -1,7 +1,7 @@
 package ai.platon.pulsar.tta
 
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
-import ai.platon.pulsar.util.server.Application
+import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest
  * Simplified version using correct TextToAction API
  */
 @Tag("ExternalServiceTest")
-@SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionElementSelectionTests : TextToActionTestBase() {
 
     private lateinit var textToAction: TextToAction
