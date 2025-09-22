@@ -43,8 +43,6 @@ class EcCategoryController(
 class ListPageRenderer {
     private val log = LoggerFactory.getLogger(javaClass)
     private val template: String by lazy { loadTemplate() }
-    private val productListDivPattern = Pattern.compile("""<div id=\"product-list\"[^>]*>.*?</div>""", Pattern.DOTALL)
-    private val titlePattern = Pattern.compile("<title>.*?</title>")
 
     fun renderCategory(category: Category, products: List<Product>): String {
         val productCards = products.joinToString("\n") { buildProductCard(it) }
@@ -52,12 +50,28 @@ class ListPageRenderer {
         // Fix relative asset paths so CSS/JS load correctly under /ec/b
         htmlWorking = htmlWorking.replace("href=\"style.css\"", "href=\"/generated/mock-amazon/list/style.css\"")
             .replace("src=\"main.js\"", "src=\"/generated/mock-amazon/list/main.js\"")
-        val replacedList = productListDivPattern.matcher(htmlWorking).replaceFirst(
-            """<div id=\"product-list\" class=\"product-list\" data-server-rendered=\"true\">$productCards</div>"""
-        )
-        val titleReplaced = titlePattern.matcher(replacedList)
-            .replaceFirst("<title>Category: ${escapeHtml(category.name)}</title>")
-        return titleReplaced
+
+        // Replace the product list content - use simple string replacement instead of regex
+        val productListStart = htmlWorking.indexOf("""<div id="product-list" class="product-list">""")
+        val productListEnd = htmlWorking.indexOf("""</div>""", productListStart + 1)
+
+        if (productListStart != -1 && productListEnd != -1) {
+            val beforeProductList = htmlWorking.substring(0, productListStart)
+            val afterProductList = htmlWorking.substring(productListEnd + 6) // 6 = length of "</div>"
+            val newProductList = """<div id="product-list" class="product-list" data-server-rendered="true">$productCards</div>"""
+            htmlWorking = beforeProductList + newProductList + afterProductList
+        }
+
+        // Replace title
+        val titleStart = htmlWorking.indexOf("""<title>""")
+        val titleEnd = htmlWorking.indexOf("""</title>""", titleStart + 1)
+        if (titleStart != -1 && titleEnd != -1) {
+            val beforeTitle = htmlWorking.substring(0, titleStart)
+            val afterTitle = htmlWorking.substring(titleEnd + 8) // 8 = length of "</title>"
+            htmlWorking = beforeTitle + """<title>Category: ${escapeHtml(category.name)}</title>""" + afterTitle
+        }
+
+        return htmlWorking
     }
 
     private fun buildProductCard(p: Product): String {
