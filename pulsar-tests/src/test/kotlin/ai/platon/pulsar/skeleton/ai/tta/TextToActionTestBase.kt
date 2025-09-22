@@ -1,4 +1,4 @@
-package ai.platon.pulsar.tta
+package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.AppPaths
@@ -6,18 +6,22 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.ChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.session.PulsarSession
+import ai.platon.pulsar.util.server.Application
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.TestConstructor
 
-class TextToActionTestBase: WebDriverTestBase() {
+@SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+class TextToActionTestBase(
+    override val session: PulsarSession,
+): WebDriverTestBase(session) {
 
     companion object {
-        val session = PulsarContexts.getOrCreateSession()
         var lastResponse: ModelResponse? = null
-
-        val textToAction = TextToAction(session.sessionConfig)
 
         private val conf = ImmutableConfig(loadDefaults = true)
         private val isModelConfigured get() = ChatModelFactory.isModelConfigured(conf)
@@ -40,4 +44,6 @@ class TextToActionTestBase: WebDriverTestBase() {
             Assumptions.assumeTrue(isModelConfigured)
         }
     }
+
+    val textToAction by lazy { TextToAction(session.sessionConfig) }
 }

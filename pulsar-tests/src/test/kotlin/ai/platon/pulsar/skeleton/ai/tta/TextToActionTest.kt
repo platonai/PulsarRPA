@@ -1,6 +1,6 @@
-package ai.platon.pulsar.tta
+package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.skeleton.ai.tta.TextToAction
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.util.server.Application
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -15,13 +15,12 @@ import org.springframework.boot.test.context.SpringBootTest
  */
 @Tag("ExternalServiceTest")
 @SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class TextToActionTest: TextToActionTestBase() {
-
-    private lateinit var textToAction: TextToAction
+class TextToActionTest(
+    override val session: PulsarSession,
+): TextToActionTestBase(session) {
 
     @BeforeEach
     fun setUp() {
-        textToAction = TextToAction(session.sessionConfig)
     }
 
     @Test

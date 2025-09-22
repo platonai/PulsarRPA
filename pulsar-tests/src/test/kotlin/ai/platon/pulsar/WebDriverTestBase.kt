@@ -3,40 +3,58 @@ package ai.platon.pulsar
 import ai.platon.pulsar.browser.WebDriverService
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.persist.model.ActiveDOMMetadata
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
+import ai.platon.pulsar.ql.context.SQLContexts
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.skeleton.session.PulsarSession
+import ai.platon.pulsar.util.server.Application
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
+import org.springframework.boot.test.context.SpringBootTest
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.test.assertNotNull
 
-class WebDriverTestBase : TestWebSiteAccess() {
+@SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+class WebDriverTestBase(
+    override val session: PulsarSession = SQLContexts.getOrCreateSession()
+) : TestWebSiteAccess(session) {
 
     companion object {
-        val defaultConf = ImmutableConfig(loadDefaults = true)
-        val browserFactory = DefaultBrowserFactory(defaultConf)
+        val isInitialized = AtomicBoolean(false)
         lateinit var browser: Browser
-
-        @JvmStatic
-        @BeforeAll
-        fun initBrowser() {
-            browser = browserFactory.launchRandomTempBrowser()
-            browser.newDriver()
-        }
 
         @JvmStatic
         @AfterAll
         fun closeBrowser() {
-            browser.close()
+            if (isInitialized.compareAndSet(true, false)) {
+                browser.close()
+            }
         }
     }
 
+    @BeforeEach
+    fun initBrowser() {
+        synchronized(isInitialized) {
+            if (isInitialized.compareAndSet(false, true)) {
+                browser = browserFactory.launchRandomTempBrowser()
+                browser.newDriver()
+            }
+        }
+    }
+
+    val browserFactory get() = context.getBeanOrNull(BrowserFactory::class) ?: DefaultBrowserFactory(session.unmodifiedConfig)
+
     open val webDriverService get() = WebDriverService(browserFactory)
+
+//    val browser get() = webDriverService.browser
 
     protected val expressions = """
             typeof(window)

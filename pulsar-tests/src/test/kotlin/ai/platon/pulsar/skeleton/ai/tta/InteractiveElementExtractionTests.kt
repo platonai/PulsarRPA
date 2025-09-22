@@ -1,11 +1,13 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.util.server.Application
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import kotlin.test.AfterTest
 
@@ -16,13 +18,12 @@ import kotlin.test.AfterTest
  */
 @Tag("IntegrationTest")
 @SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class InteractiveElementExtractionTests : TextToActionTestBase() {
-
-    private lateinit var textToAction: TextToAction
+class InteractiveElementExtractionTests @Autowired constructor(
+    override val session: PulsarSession,
+) : TextToActionTestBase(session) {
 
     @BeforeEach
     fun setUp() {
-        textToAction = TextToAction(session.sessionConfig)
     }
 
     @AfterTest

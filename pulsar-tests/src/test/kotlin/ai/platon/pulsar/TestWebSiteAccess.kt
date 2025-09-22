@@ -1,16 +1,20 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.skeleton.session.PulsarSession
+import ai.platon.pulsar.util.server.Application
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class TestWebSiteAccess : TestBase() {
+@SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+class TestWebSiteAccess(
+    override val session: PulsarSession
+) : TestBase(session) {
 
     @Value("\${server.port}")
-    val port: Int = 0
+    val port: Int = 18182
 
     @Autowired
     lateinit var restTemplate: TestRestTemplate
