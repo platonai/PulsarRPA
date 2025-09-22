@@ -7,6 +7,10 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
+import org.springframework.context.annotation.Import
+
+@Import(MockEcServerConfiguration::class)
 open class ScrapeControllerTestBase : IntegrationTestBase() {
 
     companion object {

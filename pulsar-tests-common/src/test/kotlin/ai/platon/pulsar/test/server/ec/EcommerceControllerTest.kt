@@ -60,6 +60,7 @@ class EcommerceControllerTest {
         assertThat(resp.body).contains("product-price")
     }
 
+
     @Test
     fun missingCategoryParam() {
         val resp = rest.getForEntity(url("/ec/b"), String::class.java)

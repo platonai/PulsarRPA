@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{TITLE}}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    header { background:#222; color:#fff; padding:1rem; }
+    #product-page { display:flex; gap:2rem; margin:2rem; }
+    .product-images { flex:1; }
+    .product-info { flex:2; }
+    .product-image { max-width:100%; height:auto; border:1px solid #ddd; }
+    #product-title { margin-top:0; }
+    #product-price { font-size:1.4rem; font-weight:bold; color:#b12704; }
+    #product-rating { color:#f90; }
+    #product-category-link { margin-bottom:1rem; }
+    #product-features { margin:1rem 0; }
+    #product-specs { border-collapse:collapse; margin:1rem 0; }
+    #product-specs th, #product-specs td { border:1px solid #ccc; padding:.4rem .6rem; text-align:left; }
+    .product-badges { margin:.5rem 0; }
+    .badge { background:#d00; color:#fff; padding:.2rem .4rem; border-radius:3px; font-size:.75rem; margin-right:.25rem; }
+    footer { margin-top:2rem; font-size:.8rem; text-align:center; color:#666; }
+  </style>
+</head>
+<body>
+  <header><h1>Mock Ecommerce</h1></header>
+  <main>
+    <article id="product-page" data-product-id="{{PRODUCT_ID}}" data-category-id="{{PRODUCT_CATEGORY_ID}}">
+      <div class="product-images">
+        <img id="product-image" class="product-image" src="{{PRODUCT_IMAGE}}" alt="{{PRODUCT_NAME}}" />
+      </div>
+      <div class="product-info">
+        <h1 id="product-title">{{PRODUCT_NAME}}</h1>
+        <div id="product-category-link">
+          <a href="/ec/b?node={{PRODUCT_CATEGORY_ID}}">{{PRODUCT_CATEGORY_NAME}}</a>
+        </div>
+        <div class="rating-line">
+          <span id="product-rating">{{PRODUCT_RATING}}</span>
+          <span id="product-rating-count">{{PRODUCT_RATING_COUNT}}</span>
+        </div>
+        <div id="product-price">{{PRODUCT_PRICE}}</div>
+        <!--BADGES-->
+        <!--FEATURE_LIST-->
+        <!--SPECS_TABLE-->
+      </div>
+    </article>
+  </main>
+  <footer>Mock EC &copy; Seeded Data</footer>
+</body>
+</html>

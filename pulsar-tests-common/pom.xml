@@ -25,6 +25,10 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-h2</artifactId>
+        </dependency>
 
         <!-- Kotlin test -->
         <dependency>

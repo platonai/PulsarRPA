@@ -8,12 +8,15 @@ import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.TestHelper
+import ai.platon.pulsar.rest.api.common.MockEcServerTestBase
+import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.test.context.ContextConfiguration
 import java.time.Instant
 import kotlin.test.Test
@@ -23,11 +26,12 @@ import kotlin.test.assertTrue
 
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
-class ScrapeServiceTests {
+@Import(MockEcServerConfiguration::class)
+class ScrapeServiceTests : MockEcServerTestBase() {
 
-    private val productListURL = "https://www.amazon.com/b?node=1292115011"
+    private val productListURL = "http://localhost:18182/ec/b?node=1292115012"
 
-    private val productDetailURL = "https://www.amazon.com/dp/B08PP5MSVB"
+    private val productDetailURL = "http://localhost:18182/ec/dp/B0E000001"
 
     @Autowired
     private lateinit var config: ImmutableConfig
@@ -37,6 +41,7 @@ class ScrapeServiceTests {
 
     @BeforeEach
     fun `Ensure resources are prepared`() {
+        super.setup() // Call parent setup to verify mock server is running
         TestHelper.ensurePage(productListURL)
         TestHelper.ensurePage(productDetailURL)
     }
@@ -51,7 +56,7 @@ class ScrapeServiceTests {
 
         val response = service.executeQuery(request)
         val records = response.resultSet
-        println(records)
+        println(records.toString())
         assertNotNull(records)
 
         assertTrue { records.isNotEmpty() }
@@ -88,7 +93,7 @@ class ScrapeServiceTests {
         val uuid = service.submitJob(request)
 
         assertTrue { uuid.isNotEmpty() }
-        println(uuid)
+        println(uuid.toString())
 
         val scrapeStatusRequest = ScrapeStatusRequest(uuid)
         var status = service.getStatus(scrapeStatusRequest)
@@ -98,7 +103,7 @@ class ScrapeServiceTests {
             sleepSeconds(1)
             status = service.getStatus(scrapeStatusRequest)
         }
-        println(pulsarObjectMapper().writeValueAsString(status))
+        println(pulsarObjectMapper().writeValueAsString(status).toString())
         assertTrue { i > 0 }
         assertEquals(200, status.statusCode)
     }
@@ -123,7 +128,7 @@ class ScrapeServiceTests {
         val records = response.resultSet
         assertNotNull(records)
 
-        println(prettyPulsarObjectMapper().writeValueAsString(response))
+        println(prettyPulsarObjectMapper().writeValueAsString(response).toString())
 
         assertTrue { records.isNotEmpty() }
         val actualUrl = records[0]["url"].toString()
