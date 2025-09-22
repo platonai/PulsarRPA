@@ -1,7 +1,7 @@
 package ai.platon.pulsar.integration.rest
 
 import ai.platon.pulsar.common.sql.SQLTemplate
-import ai.platon.pulsar.test.BasicTestHelper
+// import ai.platon.pulsar.test.BasicTestHelper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -13,7 +13,8 @@ open class ScrapeControllerTestBase : IntegrationTestBase() {
         @JvmStatic
         @BeforeAll
         fun `Ensure resources are prepared`() {
-            BasicTestHelper.ensurePages()
+            // BasicTestHelper.ensurePages()
+            // TODO: Implement proper resource preparation for integration tests
         }
     }
 

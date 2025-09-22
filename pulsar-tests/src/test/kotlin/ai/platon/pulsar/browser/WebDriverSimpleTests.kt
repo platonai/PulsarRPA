@@ -3,7 +3,6 @@ package ai.platon.pulsar.browser
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.test.BasicTestHelper
 import kotlinx.coroutines.delay
 import kotlin.test.Test
 
@@ -12,14 +11,20 @@ import kotlin.test.Test
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class WebDriverSimpleTests: WebDriverTestBase() {
+    companion object {
+        // Mock EC server URLs for testing
+        const val PRODUCT_LIST_URL = "http://localhost:18182/ec/b?node=1292115012"
+        const val PRODUCT_DETAIL_URL = "http://localhost:18182/ec/dp/B0E000001"
+    }
+
     private val url = "https://www.amazon.com/"
     // private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
-    private val url2 = BasicTestHelper.PRODUCT_LIST_URL
-    private val productURL = BasicTestHelper.PRODUCT_DETAIL_URL
+    private val url2 = PRODUCT_LIST_URL
+    private val productURL = PRODUCT_DETAIL_URL
 
     @Test
     fun testScrollDown() {
-        runWebDriverTest(browser) { driver -> visit(mockAmazonProductUrl, driver) }
+        runWebDriverTest(browser) { driver -> visit(PRODUCT_DETAIL_URL, driver) }
     }
 
     @Test
