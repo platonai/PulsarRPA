@@ -11,7 +11,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 class TestWebSiteAccess : TestBase() {
 
     @Value("\${server.port}")
-    val port: Int = 0
+    val port: Int = 18182
 
     @Autowired
     lateinit var restTemplate: TestRestTemplate

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.tta
+package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import kotlin.test.AfterTest
 
@@ -23,7 +24,6 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
     @BeforeEach
     fun setUp() {
-        textToAction = TextToAction(session.sessionConfig)
     }
 
     @AfterTest

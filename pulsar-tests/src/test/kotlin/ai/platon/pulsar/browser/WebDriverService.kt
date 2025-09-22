@@ -7,7 +7,10 @@ import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.StringUtils
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.BeforeEach
+import java.util.concurrent.atomic.AtomicBoolean
 
 open class WebDriverService(
     val browserFactory: BrowserFactory,

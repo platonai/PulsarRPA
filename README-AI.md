@@ -14,7 +14,7 @@ and **CI/CD integration**.
 - **Primary Language**: **Kotlin**
 - **Build Tool**: Always use `./mvnw` (Maven wrapper) from the project root
 - **System Adaptation**: Detect **OS environment first** to select best-suited tools  
-- **Java Compatibility**: Read `pom.xml` detemine Java versions
+- **Java Compatibility**: Read `pom.xml` determine Java versions
 
 ---
 
@@ -64,45 +64,6 @@ project-root/
   - No cyclic dependencies between modules
   - Shared utilities go to `pulsar-core/pulsar-common`
   - AI client/utilities in `pulsar-third/pulsar-llm`
-
----
-
-## 5. 🗂 File Naming & Package Rules
-
-- **File Naming**:
-- Kotlin files: `PascalCase.kt` (e.g., `TextToAction.kt`)
-- Test files: `<ClassName>Test.kt` (e.g., `TextToActionTest.kt`)
-- Integration tests: `<ClassName>IT.kt`
-- Guidelines for AI: `README-AI.md` (in project root dir and multiple modules)
-
-- **Packages**:
-- Base package: `ai.platon.pulsar`
-- Organized by **responsibility**, not by layer only:
-  - `ai.platon.pulsar.skeleton.*` (Core WebDriver & AI translation)
-  - `ai.platon.pulsar.common.*` (Common utilities)
-  - `ai.platon.pulsar.dom.*` (DOM manipulation)
-  - `ai.platon.pulsar.persist.*` (Data persistence)
-  - `ai.platon.pulsar.ql.*` (Query language)
-  - `ai.platon.pulsar.rest.*` (REST API)
-  - `ai.platon.pulsar.app.*` (Application layer)
-  - `ai.platon.pulsar.test.*` (Test packages)
-
----
-
-## 6. 🏷 Class Placement by Responsibility
-
-- **REST APIs & Controllers** → `pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/controller/`
-- **API Services** → `pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/service/`
-- **API Entities/DTOs** → `pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/entities/`
-- **Core Session Management** → `pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/session/`
-- **Web Crawling Logic** → `pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/`
-- **AI Translation (Text-to-Action)** → `pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/ai/`
-- **DOM Manipulation & Models** → `pulsar-dom/src/main/kotlin/ai/platon/pulsar/dom/`
-- **Common Utilities** → `pulsar-common/src/main/kotlin/ai/platon/pulsar/common/`
-- **Data Persistence** → `pulsar-persist/src/main/kotlin/ai/platon/pulsar/persist/`
-- **Query Language** → `pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/`
-- **Browser Automation Apps** → `browser4/browser4-crawler/src/main/kotlin/ai/platon/pulsar/app/`
-- **Test Classes** → Mirror the main package structure under `src/test/kotlin/`
 
 ---
 

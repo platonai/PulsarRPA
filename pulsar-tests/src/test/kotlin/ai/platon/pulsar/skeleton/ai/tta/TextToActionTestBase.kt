@@ -1,4 +1,4 @@
-package ai.platon.pulsar.tta
+package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.AppPaths
@@ -6,21 +6,22 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.ChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.tta.TextToAction
-import ai.platon.pulsar.skeleton.ai.tta.InteractiveElement
-import ai.platon.pulsar.skeleton.ai.tta.ElementBounds
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.skeleton.session.PulsarSession
+import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.TestConstructor
 
-class TextToActionTestBase: WebDriverTestBase() {
+@SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+class TextToActionTestBase(
+    override val session: PulsarSession,
+): WebDriverTestBase(session) {
 
     companion object {
-        val session = PulsarContexts.getOrCreateSession()
         var lastResponse: ModelResponse? = null
-
-        val textToAction = TextToAction(session.sessionConfig)
 
         private val conf = ImmutableConfig(loadDefaults = true)
         private val isModelConfigured get() = ChatModelFactory.isModelConfigured(conf)
@@ -44,6 +45,7 @@ class TextToActionTestBase: WebDriverTestBase() {
         }
     }
 
+<<<<<<< HEAD:pulsar-tests/src/test/kotlin/ai/platon/pulsar/tta/TextToActionTestBase.kt
     // Helper methods for TTA testing as recommended in README
 
     /**
@@ -151,3 +153,7 @@ class TextToActionTestBase: WebDriverTestBase() {
         return null
     }
 }
+=======
+    val textToAction by lazy { TextToAction(session.sessionConfig) }
+}
+>>>>>>> origin/feat/tools-use:pulsar-tests/src/test/kotlin/ai/platon/pulsar/skeleton/ai/tta/TextToActionTestBase.kt

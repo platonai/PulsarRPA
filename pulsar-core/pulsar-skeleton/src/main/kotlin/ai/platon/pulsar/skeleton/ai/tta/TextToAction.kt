@@ -2,12 +2,16 @@ package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import java.nio.file.Files
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 
 data class InteractiveElement(
     val id: String,
@@ -53,8 +57,6 @@ data class InstructionResult(
     val functionResults : List<Any?>,
     val modelResponse: ModelResponse,
 ) {
-    fun hasResults() = functionResults.isNotEmpty()
-
     companion object {
         val LLM_NOT_AVAILABLE = InstructionResult(
             listOf(),
@@ -75,6 +77,7 @@ data class MethodSelectionResult(
 )
 
 class TextToAction(val conf: ImmutableConfig) {
+    private val logger = getLogger(this)
     private val model = ChatModelFactory.getOrCreateOrNull(conf)
 
     val baseDir = AppPaths.get("tta")
@@ -94,9 +97,94 @@ class TextToAction(val conf: ImmutableConfig) {
         private set
     val actionInterfaceMessageFile = baseDir.resolve("system-message.txt")
 
-    // Lazy load JavaScript script from resource file
-    private val extractElementsScript: String by lazy {
-        loadResourceScript("/ai/platon/pulsar/skeleton/ai/tta/extract-interactive-elements.js")
+    // Tool-use helpers -------------------------------------------------------------------------
+    internal data class ToolCall(val name: String, val args: Map<String, Any?>)
+
+    private fun buildToolUsePrompt(userPrompt: String) = """
+你现在以工具调用模式工作。给定用户指令, 只返回可执行的 WebDriver 工具调用 JSON。
+工具列表(函数与参数说明):
+- click(selector: String)
+- fill(selector: String, text: String)
+- navigateTo(url: String)
+- scrollDown(count: Int = 1)
+- scrollUp(count: Int = 1)
+- scrollToMiddle(ratio: Double = 0.5)
+- waitForSelector(selector: String, timeoutMillis: Long = 5000)
+- check(selector: String)
+- uncheck(selector: String)
+
+返回格式严格为(不要多余文字):
+{
+  "tool_calls":[
+    {"name":"click","args":{"selector":"#submit-btn"}},
+    {"name":"fill","args":{"selector":"#search-input","text":"Hello"}}
+  ]
+}
+
+规则:
+1. 仅返回 JSON
+2. 若无法确定操作, 返回 {"tool_calls":[]}
+3. 参数缺失时不要臆造 selector
+4. 不返回注释/Markdown/代码块
+
+用户指令: $userPrompt
+""".trimIndent()
+
+    // Proper JSON parsing with Gson instead of ad-hoc regex
+    internal fun parseToolCalls(json: String): List<ToolCall> {
+        if (json.isBlank()) return emptyList()
+        return try {
+            val root = JsonParser.parseString(json)
+            if (!root.isJsonObject) return emptyList()
+            val arr = root.asJsonObject.getAsJsonArray("tool_calls") ?: return emptyList()
+            arr.mapNotNull { el ->
+                if (!el.isJsonObject) return@mapNotNull null
+                val obj = el.asJsonObject
+                val name = obj.get("name")?.takeIf { it.isJsonPrimitive }?.asString ?: return@mapNotNull null
+                val argsObj: JsonObject = obj.getAsJsonObject("args") ?: JsonObject()
+                val args = mutableMapOf<String, Any?>()
+                for ((k, v) in argsObj.entrySet()) {
+                    args[k] = jsonElementToKotlin(v)
+                }
+                ToolCall(name, args)
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to parse tool calls: {}", e.message)
+            emptyList()
+        }
+    }
+
+    private fun jsonElementToKotlin(e: JsonElement): Any? = when {
+        e.isJsonNull -> null
+        e.isJsonPrimitive -> {
+            val p = e.asJsonPrimitive
+            when {
+                p.isBoolean -> p.asBoolean
+                p.isNumber -> {
+                    val num = p.asNumber
+                    val d = num.toDouble()
+                    val i = num.toInt()
+                    if (d == i.toDouble()) i else d
+                }
+                else -> p.asString
+            }
+        }
+        e.isJsonArray -> e.asJsonArray.map { jsonElementToKotlin(it) }
+        e.isJsonObject -> e.asJsonObject.entrySet().associate { it.key to jsonElementToKotlin(it.value) }
+        else -> null
+    }
+
+    internal fun toolCallToDriverLine(tc: ToolCall): String? = when (tc.name) {
+        "click" -> tc.args["selector"]?.let { "driver.click(\"$it\")" }
+        "fill" -> tc.args["selector"]?.let { s -> "driver.fill(\"$s\", \"${tc.args["text"] ?: ""}\")" }
+        "navigateTo" -> tc.args["url"]?.let { "driver.navigateTo(\"$it\")" }
+        "scrollDown" -> "driver.scrollDown(${tc.args["count"] ?: 1})"
+        "scrollUp" -> "driver.scrollUp(${tc.args["count"] ?: 1})"
+        "scrollToMiddle" -> "driver.scrollToMiddle(${tc.args["ratio"] ?: 0.5})"
+        "waitForSelector" -> tc.args["selector"]?.let { sel -> "driver.waitForSelector(\"$sel\", ${(tc.args["timeoutMillis"] ?: 5000)}L)" }
+        "check" -> tc.args["selector"]?.let { "driver.check(\"$it\")" }
+        "uncheck" -> tc.args["selector"]?.let { "driver.uncheck(\"$it\")" }
+        else -> null
     }
 
     init {
@@ -160,12 +248,21 @@ class TextToAction(val conf: ImmutableConfig) {
      * Generate the action code from the prompt.
      * */
     fun generateWebDriverActions(prompt: String): ActionDescription {
-        val response = chatAboutWebDriver(prompt)
-        val functionCalls = response.content.split("\n")
-            .map { it.trim() }.filter { it.startsWith("driver.") }
-
+        val toolPrompt = buildToolUsePrompt(prompt)
+        val response = model?.call(toolPrompt) ?: ModelResponse.LLM_NOT_AVAILABLE
+        val toolCalls = parseToolCalls(response.content)
+        val functionCalls = if (toolCalls.isNotEmpty()) {
+            toolCalls.mapNotNull { toolCallToDriverLine(it) }
+        } else {
+            response.content.split("\n").map { it.trim() }.filter { it.startsWith("driver.") && it.contains("(") }
+        }
         return ActionDescription(functionCalls, null, response)
     }
+
+    /**
+     * Generate the action code from the prompt.
+     * */
+    fun generateWebDriverActions(prompt: String, driver: WebDriver?): ActionDescription = generateWebDriverActions(prompt)
 
     /**
      * Generate the action code from the prompt.
@@ -206,7 +303,7 @@ class TextToAction(val conf: ImmutableConfig) {
                 }
             }
         } catch (e: Exception) {
-            println("Error parsing interactive elements: ${e.message}")
+            logger.warn("Error parsing interactive elements: {}", e.message)
         }
 
         return emptyList()
@@ -240,447 +337,152 @@ class TextToAction(val conf: ImmutableConfig) {
                 )
             )
         } catch (e: Exception) {
-            println("Error parsing element from map: ${e.message}")
+            logger.warn("Error parsing element from map: {}", e.message)
             return null
         }
     }
 
     /**
-     * Parse elements from JSON string (fallback method)
+     * Parse elements from JSON string using Gson
      */
-    private fun parseElementsFromJsonString(jsonString: String): List<InteractiveElement> {
-        // 简化的 JSON 解析，实际项目中应该使用 Jackson 或 Gson
-        val elements = mutableListOf<InteractiveElement>()
-
-        try {
-            // 这里是一个简化的解析逻辑，用于演示
-            // 在实际项目中，应该使用专门的 JSON 解析库
-            if (jsonString.contains("[") && jsonString.contains("]")) {
-                // 创建一些示例元素用于演示
-                elements.add(
-                    InteractiveElement(
-                        id = "search-input",
-                        tagName = "input",
-                        selector = "#search-input",
-                        text = "",
-                        type = "search",
-                        href = null,
-                        className = "search-box",
-                        placeholder = "Search...",
-                        value = "",
-                        isVisible = true,
-                        bounds = ElementBounds(50.0, 100.0, 300.0, 40.0)
-                    )
+    internal fun parseElementsFromJsonString(jsonString: String): List<InteractiveElement> {
+        if (jsonString.isBlank()) return emptyList()
+        return try {
+            val root = JsonParser.parseString(jsonString)
+            val arr = when {
+                root.isJsonArray -> root.asJsonArray
+                root.isJsonObject && root.asJsonObject.get("elements")?.isJsonArray == true -> root.asJsonObject.getAsJsonArray("elements")
+                else -> return emptyList()
+            }
+            arr.mapNotNull { el ->
+                if (!el.isJsonObject) return@mapNotNull null
+                val obj = el.asJsonObject
+                val boundsObj = obj.get("bounds")?.takeIf { it.isJsonObject }?.asJsonObject
+                val bounds = ElementBounds(
+                    x = boundsObj?.get("x")?.asDouble ?: 0.0,
+                    y = boundsObj?.get("y")?.asDouble ?: 0.0,
+                    width = boundsObj?.get("width")?.asDouble ?: 0.0,
+                    height = boundsObj?.get("height")?.asDouble ?: 0.0
                 )
-
-                elements.add(
-                    InteractiveElement(
-                        id = "submit-btn",
-                        tagName = "button",
-                        selector = "#submit-btn",
-                        text = "Search",
-                        type = "submit",
-                        href = null,
-                        className = "btn btn-primary",
-                        placeholder = null,
-                        value = null,
-                        isVisible = true,
-                        bounds = ElementBounds(360.0, 100.0, 80.0, 40.0)
-                    )
+                InteractiveElement(
+                    id = obj.get("id")?.asString ?: "",
+                    tagName = obj.get("tagName")?.asString ?: "",
+                    selector = obj.get("selector")?.asString ?: "",
+                    text = obj.get("text")?.asString?.take(100) ?: "",
+                    type = obj.get("type")?.asString,
+                    href = obj.get("href")?.asString,
+                    className = obj.get("className")?.asString,
+                    placeholder = obj.get("placeholder")?.asString,
+                    value = obj.get("value")?.asString,
+                    isVisible = obj.get("isVisible")?.asBoolean ?: false,
+                    bounds = bounds
                 )
             }
         } catch (e: Exception) {
-            println("Error parsing JSON string: ${e.message}")
+            logger.warn("Failed to parse elements JSON: {}", e.message)
+            emptyList()
         }
-
-        return elements
     }
 
-    /**
-     * Extract interactive elements from the current page using JavaScript
-     */
+    // Make extraction helpers internal for tests
+    internal fun extractSelector(command: String): String? {
+        val patterns = listOf(
+            // ID selectors
+            """['"](#[^'"]+)['"]""".toRegex(),
+            // Class selectors (allow dot followed by any non-quote/non-space chars)
+            """['"](\.[^'"\s]+)['"]""".toRegex(),
+            // Attribute selectors
+            """['"](\[[^]]+])['"]""".toRegex(),
+            // Fallback: any quoted token starting with a letter
+            """['"]([a-zA-Z][^'"]*?)['"]""".toRegex()
+        )
+        for (pattern in patterns) {
+            val match = pattern.find(command)
+            if (match != null) return match.groupValues[1]
+        }
+        return null
+    }
+
+    internal fun extractSelectorAndText(command: String): Pair<String?, String?> {
+        val patterns = listOf(
+            """fill\s*\(\s*['"]([^'"]+)['"]\s*,\s*['"]([^'"]*)['"]\s*\)""".toRegex(),
+            """type\s*\(\s*['"]([^'"]+)['"]\s*,\s*['"]([^'"]*)['"]\s*\)""".toRegex()
+        )
+        for (pattern in patterns) {
+            val match = pattern.find(command)
+            if (match != null && match.groupValues.size >= 3) return Pair(match.groupValues[1], match.groupValues[2])
+        }
+        return Pair(null, null)
+    }
+
+    internal fun extractRatio(command: String): Double? {
+        val patterns = listOf(
+            """scrollToMiddle\s*\(\s*(\d*\.?\d+)\s*\)""".toRegex(),
+            """(\d*\.?\d+)""".toRegex()
+        )
+        for (pattern in patterns) {
+            val match = pattern.find(command)
+            if (match != null) return match.groupValues[1].toDoubleOrNull()
+        }
+        return null
+    }
+
+    internal fun extractCount(command: String): Int? {
+        val patterns = listOf(
+            """(?:scrollDown|scrollUp)\s*\(\s*(\d+)\s*\)""".toRegex(),
+            """(\d+)""".toRegex()
+        )
+        for (pattern in patterns) {
+            val match = pattern.find(command)
+            if (match != null) return match.groupValues[1].toIntOrNull()
+        }
+        return null
+    }
+
+    internal fun extractSelectorAndTimeout(command: String): Pair<String?, Long?> {
+        val selectorPattern = """waitForSelector\s*\(\s*['"]([^'"]+)['"]""".toRegex()
+        val timeoutPattern = """(\d+)L?""".toRegex()
+        val selector = selectorPattern.find(command)?.groupValues?.get(1)
+        val timeout = timeoutPattern.findAll(command).lastOrNull()?.groupValues?.get(1)?.toLongOrNull()
+        return Pair(selector, timeout)
+    }
+
+    internal fun extractUrl(command: String): String? {
+        val patterns = listOf(
+            """navigateTo\s*\(\s*['"]([^'"]+)['"]""".toRegex(),
+            """['"]((https?://[^'"]+))['"]""".toRegex()
+        )
+        for (pattern in patterns) {
+            val match = pattern.find(command)
+            if (match != null) return match.groupValues[1]
+        }
+        return null
+    }
+
+    // Newly reintroduced helpers --------------------------------------------------------------
     suspend fun extractInteractiveElements(driver: WebDriver): List<InteractiveElement> {
         val result = driver.evaluate(extractElementsScript)
         return parseInteractiveElements(result)
     }
 
-    /**
-     * Enhanced method to generate WebDriver actions with element selection
-     * This method now uses the optimized two-stage approach to reduce prompt size
-     */
-    suspend fun generateWebDriverActions(prompt: String, driver: WebDriver?): ActionDescription {
-        return generateWebDriverActionsOptimized(prompt, driver)
-    }
+    private fun extractFunctionCalls(content: String): List<String> = content.split('\n')
+        .map { it.trim() }
+        .filter { it.startsWith("driver.") && it.contains('(') && !it.startsWith("//") }
 
-    /**
-     * Execute action commands with proper element selection and fallback handling
-     */
-    suspend fun executeActionCommands(commands: List<String>, driver: WebDriver): InstructionResult {
-        val results = mutableListOf<Any?>()
-        val functionCalls = mutableListOf<String>()
-
-        try {
-            for (command in commands) {
-                val actionDescription = generateWebDriverActions(command, driver)
-                functionCalls.addAll(actionDescription.functionCalls)
-
-                // Execute the function calls
-                for (functionCall in actionDescription.functionCalls) {
-                    try {
-                        val result = executeSingleCommand(functionCall, driver)
-                        results.add(result)
-                    } catch (e: Exception) {
-                        results.add("Error executing '$functionCall': ${e.message}")
-                    }
-                }
-            }
-
-            return InstructionResult(
-                functionCalls,
-                results,
-                ModelResponse("Commands executed successfully", ResponseState.STOP)
-            )
-        } catch (e: Exception) {
-            return InstructionResult(
-                functionCalls,
-                results,
-                ModelResponse("Execution failed: ${e.message}", ResponseState.OTHER)
-            )
-        }
-    }
-
-    /**
-     * Execute a single WebDriver command with enhanced parameter extraction
-     */
-    private suspend fun executeSingleCommand(command: String, driver: WebDriver): Any? {
-        return when {
-            command.contains("click(") -> {
-                val selector = extractSelector(command)
-                if (selector != null) {
-                    driver.click(selector)
-                    "Clicked element: $selector"
-                } else {
-                    "Failed to extract selector from: $command"
-                }
-            }
-
-            command.contains("fill(") || command.contains("type(") -> {
-                val (selector, text) = extractSelectorAndText(command)
-                if (selector != null && text != null) {
-                    driver.fill(selector, text)
-                    "Filled '$selector' with: $text"
-                } else {
-                    "Failed to extract parameters from: $command"
-                }
-            }
-
-            command.contains("scrollToMiddle(") -> {
-                val ratio = extractRatio(command) ?: 0.5
-                driver.scrollToMiddle(ratio)
-                "Scrolled to middle (ratio: $ratio)"
-            }
-
-            command.contains("scrollDown(") -> {
-                val count = extractCount(command) ?: 1
-                driver.scrollDown(count)
-                "Scrolled down $count times"
-            }
-
-            command.contains("scrollUp(") -> {
-                val count = extractCount(command) ?: 1
-                driver.scrollUp(count)
-                "Scrolled up $count times"
-            }
-
-            command.contains("waitForSelector(") -> {
-                val (selector, timeout) = extractSelectorAndTimeout(command)
-                if (selector != null) {
-                    val timeoutMs = timeout ?: 5000L
-                    val remainingTime = driver.waitForSelector(selector, timeoutMs)
-                    "Waited for '$selector' (remaining: ${remainingTime}ms)"
-                } else {
-                    "Failed to extract selector from: $command"
-                }
-            }
-
-            command.contains("navigateTo(") -> {
-                val url = extractUrl(command)
-                if (url != null) {
-                    driver.navigateTo(url)
-                    "Navigated to: $url"
-                } else {
-                    "Failed to extract URL from: $command"
-                }
-            }
-
-            command.contains("check(") -> {
-                val selector = extractSelector(command)
-                if (selector != null) {
-                    driver.check(selector)
-                    "Checked element: $selector"
-                } else {
-                    "Failed to extract selector from: $command"
-                }
-            }
-
-            command.contains("uncheck(") -> {
-                val selector = extractSelector(command)
-                if (selector != null) {
-                    driver.uncheck(selector)
-                    "Unchecked element: $selector"
-                } else {
-                    "Failed to extract selector from: $command"
-                }
-            }
-
-            else -> "Unrecognized command: $command"
-        }
-    }
-
-    /**
-     * Generate enhanced prompts that leverage element lists efficiently
-     */
-    private fun createElementBasedPrompt(
-        command: String,
-        elements: List<InteractiveElement>,
-        language: String = "zh"
-    ): String {
-        val elementsDescription = elements.take(20) // Limit to avoid token overflow
-            .mapIndexed { index, element ->
-                "$index: ${element.description}"
-            }
-            .joinToString("\n")
-
-        return if (language == "zh") {
-            """
-            可用的交互元素列表：
-            $elementsDescription
-            
-            用户指令：$command
-            
-            请根据用户指令选择最匹配的交互元素，并生成相应的WebDriver操作代码。
-            如果需要选择元素，请在代码中使用对应的selector。
-            如果没有合适的交互元素，请生成一个空的挂起函数。
-            
-            常见操作示例：
-            - 点击按钮：driver.click("button selector")
-            - 输入文本：driver.fill("input selector", "text")
-            - 滚动页面：driver.scrollToMiddle(0.5)
-            - 等待元素：driver.waitForSelector("selector", 5000)
-            """.trimIndent()
-        } else {
-            """
-            Available interactive elements:
-            $elementsDescription
-            
-            User command: $command
-            
-            Please select the best matching interactive element based on the user command and generate corresponding WebDriver operation code.
-            Use the corresponding selector in the code if element selection is needed.
-            If no suitable interactive element exists, generate an empty suspend function.
-            
-            Common operation examples:
-            - Click button: driver.click("button selector")
-            - Type text: driver.fill("input selector", "text")
-            - Scroll page: driver.scrollToMiddle(0.5)
-            - Wait for element: driver.waitForSelector("selector", 5000)
-            """.trimIndent()
-        }
-    }
-
-    /**
-     * Select the best matching interactive element for the given command
-     */
     private fun selectBestMatchingElement(command: String, elements: List<InteractiveElement>): InteractiveElement? {
-        val commandLower = command.lowercase()
-
-        // Priority-based matching with enhanced logic
-        elements.forEach { element ->
-            val elementText = element.text.lowercase()
-            val elementType = element.type?.lowercase() ?: ""
-            val elementPlaceholder = element.placeholder?.lowercase() ?: ""
-
-            // Exact text match (highest priority)
-            if (elementText.isNotBlank() && commandLower.contains(elementText)) {
-                return element
-            }
-
-            // Placeholder text match
-            if (elementPlaceholder.isNotBlank() && commandLower.contains(elementPlaceholder)) {
-                return element
-            }
-
-            // Type-based matching for common actions
-            when {
-                commandLower.contains("search") && (
-                    elementType == "search" ||
-                    elementPlaceholder.contains("search") ||
-                    elementText.contains("search")
-                ) -> return element
-
-                commandLower.contains("submit") && (
-                    elementType == "submit" ||
-                    elementText.contains("submit") ||
-                    elementText.contains("提交")
-                ) -> return element
-
-                commandLower.contains("button") && element.tagName == "button" -> return element
-                commandLower.contains("按钮") && element.tagName == "button" -> return element
-
-                commandLower.contains("link") && element.tagName == "a" -> return element
-                commandLower.contains("链接") && element.tagName == "a" -> return element
-
-                commandLower.contains("input") && element.tagName == "input" -> return element
-                commandLower.contains("输入") && element.tagName == "input" -> return element
-
-                commandLower.contains("click") && (
-                    element.tagName == "button" ||
-                    element.tagName == "a" ||
-                    elementType == "submit"
-                ) -> return element
-
-                commandLower.contains("点击") && (
-                    element.tagName == "button" ||
-                    element.tagName == "a" ||
-                    elementType == "submit"
-                ) -> return element
-
-                commandLower.contains("type") && element.tagName == "input" -> return element
-                commandLower.contains("输入") && element.tagName == "input" -> return element
-            }
+        val norm = command.lowercase()
+        // prioritized exact text/placeholder/type clues
+        elements.forEach { e ->
+            val txt = e.text.lowercase()
+            val ph = e.placeholder?.lowercase() ?: ""
+            val type = e.type?.lowercase() ?: ""
+            if (txt.isNotBlank() && norm.contains(txt)) return e
+            if (ph.isNotBlank() && norm.contains(ph)) return e
+            if (norm.contains("search") && (type == "search" || ph.contains("search") || txt.contains("search"))) return e
+            if (norm.contains("submit") && (type == "submit" || txt.contains("submit") || txt.contains("提交"))) return e
         }
-
-        // Fallback: return first visible element
-        return elements.firstOrNull { it.isVisible }
-    }
-
-    /**
-     * Extract function calls from AI response
-     */
-    private fun extractFunctionCalls(content: String): List<String> {
-        return content.split("\n")
-            .map { it.trim() }
-            .filter { line ->
-                (line.startsWith("driver.") || line.startsWith("session.")) &&
-                line.contains("(") &&
-                !line.startsWith("//")
-            }
-    }
-
-    /**
-     * Validate that element references are stable against DOM mutations
-     */
-    suspend fun validateElementStability(element: InteractiveElement, driver: WebDriver): Boolean {
-        return try {
-            driver.exists(element.selector)
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    /**
-     * Extract CSS selector from command string with enhanced patterns
-     */
-    private fun extractSelector(command: String): String? {
-        val patterns = listOf(
-            """['"](#[^'"]+)['"]""".toRegex(),
-            """['"](\.[\w-]+)['"]""".toRegex(),
-            """['"](\[[^\]]+\])['"]""".toRegex(),
-            """['"]([a-zA-Z][^'"]*?)['"]""".toRegex()
-        )
-
-        for (pattern in patterns) {
-            val match = pattern.find(command)
-            if (match != null) {
-                return match.groupValues[1]
-            }
-        }
-        return null
-    }
-
-    /**
-     * Extract selector and text from fill/type commands
-     */
-    private fun extractSelectorAndText(command: String): Pair<String?, String?> {
-        val patterns = listOf(
-            """fill\s*\(\s*['"]([^'"]+)['"]\s*,\s*['"]([^'"]*)['"]\s*\)""".toRegex(),
-            """type\s*\(\s*['"]([^'"]+)['"]\s*,\s*['"]([^'"]*)['"]\s*\)""".toRegex()
-        )
-
-        for (pattern in patterns) {
-            val match = pattern.find(command)
-            if (match != null && match.groupValues.size >= 3) {
-                return Pair(match.groupValues[1], match.groupValues[2])
-            }
-        }
-        return Pair(null, null)
-    }
-
-    /**
-     * Extract numeric ratio from command
-     */
-    private fun extractRatio(command: String): Double? {
-        val patterns = listOf(
-            """scrollToMiddle\s*\(\s*(\d*\.?\d+)\s*\)""".toRegex(),
-            """(\d*\.?\d+)""".toRegex()
-        )
-
-        for (pattern in patterns) {
-            val match = pattern.find(command)
-            if (match != null) {
-                return match.groupValues[1].toDoubleOrNull()
-            }
-        }
-        return null
-    }
-
-    /**
-     * Extract count parameter
-     */
-    private fun extractCount(command: String): Int? {
-        val patterns = listOf(
-            """(?:scrollDown|scrollUp)\s*\(\s*(\d+)\s*\)""".toRegex(),
-            """(\d+)""".toRegex()
-        )
-
-        for (pattern in patterns) {
-            val match = pattern.find(command)
-            if (match != null) {
-                return match.groupValues[1].toIntOrNull()
-            }
-        }
-        return null
-    }
-
-    /**
-     * Extract selector and timeout from waitForSelector command
-     */
-    private fun extractSelectorAndTimeout(command: String): Pair<String?, Long?> {
-        val selectorPattern = """waitForSelector\s*\(\s*['"]([^'"]+)['"]""".toRegex()
-        val timeoutPattern = """(\d+)L?""".toRegex()
-
-        val selector = selectorPattern.find(command)?.groupValues?.get(1)
-        val timeout = timeoutPattern.findAll(command).lastOrNull()?.groupValues?.get(1)?.toLongOrNull()
-
-        return Pair(selector, timeout)
-    }
-
-    /**
-     * Extract URL from navigateTo command
-     */
-    private fun extractUrl(command: String): String? {
-        val patterns = listOf(
-            """navigateTo\s*\(\s*['"]([^'"]+)['"]""".toRegex(),
-            """['"]((https?://[^'"]+))['"]""".toRegex()
-        )
-
-        for (pattern in patterns) {
-            val match = pattern.find(command)
-            if (match != null) {
-                return match.groupValues[1]
-            }
-        }
-        return null
+        // fallback visible element
+        return elements.firstOrNull { it.isVisible } ?: elements.firstOrNull()
     }
 
     /**
@@ -782,28 +584,19 @@ class TextToAction(val conf: ImmutableConfig) {
      */
     private fun extractMethodDescription(method: java.lang.reflect.Method): String? {
         val methodName = method.name
-
-        // Try to find the method in webDriverSourceCode
         val methodPattern = """fun\s+$methodName\s*\([^)]*\)[^{]*""".toRegex()
         val match = methodPattern.find(webDriverSourceCode)
-
         if (match != null) {
-            // Look for documentation comment before the method
             val methodIndex = webDriverSourceCode.indexOf(match.value)
             val beforeMethod = webDriverSourceCode.substring(0, methodIndex)
-
-            // Find the last /** */ comment block before this method
+            // Correct KDoc block pattern
             val docPattern = """/\*\*([^*]|\*(?!/))*\*/""".toRegex()
             val docMatches = docPattern.findAll(beforeMethod).toList()
-
             if (docMatches.isNotEmpty()) {
                 val lastDoc = docMatches.last().value
-                // Extract description from the comment
                 return extractDescriptionFromComment(lastDoc)
             }
         }
-
-        // Fallback to pattern-based description generation
         return generateDescriptionFromMethodName(methodName)
     }
 
@@ -1076,5 +869,22 @@ suspend fun llmGeneratedFunction(session: PulsarSession) {
 }
 ```
         """.trimIndent()
+
+        private val extractElementsScript = """
+    // JavaScript code to extract interactive elements from the page
+    return Array.from(document.querySelectorAll('*')).map(el => ({
+        id: el.id,
+        tagName: el.tagName,
+        selector: el.tagName.toLowerCase() + (el.id ? ('#' + el.id) : ''),
+        text: el.innerText || '',
+        type: el.type || null,
+        href: el.href || null,
+        className: el.className || null,
+        placeholder: el.placeholder || null,
+        value: el.value || null,
+        isVisible: !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length),
+        bounds: el.getBoundingClientRect()
+    }));
+""".trimIndent()
     }
 }

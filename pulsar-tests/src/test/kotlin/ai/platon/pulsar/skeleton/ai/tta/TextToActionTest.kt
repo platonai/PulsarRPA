@@ -1,4 +1,4 @@
-package ai.platon.pulsar.tta
+package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
@@ -21,7 +21,6 @@ class TextToActionTest: TextToActionTestBase() {
 
     @BeforeEach
     fun setUp() {
-        textToAction = TextToAction(session.sessionConfig)
     }
 
     @Test

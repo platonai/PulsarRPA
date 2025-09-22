@@ -1,4 +1,4 @@
-package ai.platon.pulsar.tta
+package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
@@ -24,7 +24,6 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @BeforeEach
     fun setUp() {
-        textToAction = TextToAction(session.sessionConfig)
     }
 
     @Test
