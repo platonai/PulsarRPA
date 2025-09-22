@@ -30,13 +30,15 @@ pulsar-tests/src/test/kotlin/ai/platon/pulsar/tta/    # 测试代码目录
 ├── InteractiveElementExtractionTests.kt             # 元素提取测试
 └── README-AI.md                                     # 本文件
 
-pulsar-tests/src/main/resources/static/generated/    # 测试网页目录
-├── interactive-1.html                               # 基础交互测试页面
-├── interactive-2.html                               # 复杂表单测试页面
-├── interactive-3.html                               # 动态内容测试页面
-├── interactive-4.html                               # 高级交互测试页面
-└── interactive-screens.html                         # 多屏幕布局测试页面
+# 注意：当前交互测试网页实际存放在公共模块（共享给多个测试模块）
+pulsar-tests-common/src/main/resources/static/generated/tta  # 测试网页实际目录
+├── interactive-1.html                               # 基础交互
+├── interactive-2.html                               # 复杂表单
+├── interactive-3.html                               # 动画/基础动态
+├── interactive-4.html                               # 暗色模式 + 拖拽
+└── interactive-screens.html                         #（目前仍为单页结构，占位）
 ```
+> 若未来迁移回 `pulsar-tests`，需同步更新本说明；新增页面优先放入 `pulsar-tests-common` 以便复用。
 
 ### 环境要求
 - **Java版本**: 根据根目录 `pom.xml` 确定
@@ -59,8 +61,8 @@ TextToActionTestBase          # TTA专用测试基础设施
 测试基类会自动检查LLM配置：
 - 如果未配置API密钥，测试将被跳过并显示配置提示
 - 配置文件位置
-  - `${project.baseDir}/application*.properties`
-  - `AppPaths.CONFIG_ENABLED_DIR/application*.properties`
+  - `${project.baseDir}/application[-private].properties`
+  - `AppPaths.CONFIG_ENABLED_DIR/application[-private].properties`
 - 支持环境变量配置
 
 ## 📝 测试编写规范
@@ -96,8 +98,8 @@ fun `Given complex form when ask to fill specific field then select correct elem
 
 ### 1. 测试网页选择策略
 - **优先使用现有测试网页**: 检查 `interactive-*.html` 是否满足测试需求
-- **创建新网页条件**: 当现有网页无法覆盖特定测试场景时
-- **网页命名规范**: `interactive-<number>.html` 或 `<feature>-test.html`
+- **创建新网页条件**: 当现有网页无法覆盖特定测试场景时（动态加载、歧义解析、Shadow DOM 等）
+- **命名规范**: `interactive-<number>.html` 或 `<feature>-test.html`
 
 ### 2. 测试层次划分
 
@@ -124,9 +126,7 @@ fun `Given complex form when ask to fill specific field then select correct elem
 fun `When given clear action command then generate precise WebDriver code`() {
     val command = "点击登录按钮"
     val result = textToAction.generateWebDriverActions(command, interactiveElements)
-    
     assertThat(result).contains("click")
-    assertThat(result).contains("登录")
 }
 ```
 
@@ -134,22 +134,17 @@ fun `When given clear action command then generate precise WebDriver code`() {
 ```kotlin
 @Test
 fun `When no matching element exists then generate empty suspend function`() {
-    val command = "点击不存在的按钮"
-    val result = textToAction.generateWebDriverActions(command, emptyList())
-    
-    assertThat(result).contains("suspend")
+    val result = textToAction.generateWebDriverActions("点击不存在的按钮", emptyList())
     assertThat(result).doesNotContain("click")
 }
 ```
 
-#### 错误处理测试
+#### 歧义/恢复测试
 ```kotlin
 @Test
-fun `When given ambiguous command then request clarification or select best match`() {
-    val command = "点击按钮"  // 模糊指令
-    val result = textToAction.generateWebDriverActions(command, multipleButtons)
-    
-    // 验证处理策略
+fun `When ambiguous command then choose best match or ask clarify`() {
+    val result = textToAction.generateWebDriverActions("点击按钮", multipleButtons)
+    // 验证策略
 }
 ```
 
@@ -186,6 +181,65 @@ fun `When given ambiguous command then request clarification or select best matc
 - **代码覆盖率**: 70%+ (JaCoCo配置)
 - **场景覆盖率**: 100% 核心用户场景
 
+---
+## ✅ 当前测试网页能力与差距摘要
+| 页面 | 已含能力 | 主要缺失 |
+|------|----------|----------|
+| interactive-1 | 基础输入/选择/按钮/显隐/简单计算 | 多按钮歧义/错误态/滚动长内容 |
+| interactive-2 | 多控件表单/滑块/订阅开关/动态字体 | 表单验证/多步骤/条件显示/file/radio |
+| interactive-3 | IntersectionObserver动画/范围控制/显隐切换 | 真异步加载/列表增删/懒加载/分页 |
+| interactive-4 | 暗色模式/拖拽排序 | 跨列表拖拽/撤销/Shadow DOM/多拖拽类型 |
+| interactive-screens | 与 1 类似（占位） | 真正多屏/Tab/iframe/分栏/路由感知 |
+
+> 结论：需要新增专用页面覆盖：动态异步、歧义冲突、Shadow DOM、可访问性、媒体/富文本、多屏结构。
+
+## 🧩 元素类型覆盖进度（概览）
+- 已覆盖: text/email/number/range/textarea/select/checkbox/button/a/draggable list/toggle(自制)/slider
+- 未覆盖（优先）: password/search/date/time/file/radio/progress/meter/dialog/modal/contenteditable/iframe/video/audio/canvas/disabled/readonly/aria-live/Shadow DOM
+
+## 🗺 改进路线（分阶段）
+1. Phase 1（结构修复）
+   - 测试网页实际目录修改为 pulsar-tests-common/src/main/resources/static/generated/tta
+   - 重命名interactive-<number>.html，使用可读性强的名字
+   - 修正文档路径说明（已完成）
+   - 重写 interactive-screens 为真正多屏：Tab + iframe + anchor + 长滚动区
+2. Phase 2（动态与歧义）
+   - 新增 `interactive-dynamic.html`：异步加载(setTimeout)、列表增删、懒加载图片、虚拟滚动占位
+   - 新增 `interactive-ambiguity.html`：重复按钮/同文本不同区域/data-testid 策略
+3. Phase 3（高级控件）
+   - `forms-advanced-test.html`: radio/file/date/time/password/验证错误态/disabled/readonly
+   - `modal-dialog-test.html`: 自定义 dialog + focus trap + ESC 关闭
+4. Phase 4（平台/可访问性）
+   - `shadow-components-test.html`: open/closed shadow + slot
+   - `a11y-test.html`: landmarks/nav/main/aria-label/aria-live/aria-expanded
+   - `media-rich-test.html`: video/audio/canvas/contenteditable
+5. Phase 5（策略验证）
+   - 编写元素定位优先级测试：data-testid > aria-label > role+name > 文本 > 相对位置
+   - 加入 dom 置换 / stale element 重试测试
+
+## 🏷 定位与命名规范补充
+- 为歧义消解引入: `data-testid="tta-<domain>-<seq>"`
+- Shadow DOM 元素：外层再加 wrapper `data-scope="shadow-demo"`
+- 动态插入元素：添加 `data-dynamic="true"` 便于过滤
+
+## 🔁 推荐测试辅助方法（后续可在基类中补充）
+- `waitFor(selector, timeout)` 条件等待
+- `retrying(action)` 处理暂时性 stale
+- `byTestId(id)` 简化选择器
+
+## 📌 新增/更新页面的验收清单
+- 是否引入新元素类型
+- 是否提供至少 1 个歧义选择场景
+- 是否包含动态/延迟/可失败交互
+- 是否添加 data-testid / aria 元数据
+- 是否在 README 能力表中登记
+
+## 🧪 质量度量改进建议
+- 脚本统计元素种类：扫描 `static/generated/*.html` 输出覆盖率
+- 统计测试指令语料类型分布（动作/目标/修饰）
+- 失败分类：解析失败/定位失败/执行失败/超时
+
+---
 ## 🚀 测试执行命令
 
 ```bash
@@ -220,5 +274,4 @@ fun `When given ambiguous command then request clarification or select best matc
 - 建立回归测试基准
 
 ---
-
-> 💡 **提示**: 本文档应该随着项目功能演进而定期更新。如发现测试覆盖盲区或新的测试需求，及时补充相应的测试指导。
+> 💡 **提示**: 本文档应随功能演进更新。发现覆盖盲区请优先：登记差距 → 设计页面 → 编写用例 → 更新能力表。
