@@ -156,42 +156,42 @@
 </head>
 <body>
 
-<header>
+<header id="pageHeader" data-testid="pageHeader" class="header-main" data-role="header" data-component="site-header">
     <h1>🎨 Interactive Showroom</h1>
     <p>Now with Drag & Drop and Dark Mode</p>
 </header>
 
-<section class="fade-in-up">
+<section id="userInfoSection" data-testid="userInfoSection" class="fade-in-up section section-user-info" data-role="section" data-component="user-info-section">
     <h2>📝 User Information</h2>
-    <label>Name: <input type="text" placeholder="Enter your name" /></label>
-    <label>Email: <input type="email" placeholder="Enter your email" /></label>
-    <label>Comment: <textarea placeholder="Leave your message"></textarea></label>
-    <button onclick="alert('Form Submitted!')">Submit</button>
+    <label for="userNameInput">Name: <input type="text" id="userNameInput" data-testid="userNameInput" class="input input-name" placeholder="Enter your name" data-role="input" data-component="name-input" aria-label="Enter your name" /></label>
+    <label for="userEmailInput">Email: <input type="email" id="userEmailInput" data-testid="userEmailInput" class="input input-email" placeholder="Enter your email" data-role="input" data-component="email-input" aria-label="Enter your email" /></label>
+    <label for="userComment">Comment: <textarea id="userComment" data-testid="userComment" class="textarea textarea-comment" placeholder="Leave your message" data-role="textarea" data-component="comment-textarea" aria-label="Enter your comment"></textarea></label>
+    <button id="submitUserInfoButton" data-testid="submitUserInfoButton" class="btn btn-submit-user" onclick="alert('Form Submitted!')" data-role="button" data-component="submit-user-button" data-action="submit-user-info" aria-label="Submit user information">Submit</button>
 </section>
 
-<section class="fade-in-up">
+<section id="appearanceSection" data-testid="appearanceSection" class="fade-in-up section section-appearance" data-role="section" data-component="appearance-section">
     <h2>🌓 Appearance</h2>
-    <label>
+    <label for="darkToggleWrapper">
         Dark Mode:
-        <span class="toggle">
-        <input type="checkbox" id="darkToggle">
-        <span class="slider"></span>
+        <span class="toggle" id="darkToggleWrapper" data-testid="darkToggleWrapper" data-role="toggle" data-component="dark-mode-toggle">
+        <input type="checkbox" id="darkToggle" data-testid="darkToggle" class="checkbox checkbox-dark-mode" data-role="checkbox" data-component="dark-mode-checkbox" data-action="toggle-dark-mode" aria-label="Toggle dark mode">
+        <span class="slider" aria-hidden="true"></span>
       </span>
     </label>
 </section>
 
-<section class="fade-in-up">
+<section id="dragDropSection" data-testid="dragDropSection" class="fade-in-up section section-drag-drop" data-role="section" data-component="drag-drop-section">
     <h2>📋 Drag & Drop List</h2>
     <p>Reorder the items below:</p>
-    <ul class="draggable-list" id="sortableList">
-        <li draggable="true">🟢 Task A</li>
-        <li draggable="true">🔵 Task B</li>
-        <li draggable="true">🟣 Task C</li>
-        <li draggable="true">🟠 Task D</li>
+    <ul class="draggable-list" id="sortableList" data-testid="sortableList" data-role="list" data-component="sortable-list" aria-label="Sortable task list">
+        <li draggable="true" class="draggable-item" id="taskItemA" data-testid="taskItemA" data-role="listitem" data-component="drag-item" data-action="drag-item" data-order="1" aria-grabbed="false">🟢 Task A</li>
+        <li draggable="true" class="draggable-item" id="taskItemB" data-testid="taskItemB" data-role="listitem" data-component="drag-item" data-action="drag-item" data-order="2" aria-grabbed="false">🔵 Task B</li>
+        <li draggable="true" class="draggable-item" id="taskItemC" data-testid="taskItemC" data-role="listitem" data-component="drag-item" data-action="drag-item" data-order="3" aria-grabbed="false">🟣 Task C</li>
+        <li draggable="true" class="draggable-item" id="taskItemD" data-testid="taskItemD" data-role="listitem" data-component="drag-item" data-action="drag-item" data-order="4" aria-grabbed="false">🟠 Task D</li>
     </ul>
 </section>
 
-<footer>© 2025 Interactive Showroom by ChatGPT</footer>
+<footer id="pageFooter" data-testid="pageFooter" class="footer-main" data-role="footer" data-component="site-footer">© 2025 Interactive Showroom by ChatGPT</footer>
 
 <script>
     // Animate on scroll
@@ -243,6 +243,13 @@
                 return closest;
             }
         }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // Enhance drag & drop aria
+    const dList = document.getElementById('sortableList');
+    if (dList) {
+        dList.addEventListener('dragstart', e => { if (e.target.matches('li[draggable]')) e.target.setAttribute('aria-grabbed','true'); });
+        dList.addEventListener('dragend', e => { if (e.target.matches('li[draggable]')) e.target.setAttribute('aria-grabbed','false'); });
     }
 </script>
 </body>

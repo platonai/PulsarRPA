@@ -132,61 +132,55 @@
     </style>
 </head>
 <body>
-
-<header>
+<header id="pageHeader" data-testid="pageHeader" class="header-main" data-role="header" data-component="site-header">
     <h1>🎨 Interactive Showroom</h1>
     <p>Experience various UI interactions and animations</p>
 </header>
-
-<section class="fade-in-up">
+<section id="userInfoSection" data-testid="userInfoSection" class="fade-in-up section section-user-info" data-role="section" data-component="user-info-section">
     <h2>📝 User Information</h2>
-    <label>Name:
-        <input type="text" placeholder="Enter your name"/>
+    <label for="userNameInput">Name:
+        <input type="text" id="userNameInput" data-testid="userNameInput" class="input input-name" placeholder="Enter your name" data-role="input" data-component="name-input" aria-label="Enter your name"/>
     </label>
-    <label>Email:
-        <input type="email" placeholder="Enter your email"/>
+    <label for="userEmailInput">Email:
+        <input type="email" id="userEmailInput" data-testid="userEmailInput" class="input input-email" placeholder="Enter your email" data-role="input" data-component="email-input" aria-label="Enter your email"/>
     </label>
-    <label>Comment:
-        <textarea placeholder="Leave your message"></textarea>
+    <label for="userComment">Comment:
+        <textarea id="userComment" data-testid="userComment" class="textarea textarea-comment" placeholder="Leave your message" data-role="textarea" data-component="comment-textarea" aria-label="Enter your comment"></textarea>
     </label>
-    <button onclick="alert('Form Submitted!')">Submit</button>
+    <button id="submitUserInfoButton" data-testid="submitUserInfoButton" class="btn btn-submit-user" onclick="alert('Form Submitted!')" data-role="button" data-component="submit-user-button" data-action="submit-user-info" aria-label="Submit user information" aria-live="polite">Submit</button>
 </section>
-
-<section class="fade-in-up">
+<section id="controlsSection" data-testid="controlsSection" class="fade-in-up section section-controls" data-role="section" data-component="controls-section">
     <h2>🎛️ Controls & Toggles</h2>
-    <label>Choose a language:
-        <select>
+    <label for="languageSelect">Choose a language:
+        <select id="languageSelect" data-testid="languageSelect" class="select select-language" data-role="select" data-component="language-select" aria-label="Language selector">
             <option>JavaScript</option>
             <option>Kotlin</option>
             <option>Python</option>
         </select>
     </label>
 
-    <label>
+    <label for="darkToggleWrapper">
         Dark Mode:
-        <span class="toggle">
-        <input type="checkbox" id="darkToggle">
-        <span class="slider"></span>
+        <span class="toggle" id="darkToggleWrapper" data-testid="darkToggleWrapper" data-role="toggle" data-component="dark-mode-toggle">
+        <input type="checkbox" id="darkToggle" data-testid="darkToggle" class="checkbox checkbox-dark-mode" data-role="checkbox" data-component="dark-mode-checkbox" data-action="toggle-dark-mode" aria-label="Toggle dark mode">
+        <span class="slider" aria-hidden="true"></span>
       </span>
     </label>
 
-    <label>Volume:
-        <input type="range" min="0" max="100" value="50" onchange="document.getElementById('volumeValue').innerText = this.value">
-        <span id="volumeValue">50</span>
+    <label for="volumeRange">Volume:
+        <input type="range" id="volumeRange" data-testid="volumeRange" class="range range-volume" min="0" max="100" value="50" data-role="slider" data-component="volume-slider" data-action="adjust-volume" aria-label="Adjust volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" />
+        <span id="volumeValue" data-testid="volumeValue" class="value value-volume" data-role="output" data-component="volume-value" aria-live="polite">50</span>
     </label>
 </section>
-
-<section class="fade-in-up">
+<section id="interactionDemoSection" data-testid="interactionDemoSection" class="fade-in-up section section-interaction-demo" data-role="section" data-component="interaction-demo-section">
     <h2>📊 Interaction Demo</h2>
     <p>Click the button below to trigger a fade animation:</p>
-    <button onclick="toggleBox()">Toggle Box</button>
-    <div id="demoBox" style="margin-top:1rem;width:100%;height:100px;background:#eee;border-radius:6px;display:none;transition:opacity 0.4s ease;"></div>
+    <button id="toggleBoxButton" data-testid="toggleBoxButton" class="btn btn-toggle-box" onclick="toggleBox()" data-role="button" data-component="toggle-box-button" data-action="toggle-demo-box" aria-label="Toggle demo box" aria-controls="demoBox" aria-expanded="false">Toggle Box</button>
+    <div id="demoBox" data-testid="demoBox" class="box box-demo" style="margin-top:1rem;width:100%;height:100px;background:#eee;border-radius:6px;display:none;transition:opacity 0.4s ease;" data-role="region" data-component="demo-box" aria-hidden="true" role="region" aria-label="Demo box region"></div>
 </section>
-
-<footer>
+<footer id="pageFooter" data-testid="pageFooter" class="footer-main" data-role="footer" data-component="site-footer">
     © 2025 Interactive Showroom by ChatGPT
 </footer>
-
 <script>
     // Intersection observer for fade-in sections
     const observer = new IntersectionObserver((entries) => {
@@ -202,16 +196,21 @@
     // Toggle demo box
     function toggleBox() {
         const box = document.getElementById('demoBox');
-        if (box.style.display === 'none') {
+        const btn = document.getElementById('toggleBoxButton');
+        const isHidden = box.style.display === 'none';
+        if (isHidden) {
             box.style.display = 'block';
             box.style.opacity = 0;
             setTimeout(() => { box.style.opacity = 1 }, 10);
+            box.setAttribute('aria-hidden', 'false');
+            btn.setAttribute('aria-expanded', 'true');
         } else {
             box.style.opacity = 0;
             setTimeout(() => { box.style.display = 'none'; }, 400);
+            box.setAttribute('aria-hidden', 'true');
+            btn.setAttribute('aria-expanded', 'false');
         }
     }
 </script>
-
 </body>
 </html>

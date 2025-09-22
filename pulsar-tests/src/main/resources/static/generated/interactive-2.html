@@ -76,55 +76,52 @@
 </head>
 <body>
 
-<header>
+<header id="pageHeader" data-testid="pageHeader" class="header-main" data-role="header" data-component="site-header">
     <h1>Interactive Demo Page</h1>
 </header>
 
-<section>
+<section id="introductionSection" data-testid="introductionSection" class="section section-introduction" data-role="section" data-component="introduction-section">
     <h2>📘 Introduction</h2>
     <p>This is a sample single-page website built using only HTML, CSS, and JavaScript.</p>
     <p>It includes layout examples, interactive components, and responsive styles.</p>
 </section>
 
-<section class="interactive">
+<section id="userInfoSection" data-testid="userInfoSection" class="interactive section section-user-info" data-role="section" data-component="user-info-section">
     <h2>🧠 Your Info</h2>
-    <label>Name:
-        <input type="text" id="nameInput" placeholder="Enter your name">
-    </label>
-    <label>Favorite Language:
-        <select id="languageSelect">
-            <option>JavaScript</option>
-            <option>Python</option>
-            <option>Kotlin</option>
-            <option>Rust</option>
-        </select>
-    </label>
-    <div class="switch">
-        <input type="checkbox" id="subscribeToggle">
+    <label for="nameInput">Name:</label>
+    <input type="text" id="nameInput" data-testid="nameInput" class="input input-name" placeholder="Enter your name" data-role="input" data-component="name-input" aria-label="Enter your name" />
+    <label for="languageSelect">Favorite Language:</label>
+    <select id="languageSelect" data-testid="languageSelect" class="select select-language" data-role="select" data-component="language-select" aria-label="Favorite language">
+        <option>JavaScript</option>
+        <option>Python</option>
+        <option>Kotlin</option>
+        <option>Rust</option>
+    </select>
+    <div class="switch switch-subscribe" data-role="container" data-component="subscribe-toggle">
+        <input type="checkbox" id="subscribeToggle" data-testid="subscribeToggle" class="checkbox checkbox-subscribe" data-role="checkbox" data-component="subscribe-checkbox" aria-label="Subscribe to newsletter">
         <label for="subscribeToggle">Subscribe to newsletter</label>
     </div>
-    <button onclick="showSummary()">Show Summary</button>
-    <p id="summaryOutput"></p>
+    <button id="showSummaryButton" data-testid="showSummaryButton" class="btn btn-summary" onclick="showSummary()" data-role="button" data-component="summary-button" data-action="show-summary" aria-label="Show summary" aria-controls="summaryOutput">Show Summary</button>
+    <p id="summaryOutput" data-testid="summaryOutput" class="result result-summary" data-role="output" data-component="summary-output" aria-live="polite"></p>
 </section>
 
-<section>
+<section id="dynamicStylingSection" data-testid="dynamicStylingSection" class="section section-dynamic-styling" data-role="section" data-component="dynamic-styling-section">
     <h2>🎨 Dynamic Styling</h2>
-    <label>Choose text size:
-        <div class="slider-container">
-            <input type="range" min="12" max="36" value="16" id="textSizeSlider">
-        </div>
-    </label>
-    <p id="dynamicText">This paragraph will resize dynamically based on your slider input.</p>
+    <label for="textSizeSlider">Choose text size:</label>
+    <div class="slider-container slider-text-size" data-role="container" data-component="text-size-slider-container">
+        <input type="range" id="textSizeSlider" data-testid="textSizeSlider" class="range range-text-size" min="12" max="36" value="16" data-role="slider" data-component="text-size-slider" data-action="adjust-text-size" aria-label="Adjust text size" aria-valuemin="12" aria-valuemax="36" aria-valuenow="16" />
+    </div>
+    <p id="dynamicText" data-testid="dynamicText" class="dynamic-text" data-role="text" data-component="dynamic-text" aria-live="polite">This paragraph will resize dynamically based on your slider input.</p>
 </section>
 
-<section>
+<section id="hoverEffectSection" data-testid="hoverEffectSection" class="section section-hover-card" data-role="section" data-component="hover-effect-section">
     <h2>🪄 CSS Hover Effect</h2>
-    <div class="hover-card">
+    <div class="hover-card card-hover-demo" id="hoverDemoCard" data-testid="hoverDemoCard" data-role="card" data-component="hover-demo-card" aria-label="Hover demo card">
         <p>This card lifts and glows on hover.</p>
     </div>
 </section>
 
-<footer>
+<footer id="pageFooter" data-testid="pageFooter" class="footer-main" data-role="footer" data-component="site-footer">
     <p>&copy; 2025 Example. All rights reserved.</p>
 </footer>
 
@@ -145,6 +142,7 @@
     const dynamicText = document.getElementById('dynamicText');
     textSizeSlider.addEventListener('input', function() {
         dynamicText.style.fontSize = `${this.value}px`;
+        this.setAttribute('aria-valuenow', this.value);
     });
 </script>
 

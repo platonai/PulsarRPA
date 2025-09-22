@@ -1,0 +1,34 @@
+[
+  {"file":"interactive-1.html","id":"pageHeader","testId":"pageHeader","type":"header"},
+  {"file":"interactive-1.html","id":"userInformation","testId":"userInformation","type":"section"},
+  {"file":"interactive-1.html","id":"preferences","testId":"preferences","type":"section"},
+  {"file":"interactive-1.html","id":"calculatorSection","testId":"calculatorSection","type":"section"},
+  {"file":"interactive-1.html","id":"toggleSection","testId":"toggleSection","type":"section"},
+
+  {"file":"interactive-2.html","id":"pageHeader","testId":"pageHeader","type":"header"},
+  {"file":"interactive-2.html","id":"introductionSection","testId":"introductionSection","type":"section"},
+  {"file":"interactive-2.html","id":"userInfoSection","testId":"userInfoSection","type":"section"},
+  {"file":"interactive-2.html","id":"dynamicStylingSection","testId":"dynamicStylingSection","type":"section"},
+  {"file":"interactive-2.html","id":"hoverEffectSection","testId":"hoverEffectSection","type":"section"},
+
+  {"file":"interactive-3.html","id":"pageHeader","testId":"pageHeader","type":"header"},
+  {"file":"interactive-3.html","id":"userInfoSection","testId":"userInfoSection","type":"section"},
+  {"file":"interactive-3.html","id":"controlsSection","testId":"controlsSection","type":"section"},
+  {"file":"interactive-3.html","id":"interactionDemoSection","testId":"interactionDemoSection","type":"section"},
+
+  {"file":"interactive-4.html","id":"pageHeader","testId":"pageHeader","type":"header"},
+  {"file":"interactive-4.html","id":"userInfoSection","testId":"userInfoSection","type":"section"},
+  {"file":"interactive-4.html","id":"appearanceSection","testId":"appearanceSection","type":"section"},
+  {"file":"interactive-4.html","id":"dragDropSection","testId":"dragDropSection","type":"section"},
+
+  {"file":"interactive-screens.html","id":"pageHeader","testId":"pageHeader","type":"header"},
+  {"file":"interactive-screens.html","id":"userInformationSection","testId":"userInformationSection","type":"section"},
+  {"file":"interactive-screens.html","id":"preferencesSection","testId":"preferencesSection","type":"section"},
+  {"file":"interactive-screens.html","id":"calculatorSection","testId":"calculatorSection","type":"section"},
+  {"file":"interactive-screens.html","id":"toggleSection","testId":"toggleSection","type":"section"},
+  {"file":"interactive-screens.html","id":"emailValidationSection","testId":"emailValidationSection","type":"section"},
+  {"file":"interactive-screens.html","id":"customerStorySection","testId":"customerStorySection","type":"section"},
+  {"file":"interactive-screens.html","id":"blogsSection","testId":"blogsSection","type":"section"},
+  {"file":"interactive-screens.html","id":"contactSection","testId":"contactSection","type":"section"}
+]
+
