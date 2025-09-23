@@ -155,10 +155,7 @@ class SinglePageApplicationController(
         }
 
         return try {
-            runBlocking {
-                driver.bringToFront()
-                driver.instruct(request.act)
-            }
+            val result = runBlocking { driver.act(request.act) }
 
             val status = CommandStatus(
                 "",
@@ -243,12 +240,7 @@ class SinglePageApplicationController(
                 dataExtractionRules = request.prompt,
                 xsql = request.xsql,
             )
-            commandService.executeCommandStepByStep(
-                page,
-                document,
-                command,
-                status
-            )
+            commandService.executeCommand(page, document,command, status)
         }
 
         return ResponseEntity.ok(status)

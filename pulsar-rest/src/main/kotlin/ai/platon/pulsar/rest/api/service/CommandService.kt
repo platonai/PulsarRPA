@@ -181,6 +181,10 @@ class CommandService(
         return status
     }
 
+    fun executeCommand(page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus) {
+        return executeCommandStepByStep(page, document, request, status)
+    }
+
     private fun createCachedCommandStatus(request: CommandRequest? = null): CommandStatus {
         val status = CommandStatus()
         // status.request = request
@@ -204,7 +208,7 @@ class CommandService(
         executeCommandStepByStep(page, document, request, status)
     }
 
-    fun executeCommandStepByStep(page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus) {
+    internal fun executeCommandStepByStep(page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus) {
         val url = request.url
         require(URLUtils.isStandard(url)) { "Invalid URL: $url" }
 
