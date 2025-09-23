@@ -34,16 +34,16 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test basic functionality using the available chat method
         val prompt = "从当前页面提取所有可交互的元素"
-        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
+        val response = textToAction.generateWebDriverAction(prompt, driver)
 
-        println("Element extraction response: ${response.content}")
+        println("Element extraction response: ${response.modelResponse.content}")
 
         // Verify response contains information about element extraction
         assertTrue(
-            response.content.contains("element") ||
-            response.content.contains("元素") ||
-            response.content.contains("extract") ||
-            response.content.contains("提取"),
+            response.modelResponse.content.contains("element") ||
+            response.modelResponse.content.contains("元素") ||
+            response.modelResponse.content.contains("extract") ||
+            response.modelResponse.content.contains("提取"),
             "Response should mention element extraction"
         )
     }
@@ -63,16 +63,16 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
                 // Test extraction functionality using available methods
                 val prompt = "分析$pageUrl 页面中的可交互元素"
-                val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
+                val response = textToAction.generateWebDriverAction(prompt, driver)
 
-                println("Page $pageUrl analysis: ${response.content}")
+                println("Page $pageUrl analysis: ${response.modelResponse.content}")
 
                 // Verify response mentions page analysis
                 assertTrue(
-                    response.content.contains("element") ||
-                    response.content.contains("元素") ||
-                    response.content.contains("page") ||
-                    response.content.contains("页面"),
+                    response.modelResponse.content.contains("element") ||
+                    response.modelResponse.content.contains("元素") ||
+                    response.modelResponse.content.contains("page") ||
+                    response.modelResponse.content.contains("页面"),
                     "Should analyze page elements"
                 )
             }
@@ -85,18 +85,18 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test bounds-related functionality
         val prompt = "分析页面中元素的定位和尺寸信息"
-        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
+        val response = textToAction.generateWebDriverAction(prompt, driver)
 
-        println("Bounds analysis response: ${response.content}")
+        println("Bounds analysis response: ${response.modelResponse.content}")
 
         // Should mention positioning or bounds
         assertTrue(
-            response.content.contains("position") ||
-            response.content.contains("定位") ||
-            response.content.contains("bounds") ||
-            response.content.contains("边界") ||
-            response.content.contains("size") ||
-            response.content.contains("尺寸"),
+            response.modelResponse.content.contains("position") ||
+            response.modelResponse.content.contains("定位") ||
+            response.modelResponse.content.contains("bounds") ||
+            response.modelResponse.content.contains("边界") ||
+            response.modelResponse.content.contains("size") ||
+            response.modelResponse.content.contains("尺寸"),
             "Should mention element positioning or bounds"
         )
     }
@@ -107,18 +107,18 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test visibility-related functionality
         val prompt = "分析页面中元素的可见性状态"
-        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
+        val response = textToAction.generateWebDriverAction(prompt, driver)
 
-        println("Visibility analysis response: ${response.content}")
+        println("Visibility analysis response: ${response.modelResponse.content}")
 
         // Should mention visibility
         assertTrue(
-            response.content.contains("visible") ||
-            response.content.contains("可见") ||
-            response.content.contains("display") ||
-            response.content.contains("显示") ||
-            response.content.contains("hidden") ||
-            response.content.contains("隐藏"),
+            response.modelResponse.content.contains("visible") ||
+            response.modelResponse.content.contains("可见") ||
+            response.modelResponse.content.contains("display") ||
+            response.modelResponse.content.contains("显示") ||
+            response.modelResponse.content.contains("hidden") ||
+            response.modelResponse.content.contains("隐藏"),
             "Should mention element visibility"
         )
     }
@@ -129,18 +129,18 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test description generation functionality
         val prompt = "生成页面中元素的详细描述信息"
-        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
+        val response = textToAction.generateWebDriverAction(prompt, driver)
 
-        println("Description generation response: ${response.content}")
+        println("Description generation response: ${response.modelResponse.content}")
 
         // Should mention element descriptions
         assertTrue(
-            response.content.contains("description") ||
-            response.content.contains("描述") ||
-            response.content.contains("detail") ||
-            response.content.contains("详细") ||
-            response.content.contains("information") ||
-            response.content.contains("信息"),
+            response.modelResponse.content.contains("description") ||
+            response.modelResponse.content.contains("描述") ||
+            response.modelResponse.content.contains("detail") ||
+            response.modelResponse.content.contains("详细") ||
+            response.modelResponse.content.contains("information") ||
+            response.modelResponse.content.contains("信息"),
             "Should mention element descriptions"
         )
     }
@@ -151,18 +151,18 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test selector generation functionality
         val prompt = "分析页面中元素的选择器生成逻辑"
-        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
+        val response = textToAction.generateWebDriverAction(prompt, driver)
 
-        println("Selector generation response: ${response.content}")
+        println("Selector generation response: ${response.modelResponse.content}")
 
         // Should mention selectors
         assertTrue(
-            response.content.contains("selector") ||
-            response.content.contains("选择器") ||
-            response.content.contains("#") || // ID selector
-            response.content.contains(".") || // Class selector
-            response.content.contains("logic") ||
-            response.content.contains("逻辑"),
+            response.modelResponse.content.contains("selector") ||
+            response.modelResponse.content.contains("选择器") ||
+            response.modelResponse.content.contains("#") || // ID selector
+            response.modelResponse.content.contains(".") || // Class selector
+            response.modelResponse.content.contains("logic") ||
+            response.modelResponse.content.contains("逻辑"),
             "Should mention selector generation logic"
         )
     }
@@ -173,18 +173,18 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test dynamic content functionality
         val prompt = "测试页面动态内容的交互功能"
-        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
+        val response = textToAction.generateWebDriverAction(prompt, driver)
 
-        println("Dynamic content response: ${response.content}")
+        println("Dynamic content response: ${response.modelResponse.content}")
 
         // Should mention dynamic content or interaction
         assertTrue(
-            response.content.contains("dynamic") ||
-            response.content.contains("动态") ||
-            response.content.contains("interactive") ||
-            response.content.contains("交互") ||
-            response.content.contains("content") ||
-            response.content.contains("内容"),
+            response.modelResponse.content.contains("dynamic") ||
+            response.modelResponse.content.contains("动态") ||
+            response.modelResponse.content.contains("interactive") ||
+            response.modelResponse.content.contains("交互") ||
+            response.modelResponse.content.contains("content") ||
+            response.modelResponse.content.contains("内容"),
             "Should mention dynamic content interaction"
         )
     }
@@ -195,18 +195,18 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test hidden element functionality
         val prompt = "分析页面中隐藏元素的显示和隐藏逻辑"
-        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
+        val response = textToAction.generateWebDriverAction(prompt, driver)
 
-        println("Hidden elements response: ${response.content}")
+        println("Hidden elements response: ${response.modelResponse.content}")
 
         // Should mention hidden elements or toggle functionality
         assertTrue(
-            response.content.contains("hidden") ||
-            response.content.contains("隐藏") ||
-            response.content.contains("toggle") ||
-            response.content.contains("切换") ||
-            response.content.contains("show") ||
-            response.content.contains("显示"),
+            response.modelResponse.content.contains("hidden") ||
+            response.modelResponse.content.contains("隐藏") ||
+            response.modelResponse.content.contains("toggle") ||
+            response.modelResponse.content.contains("切换") ||
+            response.modelResponse.content.contains("show") ||
+            response.modelResponse.content.contains("显示"),
             "Should mention hidden elements functionality"
         )
     }
@@ -218,12 +218,12 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test basic functionality to ensure script loading works
         val prompt = "测试JavaScript资源加载和功能执行"
-        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
+        val response = textToAction.generateWebDriverAction(prompt, listOf())
 
-        println("Resource loading test response: ${response.content}")
+        println("Resource loading test response: ${response.modelResponse.content}")
 
         // Should generate some response indicating functionality works
-        assertTrue(response.content.isNotBlank(), "Should generate response for resource loading test")
+        assertTrue(response.modelResponse.content.isNotBlank(), "Should generate response for resource loading test")
     }
 
     @Test
@@ -233,23 +233,23 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         // Test performance with complex page
         val startTime = System.currentTimeMillis()
         val prompt = "分析复杂页面中的元素提取性能"
-        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
+        val response = textToAction.generateWebDriverAction(prompt, driver)
         val endTime = System.currentTimeMillis()
 
         val processingTime = endTime - startTime
         println("Complex page analysis took ${processingTime}ms")
 
-        println("Performance analysis response: ${response.content}")
+        println("Performance analysis response: ${response.modelResponse.content}")
 
         // Should complete in reasonable time and mention performance
         assertTrue(processingTime < 5000, "Should complete within 5 seconds")
         assertTrue(
-            response.content.contains("performance") ||
-            response.content.contains("性能") ||
-            response.content.contains("complex") ||
-            response.content.contains("复杂") ||
-            response.content.contains("speed") ||
-            response.content.contains("速度"),
+            response.modelResponse.content.contains("performance") ||
+            response.modelResponse.content.contains("性能") ||
+            response.modelResponse.content.contains("complex") ||
+            response.modelResponse.content.contains("复杂") ||
+            response.modelResponse.content.contains("speed") ||
+            response.modelResponse.content.contains("速度"),
             "Should mention performance or complexity"
         )
     }

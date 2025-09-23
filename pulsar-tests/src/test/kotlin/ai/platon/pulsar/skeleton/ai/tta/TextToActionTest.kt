@@ -24,24 +24,24 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to click a button then generate correct WebDriver action code`() {
         val prompt = "点击搜索按钮"
 
-        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
-        lastResponse = response
-        println(response.content)
+        val actionDescription = textToAction.generateWebDriverAction(prompt, listOf())
+        lastResponse = actionDescription.modelResponse
+        println(actionDescription.modelResponse.content)
 
-        assertTrue(response.content.contains("driver.click") || response.content.contains(".click("))
-        assertTrue(response.content.contains("搜索") || response.content.contains("search"))
+        assertTrue(actionDescription.modelResponse.content.contains("driver.click") || actionDescription.modelResponse.content.contains(".click("))
+        assertTrue(actionDescription.modelResponse.content.contains("搜索") || actionDescription.modelResponse.content.contains("search"))
     }
 
     @Test
     fun `When ask to fill input field then generate correct WebDriver action code`() {
         val prompt = "在搜索框中输入 'AI toys'"
 
-        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
-        lastResponse = response
-        println(response.content)
+        val actionDescription = textToAction.generateWebDriverAction(prompt, listOf())
+        lastResponse = actionDescription.modelResponse
+        println(actionDescription.modelResponse.content)
 
-        assertTrue(response.content.contains("driver.fill") || response.content.contains(".fill("))
-        assertTrue(response.content.contains("AI toys") || response.content.contains("搜索"))
+        assertTrue(actionDescription.modelResponse.content.contains("driver.fill") || actionDescription.modelResponse.content.contains(".fill("))
+        assertTrue(actionDescription.modelResponse.content.contains("AI toys") || actionDescription.modelResponse.content.contains("搜索"))
     }
 
     @Test

@@ -83,11 +83,11 @@ class TextToActionTestBase : WebDriverTestBase() {
     suspend fun testElementSelectionStrategy(
         prompt: String,
         expectedStrategy: String
-    ): ModelResponse {
-        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
+    ): ActionDescription {
+        val response = textToAction.generateWebDriverAction(prompt, listOf())
 
-        assert(response.content.contains(expectedStrategy)) {
-            "Expected selection strategy '$expectedStrategy' not found in response: ${response.content}"
+        assert(response.modelResponse.content.contains(expectedStrategy)) {
+            "Expected selection strategy '$expectedStrategy' not found in response: ${response.modelResponse.content}"
         }
 
         return response

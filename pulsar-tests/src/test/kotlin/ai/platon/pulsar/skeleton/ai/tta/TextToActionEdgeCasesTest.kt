@@ -1,0 +1,353 @@
+package ai.platon.pulsar.skeleton.ai.tta
+
+import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
+import ai.platon.pulsar.external.ModelResponse
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
+import org.springframework.boot.test.context.SpringBootTest
+
+/**
+ * Edge case and boundary condition tests for TextToAction.generateWebDriverAction() method
+ */
+@SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+class TextToActionEdgeCasesTest : TextToActionTestBase() {
+
+    @BeforeEach
+    fun setUp() {
+        // Setup is handled by parent class
+    }
+
+    // ===== Tests for empty and null scenarios =====
+
+    @Test
+    fun `When command is empty then handle gracefully`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val actionDescription = textToAction.generateWebDriverAction("", driver)
+
+        assertNotNull(actionDescription)
+        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        println("Empty command generated: ${actionDescription.functionCalls}")
+    }
+
+    @Test
+    fun `When command is blank then handle gracefully`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val actionDescription = textToAction.generateWebDriverAction("   ", driver)
+
+        assertNotNull(actionDescription)
+        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        println("Blank command generated: ${actionDescription.functionCalls}")
+    }
+
+    @Test
+    fun `When command is very long then handle appropriately`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val longCommand = "点击搜索按钮并输入一些文本然后滚动到页面底部再点击提交按钮并且等待页面加载完成"
+        val actionDescription = textToAction.generateWebDriverAction(longCommand, driver)
+
+        assertNotNull(actionDescription)
+        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        println("Long command generated: ${actionDescription.functionCalls}")
+    }
+
+    // ===== Tests for special characters and encoding =====
+
+    @Test
+    fun `When command contains special characters then handle appropriately`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val specialCommand = "点击搜索按钮!@#$%^*()"
+        val actionDescription = textToAction.generateWebDriverAction(specialCommand, driver)
+
+        assertNotNull(actionDescription)
+        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        println("Special characters command generated: ${actionDescription.functionCalls}")
+    }
+
+    @Test
+    fun `When command contains unicode characters then handle appropriately`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val unicodeCommand = "点击搜索按钮 🎯 测试"
+        val actionDescription = textToAction.generateWebDriverAction(unicodeCommand, driver)
+
+        assertNotNull(actionDescription)
+        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        println("Unicode command generated: ${actionDescription.functionCalls}")
+    }
+
+    @Test
+    fun `When command contains quotes then handle appropriately`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val quotedCommand = """点击"搜索"按钮"""
+        val actionDescription = textToAction.generateWebDriverAction(quotedCommand, driver)
+
+        assertNotNull(actionDescription)
+        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        println("Quoted command generated: ${actionDescription.functionCalls}")
+    }
+
+    // ===== Tests for impossible requests =====
+
+    @Test
+    fun `When command asks for non-existent element then handle gracefully`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val impossibleCommand = "点击魔法传送门按钮"
+        val actionDescription = textToAction.generateWebDriverAction(impossibleCommand, driver)
+
+        assertNotNull(actionDescription)
+        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        println("Impossible element request generated: ${actionDescription.functionCalls}")
+    }
+
+    @Test
+    fun `When command asks for impossible action then handle gracefully`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val impossibleCommand = "让页面飞起来"
+        val actionDescription = textToAction.generateWebDriverAction(impossibleCommand, driver)
+
+        assertNotNull(actionDescription)
+        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        println("Impossible action request generated: ${actionDescription.functionCalls}")
+    }
+
+    // ===== Tests for contradictory requests =====
+
+    @Test
+    fun `When command contains contradictory instructions then handle appropriately`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val contradictoryCommand = "点击搜索按钮但不要点击任何东西"
+        val actionDescription = textToAction.generateWebDriverAction(contradictoryCommand, driver)
+
+        assertNotNull(actionDescription)
+        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        println("Contradictory command generated: ${actionDescription.functionCalls}")
+    }
+
+    // ===== Tests for ambiguous requests =====
+
+    @Test
+    fun `When command is extremely vague then select reasonable action`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val vagueCommands = listOf(
+            "做点什么",
+            "操作页面",
+            "开始",
+            "执行",
+            "互动"
+        )
+
+        vagueCommands.forEach { command ->
+            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+
+            assertNotNull(actionDescription)
+            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            println("Vague command '$command' generated: ${actionDescription.functionCalls}")
+        }
+    }
+
+    @Test
+    fun `When command asks for something that could be multiple things then select one`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
+        driver.waitForSelector("body")
+
+        val ambiguousCommands = listOf(
+            "点击按钮",
+            "填写输入框",
+            "选择选项"
+        )
+
+        ambiguousCommands.forEach { command ->
+            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+
+            assertNotNull(actionDescription)
+            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            println("Ambiguous command '$command' generated: ${actionDescription.functionCalls}")
+        }
+    }
+
+    // ===== Tests for pages with no interactive elements =====
+
+    @Test
+    fun `When page has no interactive elements then handle gracefully`() = runWebDriverTest { driver ->
+        driver.navigateTo("about:blank")
+
+        val actionDescription = textToAction.generateWebDriverAction("点击按钮", driver)
+
+        assertNotNull(actionDescription)
+        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        println("No elements page generated: ${actionDescription.functionCalls}")
+    }
+
+    // ===== Tests for malformed commands =====
+
+    @Test
+    fun `When command contains grammar errors then handle appropriately`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val malformedCommands = listOf(
+            "点击搜素按钮", // typo: 搜素 instead of 搜索
+            "填写输入", // incomplete
+            "按钮点击", // reversed word order
+            "clik button" // typo in English
+        )
+
+        malformedCommands.forEach { command ->
+            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+
+            assertNotNull(actionDescription)
+            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            println("Malformed command '$command' generated: ${actionDescription.functionCalls}")
+        }
+    }
+
+    // ===== Tests for extremely specific requests =====
+
+    @Test
+    fun `When command is extremely specific then handle appropriately`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val specificCommands = listOf(
+            "点击id为search-btn的按钮",
+            "选择class为form-control的输入框",
+            "点击第3个div中的按钮",
+            "填写name属性为username的输入框"
+        )
+
+        specificCommands.forEach { command ->
+            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+
+            assertNotNull(actionDescription)
+            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            println("Specific command '$command' generated: ${actionDescription.functionCalls}")
+        }
+    }
+
+    // ===== Tests for rapid successive calls =====
+
+    @Test
+    fun `When multiple rapid calls are made then handle consistently`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val command = "点击搜索按钮"
+        val results = mutableListOf<ActionDescription>()
+
+        // Make 5 rapid calls
+        repeat(5) {
+            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            results.add(actionDescription)
+        }
+
+        // All results should be valid
+        results.forEach { result ->
+            assertNotNull(result)
+            assertTrue(result.functionCalls.size <= 1, "Each rapid call should generate at most one action")
+        }
+
+        println("Rapid calls generated consistent results: ${results.map { it.functionCalls }}")
+    }
+
+    // ===== Tests for mixed language commands =====
+
+    @Test
+    fun `When command mixes languages then handle appropriately`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val mixedCommands = listOf(
+            "点击search按钮",
+            "click搜索button",
+            "填写input框",
+            "select选项"
+        )
+
+        mixedCommands.forEach { command ->
+            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+
+            assertNotNull(actionDescription)
+            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            println("Mixed language command '$command' generated: ${actionDescription.functionCalls}")
+        }
+    }
+
+    // ===== Tests for extremely long text input =====
+
+    @Test
+    fun `When fill command contains extremely long text then handle appropriately`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val longText = "a".repeat(1000) // 1000 character string
+        val command = "在搜索框输入 '$longText'"
+
+        val actionDescription = textToAction.generateWebDriverAction(command, driver)
+
+        assertNotNull(actionDescription)
+        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        println("Long text command generated: ${actionDescription.functionCalls}")
+    }
+
+    // ===== Tests for selectedElement field validation =====
+
+    @Test
+    fun `When element is selected then validate selectedElement structure`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val actionDescription = textToAction.generateWebDriverAction("点击搜索按钮", driver)
+
+        assertNotNull(actionDescription)
+
+        if (actionDescription.selectedElement != null) {
+            val element = actionDescription.selectedElement!!
+            assertTrue(element.id.isNotBlank() || element.selector.isNotBlank(),
+                      "Selected element should have id or selector")
+            assertTrue(element.tagName.isNotBlank(), "Selected element should have tag name")
+            println("Selected element validation passed: ${element.tagName} with selector ${element.selector}")
+        }
+    }
+
+    // ===== Tests for model response validation =====
+
+    @Test
+    fun `When action is generated then validate model response structure`() = runWebDriverTest { driver ->
+        driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
+        driver.waitForSelector("body")
+
+        val actionDescription = textToAction.generateWebDriverAction("点击搜索按钮", driver)
+
+        assertNotNull(actionDescription)
+        assertNotNull(actionDescription.modelResponse, "Model response should not be null")
+
+        if (actionDescription.modelResponse != ModelResponse.LLM_NOT_AVAILABLE) {
+            assertTrue(actionDescription.modelResponse.content.isNotBlank(),
+                      "Model response content should not be blank")
+        }
+
+        println("Model response validation passed: ${actionDescription.modelResponse}")
+    }
+}
