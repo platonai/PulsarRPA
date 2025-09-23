@@ -1,7 +1,5 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach

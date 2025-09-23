@@ -1,6 +1,5 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach

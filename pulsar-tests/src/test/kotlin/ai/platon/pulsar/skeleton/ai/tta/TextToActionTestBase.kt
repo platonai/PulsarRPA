@@ -6,12 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.ChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.tta.TextToAction
-import ai.platon.pulsar.skeleton.ai.tta.InteractiveElement
-import ai.platon.pulsar.skeleton.ai.tta.ElementBounds
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
