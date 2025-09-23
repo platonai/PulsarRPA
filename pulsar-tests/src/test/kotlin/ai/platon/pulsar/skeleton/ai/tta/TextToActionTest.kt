@@ -24,7 +24,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to click a button then generate correct WebDriver action code`() {
         val prompt = "点击搜索按钮"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         lastResponse = response
         println(response.content)
 
@@ -36,7 +36,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to fill input field then generate correct WebDriver action code`() {
         val prompt = "在搜索框中输入 'AI toys'"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         lastResponse = response
         println(response.content)
 
@@ -48,7 +48,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to scroll page then generate correct scrolling action`() {
         val prompt = "滚动到页面中间位置"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         lastResponse = response
         println(response.content)
 
@@ -59,7 +59,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to wait for element then generate correct wait action`() {
         val prompt = "等待提交按钮出现"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         lastResponse = response
         println(response.content)
 
@@ -71,7 +71,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to navigate to URL then generate correct navigation action`() {
         val prompt = "打开网页 https://example.com"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         lastResponse = response
         println(response.content)
 
@@ -85,7 +85,7 @@ class TextToActionTest: TextToActionTestBase() {
         打开搜索页面，在搜索框输入 'best AI toys'，点击搜索按钮，然后滚动到页面30%位置
         """.trimIndent()
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         lastResponse = response
         println(response.content)
 
@@ -100,7 +100,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask about form submission then generate appropriate form actions`() {
         val prompt = "填写登录表单并提交"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         lastResponse = response
         println(response.content)
 
@@ -113,7 +113,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask about checkbox operations then generate check or uncheck actions`() {
         val prompt = "勾选同意条款复选框"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         lastResponse = response
         println(response.content)
 
@@ -124,7 +124,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask in English then generate appropriate English-context actions`() {
         val prompt = "Click the submit button and wait for confirmation"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         lastResponse = response
         println(response.content)
 
@@ -224,7 +224,7 @@ class TextToActionTest: TextToActionTestBase() {
         )
 
         testCases.forEach { (prompt, expectedKeyword) ->
-            val response = textToAction.chatAboutWebDriver(prompt)
+            val response = textToAction.useWebDriver(prompt)
             lastResponse = response
 
             assertNotNull(response)
@@ -241,7 +241,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When test command extraction patterns then validate parsing logic`() {
         val prompt = "执行点击和填充操作"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         lastResponse = response
         println(response.content)
 

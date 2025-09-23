@@ -12,7 +12,7 @@ class WebDriver2JsonProtocolTests: TTATestBase() {
 你的任务是将WebDriver的操作转换为Json协议，以便在浏览器中执行。
         """.trimIndent()
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         lastResponse = response
         println(response.content)
     }

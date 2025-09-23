@@ -23,7 +23,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
     fun `When given ambiguous command with multiple buttons then request clarification or select best match`() {
         val prompt = "点击按钮" // Ambiguous: just "click button"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -42,7 +42,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
     fun `When given command with no matching element then generate appropriate fallback`() {
         val prompt = "点击不存在的登录按钮" // Non-existent login button
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -61,7 +61,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
     fun `When given empty command then handle gracefully`() {
         val prompt = "" // Empty command
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -74,7 +74,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
     fun `When given extremely long command then process without errors`() {
         val prompt = "点击登录按钮并在用户名输入框输入 'verylongusernamethatexceedsnormallimits' 并在密码输入框输入 'verylongpasswordthatexceedsnormallimitsandshouldbehandledproperly' 然后点击提交按钮并等待页面加载完成并滚动到页面底部"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -88,7 +88,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
     fun `When given command with special characters then handle properly`() {
         val prompt = "点击按钮 'Submit & Go' 并输入 'Hello@#$%^&*()'"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -101,7 +101,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
     fun `When given contradictory commands then resolve or report conflict`() {
         val prompt = "点击登录按钮同时不要点击任何按钮" // Contradictory: click login button but don't click any button
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -134,7 +134,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
     fun `When given command in unsupported language then handle gracefully`() {
         val prompt = "Cliquez sur le bouton de connexion" // French command
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -147,7 +147,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
     fun `When given command with impossible timing requirements then handle appropriately`() {
         val prompt = "在0.001秒内点击按钮并立即提交表单" // Impossible timing
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -162,7 +162,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
     fun `When given command referring to non-interactive elements then provide guidance`() {
         val prompt = "点击页面标题" // Trying to click page title (typically non-interactive)
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -182,8 +182,8 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
         driver.waitForSelector("body", 5000)
 
         // Since extractInteractiveElements is suspend function and not available in current API,
-        // test the basic functionality with chatAboutWebDriver instead
-        val initialResponse = textToAction.chatAboutWebDriver("找到页面上的按钮")
+        // test the basic functionality with useWebDriver instead
+        val initialResponse = textToAction.useWebDriver("找到页面上的按钮")
         assertTrue(initialResponse.content.isNotBlank(), "Should generate initial response")
 
         // Modify DOM by adding a new element
@@ -198,7 +198,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
         Thread.sleep(500) // Wait for DOM update
 
         // Test response after DOM change
-        val updatedResponse = textToAction.chatAboutWebDriver("找到页面上的Dynamic Button")
+        val updatedResponse = textToAction.useWebDriver("找到页面上的Dynamic Button")
         assertTrue(updatedResponse.content.isNotBlank(), "Should handle DOM changes")
 
         // The response should mention the new button or dynamic elements
@@ -214,7 +214,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
     fun `When given command with multiple possible interpretations then provide options`() {
         val prompt = "点击第一个按钮" // "Click the first button" - ambiguous which is "first"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 

@@ -221,7 +221,7 @@ class TextToAction(val conf: ImmutableConfig) {
     /**
      * Generate the action code from the prompt.
      * */
-    fun chatAboutWebDriver(prompt: String): ModelResponse {
+    fun useWebDriver(prompt: String): ModelResponse {
         val promptWithSystemMessage = """
             $webDriverMessage
             

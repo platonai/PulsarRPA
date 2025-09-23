@@ -26,7 +26,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test text-based element selection using available API
         val prompt = "点击Add按钮" // Click Add button
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Text matching response: ${response.content}")
 
@@ -46,7 +46,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test position-based element selection
         val prompt = "点击右上角的输入框" // Click input field in top right
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Position-based response: ${response.content}")
 
@@ -66,7 +66,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test function-based element selection
         val prompt = "选择搜索框" // Select search box
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Function-based response: ${response.content}")
 
@@ -86,7 +86,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test selection among multiple buttons
         val prompt = "点击提交按钮而不是取消按钮" // Click submit button not cancel button
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Multiple elements response: ${response.content}")
 
@@ -106,7 +106,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test ID-based element selection
         val prompt = "点击id为name的输入框" // Click input with id 'name'
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("ID-based selection response: ${response.content}")
 
@@ -125,7 +125,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test visible element preference
         val prompt = "点击可见的提交按钮" // Click visible submit button
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Visibility-aware response: ${response.content}")
 
@@ -144,7 +144,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test hierarchical element selection
         val prompt = "点击section标签下的按钮" // Click button under section tag
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Hierarchy-aware response: ${response.content}")
 
@@ -164,7 +164,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test ambiguity resolution
         val prompt = "点击按钮" // Generic "click button" - ambiguous
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Ambiguity resolution response: ${response.content}")
 
@@ -184,7 +184,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test stable selector generation
         val prompt = "使用稳定的选择器点击按钮，避免依赖动态文本" // Use stable selectors to click button, avoid dynamic text
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Stable selector response: ${response.content}")
 
@@ -205,7 +205,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test contextual element selection
         val prompt = "点击用户名旁边的输入框" // Click input field next to username
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Contextual response: ${response.content}")
 
@@ -225,7 +225,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test low confidence scenarios
         val prompt = "可能点击那个蓝色的按钮如果存在的话" // "Maybe click that blue button if it exists"
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Low confidence response: ${response.content}")
 
@@ -246,7 +246,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test resilient selector generation for DOM changes
         val prompt = "创建能够适应DOM变化的选择器来找到登录按钮" // "Create selectors that can adapt to DOM changes to find login button"
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Resilient selector response: ${response.content}")
 
@@ -267,7 +267,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test verification requirement scenarios
         val prompt = "在确认安全的情况下点击删除按钮" // "Click delete button after confirming it's safe"
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Verification response: ${response.content}")
 
@@ -287,7 +287,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test sequence-aware element selection
         val prompt = "先填写用户名再填写密码最后点击登录" // "Fill username first, then password, finally click login"
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Sequence response: ${response.content}")
 
@@ -311,7 +311,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test educational explanation generation
         val prompt = "解释为什么选择这个特定的输入框并说明选择器的工作原理" // "Explain why select this specific input field and how the selector works"
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         println("Educational response: ${response.content}")
 
@@ -336,7 +336,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Test performance optimization guidance
         val prompt = "优化选择器性能来快速定位搜索输入框" // "Optimize selector performance to quickly locate search input field"
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
 
         val processingTime = System.currentTimeMillis() - startTime
         println("Performance optimization took ${processingTime}ms")
@@ -370,7 +370,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         edgeCasePrompts.forEach { (prompt, description) ->
             println("Testing edge case: $description")
-            val response = textToAction.chatAboutWebDriver(prompt)
+            val response = textToAction.useWebDriver(prompt)
 
             assertTrue(response.content.isNotBlank(), "Should handle edge case: $description")
             println("Edge case response: ${response.content}")
@@ -383,7 +383,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
         // Final validation test
         val finalPrompt = "验证元素选择功能是否完全按照README-AI.md的要求实现"
-        val response = textToAction.chatAboutWebDriver(finalPrompt)
+        val response = textToAction.useWebDriver(finalPrompt)
 
         assertTrue(response.content.isNotBlank(), "Should provide final validation")
 

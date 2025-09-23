@@ -24,7 +24,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When ask to fill password field then generate correct password input action`() {
         val prompt = "在密码输入框中输入 'securePass123'"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -35,7 +35,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When ask to search for products then generate correct search input action`() {
         val prompt = "在产品搜索框中输入 'laptop'"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -46,7 +46,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When ask to select date then generate correct date picker action`() {
         val prompt = "选择日期 2024-12-25"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -57,7 +57,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When ask to select radio button then generate correct radio selection action`() {
         val prompt = "选择 Premium 订阅选项"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -69,7 +69,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When ask to wait for async content then generate appropriate wait action`() {
         val prompt = "等待异步内容加载完成"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -80,7 +80,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When ask to handle dynamic list then generate list management actions`() {
         val prompt = "在动态列表中添加新项目 'Test Item'"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -92,7 +92,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When multiple buttons have same text then use context to disambiguate`() {
         val prompt = "点击用户管理部分的保存按钮"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -108,7 +108,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When position matters then use spatial context`() {
         val prompt = "点击右上角的菜单按钮"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -124,7 +124,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When billing and shipping forms exist then use form context`() {
         val prompt = "填写收货地址的城市字段"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -155,7 +155,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When input is empty then provide helpful error message`() {
         val prompt = ""
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -170,7 +170,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When timeout is very short then handle timeout appropriately`() {
         val prompt = "设置1毫秒超时等待元素"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -185,7 +185,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When conflicting instructions are provided then handle contradiction`() {
         val prompt = "同时点击保存按钮和取消按钮（矛盾指令）"
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -204,7 +204,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         打开搜索页面，在搜索框输入 'best AI toys'，点击搜索按钮，然后滚动到页面30%位置
         """.trimIndent()
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -227,7 +227,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
             6. 验证最终状态
         """.trimIndent()
 
-        val response = textToAction.chatAboutWebDriver(prompt)
+        val response = textToAction.useWebDriver(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -250,7 +250,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     // Test validation methods
     @Test
     fun `When validate WebDriver response then check expected actions`() {
-        val response = textToAction.chatAboutWebDriver("点击按钮")
+        val response = textToAction.useWebDriver("点击按钮")
 
         // Should not throw exception
         validateWebDriverResponse(response, "click")
@@ -268,7 +268,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     // Test element selection strategy
     @Test
     fun `When test element selection strategy then validate strategy detection`() {
-        val response = textToAction.chatAboutWebDriver("使用data-testid选择元素")
+        val response = textToAction.useWebDriver("使用data-testid选择元素")
         assertTrue(response.content.contains("data-testid"))
     }
 }
