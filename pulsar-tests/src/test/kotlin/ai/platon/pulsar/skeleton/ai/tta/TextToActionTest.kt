@@ -148,7 +148,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When generate Pulsar session actions then return session-based commands`() {
         val prompt = "创建一个新的浏览器会话并导航到页面"
 
-        val response = textToAction.chatAboutPulsarSession(prompt)
+        val response = textToAction.usePulsarSessionTools(prompt)
         lastResponse = response
         println(response.content)
 
@@ -159,7 +159,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When generate actions for web scraping then include appropriate session methods`() {
         val prompt = "抓取电商网站的商品信息"
 
-        val response = textToAction.chatAboutPulsarSession(prompt)
+        val response = textToAction.usePulsarSessionTools(prompt)
         lastResponse = response
         println(response.content)
 
@@ -204,7 +204,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask about all instruction capabilities then generate comprehensive response`() {
         val prompt = "如何使用WebDriver和PulsarSession进行网页自动化？"
 
-        val response = textToAction.chatAboutAllInstruction(prompt)
+        val response = textToAction.useAllTools(prompt)
         lastResponse = response
         println(response.content)
 

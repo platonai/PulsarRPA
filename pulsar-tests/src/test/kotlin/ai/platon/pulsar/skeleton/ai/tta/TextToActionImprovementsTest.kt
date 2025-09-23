@@ -259,7 +259,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
 
     @Test
     fun `When validate Pulsar session response then check expected actions`() {
-        val response = textToAction.chatAboutPulsarSession("加载页面")
+        val response = textToAction.usePulsarSessionTools("加载页面")
 
         // Should not throw exception
         validatePulsarSessionResponse(response, "session", "load")

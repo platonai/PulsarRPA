@@ -12,6 +12,7 @@ import java.nio.file.Files
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import kotlinx.coroutines.runBlocking
 
 data class InteractiveElement(
     val id: String,
@@ -84,18 +85,18 @@ class TextToAction(val conf: ImmutableConfig) {
     val pulsarSessionFile = baseDir.resolve("PulsarSession.kt")
     var pulsarSessionSourceCode: String
         private set
-    var pulsarSessionMessage: String
+    var pulsarSessionUseMessage: String
         private set
 
     val webDriverFile = baseDir.resolve("MiniWebDriver.kt")
     var webDriverSourceCode: String
         private set
-    var webDriverMessage: String
+    var webDriverUseMessage: String
         private set
 
-    var actionInstructionMessage: String
+    var pulsarToolsSourceCode: String
         private set
-    val actionInterfaceMessageFile = baseDir.resolve("system-message.txt")
+    val pulsarToolsSourceCodeFile = baseDir.resolve("system-message.txt")
 
     // Tool-use helpers -------------------------------------------------------------------------
     internal data class ToolCall(val name: String, val args: Map<String, Any?>)
@@ -194,24 +195,25 @@ class TextToAction(val conf: ImmutableConfig) {
         webDriverSourceCode = Files.readAllLines(webDriverFile)
             .filter { it.contains(" fun ") }
             .joinToString("\n")
-        webDriverMessage = WEB_DRIVER_MESSAGE_TEMPLATE.replace("{{webDriverSourceCode}}", webDriverSourceCode)
+        webDriverUseMessage = WEB_DRIVER_MESSAGE_TEMPLATE.replace("{{webDriverSourceCode}}", webDriverSourceCode)
 
         LLMUtils.copyPulsarSessionFile(pulsarSessionFile)
         pulsarSessionSourceCode = Files.readAllLines(pulsarSessionFile)
             .filter { it.contains(" fun ") }
             .joinToString("\n")
-        pulsarSessionMessage = PULSAR_SESSION_MESSAGE_TEMPLATE.replace("{{pulsarSessionSourceCode}}", pulsarSessionSourceCode)
+        pulsarSessionUseMessage = PULSAR_SESSION_MESSAGE_TEMPLATE.replace("{{pulsarSessionSourceCode}}", pulsarSessionSourceCode)
 
-        actionInstructionMessage = webDriverSourceCode + pulsarSessionSourceCode
-        Files.writeString(actionInterfaceMessageFile, actionInstructionMessage)
+        pulsarToolsSourceCode = webDriverSourceCode + "\n\n" + pulsarSessionSourceCode
+        Files.writeString(pulsarToolsSourceCodeFile, pulsarToolsSourceCode)
     }
 
     /**
      * Generate the action code from the prompt.
      * */
-    fun chatAboutAllInstruction(prompt: String): ModelResponse {
+    fun usePulsarTools(prompt: String): ModelResponse {
         val promptWithSystemMessage = """
-            $actionInstructionMessage
+            $pulsarToolsSourceCode
+
             $prompt
         """.trimIndent()
 
@@ -223,7 +225,7 @@ class TextToAction(val conf: ImmutableConfig) {
      * */
     fun useWebDriver(prompt: String): ModelResponse {
         val promptWithSystemMessage = """
-            $webDriverMessage
+            $webDriverUseMessage
             
             $prompt
             
@@ -235,9 +237,9 @@ class TextToAction(val conf: ImmutableConfig) {
     /**
      * Generate the action code from the prompt.
      * */
-    fun chatAboutPulsarSession(prompt: String): ModelResponse {
+    fun usePulsarSessionTools(prompt: String): ModelResponse {
         val promptWithSystemMessage = """
-            $pulsarSessionMessage
+            $pulsarSessionUseMessage
             $prompt
         """.trimIndent()
 
@@ -262,13 +264,17 @@ class TextToAction(val conf: ImmutableConfig) {
     /**
      * Generate the action code from the prompt.
      * */
-    fun generateWebDriverActions(prompt: String, driver: WebDriver?): ActionDescription = generateWebDriverActions(prompt)
+    fun generateWebDriverActions(prompt: String, driver: WebDriver?): ActionDescription {
+        return runBlocking {
+            generateWebDriverActionsWithInteractiveElements(prompt, driver)
+        }
+    }
 
     /**
      * Generate the action code from the prompt.
      * */
     fun generatePulsarSessionActions(prompt: String): ActionDescription {
-        val response = chatAboutPulsarSession(prompt)
+        val response = usePulsarSessionTools(prompt)
         val functionCalls = response.content.split("\n")
             .map { it.trim() }.filter { it.startsWith("session.") }
 
@@ -778,7 +784,7 @@ suspend fun llmGeneratedFunction(driver: WebDriver) {
      * Stage 1: AI selects 5 best candidate methods from compact list
      * Stage 2: AI generates detailed function using full method descriptions
      */
-    suspend fun generateWebDriverActionsOptimized(prompt: String, driver: WebDriver?): ActionDescription {
+    suspend fun generateWebDriverActionsWithInteractiveElements(prompt: String, driver: WebDriver?): ActionDescription {
         if (driver == null) {
             val emptyResponse = ModelResponse("""
                 suspend fun llmGeneratedFunction(driver: WebDriver) {
