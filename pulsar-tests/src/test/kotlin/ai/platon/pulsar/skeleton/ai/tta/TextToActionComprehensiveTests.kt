@@ -25,7 +25,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask to open a web page then generate correct kotlin code`() {
         val prompt = "如何打开一个网页？"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -36,7 +36,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask to click a button then generate correct kotlin code`() {
         val prompt = "点击搜索按钮"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -48,7 +48,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask to fill input then generate correct kotlin code`() {
         val prompt = "在搜索框中输入'best AI toy'"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -60,7 +60,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask to scroll to middle then generate correct kotlin code`() {
         val prompt = "滚动到页面中间位置"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -71,7 +71,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask to scroll and wait then generate correct kotlin code`() {
         val prompt = "滚动到页面30%位置，然后等待元素加载"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -84,7 +84,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask complex action sequence then generate correct kotlin code`() {
         val prompt = "打开网页，在搜索框输入关键词，点击搜索按钮，然后滚动查看结果"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -99,7 +99,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask enhanced generateWebDriverActions without driver then generate empty suspend function`() {
         val prompt = "点击按钮"
 
-        val result = textToAction.generateWebDriverActions(prompt)
+        val result = textToAction.generateWebDriverToolCalls(prompt)
 
         assertNotNull(result)
         assertTrue(result.functionCalls.isEmpty())
@@ -128,7 +128,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask about element interaction patterns then generate appropriate code`() {
         val prompt = "找到页面上的提交按钮并点击"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -141,7 +141,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask about form operations then generate form handling code`() {
         val prompt = "填写表单：用户名输入'admin'，密码输入'password123'，然后提交"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -156,7 +156,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask about navigation and waiting then generate proper sequence`() {
         val prompt = "打开网页，等待页面加载完成，然后滚动到底部"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -170,7 +170,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask about element selection strategies then generate selector usage`() {
         val prompt = "点击id为'submitBtn'的按钮"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -183,7 +183,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask about validation operations then generate checking code`() {
         val prompt = "检查复选框是否选中，如果没有选中则点击选中"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 

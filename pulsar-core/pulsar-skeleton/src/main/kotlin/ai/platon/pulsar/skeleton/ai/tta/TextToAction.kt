@@ -1,6 +1,7 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ChatModelFactory
@@ -8,11 +9,10 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import java.nio.file.Files
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import kotlinx.coroutines.runBlocking
+import java.nio.file.Files
 
 data class InteractiveElement(
     val id: String,
@@ -82,21 +82,12 @@ class TextToAction(val conf: ImmutableConfig) {
     private val model = ChatModelFactory.getOrCreateOrNull(conf)
 
     val baseDir = AppPaths.get("tta")
-    val pulsarSessionFile = baseDir.resolve("PulsarSession.kt")
-    var pulsarSessionSourceCode: String
-        private set
-    var pulsarSessionUseMessage: String
-        private set
 
-    val webDriverFile = baseDir.resolve("MiniWebDriver.kt")
+    val webDriverSourceCodeFile = baseDir.resolve("MiniWebDriver.kt")
     var webDriverSourceCode: String
         private set
-    var webDriverUseMessage: String
+    var webDriverSourceCodeUseMessage: String
         private set
-
-    var pulsarToolsSourceCode: String
-        private set
-    val pulsarToolsSourceCodeFile = baseDir.resolve("system-message.txt")
 
     // Tool-use helpers -------------------------------------------------------------------------
     internal data class ToolCall(val name: String, val args: Map<String, Any?>)
@@ -191,74 +182,25 @@ class TextToAction(val conf: ImmutableConfig) {
     init {
         Files.createDirectories(baseDir)
 
-        LLMUtils.copyWebDriverFile(webDriverFile)
-        webDriverSourceCode = Files.readAllLines(webDriverFile)
+        LLMUtils.copyWebDriverFile(webDriverSourceCodeFile)
+        webDriverSourceCode = Files.readAllLines(webDriverSourceCodeFile)
             .filter { it.contains(" fun ") }
             .joinToString("\n")
-        webDriverUseMessage = WEB_DRIVER_MESSAGE_TEMPLATE.replace("{{webDriverSourceCode}}", webDriverSourceCode)
-
-        LLMUtils.copyPulsarSessionFile(pulsarSessionFile)
-        pulsarSessionSourceCode = Files.readAllLines(pulsarSessionFile)
-            .filter { it.contains(" fun ") }
-            .joinToString("\n")
-        pulsarSessionUseMessage = PULSAR_SESSION_MESSAGE_TEMPLATE.replace("{{pulsarSessionSourceCode}}", pulsarSessionSourceCode)
-
-        pulsarToolsSourceCode = webDriverSourceCode + "\n\n" + pulsarSessionSourceCode
-        Files.writeString(pulsarToolsSourceCodeFile, pulsarToolsSourceCode)
+        webDriverSourceCodeUseMessage = PromptTemplate(WEB_DRIVER_SOURCE_CODE_USE_MESSAGE_TEMPLATE)
+            .render(mapOf("webDriverSourceCode" to webDriverSourceCode))
     }
 
     /**
      * Generate the action code from the prompt.
      * */
-    fun usePulsarTools(prompt: String): ModelResponse {
-        val promptWithSystemMessage = """
-            $pulsarToolsSourceCode
-
-            $prompt
-        """.trimIndent()
-
-        return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
+    fun useWebDriver(prompt: String, driver: WebDriver): ActionDescription {
+        TODO("generate EXACT ONE WebDriver Action With Interactive Elements")
     }
 
     /**
      * Generate the action code from the prompt.
      * */
-    fun useWebDriverLegacy(prompt: String): ModelResponse {
-        val promptWithSystemMessage = """
-            $webDriverUseMessage
-            
-            $prompt
-            
-        """.trimIndent()
-
-        return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
-    }
-
-    /**
-     * Choose exact one WebDriver action according to the prompt and the interactive elements in the page
-     * */
-    fun useWebDriver(prompt: String, driver: WebDriver?): ActionDescription {
-        return runBlocking {
-            generateWebDriverActionWithInteractiveElements(prompt, driver)
-        }
-    }
-
-    /**
-     * Generate the action code from the prompt.
-     * */
-    fun usePulsarSessionTools(prompt: String): ModelResponse {
-        val promptWithSystemMessage = """
-            $pulsarSessionUseMessage
-            $prompt
-        """.trimIndent()
-
-        return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
-    }
-
-    /**
-     * Generate the action code from the prompt.
-     * */
-    fun generateWebDriverActions(prompt: String): ActionDescription {
+    fun generateWebDriverToolCalls(prompt: String): ActionDescription {
         val toolPrompt = buildToolUsePrompt(prompt)
         val response = model?.call(toolPrompt) ?: ModelResponse.LLM_NOT_AVAILABLE
         val toolCalls = parseToolCalls(response.content)
@@ -273,12 +215,15 @@ class TextToAction(val conf: ImmutableConfig) {
     /**
      * Generate the action code from the prompt.
      * */
-    fun generatePulsarSessionActions(prompt: String): ActionDescription {
-        val response = usePulsarSessionTools(prompt)
-        val functionCalls = response.content.split("\n")
-            .map { it.trim() }.filter { it.startsWith("session.") }
+    fun generateWebDriverActionsWithSourceCode(prompt: String): ModelResponse {
+        val promptWithSystemMessage = """
+            $webDriverSourceCodeUseMessage
+            
+            $prompt
+            
+        """.trimIndent()
 
-        return ActionDescription(functionCalls, null, response)
+        return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
     /**
@@ -836,7 +781,7 @@ suspend fun llmGeneratedFunction(driver: WebDriver) {
     }
 
     companion object {
-        val WEB_DRIVER_MESSAGE_TEMPLATE = """
+        val WEB_DRIVER_SOURCE_CODE_USE_MESSAGE_TEMPLATE = """
 以下是浏览器自动化的 WebDriver API 接口及其注释，你可以使用这些接口来控制浏览器。
 
 {{webDriverSourceCode}}
@@ -859,7 +804,7 @@ suspend fun llmGeneratedFunction(driver: WebDriver) {
 4. 如果没有合适的交互元素，请生成一个空的挂起函数
         """.trimIndent()
 
-        val PULSAR_SESSION_MESSAGE_TEMPLATE = """
+        val PULSAR_SESSION_SOURCE_CODE_USE_MESSAGE_TEMPLATE = """
 以下是抓取网页的 API 接口及其注释，你可以使用这些接口来抓取网页。
 
 {{pulsarSessionSourceCode}}

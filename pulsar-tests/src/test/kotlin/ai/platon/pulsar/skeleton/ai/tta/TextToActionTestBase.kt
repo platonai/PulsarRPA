@@ -84,7 +84,7 @@ class TextToActionTestBase : WebDriverTestBase() {
         prompt: String,
         expectedStrategy: String
     ): ModelResponse {
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
 
         assert(response.content.contains(expectedStrategy)) {
             "Expected selection strategy '$expectedStrategy' not found in response: ${response.content}"

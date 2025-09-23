@@ -24,7 +24,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to click a button then generate correct WebDriver action code`() {
         val prompt = "点击搜索按钮"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -36,7 +36,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to fill input field then generate correct WebDriver action code`() {
         val prompt = "在搜索框中输入 'AI toys'"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -48,7 +48,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to scroll page then generate correct scrolling action`() {
         val prompt = "滚动到页面中间位置"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -59,7 +59,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to wait for element then generate correct wait action`() {
         val prompt = "等待提交按钮出现"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -71,7 +71,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to navigate to URL then generate correct navigation action`() {
         val prompt = "打开网页 https://example.com"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -85,7 +85,7 @@ class TextToActionTest: TextToActionTestBase() {
         打开搜索页面，在搜索框输入 'best AI toys'，点击搜索按钮，然后滚动到页面30%位置
         """.trimIndent()
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -100,7 +100,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask about form submission then generate appropriate form actions`() {
         val prompt = "填写登录表单并提交"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -113,7 +113,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask about checkbox operations then generate check or uncheck actions`() {
         val prompt = "勾选同意条款复选框"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -124,7 +124,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask in English then generate appropriate English-context actions`() {
         val prompt = "Click the submit button and wait for confirmation"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
@@ -135,7 +135,7 @@ class TextToActionTest: TextToActionTestBase() {
 
     @Test
     fun `When generate WebDriver actions without driver then return fallback response`() {
-        val actionDescription = textToAction.generateWebDriverActions("点击按钮")
+        val actionDescription = textToAction.generateWebDriverToolCalls("点击按钮")
 
         assertNotNull(actionDescription)
         // selectedElement is only available in the suspend version, so skip this assertion
@@ -145,33 +145,10 @@ class TextToActionTest: TextToActionTestBase() {
     }
 
     @Test
-    fun `When generate Pulsar session actions then return session-based commands`() {
-        val prompt = "创建一个新的浏览器会话并导航到页面"
-
-        val response = textToAction.usePulsarSessionTools(prompt)
-        lastResponse = response
-        println(response.content)
-
-        assertTrue(response.content.contains("session.") || response.content.contains("PulsarSession"))
-    }
-
-    @Test
-    fun `When generate actions for web scraping then include appropriate session methods`() {
-        val prompt = "抓取电商网站的商品信息"
-
-        val response = textToAction.usePulsarSessionTools(prompt)
-        lastResponse = response
-        println(response.content)
-
-        val content = response.content
-        assertTrue(content.contains("session.") || content.contains("load") || content.contains("scrape"))
-    }
-
-    @Test
     fun `When test action description with WebDriver prompt then extract function calls correctly`() {
         val prompt = "点击登录按钮然后等待页面加载"
 
-        val actionDescription = textToAction.generateWebDriverActions(prompt)
+        val actionDescription = textToAction.generateWebDriverToolCalls(prompt)
 
         assertNotNull(actionDescription)
         assertNotNull(actionDescription.modelResponse)
@@ -185,35 +162,6 @@ class TextToActionTest: TextToActionTestBase() {
     }
 
     @Test
-    fun `When test action description with Pulsar session prompt then extract session calls correctly`() {
-        val prompt = "加载页面并提取标题"
-
-        val actionDescription = textToAction.generatePulsarSessionActions(prompt)
-
-        assertNotNull(actionDescription)
-        assertNotNull(actionDescription.modelResponse)
-
-        val functionCalls = actionDescription.functionCalls
-        println("Extracted session function calls: $functionCalls")
-
-        // Should contain session-related calls or be mentioned in response
-        assertTrue(functionCalls.any { it.contains("session.") } || actionDescription.modelResponse.content.contains("session"))
-    }
-
-    @Test
-    fun `When ask about all instruction capabilities then generate comprehensive response`() {
-        val prompt = "如何使用WebDriver和PulsarSession进行网页自动化？"
-
-        val response = textToAction.useAllTools(prompt)
-        lastResponse = response
-        println(response.content)
-
-        val content = response.content
-        assertTrue(content.contains("WebDriver") || content.contains("driver"))
-        assertTrue(content.contains("PulsarSession") || content.contains("session"))
-    }
-
-    @Test
     fun `When test element matching scenarios with realistic prompts then validate response structure`() {
         val testCases = listOf(
             "点击提交按钮" to "submit",
@@ -224,7 +172,7 @@ class TextToActionTest: TextToActionTestBase() {
         )
 
         testCases.forEach { (prompt, expectedKeyword) ->
-            val response = textToAction.useWebDriverLegacy(prompt)
+            val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
             lastResponse = response
 
             assertNotNull(response)
@@ -241,7 +189,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When test command extraction patterns then validate parsing logic`() {
         val prompt = "执行点击和填充操作"
 
-        val response = textToAction.useWebDriverLegacy(prompt)
+        val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
         println(response.content)
 
