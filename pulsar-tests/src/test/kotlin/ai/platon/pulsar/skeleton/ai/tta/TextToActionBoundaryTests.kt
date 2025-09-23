@@ -37,7 +37,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given single character command then handle appropriately`() {
         val prompt = "点" // Single character
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -49,7 +49,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given command with only whitespace then handle gracefully`() {
         val prompt = "   " // Only whitespace
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -62,7 +62,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given maximum length command then process without overflow`() {
         val prompt = "点击按钮".repeat(50) // Very long repeated command
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -75,7 +75,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given command with null characters then handle sanitization`() {
         val prompt = "点击按钮\u0000" // Command with null character
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -92,7 +92,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         )
 
         prompts.forEach { prompt ->
-            val response = textToAction.useWebDriver(prompt)
+            val response = textToAction.useWebDriverLegacy(prompt)
             TextToActionTestBase.lastResponse = response
             println("Prompt: $prompt")
             println("Response: ${response.content}")
@@ -105,7 +105,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given mixed language command then process appropriately`() {
         val prompt = "click 登录 button and fill username" // Mixed English/Chinese
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -122,7 +122,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given command with extreme numerical values then handle sanely`() {
         val prompt = "滚动到页面9999999999%位置" // Impossible scroll percentage
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -137,7 +137,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given circular command references then prevent infinite loops`() {
         val prompt = "点击按钮然后再次点击同一个按钮" // Circular reference
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -156,7 +156,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         )
 
         prompts.forEach { prompt ->
-            val response = textToAction.useWebDriver(prompt)
+            val response = textToAction.useWebDriverLegacy(prompt)
             TextToActionTestBase.lastResponse = response
             println("Incomplete prompt: $prompt")
             println("Response: ${response.content}")
@@ -170,7 +170,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given command with logical paradox then handle gracefully`() {
         val prompt = "同时点击和不点击按钮" // Logical paradox
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -191,7 +191,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given command with future tense requirements then handle appropriately`() {
         val prompt = "明天点击登录按钮" // Future tense: "tomorrow click login button"
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -204,7 +204,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given command with impossible physical requirements then handle sanely`() {
         val prompt = "用意念点击按钮" // "Click button with mind power" - impossible
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -230,7 +230,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given command with recursive self-references then handle without stack overflow`() {
         val prompt = "点击按钮然后重复点击同一个按钮三次再重复整个过程两次" // Recursive self-reference
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -244,7 +244,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given command with quantum superposition then collapse to concrete action`() {
         val prompt = "点击按钮同时保持不点击的状态" // Quantum superposition analogy
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 
@@ -263,7 +263,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When given command with infinite loops then detect and handle`() {
         val prompt = "无限循环点击按钮" // "Infinitely loop clicking button"
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         TextToActionTestBase.lastResponse = response
         println(response.content)
 

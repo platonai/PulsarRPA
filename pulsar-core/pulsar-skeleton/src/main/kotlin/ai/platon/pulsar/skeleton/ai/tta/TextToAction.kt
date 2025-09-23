@@ -223,7 +223,7 @@ class TextToAction(val conf: ImmutableConfig) {
     /**
      * Generate the action code from the prompt.
      * */
-    fun useWebDriver(prompt: String): ModelResponse {
+    fun useWebDriverLegacy(prompt: String): ModelResponse {
         val promptWithSystemMessage = """
             $webDriverUseMessage
             
@@ -232,6 +232,15 @@ class TextToAction(val conf: ImmutableConfig) {
         """.trimIndent()
 
         return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
+    }
+
+    /**
+     * Choose exact one WebDriver action according to the prompt and the interactive elements in the page
+     * */
+    fun useWebDriver(prompt: String, driver: WebDriver?): ActionDescription {
+        return runBlocking {
+            generateWebDriverActionWithInteractiveElements(prompt, driver)
+        }
     }
 
     /**
@@ -259,15 +268,6 @@ class TextToAction(val conf: ImmutableConfig) {
             response.content.split("\n").map { it.trim() }.filter { it.startsWith("driver.") && it.contains("(") }
         }
         return ActionDescription(functionCalls, null, response)
-    }
-
-    /**
-     * Generate the action code from the prompt.
-     * */
-    fun generateWebDriverActions(prompt: String, driver: WebDriver?): ActionDescription {
-        return runBlocking {
-            generateWebDriverActionsWithInteractiveElements(prompt, driver)
-        }
     }
 
     /**
@@ -784,7 +784,7 @@ suspend fun llmGeneratedFunction(driver: WebDriver) {
      * Stage 1: AI selects 5 best candidate methods from compact list
      * Stage 2: AI generates detailed function using full method descriptions
      */
-    suspend fun generateWebDriverActionsWithInteractiveElements(prompt: String, driver: WebDriver?): ActionDescription {
+    suspend fun generateWebDriverActionWithInteractiveElements(prompt: String, driver: WebDriver?): ActionDescription {
         if (driver == null) {
             val emptyResponse = ModelResponse("""
                 suspend fun llmGeneratedFunction(driver: WebDriver) {

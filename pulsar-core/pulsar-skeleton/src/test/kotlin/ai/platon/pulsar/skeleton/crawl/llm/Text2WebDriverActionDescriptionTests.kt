@@ -19,7 +19,7 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
 如何打开一个网页？
         """.trimIndent()
         
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         lastResponse = response
         println(response.content)
 
@@ -32,7 +32,7 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
 打开一个网页，然后滚动到页面30%位置。
         """.trimIndent()
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         lastResponse = response
         println(response.content)
 
@@ -45,7 +45,7 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
 打开一个网页，然后滚动到页面30%位置，然后滚动到页面顶部，最后截取页面快照。
         """.trimIndent()
 
-        val response = textToAction.useWebDriver(prompt)
+        val response = textToAction.useWebDriverLegacy(prompt)
         lastResponse = response
         println(response.content)
 
