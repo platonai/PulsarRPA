@@ -11,7 +11,8 @@ Its main job is to **translate user’s natural language command into a callable
 
 1. **Action Translation**
 
-    * Implement logic in **`ai.platon.pulsar.skeleton.ai.tta.TextToAction#generateWebDriverActions`**
+    * Implement logic in **`ai.platon.pulsar.skeleton.ai.tta.TextToAction#generateWebDriverAction`**
+    * Generate EXACT ONE WebDriver action with interactive elements.
     * Convert user’s plain text commands (e.g., *"scroll to the middle"*) into concrete **MiniWebDriver APIs**.
 
 2. **Element Selection**
@@ -27,7 +28,7 @@ Its main job is to **translate user’s natural language command into a callable
 
 3. **Prompt Construction**
 
-    * Refer to **`WEB_DRIVER_MESSAGE_TEMPLATE`** for how to query AI so that it correctly matches **method ↔ action command**.
+    * Tool use style prompt and response
     * Provide **interactive element lists only** (not the entire page DOM).
 
 4. **Interactive Element Handling**
@@ -47,9 +48,8 @@ Its main job is to **translate user’s natural language command into a callable
 * Minimal, accurate **action-to-API mapping**
 * Reliable **element reference** under DOM changes
 * Efficient prompts leveraging only **element list** (avoid full DOM dumps)
-* Robust fallback handling
 
 ## Implementation Notes
 
 * Only use MiniWebDriver as a contract, when you code, use WebDriver as the interface
-* Reference `ai.platon.pulsar.skeleton.crawl.llm.Text2WebDriverActionDescriptionTests` to lean how to create tests
+* Reference `ai.platon.pulsar.skeleton.ai.tta.InteractiveElementExtractionTests` to lean how to create tests

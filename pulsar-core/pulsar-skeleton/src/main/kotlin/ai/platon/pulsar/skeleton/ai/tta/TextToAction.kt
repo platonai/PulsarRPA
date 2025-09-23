@@ -12,6 +12,8 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import kotlinx.coroutines.runBlocking
+import org.apache.hadoop.record.compiler.generated.Rcc.driver
 import java.nio.file.Files
 
 data class InteractiveElement(
@@ -37,6 +39,8 @@ data class InteractiveElement(
             if (value != null) append("value='$value' ")
             append("selector='$selector'")
         }
+
+    override fun toString() = description
 }
 
 data class ElementBounds(
@@ -89,12 +93,7 @@ class TextToAction(val conf: ImmutableConfig) {
     var webDriverSourceCodeUseMessage: String
         private set
 
-    // Tool-use helpers -------------------------------------------------------------------------
-    internal data class ToolCall(val name: String, val args: Map<String, Any?>)
-
-    private fun buildToolUsePrompt(userPrompt: String) = """
-你现在以工具调用模式工作。给定用户指令, 只返回可执行的 WebDriver 工具调用 JSON。
-工具列表(函数与参数说明):
+    val TOOL_CALL_LIST = """
 - click(selector: String)
 - fill(selector: String, text: String)
 - navigateTo(url: String)
@@ -104,6 +103,19 @@ class TextToAction(val conf: ImmutableConfig) {
 - waitForSelector(selector: String, timeoutMillis: Long = 5000)
 - check(selector: String)
 - uncheck(selector: String)
+    """.trimIndent()
+
+    // Tool-use helpers -------------------------------------------------------------------------
+    internal data class ToolCall(val name: String, val args: Map<String, Any?>)
+
+    private fun buildToolUsePrompt(
+        userPrompt: String,
+        interactiveElements: List<InteractiveElement>,
+        toolCallLimit: Int = 100,
+    ): String {
+        val promptPrefix = """
+你现在以工具调用模式工作。给定用户指令, 只返回可执行的工具调用 JSON。
+$TOOL_CALL_LIST
 
 返回格式严格为(不要多余文字):
 {
@@ -119,8 +131,24 @@ class TextToAction(val conf: ImmutableConfig) {
 3. 参数缺失时不要臆造 selector
 4. 不返回注释/Markdown/代码块
 
-用户指令: $userPrompt
-""".trimIndent()
+    """.trimIndent()
+
+        val prompt = buildString {
+            append(promptPrefix)
+
+            appendLine("每次最多调用 $toolCallLimit 个工具")
+
+            if (interactiveElements.isNotEmpty()) {
+                appendLine("可交互元素列表: ")
+                interactiveElements.forEach { e -> appendLine(e.toString()) }
+            }
+
+            appendLine()
+            appendLine("用户指令: $userPrompt")
+        }
+
+        return prompt
+    }
 
     // Proper JSON parsing with Gson instead of ad-hoc regex
     internal fun parseToolCalls(json: String): List<ToolCall> {
@@ -193,18 +221,50 @@ class TextToAction(val conf: ImmutableConfig) {
     /**
      * Generate EXACT ONE WebDriver action with interactive elements.
      *
-     * @param act The action description with plain text
+     * @param command The action description with plain text
      * @param driver The driver to use to collect the context, such as interactive elements
      * @return The action description
      * */
-    fun generateWebDriverAction(act: String, driver: WebDriver): ActionDescription {
-        TODO("generate EXACT ONE WebDriver Action With Interactive Elements")
+    fun generateWebDriverAction(
+        command: String,
+        driver: WebDriver
+    ): ActionDescription {
+        try {
+            val interactiveElements = extractInteractiveElements(driver)
+
+            return generateWebDriverAction(command, interactiveElements)
+        } catch (e: Exception) {
+            val errorResponse = ModelResponse("""
+                suspend fun llmGeneratedFunction(driver: WebDriver) {
+                    // Error occurred during optimization: ${e.message}
+                }
+            """.trimIndent(), ResponseState.OTHER)
+            return ActionDescription(emptyList(), null, errorResponse)
+        }
     }
 
-    fun generateWebDriverActionsWithToolCallSpecs(prompt: String): ActionDescription {
-        val toolPrompt = buildToolUsePrompt(prompt)
+    /**
+     * Generate EXACT ONE WebDriver action with interactive elements.
+     *
+     * @param command The action description with plain text
+     * @param driver The driver to use to collect the context, such as interactive elements
+     * @return The action description
+     * */
+    fun generateWebDriverAction(
+        command: String,
+        interactiveElements: List<InteractiveElement> = listOf()
+    ): ActionDescription {
+        return generateWebDriverActionsWithToolCallSpecs(command, interactiveElements, 1)
+    }
+
+    fun generateWebDriverActionsWithToolCallSpecs(
+        command: String,
+        interactiveElements: List<InteractiveElement> = listOf(),
+        toolCallLimit: Int = 100,
+    ): ActionDescription {
+        val toolPrompt = buildToolUsePrompt(command, interactiveElements, toolCallLimit)
         val response = model?.call(toolPrompt) ?: ModelResponse.LLM_NOT_AVAILABLE
-        val toolCalls = parseToolCalls(response.content)
+        val toolCalls = parseToolCalls(response.content).take(toolCallLimit)
         val functionCalls = if (toolCalls.isNotEmpty()) {
             toolCalls.mapNotNull { toolCallToDriverLine(it) }
         } else {
@@ -213,15 +273,22 @@ class TextToAction(val conf: ImmutableConfig) {
         return ActionDescription(functionCalls, null, response)
     }
 
-    fun generateWebDriverActionsWithSourceCode(prompt: String): ModelResponse {
-        val promptWithSystemMessage = """
-            $webDriverSourceCodeUseMessage
-            
-            $prompt
-            
-        """.trimIndent()
+    fun generateWebDriverActionsWithSourceCode(
+        command: String,
+        interactiveElements: List<InteractiveElement> = listOf()
+    ): ModelResponse {
+        val prompt = buildString {
+            appendLine(webDriverSourceCodeUseMessage)
 
-        return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
+            if (interactiveElements.isNotEmpty()) {
+                appendLine("可交互元素列表：")
+                interactiveElements.forEach { appendLine(it) }
+            }
+
+            appendLine(command)
+        }
+
+        return model?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
     /**
@@ -409,372 +476,10 @@ class TextToAction(val conf: ImmutableConfig) {
     }
 
     // Newly reintroduced helpers --------------------------------------------------------------
-    suspend fun extractInteractiveElements(driver: WebDriver): List<InteractiveElement> {
-        val result = driver.evaluate(extractElementsScript)
-        return parseInteractiveElements(result)
-    }
-
-    private fun extractFunctionCalls(content: String): List<String> = content.split('\n')
-        .map { it.trim() }
-        .filter { it.startsWith("driver.") && it.contains('(') && !it.startsWith("//") }
-
-    private fun selectBestMatchingElement(command: String, elements: List<InteractiveElement>): InteractiveElement? {
-        val norm = command.lowercase()
-        // prioritized exact text/placeholder/type clues
-        elements.forEach { e ->
-            val txt = e.text.lowercase()
-            val ph = e.placeholder?.lowercase() ?: ""
-            val type = e.type?.lowercase() ?: ""
-            if (txt.isNotBlank() && norm.contains(txt)) return e
-            if (ph.isNotBlank() && norm.contains(ph)) return e
-            if (norm.contains("search") && (type == "search" || ph.contains("search") || txt.contains("search"))) return e
-            if (norm.contains("submit") && (type == "submit" || txt.contains("submit") || txt.contains("提交"))) return e
-        }
-        // fallback visible element
-        return elements.firstOrNull { it.isVisible } ?: elements.firstOrNull()
-    }
-
-    /**
-     * Load JavaScript script from resource file
-     */
-    private fun loadResourceScript(resourcePath: String): String {
-        return try {
-            this::class.java.getResourceAsStream(resourcePath)?.use { inputStream ->
-                inputStream.bufferedReader().use { it.readText() }
-            } ?: throw IllegalArgumentException("Resource not found: $resourcePath")
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to load JavaScript resource: $resourcePath", e)
-        }
-    }
-
-    // WebDriver method information for two-stage optimization
-    private val webDriverMethods: Map<String, WebDriverMethodInfo> by lazy {
-        initializeWebDriverMethods()
-    }
-
-    /**
-     * Initialize WebDriver methods information for two-stage optimization
-     * Now dynamically loads from MiniWebDriver interface using reflection
-     */
-    private fun initializeWebDriverMethods(): Map<String, WebDriverMethodInfo> {
-        val methods = mutableMapOf<String, WebDriverMethodInfo>()
-
-        try {
-            // Use reflection to get all methods from MiniWebDriver interface
-            val webDriverClass = Class.forName("ai.platon.pulsar.skeleton.crawl.fetch.driver.MiniWebDriver")
-
-            // Get all declared methods from the interface
-            val declaredMethods = webDriverClass.declaredMethods
-
-            for (method in declaredMethods) {
-                // Skip synthetic and bridge methods
-                if (method.isSynthetic || method.isBridge) continue
-
-                // Generate method signature
-                val methodSignature = generateMethodSignature(method)
-
-                // Extract method description from source code or use default
-                val description = extractMethodDescription(method) ?: "Execute ${method.name} operation"
-
-                methods[methodSignature] = WebDriverMethodInfo(
-                    methodSignature,
-                    description
-                )
-            }
-
-        } catch (e: Exception) {
-            // Fallback to predefined methods if reflection fails
-            return initializeFallbackWebDriverMethods()
-        }
-
-        return methods
-    }
-
-    /**
-     * Generate method signature string from reflection Method object
-     */
-    private fun generateMethodSignature(method: java.lang.reflect.Method): String {
-        val name = method.name
-        val paramTypes = method.parameterTypes
-        val params = mutableListOf<String>()
-
-        // Map common parameter names based on method patterns
-        for (i in paramTypes.indices) {
-            val paramType = paramTypes[i]
-            val paramName = when {
-                paramType == String::class.java && name.contains("selector", ignoreCase = true) -> "selector: String"
-                paramType == String::class.java && name.contains("url", ignoreCase = true) -> "url: String"
-                paramType == String::class.java && name.contains("text", ignoreCase = true) -> "text: String"
-                paramType == String::class.java && name.contains("pattern", ignoreCase = true) -> "pattern: String"
-                paramType == String::class.java && name.contains("key", ignoreCase = true) -> "key: String"
-                paramType == String::class.java && name.contains("name", ignoreCase = true) -> "name: String"
-                paramType == String::class.java && name.contains("domain", ignoreCase = true) -> "domain: String?"
-                paramType == String::class.java && name.contains("path", ignoreCase = true) -> "path: String?"
-                paramType == String::class.java && name.contains("attr", ignoreCase = true) -> "attrName: String"
-                paramType == String::class.java && name.contains("root", ignoreCase = true) -> "rootSelector: String"
-                paramType == String::class.java -> "param${i}: String"
-                paramType == Int::class.java && name.contains("count", ignoreCase = true) -> "count: Int = 1"
-                paramType == Int::class.java -> "n: Int"
-                paramType == Long::class.java && name.contains("timeout", ignoreCase = true) -> "timeoutMillis: Long"
-                paramType == Long::class.java -> "value: Long"
-                paramType == Double::class.java && name.contains("ratio", ignoreCase = true) -> "ratio: Double"
-                paramType == Double::class.java -> "value: Double"
-                paramType == Boolean::class.java -> "flag: Boolean"
-                else -> "param${i}: ${paramType.simpleName}"
-            }
-            params.add(paramName)
-        }
-
-        return "$name(${params.joinToString(", ")})"
-    }
-
-    /**
-     * Extract method description from webDriverSourceCode or use pattern matching
-     */
-    private fun extractMethodDescription(method: java.lang.reflect.Method): String? {
-        val methodName = method.name
-        val methodPattern = """fun\s+$methodName\s*\([^)]*\)[^{]*""".toRegex()
-        val match = methodPattern.find(webDriverSourceCode)
-        if (match != null) {
-            val methodIndex = webDriverSourceCode.indexOf(match.value)
-            val beforeMethod = webDriverSourceCode.substring(0, methodIndex)
-            // Correct KDoc block pattern
-            val docPattern = """/\*\*([^*]|\*(?!/))*\*/""".toRegex()
-            val docMatches = docPattern.findAll(beforeMethod).toList()
-            if (docMatches.isNotEmpty()) {
-                val lastDoc = docMatches.last().value
-                return extractDescriptionFromComment(lastDoc)
-            }
-        }
-        return generateDescriptionFromMethodName(methodName)
-    }
-
-    /**
-     * Extract meaningful description from KDoc comment
-     */
-    private fun extractDescriptionFromComment(docComment: String): String {
-        // Remove /** */ and clean up
-        val cleaned = docComment
-            .removePrefix("/**")
-            .removeSuffix("*/")
-            .split("\n")
-            .map { it.trim().removePrefix("*").trim() }
-            .filter { it.isNotEmpty() && !it.startsWith("@") }
-            .joinToString(" ")
-            .trim()
-
-        return if (cleaned.isNotEmpty()) cleaned else "WebDriver operation"
-    }
-
-    /**
-     * Generate description based on method name patterns
-     */
-    private fun generateDescriptionFromMethodName(methodName: String): String {
-        return when {
-            methodName.startsWith("navigate") -> "Navigate page to the specified URL"
-            methodName.startsWith("click") && methodName.contains("Text") -> "Click on element(s) where text content matches the pattern"
-            methodName.startsWith("click") && methodName.contains("Matches") -> "Click on element(s) where attribute value matches the pattern"
-            methodName.startsWith("click") && methodName.contains("Nth") -> "Click the nth element within the specified selector"
-            methodName.startsWith("click") -> "Click on element(s) matching the CSS selector"
-            methodName.startsWith("fill") -> "Fill text into input element matching the selector"
-            methodName.startsWith("type") -> "Type text into element matching the selector"
-            methodName.startsWith("press") -> "Press a key on element matching the selector"
-            methodName.startsWith("check") -> "Check checkbox or radio button matching the selector"
-            methodName.startsWith("uncheck") -> "Uncheck checkbox matching the selector"
-            methodName.startsWith("scroll") && methodName.contains("Down") -> "Scroll down by specified number of times"
-            methodName.startsWith("scroll") && methodName.contains("Up") -> "Scroll up by specified number of times"
-            methodName.startsWith("scroll") && methodName.contains("Top") -> "Scroll to the top of the page"
-            methodName.startsWith("scroll") && methodName.contains("Bottom") -> "Scroll to the bottom of the page"
-            methodName.startsWith("scroll") && methodName.contains("Middle") -> "Scroll to specified ratio of the page"
-            methodName.startsWith("scroll") -> "Scroll to element matching the selector"
-            methodName.startsWith("waitFor") -> "Wait for element matching selector to become present"
-            methodName.startsWith("exists") -> "Check if element matching selector exists"
-            methodName.startsWith("isVisible") || methodName == "visible" -> "Check if element matching selector is visible"
-            methodName.startsWith("isHidden") -> "Check if element matching selector is hidden"
-            methodName.startsWith("isChecked") -> "Check if checkbox/radio button matching selector is checked"
-            methodName.startsWith("focus") -> "Focus on element matching the selector"
-            methodName.startsWith("select") && methodName.contains("Text") -> "Get text content of element(s) matching selector"
-            methodName.startsWith("select") && methodName.contains("Attribute") -> "Get attribute value of element(s) matching selector"
-            methodName.startsWith("select") -> "Select element(s) matching the selector"
-            methodName.contains("url") -> "Get or manipulate URL"
-            methodName.contains("Cookie") -> "Manage browser cookies"
-            else -> "Execute $methodName operation"
-        }
-    }
-
-    /**
-     * Fallback method initialization if reflection fails
-     */
-    private fun initializeFallbackWebDriverMethods(): Map<String, WebDriverMethodInfo> {
-        val methods = mutableMapOf<String, WebDriverMethodInfo>()
-
-        // Keep essential methods as fallback
-        methods["click(selector: String, count: Int = 1)"] = WebDriverMethodInfo(
-            "click(selector: String, count: Int = 1)",
-            "Click on element(s) matching the CSS selector. Can specify number of clicks."
-        )
-
-        methods["fill(selector: String, text: String)"] = WebDriverMethodInfo(
-            "fill(selector: String, text: String)",
-            "Fill text into input element matching the selector"
-        )
-
-        methods["navigateTo(url: String)"] = WebDriverMethodInfo(
-            "navigateTo(url: String)",
-            "Navigate page to the specified URL"
-        )
-
-        methods["scrollDown(count: Int = 1)"] = WebDriverMethodInfo(
-            "scrollDown(count: Int = 1)",
-            "Scroll down by specified number of times"
-        )
-
-        methods["waitForSelector(selector: String, timeoutMillis: Long)"] = WebDriverMethodInfo(
-            "waitForSelector(selector: String, timeoutMillis: Long)",
-            "Wait for element matching selector to become present"
-        )
-
-        return methods
-    }
-
-    /**
-     * Stage 1: Select top candidate methods based on compact method list
-     */
-    private fun selectMethodCandidates(prompt: String): MethodSelectionResult {
-        val compactMethodList = webDriverMethods.keys.joinToString("\n") { "- $it" }
-
-        val selectionPrompt = """
-请根据用户指令，从以下WebDriver方法列表中选择5个最相关的候选方法：
-
-可用方法列表：
-$compactMethodList
-
-用户指令：$prompt
-
-请仅返回方法名列表，每行一个，格式如下：
-- click(selector: String, count: Int = 1)
-- fill(selector: String, text: String)
-...
-
-最多选择5个最相关的方法。
-        """.trimIndent()
-
-        val response = model?.call(selectionPrompt) ?: ModelResponse.LLM_NOT_AVAILABLE
-
-        val selectedMethods = response.content.split("\n")
-            .asSequence()
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .filter { it.startsWith("- ") }
-            .take(5)
-            .toList()
-
-        return MethodSelectionResult(selectedMethods, response)
-    }
-
-    /**
-     * Stage 2: Generate detailed function using selected methods
-     */
-    private fun generateDetailedFunction(
-        prompt: String,
-        selectedMethods: List<String>,
-        interactiveElements: List<InteractiveElement>
-    ): ModelResponse {
-        val detailedMethodInfo = selectedMethods.mapNotNull { methodSignature ->
-            webDriverMethods[methodSignature]?.let { info ->
-                """
-方法：${info.methodSignature}
-说明：${info.fullDescription}
-                """.trimIndent()
-            }
-        }.joinToString("\n\n")
-
-        val elementsDescription = interactiveElements.take(10)
-            .mapIndexed { index, element ->
-                "$index: ${element.description}"
-            }
-            .joinToString("\n")
-
-        val detailedPrompt = """
-你可以使用以下WebDriver方法来实现用户需求：
-
-$detailedMethodInfo
-
-页面可交互元素：
-$elementsDescription
-
-用户指令：$prompt
-
-请生成一个kotlin函数来实现用户需求，格式如下：
-```kotlin
-suspend fun llmGeneratedFunction(driver: WebDriver) {
-    // 你的代码
-}
-```
-
-注意事项：
-1. 只使用提供的方法
-2. 优先选择最匹配的页面元素
-3. 确保生成的代码语法正确
-4. 如果无法实现需求，生成空函数
-        """.trimIndent()
-
-        return model?.call(detailedPrompt) ?: ModelResponse.LLM_NOT_AVAILABLE
-    }
-
-    /**
-     * Optimized two-stage WebDriver action generation
-     * Stage 1: AI selects 5 best candidate methods from compact list
-     * Stage 2: AI generates detailed function using full method descriptions
-     */
-    suspend fun generateWebDriverActionWithInteractiveElements(prompt: String, driver: WebDriver?): ActionDescription {
-        if (driver == null) {
-            val emptyResponse = ModelResponse("""
-                suspend fun llmGeneratedFunction(driver: WebDriver) {
-                    // No WebDriver instance available
-                }
-            """.trimIndent(), ResponseState.OTHER)
-            return ActionDescription(emptyList(), null, emptyResponse)
-        }
-
-        try {
-            val interactiveElements = extractInteractiveElements(driver)
-
-            if (interactiveElements.isEmpty()) {
-                val emptyResponse = ModelResponse("""
-                    suspend fun llmGeneratedFunction(driver: WebDriver) {
-                        // No interactive elements found on the page
-                    }
-                """.trimIndent(), ResponseState.OTHER)
-                return ActionDescription(emptyList(), null, emptyResponse)
-            }
-
-            // Stage 1: Select candidate methods (reduced prompt size)
-            val candidateSelection = selectMethodCandidates(prompt)
-
-            if (candidateSelection.selectedMethods.isEmpty()) {
-                val emptyResponse = ModelResponse("""
-                    suspend fun llmGeneratedFunction(driver: WebDriver) {
-                        // No suitable methods found for the request
-                    }
-                """.trimIndent(), ResponseState.OTHER)
-                return ActionDescription(emptyList(), null, emptyResponse)
-            }
-
-            // Stage 2: Generate detailed function with full descriptions of selected methods
-            val detailedResponse = generateDetailedFunction(prompt, candidateSelection.selectedMethods, interactiveElements)
-
-            val functionCalls = extractFunctionCalls(detailedResponse.content)
-            val selectedElement = selectBestMatchingElement(prompt, interactiveElements)
-
-            return ActionDescription(functionCalls, selectedElement, detailedResponse)
-        } catch (e: Exception) {
-            val errorResponse = ModelResponse("""
-                suspend fun llmGeneratedFunction(driver: WebDriver) {
-                    // Error occurred during optimization: ${e.message}
-                }
-            """.trimIndent(), ResponseState.OTHER)
-            return ActionDescription(emptyList(), null, errorResponse)
+    fun extractInteractiveElements(driver: WebDriver): List<InteractiveElement> {
+        return runBlocking {
+            val result = driver.evaluate(extractElementsScript)
+            parseInteractiveElements(result)
         }
     }
 

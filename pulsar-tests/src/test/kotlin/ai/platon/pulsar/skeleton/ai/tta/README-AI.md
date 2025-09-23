@@ -8,13 +8,14 @@
 
 1. **项目根目录** `README-AI.md` - 全局开发规范和项目结构
 2. **核心功能文档** `pulsar-core/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/ai/README-AI.md` - TTA核心实现指南
+3. 所有测试都必须使用 Mock Server 的网页进行测试，这些网页资源位于`pulsar-tests-common/src/main/resources/static/generated/tta`目录下
 
 ## 🎯 测试目标
 
 测试 **Text-To-Action (TTA)** 功能，确保AI能够正确地将用户的自然语言指令转换为可执行的WebDriver操作。
 
 **核心测试对象：**
-- `ai.platon.pulsar.skeleton.ai.tta.TextToAction` 类
+- `ai.platon.pulsar.skeleton.ai.tta.TextToAction#generateWebDriverAction` 方法
 - 自然语言 → WebDriver API 转换的准确性
 - 交互元素识别和选择的可靠性
 - DOM变化下元素引用的稳定性
@@ -38,13 +39,13 @@ pulsar-tests-common/src/main/resources/static/generated/tta  # 测试网页实�
 ├── interactive-4.html                               # 暗色模式 + 拖拽
 └── interactive-screens.html                         #（目前仍为单页结构，占位）
 ```
-> 若未来迁移回 `pulsar-tests`，需同步更新本说明；新增页面优先放入 `pulsar-tests-common` 以便复用。
 
 ### 环境要求
 - **Java版本**: 根据根目录 `pom.xml` 确定
 - **构建工具**: 使用 `./mvnw` (Maven wrapper)
 - **LLM配置**: 需要配置AI模型API密钥
 - **网页服务器**: 继承 `WebDriverTestBase` 自动启动
+- **WebDriver 对象**: 继承 `WebDriverTestBase`，使用 `runWebDriverTest` 获得
 
 ## 🔧 测试基础设施
 
@@ -76,12 +77,12 @@ TextToActionTestBase          # TTA专用测试基础设施
 使用反引号描述性命名：
 ```kotlin
 @Test
-fun `When ask to click a button then generate correct WebDriver action code`() {
+fun `When ask to click a button then generate correct WebDriver action code`() = runWebDriverTest(browser) { driver ->
     // 测试实现
 }
 
 @Test
-fun `Given complex form when ask to fill specific field then select correct element`() {
+fun `Given complex form when ask to fill specific field then select correct element`() = runWebDriverTest(browser) { driver ->
     // 测试实现
 }
 ```
@@ -123,9 +124,9 @@ fun `Given complex form when ask to fill specific field then select correct elem
 #### 正向测试
 ```kotlin
 @Test
-fun `When given clear action command then generate precise WebDriver code`() {
+fun `When given clear action command then generate precise WebDriver code`() = runWebDriverTest(browser) { driver ->
     val command = "点击登录按钮"
-    val result = textToAction.generateWebDriverActions(command, interactiveElements)
+    val result = textToAction.generateWebDriverAction(command, driver)
     assertThat(result).contains("click")
 }
 ```
@@ -133,8 +134,8 @@ fun `When given clear action command then generate precise WebDriver code`() {
 #### 边界测试
 ```kotlin
 @Test
-fun `When no matching element exists then generate empty suspend function`() {
-    val result = textToAction.generateWebDriverActions("点击不存在的按钮", emptyList())
+fun `When no matching element exists then generate empty suspend function`() = runWebDriverTest(browser) { driver ->
+    val result = textToAction.generateWebDriverAction("点击不存在的按钮", driver)
     assertThat(result).doesNotContain("click")
 }
 ```
@@ -142,8 +143,8 @@ fun `When no matching element exists then generate empty suspend function`() {
 #### 歧义/恢复测试
 ```kotlin
 @Test
-fun `When ambiguous command then choose best match or ask clarify`() {
-    val result = textToAction.generateWebDriverActions("点击按钮", multipleButtons)
+fun `When ambiguous command then choose best match or ask clarify`() = runWebDriverTest(browser) { driver ->
+    val result = textToAction.generateWebDriverAction("点击按钮", driver)
     // 验证策略
 }
 ```
@@ -151,10 +152,10 @@ fun `When ambiguous command then choose best match or ask clarify`() {
 ## 🎯 重点测试场景
 
 ### 1. 基础操作转换
-- 点击操作: "点击登录按钮" → `driver.findElement().click()`
-- 输入操作: "在搜索框输入AI工具" → `driver.findElement().sendKeys("AI工具")`
-- 滚动操作: "滚动到页面中间" → `driver.executeScript("window.scrollTo...")`
-- 导航操作: "返回上一页" → `driver.navigate().back()`
+- 点击操作: "点击登录按钮" → `driver.click()`
+- 输入操作: "在搜索框输入AI工具" → `driver.type("AI工具")`
+- 滚动操作: "滚动到页面中间" → `driver.evaluate("window.scrollTo...")`
+- 导航操作: "返回上一页" → `driver.back()`
 
 ### 2. 元素选择准确性
 - 通过文本匹配: "点击提交按钮"
@@ -202,6 +203,7 @@ fun `When ambiguous command then choose best match or ask clarify`() {
    - 测试网页实际目录修改为 pulsar-tests-common/src/main/resources/static/generated/tta
    - 重命名interactive-<number>.html，使用可读性强的名字
    - 修正文档路径说明（已完成）
+   - 修复暗色模式
    - 重写 interactive-screens 为真正多屏：Tab + iframe + anchor + 长滚动区
 2. Phase 2（动态与歧义）
    - 新增 `interactive-dynamic.html`：异步加载(setTimeout)、列表增删、懒加载图片、虚拟滚动占位
