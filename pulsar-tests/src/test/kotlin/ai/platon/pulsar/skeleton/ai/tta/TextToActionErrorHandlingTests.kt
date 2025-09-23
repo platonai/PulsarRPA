@@ -1,4 +1,4 @@
-package ai.platon.pulsar.tta
+package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
@@ -16,11 +16,8 @@ import org.springframework.boot.test.context.SpringBootTest
 @SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionErrorHandlingTests : TextToActionTestBase() {
 
-    private lateinit var textToAction: TextToAction
-
     @BeforeEach
     fun setUp() {
-        textToAction = TextToAction(session.sessionConfig)
     }
 
     @Test
@@ -28,7 +25,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
         val prompt = "点击按钮" // Ambiguous: just "click button"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -47,7 +44,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
         val prompt = "点击不存在的登录按钮" // Non-existent login button
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -66,7 +63,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
         val prompt = "" // Empty command
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         // Should not crash and should provide helpful response
@@ -79,7 +76,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
         val prompt = "点击登录按钮并在用户名输入框输入 'verylongusernamethatexceedsnormallimits' 并在密码输入框输入 'verylongpasswordthatexceedsnormallimitsandshouldbehandledproperly' 然后点击提交按钮并等待页面加载完成并滚动到页面底部"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -93,7 +90,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
         val prompt = "点击按钮 'Submit & Go' 并输入 'Hello@#$%^&*()'"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -106,7 +103,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
         val prompt = "点击登录按钮同时不要点击任何按钮" // Contradictory: click login button but don't click any button
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -139,7 +136,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
         val prompt = "Cliquez sur le bouton de connexion" // French command
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -152,7 +149,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
         val prompt = "在0.001秒内点击按钮并立即提交表单" // Impossible timing
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -167,7 +164,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
         val prompt = "点击页面标题" // Trying to click page title (typically non-interactive)
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -219,7 +216,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
         val prompt = "点击第一个按钮" // "Click the first button" - ambiguous which is "first"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content

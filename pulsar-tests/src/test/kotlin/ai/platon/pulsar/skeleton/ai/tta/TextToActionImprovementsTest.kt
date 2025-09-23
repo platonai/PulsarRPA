@@ -1,4 +1,4 @@
-package ai.platon.pulsar.tta
+package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
@@ -27,7 +27,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         val prompt = "在密码输入框中输入 'securePass123'"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         validateWebDriverResponse(response, "fill", "password", "securePass123")
@@ -38,7 +38,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         val prompt = "在产品搜索框中输入 'laptop'"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         validateWebDriverResponse(response, "fill", "search", "laptop")
@@ -49,7 +49,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         val prompt = "选择日期 2024-12-25"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         validateWebDriverResponse(response, "fill", "date", "2024-12-25")
@@ -60,7 +60,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         val prompt = "选择 Premium 订阅选项"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         validateWebDriverResponse(response, "radio", "premium", "check")
@@ -72,7 +72,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         val prompt = "等待异步内容加载完成"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         validateWebDriverResponse(response, "wait", "async", "load")
@@ -83,7 +83,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         val prompt = "在动态列表中添加新项目 'Test Item'"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         validateWebDriverResponse(response, "add", "list", "item")
@@ -95,7 +95,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         val prompt = "点击用户管理部分的保存按钮"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content.lowercase()
@@ -111,7 +111,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         val prompt = "点击右上角的菜单按钮"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content.lowercase()
@@ -127,7 +127,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         val prompt = "填写收货地址的城市字段"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content.lowercase()
@@ -158,7 +158,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         val prompt = ""
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content.lowercase()
@@ -173,7 +173,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         val prompt = "设置1毫秒超时等待元素"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content.lowercase()
@@ -188,7 +188,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         val prompt = "同时点击保存按钮和取消按钮（矛盾指令）"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content.lowercase()
@@ -207,7 +207,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         """.trimIndent()
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -230,7 +230,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
         """.trimIndent()
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content.lowercase()

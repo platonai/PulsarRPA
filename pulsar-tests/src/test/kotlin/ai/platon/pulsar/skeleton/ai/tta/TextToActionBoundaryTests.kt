@@ -1,4 +1,4 @@
-package ai.platon.pulsar.tta
+package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
@@ -16,11 +16,8 @@ import org.springframework.boot.test.context.SpringBootTest
 @SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionBoundaryTests : TextToActionTestBase() {
 
-    private lateinit var textToAction: TextToAction
-
     @BeforeEach
     fun setUp() {
-        textToAction = TextToAction(session.sessionConfig)
     }
 
     @Test
@@ -42,7 +39,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "点" // Single character
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         // Should handle minimal input
@@ -54,7 +51,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "   " // Only whitespace
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         // Should not crash and should provide helpful response
@@ -67,7 +64,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "点击按钮".repeat(50) // Very long repeated command
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         // Should handle very long commands without crashing
@@ -80,7 +77,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "点击按钮\u0000" // Command with null character
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         // Should handle null characters gracefully
@@ -97,7 +94,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
 
         prompts.forEach { prompt ->
             val response = textToAction.chatAboutWebDriver(prompt)
-            lastResponse = response
+            TextToActionTestBase.lastResponse = response
             println("Prompt: $prompt")
             println("Response: ${response.content}")
 
@@ -110,7 +107,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "click 登录 button and fill username" // Mixed English/Chinese
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -127,7 +124,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "滚动到页面9999999999%位置" // Impossible scroll percentage
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -142,7 +139,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "点击按钮然后再次点击同一个按钮" // Circular reference
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -161,7 +158,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
 
         prompts.forEach { prompt ->
             val response = textToAction.chatAboutWebDriver(prompt)
-            lastResponse = response
+            TextToActionTestBase.lastResponse = response
             println("Incomplete prompt: $prompt")
             println("Response: ${response.content}")
 
@@ -175,7 +172,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "同时点击和不点击按钮" // Logical paradox
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -196,7 +193,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "明天点击登录按钮" // Future tense: "tomorrow click login button"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -209,7 +206,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "用意念点击按钮" // "Click button with mind power" - impossible
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -235,7 +232,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "点击按钮然后重复点击同一个按钮三次再重复整个过程两次" // Recursive self-reference
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -249,7 +246,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "点击按钮同时保持不点击的状态" // Quantum superposition analogy
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content
@@ -268,7 +265,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
         val prompt = "无限循环点击按钮" // "Infinitely loop clicking button"
 
         val response = textToAction.chatAboutWebDriver(prompt)
-        lastResponse = response
+        TextToActionTestBase.lastResponse = response
         println(response.content)
 
         val content = response.content

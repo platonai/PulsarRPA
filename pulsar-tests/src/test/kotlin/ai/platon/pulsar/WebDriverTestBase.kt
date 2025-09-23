@@ -13,7 +13,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.skeleton.session.PulsarSession
-import ai.platon.pulsar.util.server.Application
+import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -22,10 +22,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.test.assertNotNull
 
-@SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class WebDriverTestBase(
-    override val session: PulsarSession = SQLContexts.getOrCreateSession()
-) : TestWebSiteAccess(session) {
+@SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+class WebDriverTestBase : TestWebSiteAccess() {
 
     companion object {
         val isInitialized = AtomicBoolean(false)

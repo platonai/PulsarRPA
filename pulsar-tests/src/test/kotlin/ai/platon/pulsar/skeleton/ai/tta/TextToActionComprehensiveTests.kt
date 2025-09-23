@@ -19,9 +19,6 @@ import kotlin.test.assertTrue
 @SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionComprehensiveTests : TextToActionTestBase() {
 
-    private lateinit var textToAction: TextToAction
-    private var lastResponse: ModelResponse? = null
-
     @BeforeEach
     fun setUp() {
     }

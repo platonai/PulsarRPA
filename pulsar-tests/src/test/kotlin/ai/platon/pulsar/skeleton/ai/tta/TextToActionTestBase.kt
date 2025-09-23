@@ -6,19 +6,19 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.ChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.ai.tta.TextToAction
+import ai.platon.pulsar.skeleton.ai.tta.InteractiveElement
+import ai.platon.pulsar.skeleton.ai.tta.ElementBounds
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.TestConstructor
 
 @SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-class TextToActionTestBase(
-    override val session: PulsarSession,
-): WebDriverTestBase(session) {
+class TextToActionTestBase : WebDriverTestBase() {
 
     companion object {
         var lastResponse: ModelResponse? = null
@@ -45,7 +45,8 @@ class TextToActionTestBase(
         }
     }
 
-<<<<<<< HEAD:pulsar-tests/src/test/kotlin/ai/platon/pulsar/tta/TextToActionTestBase.kt
+    val textToAction by lazy { TextToAction(session.sessionConfig) }
+
     // Helper methods for TTA testing as recommended in README
 
     /**
@@ -153,7 +154,3 @@ class TextToActionTestBase(
         return null
     }
 }
-=======
-    val textToAction by lazy { TextToAction(session.sessionConfig) }
-}
->>>>>>> origin/feat/tools-use:pulsar-tests/src/test/kotlin/ai/platon/pulsar/skeleton/ai/tta/TextToActionTestBase.kt

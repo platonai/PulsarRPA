@@ -20,8 +20,6 @@ import kotlin.test.AfterTest
 @SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class InteractiveElementExtractionTests : TextToActionTestBase() {
 
-    private lateinit var textToAction: TextToAction
-
     @BeforeEach
     fun setUp() {
     }

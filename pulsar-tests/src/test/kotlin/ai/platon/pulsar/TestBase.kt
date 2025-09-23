@@ -16,12 +16,6 @@ class TestBase {
     @Autowired
     lateinit var session: PulsarSession
 
-    @Autowired
-    lateinit var crawlLoops: CrawlLoops
-
-    @Autowired
-    lateinit var webDB: WebDb
-
     val context get() = session.context
 
     val crawlLoops get() = context.crawlLoops

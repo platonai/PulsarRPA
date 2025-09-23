@@ -17,8 +17,6 @@ import org.springframework.boot.test.context.SpringBootTest
 @SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionTest: TextToActionTestBase() {
 
-    private lateinit var textToAction: TextToAction
-
     @BeforeEach
     fun setUp() {
     }
