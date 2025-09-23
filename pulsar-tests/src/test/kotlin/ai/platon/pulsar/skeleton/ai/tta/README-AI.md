@@ -16,6 +16,7 @@
 
 **核心测试对象：**
 - `ai.platon.pulsar.skeleton.ai.tta.TextToAction#generateWebDriverAction` 方法
+- 仅测试 generateWebDriverAction 方法，忽略其他方法
 - 自然语言 → WebDriver API 转换的准确性
 - 交互元素识别和选择的可靠性
 - DOM变化下元素引用的稳定性
