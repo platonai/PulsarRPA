@@ -299,6 +299,24 @@ abstract class AbstractWebDriver(
     }
 
     @Throws(WebDriverException::class)
+    override suspend fun act(prompt: String): InstructionResult {
+        // Converts the prompt into a sequence of webdriver actions using TextToAction.
+        val tta = TextToAction(config)
+        val actions = tta.generateWebDriverAction(prompt, this)
+        if (actions.functionCalls.isEmpty()) {
+            return InstructionResult(listOf(), listOf(), actions.modelResponse)
+        }
+        val functionCalls = actions.functionCalls.take(1)
+
+        // Dispatches and executes each action using a SimpleCommandDispatcher.
+        val dispatcher = SimpleCommandDispatcher()
+        val functionResults = functionCalls.map { action ->
+            dispatcher.execute(action, this)
+        }
+        return InstructionResult(actions.functionCalls, functionResults, actions.modelResponse)
+    }
+
+    @Throws(WebDriverException::class)
     override suspend fun instruct(prompt: String): InstructionResult {
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(config)

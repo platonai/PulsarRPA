@@ -190,7 +190,14 @@ class TextToAction(val conf: ImmutableConfig) {
             .render(mapOf("webDriverSourceCode" to webDriverSourceCode))
     }
 
-    fun useWebDriver(prompt: String, driver: WebDriver): ActionDescription {
+    /**
+     * Generate EXACT ONE WebDriver action with interactive elements.
+     *
+     * @param act The action description with plain text
+     * @param driver The driver to use to collect the context, such as interactive elements
+     * @return The action description
+     * */
+    fun generateWebDriverAction(act: String, driver: WebDriver): ActionDescription {
         TODO("generate EXACT ONE WebDriver Action With Interactive Elements")
     }
 

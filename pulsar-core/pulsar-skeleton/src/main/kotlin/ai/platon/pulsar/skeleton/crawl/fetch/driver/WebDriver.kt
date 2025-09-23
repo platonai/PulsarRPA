@@ -393,6 +393,16 @@ interface WebDriver : Closeable {
      */
     suspend fun chat(prompt: String, selector: String): ModelResponse
     /**
+     * Instructs the webdriver to perform EXACT ONE action based on the given prompt.
+     * This function converts the prompt into EXACT ONE webdriver action, which will then be executed.
+     *
+     * @param prompt The textual prompt that describes the action to be performed by the webdriver.
+     * @return The response from the model, though in this implementation, the return value is not explicitly used.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun act(prompt: String): InstructionResult
+
+    /**
      * Instructs the webdriver to perform a series of actions based on the given prompt.
      * This function converts the prompt into a sequence of webdriver actions, which are then executed.
      *
