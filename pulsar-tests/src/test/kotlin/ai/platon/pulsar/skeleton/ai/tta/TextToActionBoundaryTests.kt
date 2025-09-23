@@ -23,7 +23,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When no matching element exists then generate empty suspend function`() {
         val prompt = "点击不存在的按钮" // Non-existent button
 
-        val result = textToAction.generateWebDriverToolCalls(prompt)
+        val result = textToAction.generateWebDriverActionsWithToolCallSpecs(prompt)
 
         assertNotNull(result)
         assertTrue(result.functionCalls.isEmpty())
@@ -220,7 +220,7 @@ class TextToActionBoundaryTests : TextToActionTestBase() {
     fun `When processing with empty interactive elements list then handle gracefully`() {
         val prompt = "点击任何可交互元素"
 
-        val result = textToAction.generateWebDriverToolCalls(prompt)
+        val result = textToAction.generateWebDriverActionsWithToolCallSpecs(prompt)
 
         assertNotNull(result)
         assertTrue(result.functionCalls.isEmpty() || result.modelResponse.content.contains("No interactive elements"))

@@ -141,7 +141,7 @@ class TextToActionImprovementsTest : TextToActionTestBase() {
     fun `When no matching element exists then generate empty fallback function`() {
         val prompt = "点击不存在的按钮"
 
-        val actionDescription = textToAction.generateWebDriverToolCalls(prompt)
+        val actionDescription = textToAction.generateWebDriverActionsWithToolCallSpecs(prompt)
 
         assertTrue(actionDescription.functionCalls.isEmpty())
         assertTrue(

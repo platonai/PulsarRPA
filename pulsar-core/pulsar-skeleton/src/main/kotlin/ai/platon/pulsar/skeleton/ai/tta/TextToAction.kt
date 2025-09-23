@@ -190,17 +190,11 @@ class TextToAction(val conf: ImmutableConfig) {
             .render(mapOf("webDriverSourceCode" to webDriverSourceCode))
     }
 
-    /**
-     * Generate the action code from the prompt.
-     * */
     fun useWebDriver(prompt: String, driver: WebDriver): ActionDescription {
         TODO("generate EXACT ONE WebDriver Action With Interactive Elements")
     }
 
-    /**
-     * Generate the action code from the prompt.
-     * */
-    fun generateWebDriverToolCalls(prompt: String): ActionDescription {
+    fun generateWebDriverActionsWithToolCallSpecs(prompt: String): ActionDescription {
         val toolPrompt = buildToolUsePrompt(prompt)
         val response = model?.call(toolPrompt) ?: ModelResponse.LLM_NOT_AVAILABLE
         val toolCalls = parseToolCalls(response.content)
@@ -212,9 +206,6 @@ class TextToAction(val conf: ImmutableConfig) {
         return ActionDescription(functionCalls, null, response)
     }
 
-    /**
-     * Generate the action code from the prompt.
-     * */
     fun generateWebDriverActionsWithSourceCode(prompt: String): ModelResponse {
         val promptWithSystemMessage = """
             $webDriverSourceCodeUseMessage

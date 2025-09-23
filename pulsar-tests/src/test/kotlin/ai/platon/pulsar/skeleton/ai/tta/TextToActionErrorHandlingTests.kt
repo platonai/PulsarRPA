@@ -122,7 +122,7 @@ class TextToActionErrorHandlingTests : TextToActionTestBase() {
     fun `When WebDriver actions generation fails then return appropriate error response`() {
         val prompt = "点击按钮"
 
-        val result = textToAction.generateWebDriverToolCalls(prompt)
+        val result = textToAction.generateWebDriverActionsWithToolCallSpecs(prompt)
 
         assertNotNull(result)
         assertTrue(result.functionCalls.isEmpty())

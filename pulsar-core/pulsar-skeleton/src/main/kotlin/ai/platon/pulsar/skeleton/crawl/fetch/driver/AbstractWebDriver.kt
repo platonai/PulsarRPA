@@ -302,7 +302,7 @@ abstract class AbstractWebDriver(
     override suspend fun instruct(prompt: String): InstructionResult {
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(config)
-        val actions = tta.generateWebDriverToolCalls(prompt)
+        val actions = tta.generateWebDriverActionsWithToolCallSpecs(prompt)
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
         val dispatcher = SimpleCommandDispatcher()

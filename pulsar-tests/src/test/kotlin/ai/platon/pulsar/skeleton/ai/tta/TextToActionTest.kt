@@ -135,7 +135,7 @@ class TextToActionTest: TextToActionTestBase() {
 
     @Test
     fun `When generate WebDriver actions without driver then return fallback response`() {
-        val actionDescription = textToAction.generateWebDriverToolCalls("点击按钮")
+        val actionDescription = textToAction.generateWebDriverActionsWithToolCallSpecs("点击按钮")
 
         assertNotNull(actionDescription)
         // selectedElement is only available in the suspend version, so skip this assertion
@@ -148,7 +148,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When test action description with WebDriver prompt then extract function calls correctly`() {
         val prompt = "点击登录按钮然后等待页面加载"
 
-        val actionDescription = textToAction.generateWebDriverToolCalls(prompt)
+        val actionDescription = textToAction.generateWebDriverActionsWithToolCallSpecs(prompt)
 
         assertNotNull(actionDescription)
         assertNotNull(actionDescription.modelResponse)

@@ -99,7 +99,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     fun `When ask enhanced generateWebDriverActions without driver then generate empty suspend function`() {
         val prompt = "点击按钮"
 
-        val result = textToAction.generateWebDriverToolCalls(prompt)
+        val result = textToAction.generateWebDriverActionsWithToolCallSpecs(prompt)
 
         assertNotNull(result)
         assertTrue(result.functionCalls.isEmpty())

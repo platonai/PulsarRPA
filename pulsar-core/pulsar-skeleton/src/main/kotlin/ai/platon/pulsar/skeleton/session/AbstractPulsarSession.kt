@@ -504,7 +504,7 @@ abstract class AbstractPulsarSession(
 
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(sessionConfig)
-        val actions = tta.generateWebDriverToolCalls(prompt)
+        val actions = tta.generateWebDriverActionsWithToolCallSpecs(prompt)
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
         val dispatcher = SimpleCommandDispatcher()
