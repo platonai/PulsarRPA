@@ -238,7 +238,7 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 - 是否在 README 能力表中登记
 
 ## 🧪 质量度量改进建议
-- 脚本统计元素种类：扫描 `static/generated/*.html` 输出覆盖率
+- 脚本统计元素种类：扫描 `static/generated/tta/*.html` 输出覆盖率
 - 统计测试指令语料类型分布（动作/目标/修饰）
 - 失败分类：解析失败/定位失败/执行失败/超时
 
@@ -259,6 +259,8 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 ./mvnw clean test jacoco:report
 ```
 
+> NOTE: 在测试命令中，参数中如果有特殊符号如`.`，使用双引号，譬如：`./mvnw test -Dtest="ai.platon.pulsar.tta.**"`
+
 ## 📈 持续改进指导
 
 ### 1. 测试维护
@@ -278,10 +280,8 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 
 ## 人类评审员意见
 
-- 避免使用 `https://example.com` 作为测试站点，测试站点必须使用本地 Mock Server，保证测试网页内容可控，交互响应可控
-- 生成的代码中优先使用英文，包括注释、字符串、模拟数据等。
-- 重新设计本文件所有测试。本文件将详细测试textToAction.extractInteractiveElements方法，而不必测试generateWebDriverAction方法。
-
+- 测试站点必须使用本地 Mock Server，保证测试网页内容可控，交互响应可控
+- 生成的代码中优先使用英文，包括注释、字符串、模拟数据等
 
 ---
 > 💡 **提示**: 本文档应随功能演进更新。发现覆盖盲区请优先：登记差距 → 设计页面 → 编写用例 → 更新能力表。

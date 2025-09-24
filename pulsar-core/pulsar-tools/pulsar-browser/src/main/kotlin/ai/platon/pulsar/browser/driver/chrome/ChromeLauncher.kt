@@ -404,7 +404,7 @@ class ChromeLauncher constructor(
 
             if (port == 0) {
                 close(readLineThread)
-                logger.info("Process output:>>>\n$processOutput\n<<<")
+                logger.debug("Process output:>>>\n{}\n<<<", processOutput)
 
                 handleChromeFailedToStart()
 
@@ -737,7 +737,7 @@ Kill all Chrome processes and run the program again.
                 Files.writeString(argsFile, "\n$arg", StandardOpenOption.APPEND)
             }
 
-            logger.info("Chrome launch arguments saved to: {}", argsFile)
+            logger.debug("Chrome launch arguments saved to: {}", argsFile)
         } catch (e: Exception) {
             logger.warn("Failed to write launch arguments to file: {}", e.message)
         }

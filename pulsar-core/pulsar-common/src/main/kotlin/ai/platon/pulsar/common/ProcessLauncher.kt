@@ -10,7 +10,7 @@ import java.time.Duration
  * The process launcher
  * */
 object ProcessLauncher {
-    private val log = LoggerFactory.getLogger(ProcessLauncher::class.java)
+    private val logger = LoggerFactory.getLogger(ProcessLauncher::class.java)
 
     @Throws(IOException::class)
     fun launch(executable: String, args: List<String>): Process {
@@ -20,7 +20,7 @@ object ProcessLauncher {
             .redirectErrorStream(true)
             .redirectOutput(ProcessBuilder.Redirect.PIPE)
 
-        log.info("Launching process:\n{}", processBuilder.command().joinToString(" ") {
+        logger.debug("Launching process:\n{}", processBuilder.command().joinToString(" ") {
             Strings.doubleQuoteIfContainsWhitespace(it)
         })
 

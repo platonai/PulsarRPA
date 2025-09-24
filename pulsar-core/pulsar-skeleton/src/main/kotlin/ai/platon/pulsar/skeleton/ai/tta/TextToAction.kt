@@ -363,8 +363,21 @@ $TOOL_CALL_LIST
      */
     internal fun parseElementsFromJsonString(jsonString: String): List<InteractiveElement> {
         if (jsonString.isBlank()) return emptyList()
+
+        // Support strings like: JsEvaluation(value=[ {...}, {...} ], unserializableValue=null, ...)
+        val normalized = when {
+            jsonString.trimStart().startsWith("[") || jsonString.trimStart().startsWith("{") -> jsonString
+            jsonString.contains("JsEvaluation(") -> {
+                // Try to extract the substring that starts from the first '[' and ends at the matching ']'
+                val start = jsonString.indexOf('[')
+                val end = jsonString.lastIndexOf(']')
+                if (start >= 0 && end > start) jsonString.substring(start, end + 1) else jsonString
+            }
+            else -> jsonString
+        }
+
         return try {
-            val root = JsonParser.parseString(jsonString)
+            val root = JsonParser.parseString(normalized)
             val arr = when {
                 root.isJsonArray -> root.asJsonArray
                 root.isJsonObject && root.asJsonObject.get("elements")?.isJsonArray == true -> root.asJsonObject.getAsJsonArray("elements")
@@ -375,22 +388,22 @@ $TOOL_CALL_LIST
                 val obj = el.asJsonObject
                 val boundsObj = obj.get("bounds")?.takeIf { it.isJsonObject }?.asJsonObject
                 val bounds = ElementBounds(
-                    x = boundsObj?.get("x")?.asDouble ?: 0.0,
-                    y = boundsObj?.get("y")?.asDouble ?: 0.0,
-                    width = boundsObj?.get("width")?.asDouble ?: 0.0,
-                    height = boundsObj?.get("height")?.asDouble ?: 0.0
+                    x = boundsObj?.get("x")?.takeIf { it.isJsonPrimitive }?.asDouble ?: 0.0,
+                    y = boundsObj?.get("y")?.takeIf { it.isJsonPrimitive }?.asDouble ?: 0.0,
+                    width = boundsObj?.get("width")?.takeIf { it.isJsonPrimitive }?.asDouble ?: 0.0,
+                    height = boundsObj?.get("height")?.takeIf { it.isJsonPrimitive }?.asDouble ?: 0.0
                 )
                 InteractiveElement(
-                    id = obj.get("id")?.asString ?: "",
-                    tagName = obj.get("tagName")?.asString ?: "",
-                    selector = obj.get("selector")?.asString ?: "",
-                    text = obj.get("text")?.asString?.take(100) ?: "",
-                    type = obj.get("type")?.asString,
-                    href = obj.get("href")?.asString,
-                    className = obj.get("className")?.asString,
-                    placeholder = obj.get("placeholder")?.asString,
-                    value = obj.get("value")?.asString,
-                    isVisible = obj.get("isVisible")?.asBoolean ?: false,
+                    id = obj.get("id")?.takeIf { it.isJsonPrimitive }?.asString ?: "",
+                    tagName = obj.get("tagName")?.takeIf { it.isJsonPrimitive }?.asString ?: "",
+                    selector = obj.get("selector")?.takeIf { it.isJsonPrimitive }?.asString ?: "",
+                    text = obj.get("text")?.takeIf { it.isJsonPrimitive }?.asString?.take(100) ?: "",
+                    type = obj.get("type")?.takeIf { it.isJsonPrimitive }?.asString,
+                    href = obj.get("href")?.takeIf { it.isJsonPrimitive }?.asString,
+                    className = obj.get("className")?.takeIf { it.isJsonPrimitive }?.asString,
+                    placeholder = obj.get("placeholder")?.takeIf { it.isJsonPrimitive }?.asString,
+                    value = obj.get("value")?.takeIf { it.isJsonPrimitive }?.asString,
+                    isVisible = obj.get("isVisible")?.takeIf { it.isJsonPrimitive }?.asBoolean ?: false,
                     bounds = bounds
                 )
             }
@@ -479,8 +492,10 @@ $TOOL_CALL_LIST
     fun extractInteractiveElements(driver: WebDriver): List<InteractiveElement> {
         return runBlocking {
             // If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
-            val result = driver.evaluate(EXTRACT_ELEMENTS_SCRIPT)
-            val elements = parseInteractiveElements(result)
+            val result = driver.evaluateDetail(EXTRACT_INTERACTIVE_ELEMENTS_EXPRESSION)
+
+            // NOTE: Do NOT coerce to string here; parseInteractiveElements can handle List/Map/JSON string
+            val elements = parseInteractiveElements(result?.value)
             // Kotlin-side safety filter: only visible interactive controls
             val filtered = elements.filter { e ->
                 val tag = e.tagName.lowercase()
@@ -534,8 +549,8 @@ suspend fun llmGeneratedFunction(session: PulsarSession) {
 ```
         """.trimIndent()
 
-        val EXTRACT_ELEMENTS_SCRIPT = """
-    // JavaScript code to extract truly interactive elements from the page
+        // JavaScript code to extract truly interactive elements from the page
+        val EXTRACT_INTERACTIVE_ELEMENTS_EXPRESSION = """
     (function() {
         // Basic CSS.escape polyfill
         if (typeof window.CSS === 'undefined') { window.CSS = {}; }
@@ -631,7 +646,8 @@ suspend fun llmGeneratedFunction(session: PulsarSession) {
 
         // Deduplicate by selector
         const seen = new Set();
-        return elements.filter(e => !seen.has(e.selector) && seen.add(e.selector));
+        let finalElements = elements.filter(e => !seen.has(e.selector) && seen.add(e.selector));
+        return JSON.stringify(finalElements)
     })();
 """.trimIndent()
     }

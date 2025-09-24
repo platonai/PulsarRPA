@@ -12,8 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest
  * Element-specific interaction tests for TextToAction.generateWebDriverAction() method
  * Focus on different HTML element types and interaction patterns
  */
-@Tag("ExternalServiceTest")
-@Tag("TimeConsumingTest")
 @SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionElementInteractionTests : TextToActionTestBase() {
 
@@ -25,7 +23,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     // ======== INPUT FIELD TESTS ========
 
     @Test
-    fun `Make sure interactive elements calculated`() = runWebDriverTest(browser) { driver ->
+    fun `Make sure interactive elements calculated correctly`() = runWebDriverTest(browser) { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
