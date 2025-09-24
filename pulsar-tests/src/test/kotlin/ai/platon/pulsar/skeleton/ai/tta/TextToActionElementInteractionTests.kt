@@ -25,7 +25,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     // ======== INPUT FIELD TESTS ========
 
     @Test
-    fun `When calculate interactive elements then proper interactive elements return`() = runWebDriverTest { driver ->
+    fun `Make sure interactive elements calculated`() = runWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 

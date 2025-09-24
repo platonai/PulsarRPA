@@ -4,6 +4,7 @@ import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.js.JsUtils
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
 
@@ -12,6 +13,31 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     override val webDriverService get() = FastWebDriverService(browserFactory)
 
     val text = "awesome AI enabled Browser4!"
+
+    protected val expressions = """
+            typeof(window)
+            
+            typeof(window.history)
+            window.history
+            window.history.length
+            
+            typeof(document)
+            document.location
+            document.baseURI
+            
+            typeof(document.body)
+            document.body.clientWidth
+            
+            typeof(__pulsar_)
+            __pulsar_utils__.add(1, 1)
+        """.trimIndent().split("\n").map { it.trim() }.filter { it.isNotBlank() }
+
+    suspend fun evaluateExpressions(driver: WebDriver, type: String) {
+        expressions.forEach { expression ->
+            val detail = driver.evaluateDetail(expression)
+            println(String.format("%-6s%-40s%s", type, expression, detail))
+        }
+    }
 
     @Test
     fun `test evaluate that returns primitive values`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->

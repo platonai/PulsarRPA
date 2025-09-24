@@ -52,50 +52,43 @@ class WebDriverTestBase : TestWebSiteAccess() {
 
     open val webDriverService get() = WebDriverService(browserFactory)
 
-    protected val expressions = """
-            typeof(window)
-            
-            typeof(window.history)
-            window.history
-            window.history.length
-            
-            typeof(document)
-            document.location
-            document.baseURI
-            
-            typeof(document.body)
-            document.body.clientWidth
-            
-            typeof(__pulsar_)
-            __pulsar_utils__.add(1, 1)
-        """.trimIndent().split("\n").map { it.trim() }.filter { it.isNotBlank() }
-
     val settings get() = BrowserSettings(session.sessionConfig)
     val confuser get() = settings.confuser as SimpleScriptConfuser
 
-    suspend fun evaluateExpressions(driver: WebDriver, type: String) {
-        expressions.forEach { expression ->
-            val detail = driver.evaluateDetail(expression)
-            println(String.format("%-6s%-40s%s", type, expression, detail))
-        }
-    }
+    /**
+     * Run webdriver test with the default browser.
+     * */
+    protected fun runWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runWebDriverTest(url, browser, block)
 
+    /**
+     * Run webdriver test with a specified browser.
+     * */
     protected fun runWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
         webDriverService.runWebDriverTest(url, browser, block)
+
+    /**
+     * Run webdriver test with a specified browser.
+     * */
+    protected fun runWebDriverTest(browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runWebDriverTest(browser, block)
+
+    /**
+     * Run webdriver test with a newly created browser with a random browser profile.
+     * */
+    protected fun runWebDriverTest(block: suspend (driver: WebDriver) -> Unit) = webDriverService.runWebDriverTest(block)
+
+    /**
+     * Run webdriver test with a newly created browser with the given browser profile.
+     * */
+    protected fun runWebDriverTest(browserId: BrowserId, block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runWebDriverTest(browserId, block)
 
     protected fun runResourceWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) =
         webDriverService.runResourceWebDriverTest(url, block)
 
     protected fun runResourceWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
         webDriverService.runResourceWebDriverTest(url, browser, block)
-
-    protected fun runWebDriverTest(block: suspend (driver: WebDriver) -> Unit) = webDriverService.runWebDriverTest(block)
-
-    protected fun runWebDriverTest(browserId: BrowserId, block: suspend (driver: WebDriver) -> Unit) =
-        webDriverService.runWebDriverTest(browserId, block)
-
-    protected fun runWebDriverTest(browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
-        webDriverService.runWebDriverTest(browser, block)
 
     protected suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) = webDriverService.open(url, driver, scrollCount)
 
