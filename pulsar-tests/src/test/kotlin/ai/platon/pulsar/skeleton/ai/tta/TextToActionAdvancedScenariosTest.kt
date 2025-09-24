@@ -27,7 +27,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When given multi-step workflow commands then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo(ttaUrl2)
         driver.waitForSelector("body")
 
         val complexCommands = listOf(
@@ -56,7 +56,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When given conditional commands then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val conditionalCommands = listOf(
@@ -86,7 +86,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When given context-specific commands then use appropriate context`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-ambiguity.html")
+        driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
         val contextCommands = listOf(
@@ -113,7 +113,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When given spatial reference commands then use position context`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-ambiguity.html")
+        driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
         val spatialCommands = listOf(
@@ -142,7 +142,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When given malformed commands then handle gracefully`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val malformedCommands = listOf(
@@ -173,7 +173,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When given contradictory commands then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val contradictoryCommands = listOf(
@@ -203,7 +203,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When given extremely long commands then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val veryLongCommand = """
@@ -230,7 +230,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When given commands with special Unicode characters then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val unicodeCommands = listOf(
@@ -259,7 +259,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When given commands in different languages then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val multilingualCommands = listOf(
@@ -288,7 +288,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When given rapid sequential commands then maintain consistency`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val baseCommand = "点击添加按钮"
@@ -316,7 +316,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When given commands with timing requirements then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val timingCommands = listOf(
@@ -343,7 +343,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When given validation-related commands then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-ambiguity.html")
+        driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
         val validationCommands = listOf(
@@ -370,7 +370,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @Test
     fun `When analyzing responses then extract meaningful information`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val testCommand = "点击添加按钮"

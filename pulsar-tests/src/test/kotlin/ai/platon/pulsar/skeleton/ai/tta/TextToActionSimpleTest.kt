@@ -17,7 +17,7 @@ class TextToActionSimpleTest : TextToActionTestBase() {
         val prompt = "点击搜索按钮"
 
         runWebDriverTest { driver ->
-            driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+            driver.navigateTo(ttaUrl1)
             driver.waitForSelector("body")
 
             // Debug: Print interactive elements to see what's available
@@ -44,7 +44,7 @@ class TextToActionSimpleTest : TextToActionTestBase() {
     @Test
     fun `When on interactive-1 page and ask to fill form then generate correct action`() {
         runWebDriverTest { driver ->
-            driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+            driver.navigateTo(ttaUrl1)
             driver.waitForSelector("body")
 
             // Debug: Print interactive elements to see what's available

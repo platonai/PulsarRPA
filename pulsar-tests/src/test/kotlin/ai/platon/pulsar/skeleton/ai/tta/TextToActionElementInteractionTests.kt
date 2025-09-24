@@ -60,7 +60,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given text input commands then generate appropriate fill actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val testCases = listOf(
@@ -85,7 +85,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given number input commands then generate appropriate fill actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val testCases = listOf(
@@ -115,7 +115,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given select commands then generate appropriate selection actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val testCases = listOf(
@@ -139,7 +139,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given language selection commands then generate appropriate actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val testCases = listOf(
@@ -165,7 +165,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given button click commands then generate appropriate click actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val testCases = listOf(
@@ -189,7 +189,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given show summary commands then generate appropriate click actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val testCases = listOf(
@@ -215,7 +215,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given checkbox commands then generate appropriate check actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val testCases = listOf(
@@ -239,7 +239,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given uncheck commands then generate appropriate uncheck actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         // First check the checkbox
@@ -268,7 +268,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given slider commands then generate appropriate interaction actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val testCases = listOf(
@@ -296,7 +296,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given form filling commands then generate appropriate sequential actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val testCases = listOf(
@@ -322,7 +322,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given commands for dynamic elements then generate appropriate actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         // First toggle the message to make it visible
@@ -351,7 +351,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given scroll commands then generate appropriate scroll actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val testCases = listOf(
@@ -377,7 +377,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given wait commands then generate appropriate wait actions`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val testCases = listOf(
@@ -403,7 +403,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given commands for non-existent elements then handle gracefully`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val testCases = listOf(
@@ -429,7 +429,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @Test
     fun `When given ambiguous commands then select most reasonable element`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-ambiguity.html")
+        driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
         val testCases = listOf(

@@ -26,7 +26,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on interactive-1 page and ask to type name then fill the name input field`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val command = "在姓名输入框中输入 '张三'"
@@ -43,7 +43,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on interactive-1 page and ask to select color then interact with color dropdown`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val command = "选择最喜欢的颜色为蓝色"
@@ -60,7 +60,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on interactive-1 page and ask to click add button then click the add button`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val command = "点击添加按钮"
@@ -77,7 +77,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on interactive-1 page and ask to toggle message then click toggle button`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val command = "切换消息显示"
@@ -94,7 +94,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on interactive-1 page and ask to fill numbers then fill both number inputs`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val command = "在第一个数字输入框输入10，第二个数字输入框输入20"
@@ -114,7 +114,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on interactive-2 page and ask to fill name then fill name input field`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val command = "在姓名输入框输入 '李四'"
@@ -130,7 +130,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on interactive-2 page and ask to select language then interact with language dropdown`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val command = "选择最喜欢的编程语言为Python"
@@ -146,7 +146,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on interactive-2 page and ask to toggle newsletter then click the checkbox`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val command = "勾选订阅通讯复选框"
@@ -162,7 +162,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on interactive-2 page and ask to click show summary then click the button`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val command = "点击显示摘要按钮"
@@ -178,7 +178,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on interactive-2 page and ask to adjust text size then interact with slider`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val command = "调整文本大小滑块到24"
@@ -197,7 +197,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on ambiguity page and ask to click save in user section then select user save button`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-ambiguity.html")
+        driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
         val command = "点击用户管理区域的保存按钮"
@@ -214,7 +214,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on ambiguity page and ask to click save in product section then select product save button`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-ambiguity.html")
+        driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
         val command = "点击产品管理区域的保存按钮"
@@ -231,7 +231,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on ambiguity page and ask to click top right menu then select header menu button`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-ambiguity.html")
+        driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
         val command = "点击右上角的菜单按钮"
@@ -248,7 +248,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on ambiguity page and ask to fill billing name then select billing name field`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-ambiguity.html")
+        driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
         val command = "在账单地址区域填写姓名为 '王五'"
@@ -265,7 +265,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When on ambiguity page and ask to search products then select product search field`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-ambiguity.html")
+        driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
         val command = "在产品搜索框中输入 '手机'"
@@ -284,7 +284,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When given complex multi-step instruction then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val command = "输入姓名张三，选择蓝色，然后点击添加按钮"
@@ -300,7 +300,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When given ambiguous command then select most reasonable element`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-ambiguity.html")
+        driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
         val command = "点击编辑按钮"
@@ -317,7 +317,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When given command with no matching elements then generate empty or fallback action`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val command = "点击不存在的提交按钮"
@@ -335,7 +335,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When given English commands then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val commands = listOf(
@@ -357,7 +357,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When given mixed language commands then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val commands = listOf(
@@ -381,7 +381,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When given empty command then handle gracefully`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val command = ""
@@ -396,7 +396,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When given very long command then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-1.html")
+        driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
         val command = "请帮我在这个页面的姓名输入框里面输入一个非常长的名字叫做'这是一个非常长的中文名字用来测试系统对于长文本输入的处理能力'然后选择颜色为浅黄色接着点击添加按钮计算一些数字最后切换消息显示"
@@ -411,7 +411,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @Test
     fun `When given command with special characters then handle appropriately`() = runWebDriverTest { driver ->
-        driver.navigateTo("http://127.0.0.1:$port/generated/tta/interactive-2.html")
+        driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
         val commands = listOf(
