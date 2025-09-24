@@ -25,25 +25,34 @@
 
 ### 目录结构
 ```
-pulsar-tests/src/test/kotlin/ai/platon/pulsar/tta/    # Test code directory
-├── TextToActionTestBase.kt                          # Test base class
-├── TextToActionTest.kt                              # Basic functionality tests
-├── TextToActionComprehensiveTests.kt                # Comprehensive tests
-├── InteractiveElementExtractionTests.kt             # Element extraction tests
-└── README-AI.md                                     # This file
+pulsar-tests/src/test/kotlin/ai/platon/pulsar/skeleton/ai/tta/    # Test code directory
+├── TextToActionTestBase.kt                                       # Test base class
+├── TextToActionBasicTest.kt                                      # Basic sanity tests
+├── TextToActionSimpleTest.kt                                     # Simple scenarios
+├── TextToActionTest.kt                                           # General functionality tests
+├── TextToActionGenerateWebDriverActionTest.kt                    # generateWebDriverAction focus
+├── TextToActionElementSelectionTests.kt                          # Element selection tests
+├── TextToActionElementInteractionTests.kt                        # Element interaction tests
+├── TextToActionEdgeCasesTest.kt                                  # Edge cases
+├── TextToActionComprehensiveTests.kt                             # Comprehensive tests
+├── TextToActionMockServerTests.kt                                # Mock server wiring tests
+└── README-AI.md                                                  # This file
 
 # Note: The actual interactive test web pages are stored in a shared module (used by multiple test modules)
-pulsar-tests-common/src/main/resources/static/generated/tta  # Actual test web page directory
-├── interactive-1.html                               # Basic interactions
-├── interactive-2.html                               # Complex forms
-├── interactive-3.html                               # Animation/basic dynamics
-├── interactive-4.html                               # Dark mode + drag-and-drop
-└── interactive-screens.html                         # (Currently still a single-page placeholder)
+pulsar-tests-common/src/main/resources/static/generated/tta       # Actual test web page directory
+├── interactive-1.html                                            # Basic interactions
+├── interactive-2.html                                            # Complex forms
+├── interactive-3.html                                            # Animation/basic dynamics
+├── interactive-4.html                                            # Dark mode + drag-and-drop
+├── interactive-dynamic.html                                      # Async/dynamic content
+├── interactive-ambiguity.html                                    # Ambiguity/resolution scenarios
+├── forms-advanced-test.html                                      # Advanced form controls
+└── interactive-screens.html                                      # Multi-screen placeholder (to be enhanced)
 ```
 
 ### 环境要求
 - **Java版本**: 根据根目录 `pom.xml` 确定
-- **构建工具**: 使用 `./mvnw` (Maven wrapper)
+- **构建工具**: 使用 Maven Wrapper 从项目根目录运行（Windows: `mvnw.cmd`，Linux/macOS: `./mvnw`）
 - **LLM配置**: 需要配置AI模型API密钥
 - **网页服务器**: 继承 `WebDriverTestBase` 自动启动
 - **WebDriver 对象**: 继承 `WebDriverTestBase`，使用 `runWebDriverTest` 获得
@@ -52,12 +61,14 @@ pulsar-tests-common/src/main/resources/static/generated/tta  # Actual test web p
 
 ### 测试基类继承关系
 ```text
-WebDriverTestBase              # 提供网页服务器和WebDriver支持
+WebDriverTestBase              # 提供网页服务器和WebDriver支持（已含 @SpringBootTest）
     ↓
-TextToActionTestBase          # TTA专用测试基础设施
+TextToActionTestBase          # TTA专用测试基础设施（已含 @SpringBootTest 与 LLM 检查）
     ↓
 具体测试类                     # 实际测试实现
 ```
+
+提示：测试类无需再次添加 `@SpringBootTest`，基类已包含该注解。
 
 ### LLM配置检查
 测试基类会自动检查LLM配置：
@@ -78,12 +89,12 @@ TextToActionTestBase          # TTA专用测试基础设施
 使用反引号描述性命名：
 ```kotlin
 @Test
-fun `When ask to click a button then generate correct WebDriver action code`() = runWebDriverTest(browser) { driver ->
+fun `When ask to click a button then generate correct WebDriver action code`() = runWebDriverTest { driver ->
     // 测试实现
 }
 
 @Test
-fun `Given complex form when ask to fill specific field then select correct element`() = runWebDriverTest(browser) { driver ->
+fun `Given complex form when ask to fill specific field then select correct element`() = runWebDriverTest { driver ->
     // 测试实现
 }
 ```
@@ -92,8 +103,9 @@ fun `Given complex form when ask to fill specific field then select correct elem
 ```kotlin
 @Tag("ExternalServiceTest")    // 需要外部服务（LLM API）
 @Tag("TimeConsumingTest")      // 耗时测试
-@SpringBootTest(classes = [Application::class], 
-    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+class TextToActionComprehensiveTests : TextToActionTestBase() {
+    // ...
+}
 ```
 
 ## 🧪 测试策略
@@ -125,38 +137,40 @@ fun `Given complex form when ask to fill specific field then select correct elem
 #### 正向测试
 ```kotlin
 @Test
-fun `When given clear action command then generate precise WebDriver code`() = runWebDriverTest(browser) { driver ->
+fun `When given clear action command then generate precise WebDriver code`() = runWebDriverTest { driver ->
     val command = "点击登录按钮"
-    val result = textToAction.generateWebDriverAction(command, driver)
-    assertThat(result).contains("click")
+    val action = textToAction.generateWebDriverAction(command, driver)
+    assertThat(action.functionCalls.joinToString("\n")).contains("driver.click(")
 }
 ```
 
 #### 边界测试
 ```kotlin
 @Test
-fun `When no matching element exists then generate empty suspend function`() = runWebDriverTest(browser) { driver ->
-    val result = textToAction.generateWebDriverAction("点击不存在的按钮", driver)
-    assertThat(result).doesNotContain("click")
+fun `When no matching element exists then generate empty tool-calls`() = runWebDriverTest { driver ->
+    val action = textToAction.generateWebDriverAction("点击不存在的按钮", driver)
+    assertThat(action.functionCalls.joinToString()).doesNotContain("driver.click(")
 }
 ```
 
 #### 歧义/恢复测试
 ```kotlin
 @Test
-fun `When ambiguous command then choose best match or ask clarify`() = runWebDriverTest(browser) { driver ->
-    val result = textToAction.generateWebDriverAction("点击按钮", driver)
-    // 验证策略
+fun `When ambiguous command then choose best match or ask clarify`() = runWebDriverTest { driver ->
+    val action = textToAction.generateWebDriverAction("点击按钮", driver)
+    // 验证策略，例如优先 data-testid 或文本最相近
 }
 ```
 
 ## 🎯 重点测试场景
 
-### 1. 基础操作转换
-- 点击操作: "点击登录按钮" → `driver.click()`
-- 输入操作: "在搜索框输入AI工具" → `driver.type("AI工具")`
-- 滚动操作: "滚动到页面中间" → `driver.evaluate("window.scrollTo...")`
-- 导航操作: "返回上一页" → `driver.back()`
+### 1. 基础操作转换（与当前工具列表对齐）
+- 点击操作: "点击登录按钮" → `driver.click("#login-btn")`
+- 输入操作: "在搜索框输入AI工具" → `driver.fill("#search-input", "AI工具")`
+- 滚动操作: "滚动到页面中间" → `driver.scrollToMiddle(0.5)` 或 `driver.scrollDown(1)`
+- 导航操作: "打开 /docs 页面" → `driver.navigateTo("/docs")`
+- 等待元素: "等待提交按钮出现" → `driver.waitForSelector("#submit-btn", 5000L)`
+- 勾选/取消: `driver.check("#agree")` / `driver.uncheck("#agree")`
 
 ### 2. 元素选择准确性
 - 通过文本匹配: "点击提交按钮"
@@ -191,6 +205,9 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 | interactive-2 | 多控件表单/滑块/订阅开关/动态字体 | 表单验证/多步骤/条件显示/file/radio |
 | interactive-3 | IntersectionObserver动画/范围控制/显隐切换 | 真异步加载/列表增删/懒加载/分页 |
 | interactive-4 | 暗色模式/拖拽排序 | 跨列表拖拽/撤销/Shadow DOM/多拖拽类型 |
+| interactive-dynamic | 延迟/异步加载/列表增删 | 更复杂的懒加载/虚拟列表 |
+| interactive-ambiguity | 重复元素/歧义冲突/data-testid | 更全面的消歧策略/位置参照 |
+| forms-advanced-test | radio/file/date/time/password/禁用/只读 | 校验错误态更全/无障碍属性 |
 | interactive-screens | 与 1 类似（占位） | 真正多屏/Tab/iframe/分栏/路由感知 |
 
 > 结论：需要新增专用页面覆盖：动态异步、歧义冲突、Shadow DOM、可访问性、媒体/富文本、多屏结构。
@@ -245,21 +262,31 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 ---
 ## 🚀 测试执行命令
 
-```bash
-# 运行所有TTA测试
-./mvnw test -Dtest="ai.platon.pulsar.tta.**"
+Windows (cmd.exe)：
+```
+# 运行所有 TTA 测试（包路径已校正）
+mvnw.cmd test -Dtest="ai.platon.pulsar.skeleton.ai.tta.**"
 
 # 运行特定测试类
-./mvnw test -Dtest="TextToActionTest"
+mvnw.cmd test -Dtest=TextToActionTest
 
-# 跳过需要LLM的测试
-./mvnw test -Dtest="**" -DexcludedGroups="ExternalServiceTest"
+# 跳过需要 LLM 的测试（可覆盖默认 excludedGroups）
+mvnw.cmd test -DexcludedGroups=ExternalServiceTest
 
-# 运行覆盖率报告
+# 运行覆盖率报告（JaCoCo）
+mvnw.cmd clean test jacoco:report
+```
+
+Linux/macOS：
+```
+./mvnw test -Dtest="ai.platon.pulsar.skeleton.ai.tta.**"
+./mvnw test -Dtest=TextToActionTest
+./mvnw test -DexcludedGroups=ExternalServiceTest
 ./mvnw clean test jacoco:report
 ```
 
-> NOTE: 在测试命令中，参数中如果有特殊符号如`.`，使用双引号，譬如：`./mvnw test -Dtest="ai.platon.pulsar.tta.**"`
+> NOTE: 在测试命令中，参数中如果有特殊符号如 `.`，使用双引号，例如：`-Dtest="ai.platon.pulsar.skeleton.ai.tta.**"`。
+> 默认已排除 `TimeConsumingTest, ExternalServiceTest`，如需执行请清空或调整 `-DexcludedGroups`。
 
 ## 📈 持续改进指导
 
