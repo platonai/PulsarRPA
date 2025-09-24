@@ -4,7 +4,7 @@ This guideline defines how AI Coder Agents (e.g., GitHub Copilot, Claude Coder, 
 to this project. The document standardizes **environment setup**, **coding rules**, **testing strategy**, 
 and **CI/CD integration**.
 
-> 💡 **Tip:** This file should be upgrade frequently
+> 💡 Note: This document should be updated as the functionality evolves.
 
 ---
 

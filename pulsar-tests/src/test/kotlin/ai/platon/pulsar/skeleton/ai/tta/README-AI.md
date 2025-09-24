@@ -25,20 +25,20 @@
 
 ### 目录结构
 ```
-pulsar-tests/src/test/kotlin/ai/platon/pulsar/tta/    # 测试代码目录
-├── TextToActionTestBase.kt                          # 测试基类
-├── TextToActionTest.kt                              # 基础功能测试
-├── TextToActionComprehensiveTests.kt                # 综合测试
-├── InteractiveElementExtractionTests.kt             # 元素提取测试
-└── README-AI.md                                     # 本文件
+pulsar-tests/src/test/kotlin/ai/platon/pulsar/tta/    # Test code directory
+├── TextToActionTestBase.kt                          # Test base class
+├── TextToActionTest.kt                              # Basic functionality tests
+├── TextToActionComprehensiveTests.kt                # Comprehensive tests
+├── InteractiveElementExtractionTests.kt             # Element extraction tests
+└── README-AI.md                                     # This file
 
-# 注意：当前交互测试网页实际存放在公共模块（共享给多个测试模块）
-pulsar-tests-common/src/main/resources/static/generated/tta  # 测试网页实际目录
-├── interactive-1.html                               # 基础交互
-├── interactive-2.html                               # 复杂表单
-├── interactive-3.html                               # 动画/基础动态
-├── interactive-4.html                               # 暗色模式 + 拖拽
-└── interactive-screens.html                         #（目前仍为单页结构，占位）
+# Note: The actual interactive test web pages are stored in a shared module (used by multiple test modules)
+pulsar-tests-common/src/main/resources/static/generated/tta  # Actual test web page directory
+├── interactive-1.html                               # Basic interactions
+├── interactive-2.html                               # Complex forms
+├── interactive-3.html                               # Animation/basic dynamics
+├── interactive-4.html                               # Dark mode + drag-and-drop
+└── interactive-screens.html                         # (Currently still a single-page placeholder)
 ```
 
 ### 环境要求
