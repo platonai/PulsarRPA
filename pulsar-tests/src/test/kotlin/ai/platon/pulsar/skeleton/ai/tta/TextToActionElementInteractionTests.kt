@@ -40,14 +40,12 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
 
-            if (actionDescription.functionCalls.isNotEmpty()) {
-                val action = actionDescription.functionCalls.first()
-                println("Input command: $command -> Generated action: $action")
-                assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
-                assertTrue(action.contains(expectedField), "Should target the name field")
-            }
+            val action = actionDescription.functionCalls.first()
+            println("Input command: $command -> Generated action: $action")
+            assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
+            assertTrue(action.contains(expectedField), "Should target the name field")
         }
     }
 
@@ -67,16 +65,15 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
 
-            if (actionDescription.functionCalls.isNotEmpty()) {
-                val action = actionDescription.functionCalls.first()
-                println("Number input command: $command -> Generated action: $action")
-                assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
-                // Should target one of the number fields
-                val targetsCorrectField = possibleFields.any { action.contains(it) }
-                assertTrue(targetsCorrectField, "Should target one of: $possibleFields")
-            }
+            val action = actionDescription.functionCalls.first()
+            println("Number input command: $command -> Generated action: $action")
+            assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
+
+            // Should target one of the number fields
+            val targetsCorrectField = possibleFields.any { field -> action.contains(field) }
+            assertTrue(targetsCorrectField, "Should target one of: $possibleFields")
         }
     }
 
@@ -98,14 +95,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
                 println("Select command: $command -> Generated action: $action")
                 assertTrue(action.contains("click") || action.contains("select"), "Should generate selection action")
                 assertTrue(action.contains(expectedField), "Should target the select field")
-            }
         }
     }
 
@@ -125,14 +119,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
                 println("Language select command: $command -> Generated action: $action")
                 assertTrue(action.contains("click") || action.contains("select"), "Should generate selection action")
                 assertTrue(action.contains(expectedField), "Should target the language select")
-            }
         }
     }
 
@@ -154,14 +145,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
                 println("Button click command: $command -> Generated action: $action")
                 assertTrue(action.contains("click"), "Should generate click action")
                 assertTrue(action.contains("button") || action.contains(expectedContext), "Should target button element")
-            }
         }
     }
 
@@ -181,14 +169,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
                 println("Show summary command: $command -> Generated action: $action")
                 assertTrue(action.contains("click"), "Should generate click action")
                 assertTrue(action.contains(expectedContext) || action.contains("button"), "Should target summary button")
-            }
         }
     }
 
@@ -210,14 +195,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
                 println("Checkbox command: $command -> Generated action: $action")
                 assertTrue(action.contains(expectedAction) || action.contains("click"), "Should generate check or click action")
                 assertTrue(action.contains("subscribeToggle") || action.contains("checkbox"), "Should target subscribe checkbox")
-            }
         }
     }
 
@@ -240,14 +222,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
                 println("Uncheck command: $command -> Generated action: $action")
                 assertTrue(action.contains(expectedAction) || action.contains("click"), "Should generate uncheck or click action")
                 assertTrue(action.contains("subscribeToggle") || action.contains("checkbox"), "Should target subscribe checkbox")
-            }
         }
     }
 
@@ -269,16 +248,13 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
                 println("Slider command: $command -> Generated action: $action")
                 // Slider might be handled via click, fill, or JavaScript evaluation
                 assertTrue(action.contains("click") || action.contains("fill") || action.contains("evaluate"),
                           "Should generate interaction for slider")
                 assertTrue(action.contains(expectedField) || action.contains("slider"), "Should target text size slider")
-            }
         }
     }
 
@@ -299,15 +275,12 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
                 println("Form command: $command -> Generated action: $action")
                 // Should handle the complex form instruction
                 assertTrue(action.contains("fill") || action.contains("click") || action.contains("check"),
                           "Should generate form interaction")
-            }
         }
     }
 
@@ -332,14 +305,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
                 println("Dynamic content command: $command -> Generated action: $action")
                 assertTrue(action.contains("click"), "Should generate click action")
                 assertTrue(action.contains("toggle") || action.contains("button"), "Should target toggle button")
-            }
         }
     }
 
@@ -361,14 +331,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
                 println("Scroll command: $command -> Generated action: $action")
                 assertTrue(action.contains("scroll"), "Should generate scroll action")
                 assertTrue(action.contains(expectedAction), "Should generate correct scroll action")
-            }
         }
     }
 
@@ -390,14 +357,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
                 println("Wait command: $command -> Generated action: $action")
                 assertTrue(action.contains("waitFor"), "Should generate wait action")
                 assertTrue(action.contains(expectedAction), "Should generate correct wait action")
-            }
         }
     }
 
@@ -419,7 +383,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
 
             println("Non-existent element command: $command -> Generated: ${actionDescription.functionCalls}")
             println("Model response: ${actionDescription.modelResponse.content}")
@@ -445,15 +409,12 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
                 println("Ambiguous command: $command -> Generated action: $action")
                 assertTrue(action.contains("click") || action.contains("fill"), "Should generate some action")
                 // Should select one of the available elements
                 println("Selected element: ${actionDescription.selectedElement}")
-            }
         }
     }
 }

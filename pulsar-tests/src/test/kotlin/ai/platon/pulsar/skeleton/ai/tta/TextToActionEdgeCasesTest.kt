@@ -30,7 +30,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         println("Empty command generated: ${actionDescription.functionCalls}")
     }
 
@@ -42,7 +42,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("   ", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         println("Blank command generated: ${actionDescription.functionCalls}")
     }
 
@@ -55,7 +55,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction(longCommand, driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         println("Long command generated: ${actionDescription.functionCalls}")
     }
 
@@ -70,7 +70,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction(specialCommand, driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         println("Special characters command generated: ${actionDescription.functionCalls}")
     }
 
@@ -83,7 +83,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction(unicodeCommand, driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         println("Unicode command generated: ${actionDescription.functionCalls}")
     }
 
@@ -96,7 +96,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction(quotedCommand, driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         println("Quoted command generated: ${actionDescription.functionCalls}")
     }
 
@@ -111,7 +111,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction(impossibleCommand, driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         println("Impossible element request generated: ${actionDescription.functionCalls}")
     }
 
@@ -124,7 +124,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction(impossibleCommand, driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         println("Impossible action request generated: ${actionDescription.functionCalls}")
     }
 
@@ -139,7 +139,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction(contradictoryCommand, driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         println("Contradictory command generated: ${actionDescription.functionCalls}")
     }
 
@@ -162,7 +162,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
             println("Vague command '$command' generated: ${actionDescription.functionCalls}")
         }
     }
@@ -182,7 +182,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
             println("Ambiguous command '$command' generated: ${actionDescription.functionCalls}")
         }
     }
@@ -196,7 +196,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("点击按钮", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         println("No elements page generated: ${actionDescription.functionCalls}")
     }
 
@@ -218,7 +218,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
             println("Malformed command '$command' generated: ${actionDescription.functionCalls}")
         }
     }
@@ -241,7 +241,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
             println("Specific command '$command' generated: ${actionDescription.functionCalls}")
         }
     }
@@ -289,7 +289,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
             println("Mixed language command '$command' generated: ${actionDescription.functionCalls}")
         }
     }
@@ -307,7 +307,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         println("Long text command generated: ${actionDescription.functionCalls}")
     }
 

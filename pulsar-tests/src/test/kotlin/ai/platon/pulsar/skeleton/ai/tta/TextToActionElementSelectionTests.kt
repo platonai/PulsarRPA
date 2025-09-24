@@ -30,14 +30,11 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("点击第一个提交按钮", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Multiple buttons - Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action")
-        }
     }
 
     @Test
@@ -48,14 +45,11 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("点击关于链接", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Multiple links - Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for link")
-        }
     }
 
     @Test
@@ -66,15 +60,12 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("填写邮箱地址", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Multiple inputs - Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("type") || action.contains("driver.type"),
                       "Should generate fill action for specific input")
-        }
     }
 
     // ===== Tests for element selection by position/context =====
@@ -87,14 +78,11 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("点击顶部的搜索按钮", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Position-based selection - Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for positioned element")
-        }
     }
 
     @Test
@@ -105,15 +93,12 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("在表单中填写用户名", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Context-based selection - Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("type") || action.contains("driver.type"),
                       "Should generate fill action for contextually selected element")
-        }
     }
 
     // ===== Tests for element selection with data-testid attributes =====
@@ -126,14 +111,11 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("点击 data-testid 为 submit-primary 的按钮", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("data-testid selection - Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for data-testid element")
-        }
     }
 
     // ===== Tests for element selection with ARIA attributes =====
@@ -146,14 +128,11 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("点击 aria-label 为 主要提交 的按钮", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("ARIA label selection - Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for ARIA labeled element")
-        }
     }
 
     // ===== Tests for element selection with placeholder text =====
@@ -166,15 +145,12 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("填写带有占位符的输入框", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Placeholder-based selection - Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("type") || action.contains("driver.type"),
                       "Should generate fill action for placeholder-based selection")
-        }
     }
 
     // ===== Tests for element selection with text content =====
@@ -187,14 +163,11 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("点击显示结果的按钮", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Text-based button selection - Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for text-based button selection")
-        }
     }
 
     @Test
@@ -205,14 +178,11 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("点击联系我们的链接", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Link text selection - Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for link text selection")
-        }
     }
 
     // ===== Tests for element selection with type attributes =====
@@ -225,15 +195,12 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("填写邮箱输入框", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Input type selection - Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("type") || action.contains("driver.type"),
                       "Should generate fill action for specific input type")
-        }
     }
 
     @Test
@@ -244,15 +211,12 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("输入密码", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Password field selection - Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("type") || action.contains("driver.type"),
                       "Should generate fill action for password field")
-        }
     }
 
     // ===== Tests for element selection with class names =====
@@ -265,14 +229,11 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("点击带有 primary 类的按钮", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Class-based selection - Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for class-based selection")
-        }
     }
 
     // ===== Tests for element selection with hierarchical context =====
@@ -285,14 +246,11 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("在第一个区域中点击按钮", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Section-based selection - Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for section-based selection")
-        }
     }
 
     // ===== Tests for element selection accuracy validation =====
@@ -325,13 +283,10 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverAction("点击主要的提交按钮", driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
-
-        if (actionDescription.functionCalls.isNotEmpty()) {
+        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
             val action = actionDescription.functionCalls.first()
             println("Most appropriate element selection - Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for most appropriate element")
-        }
     }
 }

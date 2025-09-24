@@ -37,7 +37,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             assertNotNull(actionDescription.modelResponse)
 
             // Should generate at most one action (EXACT ONE requirement)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action")
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
 
             // If there are function calls, they should be valid WebDriver calls
             actionDescription.functionCalls.forEach { call ->
@@ -63,14 +63,13 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 val actionDescription = textToAction.generateWebDriverAction(prompt, driver)
 
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
-                assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $prompt")
+                assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
 
                 // Check if the generated action is appropriate
-                if (actionDescription.functionCalls.isNotEmpty()) {
+                
                     val action = actionDescription.functionCalls.first()
                     println("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("click") || action.contains("driver.click"), "Should generate click-related action")
-                }
             }
         }
     }
@@ -92,15 +91,12 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 val actionDescription = textToAction.generateWebDriverAction(prompt, driver)
 
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
-                assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $prompt")
-
-                if (actionDescription.functionCalls.isNotEmpty()) {
+                assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
                     val action = actionDescription.functionCalls.first()
                     println("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                              action.contains("type") || action.contains("driver.type"),
                              "Should generate fill-related action")
-                }
             }
         }
     }
@@ -119,14 +115,11 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 val actionDescription = textToAction.generateWebDriverAction(prompt, driver)
 
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
-                assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $prompt")
-
-                if (actionDescription.functionCalls.isNotEmpty()) {
+                assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
                     val action = actionDescription.functionCalls.first()
                     println("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("navigateTo") || action.contains("driver.navigateTo"),
                              "Should generate navigation-related action")
-                }
             }
         }
     }
@@ -148,14 +141,11 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 val actionDescription = textToAction.generateWebDriverAction(prompt, driver)
 
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
-                assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $prompt")
-
-                if (actionDescription.functionCalls.isNotEmpty()) {
+                assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
                     val action = actionDescription.functionCalls.first()
                     println("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("scroll") || action.contains("driver.scroll"),
                              "Should generate scroll-related action")
-                }
             }
         }
     }
@@ -177,14 +167,11 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 val actionDescription = textToAction.generateWebDriverAction(prompt, driver)
 
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
-                assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $prompt")
-
-                if (actionDescription.functionCalls.isNotEmpty()) {
+                assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
                     val action = actionDescription.functionCalls.first()
                     println("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("waitFor") || action.contains("driver.waitFor"),
                              "Should generate wait-related action")
-                }
             }
         }
     }
@@ -206,15 +193,12 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 val actionDescription = textToAction.generateWebDriverAction(prompt, driver)
 
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
-                assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $prompt")
-
-                if (actionDescription.functionCalls.isNotEmpty()) {
+                assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
                     val action = actionDescription.functionCalls.first()
                     println("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("check") || action.contains("driver.check") ||
                              action.contains("uncheck") || action.contains("driver.uncheck"),
                              "Should generate checkbox-related action")
-                }
             }
         }
     }
@@ -227,7 +211,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         // Should handle empty elements gracefully
-        assertTrue(actionDescription.functionCalls.size <= 1)
+        assertEquals(1, actionDescription.functionCalls.size)
     }
 
     @Test
@@ -241,7 +225,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
 
             assertNotNull(actionDescription)
             // Should handle pages with no/few interactive elements
-            assertTrue(actionDescription.functionCalls.size <= 1)
+            assertEquals(1, actionDescription.functionCalls.size)
         }
     }
 
@@ -320,7 +304,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(prompt, driver)
 
             // Test that the tool call parsing works correctly
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            
                 val action = actionDescription.functionCalls.first()
                 println("Generated tool call style action: $action")
 
@@ -328,7 +312,6 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 assertTrue(action.startsWith("driver.") || action.contains("driver."), "Should be a valid WebDriver call")
                 assertTrue(action.contains("("), "Should contain method parameters")
                 assertTrue(action.contains(")"), "Should close method parameters")
-            }
         }
     }
 
@@ -350,7 +333,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 val actionDescription = textToAction.generateWebDriverAction(prompt, driver)
 
                 assertNotNull(actionDescription, "Should handle $elementType element type for: $prompt")
-                assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $prompt")
+                assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
 
                 println("Element type $elementType, prompt: $prompt -> Generated: ${actionDescription.functionCalls}")
             }
@@ -375,7 +358,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 val actionDescription = textToAction.generateWebDriverAction(prompt, driver)
 
                 assertNotNull(actionDescription, "Should handle Chinese prompt: $prompt")
-                assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $prompt")
+                assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
 
                 println("Chinese prompt: $prompt -> Generated: ${actionDescription.functionCalls}")
             }

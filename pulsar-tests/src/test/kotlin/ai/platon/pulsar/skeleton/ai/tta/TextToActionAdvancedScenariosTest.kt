@@ -48,10 +48,9 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             println("Model response: ${actionDescription.modelResponse.content}")
 
             // Should handle complex instructions in some way
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
-            }
         }
     }
 
@@ -77,10 +76,9 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             println("Generated action: ${actionDescription.functionCalls}")
 
             // Should handle conditional logic
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
-            }
         }
     }
 
@@ -103,16 +101,13 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
 
             println("Context-aware command: $command (expected: $expectedContext)")
             println("Generated action: ${actionDescription.functionCalls}")
             println("Selected element: ${actionDescription.selectedElement}")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
-            }
         }
     }
 
@@ -133,16 +128,13 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverAction(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for: $command")
+            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
 
             println("Spatial command: $command (expected: $expectedPosition)")
             println("Generated action: ${actionDescription.functionCalls}")
             println("Selected element: ${actionDescription.selectedElement}")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
-            }
         }
     }
 
@@ -201,10 +193,9 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             println("Generated action: ${actionDescription.functionCalls}")
 
             // Should handle contradictions in some way
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
-            }
         }
     }
 
@@ -260,10 +251,9 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             println("Generated action: ${actionDescription.functionCalls}")
 
             // Should handle Unicode characters
-            if (actionDescription.functionCalls.isNotEmpty()) {
+            
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
-            }
         }
     }
 
@@ -289,11 +279,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             println("$language command: $command")
             println("Generated action: ${actionDescription.functionCalls}")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
-            }
         }
     }
 
@@ -347,11 +334,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             println("Timing command: $command")
             println("Generated action: ${actionDescription.functionCalls}")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
-            }
         }
     }
 
@@ -377,11 +361,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             println("Validation command: $command (type: $expectedType)")
             println("Generated action: ${actionDescription.functionCalls}")
-
-            if (actionDescription.functionCalls.isNotEmpty()) {
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
-            }
         }
     }
 
