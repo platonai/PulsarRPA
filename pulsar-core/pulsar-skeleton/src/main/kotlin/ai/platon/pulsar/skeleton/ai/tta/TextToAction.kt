@@ -478,6 +478,7 @@ $TOOL_CALL_LIST
     // Newly reintroduced helpers --------------------------------------------------------------
     fun extractInteractiveElements(driver: WebDriver): List<InteractiveElement> {
         return runBlocking {
+            // If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
             val result = driver.evaluate(EXTRACT_ELEMENTS_SCRIPT)
             val elements = parseInteractiveElements(result)
             // Kotlin-side safety filter: only visible interactive controls

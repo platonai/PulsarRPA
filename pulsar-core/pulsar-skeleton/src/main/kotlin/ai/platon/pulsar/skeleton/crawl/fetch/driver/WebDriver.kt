@@ -1326,6 +1326,8 @@ interface WebDriver : Closeable {
      * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
      * it is not returned.
      *
+     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
+     *
      * ```kotlin
      * val title = driver.evaluate("document.title")
      * ```
@@ -1358,6 +1360,8 @@ interface WebDriver : Closeable {
      * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
      * it is not returned.
      *
+     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
+     *
      * ```kotlin
      * val title = driver.evaluate("document.title", "Untitled")
      * ```
@@ -1371,6 +1375,8 @@ interface WebDriver : Closeable {
     /**
      * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
      * it is not returned.
+     *
+     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
      *
      * ```kotlin
      * val title = driver.evaluate("document.title")
@@ -1386,6 +1392,8 @@ interface WebDriver : Closeable {
     /**
      * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
      * it is returned as a JSON object.
+     *
+     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
      *
      * ```kotlin
      * val title = driver.evaluate("document.title")
@@ -1420,6 +1428,8 @@ interface WebDriver : Closeable {
      * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
      * it is returned as a JSON object.
      *
+     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
+     *
      * ```kotlin
      * val title = driver.evaluate("document.title", "Untitled")
      * ```
@@ -1434,6 +1444,8 @@ interface WebDriver : Closeable {
     /**
      * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
      * it is returned as a JSON object.
+     *
+     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
      *
      * ```kotlin
      * val title = driver.evaluate("document.title")
