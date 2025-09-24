@@ -12,6 +12,17 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import kotlin.test.*
 
 class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
+
+    protected suspend fun computeActiveDOMMetadata(driver: WebDriver): ActiveDOMMetadata {
+        val detail = driver.evaluateDetail("JSON.stringify(__pulsar_utils__.computeMetadata())")
+        println(detail)
+        assertNotNull(detail)
+        assertNotNull(detail.value)
+        println(detail.value)
+        val data = requireNotNull(detail.value?.toString())
+        return pulsarObjectMapper().readValue(data)
+    }
+
     @Test
     fun `When navigate to a HTML page then the navigate state are correct`() = runWebDriverTest(browser) { driver ->
         open(interactiveUrl, driver, 1)

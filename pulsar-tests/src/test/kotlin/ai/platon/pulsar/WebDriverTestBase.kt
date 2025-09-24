@@ -62,6 +62,12 @@ class WebDriverTestBase : TestWebSiteAccess() {
         webDriverService.runWebDriverTest(url, browser, block)
 
     /**
+     * Run webdriver test with the default browser.
+     * */
+    protected fun runWebDriverTest(block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runWebDriverTest(browser, block)
+
+    /**
      * Run webdriver test with a specified browser.
      * */
     protected fun runWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
@@ -72,11 +78,6 @@ class WebDriverTestBase : TestWebSiteAccess() {
      * */
     protected fun runWebDriverTest(browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
         webDriverService.runWebDriverTest(browser, block)
-
-    /**
-     * Run webdriver test with a newly created browser with a random browser profile.
-     * */
-    protected fun runWebDriverTest(block: suspend (driver: WebDriver) -> Unit) = webDriverService.runWebDriverTest(block)
 
     /**
      * Run webdriver test with a newly created browser with the given browser profile.
@@ -93,14 +94,4 @@ class WebDriverTestBase : TestWebSiteAccess() {
     protected suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) = webDriverService.open(url, driver, scrollCount)
 
     protected suspend fun openResource(url: String, driver: WebDriver, scrollCount: Int = 1) = webDriverService.openResource(url, driver, scrollCount)
-
-    protected suspend fun computeActiveDOMMetadata(driver: WebDriver): ActiveDOMMetadata {
-        val detail = driver.evaluateDetail("JSON.stringify(__pulsar_utils__.computeMetadata())")
-        println(detail)
-        assertNotNull(detail)
-        assertNotNull(detail.value)
-        println(detail.value)
-        val data = requireNotNull(detail.value?.toString())
-        return pulsarObjectMapper().readValue(data)
-    }
 }
