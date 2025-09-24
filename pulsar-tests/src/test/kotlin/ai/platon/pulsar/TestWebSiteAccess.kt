@@ -35,10 +35,11 @@ class TestWebSiteAccess : TestBase() {
 
     protected val interactiveUrl get() = "$generatedAssetsBaseURL/interactive-1.html"
 
-    protected val interactiveUrl1 get() = "$generatedAssetsBaseURL/interactive-1.html"
-    protected val interactiveUrl2 get() = "$generatedAssetsBaseURL/interactive-2.html"
-    protected val interactiveUrl3 get() = "$generatedAssetsBaseURL/interactive-3.html"
-    protected val interactiveUrl4 get() = "$generatedAssetsBaseURL/interactive-4.html"
+    protected val ttaBaseURL get() = "http://127.0.0.1:$port/generated/tta"
+    protected val ttaUrl1 get() = "$ttaBaseURL/interactive-1.html"
+    protected val ttaUrl2 get() = "$ttaBaseURL/interactive-2.html"
+    protected val ttaUrl3 get() = "$ttaBaseURL/interactive-3.html"
+    protected val ttaUrl4 get() = "$ttaBaseURL/interactive-4.html"
 
     protected val multiScreensInteractiveUrl get() = "$generatedAssetsBaseURL/interactive-screens.html"
 

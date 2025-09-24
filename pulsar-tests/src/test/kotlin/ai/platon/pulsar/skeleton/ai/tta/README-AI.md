@@ -276,5 +276,11 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 - 收集和分类边界用例
 - 建立回归测试基准
 
+## 人类评审员意见
+
+- 避免使用 `https://example.com` 作为测试站点，测试站点必须使用本地 Mock Server，保证测试网页内容可控，交互响应可控
+- 生成的代码中优先使用英文，包括注释、字符串、模拟数据等。
+
+
 ---
 > 💡 **提示**: 本文档应随功能演进更新。发现覆盖盲区请优先：登记差距 → 设计页面 → 编写用例 → 更新能力表。
