@@ -280,7 +280,7 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 
 - 避免使用 `https://example.com` 作为测试站点，测试站点必须使用本地 Mock Server，保证测试网页内容可控，交互响应可控
 - 生成的代码中优先使用英文，包括注释、字符串、模拟数据等。
-- 
+- 重新设计本文件所有测试。本文件将详细测试textToAction.extractInteractiveElements方法，而不必测试generateWebDriverAction方法。
 
 
 ---
