@@ -478,8 +478,17 @@ $TOOL_CALL_LIST
     // Newly reintroduced helpers --------------------------------------------------------------
     fun extractInteractiveElements(driver: WebDriver): List<InteractiveElement> {
         return runBlocking {
-            val result = driver.evaluate(extractElementsScript)
-            parseInteractiveElements(result)
+            val result = driver.evaluate(EXTRACT_ELEMENTS_SCRIPT)
+            val elements = parseInteractiveElements(result)
+            // Kotlin-side safety filter: only visible interactive controls
+            val filtered = elements.filter { e ->
+                val tag = e.tagName.lowercase()
+                e.isVisible && (
+                    tag == "input" || tag == "select" || tag == "textarea" || tag == "button" || (tag == "a" && !e.href.isNullOrBlank())
+                )
+            }
+            // Deduplicate by selector to avoid duplicates from complex pages
+            filtered.distinctBy { it.selector }
         }
     }
 
@@ -524,20 +533,105 @@ suspend fun llmGeneratedFunction(session: PulsarSession) {
 ```
         """.trimIndent()
 
-        private val extractElementsScript = """
-Array.from(document.querySelectorAll('*')).map(el => ({
-    id: el.id,
-    tagName: el.tagName,
-    selector: el.tagName.toLowerCase() + (el.id ? ('#' + el.id) : ''),
-    text: el.innerText || '',
-    type: el.type || null,
-    href: el.href || null,
-    className: el.className || null,
-    placeholder: el.placeholder || null,
-    value: el.value || null,
-    isVisible: !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length),
-    bounds: el.getBoundingClientRect()
-}));
+        val EXTRACT_ELEMENTS_SCRIPT = """
+    // JavaScript code to extract truly interactive elements from the page
+    (function() {
+        // Basic CSS.escape polyfill
+        if (typeof window.CSS === 'undefined') { window.CSS = {}; }
+        if (!window.CSS.escape) {
+            window.CSS.escape = function(value) {
+                if (value == null) return '';
+                return String(value).replace(/([#.:\[\]"'\\\s>+~])/g, '\\$1');
+            };
+        }
+
+        const isVisible = (el) => {
+            const style = window.getComputedStyle(el);
+            if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+            const rect = el.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+        };
+
+        const isDisabled = (el) => el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true';
+
+        const buildSelector = (el) => {
+            const tag = el.tagName.toLowerCase();
+            if (el.id) return '#' + CSS.escape(el.id);
+            const testId = el.getAttribute('data-testid');
+            if (testId) return `[data-testid="${'$'}{CSS.escape(testId)}"]`;
+            const nameAttr = el.getAttribute('name');
+            if (nameAttr) return `${'$'}{tag}[name="${'$'}{CSS.escape(nameAttr)}"]`;
+            if (el.hasAttribute('onclick')) {
+                const oc = el.getAttribute('onclick').replace(/"/g, '\\"');
+                return `${'$'}{tag}[onclick="${'$'}{oc}"]`;
+            }
+            if (tag === 'a' && el.getAttribute('href')) {
+                const href = el.getAttribute('href').replace(/"/g, '\\"');
+                return `a[href="${'$'}{href}"]`;
+            }
+            const typeAttr = el.getAttribute('type');
+            if (typeAttr) return `${'$'}{tag}[type="${'$'}{CSS.escape(typeAttr)}"]`;
+            // Fallback to nth-of-type path
+            let path = tag;
+            let node = el;
+            while (node && node.parentElement) {
+                const parent = node.parentElement;
+                if (parent.id) {
+                    const idx = Array.from(parent.children).filter(c => c.tagName === node.tagName).indexOf(node) + 1;
+                    path = parent.tagName.toLowerCase() + '#' + CSS.escape(parent.id) + ' > ' + node.tagName.toLowerCase() + `:nth-of-type(${ '$' }{idx})`;
+                    break;
+                } else {
+                    const idx = Array.from(parent.children).filter(c => c.tagName === node.tagName).indexOf(node) + 1;
+                    path = parent.tagName.toLowerCase() + ' > ' + node.tagName.toLowerCase() + `:nth-of-type(${ '$' }{idx})`;
+                }
+                node = parent;
+            }
+            return path;
+        };
+
+        const candidates = new Set();
+        // Form controls and standard interactive elements
+        document.querySelectorAll('input, textarea, select, button, a[href]').forEach(el => candidates.add(el));
+        // Elements with explicit interactivity
+        document.querySelectorAll('[onclick], [contenteditable="true"], [role="button"], [role="link"]').forEach(el => candidates.add(el));
+
+        const interactiveTags = new Set(['INPUT','TEXTAREA','SELECT','BUTTON','A']);
+        const hiddenInputTypes = new Set(['hidden']);
+
+        const elements = [];
+        candidates.forEach(el => {
+            const tag = el.tagName;
+            const type = (el.getAttribute('type') || '').toLowerCase();
+            if (!isVisible(el)) return;
+            if (isDisabled(el)) return;
+            if (tag === 'INPUT' && hiddenInputTypes.has(type)) return;
+
+            // Accept if it's a known interactive tag or has onclick/contenteditable/role
+            const hasInteractiveRole = el.hasAttribute('onclick') || el.getAttribute('contenteditable') === 'true' || ['button','link'].includes((el.getAttribute('role')||'').toLowerCase());
+            const isStandardInteractive = interactiveTags.has(tag) && (tag !== 'A' || el.hasAttribute('href'));
+            if (!hasInteractiveRole && !isStandardInteractive) return;
+
+            const selector = buildSelector(el);
+            const bounds = el.getBoundingClientRect();
+            elements.push({
+                id: el.id || '',
+                tagName: tag,
+                selector: selector,
+                text: (el.innerText || '').trim(),
+                type: el.getAttribute('type') || null,
+                href: el.getAttribute('href') || null,
+                className: el.className || null,
+                placeholder: el.getAttribute('placeholder') || null,
+                value: (el.value !== undefined ? String(el.value) : null),
+                isVisible: true,
+                bounds: { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }
+            });
+        });
+
+        // Deduplicate by selector
+        const seen = new Set();
+        return elements.filter(e => !seen.has(e.selector) && seen.add(e.selector));
+    })();
 """.trimIndent()
     }
 }
