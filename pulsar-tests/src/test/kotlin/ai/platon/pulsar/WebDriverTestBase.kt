@@ -52,8 +52,6 @@ class WebDriverTestBase : TestWebSiteAccess() {
 
     open val webDriverService get() = WebDriverService(browserFactory)
 
-//    val browser get() = webDriverService.browser
-
     protected val expressions = """
             typeof(window)
             
