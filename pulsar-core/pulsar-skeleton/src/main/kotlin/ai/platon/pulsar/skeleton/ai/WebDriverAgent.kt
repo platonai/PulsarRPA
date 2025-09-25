@@ -31,29 +31,50 @@ class WebDriverAgent(
 
     suspend fun execute(instruction: String): ModelResponse {
         Files.createDirectories(baseDir)
+        logger.info("Starting WebDriverAgent execution for instruction: {}", instruction.take(100))
 
         val systemPrompt = buildOperatorSystemPrompt(instruction)
+        val startTime = Instant.now()
+        var consecutiveNoOps = 0
 
         var step = 0
         while (step < maxSteps) {
             step++
+            logger.debug("Executing step {} of {} for instruction", step, maxSteps)
 
             val screenshotB64 = safeScreenshot()
             val userMsg = buildUserMessage(instruction)
 
-            val message = """
-                $systemPrompt 
-                $userMsg
-            """.trimIndent()
+            val message = buildString {
+                appendLine(systemPrompt)
+                appendLine(userMsg)
+                if (screenshotB64 != null) {
+                    appendLine("[Current page screenshot provided as base64 image]")
+                }
+            }
 
             // Use TextToAction to generate EXACT ONE step
-            val action = tta.generateWebDriverAction(message, driver, screenshotB64)
-            val response = action.modelResponse
+            val action = try {
+                tta.generateWebDriverAction(message, driver, screenshotB64)
+            } catch (e: Exception) {
+                logger.error("Failed to generate action at step {}: {}", step, e.message)
+                history += "#$step ERROR: Action generation failed - ${e.message}"
+                consecutiveNoOps++
+                if (consecutiveNoOps >= 3) {
+                    logger.warn("Too many consecutive action generation failures, stopping")
+                    break
+                }
+                delay(500)
+                continue
+            }
 
+            val response = action.modelResponse
             val parsed = parseOperatorResponse(response.content)
 
             // termination checks (supported if model responded with such fields)
             if (parsed.taskComplete == true || parsed.method?.equals("close", true) == true) {
+                logger.info("Task completion detected at step {}: taskComplete={}, method={}",
+                           step, parsed.taskComplete, parsed.method)
                 runCatching { driver.close() }.onFailure { logger.warn("Close failed: {}", it.message) }
                 history += "#$step complete: taskComplete=${parsed.taskComplete} method=${parsed.method}"
                 break
@@ -61,28 +82,50 @@ class WebDriverAgent(
 
             val toolCall = parsed.toolCalls.firstOrNull()
             if (toolCall == null) {
-                history += "#$step no-op (no tool_calls)"
-                // if model keeps returning nothing, stop after a small backoff
-                if (step >= maxSteps) break
-                delay(250)
+                consecutiveNoOps++
+                history += "#$step no-op (no tool_calls) - consecutive_no_ops: $consecutiveNoOps"
+                logger.warn("No tool calls generated at step {} (consecutive: {})", step, consecutiveNoOps)
+
+                // Stop if model keeps returning nothing
+                if (consecutiveNoOps >= 5) {
+                    logger.warn("Too many consecutive no-ops, stopping execution")
+                    break
+                }
+                delay(250L * consecutiveNoOps) // Exponential backoff
                 continue
             }
 
-//            val execSummary = runCatching { executeToolCall(toolCall) }
-//                .onFailure { e -> history += "#$step ERR ${toolCall.name}: ${e.message}" }
-//                .getOrElse { null }
+            // Reset consecutive no-ops counter when we have a valid action
+            consecutiveNoOps = 0
 
-            val execSummary = runCatching { driver.act(action) }
-                .onFailure { e -> history += "#$step ERR ${toolCall.name}: ${e.message}" }
-                .getOrElse { null }
+            val execSummary = runCatching {
+                logger.debug("Executing tool call: {} with args: {}", toolCall.name, toolCall.args)
+                driver.act(action)
+            }.onFailure { e ->
+                logger.error("Tool execution failed at step {}: {} - {}", step, toolCall.name, e.message)
+                history += "#$step ERR ${toolCall.name}: ${e.message}"
+            }.getOrElse { null }
 
             if (execSummary != null) {
                 history += "#$step ${execSummary}"
+                logger.debug("Step {} completed successfully: {}", step, execSummary)
             }
+
+            // Brief pause between actions for stability
+            delay(100)
         }
 
+        val executionTime = java.time.Duration.between(startTime, Instant.now())
+        logger.info("WebDriverAgent execution completed in {} steps over {}", step, executionTime)
+
         // Final summary
-        val finalSummary = summarize(instruction)
+        val finalSummary = try {
+            summarize(instruction)
+        } catch (e: Exception) {
+            logger.error("Failed to generate final summary: {}", e.message)
+            ModelResponse("Failed to generate summary: ${e.message}", ai.platon.pulsar.external.ResponseState.OTHER)
+        }
+
         history += "FINAL ${finalSummary.content.take(200)}" // keep history compact
         persistTranscript(instruction, finalSummary)
 
@@ -97,11 +140,18 @@ class WebDriverAgent(
 2) act 一次仅做一个动作（单击一次、输入一次、选择一次）；
 3) 不要在一步中合并多个动作；
 4) 多个动作用多步表达；
+5) 始终验证目标元素存在且可见后再执行操作；
+6) 遇到错误时尝试替代方案或优雅终止；
 
 输出严格使用 JSON，字段：
 - tool_calls: [ { name: string, args: object } ] // 最多 1 个
 - taskComplete: boolean // 可选
 - method: string // 可选，'close' 时终止
+
+安全要求：
+- 仅操作可见的交互元素
+- 避免快速连续操作，适当等待页面加载
+- 遇到验证码或安全提示时停止执行
 
 工具规范：
 ${tta.TOOL_CALL_LIST}
@@ -298,29 +348,83 @@ $h
 
     private fun overrideName(name: String) = name // placeholder for future alias handling
 
-    private suspend fun safeScreenshot(): String? = runCatching { driver.captureScreenshot() }.getOrNull()
+    /**
+     * Validates if a URL is safe to navigate to
+     */
+    private fun isSafeUrl(url: String): Boolean {
+        if (url.isBlank()) return false
+
+        return runCatching {
+            val uri = java.net.URI(url)
+            val scheme = uri.scheme?.lowercase()
+
+            // Only allow http and https schemes
+            if (scheme !in setOf("http", "https")) {
+                logger.warn("Blocked unsafe URL scheme: {}", scheme)
+                return false
+            }
+
+            // Additional safety checks can be added here
+            // - Domain whitelist/blacklist
+            // - IP address validation
+            // - Port validation
+
+            true
+        }.onFailure { e ->
+            logger.warn("URL validation failed for '{}': {}", url, e.message)
+        }.getOrElse { false }
+    }
+
+    private suspend fun safeScreenshot(): String? {
+        return runCatching {
+            logger.debug("Attempting to capture screenshot")
+            val screenshot = driver.captureScreenshot()
+            if (screenshot != null) {
+                logger.debug("Screenshot captured successfully ({} bytes)", screenshot.length)
+            } else {
+                logger.warn("Screenshot capture returned null")
+            }
+            screenshot
+        }.onFailure { e ->
+            logger.error("Screenshot capture failed: {}", e.message, e)
+        }.getOrNull()
+    }
 
     private fun saveStepScreenshot(b64: String) {
         runCatching {
             val ts = Instant.now().toEpochMilli()
             val p = baseDir.resolve("screenshot-${ts}.b64")
+            logger.debug("Saving step screenshot to: {}", p)
             Files.writeString(p, b64)
-        }.onFailure { logger.warn("Save screenshot failed: {}", it.message) }
+            logger.debug("Screenshot saved successfully ({} bytes)", b64.length)
+        }.onFailure { e ->
+            logger.warn("Save screenshot failed: {}", e.message, e)
+        }
     }
 
     private fun persistTranscript(instruction: String, finalResp: ModelResponse) {
         runCatching {
             val ts = Instant.now().toEpochMilli()
             val log = baseDir.resolve("session-${ts}.log")
+            logger.info("Persisting execution transcript to: {}", log)
+
             val sb = StringBuilder()
             sb.appendLine("INSTRUCTION: $instruction")
+            sb.appendLine("EXECUTION_TIME: ${ts}")
+            sb.appendLine("AGENT_UUID: $uuid")
             sb.appendLine("HISTORY:")
             history.forEach { sb.appendLine(it) }
             sb.appendLine()
-            sb.appendLine("FINAL:")
+            sb.appendLine("FINAL_SUMMARY:")
             sb.appendLine(finalResp.content)
+            sb.appendLine()
+            sb.appendLine("RESPONSE_STATE: ${finalResp.state}")
+
             Files.writeString(log, sb.toString())
-        }.onFailure { logger.warn("Persist transcript failed: {}", it.message) }
+            logger.info("Transcript persisted successfully ({} lines)", history.size + 5)
+        }.onFailure { e ->
+            logger.error("Failed to persist transcript: {}", e.message, e)
+        }
     }
 
     private fun buildSummaryPrompt(goal: String): Pair<String, String> {

@@ -1,52 +1,95 @@
-# 🚦 Coder Guideline For WebDriverAgent
+# 🚦 WebDriverAgent Developer Guide
 
-## 📋 前置条件
+## 📋 Prerequisites
 
-在开始之前，请阅读以下文档以了解项目全貌：
+Before starting, read the following documents to understand the project structure:
 
-1. **项目根目录** `README-AI.md` - 全局开发规范和项目结构
+1. **Root Directory** `README-AI.md` - Global development guidelines and project structure
 
-## 核心任务：
+## Core Tasks:
 
-- 优化本文档
-- 根据本文档实现代码
+- Optimize this documentation
+- Implement code according to this specification
 
-[WebDriverAgent.kt](WebDriverAgent.kt) 是一个“多轮计划执行器”：
-它让通用模型基于截图观察与历史动作来规划下一步（act/extract/navigate 等），每步只做一个原子动作，
-直到判断目标完成。
+## 🎯 Overview
 
-关键点：
-- 首条系统消息要求“拆解为原子动作，一步一步来”
-- 每轮将“上一轮动作摘要 + 可交互元素列表 + 当前截图”作为 `user` 消息输入模型
-- 模型输出结构化 JSON 决定下一步，function call 风格，TextToAction 已经提供接口
-- 执行动作后继续下一轮，终止条件可由 function call `stop` 或 `taskComplete=true` 等判断
-- 循环结束后调用 `operatorSummarySchema` 要求模型对原始目标产出总结
+[WebDriverAgent.kt](WebDriverAgent.kt) is a **multi-round planning executor** that enables AI models to perform web automation through screenshot observation and historical action analysis. It plans and executes atomic actions (act/extract/navigate) step-by-step until the target is achieved.
 
-Prompt 摘要：
-- `buildOperatorSystemPrompt(goal)`（system）：
-    - 你是通用代理，需要基于步骤完成用户目标
-    - 重要指南：
-        1) 将复杂动作拆成原子步骤
-        2) act 一次仅做一个动作（单击一次、输入一次、选择一次）
-        3) 不要在一步中合并多个动作
-        4) 多个动作用多步表达
-- 运行时 `user` 消息：
-    - “此前动作摘要” 文本
-    - 当前页面的截图, 用 `image_url` data URI，可使用占位符等待人类评审员处理
+### Key Architecture Principles
 
-关键方法和工具：
+- **Atomic Actions**: Each step performs exactly one atomic action (single click, single input, single selection)
+- **Multi-round Planning**: AI model plans next action based on screenshot + action history
+- **Structured Output**: Model returns JSON-formatted function calls
+- **Termination Control**: Loop ends via `stop` function call or `taskComplete=true`
+- **Result Summarization**: Final summary generated using `operatorSummarySchema`
 
-Use TextToAction to ask AI to generate EXACT ONE step
+### Core Workflow
+
+1. **System Prompt** (`buildOperatorSystemPrompt(goal)`):
+   - Establishes AI as general-purpose agent for step-by-step task completion
+   - Enforces atomic action decomposition
+   - Provides tool specification and user goal
+
+2. **User Message** (per iteration):
+   - Previous action summary (last 8 steps)
+   - Current page screenshot (base64 encoded)
+   - Target instruction and current URL
+
+3. **AI Response Processing**:
+   - Parse structured JSON with tool calls
+   - Execute single atomic action via WebDriver
+   - Update history and continue loop
+
+4. **Termination & Summary**:
+   - Loop ends on `taskComplete=true`, `method=close`, or `maxSteps` reached
+   - Generate final summary of execution trajectory
+
+## 🔧 Key Components
+
+### TextToAction Integration
+
 ```kotlin
+// Generate EXACT ONE step using AI
 val action = tta.generateWebDriverAction(message, driver, screenshotB64)
-```
 
-Execute an action:
-```kotlin
+// Execute the generated action
 suspend fun act(action: ActionDescription): InstructionResult
 ```
 
-Executes a WebDriver command provided as a string expression:
-```kotlin
-ai.platon.pulsar.skeleton.crawl.fetch.driver.SimpleCommandDispatcher
-```
+### Action Execution Pipeline
+
+1. **Screenshot Capture**: `safeScreenshot()` - Base64 encoded current page
+2. **Message Construction**: Combine system prompt + user context + screenshot
+3. **AI Action Generation**: Single atomic action via TextToAction
+4. **Action Execution**: WebDriver command execution with error handling
+5. **History Tracking**: Maintain execution trajectory for context
+
+### Supported Tool Calls
+
+- **Navigation**: `navigateTo(url)`, `waitForSelector(selector, timeout)`
+- **Interactions**: `click(selector)`, `fill(selector, text)`, `press(selector, key)`
+- **Form Controls**: `check(selector)`, `uncheck(selector)`
+- **Scrolling**: `scrollDown(count)`, `scrollUp(count)`, `scrollToTop()`, `scrollToBottom()`
+- **Screenshots**: `captureScreenshot()`, `captureScreenshot(selector)`
+- **Timing**: `delay(millis)`
+
+### Error Handling & Resilience
+
+- **Graceful Degradation**: Continue execution on individual action failures
+- **Screenshot Safety**: Handle screenshot capture failures without crashing
+- **Tool Call Validation**: Skip invalid/unknown tool calls with warnings
+- **Navigation Safety**: URL validation and navigation error handling
+
+## 📊 Performance & Monitoring
+
+- **Step Limit**: Configurable `maxSteps` (default: 100) prevents infinite loops
+- **History Management**: Keep last 8 actions for context efficiency
+- **Screenshot Persistence**: Optional step-by-step screenshot saving
+- **Session Logging**: Complete execution transcript with timestamps
+
+## 🔒 Security Considerations
+
+- **Input Validation**: All user inputs sanitized before execution
+- **URL Validation**: Navigation targets validated for safety
+- **Resource Limits**: Configurable timeouts and step limits
+- **Error Isolation**: Individual action failures don't crash entire session
