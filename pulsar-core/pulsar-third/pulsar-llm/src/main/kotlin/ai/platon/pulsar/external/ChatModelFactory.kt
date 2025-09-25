@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.logging.ThrottlingLogger
 import ai.platon.pulsar.common.warn
 import ai.platon.pulsar.external.impl.ChatModelImpl
 import dev.langchain4j.model.openai.OpenAiChatModel
-import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -201,7 +200,6 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
         logger.info("Creating LLM with provider and model name | {} {} {}", provider, modelName, encodeSecretKey(apiKey))
 
         return when (provider) {
-            "zhipu" -> createZhipuChatModel(apiKey, conf)
             "bailian" -> createBaiLianChatModel(modelName, apiKey, conf)
             "deepseek" -> createDeepSeekChatModel(modelName, apiKey, conf)
             "volcengine" -> createVolcengineChatModel(modelName, apiKey, conf)
@@ -227,16 +225,6 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
 
 
 
-        return ChatModelImpl(lm, conf)
-    }
-
-    private fun createZhipuChatModel(apiKey: String, conf: ImmutableConfig): ChatModel {
-        val lm = ZhipuAiChatModel.builder()
-            .apiKey(apiKey)
-            .logRequests(true)
-            .logResponses(true)
-            .maxRetries(2)
-            .build()
         return ChatModelImpl(lm, conf)
     }
 

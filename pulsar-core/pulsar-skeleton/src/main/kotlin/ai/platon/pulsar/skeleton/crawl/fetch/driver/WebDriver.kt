@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import com.google.common.annotations.Beta
 import org.jsoup.Connection
@@ -125,10 +126,12 @@ interface WebDriver : Closeable {
      * The driver id.
      * */
     val id: Int
+
     /**
      * The parent driver id.
      * */
     val parentSid: Int
+
     /**
      * The browser of the driver.
      * The browser defines methods and events to manipulate a real browser.
@@ -392,6 +395,7 @@ interface WebDriver : Closeable {
      * @return The response from the model
      */
     suspend fun chat(prompt: String, selector: String): ModelResponse
+
     /**
      * Instructs the webdriver to perform EXACT ONE action based on the given prompt.
      * This function converts the prompt into EXACT ONE webdriver action, which will then be executed.
@@ -401,6 +405,16 @@ interface WebDriver : Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun act(prompt: String): InstructionResult
+
+    /**
+     * Instructs the webdriver to perform EXACT ONE action based on the given prompt.
+     * This function converts the prompt into EXACT ONE webdriver action, which will then be executed.
+     *
+     * @param action The action description that describes the action to be performed by the webdriver.
+     * @return The response from the model, though in this implementation, the return value is not explicitly used.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun act(action: ActionDescription): InstructionResult
 
     /**
      * Instructs the webdriver to perform a series of actions based on the given prompt.

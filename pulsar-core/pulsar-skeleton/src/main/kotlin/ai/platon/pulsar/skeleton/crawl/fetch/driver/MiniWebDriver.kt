@@ -20,16 +20,6 @@ interface MiniWebDriver {
     suspend fun getCookies(): List<Map<String, String>>
 
     /**
-     * @param name Name of the cookies to remove.
-     * @param url If specified, deletes all the cookies with the given name where domain and path match provided URL.
-     * @param domain If specified, deletes only cookies with the exact domain.
-     * @param path If specified, deletes only cookies with the exact path.
-     */
-    suspend fun deleteCookies(name: String, url: String? = null, domain: String? = null, path: String? = null)
-
-    suspend fun clearBrowserCookies()
-
-    /**
      * @param timeoutMillis The maximum time to wait for the element to become present.
      * @return The remaining time until timeout when the element becomes present.
      */
@@ -246,20 +236,6 @@ interface MiniWebDriver {
     suspend fun selectAttributeAll(selector: String, attrName: String, start: Int = 0, limit: Int = 10000): List<String>
 
     /**
-     * @param selector The CSS query to select an element.
-     * @param attrName The attribute name to set.
-     * @param attrValue The attribute value to set.
-     */
-    suspend fun setAttribute(selector: String, attrName: String, attrValue: String)
-
-    /**
-     * @param selector The CSS query to select elements.
-     * @param attrName The attribute name to set.
-     * @param attrValue The attribute value to set.
-     */
-    suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String)
-
-    /**
      * @param selector The selector to locate the node.
      * @param propName The property name to retrieve.
      * @return The property value of the node.
@@ -281,20 +257,6 @@ interface MiniWebDriver {
     ): List<String>
 
     /**
-     * @param selector The CSS query to select an element.
-     * @param propName The property name to set.
-     * @param propValue The property value to set.
-     */
-    suspend fun setProperty(selector: String, propName: String, propValue: String)
-
-    /**
-     * @param selector The CSS query to select elements.
-     * @param propName The property name to set.
-     * @param propValue The property value to set.
-     */
-    suspend fun setPropertyAll(selector: String, propName: String, propValue: String)
-
-    /**
      * @param selector The CSS query to select elements.
      * @param offset The offset of the first element to select.
      * @param limit The maximum number of elements to select.
@@ -309,18 +271,6 @@ interface MiniWebDriver {
      * @return The image URLs.
      */
     suspend fun selectImages(selector: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String>
-
-    /**
-     * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or null.
-     */
-    suspend fun evaluate(expression: String): Any?
-
-    /**
-     * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or JSON values (if it was requested).
-     */
-    suspend fun evaluateValue(expression: String): Any?
 
     /**
      * @return The screenshot of the element in base64 format.

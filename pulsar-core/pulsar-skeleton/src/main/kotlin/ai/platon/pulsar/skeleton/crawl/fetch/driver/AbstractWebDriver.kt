@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -302,24 +303,31 @@ abstract class AbstractWebDriver(
     override suspend fun act(prompt: String): InstructionResult {
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(config)
-        val actions = tta.generateWebDriverAction(prompt, this)
-        if (actions.functionCalls.isEmpty()) {
-            return InstructionResult(listOf(), listOf(), actions.modelResponse)
+        val action = tta.generateWebDriverAction(prompt, this)
+
+        return act(action)
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun act(action: ActionDescription): InstructionResult {
+        if (action.functionCalls.isEmpty()) {
+            return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
-        val functionCalls = actions.functionCalls.take(1)
+        val functionCalls = action.functionCalls.take(1)
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
         val dispatcher = SimpleCommandDispatcher()
         val functionResults = functionCalls.map { action ->
             dispatcher.execute(action, this)
         }
-        return InstructionResult(actions.functionCalls, functionResults, actions.modelResponse)
+        return InstructionResult(action.functionCalls, functionResults, action.modelResponse)
     }
 
     @Throws(WebDriverException::class)
     override suspend fun instruct(prompt: String): InstructionResult {
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(config)
+
         val actions = tta.generateWebDriverActionsWithToolCallSpecs(prompt)
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.

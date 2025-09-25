@@ -55,6 +55,9 @@ data class ActionDescription(
     val selectedElement: InteractiveElement?,
     val modelResponse: ModelResponse,
 ) {
+    companion object {
+        val LLM_NOT_AVAILABLE = ActionDescription(listOf(), null, ModelResponse.LLM_NOT_AVAILABLE)
+    }
 }
 
 data class InstructionResult(
@@ -71,19 +74,9 @@ data class InstructionResult(
     }
 }
 
-data class WebDriverMethodInfo(
-    val methodSignature: String,
-    val fullDescription: String
-)
-
-data class MethodSelectionResult(
-    val selectedMethods: List<String>,
-    val modelResponse: ModelResponse
-)
-
-class TextToAction(val conf: ImmutableConfig) {
+open class TextToAction(val conf: ImmutableConfig) {
     private val logger = getLogger(this)
-    private val model = ChatModelFactory.getOrCreateOrNull(conf)
+    protected val model = ChatModelFactory.getOrCreateOrNull(conf)
 
     val baseDir = AppPaths.get("tta")
 
@@ -94,21 +87,27 @@ class TextToAction(val conf: ImmutableConfig) {
         private set
 
     val TOOL_CALL_LIST = """
+- navigateTo(url: String)
+- waitForSelector(selector: String, timeoutMillis: Long = 5000)
 - click(selector: String)
 - fill(selector: String, text: String)
-- navigateTo(url: String)
-- scrollDown(count: Int = 1)
-- scrollUp(count: Int = 1)
-- scrollToMiddle(ratio: Double = 0.5)
-- waitForSelector(selector: String, timeoutMillis: Long = 5000)
+- press(selector: String, key: String)
 - check(selector: String)
 - uncheck(selector: String)
+- scrollDown(count: Int = 1)
+- scrollUp(count: Int = 1)
+- scrollToTop()
+- scrollToBottom()
+- scrollToMiddle(ratio: Double = 0.5)
+- captureScreenshot()
+- captureScreenshot(selector: String)
+- delay(millis: Long)
     """.trimIndent()
 
     // Tool-use helpers -------------------------------------------------------------------------
     internal data class ToolCall(val name: String, val args: Map<String, Any?>)
 
-    private fun buildToolUsePrompt(
+    protected fun buildToolUsePrompt(
         userPrompt: String,
         interactiveElements: List<InteractiveElement>,
         toolCallLimit: Int = 100,
@@ -148,6 +147,105 @@ $TOOL_CALL_LIST
         }
 
         return prompt
+    }
+
+    init {
+        Files.createDirectories(baseDir)
+
+        LLMUtils.copyWebDriverFile(webDriverSourceCodeFile)
+        webDriverSourceCode = Files.readAllLines(webDriverSourceCodeFile)
+            .filter { it.contains(" fun ") }
+            .joinToString("\n")
+        webDriverSourceCodeUseMessage = PromptTemplate(WEB_DRIVER_SOURCE_CODE_USE_MESSAGE_TEMPLATE)
+            .render(mapOf("webDriverSourceCode" to webDriverSourceCode))
+    }
+
+    /**
+     * Generate EXACT ONE WebDriver action with interactive elements.
+     *
+     * @param command The action description with plain text
+     * @param driver The driver to use to collect the context, such as interactive elements
+     * @return The action description
+     * */
+    open fun generateWebDriverAction(
+        command: String,
+        driver: WebDriver,
+        screenshotB64: String? = null,
+    ): ActionDescription {
+        try {
+            val interactiveElements = extractInteractiveElements(driver)
+
+            return generateWebDriverAction(command, interactiveElements, screenshotB64)
+        } catch (e: Exception) {
+            val errorResponse = ModelResponse("""
+                suspend fun llmGeneratedFunction(driver: WebDriver) {
+                    // Error occurred during optimization: ${e.message}
+                }
+            """.trimIndent(), ResponseState.OTHER)
+            return ActionDescription(emptyList(), null, errorResponse)
+        }
+    }
+
+    /**
+     * Generate EXACT ONE WebDriver action with interactive elements.
+     *
+     * @param command The action description with plain text
+     * @param driver The driver to use to collect the context, such as interactive elements
+     * @return The action description
+     * */
+    open fun generateWebDriverAction(
+        command: String,
+        interactiveElements: List<InteractiveElement> = listOf(),
+        screenshotB64: String? = null
+    ): ActionDescription {
+        return generateWebDriverActionsWithToolCallSpecs(command, interactiveElements, screenshotB64, 1)
+    }
+
+    open fun generateWebDriverActionsWithToolCallSpecs(
+        command: String,
+        interactiveElements: List<InteractiveElement> = listOf(),
+        screenshotB64: String? = null,
+        toolCallLimit: Int = 100,
+    ): ActionDescription {
+        if (model == null) {
+            return ActionDescription(listOf(), null, ModelResponse.LLM_NOT_AVAILABLE)
+        }
+
+        val toolPrompt = buildToolUsePrompt(command, interactiveElements, toolCallLimit)
+        val response = if (screenshotB64 != null) {
+            model.call(toolPrompt, "", screenshotB64, "image/jpeg")
+        } else {
+            model.call(toolPrompt)
+        }
+        return modelResponseToActionDescription(response, toolCallLimit)
+    }
+
+    open fun generateWebDriverActionsWithSourceCode(
+        command: String,
+        interactiveElements: List<InteractiveElement> = listOf()
+    ): ModelResponse {
+        val prompt = buildString {
+            appendLine(webDriverSourceCodeUseMessage)
+
+            if (interactiveElements.isNotEmpty()) {
+                appendLine("可交互元素列表：")
+                interactiveElements.forEach { appendLine(it) }
+            }
+
+            appendLine(command)
+        }
+
+        return model?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
+    }
+
+    protected fun modelResponseToActionDescription(response: ModelResponse, toolCallLimit: Int = 1): ActionDescription {
+        val toolCalls = parseToolCalls(response.content).take(toolCallLimit)
+        val functionCalls = if (toolCalls.isNotEmpty()) {
+            toolCalls.mapNotNull { toolCallToDriverLine(it) }
+        } else {
+            response.content.split("\n").map { it.trim() }.filter { it.startsWith("driver.") && it.contains("(") }
+        }
+        return ActionDescription(functionCalls, null, response)
     }
 
     // Proper JSON parsing with Gson instead of ad-hoc regex
@@ -195,100 +293,49 @@ $TOOL_CALL_LIST
     }
 
     internal fun toolCallToDriverLine(tc: ToolCall): String? = when (tc.name) {
+        // Navigation
+        "navigateTo" -> tc.args["url"]?.let { "driver.navigateTo(\"$it\")" }
+        // Backward compatibility for older prompts
+        "goto" -> tc.args["url"]?.let { "driver.navigateTo(\"$it\")" }
+        // Wait
+        "waitForSelector" -> tc.args["selector"]?.let { sel -> "driver.waitForSelector(\"$sel\", ${(tc.args["timeoutMillis"] ?: 5000)}L)" }
+        // Basic interactions
         "click" -> tc.args["selector"]?.let { "driver.click(\"$it\")" }
         "fill" -> tc.args["selector"]?.let { s -> "driver.fill(\"$s\", \"${tc.args["text"] ?: ""}\")" }
-        "navigateTo" -> tc.args["url"]?.let { "driver.navigateTo(\"$it\")" }
-        "scrollDown" -> "driver.scrollDown(${tc.args["count"] ?: 1})"
-        "scrollUp" -> "driver.scrollUp(${tc.args["count"] ?: 1})"
-        "scrollToMiddle" -> "driver.scrollToMiddle(${tc.args["ratio"] ?: 0.5})"
-        "waitForSelector" -> tc.args["selector"]?.let { sel -> "driver.waitForSelector(\"$sel\", ${(tc.args["timeoutMillis"] ?: 5000)}L)" }
+        "press" -> tc.args["selector"]?.let { s -> tc.args["key"]?.let { k -> "driver.press(\"$s\", \"$k\")" } }
         "check" -> tc.args["selector"]?.let { "driver.check(\"$it\")" }
         "uncheck" -> tc.args["selector"]?.let { "driver.uncheck(\"$it\")" }
+        // Scrolling
+        "scrollDown" -> "driver.scrollDown(${tc.args["count"] ?: 1})"
+        "scrollUp" -> "driver.scrollUp(${tc.args["count"] ?: 1})"
+        "scrollToTop" -> "driver.scrollToTop()"
+        "scrollToBottom" -> "driver.scrollToBottom()"
+        "scrollToMiddle" -> "driver.scrollToMiddle(${tc.args["ratio"] ?: 0.5})"
+        "scrollToScreen" -> tc.args["screenNumber"]?.let { n -> "driver.scrollToScreen(${n})" }
+        // Advanced clicks
+        "clickTextMatches" -> tc.args["selector"]?.let { s ->
+            val pattern = tc.args["pattern"] ?: return@let null
+            val count = tc.args["count"] ?: 1
+            "driver.clickTextMatches(\"$s\", \"$pattern\", $count)"
+        }
+        "clickMatches" -> tc.args["selector"]?.let { s ->
+            val attr = tc.args["attrName"] ?: return@let null
+            val pattern = tc.args["pattern"] ?: return@let null
+            val count = tc.args["count"] ?: 1
+            "driver.clickMatches(\"$s\", \"$attr\", \"$pattern\", $count)"
+        }
+        "clickNthAnchor" -> tc.args["n"]?.let { n ->
+            val root = tc.args["rootSelector"]?.toString() ?: "body"
+            "driver.clickNthAnchor(${n}, \"$root\")"
+        }
+        // Screenshots
+        "captureScreenshot" -> {
+            val sel = tc.args["selector"]?.toString()
+            if (sel.isNullOrBlank()) "driver.captureScreenshot()" else "driver.captureScreenshot(\"$sel\")"
+        }
+        // Timing
+        "delay" -> "driver.delay(${tc.args["millis"] ?: 1000}L)"
         else -> null
-    }
-
-    init {
-        Files.createDirectories(baseDir)
-
-        LLMUtils.copyWebDriverFile(webDriverSourceCodeFile)
-        webDriverSourceCode = Files.readAllLines(webDriverSourceCodeFile)
-            .filter { it.contains(" fun ") }
-            .joinToString("\n")
-        webDriverSourceCodeUseMessage = PromptTemplate(WEB_DRIVER_SOURCE_CODE_USE_MESSAGE_TEMPLATE)
-            .render(mapOf("webDriverSourceCode" to webDriverSourceCode))
-    }
-
-    /**
-     * Generate EXACT ONE WebDriver action with interactive elements.
-     *
-     * @param command The action description with plain text
-     * @param driver The driver to use to collect the context, such as interactive elements
-     * @return The action description
-     * */
-    fun generateWebDriverAction(
-        command: String,
-        driver: WebDriver
-    ): ActionDescription {
-        try {
-            val interactiveElements = extractInteractiveElements(driver)
-
-            return generateWebDriverAction(command, interactiveElements)
-        } catch (e: Exception) {
-            val errorResponse = ModelResponse("""
-                suspend fun llmGeneratedFunction(driver: WebDriver) {
-                    // Error occurred during optimization: ${e.message}
-                }
-            """.trimIndent(), ResponseState.OTHER)
-            return ActionDescription(emptyList(), null, errorResponse)
-        }
-    }
-
-    /**
-     * Generate EXACT ONE WebDriver action with interactive elements.
-     *
-     * @param command The action description with plain text
-     * @param driver The driver to use to collect the context, such as interactive elements
-     * @return The action description
-     * */
-    fun generateWebDriverAction(
-        command: String,
-        interactiveElements: List<InteractiveElement> = listOf()
-    ): ActionDescription {
-        return generateWebDriverActionsWithToolCallSpecs(command, interactiveElements, 1)
-    }
-
-    fun generateWebDriverActionsWithToolCallSpecs(
-        command: String,
-        interactiveElements: List<InteractiveElement> = listOf(),
-        toolCallLimit: Int = 100,
-    ): ActionDescription {
-        val toolPrompt = buildToolUsePrompt(command, interactiveElements, toolCallLimit)
-        val response = model?.call(toolPrompt) ?: ModelResponse.LLM_NOT_AVAILABLE
-        val toolCalls = parseToolCalls(response.content).take(toolCallLimit)
-        val functionCalls = if (toolCalls.isNotEmpty()) {
-            toolCalls.mapNotNull { toolCallToDriverLine(it) }
-        } else {
-            response.content.split("\n").map { it.trim() }.filter { it.startsWith("driver.") && it.contains("(") }
-        }
-        return ActionDescription(functionCalls, null, response)
-    }
-
-    fun generateWebDriverActionsWithSourceCode(
-        command: String,
-        interactiveElements: List<InteractiveElement> = listOf()
-    ): ModelResponse {
-        val prompt = buildString {
-            appendLine(webDriverSourceCodeUseMessage)
-
-            if (interactiveElements.isNotEmpty()) {
-                appendLine("可交互元素列表：")
-                interactiveElements.forEach { appendLine(it) }
-            }
-
-            appendLine(command)
-        }
-
-        return model?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
     /**
