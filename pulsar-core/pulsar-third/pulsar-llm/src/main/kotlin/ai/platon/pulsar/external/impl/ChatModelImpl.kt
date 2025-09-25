@@ -47,17 +47,10 @@ open class ChatModelImpl(
 
     override fun call(userMessage: String) = call(userMessage, "")
 
-    override fun call(userMessage: String, systemMessage: String): ModelResponse {
-        return callWithCache(userMessage, systemMessage)
-    }
-
-    override fun call(
-        userMessage: String,
-        systemMessage: String,
-        attachment: String,
-        mediaType: String
+    override fun call(userMessage: String, systemMessage: String,
+        imageUrl: String?, b64Image: String?, mediaType: String?
     ): ModelResponse {
-        return callWithCache(userMessage, systemMessage, attachment, mediaType)
+        return callWithCache(userMessage, systemMessage, imageUrl, b64Image, mediaType)
     }
 
     override fun call(document: FeaturedDocument, prompt: String) = call(document.document, prompt)
@@ -66,7 +59,8 @@ open class ChatModelImpl(
 
     private fun callWithCache(
         userMessage: String, systemMessage: String,
-        attachment: String? = null, mediaType: String? = null
+        imageUrl: String? = null,
+        b64Image: String? = null, mediaType: String? = null,
     ): ModelResponse {
         if (userMessage.isBlank()) {
             logger.warn("No user message, return empty response")
@@ -75,11 +69,17 @@ open class ChatModelImpl(
 
         val trimmedUserMessage = userMessage.take(settings.maximumLength).trim()
 
-        // Build cache key; include attachment/mediaType hash if provided
-        val attachmentKeyPart = if (!attachment.isNullOrBlank() && !mediaType.isNullOrBlank()) {
-            val dataUrl = "data:$mediaType;base64,$attachment"
+        // Build cache key; include b64Image/mediaType hash if provided
+        val b64ImageProvided = !b64Image.isNullOrBlank() && !mediaType.isNullOrBlank()
+        val imageUrlProvided = !imageUrl.isNullOrBlank()
+        val imageProvided = b64ImageProvided || imageUrlProvided
+        val attachmentKeyPart = if (b64ImageProvided) {
+            val dataUrl = "data:$mediaType;base64,$b64Image"
             ":" + DigestUtils.md5Hex(dataUrl)
+        } else if (imageUrlProvided) {
+            DigestUtils.md5Hex(imageUrl)
         } else ""
+
         val cacheKey = DigestUtils.md5Hex("$trimmedUserMessage|$systemMessage$attachmentKeyPart")
 
         // Check if the response is already cached
@@ -91,13 +91,16 @@ open class ChatModelImpl(
         // 记录请求
         val requestId = ChatModelLogger.logRequest(trimmedUserMessage, systemMessage)
 
-        // Build user message, optionally with attachment content parts
-        val um: UserMessage = if (!attachment.isNullOrBlank() && !mediaType.isNullOrBlank()) {
-            val contents = mutableListOf<Content>()
-            contents.add(TextContent.from(trimmedUserMessage))
+        // Build user message, optionally with b64Image content parts
+        val um: UserMessage = if (imageProvided) {
             // Build a data URL for the image to be compatible with OpenAI-style vision inputs
-            val dataUrl = "data:$mediaType;base64,$attachment"
+            val dataUrl = imageUrl ?: "data:$mediaType;base64,$b64Image"
+
+            val contents = mutableListOf<Content>()
+
+            contents.add(TextContent.from(trimmedUserMessage))
             contents.add(ImageContent.from(dataUrl))
+
             UserMessage.userMessage(contents)
         } else {
             UserMessage.userMessage(trimmedUserMessage)

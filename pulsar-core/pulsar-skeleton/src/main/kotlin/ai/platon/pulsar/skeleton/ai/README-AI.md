@@ -1,11 +1,17 @@
 # 🚦 Coder Guideline For WebDriverAgent
 
-你的任务：
+## 📋 前置条件
+
+在开始之前，请阅读以下文档以了解项目全貌：
+
+1. **项目根目录** `README-AI.md` - 全局开发规范和项目结构
+
+## 你的任务：
 - 优化本文档
 - 根据本文档实现代码
 
 [WebDriverAgent.kt](WebDriverAgent.kt) 是一个“多轮计划执行器”：
-它让通用模型基于截图观察与历史动作来规划下一步（act/extract/goto 等），每步只做一个原子动作，
+它让通用模型基于截图观察与历史动作来规划下一步（act/extract/navigate 等），每步只做一个原子动作，
 直到判断目标完成。
 
 关键点：
@@ -14,7 +20,6 @@
 - 模型输出结构化 JSON 决定下一步
 - 执行动作后继续下一轮，终止条件可由 `method=close` 或 `taskComplete=true` 等判断
 - 循环结束后调用 `operatorSummarySchema` 要求模型对原始目标产出总结
-
 
 Prompt 摘要：
 - `buildOperatorSystemPrompt(goal)`（system）：
@@ -27,3 +32,11 @@ Prompt 摘要：
 - 运行时 `user` 消息：
     - “此前动作摘要” 文本
     - 当前页面的截图（Anthropic 用 base64 image 块；OpenAI 用 `image_url` data URI）
+
+关键方法和工具：
+
+Execute an action:
+`suspend fun act(action: ActionDescription): InstructionResult`
+
+Executes a WebDriver command provided as a string expression:
+`ai.platon.pulsar.skeleton.crawl.fetch.driver.SimpleCommandDispatcher`

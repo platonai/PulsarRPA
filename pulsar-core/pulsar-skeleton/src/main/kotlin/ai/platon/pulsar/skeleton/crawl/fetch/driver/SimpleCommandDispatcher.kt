@@ -1,18 +1,30 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
 /**
- * Dispatches web driver commands provided in text format.
+ * Executes WebDriver commands provided as string expressions.
  *
  * This class serves as a bridge between text-based automation commands and WebDriver actions.
  * It parses string commands and executes the corresponding WebDriver methods, enabling
  * script-based control of browser automation.
  *
- * @author Vincent Zhang
+ * ## Key Features:
+ * - Supports a wide range of WebDriver commands, such as navigation, interaction, and evaluation.
+ * - Provides error handling to ensure robust execution of commands.
+ * - Includes a companion object for parsing function calls from string inputs.
+ *
+ * ## Example Usage:
+ *
+ * ```kotlin
+ * val dispatcher = SimpleCommandDispatcher()
+ * val result = dispatcher.execute("driver.open('https://example.com')", driver)
+ * ```
+ *
+ * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
 class SimpleCommandDispatcher {
 
     /**
-     * Executes a WebDriver command provided as a text string.
+     * Executes a WebDriver command provided as a string expression.
      *
      * Parses the command string to extract the function name and arguments, then invokes
      * the corresponding WebDriver method. For example, the string "driver.open('https://example.com')"

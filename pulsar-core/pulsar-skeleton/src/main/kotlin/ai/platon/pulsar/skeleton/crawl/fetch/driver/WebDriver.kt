@@ -407,8 +407,7 @@ interface WebDriver : Closeable {
     suspend fun act(prompt: String): InstructionResult
 
     /**
-     * Instructs the webdriver to perform EXACT ONE action based on the given prompt.
-     * This function converts the prompt into EXACT ONE webdriver action, which will then be executed.
+     * Perform an action described by [action].
      *
      * @param action The action description that describes the action to be performed by the webdriver.
      * @return The response from the model, though in this implementation, the return value is not explicitly used.

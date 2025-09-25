@@ -110,16 +110,23 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
         // - DEEPSEEK_API_KEY, deepseek.apiKey, deepseek.api-key
         val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
         if (deepseekAPIKey != null) {
-            val deepseekModelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
-            val deepseekBaseURL = conf["DEEPSEEK_BASE_URL"] ?: "https://api.deepseek.com/"
-            return getOrCreateOpenAICompatibleModel(deepseekModelName, deepseekAPIKey, deepseekBaseURL, conf)
+            val modelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
+            val baseURL = conf["DEEPSEEK_BASE_URL"] ?: "https://api.deepseek.com/"
+            return getOrCreateOpenAICompatibleModel(modelName, deepseekAPIKey, baseURL, conf)
+        }
+
+        val dashscopeAPIKey = conf["DASHSCOPE_API_KEY"]
+        if (dashscopeAPIKey != null) {
+            val modelName = conf["VOLCENGINE_MODEL_NAME"] ?: "qwen-plus"
+            val baseURL = conf["VOLCENGINE_BASE_URL"] ?: "https://ark.cn-beijing.volces.com/api/v3"
+            return getOrCreateOpenAICompatibleModel(modelName, dashscopeAPIKey, baseURL, conf)
         }
 
         val volcengineAPIKey = conf["VOLCENGINE_API_KEY"]
         if (volcengineAPIKey != null) {
-            val volcengineModelName = conf["VOLCENGINE_MODEL_NAME"] ?: "doubao-1.5-pro-32k-250115"
-            val volcengineBaseURL = conf["VOLCENGINE_BASE_URL"] ?: "https://ark.cn-beijing.volces.com/api/v3"
-            return getOrCreateOpenAICompatibleModel(volcengineModelName, volcengineAPIKey, volcengineBaseURL, conf)
+            val modelName = conf["VOLCENGINE_MODEL_NAME"] ?: "doubao-1.5-pro-32k-250115"
+            val baseURL = conf["VOLCENGINE_BASE_URL"] ?: "https://ark.cn-beijing.volces.com/api/v3"
+            return getOrCreateOpenAICompatibleModel(modelName, volcengineAPIKey, baseURL, conf)
         }
 
         val openaiAPIKey = conf["OPENAI_API_KEY"]
@@ -222,8 +229,6 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
             .maxRetries(2)
             .timeout(Duration.ofSeconds(60))
             .build()
-
-
 
         return ChatModelImpl(lm, conf)
     }
