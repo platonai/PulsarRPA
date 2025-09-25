@@ -102,6 +102,7 @@ open class TextToAction(val conf: ImmutableConfig) {
 - captureScreenshot()
 - captureScreenshot(selector: String)
 - delay(millis: Long)
+- stop()
     """.trimIndent()
 
     // Tool-use helpers -------------------------------------------------------------------------

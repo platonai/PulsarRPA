@@ -287,4 +287,13 @@ interface MiniWebDriver {
      * @param millis The amount of time to delay, in milliseconds.
      */
     suspend fun delay(millis: Long)
+
+    /**
+     * Force the page stop all navigations and RELEASES all resources. Interaction with the
+     * stop page results in undefined behavior and the results should not be trusted.
+     *
+     * If a web driver stops, it can later be used to visit other pages.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun stop()
 }

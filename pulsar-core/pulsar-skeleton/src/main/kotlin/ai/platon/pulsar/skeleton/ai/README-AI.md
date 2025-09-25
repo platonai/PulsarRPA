@@ -6,7 +6,8 @@
 
 1. **项目根目录** `README-AI.md` - 全局开发规范和项目结构
 
-## 你的任务：
+## 核心任务：
+
 - 优化本文档
 - 根据本文档实现代码
 
@@ -16,9 +17,9 @@
 
 关键点：
 - 首条系统消息要求“拆解为原子动作，一步一步来”
-- 每轮将“上一轮动作摘要 + 当前截图”作为 `user` 消息输入模型
-- 模型输出结构化 JSON 决定下一步
-- 执行动作后继续下一轮，终止条件可由 `method=close` 或 `taskComplete=true` 等判断
+- 每轮将“上一轮动作摘要 + 可交互元素列表 + 当前截图”作为 `user` 消息输入模型
+- 模型输出结构化 JSON 决定下一步，function call 风格，TextToAction 已经提供接口
+- 执行动作后继续下一轮，终止条件可由 function call `stop` 或 `taskComplete=true` 等判断
 - 循环结束后调用 `operatorSummarySchema` 要求模型对原始目标产出总结
 
 Prompt 摘要：
@@ -31,12 +32,21 @@ Prompt 摘要：
         4) 多个动作用多步表达
 - 运行时 `user` 消息：
     - “此前动作摘要” 文本
-    - 当前页面的截图（Anthropic 用 base64 image 块；OpenAI 用 `image_url` data URI）
+    - 当前页面的截图, 用 `image_url` data URI，可使用占位符等待人类评审员处理
 
 关键方法和工具：
 
+Use TextToAction to ask AI to generate EXACT ONE step
+```kotlin
+val action = tta.generateWebDriverAction(message, driver, screenshotB64)
+```
+
 Execute an action:
-`suspend fun act(action: ActionDescription): InstructionResult`
+```kotlin
+suspend fun act(action: ActionDescription): InstructionResult
+```
 
 Executes a WebDriver command provided as a string expression:
-`ai.platon.pulsar.skeleton.crawl.fetch.driver.SimpleCommandDispatcher`
+```kotlin
+ai.platon.pulsar.skeleton.crawl.fetch.driver.SimpleCommandDispatcher
+```
