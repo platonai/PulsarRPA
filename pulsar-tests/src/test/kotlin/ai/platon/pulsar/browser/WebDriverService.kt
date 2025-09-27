@@ -1,7 +1,7 @@
 package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactoryDeprecated
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils
 import org.junit.jupiter.api.Assumptions.assumeTrue
 
 open class WebDriverService(
-    val browserFactory: BrowserFactoryDeprecated,
+    val browserFactory: BrowserFactory,
     val requiredPageSize: Int = 100
 ) {
     fun runWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
@@ -131,7 +131,7 @@ open class WebDriverService(
 }
 
 open class FastWebDriverService(
-    browserFactory: BrowserFactoryDeprecated,
+    browserFactory: BrowserFactory,
     requiredPageSize: Int = 1
 ) : WebDriverService(browserFactory, requiredPageSize) {
     override suspend fun open(url: String, driver: WebDriver, scrollCount: Int) {

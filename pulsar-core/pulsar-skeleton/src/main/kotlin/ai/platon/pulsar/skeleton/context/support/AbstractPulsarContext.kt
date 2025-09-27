@@ -20,7 +20,7 @@ import ai.platon.pulsar.skeleton.crawl.common.FetchState
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.crawl.component.*
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactoryDeprecated
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
@@ -158,7 +158,7 @@ abstract class AbstractPulsarContext(
 
     override val crawlLoops: CrawlLoops get() = getBean()
 
-    override val browserFactory: BrowserFactoryDeprecated get() = getBean()
+    override val browserFactory: BrowserFactory get() = getBean()
 
     /**
      * The start time

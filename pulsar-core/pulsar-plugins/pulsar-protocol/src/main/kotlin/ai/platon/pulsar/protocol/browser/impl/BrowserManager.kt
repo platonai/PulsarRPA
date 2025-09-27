@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class BrowserManager(
-    val browserFactory: BrowserFactoryDeprecated,
+    val browserFactory: BrowserFactory,
     val conf: ImmutableConfig
 ) : AutoCloseable {
     private val logger = getLogger(this)

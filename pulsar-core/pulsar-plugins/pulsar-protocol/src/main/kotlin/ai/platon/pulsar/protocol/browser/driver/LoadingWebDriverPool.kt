@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class LoadingWebDriverPool constructor(
     val browserId: BrowserId,
     val browserManager: BrowserManager,
-    val browserFactory: BrowserFactoryDeprecated,
+    val browserFactory: BrowserFactory,
     val immutableConfig: ImmutableConfig
 ) : AutoCloseable {
     companion object {

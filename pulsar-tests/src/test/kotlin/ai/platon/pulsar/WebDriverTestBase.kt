@@ -5,7 +5,7 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactoryDeprecated
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
@@ -40,7 +40,7 @@ class WebDriverTestBase : TestWebSiteAccess() {
         }
     }
 
-    val browserFactory get() = context.getBeanOrNull(BrowserFactoryDeprecated::class) ?: DefaultBrowserFactory(session.unmodifiedConfig)
+    val browserFactory get() = context.getBeanOrNull(BrowserFactory::class) ?: DefaultBrowserFactory(session.unmodifiedConfig)
 
     open val webDriverService get() = WebDriverService(browserFactory)
 

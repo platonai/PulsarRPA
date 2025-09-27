@@ -10,7 +10,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 /**
  * A factory to create browser instances.
  * */
-interface BrowserFactoryDeprecated {
+interface BrowserFactory {
 
     val conf: ImmutableConfig
 
