@@ -7,7 +7,9 @@ import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.ai.WebDriverAgent
 import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
+import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -306,6 +308,15 @@ abstract class AbstractWebDriver(
         val action = tta.generateWebDriverAction(prompt, this)
 
         return act(action)
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun act(action: ActionOptions): WebDriverAgent {
+        val agent = WebDriverAgent(this)
+
+        val action = agent.execute(action)
+
+        return agent
     }
 
     @Throws(WebDriverException::class)

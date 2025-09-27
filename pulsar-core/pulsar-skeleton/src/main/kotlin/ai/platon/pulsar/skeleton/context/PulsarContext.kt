@@ -1,7 +1,6 @@
 package ai.platon.pulsar.skeleton.context
 
 import ai.platon.pulsar.common.CheckState
-import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -12,6 +11,7 @@ import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactoryDeprecated
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -57,6 +57,11 @@ interface PulsarContext: java.lang.AutoCloseable {
      * The main loops
      * */
     val crawlLoops: CrawlLoops
+
+    /**
+     * The browser factory.
+     * */
+    val browserFactory: BrowserFactoryDeprecated
 
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist

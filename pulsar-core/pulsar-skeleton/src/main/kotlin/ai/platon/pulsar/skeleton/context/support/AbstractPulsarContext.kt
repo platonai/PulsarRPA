@@ -1,7 +1,6 @@
 package ai.platon.pulsar.skeleton.context.support
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -21,6 +20,7 @@ import ai.platon.pulsar.skeleton.crawl.common.FetchState
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.skeleton.crawl.component.*
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactoryDeprecated
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
@@ -143,7 +143,7 @@ abstract class AbstractPulsarContext(
      * The web db
      * */
     open val webDb: WebDb get() = getBean()
-    
+
     open val globalCacheFactory: GlobalCacheFactory get() = getBean()
 
     open val fetchComponent: BatchFetchComponent get() = getBean()
@@ -157,7 +157,9 @@ abstract class AbstractPulsarContext(
     override val globalCache: GlobalCache get() = globalCacheFactory.globalCache
 
     override val crawlLoops: CrawlLoops get() = getBean()
-    
+
+    override val browserFactory: BrowserFactoryDeprecated get() = getBean()
+
     /**
      * The start time
      * */

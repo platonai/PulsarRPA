@@ -3,24 +3,16 @@ package ai.platon.pulsar
 import ai.platon.pulsar.browser.WebDriverService
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
-import ai.platon.pulsar.persist.model.ActiveDOMMetadata
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
-import ai.platon.pulsar.ql.context.SQLContexts
-import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactoryDeprecated
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.boot.test.context.SpringBootTest
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.test.assertNotNull
 
 @SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class WebDriverTestBase : TestWebSiteAccess() {
@@ -48,7 +40,7 @@ class WebDriverTestBase : TestWebSiteAccess() {
         }
     }
 
-    val browserFactory get() = context.getBeanOrNull(BrowserFactory::class) ?: DefaultBrowserFactory(session.unmodifiedConfig)
+    val browserFactory get() = context.getBeanOrNull(BrowserFactoryDeprecated::class) ?: DefaultBrowserFactory(session.unmodifiedConfig)
 
     open val webDriverService get() = WebDriverService(browserFactory)
 

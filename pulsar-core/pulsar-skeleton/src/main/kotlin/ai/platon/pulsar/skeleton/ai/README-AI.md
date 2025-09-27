@@ -13,7 +13,9 @@ Before starting, read the following documents to understand the project structur
 
 ## 🎯 Overview
 
-[WebDriverAgent.kt](WebDriverAgent.kt) is a **multi-round planning executor** that enables AI models to perform web automation through screenshot observation and historical action analysis. It plans and executes atomic actions (act/extract/navigate) step-by-step until the target is achieved.
+[WebDriverAgent.kt](WebDriverAgent.kt) is a **multi-round planning executor** that enables AI models to perform 
+web automation through screenshot observation and historical action analysis. It plans and executes atomic 
+actions (act/extract/navigate) step-by-step until the target is achieved.
 
 ### Key Architecture Principles
 
@@ -93,3 +95,15 @@ suspend fun act(action: ActionDescription): InstructionResult
 - **URL Validation**: Navigation targets validated for safety
 - **Resource Limits**: Configurable timeouts and step limits
 - **Error Isolation**: Individual action failures don't crash entire session
+
+## Human Reviewer Comments
+
+### Nonsense tests
+
+Nonsense tests in WebDriverAgentBasicTest, none of the tests make sense.
+
+### Examples
+
+
+
+

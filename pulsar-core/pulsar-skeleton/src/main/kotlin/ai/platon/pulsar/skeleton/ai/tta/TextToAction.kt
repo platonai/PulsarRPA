@@ -50,6 +50,19 @@ data class ElementBounds(
     val height: Double
 )
 
+data class ActionOptions(
+    val action: String,
+    val modelName: String? = null,
+    val variables: Map<String, String>? = null,
+    val domSettleTimeoutMs: Int? = null,
+    val timeoutMs: Int? = null,
+    val iframes: Boolean? = null
+) {
+    companion object {
+        val LLM_NOT_AVAILABLE = ActionDescription(listOf(), null, ModelResponse.LLM_NOT_AVAILABLE)
+    }
+}
+
 data class ActionDescription(
     val functionCalls: List<String>,
     val selectedElement: InteractiveElement?,
@@ -76,10 +89,10 @@ data class InstructionResult(
 
 open class TextToAction(val conf: ImmutableConfig) {
     private val logger = getLogger(this)
-    protected val model = ChatModelFactory.getOrCreateOrNull(conf)
 
     val baseDir = AppPaths.get("tta")
 
+    val model = ChatModelFactory.getOrCreateOrNull(conf)
     val webDriverSourceCodeFile = baseDir.resolve("MiniWebDriver.kt")
     var webDriverSourceCode: String
         private set

@@ -1,13 +1,9 @@
 package ai.platon.pulsar.protocol.browser.impl
 
-import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
-import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.common.warnInterruptible
-import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import java.util.concurrent.ConcurrentHashMap
@@ -15,7 +11,7 @@ import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class BrowserManager(
-    val browserFactory: BrowserFactory,
+    val browserFactory: BrowserFactoryDeprecated,
     val conf: ImmutableConfig
 ) : AutoCloseable {
     private val logger = getLogger(this)

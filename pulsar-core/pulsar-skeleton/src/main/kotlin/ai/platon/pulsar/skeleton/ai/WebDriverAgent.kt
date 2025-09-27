@@ -2,8 +2,8 @@ package ai.platon.pulsar.skeleton.ai
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.external.ChatModel
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -12,11 +12,10 @@ import com.google.gson.JsonParser
 import kotlinx.coroutines.delay
 import java.nio.file.Files
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 class WebDriverAgent(
     val driver: WebDriver,
-    val model: ChatModel,
     val maxSteps: Int = 100,
 ) {
     private val logger = getLogger(this)
@@ -27,10 +26,15 @@ class WebDriverAgent(
 
     private val tta by lazy { TextToAction(conf) }
 
+    private val model get() = tta.model
+
     private val history = mutableListOf<String>()
 
-    suspend fun execute(instruction: String): ModelResponse {
+    suspend fun execute(action: ActionOptions): ModelResponse {
         Files.createDirectories(baseDir)
+
+        val instruction = action.action
+
         logger.info("Starting WebDriverAgent execution for instruction: {}", instruction.take(100))
 
         val systemPrompt = buildOperatorSystemPrompt(instruction)
@@ -441,6 +445,6 @@ $h
 
     private fun summarize(goal: String): ModelResponse {
         val (system, user) = buildSummaryPrompt(goal)
-        return model.call(user, system)
+        return model!!.call(user, system)
     }
 }

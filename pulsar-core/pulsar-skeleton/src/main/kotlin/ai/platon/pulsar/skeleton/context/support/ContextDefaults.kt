@@ -22,6 +22,7 @@ class ContextDefaults {
      * The default web db
      * */
     val webDb = WebDb(unmodifiedConfig)
+
     /**
      * The default global cache
      * */

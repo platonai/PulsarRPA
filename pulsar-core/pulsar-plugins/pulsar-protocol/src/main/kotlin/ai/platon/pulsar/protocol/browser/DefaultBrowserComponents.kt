@@ -28,7 +28,7 @@ import ai.platon.pulsar.protocol.browser.emulator.impl.InteractiveBrowserEmulato
 import ai.platon.pulsar.protocol.browser.emulator.impl.PrivacyManagedBrowserFetcher
 import ai.platon.pulsar.protocol.browser.impl.BrowserManager
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactoryDeprecated
 
 class DefaultBrowserManager(conf: ImmutableConfig): BrowserManager(DefaultBrowserFactory(conf), conf)
 
@@ -54,7 +54,7 @@ class DefaultBrowserEmulator(
 
 class DefaultPrivacyManagedBrowserFetcher(
     browserManager: BrowserManager,
-    browserFactory: BrowserFactory,
+    browserFactory: BrowserFactoryDeprecated,
     browserEmulator: BrowserEmulator,
     privacyManager: BrowserPrivacyManager,
     conf: ImmutableConfig,
@@ -94,6 +94,6 @@ class DefaultBrowserComponents(val conf: ImmutableConfig = ImmutableConfig.DEFAU
     val browserManager: BrowserManager
         get() = privacyManager.browserManager
 
-    val browserFactory: BrowserFactory
+    val browserFactory: BrowserFactoryDeprecated
         get() = privacyManager.browserFactory
 }

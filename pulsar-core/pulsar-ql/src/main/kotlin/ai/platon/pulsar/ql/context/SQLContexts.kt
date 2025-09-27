@@ -10,14 +10,11 @@ import ai.platon.pulsar.ql.h2.H2MemoryDb
 import ai.platon.pulsar.ql.h2.H2SQLSession
 import ai.platon.pulsar.ql.h2.H2SessionDelegate
 import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.skeleton.context.support.ContextDefaults
-import ai.platon.pulsar.skeleton.crawl.component.*
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
-import org.springframework.context.support.StaticApplicationContext
 import java.sql.Connection
 
 open class H2SQLContext(
@@ -49,54 +46,6 @@ open class H2SQLContext(
     override fun createSession(): BasicPulsarSession {
         val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())
         return session.also { sessions[it.id] = it }
-    }
-}
-
-open class StaticH2SQLContext(
-    applicationContext: StaticApplicationContext = StaticApplicationContext()
-) : H2SQLContext(applicationContext) {
-    private val defaults = ContextDefaults()
-
-    /**
-     * The unmodified config
-     * */
-    override val unmodifiedConfig get() = getBeanOrNull() ?: defaults.unmodifiedConfig
-
-    /**
-     * Url normalizer
-     * */
-    override val urlNormalizer get() = getBeanOrNull() ?: defaults.urlNormalizer
-    /**
-     * The web db
-     * */
-    override val webDb get() = getBeanOrNull() ?: defaults.webDb
-    /**
-     * The global cache
-     * */
-    override val globalCacheFactory get() = getBeanOrNull() ?: defaults.globalCacheFactory
-    /**
-     * The fetch component
-     * */
-    override val fetchComponent get() = getBeanOrNull() ?: defaults.fetchComponent
-    /**
-     * The parse component
-     * */
-    override val parseComponent get() = getBeanOrNull() ?: defaults.parseComponent
-    /**
-     * The update component
-     * */
-    override val updateComponent get() = getBeanOrNull() ?: defaults.updateComponent
-    /**
-     * The load component
-     * */
-    override val loadComponent get() = getBeanOrNull() ?: defaults.loadComponent
-    /**
-     * The main loop
-     * */
-    override val crawlLoops get() = getBeanOrNull() ?: defaults.crawlLoops
-
-    init {
-        applicationContext.refresh()
     }
 }
 

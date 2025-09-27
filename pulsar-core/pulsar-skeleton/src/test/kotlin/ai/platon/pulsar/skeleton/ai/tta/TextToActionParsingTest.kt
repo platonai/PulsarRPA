@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 class TextToActionParsingTest {
 
-    private val tta = TextToAction(ImmutableConfig.DEFAULT)
+    private val tta = TextToAction(ImmutableConfig())
 
     @Test
     fun `parseToolCalls should parse multiple tool calls with mixed argument types`() {
