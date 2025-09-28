@@ -7,7 +7,7 @@ import org.springframework.context.support.AbstractApplicationContext
 object AgenticContexts {
     @Synchronized
     fun create(): AgenticContext = (PulsarContexts.activeContext as? AgenticContext)
-        ?: create(DefaultClassPathXmlAgenticQLContext())
+        ?: create(DefaultClassPathXmlAgenticContext())
 
     @Synchronized
     fun create(context: AgenticContext): AgenticContext = context.also { PulsarContexts.create(it) }
@@ -15,15 +15,15 @@ object AgenticContexts {
     @Synchronized
     fun create(applicationContext: ApplicationContext): AgenticContext {
         val context = PulsarContexts.activeContext
-        if (context is AgenticQLContext && context.applicationContext == applicationContext) {
+        if (context is QLAgenticContext && context.applicationContext == applicationContext) {
             return PulsarContexts.activeContext as AgenticContext
         }
 
-        return create(AgenticQLContext(applicationContext as AbstractApplicationContext))
+        return create(QLAgenticContext(applicationContext as AbstractApplicationContext))
     }
 
     @Synchronized
-    fun create(contextLocation: String): AgenticContext = create(ClassPathXmlAgenticQLContext(contextLocation))
+    fun create(contextLocation: String): AgenticContext = create(ClassPathXmlAgenticContext(contextLocation))
 
     @Synchronized
     fun createSession() = create().createSession()

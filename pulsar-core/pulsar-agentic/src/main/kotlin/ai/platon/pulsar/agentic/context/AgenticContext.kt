@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.context
 
-import ai.platon.pulsar.agentic.AgenticQLSession
+import ai.platon.pulsar.agentic.QLAgenticSession
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -18,7 +18,7 @@ interface AgenticContext : SQLContext {
     override fun createSession(sessionDelegate: SessionDelegate): AgenticSession
 }
 
-abstract class AbstractAgenticQLContext(
+abstract class AbstractAgenticContext(
     applicationContext: AbstractApplicationContext
 ) : AbstractH2SQLContext(applicationContext), AgenticContext {
     private val logger = getLogger(this)
@@ -27,23 +27,23 @@ abstract class AbstractAgenticQLContext(
     override fun createSession(sessionDelegate: SessionDelegate): AgenticSession {
         require(sessionDelegate is H2SessionDelegate)
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
-            AgenticQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
+            QLAgenticSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
         }
         logger.info("AgenticQLSession is created | #{}/{}/{}", session.id, sessionDelegate.id, id)
-        return session as AgenticQLSession
+        return session as QLAgenticSession
     }
 }
 
-open class AgenticQLContext(
+open class QLAgenticContext(
     applicationContext: AbstractApplicationContext
-) : AbstractAgenticQLContext(applicationContext) {
+) : AbstractAgenticContext(applicationContext) {
 }
 
-open class ClassPathXmlAgenticQLContext(configLocation: String) :
-    AbstractAgenticQLContext(ClassPathXmlApplicationContext(configLocation)) {
+open class ClassPathXmlAgenticContext(configLocation: String) :
+    AbstractAgenticContext(ClassPathXmlApplicationContext(configLocation)) {
 }
 
-open class DefaultClassPathXmlAgenticQLContext() : ClassPathXmlAgenticQLContext(
+open class DefaultClassPathXmlAgenticContext() : ClassPathXmlAgenticContext(
     System.getProperty(
         CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION,
         AppConstants.PULSAR_CONTEXT_CONFIG_LOCATION

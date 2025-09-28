@@ -8,14 +8,14 @@ import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 
 interface AgenticSession: SQLSession
 
-open class AbstractAgenticQLSession(
+open class AbstractAgenticSession(
     context: AbstractPulsarContext,
     sessionDelegate: H2SessionDelegate,
     config: SessionConfig
 ) : AbstractH2SQLSession(context, sessionDelegate, config), AgenticSession
 
-open class AgenticQLSession(
+open class QLAgenticSession(
     context: AbstractPulsarContext,
     sessionDelegate: H2SessionDelegate,
     config: SessionConfig
-) : AbstractAgenticQLSession(context, sessionDelegate, config)
+) : AbstractAgenticSession(context, sessionDelegate, config)
