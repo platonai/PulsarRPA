@@ -130,7 +130,6 @@ abstract class AbstractWebDriver(
     /** Whether browser connection / session channel is still live */
     val isConnectable get() = browser.isConnected
 
-    protected val enableStartupScript get() = settings.isStartupScriptEnabled
     /** Accumulates init scripts (preload scripts) until first navigation. */
     protected val initScriptCache = mutableListOf<String>()
 

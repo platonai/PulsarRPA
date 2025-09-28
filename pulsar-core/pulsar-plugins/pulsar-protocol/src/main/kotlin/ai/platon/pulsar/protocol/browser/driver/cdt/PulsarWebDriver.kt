@@ -118,7 +118,7 @@ class PulsarWebDriver(
         }
 
         invokeOnPage("navigateTo") {
-            if (enableStartupScript) navigateInvaded(entry) else navigateNonInvaded(entry)
+            navigateInvaded(entry)
         }
     }
 
@@ -679,16 +679,6 @@ class PulsarWebDriver(
         } else {
             page.navigate(url, referrer = navigateEntry.pageReferrer)
         }
-    }
-
-    /**
-     * Navigate to a url without javascript injected, this is only for debugging
-     * */
-    private fun navigateNonInvaded(entry: NavigateEntry) {
-        val url = entry.url
-
-        navigateUrl = url
-        pageAPI?.navigate(url)
     }
 
     private fun openLocalFile(url: String) {
