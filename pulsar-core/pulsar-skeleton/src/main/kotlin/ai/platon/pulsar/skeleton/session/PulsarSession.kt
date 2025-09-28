@@ -200,6 +200,14 @@ interface PulsarSession : AutoCloseable {
      * */
     val globalCache: GlobalCache
     /**
+     * The bound driver. If there is a bound driver, all subsequential actions that needed a driver use the bound one.
+     * */
+    val boundDriver: WebDriver?
+    /**
+     * The bound browser. If there is a bound browser, all subsequential actions that needed a browser use the bound one.
+     * */
+    val boundBrowser: Browser?
+    /**
      * Disable page cache and document cache
      * */
     fun disablePDCache()

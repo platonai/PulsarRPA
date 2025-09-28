@@ -94,6 +94,10 @@ abstract class AbstractPulsarSession(
     override val pageCache get() = globalCache.pageCache
     override val documentCache get() = globalCache.documentCache
 
+    override val boundDriver get() = sessionConfig.getBeanOrNull(WebDriver::class)
+
+    override val boundBrowser get() = sessionConfig.getBeanOrNull(Browser::class)
+
     private val contextOrNull get() = if (isActive) context else null
     private val globalCacheFactoryOrNull get() = contextOrNull?.globalCacheFactory
     private val pageCacheOrNull get() = globalCacheFactoryOrNull?.globalCache?.pageCache
