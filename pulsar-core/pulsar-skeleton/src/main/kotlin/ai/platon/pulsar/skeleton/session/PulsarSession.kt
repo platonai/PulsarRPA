@@ -408,12 +408,12 @@ interface PulsarSession : AutoCloseable {
     fun chat(prompt: String, element: Element): ModelResponse
 
     /** Generate and execute exactly one webdriver action inferred from natural language. */
-    suspend fun act(prompt: String, driver: WebDriver): InstructionResult
-    @Beta suspend fun act(action: ActionOptions, driver: WebDriver): WebDriverAgent
+    suspend fun act(prompt: String): InstructionResult
+    @Beta suspend fun act(action: ActionOptions): WebDriverAgent
     /** Execute a structured action description (already resolved). */
-    suspend fun act(action: ActionDescription, driver: WebDriver): InstructionResult
+    suspend fun act(action: ActionDescription): InstructionResult
     /** Multi‑step natural language instruction -> sequence of webdriver actions. */
-    suspend fun instruct(prompt: String, driver: WebDriver): InstructionResult
+    suspend fun instruct(prompt: String): InstructionResult
 
     // --------------------------------------------------------------------------------------------
     // Export (Serialization / Archival) & Persistence

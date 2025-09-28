@@ -19,7 +19,7 @@ class SessionInstructionsExample {
         val document = session.parse(page)
         val fields = session.extract(document, mapOf("title" to "#title"))
 
-        val actResult = driver.act("search for 'browser'")
+        val actResult = session.act("search for 'browser'")
 
         val page2 = session.attach(url, driver)
         val document2 = session.parse(page)

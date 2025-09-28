@@ -518,15 +518,17 @@ abstract class AbstractPulsarSession(
     override fun chat(prompt: String, element: Element) = chat(prompt +
             "\n\nThere is the text content of the selected element:\n\n\n" + element.text())
 
-    override suspend fun act(prompt: String, driver: WebDriver): InstructionResult {
+    override suspend fun act(prompt: String): InstructionResult {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(sessionConfig)
         val action = tta.generateWebDriverAction(prompt, driver)
 
-        return act(action, driver)
+        return act(action)
     }
 
-    override suspend fun act(action: ActionOptions, driver: WebDriver): WebDriverAgent {
+    override suspend fun act(action: ActionOptions): WebDriverAgent {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
         val agent = WebDriverAgent(driver)
 
         val action = agent.execute(action)
@@ -534,7 +536,8 @@ abstract class AbstractPulsarSession(
         return agent
     }
 
-    override suspend fun act(action: ActionDescription, driver: WebDriver): InstructionResult {
+    override suspend fun act(action: ActionDescription): InstructionResult {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
         if (action.functionCalls.isEmpty()) {
             return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
@@ -548,7 +551,9 @@ abstract class AbstractPulsarSession(
         return InstructionResult(action.functionCalls, functionResults, action.modelResponse)
     }
 
-    override suspend fun instruct(prompt: String, driver: WebDriver): InstructionResult {
+    override suspend fun instruct(prompt: String): InstructionResult {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
+
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(sessionConfig)
 
@@ -559,6 +564,7 @@ abstract class AbstractPulsarSession(
         val functionResults = actions.functionCalls.map { action ->
             dispatcher.execute(action, driver)
         }
+
         return InstructionResult(actions.functionCalls, functionResults, actions.modelResponse)
     }
 
