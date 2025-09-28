@@ -244,3 +244,36 @@ project-root/
   - **Test data builders**: Fluent test data creation
   - **Assertion helpers**: Domain-specific validations
   - **Test fixtures**: Reusable test scenarios
+
+## 8. 🔬 Benchmarks (JMH)
+- Module: `pulsar-benchmarks` (not part of deploy/release profile)
+- Execution:
+  ```bash
+  ./mvnw -pl pulsar-benchmarks -am package -DskipTests
+  java -jar pulsar-benchmarks/target/pulsar-benchmarks-*-shaded.jar -f 1 -wi 3 -i 5
+  ```
+- Conventions:
+  - Put micro benchmarks close to core algorithms (string processing, DOM, parsing, scoring, ql)
+  - Keep benchmark state isolated (`@State(Scope.Thread)` unless shared)
+  - Always include a short KDoc: purpose + metric + potential regression trigger
+  - Avoid external I/O in JMH loops; pre-load data in `@Setup`
+
+## 9. 🧩 AI Templates & Resources
+Located under `docs/copilot/templates/`:
+- `response-template.md` – Standard AI agent reply format
+- `pr-description-template.md` – PR description scaffold
+- `test-tag-usage.md` – Tag examples (`UnitTest`, `IntegrationTest`, `E2ETest`, `BenchmarkTest` ...)
+
+Usage Guidance:
+- When generating a PR: fill all mandatory sections (Summary, Motivation, Risk, Rollback)
+- For performance-sensitive change: add provisional benchmark in `pulsar-benchmarks` referencing ticket ID
+- For flaky test triage: cite tag + recent runtime + failure signature
+
+## 10. ♻️ Future Improvements (Tracking)
+- Aggregate JaCoCo across modules (already partially via CI profile) -> Automate delta report
+- Add more domain-specific benchmarks (DOM diff, selector matching, scoring heuristics)
+- Integrate benchmark threshold check into CI optional workflow
+- Auto-generate test gap report (class vs test coverage skeleton)
+
+---
+If adding new categories (e.g., Load / Stress), extend both this file and `docs/copilot/README-AI.md` to keep them in sync.

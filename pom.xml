@@ -95,7 +95,8 @@
         <module>pulsar-tests-common</module>
         <module>pulsar-tests</module>
         <module>pulsar-examples</module>
-
+        <!-- Benchmark / performance regression module (not published in release profile) -->
+        <module>pulsar-benchmarks</module>
         <module>browser4</module>
     </modules>
 
@@ -843,6 +844,12 @@
             <artifactId>mockito-junit-jupiter</artifactId>
             <version>${mockito-junit-jupiter.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>1.37</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
