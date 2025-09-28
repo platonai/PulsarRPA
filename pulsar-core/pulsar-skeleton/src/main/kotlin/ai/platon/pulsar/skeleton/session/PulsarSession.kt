@@ -8,6 +8,9 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.ai.WebDriverAgent
+import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
+import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
@@ -553,7 +556,7 @@ interface PulsarSession : AutoCloseable {
     fun bindBrowser(browser: Browser)
 
     /**
-     * Load an url.
+     * Load a url.
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
@@ -1809,6 +1812,65 @@ interface PulsarSession : AutoCloseable {
      * field selectors.
      *
      * ```kotlin
+     * val document = session.loadDocument("http://example.com", "-expire 1d")
+     * val fields = session.extract(document, listOf(".title", ".content"))
+     * ```
+     *
+     * @param document The document to extract
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their selectors
+     * */
+    fun extract(document: FeaturedDocument, fieldSelectors: Iterable<String>): Map<String, String?>
+    /**
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * ```kotlin
+     * val document = session.loadDocument("http://example.com", "-expire 1d")
+     * val fields = session.extract(document, "#main-content", listOf(".title", ".content"))
+     * ```
+     *
+     * @param document The document to extract
+     * @param fieldSelectors The selectors to extract fields
+     * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
+     * @return All the extracted fields and their selectors
+     * */
+    fun extract(document: FeaturedDocument, restrictSelector: String, fieldSelectors: Iterable<String>): List<Map<String, String?>>
+    /**
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * ```kotlin
+     * val document = session.loadDocument("http://example.com", "-expire 1d")
+     * val fields = session.extract(document, mapOf("title" to ".title", "content" to ".content"))
+     * ```
+     *
+     * @param document The document to extract
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their selectors
+     * */
+    fun extract(document: FeaturedDocument, fieldSelectors: Map<String, String>): Map<String, String?>
+    /**
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * ```kotlin
+     * val document = session.loadDocument("http://example.com", "-expire 1d")
+     * val fields = session.extract(document, "#main-content", mapOf("title" to ".title", "content" to ".content"))
+     * ```
+     *
+     * @param document The document to extract
+     * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their selectors
+     * */
+    fun extract(document: FeaturedDocument, restrictSelector: String, fieldSelectors: Map<String, String>): List<Map<String, String?>>
+
+    /**
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * ```kotlin
      * val fields = session.scrape("http://example.com", "-expire 1d", listOf(".title", ".content"))
      * ```
      *
@@ -1818,6 +1880,7 @@ interface PulsarSession : AutoCloseable {
      * @return All the extracted fields and their selectors
      * */
     fun scrape(url: String, args: String, fieldSelectors: Iterable<String>): Map<String, String?>
+
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -2182,12 +2245,32 @@ interface PulsarSession : AutoCloseable {
      * @return The response from the model
      */
     fun chat(prompt: String, element: Element): ModelResponse
+
+    /**
+     * Instructs the webdriver to perform EXACT ONE action based on the given prompt.
+     * This function converts the prompt into EXACT ONE webdriver action, which will then be executed.
+     *
+     * @param prompt The textual prompt that describes the action to be performed by the webdriver.
+     * @return The response from the model, though in this implementation, the return value is not explicitly used.
+     */
+    suspend fun act(prompt: String, driver: WebDriver): InstructionResult
+
+    @Beta
+    suspend fun act(action: ActionOptions, driver: WebDriver): WebDriverAgent
+
+    /**
+     * Perform an action described by [action].
+     *
+     * @param action The action description that describes the action to be performed by the webdriver.
+     * @return The response from the model, though in this implementation, the return value is not explicitly used.
+     */
+    suspend fun act(action: ActionDescription, driver: WebDriver): InstructionResult
+
     /**
      * Instructs the webdriver to perform a series of actions based on the given prompt.
      * This function converts the prompt into a sequence of webdriver actions, which are then executed.
      *
      * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
-     * @param driver The webdriver instance that will execute the actions.
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
     suspend fun instruct(prompt: String, driver: WebDriver): InstructionResult
