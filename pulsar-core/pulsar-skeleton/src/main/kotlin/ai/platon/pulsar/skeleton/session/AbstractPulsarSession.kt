@@ -202,17 +202,24 @@ abstract class AbstractPulsarSession(
     
     override fun open(url: String, eventHandlers: PageEventHandlers): WebPage = load(url, options("-refresh", eventHandlers))
 
-    override suspend fun open(url: String, driver: WebDriver): WebPage = context.open(url, driver, options("-refresh"))
+    override suspend fun open(url: String, driver: WebDriver): WebPage {
+        bindDriver(driver)
+        return context.open(url, driver, options("-refresh"))
+    }
 
-    override suspend fun open(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage =
-        context.open(url, driver, options("-refresh", eventHandlers))
+    override suspend fun open(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage {
+        bindDriver(driver)
+        return context.open(url, driver, options("-refresh", eventHandlers))
+    }
 
     override suspend fun attach(url: String, driver: WebDriver): WebPage {
+        bindDriver(driver)
         val normURL = normalize(url)
         return context.attach(normURL, driver)
     }
 
     override suspend fun attach(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage {
+        bindDriver(driver)
         val normURL = normalize(url, options(eventHandlers = eventHandlers))
         return context.attach(normURL, driver)
     }
@@ -223,6 +230,12 @@ abstract class AbstractPulsarSession(
     }
 
     override fun bindBrowser(browser: Browser) { sessionConfig.putBean(browser) }
+
+    override fun unbindDriver(driver: WebDriver) {
+        sessionConfig.removeBean(driver)
+    }
+
+    override fun unbindBrowser(browser: Browser) { sessionConfig.removeBean(browser) }
 
     override fun load(url: String): WebPage = load(url, options())
     

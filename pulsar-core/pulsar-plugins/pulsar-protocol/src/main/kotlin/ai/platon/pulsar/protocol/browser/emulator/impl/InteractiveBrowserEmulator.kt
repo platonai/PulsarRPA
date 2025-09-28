@@ -504,11 +504,7 @@ open class InteractiveBrowserEmulator(
         val result = try {
             emit1(EmulateEvents.willInteract, page, driver)
 
-            if (settings.isStartupScriptEnabled) {
-                interact(interactTask)
-            } else {
-                interactNoJsInvaded(interactTask)
-            }
+            interact(interactTask)
         } finally {
             emit1(EmulateEvents.didInteract, page, driver)
         }
@@ -548,19 +544,6 @@ open class InteractiveBrowserEmulator(
 //        }
 
         return result
-    }
-
-    protected open suspend fun interactNoJsInvaded(interactTask: InteractTask): InteractResult {
-        var pageSource = ""
-        var i = 0
-        do {
-            pageSource = interactTask.driver.pageSource() ?: ""
-            if (pageSource.length < 20_000) {
-                delay(1000)
-            }
-        } while (i++ < 45 && pageSource.length < 20_000 && isActive)
-
-        return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
     }
 
     @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)

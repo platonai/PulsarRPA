@@ -6,13 +6,17 @@ import ai.platon.pulsar.skeleton.session.PulsarSession
 import kotlinx.coroutines.runBlocking
 
 class SessionInstructionsExample {
+    init {
+        // Single Page Application
+        PulsarSettings().withSPA()
+    }
+
     val session = AgenticContexts.createSession()
-    val driver = session.context.browserFactory.launchDefaultBrowser().newDriver()
 
     suspend fun run() {
-        PulsarSettings().withSPA()
-
+        val driver = session.context.browserFactory.launchDefaultBrowser().newDriver()
         session.bindDriver(driver)
+
         val url = "https://news.ycombinator.com/news"
 
         val page = session.open(url)
@@ -22,7 +26,7 @@ class SessionInstructionsExample {
         val actResult = session.act("search for 'browser'")
 
         val page2 = session.attach(url, driver)
-        val document2 = session.parse(page)
+        val document2 = session.parse(page2)
         val fields2 = session.extract(document, mapOf("title" to "#title"))
 
     }

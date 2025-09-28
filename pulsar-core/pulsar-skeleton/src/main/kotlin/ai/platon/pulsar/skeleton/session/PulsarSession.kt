@@ -222,6 +222,11 @@ interface PulsarSession : AutoCloseable {
     /** Bind a browser to the session for implicit reuse. */
     fun bindBrowser(browser: Browser)
 
+    /** Unbind the currently bound WebDriver from the session and revert to default behavior. */
+    fun unbindDriver(driver: WebDriver)
+    /** Unbind the currently bound Browser from the session and revert to default behavior. */
+    fun unbindBrowser(browser: Browser)
+
     // --------------------------------------------------------------------------------------------
     // Load (Conditional Fetch)
     // --------------------------------------------------------------------------------------------

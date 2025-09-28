@@ -435,11 +435,6 @@ open class BrowserSettings constructor(
      * */
     val isSPA get() = config.getBoolean(BROWSER_SPA_MODE, false)
     /**
-     * Check if startup scripts are allowed. If true, PulsarPRA injects scripts into the browser
-     * before loading a page, and custom scripts are also allowed.
-     * */
-    val isStartupScriptEnabled get() = config.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
-    /**
      * The probability to block resource requests.
      * The probability must be in [0, 1].
      * */
