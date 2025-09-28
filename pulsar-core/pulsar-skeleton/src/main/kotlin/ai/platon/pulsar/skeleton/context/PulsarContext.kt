@@ -99,13 +99,13 @@ interface PulsarContext: java.lang.AutoCloseable {
     fun registerClosable(closable: java.lang.AutoCloseable, priority: Int = 0)
 
     /**
-     * Normalize an url, the url can be in one of the following forms:
+     * Normalize a url, the url can be in one of the following forms:
      * 1. a normal url
      * 2. a configured url
      * 3. a base64 encoded url
      * 4. a base64 encoded configured url
      *
-     * An url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
+     * A url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
      * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
      * but default values in LoadOptions are ignored.
      *
@@ -117,13 +117,13 @@ interface PulsarContext: java.lang.AutoCloseable {
     fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormURL
 
     /**
-     * Normalize an url, the url can be in one of the following forms:
+     * Normalize a url, the url can be in one of the following forms:
      * 1. a normal url
      * 2. a configured url
      * 3. a base64 encoded url
      * 4. a base64 encoded configured url
      *
-     * An url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
+     * A url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
      * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
      * but default values in LoadOptions are ignored.
      *
@@ -144,7 +144,7 @@ interface PulsarContext: java.lang.AutoCloseable {
      * */
     fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormURL>
     /**
-     * Normalize an url.
+     * Normalize a url.
      *
      * If both url arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
      * but default values in LoadOptions are ignored.
@@ -156,13 +156,13 @@ interface PulsarContext: java.lang.AutoCloseable {
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormURL
     /**
-     * Normalize an url, the url can be in one of the following forms:
+     * Normalize a url, the url can be in one of the following forms:
      * 1. a normal url
      * 2. a configured url
      * 3. a base64 encoded url
      * 4. a base64 encoded configured url
      *
-     * An url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
+     * A url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
      * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
      * but default values in LoadOptions are ignored.
      *

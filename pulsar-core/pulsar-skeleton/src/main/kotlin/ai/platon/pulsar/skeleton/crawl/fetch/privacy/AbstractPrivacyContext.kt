@@ -233,17 +233,17 @@ abstract class AbstractPrivacyContext(
     }
 
     /**
-     * Open an url in the privacy context.
+     * Open a url in the privacy context.
      * */
     abstract override suspend fun open(url: String): FetchResult
 
     /**
-     * Open an url in the privacy context, with the specified options.
+     * Open a url in the privacy context, with the specified options.
      * */
     abstract override suspend fun open(url: String, options: LoadOptions): FetchResult
 
     /**
-     * Open an url in the privacy context, with the specified fetch function.
+     * Open a url in the privacy context, with the specified fetch function.
      * */
     @Throws(ProxyVendorException::class)
     override suspend fun open(url: String, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {

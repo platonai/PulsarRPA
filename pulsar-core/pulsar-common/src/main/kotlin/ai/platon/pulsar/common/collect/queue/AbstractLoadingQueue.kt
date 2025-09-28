@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.function.Predicate
 
 /**
- * An url queue should be small since every url uses about 1s to fetch
+ * a url queue should be small since every url uses about 1s to fetch
  * */
 abstract class AbstractLoadingQueue(
     val loader: ExternalUrlLoader,

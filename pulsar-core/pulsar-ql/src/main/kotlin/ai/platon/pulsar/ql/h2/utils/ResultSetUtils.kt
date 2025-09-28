@@ -323,7 +323,7 @@ object ResultSetUtils {
      *
      * Supports both single and double quotes, handles basic escaping.
      *
-     * @param sql The sql to extract an url from
+     * @param sql The sql to extract a url from
      * @return The url extracted from the sql, null if no such url
      */
     fun extractUrlFromFromClause(sql: String): String? {

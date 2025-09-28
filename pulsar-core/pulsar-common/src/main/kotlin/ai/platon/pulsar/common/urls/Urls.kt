@@ -111,7 +111,7 @@ interface UrlAware {
     val toURLOrNull: URL?
 
     /**
-     * An url is Nil if it equals to AppConstants.NIL_PAGE_URL
+     * A url is Nil if it equals to AppConstants.NIL_PAGE_URL
      * */
     val isNil: Boolean
     

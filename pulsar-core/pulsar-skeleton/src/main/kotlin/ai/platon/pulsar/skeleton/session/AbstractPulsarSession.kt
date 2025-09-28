@@ -19,6 +19,9 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
+import ai.platon.pulsar.skeleton.ai.WebDriverAgent
+import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
+import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
@@ -30,6 +33,7 @@ import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.SimpleCommandDispatcher
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import org.xml.sax.InputSource
@@ -374,7 +378,27 @@ abstract class AbstractPulsarSession(
     override fun loadDocument(url: UrlAware, options: LoadOptions) = parse(load(url, options))
     
     override fun loadDocument(url: NormURL) = parse(load(url))
-    
+
+    override fun extract(document: FeaturedDocument, fieldSelectors: Iterable<String>): Map<String, String?> {
+        return fieldSelectors.associateWith { document.selectFirstOrNull(it)?.text() }
+    }
+
+    override fun extract(document: FeaturedDocument, restrictSelector: String, fieldSelectors: Iterable<String>): List<Map<String, String?>> {
+        return document.select(restrictSelector).map { ele ->
+            fieldSelectors.associateWith { ele.selectFirstOrNull(it)?.text() }
+        }
+    }
+
+    override fun extract(document: FeaturedDocument, fieldSelectors: Map<String, String>): Map<String, String?> {
+        return fieldSelectors.entries.associate { it.key to document.selectFirstOrNull(it.value)?.text() }
+    }
+
+    override fun extract(document: FeaturedDocument, restrictSelector: String, fieldSelectors: Map<String, String>): List<Map<String, String?>> {
+        return document.select(restrictSelector).map { ele ->
+            fieldSelectors.entries.associate { it.key to ele.selectFirstOrNull(it.value)?.text() }
+        }
+    }
+
     override fun scrape(url: String, args: String, fieldSelectors: Iterable<String>): Map<String, String?> =
         scrape(url, options(args), fieldSelectors)
     
@@ -489,21 +513,41 @@ abstract class AbstractPulsarSession(
 
     override fun chat(prompt: String, element: Element) = chat(prompt +
             "\n\nThere is the text content of the selected element:\n\n\n" + element.text())
-    /**
-     * Instructs the webdriver to perform a series of actions based on the given prompt.
-     * This function converts the prompt into a sequence of webdriver actions, which are then executed.
-     *
-     * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
-     * @param driver The webdriver instance that will execute the actions.
-     * @return The response from the model, though in this implementation, the return value is not explicitly used.
-     */
-    override suspend fun instruct(prompt: String, driver: WebDriver): InstructionResult {
-        if (!ChatModelFactory.isModelConfigured(sessionConfig)) {
-            return InstructionResult.LLM_NOT_AVAILABLE
-        }
 
+    override suspend fun act(prompt: String, driver: WebDriver): InstructionResult {
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(sessionConfig)
+        val action = tta.generateWebDriverAction(prompt, driver)
+
+        return act(action, driver)
+    }
+
+    override suspend fun act(action: ActionOptions, driver: WebDriver): WebDriverAgent {
+        val agent = WebDriverAgent(driver)
+
+        val action = agent.execute(action)
+
+        return agent
+    }
+
+    override suspend fun act(action: ActionDescription, driver: WebDriver): InstructionResult {
+        if (action.functionCalls.isEmpty()) {
+            return InstructionResult(listOf(), listOf(), action.modelResponse)
+        }
+        val functionCalls = action.functionCalls.take(1)
+
+        // Dispatches and executes each action using a SimpleCommandDispatcher.
+        val dispatcher = SimpleCommandDispatcher()
+        val functionResults = functionCalls.map { action ->
+            dispatcher.execute(action, driver)
+        }
+        return InstructionResult(action.functionCalls, functionResults, action.modelResponse)
+    }
+
+    override suspend fun instruct(prompt: String, driver: WebDriver): InstructionResult {
+        // Converts the prompt into a sequence of webdriver actions using TextToAction.
+        val tta = TextToAction(sessionConfig)
+
         val actions = tta.generateWebDriverActionsWithToolCallSpecs(prompt)
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
@@ -607,11 +651,7 @@ abstract class AbstractPulsarSession(
             additionalFields = d.fields.takeIf { it.isNotEmpty() }
         )
     }
-    
-    private fun chat0() {
-    
-    }
-    
+
     private fun loadAndCache(normURL: NormURL): WebPage {
         return context.load(normURL).also {
             pageCacheOrNull?.putDatum(it.url, it)
