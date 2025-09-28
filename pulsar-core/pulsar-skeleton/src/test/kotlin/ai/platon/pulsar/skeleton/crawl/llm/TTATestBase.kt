@@ -2,7 +2,7 @@ package ai.platon.pulsar.skeleton.crawl.llm
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.external.ChatModel
+import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
@@ -21,7 +21,7 @@ open class TTATestBase {
 
         private val conf = ImmutableConfig(loadDefaults = true)
         private val isModelConfigured get() = ChatModelFactory.isModelConfigured(conf)
-        private lateinit var model: ChatModel
+        private lateinit var model: BrowserChatModel
 
         @BeforeAll
         @JvmStatic

@@ -100,7 +100,7 @@ open class ClassPathXmlSQLContext(configLocation: String) :
 open class DefaultClassPathXmlSQLContext() : ClassPathXmlSQLContext(
     System.getProperty(
         CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION,
-        AppConstants.PULSAR_CONTEXT_CONFIG_LOCATION
+        AppConstants.QL_CONTEXT_CONFIG_LOCATION
     )
 )
 

@@ -21,7 +21,7 @@ class ChatModelTests {
         private val clusterAnalysisPrompt = ResourceLoader.readString("prompts/data-expert/fulltext/prompt.p1723107189.6.remarkable.txt")
         private val conf = ImmutableConfig(loadDefaults = true)
         private val isModelConfigured get() = ChatModelFactory.isModelConfigured(conf)
-        private lateinit var model: ChatModel
+        private lateinit var model: BrowserChatModel
 
         @BeforeAll
         @JvmStatic

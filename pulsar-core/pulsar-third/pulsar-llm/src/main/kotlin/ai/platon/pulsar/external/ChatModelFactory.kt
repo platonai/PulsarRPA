@@ -4,8 +4,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.logging.ThrottlingLogger
-import ai.platon.pulsar.common.warn
-import ai.platon.pulsar.external.impl.ChatModelImpl
+import ai.platon.pulsar.external.impl.BrowserChatModelImpl
 import dev.langchain4j.model.openai.OpenAiChatModel
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
@@ -17,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 object ChatModelFactory {
     private val logger = getLogger(this::class)
     private val throttlingLogger = ThrottlingLogger(logger, ttl = Duration.ofHours(4))
-    private val models = ConcurrentHashMap<String, ChatModel>()
+    private val models = ConcurrentHashMap<String, BrowserChatModel>()
 
     private val llmGuideReported = AtomicBoolean(false)
     const val DOCUMENT_PATH = "https://github.com/platonai/browser4/blob/master/docs/config/llm/llm-config.md"
@@ -100,7 +99,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
      * @throws IllegalArgumentException If the configuration is not configured.
      */
     @Throws(IllegalArgumentException::class)
-    fun getOrCreate(conf: ImmutableConfig): ChatModel {
+    fun getOrCreate(conf: ImmutableConfig): BrowserChatModel {
         if (!isModelConfigured(conf, verbose = false)) {
             throw IllegalArgumentException("The LLM is not configured, see docs/config/llm/llm-config.md")
         }
@@ -162,19 +161,19 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
      *
      * @return The created model.
      */
-    fun getOrCreateOrNull(conf: ImmutableConfig): ChatModel? {
+    fun getOrCreateOrNull(conf: ImmutableConfig): BrowserChatModel? {
         if (!isModelConfigured(conf)) {
             return null
         }
 
         return kotlin.runCatching { getOrCreate(conf) }
-            .onFailure { warn(this, it.message ?: "Failed to create chat model") }
+            .onFailure { logger.warn("Failed to create chat model ", it) }
             .getOrNull()
     }
 
     fun getOrCreateOpenAICompatibleModel(
         modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig
-    ): ChatModel {
+    ): BrowserChatModel {
         val key = "$modelName:$apiKey:$baseUrl"
         return models.computeIfAbsent(key) { createOpenAICompatibleModel0(modelName, apiKey, baseUrl, conf) }
     }
@@ -198,12 +197,12 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
         return provider != null && llm != null && apiKey.length > minKeyLen
     }
 
-    private fun getOrCreateModel0(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
+    private fun getOrCreateModel0(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): BrowserChatModel {
         val key = "$modelName:$apiKey"
         return models.computeIfAbsent(key) { doCreateModel(provider, modelName, apiKey, conf) }
     }
 
-    private fun doCreateModel(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
+    private fun doCreateModel(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): BrowserChatModel {
         logger.info("Creating LLM with provider and model name | {} {} {}", provider, modelName, encodeSecretKey(apiKey))
 
         return when (provider) {
@@ -218,7 +217,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
      * QianWen API is compatible with OpenAI API, so it's OK to use OpenAIChatModel.
      * @see <a href='https://help.aliyun.com/zh/model-studio/getting-started/what-is-model-studio'>What is Model Studio</a>
      * */
-    private fun createBaiLianChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
+    private fun createBaiLianChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): BrowserChatModel {
         val baseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1"
         val lm = OpenAiChatModel.builder()
             .apiKey(apiKey)
@@ -230,7 +229,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
             .timeout(Duration.ofSeconds(60))
             .build()
 
-        return ChatModelImpl(lm, conf)
+        return BrowserChatModelImpl(lm, conf)
     }
 
     /**
@@ -238,7 +237,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
      *
      * @see <a href='https://github.com/deepseek-ai/DeepSeek-V2/issues/18'>DeepSeek-V2 Issue 18</a>
      * */
-    private fun createDeepSeekChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
+    private fun createDeepSeekChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): BrowserChatModel {
         val lm = OpenAiChatModel.builder()
             .apiKey(apiKey)
             .baseUrl("https://api.deepseek.com/")
@@ -248,7 +247,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
             .maxRetries(2)
             .timeout(Duration.ofSeconds(90))
             .build()
-        return ChatModelImpl(lm, conf)
+        return BrowserChatModelImpl(lm, conf)
     }
 
     /**
@@ -256,7 +255,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
      *
      * @see <a href='https://www.volcengine.com/docs/82379/1399008'>快速入门-调用模型服务</a>
      * */
-    private fun createVolcengineChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): ChatModel {
+    private fun createVolcengineChatModel(modelName: String, apiKey: String, conf: ImmutableConfig): BrowserChatModel {
         val lm = OpenAiChatModel.builder()
             .apiKey(apiKey)
             .baseUrl("https://ark.cn-beijing.volces.com/api/v3")
@@ -266,7 +265,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
             .maxRetries(2)
             .timeout(Duration.ofSeconds(90))
             .build()
-        return ChatModelImpl(lm, conf)
+        return BrowserChatModelImpl(lm, conf)
     }
 
     /**
@@ -276,7 +275,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
      * */
     private fun createOpenAICompatibleModel0(
         modelName: String, apiKey: String, baseUrl: String, conf: ImmutableConfig
-    ): ChatModel {
+    ): BrowserChatModel {
         val lm = OpenAiChatModel.builder()
             .apiKey(apiKey)
             .baseUrl(baseUrl)
@@ -286,7 +285,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
             .maxRetries(2)
             .timeout(Duration.ofSeconds(90))
             .build()
-        return ChatModelImpl(lm, conf)
+        return BrowserChatModelImpl(lm, conf)
     }
 
     /**

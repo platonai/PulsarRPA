@@ -3,7 +3,7 @@ package ai.platon.pulsar.external
 import ai.platon.pulsar.dom.FeaturedDocument
 import org.jsoup.nodes.Element
 
-interface ChatModel {
+interface BrowserChatModel {
     val settings: ChatModelSettings
 
     /**

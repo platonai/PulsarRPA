@@ -76,6 +76,10 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-ql</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-agentic</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.google.guava</groupId>

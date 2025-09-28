@@ -767,6 +767,13 @@
                 <scope>test</scope>
             </dependency>
 
+
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-bom</artifactId>
+                <version>${langchain4j.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.nibor.autolink</groupId>
                 <artifactId>autolink</artifactId>
@@ -849,6 +856,7 @@
         <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
         <mockito-junit-jupiter.version>5.11.0</mockito-junit-jupiter.version>
 
+        <langchain4j.version>1.5.0</langchain4j.version>
 
         <!-- Plugin versions -->
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>

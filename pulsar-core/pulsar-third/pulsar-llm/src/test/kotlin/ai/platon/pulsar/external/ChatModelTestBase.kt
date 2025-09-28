@@ -10,7 +10,7 @@ class ChatModelTestBase {
     companion object {
         private val conf = ImmutableConfig(loadDefaults = true)
         private val isModelConfigured get() = ChatModelFactory.isModelConfigured(conf)
-        lateinit var model: ChatModel
+        lateinit var model: BrowserChatModel
 
         @BeforeAll
         @JvmStatic

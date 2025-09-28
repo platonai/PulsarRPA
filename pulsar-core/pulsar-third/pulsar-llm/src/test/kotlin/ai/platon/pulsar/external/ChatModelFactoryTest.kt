@@ -2,7 +2,7 @@ package ai.platon.pulsar.external
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
-import ai.platon.pulsar.external.impl.ChatModelImpl
+import ai.platon.pulsar.external.impl.BrowserChatModelImpl
 import org.junit.jupiter.api.Assertions.assertNotNull
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
@@ -35,7 +35,7 @@ class ChatModelFactoryTest {
         val conf = ImmutableConfig()
         val model = ChatModelFactory.getOrCreate(provider, modelName, apiKey, conf)
         assertNotNull(model)
-        assertIs<ChatModelImpl>(model)
+        assertIs<BrowserChatModelImpl>(model)
 
         try {
             // This is a fake API key so you must fail

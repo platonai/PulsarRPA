@@ -3,10 +3,9 @@ package ai.platon.pulsar.skeleton.ai.tta
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.external.ChatModel
+import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
@@ -20,7 +19,7 @@ class TextToActionTestBase : WebDriverTestBase() {
 
         private val conf = ImmutableConfig(loadDefaults = true)
         private val isModelConfigured get() = ChatModelFactory.isModelConfigured(conf)
-        private lateinit var model: ChatModel
+        private lateinit var model: BrowserChatModel
 
         @BeforeAll
         @JvmStatic

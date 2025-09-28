@@ -26,6 +26,8 @@ import java.time.Instant;
 public interface AppConstants {
 
     String PULSAR_CONTEXT_CONFIG_LOCATION = "classpath*:/pulsar-beans/app-context.xml";
+    String QL_CONTEXT_CONFIG_LOCATION = "classpath*:/ql-beans/app-context.xml";
+    String AGENTIC_CONTEXT_CONFIG_LOCATION = "classpath*:/agentic-beans/app-context.xml";
 
     String YES_STRING = "y";
 

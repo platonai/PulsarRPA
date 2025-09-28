@@ -20,11 +20,11 @@ import java.io.IOException
 import java.io.InterruptedIOException
 import java.time.Duration
 
-open class ChatModelImpl(
+open class BrowserChatModelImpl(
     private val langchainModel: dev.langchain4j.model.chat.ChatModel,
     private val conf: ImmutableConfig
-) : ChatModel {
-    private val logger = getLogger(ChatModelImpl::class)
+) : BrowserChatModel {
+    private val logger = getLogger(BrowserChatModelImpl::class)
 
     private val llmResponseCacheTTL = conf.getLong("llm.response.cache.ttl", 600L) // Default to 10 minutes if not set
 

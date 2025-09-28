@@ -46,6 +46,6 @@ open class ClassPathXmlAgenticContext(configLocation: String) :
 open class DefaultClassPathXmlAgenticContext() : ClassPathXmlAgenticContext(
     System.getProperty(
         CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION,
-        AppConstants.PULSAR_CONTEXT_CONFIG_LOCATION
+        AppConstants.AGENTIC_CONTEXT_CONFIG_LOCATION
     )
 )

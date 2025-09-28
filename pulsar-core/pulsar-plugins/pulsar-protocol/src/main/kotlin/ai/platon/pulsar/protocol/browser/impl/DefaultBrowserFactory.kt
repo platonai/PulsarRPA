@@ -20,6 +20,8 @@ class DefaultBrowserFactory(
         BrowserType.PLAYWRIGHT_CHROME to PlaywrightBrowserLauncher()
     )
 
+    constructor(conf: ImmutableConfig) : this(conf, BrowserSettings(conf))
+
     @Synchronized
     override fun launch(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
