@@ -57,48 +57,47 @@ open class LoadOptions constructor(
 ) : CommonOptions(argv) {
 
     /**
-     * The entity name representing the type of content being crawled (e.g., article, product, hotel).
-     * Used for classification and specialized processing of different content types.
+     * Represents the type of content being crawled, such as an article, product, or hotel.
+     * This is used for classifying and applying specialized processing to different content types.
      */
     @ApiPublic
     @Parameter(
         names = ["-e", "-entity", "--entity"],
-        description = "The entity of the page, it's optional."
+        description = "Specifies the entity type of the page. This is optional."
     )
     var entity = ""
-    
+
     /**
-     * Optional label used to categorize tasks into logical groups.
-     * Useful for organizing related crawl tasks and filtering/querying results.
+     * A label to categorize tasks into logical groups.
+     * Useful for organizing related crawl tasks and enabling easier filtering or querying of results.
      */
     @ApiPublic
     @Parameter(
         names = ["-l", "-label", "--label"],
-        description = "The task label, it's optional and can be used to group tasks"
+        description = "An optional label to group tasks logically."
     )
     var label = ""
-    
+
     /**
-     * Optional identifier to distinguish between separate tasks.
-     * Provides a unique reference for individual crawl operations within the system.
+     * A unique identifier for distinguishing between separate tasks.
+     * This helps in tracking and managing individual crawl operations within the system.
      */
     @ApiPublic
     @Parameter(
         names = ["-taskId", "--task-id"],
-        description = "The taskId is optional and serves to differentiate tasks if needed."
+        description = "An optional task ID to differentiate tasks."
     )
     var taskId = ""
 
     /**
-     * Timestamp used to identify a batch of related tasks.
-     * 
-     * Initialized to Instant.EPOCH to maintain symmetry between parse() and toString() operations.
-     * When specified, groups tasks that belong to the same logical batch or execution window.
+     * A timestamp used to group related tasks into a batch.
+     * Initialized to Instant.EPOCH for consistency between parsing and string conversion operations.
+     * This is useful for identifying tasks that belong to the same execution window.
      */
     @ApiPublic
     @Parameter(
         names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
-        description = "The taskTime is usually used to denote the name of a batch of tasks."
+        description = "An optional timestamp to denote a batch of tasks."
     )
     var taskTime = Instant.EPOCH
     
