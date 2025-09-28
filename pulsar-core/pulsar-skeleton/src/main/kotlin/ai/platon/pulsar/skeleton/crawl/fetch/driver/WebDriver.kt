@@ -413,10 +413,8 @@ interface WebDriver : Closeable {
     suspend fun act(action: ActionOptions): WebDriverAgent
 
     /**
-     * Perform an action described by [action].
-     *
-     * @param action The action description that describes the action to be performed by the webdriver.
-     * @return The response from the model, though in this implementation, the return value is not explicitly used.
+     * Perform a model-generated action described by [action]. Executes (possibly multiple) low-level driver operations
+     * and returns an [InstructionResult] containing both tool calls and their outcomes.
      */
     @Throws(WebDriverException::class)
     suspend fun act(action: ActionDescription): InstructionResult
@@ -1226,7 +1224,7 @@ interface WebDriver : Closeable {
 
 
     /**
-     * Returns the node's property value, the node is located by [selector], the property is [attrName].
+     * Returns the node's property value, the node is located by [selector], the property is [propName].
      *
      * If the node does not exist, or the property does not exist, returns null.
      *
@@ -1376,143 +1374,57 @@ interface WebDriver : Closeable {
     suspend fun evaluate(expression: String): Any?
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
-     * it is not returned.
-     *
-     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
-     *
-     * ```kotlin
-     * val title = driver.evaluate("document.title", "Untitled")
-     * ```
-     *
-     * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or null.
-     * */
+     * Executes JavaScript and returns the result or [defaultValue] if evaluation returns null or incompatible type.
+     */
     @Throws(WebDriverException::class)
     suspend fun <T> evaluate(expression: String, defaultValue: T): T
 
-    /**
-     * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
-     * it is not returned.
-     *
-     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
-     *
-     * ```kotlin
-     * val title = driver.evaluate("document.title")
-     * ```
-     *
-     * @param expression Javascript expression to evaluate
-     * @return expression result
-     * */
+    /** Detailed evaluation metadata (beta). */
     @Beta
     @Throws(WebDriverException::class)
     suspend fun evaluateDetail(expression: String): JsEvaluation?
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
-     * it is returned as a JSON object.
-     *
-     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
-     *
-     * ```kotlin
-     * val title = driver.evaluate("document.title")
-     * ```
-     *
-     * To execute multi-line JavaScript code:
-     *
-     * ```kotlin
-     * val code = """
-     * () => {
-     *   const a = 10;
-     *   const b = 20;
-     *   return a * b;
-     * }
-     * """.trimIndent()
-     *
-     * val result = driver.evaluate(code)
-     * ```
-     *
-     * ### 🔍 Notes:
-     * * **Wrap the code in an IIFE (Immediately Invoked Function Expression)** to return a value.
-     * * **Escape line breaks** with `\n`.
-     *
-     * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or JSON values (if it was requested).
-     * */
+     * Executes JavaScript returning JSONifiable value if possible (objects serialized), else primitive/string/null.
+     */
     @Beta
     @Throws(WebDriverException::class)
     suspend fun evaluateValue(expression: String): Any?
 
-    /**
-     * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
-     * it is returned as a JSON object.
-     *
-     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
-     *
-     * ```kotlin
-     * val title = driver.evaluate("document.title", "Untitled")
-     * ```
-     *
-     * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or JSON values (if it was requested).
-     * */
+    /** Executes JS returning JSONifiable value or [defaultValue] if null/incompatible. */
     @Beta
     @Throws(WebDriverException::class)
     suspend fun <T> evaluateValue(expression: String, defaultValue: T): T
 
-    /**
-     * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
-     * it is returned as a JSON object.
-     *
-     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
-     *
-     * ```kotlin
-     * val title = driver.evaluate("document.title")
-     * ```
-     *
-     * @param expression Javascript expression to evaluate
-     * @return expression result
-     * */
+    /** Detailed value evaluation metadata (beta). */
     @Beta
     @Throws(WebDriverException::class)
     suspend fun evaluateValueDetail(expression: String): JsEvaluation?
 
     /**
-     * This method scrolls element into view if needed, and then ake a screenshot of the element.
+     * Capture a screenshot of the current viewport (or primary browsing context) after ensuring any pending layout.
+     * If the backend supports element-centric capture this may represent the full page; implementation specific.
+     *
+     * The target element (if any) is scrolled into view before capture.
      *
      * ```kotlin
-     * val screenshot = driver.captureScreenshot()
-     * val bytes = Base64.getDecoder().decode(screenshot)
-     * val path = AppPaths.TMP_DIR.resolve("screenshot.jpg")
-     * AppFiles.saveTo(bytes, path, true)
+     * val base64 = driver.captureScreenshot()
+     * val bytes = Base64.getDecoder().decode(base64)
      * ```
-     *
-     * @return The screenshot of the element in base64 format.
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(): String?
 
     /**
-     * This method scrolls element into view if needed, and then ake a screenshot of the element.
-     *
-     * ```kotlin
-     * val screenshot = driver.captureScreenshot("h2.title")
-     * val bytes = Base64.getDecoder().decode(screenshot)
-     * val path = AppPaths.TMP_DIR.resolve("screenshot.jpg")
-     * AppFiles.saveTo(bytes, path, true)
-     * ```
-     *
-     * @param selector The selector of the element to capture.
-     * @return The screenshot of the element in base64 format.
+     * Scroll the element matched by [selector] into view (if needed) then take a screenshot of that element's bounding box.
+     * Returns a Base64 encoded image (implementation usually PNG/JPEG).
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(selector: String): String?
 
     /**
-     * This method scrolls element into view if needed, and then ake a screenshot of the element.
-     *
-     * @param rect The rectangle of the element to capture.
-     * @return The screenshot of the element in base64 format.
+     * Take a screenshot of the rectangle specified by [rect] in the current page coordinate space. Caller is responsible
+     * for ensuring the rectangle is visible or scrolled into view if the implementation requires it.
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(rect: RectD): String?
@@ -1577,7 +1489,7 @@ interface WebDriver : Closeable {
      *
      * @param duration The amount of time to delay.
      * */
-    suspend fun delay(duration: java.time.Duration) = kotlinx.coroutines.delay(duration.toMillis())
+    suspend fun delay(duration: Duration) = kotlinx.coroutines.delay(duration.toMillis())
 
     /**
      * Delay for a given amount of time.
