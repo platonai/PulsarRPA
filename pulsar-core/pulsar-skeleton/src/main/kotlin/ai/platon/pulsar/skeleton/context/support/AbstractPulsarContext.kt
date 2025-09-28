@@ -203,10 +203,10 @@ abstract class AbstractPulsarContext(
      * Create a session
      * */
     @Throws(Exception::class)
-    abstract override fun createSession(): AbstractPulsarSession
+    abstract override fun createSession(): PulsarSession
 
     @Throws(Exception::class)
-    override fun getOrCreateSession(): AbstractPulsarSession = sessions.values.firstOrNull() ?: createSession()
+    override fun getOrCreateSession(): PulsarSession = sessions.values.firstOrNull() ?: createSession()
 
     /**
      * Close the given session

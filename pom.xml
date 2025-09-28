@@ -718,6 +718,12 @@
                 <artifactId>pulsar-ql</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-agentic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-rest</artifactId>

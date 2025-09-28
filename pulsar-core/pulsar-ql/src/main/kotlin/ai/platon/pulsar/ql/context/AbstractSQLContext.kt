@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.sql.SQLUtils
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
+import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.SessionDelegate
 import ai.platon.pulsar.skeleton.session.PulsarEnvironment
 import org.h2.api.ErrorCode
@@ -25,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * The abstract SQL context, every X-SQL staff should be within the SQL context
  */
-abstract class AbstractSQLContext constructor(
+abstract class AbstractSQLContext(
     applicationContext: AbstractApplicationContext,
     pulsarEnvironment: PulsarEnvironment = PulsarEnvironment(),
 ) : AbstractPulsarContext(applicationContext, pulsarEnvironment), SQLContext {
@@ -121,7 +122,7 @@ abstract class AbstractSQLContext constructor(
     }
     
     @Throws(Exception::class)
-    abstract override fun createSession(sessionDelegate: SessionDelegate): AbstractSQLSession
+    abstract override fun createSession(sessionDelegate: SessionDelegate): SQLSession
 
     override fun sessionCount(): Int {
         ensureRunning()
@@ -129,13 +130,13 @@ abstract class AbstractSQLContext constructor(
     }
     
     @Throws(Exception::class)
-    override fun getSession(sessionInterface: SessionInterface): AbstractSQLSession {
+    override fun getSession(sessionInterface: SessionInterface): SQLSession {
         val h2session = sessionInterface as Session
         return getSession(h2session.serialId)
     }
 
     @Throws(Exception::class)
-    override fun getSession(sessionId: Int): AbstractSQLSession {
+    override fun getSession(sessionId: Int): SQLSession {
         ensureRunning()
         val session = sqlSessions[sessionId]
         if (session == null) {

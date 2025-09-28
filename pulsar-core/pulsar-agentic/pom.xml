@@ -15,29 +15,16 @@
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
         <version>4.0.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>pulsar-core</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>pulsar-agentic</artifactId>
+    <name>Pulsar Agentic</name>
 
-    <name>Pulsar Core</name>
-
-    <build>
-        <defaultGoal>package</defaultGoal>
-    </build>
-
-    <modules>
-        <module>pulsar-resources</module>
-        <module>pulsar-common</module>
-        <module>pulsar-dom</module>
-        <module>pulsar-persist</module>
-        <module>pulsar-plugins</module>
-        <module>pulsar-ql-common</module>
-        <module>pulsar-third</module>
-        <module>pulsar-tools</module>
-        <module>pulsar-skeleton</module>
-        <module>pulsar-spring-support</module>
-        <module>pulsar-ql</module>
-        <module>pulsar-agentic</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-ql</artifactId>
+        </dependency>
+    </dependencies>
 </project>
