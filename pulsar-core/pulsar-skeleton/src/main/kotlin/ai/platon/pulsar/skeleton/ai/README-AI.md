@@ -104,6 +104,6 @@ Nonsense tests in WebDriverAgentBasicTest, none of the tests make sense.
 
 ### Examples
 
-
+[SessionInstructionsExample](/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/agent/SessionInstructions.kt)
 
 
