@@ -40,7 +40,7 @@ data class InteractSettings(
      * */
     var pageLoadTimeout: Duration = Duration.ofMinutes(3),
     /**
-     * Whether to bring the page to the front.
+     * Whether to bring the page to the front before scroll.
      * */
     var bringToFront: Boolean = false,
 ) {
