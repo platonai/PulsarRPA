@@ -51,7 +51,7 @@ internal class RPACrawler(private val session: PulsarSession = createSession()) 
  * Demonstrates how to use RPA for Web scraping.
  * */
 fun main() {
-    PulsarSettings().withDefaultBrowser()
+    PulsarSettings.withDefaultBrowser()
 
     val url = "https://www.amazon.com/dp/B08PP5MSVB"
     val args = "-refresh -parse"

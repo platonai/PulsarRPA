@@ -32,7 +32,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
 
     @BeforeEach
     fun setupBrowserContext() {
-        PulsarSettings().withSPA()
+        PulsarSettings.withSPA()
     }
 
     @BeforeEach

@@ -65,7 +65,7 @@ public class JvmHighPerformanceCrawler {
             System.setProperty(CapabilityTypes.PROXY_ROTATION_URL, proxyHubURL);
         }
 
-        var settings = new PulsarSettings();
+        var settings = new PulsarSettings;
         settings.maxBrowserContexts(2);
         settings.maxOpenTabs(8);
         settings.withSequentialBrowsers();

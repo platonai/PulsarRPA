@@ -31,8 +31,8 @@ class BrowserRotationTest : MassiveTestBase() {
         @JvmStatic
         @BeforeAll
         fun initPulsarSettings() {
-            PulsarSettings().maxBrowserContexts(4).maxOpenTabs(8)
-            // PulsarSettings().withTemporaryBrowser()
+            PulsarSettings.maxBrowserContexts(4).maxOpenTabs(8)
+            // PulsarSettings.withTemporaryBrowser()
         }
     }
 
@@ -44,13 +44,13 @@ class BrowserRotationTest : MassiveTestBase() {
 
     @Test
     fun testWithSequentialBrowser() {
-        PulsarSettings().withSequentialBrowsers()
+        PulsarSettings.withSequentialBrowsers()
         runAndAwait()
     }
 
     @Test
     fun testWithTemporaryBrowser() {
-        PulsarSettings().withTemporaryBrowser()
+        PulsarSettings.withTemporaryBrowser()
         runAndAwait()
     }
 

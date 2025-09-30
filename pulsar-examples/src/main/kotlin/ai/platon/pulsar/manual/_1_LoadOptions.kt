@@ -9,7 +9,7 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 fun main() {
     // Use the default browser which has an isolated profile.
     // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
-    PulsarSettings().withDefaultBrowser()
+    PulsarSettings.withDefaultBrowser()
 
     // Create a pulsar session
     val session = PulsarContexts.createSession()

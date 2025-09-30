@@ -14,7 +14,7 @@ import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 fun main() {
     println("This is a bad case. Playwright is not threadsafe nor coroutine safe")
 
-    PulsarSettings().withBrowser(BrowserType.PLAYWRIGHT_CHROME)
+    PulsarSettings.withBrowser(BrowserType.PLAYWRIGHT_CHROME)
     val context = PulsarContexts.create()
 
     val parseHandler = { _: WebPage, document: FeaturedDocument ->

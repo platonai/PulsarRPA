@@ -66,7 +66,7 @@ class SinglePageApplicationController(
                 require(session.isActive)
 
                 // Use a real browser for SPA rendering
-                PulsarSettings().withDefaultBrowser()
+                PulsarSettings.withDefaultBrowser()
 
                 // 如果已经初始化过，直接返回健康状态
                 if (isInitialized && browser != null) {
@@ -128,7 +128,7 @@ class SinglePageApplicationController(
         }
 
         // Use a real browser for SPA rendering
-        PulsarSettings().withDefaultBrowser()
+        PulsarSettings.withDefaultBrowser()
             .withInteractSettings(InteractSettings.Builder.DEFAULT.noScroll())
 
         runBlocking {

@@ -12,7 +12,7 @@ import java.time.OffsetDateTime
 fun main() {
     // Use the default browser for the best experience
     // Enable Single Page Application mode to avoid timeout
-    PulsarSettings().withDefaultBrowser().withSPA()
+    PulsarSettings.withDefaultBrowser().withSPA()
 
     val session = PulsarContexts.createSession()
     val url = "https://www.amazon.com/dp/B08PP5MSVB"

@@ -8,7 +8,7 @@ import kotlinx.coroutines.runBlocking
 class SessionInstructionsExample {
     init {
         // Single Page Application
-        PulsarSettings().withSPA()
+        PulsarSettings.withSPA()
     }
 
     val session = AgenticContexts.createSession()

@@ -114,7 +114,7 @@ class PrintFlowEventHandlers: DefaultPageEventHandlers() {
  * Demonstrates how to use event handlers.
  * */
 fun main() {
-    PulsarSettings().withDefaultBrowser()
+    PulsarSettings.withDefaultBrowser()
 
     val url = "https://www.amazon.com/dp/B08PP5MSVB"
     val session = PulsarContexts.createSession()
