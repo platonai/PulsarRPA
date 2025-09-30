@@ -129,6 +129,11 @@
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+        </dependency>
+
         <!-- Automatic Restart, LiveReload, Remote Debug -->
 <!--        <dependency>-->
 <!--            <groupId>org.springframework.boot</groupId>-->

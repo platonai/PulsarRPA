@@ -33,4 +33,6 @@ class SessionInstructionsExample {
     }
 }
 
-fun main() = runBlocking { SessionInstructionsExample().run() }
+fun main() = runBlocking {
+    SessionInstructionsExample().run()
+}

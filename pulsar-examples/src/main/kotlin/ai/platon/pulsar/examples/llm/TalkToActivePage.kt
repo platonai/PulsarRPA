@@ -33,7 +33,8 @@ get the text of the element with id 'title'
                 println("\n")
                 println(OffsetDateTime.now())
                 println(">>> $prompt")
-                val result = session.instruct(prompt, driver)
+                session.bindDriver(driver)
+                val result = session.instruct(prompt)
                 println(result.modelResponse)
                 result.functionCalls.forEachIndexed { i, functionCall ->
                     println()
