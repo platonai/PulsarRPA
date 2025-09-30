@@ -11,10 +11,11 @@ class SessionInstructionsExample {
         PulsarSettings.withSPA()
     }
 
-    val session = AgenticContexts.createSession()
+    val context = AgenticContexts.create()
+    val session = context.createSession()
 
     suspend fun run() {
-        val driver = session.context.browserFactory.launchDefaultBrowser().newDriver()
+        val driver = context.launchDefaultBrowser().newDriver()
         session.bindDriver(driver)
 
         val url = "https://news.ycombinator.com/news"

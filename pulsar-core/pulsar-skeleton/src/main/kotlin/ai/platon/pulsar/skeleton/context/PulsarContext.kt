@@ -11,7 +11,9 @@ import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -97,6 +99,30 @@ interface PulsarContext: java.lang.AutoCloseable {
      * @param priority The priority of the object, the higher the priority, the earlier the object is closed
      * */
     fun registerClosable(closable: java.lang.AutoCloseable, priority: Int = 0)
+
+    /**
+     * Launch the system default browser, the system default browser is your daily used browser.
+     * */
+    @Throws(BrowserLaunchException::class)
+    fun launchSystemDefaultBrowser(): Browser = browserFactory.launchSystemDefaultBrowser()
+
+    /**
+     * Launch the default browser, notice, the default browser is not the one you used daily.
+     * */
+    @Throws(BrowserLaunchException::class)
+    fun launchDefaultBrowser(): Browser = browserFactory.launchDefaultBrowser()
+
+    /**
+     * Launch the prototype browser, the prototype browser is a browser instance with default settings.
+     * */
+    @Throws(BrowserLaunchException::class)
+    fun launchPrototypeBrowser(): Browser = browserFactory.launchPrototypeBrowser()
+
+    /**
+     * Launch a random temporary browser, the browser's user data dir is a random temporary dir.
+     * */
+    @Throws(BrowserLaunchException::class)
+    fun launchRandomTempBrowser(): Browser = browserFactory.launchRandomTempBrowser()
 
     /**
      * Normalize a url, the url can be in one of the following forms:
