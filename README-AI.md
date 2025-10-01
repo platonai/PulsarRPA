@@ -24,6 +24,7 @@ and **CI/CD integration**.
 - Keep functions **small and single-responsibility**
 - Document all **public functions and classes** with KDoc
 
+
 ---
 
 ## 3. 🤖 AI Agent Behavior
