@@ -51,7 +51,7 @@ data class ElementBounds(
 )
 
 data class ActionOptions(
-    val prompt: String,
+    val action: String,
     val modelName: String? = null,
     val variables: Map<String, String>? = null,
     val domSettleTimeoutMs: Int? = null,

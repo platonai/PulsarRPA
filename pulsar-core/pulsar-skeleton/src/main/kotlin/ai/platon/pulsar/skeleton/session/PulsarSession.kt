@@ -2257,17 +2257,11 @@ interface PulsarSession : AutoCloseable {
      */
     fun chat(prompt: String, element: Element): ModelResponse
 
-    /**
-     * Instructs the webdriver to perform EXACT ONE action based on the given prompt.
-     * This function converts the prompt into EXACT ONE webdriver action, which will then be executed.
-     *
-     * @param action The textual prompt that describes the action to be performed by the webdriver.
-     * @return The response from the model, though in this implementation, the return value is not explicitly used.
-     */
-    suspend fun act(action: String): InstructionResult
+    @Beta
+    suspend fun act(action: String): WebDriverAgent
 
     @Beta
-    suspend fun multiAct(action: ActionOptions): WebDriverAgent
+    suspend fun act(action: ActionOptions): WebDriverAgent
 
     /**
      * Perform an action described by [action].

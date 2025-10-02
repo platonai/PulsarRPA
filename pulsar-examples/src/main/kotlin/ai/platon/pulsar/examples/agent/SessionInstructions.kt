@@ -48,7 +48,7 @@ class SessionInstructionsExample {
         // Basic action examples (natural language instructions)
         step("Action: search for 'browser'")
         var actOptions = ActionOptions("search for 'browser'")
-        var actResult = session.multiAct(actOptions)
+        var actResult = session.act(actOptions)
         result("action result", actResult)
 
         step("Capture body text after search (snippet)")
@@ -57,7 +57,7 @@ class SessionInstructionsExample {
 
         step("Action: click the 3rd link")
         actOptions = ActionOptions("click the 3rd link")
-        actResult = session.multiAct(actOptions)
+        actResult = session.act(actOptions)
         result("action result", actResult)
 
         step("Capture body text after clicking 3rd link (snippet)")
@@ -69,7 +69,7 @@ class SessionInstructionsExample {
         // 1) Use the site's search box (example: enter text and submit)
         step("Action: find the search box, type 'web scraping' and submit the form")
         actOptions = ActionOptions("find the search box, type 'web scraping' and submit the form")
-        actResult = session.multiAct(actOptions)
+        actResult = session.act(actOptions)
         result("action result", actResult)
 
         step("Re-attach current URL and parse after search form submission")
@@ -85,7 +85,7 @@ class SessionInstructionsExample {
         // 2) Click a link by visible text
         step("Action: click the first link that contains 'Show HN' or 'Ask HN'")
         actOptions = ActionOptions("click the first link that contains 'Show HN' or 'Ask HN'")
-        actResult = session.multiAct(actOptions)
+        actResult = session.act(actOptions)
         result("action result", actResult)
 
         step("Capture body text after clicking Show/Ask HN link (snippet)")
@@ -95,37 +95,37 @@ class SessionInstructionsExample {
         // 3) Scroll to bottom
         step("Action: scroll to the bottom of the page and wait for new content to load")
         actOptions = ActionOptions("scroll to the bottom of the page and wait for new content to load")
-        actResult = session.multiAct(actOptions)
+        actResult = session.act(actOptions)
         result("action result", actResult)
 
         // 4) Open the first comment thread
         step("Action: open the first comment thread on the page")
         actOptions = ActionOptions("open the first comment thread on the page")
-        actResult = session.multiAct(actOptions)
+        actResult = session.act(actOptions)
         result("action result", actResult)
 
         // 5) Navigate back
         step("Action: navigate back")
         actOptions = ActionOptions("navigate back")
-        actResult = session.multiAct(actOptions)
+        actResult = session.act(actOptions)
         result("action result", actResult)
 
         // 5b) Navigate forward
         step("Action: navigate forward")
         actOptions = ActionOptions("navigate forward")
-        actResult = session.multiAct(actOptions)
+        actResult = session.act(actOptions)
         result("action result", actResult)
 
         // 6) Take a screenshot
         step("Action: take a full-page screenshot and save it")
         actOptions = ActionOptions("take a full-page screenshot and save it")
-        actResult = session.multiAct(actOptions)
+        actResult = session.act(actOptions)
         result("action result", actResult)
 
         // 7) Extract specific data after interactions
         step("Action: extract article titles and their hrefs from the main list")
         actOptions = ActionOptions("extract article titles and their hrefs from the main list")
-        actResult = session.multiAct(actOptions)
+        actResult = session.act(actOptions)
         result("action result", actResult)
 
         step("Fallback: attach current URL and parse for titles")

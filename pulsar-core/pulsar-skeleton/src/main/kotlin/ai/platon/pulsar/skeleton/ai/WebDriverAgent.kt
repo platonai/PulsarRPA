@@ -156,7 +156,7 @@ class WebDriverAgent(
      * Main execution logic with enhanced error handling and monitoring
      */
     private suspend fun executeInternal(action: ActionOptions, sessionId: String, startTime: Instant, attempt: Int): ModelResponse {
-        val instruction = action.prompt
+        val instruction = action.action
         val context = ExecutionContext(sessionId, 0, "execute", getCurrentUrl())
 
         logStructured("Starting WebDriverAgent execution", context, mapOf(

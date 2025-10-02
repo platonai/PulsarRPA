@@ -529,17 +529,21 @@ abstract class AbstractPulsarSession(
     override fun chat(prompt: String, element: Element) = chat(prompt +
             "\n\nThere is the text content of the selected element:\n\n\n" + element.text())
 
-    override suspend fun act(action: String): InstructionResult {
-        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
-        // Converts the prompt into a sequence of webdriver actions using TextToAction.
-        val tta = TextToAction(sessionConfig)
-        val action = tta.generateWebDriverAction(action, driver)
+    override suspend fun act(action: String): WebDriverAgent {
+        return act(ActionOptions(action = action))
+    }
 
-        return performAct(action)
+    override suspend fun act(action: ActionOptions): WebDriverAgent {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `multiAct`" }
+        val agent = WebDriverAgent(driver)
+
+        agent.execute(action)
+
+        return agent
     }
 
     override suspend fun performAct(action: ActionDescription): InstructionResult {
-        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `performAct`" }
         if (action.functionCalls.isEmpty()) {
             return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
@@ -551,15 +555,6 @@ abstract class AbstractPulsarSession(
             dispatcher.execute(action, driver)
         }
         return InstructionResult(action.functionCalls, functionResults, action.modelResponse)
-    }
-
-    override suspend fun multiAct(action: ActionOptions): WebDriverAgent {
-        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
-        val agent = WebDriverAgent(driver)
-
-        agent.execute(action)
-
-        return agent
     }
 
     @Deprecated("Use multiAct instead", replaceWith = ReplaceWith("multiAct(action)"))
