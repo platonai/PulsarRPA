@@ -54,7 +54,7 @@ open class LoadOptions constructor(
     var rawEvent: PageEventHandlers? = null,
     var rawItemEvent: PageEventHandlers? = null,
     var referrer: String? = null,
-) : CommonOptions(argv) {
+) : PulsarOptions(argv) {
 
     /**
      * Represents the type of content being crawled, such as an article, product, or hotel.
