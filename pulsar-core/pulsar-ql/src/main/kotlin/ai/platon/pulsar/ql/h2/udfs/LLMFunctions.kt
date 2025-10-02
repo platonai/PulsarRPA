@@ -43,7 +43,7 @@ object LLMFunctions {
     @JvmStatic
     @UDFunction(description = "Get the LLM model name")
     fun modelName(): String {
-        return session.unmodifiedConfig["llm.name"] ?: "unknown"
+        return session.configuration["llm.name"] ?: "unknown"
     }
 
     @JvmStatic

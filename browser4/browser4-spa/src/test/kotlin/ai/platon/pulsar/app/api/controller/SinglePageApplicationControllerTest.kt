@@ -35,7 +35,7 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
 
     @BeforeEach
     fun `init Single Page Application`() {
-        Assumptions.assumeTrue { ChatModelFactory.isModelConfigured(session.unmodifiedConfig) }
+        Assumptions.assumeTrue { ChatModelFactory.isModelConfigured(session.configuration) }
 
         init()
     }

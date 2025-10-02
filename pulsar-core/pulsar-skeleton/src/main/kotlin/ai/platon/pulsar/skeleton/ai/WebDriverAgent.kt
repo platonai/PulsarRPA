@@ -6,6 +6,7 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
 import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
+import ai.platon.pulsar.skeleton.ai.tta.InteractiveElement
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonObject
@@ -30,7 +31,7 @@ data class WebDriverAgentConfig(
     val consecutiveNoOpLimit: Int = 5,
     val actionGenerationTimeoutMs: Long = 30000,
     val screenshotCaptureTimeoutMs: Long = 5000,
-    val enableStructuredLogging: Boolean = true,
+    val enableStructuredLogging: Boolean = false,
     val enableDebugMode: Boolean = false,
     val enablePerformanceMetrics: Boolean = true,
     val memoryCleanupIntervalSteps: Int = 50,
@@ -91,7 +92,7 @@ class WebDriverAgent(
     private val model get() = tta.model
 
     // Enhanced state management
-    private val history = Collections.synchronizedList(mutableListOf<String>())
+    private val _history = mutableListOf<String>()
     private val performanceMetrics = PerformanceMetrics()
     private val retryCounter = AtomicInteger(0)
     private val consecutiveFailureCounter = AtomicInteger(0)
@@ -99,6 +100,8 @@ class WebDriverAgent(
 
     // Action validation cache
     private val validationCache = ConcurrentHashMap<String, Boolean>()
+
+    val history: List<String> get() = _history
 
     suspend fun execute(action: ActionOptions): ModelResponse {
         Files.createDirectories(baseDir)
@@ -153,7 +156,7 @@ class WebDriverAgent(
      * Main execution logic with enhanced error handling and monitoring
      */
     private suspend fun executeInternal(action: ActionOptions, sessionId: String, startTime: Instant, attempt: Int): ModelResponse {
-        val instruction = action.action
+        val instruction = action.prompt
         val context = ExecutionContext(sessionId, 0, "execute", getCurrentUrl())
 
         logStructured("Starting WebDriverAgent execution", context, mapOf(
@@ -173,10 +176,14 @@ class WebDriverAgent(
                 val stepStartTime = Instant.now()
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
 
+                // Extract interactive elements each step (could be optimized via diffing later)
+                val interactiveElements = runCatching { tta.extractInteractiveElements(driver) }.getOrElse { emptyList() }
+
                 logStructured("Executing step", stepContext, mapOf(
                     "step" to step,
                     "maxSteps" to config.maxSteps,
-                    "consecutiveNoOps" to consecutiveNoOps
+                    "consecutiveNoOps" to consecutiveNoOps,
+                    "interactiveElementCount" to interactiveElements.size
                 ))
 
                 // Memory cleanup at intervals
@@ -185,10 +192,10 @@ class WebDriverAgent(
                 }
 
                 val screenshotB64 = captureScreenshotWithRetry(stepContext)
-                val userMsg = buildUserMessage(instruction)
+                val userMsg = buildUserMessage(instruction, interactiveElements)
 
                 val message = buildExecutionMessage(systemPrompt, userMsg, screenshotB64)
-                val actionResult = generateActionWithRetry(message, stepContext)
+                val actionResult = generateActionWithRetry(message, stepContext, interactiveElements)
 
                 if (actionResult == null) {
                     consecutiveNoOps++
@@ -313,7 +320,7 @@ class WebDriverAgent(
             "message" to message
         ) + additionalData
 
-        logger.info("WebDriverAgent: {}", logData)
+        logger.info("{}", logData)
     }
 
     /**
@@ -351,9 +358,10 @@ class WebDriverAgent(
     /**
      * Generates action with retry mechanism
      */
-    private suspend fun generateActionWithRetry(message: String, context: ExecutionContext): ActionDescription? {
+    private suspend fun generateActionWithRetry(message: String, context: ExecutionContext, interactiveElements: List<InteractiveElement>): ActionDescription? {
         return try {
-            tta.generateWebDriverAction(message, driver, null)
+            // Use overload supplying extracted elements to avoid re-extraction
+            tta.generateWebDriverAction(message, interactiveElements, null)
         } catch (e: Exception) {
             logError("Action generation failed", e, context.sessionId)
             consecutiveFailureCounter.incrementAndGet()
@@ -506,9 +514,9 @@ class WebDriverAgent(
     private fun performMemoryCleanup(context: ExecutionContext) {
         try {
             // Clean up history if it gets too large
-            if (history.size > config.maxHistorySize) {
-                val toRemove = history.size - config.maxHistorySize + 10
-                history.subList(0, toRemove).clear()
+            if (_history.size > config.maxHistorySize) {
+                val toRemove = _history.size - config.maxHistorySize + 10
+                _history.subList(0, toRemove).clear()
             }
 
             // Clear validation cache periodically
@@ -526,10 +534,10 @@ class WebDriverAgent(
      * Enhanced history management
      */
     private fun addToHistory(entry: String) {
-        history.add(entry)
-        if (history.size > config.maxHistorySize * 2) {
+        _history.add(entry)
+        if (_history.size > config.maxHistorySize * 2) {
             // Remove oldest entries to prevent memory issues
-            history.subList(0, config.maxHistorySize).clear()
+            _history.subList(0, config.maxHistorySize).clear()
         }
     }
 
@@ -595,14 +603,42 @@ ${tta.TOOL_CALL_LIST}
         """.trimIndent()
     }
 
-    private suspend fun buildUserMessage(instruction: String): String {
+    private fun rankInteractiveElements(elements: List<InteractiveElement>): List<InteractiveElement> {
+        // Simple heuristic scoring: prioritize buttons, inputs (empty), anchors with text, then others
+        return elements.sortedWith(compareByDescending<InteractiveElement> { e ->
+            when (e.tagName.lowercase()) {
+                "button" -> 5
+                "input" -> if (e.value.isNullOrBlank()) 4 else 3
+                "select" -> 3
+                "textarea" -> 3
+                "a" -> if (e.text.isNotBlank()) 2 else 1
+                else -> 0
+            }
+        }.thenByDescending { it.text.length }.thenBy { it.selector.length })
+    }
+
+    private fun formatInteractiveElements(elements: List<InteractiveElement>, limit: Int = 20, charLimitPerLine: Int = 180): String {
+        if (elements.isEmpty()) return "(无)"
+        val ranked = rankInteractiveElements(elements).take(limit)
+        return ranked.mapIndexed { idx, e ->
+            val base = e.description
+            val clipped = if (base.length > charLimitPerLine) base.take(charLimitPerLine - 3) + "..." else base
+            "${idx + 1}. $clipped"
+        }.joinToString("\n")
+    }
+
+    private suspend fun buildUserMessage(instruction: String, interactiveElements: List<InteractiveElement>): String {
         val currentUrl = getCurrentUrl()
-        val h = if (history.isEmpty()) "(无)" else history.takeLast(min(8, history.size)).joinToString("\n")
+        val h = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
+        val interactiveSummary = formatInteractiveElements(interactiveElements)
         return """
 此前动作摘要：
 $h
 
-请基于当前页面截图与历史动作，规划下一步（严格单步原子动作），若无法推进请输出空 tool_calls。
+可交互元素(最多20)：
+$interactiveSummary
+
+请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作），若无法推进请输出空 tool_calls。
 目标：$instruction
 当前URL：$currentUrl
         """.trimIndent()
@@ -887,7 +923,7 @@ $h
             sb.appendLine("INSTRUCTION: $instruction")
             sb.appendLine("RESPONSE_STATE: ${finalResp.state}")
             sb.appendLine("EXECUTION_HISTORY:")
-            history.forEach { sb.appendLine(it) }
+            _history.forEach { sb.appendLine(it) }
             sb.appendLine()
             sb.appendLine("FINAL_SUMMARY:")
             sb.appendLine(finalResp.content)
@@ -901,7 +937,7 @@ $h
 
             Files.writeString(log, sb.toString())
             logStructured("Transcript persisted successfully", context,
-                mapOf("lines" to history.size + 10, "path" to log.toString()))
+                mapOf("lines" to _history.size + 10, "path" to log.toString()))
         }.onFailure { e ->
             logError("Failed to persist transcript", e, context.sessionId)
         }
@@ -912,7 +948,7 @@ $h
         val user = buildString {
             appendLine("原始目标：$goal")
             appendLine("执行轨迹(按序)：")
-            history.forEach { appendLine(it) }
+            _history.forEach { appendLine(it) }
             appendLine()
             appendLine("""请严格输出 JSON：{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]} 无多余文字。""")
         }

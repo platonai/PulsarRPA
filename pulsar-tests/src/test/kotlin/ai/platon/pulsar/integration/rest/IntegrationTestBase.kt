@@ -36,7 +36,7 @@ class IntegrationTestBase {
     lateinit var session: PulsarSession
 
     @Autowired
-    lateinit var unmodifiedConfig: ImmutableConfig
+    lateinit var configuration: ImmutableConfig
 
     val hostname = "127.0.0.1"
 

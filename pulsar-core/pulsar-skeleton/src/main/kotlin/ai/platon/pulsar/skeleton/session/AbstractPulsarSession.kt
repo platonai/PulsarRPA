@@ -15,7 +15,6 @@ import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
-import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
@@ -33,7 +32,6 @@ import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.SimpleCommandDispatcher
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import org.xml.sax.InputSource
@@ -81,7 +79,7 @@ abstract class AbstractPulsarSession(
 
     private val logger = LoggerFactory.getLogger(AbstractPulsarSession::class.java)
 
-    override val unmodifiedConfig get() = context.unmodifiedConfig
+    override val configuration get() = context.configuration
 
     override val display get() = "$id"
 
@@ -133,7 +131,7 @@ abstract class AbstractPulsarSession(
     }
 
     override fun property(name: String): String? {
-        return sessionConfig[name] ?: unmodifiedConfig[name]
+        return sessionConfig[name] ?: configuration[name]
     }
 
     override fun property(name: String, value: String) {
@@ -531,25 +529,16 @@ abstract class AbstractPulsarSession(
     override fun chat(prompt: String, element: Element) = chat(prompt +
             "\n\nThere is the text content of the selected element:\n\n\n" + element.text())
 
-    override suspend fun act(prompt: String): InstructionResult {
+    override suspend fun performAct(action: String): InstructionResult {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(sessionConfig)
-        val action = tta.generateWebDriverAction(prompt, driver)
+        val action = tta.generateWebDriverAction(action, driver)
 
-        return act(action)
+        return performAct(action)
     }
 
-    override suspend fun act(action: ActionOptions): WebDriverAgent {
-        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
-        val agent = WebDriverAgent(driver)
-
-        val action = agent.execute(action)
-
-        return agent
-    }
-
-    override suspend fun act(action: ActionDescription): InstructionResult {
+    override suspend fun performAct(action: ActionDescription): InstructionResult {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
         if (action.functionCalls.isEmpty()) {
             return InstructionResult(listOf(), listOf(), action.modelResponse)
@@ -564,6 +553,16 @@ abstract class AbstractPulsarSession(
         return InstructionResult(action.functionCalls, functionResults, action.modelResponse)
     }
 
+    override suspend fun multiAct(action: ActionOptions): WebDriverAgent {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
+        val agent = WebDriverAgent(driver)
+
+        agent.execute(action)
+
+        return agent
+    }
+
+    @Deprecated("Use multiAct instead", replaceWith = ReplaceWith("multiAct(action)"))
     override suspend fun instruct(prompt: String): InstructionResult {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
 

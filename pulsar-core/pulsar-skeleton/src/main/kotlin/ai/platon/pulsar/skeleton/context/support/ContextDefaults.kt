@@ -13,7 +13,7 @@ class ContextDefaults {
     /**
      * The default unmodified config
      * */
-    val unmodifiedConfig = ImmutableConfig(loadDefaults = true)
+    val configuration = ImmutableConfig(loadDefaults = true)
     /**
      * Url default normalizer
      * */
@@ -21,31 +21,31 @@ class ContextDefaults {
     /**
      * The default web db
      * */
-    val webDb = WebDb(unmodifiedConfig)
+    val webDb = WebDb(configuration)
 
     /**
      * The default global cache
      * */
-    val globalCacheFactory = GlobalCacheFactory(unmodifiedConfig)
+    val globalCacheFactory = GlobalCacheFactory(configuration)
     /**
      * The default fetch component
      * */
-    val fetchComponent = BatchFetchComponent(webDb, unmodifiedConfig)
+    val fetchComponent = BatchFetchComponent(webDb, configuration)
     /**
      * The default parse component
      * */
-    val parseComponent: ParseComponent = ParseComponent(globalCacheFactory, unmodifiedConfig)
+    val parseComponent: ParseComponent = ParseComponent(globalCacheFactory, configuration)
     /**
      * The default update component
      * */
-    val updateComponent = UpdateComponent(webDb, unmodifiedConfig)
+    val updateComponent = UpdateComponent(webDb, configuration)
     /**
      * The default load component
      * */
     val loadComponent = LoadComponent(
-        webDb, globalCacheFactory, fetchComponent, parseComponent, updateComponent, unmodifiedConfig)
+        webDb, globalCacheFactory, fetchComponent, parseComponent, updateComponent, configuration)
     /**
      * The default main loop
      * */
-    val crawlLoops = CrawlLoops(StreamingCrawlLoop(unmodifiedConfig))
+    val crawlLoops = CrawlLoops(StreamingCrawlLoop(configuration))
 }

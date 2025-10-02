@@ -40,7 +40,7 @@ class WebDriverTestBase : TestWebSiteAccess() {
         }
     }
 
-    val browserFactory get() = context.getBeanOrNull(BrowserFactory::class) ?: DefaultBrowserFactory(session.unmodifiedConfig)
+    val browserFactory get() = context.getBeanOrNull(BrowserFactory::class) ?: DefaultBrowserFactory(session.configuration)
 
     open val webDriverService get() = WebDriverService(browserFactory)
 

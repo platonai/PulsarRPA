@@ -33,7 +33,14 @@ actions step-by-step until the target is achieved.
 
 ### Test Coverage Areas
 1. **Action Execution Pipeline** - All tool calls (navigation, interactions, scrolling, screenshots)
-2. **Error Handling** - Graceful degradation and recovery
-3. **Termination Logic** - Task completion detection and cleanup
-4. **Security Validation** - URL safety and input sanitization
-5. **Performance Boundaries** - Step limits and timeout handling
+
+
+## 后续可选增强建议（未实现，仅供参考）
+
+### InteractiveElement
+
+- 缓存上一步与当前提取结果做 diff，仅输出新增或消失的元素。
+- 为每个元素增加一个简短 action hint（如 “可输入”, “可点击跳转”）。
+- 针对长页面：按屏幕区域分 bucket（top/middle/bottom）再排序，减少偏向首屏元素。
+- 将已操作过的元素在摘要中标记 (✔) ，避免模型重复点击。
+

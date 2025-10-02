@@ -34,7 +34,7 @@ abstract class AbstractH2SQLContext(
     override fun createSession(sessionDelegate: SessionDelegate): SQLSession {
         require(sessionDelegate is H2SessionDelegate)
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
-            H2SQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
+            H2SQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, configuration))
         }
         logger.info("SQLSession is created | #{}/{}/{}", session.id, sessionDelegate.id, id)
         return session as H2SQLSession
@@ -47,7 +47,7 @@ abstract class AbstractH2SQLContext(
      * */
     @Throws(Exception::class)
     override fun createSession(): PulsarSession {
-        val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())
+        val session = BasicPulsarSession(this, configuration.toVolatileConfig())
         return session.also { sessions[it.id] = it }
     }
 }
@@ -71,7 +71,7 @@ open class ClassPathXmlSQLContext(configLocation: String) :
     override fun createSession(sessionDelegate: SessionDelegate): AbstractSQLSession {
         require(sessionDelegate is H2SessionDelegate)
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
-            H2SQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
+            H2SQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, configuration))
         }
         logger.info("SQLSession is created | #{}/{}/{}", session.id, sessionDelegate.id, id)
         return session as H2SQLSession
@@ -83,7 +83,7 @@ open class ClassPathXmlSQLContext(configLocation: String) :
      * > **NOTE:** The session is not a SQLSession, use [execute], [executeQuery] to access [ai.platon.pulsar.ql.SQLSession].
      * */
     override fun createSession(): BasicPulsarSession {
-        val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())
+        val session = BasicPulsarSession(this, configuration.toVolatileConfig())
         return session.also { sessions[it.id] = it }
     }
 

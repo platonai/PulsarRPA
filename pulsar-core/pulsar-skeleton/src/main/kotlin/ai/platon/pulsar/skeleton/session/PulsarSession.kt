@@ -173,9 +173,8 @@ interface PulsarSession : AutoCloseable {
     val context: PulsarContext
     /**
      * This is an immutable configuration, loaded from the configuration file during process startup.
-     * Once the process has started, this configuration remains unchangeable.
      * */
-    val unmodifiedConfig: ImmutableConfig
+    val configuration: ImmutableConfig
 
     /**
      * The session-specific volatile configuration, which allows dynamic adjustments to settings at any point during the session.
@@ -2262,13 +2261,13 @@ interface PulsarSession : AutoCloseable {
      * Instructs the webdriver to perform EXACT ONE action based on the given prompt.
      * This function converts the prompt into EXACT ONE webdriver action, which will then be executed.
      *
-     * @param prompt The textual prompt that describes the action to be performed by the webdriver.
+     * @param action The textual prompt that describes the action to be performed by the webdriver.
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
-    suspend fun act(prompt: String): InstructionResult
+    suspend fun performAct(action: String): InstructionResult
 
     @Beta
-    suspend fun act(action: ActionOptions): WebDriverAgent
+    suspend fun multiAct(action: ActionOptions): WebDriverAgent
 
     /**
      * Perform an action described by [action].
@@ -2276,7 +2275,7 @@ interface PulsarSession : AutoCloseable {
      * @param action The action description that describes the action to be performed by the webdriver.
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
-    suspend fun act(action: ActionDescription): InstructionResult
+    suspend fun performAct(action: ActionDescription): InstructionResult
 
     /**
      * Instructs the webdriver to perform a series of actions based on the given prompt.
@@ -2285,6 +2284,7 @@ interface PulsarSession : AutoCloseable {
      * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
+    @Deprecated("Use multiAct instead", ReplaceWith("multiAct(action)"))
     suspend fun instruct(prompt: String): InstructionResult
 
     /**

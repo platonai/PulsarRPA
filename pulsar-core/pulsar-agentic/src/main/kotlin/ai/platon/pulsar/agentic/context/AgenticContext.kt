@@ -27,7 +27,7 @@ abstract class AbstractAgenticContext(
     override fun createSession(sessionDelegate: SessionDelegate): AgenticSession {
         require(sessionDelegate is H2SessionDelegate)
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
-            QLAgenticSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
+            QLAgenticSession(this, sessionDelegate, SessionConfig(sessionDelegate, configuration))
         }
         logger.info("AgenticQLSession is created | #{}/{}/{}", session.id, sessionDelegate.id, id)
         return session as QLAgenticSession

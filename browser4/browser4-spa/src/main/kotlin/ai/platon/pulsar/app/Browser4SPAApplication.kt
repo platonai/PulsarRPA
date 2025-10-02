@@ -57,7 +57,7 @@ class Browser4Application {
 
     private fun getLLMStatusMessage(): String {
         return try {
-            val hasLLM = ChatModelFactory.isModelConfigured(session.unmodifiedConfig, verbose = false)
+            val hasLLM = ChatModelFactory.isModelConfigured(session.configuration, verbose = false)
             if (hasLLM) {
                 "LLM is configured, you can use LLM commands."
             } else {

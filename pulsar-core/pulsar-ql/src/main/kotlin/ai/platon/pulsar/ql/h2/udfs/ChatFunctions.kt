@@ -14,7 +14,7 @@ import ai.platon.pulsar.ql.context.SQLContexts
 object ChatFunctions {
 
     private val sqlContext get() = SQLContexts.create()
-    private val unmodifiedConfig get() = sqlContext.unmodifiedConfig
+    private val configuration get() = sqlContext.configuration
 
     @UDFunction(description = "Chat with the AI model")
     @JvmStatic

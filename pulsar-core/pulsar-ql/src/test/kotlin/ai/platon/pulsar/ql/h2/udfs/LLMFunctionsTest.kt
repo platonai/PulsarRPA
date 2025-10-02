@@ -20,7 +20,7 @@ class LLMFunctionsTest : TestBase() {
 
     @BeforeEach
     fun setup() {
-        Assumptions.assumeTrue(ChatModelFactory.isModelConfigured(session.unmodifiedConfig))
+        Assumptions.assumeTrue(ChatModelFactory.isModelConfigured(session.configuration))
         ensurePage(url)
     }
 

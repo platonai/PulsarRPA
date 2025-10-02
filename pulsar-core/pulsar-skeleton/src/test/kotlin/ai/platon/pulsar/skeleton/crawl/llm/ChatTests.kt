@@ -42,7 +42,7 @@ class ChatTests {
      * */
     @Test
     fun `When check configuration then it works`() {
-        val conf = ContextDefaults().unmodifiedConfig
+        val conf = ContextDefaults().configuration
         
         val model = conf.get("llm.name")
         val apiKey = conf.get("llm.apiKey")
@@ -50,8 +50,8 @@ class ChatTests {
         println(model)
         println(apiKey)
         
-        val model2 = session.unmodifiedConfig.get("llm.name")
-        val apiKey2 = session.unmodifiedConfig.get("llm.apiKey")
+        val model2 = session.configuration.get("llm.name")
+        val apiKey2 = session.configuration.get("llm.apiKey")
         
         assertEquals(model, model2)
         assertEquals(apiKey, apiKey2)

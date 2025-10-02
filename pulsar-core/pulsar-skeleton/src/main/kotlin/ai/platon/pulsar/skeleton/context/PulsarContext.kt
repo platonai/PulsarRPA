@@ -43,7 +43,7 @@ interface PulsarContext: java.lang.AutoCloseable {
     /**
      * An immutable config loaded from the config file at startup, and never changes
      * */
-    val unmodifiedConfig: ImmutableConfig
+    val configuration: ImmutableConfig
 
     /**
      * The url normalizer

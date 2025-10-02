@@ -127,7 +127,7 @@ abstract class AbstractPulsarContext(
     /**
      * An immutable config is which loaded from the config file at process startup, and never changes
      * */
-    override val unmodifiedConfig: ImmutableConfig get() = getBean()
+    override val configuration: ImmutableConfig get() = getBean()
 
     /**
      * Url normalizer
@@ -447,11 +447,11 @@ abstract class AbstractPulsarContext(
     }
 
     override fun chat(prompt: String): ModelResponse {
-        return ChatModelFactory.getOrCreateOrNull(unmodifiedConfig)?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
+        return ChatModelFactory.getOrCreateOrNull(configuration)?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
     override fun chat(userMessage: String, systemMessage: String): ModelResponse {
-        return ChatModelFactory.getOrCreateOrNull(unmodifiedConfig)?.call(userMessage, systemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
+        return ChatModelFactory.getOrCreateOrNull(configuration)?.call(userMessage, systemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
     @Throws(WebDBException::class)
