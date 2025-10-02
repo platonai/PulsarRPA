@@ -457,7 +457,7 @@ class WebDriverAgent(
      * Checks if execution should terminate
      */
     private fun shouldTerminate(parsed: ParsedResponse): Boolean {
-        return parsed.taskComplete == true || parsed.method?.equals("close", true) == true
+        return parsed.taskComplete == true
     }
 
     /**
@@ -465,15 +465,10 @@ class WebDriverAgent(
      */
     private suspend fun handleTaskCompletion(parsed: ParsedResponse, step: Int, context: ExecutionContext) {
         logStructured("Task completion detected", context, mapOf(
-            "taskComplete" to (parsed.taskComplete ?: false),
-            "method" to (parsed.method ?: "unknown")
+            "taskComplete" to (parsed.taskComplete ?: false)
         ))
 
-        runCatching { driver.close() }.onFailure {
-            logError("Close failed", it, context.sessionId)
-        }
-
-        addToHistory("#$step complete: taskComplete=${parsed.taskComplete} method=${parsed.method}")
+        addToHistory("#$step complete: taskComplete=${parsed.taskComplete}")
     }
 
     /**
@@ -587,7 +582,6 @@ class WebDriverAgent(
 输出严格使用 JSON，字段：
 - tool_calls: [ { name: string, args: object } ] // 最多 1 个
 - taskComplete: boolean // 可选
-- method: string // 可选，'close' 时终止
 
 安全要求：
 - 仅操作可见的交互元素
@@ -619,7 +613,6 @@ $h
     private data class ParsedResponse(
         val toolCalls: List<ToolCall>,
         val taskComplete: Boolean?,
-        val method: String?
     )
 
     private fun parseOperatorResponse(content: String): ParsedResponse {
@@ -641,9 +634,8 @@ $h
                     }
                 }
                 val taskComplete = obj.get("taskComplete")?.takeIf { it.isJsonPrimitive }?.asBoolean
-                val method = obj.get("method")?.takeIf { it.isJsonPrimitive }?.asString
-                if (toolCalls.isNotEmpty() || taskComplete != null || method != null) {
-                    return ParsedResponse(toolCalls.take(1), taskComplete, method)
+                if (toolCalls.isNotEmpty() || taskComplete != null) {
+                    return ParsedResponse(toolCalls.take(1), taskComplete)
                 }
             }
         } catch (_: Exception) { /* fall back */
@@ -652,8 +644,8 @@ $h
         // 2) Fall back to TTA tool call JSON parser
         return runCatching {
             val calls = tta.parseToolCalls(content).map { ToolCall(it.name, it.args) }
-            ParsedResponse(calls.take(1), null, null)
-        }.getOrElse { ParsedResponse(emptyList(), null, null) }
+            ParsedResponse(calls.take(1), null)
+        }.getOrElse { ParsedResponse(emptyList(), null) }
     }
 
     private fun jsonElementToKotlin(e: com.google.gson.JsonElement): Any? = when {
