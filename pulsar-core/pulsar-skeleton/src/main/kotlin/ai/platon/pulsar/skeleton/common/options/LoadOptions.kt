@@ -48,7 +48,7 @@ import kotlin.reflect.jvm.kotlinProperty
  * session.load('https://www.jd.com', '-storeContent')
  * ```
  */
-open class LoadOptions constructor(
+open class LoadOptions(
     argv: Array<String>,
     var conf: VolatileConfig,
     var rawEvent: PageEventHandlers? = null,
