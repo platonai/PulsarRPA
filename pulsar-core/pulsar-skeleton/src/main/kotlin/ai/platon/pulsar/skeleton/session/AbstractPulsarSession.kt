@@ -529,7 +529,7 @@ abstract class AbstractPulsarSession(
     override fun chat(prompt: String, element: Element) = chat(prompt +
             "\n\nThere is the text content of the selected element:\n\n\n" + element.text())
 
-    override suspend fun performAct(action: String): InstructionResult {
+    override suspend fun act(action: String): InstructionResult {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(sessionConfig)
@@ -543,7 +543,7 @@ abstract class AbstractPulsarSession(
         if (action.functionCalls.isEmpty()) {
             return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
-        val functionCalls = action.functionCalls.take(1)
+        val functionCalls = action.functionCalls
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
         val dispatcher = SimpleCommandDispatcher()

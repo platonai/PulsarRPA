@@ -2264,7 +2264,7 @@ interface PulsarSession : AutoCloseable {
      * @param action The textual prompt that describes the action to be performed by the webdriver.
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
-    suspend fun performAct(action: String): InstructionResult
+    suspend fun act(action: String): InstructionResult
 
     @Beta
     suspend fun multiAct(action: ActionOptions): WebDriverAgent
