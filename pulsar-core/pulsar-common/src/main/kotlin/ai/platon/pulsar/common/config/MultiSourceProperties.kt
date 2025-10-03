@@ -7,16 +7,13 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * Configuration is a set of key/value pairs. Keys are always strings, values can be any type.
  *
- * @property extraResources The extra resources to load.
  * @property loadDefaults Whether to load the default resources.
  * */
 class MultiSourceProperties(
-    val extraResources: Iterable<String> = listOf(),
     private val loadDefaults: Boolean = true,
 ) : Iterable<Map.Entry<String, String?>> {
 
     companion object {
-        val DEFAULT_RESOURCES = mutableSetOf("pulsar-default.xml")
         private val ID_SUPPLIER = AtomicInteger()
     }
 
@@ -27,7 +24,7 @@ class MultiSourceProperties(
         get() {
             synchronized(MultiSourceProperties::class.java) {
                 if (globalLoadedProperties == null) {
-                    globalLoadedProperties = LocalResourceProperties(extraResources, loadDefaults).also { it.load() }
+                    globalLoadedProperties = LocalResourceProperties(loadDefaults).also { it.load() }
                 }
                 return globalLoadedProperties!!
             }
@@ -35,7 +32,7 @@ class MultiSourceProperties(
 
     val id = ID_SUPPLIER.incrementAndGet()
 
-    constructor(conf: MultiSourceProperties) : this(conf.extraResources, conf.loadDefaults)
+    constructor(props: MultiSourceProperties) : this(props.loadDefaults)
 
     /**
      * @param name property name.

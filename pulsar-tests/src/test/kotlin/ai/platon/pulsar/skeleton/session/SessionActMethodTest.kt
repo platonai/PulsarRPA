@@ -15,21 +15,15 @@ import kotlin.test.assertTrue
 @SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class SessionActMethodTest : TextToActionTestBase() {
 
-    companion object {
-        @BeforeAll
-        @JvmStatic
-        fun beforeAll() {
-            PulsarSettings.withSPA()
-        }
-    }
-
-    private val demoUrl = "http://localhost:18080/generated/tta/act/act-demo.html"
+    private val demoUrl = "$ttaBaseURL/act/act-demo.html"
 
     // Resources initialized per test
     private lateinit var driver: WebDriver
 
     @BeforeEach
     fun setUp() {
+        PulsarSettings.withSPA()
+
         runBlocking {
             driver = newBoundDriver()
             // Open demo page so each test begins from consistent state
@@ -39,6 +33,7 @@ class SessionActMethodTest : TextToActionTestBase() {
 
     @AfterEach
     fun tearDown() {
+        driver.close()
     }
 
     /**
@@ -60,7 +55,7 @@ class SessionActMethodTest : TextToActionTestBase() {
      */
     @Test
     fun testOpenAndParseDemoPage() = runBlocking {
-        val page = session.open(demoUrl)
+        val page = session.attach(demoUrl, driver)
         val document = session.parse(page)
         val title = document.selectFirstTextOrNull("#title")
         assertEquals("Session Instructions Demo", title, "Initial #title text should match")

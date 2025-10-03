@@ -34,7 +34,6 @@ import kotlin.io.path.notExists
 import kotlin.io.path.reader
 
 class LocalResourceProperties(
-    private val extraResources: Iterable<String>,
     private val loadDefaults: Boolean,
 ) {
     private val logger = getLogger(this)
@@ -53,41 +52,43 @@ class LocalResourceProperties(
         resourceURIs.clear()
         resources.clear()
 
-        collectResourcePaths()
-        resourceURIs.mapNotNull { URLUtils.getURLOrNull(it) }.forEach { addResource(it) }
-        if (loadDefaults && Files.isDirectory(AppPaths.CONFIG_ENABLED_DIR)) {
-            // search for properties files in the ${project.baseDir} and ${project.baseDir}/config,
-            // keep consistent with spring's behavior, so even when we are not running a full Spring Boot application
-            // (e.g., CLI tool, unit test, or native launch),
-            // we can still load properties from these locations.
-            // https://github.com/platonai/browser4/issues/110
-            val projectRoot = ProjectUtils.findProjectRootDir()
-            if (projectRoot != null) {
-                loadExternalProperties(projectRoot)
-                loadExternalProperties(projectRoot.resolve("config"))
-            }
+        if (!loadDefaults) {
+            return
+        }
 
+        // collectResourcePaths()
+
+        // resourceURIs.mapNotNull { URLUtils.getURLOrNull(it) }.forEach { addResource(it) }
+
+        // search for properties files in the ${project.baseDir} and ${project.baseDir}/config,
+        // keep consistent with spring's behavior, so even when we are not running a full Spring Boot application
+        // (e.g., CLI tool, unit test, or native launch),
+        // we can still load properties from these locations.
+        // https://github.com/platonai/browser4/issues/110
+        val projectRoot = ProjectUtils.findProjectRootDir()
+        if (projectRoot != null) {
+            // TODO: search classpath?
+            loadExternalProperties(projectRoot)
+            loadExternalProperties(projectRoot.resolve("config"))
+        }
+
+        if (Files.isDirectory(AppPaths.CONFIG_ENABLED_DIR)) {
             loadExternalProperties(AppPaths.CONFIG_ENABLED_DIR)
-            addExternalResource(AppPaths.CONFIG_ENABLED_DIR)
         }
     }
 
     fun addResource(url: URL) = addResourceObject(Resource(url))
-
-    fun addResource(path: Path) = addResourceObject(Resource(path))
-
-    @Deprecated("XML configuration will be deprecated")
-    fun addExternalResource(baseDir: Path) {
-        val externalResources = baseDir.listDirectoryEntries("*.xml").filter { it.isRegularFile() && it.isReadable() }
-        externalResources.forEach { addResource(it) }
-    }
 
     fun loadExternalProperties(baseDir: Path) {
         if (baseDir.notExists()) {
             return
         }
 
-        val externalResources = baseDir.listDirectoryEntries("*.properties")
+        // val externalResources = baseDir.listDirectoryEntries("*.properties")
+        val externalResources = listOf(
+            baseDir.resolve("application.properties"),
+            baseDir.resolve("application-private.properties"),
+        )
         externalResources.forEach { loadFromPropertyFile(it) }
     }
 
@@ -136,11 +137,6 @@ class LocalResourceProperties(
     }
 
     private fun collectResourcePaths() {
-        resourceNames.addAll(extraResources)
-        if (loadDefaults) {
-            resourceNames.addAll(MultiSourceProperties.DEFAULT_RESOURCES)
-        }
-
         for (resourceName in resourceNames) {
             val realResource = findRealResource(resourceName)?.toString()
             if (realResource != null && realResource !in resourceURIs) {
@@ -231,8 +227,8 @@ class LocalResourceProperties(
     }
 
     private fun loadProperty(
-        properties: Properties, @Suppress("UNUSED_PARAMETER") name: String, key: String,
-        value: String?, @Suppress("UNUSED_PARAMETER") finalParameter: Boolean, @Suppress("UNUSED_PARAMETER") source: Array<String>?
+        properties: Properties, name: String, key: String,
+        value: String?, finalParameter: Boolean, source: Array<String>?
     ) {
         // @see https://docs.spring.io/spring-boot/reference/features/external-config.html
         val actualKey = PropertyNameStyle.toDotSeparatedKebabCase(key)

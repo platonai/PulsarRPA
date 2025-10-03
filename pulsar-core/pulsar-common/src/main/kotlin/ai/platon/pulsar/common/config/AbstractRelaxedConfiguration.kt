@@ -2,7 +2,6 @@ package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.PropertyNameStyle
 import ai.platon.pulsar.common.SParser
-import ai.platon.pulsar.common.config.MultiSourceProperties.Companion.DEFAULT_RESOURCES
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
 import java.io.InputStream
@@ -53,16 +52,8 @@ abstract class AbstractRelaxedConfiguration {
      */
     var environment: Environment? = null
 
-    constructor(
-        profile: String = System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
-        loadDefaults: Boolean = true,
-        resources: Iterable<String> = DEFAULT_RESOURCES
-    ) {
-        multiSourceProperties = MultiSourceProperties(extraResources = resources, loadDefaults = loadDefaults)
-    }
-
-    constructor(conf: MultiSourceProperties) {
-        this.multiSourceProperties = MultiSourceProperties(conf)
+    constructor(props: MultiSourceProperties) {
+        this.multiSourceProperties = MultiSourceProperties(props)
     }
 
     /**
