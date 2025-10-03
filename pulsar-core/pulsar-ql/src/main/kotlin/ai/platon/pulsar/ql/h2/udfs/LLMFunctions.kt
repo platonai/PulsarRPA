@@ -55,7 +55,7 @@ object LLMFunctions {
     @JvmStatic
     @UDFunction(description = "Chat with the LLM model")
     fun chat(dom: ValueDom, prompt: String): String {
-        return session.chat(dom.element, prompt).content
+        return session.chat(prompt, dom.element).content
     }
 
     @JvmStatic
@@ -67,7 +67,7 @@ object LLMFunctions {
 
     internal fun extractInternal(domContent: String, dataExtractionRules: String): Map<String, String> {
         val prompt = LLM_UDF_EXTRACT_PROMPT.replace(DATA_EXTRACTION_RULES_PLACEHOLDER, dataExtractionRules)
-        val content = session.chat(domContent, prompt).content
+        val content = session.chat(prompt + "\n" + domContent).content
 
         val jsonBlocks = JSONExtractor.extractJsonBlocks(content)
         if (jsonBlocks.isEmpty()) {

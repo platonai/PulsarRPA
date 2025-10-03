@@ -71,7 +71,7 @@ class ChatTests {
     fun `Should generate answer and return token usage and finish reason stop`() {
         val document = Documents.parse(productHtml, url)
         val prompt = "以下是一个电商网站的网页内容，找出商品标题、商品价格："
-        val response = session.chat(document, prompt)
+        val response = session.chat(prompt, document)
         lastResponse = response
         println(response.content)
         

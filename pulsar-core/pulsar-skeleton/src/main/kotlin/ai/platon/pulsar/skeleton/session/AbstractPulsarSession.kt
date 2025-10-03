@@ -509,22 +509,11 @@ abstract class AbstractPulsarSession(
 
     override fun chat(prompt: String): ModelResponse = context.chat(prompt)
 
-    override fun chat(userMessage: String, systemMessage: String) = context.chat(userMessage, systemMessage)
-
-    override fun chat(page: WebPage, prompt: String) = chat(prompt +
-            "\n\nThere is the source code of the page:\n\n\n" + page.contentAsString)
-
     override fun chat(prompt: String, page: WebPage) = chat(prompt +
             "\n\nThere is the source code of the page:\n\n\n" + page.contentAsString)
 
-    override fun chat(document: FeaturedDocument, prompt: String) = chat(prompt +
-            "\n\nThere is the text content of the page:\n\n\n" + document.text)
-
     override fun chat(prompt: String, document: FeaturedDocument) = chat(prompt +
             "\n\nThere is the text content of the page:\n\n\n" + document.text)
-
-    override fun chat(element: Element, prompt: String) = chat(prompt +
-            "\n\nThere is the text content of the selected element:\n\n\n" + element.text())
 
     override fun chat(prompt: String, element: Element) = chat(prompt +
             "\n\nThere is the text content of the selected element:\n\n\n" + element.text())
@@ -557,7 +546,7 @@ abstract class AbstractPulsarSession(
         return InstructionResult(action.functionCalls, functionResults, action.modelResponse)
     }
 
-    @Deprecated("Use multiAct instead", replaceWith = ReplaceWith("multiAct(action)"))
+    @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
     override suspend fun instruct(prompt: String): InstructionResult {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
 

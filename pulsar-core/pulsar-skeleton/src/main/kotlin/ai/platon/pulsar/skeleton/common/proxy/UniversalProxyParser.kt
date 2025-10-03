@@ -50,7 +50,7 @@ Your response should contains ONLY the JSON object, and nothing else.
         get() = "UniversalProxyParser"
 
     override fun parse(text: String, format: String): List<ProxyEntry> {
-        val response = session.chat(prompt, text).content
+        val response = session.chat(prompt + "\n" + text).content
         if (response == "LLM not available") {
             logger.warn(response)
             return listOf()

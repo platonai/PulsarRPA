@@ -35,7 +35,7 @@ class ConversationService(
         }
 
         return if (page.protocolStatus.isSuccess) {
-            session.chat(prompt, document.text).content
+            session.chat(prompt + "\n" + document.text).content
         } else {
             // Throw?
             page.protocolStatus.toString()

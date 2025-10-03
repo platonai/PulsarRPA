@@ -2194,25 +2194,6 @@ interface PulsarSession : AutoCloseable {
     fun chat(prompt: String): ModelResponse
 
     /**
-     * Chat with the AI model.
-     *
-     * @param userMessage Represents a message from a user, typically an end user of the application.
-     * @param systemMessage Represents a system message, typically defined by a developer. This type of message usually
-     *  provides instructions regarding the AI's actions, such as its behavior or response style.
-     * @return The response from the model.
-     */
-    fun chat(userMessage: String, systemMessage: String): ModelResponse
-
-    /**
-     * Chat with the AI model about the specified webpage.
-     *
-     * @param prompt The prompt to chat with
-     * @param page The page to chat with
-     * @return The response from the model
-     */
-    fun chat(page: WebPage, prompt: String): ModelResponse
-
-    /**
      * Chat with the AI model about the specified webpage.
      *
      * @param prompt The prompt to chat with
@@ -2228,25 +2209,7 @@ interface PulsarSession : AutoCloseable {
      * @param prompt The prompt to chat with
      * @return The response from the model
      */
-    fun chat(document: FeaturedDocument, prompt: String): ModelResponse
-
-    /**
-     * Chat with the AI model about the specified document.
-     *
-     * @param document The document to chat with
-     * @param prompt The prompt to chat with
-     * @return The response from the model
-     */
     fun chat(prompt: String, document: FeaturedDocument): ModelResponse
-
-    /**
-     * Chat with the AI model about the specified element.
-     *
-     * @param element The element to chat with
-     * @param prompt The prompt to chat with
-     * @return The response from the model
-     */
-    fun chat(element: Element, prompt: String): ModelResponse
 
     /**
      * Chat with the AI model about the specified element.
@@ -2257,10 +2220,8 @@ interface PulsarSession : AutoCloseable {
      */
     fun chat(prompt: String, element: Element): ModelResponse
 
-    @Beta
     suspend fun act(action: String): WebDriverAgent
 
-    @Beta
     suspend fun act(action: ActionOptions): WebDriverAgent
 
     /**
@@ -2269,6 +2230,7 @@ interface PulsarSession : AutoCloseable {
      * @param action The action description that describes the action to be performed by the webdriver.
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
+    @Beta
     suspend fun performAct(action: ActionDescription): InstructionResult
 
     /**
@@ -2278,7 +2240,7 @@ interface PulsarSession : AutoCloseable {
      * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
-    @Deprecated("Use multiAct instead", ReplaceWith("multiAct(action)"))
+    @Deprecated("Use act instead", ReplaceWith("multiAct(action)"))
     suspend fun instruct(prompt: String): InstructionResult
 
     /**

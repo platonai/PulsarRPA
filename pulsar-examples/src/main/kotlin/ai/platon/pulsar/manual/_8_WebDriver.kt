@@ -47,7 +47,7 @@ internal class WebDriverDemo(private val session: PulsarSession = createSession(
             println("Using plain language, tell the browser to click $selector ...")
             // Only works when LLM is configured
             session.bindDriver(driver)
-            session.instruct("scroll to middle")
+            session.act("scroll to middle")
 
             println("select first text by $selector ...")
             var text = driver.selectFirstTextOrNull(selector) ?: "no-text"
