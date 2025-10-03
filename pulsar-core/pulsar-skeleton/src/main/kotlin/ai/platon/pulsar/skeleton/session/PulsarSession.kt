@@ -2184,44 +2184,66 @@ interface PulsarSession : AutoCloseable {
      * @see [boilerpipe-web](https://boilerpipe-web.appspot.com/)
      * */
     fun harvest(page: WebPage, engine: String = "boilerpipe"): TextDocument
-
     /**
-     * Chat with the AI model.
-     *
-     * @param prompt The prompt to chat with
-     * @return The response from the model
-     */
-    fun chat(prompt: String): ModelResponse
+      * Initiates a chat with the AI model using a general prompt.
+      * This method sends the provided prompt to the AI model without any additional context.
+      *
+      * @param prompt The prompt or query to be sent to the AI model.
+      * @return The response from the AI model encapsulated in a [ModelResponse] object.
+      */
+     fun chat(prompt: String): ModelResponse
 
+     /**
+      * Initiates a chat with the AI model about a specific webpage.
+      * The method sends the provided prompt along with the HTML source code of the specified webpage to the AI model.
+      *
+      * @param prompt The prompt or query to be sent to the AI model.
+      * @param page The [WebPage] object containing the webpage's content to provide context for the chat.
+      * @return The response from the AI model encapsulated in a [ModelResponse] object.
+      */
+     fun chat(prompt: String, page: WebPage): ModelResponse
+
+     /**
+      * Initiates a chat with the AI model about a specific document.
+      * The method sends the provided prompt along with the text content of the specified document to the AI model.
+      *
+      * @param prompt The prompt or query to be sent to the AI model.
+      * @param document The [FeaturedDocument] object containing the document's text content to provide context for the chat.
+      * @return The response from the AI model encapsulated in a [ModelResponse] object.
+      */
+     fun chat(prompt: String, document: FeaturedDocument): ModelResponse
+
+     /**
+      * Initiates a chat with the AI model about a specific HTML element.
+      * The method sends the provided prompt along with the text content of the specified HTML element to the AI model.
+      *
+      * @param prompt The prompt or query to be sent to the AI model.
+      * @param element The [Element] object containing the HTML element's text content to provide context for the chat.
+      * @return The response from the AI model encapsulated in a [ModelResponse] object.
+      */
+     fun chat(prompt: String, element: Element): ModelResponse
     /**
-     * Chat with the AI model about the specified webpage.
+     * Executes an action described by the given string.
+     * An agent will be created to analyze the action and generate a step-by-step plan to perform it.
+     * Each step in the plan uses at most one tool.
      *
-     * @param prompt The prompt to chat with
-     * @param page The page to chat with
-     * @return The response from the model
+     * @param action A string describing the action to be performed.
+     * @return A [WebDriverAgent] instance that executes the action.
+     * @throws Exception if the action cannot be performed or if an error occurs during execution.
      */
-    fun chat(prompt: String, page: WebPage): ModelResponse
-
-    /**
-     * Chat with the AI model about the specified document.
-     *
-     * @param document The document to chat with
-     * @param prompt The prompt to chat with
-     * @return The response from the model
-     */
-    fun chat(prompt: String, document: FeaturedDocument): ModelResponse
-
-    /**
-     * Chat with the AI model about the specified element.
-     *
-     * @param prompt The prompt to chat with
-     * @param element The element to chat with
-     * @return The response from the model
-     */
-    fun chat(prompt: String, element: Element): ModelResponse
-
+    @Beta
     suspend fun act(action: String): WebDriverAgent
 
+    /**
+     * Executes an action described by the given [ActionOptions].
+     * An agent will be created to analyze the action and generate a step-by-step plan to perform it.
+     * Each step in the plan uses at most one tool.
+     *
+     * @param action An [ActionOptions] object describing the action to be performed.
+     * @return A [WebDriverAgent] instance that executes the action.
+     * @throws Exception if the action cannot be performed or if an error occurs during execution.
+     */
+    @Beta
     suspend fun act(action: ActionOptions): WebDriverAgent
 
     /**
