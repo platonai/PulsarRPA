@@ -45,18 +45,6 @@ class TestString {
     }
 
     @Test
-    fun testPadding() {
-        val strings = arrayOf(
-            "1.\thttp://v.ifeng.com/\t凤凰视频首页-最具媒体价值的视频门户-凤凰网",
-            "2.\thttp://fo.ifeng.com/\t佛教首页_佛教频道__凤凰网",
-            "3.\thttp://www.ifeng.com/\t凤凰网",
-            "24.\thttp://fashion.ifeng.com/health/\t凤凰健康_关注全球华人健康"
-        )
-        IntStream.range(0, strings.size).forEach { i: Int -> strings[i] = StringUtils.rightPad(strings[i], 60) }
-        Stream.of(*strings).forEach { x: String? -> println(x) }
-    }
-
-    @Test
     fun testRegex() {
         var text = "http://aitxt.com/book/12313413874"
         var regex = "http://(.*)aitxt.com(.*)"
@@ -94,11 +82,7 @@ class TestString {
         PATTERN_RECT = Pattern.compile(REGEX_RECT, Pattern.CASE_INSENSITIVE)
         matcher = PATTERN_RECT.matcher(text)
         if (matcher.find()) {
-            println(matcher.group(0))
-            println(matcher.group(1) + matcher.group(2))
-            println(matcher.group(3) + matcher.group(4))
-            println(matcher.group(5) + matcher.group(6))
-            println(matcher.group(7) + matcher.group(8))
+            assertEquals("*,*,230,420", matcher.group(0))
         }
     }
 
@@ -238,15 +222,6 @@ class TestString {
             )
             assertTrue(Strings.isMainlyChinese(text, 0.6), text)
         }
-    }
-
-    @Test
-    fun testStringFormat() {
-        println(String.format("%1$,20d", -3123))
-        println(String.format("%1$9d", -31))
-        println(String.format("%1$-9d", -31))
-        println(String.format("%1$(9d", -31))
-        println(String.format("%1$#9x", 5689))
     }
 
     @Test

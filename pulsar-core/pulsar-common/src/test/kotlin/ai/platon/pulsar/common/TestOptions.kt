@@ -19,7 +19,7 @@ class TestOptions {
         val regex = names.joinToString("|").toRegex()
         val values = linkString.split(regex)
 
-        println("Regex: $regex")
+        // println("Regex: $regex")
         values.forEach { println(it) }
         // assertTrue { "" }
     }
@@ -34,7 +34,7 @@ class TestOptions {
         val regex = "-\\w+".toRegex()
         val values = linkString.split(regex)
 
-        println("Regex: $regex")
+        // println("Regex: $regex")
         values.forEach { println(it) }
     }
 
@@ -47,7 +47,7 @@ class TestOptions {
 
         val argv = OptionUtils.translateCommandline(linkString)
 
-        argv.forEach { println(it) }
+        // argv.forEach { println(it) }
         assertEquals("-text", argv[1])
         assertEquals(text, argv[2])
         assertEquals("-args", argv[3])

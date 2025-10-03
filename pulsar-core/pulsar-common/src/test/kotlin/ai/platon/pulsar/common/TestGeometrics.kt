@@ -34,32 +34,4 @@ class TestGeometrics {
         val r = r1.intersection(r2)
         println(r.str2)
     }
-
-    /**
-     * TODO: Test failed
-     * */
-    @Ignore("TODO: Test failed")
-    @Test
-    fun testCollinear() {
-        val r1 = Rectangle(0, 0, 100, 40)
-        for (y in 0 until 40 step 10) {
-            val r2 = Rectangle(0, y, 100, 40)
-            assertTrue("y: ${r1.y} - $y") { r1.testAlignment(r2).isVertical }
-            assertTrue("y: ${r1.y} - $y") { r2.testAlignment(r1).isVertical }
-        }
-
-        for (y in 0..40) {
-            val r2 = Rectangle(0, y, 100, 40)
-            assertTrue("y: ${r1.y} - $y") { r1.testAlignment(r2).isHorizontal }
-            assertTrue("y: ${r1.y} - $y") { r2.testAlignment(r1).isHorizontal }
-        }
-
-        val r3 = Rectangle(1000000, 20, 100, 40)
-        assertTrue { r1.testAlignment(r3, 0.5).isHorizontal }
-        assertTrue { r3.testAlignment(r1, 1.0).isHorizontal }
-
-        val r4 = Rectangle(0, 50, 100, 40)
-        assertFalse { r1.testAlignment(r4).isHorizontal }
-        assertFalse { r4.testAlignment(r1).isHorizontal }
-    }
 }

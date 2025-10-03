@@ -26,8 +26,8 @@ class TestURLUtils {
 
     @Test
     fun testReverseUrl() {
-        println(reverseUrl("http://sz.sxrb.com/sxxww/dspd/szpd/wsjk"))
-        println(reverseUrl("http://sz.sxrb.com/sxxww/"))
+//        println(reverseUrl("http://sz.sxrb.com/sxxww/dspd/szpd/wsjk"))
+//        println(reverseUrl("http://sz.sxrb.com/sxxww/"))
 
         assertReverse(UrlCommon.urlString1, UrlCommon.reversedUrlString1)
         assertReverse(UrlCommon.urlString2, UrlCommon.reversedUrlString2)

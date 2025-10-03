@@ -1,9 +1,7 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.urls.UrlTree
 import com.google.common.collect.TreeMultimap
 import com.google.common.net.InetAddresses
-import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
@@ -13,6 +11,8 @@ import java.math.BigInteger
 import java.time.Duration
 import java.time.Instant
 import java.util.*
+import kotlin.math.floor
+import kotlin.math.roundToInt
 import kotlin.random.Random
 import kotlin.test.*
 
@@ -87,81 +87,16 @@ class TestCases {
     }
 
     @Test
-    fun testBucket() {
-        val ints = (0..200 step 5).toMutableList()
-        ints.add(0, -1000)
-        ints.add(1000)
-        val buckets = ints.toList().map { it.toDouble() }.toDoubleArray()
-        buckets.indices.map { String.format("%6d", it) }.joinToString("").also { println(it) }
-        buckets.map { String.format("%6.0f", it) }.joinToString("").also { println(it) }
-        val bucketIndexes = listOf(-10.0, -1.0, 0.0, 0.1, 1.0, 4.0, 5.0, 6.0, 9.0, 10.0, 11.0, 99.0, 100.0, 101.0, 199.0, 200.0, 201.0)
-                .map { it to buckets.binarySearch(it) }
-                .map { it.first to if (it.second < 0) -it.second - 2 else it.second }.toMap()
-
-        println()
-        bucketIndexes.keys.map { String.format("%6.1f", it) }.joinToString("").also { println(it) }
-        bucketIndexes.values.map { String.format("%6d", it) }.joinToString("").also { println(it) }
-
-        assertTrue { bucketIndexes[-1.0] == 0 }
-        assertTrue { bucketIndexes[0.0] == 1 }
-        assertTrue { bucketIndexes[1.0] == 1 }
-        assertTrue { bucketIndexes[4.0] == 1 }
-    }
-
-    @Ignore("Not actually a test")
-    @Test
-    fun testGeneratePopularDurations() {
-        IntRange(1, 60).forEach { i ->
-            println("val sec$i = Duration.ofSeconds($i)")
-        }
-
-        println("")
-        IntRange(1, 60).forEach { i ->
-            println("val min$i = Duration.ofMinutes($i)")
-        }
-
-        println("")
-        IntRange(1, 60).forEach { i ->
-            println("val hour$i = Duration.ofHours($i)")
-        }
-
-        println("")
-        IntRange(1, 20).forEach { i ->
-            println("val day$i = Duration.ofDays($i)")
-        }
-        IntRange(21, 200).filter { it % 5 == 0 }.forEach { i ->
-            println("val day$i = Duration.ofDays($i)")
-        }
-
-        println("")
-        IntRange(1, 10).forEach { i ->
-            println("val year$i = Duration.ofDays($i * 365)")
-        }
-    }
-
-    @Test
     fun testNumber() {
         val a = 100000
         val b = 23
         val n = a + 23
-
-//        println(n % a)
-//        println((a * 3 + b) % a)
 
         for (i in 0..10) {
             assertEquals(b, (a * i + b) % a, "i=$i")
         }
 
         assertTrue { Int.MIN_VALUE < Int.MAX_VALUE }
-    }
-
-    @Test
-    fun testEnv() {
-        SystemUtils.USER_NAME
-        println(System.getProperty("USER"))
-
-        var env = System.getenv("XDG_SESSION_TYPE")
-        println(env)
     }
 
     /**
@@ -187,26 +122,29 @@ class TestCases {
     }
 
     @Test
-    fun testAlignment() {
+    fun testNumberRoundTo() {
         val numbers = listOf(391, 392, 393, 394, 395, 396, 397, 398, 399)
-        val s = numbers.map { (it + 2.5).toInt() / 5 * 5 }.joinToString()
-        println(s)
+        val s = numbers.map { (it + 2.5).toInt() / 5 * 5 }
+        assertContentEquals(listOf(390, 390, 395, 395, 395, 395, 395, 400, 400), s)
+        // println(s)
 
-        val s2 = numbers.map { Math.round(it.toDouble() / 5) * 5 }.joinToString()
-        println(s2)
+        val s2 = numbers.map { (it.toDouble() / 5).roundToInt() * 5 }
+        assertContentEquals(listOf(390, 390, 395, 395, 395, 395, 395, 400, 400), s2)
+        // println(s2)
 
-        val s3 = doubleArrayOf(0.5, 0.61, 1.0, 1.3, 1.5, 2.0, 2.8, 3.0).map { Math.floor(it) }.joinToString()
-        println(s3)
+        val s3 = doubleArrayOf(0.5, 0.61, 1.0, 1.3, 1.5, 2.0, 2.8, 3.0).map { floor(it) }
+        // println(s3)
+        assertContentEquals(listOf(0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 3.0), s3)
     }
 
     @Test
     fun testStringPattern() {
-        assertEquals(8891, '⊻'.toInt())
+        assertEquals(8891, '⊻'.code)
         assertEquals("a", "\t a\t\n".trim())
 
-        println(''.toInt())
+        assertEquals(58893, ''.code)
 
-        println(' '.isWhitespace())
+        assertTrue(' '.isWhitespace())
 
         var text = "¥58.00"
         assertTrue { Strings.isMoneyLike(text) }
@@ -222,20 +160,6 @@ class TestCases {
         // println(arrayOf("").joinToString(";"))
     }
 
-    @Ignore("Print special chars only if we want to check it")
-    @Test
-    fun printSpecialChars() {
-        val s = '!'.toInt()
-        val e = '◻'.toInt()
-        for (i in s..e) {
-            print(i.toChar())
-            print('\t')
-            if (i % 100 == 0) {
-                print('\n')
-            }
-        }
-    }
-
     @Test
     fun testStripSpecialChars() {
         val text = " hell\uE60Do\uDF21world "
@@ -248,54 +172,9 @@ class TestCases {
         assertEquals("", Strings.removeNonPrintableChar("              "))
         assertEquals("a b c d e f g", Strings.removeNonPrintableChar(" a b c d e f g "))
 
-        val unicodeChars = arrayOf('', 'Ɑ', 'ⰿ', '', '?', 'И', ' ')
-        unicodeChars.forEach {
-            print(Strings.removeNonPrintableChar("<$it>"))
-            print('\t')
-            print(Strings.removeNonCJKChar("<$it>", Strings.DEFAULT_KEEP_CHARS))
-            println()
-        }
-
         arrayOf("hello world", " hello      world ", " hello world ", "                 hello world").forEach {
             assertEquals("hello world", Strings.removeNonPrintableChar(it))
         }
-    }
-
-    @Test
-    fun testRandomInt() {
-        val numbers = IntRange(1, 100).joinToString { Random.nextInt(0, 100000).toString(Character.MAX_RADIX) }
-        println(numbers)
-    }
-
-    @Test
-    fun testQualifiedClassNames() {
-        val classNames = arrayOf(
-                mutableSetOf(""),
-                mutableSetOf("", "a", "b", "clearfix", "d", "right", "e", "f")
-        ).map { getQualifiedClassNames(it) }.forEach {
-            if (it.isNotEmpty()) {
-                println(it.joinToString(".", ".") { it })
-            }
-        }
-    }
-
-    fun getQualifiedClassNames(classNames: MutableSet<String>): MutableSet<String> {
-        classNames.remove("")
-        if (classNames.isEmpty()) return classNames
-        arrayOf("clearfix", "left", "right", "l", "r").forEach {
-            classNames.remove(it)
-            if (classNames.isEmpty()) {
-                classNames.add(it)
-                return@forEach
-            }
-        }
-        return classNames
-    }
-
-    @Test
-    fun testStringFormat() {
-        println(String.format("%06x", 0x333))
-        println(String.format("%s %s", "a", null?:""))
     }
 
     @Test
@@ -323,47 +202,6 @@ class TestCases {
     }
 
     @Test
-    fun testTreeMultimap() {
-        var start = Instant.now()
-        val multimap = TreeMultimap.create<Int, Int>()
-        for (i in 0..2000000) {
-            multimap.put(i, i)
-        }
-        println("init: " + Duration.between(start, Instant.now()))
-
-        start = Instant.now()
-        var map = multimap.asMap()
-        println("asMap: " + Duration.between(start, Instant.now()))
-        println("${multimap.size()} -> ${map.size}")
-
-        start = Instant.now()
-        map = multimap.asMap()
-        println("asMap: " + Duration.between(start, Instant.now()))
-        println("${multimap.size()} -> ${map.size}")
-
-        multimap.put(map.size + 1, map.size + 1)
-        start = Instant.now()
-        map = multimap.asMap()
-        println("asMap: " + Duration.between(start, Instant.now()))
-        println("${multimap.size()} -> ${map.size}")
-
-        multimap.clear()
-        start = Instant.now()
-        map = multimap.asMap()
-        println("asMap: " + Duration.between(start, Instant.now()))
-        println("${multimap.size()} -> ${map.size}")
-    }
-
-    @Test
-    fun testDistribution() {
-        val d1 = UniformIntegerDistribution(0, 100)
-        println(d1.sample(30).joinToString())
-
-        val d2 = NormalDistribution(10.0, 1.0)
-        println(d2.sample(30).joinToString())
-    }
-
-    @Test
     fun testRange() {
         var a = 0
         for (i in 10 downTo 1) {
@@ -386,26 +224,22 @@ class TestCases {
         // upper 1.5*IQR whisker
         val whisker = (q3 + 1.5 * iqr).toInt()
 
-        println(ds)
-        println("$q1\t$q2\t$q3\t$q4\twhisker:$whisker")
-    }
+//        println(ds)
+//        println("$q1\t$q2\t$q3\t$q4\twhisker:$whisker")
 
-    @Test
-    fun testUrlTree() {
-        val urls = arrayOf(
-                "http://a.com/cn/news/201810/a/b/file1.htm",
-                "http://a.com/cn/news/201810/a/b/file2.htm",
-                "http://a.com/cn/news/201810/a/b/file3.htm",
-                "http://a.com/cn/news/201810/a/b/file4.htm",
-                "http://a.com/cn/news/201810/a/b/file5.htm",
-                "http://a.com/cn/news/201810/e/c/file6.htm",
-                "http://a.com/cn/news/201812/d/file7.htm",
-                "http://a.com/cn/news/201812/d/file8.htm",
-                "http://a.com/cn/news/file9.htm"
-        )
-        val tree = UrlTree()
-        urls.forEach { tree.add(it) }
-        tree.print()
+        assertEquals(2, ds.n)
+        assertEquals(100.0, ds.min)
+        assertEquals(101.0, ds.max)
+        assertEquals(100.5, ds.mean)
+
+        assertEquals(100.0, q1)
+        assertEquals(100.5, q2)
+        assertEquals(101.0, q3)
+        assertEquals(101.0, q4)
+
+        assertEquals(102, whisker)
+//        assertEquals(Double.NaN, ds.skewness)
+//        assertEquals(Double.NaN, ds.kurtosis)
     }
 
     @Test

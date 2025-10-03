@@ -59,7 +59,7 @@ class BrowserFilesTests {
     @Test
     fun `when computeNextSequentialContextDir then next sequential context dir is created`() {
         val path = BrowserFiles.computeNextSequentialContextDir(group)
-        println(path)
+        // println(path)
         assertTrue("directory should exists: $contextBaseDir") { Files.exists(contextBaseDir) }
         assertTrue("directory should exists: $path") { Files.exists(path) }
     }

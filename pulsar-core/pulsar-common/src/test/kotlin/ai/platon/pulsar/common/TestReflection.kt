@@ -23,25 +23,25 @@ class TestReflection {
         emitter.on1(BarEvents.onWillDoADelayed) { delay(1) }
 
         emitter.listeners().forEach { obj ->
-            println("=========== Java Class: ")
-            println(obj.javaClass)
-            println("Superclass: " + obj.javaClass.superclass)
-
-            println("----------- methods: ")
+//            println("=========== Java Class: ")
+//            println(obj.javaClass)
+//            println("Superclass: " + obj.javaClass.superclass)
+//
+//            println("----------- methods: ")
 
             obj.javaClass.methods.forEach { method ->
                 val name = method.name
                 val fullName = method.toString()
 
-                println(name)
-                println(fullName)
-                println("Invokable?: " + MethodReflect.isInvokable(method))
-                println("NormalInvokable?: " + MethodReflect.isNormalInvokable(method))
-                println("SuspendInvokable?: " + MethodReflect.isSuspendInvokable(method))
-                method.parameters.forEach {
-                    println(it.name + "\t" + it.type + "\t" + it.type.name)
-                    println("Type: " + it.type.name + "\t" + it.type.canonicalName + "\t")
-                }
+//                println(name)
+//                println(fullName)
+//                println("Invokable?: " + MethodReflect.isInvokable(method))
+//                println("NormalInvokable?: " + MethodReflect.isNormalInvokable(method))
+//                println("SuspendInvokable?: " + MethodReflect.isSuspendInvokable(method))
+//                method.parameters.forEach {
+//                    println(it.name + "\t" + it.type + "\t" + it.type.name)
+//                    println("Type: " + it.type.name + "\t" + it.type.canonicalName + "\t")
+//                }
             }
         }
     }
