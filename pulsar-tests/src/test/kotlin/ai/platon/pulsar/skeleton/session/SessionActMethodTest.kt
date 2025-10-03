@@ -15,7 +15,7 @@ import kotlin.test.assertTrue
 @SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class SessionActMethodTest : TextToActionTestBase() {
 
-    private val demoUrl = "$ttaBaseURL/act/act-demo.html"
+    private val demoUrl get() = "$ttaBaseURL/act/act-demo.html"
 
     // Resources initialized per test
     private lateinit var driver: WebDriver

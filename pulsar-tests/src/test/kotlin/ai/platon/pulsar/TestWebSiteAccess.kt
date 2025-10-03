@@ -11,7 +11,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 class TestWebSiteAccess : TestBase() {
 
     @Value("\${server.port}")
-    val port: Int = 18182
+    val port: Int = 18080
 
     @Autowired
     lateinit var restTemplate: TestRestTemplate
@@ -35,7 +35,7 @@ class TestWebSiteAccess : TestBase() {
 
     protected val interactiveUrl get() = "$generatedAssetsBaseURL/interactive-1.html"
 
-    protected val ttaBaseURL get() = "http://127.0.0.1:$port/generated/tta"
+    protected val ttaBaseURL get() = "$generatedAssetsBaseURL/tta"
     protected val ttaUrl1 get() = "$ttaBaseURL/interactive-1.html"
     protected val ttaUrl2 get() = "$ttaBaseURL/interactive-2.html"
     protected val ttaUrl3 get() = "$ttaBaseURL/interactive-3.html"
