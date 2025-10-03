@@ -22,7 +22,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-@Tag("TimeConsumingTest")
+@Tag("E2ETest")
 open class PulsarWebDriverE2ETest : WebDriverTestBase() {
 
     private val fieldSelectors = mapOf(

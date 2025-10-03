@@ -67,7 +67,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
         val sqlSession = sqlContext.createSession(H2SessionDelegate(h2session.serialId, h2session))
         sqlSession.sessionConfig.set(CapabilityTypes.SCENT_EXTRACT_TABULATE_CELL_TYPE, "DATABASE")
-        require(sqlSession.id == h2session.serialId)
+        require(sqlSession.id == h2session.serialId.toLong())
 
         log.info("SQLSession {} is created for h2session <{}>, connection: <{}>",
             sqlSession, h2session, ci.url)

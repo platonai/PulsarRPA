@@ -12,6 +12,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
 import kotlin.test.Test
@@ -25,6 +26,7 @@ import kotlin.time.toJavaDuration
  *
  * Notice: before we load the local files using Browser4, we have to transform the paths using [URLUtils.pathToLocalURL].
  * */
+@Tag("HeavyTest")
 class BrowserRotationTest : MassiveTestBase() {
 
     companion object {

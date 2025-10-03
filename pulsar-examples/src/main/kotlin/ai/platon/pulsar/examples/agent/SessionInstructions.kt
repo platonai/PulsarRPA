@@ -4,7 +4,9 @@ import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.ai.WebDriverAgent
 import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
+import ai.platon.pulsar.test.server.DemoSiteStarter
 import kotlinx.coroutines.runBlocking
+import ai.platon.pulsar.common.getLogger
 
 class SessionInstructionsExample {
     init {
@@ -12,8 +14,10 @@ class SessionInstructionsExample {
         PulsarSettings.withSPA()
     }
 
+    private val logger = getLogger(this)
+
     private var stepNo = 0
-    private fun step(label: String) { println("[STEP ${++stepNo}] $label") }
+    private fun step(label: String) { logger.info("[STEP ${++stepNo}] $label") }
     private fun result(label: String, value: Any?) {
         val text = if (value is WebDriverAgent) {
             value.history.lastOrNull()?.replace("\n", " ")?.take(240)
@@ -21,17 +25,22 @@ class SessionInstructionsExample {
             value?.toString()?.replace("\n", " ")?.take(240)
         }
 
-        println("[RESULT ${stepNo}] $label => $text")
+        logger.info("[RESULT ${stepNo}] $label => $text")
     }
 
     val context = AgenticContexts.create()
     val session = context.createSession()
 
     suspend fun run() {
+        // Use local mock site instead of external site so actions are deterministic.
+        val url = "http://localhost:18080/generated/tta/act/act-demo.html"
+        // one more short wait after potential start (shorter, less verbose)
+        val starter = DemoSiteStarter()
+        starter.start(url)
+        context.registerClosable(starter)
+
         val driver = context.launchDefaultBrowser().newDriver()
         session.bindDriver(driver)
-
-        val url = "https://www.producthunt.com/"
 
         step("Open URL: $url")
         var page = session.open(url)
@@ -45,7 +54,7 @@ class SessionInstructionsExample {
         var fields = session.extract(document, mapOf("title" to "#title"))
         result("fields", fields)
 
-        // Basic action examples (natural language instructions)
+        // Basic action examples (natural language instructions) - now operate on local mock page
         step("Action: search for 'browser'")
         var actOptions = ActionOptions("search for 'browser'")
         var actResult = session.act(actOptions)
@@ -66,7 +75,7 @@ class SessionInstructionsExample {
 
         // More typical session.act() examples
 
-        // 1) Use the site's search box (example: enter text and submit)
+        // 1) Use the page's search box (enter text and submit)
         step("Action: find the search box, type 'web scraping' and submit the form")
         actOptions = ActionOptions("find the search box, type 'web scraping' and submit the form")
         actResult = session.act(actOptions)
@@ -82,7 +91,7 @@ class SessionInstructionsExample {
         fields = session.extract(document, mapOf("title" to "#title"))
         result("fields", fields)
 
-        // 2) Click a link by visible text
+        // 2) Click a link by visible text (Show/Ask HN like titles in mock page)
         step("Action: click the first link that contains 'Show HN' or 'Ask HN'")
         actOptions = ActionOptions("click the first link that contains 'Show HN' or 'Ask HN'")
         actResult = session.act(actOptions)
@@ -92,7 +101,7 @@ class SessionInstructionsExample {
         content = driver.selectFirstTextOrNull("body")
         result("body snippet", content?.take(160))
 
-        // 3) Scroll to bottom
+        // 3) Scroll to bottom (triggers infinite scroll loading extra items on mock page)
         step("Action: scroll to the bottom of the page and wait for new content to load")
         actOptions = ActionOptions("scroll to the bottom of the page and wait for new content to load")
         actResult = session.act(actOptions)
@@ -144,9 +153,9 @@ class SessionInstructionsExample {
 
         // Print final values so variables are referenced (avoid unused warnings in IDE/build)
         step("Summary outputs")
-        println("Final extracted fields keys: ${fields?.keys}")
-        println("Sample page content snippet: ${content?.take(120)}")
-        println("Last action result: ${actResult}")
+        logger.info("Final extracted fields keys: ${fields?.keys}")
+        logger.info("Sample page content snippet: ${content?.take(120)}")
+        logger.info("Last action result: ${actResult}")
     }
 }
 

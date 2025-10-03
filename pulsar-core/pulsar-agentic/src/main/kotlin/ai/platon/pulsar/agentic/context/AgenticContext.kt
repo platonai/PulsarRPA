@@ -10,6 +10,8 @@ import ai.platon.pulsar.ql.SessionDelegate
 import ai.platon.pulsar.ql.context.AbstractH2SQLContext
 import ai.platon.pulsar.ql.context.SQLContext
 import ai.platon.pulsar.ql.h2.H2SessionDelegate
+import ai.platon.pulsar.skeleton.session.BasicPulsarSession
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.springframework.context.support.AbstractApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 
@@ -22,6 +24,17 @@ abstract class AbstractAgenticContext(
     applicationContext: AbstractApplicationContext
 ) : AbstractH2SQLContext(applicationContext), AgenticContext {
     private val logger = getLogger(this)
+
+    /**
+     * Create a [BasicPulsarSession].
+     *
+     * > **NOTE:** The session is not a SQLSession, use [execute], [executeQuery] to access [ai.platon.pulsar.ql.SQLSession].
+     * */
+    @Throws(Exception::class)
+    override fun createSession(): PulsarSession {
+        val session = BasicPulsarSession(this, configuration.toVolatileConfig())
+        return session.also { sessions[it.id] = it }
+    }
 
     @Throws(Exception::class)
     override fun createSession(sessionDelegate: SessionDelegate): AgenticSession {

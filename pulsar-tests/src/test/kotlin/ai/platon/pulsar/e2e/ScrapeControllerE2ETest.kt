@@ -1,17 +1,15 @@
-package ai.platon.pulsar.integration.rest
+package ai.platon.pulsar.e2e
 
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
+import ai.platon.pulsar.integration.rest.IntegrationTestBase
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.Ignore
 import kotlin.test.assertTrue
 
 @Ignore("Websites might be fall, run these integration tests manually")
-@Tag("TimeConsumingTest")
-class ScrapeControllerTests : IntegrationTestBase() {
-
-    protected val originUrl = "https://www.amazon.com/"
-    protected val productUrl = "https://www.amazon.com/dp/B08PP5MSVB"
+@Tag("E2ETest")
+class ScrapeControllerE2ETest : IntegrationTestBase() {
 
     fun testScraping(url: String) {
         val result = scrape(url)

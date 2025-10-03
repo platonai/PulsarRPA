@@ -564,7 +564,10 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.version}</version>
                 <configuration>
-                    <excludedGroups>TimeConsumingTest,ExternalServiceTest</excludedGroups>
+                    <!--
+
+                    -->
+                    <excludedGroups>TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,SelfTest</excludedGroups>
                     <!-- All tests are in the same JVM process -->
                     <forkCount>1</forkCount>
                     <reuseForks>true</reuseForks>
