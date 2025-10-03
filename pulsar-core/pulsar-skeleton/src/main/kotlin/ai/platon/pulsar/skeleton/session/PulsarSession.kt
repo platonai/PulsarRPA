@@ -2185,6 +2185,7 @@ interface PulsarSession : AutoCloseable {
      * @see [boilerpipe ](https://github.com/kohlschutter/boilerpipe)
      * @see [boilerpipe-web](https://boilerpipe-web.appspot.com/)
      * */
+    @Deprecated("Will be removed in a future release.")
     fun harvest(url: String, args: String = "", engine: String = "boilerpipe"): TextDocument
     /**
      * Harvest the content of a webpage using a web content extractor engine.
@@ -2204,6 +2205,7 @@ interface PulsarSession : AutoCloseable {
      * @see [boilerpipe ](https://github.com/kohlschutter/boilerpipe)
      * @see [boilerpipe-web](https://boilerpipe-web.appspot.com/)
      * */
+    @Deprecated("Will be removed in a future release.")
     fun harvest(page: WebPage, engine: String = "boilerpipe"): TextDocument
     /**
       * Initiates a chat with the AI model using a general prompt.

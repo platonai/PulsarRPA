@@ -516,8 +516,10 @@ abstract class AbstractPulsarSession(
             .toList()
     }
 
+    @Deprecated("Will be removed in a future release.")
     override fun harvest(url: String, args: String, engine: String): TextDocument = harvest(load(url, args), engine)
 
+    @Deprecated("Will be removed in a future release.")
     override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
 
     override fun chat(prompt: String): ModelResponse = context.chat(prompt)
@@ -653,11 +655,14 @@ abstract class AbstractPulsarSession(
         return context.parse(page) ?: nil
     }
 
+    @Deprecated("Will be removed in a future release.")
     private fun harvest0(page: WebPage, engine: String) = harvest0(page.url, page.contentAsString, engine)
 
+    @Deprecated("Will be removed in a future release.")
     private fun harvest0(url: String, html: String, engine: String) =
         harvest0(url, InputSource(StringReader(html)), engine)
 
+    @Deprecated("Will be removed in a future release.")
     private fun harvest0(url: String, inputSource: InputSource, engine: String): TextDocument {
         if (engine != "boilerpipe") {
             throw IllegalArgumentException("Unsupported engine: $engine")
