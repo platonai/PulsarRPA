@@ -8,7 +8,7 @@ import ai.platon.pulsar.test.server.DemoSiteStarter
 import kotlinx.coroutines.runBlocking
 import ai.platon.pulsar.common.getLogger
 
-class SessionInstructionsExample {
+class SessionAct {
     init {
         // Single Page Application
         PulsarSettings.withSPA()
@@ -160,5 +160,5 @@ class SessionInstructionsExample {
 }
 
 fun main() = runBlocking {
-    SessionInstructionsExample().run()
+    SessionAct().run()
 }

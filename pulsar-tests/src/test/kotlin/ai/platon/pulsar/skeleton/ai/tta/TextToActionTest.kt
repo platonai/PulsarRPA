@@ -1,6 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
+import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -13,7 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest
  * Testing real behavior without mocks
  */
 @Tag("ExternalServiceTest")
-@SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionTest: TextToActionTestBase() {
 
     @BeforeEach

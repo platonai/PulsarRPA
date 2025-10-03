@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 
-@Tag("SelfTest")
+@Tag("TestInfraCheck")
 class AccessibilityAndDragDropTest {
 
     private fun readResource(path: String): String {

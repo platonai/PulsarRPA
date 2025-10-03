@@ -567,7 +567,7 @@
                     <!--
 
                     -->
-                    <excludedGroups>TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,SelfTest</excludedGroups>
+                    <excludedGroups>TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,TestInfraCheck</excludedGroups>
                     <!-- All tests are in the same JVM process -->
                     <forkCount>1</forkCount>
                     <reuseForks>true</reuseForks>

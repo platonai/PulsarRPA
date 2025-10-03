@@ -1,13 +1,13 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
+import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 
-@SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TestWebSiteAccess : TestBase() {
 
     @Value("\${server.port}")

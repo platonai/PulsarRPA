@@ -15,7 +15,7 @@ data class InteractiveIndexEntry(
     val type: String
 )
 
-@Tag("SelfTest")
+@Tag("TestInfraCheck")
 class InteractivePagesTest {
 
     private val mapper = jacksonObjectMapper()

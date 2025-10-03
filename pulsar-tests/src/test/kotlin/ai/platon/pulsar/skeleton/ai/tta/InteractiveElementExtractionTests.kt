@@ -1,6 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
+import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -15,7 +15,7 @@ import kotlin.test.AfterTest
  * Uses the pulsar-tests infrastructure with local HTTP server and test pages
  */
 @Tag("IntegrationTest")
-@SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class InteractiveElementExtractionTests : TextToActionTestBase() {
 
     @BeforeEach

@@ -1,18 +1,16 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
+import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import ai.platon.pulsar.external.ModelResponse
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
 /**
  * Edge case and boundary condition tests for TextToAction.generateWebDriverAction() method
  */
-@SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
     @BeforeEach

@@ -1,10 +1,8 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
-import kotlinx.coroutines.runBlocking
+import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
@@ -15,7 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest
  * Each test opens a real webpage on the mock server and tests
  * the generateWebDriverAction method with actual interactive elements
  */
-@SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionMockServerTests : TextToActionTestBase() {
 
     @BeforeEach

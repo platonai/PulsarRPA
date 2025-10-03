@@ -1,6 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
+import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
@@ -9,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest
  * Simple test to verify TextToAction.generateWebDriverAction() method
  * without ExternalServiceTest tag
  */
-@SpringBootTest(classes = [PulsarAndMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionSimpleTest : TextToActionTestBase() {
 
     @Test

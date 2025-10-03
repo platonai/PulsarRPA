@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
-@Tag("SelfTest")
+@Tag("TestInfraCheck")
 class MockSiteLauncherPortTest {
 
     @AfterEach

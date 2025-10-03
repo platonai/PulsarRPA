@@ -3,11 +3,11 @@ package ai.platon.pulsar
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.skeleton.session.PulsarSession
-import ai.platon.pulsar.util.server.PulsarAndMockServerApplication
+import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 
-@SpringBootTest(classes = [PulsarAndMockServerApplication::class])
+@SpringBootTest(classes = [EnabledMockServerApplication::class])
 class TestBase {
 
     @Autowired
