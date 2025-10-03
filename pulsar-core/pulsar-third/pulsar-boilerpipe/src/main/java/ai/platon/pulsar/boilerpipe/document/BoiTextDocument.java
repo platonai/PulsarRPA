@@ -1,7 +1,3 @@
-/**
- * Created by vincent on 16-11-9.
- * Copyright @ 2013-2016 Platon AI. All rights reserved
- */
 package ai.platon.pulsar.boilerpipe.document;
 
 import ai.platon.pulsar.boilerpipe.utils.PageCategory;
