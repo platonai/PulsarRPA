@@ -11,7 +11,9 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import java.nio.file.Files
 import java.time.Instant
 import java.util.*
@@ -360,8 +362,10 @@ class WebDriverAgent(
      */
     private suspend fun generateActionWithRetry(message: String, context: ExecutionContext, interactiveElements: List<InteractiveElement>): ActionDescription? {
         return try {
-            // Use overload supplying extracted elements to avoid re-extraction
-            tta.generateWebDriverAction(message, interactiveElements, null)
+            withContext(Dispatchers.IO) {
+                // Use overload supplying extracted elements to avoid re-extraction
+                tta.generateWebDriverAction(message, interactiveElements, null)
+            }
         } catch (e: Exception) {
             logError("Action generation failed", e, context.sessionId)
             consecutiveFailureCounter.incrementAndGet()
