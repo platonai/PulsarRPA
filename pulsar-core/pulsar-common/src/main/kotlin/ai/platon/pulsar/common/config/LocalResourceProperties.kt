@@ -97,6 +97,10 @@ class LocalResourceProperties(
             return
         }
 
+        if (path.notExists()) {
+            return
+        }
+
         logger.info("Loading properties: {}", path)
         try {
             properties.load(path.reader())

@@ -25,4 +25,6 @@
     <logger name="org.apache.gora.mongodb.store" level="INFO"/>
     <logger name="org.apache.gora" level="INFO"/>
 
+    <logger name="dev.langchain4j.http.client.log" level="WARN" />
+
 </configuration>

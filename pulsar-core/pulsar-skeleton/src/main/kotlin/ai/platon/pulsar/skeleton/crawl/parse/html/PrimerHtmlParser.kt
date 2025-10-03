@@ -43,7 +43,7 @@ class PrimerHtmlParser(
     override val timeout = Duration.ZERO
 
     init {
-        logger.info(params.formatAsLine())
+        logger.debug(params.formatAsLine())
     }
 
     constructor(conf: ImmutableConfig): this(null, conf)

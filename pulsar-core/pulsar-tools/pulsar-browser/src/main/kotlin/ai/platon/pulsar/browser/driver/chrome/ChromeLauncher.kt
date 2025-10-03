@@ -564,7 +564,7 @@ Kill all Chrome processes and run the program again.
 
             // Write to both console and file
             val textReport = formatTextReport(reportData)
-            logger.info("Chrome Launch Report:\n{}", textReport)
+            logger.debug("Chrome Launch Report:\n{}", textReport)
 
             // Write JSON report to file
             val reportPath = userDataDir.resolveSibling("chrome-launch-report.json")
