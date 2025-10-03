@@ -2266,80 +2266,103 @@ interface PulsarSession : AutoCloseable {
     suspend fun instruct(prompt: String): InstructionResult
 
     /**
-     * Export the content of a webpage.
+     * Exports the content of a webpage to a file.
      *
+     * This method saves the content of the given webpage to a file and returns the path
+     * where the file is stored.
+     *
+     * Example usage:
      * ```kotlin
      * val page = session.load("http://example.com")
      * val path = session.export(page)
      * ```
      *
-     * @param page Page to export
-     * @return The path of the exported page
-     * */
+     * @param page The webpage to export.
+     * @return The path of the exported file.
+     */
     fun export(page: WebPage): Path
 
     /**
-     * Export the content of a webpage.
+     * Exports the content of a webpage to a file with a specified identifier.
      *
+     * This method saves the content of the given webpage to a file, using the provided
+     * identifier to distinguish the file from others, and returns the path where the file is stored.
+     *
+     * Example usage:
      * ```kotlin
      * val page = session.load("http://example.com")
      * val path = session.export(page, "example")
      * ```
      *
-     * @param page Page to export
-     * @param ident File name identifier used to distinguish from other files
-     * @return The path of the exported page
-     * */
+     * @param page The webpage to export.
+     * @param ident A file name identifier used to distinguish the exported file.
+     * @return The path of the exported file.
+     */
     fun export(page: WebPage, ident: String = ""): Path
 
     /**
-     * Export the content of a webpage.
+     * Exports the content of a webpage to a specified file path.
      *
+     * This method saves the content of the given webpage to the specified file path
+     * and returns the path where the file is stored.
+     *
+     * Example usage:
      * ```kotlin
      * val page = session.load("http://example.com")
      * val path = session.exportTo(page, Paths.get("/tmp/example.html"))
      * ```
      *
-     * @param page Webpage to export
-     * @param path Path to save the exported content
-     * @return The path of the exported document
-     * */
+     * @param page The webpage to export.
+     * @param path The file path where the content will be saved.
+     * @return The path of the exported file.
+     */
     fun exportTo(page: WebPage, path: Path): Path
 
     /**
-     * Export the outer HTML of the document.
+     * Exports the outer HTML of a document to a file.
      *
-     * @param doc Document to export
-     * @return The path of the exported document
-     * */
+     * This method saves the outer HTML of the given document to a file and returns
+     * the path where the file is stored.
+     *
+     * @param doc The document to export.
+     * @return The path of the exported file.
+     */
     fun export(doc: FeaturedDocument): Path
 
     /**
-     * Export the outer HTML of the document.
+     * Exports the outer HTML of a document to a file with a specified identifier.
      *
+     * This method saves the outer HTML of the given document to a file, using the provided
+     * identifier to distinguish the file from others, and returns the path where the file is stored.
+     *
+     * Example usage:
      * ```kotlin
      * val document = session.loadDocument("http://example.com")
      * val path = session.export(document, "example")
      * ```
      *
-     * @param doc Document to export
-     * @param ident File name identifier used to distinguish from other files
-     * @return The path of the exported document
-     * */
+     * @param doc The document to export.
+     * @param ident A file name identifier used to distinguish the exported file.
+     * @return The path of the exported file.
+     */
     fun export(doc: FeaturedDocument, ident: String = ""): Path
 
     /**
-     * Export the outer HTML of the document.
+     * Exports the outer HTML of a document to a specified file path.
      *
+     * This method saves the outer HTML of the given document to the specified file path
+     * and returns the path where the file is stored.
+     *
+     * Example usage:
      * ```kotlin
      * val document = session.loadDocument("http://example.com")
      * val path = session.exportTo(document, Paths.get("/tmp/example.html"))
      * ```
      *
-     * @param doc Document to export
-     * @param path Path to save the exported content
-     * @return The path of the exported document
-     * */
+     * @param doc The document to export.
+     * @param path The file path where the content will be saved.
+     * @return The path of the exported file.
+     */
     fun exportTo(doc: FeaturedDocument, path: Path): Path
 
     /**
