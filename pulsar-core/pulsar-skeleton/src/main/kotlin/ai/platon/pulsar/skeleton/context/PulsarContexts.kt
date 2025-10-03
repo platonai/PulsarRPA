@@ -123,7 +123,7 @@ object PulsarContexts {
      * @param closable the closable object
      * @param priority the priority of the closable object
      * @see AutoCloseable
-     * @see AbstractPulsarContext.registerClosable
+     * @see PulsarContext.registerClosable
      */
     @JvmStatic
     fun registerClosable(closable: AutoCloseable, priority: Int = 0) {

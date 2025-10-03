@@ -15,6 +15,7 @@ import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.PulsarContext
+import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.DocumentCatch
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
@@ -169,6 +170,10 @@ interface PulsarSession : AutoCloseable {
      * */
     val uuid: String
     /**
+     * A short descriptive display text.
+     * */
+    val display: String
+    /**
      * Check if the session is active.
      * */
     val isActive: Boolean
@@ -177,20 +182,24 @@ interface PulsarSession : AutoCloseable {
      * */
     val context: PulsarContext
     /**
-     * This is an immutable configuration, loaded from the configuration file during process startup.
+     * The main configuration.
+     *
+     * Browser4 supports multiple configuration sources in order of precedence:
+     *
+     * 1. 🔧 **Environment Variables**
+     * 2. ⚙️ **JVM System Properties**
+     * 3. 📝 **Spring Boot `application.properties` or `application.yml`**
+     *
+     * @see `docs/config.md` for detail.
      * */
     val configuration: ImmutableConfig
 
     /**
      * The session-specific volatile configuration, which allows dynamic adjustments to settings at any point during the session.
-     * Unlike the immutable configuration loaded at startup, this configuration is designed to be modified on-the-fly to adapt to runtime requirements.
+     * Unlike the main configuration, this configuration is designed to be modified on-the-fly to adapt to runtime requirements.
      * */
     val sessionConfig: VolatileConfig
 
-    /**
-     * A short descriptive display text.
-     * */
-    val display: String
     /**
      * The global page cache.
      * */
@@ -215,7 +224,14 @@ interface PulsarSession : AutoCloseable {
      * Disable page cache and document cache
      * */
     fun disablePDCache()
-
+    /**
+     * Register a closable object to the session.
+     *
+     * @param closable the closable object
+     * @see AutoCloseable
+     * @see PulsarContext.registerClosable
+     */
+    fun registerClosable(closable: AutoCloseable)
     /**
      * Get a variable which is stored in this session
      *

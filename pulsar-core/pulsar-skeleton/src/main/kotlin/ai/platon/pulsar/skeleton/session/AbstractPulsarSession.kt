@@ -71,13 +71,6 @@ abstract class AbstractPulsarSession(
         // Keep existing page/document cache counters
         val pageCacheHits = AtomicLong()
         val documentCacheHits = AtomicLong()
-
-        // Legacy id generator retained (unchanged)
-        const val ID_CAPACITY = 1_000_000
-        const val ID_START = 1_000_000
-        const val ID_END = ID_START + ID_CAPACITY - 1
-        private val idGen = AtomicInteger()
-        fun generateNextId() = ID_START + idGen.incrementAndGet()
     }
 
     private val logger = LoggerFactory.getLogger(AbstractPulsarSession::class.java)
@@ -108,17 +101,12 @@ abstract class AbstractPulsarSession(
 
     private val closableObjects = mutableSetOf<AutoCloseable>()
 
-    fun registerClosable(closable: AutoCloseable) = ensureActive { closableObjects.add(closable) }
+    override fun disablePDCache() { enablePDCache = false }
 
-    override fun disablePDCache() = run { enablePDCache = false }
+    override fun registerClosable(closable: AutoCloseable) {
+        closableObjects.takeIf { isActive }?.add(closable)
+    }
 
-    /**
-     * Parse the args and create a LoadOptions instance.
-     *
-     * Note: if the url is submitted, the session is the one from a crawler loop such as StreamingCrawlerLoop.
-     *
-     * @param options The options to normalize.
-     * */
     override fun normalize(options: LoadOptions): LoadOptions {
         options.conf = sessionConfig.toVolatileConfig()
         require(options.conf.fallbackConfig === sessionConfig)
