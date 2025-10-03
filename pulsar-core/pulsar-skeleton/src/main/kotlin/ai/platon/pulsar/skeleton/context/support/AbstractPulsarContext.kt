@@ -24,7 +24,6 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
-import ai.platon.pulsar.skeleton.session.PulsarEnvironment
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
@@ -41,8 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 abstract class AbstractPulsarContext(
-    val applicationContext: AbstractApplicationContext,
-    val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
+    val applicationContext: AbstractApplicationContext
 ) : PulsarContext, AutoCloseable {
     
     companion object {
@@ -168,7 +166,7 @@ abstract class AbstractPulsarContext(
     /**
      * All open sessions
      * */
-    val sessions = ConcurrentSkipListMap<Int, AbstractPulsarSession>()
+    val sessions = ConcurrentSkipListMap<String, AbstractPulsarSession>()
 
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist

@@ -25,6 +25,7 @@ import com.google.common.annotations.Beta
 import org.jsoup.nodes.Element
 import java.nio.ByteBuffer
 import java.nio.file.Path
+import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -162,7 +163,7 @@ interface PulsarSession : AutoCloseable {
     /**
      * The session id.
      * */
-    val id: Int
+    val id: String
     /**
      * Check if the session is active.
      * */

@@ -9,7 +9,6 @@ import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.SessionDelegate
-import ai.platon.pulsar.skeleton.session.PulsarEnvironment
 import org.h2.api.ErrorCode
 import org.h2.engine.Session
 import org.h2.engine.SessionInterface
@@ -27,9 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * The abstract SQL context, every X-SQL staff should be within the SQL context
  */
 abstract class AbstractSQLContext(
-    applicationContext: AbstractApplicationContext,
-    pulsarEnvironment: PulsarEnvironment = PulsarEnvironment(),
-) : AbstractPulsarContext(applicationContext, pulsarEnvironment), SQLContext {
+    applicationContext: AbstractApplicationContext
+) : AbstractPulsarContext(applicationContext), SQLContext {
 
     private val logger = LoggerFactory.getLogger(AbstractSQLContext::class.java)
 

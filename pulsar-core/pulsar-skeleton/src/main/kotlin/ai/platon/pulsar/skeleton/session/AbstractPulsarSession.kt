@@ -39,6 +39,7 @@ import java.io.StringReader
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.time.Instant
+import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -61,7 +62,7 @@ abstract class AbstractPulsarSession(
     /**
      * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
      * */
-    override val id: Int
+    override val id: String = UUID.randomUUID().toString()
 ) : PulsarSession {
 
     companion object {
@@ -600,7 +601,7 @@ abstract class AbstractPulsarSession(
 
     override fun equals(other: Any?) = other === this || (other is PulsarSession && other.id == id)
 
-    override fun hashCode(): Int = id
+    override fun hashCode(): Int = id.hashCode()
 
     override fun toString(): String = "#$id"
 
