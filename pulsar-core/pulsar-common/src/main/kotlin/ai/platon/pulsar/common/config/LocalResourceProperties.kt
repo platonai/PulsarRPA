@@ -56,9 +56,9 @@ class LocalResourceProperties(
             return
         }
 
-        // collectResourcePaths()
-
-        // resourceURIs.mapNotNull { URLUtils.getURLOrNull(it) }.forEach { addResource(it) }
+        // loading legacy XML config files
+        collectResourcePaths()
+        resourceURIs.mapNotNull { URLUtils.getURLOrNull(it) }.forEach { addResource(it) }
 
         // search for properties files in the ${project.baseDir} and ${project.baseDir}/config,
         // keep consistent with spring's behavior, so even when we are not running a full Spring Boot application

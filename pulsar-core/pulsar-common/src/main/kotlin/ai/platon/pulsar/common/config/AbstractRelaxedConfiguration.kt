@@ -42,8 +42,6 @@ abstract class AbstractRelaxedConfiguration {
     protected val logger = LoggerFactory.getLogger(AbstractRelaxedConfiguration::class.java)
 
     var name = "Configuration#" + hashCode()
-    var profile = ""
-        private set
 
     private val multiSourceProperties: MultiSourceProperties
 
@@ -528,5 +526,5 @@ abstract class AbstractRelaxedConfiguration {
 
     private fun p(name: String) = SParser(get(name))
 
-    override fun toString() = "profile: <$profile> | $multiSourceProperties"
+    override fun toString() = "$multiSourceProperties"
 }

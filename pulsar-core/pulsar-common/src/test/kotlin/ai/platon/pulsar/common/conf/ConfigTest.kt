@@ -16,16 +16,6 @@ import kotlin.test.assertTrue
 class ConfigTest {
 
     @Test
-    fun testConfig() {
-        var conf = ImmutableConfig()
-        println(conf.toString())
-        assertFalse("pulsar-default.xml" in conf.toString())
-        conf = ImmutableConfig(profile = "default", loadDefaults = true)
-        assertTrue("pulsar-default.xml" in conf.toString())
-        assertEquals("pulsar_test_crawl_id", conf["storage.crawl.id"])
-    }
-    
-    @Test
     fun testFallback() {
         val mutableConfig = MutableConfig()
         val n1 = "n1"
@@ -39,7 +29,7 @@ class ConfigTest {
     
     @Test
     fun testFallback2() {
-        val conf1 = ImmutableConfig(profile = "default", loadDefaults = true)
+        val conf1 = ImmutableConfig(loadDefaults = true)
         assertEquals("pulsar_test_crawl_id", conf1["storage.crawl.id"])
         
         val conf2 = conf1.toMutableConfig()
