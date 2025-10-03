@@ -1,10 +1,12 @@
-package ai.platon.pulsar.tests.web.selfCheck
+package ai.platon.pulsar.self
 
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 
+@Tag("SelfTest")
 class AccessibilityAndDragDropTest {
 
     private fun readResource(path: String): String {

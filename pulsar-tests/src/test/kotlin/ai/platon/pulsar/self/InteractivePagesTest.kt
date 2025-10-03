@@ -1,8 +1,9 @@
-package ai.platon.pulsar.tests.web.selfCheck
+package ai.platon.pulsar.self
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
@@ -14,6 +15,7 @@ data class InteractiveIndexEntry(
     val type: String
 )
 
+@Tag("SelfTest")
 class InteractivePagesTest {
 
     private val mapper = jacksonObjectMapper()
