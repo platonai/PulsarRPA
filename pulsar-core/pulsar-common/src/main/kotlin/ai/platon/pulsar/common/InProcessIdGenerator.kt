@@ -33,6 +33,9 @@ package ai.platon.pulsar.common
  * Usage example:
  * val gen = InProcessIdGenerator(nodeId = 1)
  * val id = gen.nextId()
+ *
+ * Reference:
+ * - [Unique ID Generators](https://medium.com/prepster/unique-id-generators-4e3f898d0999)
  */
 class InProcessIdGenerator(
     private val nodeId: Long = 0,

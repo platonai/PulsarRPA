@@ -43,25 +43,12 @@ public interface CapabilityTypes {
      * */
     String MAIN_LOOP_CONCURRENCY_OVERRIDE = "main.loop.concurrency.override";
 
-    String START = "start";
-
-    String LIMIT = "limit";
-
-    String BATCH_ID = "batch.id";
-
     String PARAM_JOB_NAME = "job.name";
-
-    String FORCE = "force";
-
-    String RECENT_DAYS_WINDOW = "recent.days.window";
 
     /**
      * Application metrics
      * */
     String METRICS_ENABLED = "metrics.enabled";
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Crawl section
 
     String PAGE_EVENT_CLASS = "page.eventHandlers.class";
 
@@ -272,10 +259,16 @@ public interface CapabilityTypes {
      * */
     String GLOBAL_DOCUMENT_CACHE_SIZE = "global.document.cache.size";
 
-    String PULSAR_DOMAIN = "pulsar.domain";
-
     // H2
     String H2_SESSION_FACTORY_CLASS = "h2.sessionFactory";
 
     String SCENT_EXTRACT_TABULATE_CELL_TYPE = "scent.extract.tabulate.cell.type";
+
+    /// /////////////////////////////////////////////////////
+    // Distributed
+
+    /**
+     * The node id. The node id **HAS TO** be specified as a JVM System variable or a Environment variable.
+     * */
+    String APP_NODE_ID = "app.node.id";
 }

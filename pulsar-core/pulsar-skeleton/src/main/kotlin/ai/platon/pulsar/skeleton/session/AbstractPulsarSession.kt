@@ -2,18 +2,14 @@ package ai.platon.pulsar.skeleton.session
 
 import ai.platon.pulsar.boilerpipe.extractors.DefaultExtractor
 import ai.platon.pulsar.boilerpipe.sax.SAXInput
-import ai.platon.pulsar.common.AppFiles
-import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
-import ai.platon.pulsar.common.IllegalApplicationStateException
-import ai.platon.pulsar.common.InProcessIdGenerator
-import ai.platon.pulsar.common.Runtimes
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.urls.PlainUrl
-import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.URLUtils
-import ai.platon.pulsar.common.warnForClose
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
@@ -41,7 +37,7 @@ import java.io.StringReader
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -68,7 +64,7 @@ abstract class AbstractPulsarSession(
 ) : PulsarSession {
 
     companion object {
-        private val inProcessIdGenerator = InProcessIdGenerator()
+        private val inProcessIdGenerator = InProcessIdGenerator(AppContext.nodeId)
 
         fun generateNextInProcessId() = inProcessIdGenerator.nextId()
 
@@ -207,7 +203,8 @@ abstract class AbstractPulsarSession(
 
     override fun open(url: String): WebPage = load(url, "-refresh")
 
-    override fun open(url: String, eventHandlers: PageEventHandlers): WebPage = load(url, options("-refresh", eventHandlers))
+    override fun open(url: String, eventHandlers: PageEventHandlers): WebPage =
+        load(url, options("-refresh", eventHandlers))
 
     override suspend fun open(url: String, driver: WebDriver): WebPage {
         bindDriver(driver)
@@ -236,13 +233,17 @@ abstract class AbstractPulsarSession(
         bindBrowser(driver.browser)
     }
 
-    override fun bindBrowser(browser: Browser) { sessionConfig.putBean(browser) }
+    override fun bindBrowser(browser: Browser) {
+        sessionConfig.putBean(browser)
+    }
 
     override fun unbindDriver(driver: WebDriver) {
         sessionConfig.removeBean(driver)
     }
 
-    override fun unbindBrowser(browser: Browser) { sessionConfig.removeBean(browser) }
+    override fun unbindBrowser(browser: Browser) {
+        sessionConfig.removeBean(browser)
+    }
 
     override fun load(url: String): WebPage = load(url, options())
 
@@ -341,7 +342,14 @@ abstract class AbstractPulsarSession(
     override fun submitAll(urls: Iterable<String>, args: String) = submitAll(urls.map { PlainUrl(it, args) })
 
     override fun submitAll(urls: Iterable<String>, options: LoadOptions) =
-        submitAll(urls.map { ListenableHyperlink(it, "", args = options.toString(), eventHandlers = options.eventHandlers) })
+        submitAll(urls.map {
+            ListenableHyperlink(
+                it,
+                "",
+                args = options.toString(),
+                eventHandlers = options.eventHandlers
+            )
+        })
 
     override fun submitAll(urls: Collection<UrlAware>) = also { context.submitAll(urls) }
 
@@ -407,7 +415,11 @@ abstract class AbstractPulsarSession(
         return fieldSelectors.associateWith { document.selectFirstOrNull(it)?.text() }
     }
 
-    override fun extract(document: FeaturedDocument, restrictSelector: String, fieldSelectors: Iterable<String>): List<Map<String, String?>> {
+    override fun extract(
+        document: FeaturedDocument,
+        restrictSelector: String,
+        fieldSelectors: Iterable<String>
+    ): List<Map<String, String?>> {
         return document.select(restrictSelector).map { ele ->
             fieldSelectors.associateWith { ele.selectFirstOrNull(it)?.text() }
         }
@@ -417,7 +429,11 @@ abstract class AbstractPulsarSession(
         return fieldSelectors.entries.associate { it.key to document.selectFirstOrNull(it.value)?.text() }
     }
 
-    override fun extract(document: FeaturedDocument, restrictSelector: String, fieldSelectors: Map<String, String>): List<Map<String, String?>> {
+    override fun extract(
+        document: FeaturedDocument,
+        restrictSelector: String,
+        fieldSelectors: Map<String, String>
+    ): List<Map<String, String?>> {
         return document.select(restrictSelector).map { ele ->
             fieldSelectors.entries.associate { it.key to ele.selectFirstOrNull(it.value)?.text() }
         }
@@ -518,14 +534,20 @@ abstract class AbstractPulsarSession(
 
     override fun chat(prompt: String): ModelResponse = context.chat(prompt)
 
-    override fun chat(prompt: String, page: WebPage) = chat(prompt +
-            "\n\nThere is the source code of the page:\n\n\n" + page.contentAsString)
+    override fun chat(prompt: String, page: WebPage) = chat(
+        prompt +
+                "\n\nThere is the source code of the page:\n\n\n" + page.contentAsString
+    )
 
-    override fun chat(prompt: String, document: FeaturedDocument) = chat(prompt +
-            "\n\nThere is the text content of the page:\n\n\n" + document.text)
+    override fun chat(prompt: String, document: FeaturedDocument) = chat(
+        prompt +
+                "\n\nThere is the text content of the page:\n\n\n" + document.text
+    )
 
-    override fun chat(prompt: String, element: Element) = chat(prompt +
-            "\n\nThere is the text content of the selected element:\n\n\n" + element.text())
+    override fun chat(prompt: String, element: Element) = chat(
+        prompt +
+                "\n\nThere is the text content of the selected element:\n\n\n" + element.text()
+    )
 
     override suspend fun act(action: String): WebDriverAgent {
         return act(ActionOptions(action = action))
@@ -659,7 +681,8 @@ abstract class AbstractPulsarSession(
             return TextDocument(url)
         }
 
-        return TextDocument(url,
+        return TextDocument(
+            url,
             pageTitle = d.pageTitle,
             contentTitle = d.contentTitle,
             textContent = d.textContent,

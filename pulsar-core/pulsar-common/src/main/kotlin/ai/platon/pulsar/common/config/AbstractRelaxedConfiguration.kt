@@ -188,7 +188,7 @@ abstract class AbstractRelaxedConfiguration {
      *
      * 1. 🔧 Java Environment Variables
      * 2. ⚙️ Java System Properties
-     * 3. 📝 Spring Boot `application.properties` / `application.yml` (REST API only)
+     * 3. 📝 Spring Boot `application.properties`
      * 4. 📁 Files in `${PULSAR_DATA_HOME}/config/conf-enabled`
      *
      * @param name The logical property name. Leading/trailing whitespace will be trimmed.
