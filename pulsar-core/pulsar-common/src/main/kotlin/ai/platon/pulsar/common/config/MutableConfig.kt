@@ -16,18 +16,7 @@ open class MutableConfig : ImmutableConfig {
 
     constructor() : this(false)
 
-    constructor(profile: String) : this(profile, true, listOf())
-
-    constructor(loadDefaults: Boolean) : this(
-        System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
-        loadDefaults, listOf()
-    )
-
-    constructor(
-        profile: String,
-        loadDefaults: Boolean,
-        resources: Iterable<String> = mutableSetOf()
-    ) : super(profile, loadDefaults, resources)
+    constructor(loadDefaults: Boolean) : super(loadDefaults)
 
     constructor(conf: ImmutableConfig) : super(conf.unbox()) {
         this.environment = conf.environment
