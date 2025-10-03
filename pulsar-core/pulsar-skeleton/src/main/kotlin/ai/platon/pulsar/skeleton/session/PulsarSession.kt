@@ -161,9 +161,13 @@ import java.util.concurrent.CompletableFuture
  * */
 interface PulsarSession : AutoCloseable {
     /**
-     * The session id.
+     * The in-process unique id.
      * */
-    val id: String
+    val id: Long
+    /**
+     * The universally unique identifier (UUID). A UUID represents a 128-bit value.
+     * */
+    val uuid: String
     /**
      * Check if the session is active.
      * */

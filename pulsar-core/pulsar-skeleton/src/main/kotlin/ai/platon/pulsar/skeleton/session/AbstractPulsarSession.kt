@@ -6,6 +6,8 @@ import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.IllegalApplicationStateException
+import ai.platon.pulsar.common.InProcessIdGenerator
+import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.urls.PlainUrl
@@ -62,23 +64,29 @@ abstract class AbstractPulsarSession(
     /**
      * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
      * */
-    override val id: String = UUID.randomUUID().toString()
+    override val id: Long
 ) : PulsarSession {
 
     companion object {
-        const val ID_CAPACITY = 1_000_000
-        const val ID_START = 1_000_000
-        const val ID_END = ID_START + ID_CAPACITY - 1
+        private val inProcessIdGenerator = InProcessIdGenerator()
 
-        private val idGen = AtomicInteger()
+        fun generateNextInProcessId() = inProcessIdGenerator.nextId()
 
+        // Keep existing page/document cache counters
         val pageCacheHits = AtomicLong()
         val documentCacheHits = AtomicLong()
 
+        // Legacy id generator retained (unchanged)
+        const val ID_CAPACITY = 1_000_000
+        const val ID_START = 1_000_000
+        const val ID_END = ID_START + ID_CAPACITY - 1
+        private val idGen = AtomicInteger()
         fun generateNextId() = ID_START + idGen.incrementAndGet()
     }
 
     private val logger = LoggerFactory.getLogger(AbstractPulsarSession::class.java)
+
+    override val uuid: String = UUID.randomUUID().toString()
 
     override val configuration get() = context.configuration
 

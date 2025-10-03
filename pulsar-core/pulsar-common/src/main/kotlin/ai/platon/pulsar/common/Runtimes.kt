@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit
 import javax.swing.JFrame
 import kotlin.random.Random
 
-
 /**
  * Runtime utility
  * */

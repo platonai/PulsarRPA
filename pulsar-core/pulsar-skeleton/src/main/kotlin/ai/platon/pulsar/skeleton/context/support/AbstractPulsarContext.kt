@@ -166,7 +166,7 @@ abstract class AbstractPulsarContext(
     /**
      * All open sessions
      * */
-    val sessions = ConcurrentSkipListMap<String, AbstractPulsarSession>()
+    val sessions = ConcurrentSkipListMap<Long, AbstractPulsarSession>()
 
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
