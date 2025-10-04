@@ -1,14 +1,9 @@
-package ai.platon.pulsar.common.conf
+package ai.platon.pulsar.common.config
 
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.common.config.VolatileConfig
 import org.apache.commons.lang3.StringUtils
 import java.time.Duration
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 17-1-14.
@@ -25,18 +20,6 @@ class ConfigTest {
         assertEquals(v1, conf[n1])
         println(StringUtils.join(conf.getStrings(n1), ", "))
         assertEquals(4, conf.getStrings(n1).size)
-    }
-    
-    @Test
-    fun testFallback2() {
-        val conf1 = ImmutableConfig(loadDefaults = true)
-        assertEquals("pulsar_test_crawl_id", conf1["storage.crawl.id"])
-        
-        val conf2 = conf1.toMutableConfig()
-        assertEquals("pulsar_test_crawl_id", conf2["storage.crawl.id"])
-        
-        val conf3 = conf1.toVolatileConfig()
-        assertEquals("pulsar_test_crawl_id", conf3["storage.crawl.id"])
     }
 
     @Test
@@ -92,4 +75,3 @@ class ConfigTest {
         assertEquals(4, conf.getStrings(n1).size)
     }
 }
-

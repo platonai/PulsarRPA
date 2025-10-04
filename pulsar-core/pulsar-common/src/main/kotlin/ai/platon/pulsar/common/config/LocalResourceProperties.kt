@@ -67,7 +67,7 @@ class LocalResourceProperties(
         // https://github.com/platonai/browser4/issues/110
         val projectRoot = ProjectUtils.findProjectRootDir()
         if (projectRoot != null) {
-            // TODO: search classpath?
+            // TODO: search classpath
             loadExternalProperties(projectRoot)
             loadExternalProperties(projectRoot.resolve("config"))
         }
