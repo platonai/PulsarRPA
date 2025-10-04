@@ -236,19 +236,6 @@ interface WebDriver : Closeable {
     suspend fun addBlockedURLs(urlPatterns: List<String>)
 
     /**
-     * Block resource URL loading with a certain probability.
-     *
-     * @param urlPatterns Regular expressions of URLs to block.
-     */
-    suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>)
-
-    /**
-     * TODO: NOT IMPLEMENTED
-     * */
-    @Throws(WebDriverException::class)
-    suspend fun setTimeouts(browserSettings: BrowserSettings)
-
-    /**
      * Opens the specified URL in the web driver.
      *
      * This function navigates the web driver to the provided URL and waits for the navigation to complete.

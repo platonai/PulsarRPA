@@ -58,14 +58,6 @@ class PlaywrightDriver(
         }
     }
 
-    override suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>) {
-        // Implement probability-based blocking logic here
-    }
-
-    override suspend fun setTimeouts(browserSettings: BrowserSettings) {
-        // Implement timeout settings logic here
-    }
-
     /**
      * Navigates to a URL without waiting for navigation to complete.
      * @throws RuntimeException if navigation fails

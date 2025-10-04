@@ -1,6 +1,5 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
-import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
@@ -12,7 +11,10 @@ import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.urls.URLUtils
-import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
+import ai.platon.pulsar.protocol.browser.driver.cdt.detail.ChromeNavigateEntry
+import ai.platon.pulsar.protocol.browser.driver.cdt.detail.NetworkEvents
+import ai.platon.pulsar.protocol.browser.driver.cdt.detail.NetworkManager
+import ai.platon.pulsar.protocol.browser.driver.cdt.detail.RobustRPC
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
@@ -28,7 +30,6 @@ import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourceOptions
 import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
-import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import org.apache.commons.lang3.SystemUtils
 import org.apache.hc.core5.net.URIBuilder
@@ -97,13 +98,6 @@ class PulsarWebDriver(
 
     override suspend fun addBlockedURLs(urlPatterns: List<String>) {
         _blockedURLPatterns.addAll(urlPatterns)
-    }
-
-    override suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>) {
-        _probabilityBlockedURLPatterns.addAll(urlPatterns)
-    }
-
-    override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 
     @Throws(WebDriverException::class)
