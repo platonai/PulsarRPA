@@ -621,7 +621,7 @@ ${tta.TOOL_CALL_LIST}
         }.thenByDescending { it.text.length }.thenBy { it.selector.length })
     }
 
-    private fun formatInteractiveElements(elements: List<InteractiveElement>, limit: Int = 20, charLimitPerLine: Int = 180): String {
+    private fun formatInteractiveElements(elements: List<InteractiveElement>, limit: Int = 200, charLimitPerLine: Int = 180): String {
         if (elements.isEmpty()) return "(无)"
         val ranked = rankInteractiveElements(elements).take(limit)
         return ranked.mapIndexed { idx, e ->
@@ -639,7 +639,7 @@ ${tta.TOOL_CALL_LIST}
 此前动作摘要：
 $h
 
-可交互元素(最多20)：
+可交互元素：
 $interactiveSummary
 
 请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作），若无法推进请输出空 tool_calls。

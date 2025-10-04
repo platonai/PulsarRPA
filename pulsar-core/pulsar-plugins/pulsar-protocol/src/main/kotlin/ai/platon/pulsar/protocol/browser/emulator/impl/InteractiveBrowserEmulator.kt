@@ -468,10 +468,6 @@ open class InteractiveBrowserEmulator(
         val page = task.page
 
         logBeforeNavigate(fetchTask, settings)
-        // TODO: not implemented yet
-        driver.setTimeouts(settings)
-        // TODO: handle frames
-        // driver.switchTo().frame(1);
 
         meterNavigates.mark()
         numDeferredNavigates.mark()
