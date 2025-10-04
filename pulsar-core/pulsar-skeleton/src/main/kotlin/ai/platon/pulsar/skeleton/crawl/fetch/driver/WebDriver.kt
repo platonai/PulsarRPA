@@ -297,12 +297,27 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun navigateTo(entry: NavigateEntry)
 
+    /**
+     * Navigates the browser to the previous page in the navigation history.
+     *
+     * This method is expected to use the browser's navigation history to move back to the previous page.
+     * It should handle any exceptions that may occur during the navigation process.
+     *
+     * @throws WebDriverException If an error occurs while navigating back.
+     */
     @Throws(WebDriverException::class)
     suspend fun goBack()
 
+    /**
+     * Navigates the browser to the next page in the navigation history.
+     *
+     * This method is expected to use the browser's navigation history to move forward to the next page.
+     * It should handle any exceptions that may occur during the navigation process.
+     *
+     * @throws WebDriverException If an error occurs while navigating forward.
+     */
     @Throws(WebDriverException::class)
     suspend fun goForward()
-
     /**
      * Returns a string representing the current URL that the browser is looking at. The current url is always
      * the main frame's `document.documentURI` if the browser succeed to return it, and is displayed in the browser's
