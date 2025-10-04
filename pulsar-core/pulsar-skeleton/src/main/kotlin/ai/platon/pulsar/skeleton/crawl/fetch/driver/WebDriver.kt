@@ -297,6 +297,12 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun navigateTo(entry: NavigateEntry)
 
+    @Throws(WebDriverException::class)
+    suspend fun goBack()
+
+    @Throws(WebDriverException::class)
+    suspend fun goForward()
+
     /**
      * Returns a string representing the current URL that the browser is looking at. The current url is always
      * the main frame's `document.documentURI` if the browser succeed to return it, and is displayed in the browser's

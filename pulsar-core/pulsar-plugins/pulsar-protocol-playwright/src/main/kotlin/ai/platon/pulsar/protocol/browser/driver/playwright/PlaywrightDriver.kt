@@ -85,6 +85,14 @@ class PlaywrightDriver(
         }
     }
 
+    override suspend fun goBack() {
+        page.goBack()
+    }
+
+    override suspend fun goForward() {
+        page.goForward()
+    }
+
     /**
      * Navigate to the page and inject scripts.
      * */

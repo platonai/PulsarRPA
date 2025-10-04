@@ -122,6 +122,32 @@ class PulsarWebDriver(
         }
     }
 
+    override suspend fun goBack() {
+        invokeOnPage("goBack") {
+            val history = pageAPI?.navigationHistory ?: return@invokeOnPage
+            val currentIndex = history.currentIndex ?: return@invokeOnPage
+            val entries = history.entries ?: return@invokeOnPage
+            val targetIndex = currentIndex - 1
+            if (targetIndex >= 0 && targetIndex < entries.size) {
+                val entryId = entries[targetIndex].id
+                pageAPI?.navigateToHistoryEntry(entryId)
+            }
+        }
+    }
+
+    override suspend fun goForward() {
+        invokeOnPage("goForward") {
+            val history = pageAPI?.navigationHistory ?: return@invokeOnPage
+            val currentIndex = history.currentIndex ?: return@invokeOnPage
+            val entries = history.entries ?: return@invokeOnPage
+            val targetIndex = currentIndex + 1
+            if (targetIndex >= 0 && targetIndex < entries.size) {
+                val entryId = entries[targetIndex].id
+                pageAPI?.navigateToHistoryEntry(entryId)
+            }
+        }
+    }
+
     @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
         return invokeOnPage("getCookies") { getCookies0() } ?: listOf()
