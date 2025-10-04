@@ -26,22 +26,20 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
         runWebDriverTest { driver ->
             // Navigate to a test page with interactive elements first
-            driver.navigateTo("https://example.com")
+            driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
             val result = driver.act(prompt)
 
             assertNotNull(result)
-            assertTrue(result.functionCalls.isNotEmpty() || result.functionResults.isNotEmpty() || result.modelResponse.content.isNotBlank())
-
-            // Should contain exactly one action
+            // Must generate at least one function call
+            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            // Should contain at most one action
             assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
 
-            // If there are function calls, they should be related to clicking
-            if (result.functionCalls.isNotEmpty()) {
-                val action = result.functionCalls.first()
-                assertTrue(action.contains("click") || action.contains("driver.click"), "Should generate click action")
-            }
+            // The generated action should be related to clicking
+            val action = result.functionCalls.first()
+            assertTrue(action.contains("click") || action.contains("driver.click"), "Should generate click action")
         }
     }
 
@@ -51,19 +49,20 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
         runWebDriverTest { driver ->
             // Navigate to a test page
-            driver.navigateTo("https://example.com")
+            driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
             val result = driver.act(prompt)
 
             assertNotNull(result)
+            // Must generate at least one function call
+            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            // Should contain at most one action
             assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
 
-            // If there are function calls, they should be related to filling
-            if (result.functionCalls.isNotEmpty()) {
-                val action = result.functionCalls.first()
-                assertTrue(action.contains("fill") || action.contains("driver.fill"), "Should generate fill action")
-            }
+            // The generated action should be related to filling
+            val action = result.functionCalls.first()
+            assertTrue(action.contains("fill") || action.contains("driver.fill"), "Should generate fill action")
         }
     }
 
@@ -75,13 +74,14 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             val result = driver.act(prompt)
 
             assertNotNull(result)
+            // Must generate at least one function call
+            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            // Should contain at most one action
             assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
 
-            // If there are function calls, they should be related to navigation
-            if (result.functionCalls.isNotEmpty()) {
-                val action = result.functionCalls.first()
-                assertTrue(action.contains("navigateTo") || action.contains("driver.navigateTo"), "Should generate navigation action")
-            }
+            // The generated action should be related to navigation
+            val action = result.functionCalls.first()
+            assertTrue(action.contains("navigateTo") || action.contains("driver.navigateTo"), "Should generate navigation action")
         }
     }
 
@@ -91,19 +91,20 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
         runWebDriverTest { driver ->
             // Navigate to a test page
-            driver.navigateTo("https://example.com")
+            driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
             val result = driver.act(prompt)
 
             assertNotNull(result)
+            // Must generate at least one function call
+            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            // Should contain at most one action
             assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
 
-            // If there are function calls, they should be related to scrolling
-            if (result.functionCalls.isNotEmpty()) {
-                val action = result.functionCalls.first()
-                assertTrue(action.contains("scroll") || action.contains("driver.scroll"), "Should generate scroll action")
-            }
+            // The generated action should be related to scrolling
+            val action = result.functionCalls.first()
+            assertTrue(action.contains("scroll") || action.contains("driver.scroll"), "Should generate scroll action")
         }
     }
 
@@ -113,19 +114,20 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
         runWebDriverTest { driver ->
             // Navigate to a test page
-            driver.navigateTo("https://example.com")
+            driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
             val result = driver.act(prompt)
 
             assertNotNull(result)
+            // Must generate at least one function call
+            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            // Should contain at most one action
             assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
 
-            // If there are function calls, they should be related to waiting
-            if (result.functionCalls.isNotEmpty()) {
-                val action = result.functionCalls.first()
-                assertTrue(action.contains("waitFor") || action.contains("driver.waitFor"), "Should generate wait action")
-            }
+            // The generated action should be related to waiting
+            val action = result.functionCalls.first()
+            assertTrue(action.contains("waitFor") || action.contains("driver.waitFor"), "Should generate wait action")
         }
     }
 
@@ -135,19 +137,20 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
         runWebDriverTest { driver ->
             // Navigate to a test page
-            driver.navigateTo("https://example.com")
+            driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
             val result = driver.act(prompt)
 
             assertNotNull(result)
+            // Must generate at least one function call
+            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            // Should contain at most one action
             assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
 
-            // If there are function calls, they should be related to checkbox
-            if (result.functionCalls.isNotEmpty()) {
-                val action = result.functionCalls.first()
-                assertTrue(action.contains("check") || action.contains("driver.check"), "Should generate checkbox action")
-            }
+            // The generated action should be related to checkbox
+            val action = result.functionCalls.first()
+            assertTrue(action.contains("check") || action.contains("driver.check"), "Should generate checkbox action")
         }
     }
 
@@ -157,17 +160,16 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
         runWebDriverTest { driver ->
             // Navigate to a test page
-            driver.navigateTo("https://example.com")
+            driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
             val result = driver.act(prompt)
 
             assertNotNull(result)
+            // Must generate at least one function call
+            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            // Should contain at most one action
             assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
-
-            // Should handle English prompts appropriately
-            assertNotNull(result.modelResponse)
-            assertTrue(result.modelResponse.content.isNotBlank() || result.functionCalls.isNotEmpty())
         }
     }
 
@@ -177,13 +179,15 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
         runWebDriverTest { driver ->
             // Navigate to a test page
-            driver.navigateTo("https://example.com")
+            driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
             val result = driver.act(prompt)
 
             assertNotNull(result)
-            // Should handle ambiguous prompts gracefully - either no action or a reasonable default
+            // Must generate at least one function call
+            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action even for ambiguous prompts")
+            // Should contain at most one action
             assertTrue(result.functionCalls.size <= 1, "Should generate at most one action even for ambiguous prompts")
         }
     }
@@ -192,7 +196,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
     fun `When act method is called multiple times then each call is independent`() {
         runWebDriverTest { driver ->
             // Navigate to a test page
-            driver.navigateTo("https://example.com")
+            driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
             val result1 = driver.act("点击搜索")
@@ -204,9 +208,12 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             assertNotNull(result2)
             assertNotNull(result3)
 
-            // Each should generate at most one action
+            // Each should generate exactly one action (at least one and at most one)
+            assertTrue(result1.functionCalls.isNotEmpty(), "First call should generate at least one action")
             assertTrue(result1.functionCalls.size <= 1)
+            assertTrue(result2.functionCalls.isNotEmpty(), "Second call should generate at least one action")
             assertTrue(result2.functionCalls.size <= 1)
+            assertTrue(result3.functionCalls.isNotEmpty(), "Third call should generate at least one action")
             assertTrue(result3.functionCalls.size <= 1)
         }
     }
@@ -223,13 +230,14 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
         runWebDriverTest { driver ->
             // Navigate to a test page
-            driver.navigateTo("https://example.com")
+            driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            testCases.forEach { (prompt, expectedKeywords) ->
+            testCases.forEach { (prompt, _) ->
                 val result = driver.act(prompt)
 
                 assertNotNull(result, "Result should not be null for prompt: $prompt")
+                assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action for: $prompt")
                 assertTrue(result.functionCalls.size <= 1, "Should generate at most one action for: $prompt")
 
                 println("Prompt: $prompt")
