@@ -77,8 +77,9 @@ class SessionActMethodTest : TextToActionTestBase() {
     @Test
     fun testClickThirdLinkNavigatesToPageC() = runBlocking {
         session.act(ActionOptions("click the 3rd link"))
-        val navigated = waitUntil { driver.currentUrl().endsWith("pageC.html") }
-        assertTrue(navigated, "Should navigate to pageC.html after clicking 3rd link")
+        val remainingTime = driver.waitUntil { driver.currentUrl().endsWith("pageC.html") }
+        // val navigated = waitUntil { driver.currentUrl().endsWith("pageC.html") }
+        assertTrue(remainingTime.seconds > 0, "Should navigate to pageC.html after clicking 3rd link")
         val page = session.attach(driver.currentUrl(), driver)
         val doc = session.parse(page)
         assertEquals("Page C (Third Link Target)", doc.selectFirstTextOrNull("#title"))

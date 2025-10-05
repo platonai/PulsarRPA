@@ -183,7 +183,7 @@ open class TextToAction(val conf: ImmutableConfig) {
     /**
      * Generate EXACT ONE WebDriver action with interactive elements.
      *
-     * @param command The action description with plain text
+     * @param instruction The action description with plain text
      * @param driver The driver to use to collect the context, such as interactive elements
      * @return The action description
      * */
@@ -208,7 +208,7 @@ open class TextToAction(val conf: ImmutableConfig) {
         val systemPrompt = buildOperatorSystemPrompt(instruction)
         val toolUsePrompt = buildToolUsePrompt(systemPrompt, interactiveElements, toolCallLimit)
         val response = if (screenshotB64 != null) {
-            model.call(toolUsePrompt, "", screenshotB64, null, "image/jpeg")
+            model.call(toolUsePrompt, "", null, screenshotB64, "image/jpeg")
         } else {
             model.call(toolUsePrompt)
         }
@@ -234,12 +234,36 @@ open class TextToAction(val conf: ImmutableConfig) {
         return model?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
-    private fun buildOperatorSystemPrompt(goal: String): String {
+    fun buildOperatorSystemPrompt(goal: String): String {
         return """
 $AGENT_SYSTEM_PROMPT
 
 用户总目标：$goal
         """.trimIndent()
+    }
+
+    fun formatInteractiveElements(elements: List<InteractiveElement>, limit: Int = 200, charLimitPerLine: Int = 180): String {
+        if (elements.isEmpty()) return "(无)"
+        val ranked = rankInteractiveElements(elements).take(limit)
+        return ranked.mapIndexed { idx, e ->
+            val base = e.description
+            val clipped = if (base.length > charLimitPerLine) base.take(charLimitPerLine - 3) + "..." else base
+            "${idx + 1}. $clipped"
+        }.joinToString("\n")
+    }
+
+    fun rankInteractiveElements(elements: List<InteractiveElement>): List<InteractiveElement> {
+        // Simple heuristic scoring: prioritize buttons, inputs (empty), anchors with text, then others
+        return elements.sortedWith(compareByDescending<InteractiveElement> { e ->
+            when (e.tagName.lowercase()) {
+                "button" -> 5
+                "input" -> if (e.value.isNullOrBlank()) 4 else 3
+                "select" -> 3
+                "textarea" -> 3
+                "a" -> if (e.text.isNotBlank()) 2 else 1
+                else -> 0
+            }
+        }.thenByDescending { it.text.length }.thenBy { it.selector.length })
     }
 
     protected fun modelResponseToActionDescription(response: ModelResponse, toolCallLimit: Int = 1): ActionDescription {
@@ -561,19 +585,45 @@ $AGENT_SYSTEM_PROMPT
 
     companion object {
 
+        const val TOOL_CALL_LIST = """
+- navigateTo(url: String)
+- waitForSelector(selector: String, timeoutMillis: Long = 5000)
+- click(selector: String)
+- fill(selector: String, text: String)
+- press(selector: String, key: String)
+- check(selector: String)
+- uncheck(selector: String)
+- scrollDown(count: Int = 1)
+- scrollUp(count: Int = 1)
+- scrollToTop()
+- scrollToBottom()
+- scrollToMiddle(ratio: Double = 0.5)
+- scrollToScreen(screenNumber: Double)
+- clickTextMatches(selector: String, pattern: String, count: Int = 1)
+- clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
+- clickNthAnchor(n: Int, rootSelector: String = "body")
+- captureScreenshot()
+- captureScreenshot(selector: String)
+- delay(millis: Long)
+- stop()
+    """
+
         val AGENT_SYSTEM_PROMPT = """
 你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
 重要指南：
 1) 将复杂动作拆成原子步骤；
-2) act 一次仅做一个动作（如：单击一次、输入一次、选择一次）；
+2) 一次仅做一个动作（如：单击一次、输入一次、选择一次）；
 3) 不要在一步中合并多个动作；
 4) 多个动作用多步表达；
 5) 始终验证目标元素存在且可见后再执行操作；
 6) 遇到错误时尝试替代方案或优雅终止；
 
-输出严格使用 JSON，字段：
-- tool_calls: [ { name: string, args: object } ] // 最多 1 个
-- taskComplete: boolean // 可选
+输出严格使用 JSON 字段：
+
+{
+  tool_calls: [ { name: string, args: object } ]
+  taskComplete: boolean
+}
 
 安全要求：
 - 仅操作可见的交互元素
@@ -624,29 +674,6 @@ suspend fun llmGeneratedFunction(session: PulsarSession) {
 }
 ```
         """
-
-        const val TOOL_CALL_LIST = """
-- navigateTo(url: String)
-- waitForSelector(selector: String, timeoutMillis: Long = 5000)
-- click(selector: String)
-- fill(selector: String, text: String)
-- press(selector: String, key: String)
-- check(selector: String)
-- uncheck(selector: String)
-- scrollDown(count: Int = 1)
-- scrollUp(count: Int = 1)
-- scrollToTop()
-- scrollToBottom()
-- scrollToMiddle(ratio: Double = 0.5)
-- scrollToScreen(screenNumber: Double)
-- clickTextMatches(selector: String, pattern: String, count: Int = 1)
-- clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
-- clickNthAnchor(n: Int, rootSelector: String = "body")
-- captureScreenshot()
-- captureScreenshot(selector: String)
-- delay(millis: Long)
-- stop()
-    """
 
         // JavaScript code to extract truly interactive elements from the page
         val EXTRACT_INTERACTIVE_ELEMENTS_EXPRESSION = """

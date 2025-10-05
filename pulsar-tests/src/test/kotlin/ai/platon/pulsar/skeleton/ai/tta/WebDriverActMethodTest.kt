@@ -8,12 +8,14 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
 /**
- * Comprehensive tests for WebDriver.act() method implementation
+ * Comprehensive tests for Webtta.generateWebDriverAction() method implementation
  * Testing the Tool Call style implementation with interactive elements
  */
 @Tag("ExternalServiceTest")
 @SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class WebDriverActMethodTest : TextToActionTestBase() {
+    
+    private val tta by lazy { TextToAction(conf) }
 
     @BeforeEach
     fun setUp() {
@@ -29,7 +31,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = driver.act(prompt)
+            val result = tta.generateWebDriverAction(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -52,7 +54,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = driver.act(prompt)
+            val result = tta.generateWebDriverAction(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -71,7 +73,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
         val prompt = "打开网页 https://www.google.com"
 
         runWebDriverTest { driver ->
-            val result = driver.act(prompt)
+            val result = tta.generateWebDriverAction(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -94,7 +96,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = driver.act(prompt)
+            val result = tta.generateWebDriverAction(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -117,7 +119,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = driver.act(prompt)
+            val result = tta.generateWebDriverAction(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -140,7 +142,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = driver.act(prompt)
+            val result = tta.generateWebDriverAction(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -163,7 +165,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = driver.act(prompt)
+            val result = tta.generateWebDriverAction(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -182,7 +184,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = driver.act(prompt)
+            val result = tta.generateWebDriverAction(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -199,9 +201,9 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result1 = driver.act("点击搜索")
-            val result2 = driver.act("滚动页面")
-            val result3 = driver.act("等待元素")
+            val result1 = tta.generateWebDriverAction("点击搜索")
+            val result2 = tta.generateWebDriverAction("滚动页面")
+            val result3 = tta.generateWebDriverAction("等待元素")
 
             // Each call should be independent
             assertNotNull(result1)
@@ -234,7 +236,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.waitForSelector("body")
 
             testCases.forEach { (prompt, _) ->
-                val result = driver.act(prompt)
+                val result = tta.generateWebDriverAction(prompt)
 
                 assertNotNull(result, "Result should not be null for prompt: $prompt")
                 assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action for: $prompt")

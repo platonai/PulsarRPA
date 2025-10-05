@@ -7,7 +7,6 @@ import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
 import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.ai.tta.InteractiveElement
-import ai.platon.pulsar.skeleton.ai.tta.TextToAction.Companion.AGENT_SYSTEM_PROMPT
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonObject
@@ -106,6 +105,10 @@ class PulsarAgent(
 
     val history: List<String> get() = _history
 
+    /**
+     * Execution with comprehensive error handling and retry mechanism.
+     * Returns the final summary with enhanced error handling.
+     */
     suspend fun execute(action: ActionOptions): ModelResponse {
         Files.createDirectories(baseDir)
         val startTime = Instant.now()
@@ -116,6 +119,7 @@ class PulsarAgent(
 
     /**
      * Enhanced execution with comprehensive error handling and retry mechanisms
+     * Returns the final summary with enhanced error handling.
      */
     private suspend fun executeWithRetry(action: ActionOptions, sessionId: String, startTime: Instant): ModelResponse {
         var lastError: Exception? = null
@@ -156,7 +160,8 @@ class PulsarAgent(
     }
 
     /**
-     * Main execution logic with enhanced error handling and monitoring
+     * Main execution logic with enhanced error handling and monitoring.
+     * Returns the final summary with enhanced error handling.
      */
     private suspend fun executeInternal(action: ActionOptions, sessionId: String, startTime: Instant, attempt: Int): ModelResponse {
         val overallGoal = action.action
@@ -169,7 +174,7 @@ class PulsarAgent(
             "maxRetries" to config.maxRetries
         ))
 
-        val systemPrompt = buildOperatorSystemPrompt(overallGoal)
+        val systemMsg = tta.buildOperatorSystemPrompt(overallGoal)
         var consecutiveNoOps = 0
         var step = 0
 
@@ -198,8 +203,9 @@ class PulsarAgent(
                 val userMsg = buildUserMessage(overallGoal, interactiveElements)
 
                 // message: agent guide + overall goal + last action summary + current context message
-                val message = buildExecutionMessage(systemPrompt, userMsg, screenshotB64)
-                val stepActionResult = generateStepActionWithRetry(message, stepContext, interactiveElements)
+                val message = buildExecutionMessage(systemMsg, userMsg, screenshotB64)
+                // interactive elements are already appended to message
+                val stepActionResult = generateStepActionWithRetry(message, stepContext, listOf(), screenshotB64)
 
                 if (stepActionResult == null) {
                     consecutiveNoOps++
@@ -362,11 +368,13 @@ class PulsarAgent(
     /**
      * Generates action with retry mechanism
      */
-    private suspend fun generateStepActionWithRetry(message: String, context: ExecutionContext, interactiveElements: List<InteractiveElement>): ActionDescription? {
+    private suspend fun generateStepActionWithRetry(
+        message: String, context: ExecutionContext, interactiveElements: List<InteractiveElement>, screenshotB64: String?
+    ): ActionDescription? {
         return try {
             withContext(Dispatchers.IO) {
                 // Use overload supplying extracted elements to avoid re-extraction
-                tta.generateWebDriverAction(message, interactiveElements, null)
+                tta.generateWebDriverAction(message, interactiveElements, screenshotB64)
             }
         } catch (e: Exception) {
             logError("Action generation failed", e, context.sessionId)
@@ -610,42 +618,10 @@ class PulsarAgent(
         }
     }
 
-    private fun buildOperatorSystemPrompt(goal: String): String {
-        return """
-$AGENT_SYSTEM_PROMPT
-
-用户总目标：$goal
-        """.trimIndent()
-    }
-
-    private fun rankInteractiveElements(elements: List<InteractiveElement>): List<InteractiveElement> {
-        // Simple heuristic scoring: prioritize buttons, inputs (empty), anchors with text, then others
-        return elements.sortedWith(compareByDescending<InteractiveElement> { e ->
-            when (e.tagName.lowercase()) {
-                "button" -> 5
-                "input" -> if (e.value.isNullOrBlank()) 4 else 3
-                "select" -> 3
-                "textarea" -> 3
-                "a" -> if (e.text.isNotBlank()) 2 else 1
-                else -> 0
-            }
-        }.thenByDescending { it.text.length }.thenBy { it.selector.length })
-    }
-
-    private fun formatInteractiveElements(elements: List<InteractiveElement>, limit: Int = 200, charLimitPerLine: Int = 180): String {
-        if (elements.isEmpty()) return "(无)"
-        val ranked = rankInteractiveElements(elements).take(limit)
-        return ranked.mapIndexed { idx, e ->
-            val base = e.description
-            val clipped = if (base.length > charLimitPerLine) base.take(charLimitPerLine - 3) + "..." else base
-            "${idx + 1}. $clipped"
-        }.joinToString("\n")
-    }
-
     private suspend fun buildUserMessage(instruction: String, interactiveElements: List<InteractiveElement>): String {
         val currentUrl = getCurrentUrl()
         val h = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
-        val interactiveSummary = formatInteractiveElements(interactiveElements)
+        val interactiveSummary = tta.formatInteractiveElements(interactiveElements)
         return """
 此前动作摘要：
 $h
