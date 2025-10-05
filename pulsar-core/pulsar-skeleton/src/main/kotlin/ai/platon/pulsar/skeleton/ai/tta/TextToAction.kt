@@ -99,55 +99,36 @@ open class TextToAction(val conf: ImmutableConfig) {
     var webDriverSourceCodeUseMessage: String
         private set
 
-    val TOOL_CALL_LIST = """
-- navigateTo(url: String)
-- waitForSelector(selector: String, timeoutMillis: Long = 5000)
-- click(selector: String)
-- fill(selector: String, text: String)
-- press(selector: String, key: String)
-- check(selector: String)
-- uncheck(selector: String)
-- scrollDown(count: Int = 1)
-- scrollUp(count: Int = 1)
-- scrollToTop()
-- scrollToBottom()
-- scrollToMiddle(ratio: Double = 0.5)
-- captureScreenshot()
-- captureScreenshot(selector: String)
-- delay(millis: Long)
-- stop()
-    """.trimIndent()
-
     // Tool-use helpers -------------------------------------------------------------------------
     internal data class ToolCall(val name: String, val args: Map<String, Any?>)
 
+//    protected fun buildToolUsePrompt() = """
+//你现在以工具调用模式工作。给定用户指令, 只返回可执行的工具调用 JSON。
+//$TOOL_CALL_LIST
+//
+//返回格式严格为(不要多余文字):
+//{
+//  "tool_calls":[
+//    {"name":"click","args":{"selector":"#submit-btn"}},
+//    {"name":"fill","args":{"selector":"#search-input","text":"Hello"}}
+//  ]
+//}
+//
+//规则:
+//1. 仅返回 JSON
+//2. 若无法确定操作, 返回 {"tool_calls":[]}
+//3. 参数缺失时不要臆造 selector
+//4. 不返回注释/Markdown/代码块
+//
+//    """.trimIndent()
+
     protected fun buildToolUsePrompt(
-        userPrompt: String,
+        systemPrompt: String,
         interactiveElements: List<InteractiveElement>,
         toolCallLimit: Int = 100,
     ): String {
-        val promptPrefix = """
-你现在以工具调用模式工作。给定用户指令, 只返回可执行的工具调用 JSON。
-$TOOL_CALL_LIST
-
-返回格式严格为(不要多余文字):
-{
-  "tool_calls":[
-    {"name":"click","args":{"selector":"#submit-btn"}},
-    {"name":"fill","args":{"selector":"#search-input","text":"Hello"}}
-  ]
-}
-
-规则:
-1. 仅返回 JSON
-2. 若无法确定操作, 返回 {"tool_calls":[]}
-3. 参数缺失时不要臆造 selector
-4. 不返回注释/Markdown/代码块
-
-    """.trimIndent()
-
         val prompt = buildString {
-            append(promptPrefix)
+            append(systemPrompt)
 
             appendLine("每次最多调用 $toolCallLimit 个工具")
 
@@ -157,7 +138,6 @@ $TOOL_CALL_LIST
             }
 
             appendLine()
-            appendLine("用户指令: $userPrompt")
         }
 
         return prompt
@@ -208,15 +188,15 @@ $TOOL_CALL_LIST
      * @return The action description
      * */
     open fun generateWebDriverAction(
-        command: String,
+        instruction: String,
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null
     ): ActionDescription {
-        return generateWebDriverActionsWithToolCallSpecs(command, interactiveElements, screenshotB64, 1)
+        return generateWebDriverActionsWithToolCallSpecs(instruction, interactiveElements, screenshotB64, 1)
     }
 
     open fun generateWebDriverActionsWithToolCallSpecs(
-        command: String,
+        instruction: String,
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
@@ -225,12 +205,14 @@ $TOOL_CALL_LIST
             return ActionDescription(listOf(), null, ModelResponse.LLM_NOT_AVAILABLE)
         }
 
-        val toolPrompt = buildToolUsePrompt(command, interactiveElements, toolCallLimit)
+        val systemPrompt = buildOperatorSystemPrompt(instruction)
+        val toolUsePrompt = buildToolUsePrompt(systemPrompt, interactiveElements, toolCallLimit)
         val response = if (screenshotB64 != null) {
-            model.call(toolPrompt, "", screenshotB64, "image/jpeg")
+            model.call(toolUsePrompt, "", screenshotB64, null, "image/jpeg")
         } else {
-            model.call(toolPrompt)
+            model.call(toolUsePrompt)
         }
+
         return modelResponseToActionDescription(response, toolCallLimit)
     }
 
@@ -250,6 +232,14 @@ $TOOL_CALL_LIST
         }
 
         return model?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
+    }
+
+    private fun buildOperatorSystemPrompt(goal: String): String {
+        return """
+$AGENT_SYSTEM_PROMPT
+
+用户总目标：$goal
+        """.trimIndent()
     }
 
     protected fun modelResponseToActionDescription(response: ModelResponse, toolCallLimit: Int = 1): ActionDescription {
@@ -570,7 +560,32 @@ $TOOL_CALL_LIST
     }
 
     companion object {
-        val WEB_DRIVER_SOURCE_CODE_USE_MESSAGE_TEMPLATE = """
+
+        val AGENT_SYSTEM_PROMPT = """
+你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
+重要指南：
+1) 将复杂动作拆成原子步骤；
+2) act 一次仅做一个动作（如：单击一次、输入一次、选择一次）；
+3) 不要在一步中合并多个动作；
+4) 多个动作用多步表达；
+5) 始终验证目标元素存在且可见后再执行操作；
+6) 遇到错误时尝试替代方案或优雅终止；
+
+输出严格使用 JSON，字段：
+- tool_calls: [ { name: string, args: object } ] // 最多 1 个
+- taskComplete: boolean // 可选
+
+安全要求：
+- 仅操作可见的交互元素
+- 避免快速连续操作，适当等待页面加载
+- 遇到验证码或安全提示时停止执行
+
+工具规范：
+$TOOL_CALL_LIST
+
+        """.trimIndent()
+
+        const val WEB_DRIVER_SOURCE_CODE_USE_MESSAGE_TEMPLATE = """
 以下是浏览器自动化的 WebDriver API 接口及其注释，你可以使用这些接口来控制浏览器。
 
 {{webDriverSourceCode}}
@@ -591,9 +606,9 @@ suspend fun llmGeneratedFunction(driver: WebDriver) {
 2. 对于点击操作，优先选择按钮或链接元素
 3. 对于输入操作，优先选择输入框元素
 4. 如果没有合适的交互元素，请生成一个空的挂起函数
-        """.trimIndent()
+        """
 
-        val PULSAR_SESSION_SOURCE_CODE_USE_MESSAGE_TEMPLATE = """
+        const val PULSAR_SESSION_SOURCE_CODE_USE_MESSAGE_TEMPLATE = """
 以下是抓取网页的 API 接口及其注释，你可以使用这些接口来抓取网页。
 
 {{pulsarSessionSourceCode}}
@@ -608,7 +623,30 @@ suspend fun llmGeneratedFunction(session: PulsarSession) {
     // 你的代码
 }
 ```
-        """.trimIndent()
+        """
+
+        const val TOOL_CALL_LIST = """
+- navigateTo(url: String)
+- waitForSelector(selector: String, timeoutMillis: Long = 5000)
+- click(selector: String)
+- fill(selector: String, text: String)
+- press(selector: String, key: String)
+- check(selector: String)
+- uncheck(selector: String)
+- scrollDown(count: Int = 1)
+- scrollUp(count: Int = 1)
+- scrollToTop()
+- scrollToBottom()
+- scrollToMiddle(ratio: Double = 0.5)
+- scrollToScreen(screenNumber: Double)
+- clickTextMatches(selector: String, pattern: String, count: Int = 1)
+- clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
+- clickNthAnchor(n: Int, rootSelector: String = "body")
+- captureScreenshot()
+- captureScreenshot(selector: String)
+- delay(millis: Long)
+- stop()
+    """
 
         // JavaScript code to extract truly interactive elements from the page
         val EXTRACT_INTERACTIVE_ELEMENTS_EXPRESSION = """

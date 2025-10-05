@@ -491,9 +491,6 @@ open class InteractiveBrowserEmulator(
         }
 
         require(driver is AbstractWebDriver)
-        if (!driver.supportJavascript) {
-            return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
-        }
 
         val interactTask = InteractTask(task, settings, driver)
 

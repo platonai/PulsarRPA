@@ -159,7 +159,7 @@ abstract class AbstractWebDriver(
     /** True if underlying browser / protocol crashed. */
     val isCrashed get() = crashed.get()
 
-    /** Human readable composite status string (e.g. WORKING,IDLE or READY,REUSED). */
+    /** Human-readable composite status string (e.g. WORKING,IDLE or READY,REUSED). */
     val status: String get() {
         val sb = StringBuilder()
         val st = state.get() ?: return ""
@@ -178,9 +178,6 @@ abstract class AbstractWebDriver(
         if (isReused) sb.append(",REUSED")
         return sb.toString()
     }
-
-    /** Whether javascript execution is supported for this driver implementation. */
-    open val supportJavascript: Boolean = true
 
     /** True if pageSource is a mocked/fake value (e.g. offline / synthetic content). */
     open val isMockedPageSource: Boolean = false
@@ -283,10 +280,8 @@ abstract class AbstractWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun act(prompt: String): InstructionResult {
-        val tta = TextToAction(config)
-        val action = tta.generateWebDriverAction(prompt, this)
-        return act(action)
+    override suspend fun act(action: String): WebDriverAgent {
+        return act(ActionOptions(action))
     }
 
     @Throws(WebDriverException::class)

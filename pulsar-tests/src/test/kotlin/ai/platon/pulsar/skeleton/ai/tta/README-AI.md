@@ -125,9 +125,12 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 #### 集成测试 (Integration Tests) 
 - 测试TTA与LLM的真实交互
 - 使用真实API调用
+- 使用Mock Server
 - 验证端到端的转换流程
+- 从自然语言输入到浏览器操作执行
 
 #### E2E测试 (End-to-End Tests)
+- 使用真实运行的网站
 - 完整的用户场景测试
 - 从自然语言输入到浏览器操作执行
 - 验证最终的自动化效果
@@ -167,10 +170,16 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 ### 1. 基础操作转换（与当前工具列表对齐）
 - 点击操作: "点击登录按钮" → `driver.click("#login-btn")`
 - 输入操作: "在搜索框输入AI工具" → `driver.fill("#search-input", "AI工具")`
+- 键盘操作: "在输入框按下 Enter" → `driver.press("#search-input", "Enter")`
 - 滚动操作: "滚动到页面中间" → `driver.scrollToMiddle(0.5)` 或 `driver.scrollDown(1)`
+- 屏幕滚动: "滚到第2屏中部" → `driver.scrollToScreen(1.5)`
 - 导航操作: "打开 /docs 页面" → `driver.navigateTo("/docs")`
 - 等待元素: "等待提交按钮出现" → `driver.waitForSelector("#submit-btn", 5000L)`
 - 勾选/取消: `driver.check("#agree")` / `driver.uncheck("#agree")`
+- 高级点击（文本/属性匹配）: `driver.clickTextMatches(".list", "提交", 1)` / `driver.clickMatches(".item", "data-id", "^x-\\d+$", 1)`
+- 点击第 N 个链接: `driver.clickNthAnchor(3)`（从 0 开始）
+- 截图: 整页 `driver.captureScreenshot()` 或节点 `driver.captureScreenshot("#area")`
+- 提取内容: "提取文本内容" → `driver.selectFirstTextOrNull("#content")`（注：该选择类API尚未作为 tool_call 暴露，当前工具模式不会生成此调用）
 
 ### 2. 元素选择准确性
 - 通过文本匹配: "点击提交按钮"
@@ -189,6 +198,79 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 - 模糊指令的处理
 - DOM结构变化的适应性
 - 超时和异常的处理
+
+---
+
+## ✅ 与实现对齐的工具调用 API 清单（当前可用）
+
+- 已暴露并已支持（TTA 工具 → driver.* 映射存在）：
+  - navigateTo(url)
+  - waitForSelector(selector, timeoutMillis)
+  - click(selector)
+  - fill(selector, text)
+  - press(selector, key)
+  - check(selector) / uncheck(selector)
+  - scrollDown(count) / scrollUp(count) / scrollToTop() / scrollToBottom() / scrollToMiddle(ratio)
+  - scrollToScreen(screenNumber)
+  - clickTextMatches(selector, pattern, count)
+  - clickMatches(selector, attrName, pattern, count)
+  - clickNthAnchor(n, rootSelector?)
+  - captureScreenshot() / captureScreenshot(selector)
+  - delay(millis)
+  - stop()
+
+- MiniWebDriver 已有但尚未通过工具暴露（建议后续开放）：
+  - 状态查询：exists(selector), isVisible(selector), isHidden(selector), isChecked(selector)
+  - 焦点与输入：focus(selector), type(selector, text)
+  - 精确滚动与定位：scrollTo(selector), moveMouseTo(x, y) / moveMouseTo(selector, dx, dy)
+  - 轮滚/拖拽：mouseWheelDown/Up(...), dragAndDrop(selector, dx, dy)
+  - 导航增强：waitForNavigation(oldUrl?, timeout?), goBack(), goForward()
+  - 页面与节点提取：outerHTML(), outerHTML(selector)
+  - 文本/属性/属性值/属性对/超大批量：selectFirstTextOrNull, selectTextAll, selectFirstAttributeOrNull, selectAttributes, selectAttributeAll
+  - 属性/Property：selectFirstPropertyValueOrNull, selectPropertyValueAll
+  - 链接/图片批量：selectHyperlinks, selectImages
+  - 会话态：getCookies(), url()/currentUrl()/documentURI()/baseURI()/referrer()
+  - 置前：bringToFront()
+
+## 🧭 建议新增的工具调用与使用场景
+
+- exists/isVisible：
+  - 场景："如果页面有‘购买’按钮就点击" → 先判存活/可见再 click，降低报错。
+- focus/type：
+  - 场景：需要保留原值或模拟逐字输入（用于触发 input/keyup 监听）。
+- scrollTo(selector)：
+  - 场景："滚到评论区并点赞"，比 scrollDown 更稳健。
+- waitForNavigation/goBack/goForward：
+  - 场景："点击登录后等待跳转"、"返回上一页"、"前进到下一页"。
+- mouseWheelDown/Up、moveMouseTo、dragAndDrop：
+  - 场景：画布、拖拽排序、地图/白板、复杂滚动容器。
+- outerHTML/page extract 与批量选择 API：
+  - 场景："抓取列表所有标题/链接/图片"、"导出节点HTML"。
+- getCookies/url/referrer：
+  - 场景：需要校验登陆态、记录来源、调试导航链路。
+
+> 建议优先开放：exists/isVisible/focus/scrollTo(selector)/waitForNavigation，因为它们能显著提升稳健性与可观测性，且风险低。
+
+## 🧱 元素抽取与上下文感知差距
+
+- 当前交互元素抽取逻辑覆盖：input/textarea/select/button/a[href]、显式 onclick/contenteditable/role=button|link，过滤 hidden/disabled。
+- 尚未覆盖：
+  - iframe 内部元素（需要切换上下文）
+  - Shadow DOM（open/closed）
+  - a11y 语义（aria-*、role+name）优先级
+- 测试页面规划已包含上述方向，建议在对应页面落地后扩展元素抽取脚本与测试用例。
+
+## ✍️ 文档需要更新（与实现对齐）的要点
+
+- 在“基础操作转换”中补充：
+  - scrollToScreen、clickTextMatches、clickMatches、clickNthAnchor、captureScreenshot(selector)
+- 在“重点测试场景”中新增：
+  - "点击第 N 个链接"、"文本/属性匹配点击"、"局部截图" 场景
+- 在“差距摘要/路线图”中明确：
+  - 目前元素抽取不支持 iframe/Shadow DOM，需要测试落地后再扩展
+- 新增“建议开放的工具调用”章节（见上），作为未来测试项的来源清单
+
+---
 
 ## 📊 测试覆盖率要求
 

@@ -497,7 +497,6 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun captureScreenshot(): String? {
         return try {
-            // rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
             rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot() }
         } catch (e: ChromeDriverException) {
             rpc.handleChromeException(e, "captureScreenshot")
@@ -515,7 +514,6 @@ class PulsarWebDriver(
         return try {
             val nodeId = page.scrollIntoViewIfNeeded(selector) ?: return null
             // Force the page stop all navigations and pending resource fetches.
-            rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
             rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(selector) }
         } catch (e: ChromeDriverException) {
             rpc.handleChromeException(e, "captureScreenshot")
@@ -527,7 +525,6 @@ class PulsarWebDriver(
     override suspend fun captureScreenshot(rect: RectD): String? {
         return try {
             // Force the page stop all navigations and pending resource fetches.
-            rpc.invokeDeferred("stopLoading") { pageAPI?.stopLoading() }
             rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(rect) }
         } catch (e: ChromeDriverException) {
             rpc.handleChromeException(e, "captureScreenshot")
@@ -537,7 +534,10 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun pageSource(): String? {
-        return invokeOnPage("pageSource") { domAPI?.getOuterHTML(domAPI?.document?.nodeId, null, null) }
+        return invokeOnPage("pageSource") {
+            // pageAPI?.getResourceContent(mainFrameAPI?.id, currentUrl())
+            domAPI?.getOuterHTML(domAPI?.document?.nodeId, null, null)
+        }
     }
 
     override suspend fun bringToFront() {
@@ -556,8 +556,8 @@ class PulsarWebDriver(
             includeCredentials = false
         }
 
-        val frameId = pageAPI?.frameTree?.frame?.id
         val response = rpc.invokeDeferred("loadNetworkResource") {
+            val frameId = pageAPI?.frameTree?.frame?.id
             val resource = networkAPI?.loadNetworkResource(frameId, url, options)
             resource?.let {
                 NetworkResourceResponse.from(it)
@@ -571,11 +571,6 @@ class PulsarWebDriver(
      * Close the tab hold by this driver.
      * */
     override fun close() {
-        // state should not be ready, working
-//        if (state.get() == WebDriver.State.READY || state.get() == WebDriver.State.WORKING) {
-//            logger.warn("Illegal driver state before close | {}", state.get())
-//        }
-
         browser.destroyDriver(this)
         doClose()
     }

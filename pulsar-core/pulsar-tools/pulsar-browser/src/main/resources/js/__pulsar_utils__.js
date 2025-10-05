@@ -559,6 +559,8 @@ __pulsar_utils__.click = function(selector) {
  * @return
  */
 __pulsar_utils__.clickTextMatches = function(selector, pattern) {
+    // TODO: handle selector `*`
+
     let elements = document.querySelectorAll(selector)
     for (let ele of elements) {
         if (ele instanceof HTMLElement) {

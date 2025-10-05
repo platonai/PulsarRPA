@@ -333,7 +333,7 @@ interface WebDriver : Closeable {
      *
      * @see [Document: URL property](https://developer.mozilla.org/en-US/docs/Web/API/Document/URL)
      *
-     * @return A string containing the URL of the document.
+     * @return A string containing the URL of the document
      */
     @Throws(WebDriverException::class)
     suspend fun url(): String
@@ -386,7 +386,10 @@ interface WebDriver : Closeable {
      * example, by Javascript) there is no guarantee that the returned text is that of the modified
      * page.
      *
-     * TODO: distinguish pageSource and outerHTML
+     * PageSource and outerHTML:
+     *
+     * - pageSource: returns document HTML markup, will support non-HTML document
+     * - outerHTML: returns document HTML markup, for HTML document only
      *
      * ```kotlin
      * val pageSource = driver.pageSource()
@@ -407,15 +410,15 @@ interface WebDriver : Closeable {
     suspend fun chat(prompt: String, selector: String): ModelResponse
 
     /**
-     * Instructs the webdriver to perform EXACT ONE action based on the given prompt.
-     * This function converts the prompt into EXACT ONE webdriver action, which will then be executed.
-     *
-     * @param prompt The textual prompt that describes the action to be performed by the webdriver.
-     * @return The response from the model, though in this implementation, the return value is not explicitly used.
+     * Create an AI agent to resolve the action requirement.
      */
     @Throws(WebDriverException::class)
-    suspend fun act(prompt: String): InstructionResult
+    @Beta
+    suspend fun act(action: String): WebDriverAgent
 
+    /**
+     * Create an AI agent to resolve the action requirement.
+     */
     @Throws(WebDriverException::class)
     @Beta
     suspend fun act(action: ActionOptions): WebDriverAgent
@@ -480,7 +483,6 @@ interface WebDriver : Closeable {
      * driver.clearBrowserCookies()
      * ```
      *
-     * TODO: consider only use driver.browser.clearCookies()
      * @see Browser.clearCookies
      * */
     @Throws(WebDriverException::class)

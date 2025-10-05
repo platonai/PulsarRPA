@@ -7,6 +7,7 @@ import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
 import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.ai.tta.InteractiveElement
+import ai.platon.pulsar.skeleton.ai.tta.TextToAction.Companion.AGENT_SYSTEM_PROMPT
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonObject
@@ -158,17 +159,17 @@ class WebDriverAgent(
      * Main execution logic with enhanced error handling and monitoring
      */
     private suspend fun executeInternal(action: ActionOptions, sessionId: String, startTime: Instant, attempt: Int): ModelResponse {
-        val instruction = action.action
+        val overallGoal = action.action
         val context = ExecutionContext(sessionId, 0, "execute", getCurrentUrl())
 
         logStructured("Starting WebDriverAgent execution", context, mapOf(
-            "instruction" to instruction.take(100),
+            "instruction" to overallGoal.take(100),
             "attempt" to (attempt + 1),
             "maxSteps" to config.maxSteps,
             "maxRetries" to config.maxRetries
         ))
 
-        val systemPrompt = buildOperatorSystemPrompt(instruction)
+        val systemPrompt = buildOperatorSystemPrompt(overallGoal)
         var consecutiveNoOps = 0
         var step = 0
 
@@ -194,18 +195,19 @@ class WebDriverAgent(
                 }
 
                 val screenshotB64 = captureScreenshotWithRetry(stepContext)
-                val userMsg = buildUserMessage(instruction, interactiveElements)
+                val userMsg = buildUserMessage(overallGoal, interactiveElements)
 
+                // message: agent guide + overall goal + last action summary + current context message
                 val message = buildExecutionMessage(systemPrompt, userMsg, screenshotB64)
-                val actionResult = generateActionWithRetry(message, stepContext, interactiveElements)
+                val stepActionResult = generateStepActionWithRetry(message, stepContext, interactiveElements)
 
-                if (actionResult == null) {
+                if (stepActionResult == null) {
                     consecutiveNoOps++
                     handleConsecutiveNoOps(consecutiveNoOps, step, stepContext)
                     continue
                 }
 
-                val response = actionResult.modelResponse
+                val response = stepActionResult.modelResponse
                 val parsed = parseOperatorResponse(response.content)
 
                 // Check for task completion
@@ -225,7 +227,7 @@ class WebDriverAgent(
                 consecutiveNoOps = 0
 
                 // Execute the tool call with enhanced error handling
-                val execSummary = executeToolCallWithRetry(toolCall, actionResult, step, stepContext)
+                val execSummary = executeToolCallWithRetry(toolCall, stepActionResult, step, stepContext)
 
                 if (execSummary != null) {
                     addToHistory("#$step ${execSummary}")
@@ -246,7 +248,7 @@ class WebDriverAgent(
                 "performanceMetrics" to performanceMetrics
             ))
 
-            return generateFinalSummary(instruction, context)
+            return generateFinalSummary(overallGoal, context)
 
         } catch (e: Exception) {
             val executionTime = java.time.Duration.between(startTime, Instant.now())
@@ -360,7 +362,7 @@ class WebDriverAgent(
     /**
      * Generates action with retry mechanism
      */
-    private suspend fun generateActionWithRetry(message: String, context: ExecutionContext, interactiveElements: List<InteractiveElement>): ActionDescription? {
+    private suspend fun generateStepActionWithRetry(message: String, context: ExecutionContext, interactiveElements: List<InteractiveElement>): ActionDescription? {
         return try {
             withContext(Dispatchers.IO) {
                 // Use overload supplying extracted elements to avoid re-extraction
@@ -553,7 +555,35 @@ class WebDriverAgent(
     }
 
     /**
-     * Builds execution message with enhanced context
+     * Builds the full model execution message by concatenating the system prompt, the user/context block,
+     * and an optional screenshot marker on separate lines.
+     *
+     * Result format (lines separated by '\n'):
+     *  1) systemPrompt
+     *  2) userMsg
+     *  3) "[Current page screenshot provided as base64 image]" (only if screenshotB64 != null)
+     *
+     * Notes:
+     * - The base64 screenshot itself is NOT embedded to reduce token usage; only a marker line is added so the model
+     *   understands an image attachment is present in the multimodal payload handled elsewhere.
+     * - Each call to appendLine adds a trailing newline. When no screenshot is provided, the returned string ends with
+     *   a newline after userMsg.
+     *
+     * Example:
+     *   systemPrompt = "You are a browsing agent..."
+     *   userMsg = "Goal: Buy a laptop...\nCurrent URL: https://example.com"
+     *   screenshotB64 = "iVBORw0KGgo..." (omitted)
+     *
+     *   Returns:
+     *   You are a browsing agent...
+     *   Goal: Buy a laptop...
+     *   Current URL: https://example.com
+     *   [Current page screenshot provided as base64 image]
+     *
+     * @param systemPrompt Agent system instructions placed at the top of the message
+     * @param userMsg Human-readable state/instruction assembled for the current step
+     * @param screenshotB64 Optional base64 PNG/JPEG screenshot; if non-null, only a marker line is appended
+     * @return A multi-line String ready for the LLM as the text part of a multimodal request
      */
     private fun buildExecutionMessage(systemPrompt: String, userMsg: String, screenshotB64: String?): String {
         return buildString {
@@ -582,26 +612,7 @@ class WebDriverAgent(
 
     private fun buildOperatorSystemPrompt(goal: String): String {
         return """
-你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
-重要指南：
-1) 将复杂动作拆成原子步骤；
-2) act 一次仅做一个动作（单击一次、输入一次、选择一次）；
-3) 不要在一步中合并多个动作；
-4) 多个动作用多步表达；
-5) 始终验证目标元素存在且可见后再执行操作；
-6) 遇到错误时尝试替代方案或优雅终止；
-
-输出严格使用 JSON，字段：
-- tool_calls: [ { name: string, args: object } ] // 最多 1 个
-- taskComplete: boolean // 可选
-
-安全要求：
-- 仅操作可见的交互元素
-- 避免快速连续操作，适当等待页面加载
-- 遇到验证码或安全提示时停止执行
-
-工具规范：
-${tta.TOOL_CALL_LIST}
+$AGENT_SYSTEM_PROMPT
 
 用户总目标：$goal
         """.trimIndent()

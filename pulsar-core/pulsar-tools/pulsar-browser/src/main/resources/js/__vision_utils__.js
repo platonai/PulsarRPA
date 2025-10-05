@@ -52,10 +52,6 @@ function isTransparent(rgb) {
     return !rgb || rgb.a === 0;
 }
 
-function isTransparent(rgb) {
-    return !rgb || rgb.a === 0;
-}
-
 // --- Linearization & Relative Luminance ---
 
 /**

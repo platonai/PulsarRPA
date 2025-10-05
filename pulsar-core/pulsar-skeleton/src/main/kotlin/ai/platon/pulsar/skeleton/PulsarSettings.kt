@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton
 
+import ai.platon.pulsar.browser.common.BlockRule
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.DisplayMode
 import ai.platon.pulsar.browser.common.InteractSettings
@@ -7,6 +8,7 @@ import ai.platon.pulsar.common.browser.BrowserContextMode
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.InteractLevel
 import ai.platon.pulsar.common.config.CapabilityTypes.*
+import dev.langchain4j.model.chat.ChatModel
 
 /**
  * The [PulsarSettings] class defines a convenient interface to control the behavior of Browser4.
@@ -44,16 +46,14 @@ data class PulsarSettings(
     val browserContextMode: BrowserContextMode = BrowserContextMode.DEFAULT,
     val browserType: BrowserType = BrowserType.DEFAULT,
     val displayMode: DisplayMode = DisplayMode.GUI,
-    val isSupervised: Boolean = false,
     val maxBrowsers: Int = Int.MAX_VALUE,
     val maxOpenTabs: Int = Int.MAX_VALUE,
+    val supervisorProcess: String? = null,
+    val supervisorProcessArgs: String? = null,
     val isSPA: Boolean = false,
     val interactSettings: InteractSettings = InteractSettings.DEFAULT,
-    val interactLevel: InteractLevel = InteractLevel.DEFAULT,
-    val enableURLBlocking: Boolean = true,
-    val llmProvider: String? = null,
-    val llmName: String? = null,
-    val llmAPIKey: String? = null,
+    val blockRule: BlockRule? = null,
+    val chatModel: ChatModel? = null,
 ) {
     companion object {
         @JvmStatic
