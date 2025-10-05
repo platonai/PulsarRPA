@@ -104,7 +104,3 @@ actions step-by-step until the target is achieved.
 - 为每个元素增加一个简短 action hint（如 “可输入”, “可点击跳转”）。
 - 针对长页面：按屏幕区域分 bucket（top/middle/bottom）再排序，减少偏向首屏元素。
 - 将已操作过的元素在摘要中标记 (✔) ，避免模型重复点击。
-
-### 新增测试
-
-- LLM 的图像理解冒烟测试
