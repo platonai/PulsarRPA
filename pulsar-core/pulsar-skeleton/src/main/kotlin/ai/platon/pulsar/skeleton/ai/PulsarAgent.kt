@@ -167,7 +167,7 @@ class PulsarAgent(
         val overallGoal = action.action
         val context = ExecutionContext(sessionId, 0, "execute", getCurrentUrl())
 
-        logStructured("Starting WebDriverAgent execution", context, mapOf(
+        logStructured("Starting PulsarAgent execution", context, mapOf(
             "instruction" to overallGoal.take(100),
             "attempt" to (attempt + 1),
             "maxSteps" to config.maxSteps,
@@ -344,7 +344,7 @@ class PulsarAgent(
             "timestamp" to Instant.now()
         )
 
-        logger.error("WebDriverAgent Error: {} - {}", message, errorData, error)
+        logger.error("PulsarAgent Error: {} - {}", message, errorData, error)
     }
 
     /**
@@ -630,7 +630,7 @@ $h
 $interactiveSummary
 
 请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作），若无法推进请输出空 tool_calls。
-目标：$instruction
+当前目标：$instruction
 当前URL：$currentUrl
         """.trimIndent()
     }

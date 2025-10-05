@@ -205,7 +205,10 @@ open class TextToAction(val conf: ImmutableConfig) {
             return ActionDescription(listOf(), null, ModelResponse.LLM_NOT_AVAILABLE)
         }
 
-        val systemPrompt = buildOperatorSystemPrompt(instruction)
+        val systemPrompt = when {
+            instruction.contains(AGENT_SYSTEM_PROMPT_PREFIX_20) -> instruction
+            else -> buildOperatorSystemPrompt(instruction)
+        }
         val toolUsePrompt = buildToolUsePrompt(systemPrompt, interactiveElements, toolCallLimit)
         val response = if (screenshotB64 != null) {
             model.call(toolUsePrompt, "", null, screenshotB64, "image/jpeg")
@@ -634,6 +637,8 @@ $AGENT_SYSTEM_PROMPT
 $TOOL_CALL_LIST
 
         """.trimIndent()
+
+        val AGENT_SYSTEM_PROMPT_PREFIX_20 = AGENT_SYSTEM_PROMPT.take(20)
 
         const val WEB_DRIVER_SOURCE_CODE_USE_MESSAGE_TEMPLATE = """
 以下是浏览器自动化的 WebDriver API 接口及其注释，你可以使用这些接口来控制浏览器。
