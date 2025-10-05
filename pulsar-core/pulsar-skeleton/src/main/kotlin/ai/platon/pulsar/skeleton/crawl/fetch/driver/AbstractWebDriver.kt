@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.WebDriverAgent
+import ai.platon.pulsar.skeleton.ai.PulsarAgent
 import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
 import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
@@ -280,13 +280,13 @@ abstract class AbstractWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun act(action: String): WebDriverAgent {
+    override suspend fun act(action: String): PulsarAgent {
         return act(ActionOptions(action))
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun act(action: ActionOptions): WebDriverAgent {
-        val agent = WebDriverAgent(this)
+    override suspend fun act(action: ActionOptions): PulsarAgent {
+        val agent = PulsarAgent(this)
         agent.execute(action) // execute without shadowing
         return agent
     }

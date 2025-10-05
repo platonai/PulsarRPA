@@ -4,7 +4,6 @@ import ai.platon.pulsar.boilerpipe.extractors.DefaultExtractor
 import ai.platon.pulsar.boilerpipe.sax.SAXInput
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.urls.PlainUrl
@@ -16,7 +15,7 @@ import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
-import ai.platon.pulsar.skeleton.ai.WebDriverAgent
+import ai.platon.pulsar.skeleton.ai.PulsarAgent
 import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
 import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
@@ -41,7 +40,6 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -539,13 +537,13 @@ abstract class AbstractPulsarSession(
                 "\n\nThere is the text content of the selected element:\n\n\n" + element.text()
     )
 
-    override suspend fun act(action: String): WebDriverAgent {
+    override suspend fun act(action: String): PulsarAgent {
         return act(ActionOptions(action = action))
     }
 
-    override suspend fun act(action: ActionOptions): WebDriverAgent {
-        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `multiAct`" }
-        val agent = WebDriverAgent(driver)
+    override suspend fun act(action: ActionOptions): PulsarAgent {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`: session.bind(driver)" }
+        val agent = PulsarAgent(driver)
 
         agent.execute(action)
 

@@ -80,7 +80,7 @@ data class ExecutionContext(
     val additionalContext: Map<String, Any> = emptyMap()
 )
 
-class WebDriverAgent(
+class PulsarAgent(
     val driver: WebDriver,
     val maxSteps: Int = 100,
     val config: WebDriverAgentConfig = WebDriverAgentConfig(maxSteps = maxSteps)

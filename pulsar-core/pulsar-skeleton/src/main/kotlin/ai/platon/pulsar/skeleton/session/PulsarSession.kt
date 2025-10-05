@@ -8,14 +8,13 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.skeleton.ai.WebDriverAgent
+import ai.platon.pulsar.skeleton.ai.PulsarAgent
 import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
 import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.PulsarContext
-import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.DocumentCatch
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
@@ -26,7 +25,6 @@ import com.google.common.annotations.Beta
 import org.jsoup.nodes.Element
 import java.nio.ByteBuffer
 import java.nio.file.Path
-import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -2251,11 +2249,11 @@ interface PulsarSession : AutoCloseable {
      * Each step in the plan uses at most one tool.
      *
      * @param action A string describing the action to be performed.
-     * @return A [WebDriverAgent] instance that executes the action.
+     * @return A [PulsarAgent] instance that executes the action.
      * @throws Exception if the action cannot be performed or if an error occurs during execution.
      */
     @Beta
-    suspend fun act(action: String): WebDriverAgent
+    suspend fun act(action: String): PulsarAgent
 
     /**
      * Executes an action described by the given [ActionOptions].
@@ -2263,11 +2261,11 @@ interface PulsarSession : AutoCloseable {
      * Each step in the plan uses at most one tool.
      *
      * @param action An [ActionOptions] object describing the action to be performed.
-     * @return A [WebDriverAgent] instance that executes the action.
+     * @return A [PulsarAgent] instance that executes the action.
      * @throws Exception if the action cannot be performed or if an error occurs during execution.
      */
     @Beta
-    suspend fun act(action: ActionOptions): WebDriverAgent
+    suspend fun act(action: ActionOptions): PulsarAgent
 
     /**
      * Perform an action described by [action].
