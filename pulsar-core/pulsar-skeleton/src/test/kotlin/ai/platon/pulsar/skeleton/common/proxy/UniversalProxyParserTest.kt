@@ -83,6 +83,7 @@ proxy89.myvpn.network:443
         // assertTrue { proxies.isEmpty() }
         proxies.forEach {
             // println(it)
+            assertTrue { it.host.isNotBlank() }
         }
     }
 }
