@@ -1,14 +1,15 @@
 package ai.platon.pulsar.ql.context
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.SQLUtils
-import ai.platon.pulsar.skeleton.common.urls.NormURL
-import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.SessionDelegate
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.skeleton.common.urls.NormURL
+import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import org.h2.api.ErrorCode
 import org.h2.engine.Session
 import org.h2.engine.SessionInterface
@@ -36,6 +37,10 @@ abstract class AbstractSQLContext(
     var status: Status = Status.NOT_READY
 
     abstract val randomConnection: Connection
+
+    init {
+        System.setProperty("h2.sessionFactory", AppConstants.H2_SESSION_FACTORY)
+    }
 
     val randomConnectionOrNull: Connection? get() = kotlin.runCatching { randomConnection }
         .onFailure { warnInterruptible(this, it) }
