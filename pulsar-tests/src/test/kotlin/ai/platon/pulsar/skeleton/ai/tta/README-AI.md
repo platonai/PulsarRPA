@@ -36,6 +36,8 @@ pulsar-tests/src/test/kotlin/ai/platon/pulsar/skeleton/ai/tta/    # Test code di
 ├── TextToActionEdgeCasesTest.kt                                  # Edge cases
 ├── TextToActionComprehensiveTests.kt                             # Comprehensive tests
 ├── TextToActionMockServerTests.kt                                # Mock server wiring tests
+├── NewToolsIntegrationTest.kt                                    # New tools integration tests
+├── ConditionalActionsAndNavigationTest.kt                        # Conditional actions and navigation tests
 └── README-AI.md                                                  # This file
 
 # Note: The actual interactive test web pages are stored in a shared module (used by multiple test modules)
@@ -145,6 +147,34 @@ fun `When given clear action command then generate precise WebDriver code`() = r
     val action = textToAction.generateWebDriverAction(command, driver)
     assertThat(action.functionCalls.joinToString("\n")).contains("driver.click(")
 }
+
+@Test
+fun `When asking to check element existence then generate exists check`() = runWebDriverTest { driver ->
+    val command = "检查登录按钮是否存在"
+    val action = textToAction.generateWebDriverAction(command, driver)
+    assertThat(action.functionCalls.joinToString("\n")).contains("driver.exists(")
+}
+
+@Test
+fun `When asking to verify element visibility then generate visibility check`() = runWebDriverTest { driver ->
+    val command = "确认提交按钮可见"
+    val action = textToAction.generateWebDriverAction(command, driver)
+    assertThat(action.functionCalls.joinToString("\n")).contains("driver.isVisible(")
+}
+
+@Test
+fun `When asking to focus element then generate focus action`() = runWebDriverTest { driver ->
+    val command = "聚焦到搜索框"
+    val action = textToAction.generateWebDriverAction(command, driver)
+    assertThat(action.functionCalls.joinToString("\n")).contains("driver.focus(")
+}
+
+@Test
+fun `When asking to scroll to element then generate scrollTo action`() = runWebDriverTest { driver ->
+    val command = "滚动到页面底部"
+    val action = textToAction.generateWebDriverAction(command, driver)
+    assertThat(action.functionCalls.joinToString("\n")).contains("driver.scrollTo(")
+}
 ```
 
 #### 边界测试
@@ -153,6 +183,20 @@ fun `When given clear action command then generate precise WebDriver code`() = r
 fun `When no matching element exists then generate empty tool-calls`() = runWebDriverTest { driver ->
     val action = textToAction.generateWebDriverAction("点击不存在的按钮", driver)
     assertThat(action.functionCalls.joinToString()).doesNotContain("driver.click(")
+}
+
+@Test
+fun `When asking for conditional action then generate appropriate checks`() = runWebDriverTest { driver ->
+    val action = textToAction.generateWebDriverAction("如果登录按钮存在就点击它", driver)
+    val calls = action.functionCalls.joinToString()
+    assertThat(calls).contains("driver.exists(") || calls.contains("driver.click(")
+}
+
+@Test
+fun `When asking for defensive interaction then generate visibility check`() = runWebDriverTest { driver ->
+    val action = textToAction.generateWebDriverAction("确认提交按钮可见后点击", driver)
+    val calls = action.functionCalls.joinToString()
+    assertThat(calls).contains("driver.isVisible(") || calls.contains("driver.click(")
 }
 ```
 
@@ -163,6 +207,23 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
     val action = textToAction.generateWebDriverAction("点击按钮", driver)
     // 验证策略，例如优先 data-testid 或文本最相近
 }
+
+@Test
+fun `When asking for navigation sequence then generate proper flow`() = runWebDriverTest { driver ->
+    val action = textToAction.generateWebDriverAction("点击链接后等待页面跳转完成", driver)
+    val calls = action.functionCalls.joinToString()
+    assertThat(calls).contains("driver.click(") || calls.contains("driver.waitForNavigation(")
+}
+
+@Test
+fun `When asking for complex interaction then generate multi-step sequence`() = runWebDriverTest { driver ->
+    val action = textToAction.generateWebDriverAction("滚动到表单，确认输入框可见，然后输入文本", driver)
+    val calls = action.functionCalls.joinToString()
+    assertThat(calls).contains("driver.scrollTo(") ||
+                  calls.contains("driver.isVisible(") ||
+                  calls.contains("driver.fill(") ||
+                  calls.contains("driver.type(")
+}
 ```
 
 ## 🎯 重点测试场景
@@ -172,9 +233,14 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 - 输入操作: "在搜索框输入AI工具" → `driver.fill("#search-input", "AI工具")`
 - 键盘操作: "在输入框按下 Enter" → `driver.press("#search-input", "Enter")`
 - 滚动操作: "滚动到页面中间" → `driver.scrollToMiddle(0.5)` 或 `driver.scrollDown(1)`
+- 滚动到元素: "滚动到评论区" → `driver.scrollTo("#comments")`
 - 屏幕滚动: "滚到第2屏中部" → `driver.scrollToScreen(1.5)`
 - 导航操作: "打开 /docs 页面" → `driver.navigateTo("/docs")`
 - 等待元素: "等待提交按钮出现" → `driver.waitForSelector("#submit-btn", 5000L)`
+- 等待导航: "点击登录后等待跳转" → `driver.click("#login")` + `driver.waitForNavigation()`
+- 浏览器历史: "返回上一页" → `driver.goBack()`，"前进到下一页" → `driver.goForward()`
+- 元素检查: "检查元素是否存在" → `driver.exists("#element")`，"检查元素是否可见" → `driver.isVisible("#element")`
+- 元素聚焦: "聚焦到搜索框" → `driver.focus("#search-input")`
 - 勾选/取消: `driver.check("#agree")` / `driver.uncheck("#agree")`
 - 高级点击（文本/属性匹配）: `driver.clickTextMatches(".list", "提交", 1)` / `driver.clickMatches(".item", "data-id", "^x-\\d+$", 1)`
 - 点击第 N 个链接: `driver.clickNthAnchor(3)`（从 0 开始）
@@ -192,12 +258,18 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 - 表单填写的字段匹配
 - 多步骤操作的序列生成
 - 条件判断逻辑的处理
+- 防御性编程：exists/isVisible 检查后再执行操作
+- 导航处理：waitForNavigation 在页面跳转后的使用
+- 复杂交互序列：滚动→检查→聚焦→输入的组合操作
 
 ### 4. 错误和边界情况
 - 元素不存在时的fallback策略
 - 模糊指令的处理
 - DOM结构变化的适应性
 - 超时和异常的处理
+- 条件执行失败：元素存在但不可见时的处理
+- 导航超时：页面加载过慢时的处理
+- 复杂序列中某一步失败时的恢复策略
 
 ---
 
@@ -206,25 +278,31 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 - 已暴露并已支持（TTA 工具 → driver.* 映射存在）：
   - navigateTo(url)
   - waitForSelector(selector, timeoutMillis)
+  - exists(selector): Boolean - 检查元素是否存在
+  - isVisible(selector): Boolean - 检查元素是否可见
+  - focus(selector) - 聚焦到指定元素
   - click(selector)
   - fill(selector, text)
   - press(selector, key)
   - check(selector) / uncheck(selector)
   - scrollDown(count) / scrollUp(count) / scrollToTop() / scrollToBottom() / scrollToMiddle(ratio)
+  - scrollTo(selector) - 滚动到指定元素
   - scrollToScreen(screenNumber)
   - clickTextMatches(selector, pattern, count)
   - clickMatches(selector, attrName, pattern, count)
   - clickNthAnchor(n, rootSelector?)
+  - waitForNavigation(oldUrl?, timeoutMillis?) - 等待页面导航完成
+  - goBack() - 浏览器后退
+  - goForward() - 浏览器前进
   - captureScreenshot() / captureScreenshot(selector)
   - delay(millis)
   - stop()
 
 - MiniWebDriver 已有但尚未通过工具暴露（建议后续开放）：
-  - 状态查询：exists(selector), isVisible(selector), isHidden(selector), isChecked(selector)
-  - 焦点与输入：focus(selector), type(selector, text)
-  - 精确滚动与定位：scrollTo(selector), moveMouseTo(x, y) / moveMouseTo(selector, dx, dy)
+  - 状态查询：isHidden(selector), isChecked(selector)
+  - 焦点与输入：type(selector, text)
+  - 精确滚动与定位：moveMouseTo(x, y) / moveMouseTo(selector, dx, dy)
   - 轮滚/拖拽：mouseWheelDown/Up(...), dragAndDrop(selector, dx, dy)
-  - 导航增强：waitForNavigation(oldUrl?, timeout?), goBack(), goForward()
   - 页面与节点提取：outerHTML(), outerHTML(selector)
   - 文本/属性/属性值/属性对/超大批量：selectFirstTextOrNull, selectTextAll, selectFirstAttributeOrNull, selectAttributes, selectAttributeAll
   - 属性/Property：selectFirstPropertyValueOrNull, selectPropertyValueAll
@@ -290,7 +368,7 @@ fun `When ambiguous command then choose best match or ask clarify`() = runWebDri
 | interactive-dynamic | 延迟/异步加载/列表增删 | 更复杂的懒加载/虚拟列表 |
 | interactive-ambiguity | 重复元素/歧义冲突/data-testid | 更全面的消歧策略/位置参照 |
 | forms-advanced-test | radio/file/date/time/password/禁用/只读 | 校验错误态更全/无障碍属性 |
-| interactive-screens | 与 1 类似（占位） | 真正多屏/Tab/iframe/分栏/路由感知 |
+| interactive-screens | 多屏滚动/长页面/分段内容 | 真正多屏/Tab/iframe/分栏/路由感知 |
 
 > 结论：需要新增专用页面覆盖：动态异步、歧义冲突、Shadow DOM、可访问性、媒体/富文本、多屏结构。
 

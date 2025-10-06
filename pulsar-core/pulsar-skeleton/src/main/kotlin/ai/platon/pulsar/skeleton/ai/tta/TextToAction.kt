@@ -330,6 +330,10 @@ $AGENT_SYSTEM_PROMPT
         "goto" -> tc.args["url"]?.let { "driver.navigateTo(\"$it\")" }
         // Wait
         "waitForSelector" -> tc.args["selector"]?.let { sel -> "driver.waitForSelector(\"$sel\", ${(tc.args["timeoutMillis"] ?: 5000)}L)" }
+        // Status checking (first batch of new tools)
+        "exists" -> tc.args["selector"]?.let { "driver.exists(\"$it\")" }
+        "isVisible" -> tc.args["selector"]?.let { "driver.isVisible(\"$it\")" }
+        "focus" -> tc.args["selector"]?.let { "driver.focus(\"$it\")" }
         // Basic interactions
         "click" -> tc.args["selector"]?.let { "driver.click(\"$it\")" }
         "fill" -> tc.args["selector"]?.let { s -> "driver.fill(\"$s\", \"${tc.args["text"] ?: ""}\")" }
@@ -339,6 +343,7 @@ $AGENT_SYSTEM_PROMPT
         // Scrolling
         "scrollDown" -> "driver.scrollDown(${tc.args["count"] ?: 1})"
         "scrollUp" -> "driver.scrollUp(${tc.args["count"] ?: 1})"
+        "scrollTo" -> tc.args["selector"]?.let { "driver.scrollTo(\"$it\")" }
         "scrollToTop" -> "driver.scrollToTop()"
         "scrollToBottom" -> "driver.scrollToBottom()"
         "scrollToMiddle" -> "driver.scrollToMiddle(${tc.args["ratio"] ?: 0.5})"
@@ -359,6 +364,14 @@ $AGENT_SYSTEM_PROMPT
             val root = tc.args["rootSelector"]?.toString() ?: "body"
             "driver.clickNthAnchor(${n}, \"$root\")"
         }
+        // Enhanced navigation
+        "waitForNavigation" -> {
+            val oldUrl = tc.args["oldUrl"]?.toString() ?: ""
+            val timeout = tc.args["timeoutMillis"] ?: 5000L
+            "driver.waitForNavigation(\"$oldUrl\", ${timeout}L)"
+        }
+        "goBack" -> "driver.goBack()"
+        "goForward" -> "driver.goForward()"
         // Screenshots
         "captureScreenshot" -> {
             val sel = tc.args["selector"]?.toString()
@@ -591,6 +604,9 @@ $AGENT_SYSTEM_PROMPT
         const val TOOL_CALL_LIST = """
 - navigateTo(url: String)
 - waitForSelector(selector: String, timeoutMillis: Long = 5000)
+- exists(selector: String): Boolean
+- isVisible(selector: String): Boolean
+- focus(selector: String)
 - click(selector: String)
 - fill(selector: String, text: String)
 - press(selector: String, key: String)
@@ -598,6 +614,7 @@ $AGENT_SYSTEM_PROMPT
 - uncheck(selector: String)
 - scrollDown(count: Int = 1)
 - scrollUp(count: Int = 1)
+- scrollTo(selector: String)
 - scrollToTop()
 - scrollToBottom()
 - scrollToMiddle(ratio: Double = 0.5)
@@ -605,6 +622,9 @@ $AGENT_SYSTEM_PROMPT
 - clickTextMatches(selector: String, pattern: String, count: Int = 1)
 - clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
 - clickNthAnchor(n: Int, rootSelector: String = "body")
+- waitForNavigation(oldUrl: String = "", timeoutMillis: Long = 5000): Long
+- goBack()
+- goForward()
 - captureScreenshot()
 - captureScreenshot(selector: String)
 - delay(millis: Long)

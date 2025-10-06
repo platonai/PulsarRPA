@@ -428,7 +428,9 @@ class PulsarAgent(
         return validationCache.getOrPut(cacheKey) {
             when (toolCall.name) {
                 "navigateTo" -> validateNavigateTo(toolCall.args)
-                "click", "fill", "press", "check", "uncheck" -> validateElementAction(toolCall.args)
+                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo" -> validateElementAction(toolCall.args)
+                "waitForNavigation" -> validateWaitForNavigation(toolCall.args)
+                "goBack", "goForward", "delay" -> true // These don't need validation
                 else -> true // Unknown actions are allowed by default
             }
         }
@@ -448,6 +450,15 @@ class PulsarAgent(
     private fun validateElementAction(args: Map<String, Any?>): Boolean {
         val selector = args["selector"]?.toString() ?: return false
         return selector.isNotBlank() && selector.length < 1000 // Basic validation
+    }
+
+    /**
+     * Validates waitForNavigation actions
+     */
+    private fun validateWaitForNavigation(args: Map<String, Any?>): Boolean {
+        val oldUrl = args["oldUrl"]?.toString() ?: ""
+        val timeout = (args["timeoutMillis"] as? Number)?.toLong() ?: 5000L
+        return timeout in 100L..60000L && oldUrl.length < 1000 // Reasonable timeout range and URL length
     }
 
     /**
@@ -792,6 +803,48 @@ $interactiveSummary
                 if (b64 != null) saveStepScreenshot(b64)
                 val target = sel.ifBlank { "page" }
                 "captureScreenshot -> $target"
+            }
+
+            // Status checking (first batch of new tools)
+            "exists" -> {
+                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
+                if (selector.isBlank()) return "skip exists (blank selector)"
+                val result = driver.exists(selector)
+                "exists -> $selector = $result"
+            }
+            "isVisible" -> {
+                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
+                if (selector.isBlank()) return "skip isVisible (blank selector)"
+                val result = driver.isVisible(selector)
+                "isVisible -> $selector = $result"
+            }
+            "focus" -> {
+                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
+                if (selector.isBlank()) return "skip focus (blank selector)"
+                driver.focus(selector)
+                "focus -> $selector"
+            }
+            "scrollTo" -> {
+                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
+                if (selector.isBlank()) return "skip scrollTo (blank selector)"
+                driver.scrollTo(selector)
+                "scrollTo -> $selector"
+            }
+
+            // Enhanced navigation
+            "waitForNavigation" -> {
+                val oldUrl = tc.args["oldUrl"]?.toString() ?: ""
+                val timeout = (tc.args["timeoutMillis"] as? Number)?.toLong() ?: 5000L
+                val remainingTime = driver.waitForNavigation(oldUrl, timeout)
+                "waitForNavigation -> oldUrl='$oldUrl' remaining=${remainingTime}ms"
+            }
+            "goBack" -> {
+                driver.goBack()
+                "goBack"
+            }
+            "goForward" -> {
+                driver.goForward()
+                "goForward"
             }
 
             // Timing
