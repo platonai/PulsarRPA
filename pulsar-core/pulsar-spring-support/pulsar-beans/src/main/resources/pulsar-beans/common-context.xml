@@ -10,10 +10,6 @@
         <property name="environment" ref="environment"/>
     </bean>
 
-<!--    <bean id="applicationContext" class="org.springframework.context.support.ClassPathXmlApplicationContext" -->
-<!--          init-method="start" destroy-method="close">-->
-<!--    </bean>-->
-
     <!--Web Page Database -->
     <bean id="webDb" class="ai.platon.pulsar.persist.WebDb" destroy-method="close">
         <constructor-arg ref="conf" />
