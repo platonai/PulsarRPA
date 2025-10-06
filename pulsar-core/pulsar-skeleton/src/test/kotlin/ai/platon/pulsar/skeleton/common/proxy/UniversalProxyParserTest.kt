@@ -4,9 +4,11 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
+@Tag("ExternalServiceTest")
 class UniversalProxyParserTest {
     private val session = PulsarContexts.getOrCreateSession()
     private val conf = session.sessionConfig
